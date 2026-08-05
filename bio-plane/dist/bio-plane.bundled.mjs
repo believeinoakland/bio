@@ -187,17 +187,43 @@ CREATE TABLE IF NOT EXISTS signers (
 -- carries its own attestation and its own date, and still says what it said.
 --
 -- title is the ONE deliberate divergence from DATA-MODEL.md 2.4.4, so the
--- public index is not N+1. The four frozen columns after it are what the
--- group SIGNED, kept beside the signature rather than only inside the bytes:
--- completeness is the assertion C-21.1 compares the NEXT edition against
--- (a gate that only checks presence IS a checkbox, and the comparison must
--- not depend on R2 or on a history snapshot surviving); strength is BOTH
--- frozen axis objects (never two letters -- unrated and undetermined are
--- different frozen facts, and C-21.2 compares per axis against the right
--- one); required is DEC-17's declared bar as it stood, null meaning ABSENT
--- and gating nothing; manifest is DEC-34's signed hash manifest over every
--- part of the container, with its own sha in manifest_sha so any copy of the
--- container anywhere can be checked against this instance.
+-- public index is not N+1. The frozen columns after it are what the group
+-- SIGNED, kept beside the signature rather than only inside the bytes:
+-- strength is BOTH frozen axis objects (never two letters -- unrated and
+-- undetermined are different frozen facts, and C-21.2 compares per axis
+-- against the right one); required is DEC-17's declared bar as it stood,
+-- null meaning ABSENT and gating nothing.
+--
+-- REC-44 / DEC-44 / D-187: THIS ROW IS A **FINDING**, NOT A CASE, and the
+-- correction is that it was only ever a case by assumption. A published case
+-- is a CONTAINER OVER ONE OR MORE FINDINGS scoped to the project's own
+-- question; the FINDING stays the unit of truth and the CASE becomes the unit
+-- of publication. So THREE things left this table and went to
+-- published_cases, and each one left for the same reason -- it is a fact
+-- about the CASE and would otherwise be stated once per member finding, which
+-- is D-21's second place to state one fact:
+--   completeness  the assertion C-21.1 compares the next edition against.
+--                 C-21.1 is now PER CASE PER EDITION; C-21.2's per-axis
+--                 inheritance stays PER FINDING and reads strength below.
+--                 The two live at different altitudes and collapsing them is
+--                 exactly what DEC-44 forbids.
+--   manifest      DEC-34's signed hash manifest, which now describes the
+--   manifest_sha  WHOLE case -- every member finding's parts, every member's
+--                 own signature -- because a stranger holding the container
+--                 must be able to check every finding the case rests on
+--                 without contacting this instance (DEC-44 determination 3).
+-- edition here IS the CASE edition the finding was published in, not a
+-- number of its own: editions are over the CONTAINER (DEC-12, unchanged by
+-- DEC-44 and given its natural home by it).
+--
+-- parts is WHAT THIS SIGNED EDITION OF THIS FINDING CONSISTS OF -- the path,
+-- sha256, kind and byte length of every file, as hashed at ratification. It is
+-- a column rather than a query over published_shas because published_shas is
+-- append-only ACROSS editions on purpose (a hash once published answers
+-- forever), so it cannot say which parts belong to WHICH edition, and the case
+-- container needs exactly that: assembling edition N of a case means gathering
+-- edition N's parts from every member, including members ratified minutes
+-- earlier. Nothing else holds it.
 CREATE TABLE IF NOT EXISTS published_bundles (
   bundle_id       TEXT NOT NULL,
   edition         INTEGER NOT NULL,
@@ -208,11 +234,9 @@ CREATE TABLE IF NOT EXISTS published_bundles (
   attestor_member TEXT,
   gate_version    TEXT NOT NULL,
   sig_armored     TEXT NOT NULL,
-  completeness    TEXT,
   strength        TEXT,
   required        TEXT,
-  manifest_sha    TEXT,
-  manifest        TEXT,
+  parts           TEXT,
   PRIMARY KEY (bundle_id, edition)
 );
 CREATE TABLE IF NOT EXISTS published_shas (
@@ -667,6 +691,80 @@ CREATE TABLE IF NOT EXISTS reading_refs (
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
 CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
+-- REC-36: the NAME index -- one row per normalised TERM of a reference's label,
+-- which is what makes the framework section 8.1 GRADE-C tier (a document that
+-- mentions a subject by NAME, carrying no reference the source assigned) an
+-- indexed lookup instead of a corpus scan. Before this, reading_refs had an index
+-- on ref and none on label, so a name-only mention was unreachable from any
+-- member surface and REC-18's earned grades were bounded to exact references.
+--
+-- WHY TERMS AND NOT A NORMALISED LABEL COLUMN, and it is MEASURED, not preferred
+-- (MEASUREMENTS.md 2026-08-04, REC-36; instrument test/label-variance-probe.mjs).
+-- Over the one real captured document this repository holds -- a 33-page Oakland
+-- Legistar agenda read by the real doctype -- a subject name was the WHOLE label
+-- in 0 of 41 labels against 33 names taken from the document itself. The label is
+-- the document ITEM's title ("Contract Agreement For James Beere As Oakland Police
+-- Chief"), and the name is EMBEDDED in it. A column holding the normalised whole
+-- label, however carefully folded, would have answered nothing. Requiring every
+-- term of a name to be present found 15 -- exactly what a substring scan found --
+-- so the indexable form loses nothing against the scan it replaces, at a measured
+-- 305 rows for that whole document.
+--
+-- term is the case-folded, whitespace-collapsed, punctuation-split form produced
+-- by the SAME normaliser entity_aliases.alias_norm keys on (Store labelTerms over
+-- normAlias). One function, so the two sides of the join cannot drift; a term
+-- projection that folded differently from the alias index would silently stop
+-- matching and nothing would fail.
+--
+-- bundle_id is carried so the D-15 viewer gate applies IN SQL at the lookup --
+-- a candidate the viewer may not see is not a candidate and its row is withheld,
+-- not merely redacted. DERIVED from the corpus like readings/reading_refs, so a
+-- whole-store purge clears it (D-113) and a re-promotion replaces it.
+-- REC-40: THE SAME INDEX NOW CARRIES THREE TERM SOURCES, AND src IS PART OF
+-- THE KEY. REC-36 indexed the label alone, which made op=readingname answer on
+-- the NAME a reading recorded while op=readingref answered on the REFERENCE
+-- STRING -- so the framework 8.1 A and B tiers (a document whose reference, or
+-- whose reference KEY, is spelled like a subject's registered name) were
+-- proposable only by a caller who already knew the exact string to ask for, and
+-- after UI-26 traded away the per-name loop they were proposable from no surface
+-- at all. #recognise reads THREE strings and grades them A (ref), B (ref_key)
+-- and C (label); an index carrying one of the three answers one of the three.
+--
+-- WHY THE SAME TABLE AND NOT A SIBLING, by this project's own test (D4 as REC-42
+-- and REC-44 applied it): a term of an identifier needs NO ORDINAL of its own --
+-- it is keyed by exactly what a label term is keyed by, it has no ordering, no
+-- lifecycle and no identity apart from the reading_refs row it is derived from
+-- and dies with -- and NO QUERY IS KEYED ON IT SEPARATELY. There is one question
+-- ("every term of this registered name present within one reference's one
+-- source") and REC-40's whole requirement is that ONE call answer every tier, so
+-- a second table would force either a UNION of two compound arms -- toward D-36's
+-- five-compound workerd ceiling -- or two statements, which is the N-call shape
+-- this item exists to remove.
+--
+-- WHY src IS IN THE PRIMARY KEY, and it is a CORRECTNESS requirement rather
+-- than a way of labelling the answer: the lookup is a SUBSET test (every term of
+-- the name present in one group). If the label's terms and the reference's terms
+-- shared a group, a registered name could be satisfied by a MIX -- one word taken
+-- from the document's title and another from its reference string -- manufacturing
+-- a correspondence that NEITHER string made. That puts a wrong subject on a
+-- document, which is the direction the diacritic decision below already refuses
+-- to take. So the group is (capture_sha, ref, src) and a mixed match is
+-- structurally impossible rather than filtered out afterwards.
+--
+-- src is label, ref or key, and key is written only when the reference
+-- key normalises to something different from the whole reference -- the same
+-- guard #recognise applies before it considers the B tier, so the index and
+-- the recogniser cannot disagree about whether a B tier exists.
+CREATE TABLE IF NOT EXISTS reading_ref_terms (
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  ref          TEXT NOT NULL,
+  src          TEXT NOT NULL,
+  term         TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, ref, src, term)
+);
+CREATE INDEX IF NOT EXISTS reading_ref_terms_term ON reading_ref_terms(term);
+CREATE INDEX IF NOT EXISTS reading_ref_terms_bundle ON reading_ref_terms(bundle_id);
 -- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY, which IS the framework's
 -- entity axis. Built ONCE (D-83): the bias doctrine's subject registry
 -- (BIO_Declared_Bias_v0_1.md safeguard 4) and the framework's entity axis
@@ -1087,12 +1185,40 @@ CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at)
 -- testimony (a member's signed grade-D account), or hunch (DEC-15): an
 -- authored connection grade, the ONLY authored grade permitted above D,
 -- requiring an author and a date in the document, visible as a hunch from the
--- moment it is made, and BIAS DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+-- moment it is made, and HUNCH DEBT until cleared (BIO_Declared_Bias_v0_1.md).
+-- D-188 / DEC-46 (d): HUNCH DEBT, not "bias debt". A hunch is the ONE kind of
+-- declared bias that DISQUALIFIES publication (DEC-20); ordinary bias debt is
+-- DISCLOSED and travels with the published case. Calling this "bias debt" is
+-- what made Bob re-read his own ruling as a contradiction on 2026-08-04.
 --
 -- inquiry_basis_target is the reverse index: "which inquiries rest on this
 -- document" (E2, and REC-17's re-evaluation obligation) is ONE indexed lookup.
 -- Cleared in BOTH purge arms via the TABLES list (D-113); hygiene.test.mjs
 -- holds that list against this file.
+--
+-- REC-42 / DEC-32: the ground column IS THE RELATIONSHIP BETWEEN LEGS, one
+-- nullable column rather than a table because a leg belongs to exactly ONE
+-- ground and the leg row is already keyed (bundle_id, ord). Legs sharing a
+-- ground are AND-related (the basis is no stronger than the weakest of them);
+-- the grounds themselves are OR-related (the basis is as strong as its
+-- STRONGEST ground). NULL IS THE IMPLICIT SINGLE GROUND and it is the DEFAULT
+-- ON PURPOSE: every leg written before this column existed reads NULL, lands in
+-- one ground, and derives exactly the weakest-leg answer it derived before.
+-- Bob's ruling (DEC-32): "sometimes the weakest is the claim's strength, and
+-- other times it's not. The difference is really whether the relationship
+-- between legs is AND or OR."
+--
+-- THE ATTRIBUTION IS NOT PROJECTED HERE, and that is the deliberate half. A
+-- ground's claim to be INDEPENDENTLY SUFFICIENT is asserted per ground, by a
+-- named member, in bundle.md's grounds[] block -- one row per label carrying
+-- asserted_by and at. It is per (bundle_id, ground), so a column here would
+-- state it once per LEG: a second place for one fact to be written, which is
+-- what D-21 forbids and what the ordinal above exists to avoid. It is not a
+-- second TABLE either, because nothing asks the record a question keyed on it:
+-- the assertion is enforced at BOTH gates by one catalog function
+-- (checkInquiryBasis, REC-11's precedent) and frozen into the ratified bytes at
+-- publication, which is where a reader checks it. If a query ever needs "which
+-- grounds did this member assert", THAT is when the table is earned.
 CREATE TABLE IF NOT EXISTS inquiry_basis (
   bundle_id    TEXT NOT NULL,   -- the inquiry
   ord          INTEGER NOT NULL,-- position in basis[], so a leg is addressable
@@ -1104,6 +1230,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' (DEC-15)
   note         TEXT,
   at           TEXT,
+  ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
@@ -1243,6 +1370,92 @@ CREATE TABLE IF NOT EXISTS published_edges (
   PRIMARY KEY (from_bundle, to_bundle, kind)
 );
 CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
+-- REC-44 / DEC-44 / D-187: THE PUBLISHED CASE, which is the object this record
+-- always meant and never had. A case is a CONTAINER OVER ONE OR MORE FINDINGS,
+-- scoped to the project's own question. Before this table a case WAS an
+-- inquiry, and nobody chose that: it was assumed by every item in the chain,
+-- and DEC-32 closed the only escape (a parent inquiry citing children would
+-- collapse several propositions into one conclusion with one falsifier, the
+-- overclaim DEC-32 exists to prevent).
+--
+-- THE IDENTITY IS DISTINCT FROM A BUNDLE ID, ALWAYS, including for the
+-- one-finding case DEC-44 determination 5 keeps legal. Reusing the member's
+-- bundle id when there happens to be one member is exactly the conflation
+-- D-187 records: it would make ?id= ambiguous at the public read path and it
+-- would make the shape depend on the arity, so the degenerate case would stop
+-- being degenerate the moment a second finding joined. The id is minted by
+-- op=publish (CASE-<year>-<seq>, through allocId like every other minted
+-- identifier) and then CARRIED IN THE SIGNED BYTES of every member finding, so
+-- a case identity can never be claimed at the commit that was not inside the
+-- hash the member signed -- the rule DEC-12 already imposes on the edition.
+--
+-- WHAT IS AUTHORED HERE, and both are authored per CASE per EDITION:
+--   scope         DEC-44 determination 2 -- Bob's "sufficient scope to address
+--                 all issues that brought the various inquiries together".
+--                 NEVER derived from the findings' titles. It sits BESIDE the
+--                 completeness assertion and does not replace it: completeness
+--                 says what was left OUT, scope says what the case is ABOUT,
+--                 and a reader needs both because they are not the same claim.
+--   completeness  REC-14's assertion, moved up one altitude. C-21.1's
+--                 byte-check compares THIS against the previous edition of
+--                 THIS CASE. The scope statement is deliberately NOT under
+--                 that byte-check, and the reasoning is at C-21.1's site.
+--   bias_acknowledgement
+--                 REC-47 / DEC-46 (a). The publisher's AUTHORED acknowledgement
+--                 of the bias this edition's case was produced under -- fresh
+--                 per edition, never prefilled, and UNDER C-21.1's byte-check
+--                 alongside completeness rather than exempt alongside scope.
+--                 The discriminator between the two rules is recorded once, at
+--                 C-21.1's site, because these three fields now sit side by
+--                 side under two different rules and the next reader will ask.
+--                 DEC-20 is why this is a DISCLOSURE and not a gate: ordinary
+--                 declared bias never blocks publication and travels with every
+--                 published case. Only an uncleared HUNCH disqualifies, and
+--                 that refusal is publishpreflight's (UNCLEARED_HUNCH), not
+--                 this column's. This field states the lens; it never judges it.
+--                 The bias MANIFEST -- computed and stamped, DEC-46's other
+--                 half -- is NOT here and is not built: the bias object type
+--                 is still absent from the check catalogue (D-84), so no
+--                 bundle exists to compute one from. The two are different
+--                 things travelling together, and only the AUTHORED half of
+--                 the pair can be built today.
+--
+-- ratified_at is NULL until the edition is COMPLETE -- until every member
+-- finding has been ratified. That is a real state and it is stated rather than
+-- hidden: each finding carries its own signature over its own bytes (the
+-- finding is the unit of truth), so a case edition exists from the first
+-- ratification and can only be SERVED as a container once the last one lands.
+CREATE TABLE IF NOT EXISTS published_cases (
+  case_id      TEXT NOT NULL,
+  edition      INTEGER NOT NULL,
+  scope        TEXT,
+  completeness TEXT,
+  bias_acknowledgement TEXT,
+  opened       TEXT NOT NULL,
+  ratified_at  TEXT,
+  manifest_sha TEXT,
+  manifest     TEXT,
+  PRIMARY KEY (case_id, edition)
+);
+-- The case -> findings MEMBERSHIP, as DECLARED in every member's own ratified
+-- bytes. published_bundles holds the RATIFIED SUBSET; this holds the whole set,
+-- and the difference between them is what "this edition is not complete yet"
+-- means. That difference is also why this is a TABLE rather than a derived
+-- query over published_bundles, and it earns itself on the D4/REC-42 test
+-- twice over: it needs an ORDINAL (the order the member published the findings
+-- in is the order the container's parts[] and every rendering take, and it is
+-- authored rather than alphabetical), and it answers a query keyed on it in
+-- BOTH directions -- "which findings are in this case edition" (assembling the
+-- container) and "which case does this finding belong to" (the public read
+-- path resolving a finding id, which is why bundle_id is indexed).
+CREATE TABLE IF NOT EXISTS published_case_members (
+  case_id   TEXT NOT NULL,
+  edition   INTEGER NOT NULL,
+  ord       INTEGER NOT NULL,
+  bundle_id TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS published_case_members_bundle ON published_case_members(bundle_id);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive
@@ -1277,6 +1490,97 @@ CREATE TABLE IF NOT EXISTS monitor_tick_epoch (
   epoch      INTEGER NOT NULL,
   opened_at  TEXT NOT NULL
 );
+
+-- REC-24 (a): WHY AN ACTION EXISTS, and it is DELIBERATELY inquiry_basis's
+-- shape rather than a new one. Read from the action it is *why we are asking*;
+-- read from the case it is *what we did about it*. One table, one grammar, one
+-- projection discipline: a projection of the action document's own
+-- action_basis[] block, re-projected WHOLE on every promotion, never a second
+-- place the relationship is stated (D-21).
+--
+-- kind is 'rests_on' (this action is built on that finding) or 'advances'
+-- (this action pursues that question). TWO kinds and not one, because the
+-- difference is what DEC-13 rides on: a request_for_comment names THE SPECIFIC
+-- INQUIRIES IT DISCLOSED as advances legs, so "we contacted them" and "we put
+-- these four claims to them" are different rows in the record rather than the
+-- same sentence. The Columbia review of Rolling Stone identified a comment
+-- request made WITHOUT SPECIFICS as the central failure; this column is where
+-- the specifics live.
+--
+-- It is ALSO where DEC-14's outcome/impact line is drawn. A recorded
+-- consequence is an OUTCOME by default and needs nothing here; promoting it to
+-- an IMPACT claim requires a rests_on leg pointing at evidence that is NOT
+-- our own action and NOT a document this action's own correspondence produced.
+-- Absent that, the claim is RECORDED and its state is unproven \u2014 a stated
+-- state on the R1 shape, never a fifth grade and never a low one.
+--
+-- action_basis_target is the reverse index: "which actions rest on this
+-- finding" is ONE indexed lookup, exactly as inquiry_basis_target is for
+-- questions. Cleared in BOTH purge arms via the TABLES list (D-113);
+-- hygiene.test.mjs holds that list against this file.
+CREATE TABLE IF NOT EXISTS action_basis (
+  bundle_id   TEXT NOT NULL,   -- the action
+  ord         INTEGER NOT NULL,-- position in action_basis[], so a leg is addressable
+  target_id   TEXT NOT NULL,   -- an INFO- or an INQ-/PROB-/FOCUS- bundle
+  target_type TEXT NOT NULL,   -- denormalised from the id prefix through the catalog's map
+  kind        TEXT NOT NULL,   -- 'rests_on' | 'advances'
+  note        TEXT,
+  at          TEXT,            -- the document's own authored date, never a server stamp
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS action_basis_target ON action_basis(target_id);
+CREATE INDEX IF NOT EXISTS action_basis_bundle ON action_basis(bundle_id);
+
+-- REC-24 (b): THE CORRESPONDENCE LEDGER \u2014 what we sent, what came back, and
+-- what did NOT come back. A projection of a new frontmatter correspondence[]
+-- block exactly as refs is of references[]: re-projected whole on every
+-- promotion, appended to by op=actioncorrespond and NEVER rewritten, because a
+-- correspondence entry that changed is itself a fact rather than a correction.
+--
+-- THE CAPTURE-OR-TESTIFY CHOICE IS STRUCTURAL, and it is the reason two of
+-- these columns are nullable rather than one being NOT NULL. An entry carries
+-- either an artifact_sha that resolves in register \u2014 the bytes, hashed, the
+-- thing we can prove later \u2014 OR an account with an author, which is a
+-- member's dated testimony that this exchange happened. NEVER NEITHER (an
+-- entry standing for nothing) and NEVER BOTH (bytes and a paraphrase of the
+-- same exchange competing to be the record; DEC-13 is explicit that what comes
+-- back is CAPTURED, not summarised). C-2.10 enforces the choice over the
+-- document and promote enforces the RESOLUTION of the sha, which only the store
+-- can see. This is inquiry_exclusions' target-or-prose structure one construct
+-- over.
+--
+-- direction is 'sent', 'received', or 'no_response'. The third is not a
+-- bookkeeping convenience: DEC-13 rules that a refusal to reply is a dated
+-- first-party fact about the body and frequently the more useful one, so it is
+-- RECORDED with its date rather than left as an absence a reader has to infer.
+-- A no_response entry is testimony by construction \u2014 there are no bytes to
+-- hash when nothing arrived \u2014 and takes the account/author arm.
+--
+-- author is SERVER-STAMPED at index.mjs from the authenticated session, like
+-- every other authorship in this plane: who put a testimonial account on the
+-- record is part of the record, and a caller naming it would be a caller
+-- signing as somebody else. recorded_at is when the entry was written; at is
+-- when the exchange HAPPENED, and they are different facts.
+--
+-- artifact_bundle_id is resolved from the register at projection time, so the
+-- ledger can name the INFO- bundle a captured reply became without the document
+-- restating it. Cleared in BOTH purge arms via the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS correspondence (
+  bundle_id          TEXT NOT NULL,   -- the action
+  ord                INTEGER NOT NULL,-- position in correspondence[], append-only
+  direction          TEXT NOT NULL,   -- 'sent' | 'received' | 'no_response'
+  at                 TEXT NOT NULL,   -- when the exchange happened (authored)
+  medium             TEXT,
+  party              TEXT,
+  artifact_bundle_id TEXT,            -- resolved from register, NULL for testimony
+  artifact_sha       TEXT,            -- the capture, XOR account/author below
+  account            TEXT,
+  author             TEXT,            -- server-stamped, required with account
+  recorded_at        TEXT,
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
+CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
@@ -1418,7 +1722,7 @@ rev ${rev}
   const l2 = await get(`lease?id=${id}&actor=probe-b`);
   assert("second actor denied while lease holds", l2.ok, false);
   {
-    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"];
+    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"];
     const configured = names.filter((n) => typeof env[n] === "string" && env[n].length > 0);
     const published = [];
     for (const n of configured) {
@@ -1684,7 +1988,16 @@ var STATES = {
   }
 };
 STATES.problem = STATES.focus;
-var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "other"];
+var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
+var ACTION_BASIS_KINDS = ["rests_on", "advances"];
+var CORRESPONDENCE_DIRECTIONS = ["sent", "received", "no_response"];
+var RESOLUTIONS = ["complied", "denied", "escalated", "withdrawn"];
+var RFC_RESPONSE_WINDOW_PRECEDENT = {
+  min_days: 7,
+  max_days: 30,
+  source: "GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft)",
+  enforced: false
+};
 var COUNTERPARTY_STATES = ["named", "undetermined"];
 var ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
 var COUNTERPARTY_PLACEHOLDER = "to be named";
@@ -2312,7 +2625,7 @@ async function checkInformationExtension(ctx, findings) {
     }
   }
 }
-var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates", "links_to"];
+var REL_VOCAB = ["cites", "relates_to", "elevated_into", "initiates", "derived_from", "supersedes", "corroborates", "links_to", "responds_to"];
 var SOURCE_ASSERTED_RELS = ["links_to"];
 var EDGE_STATUS = ["proposed", "confirmed", "severed"];
 function sectionText(body, heading) {
@@ -2325,6 +2638,18 @@ var NON_MEMBER_AUTHORS = ["claude", "pwa-client", "daemon", "sweep", "session", 
 var CAPTURE_GRADES = ["A", "B", "C"];
 var ACTOR_CLASSES = ["daemon", "session", "member"];
 var ORIGIN_KINDS = ["named_request", "sweep", "member"];
+var MACHINE_AUTHOR_PREFIX = "token:";
+var MACHINE_CLASS_PREFIX = "class:";
+var MACHINE_STAMP_PREFIXES = [MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX];
+function isMachineStamp(who) {
+  const s = String(who ?? "").trim().toLowerCase();
+  return s !== "" && MACHINE_STAMP_PREFIXES.some((p) => s.startsWith(p));
+}
+function isMachineIdentity(who) {
+  const s = String(who ?? "").trim().toLowerCase();
+  if (s === "") return false;
+  return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
+}
 function checkAuthorityPublishable(ctx, findings) {
   const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
   const atFence = ctx.fm?.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
@@ -2445,7 +2770,7 @@ function checkReleaseAuthority(ctx, findings) {
   const releases = hist.filter((e) => e && e.from_state === "collected" && e.to_state === "verified");
   for (const e of releases) {
     const a = String(e.author || "").toLowerCase();
-    if (!a || NON_MEMBER_AUTHORS.includes(a)) {
+    if (!a || isMachineIdentity(a)) {
       findings.push(f(
         "C-18.1",
         "error",
@@ -2457,7 +2782,7 @@ function checkReleaseAuthority(ctx, findings) {
   const everVerified = ctx.fm.current_state === "verified" || hist.some((e) => e && e.to_state === "verified");
   const memberRelease = releases.some((e) => {
     const a = String(e.author || "").toLowerCase();
-    return a && !NON_MEMBER_AUTHORS.includes(a);
+    return a && !isMachineIdentity(a);
   });
   if (sweepOrigin && everVerified && !memberRelease) {
     findings.push(f(
@@ -2548,6 +2873,7 @@ function checkReferences(ctx, findings) {
     if (!hasDist) findings.push(f("C-6.3", "error", "workproduct_state is distributed but distributions/ is empty"));
   }
   supersedesEdgeFindings(ctx.fm, findings);
+  respondsToEdgeFindings(ctx.fm, findings);
   divisionDisclosureFindings(ctx.fm, findings);
 }
 function supersedesEdgeFindings(fm, findings) {
@@ -2564,6 +2890,24 @@ function supersedesEdgeFindings(fm, findings) {
     }
     if (typeof r.target !== "string" || !BUNDLE_ID_RE.test(r.target)) {
       findings.push(f("C-6.1", "error", `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical bundle id: an edge that asserts a lineage must name the thing it came from`));
+    }
+  });
+}
+function respondsToEdgeFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== "object" || r.rel !== "responds_to") return;
+    const target = typeof r.target === "string" ? r.target : "";
+    if (!BUNDLE_ID_RE.test(target) || OBJECT_TYPES[target.split("-")[0]] !== "action") {
+      findings.push(f(
+        "C-6.1",
+        "error",
+        `references[${i}] is a responds_to edge whose target '${String(r.target).slice(0, 40)}' is not an ACTION: this edge says "this is what came back when we asked", so it points at the ask`,
+        [
+          "point the edge at the ACTN- bundle whose correspondence this answers",
+          "or use relates_to, which claims nothing about an exchange"
+        ]
+      ));
     }
   });
 }
@@ -2758,7 +3102,17 @@ function checkInquiryExtension(ctx, findings) {
   }
   if (fm.current_state === "published") checkPublishedExtension(fm, findings);
   if (fm.current_state === "divided") checkDividedExtension(fm, findings);
-  checkInquiryBasis(fm, findings, ctx.publishedRegistry);
+  if (fm.subject_entity !== void 0 && fm.subject_entity !== null && fm.subject_entity !== "") {
+    if (typeof fm.subject_entity !== "string" || !ENTITY_ID_RE.test(fm.subject_entity)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        ["point subject_entity at an entry in the subject registry (op=entitycreate / op=entitybyalias), or omit it \u2014 an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15)"]
+      ));
+    }
+  }
+  checkInquiryBasis(fm, findings, ctx.publishedRegistry, ctx.earnedRegistry);
 }
 function checkDividedExtension(fm, findings) {
   const d = typeof fm.division === "object" && fm.division && !Array.isArray(fm.division) ? fm.division : null;
@@ -2797,7 +3151,7 @@ function checkDividedExtension(fm, findings) {
       ["author the reason the question was two questions"]
     ));
   }
-  if (typeof d.apportioned_by !== "string" || d.apportioned_by.trim() === "" || NON_MEMBER_AUTHORS.includes(String(d.apportioned_by).toLowerCase())) {
+  if (typeof d.apportioned_by !== "string" || d.apportioned_by.trim() === "" || isMachineIdentity(d.apportioned_by)) {
     findings.push(f("C-2.8", "error", `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
   }
   if (!ISO_TS_RE.test(String(d.at || ""))) {
@@ -2853,6 +3207,10 @@ function checkDividedExtension(fm, findings) {
 }
 var SUBJECT_POSITIONS = ["sought_and_answered", "sought_no_answer", "not_sought"];
 var STRENGTH_STATES = ["graded", "unrated", "undetermined"];
+function biasAcknowledgementOf(fm) {
+  const v = fm && typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null;
+  return v === null || v === "null" ? null : v;
+}
 function completenessFields(fm) {
   const c = fm && typeof fm.completeness === "object" && fm.completeness || {};
   const rows = Array.isArray(fm?.completeness_excluded) ? fm.completeness_excluded : [];
@@ -2911,6 +3269,40 @@ function checkPublishedExtension(fm, findings) {
       ));
     }
   }
+  if (typeof fm.case_id !== "string" || fm.case_id.trim() === "" || fm.case_id === "null") {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      "published state requires case_id: a published case is a CONTAINER over one or more findings (DEC-44), and a finding published into no case has no edition, no scope and nothing for C-21.1 to hold it to",
+      ["publish through op=publish, which mints or carries the case identity and stamps it into the bytes"]
+    ));
+  }
+  if (typeof fm.case_scope !== "string" || fm.case_scope.trim() === "") {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      "published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings' titles \u2014 a scope this plane wrote is not a scope the group made (DEC-44)",
+      ["author the case scope on op=publish"]
+    ));
+  }
+  if (biasAcknowledgementOf(fm) === null || fm.bias_acknowledgement.trim() === "") {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      "published state requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) \u2014 what is refused here is publishing SILENTLY about the lens, not publishing under one",
+      ["author the bias acknowledgement on op=publish, fresh for this edition"]
+    ));
+  }
+  if (!Array.isArray(fm.case_findings) || !fm.case_findings.length) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      "published state requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)",
+      ["publish through op=publish, which writes the roster into every member's bytes"]
+    ));
+  } else if (typeof fm.id === "string" && !fm.case_findings.includes(fm.id)) {
+    findings.push(f("C-2.8", "error", `case_findings does not include this document (${fm.id}): a finding that is not a member of the case it names cannot be published into it`));
+  }
   if (!Array.isArray(fm.completeness_excluded)) {
     findings.push(f(
       "C-2.8",
@@ -2958,6 +3350,39 @@ function checkPublishedExtension(fm, findings) {
       }
     }
   }
+  const grouped = Array.isArray(fm.basis) && fm.basis.some((l) => l && typeof l === "object" && typeof l.ground === "string" && l.ground !== "");
+  const frozenGrounds = Array.isArray(fm.published_strength_grounds) ? fm.published_strength_grounds : null;
+  if (grouped && !frozenGrounds) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      'published state requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
+      ["publish through op=publish, which freezes the per-ground breakdown beside the pair"]
+    ));
+  } else if (grouped) {
+    for (let i = 0; i < frozenGrounds.length; i++) {
+      const g = frozenGrounds[i];
+      if (!g || typeof g !== "object") {
+        findings.push(f("C-2.8", "error", `published_strength_grounds[${i}] is not an object`));
+        continue;
+      }
+      if (!GRADE_AXES.includes(g.axis)) {
+        findings.push(f("C-2.8", "error", `published_strength_grounds[${i}].axis '${g.axis}' is not one of: ${GRADE_AXES.join(", ")} \u2014 the branches are composed PER AXIS and both axes are frozen separately (DEC-21)`));
+      }
+      if (!STRENGTH_STATES.includes(g.state)) {
+        findings.push(f("C-2.8", "error", `published_strength_grounds[${i}].state '${g.state}' is not one of: ${STRENGTH_STATES.join(", ")}`));
+      } else if (g.state === "graded" && !BASIS_GRADES.includes(g.grade)) {
+        findings.push(f("C-2.8", "error", `published_strength_grounds[${i}] is graded but carries no grade`));
+      } else if (g.state !== "graded" && g.grade != null) {
+        findings.push(f("C-2.8", "error", `published_strength_grounds[${i}] is ${g.state} and still carries grade '${g.grade}': a suspended ground states what is unknown, and an unrated one states that nothing on it is established \u2014 neither is a grade`));
+      }
+    }
+    for (const label of new Set(fm.basis.filter((l) => l && typeof l.ground === "string" && l.ground).map((l) => l.ground))) {
+      if (!frozenGrounds.some((g) => g && g.ground === label)) {
+        findings.push(f("C-2.8", "error", `published_strength_grounds names no row for ground '${label}': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check`));
+      }
+    }
+  }
   const rq = typeof fm.required_strength === "object" && fm.required_strength || null;
   if (!rq || typeof rq.declared !== "boolean") {
     findings.push(f(
@@ -2977,28 +3402,37 @@ function checkPublishedExtension(fm, findings) {
 function checkCompletenessFreshness(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
   if (ctx.fm?.current_state !== "published") return;
-  const reg = ctx.publishedRegistry;
+  const reg = ctx.publishedCaseRegistry;
   if (!reg) return;
-  const mine = reg[ctx.fm.id];
+  const cid = typeof ctx.fm.case_id === "string" && ctx.fm.case_id !== "null" ? ctx.fm.case_id : null;
+  if (!cid) return;
+  const mine = reg[cid];
   if (!mine || !mine.editions) return;
   const prior = Object.values(mine.editions).filter((x) => Number(x.edition) < Number(ctx.fm.edition)).sort((a, b) => Number(b.edition) - Number(a.edition))[0];
   if (!prior || !prior.completeness) return;
-  const now = completenessFields(ctx.fm);
-  const was = prior.completeness;
+  const now = { ...completenessFields(ctx.fm), bias_acknowledgement: biasAcknowledgementOf(ctx.fm) };
+  const was = { ...prior.completeness, bias_acknowledgement: prior.bias_acknowledgement ?? null };
   const LABEL = {
     statement: "completeness.statement",
     subject_justification: "completeness.subject_justification",
-    excluded: "completeness_excluded"
+    excluded: "completeness_excluded",
+    bias_acknowledgement: "bias_acknowledgement"
+  };
+  const WHY = {
+    bias_acknowledgement: `an acknowledgement of the bias a case was produced under is AUTHORED at the moment of export, not carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked at what this edition actually says. The lens itself may be unchanged and usually is \u2014 what must be fresh is the publisher's account of what it means for THIS edition's findings`
+  };
+  const REMEDY = {
+    bias_acknowledgement: "if the bias itself has not moved, say THAT as of this edition and say what it means for the findings this edition adds or revises \u2014 the bias is disclosed, never disqualifying (DEC-20)"
   };
   for (const k of Object.keys(LABEL)) {
     if (now[k] != null && was[k] != null && now[k] === was[k]) {
       findings.push(f(
         "C-21.1",
         "error",
-        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it. Every edition is a SEPARATE DOCUMENT and states its own limits in its own words, as of its own date (DEC-12, C-21.1)`,
+        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: ${WHY[k] || "a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it"}. Every edition is a SEPARATE DOCUMENT and states its own claims in its own words, as of its own date (DEC-12, C-21.1)`,
         [
           `author ${LABEL[k]} fresh for edition ${ctx.fm.edition}`,
-          "if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one"
+          REMEDY[k] || "if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one"
         ]
       ));
     }
@@ -3007,10 +3441,18 @@ function checkCompletenessFreshness(ctx, findings) {
 var BASIS_ROLES = ["supports", "cuts_against"];
 var BASIS_GRADES = ["A", "B", "C", "D"];
 var GRADE_AXES = ["capture", "connection"];
-var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited"];
-function checkInquiryBasis(fm, findings, publishedRegistry) {
+var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"];
+var EARNED_GRADE_SOURCES = ["resolution", "capture"];
+var EARNED_CAPTURE_CEILING = "B";
+var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
+var EARNED_SOURCE_AXIS = { resolution: "connection", capture: "capture" };
+var GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
+function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
-  if (legs === void 0 || legs === null) return;
+  if (legs === void 0 || legs === null) {
+    checkGrounds(fm, [], findings);
+    return;
+  }
   if (!Array.isArray(legs)) {
     findings.push(f("C-2.8", "error", `basis is not an array`));
     return;
@@ -3071,6 +3513,17 @@ function checkInquiryBasis(fm, findings, publishedRegistry) {
         ]
       ));
     }
+    if (leg.grade_axis === "capture" && graded && (leg.grade_source === "testimony" || leg.grade_source === "hunch")) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === "testimony" ? "Testimony is a member's account of a connection" : "A hunch is a member's provisional connection"}, and neither is an account of a fetch`,
+        [
+          "use grade_source: capture \u2014 the capture axis is EARNED from the capture record, and op=earnedbasis says what it earns",
+          "or move this grade onto the connection axis, where testimony and hunches belong"
+        ]
+      ));
+    }
     if (leg.grade_source === "hunch") {
       if (typeof leg.author !== "string" || leg.author.trim() === "") {
         findings.push(f("C-2.8", "error", `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
@@ -3082,10 +3535,206 @@ function checkInquiryBasis(fm, findings, publishedRegistry) {
     if (leg.grade_source === "testimony" && graded && leg.grade !== "D") {
       findings.push(f("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade D at no other value \u2014 a hunch is the only authored grade permitted above D (DEC-15)`));
     }
+    if ((leg.grade_source === "testimony" || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis[${i}] states grade_source '${leg.grade_source}' with no grade: a source is an account of where a grade came from, and there is no grade here to account for`,
+        ["state the grade this source produced", `or drop grade_source \u2014 an undetermined leg states neither, and is read as present and not yet load-bearing (DEC-18)`]
+      ));
+    }
     if (leg.note !== void 0 && leg.note !== null && typeof leg.note !== "string") {
       findings.push(f("C-2.8", "error", `basis[${i}].note is not a string`));
     }
+    checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
+  }
+  checkGrounds(fm, legs, findings);
+}
+function checkGrounds(fm, legs, findings) {
+  const rows = fm?.grounds;
+  const labelled = [];
+  let unlabelled = 0;
+  legs.forEach((leg, i) => {
+    if (!leg || typeof leg !== "object") return;
+    const g = leg.ground;
+    if (g === void 0 || g === null || g === "") {
+      unlabelled++;
+      return;
+    }
+    if (typeof g !== "string" || !GROUND_LABEL_RE.test(g)) {
+      findings.push(f("C-2.8", "error", `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
+      return;
+    }
+    labelled.push([i, g]);
+  });
+  if (rows === void 0 || rows === null) {
+    if (labelled.length) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis leg${labelled.length === 1 ? "" : "s"} ${labelled.map(([i]) => i).join(", ")} name${labelled.length === 1 ? "s" : ""} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg \u2014 and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it`,
+        [
+          "author a grounds[] row per label, naming the member who asserts that ground is independently sufficient and the date",
+          "or drop the ground labels \u2014 an unstructured basis is no stronger than its weakest leg, which is the conservative reading"
+        ]
+      ));
+    }
+    return;
+  }
+  if (!Array.isArray(rows)) {
+    findings.push(f("C-2.8", "error", "grounds is not an array"));
+    return;
+  }
+  const declared = /* @__PURE__ */ new Map();
+  rows.forEach((r, i) => {
+    if (!r || typeof r !== "object" || Array.isArray(r)) {
+      findings.push(f("C-2.8", "error", `grounds[${i}] is not an object`));
+      return;
+    }
+    const label = r.ground;
+    if (typeof label !== "string" || !GROUND_LABEL_RE.test(label)) {
+      findings.push(f("C-2.8", "error", `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
+      return;
+    }
+    if (declared.has(label)) {
+      findings.push(f("C-2.8", "error", `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
+      return;
+    }
+    declared.set(label, i);
+    if (typeof r.asserted_by !== "string" || r.asserted_by.trim() === "" || isMachineIdentity(r.asserted_by)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it \u2014 never a machine's`,
+        ["name the member asserting that this ground is independently sufficient"]
+      ));
+    }
+    if (!ISO_TS_RE.test(String(r.at || ""))) {
+      findings.push(f("C-2.8", "error", `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
+    }
+    if (r.statement !== void 0 && r.statement !== null && typeof r.statement !== "string") {
+      findings.push(f("C-2.8", "error", `grounds[${i}].statement is not a string`));
+    }
+  });
+  if (labelled.length && unlabelled) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `${unlabelled} basis leg${unlabelled === 1 ? "" : "s"} carr${unlabelled === 1 ? "ies" : "y"} no ground while ${labelled.length} do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at`,
+      [
+        "give every leg a ground \u2014 a leg that is needed whatever else holds belongs in every ground, so it is its own single-leg ground only if it alone can carry the conclusion",
+        "or remove the grounds and let the basis read as its weakest leg"
+      ]
+    ));
+  }
+  for (const [i, label] of labelled) {
+    if (!declared.has(label)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis[${i}].ground '${label}' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
+        [`add a grounds[] row for '${label}' with asserted_by and at`]
+      ));
+    }
+  }
+  const carried = new Set(labelled.map(([, l]) => l));
+  for (const [label, i] of declared) {
+    if (!carried.has(label)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `grounds[${i}] declares '${label}', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`,
+        [`give at least one basis leg 'ground: ${label}'`, "or remove the row"]
+      ));
+    }
+  }
+}
+function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
+  const src = leg.grade_source;
+  if (!EARNED_GRADE_SOURCES.includes(src)) return;
+  if (!graded) return;
+  if (!registry) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this bundle`,
+      [
+        "run this through the ratification gate or op=promote, which read the record",
+        "or state the grade as testimony (grade D, with an author and a date) if it is a member's account"
+      ]
+    ));
+    return;
+  }
+  const wantAxis = EARNED_SOURCE_AXIS[src];
+  if (leg.grade_axis === "capture" && targetType === "inquiry" && src !== "capture") return;
+  if (leg.grade_axis !== wantAxis) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states grade_source '${src}' on the ${leg.grade_axis} axis: ${src === "resolution" ? "a resolution IS the framework's \xA78.1 connection grade and grades nothing else" : "a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)"}, so it can only be a source for a ${wantAxis} grade`,
+      [
+        `set grade_axis: ${wantAxis} on basis[${i}]`,
+        `or state where this ${leg.grade_axis}-axis grade actually came from`
+      ]
+    ));
+    return;
+  }
+  if (src === "resolution" && targetType === "inquiry") {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document \u2014 there is nothing here for the recogniser to have graded`,
+      [
+        "rest this leg on the INFO- document that carries the reference",
+        "or, if the target is a published case, inherit its frozen connection grade (grade_source: inherited)"
+      ]
+    ));
+    return;
+  }
+  if (src === "resolution" && !registry.subject_entity) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target's captures TO THE INQUIRY'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))`,
+      [
+        "add subject_entity: ENT-YYYY-NNNN naming the registry entry this question is about",
+        "or state no grade at all \u2014 an inquiry with no subject entity has no A/B/C available to it, and that is honest (DEC-15)"
+      ]
+    ));
+    return;
+  }
+  const earned = registry.earned && registry.earned[wantAxis] ? registry.earned[wantAxis][leg.target] : null;
+  if (!earned || !earned.grade) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      src === "resolution" ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either \u2014 that leg is testimony and says so` : `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring`,
+      src === "resolution" ? [
+        "resolve the document to the subject with op=resolve, then state the grade it earned",
+        "or state this leg as testimony (grade D, with an author and a date)"
+      ] : ["state no capture grade \u2014 an uncaptured document is undetermined on the capture axis, and undetermined is stated (CLAUDE.md)"]
+    ));
+    return;
+  }
+  if (earned.mode === "ceiling") {
+    if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ""}`,
+        [`state grade: ${earned.grade} or weaker on basis[${i}] \u2014 op=earnedbasis answers what each target earns before you write it`]
+      ));
+    }
+    return;
+  }
+  if (earned.grade !== leg.grade) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states an EARNED ${wantAxis} grade of ${leg.grade} for ${leg.target}, but the record earns ${earned.grade}: an earned grade is computed by the record and a caller does not hand it to us in either direction. ${earned.why}`,
+      [`state grade: ${earned.grade} on basis[${i}] \u2014 op=earnedbasis answers what each target earns before you write it`]
+    ));
   }
 }
 function checkInheritedLeg(leg, i, graded, registry, findings) {
@@ -3340,14 +3989,181 @@ function checkCounterparty(fm, findings) {
     }
   }
 }
+function actionBasisFindings(fm, findings) {
+  const legs = Array.isArray(fm?.action_basis) ? fm.action_basis : [];
+  const REPAIRS = ["point the leg at the finding this rests on (kind: rests_on) or the question it advances (kind: advances)"];
+  legs.forEach((l, i) => {
+    if (!l || typeof l !== "object" || Array.isArray(l)) {
+      findings.push(f("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
+      return;
+    }
+    const target = typeof l.target === "string" ? l.target : "";
+    if (!BUNDLE_ID_RE.test(target)) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical bundle id`,
+        REPAIRS
+      ));
+    } else if (OBJECT_TYPES[target.split("-")[0]] === "action") {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)`,
+        ["point the leg at the finding or the question, not at another action"]
+      ));
+    }
+    if (!ACTION_BASIS_KINDS.includes(l.kind)) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `action_basis[${i}].kind '${l.kind}' is not one of: ${ACTION_BASIS_KINDS.join(", ")}`,
+        REPAIRS
+      ));
+    }
+  });
+  if (fm?.action_kind === "request_for_comment") {
+    const disclosed = legs.filter((l) => l && typeof l === "object" && l.kind === "advances" && typeof l.target === "string" && BUNDLE_ID_RE.test(l.target) && OBJECT_TYPES[l.target.split("-")[0]] === "inquiry");
+    if (!disclosed.length) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        'a request_for_comment names ZERO inquiries: it must name the SPECIFIC questions it put to the subject, as action_basis legs of kind advances. "We contacted them" and "we put these four claims to them" are different facts, and a comment request without specifics gives the subject nothing to answer (DEC-13)',
+        ["add an action_basis leg with kind: advances for each inquiry disclosed in the request"]
+      ));
+    }
+    const clock = Array.isArray(fm.clock) ? fm.clock : [];
+    if (!clock.length) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to reason from and is not a constant this record enforces (DEC-13)`,
+        ["add a clock[] entry: the date the response was due, and the basis it derives from"]
+      ));
+    }
+  }
+}
+function correspondenceFindings(fm, findings) {
+  const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
+  entries.forEach((e, i) => {
+    if (!e || typeof e !== "object" || Array.isArray(e)) {
+      findings.push(f("C-2.10", "error", `correspondence[${i}] is not an entry block`));
+      return;
+    }
+    if (!CORRESPONDENCE_DIRECTIONS.includes(e.direction)) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `correspondence[${i}].direction '${e.direction}' is not one of: ${CORRESPONDENCE_DIRECTIONS.join(", ")}`,
+        ["record a non-response as direction: no_response with the date it was due (DEC-13)"]
+      ));
+    }
+    if (!DATE_RE.test(String(e.at ?? "").slice(0, 10))) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `correspondence[${i}].at '${String(e.at).slice(0, 40)}' is not a date: an entry in this ledger is dated, including a non-response, which is dated by when the reply was due`
+      ));
+    }
+    const sha = typeof e.artifact_sha === "string" ? e.artifact_sha.trim() : "";
+    const account = typeof e.account === "string" ? e.account.trim() : "";
+    const author = typeof e.author === "string" ? e.author.trim() : "";
+    const CHOICE = [
+      "capture the artifact and record its sha256 (op=capture), or",
+      "record a named account: account with the member who is testifying to it"
+    ];
+    if (sha && account) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead`,
+        CHOICE
+      ));
+    } else if (!sha && !account) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and offers no way to check that it happened`,
+        CHOICE
+      ));
+    } else if (sha) {
+      if (!CONTENT_HASH_RE.test(sha) && !/^[0-9a-f]{64}$/i.test(sha)) {
+        findings.push(f(
+          "C-2.10",
+          "error",
+          `correspondence[${i}].artifact_sha '${sha.slice(0, 24)}' is not a sha256 hash`
+        ));
+      }
+      if (e.direction === "no_response") {
+        findings.push(f(
+          "C-2.10",
+          "error",
+          `correspondence[${i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)`,
+          ["record the non-response as an account: what was due, when, and that nothing came"]
+        ));
+      }
+    } else if (!author) {
+      findings.push(f(
+        "C-2.10",
+        "error",
+        `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind`
+      ));
+    }
+  });
+}
+function consequenceState(fm) {
+  const c = fm?.consequence;
+  if (!c || typeof c !== "object" || Array.isArray(c)) return null;
+  const claim = c.claim === "impact" ? "impact" : "outcome";
+  const description = typeof c.description === "string" ? c.description.trim() : "";
+  const at = typeof c.at === "string" ? c.at.trim() : "";
+  if (claim === "outcome") {
+    return {
+      claim,
+      state: "recorded",
+      determined: true,
+      grade: null,
+      evidence: [],
+      description,
+      at,
+      detail: "OUTCOME: a dated first-party fact about the body, carried at full strength. It makes no causal claim, so there is nothing here to establish (DEC-14)."
+    };
+  }
+  const ownArtifacts = new Set((Array.isArray(fm.correspondence) ? fm.correspondence : []).map((e) => e && typeof e === "object" && typeof e.artifact_bundle_id === "string" ? e.artifact_bundle_id : null).filter(Boolean));
+  const evidence = (Array.isArray(fm.action_basis) ? fm.action_basis : []).filter((l) => l && typeof l === "object" && l.kind === "rests_on" && typeof l.target === "string" && BUNDLE_ID_RE.test(l.target) && OBJECT_TYPES[l.target.split("-")[0]] !== "action" && !ownArtifacts.has(l.target)).map((l) => l.target);
+  if (!evidence.length) {
+    return {
+      claim,
+      state: "unproven",
+      determined: false,
+      grade: null,
+      evidence: [],
+      description,
+      at,
+      detail: "UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so the causal link is asserted from sequence alone. That is not a low score and not a failure \u2014 it is what we have not established. Cite something outside us (a statement naming the report, a staff memo, a hearing record) and it becomes a claim like any other (DEC-14)."
+    };
+  }
+  return {
+    claim,
+    state: "established",
+    determined: true,
+    grade: null,
+    evidence,
+    description,
+    at,
+    detail: `IMPACT rests on evidence that is not our own action: ${evidence.join(", ")}.`
+  };
+}
 function checkActionExtension(ctx, findings) {
   if (ctx.fm?.object_type !== "action") return;
   const fm = ctx.fm;
+  actionBasisFindings(fm, findings);
+  correspondenceFindings(fm, findings);
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f("C-2.10", "error", `action_kind '${fm.action_kind}' is not in the suite`));
   if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
   checkCounterparty(fm, findings);
-  if (fm.current_state === "resolved" && !["complied", "denied", "escalated", "withdrawn"].includes(fm.resolution)) {
-    findings.push(f("C-2.10", "error", "resolved state requires resolution in: complied, denied, escalated, withdrawn"));
+  if (fm.current_state === "resolved" && !RESOLUTIONS.includes(fm.resolution)) {
+    findings.push(f("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
   }
   const clock = Array.isArray(fm.clock) ? fm.clock : [];
   const today = new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10);
@@ -4872,7 +5688,7 @@ async function checkReleaseSignature(ctx, findings) {
       ));
       continue;
     }
-    if (NON_MEMBER_AUTHORS.includes(author.toLowerCase())) {
+    if (isMachineIdentity(author)) {
       findings.push(f("C-18.8", "error", `release at ${e.timestamp} is authored by '${author}', a surface or AI identity, never a release author`));
       continue;
     }
@@ -4966,6 +5782,31 @@ async function checkBundle(input, opts = {}) {
        has — the ratification gate and the store's own write path — injects it,
        which is what keeps the absence from being a way through. */
     publishedRegistry: input.publishedRegistry || null,
+    /* REC-44 / DEC-44: the CASE-altitude half of the same fact, injected on the
+       same terms and separated for the reason DEC-44 gives — a case is a
+       CONTAINER over one or more findings, so what the previous edition of THIS
+       CASE asserted about its limits is not a fact about any one finding.
+       Shape:
+         { <caseId>: { latest: n, editions: { "1": {edition, scope,
+             completeness, ratified_at} } } }
+       Absent means the caller cannot see the published record (the cli, the
+       migrate tool) and C-21.1 cannot fire; every path a real caller has
+       injects it. Kept SEPARATE from publishedRegistry deliberately: one
+       registry serving both altitudes is how the collapse this item corrects
+       happened in the first place. */
+    publishedCaseRegistry: input.publishedCaseRegistry || null,
+    /* REC-18: the second fact the catalog cannot get from the bundle, and it is
+       injected on exactly the same terms and for the same reason. What
+       `resolutions` holds about this bundle's basis targets, and what `register`
+       holds about their captures, is the record — not this document — so a
+       checker over a filesystem has no way to compute an earned grade and says
+       so rather than passing the leg (checkEarnedLeg). Shape:
+         { subject_entity, subject_label, earned: {
+             connection: { <target>: {grade, why, ...} },
+             capture:    { <target>: {grade, why, ceiling?} } } }
+       Absent means the caller cannot see the record (the cli, the migrate tool).
+       Every path a real caller has injects it. */
+    earnedRegistry: input.earnedRegistry || null,
     sha512: input.sha512 || null,
     fm: null,
     body: ""
@@ -5156,7 +5997,14 @@ table.rec tr.row:hover td{background:#F6F7F2}
   <div class="card">
     <div class="kv"><span class="k">Software version</span><span class="v" id="p-version"></span></div>
     <div class="kv"><span class="k">Claimed</span><span class="v" id="p-claimed"></span></div>
-    <div class="kv"><span class="k">Roles with passwords</span><span class="v" id="p-roles"></span></div>
+    <!-- REC-41, 2026-08-05: the label read "Roles with passwords" and the value
+         has always been filled from WHO \u2014 the ONE role that is signed in, never
+         a roster. It was a label describing op=bootstrap's roles field over a
+         value that never came from it, and with that field now removed it could
+         never become true. Corrected to what the row actually shows rather than
+         deleted: a member seeing which identity this session holds is the point
+         of the row. -->
+    <div class="kv"><span class="k">Signed in as</span><span class="v" id="p-roles"></span></div>
     <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
   </div>
   <div class="actions" style="margin:22px 0 6px">
@@ -5204,6 +6052,21 @@ table.rec tr.row:hover td{background:#F6F7F2}
   public: the working record has never been published and cannot be read by
   anyone without a password.</p>
   <label for="n-type">What kind of thing is this?</label>
+  <!-- The Action option is BACK, 2026-08-05 (UI-19). It was removed on
+       2026-08-04 by UI-15 because REC-23 had stopped both intake surfaces
+       writing a placeholder counterparty, which is the honest gate, and the
+       consequence was that an action written from this form left the catalog
+       with exactly one error - C-2.10 naming the counterparty nobody authored.
+       Offering a kind whose every instance is refused is present-and-refused,
+       which Membership Architecture v2 section 5 forbids. The condition that
+       note set is now met: the fieldset below is REC-23's radio pair, a named
+       counterparty or NOT DETERMINED YET with a written basis, no third option
+       and no default, and mdFor takes the values from the member. An action
+       written here draws zero findings; one written with nothing authored still
+       draws exactly C-2.10, because this page will not invent an addressee to
+       get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
+       the same option and the same pair, and add-surface.test.mjs asserts the
+       two together so one cannot be changed without the other. -->
   <select id="n-type">
     <option value="information">Information</option>
     <option value="inquiry">Question</option>
@@ -5234,6 +6097,34 @@ table.rec tr.row:hover td{background:#F6F7F2}
         can show what the page said. It is also public: anyone watching that archive can see that
         someone asked for this page. Leave it off if being seen to look would matter.</span></span>
       </label>
+    </div>
+  </div>
+  <!-- UI-19 / REC-23: WHO THIS IS ADDRESSED TO. An action reaches outside this
+       group and touches somebody who never agreed to be in it, so the record
+       either names them or says plainly that it does not know yet. TWO options
+       and no third, and NOTHING PRESELECTED - a default here would be this page
+       answering the question on the member's behalf, which is the placeholder
+       defect one field down and in a nicer coat. -->
+  <div id="n-act">
+    <div class="card">
+      <p style="margin:0 0 10px"><b>Who is this addressed to?</b> An action asks something of somebody
+      outside this group. The record either names them, or states that it does not know yet and says
+      what is known so far. There is no third answer and nothing is filled in for you.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-named" value="named" style="width:auto;margin-top:4px">
+        <span>A named counterparty</span></label>
+      <div id="n-cp-name-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-name">Who</label>
+        <input id="n-cp-name" placeholder="City Clerk, Office of the City Auditor">
+      </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-undet" value="undetermined" style="width:auto;margin-top:4px">
+        <span>Not determined yet, and here is why</span></label>
+      <div id="n-cp-basis-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-basis">What is known so far, and what would settle it</label>
+        <textarea id="n-cp-basis" rows="4"></textarea>
+      </div>
+      <p class="hint">This action will not be sent while this is undetermined.</p>
     </div>
   </div>
   <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
@@ -5418,10 +6309,21 @@ $("#do-login").addEventListener("click", async ()=>{
     const who = $("#lwho").value.trim();
     const role = who ? "member:" + who : "admin";
     const l = await api("login", { role, password: $("#lpw").value });
+    /* REC-41, 2026-08-05. THIS BRANCH WAS THE DISCLOSURE, not a courtesy.
+       It read the refusal's reason code and answered NO_SUCH_ROLE with "No
+       member by that name has set a password on this copy yet." \u2014 which told
+       any anonymous visitor, on the instance's own front door and in plainer
+       words than the plane itself used, whether a guessed name holds a
+       credential here. op=login's two codes are now one (SIGN_IN_REFUSED) and
+       there is nothing left to branch on; this renders the plane's own
+       sentence, which names both possibilities and says the record does not
+       report which. DEC-8: a surface renders what it received and never
+       composes a refusal of its own. The fallback is kept for a refusal that
+       somehow arrives without a detail, and it is deliberately the LESS
+       specific of the two old strings. */
     if (!l.result || !l.result.ok) {
-      e.textContent = l.result && l.result.reason === "NO_SUCH_ROLE"
-        ? "No member by that name has set a password on this copy yet."
-        : "That name and password were not accepted."; return; }
+      e.textContent = (l.result && l.result.detail)
+        || "That name and password were not accepted."; return; }
     WHO = who || "admin";
     const b = await api("bootstrap");
     panel(l.result, b.consumedAt);
@@ -5700,7 +6602,7 @@ const stamp = ()=>{
    and the per-type extension fields each type's own check requires. The first
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
-const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
+const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
@@ -5725,20 +6627,43 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src)=>{
     "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
     "    description: A member set no specific trigger at creation; replace this with a real one.");
   if (type === "project") fm.push("objective: "+JSON.stringify(title));
-  /* D-130 / REC-23: the counterparty placeholder USED TO BE PUSHED HERE TOO.
-     D-130 named only civicos-ui/app.html:1752; this is the SECOND emission
-     site, it is the one conformance.test.mjs actually exercises, and leaving it
-     would have left the defect open on the installer's own intake page.
-     Nothing replaces it: the honest undetermined state requires an AUTHORED
-     basis, and a basis this function invented would be the same lie one field
-     down. The gate names the gap until a member fills it. action_kind and
-     risk_tier are placeholders of the same family and are left for the item
-     that gives the surface real controls (UI-15/UI-19).
+  /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
+     pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
+     emission site and the one conformance.test.mjs exercises - and REC-23 took
+     it out, leaving the field ABSENT and the gate naming the gap. UI-19 gives
+     this page the radio pair, so the value arrives FROM THE MEMBER through
+     act.counterparty and nothing here invents one.
+
+     CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
+     on purpose: a bundle written by a caller that collected no answer draws
+     exactly C-2.10, which is the honest one error, and conformance.test.mjs
+     asserts BOTH directions so a future default cannot pass by inventing one.
+
+     action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
+     "other" is the catalog's own token for an ask that is not one of the named
+     kinds, which is exactly what a page offering no kind control has been told.
+     The app's intake reads the published action_kind vocabulary and lets the
+     member say; this page is the installer's minimal intake and does not.
+     risk_tier stays 1 for the reason recorded beside app.html's arm: nothing
+     publishes member-facing words for tiers 2 and 3, so a chooser would be a
+     surface deciding what they MEAN.
      (No backticks in this comment: it lives inside the SETUP_HTML template
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
-  if (type === "action") fm.push(
-    "action_kind: other","risk_tier: 1");
+  if (type === "action") {
+    fm.push("action_kind: other","risk_tier: 1");
+    const cp = act && act.counterparty;
+    /* The state the member chose is written even when the field beside it is
+       empty: a member who answered "not determined yet" and wrote nothing has
+       left a requirement unmet, and C-2.10 says so precisely. Dropping the
+       block would hand them the vaguer refusal for a question they answered. */
+    if (cp && cp.state === "named")
+      fm.push("counterparty:","  state: named",
+              ...(String(cp.name || "").trim() ? ["  name: " + JSON.stringify(String(cp.name).trim())] : []));
+    else if (cp && cp.state === "undetermined")
+      fm.push("counterparty:","  state: undetermined",
+              ...(String(cp.basis || "").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
+  }
   fm.push("---","");
   const heads = HEADINGS[type] || ["## Summary"];
   const out = fm.slice();
@@ -5797,10 +6722,26 @@ function acquireWhy(a){
    gate. */
 const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
 const syncNewForm = ()=>{
-  const isQ = $("#n-type").value === "inquiry";
+  const t = $("#n-type").value;
+  const isQ = t === "inquiry";
   $("#n-title").hidden = isQ; $("#n-title-label").hidden = isQ;
   $("#n-body-label").textContent = isQ ? "What do you want to know?" : "What do you know?";
+  /* UI-19: the counterparty pair belongs to an action and to nothing else, and
+     a document has no source panel to fill in when it is one. */
+  if ($("#n-act")) $("#n-act").hidden = t !== "action";
+  if ($("#n-src")) $("#n-src").hidden = t === "action";
+  syncCounterparty();
 };
+/* The pair reveals exactly one field, and only after the member has answered.
+   Neither is shown by default, because a visible empty field is a suggestion. */
+const syncCounterparty = ()=>{
+  const named = $("#n-cp-named") && $("#n-cp-named").checked;
+  const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+  if ($("#n-cp-name-box")) $("#n-cp-name-box").hidden = !named;
+  if ($("#n-cp-basis-box")) $("#n-cp-basis-box").hidden = !undet;
+};
+if ($("#n-cp-named")) $("#n-cp-named").addEventListener("change", syncCounterparty);
+if ($("#n-cp-undet")) $("#n-cp-undet").addEventListener("change", syncCounterparty);
 $("#n-type").addEventListener("change", syncNewForm);
 $("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
 $("#n-save").addEventListener("click", async ()=>{
@@ -5812,6 +6753,21 @@ $("#n-save").addEventListener("click", async ()=>{
   } else {
     if (!title) { e.textContent = "Give it a title."; return; }
     if (!body) { e.textContent = "Write something in the body."; return; }
+  }
+  /* UI-19: what THIS FORM has collected, never a rule about the record. C-2.10
+     is the rule and it says so in its own words at the gate if anything gets
+     past here; all this does is decline to send an action with the question
+     unanswered, because an empty control has nothing to send. */
+  let act = null;
+  if (type === "action") {
+    const named = $("#n-cp-named") && $("#n-cp-named").checked;
+    const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+    const nm = ($("#n-cp-name") ? $("#n-cp-name").value.trim() : "");
+    const bs = ($("#n-cp-basis") ? $("#n-cp-basis").value.trim() : "");
+    if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
+    if (named && !nm) { e.textContent = "Name the counterparty."; return; }
+    if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
+    act = { counterparty: named ? { state:"named", name:nm } : { state:"undetermined", basis:bs } };
   }
   $("#n-save").disabled = true;
   try {
@@ -5843,7 +6799,7 @@ $("#n-save").addEventListener("click", async ()=>{
       if (att.archive) doc.co_archive = att.archive;
     }
     const text = mdFor(id, type, state, title, body, now, !!doc,
-      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null);
+      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
       bundleId: id, base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
@@ -6123,7 +7079,17 @@ var CATALOG_VERSION = "1.20.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te = new TextEncoder();
-async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry, publishedRegistry }) {
+async function runGate({
+  bundleId,
+  image,
+  knownIds,
+  hasCapture,
+  registers,
+  releaseRegistry,
+  publishedRegistry,
+  publishedCaseRegistry,
+  earnedRegistry
+}) {
   const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
   for (const [path, v] of Object.entries(image || {})) {
     if (typeof v === "string") files.set(path, v);
@@ -6144,7 +7110,21 @@ async function runGate({ bundleId, image, knownIds, hasCapture, registers, relea
        what strength the case beneath this one FROZE when the group signed it.
        Passing null here does not soften the gate, it blinds it -- so it is
        threaded from the one place that has the rows. */
-    publishedRegistry: publishedRegistry || null
+    publishedRegistry: publishedRegistry || null,
+    /* REC-44: and C-21.1's fact at CASE altitude -- what the PREVIOUS EDITION
+       OF THIS CASE asserted about its own limits. A case is a container over
+       one or more findings (DEC-44), so this cannot be read off the finding
+       being gated and arrives in its own registry. Passing null blinds C-21.1
+       exactly as passing null above blinds C-21.2. */
+    publishedCaseRegistry: publishedCaseRegistry || null,
+    /* REC-18: what each basis target EARNS, supplied by the store (gateFacts)
+       for the bundle being gated. The third fact the catalog cannot answer from
+       the bundle alone -- an EARNED grade is computed from `resolutions` and the
+       capture record, so a leg claiming one can only be confirmed where those
+       rows are. Passing null here does not soften the gate either: checkEarnedLeg
+       refuses the leg outright rather than waving it through, which is why the
+       blinding is loud instead of silent. */
+    earnedRegistry: earnedRegistry || null
   });
   const errors = findings.filter((f2) => f2.severity === "error").map((f2) => ({ check: f2.check, detail: f2.message, ...f2.repairs ? { repairs: f2.repairs } : {} }));
   for (const r of registers || []) {
@@ -6802,7 +7782,36 @@ async function containerEntries(manifest, manifestBytes, read) {
 // src/affordances.mjs
 var DISPOSITIONS = ["deferred", "dismissed"];
 var REOPENABLE_FROM = [...DISPOSITIONS, "published"];
+var ENTITY_KINDS = [
+  /* safeguard 4's SUBJECT kinds */
+  "source",
+  "institution",
+  "office",
+  "movement",
+  /* the framework's entity kinds */
+  "person",
+  "body",
+  "ordinance",
+  "parcel",
+  "contract",
+  "fund"
+];
+var RELATION_KINDS = ["proxy_for", "member_of", "overlaps"];
+var STAGE_REQUIREDNESS = ["always", "usually", "sometimes", "never", "unless_exception"];
 var DIVIDE_PROMPT = "Dividing does not remove anything. Every leg this question rests on gets a home on one of the children \u2014 including any leg that cuts against you \u2014 and this question stays on the record as the divided parent, recording where each leg went. Each child names this parent and every sibling, and when a child is published it names them to its readers. If you mean to drop material rather than re-home it, sever it with a reason instead.";
+var GROUND_PROMPT = "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest group rather than from its weakest single reason, so your name and the time go on each group you make and stay there until that group's reasons change. Nothing is hidden: every reason stays visible under the group you put it in, and a published case carries each group and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.";
+var attestFence = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("the co-attestation fence states a ceiling AND the grade above it (DEC-39); with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `What co-attestation answers: when did these bytes exist? It asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. What it does not answer: whether the document is TRUE, whether its source is authoritative, or how close it stands to the fact you are citing it for. A secondhand report that is co-attested is still a secondhand report. What it is worth: it strengthens a Grade ${ceiling} capture toward evidentiary weight. It never reaches Grade ${unreachable} \u2014 that needs a chain-of-custody web archive this surface cannot produce.`;
+};
+var ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+var acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
+};
+var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 var VOCABULARIES = {
   action_kind: ACTION_KINDS,
   dispositions: DISPOSITIONS,
@@ -6811,7 +7820,63 @@ var VOCABULARIES = {
      nothing in the plane reads it, and a group that deliberately gave no notice
      publishes exactly as one that sought comment and printed the reply. What is
      gated is that the position is declared and justified. */
-  subject_positions: SUBJECT_POSITIONS
+  subject_positions: SUBJECT_POSITIONS,
+  /* REC-37. The roles a leg of a question's basis may carry, published beside
+     the widened `cite` act because that act now REQUIRES one and refuses by
+     name without it (NO_ROLE / BAD_ROLE). A surface that had to keep its own
+     copy of these two words would be the surface deciding what `cuts_against`
+     is called, and invariant 7's storage is not a rendering detail. Imported
+     from the catalog function that enforces the set — there is one place these
+     words live and it is not this file. */
+  basis_roles: BASIS_ROLES,
+  /* REC-35, UI-13's delegation. The three closed vocabularies of the INTENT
+     layer — the entity registry's kinds, safeguard 4's declared-relation
+     predicates, and a progression stage's requiredness. They are published for
+     the same reason every set above is: a surface that had to keep its own copy
+     would be the surface deciding what a `movement` or an `unless_exception` is
+     called, and the write path would refuse a token the surface had just
+     offered. Each is the array store.mjs's own refusal validates against —
+     imported, never transcribed, so a kind added to the registry appears on
+     every surface on its next load and cannot be added to one without the
+     other. */
+  entity_kinds: ENTITY_KINDS,
+  relation_kinds: RELATION_KINDS,
+  stage_requiredness: STAGE_REQUIREDNESS,
+  /* REC-38, UI-19's measured gap. The action loop's two closed vocabularies —
+     what a leg of an action's basis DOES (`rests_on` / `advances`, DEC-14), and
+     which way a correspondence entry went (`sent` / `received` / `no_response`,
+     DEC-13's non-response recorded as a fact rather than a silence). REC-24
+     built both ops and exported both arrays from the check catalogue; neither
+     reached here, and the cost was measured rather than argued: UI-19 could not
+     offer a basis leg at all, so `request_for_comment` — the ONE kind DEC-13
+     requires legs for — had to be filtered out of its own intake, and an action
+     could be authored with a counterparty and a kind and nothing it rests on.
+     Present-and-refused is what a published vocabulary prevents; absent-and-
+     stated is what a surface must do until there is one.
+     Imported from `bio-checks.mjs`, where C-2.10's own findings validate
+     against them (`actionBasisFindings`, `correspondenceFindings`) and where
+     store.mjs's BAD_DIRECTION refusal reads its `legal` list — the same
+     direction `action_kind` and `basis_roles` above already take. One array. */
+  action_basis_kinds: ACTION_BASIS_KINDS,
+  correspondence_directions: CORRESPONDENCE_DIRECTIONS,
+  /* REC-39, UI-24's second measured gap and the LAST of the action loop's closed
+     sets to reach here. How an action ENDED: C-2.10 requires one of these four
+     the moment an action's state is `resolved`, and `op=actionmove` refuses
+     NO_RESOLUTION without one.
+     WHY PUBLISHING IT IS NOT A CONVENIENCE, and the shape of the gap is worth
+     keeping: the words were reachable before this — out of the `legal` list on
+     op=actionmove's own NO_RESOLUTION refusal, which is what UI-19's chooser
+     reads — so the option set was a property of a REFUSAL rather than of the
+     record. A surface could not offer a resolution until the plane had already
+     told the member no, and a set that only exists inside a refusal cannot be
+     rendered anywhere a refusal has not happened. Published, it is a fact about
+     what an action may be, available to a surface that is merely describing the
+     act.
+     Imported from `bio-checks.mjs` where C-2.10's own finding validates against
+     it and where store.mjs's NO_RESOLUTION refusal reads its `legal` list — the
+     same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
+     `correspondence_directions` above already take. One array, three readers. */
+  resolutions: RESOLUTIONS
 };
 var RUNGS = {
   dispose: "reasoned",
@@ -6825,10 +7890,29 @@ var RUNGS = {
   reinstate: "reasoned",
   // Constructs:243
   attest: "attested",
-  // Constructs:275 (a NON_ACT below until a later item)
+  // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
   ratify: "attested"
   // Constructs:275 (publication pre-flight is REC-15's)
 };
+var CAPTURE_ACTS = [
+  /* op=attest. The verb is "co-attest" because the group is not the only
+     attestor: the plane asks an independent timestamp authority and stores what
+     it returns. The object is THE CAPTURE and the label says so — attesting the
+     bundle would be the claim we cannot make. */
+  /* THE FENCE RIDES THE ACT (DEC-39, on DEC-29(b)/REC-16's mechanism): every
+     surface that can offer co-attestation receives the wording that must
+     accompany it, so the sentence cannot appear in one client and not another.
+     The words are Bob's and the grade letters are the enforced rule's — the
+     reasoning is on ATTEST_FENCE itself, where both consumers read it. */
+  { id: "attest", label: "Co-attest this capture", prompt: ATTEST_FENCE },
+  /* op=monitor. One tick: re-fetch the source's locator and compare what it
+     serves NOW against the bytes the provenance register says were captured
+     from it. The label names the comparison rather than promising a watch — a
+     tick is a check, and `unchanged` / `modified` / `removed` are its answers.
+     No rung: no document assigns one, and RUNGS carries only the sourced seven
+     (FW-14's job, not a guess made here). */
+  { id: "monitor", label: "Check this source against what was captured" }
+];
 var edgesFrom = (f2) => vocabFor(STATES, f2.declared_type ?? f2.object_type)?.edges?.[f2.current_state] || [];
 var ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
@@ -6985,18 +8069,112 @@ var ACTS = [
     prompt: DIVIDE_PROMPT,
     applies: (f2, ty) => ty === "inquiry" && edgesFrom(f2).includes("divided") && (f2.basis_legs ?? 0) >= 1 && (f2.rested_on?.working ?? 0) === 0
   },
-  /* S-10/S-11 step 1: citing Information IN a Project. Published for BOTH ends,
-     because the store's own guards are type-only on both: any information
-     bundle may be cited (cite checks NOT_INFORMATION and nothing about state —
-     citing retired material is permitted and therefore published), and any
-     project may cite. Deriving a narrower answer here than the op gives would
-     be this file inventing a rule the plane does not enforce. */
+  /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
+       something, and whose record is still working.
+  
+       WHY THE LEG COUNT IS PART OF THE DERIVATION and not a detail, exactly as it
+       is for division above: a partition is a partition OF THE LEGS, so a
+       question resting on nothing has nothing to group and the store refuses it
+       NO_BASIS. Publishing the act there would be a pre-flight offering a control
+       the refusal it fronts would decline, which is the DEC-8 disagreement this
+       file exists to prevent. ONE leg IS enough and deliberately so: a member may
+       legitimately say that the single thing they have is enough on its own, and
+       the act is also the only route BACK to an ungrouped basis.
+  
+       THE TWO STATES IT IS NOT OFFERED IN, and the store refuses each BY NAME so
+       a caller that arrives anyway is told which rule it met.  `published`: the
+       composed pair and the per-group breakdown are inside signed, ratified bytes
+       (REC-14/REC-42), and re-partitioning underneath them would change what the
+       document's own basis composes to while an edition on the record says
+       otherwise — DEC-12's route is reopen, restructure, republish, which is the
+       same shape PUBLISHED_CANNOT_DIVIDE takes one act over.  `divided`: the
+       parent has been declared MALFORMED and carried forward into children that
+       supersede it (REC-16), and re-deriving a terminal parent's strength after
+       the fact would move a number its children's disclosure already pointed at.
+  
+       NO RUNG. No document assigns grouping one, and RUNGS carries only the seven
+       that are sourced. It is tempting to write `reasoned` here; that is the
+       guessing this file refuses, and FW-14 owns the assignment.
+  
+       WEIGHT `single`, conclude's precedent: one question's structure is authored
+       at a time, and a bulk version would be the checkbox these constructs exist
+       to refuse — the more so here, because this is the act that RAISES a grade.
+  
+       THE PROMPT RIDES THE ACT (DEC-29(b), REC-16's mechanism): every surface
+       that can offer grouping receives the wording that must accompany it. The
+       reasoning for why this act warrants one, and for the vocabulary bound every
+       clause of it respects, is on GROUND_PROMPT itself.
+  
+       THE ENTRY REQUIREMENTS ARE ACT-TIME REFUSALS the store words itself — a
+       reason on a RESTRUCTURE, a partition that is total, a label with an
+       attributed row — the release precedent: publishing the act says the record
+       permits the move, not that this caller's parameters will pass. */
+  {
+    id: "inquiryground",
+    label: "Group what this rests on",
+    weight: "single",
+    types: ["inquiry"],
+    prompt: GROUND_PROMPT,
+    applies: (f2, ty) => ty === "inquiry" && (f2.basis_legs ?? 0) >= 1 && f2.current_state !== "published" && f2.current_state !== "divided"
+  },
+  /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
+       guards are type-only on both: any information bundle may be cited (cite
+       checks the member's TYPE and nothing about state — citing retired material
+       is permitted and therefore published), and any citing object may cite.
+       Deriving a narrower answer here than the op gives would be this file
+       inventing a rule the plane does not enforce.
+  
+       REC-37 ADDS THE THIRD TYPE, and it is the one that makes a record become a
+       case: a QUESTION may cite, and what lands on it is a leg of the basis its
+       answer rests on rather than a citation edge. An inquiry also appears here
+       as a MEMBER — a leg may point at another question (basis recursion, DEC-23)
+       — which is the same widening read from the other end. The store refuses a
+       citing object that is neither NOT_A_PROJECT and a member that is neither
+       NOT_CITABLE, and this entry publishes exactly that and no narrower rule.
+  
+       THE LABEL IS TYPE-NEUTRAL NOW, because one act publishing itself as "in a
+       project" on a question would be the publication disagreeing with the op it
+       fronts — the disagreement this file exists to prevent. */
+  /* REC-24 (c). An action whose own machine offers ANY onward state — which is
+     everything except `resolved` and `abandoned`, and the table says so rather
+     than this file listing them. ONE condition and no second: the entry
+     requirements (an authored reason; a resolution when the target state is
+     `resolved`) are ACT-TIME refusals the store words itself, the release
+     precedent carried through conclude and reopen — publishing the act says the
+     state machine permits a move, not that this caller's parameters will pass.
+     Weight `single`: one action moves at a time and there is no set to apply.
+     NO RUNG. It is tempting to write `reasoned` because a reason is required,
+     and that is exactly the guess RUNGS refuses: no document assigns this act a
+     rung, and FW-14 owns the assignment. */
+  {
+    id: "actionmove",
+    label: "Move this action",
+    weight: "single",
+    types: ["action"],
+    applies: (f2, ty) => ty === "action" && edgesFrom(f2).length > 0
+  },
+  /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
+     Published for an action in ANY state, and the breadth is deliberate: the
+     store's own guard is the object's TYPE and nothing else, so narrowing here
+     would be this file inventing a rule the plane does not enforce (the cite
+     precedent). A resolved action can still have a late reply recorded against
+     it — the exchange happened, and the ledger is the record of it — and a
+     planned one can record a first approach.
+     Weight `single`: the ledger is append-only, one entry at a time. NO RUNG,
+     for actionmove's reason. */
+  {
+    id: "actioncorrespond",
+    label: "Record correspondence",
+    weight: "single",
+    types: ["action"],
+    applies: (f2, ty) => ty === "action"
+  },
   {
     id: "cite",
-    label: "Cite information in a project",
+    label: "Cite material into a case or a question",
     weight: "report",
-    types: ["information", "project"],
-    applies: (f2, ty) => ty === "information" || ty === "project"
+    types: ["information", "project", "inquiry"],
+    applies: (f2, ty) => ty === "information" || ty === "project" || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the
      information side: some project holds a live cites edge to it. From the
@@ -12146,7 +13324,15 @@ var QUEUE_CONDITION_KINDS = {
 };
 var QUEUE_OBLIGATION_KINDS = {
   "authority-undetermined": "authority undetermined at capture (D-98, RULED: created automatically) \u2014 LIVE: store.mjs TASK_KINDS",
-  "bias-debt": "bias debt owed after a lens change (D-86) \u2014 blocks a transition",
+  /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
+     transition", which is the PRE-DEC-20 blanket rule and the opposite of the
+     doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
+     HUNCH disqualifies. DEC-20 narrowed the workproduct_state half to hunches
+     too, so nothing about this kind blocks anything. The producer is unbuilt
+     (D-86's remaining half), which is why this is free to correct now — and
+     exactly why it had to be, since the producer would have been built to the
+     sentence. The identical wording in NOTIFICATIONS.md is corrected with it. */
+  "bias-debt": "a re-run is owed after a lens change (D-86) \u2014 DISCLOSED, never blocking (DEC-20)",
   "endorsement-owed": "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request": "a membership request is at the doorbell",
@@ -12235,7 +13421,23 @@ var FIELDS = {
      so an ordering that reads oddly in prose is one indexed seek in SQLite. */
   capture: { col: "inquiry_capture_strength", type: "text", upper: true },
   connection: { col: "inquiry_connection_strength", type: "text", upper: true },
-  legs: { col: "inquiry_basis_count", type: "number" }
+  legs: { col: "inquiry_basis_count", type: "number" },
+  /* REC-24 (e): the ACTION's six, and they are what makes the Actions rail
+     (P-52) a filter rather than a list. `overdue:true` is the one to be careful
+     about and the comment is here rather than on the column: it filters the
+     CACHED flag, computed when the document was last promoted, so a corpus-wide
+     query answers "what was late as of each action's last write" and NOT "what
+     is late now". The action page's own read derives the answer against the
+     injectable clock (store.mjs #actionDerived), which is the authority — the
+     same relationship REC-12's cached strength has with strengthOf(). A filter
+     that is a little behind is a filter; an ANSWER that is behind is a record
+     saying nothing is late when something is. */
+  actionkind: { col: "action_kind", type: "text", lower: true },
+  risk: { col: "action_risk_tier", type: "number" },
+  addressee: { col: "action_counterparty_state", type: "text", lower: true },
+  resolution: { col: "action_resolution", type: "text", lower: true },
+  due: { col: "action_clock_next", type: "time" },
+  overdue: { col: "action_clock_overdue", type: "bool" }
 };
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
@@ -12253,7 +13455,8 @@ var DEFAULT_FACETS = [
 var GATE_MARK = "/*viewer-gate*/";
 function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
-  const m = /^(class:(admin|member|probe)|member:([A-Za-z0-9._:-]{1,128})|admin)$/.exec(v);
+  const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
   const memberId = m[3] || null;
   if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member" };
@@ -12818,7 +14021,11 @@ var Store = class _Store extends DurableObject {
   }
   #migrate() {
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-    for (const [table, needed] of [["links", "citation_norm"], ["captured_locators", "via"]]) {
+    for (const [table, needed] of [
+      ["links", "citation_norm"],
+      ["captured_locators", "via"],
+      ["reading_ref_terms", "src"]
+    ]) {
       const cols = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
       if (cols.length && !cols.includes(needed)) this.sql.exec(`DROP TABLE ${table}`);
     }
@@ -12914,6 +14121,26 @@ var Store = class _Store extends DurableObject {
       ["bundles", "inquiry_connection_strength", "TEXT"],
       ["bundles", "inquiry_connection_state", "TEXT"],
       ["bundles", "inquiry_basis_count", "INTEGER"],
+      /* REC-18 / DATA-MODEL D1(b): the registry ENTITY this question is about,
+         and it is the whole of the subject-entity linkage — one nullable
+         projection column, no new table, no join row, no ordinal.
+         WHY A COLUMN AND NOT A TABLE. D4's reasoning for giving inquiry_basis
+         its own table was that a basis needs an ORDINAL (one document, two
+         legs) and a place to put a GRADE. A subject has neither: it is one
+         optional scalar fact about one bundle, exactly the shape S-10's
+         projection columns exist for, and a table would be a second place to
+         state it with nothing extra to hold.
+         WHY NOT `refs`. refs targets are BUNDLE ids and an ENT- key is not one;
+         widening the universal edge projection to carry registry keys is the
+         blast-radius argument D4 already made about grades on edges.
+         DERIVED from bundle.md's `subject_entity`, written in the same
+         transaction as inquiry_basis by the same discipline (D-21). Nullable
+         and additive: a question with no subject entity has none, and DEC-15
+         states exactly what that costs — no A/B/C on its connection axis.
+         NOT INDEXED, on REC-17's stated reasoning: it is read BY bundle_id
+         (the primary key) while building a write's earned registry, and no
+         seek anybody makes is on its value. */
+      ["bundles", "inquiry_subject_entity", "TEXT"],
       /* REC-17 / P-64: the REVERSE of a `supersedes` edge, so R7's obligation
          is a LOOKUP and not a graph walk. `refs` answers "what does this
          document supersede" because the edge lives on the SUPERSEDING
@@ -12928,7 +14155,38 @@ var Store = class _Store extends DurableObject {
          read BY bundle_id, which is the primary key, so an index on its value
          would serve no seek anybody makes. REC-12's state columns are
          unindexed for the same reason and its comment says so. */
-      ["bundles", "inquiry_superseded_by", "TEXT"]
+      ["bundles", "inquiry_superseded_by", "TEXT"],
+      /* REC-42 / DEC-32: the OR branch a basis leg belongs to. Additive and
+         nullable exactly like every column above, and here that is not merely
+         convenient — it is THE CORRECTNESS REQUIREMENT. A leg written before
+         this column existed reads NULL, falls into the one implicit ground, and
+         derives the SAME weakest-leg answer it derived before: a basis nobody
+         structured can never become stronger by an upgrade. Independent
+         sufficiency is only ever reached by an affirmative, attributed act. */
+      ["inquiry_basis", "ground", "TEXT"],
+      /* REC-24 (e): the ACTION's six projection columns — the first projection
+         columns in this table whose subject is the outward ask rather than the
+         question. Additive and nullable exactly like every column above: a
+         bundle that is not an action simply has none, and an action promoted
+         before these existed has none until its next promotion re-derives them.
+         action_kind / action_risk_tier / action_counterparty_state /
+         action_resolution are pure facts about the document, cached here so the
+         Actions rail can filter without opening every bundle.
+         THE TWO CLOCK COLUMNS ARE A CACHE AND THE READ IS THE AUTHORITY, which
+         is REC-12's rule about a stored strength said about a stored deadline.
+         action_clock_next is the earliest PENDING clock date, which is a fact
+         about the bytes and does not rot. action_clock_overdue is that date
+         compared against the clock AT PROMOTION TIME, and it goes stale the
+         moment the wall advances past it while nobody promotes — so
+         projection() derives overdue ON READ against the injectable clock
+         (REC-8's shape) and this column exists for the FILTER, never for the
+         answer a reader is shown. */
+      ["bundles", "action_kind", "TEXT"],
+      ["bundles", "action_risk_tier", "INTEGER"],
+      ["bundles", "action_counterparty_state", "TEXT"],
+      ["bundles", "action_resolution", "TEXT"],
+      ["bundles", "action_clock_next", "TEXT"],
+      ["bundles", "action_clock_overdue", "INTEGER"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -12948,7 +14206,10 @@ var Store = class _Store extends DurableObject {
       "reeval_flag",
       "annotations_open",
       "inquiry_capture_strength",
-      "inquiry_connection_strength"
+      "inquiry_connection_strength",
+      "action_kind",
+      "action_resolution",
+      "action_clock_overdue"
     ])
       this.sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
     this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
@@ -13039,6 +14300,7 @@ var Store = class _Store extends DurableObject {
        )`
     );
     this.#backfillProjection(500);
+    this.#backfillRefTerms(500);
     for (const r of this.sql.exec(
       `SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`
     ))
@@ -13049,7 +14311,13 @@ var Store = class _Store extends DurableObject {
      document says. Returns nulls rather than guesses when frontmatter does not
      parse: a wrong value in a filterable column is worse than an absent one,
      because a filter silently under-reports and the member cannot tell. */
-  static projectionOf(bundleMdText) {
+  /* REC-24 (e)/(f): `nowMs` is threaded in for ONE column, action_clock_overdue,
+     and it is threaded rather than read from a wall clock here because this
+     function is static and pure and must stay that way — the caller
+     (#writeProjection) passes the store's own injectable clock, so a suite that
+     pins BIO_NOW_MS pins the cached flag too. The column is still a CACHE: see
+     the ALTER list above, and projection() derives the answer a reader sees. */
+  static projectionOf(bundleMdText, nowMs = Date.now()) {
     const empty = {
       schema_id: null,
       produced_mode: null,
@@ -13066,6 +14334,12 @@ var Store = class _Store extends DurableObject {
       reeval_flag: null,
       reeval_since: null,
       reeval_source: null,
+      action_kind: null,
+      action_risk_tier: null,
+      action_counterparty_state: null,
+      action_resolution: null,
+      action_clock_next: null,
+      action_clock_overdue: null,
       fm_json: null
     };
     if (typeof bundleMdText !== "string") return empty;
@@ -13101,8 +14375,38 @@ var Store = class _Store extends DurableObject {
       reeval_flag: rpObj ? bool(rp.flag) : bool(rp),
       reeval_since: rpObj ? s(rp.since) : null,
       reeval_source: rpObj ? s(rp.source) : null,
+      /* REC-24 (e). Only an ACTION projects these; every other type leaves them
+         NULL, which is what "this bundle is not an action" says in a column. */
+      action_kind: fm.object_type === "action" ? s(fm.action_kind) : null,
+      action_risk_tier: fm.object_type === "action" ? num(fm.risk_tier) : null,
+      action_counterparty_state: fm.object_type === "action" ? s(nested("counterparty", "state")) : null,
+      action_resolution: fm.object_type === "action" ? s(fm.resolution) : null,
+      action_clock_next: fm.object_type === "action" ? _Store.actionClockNext(fm) : null,
+      action_clock_overdue: fm.object_type === "action" ? _Store.actionOverdue(fm, nowMs) ? 1 : 0 : null,
       fm_json: JSON.stringify(fm)
     };
+  }
+  /* REC-24 (f): the clock, read from the DOCUMENT and never from a second
+     store. The next PENDING deadline is the earliest date on a clock[] entry
+     still marked pending — a `met` or `waived` entry has been answered and a
+     date already recorded `overdue` is not the NEXT one. Pure over the
+     frontmatter, so the projection writer, the read-time derivation and any
+     later consumer compute one number by construction rather than by agreement. */
+  static actionClockNext(fm) {
+    const pending = (Array.isArray(fm?.clock) ? fm.clock : []).filter((e) => e && typeof e === "object" && e.status === "pending" && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date)).map((e) => e.date).sort();
+    return pending.length ? pending[0] : null;
+  }
+  /* Overdue is DERIVED, here, from the same two facts every caller has: the
+     document's own pending dates and an instant. Never stored as the answer.
+     A date is overdue when the day AFTER it has begun — a deadline of the 14th
+     is met by anything on the 14th — so the comparison is against the end of
+     that calendar day in UTC, which is the same convention C-11.1's
+     "silently past-due" arm uses (`e.date < today`). */
+  static actionOverdue(fm, nowMs) {
+    const next = _Store.actionClockNext(fm);
+    if (!next) return false;
+    const today = new Date(Number(nowMs)).toISOString().slice(0, 10);
+    return next < today;
   }
   static PROJECTION_COLS = [
     "schema_id",
@@ -13120,12 +14424,18 @@ var Store = class _Store extends DurableObject {
     "reeval_flag",
     "reeval_since",
     "reeval_source",
+    "action_kind",
+    "action_risk_tier",
+    "action_counterparty_state",
+    "action_resolution",
+    "action_clock_next",
+    "action_clock_overdue",
     "fm_json"
   ];
   /* Write the projection for one bundle. Called inside promote's transaction, so
      the projection can never be a revision behind the document. */
   #writeProjection(bundleId, bundleMdText) {
-    const p = _Store.projectionOf(bundleMdText);
+    const p = _Store.projectionOf(bundleMdText, this.#nowMs(null));
     const set = _Store.PROJECTION_COLS.map((c) => `${c}=?`).join(", ");
     this.sql.exec(
       `UPDATE bundles SET ${set} WHERE bundle_id=?`,
@@ -13243,7 +14553,14 @@ var Store = class _Store extends DurableObject {
    *  that reaches this read without a server-stamped identity sees nothing
    *  rather than everything. An invisible bundle answers EXACTLY as an absent
    *  one (null), because "hidden" said out loud is half the leak. */
-  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200, viewer = null } = {}) {
+  projection({
+    bundleId = null,
+    jsonPath = null,
+    jsonEquals = null,
+    limit = 200,
+    viewer = null,
+    nowMs = null
+  } = {}) {
     const cols = [
       "b.bundle_id",
       "b.object_type",
@@ -13258,11 +14575,14 @@ var Store = class _Store extends DurableObject {
       ..._Store.PROJECTION_COLS.map((c) => "b." + c)
     ].join(", ");
     const gate = viewerPredicate(viewer);
-    if (bundleId) return this.#one(
-      `SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      bundleId,
-      ...gate.args
-    );
+    if (bundleId) {
+      const row = this.#one(
+        `SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+        bundleId,
+        ...gate.args
+      );
+      return row && normalizeType(row.object_type) === "action" ? { ...row, action: this.#actionDerived(row, nowMs) } : row;
+    }
     if (jsonPath !== null && jsonEquals !== null)
       return this.#rows(
         `SELECT ${cols} FROM bundles b WHERE json_extract(b.fm_json, ?) = ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
@@ -13276,6 +14596,62 @@ var Store = class _Store extends DurableObject {
       ...gate.args,
       limit
     );
+  }
+  /** REC-24 (f)/(g): everything about ONE action that is DERIVED rather than
+   *  stored — the clock's verdict at a named instant, DEC-14's consequence
+   *  state, the ledger, the legs, and what responded.
+   *
+   *  THE CLOCK IS THE ITEM'S POINT. `overdue` is computed here against
+   *  #nowMs — the same injectable seam REC-8's overdue scan uses (an explicit
+   *  as-of `now=`, then env BIO_NOW_MS, then the wall) — so the same store and
+   *  the same bytes answer `false` before the deadline and `true` after it with
+   *  nothing written in between. The cached column is reported beside it as
+   *  `overdue_cached` rather than hidden, because an auditor comparing the two
+   *  is reading exactly the staleness this design accepts on the filter and
+   *  refuses on the answer.
+   *
+   *  THE CONSUMER OF `responds_to` IS HERE, and it is one indexed lookup over
+   *  `refs_target` rather than a walk: "what came back" is the question the
+   *  action page exists to answer, and op=actioncorrespond is what writes the
+   *  edge onto the captured reply. */
+  #actionDerived(row, nowMs = null) {
+    let fm = {};
+    try {
+      fm = row && row.fm_json ? JSON.parse(row.fm_json) || {} : {};
+    } catch {
+      fm = {};
+    }
+    const now = this.#nowMs(nowMs);
+    const next = _Store.actionClockNext(fm);
+    const ledger = this.#rows(
+      `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
+         FROM correspondence WHERE bundle_id=? ORDER BY ord`,
+      row.bundle_id
+    );
+    const legs = this.#rows(
+      `SELECT ord, target_id, target_type, kind, note, at FROM action_basis WHERE bundle_id=? ORDER BY ord`,
+      row.bundle_id
+    );
+    return {
+      kind: row.action_kind ?? null,
+      risk_tier: row.action_risk_tier ?? null,
+      counterparty_state: row.action_counterparty_state ?? null,
+      resolution: row.action_resolution ?? null,
+      clock_next: next,
+      /* DERIVED, at `now`. The column beside it is the filter's cache. */
+      clock_overdue: _Store.actionOverdue(fm, now),
+      clock_overdue_cached: row.action_clock_overdue === null || row.action_clock_overdue === void 0 ? null : !!row.action_clock_overdue,
+      as_of: new Date(now).toISOString(),
+      basis: legs,
+      correspondence: ledger,
+      /* DEC-14, derived by the catalog's own function so no reader composes it. */
+      consequence: consequenceState(fm),
+      /* REC-24 (g)'s CONSUMER: the documents that point back at this action. */
+      responses: this.#rows(
+        `SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
+        row.bundle_id
+      ).map((r) => r.bundle_id)
+    };
   }
   /** EXPLAIN QUERY PLAN for representative filters, so a test can assert the
    *  index is USED rather than trusting that creating it was enough. */
@@ -14286,6 +15662,13 @@ var Store = class _Store extends DurableObject {
      line per field. */
   static RELEASE_ACK_MAX = 500;
   static EDGE_NOTE_MAX = 480;
+  /* REC-24: how long op=actioncorrespond holds the courtesy lock while it
+     rewrites one document. Short on purpose — the op is a single append with no
+     human step inside it, so a lease outliving the call would block the next
+     writer for no reason. It is a COURTESY: promote's CAS on `base` is what
+     actually prevents a lost update, and this only stops two members
+     interleaving two accounts of the same exchange. */
+  static CORRESPOND_LEASE_MS = 3e4;
   /** Move `cites` edges between statuses for every member of a selection.
    *
    *  One method for both directions because they are the same operation over the
@@ -14962,7 +16345,7 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
           named, set refused whole. */
   release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_RELEASE",
@@ -15181,7 +16564,7 @@ Mitigation: ${mit}
    * is a promotion, and then it concludes like any other. */
   conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_CONCLUDE",
@@ -15337,6 +16720,563 @@ Falsifier: ${fals}
       weight: "single"
     };
   }
+  /* REC-24 (c): MOVING AN ACTION THROUGH ITS OWN STATE MACHINE — the first op
+   * in this plane whose subject is an action at all.
+   *
+   * WHY IT EXISTS. `STATES.action` has carried five states and seven edges since
+   * the catalog was written, and NOTHING wrote them: SB-OUTPUT §4 measured the
+   * whole diagram as dashed, with the creation of the bundle the only node that
+   * ran. An act the table permits and no caller can perform is the state machine
+   * lying, which is exactly what REC-31 said about `deferred -> open`.
+   *
+   * THE EDGE TABLE IS THE CATALOG'S AND THERE IS NO SECOND COPY. This is the
+   * NAMED hazard of this item, not a general principle: `op=dispose` held its own
+   * literal copy of the disposition set until REC-10 rewired it, and the whole
+   * cost of that copy was that the publication and the refusal could disagree
+   * about what was legal. So legality here comes from `vocabFor(STATES, …)` over
+   * the DECLARED object_type — the MAP RULE, sixth consulting site — and this
+   * method contains no state list of its own. Grep it: NO string from the action
+   * vocabulary appears in this method at all.
+   *
+   * CORRECTED 2026-08-05 (REC-39), and the old sentence is worth keeping as the
+   * receipt: it read "the only strings from the action vocabulary in this file
+   * below are the four RESOLUTIONS, which are C-2.10's and are imported nowhere
+   * because they are checked by the catalog itself a moment later". Every clause
+   * was true and the conclusion was wrong. Being re-checked downstream makes a
+   * copy HARMLESS at the write; it does not make it one array. The refusal this
+   * method returns carries `legal:` — the option set a surface renders — so the
+   * copy was load-bearing on the way OUT even though it was redundant on the way
+   * in, and a word changed in the catalog would have left this act offering the
+   * old one. RESOLUTIONS is imported now.
+   *
+   * THE REASON IS REQUIRED AND NEVER PREFILLED, op=reopen's rule and for its
+   * reason: an action moving is the group deciding to send something outside the
+   * system, or deciding it is finished, and a move with no account of why cannot
+   * be checked by anyone including its author. Nothing is derived, defaulted or
+   * proposed.
+   *
+   * A NAMED MEMBER MOVES IT. The author stamp arrives from the session and a
+   * machine credential's is `token:<class>`, refused BY SHAPE. This follows
+   * MACHINE_CANNOT_CONCLUDE / _RELEASE / _REOPEN and it is the same judgement:
+   * an action is the one construct that reaches OUTSIDE this system and touches
+   * people who never agreed to be in it, so a scheduler must not be able to
+   * advance one. A machine may surface, gather and prepare (D-78, DEC-24); it
+   * may not decide that the group is now asking somebody for something.
+   *
+   * WHAT IT DELIBERATELY DOES NOT DO: it does not touch the clock. A clock entry
+   * that has fallen past due is a REAL finding about the document (C-11.1) and
+   * this op neither suppresses it nor quietly marks it met — that would be the
+   * machine authoring the answer to the question the deadline asked. Overdue is
+   * DERIVED on read (see #actionDerived) and what to do about it is the member's. */
+  actionMove({ target, to, reason = "", resolution = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_MOVE_ACTION",
+        detail: "moving an action is a named member's decision to reach outside this system, or to declare that reaching out is finished. A machine credential may prepare an action and may never advance one. Sign in as a member."
+      };
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return {
+        ok: false,
+        reason: "NO_REASON",
+        detail: "an action moves for a stated reason, authored by the member moving it and never prefilled. A state change with no account of why cannot be checked by anyone."
+      };
+    if (why.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
+      return {
+        ok: false,
+        reason: "BAD_REASON",
+        detail: `reason is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+      };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action moves at a time: pass target=<action id>" };
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`,
+      target,
+      ...gate.args
+    );
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return {
+        ok: false,
+        reason: "NOT_AN_ACTION",
+        target,
+        object_type: b.object_type,
+        detail: "only an action has an action's state machine."
+      };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return {
+        ok: false,
+        reason: "NO_DOCUMENT",
+        target,
+        detail: "this action has no readable bundle.md, so its state cannot be moved"
+      };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+    const legal = spec?.legal || [];
+    if (!legal.includes(to))
+      return {
+        ok: false,
+        reason: "BAD_TARGET_STATE",
+        to,
+        target,
+        legal,
+        detail: `an action's state is one of ${legal.join(", ")}`
+      };
+    const legalFrom = spec?.edges?.[b.current_state] || [];
+    if (!legalFrom.includes(to))
+      return {
+        ok: false,
+        reason: "ILLEGAL_TRANSITION",
+        to,
+        target,
+        from: b.current_state,
+        object_type: fm.object_type ?? b.object_type,
+        legal_from: legalFrom,
+        detail: "this is not a legal move in the catalog's state table for this document's own vocabulary. The table is the catalog's and this op holds no copy of it."
+      };
+    const res = String(resolution ?? "").trim();
+    if (to === "resolved" && !RESOLUTIONS.includes(res))
+      return {
+        ok: false,
+        reason: "NO_RESOLUTION",
+        target,
+        legal: RESOLUTIONS,
+        detail: `an action that is resolved says HOW it resolved: one of ${RESOLUTIONS.join(", ")}. C-2.10 requires it in the resolved state, so a move without one would produce a bundle the catalog rejects.`
+      };
+    if (to !== "resolved" && res)
+      return {
+        ok: false,
+        reason: "RESOLUTION_WITHOUT_RESOLVING",
+        target,
+        to,
+        detail: `a resolution describes how an action ENDED; supplying one on a move to ${to} would record an outcome the action has not reached.`
+      };
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const withHistory = _Store.#appendStateHistory(text, {
+      timestamp: when,
+      from_state: b.current_state,
+      to_state: to,
+      blurb: why,
+      author: who
+    });
+    if (!withHistory)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_STATE_HISTORY",
+        target,
+        detail: "this document's state_history block cannot be extended in place, and a move recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
+      };
+    text = withHistory;
+    text = _Store.#setScalar(text, "prior_state", b.current_state);
+    text = _Store.#setScalar(text, "current_state", to);
+    if (to === "resolved") text = _Store.#setOrAddScalar(text, "resolution", res);
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    const entry = `### Session ${when} | Action ${b.current_state} to ${to} | ${who}
+Trigger: op=actionmove on ${target}
+Changes: state ${b.current_state} to ${to}.${to === "resolved" ? ` Resolution: ${res}.` : ""}
+Reason: ${why}
+`;
+    text = _Store.#appendSessionLog(text, entry);
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      target
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target,
+      base: b.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: fm.object_type ?? b.object_type,
+        group: fm.group || "believe-in-oakland",
+        title: fm.title,
+        current_state: to,
+        prior_state: b.current_state,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    return {
+      ok: true,
+      target,
+      from: b.current_state,
+      to,
+      reason: why,
+      ...to === "resolved" ? { resolution: res } : {},
+      author: who,
+      at: when,
+      weight: "single"
+    };
+  }
+  /* REC-24 (d): APPENDING ONE ENTRY TO AN ACTION'S CORRESPONDENCE LEDGER.
+   *
+   * APPEND ONLY, AND THAT IS THE WHOLE DESIGN. This op adds an entry and can
+   * never rewrite one: a correspondence entry that changed is ITSELF A FACT, so
+   * a correction is a new dated entry saying so and the earlier statement stays
+   * where it was. #spliceCorrespondence appends after the block's last line and
+   * touches nothing else, exactly as #spliceBasis does for legs.
+   *
+   * LEASE THEN PROMOTE. The courtesy lock is taken under the acting member
+   * before the document is rewritten, so two members recording what came back at
+   * the same moment do not silently lose one entry — and promote's CAS on `base`
+   * is still the integrity mechanism, because a lease is a courtesy and not a
+   * guarantee (D-61's own wording).
+   *
+   * CAPTURE OR TESTIFY, REFUSED HERE AND AT THE GATE. The entry carries the
+   * bytes we hashed OR a named member's account, never neither and never both.
+   * It is refused at this op so the member is told before anything is written,
+   * and again by C-2.10 over the document that lands, and again at promote where
+   * the hash is resolved against the register — three gates, one rule, in the
+   * one construct where "we have it in writing" and "somebody remembers it" are
+   * different kinds of evidence and must not be able to be confused.
+   *
+   * AND THE NON-RESPONSE IS A FIRST-CLASS ENTRY (DEC-13). A refusal to reply is
+   * a dated first-party fact about the body and is frequently the more useful
+   * one, so it is RECORDED with the date it was due rather than left as an
+   * absence a reader has to infer. It takes the testimony arm by construction:
+   * nothing arrived, so there are no bytes to hash.
+   *
+   * THE PRODUCER OF `responds_to` IS HERE. A RECEIVED entry whose artifact
+   * resolves to a bundle in this store writes a responds_to edge on THAT
+   * document, pointing back at this action — the direction SB-OUTPUT's A10 row
+   * specifies, and the reason the relation is no longer a string the vocabulary
+   * merely tolerates. Idempotent: an edge already there is not written twice. */
+  actionCorrespond({
+    target,
+    direction = "",
+    at = "",
+    medium = "",
+    party = "",
+    artifactSha = "",
+    account = "",
+    viewer = null,
+    author = null
+  } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_CORRESPOND",
+        detail: "a correspondence entry is a named member's statement that this exchange happened \u2014 and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member."
+      };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
+    if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
+      return {
+        ok: false,
+        reason: "BAD_DIRECTION",
+        legal: CORRESPONDENCE_DIRECTIONS,
+        direction,
+        detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).`
+      };
+    const day = String(at ?? "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
+      return {
+        ok: false,
+        reason: "BAD_DATE",
+        at: day,
+        detail: "every entry in this ledger is dated YYYY-MM-DD, including a non-response, which is dated by when the reply was due"
+      };
+    const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const acct = String(account ?? "").trim();
+    if (sha && acct)
+      return {
+        ok: false,
+        reason: "CAPTURE_AND_TESTIMONY",
+        target,
+        detail: "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the group can defend."
+      };
+    if (!sha && !acct)
+      return {
+        ok: false,
+        reason: "NEITHER_CAPTURE_NOR_TESTIMONY",
+        target,
+        detail: "an entry carries either an artifact_sha that resolves in the register or an account with an author. Neither is an entry that asserts an exchange and offers no way to check that it happened."
+      };
+    if (sha && !/^[0-9a-f]{64}$/.test(sha))
+      return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
+    if (sha && direction === "no_response")
+      return {
+        ok: false,
+        reason: "NO_RESPONSE_HAS_NO_BYTES",
+        target,
+        detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)."
+      };
+    for (const [name, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
+      if (v.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
+        return {
+          ok: false,
+          reason: `BAD_${name.toUpperCase()}`,
+          detail: `${name} is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+        };
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`,
+      target,
+      ...gate.args
+    );
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return {
+        ok: false,
+        reason: "NOT_AN_ACTION",
+        target,
+        object_type: b.object_type,
+        detail: "a correspondence ledger belongs to an action: it records what that ask sent and what came back."
+      };
+    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
+      return {
+        ok: false,
+        reason: "UNREGISTERED_ARTIFACT",
+        target,
+        artifact_sha: sha,
+        detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or record a named account instead \u2014 those are the two honest ways to hold an exchange."
+      };
+    const lease = this.acquireLease(target, who, _Store.CORRESPOND_LEASE_MS);
+    if (!lease.ok)
+      return {
+        ok: false,
+        reason: "LEASE_HELD",
+        target,
+        heldBy: lease.heldBy,
+        until: lease.until,
+        detail: "another member is writing to this action right now. The ledger is append-only, so a second writer would not lose an entry \u2014 but it would interleave two accounts of the same exchange with no way to tell which was written first."
+      };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return {
+        ok: false,
+        reason: "NO_DOCUMENT",
+        target,
+        detail: "this action has no readable bundle.md, so nothing can be appended to it"
+      };
+    const fm = parseFrontmatter(liveMd.content).data || {};
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    const ord = (Array.isArray(fm.correspondence) ? fm.correspondence : []).length;
+    const entryFm = {
+      direction,
+      at: day,
+      ...String(medium ?? "").trim() ? { medium: String(medium).trim() } : {},
+      ...String(party ?? "").trim() ? { party: String(party).trim() } : {},
+      ...sha ? { artifact_sha: sha } : {},
+      ...acct ? { account: acct } : {},
+      /* SERVER-STAMPED. Present on both arms — who put this entry on the record
+         is part of the record even when the record is bytes. */
+      author: who,
+      recorded_at: when
+    };
+    let text = _Store.#spliceCorrespondence(liveMd.content, entryFm);
+    if (!text)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_CORRESPONDENCE",
+        target,
+        detail: "this action's correspondence block is not in a shape this grammar can extend in place. Appending never rewrites the rest of the document, so nothing was written."
+      };
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = _Store.#appendSessionLog(
+      text,
+      `### Session ${when} | Correspondence ${direction} | ${who}
+Trigger: op=actioncorrespond on ${target}
+Changes: correspondence[${ord}] recorded, dated ${day}${String(party ?? "").trim() ? `, with ${String(party).trim()}` : ""}.
+Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who}`}
+`
+    );
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      target
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target,
+      base: b.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: fm.object_type ?? b.object_type,
+        group: fm.group || "believe-in-oakland",
+        title: fm.title,
+        current_state: b.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+    this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+    if (!promoted.ok) return { ...promoted, target };
+    const responded = direction === "received" && sha ? this.#respondsToInto(sha, target, who) : null;
+    return {
+      ok: true,
+      target,
+      ord,
+      direction,
+      at: day,
+      author: who,
+      recorded_at: when,
+      held_as: sha ? "capture" : "testimony",
+      ...sha ? { artifact_sha: sha } : { account: acct },
+      ...responded ? { responds_to: responded } : {},
+      weight: "single"
+    };
+  }
+  /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
+     back at the action it answered. The edge lives on the responding document
+     because that is what the relation says — this document is what came back —
+     and because refs is a projection of the CITING document's own frontmatter,
+     so an edge stated anywhere else would be a second place the relationship
+     lives (D-21).
+     Returns null when the capture is not part of a bundle in this store, which
+     is a legitimate state rather than a failure: bytes may be registered against
+     a bundle that has since been purged, and the ledger entry stands on its own
+     hash either way. Idempotent by inspection, so re-recording does not
+     duplicate an edge. */
+  #respondsToInto(captureSha, actionId, who) {
+    const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, captureSha);
+    if (!reg || !reg.bundle_id || reg.bundle_id === actionId) return null;
+    const doc = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha, f.content
+         FROM bundles b JOIN files f ON f.bundle_id=b.bundle_id AND f.path='bundle.md'
+        WHERE b.bundle_id=?`,
+      reg.bundle_id
+    );
+    if (!doc || doc.content === null) return null;
+    const fm = parseFrontmatter(doc.content).data || {};
+    const refs = Array.isArray(fm.references) ? fm.references : [];
+    if (refs.some((r) => r && typeof r === "object" && r.rel === "responds_to" && r.target === actionId))
+      return { bundle_id: doc.bundle_id, already: true };
+    const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
+    let text = _Store.#spliceReferences(
+      doc.content,
+      [{ rel: "responds_to", target: actionId, status: "confirmed", note: "" }]
+    );
+    if (!text) return null;
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = _Store.#appendSessionLog(
+      text,
+      `### Session ${when} | Recorded as a response | ${who}
+Trigger: op=actioncorrespond on ${actionId}
+Changes: responds_to edge added to ${actionId}.
+`
+    );
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      doc.bundle_id
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const p = this.promote({
+      bundleId: doc.bundle_id,
+      base: doc.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: fm.object_type ?? doc.object_type,
+        group: fm.group || "believe-in-oakland",
+        title: fm.title,
+        current_state: fm.current_state ?? doc.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+    return p.ok ? { bundle_id: doc.bundle_id, already: false } : { bundle_id: doc.bundle_id, refused: p.reason };
+  }
+  /* One Session Log appender for THIS item's three writers (actionMove,
+     actionCorrespond and the responds_to producer), so they cannot disagree
+     about where an entry goes. It is written as a helper rather than open-coded
+     a third time; conclude, reopen and cite still carry their own identical
+     copies of this five-line splice, which is a real duplication and is stated
+     rather than quietly inherited — moving them onto this helper is a cleanup
+     with no behaviour in it and is not this item's to make. */
+  static #appendSessionLog(text, entry) {
+    const at = text.indexOf("## Session Log");
+    if (at < 0) return text + "\n## Session Log\n\n" + entry;
+    const nxt = text.indexOf("\n## ", at + 1);
+    const cut = nxt === -1 ? text.length : nxt + 1;
+    return text.slice(0, cut) + entry + "\n" + text.slice(cut);
+  }
+  /* REC-24 (d): APPEND one entry to the `correspondence` block, touching nothing
+     else — #spliceBasis line for line, and a twin rather than a generalisation
+     for the reason stated there: the ELEMENT shapes differ, and a parameterised
+     splicer would hide that behind an option in a grammar with no serializer.
+     A KEY IS RENDERED ONLY IF THE ENTRY CARRIES IT, so an entry held as
+     testimony carries no artifact_sha at all rather than an empty one — the
+     capture-or-testify choice is visible in the bytes and not only in a table.
+     Values are emitted quoted where they are prose (account, medium, party) and
+     bare where they are tokens, matching what the restricted grammar's parser
+     reads back. */
+  static #spliceCorrespondence(text, e) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const block = [
+      `  - direction: ${e.direction}`,
+      `    at: ${e.at}`,
+      ...e.medium ? [`    medium: "${e.medium}"`] : [],
+      ...e.party ? [`    party: "${e.party}"`] : [],
+      ...e.artifact_sha ? [`    artifact_sha: ${e.artifact_sha}`] : [],
+      ...e.account ? [`    account: "${e.account}"`] : [],
+      `    author: ${e.author}`,
+      `    recorded_at: "${e.recorded_at}"`
+    ];
+    let ci = -1;
+    for (let i = 1; i < end; i++) if (/^correspondence:/.test(lines[i])) {
+      ci = i;
+      break;
+    }
+    if (ci === -1)
+      return [...lines.slice(0, end), "correspondence:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[ci].slice("correspondence:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, ci), "correspondence:", ...block, ...lines.slice(ci + 1)].join("\n");
+    if (rest !== "") return null;
+    let last = ci;
+    for (let i = ci + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) {
+        last = i;
+        continue;
+      }
+      break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+  }
   /* REC-31: REOPENING an inquiry the group SET DOWN. deferred|dismissed ->
    * open, on op=conclude's shape and for op=conclude's reasons.
    *
@@ -15396,7 +17336,7 @@ Falsifier: ${fals}
    * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_REOPEN",
@@ -15550,6 +17490,32 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
    * writes the completeness assertion, the frozen pair and the declared bar
    * INTO the bytes a member then signs.
    *
+   * REC-44 / DEC-44 / D-187, AND IT IS A CORRECTION RATHER THAN NEW SCOPE.
+   * A PUBLISHED CASE HOLDS ONE OR MORE FINDINGS. This act used to take ONE
+   * inquiry and refuse with "publishing publishes ONE case", and nobody ever
+   * argued for that — it was assumed by every item in the chain. It now takes
+   * a SET, and the two altitudes it works at must not be collapsed:
+   *
+   *   THE FINDING IS THE UNIT OF TRUTH. Each member keeps its own conclusion,
+   *   its own falsifier, its own basis and its own derived PAIR of strengths,
+   *   frozen into its own bytes and signed on its own. A case does NOT compose
+   *   a super-conclusion over them and MUST NOT derive a single case-level
+   *   strength: that is R2's forbidden composition arriving at a new altitude,
+   *   and it is exactly the "one letter" this project has refused four times.
+   *   Nothing below computes one, and there is nowhere for one to be written.
+   *
+   *   THE CASE IS THE UNIT OF PUBLICATION. It has its own identity (minted
+   *   here, never a bundle id), its own EDITIONS (DEC-12, and this is their
+   *   natural home), its own authored SCOPE STATEMENT and the completeness
+   *   assertion, which moved up one altitude with C-21.1's byte-check.
+   *
+   * A ONE-FINDING CASE IS LEGAL AND IS THE DEGENERATE CASE (DEC-44
+   * determination 5), so `target=<id>` still works and means `targets=[<id>]`.
+   * What it does NOT mean is that the case id is that bundle's id: the
+   * identity is distinct at every arity, because a shape that changes when a
+   * second finding joins is the conflation D-187 records rather than a fix
+   * for it.
+   *
    * THE ORDER IS THE POINT AND IT IS NOT NEGOTIABLE. Authoring the exclusion
    * CHANGES THE SHA, so the signature can only be taken afterwards: you cannot
    * sign first and write the caveat later. That is why this is a separate act
@@ -15587,26 +17553,51 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
    * DEC-12: this act does NOT unpublish anything and cannot. Editions append;
    * the working document moves. */
   publishCase({
-    target,
+    target = null,
+    targets = null,
+    caseId = null,
+    scope = "",
     statement = "",
     excluded = null,
     subjectPosition = "",
     subjectJustification = "",
+    biasAcknowledgement = "",
     viewer = null,
     author = null
   } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_PUBLISH",
         detail: "publishing puts the group's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member."
       };
-    if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "publishing publishes ONE case: pass target=<inquiry id>" };
+    const set = Array.isArray(targets) ? targets : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [];
+    const members = set.map((s) => String(s ?? "").trim()).filter(Boolean);
+    if (!members.length)
+      return {
+        ok: false,
+        reason: "NO_TARGET",
+        detail: "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing."
+      };
+    {
+      const seen = /* @__PURE__ */ new Set();
+      for (const m of members) {
+        if (seen.has(m))
+          return {
+            ok: false,
+            reason: "DUPLICATE_MEMBER",
+            target: m,
+            detail: `${m} appears twice in this case. A finding is in a case once \u2014 listing it twice would give the container two copies of one document and the ordinal no meaning.`
+          };
+        seen.add(m);
+      }
+    }
     const stmt = String(statement ?? "").trim();
     const just = String(subjectJustification ?? "").trim();
     const pos = String(subjectPosition ?? "").trim();
+    const scp = String(scope ?? "").trim();
+    const back = String(biasAcknowledgement ?? "").trim();
     if (!stmt)
       return {
         ok: false,
@@ -15631,6 +17622,18 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         ok: false,
         reason: "NO_EXCLUSION_FIELD",
         detail: "pass excluded[]. An EMPTY list is a claim \u2014 this case left nothing material out \u2014 and is legal; an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse."
+      };
+    if (!scp)
+      return {
+        ok: false,
+        reason: "NO_SCOPE",
+        detail: "a published case states its own SCOPE \u2014 what brought these findings together and what question the case as a whole answers. It is authored by the group and never derived from the findings' titles: a scope this plane wrote is not a scope the group made (DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT."
+      };
+    if (!back)
+      return {
+        ok: false,
+        reason: "NO_BIAS_ACKNOWLEDGEMENT",
+        detail: "a published case carries the bias it was produced under, as a fact the reader weighs. Acknowledge it here, in the ceremony, fresh for this edition \u2014 a pre-flight checkbox would be the checkbox this gate exists to refuse (DEC-46). This is a DISCLOSURE and never a bar: declaring a bias does not stop a case being published, and nothing here reads WHICH bias you name (DEC-20). The only bias that disqualifies is an uncleared HUNCH, and that is refused by name before any signature exists."
       };
     const rows = [];
     for (let i = 0; i < excluded.length; i++) {
@@ -15659,6 +17662,8 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     for (const [name, v] of [
       ["statement", stmt],
       ["subject_justification", just],
+      ["scope", scp],
+      ["bias_acknowledgement", back],
       ...rows.flatMap((r, i) => [
         [`excluded[${i}].description`, r.description],
         [`excluded[${i}].reason`, r.reason]
@@ -15673,196 +17678,327 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         };
     }
     const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
-       WHERE b.bundle_id=? AND (${gate.sql})`,
-      target,
-      ...gate.args
-    );
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "inquiry")
+    const prepared = [];
+    for (const id of members) {
+      const b = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+         WHERE b.bundle_id=? AND (${gate.sql})`,
+        id,
+        ...gate.args
+      );
+      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+      if (normalizeType(b.object_type) !== "inquiry")
+        return {
+          ok: false,
+          reason: "NOT_AN_INQUIRY",
+          target: id,
+          object_type: b.object_type,
+          detail: "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case."
+        };
+      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      if (!liveMd || liveMd.content === null)
+        return {
+          ok: false,
+          reason: "NO_DOCUMENT",
+          target: id,
+          detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
+        };
+      const fm = parseFrontmatter(liveMd.content).data || {};
+      const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
+      const legalFrom = spec?.edges?.[b.current_state] || [];
+      if (!legalFrom.includes("published"))
+        return {
+          ok: false,
+          reason: "ILLEGAL_TRANSITION",
+          to: "published",
+          target: id,
+          from: b.current_state,
+          object_type: fm.object_type ?? b.object_type,
+          detail: "publishing is reachable ONLY from `concluded`: a material set cannot be asserted over a question with no conclusion. Conclude it first (op=conclude), and a case already published is reopened before it can be concluded again for a new edition."
+        };
+      prepared.push({ id, b, fm, text: liveMd.content });
+    }
+    const belongs = /* @__PURE__ */ new Map();
+    for (const id of members) {
+      const row = this.#one(
+        `SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
+        id
+      );
+      if (row) belongs.set(id, row.case_id);
+    }
+    const distinct = [...new Set(belongs.values())];
+    const claimedInBytes = [...new Set(prepared.map((p) => typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null).filter(Boolean))];
+    if (distinct.length > 1)
       return {
         ok: false,
-        reason: "NOT_AN_INQUIRY",
-        target,
-        object_type: b.object_type,
-        detail: "a case is an inquiry that reached a conclusion; nothing else publishes."
+        reason: "FINDINGS_IN_DIFFERENT_CASES",
+        cases: distinct.sort(),
+        detail: `these findings already belong to different published cases (${distinct.sort().join(", ")}). A finding is a member of ONE case: publishing it into a second would make "which edition does this leg cite" unanswerable, since editions are over the CASE (DEC-12).`
       };
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!liveMd || liveMd.content === null)
+    let theCase = String(caseId ?? "").trim() || distinct[0] || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
+    if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
       return {
         ok: false,
-        reason: "NO_DOCUMENT",
-        target,
-        detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
+        reason: "NO_SUCH_CASE",
+        caseId: theCase,
+        detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
-    let text = liveMd.content;
-    const fm = parseFrontmatter(text).data || {};
-    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
-    const legalFrom = spec?.edges?.[b.current_state] || [];
-    if (!legalFrom.includes("published"))
-      return {
-        ok: false,
-        reason: "ILLEGAL_TRANSITION",
-        to: "published",
-        target,
-        from: b.current_state,
-        object_type: fm.object_type ?? b.object_type,
-        detail: "publishing is reachable ONLY from `concluded`: a material set cannot be asserted over a question with no conclusion. Conclude it first (op=conclude), and a case already published is reopened before it can be concluded again for a new edition."
-      };
-    const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, target);
+    for (const [id, had] of belongs)
+      if (theCase && had !== theCase)
+        return {
+          ok: false,
+          reason: "FINDING_IN_ANOTHER_CASE",
+          target: id,
+          caseId: had,
+          into: theCase,
+          detail: `${id} is already a published finding of ${had}. A finding belongs to one case; to move it, publish a new edition of ${had} without it first.`
+        };
+    const minted = !theCase;
+    if (minted) theCase = this.allocId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4)).id;
+    const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
     const edition = (top && top.m != null ? Number(top.m) : 0) + 1;
-    const reg = this.publishedRegistryFor(target);
-    const prior = reg[target] && reg[target].editions ? Object.values(reg[target].editions).sort((a, c) => Number(c.edition) - Number(a.edition))[0] : null;
-    if (prior && prior.completeness) {
-      const now = completenessFields({
-        completeness: { statement: stmt, subject_justification: just },
-        completeness_excluded: rows
-      });
+    const priorCase = this.#one(
+      `SELECT edition, completeness, bias_acknowledgement FROM published_cases
+       WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
+      theCase,
+      edition
+    );
+    const priorCompleteness = priorCase && priorCase.completeness ? JSON.parse(priorCase.completeness) : null;
+    if (priorCompleteness) {
+      const now = {
+        ...completenessFields({
+          completeness: { statement: stmt, subject_justification: just },
+          completeness_excluded: rows
+        }),
+        bias_acknowledgement: back
+      };
+      const was = { ...priorCompleteness, bias_acknowledgement: priorCase.bias_acknowledgement ?? null };
       const LABEL = {
         statement: "statement",
         subject_justification: "the subject-position justification",
-        excluded: "the exclusion list"
+        excluded: "the exclusion list",
+        bias_acknowledgement: "the bias acknowledgement"
       };
+      const REASON = { bias_acknowledgement: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" };
+      const WHY = { bias_acknowledgement: `An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. The lens itself may well be unchanged \u2014 what must be fresh is what it means for THIS edition's findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).` };
       for (const k of Object.keys(LABEL))
-        if (now[k] != null && prior.completeness[k] != null && now[k] === prior.completeness[k])
+        if (now[k] != null && was[k] != null && now[k] === was[k])
           return {
             ok: false,
-            reason: "COMPLETENESS_CARRIED_FORWARD",
+            reason: REASON[k] || "COMPLETENESS_CARRIED_FORWARD",
             field: k,
             edition,
-            prior: prior.edition,
-            detail: `${LABEL[k]} is byte-identical to edition ${prior.edition}'s. A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.`
+            check: "C-21.1",
+            caseId: theCase,
+            prior: priorCase.edition,
+            detail: `${LABEL[k]} is byte-identical to edition ${priorCase.edition}'s. ${WHY[k] || `A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.`}`
           };
     }
-    const pair = this.strengthOf(target);
-    const bar = this.#requiredStrengthFor(target, fm);
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
-    const withHistory = _Store.#appendStateHistory(text, {
-      timestamp: when,
-      from_state: b.current_state,
-      to_state: "published",
-      blurb: `edition ${edition}`,
-      author: who
-    });
-    if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
-        target,
-        detail: "this document's state_history block cannot be extended in place, and a publication recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
-    text = withHistory;
-    text = _Store.#setScalar(text, "prior_state", b.current_state);
-    text = _Store.#setScalar(text, "current_state", "published");
-    text = _Store.#setOrAddScalar(text, "edition", String(edition));
-    text = _Store.#setOrAddBlock(text, "completeness", [
-      `  statement: "${stmt}"`,
-      `  subject_position: ${pos}`,
-      `  subject_justification: "${just}"`,
-      `  author: ${who}`,
-      `  at: "${when}"`
-    ]);
-    text = _Store.#setOrAddBlock(
-      text,
-      "completeness_excluded",
-      rows.length ? rows.flatMap((r) => [
-        ...r.target ? [`  - target: ${r.target}`, `    description: "${r.description}"`] : [`  - description: "${r.description}"`],
-        `    reason: "${r.reason}"`
-      ]) : []
-    );
-    text = _Store.#setOrAddBlock(
-      text,
-      "published_strength",
-      _Store.STRENGTH_AXES.flatMap((axis) => {
-        const a = pair[axis];
-        return [
-          `  - axis: ${axis}`,
-          `    state: ${a.state}`,
-          `    grade: ${a.grade ?? "null"}`,
-          `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
-          `    load_bearing: ${a.load_bearing}`,
-          `    population: ${a.population}`,
-          `    detail: "${_Store.#fmSafe(a.detail)}"`
-        ];
-      })
-    );
-    text = _Store.#setOrAddBlock(text, "required_strength", [
-      `  declared: ${bar.declared}`,
-      `  source: ${bar.source}`,
-      `  capture: ${bar.capture ?? "null"}`,
-      `  connection: ${bar.connection ?? "null"}`,
-      `  detail: "${_Store.#fmSafe(bar.detail)}"`
-    ]);
-    text = _Store.#setOrAddScalar(
-      text,
-      "division_parent",
-      typeof fm.division_parent === "string" ? fm.division_parent : "null"
-    );
-    text = _Store.#setOrAddScalar(
-      text,
-      "division_siblings",
-      Array.isArray(fm.division_siblings) && fm.division_siblings.length ? `[${fm.division_siblings.join(", ")}]` : "[]"
-    );
-    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
-    text = _Store.#setSection(text, "## What This Excludes", [
-      stmt,
-      "",
-      ...rows.length ? rows.flatMap((r) => [`- ${r.target ? r.target + " \u2014 " : ""}${r.description || "(named above)"}: ${r.reason}`]) : ["Nothing material was excluded from this case."],
-      "",
-      `Position on putting this case to its subject: ${pos}. ${just}`
-    ]);
-    const entry = `### Session ${when} | Published | ${who}
-Trigger: op=publish on ${target}
-Changes: state ${b.current_state} to published, edition ${edition}.
+    const roster = members.join(", ");
+    const written = [];
+    for (const p of prepared) {
+      const { id: target2, b, fm } = p;
+      let text = p.text;
+      const pair = this.strengthOf(target2);
+      const bar = this.#requiredStrengthFor(target2, fm);
+      const withHistory = _Store.#appendStateHistory(text, {
+        timestamp: when,
+        from_state: b.current_state,
+        to_state: "published",
+        blurb: `edition ${edition}`,
+        author: who
+      });
+      if (!withHistory)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_STATE_HISTORY",
+          target: target2,
+          detail: "this document's state_history block cannot be extended in place, and a publication recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
+        };
+      text = withHistory;
+      text = _Store.#setScalar(text, "prior_state", b.current_state);
+      text = _Store.#setScalar(text, "current_state", "published");
+      text = _Store.#setOrAddScalar(text, "edition", String(edition));
+      text = _Store.#setOrAddScalar(text, "case_id", theCase);
+      text = _Store.#setOrAddScalar(text, "case_scope", `"${_Store.#fmSafe(scp)}"`);
+      text = _Store.#setOrAddScalar(text, "bias_acknowledgement", `"${_Store.#fmSafe(back)}"`);
+      text = _Store.#setOrAddScalar(text, "case_findings", `[${roster}]`);
+      text = _Store.#setOrAddBlock(text, "completeness", [
+        `  statement: "${stmt}"`,
+        `  subject_position: ${pos}`,
+        `  subject_justification: "${just}"`,
+        `  author: ${who}`,
+        `  at: "${when}"`
+      ]);
+      text = _Store.#setOrAddBlock(
+        text,
+        "completeness_excluded",
+        rows.length ? rows.flatMap((r) => [
+          ...r.target ? [`  - target: ${r.target}`, `    description: "${r.description}"`] : [`  - description: "${r.description}"`],
+          `    reason: "${r.reason}"`
+        ]) : []
+      );
+      text = _Store.#setOrAddBlock(
+        text,
+        "published_strength",
+        _Store.STRENGTH_AXES.flatMap((axis) => {
+          const a = pair[axis];
+          return [
+            `  - axis: ${axis}`,
+            `    state: ${a.state}`,
+            `    grade: ${a.grade ?? "null"}`,
+            `    weakest: ${a.weakest ? a.weakest.target_id : "null"}`,
+            `    load_bearing: ${a.load_bearing}`,
+            `    population: ${a.population}`,
+            `    detail: "${_Store.#fmSafe(a.detail)}"`
+          ];
+        })
+      );
+      const frozenGrounds = _Store.STRENGTH_AXES.flatMap((axis) => (pair[axis].grounds ?? []).map((g) => [axis, g]));
+      if (frozenGrounds.length)
+        text = _Store.#setOrAddBlock(
+          text,
+          "published_strength_grounds",
+          frozenGrounds.flatMap(([axis, g]) => [
+            `  - axis: ${axis}`,
+            `    ground: ${g.ground === null ? "null" : `"${_Store.#fmSafe(String(g.ground))}"`}`,
+            `    state: ${g.state}`,
+            `    grade: ${g.grade ?? "null"}`,
+            `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
+            `    load_bearing: ${g.load_bearing}`,
+            `    population: ${g.population}`
+          ])
+        );
+      text = _Store.#setOrAddBlock(text, "required_strength", [
+        `  declared: ${bar.declared}`,
+        `  source: ${bar.source}`,
+        `  capture: ${bar.capture ?? "null"}`,
+        `  connection: ${bar.connection ?? "null"}`,
+        `  detail: "${_Store.#fmSafe(bar.detail)}"`
+      ]);
+      text = _Store.#setOrAddScalar(
+        text,
+        "division_parent",
+        typeof fm.division_parent === "string" ? fm.division_parent : "null"
+      );
+      text = _Store.#setOrAddScalar(
+        text,
+        "division_siblings",
+        Array.isArray(fm.division_siblings) && fm.division_siblings.length ? `[${fm.division_siblings.join(", ")}]` : "[]"
+      );
+      text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+      text = _Store.#setSection(text, "## What This Excludes", [
+        stmt,
+        "",
+        ...rows.length ? rows.flatMap((r) => [`- ${r.target ? r.target + " \u2014 " : ""}${r.description || "(named above)"}: ${r.reason}`]) : ["Nothing material was excluded from this case."],
+        "",
+        `Position on putting this case to its subject: ${pos}. ${just}`
+      ]);
+      const entry = `### Session ${when} | Published | ${who}
+Trigger: op=publish on ${target2}
+Changes: state ${b.current_state} to published, case ${theCase} edition ${edition}.
+Case scope: ${scp}
+Findings in this case: ${roster}
 Completeness: ${stmt}
 Excluded: ${rows.length} item(s).
 Subject position: ${pos} \u2014 ${just}
 `;
-    const at = text.indexOf("## Session Log");
-    if (at < 0) text += "\n## Session Log\n\n" + entry;
-    else {
-      const nxt = text.indexOf("\n## ", at + 1);
-      const cutAt = nxt === -1 ? text.length : nxt + 1;
-      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-    }
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
-      target
-    ))
-      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-    const bytes = new TextEncoder().encode(text);
-    const promoted = this.promote({
-      bundleId: target,
-      base: b.bundle_sha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-      author: who,
-      files: [{
-        path: "bundle.md",
-        text,
-        bytes: bytes.length,
-        sha256: createSha256().update(bytes).hex()
-      }, ...carried],
-      meta: {
-        object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
-        title: fm.title,
-        current_state: "published",
-        prior_state: b.current_state,
-        created: fm.created,
-        last_updated: when,
-        criticality: fm.criticality ?? null
+      const at = text.indexOf("## Session Log");
+      if (at < 0) text += "\n## Session Log\n\n" + entry;
+      else {
+        const nxt = text.indexOf("\n## ", at + 1);
+        const cutAt = nxt === -1 ? text.length : nxt + 1;
+        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
       }
-    });
-    if (!promoted.ok) return { ...promoted, target };
+      const carried = [];
+      for (const r of this.sql.exec(
+        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+        target2
+      ))
+        carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+      const bytes = new TextEncoder().encode(text);
+      const promoted = this.promote({
+        bundleId: target2,
+        base: b.bundle_sha,
+        snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+        author: who,
+        files: [{
+          path: "bundle.md",
+          text,
+          bytes: bytes.length,
+          sha256: createSha256().update(bytes).hex()
+        }, ...carried],
+        meta: {
+          object_type: fm.object_type ?? b.object_type,
+          group: fm.group || "believe-in-oakland",
+          title: fm.title,
+          current_state: "published",
+          prior_state: b.current_state,
+          created: fm.created,
+          last_updated: when,
+          criticality: fm.criticality ?? null
+        }
+      });
+      if (!promoted.ok) return { ...promoted, target: target2, caseId: theCase, moved: written.map((w) => w.target) };
+      written.push({
+        target: target2,
+        from: b.current_state,
+        to: "published",
+        bundleSha: promoted.bundleSha,
+        title: fm.title ?? null,
+        /* PER FINDING, and it stays a per-finding array in the
+           answer for the same reason it stays one in the bytes. */
+        strength: _Store.STRENGTH_AXES.map((axis) => ({
+          axis,
+          state: pair[axis].state,
+          grade: pair[axis].grade,
+          weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null
+        })),
+        required: bar,
+        /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
+           obligation on everything whose basis names this FINDING and
+           RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
+           the edition it names, and C-21.2 keeps comparing against that
+           edition's own frozen pair. Reported from edition 2 onward
+           because edition 1 moves nothing under anybody: there was no
+           prior edition for a leg to be resting on. It is raised PER
+           FINDING because a leg rests on a finding, never on a case —
+           C-21.2's altitude, which DEC-44 leaves exactly where it was. */
+        ...edition > 1 ? { reevaluation: {
+          source: "edition",
+          since: when,
+          edition,
+          raised: this.#reevalRaisedBy(target2, viewer)
+        } } : {}
+      });
+    }
     return {
       ok: true,
-      target,
-      from: b.current_state,
-      to: "published",
+      caseId: theCase,
+      minted,
       edition,
-      bundleSha: promoted.bundleSha,
+      to: "published",
+      /* THE SET, in the order the member published it — which is the
+         order the container's parts[] and every rendering take. */
+      findings: written,
+      /* The degenerate one-finding case answers `target` and `bundleSha`
+         as it always did (DEC-44 determination 5: nothing built is
+         wasted and the common early use is unchanged). A case of two
+         answers NEITHER, deliberately: a caller reading a single sha off
+         a multi-finding case would be reading one member's document and
+         believing it was the case. */
+      ...written.length === 1 ? {
+        target: written[0].target,
+        bundleSha: written[0].bundleSha,
+        from: written[0].from
+      } : {},
+      scope: scp,
+      /* REC-47: BESIDE the completeness block, not inside it. The lens
+         and the limits are two claims (DEC-46), and nesting one in the
+         other is the collapse REC-44 spent an item undoing one altitude
+         down. */
+      bias_acknowledgement: back,
       completeness: {
         statement: stmt,
         subject_position: pos,
@@ -15871,30 +18007,14 @@ Subject position: ${pos} \u2014 ${just}
         at: when,
         excluded: rows.length
       },
-      strength: _Store.STRENGTH_AXES.map((axis) => ({
-        axis,
-        state: pair[axis].state,
-        grade: pair[axis].grade,
-        weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null
-      })),
-      required: bar,
       author: who,
       at: when,
       weight: "single",
-      /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
-         obligation on everything whose basis names this case and
-         RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
-         the edition it names, and C-21.2 keeps comparing against that
-         edition's own frozen pair. Reported from edition 2 onward
-         because edition 1 moves nothing under anybody: there was no
-         prior edition for a leg to be resting on. */
-      ...edition > 1 ? { reevaluation: {
-        source: "edition",
-        since: when,
-        edition,
-        raised: this.#reevalRaisedBy(target, viewer)
-      } } : {},
-      next: "review this sha and ratify it (op=ratify): the assertion is inside the bytes, so the signature can only be taken after it is written"
+      /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE
+         ONE. Two findings whose strengths differ have two answers; one
+         letter over the case is R2's forbidden composition arriving at
+         case altitude, and its ABSENCE here is asserted by the suite. */
+      next: written.length === 1 ? "review this sha and ratify it (op=ratify): the assertion is inside the bytes, so the signature can only be taken after it is written" : `review and ratify EACH of these ${written.length} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands`
     };
   }
   static COMPLETENESS_MAX = 2e3;
@@ -15953,7 +18073,7 @@ Subject position: ${pos} \u2014 ${just}
    * — is refused rather than quietly given a state its contract never had. */
   divide({ target, reason = "", children = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_DIVIDE",
@@ -16214,10 +18334,20 @@ Subject position: ${pos} \u2014 ${just}
       const findings = [];
       supersedesEdgeFindings(cf, findings);
       divisionDisclosureFindings(cf, findings);
-      checkInquiryBasis(cf, findings, this.publishedRegistryFor(
-        pl.id,
-        pl.legs.map((l) => l.target).filter((t) => typeof t === "string")
-      ));
+      checkInquiryBasis(
+        cf,
+        findings,
+        this.publishedRegistryFor(
+          pl.id,
+          pl.legs.map((l) => l.target).filter((t) => typeof t === "string")
+        ),
+        /* REC-18: the earned registry for the CHILD, judged before the parent
+           moves exactly as every other rule here is. A child inherits the
+           parent's subject_entity through the copied frontmatter, so an
+           apportioned earned leg is re-confirmed against the record rather than
+           carried across on trust. */
+        this.earnedRegistryForDoc(cf, pl.legs)
+      );
       const errs = findings.filter((x) => x.severity === "error");
       if (errs.length)
         return {
@@ -16385,6 +18515,462 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id and every sibling's. This question is terminal: it is answered by its children now."
     };
   }
+  /* =======================================================================
+   * REC-45 / DEC-32: `op=inquiryground` — THE ACT THAT AUTHORS THE STRUCTURE.
+   *
+   * REC-42 built the partition and both gates that defend it, and left one gap
+   * routed rather than closed: NOTHING AUTHORED IT. Grounds reached the record
+   * only through a hand-written `bundle.md` promoted by op=promote, so DEC-32
+   * clause 6 — *"RESTRUCTURING AFTER SEEING THE STRENGTH IS LEGAL, RECORDED AND
+   * ATTRIBUTED — never blocked… the system may NOTICE the pattern"* — was
+   * unreachable in both halves at once, because neither RECORDING nor NOTICING
+   * is possible without an act that carries a reason. This is that act.
+   *
+   * IT IS BUILT ON op=publish's STAMPING SHAPE, and the split is the same one:
+   *   AUTHORED, caller-supplied, never prefilled — WHICH legs are grouped
+   *   together, what each group is called, the optional STATEMENT on a group,
+   *   and the REASON for a restructuring. Nothing here proposes a partition,
+   *   guesses a label, or moves a leg on a member's behalf.
+   *   STAMPED by the server — `asserted_by` and `at` on every group, taken from
+   *   the authenticated session and the clock and NEVER from a parameter.
+   *
+   * AND THE STAMP IS THE POINT OF THE ITEM. REC-42's gate already refuses a
+   * MACHINE asserter and an UNDATED assertion; what it cannot refuse is a
+   * caller who supplies a well-formed name and a well-formed date belonging to
+   * somebody else, or belonging to an hour before the strength was shown. So a
+   * caller's `asserted_by`/`at` are DELETED from every row before the stamp
+   * (the op=promote `ownerMemberId` precedent, and the reason it is DELETE and
+   * not OVERWRITE: overwriting is a property of the code path taken, deletion
+   * is a property of the input, and only the second survives somebody later
+   * adding an arm). CLAUDE.md's rule is exactly this one — a provenance hop a
+   * caller can hand us is one a caller can invent — and this is the last door
+   * on the one field in the record that makes a finding STRONGER.
+   *
+   * WHAT COUNTS AS A RESTRUCTURE, and it is decided from the RECORD:
+   * the inquiry is in FIRST AUTHORSHIP when its standing document carries NO
+   * partition at all — no leg names a group and there is no `grounds` key — and
+   * is being RESTRUCTURED in every other case. A reason is REQUIRED on the
+   * second and required on neither half of the first; DEC-32's clause is about
+   * a member who *"may legitimately realise their structure was wrong"*, and
+   * there must be a structure for that to be true of. The distinction is NOT a
+   * parameter and must never become one: a caller who could declare "this is my
+   * first time" could walk past the reason gate on every restructuring they
+   * made. REMOVING a partition is a restructure too, and takes a reason like
+   * any other — it changes an authored structure, and the fact that it moves in
+   * the conservative direction is a fact about the ANSWER, not about the act.
+   *
+   * WHAT CARRIES FORWARD AND WHAT IS RE-STAMPED, which is the other half of
+   * making clause 6 legible. A group's row asserts that ITS LEGS are enough on
+   * their own, so the assertion is ABOUT the legs: a group whose leg set and
+   * statement are unchanged keeps the `asserted_by` and `at` it already had,
+   * and a group whose membership moved becomes THIS member's assertion, NOW.
+   * Re-stamping everything would erase the one thing DEC-32 says the date is
+   * for — *"a structure authored after a strength was seen is a different act
+   * from one authored before it, and only a date lets a reader tell"* — and
+   * carrying everything forward would let a member re-cut a group under
+   * somebody else's name and an older date.
+   *
+   * ONE GRAMMAR, AT BOTH GATES, AND NO SECOND ONE HERE. The candidate document
+   * is judged by `checkInquiryBasis` — the catalog's own function, the same one
+   * op=promote runs at the write and the checker runs at the gate — over the
+   * SAME two registries promote injects, and it is judged BEFORE a byte moves.
+   * The refusal is even called `BASIS_REFUSED`, promote's name, because one
+   * function answering twice should not answer under two names. So every REC-42
+   * refusal fires through this act: an unattributed label, a half-labelled
+   * basis, a machine asserter, an undated assertion, a duplicate label and an
+   * empty group. What is refused HERE and could not be refused there is the
+   * mapping this act introduces and the document does not have — an ordinal
+   * naming no leg, and one leg claimed by two groups.
+   *
+   * THE PARTITION IS ADDRESSED BY ORDINAL and never by target id, which is
+   * REC-16's apportionment decision for REC-16's reason: D4 makes duplicate
+   * targets legal, a basis legitimately cites one document for two legs, and
+   * target-keying would let one instruction move two legs a member meant to
+   * separate. `ord` is the leg's position in `basis[]`, which is what
+   * `inquiry_basis` already keys on.
+   *
+   * TWO STATES REFUSE BY NAME, on op=inquirydivide's precedent that a refusal
+   * should say which rule it met. `published`: the pair and the per-group
+   * breakdown are inside signed, ratified bytes, and re-cutting the partition
+   * underneath them would leave the document composing to something an edition
+   * on the record contradicts — DEC-12's route is reopen, restructure,
+   * republish. `divided`: the parent was declared MALFORMED and carried forward
+   * into children, and re-deriving a terminal parent's strength moves a number
+   * its children's own disclosure already pointed at.
+   *
+   * WHAT IS DELIBERATELY NOT HERE. No NOTICER. DEC-32 says the system MAY
+   * notice a weak leg moved into its own group immediately after a strength
+   * drop and surface it; this act makes that possible and does not do it, and
+   * the difference matters — noticing is a derived read with a surface half
+   * (UI-27's), and building it inside the act would put a judgement about the
+   * member's motive in the same function that must never refuse them (*"a
+   * machine may not refuse the act and must not hide it"*). What this act does
+   * instead is leave the evidence a noticer needs where an append-only history
+   * keeps it: the pair AS IT STOOD BEFORE the act and after it, written into
+   * the Session Log entry beside the reason, and returned to the caller.
+   */
+  groundInquiry({ target, grounds, reason = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_GROUND",
+        detail: "grouping is a named member's judgement that some of their reasons are enough on their own to carry their answer, and it is the one act in this record that makes a finding STRONGER. A machine credential may surface a question and gather what it rests on; it may not decide that part of the gathering was sufficient by itself. Sign in as a member."
+      };
+    if (!target)
+      return {
+        ok: false,
+        reason: "NO_TARGET",
+        detail: "grouping authors the structure of ONE question: pass target=<inquiry id>"
+      };
+    if (grounds === void 0)
+      return {
+        ok: false,
+        reason: "NO_PARTITION",
+        target,
+        detail: "pass grounds[] \u2014 an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. Pass an EMPTY array to remove the grouping entirely and let the answer read as its weakest leg again; that is a restructuring like any other and takes a reason."
+      };
+    const gate = viewerPredicate(viewer);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`,
+      target,
+      ...gate.args
+    );
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        target,
+        object_type: b.object_type,
+        detail: "a basis is what a QUESTION rests on, and only an inquiry carries one."
+      };
+    if (b.current_state === "published")
+      return {
+        ok: false,
+        reason: "PUBLISHED_CANNOT_RESTRUCTURE",
+        target,
+        from: b.current_state,
+        detail: "a published case's composed strength and its per-group breakdown are inside signed, ratified bytes. Re-cutting the structure underneath them would leave this document composing to something the edition on the record contradicts. Reopen it (op=reopen), restructure, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this."
+      };
+    if (b.current_state === "divided")
+      return {
+        ok: false,
+        reason: "DIVIDED_CANNOT_RESTRUCTURE",
+        target,
+        from: b.current_state,
+        detail: "this question was declared malformed and carried forward into children that supersede it. Re-deriving its strength now would move a number its children's own disclosure already points at. Restructure the CHILD that carries the half you mean."
+      };
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return {
+        ok: false,
+        reason: "NO_DOCUMENT",
+        target,
+        detail: "this inquiry has no readable bundle.md, so its structure cannot be authored"
+      };
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+    const all = Array.isArray(fm.basis) ? fm.basis : [];
+    const legs = all.filter((l) => l && typeof l === "object");
+    if (!legs.length)
+      return {
+        ok: false,
+        reason: "NO_BASIS",
+        target,
+        detail: "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold."
+      };
+    if (legs.length !== all.length)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_BASIS",
+        target,
+        detail: "this question's basis carries an entry that is not a leg, so the ordinals a partition addresses cannot be lined up against the document. Nothing was written."
+      };
+    const standingLabel = legs.map((l) => typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null);
+    const standingRows = Array.isArray(fm.grounds) ? fm.grounds : [];
+    const standingByLabel = /* @__PURE__ */ new Map();
+    for (const r of standingRows)
+      if (r && typeof r === "object" && typeof r.ground === "string" && !standingByLabel.has(r.ground))
+        standingByLabel.set(r.ground, r);
+    const restructure = standingLabel.some((g) => g !== null) || fm.grounds !== void 0 && fm.grounds !== null;
+    const why = String(reason ?? "").trim();
+    if (restructure && !why)
+      return {
+        ok: false,
+        reason: "NO_REASON",
+        target,
+        restructure: true,
+        detail: "this question already carries an authored structure, so changing it is a REVISION and records WHY. Restructuring after seeing a strength is legal and is never blocked (DEC-32) \u2014 the defence is that it is visible, which it is not without an account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping needs no reason: there is no earlier structure for it to be a revision of."
+      };
+    if (why && (why.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why)))
+      return {
+        ok: false,
+        reason: "BAD_REASON",
+        target,
+        detail: `a reason is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+      };
+    if (!Array.isArray(grounds))
+      return {
+        ok: false,
+        reason: "BAD_PARTITION",
+        target,
+        detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }"
+      };
+    const nextLabel = new Array(legs.length).fill(null);
+    const claimed = /* @__PURE__ */ new Map();
+    const asked = [];
+    for (let i = 0; i < grounds.length; i++) {
+      const row = grounds[i];
+      if (!row || typeof row !== "object" || Array.isArray(row))
+        return {
+          ok: false,
+          reason: "BAD_PARTITION",
+          target,
+          at: i,
+          detail: `grounds[${i}] is not an object`
+        };
+      const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
+      const ords = row.legs;
+      if (!Array.isArray(ords))
+        return {
+          ok: false,
+          reason: "BAD_PARTITION",
+          target,
+          at: i,
+          detail: `grounds[${i}].legs must be an array of ordinals \u2014 a group is a partition OF THE LEGS, and a group naming none asserts that nothing is enough on its own. Legs are addressed by ORDINAL (their position in basis[]) and never by target id, because one document legitimately carries two legs (D4).`
+        };
+      const stmt = row.statement === void 0 || row.statement === null ? null : row.statement;
+      if (stmt !== null && (typeof stmt !== "string" || stmt.length > _Store.EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
+        return {
+          ok: false,
+          reason: "BAD_STATEMENT",
+          target,
+          at: i,
+          detail: `grounds[${i}].statement is at most ${_Store.EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+        };
+      for (const raw of ords) {
+        if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
+          return {
+            ok: false,
+            reason: "BAD_PARTITION",
+            target,
+            at: i,
+            ord: raw ?? null,
+            legs: legs.length,
+            detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.`
+          };
+        if (claimed.has(raw))
+          return {
+            ok: false,
+            reason: "BAD_PARTITION",
+            target,
+            ord: raw,
+            claimed_by: [claimed.get(raw), label],
+            detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a leg that is needed whatever else holds is NECESSARY, and the honest way to say so is to leave the reasons ungrouped \u2014 an ungrouped basis is read as no stronger than its weakest leg, which is the conservative reading.`
+          };
+        claimed.set(raw, label);
+        nextLabel[raw] = label;
+      }
+      asked.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
+    }
+    const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const ordsOf = (label) => standingLabel.reduce((a, g, i) => g === label ? [...a, i] : a, []);
+    const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
+    const rowsOut = asked.map((a) => {
+      const prior = typeof a.label === "string" ? standingByLabel.get(a.label) : void 0;
+      const priorStmt = prior && typeof prior.statement === "string" ? prior.statement : null;
+      const carry = !!prior && same(a.ords, ordsOf(a.label)) && priorStmt === a.statement && typeof prior.asserted_by === "string" && prior.asserted_by.trim() !== "" && typeof prior.at === "string" && prior.at.trim() !== "";
+      return {
+        ground: a.label,
+        legs: a.ords,
+        statement: a.statement,
+        /* A caller's own `asserted_by`/`at` never appear in this object.
+           They are not overwritten from `row` — `row` is never read for
+           them at all, which is the same thing DELETE buys at the trust
+           boundary and is why the suite asserts a caller's values are
+           DISCARDED rather than merely losing. */
+        asserted_by: carry ? _Store.#fmSafe(prior.asserted_by) : _Store.#fmSafe(who),
+        at: carry ? _Store.#fmSafe(prior.at) : when,
+        carried_forward: carry
+      };
+    });
+    if (same(nextLabel.map((g) => String(g)), standingLabel.map((g) => String(g))) && rowsOut.every((r) => r.carried_forward) && standingByLabel.size === rowsOut.length)
+      return {
+        ok: false,
+        reason: "PARTITION_UNCHANGED",
+        target,
+        detail: "this is the structure this question already carries, leg for leg. Nothing was written: a revision that changes nothing would put a restructuring in the record that did not happen."
+      };
+    const grouped = nextLabel.some((g) => g !== null);
+    const candidate = {
+      ...fm,
+      basis: legs.map((l, i) => {
+        if (nextLabel[i] === null) {
+          const { ground, ...rest } = l;
+          return rest;
+        }
+        return { ...l, ground: nextLabel[i] };
+      })
+    };
+    if (grounds.length) candidate.grounds = rowsOut.map((r) => ({
+      ground: r.ground,
+      asserted_by: r.asserted_by,
+      at: r.at,
+      ...r.statement === null ? {} : { statement: r.statement }
+    }));
+    else delete candidate.grounds;
+    const bf = [];
+    checkInquiryBasis(
+      candidate,
+      bf,
+      this.publishedRegistryFor(
+        target,
+        legs.map((l) => l.target).filter((t) => typeof t === "string")
+      ),
+      this.earnedRegistryForDoc(candidate, candidate.basis)
+    );
+    const errs = bf.filter((x) => x.severity === "error");
+    if (errs.length)
+      return {
+        ok: false,
+        reason: "BASIS_REFUSED",
+        target,
+        findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
+        detail: "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date."
+      };
+    const before = this.strengthOf(target);
+    const spliced = _Store.#spliceBasisGround(text, nextLabel);
+    if (!spliced)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_BASIS",
+        target,
+        detail: "this document's basis block is not in a shape this grammar can edit in place. Nothing was written \u2014 a partial edit of a basis is worse than none."
+      };
+    text = spliced;
+    text = grounds.length ? _Store.#setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [
+      `  - ground: ${r.ground}`,
+      `    asserted_by: ${r.asserted_by}`,
+      `    at: "${r.at}"`,
+      ...r.statement === null ? [] : [`    statement: "${r.statement}"`]
+    ])) : _Store.#removeBlock(text, "grounds");
+    text = _Store.#setScalar(text, "last_updated", `"${when}"`);
+    const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}`;
+    text = _Store.#appendSessionLog(
+      text,
+      `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who}
+Trigger: op=inquiryground on ${target}
+Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) \u2014 ` + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ") : `grouping removed; ${legs.length} leg(s) read as necessary again`}.
+` + (restructure ? `Reason: ${why}
+` : "First grouping: no earlier structure to revise.\n") + `Strength before: ${w(before)}.
+`
+    );
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      target
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target,
+      base: b.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      /* NO STATE MOVES. The meta carries the document's own state forward
+         unchanged — this act authors what a question rests on, not where it
+         stands — which is why it is not in index.mjs's STATE_ACTIONS. */
+      meta: {
+        object_type: fm.object_type ?? b.object_type,
+        group: fm.group || "believe-in-oakland",
+        title: fm.title,
+        current_state: b.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+    if (!promoted.ok) return { ...promoted, target };
+    const after = this.strengthOf(target);
+    return {
+      ok: true,
+      target,
+      act: restructure ? "restructured" : "authored",
+      grouped,
+      grounds: rowsOut,
+      legs: legs.length,
+      reason: restructure ? why : null,
+      asserted_by: who,
+      at: when,
+      weight: "single",
+      bundleSha: promoted.bundleSha,
+      /* DEC-32 clause 6's noticing material, returned as well as
+         recorded. NOT a judgement: the act reports what the pair was and
+         what it is, and says nothing about why the member moved. */
+      strength: {
+        before: { capture: before.capture, connection: before.connection },
+        after: { capture: after.capture, connection: after.connection }
+      },
+      next: grouped ? "each group's strength is its weakest leg, and this question's is its strongest group. Every group carries the name and the date of the member who asserted it was enough on its own, and a published case carries the per-group breakdown inside the signed bytes." : "this question reads as its weakest leg again, which is the conservative reading and the one an ungrouped basis always takes."
+    };
+  }
+  /* REC-45: set or clear the `ground:` line on each basis leg, addressed BY
+       POSITION and touching nothing else in the document.
+       `byOrd[i]` is the label for basis[i], or null to remove any label it has.
+  
+       WHY A SPLICE AND NOT A REWRITE of the block: a leg carries authored fields
+       this act has no business restating — a grade, its source, a hunch's author
+       and date, a note — and rebuilding the block from the parsed frontmatter
+       would silently re-emit every one of them through this function's idea of
+       the grammar. #spliceEdgeStatus's discipline exactly: walk the entries, edit
+       the one line that is ours, and refuse (null) rather than guess if the block
+       is not in a shape this can address. */
+  static #spliceBasisGround(text, byOrd) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) {
+      at = i;
+      break;
+    }
+    if (at === -1) return null;
+    const starts = [];
+    let blockEnd = at;
+    for (let i = at + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^ {2}- /.test(lines[i])) {
+        starts.push(i);
+        blockEnd = i;
+        continue;
+      }
+      if (/^\s/.test(lines[i])) {
+        blockEnd = i;
+        continue;
+      }
+      break;
+    }
+    if (starts.length !== byOrd.length) return null;
+    const segs = [];
+    for (let s = 0; s < starts.length; s++) {
+      const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
+      const kept = [];
+      for (let i = from; i <= to; i++) if (!/^\s+ground:/.test(lines[i])) kept.push(lines[i]);
+      if (byOrd[s] !== null) kept.push(`    ground: ${byOrd[s]}`);
+      segs.push(kept);
+    }
+    return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
+  }
   /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
      are DERIVED (a strength detail, a bar's explanation) rather than authored,
      so they are sanitised here rather than refused — an authored field is
@@ -16414,7 +19000,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
      * bar somebody set for it. REC-15's preflight is where falling short is
      * refused; this only decides what is STAMPED. */
   #requiredStrengthFor(bundleId, fm) {
-    const rank = (g2) => ["A", "B", "C", "D"].indexOf(g2);
+    const rank = (g2) => BASIS_GRADES.indexOf(g2);
     const strictest = { capture: null, connection: null };
     const projects = [];
     for (const r of this.#rows(
@@ -16431,7 +19017,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       if (!rq || typeof rq !== "object") continue;
       let named = false;
       for (const axis of ["capture", "connection"]) {
-        if (!["A", "B", "C", "D"].includes(rq[axis])) continue;
+        if (!BASIS_GRADES.includes(rq[axis])) continue;
         named = true;
         if (strictest[axis] === null || rank(rq[axis]) < rank(strictest[axis])) strictest[axis] = rq[axis];
       }
@@ -16474,7 +19060,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
      happen is a bar that gates while saying nothing about which axis it gates. */
   strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || who === "member" || /^token:/.test(who))
+    if (!who || isMachineIdentity(who))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_DECLARE",
@@ -16482,8 +19068,13 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       };
     const gid = String(group ?? "").trim() || "believe-in-oakland";
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
-      if (v != null && !["A", "B", "C", "D"].includes(v))
-        return { ok: false, reason: "BAD_GRADE", axis, detail: `${axis} must be one of A, B, C, D, or null` };
+      if (v != null && !BASIS_GRADES.includes(v))
+        return {
+          ok: false,
+          reason: "BAD_GRADE",
+          axis,
+          detail: `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`
+        };
     if (capture == null && connection == null)
       return {
         ok: false,
@@ -16677,7 +19268,77 @@ ${lines.join("\n")}
   }
   /* ---- the first action that refers to a selection ----
    *
-   * CITING INFORMATION IN A PROJECT, at weight `report`.
+   * CITING, at weight `report`: material — and, onto a question, another
+   * question — becomes part of what a case or a question rests on.
+   *
+   * ================= REC-37: WIDENED, NOT DUPLICATED =================
+   *
+   * THE DECISION, recorded here because every later reader inherits it. UI-20
+   * measured the gap: `op=cite` could not reach an inquiry in either direction,
+   * `inquiry_basis` was a promote-projection with no op appending a leg, and the
+   * only way a record became a case therefore did not exist. REC-37 could have
+   * answered with a second op. It did not, and the reasoning is:
+   *
+   *   1. IT IS ONE ACT IN THE RECORD'S OWN TERMS — "this is why I think that".
+   *      WHERE the record keeps it differs (a case keeps citations in
+   *      `references[]`; a question keeps them in the `basis[]` its answer rests
+   *      on) and WHAT the member did does not. A second op would publish a
+   *      second control for one act and make every surface learn which to call,
+   *      which is the inverse of the one-edge-table rule op=affordances exists
+   *      to hold.
+   *   2. EVERYTHING HARD HERE IS ALREADY BUILT AND IS IDENTICAL ON BOTH ARMS:
+   *      the selection gate, the report weight's per-item outcome, the note
+   *      grammar, SEVERED_EDGE's doctrine, the already-cited partition and the
+   *      INLINE_MAX ceiling. A dedicated op would either hold a second copy of
+   *      the most carefully ordered refusal sequence in this file, or call this
+   *      one — in which case it is this one wearing a different name.
+   *   3. THE SURFACE COST IS ZERO BY CONSTRUCTION. UI-20 already carries ONE
+   *      `ACT_FLOW` entry for `cite`; a new op would need a new call site, which
+   *      is the very clause REC-37 is measured against ("UI-20's surface needs
+   *      NO edit when this lands").
+   *
+   * THE ONE HONEST COST, stated rather than hidden: the inquiry arm needs a
+   * field the case arm has no slot for — `role`, invariant 7's storage, where
+   * `cuts_against` is first-class. That is an arm-conditional PARAMETER, not a
+   * second act (this method has always behaved per-arm: SEVERED_EDGE only ever
+   * read a project's own references). It is REQUIRED and refused BY NAME on the
+   * inquiry arm, because a default would have the record deciding what a member
+   * meant about the thing the whole strength derivation reads.
+   *
+   * WHY THE REASON CODES DID NOT MOVE. `NOT_A_PROJECT` now fires only for a
+   * citing object that is NEITHER a case NOR a question — it refuses strictly
+   * LESS than before — and `NOT_INFORMATION` is untouched on the case arm. Both
+   * keep their names. Renaming a wire string is a BREAK by this repository's own
+   * definition (I3 2.0.0 recorded exactly that for NOT_PROBLEMS), it was
+   * MEASURED to buy nothing (no consumer matches either literal anywhere in
+   * civicos-ui — the two occurrences are prose in comments), and what a member
+   * actually reads is `detail`, which is rewritten here to say precisely what is
+   * refused. The inquiry arm gets its OWN member refusal, `NOT_CITABLE`, because
+   * on that arm an inquiry IS citable and reusing `NOT_INFORMATION` would be the
+   * refusal lying about itself. Net: purely ADDITIVE and PERMISSIVE — nothing
+   * previously admitted is now refused. Reversing the judgement costs one string
+   * per arm and the suites that pin them.
+   *
+   * WHAT THE INQUIRY ARM DOES NOT DO, and each absence is a decision:
+   *   - IT DOES NOT GRADE. The leg's connection grade is FILLED from
+   *     `earnedBasisRegistry` — the SAME function `op=earnedbasis` answers from
+   *     and `op=promote` enforces with, so the read, the fill and the write
+   *     cannot disagree. A target the record holds no A/B/C resolution for lands
+   *     with NO grade, NO axis and NO source: undetermined, STATED by the
+   *     absence, INERT (DEC-18) rather than pretending to a number. There is no
+   *     grade control and no default letter anywhere on this path.
+   *   - IT DOES NOT CHECK FOR A CYCLE. R3's DAG guard is REC-11's, at the write
+   *     inside `promote` (SELF_BASIS / BASIS_CYCLE, both naming the FULL path),
+   *     and this act reaches it because the leg lands THROUGH THE DOCUMENT. A
+   *     second cycle rule here would be a second answer waiting to disagree with
+   *     the one that actually protects the graph.
+   *   - IT DOES NOT VALIDATE A LEG. `checkInquiryBasis` is ONE catalog function
+   *     run by the checker AND by promote's write path; the legs this act
+   *     composes are judged there like any other, so a leg it could not compose
+   *     honestly never lands.
+   *   - IT DOES NOT ASK WHAT STATE A TARGET IS IN (D-168). Permissive, exactly
+   *     as the case arm has always been: citing retired material is permitted
+   *     and therefore published.
    *
    * `selectionResolve` shipped in 0.17.0 with no caller. This is its first, and
    * citing was chosen for it because it ADDS references rather than moving
@@ -16692,7 +19353,14 @@ ${lines.join("\n")}
    * Citing writes the edge into bundle.md and promotes, because `refs` is a
    * PROJECTION re-derived from frontmatter inside promote's transaction and
    * promote refuses a refs field in the payload outright (D-21). The document is
-   * authoritative; there is no second place to state an edge.
+   * authoritative; there is no second place to state an edge. REC-37: EXACTLY
+   * the same holds one altitude up. `inquiry_basis` is a projection of the same
+   * document's `basis[]`, re-derived in the same transaction, and promote
+   * refuses a `basis` field in the payload by name (BASIS_IN_PAYLOAD, D-21 from
+   * birth) — so the widened arm splices the LEG INTO THE BYTES and promotes.
+   * There is no path from this method to the table, deliberately: that is what
+   * makes REC-11's DAG guard and the one-function leg grammar unavoidable rather
+   * than merely available.
    *
    * Fully synchronous, and that is load-bearing rather than incidental. The
    * catalog's own sha256 is pure JS, so nothing between resolving the selection
@@ -16706,7 +19374,8 @@ ${lines.join("\n")}
     viewer = null,
     owner = null,
     note = "",
-    author = null
+    author = null,
+    role = null
   } = {}) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
@@ -16717,13 +19386,14 @@ ${lines.join("\n")}
       project,
       detail: "the citing object must exist before it can cite anything"
     };
-    if (p.object_type !== "project")
+    const ontoInquiry = normalizeType(p.object_type) === "inquiry";
+    if (p.object_type !== "project" && !ontoInquiry)
       return {
         ok: false,
         reason: "NOT_A_PROJECT",
         project,
         got: p.object_type,
-        detail: "cites lives on the citing object and this action cites INTO a Project (State Rules 5.2)"
+        detail: "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either."
       };
     const nt = String(note ?? "");
     if (nt.length > 200 || /["\\\r\n]/.test(nt))
@@ -16732,13 +19402,57 @@ ${lines.join("\n")}
         reason: "BAD_NOTE",
         detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
       };
+    const rl = role === null || role === void 0 || String(role) === "" ? null : String(role);
+    if (ontoInquiry) {
+      if (rl === null)
+        return {
+          ok: false,
+          reason: "NO_ROLE",
+          project,
+          handle,
+          roles: BASIS_ROLES.slice(),
+          drift: sel.drift,
+          detail: `a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: ${BASIS_ROLES.join(", ")}.`
+        };
+      if (!BASIS_ROLES.includes(rl))
+        return {
+          ok: false,
+          reason: "BAD_ROLE",
+          project,
+          handle,
+          got: rl,
+          roles: BASIS_ROLES.slice(),
+          drift: sel.drift,
+          detail: `'${rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: ${BASIS_ROLES.join(", ")}.`
+        };
+    } else if (rl !== null) {
+      return {
+        ok: false,
+        reason: "ROLE_NOT_APPLICABLE",
+        project,
+        handle,
+        got: rl,
+        drift: sel.drift,
+        detail: "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded \u2014 refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart."
+      };
+    }
     const offenders = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "information") offenders.push(id);
+      const ty = b ? normalizeType(b.object_type) : null;
+      if (ontoInquiry ? !(ty === "information" || ty === "inquiry") : ty !== "information") offenders.push(id);
     }
     if (offenders.length)
-      return {
+      return ontoInquiry ? {
+        ok: false,
+        reason: "NOT_CITABLE",
+        project,
+        handle,
+        offenders: offenders.sort(),
+        drift: sel.drift,
+        citable: ["information", "inquiry"],
+        detail: "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
+      } : {
         ok: false,
         reason: "NOT_INFORMATION",
         project,
@@ -16763,11 +19477,13 @@ ${lines.join("\n")}
     for (const r of existing)
       if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
         byTarget.set(r.target, r.status);
+    const referenced = new Set(existing.filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
+    const legged = new Set(ontoInquiry && Array.isArray(parsed.data.basis) ? parsed.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target) : []);
     const severed = [], already = [], add = [];
     for (const id of sel.members) {
       const st = byTarget.get(id);
       if (st === "severed") severed.push(id);
-      else if (st !== void 0) already.push(id);
+      else if (ontoInquiry ? legged.has(id) : st !== void 0) already.push(id);
       else add.push(id);
     }
     if (severed.length)
@@ -16805,21 +19521,61 @@ ${lines.join("\n")}
         rowVersion: null,
         detail: "every member of the selection was already cited; nothing was written"
       };
-    const spliced = _Store.#spliceReferences(
-      liveMd.content,
-      add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }))
-    );
-    if (!spliced)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_REFERENCES",
-        project,
-        detail: "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document."
-      };
+    let spliced = null, filled = [];
+    if (!ontoInquiry) {
+      spliced = _Store.#spliceReferences(
+        liveMd.content,
+        add.map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }))
+      );
+      if (!spliced)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_REFERENCES",
+          project,
+          detail: "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document."
+        };
+    } else {
+      const subject = typeof parsed.data.subject_entity === "string" && parsed.data.subject_entity.trim() !== "" ? parsed.data.subject_entity.trim() : null;
+      const reg = this.earnedBasisRegistry(subject, add);
+      filled = add.map((target) => {
+        const earned = reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        return earned && earned.grade ? {
+          target,
+          role: rl,
+          grade: earned.grade,
+          grade_axis: "connection",
+          grade_source: "resolution",
+          note: nt,
+          why: earned.why
+        } : { target, role: rl, note: nt, why: null };
+      });
+      const newRefs = add.filter((t) => !referenced.has(t)).map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
+      const withRefs = newRefs.length ? _Store.#spliceReferences(liveMd.content, newRefs) : liveMd.content;
+      if (!withRefs)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_REFERENCES",
+          project,
+          detail: "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document."
+        };
+      spliced = _Store.#spliceBasis(withRefs, filled);
+      if (!spliced)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_BASIS",
+          project,
+          detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
+        };
+    }
     let text = _Store.#setScalar(spliced, "last_updated", `"${when}"`);
     const shown = add.slice(0, _Store.CITE_LOG_SAMPLE);
     const listed = shown.join(", ") + (add.length > shown.length ? `, and ${add.length - shown.length} more` : "");
-    const entry = `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
+    const ungraded = filled.filter((l) => !l.grade).length;
+    const graded = filled.length - ungraded;
+    const entry = ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; citing is report-weight and proceeded)" : ""}
+Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
+` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; citing is report-weight and proceeded)" : ""}
 Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
 `;
@@ -16848,8 +19604,14 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         requested: add.length,
         bytes: bytes.length,
         limit: INLINE_MAX,
+        /* REC-37: on the inquiry arm a member costs a references entry
+           AND a leg, so this estimate is CONSERVATIVE there rather than
+           exact. It has never decided the refusal — that is made on the
+           real encoded length a few lines above — and an estimate that
+           errs toward "fewer would fit" tells an operator something
+           true. Stated rather than silently reused. */
         roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / _Store.CITE_EDGE_BYTES)),
-        detail: "citing this many records at once would push the Project's bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in one Project, not on the size of a selection. Cite in smaller batches; nothing has been written."
+        detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.`
       };
     }
     const textSha = createSha256().update(bytes).hex();
@@ -16861,7 +19623,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       author: author || "member",
       files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: textSha }, ...carried],
       meta: {
-        object_type: "project",
+        /* From the DOCUMENT, on op=conclude's own precedent, rather than the
+           hard-coded "project" this act carried while a project was the only
+           citing object there was. Byte-identical for a case (its frontmatter
+           says `project`) and correct for a question. */
+        object_type: fm.object_type ?? p.object_type,
         group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: fm.current_state,
@@ -16885,7 +19651,26 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       bundleSha: promoted.bundleSha,
       rowVersion: promoted.rowVersion,
       gate: sel.gate,
-      expires: sel.expires
+      expires: sel.expires,
+      /* REC-37: what the act actually landed on the question, per leg —
+         the role it wrote and the grade the RECORD earned, with the
+         registry's own `why` for a filled one and an explicit null for an
+         undetermined one. A surface renders this; it never composes it,
+         and there is no grade control anywhere in the flow. */
+      ...ontoInquiry ? {
+        citingObjectType: "inquiry",
+        role: rl,
+        legs: filled.map((l) => ({
+          target: l.target,
+          role: l.role,
+          grade: l.grade ?? null,
+          grade_axis: l.grade_axis ?? null,
+          grade_source: l.grade_source ?? null,
+          why: l.why ?? null
+        })),
+        gradesFilled: filled.filter((l) => l.grade).length,
+        gradesUndetermined: filled.filter((l) => !l.grade).length
+      } : {}
     };
   }
   /* Rewrite ONE column-0 scalar inside the frontmatter, leaving every other
@@ -17005,6 +19790,63 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     }
     return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
+  /* REC-37: APPEND legs to the `basis` block, touching nothing else — and it is
+   * #spliceReferences line for line, deliberately.
+   *
+   * Same three reachable shapes (no key, an inline empty `basis: []`, a
+   * populated block), same refusal-by-returning-null for any other inline
+   * scalar, same append-after-the-last-indented-line so a blank line an author
+   * put between the block and the next key stays where they put it. Written as
+   * a twin rather than as a generalisation of both because the ELEMENT shapes
+   * differ (a reference is four fixed keys; a leg's keys are present exactly
+   * when the leg carries them), and a parameterised splicer would have hidden
+   * that difference behind an option — which is the more expensive mistake in a
+   * grammar with no serializer.
+   *
+   * A KEY IS RENDERED ONLY IF THE LEG CARRIES IT, and that is the whole reason
+   * an undetermined leg is honest in the bytes: absent grade, absent axis, absent
+   * source is what C-2.8 reads as undetermined-and-stated, while `grade: null`
+   * would be a member asserting a null. `note` is omitted when empty for the
+   * same reason — an empty quoted string is a note somebody wrote nothing in.
+   * APPEND ONLY: nothing here rewrites or removes a leg the document already
+   * carries, so an earlier statement about the question's basis cannot be edited
+   * out by an act that was only ever meant to add one. */
+  static #spliceBasis(text, legs) {
+    if (!legs.length) return text;
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const block = legs.map((l) => [
+      `  - target: ${l.target}`,
+      `    role: ${l.role}`,
+      ...l.grade ? [`    grade: ${l.grade}`] : [],
+      ...l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : [],
+      ...l.grade_source ? [`    grade_source: ${l.grade_source}`] : [],
+      ...l.note ? [`    note: "${l.note}"`] : []
+    ].join("\n"));
+    let bi = -1;
+    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) {
+      bi = i;
+      break;
+    }
+    if (bi === -1)
+      return [...lines.slice(0, end), "basis:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[bi].slice("basis:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, bi), "basis:", ...block, ...lines.slice(bi + 1)].join("\n");
+    if (rest !== "") return null;
+    let last = bi;
+    for (let i = bi + 1; i < end; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) {
+        last = i;
+        continue;
+      }
+      break;
+    }
+    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+  }
   #rows(q, ...a) {
     return [...this.sql.exec(q, ...a)];
   }
@@ -17084,7 +19926,23 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         elidedPaths: elided,
         sha256: sha2562,
         sha512,
-        resolveTarget: (id) => known.has(id)
+        resolveTarget: (id) => known.has(id),
+        /* REC-18: the audit sweep runs INSIDE the store, so it is one of the
+           three places that CAN confirm an earned grade — and it must, because
+           checkEarnedLeg refuses a leg it cannot confirm rather than passing it.
+           Blinding the sweep would make every earned leg in a healthy corpus
+           report as an offender, which is the "audit clean before you call
+           anything done" gate failing on correct data. Built per bundle rather
+           than once for the page: the subject entity is per inquiry, so there is
+           no shared registry to build. Two indexed reads, and only for a bundle
+           that has basis rows at all. */
+        earnedRegistry: (() => {
+          const targets = this.#rows(
+            `SELECT target_id FROM inquiry_basis WHERE bundle_id=?`,
+            row.bundle_id
+          ).map((r) => r.target_id);
+          return targets.length ? this.earnedBasisRegistry(this.#subjectEntityOf(row.bundle_id), targets) : null;
+        })()
       });
       const errs = findings.filter((f2) => f2.severity === "error");
       if (!errs.length) {
@@ -17513,19 +20371,129 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
       const basisFm = isInquiry ? docFmW : null;
       const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
-      if (basisFm && basisFm.basis !== void 0 && basisFm.basis !== null && !pkg.replay) {
+      if (basisFm && !pkg.replay && (basisFm.basis !== void 0 && basisFm.basis !== null || basisFm.grounds !== void 0 && basisFm.grounds !== null)) {
         const bf = [];
-        checkInquiryBasis(basisFm, bf, this.publishedRegistryFor(
-          bundleId,
-          basisLegs.map((l) => l.target).filter((t) => typeof t === "string")
-        ));
+        checkInquiryBasis(
+          basisFm,
+          bf,
+          this.publishedRegistryFor(
+            bundleId,
+            basisLegs.map((l) => l.target).filter((t) => typeof t === "string")
+          ),
+          this.earnedRegistryForDoc(basisFm, basisLegs)
+        );
         const errs = bf.filter((x) => x.severity === "error");
         if (errs.length)
           return {
             ok: false,
             reason: "BASIS_REFUSED",
-            findings: errs.map((x) => ({ check: x.check, detail: x.message }))
+            findings: errs.map((x) => ({
+              check: x.check,
+              detail: x.message,
+              ...x.repairs ? { repairs: x.repairs } : {}
+            }))
           };
+      }
+      if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string" && docFmW.subject_entity.trim() !== "") {
+        const se = docFmW.subject_entity.trim();
+        if (!this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, se))
+          return {
+            ok: false,
+            reason: "SUBJECT_REFUSED",
+            target: se,
+            findings: [{
+              check: "C-2.8",
+              detail: `subject_entity '${se}' does not resolve in this store: an inquiry naming its subject names an entry in the SUBJECT REGISTRY, and this one names a key no entity has. Register the subject with op=entitycreate, or omit subject_entity \u2014 an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15).`
+            }]
+          };
+      }
+      const isAction = normalizeType(meta.object_type) === "action";
+      if (isAction && docFmW && !pkg.replay) {
+        const af = [];
+        actionBasisFindings(docFmW, af);
+        const aerrs = af.filter((x) => x.severity === "error");
+        if (aerrs.length)
+          return {
+            ok: false,
+            reason: "ACTION_BASIS_REFUSED",
+            findings: aerrs.map((x) => ({
+              check: x.check,
+              detail: x.message,
+              ...x.repairs ? { repairs: x.repairs } : {}
+            }))
+          };
+        const cf2 = [];
+        correspondenceFindings(docFmW, cf2);
+        const cerrs = cf2.filter((x) => x.severity === "error");
+        if (cerrs.length)
+          return {
+            ok: false,
+            reason: "CORRESPONDENCE_REFUSED",
+            findings: cerrs.map((x) => ({
+              check: x.check,
+              detail: x.message,
+              ...x.repairs ? { repairs: x.repairs } : {}
+            }))
+          };
+        for (const leg of Array.isArray(docFmW.action_basis) ? docFmW.action_basis : []) {
+          if (!leg || typeof leg.target !== "string") continue;
+          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
+            return {
+              ok: false,
+              reason: "ACTION_BASIS_REFUSED",
+              target: leg.target,
+              findings: [{
+                check: "C-2.10",
+                detail: `action_basis target '${leg.target}' does not resolve in this store: an action that names why it exists names something that exists, or it points a reader at nothing while claiming a reason`
+              }]
+            };
+        }
+        for (const e of Array.isArray(docFmW.correspondence) ? docFmW.correspondence : []) {
+          if (!e || typeof e.artifact_sha !== "string" || !e.artifact_sha.trim()) continue;
+          const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
+          if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
+            return {
+              ok: false,
+              reason: "CORRESPONDENCE_REFUSED",
+              artifact_sha: sha,
+              findings: [{
+                check: "C-2.10",
+                detail: `correspondence artifact_sha '${sha.slice(0, 16)}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)`,
+                repairs: [
+                  "capture the artifact first (op=capture), then record its sha",
+                  "or record a named account instead"
+                ]
+              }]
+            };
+        }
+      }
+      if (docFmW && !pkg.replay) {
+        const rf = [];
+        respondsToEdgeFindings(docFmW, rf);
+        const rerrs = rf.filter((x) => x.severity === "error");
+        if (rerrs.length)
+          return {
+            ok: false,
+            reason: "RESPONDS_TO_REFUSED",
+            findings: rerrs.map((x) => ({
+              check: x.check,
+              detail: x.message,
+              ...x.repairs ? { repairs: x.repairs } : {}
+            }))
+          };
+        for (const r of Array.isArray(docFmW.references) ? docFmW.references : []) {
+          if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
+          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
+            return {
+              ok: false,
+              reason: "RESPONDS_TO_REFUSED",
+              target: r.target,
+              findings: [{
+                check: "C-6.1",
+                detail: `responds_to target '${r.target}' does not resolve in this store: this document claims to be what came back from an ask that is not here`
+              }]
+            };
+        }
       }
       if (docFmW && !pkg.replay) {
         const sf = [];
@@ -17744,8 +20712,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
           this.sql.exec(
-            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at)
-             VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId,
             i,
             leg.target,
@@ -17760,7 +20728,59 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
             /* The document's own authored date (required on a hunch), never the
                server's clock: delete-then-insert re-projects every promotion,
                so a server stamp here would silently re-date every leg. */
+            leg.date != null ? String(leg.date) : null,
+            /* REC-42: the OR branch, projected exactly as authored and NEVER
+               invented. Absent, empty or non-string is NULL — the implicit
+               single ground — because the one direction this projection must
+               never take is INTO structure: a leg nobody grouped must land
+               where the weakest-leg rule still holds. checkInquiryBasis has
+               already refused any label with no attributed `grounds[]` row, at
+               this write and in the catalog, so a label that reaches here was
+               asserted by a named member. */
+            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null
+          );
+        }
+      }
+      this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
+      this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
+      if (normalizeType(meta.object_type) === "action" && docFmW) {
+        const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
+        for (let i = 0; i < alegs.length; i++) {
+          const leg = alegs[i];
+          if (!leg || typeof leg.target !== "string") continue;
+          this.sql.exec(
+            `INSERT INTO action_basis (bundle_id,ord,target_id,target_type,kind,note,at)
+             VALUES (?,?,?,?,?,?,?)`,
+            bundleId,
+            i,
+            leg.target,
+            normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) ?? "",
+            typeof leg.kind === "string" ? leg.kind : "",
+            typeof leg.note === "string" ? leg.note : null,
             leg.date != null ? String(leg.date) : null
+          );
+        }
+        const entries = Array.isArray(docFmW.correspondence) ? docFmW.correspondence : [];
+        for (let i = 0; i < entries.length; i++) {
+          const e = entries[i];
+          if (!e || typeof e !== "object") continue;
+          const sha = typeof e.artifact_sha === "string" && e.artifact_sha.trim() ? e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+          const reg = sha ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha) : null;
+          this.sql.exec(
+            `INSERT INTO correspondence
+               (bundle_id,ord,direction,at,medium,party,artifact_bundle_id,artifact_sha,account,author,recorded_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            bundleId,
+            i,
+            typeof e.direction === "string" ? e.direction : "",
+            e.at != null ? String(e.at) : "",
+            typeof e.medium === "string" ? e.medium : null,
+            typeof e.party === "string" ? e.party : null,
+            reg ? reg.bundle_id : typeof e.artifact_bundle_id === "string" ? e.artifact_bundle_id : null,
+            sha,
+            typeof e.account === "string" && e.account.trim() ? e.account : null,
+            typeof e.author === "string" && e.author.trim() ? e.author : null,
+            typeof e.recorded_at === "string" ? e.recorded_at : null
           );
         }
       }
@@ -17784,7 +20804,16 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           );
         }
       }
-      this.#writeStrengthProjection(bundleId, isInquiry);
+      this.#writeStrengthProjection(
+        bundleId,
+        isInquiry,
+        /* REC-18: the declared subject, projected from the SAME parsed bytes the
+           earned registry was built from a moment ago — never re-parsed, so the
+           value enforced at the write and the value the gate later reads are one
+           value. Empty string normalises to NULL: "named nothing" and "named the
+           empty string" are the same fact and the column states it once. */
+        basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null
+      );
       for (const c of register2)
         this.sql.exec(
           `INSERT OR REPLACE INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
@@ -17842,6 +20871,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
       const entities = Array.isArray(reading.entities) ? reading.entities : [];
       this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
+      this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -17867,8 +20897,86 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           e.key == null ? null : String(e.key),
           e.label == null ? null : String(e.label)
         );
+        for (const [src, text] of _Store.#refTermSources({
+          ref,
+          ref_key: e.key == null ? null : String(e.key),
+          label: e.label == null ? null : String(e.label)
+        }))
+          for (const term of _Store.#labelTerms(text))
+            this.sql.exec(
+              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
+              sha,
+              bundleId,
+              ref,
+              src,
+              term
+            );
       }
     }
+  }
+  /* REC-36: the bounded backfill for the name index on a store that already
+       holds readings. The terms derive from columns `reading_refs` already
+       persists, so no document has to be re-read -- unlike the projection
+       backfill, which needs the bundle's files. Bounded per pass for the same
+       reason #backfillProjection is: a Durable Object has a CPU budget and a large
+       store finishes over successive constructions.
+  
+       REC-40 CHANGED THE STALENESS TEST, and the old one would now be WRONG rather
+       than merely narrow. It read `rr.label IS NOT NULL AND rr.label <> ''`,
+       because the label was the only source and a reference with no label could
+       never produce a row. The index now also carries the REFERENCE and its KEY,
+       which every row has by construction, so a reference with no label at all is
+       exactly the row the A and B tiers are about and skipping it would leave the
+       identifier tier unreachable on every store migrated forward -- the same
+       silently-wrong empty answer this backfill exists to prevent. The test is now
+       "no term row of any source", and a reference whose every string normalises
+       to nothing (all punctuation) is re-examined on each pass rather than
+       excluded: that is a bounded cost the `examined` count reports, and it is the
+       conservative direction now that being skipped means being invisible. */
+  #backfillRefTerms(limit) {
+    const stale = this.#rows(
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
+         FROM reading_refs rr
+        WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+                           WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)
+        ORDER BY rr.capture_sha, rr.ref LIMIT ?`,
+      limit
+    );
+    let n = 0;
+    for (const r of stale) {
+      let wrote = 0;
+      for (const [src, text] of _Store.#refTermSources(r))
+        for (const term of _Store.#labelTerms(text)) {
+          this.sql.exec(
+            `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
+            r.capture_sha,
+            r.bundle_id,
+            r.ref,
+            src,
+            term
+          );
+          wrote++;
+        }
+      if (wrote) n++;
+    }
+    return { indexed: n, examined: stale.length };
+  }
+  /** Test and repair support, on `projectionClear`/`reproject`'s precedent
+   *  exactly: clear the name index so a reference looks like it predates the
+   *  table, and re-derive it. A backfill nothing can exercise is a repair path
+   *  nobody has ever run — which is the state the projection backfill was in
+   *  before its own pair existed. DO-only; no control-plane op reaches these. */
+  readingTermsClear({ captureSha = null } = {}) {
+    if (captureSha) this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, captureSha);
+    else this.sql.exec(`DELETE FROM reading_ref_terms`);
+    return {
+      ok: true,
+      cleared: captureSha || "ALL",
+      remaining: this.#one(`SELECT count(*) c FROM reading_ref_terms`).c
+    };
+  }
+  reindexNames({ limit = 500 } = {}) {
+    return { ok: true, ...this.#backfillRefTerms(limit) };
   }
   /* CONSTRUCTS Step 3 read side: the reading of one captured document, by its
      capture identity (register.capture_sha). Returns the stored reading —
@@ -17929,6 +21037,176 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       }))
     };
   }
+  /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
+   *  whose reading NAMES this subject, where the source assigned no reference the
+   *  registry already answers to. This is the framework section 8.1 GRADE-C tier
+   *  made reachable: `documentsByReference` above answers on the source's own
+   *  identifier (the A and B tiers), and until this read existed a document that
+   *  mentioned a subject only by name could not be asked for at all. UI-13's
+   *  resolve control stated that limit on the surface in so many words; this is
+   *  what narrows it.
+   *
+   *  IT OFFERS CANDIDATES AND ESTABLISHES NOTHING. No resolution is written, no
+   *  grade is minted, and the answer says how each candidate corresponded so a
+   *  member confirms rather than accepts. The recogniser (`#recognise`) remains
+   *  the only thing that grades, and a C there is still "plausible, never
+   *  established".
+   *
+   *  THE SHAPE IS THE MEASUREMENT'S, not a preference (MEASUREMENTS.md
+   *  2026-08-04, REC-36; instrument `test/label-variance-probe.mjs`):
+   *
+   *    ALIAS-JOINED, because 7 label hits on the real corpus were ABBREVIATIONS
+   *    (OPD, HUD, REAP, CSBG, MOU) whose full names appeared in NO label. No
+   *    normalisation of spelling reaches "Oakland Police Department" from "OPD";
+   *    only a name somebody REGISTERED does. So the read walks the registry's own
+   *    aliases into the corpus rather than taking a name string from a caller.
+   *
+   *    OVER A TERM INDEX and not a normalised whole-label column, because a
+   *    subject name was the whole label in 0 of 41 measured labels: the label is
+   *    the document item's TITLE and the name sits inside it. Requiring every
+   *    term of an alias found exactly what a substring scan found (15), so the
+   *    indexable form gives up nothing.
+   *
+   *  ONE STATEMENT PER ALIAS, grouped rather than INTERSECTed, and D-36 is the
+   *  reason: a compound SELECT may have about FIVE terms in workerd, so an alias
+   *  of six words expressed as six INTERSECT arms would meet an undocumented
+   *  ceiling on somebody's live instance. `term IN (...)` with a HAVING count is
+   *  one indexed lookup and binds one variable per term, well inside the other
+   *  ceiling, with #labelTerms capping the count.
+   *
+   *  GATED, AND THE ROW IS WITHHELD — not redacted. This is the OTHER shape of
+   *  the D-15 posture (see the gate's own header): `documentsByReference` answers
+   *  a question ABOUT A CAPTURE and merely points back at a bundle, so it keeps
+   *  the row and nulls the reference. A CANDIDATE LIST is a question about which
+   *  documents a member may act on — a candidate you cannot open is not a
+   *  candidate, and offering a nameless one still discloses that a document
+   *  mentioning your subject sits in a project you were not invited to. So the
+   *  gate is `#bundleGate` in SQL at the lookup, and NO count of what was
+   *  withheld is reported, because that count is the leak. */
+  documentsNamingEntity({ entityId = null, limit = 100, viewer = null } = {}) {
+    if (typeof entityId !== "string" || !entityId)
+      return {
+        ok: false,
+        reason: "NO_ENTITY",
+        detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates."
+      };
+    const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
+    if (!ent) return {
+      ok: false,
+      reason: "NO_SUCH_ENTITY",
+      entity_id: entityId,
+      detail: "no such entity is registered, so it has no names to look documents up by"
+    };
+    const aliases = this.#rows(
+      `SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? ORDER BY canonical DESC, alias_norm`,
+      entityId
+    );
+    const cap = Math.max(1, Math.min(Number(limit) || 100, 500));
+    const gate = this.#bundleGate("t.bundle_id", viewer);
+    const found = /* @__PURE__ */ new Map();
+    const tiers = /* @__PURE__ */ new Map();
+    const unusable = [];
+    for (const a of aliases) {
+      const terms = _Store.#labelTerms(a.alias);
+      if (!terms.length) {
+        unusable.push(a.alias);
+        continue;
+      }
+      const rows = this.#rows(
+        _Store.#refTermsSql(terms.length, gate.sql),
+        ...terms,
+        ...gate.args,
+        terms.length,
+        cap
+      );
+      for (const r of rows) {
+        const srcText = r.src === "ref" ? r.ref : r.src === "key" ? r.ref_key : r.label;
+        const whole = _Store.#normAlias(srcText) === a.alias_norm;
+        const [correspondence] = _Store.#CORRESPONDENCE[r.src][whole ? "whole" : "part"];
+        const tk = `${r.capture_sha} ${r.ref}`;
+        let tier = tiers.get(tk);
+        if (!tier) {
+          tier = this.#recogniseTier(r);
+          tiers.set(tk, tier);
+        }
+        const gradeIf = tier.hits.includes(entityId) ? tier.grade : null;
+        const where = r.src === "ref" ? "carries the reference" : r.src === "key" ? "carries the reference key" : "labels the reference";
+        const cand = {
+          capture_sha: r.capture_sha,
+          bundle_id: r.bundle_id,
+          ref: r.ref,
+          kind: r.ref_kind,
+          key: r.ref_key,
+          label: r.label,
+          content_type: r.content_type,
+          matched_alias: a.alias,
+          canonical_name: !!a.canonical,
+          correspondence,
+          matched_on: r.src,
+          /* WHAT THE RECOGNISER WOULD MINT, and never what this read
+             established: op=resolve remains the only thing that grades, so this
+             is a conditional about a run that has not happened. Null both when
+             the name merely sits inside a longer string and when a STRONGER
+             identifier on the same reference would resolve first. */
+          grade_if_resolved: gradeIf,
+          detail: (whole ? `this document's reading ${where} '${srcText}', which is this subject's name '${a.alias}'` : `this document's reading ${where} '${srcText}', which carries every word of this subject's name '${a.alias}'`) + (whole && gradeIf == null ? `; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first` : "")
+        };
+        const k = `${r.capture_sha}\0${r.ref}`;
+        const prev = found.get(k);
+        if (!prev || _Store.#CORRESPONDENCE_RANK.indexOf(correspondence) < _Store.#CORRESPONDENCE_RANK.indexOf(prev.correspondence)) found.set(k, cand);
+      }
+    }
+    const rank = (c) => _Store.#CORRESPONDENCE_RANK.indexOf(c.correspondence);
+    const documents = [...found.values()].sort((x, y) => rank(x) - rank(y) || String(x.bundle_id).localeCompare(String(y.bundle_id)) || String(x.capture_sha).localeCompare(String(y.capture_sha)) || String(x.ref).localeCompare(String(y.ref))).slice(0, cap);
+    return {
+      ok: true,
+      entity_id: ent.entity_id,
+      entity_label: ent.label,
+      entity_kind: ent.kind,
+      names_used: aliases.length - unusable.length,
+      names_unusable: unusable,
+      count: documents.length,
+      documents,
+      /* Said on every answer, empty or not, because an empty candidate list is
+         the one a member is most likely to read as "no such document exists". */
+      /* REC-40 RE-WIDENED THIS SENTENCE, and the old one is wrong rather than
+         merely narrow now: it said the lookup reaches what the reading recorded
+         AS A LABEL, which was true while the index carried labels alone. The
+         index now also carries the reference and its key, so the identifier
+         tiers are here too — and `grade_if_resolved` says per candidate what
+         op=resolve WOULD mint, which is not the same as anything being
+         established. The bound that is actually left is the one stated. */
+      detail: "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name \u2014 as the reference the source assigned, as that reference's key, or as the name the reading recorded \u2014 offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists."
+    };
+  }
+  /** REC-36: EXPLAIN QUERY PLAN for the name lookup, so a test can assert the
+   *  term index is USED rather than trusting that creating it was enough — the
+   *  `projectionPlan` precedent, and the reason it exists there applies here
+   *  doubly: this read replaces a scan, and a scan that still passes every
+   *  assertion is exactly the defect nobody would notice until the corpus grew.
+   *
+   *  REC-40: IT NOW EXPLAINS THE STATEMENT THE READ ACTUALLY RUNS. It used to
+   *  explain a hand-written subquery over `reading_ref_terms` alone — a second
+   *  spelling of roughly the same shape, carrying neither the join to
+   *  `reading_refs` nor the group the read groups by. A copy that agrees today
+   *  agrees at zero cost, and this one had already stopped agreeing the moment
+   *  `src` joined the group. Both now come from `#refTermsSql`, so the plan is
+   *  OF the query rather than of a twin of it, and the suite additionally pins
+   *  that `store.mjs` names `reading_ref_terms t` exactly once.
+   *
+   *  The gate is `1=1` here and nothing else: `#bundleGate` compiles a viewer's
+   *  own predicate, so a plan taken through it would describe one viewer's
+   *  lookup. What this answers is whether the TERM INDEX carries the lookup, and
+   *  the gate arm of `readingname.test.mjs` is what proves the gate is applied. */
+  readingNamePlan(terms = ["oakland", "police"]) {
+    const t = Array.isArray(terms) && terms.length ? terms.slice(0, 24) : ["oakland"];
+    const sql = _Store.#refTermsSql(t.length, "1=1");
+    return {
+      terms: t,
+      sql,
+      plan: this.#rows(`EXPLAIN QUERY PLAN ${sql}`, ...t, t.length, 100).map((r) => r.detail)
+    };
+  }
   /* ---- CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis ----
    *
    * The framework's third registry, and the bias doctrine's safeguard-4 subject
@@ -17952,23 +21230,15 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
      serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
      kinds (framework:248). Closed and validated at the write path, so introducing a
      kind outside it is a loud refusal rather than a silent new vocabulary -- the
-     spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act. */
-  static #ENTITY_KINDS = /* @__PURE__ */ new Set([
-    /* safeguard 4's SUBJECT kinds */
-    "source",
-    "institution",
-    "office",
-    "movement",
-    /* the framework's entity kinds */
-    "person",
-    "body",
-    "ordinance",
-    "parcel",
-    "contract",
-    "fund"
-  ]);
-  /* The three DECLARED-relation predicates safeguard 4 names, and only these. */
-  static #RELATION_KINDS = /* @__PURE__ */ new Set(["proxy_for", "member_of", "overlaps"]);
+     spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act.
+     REC-35: the ARRAY moved to affordances.mjs (DISPOSITIONS' arrangement, and
+     the reasoning for the direction is written there) and op=affordances now
+     publishes that same array. This is a lookup derived from it, not a copy:
+     there is no second list to fall out of step with the published one. */
+  static #ENTITY_KINDS = new Set(ENTITY_KINDS);
+  /* The three DECLARED-relation predicates safeguard 4 names, and only these.
+     REC-35: same arrangement -- one array, published and enforced. */
+  static #RELATION_KINDS = new Set(RELATION_KINDS);
   /* The case-folded, whitespace-collapsed form the alias reverse index keys on, so
      "City Clerk", "city clerk" and "  City   Clerk " are one lookup. */
   static #normAlias(s) {
@@ -17977,6 +21247,103 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   static #cleanLabel(s) {
     return String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
   }
+  /* REC-36: the TERMS of a name or a label, for the name index. THROUGH
+       #normAlias and nothing else -- the term projection and the alias index must
+       fold identically or the join between them silently stops matching, which is
+       the failure nothing would report. Splitting on non-letter/non-digit is what
+       handles the punctuation the corpus actually carries (MEASUREMENTS.md
+       2026-08-04: comma 7/41, hyphen 7/41, and a diacritic in 1/41 -- the diacritic
+       is DELIBERATELY not folded, see below).
+  
+       WHY NO DIACRITIC FOLDING. "Mentor-Protege" would then match "Mentor-Protégé",
+       which is usually what a reader wants -- and it would ALSO fold names that are
+       genuinely different in languages where the accent is the distinction. This is
+       a CANDIDATE list a member confirms, so a miss costs a member a search and a
+       false fold costs the record a wrong subject on a document. The conservative
+       direction is the one that does not put a name on a document. Measured at
+       1/41; if a real corpus makes it common the change is this one function and a
+       dated assertion, which is why it lives here and not in a tokenizer's flags.
+  
+       CAPPED at 24 terms. D-36's ceilings are real and undocumented (about 100
+       bound variables), and the read below binds one variable per term: an alias
+       that would bind more than this is truncated rather than allowed to meet a
+       limit at run time on somebody's live instance. The measured maximum is 12. */
+  static #labelTerms(s) {
+    return [...new Set(_Store.#normAlias(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean))].slice(0, 24);
+  }
+  /* REC-40: THE THREE STRINGS A READING REFERENCE CARRIES, each indexed under
+       its own `src`. This is the ONE place that decides what the term index is
+       over, so the write path, the backfill and the read's own vocabulary cannot
+       fall out of step -- the same arrangement #labelTerms has for how a term is
+       folded, and for the same reason: a projection that indexed a source the read
+       did not know about would silently index nothing.
+  
+       THE ORDER IS THE RECOGNISER'S GRADE ORDER (framework 8.1, `#recognise`
+       below): the whole reference is the A tier, the reference's key is the B
+       tier, the label is the C tier. It is returned strongest-first so the read
+       below can rank without restating the order.
+  
+       `key` IS OMITTED WHEN IT NORMALISES TO THE WHOLE REFERENCE, which is exactly
+       the guard `#recognise` applies before it considers a B tier at all
+       (`keyNorm && keyNorm !== refNorm`). Written here once so the index and the
+       recogniser cannot disagree about whether a B tier exists for a reference. */
+  static #refTermSources(rr) {
+    const ref = rr && rr.ref == null ? "" : String(rr.ref);
+    const key = rr && rr.ref_key == null ? "" : String(rr.ref_key);
+    const label = rr && rr.label == null ? "" : String(rr.label);
+    const out = [];
+    if (ref) out.push(["ref", ref]);
+    if (key && _Store.#normAlias(key) !== _Store.#normAlias(ref)) out.push(["key", key]);
+    if (label) out.push(["label", label]);
+    return out;
+  }
+  /* REC-40: THE ONE STATEMENT the name/identifier lookup runs, built here and
+       nowhere else. `readingNamePlan` explains THIS text rather than a hand-copied
+       twin of it, because a copy that agrees today agrees at zero cost and a plan
+       assertion over a second spelling of the query proves nothing about the query
+       that runs. `readingname.test.mjs` additionally asserts that `store.mjs`
+       names `reading_ref_terms t` exactly once, so a second builder fails by name.
+  
+       GROUPED BY (capture_sha, ref, SRC) and not by (capture_sha, ref): the HAVING
+       is a subset test, so sharing a group between the label and the reference
+       would let a registered name be satisfied by one word from the document's
+       title and one from its reference string -- a correspondence neither string
+       made, and a wrong subject on a document. The schema states the same rule at
+       the key; this is where it is enforced.
+  
+       `term IN (...)` with a HAVING count rather than INTERSECT, per D-36: a
+       compound SELECT may have about FIVE terms in workerd, so a six-word name
+       expressed as six INTERSECT arms would meet an undocumented ceiling on
+       somebody's live instance. This binds one variable per term, and #labelTerms
+       caps the count at 24. */
+  static #refTermsSql(nTerms, gateSql) {
+    return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+              FROM reading_ref_terms t
+              JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref
+              LEFT JOIN readings r ON r.capture_sha = t.capture_sha
+             WHERE t.term IN (${new Array(nTerms).fill("?").join(",")}) AND (${gateSql})
+             GROUP BY t.capture_sha, t.ref, t.src
+            HAVING COUNT(DISTINCT t.term) = ?
+             ORDER BY t.bundle_id, t.capture_sha, t.ref, t.src
+             LIMIT ?`;
+  }
+  /* REC-40: HOW a registered name corresponded — which of the reading's three
+     strings carried it, and whether it was the WHOLE of that string or sat
+     inside a longer one. This is a description of the correspondence and NOT a
+     grade: the grade comes from `#recogniseTier`, because whether op=resolve
+     would record anything depends on the whole reference and not on the name
+     that found it (a whole-label `name` correspondence mints nothing when some
+     other subject's identifier already matches the same reference at A). The
+     RANK below follows the recogniser's tier order so candidates are offered
+     strongest-first, and the two partial tiers sit below every whole one because
+     `#recognise` matches whole normalised strings and would never mint for them
+     at all. */
+  static #CORRESPONDENCE = {
+    ref: { whole: ["reference"], part: ["name_in_reference"] },
+    key: { whole: ["reference_key"], part: ["name_in_reference"] },
+    label: { whole: ["name"], part: ["name_in_label"] }
+  };
+  static #CORRESPONDENCE_RANK = ["reference", "reference_key", "name", "name_in_reference", "name_in_label"];
   /* Create a registry entry, with its canonical label seeded as an alias so the
      entry is retrievable BY that name as well as by any explicit alias, and any
      inline aliases attached in the SAME transaction so an entity never exists
@@ -18247,7 +21614,20 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    * #upsertResolution, never a second row and never a downgrade -- a C becomes A the
    * moment a member registers the source identifier as an alias and the recogniser is
    * re-run. */
-  static #GRADE_RANK = { A: 4, B: 3, C: 2, D: 1 };
+  /* REC-51: DERIVED from the catalog's own order, never restated. This was
+     `{ A: 4, B: 3, C: 2, D: 1 }` — the vocabulary AND its ordering typed out a
+     second time, in a file that already imports the array both come from. It
+     agreed with `BASIS_GRADES` at zero cost and would have disagreed with it
+     silently the day the catalog gained or lost a letter, which is the MAP RULE
+     and D-164's "solve it once" one level below the doctrine SENTENCES REC-43,
+     REC-48 and REC-50 composed.
+     `BASIS_GRADES` is strongest-first, so a HIGHER number is a STRONGER grade
+     and every `>`/`<` comparison below keeps the sense it has always had. While
+     the catalog reads A,B,C,D this evaluates to exactly the map it replaces —
+     nothing moves today, and it is a function of the catalog from now on. */
+  static #GRADE_RANK = Object.fromEntries(
+    BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])
+  );
   /* established is a PROPERTY OF THE GRADE, computed here and stored, so a Grade C can
      never be read back as established (an equality that costs nothing is not evidence,
      CLAUDE.md): A and B rest on a captured identifier at both ends; C is correspondence
@@ -18364,6 +21744,42 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
      correspondence is not recorded when the source's own identifier already resolved
      the reference. */
   #recognise(rr, resolvedBy) {
+    const { grade, hits, basis, method } = this.#recogniseTier(rr);
+    const matches = [];
+    for (const entityId of hits) {
+      matches.push(this.#upsertResolution({
+        captureSha: rr.capture_sha,
+        bundleId: rr.bundle_id,
+        ref: rr.ref,
+        entityId,
+        grade,
+        method,
+        basis,
+        resolvedBy
+      }));
+    }
+    return matches;
+  }
+  /** REC-40: THE TIER DECISION ON ITS OWN, because TWO callers need it and only
+   *  one of them is allowed to write anything.
+   *
+   *  `#recognise` above turns this into resolutions. `documentsNamingEntity`
+   *  needs the SAME answer to say what op=resolve WOULD mint for a candidate --
+   *  and it must be the same CODE, not the same idea written twice, because the
+   *  cascade has a property that is easy to restate wrongly: it NEVER FALLS
+   *  THROUGH. If any entity matches a reference at A, nothing is recorded at B
+   *  or C for that reference AT ALL, including for a different entity whose name
+   *  the label happens to be. A candidate read that computed its own grade from
+   *  how its own alias corresponded would therefore promise a C that op=resolve
+   *  would never mint -- the record claiming more than it can support, which is
+   *  the failure this project treats as worse than a missing feature. Found by
+   *  reasoning through the cascade after the first version shipped that bug, and
+   *  the arm that holds it is in readingname.test.mjs.
+   *
+   *  Returns the winning tier and EVERY entity that won at it; a caller asking on
+   *  behalf of one subject checks whether it is among them, and gets null when it
+   *  is not. */
+  #recogniseTier(rr) {
     const refNorm = _Store.#normAlias(rr.ref);
     const keyNorm = rr.ref_key == null ? "" : _Store.#normAlias(rr.ref_key);
     const labelNorm = rr.label == null ? "" : _Store.#normAlias(rr.label);
@@ -18391,20 +21807,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         }
       }
     }
-    const matches = [];
-    for (const entityId of hits) {
-      matches.push(this.#upsertResolution({
-        captureSha: rr.capture_sha,
-        bundleId: rr.bundle_id,
-        ref: rr.ref,
-        entityId,
-        grade,
-        method,
-        basis,
-        resolvedBy
-      }));
-    }
-    return matches;
+    return { grade, hits, basis, method };
   }
   /* op=resolve: run the recogniser over a captured document's references and store the
      resolutions. With a `ref`, resolve just that reference; without one, resolve every
@@ -18769,8 +22172,14 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
-     crucial one -- a lawful skip needs an exception document (slice B). */
-  static #REQUIREDNESS = /* @__PURE__ */ new Set(["always", "usually", "sometimes", "never", "unless_exception"]);
+     crucial one -- a lawful skip needs an exception document (slice B).
+     REC-35: the ARRAY moved to affordances.mjs and is published there; this is
+     the lookup derived from it. #REQUIRED_FIRES below is a DIFFERENT set and
+     deliberately did not move -- it is the policy of which requiredness values
+     fire a finding (DEC-9's, Bob's to rule), not the vocabulary a member may
+     declare, and publishing the two together would offer a surface a choice
+     that is not a choice. */
+  static #REQUIREDNESS = new Set(STAGE_REQUIREDNESS);
   /* op=progressiondefine: author a PROGRESSION DEFINITION as data -- an ordered set of
      stages carrying after / cardinality / interval / required-ness (framework 8.2's
      progression table). It is a member's CLAIM about how an institution ought to behave
@@ -18802,7 +22211,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           ok: false,
           reason: "BAD_REQUIRED",
           stage_key: sk,
-          detail: `stage '${sk}' required must be one of always, usually, sometimes, never, unless_exception`
+          detail: `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", ")
         };
       norm.push({
         stage_key: sk,
@@ -18915,6 +22324,129 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
     }
     return byCapture;
+  }
+  /* ===================== REC-18 · THE EARNED BASIS GRADES ==================
+   *
+   * DATA-MODEL D1(b), as DEC-15 closed it: a document leg's CONNECTION grade is
+   * EARNED — the strongest resolution of that document's captures to the
+   * inquiry's SUBJECT ENTITY — and its CAPTURE grade is earned from the capture
+   * record. Both are computed HERE, server-side, and the write path refuses a
+   * leg stating anything else (checkEarnedLeg). The rule is the recogniser's own,
+   * moved up one layer: "the RECOGNISER never mints a D; the model holds it so a
+   * member can testify, never the machine" (schema.mjs:739-743).
+   *
+   * ONE FUNCTION, THREE CONSUMERS, and that is deliberate: op=promote's write
+   * path, the ratification gate, and op=earnedbasis (the read a surface uses to
+   * fill a leg in BEFORE writing it) all call this. A member who cannot learn
+   * what a leg earns is a member the refusal pressures into inventing one, which
+   * is the failure mode CLAUDE.md names about gates.
+   */
+  /* The inquiry's declared subject, from the DOCUMENT and not from the column.
+     The projection is a cache like every other; the bytes are the authority,
+     and at promote time the column has not been written yet. */
+  #subjectEntityOf(bundleId) {
+    const row = this.#one(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, bundleId);
+    return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
+  }
+  /* THE CAPTURE-AXIS CEILING is doctrine rather than a tuning knob, and as of
+     REC-43 / DEC-39 it is DECLARED IN THE CHECK CATALOG rather than here.
+     `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
+     and the value is unchanged; what moved is WHERE it is written, so that the
+     published co-attestation fence can be composed from it (affordances.mjs
+     cannot import this file — this file imports IT). The doctrine, the reason
+     for the direction and the derivation of the unreachable letter above it are
+     all at the declaration in `checks/bio-checks.mjs`, beside `checkEarnedLeg`,
+     which is the arm that refuses a leg claiming more than this. This class
+     keeps no copy: a second literal "B" here is precisely the drift the move
+     exists to prevent, and the affordances suite pins its absence. */
+  /** The earned registry for one inquiry over one set of basis targets.
+   *
+   *  CONNECTION: the strongest resolution of each target document's captures to
+   *  the subject entity, through #strongestResolutionsFor — the SAME collapse
+   *  op=concerns, op=connect and op=thread make, reused rather than restated so
+   *  a leg's grade cannot drift from the grade that document appears at in the
+   *  reverse index. A/B/C ONLY: a grade-D resolution is a member's testimony
+   *  (op=resolvetestify), so a document known to concern the subject only by
+   *  testimony earns NOTHING here and its leg is testimony, with its own author
+   *  and date. That is the machine-never-mints-a-D rule holding at this layer
+   *  too, and it is why the D rows are dropped rather than passed through.
+   *
+   *  CAPTURE: whether the record holds registered captures for that document.
+   *  Read from `register`, which is what op=promote writes when a bundle's
+   *  bytes are registered — the capture record itself, never a caller's claim.
+   *
+   *  Bounded by the TARGETS asked about (a basis, or a caller's list) and not by
+   *  the corpus, and it runs two indexed reads per call rather than a probe per
+   *  leg — publishedRegistryFor's shape and for its reason. */
+  earnedBasisRegistry(subjectEntity, targetIds = []) {
+    const ids = [...new Set((Array.isArray(targetIds) ? targetIds : []).filter((t) => typeof t === "string" && t))];
+    const ent = subjectEntity ? this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, subjectEntity) : null;
+    const out = {
+      subject_entity: subjectEntity || null,
+      subject_label: ent ? ent.label : null,
+      subject_known: !!ent,
+      earned: { connection: {}, capture: {} }
+    };
+    if (!ids.length) return out;
+    const want = new Set(ids);
+    if (subjectEntity) {
+      const perCapture = this.#strongestResolutionsFor(subjectEntity);
+      for (const c of perCapture.values()) {
+        if (!c.bundle_id || !want.has(c.bundle_id)) continue;
+        if (!["A", "B", "C"].includes(c.grade)) continue;
+        const cur = out.earned.connection[c.bundle_id];
+        if (!cur || _Store.#GRADE_RANK[c.grade] > _Store.#GRADE_RANK[cur.grade])
+          out.earned.connection[c.bundle_id] = { grade: c.grade, capture_sha: c.capture_sha, captures: 0 };
+      }
+      for (const c of perCapture.values())
+        if (c.bundle_id && out.earned.connection[c.bundle_id]) out.earned.connection[c.bundle_id].captures++;
+      for (const [id, e] of Object.entries(out.earned.connection))
+        e.mode = "value", e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} \u2014 the strongest of the ${e.captures} capture(s) of that document the recogniser matched to this subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the document is.`;
+    }
+    const marks = ids.map(() => "?").join(",");
+    for (const r of this.#rows(
+      `SELECT bundle_id, count(*) AS n FROM (
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
+         UNION
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
+       ) GROUP BY bundle_id`,
+      ...ids,
+      ...ids
+    )) {
+      if (!r.n) continue;
+      out.earned.capture[r.bundle_id] = {
+        /* mode 'ceiling', and the difference from the connection axis is not a
+           softening — it is the record being honest about what it holds. There
+           is no per-document capture grade column anywhere in this schema, so
+           the record cannot say "this document's capture is worth C"; what it
+           CAN say is that it holds bytes for the document and what the strongest
+           capture this plane produces is worth. A leg may not claim more than
+           that (which is what makes grade A unreachable rather than merely
+           discouraged); a weaker letter is the member's account of a poorer
+           route and stays theirs. */
+        mode: "ceiling",
+        grade: EARNED_CAPTURE_CEILING,
+        captures: r.n,
+        why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
+        /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
+           immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
+           checkEarnedLeg compares this leg against, so the sentence a member reads
+           and the refusal that enforces it cannot say different things. */
+        ceiling: `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`
+      };
+    }
+    return out;
+  }
+  /* The registry as the WRITE PATH and the GATE need it: the subject this
+     document declares, over the targets this document's basis names. Takes the
+     frontmatter because at promote time the bytes are the only authority — the
+     projection column is written from them a few lines later. */
+  earnedRegistryForDoc(fm, legs) {
+    const subject = fm && typeof fm.subject_entity === "string" && fm.subject_entity ? fm.subject_entity : null;
+    return this.earnedBasisRegistry(
+      subject,
+      (Array.isArray(legs) ? legs : []).map((l) => l && l.target).filter((t) => typeof t === "string")
+    );
   }
   /* A missing stage is a FINDING only when the group's definition says the stage is expected
      (framework 8.2 required-ness) AND the skip is UNDISCHARGED. A sometimes/never stage missing
@@ -19801,8 +23333,16 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  writer, and it is what `capture-completed-unattended` reads. The literal
    *  lives at the trust boundary in index.mjs; this constant is the reader's
    *  copy, and the suite parses index.mjs's own source to prove the two agree
-   *  rather than trusting that they do. */
-  static QUEUE_MACHINE_AUTHOR_PREFIX = "token:";
+   *  rather than trusting that they do.
+   *
+   *  CORRECTED 2026-08-04 (REC-46), and the correction is the item's whole
+   *  argument in one line: there is no longer a reader's COPY to prove equal to
+   *  a writer's literal. Both are `MACHINE_AUTHOR_PREFIX`, imported from the
+   *  catalog, so the stamp and the read are the SAME STRING and cannot drift at
+   *  all. This alias stays because the name says what the value is FOR here —
+   *  the manifest-author read `capture-completed-unattended` walks — and
+   *  because the GLOB below is built from it. */
+  static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
   /** One step UP the graph from a node: the edges an ancestor is reached by.
    *
    *  TWO edge kinds, because a case reaches a document two ways. `inquiry_basis`
@@ -20961,6 +24501,10 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       entityRelations: n("entity_relations"),
       /* FW-7: the recogniser's resolutions, reported so a purge can PROVE it took them. */
       resolutions: n("resolutions"),
+      /* REC-24: the action loop's two projections, reported so a purge can PROVE
+         it cleared them (D-113) rather than assert it. */
+      actionBasis: n("action_basis"),
+      correspondence: n("correspondence"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"),
@@ -21035,7 +24579,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   basisFor(bundleId) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
     const legs = this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
        FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`,
       bundleId
     );
@@ -21329,17 +24873,37 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    * A HUNCH COMPOSES NORMALLY (DEC-15). grade_source 'hunch' is an ASSERTED
    * grade, present and load-bearing, never treated as undetermined; it is
    * reported on the member so a surface (and REC-15's pre-flight) can see the
-   * bias debt without the arithmetic pretending the grade is absent.
+   * HUNCH DEBT without the arithmetic pretending the grade is absent. (D-188 /
+   * DEC-46 (d): HUNCH debt, not "bias debt" — a hunch is the one kind that
+   * DISQUALIFIES publication; ordinary bias debt is DISCLOSED and travels with
+   * the case. This is the field the pre-flight reads to refuse UNCLEARED_HUNCH,
+   * so the disqualifying sense is the one meant here and it is now said.)
    *
    * DERIVE ON READ. The bundles columns this writes are a CACHE and never the
    * authority: a stored strength goes stale the moment a leg is raised, and
    * `resolutions` grades are explicitly improvable.
    *
-   * SINGLE-BASIS ARITHMETIC (DEC-32, still open): the basis is one flat
-   * conjunction of legs, so an axis is its weakest load-bearing member. No
-   * grounds, no OR-branches, no plurality machinery is built here — when
-   * DEC-32 closes, the shape it adds is a partition ABOVE this function, and
-   * this stays the within-branch rule. */
+   * CORRECTED 2026-08-05 (REC-42), never exempted. This paragraph read
+   * "SINGLE-BASIS ARITHMETIC (DEC-32, still open): the basis is one flat
+   * conjunction of legs, so an axis is its weakest load-bearing member", and it
+   * was right while DEC-32 was open and is WRONG now that it is answered. Bob
+   * ruled: a basis carries the RELATIONSHIP between its legs, and strength is
+   * the MINIMUM over AND-related legs and the MAXIMUM over OR-related branches.
+   * The old paragraph's own prediction held exactly — the partition sits ABOVE
+   * the within-branch rule and the within-branch rule is untouched — so what
+   * changed is the composition and not the measurement:
+   *
+   *   A GROUND is an AND of its legs and is no stronger than the weakest of
+   *   them. THE GROUNDS are OR-related — each independently sufficient for the
+   *   SAME conclusion — so the axis takes the STRONGEST of them. Both axes are
+   *   composed separately, over their own populations, exactly as before.
+   *
+   * AND THE DEFAULT IS AND, which is a correctness requirement rather than a
+   * compatibility choice: a leg with no authored ground is NECESSARY, an
+   * unstructured basis is still its weakest leg to the byte, and independent
+   * sufficiency is only ever reached by an affirmative, attributed act
+   * (checkGrounds in the catalog, enforced at both gates). #axisResult carries
+   * the composition and #groundResult the within-branch rule. */
   /* Named once so no site spells an axis and none can drift. */
   static STRENGTH_AXES = ["capture", "connection"];
   /* R1, THE ARITHMETIC HALF of the two defences (#axisResult holds the naming
@@ -21372,67 +24936,209 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       grade: m.grade ?? null,
       grade_source: m.grade_source ?? null,
       via: m.via,
+      /* REC-42: present ONLY when the leg carries an authored ground, on
+         the same rule as `inherited_from` below — a named member of an
+         unstructured basis reads exactly as it did before DEC-32, which
+         is the property the correction is required to preserve. */
+      ...m.ground ? { ground: m.ground } : {},
       ...m.inherited_from ? { inherited_from: m.inherited_from } : {},
       ...m.through ? { through: m.through } : {},
       ...m.why ? { why: m.why } : {}
     };
   }
-  /* One axis's answer, from its own population. Three states and no fourth:
-       graded       — the axis rests on at least one graded member; the grade
-                      is the weakest of them and that member is NAMED.
-       unrated      — no member of this axis carries a grade (DEC-18's
-                      boundary case). Not a low score and not a failure.
-       undetermined — the walk could not finish a branch within its depth
-                      bound (R3). UNKNOWN is not ABSENT: an unfinished branch
-                      might be weaker than everything we can see, so the axis
-                      states that it has no computed strength and names the
-                      depth. R1's shape, not an error. */
-  static #axisResult(axis, members, exhausted) {
+  /* ONE GROUND's answer, over the members of ONE axis that belong to it.
+       REC-42/DEC-32: this is R1's original arithmetic, unchanged and moved one
+       level down. A GROUND is an AND of its legs — every leg in it is necessary
+       — so it is NO STRONGER THAN THE WEAKEST of them, and a leg the walk could
+       not finish leaves THE WHOLE GROUND `undetermined`, because a necessary link
+       whose value is unknown could be weaker than anything visible beside it.
+  
+       D-160 GOVERNS THE VOCABULARY HERE, and it needs saying because DEC-32 and
+       REC-42 both state this rule using the RETIRED word — the one that means the
+       OPPOSITE thing in SB-OUTPUT §5.1 and is deliberately not spelled anywhere
+       in this file. Read both entries' word for what an unfinished leg does to
+       its branch as `undetermined`, which is what this code and this record call
+       it, and their word for a branch nothing established as UNRATED.
+       strength.test.mjs holds this whole region against the retired spelling, so
+       a comment quoting it would be an occurrence of it (D-160's own precedent).
+  
+       `ground` is the authored label, or NULL for the IMPLICIT ground that every
+       unstructured basis has and that legacy legs land in.
+  
+       DEFENCE 2 of 2, the NAMING half of DEC-18: membership of the load-bearing
+       population is decided HERE, by the presence of a grade, and the inert
+       members are named rather than dropped. Breaking this alone leaves the
+       arithmetic right and the record dishonest, which is why it has its own
+       negative control.
+  
+       THE TWO DEFENCES SHARE ONE INVARIANT and are deliberately not made
+       independent of it: `loadBearing` is non-empty EXACTLY when #weakestOf can
+       find a member, because both ask `grade != null`. So breaking either one
+       is LOUD — the graded branch below dereferences the weakest it was
+       promised, and a ground that claims a load-bearing population it cannot
+       describe fails at the write rather than publishing a strength nobody can
+       check. A defensive fallback here would turn that into a quiet wrong
+       answer, which is the failure mode this record cares about most. */
+  static #groundResult(ground, members, exhausted) {
     const isLoadBearing = (m) => m.grade != null;
     const inert = members.filter((m) => !isLoadBearing(m)).map(_Store.#namedMember);
     const loadBearing = members.filter(isLoadBearing);
-    if (exhausted.length) {
+    if (exhausted.length)
       return {
+        ground,
+        state: "undetermined",
+        grade: null,
+        weakest: null,
+        load_bearing: loadBearing.length,
+        population: members.length,
+        not_load_bearing: inert,
+        undetermined_at: exhausted.map(_Store.#namedMember)
+      };
+    if (!loadBearing.length)
+      return {
+        ground,
+        state: "unrated",
+        grade: null,
+        weakest: null,
+        load_bearing: 0,
+        population: members.length,
+        not_load_bearing: inert
+      };
+    const w = _Store.#weakestOf(members);
+    return {
+      ground,
+      state: "graded",
+      grade: w.grade,
+      weakest: _Store.#namedMember(w),
+      load_bearing: loadBearing.length,
+      population: members.length,
+      not_load_bearing: inert
+    };
+  }
+  /* One axis's answer, composed from its GROUNDS. Three states and no fourth:
+         graded       — the axis rests on at least one graded member; the grade
+                        is derived below and the member that SETS it is NAMED.
+         unrated      — no member of this axis carries a grade (DEC-18's
+                        boundary case). Not a low score and not a failure.
+         undetermined — a NECESSARY part of the answer could not be finished
+                        within the depth bound (R3). UNKNOWN is not ABSENT: an
+                        unfinished branch might be weaker than everything we can
+                        see, so the axis states that it has no computed strength
+                        and names the depth. R1's shape, not an error.
+       ==================== REC-42 · THE AND/OR ARITHMETIC =====================
+       DEC-32, Bob: "sometimes the weakest is the claim's strength, and other
+       times it's not. The difference is really whether the relationship between
+       legs is AND or OR." So this axis is composed of at most TWO PARTS and it is
+       the MINIMUM of them, because both are NECESSARY to the conclusion:
+  
+         THE IMPLICIT PART — every leg carrying NO ground label. Unlabelled means
+         nobody said this leg could be done without, so it is treated as
+         NECESSARY: one AND-group, weakest leg, exactly REC-12's landed rule.
+  
+         THE OR PART — the labelled grounds, each an independently sufficient
+         basis for the SAME conclusion, composed by MAXIMUM: a conclusion
+         established at B on one ground is established at B, and a weaker ground
+         offered beside it weakens nothing.
+  
+       WHY THE UNLABELLED LEGS ARE AND-ed RATHER THAN MADE A BRANCH OF THEIR OWN,
+       and this is the correctness requirement rather than a preference (DEC-32's
+       anti-gaming keystone). A basis nobody structured MUST NOT SILENTLY BECOME
+       STRONGER. If the unlabelled legs were their own OR branch, a basis with no
+       structure at all would be a single branch — arithmetically identical — but
+       a HALF-structured one would hand independent sufficiency to legs no member
+       ever claimed it for, by omission. Under this rule the two degenerate cases
+       are exact: nothing labelled reads weakest-leg, as it always did; everything
+       labelled reads MAX over grounds; and the mixed case reads the conservative
+       minimum of both. The DEFAULT IS AND, in the arithmetic itself and not only
+       in the write-time refusal, so it holds even for a row that reached the
+       projection around the gate (the same posture the no-referent arm takes).
+  
+       THE UNKNOWN COMPOSES ONE LEVEL UP (DEC-18's pattern applied to grounds): a
+       leg the walk could not finish leaves its GROUND undetermined, and the AXIS
+       is undetermined only when a NECESSARY part is unknown — the implicit part,
+       or the OR part with EVERY branch undetermined. An undetermined branch
+       beside a graded one is NAMED and the graded branch still carries the
+       finding. Ignoring it can only UNDERSTATE
+       the axis (the unknown branch could have been stronger, never weaker, since
+       the OR takes the max), which is the direction this record errs in.
+  
+       Q14's CONTRADICTION CASE IS NOT MODELLED HERE and must not be read into
+       this: grounds AGREE on the conclusion. Two conclusions disagreeing is a
+       different thing and is undesigned. */
+  static #axisResult(axis, members, exhausted) {
+    const keys = [];
+    const bucket = /* @__PURE__ */ new Map();
+    const at = (k) => {
+      if (!bucket.has(k)) {
+        keys.push(k);
+        bucket.set(k, { members: [], exhausted: [] });
+      }
+      return bucket.get(k);
+    };
+    for (const m of members) at(m.ground ?? null).members.push(m);
+    for (const e of exhausted) at(e.ground ?? null).exhausted.push(e);
+    if (!keys.length) at(null);
+    const grounds = keys.map((k) => _Store.#groundResult(k, bucket.get(k).members, bucket.get(k).exhausted));
+    const structured = keys.some((k) => k !== null);
+    const implicit = grounds.find((g) => g.ground === null) ?? null;
+    const branches = grounds.filter((g) => g.ground !== null);
+    const gradedBranches = branches.filter((g) => g.state === "graded");
+    const openBranches = branches.filter((g) => g.state === "undetermined");
+    const best = gradedBranches.length ? gradedBranches.reduce((a, g) => _Store.#GRADE_RANK[g.grade] > _Store.#GRADE_RANK[a.grade] ? g : a) : null;
+    const orPart = !branches.length ? null : best ? { state: "graded", grade: best.grade, weakest: best.weakest } : openBranches.length ? { state: "undetermined" } : { state: "unrated" };
+    const parts = [...implicit ? [implicit] : [], ...orPart ? [orPart] : []];
+    const inert = grounds.flatMap((g) => g.not_load_bearing);
+    const allExhausted = grounds.flatMap((g) => g.undetermined_at ?? []);
+    const loadBearing = grounds.reduce((n, g) => n + g.load_bearing, 0);
+    const population = grounds.reduce((n, g) => n + g.population, 0);
+    const withGrounds = (o) => structured ? { ...o, grounds } : o;
+    const nlb = inert.map((m) => m.target_id).join(", ");
+    const label = (g) => `"${g.ground}"`;
+    if (parts.some((p) => p.state === "undetermined")) {
+      return withGrounds({
         axis,
         state: "undetermined",
         grade: null,
         determined: false,
         weakest: null,
-        load_bearing: loadBearing.length,
-        population: members.length,
+        load_bearing: loadBearing,
+        population,
         not_load_bearing: inert,
         depth_bound: _Store.QUEUE_ANCESTOR_DEPTH,
-        undetermined_at: exhausted.map(_Store.#namedMember),
-        detail: `this ${axis} axis has NO computed strength: the basis walk reached its depth bound of ${_Store.QUEUE_ANCESTOR_DEPTH} at ${exhausted.map((e) => e.target_id).join(", ")}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.`
-      };
+        undetermined_at: allExhausted,
+        detail: `this ${axis} axis has NO computed strength: ` + (structured && branches.length && !implicit ? `EVERY one of the ${branches.length} grounds it rests on is undetermined, and ` : structured ? `a leg every ground needs is undetermined, and ` : ``) + `the basis walk reached its depth bound of ${_Store.QUEUE_ANCESTOR_DEPTH} at ${allExhausted.map((e) => e.target_id).join(", ")}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.`
+      });
     }
-    if (!loadBearing.length) {
-      return {
+    const gradedParts = parts.filter((p) => p.state === "graded");
+    if (!gradedParts.length) {
+      return withGrounds({
         axis,
         state: "unrated",
         grade: null,
         determined: false,
         weakest: null,
         load_bearing: 0,
-        population: members.length,
+        population,
         not_load_bearing: inert,
         depth_bound: _Store.QUEUE_ANCESTOR_DEPTH,
-        detail: members.length ? `UNRATED on ${axis}: no leg on this axis carries an established grade, so this conclusion rests on nothing established here. Not load-bearing: ${inert.map((m) => m.target_id).join(", ")}.` : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.`
-      };
+        detail: population ? `UNRATED on ${axis}: no leg on this axis carries an established grade` + (structured ? ` on any of the ${branches.length} grounds` : ``) + `, so this conclusion rests on nothing established here. Not load-bearing: ${nlb}.` : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.`
+      });
     }
-    const w = _Store.#weakestOf(members);
-    return {
+    const setter = gradedParts.reduce((a, p) => _Store.#GRADE_RANK[p.grade] < _Store.#GRADE_RANK[a.grade] ? p : a);
+    const w = setter.weakest;
+    const orSets = orPart && setter === orPart;
+    return withGrounds({
       axis,
       state: "graded",
-      grade: w.grade,
+      grade: setter.grade,
       determined: true,
-      weakest: _Store.#namedMember(w),
-      load_bearing: loadBearing.length,
-      population: members.length,
+      weakest: w,
+      load_bearing: loadBearing,
+      population,
       not_load_bearing: inert,
       depth_bound: _Store.QUEUE_ANCESTOR_DEPTH,
-      detail: `${axis} ${w.grade} \u2014 no stronger than the weakest ${axis} it rests on, which is ${w.target_id}` + (w.through ? ` (through ${w.through})` : "") + `. ${inert.length ? `Present and not yet load-bearing: ${inert.map((m) => m.target_id).join(", ")}.` : ""}`.trimEnd()
-    };
+      detail: (orSets ? `${axis} ${setter.grade} \u2014 the STRONGEST of the ${branches.length} independently sufficient grounds this conclusion rests on, which is ${label(best)}, and no stronger than the weakest ${axis} WITHIN that ground, which is ${w.target_id}` : `${axis} ${setter.grade} \u2014 no stronger than the weakest ${axis} it rests on, which is ${w.target_id}`) + (w.through ? ` (through ${w.through})` : "") + `.` + (structured && !orSets && implicit ? ` That leg is needed by every ground, so no ground can be stronger than it.` : ``) + (openBranches.length ? ` ${openBranches.length} further ground${openBranches.length === 1 ? " is" : "s are"} UNDETERMINED and could only be stronger, never weaker: ${openBranches.map(label).join(", ")}.` : ``) + ` ${inert.length ? `Present and not yet load-bearing: ${nlb}.` : ""}`.trimEnd()
+    });
   }
   /* The walk. Reads REC-11's projection through basisFor() — the read seam —
        and carries R3's DEPTH BOUND, which is REC-20's EXPORTED
@@ -21457,7 +25163,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         ord: leg.ord,
         target_id: leg.target_id,
         role: leg.role,
-        grade_source: leg.grade_source ?? null
+        grade_source: leg.grade_source ?? null,
+        ground: leg.ground ?? null
       };
       for (const axis of _Store.STRENGTH_AXES) {
         const onAxis = leg.grade_axis === axis;
@@ -21527,6 +25234,161 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       connection: pair.connection
     };
   }
+  /* ===================== REC-34 · the gated read of the pair ==============
+   *
+   * UI-11 measured the gap and UI-12 is hard-blocked on it: `strengthOf()` is
+   * the AUTHORITY and it derives inside the Durable Object, but no
+   * control-plane op served it for a WORKING inquiry. `/strength` and `/basis`
+   * are the DO-internal class (REC-11's precedent) and are not in index.mjs's
+   * OPS whitelist; `op=projection` and `op=search` carry neither the five
+   * cached columns nor a way to tell UNRATED from `undetermined`, which is the
+   * exact DEC-18 distinction a surface has to render.
+   *
+   * THREE THINGS MAKE IT MORE THAN AN OPS-TABLE LINE.
+   *
+   * 1. IT ANSWERS FROM `strengthOf()` AND NEVER FROM THE CACHED COLUMNS. The
+   *    five `inquiry_*` columns are a CACHE that goes stale the moment a leg
+   *    ANYWHERE BENEATH the inquiry is re-graded — REC-12's own comment says
+   *    so, and its suite proves the staleness deliberately. A read that served
+   *    the columns would let a stale row impersonate the derivation, showing a
+   *    member a strength the record no longer derives. This function therefore
+   *    calls the derivation and touches no column; the suite's negative control
+   *    is exactly the swap, and it fails on the raised-leg assertion.
+   *
+   * 2. THE VIEWER GATE, in REC-30's two shapes and through the same ONE
+   *    compilation point (`#viewerSees` / `#bundleRedactor`, both taking their
+   *    predicate from query.mjs's `viewerPredicate` and neither restating it):
+   *
+   *      the OWNING INQUIRY is the answer's SUBJECT, so an inquiry the viewer
+   *      may not see is WITHHELD WHOLE, byte-identically to one that does not
+   *      exist. No count, no "something is hidden" — op=backlinks' posture.
+   *
+   *      an id NAMED INSIDE a visible answer is a BACK-REFERENCE and is
+   *      REDACTED to null while every RECORD FACT in that answer stands
+   *      unchanged: the axis, the grade, the state, the role, the counts, the
+   *      depth bound. This is op=reevaluations' posture and the reason for it
+   *      is doctrine rather than symmetry — a derivation that got weaker or
+   *      stronger with the reader would be the record claiming something
+   *      different to different people, which is worse than the leak.
+   *
+   *    AND THE PROSE IS SWEPT, not just the fields. `detail` and `why` SPELL
+   *    THE IDS OUT in sentences, and one of them carries ids that appear
+   *    NOWHERE in this answer's structured fields: an inherited-undetermined
+   *    leg's `why` embeds the sub-walk's whole `detail`, which names where the
+   *    walk stopped several levels down. That is REC-14's measured leak shape
+   *    exactly (`#requiredStrengthFor` interpolated the same project ids into
+   *    its prose that its `projects` array named), so the sweep runs over every
+   *    string in the answer and not over the id fields alone.
+   *
+   * 3. WHAT IS *NOT* READER-DEPENDENT, stated because the residual is real.
+   *    Today `viewerPredicate` filters PROJECT bundles and nothing else — the
+   *    evidence corpus is shared BY DESIGN (7.9) — and C-2.8 refuses a basis
+   *    leg whose target is anything but information or inquiry. So for a
+   *    recognised viewer the redaction below can bite in exactly two ways: an
+   *    id naming a bundle that is GONE (fail closed, the same arm
+   *    `#bundleGate` takes), and a PROJECT-typed target that the write refuses
+   *    today but an APPEND-ONLY history can still hold — the same reason
+   *    #strengthWalk keeps its no-referent arm rather than throwing. The
+   *    mechanism is built and proved against both, because it takes its
+   *    predicate from the one compilation point and therefore inherits
+   *    whatever participation scoping lands there next, and because a read
+   *    that has to grow a gate later is a read that ships ungated first. */
+  /** REC-34: `op=inquirystrength` — REC-12's derived pair, gated.
+   *
+   *  Answers `{ capture, connection }` VERBATIM from `strengthOf()` and no
+   *  scalar. `unrated` and `undetermined` are two different states of the
+   *  `state` field and stay two here (DEC-18): the cached columns could not
+   *  tell them apart and that is half of why this op exists. */
+  inquiryStrength({ id = null, viewer = null } = {}) {
+    if (!id) return {
+      ok: false,
+      reason: "NO_ID",
+      detail: "the derived pair is asked of one inquiry: pass id=<bundle id>"
+    };
+    if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+    const ty = normalizeType(row?.object_type);
+    if (ty !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        target: id,
+        object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "bundle"}, not an inquiry. The derived pair is a property of a question and what it rests on; a document has no basis to derive one from.`
+      };
+    const s = this.strengthOf(id);
+    if (!s.ok) return s;
+    const keep = this.#bundleRedactor(viewer);
+    return {
+      ok: true,
+      target: id,
+      depth_bound: s.depth_bound,
+      capture: _Store.#redactAxis(s.capture, keep),
+      connection: _Store.#redactAxis(s.connection, keep)
+    };
+  }
+  /* Every field of a named member (#namedMember's shape) that HOLDS a bundle
+     id. `bundle_id` is the inquiry the leg is authored on, `target_id` what the
+     leg rests on, and `inherited_from`/`through` the sub-inquiry a pair came
+     from and the actual leg it named. `ord`, `role`, `grade`, `grade_source`,
+     `via` and `axis` are RECORD FACTS and are never touched. */
+  static #MEMBER_ID_FIELDS = ["bundle_id", "target_id", "inherited_from", "through"];
+  /* A bundle id AS IT APPEARS IN A SENTENCE. DERIVED from the catalog's own
+     BUNDLE_ID_RE by dropping its anchors rather than restated as a second
+     pattern — REC-12's depth-bound lesson applied to a regex: two spellings of
+     "what a bundle id looks like" are two answers waiting to disagree, and the
+     one that drifts here fails OPEN. The suite asserts the derivation. */
+  static #ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
+  /* One axis object, with the ids the viewer may not see withheld and every
+       record fact left exactly as the derivation produced it.
+  
+       RETURNS THE ORIGINAL OBJECT when nothing is withheld — not a copy — so
+       "byte-equal to strengthOf()'s answer" is a property of the code and not of
+       a key order that happened to survive a rebuild. */
+  static #redactAxis(axis, keep) {
+    let touched = false;
+    const member = (m) => {
+      let out2 = m;
+      for (const f2 of _Store.#MEMBER_ID_FIELDS) {
+        if (m[f2] == null || keep(m[f2]) !== null) continue;
+        if (out2 === m) out2 = { ...m };
+        out2[f2] = null;
+        touched = true;
+      }
+      return out2;
+    };
+    const prose = (v) => typeof v !== "string" ? v : v.replace(_Store.#ID_IN_PROSE, (m) => {
+      if (keep(m) !== null) return m;
+      touched = true;
+      return "an object you may not see";
+    });
+    const named = (m) => {
+      const r = member(m);
+      const w = prose(r.why ?? null);
+      if (w === (r.why ?? null)) return r;
+      return { ...r, why: w };
+    };
+    const out = {
+      ...axis,
+      weakest: axis.weakest ? named(axis.weakest) : axis.weakest,
+      not_load_bearing: (axis.not_load_bearing ?? []).map(named),
+      ...axis.undetermined_at ? { undetermined_at: axis.undetermined_at.map(named) } : {},
+      /* REC-42: THE PER-GROUND BREAKDOWN GETS THE SAME SWEEP, and it is not a
+         formality — a ground names its OWN weakest leg and its own inert and
+         unfinished members, so an id withheld from the axis and left standing
+         one level down would be the same leak by another field. The ground
+         LABEL is authored on the visible subject inquiry itself, so it is a
+         record fact here and is never touched. */
+      ...axis.grounds ? { grounds: axis.grounds.map((g) => ({
+        ...g,
+        weakest: g.weakest ? named(g.weakest) : g.weakest,
+        not_load_bearing: (g.not_load_bearing ?? []).map(named),
+        ...g.undetermined_at ? { undetermined_at: g.undetermined_at.map(named) } : {}
+      })) } : {},
+      detail: prose(axis.detail)
+    };
+    return touched ? { ...out, out_of_view: true } : axis;
+  }
   /* REC-12: the projection CACHE, per axis, written inside promote's
        transaction right after the inquiry_basis projection it derives from.
   
@@ -21542,20 +25404,30 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
        the composed scalar DEC-21 forbids, and a column is where one would grow.
        The STATE column beside each grade is what keeps `unrated` distinguishable
        from `undetermined` and both distinguishable from "never projected", which
-       one nullable grade column cannot do. */
-  #writeStrengthProjection(bundleId, isInquiry) {
+       one nullable grade column cannot do.
+  
+       REC-18 adds `inquiry_subject_entity` to this write, and it is NOT a cache in
+       the same sense as the four columns above: it is a straight projection of one
+       authored scalar, like every S-10 column, and it goes stale only when the
+       document changes — which re-promotes and re-writes it. It is written HERE
+       rather than in #writeProjection because it is inquiry-only and this is the
+       inquiry projection writer; #writeProjection runs for every object type and
+       would have to learn a type test to hold it. */
+  #writeStrengthProjection(bundleId, isInquiry, subjectEntity = null) {
     if (!isInquiry) return null;
     const s = this.strengthOf(bundleId);
     const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
     this.sql.exec(
       `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
-              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?
+              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?,
+              inquiry_subject_entity=?
          WHERE bundle_id=?`,
       s.capture.grade,
       s.capture.state,
       s.connection.grade,
       s.connection.state,
       n,
+      subjectEntity || null,
       bundleId
     );
     return s;
@@ -21582,11 +25454,14 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       "leases",
       "readings",
       "reading_refs",
+      "reading_ref_terms",
       "resolutions",
       "progression_instances",
       "progression_exceptions",
       "inquiry_basis",
-      "inquiry_exclusions"
+      "inquiry_exclusions",
+      "action_basis",
+      "correspondence"
     ];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -21706,16 +25581,71 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   static #rand(n = 32) {
     return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
+  /* A fixed, published, deliberately WORTHLESS salt, and the one place a
+       refusal pays what an acceptance pays.
+  
+       REC-41, 2026-08-05. Collapsing the login refusals into one code and one
+       sentence (see LOGIN_REFUSAL_DETAIL) is defeated by a stopwatch if the arms
+       do not COST the same. Before this, every arm that refuses without a
+       password check — no credentials row, and the DO dispatch's revoked/absent
+       member arm — returned immediately, while the wrong-password arm ran PBKDF2
+       at 100,000 iterations. That is tens of milliseconds, not the sub-millisecond
+       difference a network round trip hides, so "is this an active member" was
+       answerable with a timer even with the wire answers identical.
+  
+       Every such arm now awaits this first. STATED HONESTLY AND NOT OVERCLAIMED:
+       it equalises the DOMINANT cost and is NOT a proof of constant time — the
+       SQL lookup and the string compare still differ by microseconds. It removes
+       the measurement an ordinary caller can actually make over the internet,
+       which is the threat this is for.
+  
+       The salt guards nothing and is never stored; a real credential's salt is
+       minted per password by `setPassword`. */
+  static #TIMING_SALT = "bio-login-timing-equaliser";
+  static async #payLoginCost(password) {
+    await _Store.#derive(String(password ?? ""), _Store.#TIMING_SALT, 1e5);
+  }
+  /* WHAT THIS ANSWERS, AND WHAT IT DELIBERATELY NO LONGER ANSWERS (REC-41,
+       2026-08-05, closing D-188).
+  
+       `op=bootstrap` is `classes: null` — no token, no session, any stranger on
+       the internet. It exists to answer ONE question, the one the setup page must
+       ask before it can show anything: has this instance been claimed yet, and is
+       there a live bootstrap credential to claim it with. `gate-reads.test.mjs`
+       has always described it in exactly those words ("answers whether this
+       instance has been claimed").
+  
+       UNTIL THIS ITEM IT ALSO ANSWERED `roles`: every role holding a credential,
+       each with the date its password was last set. Two facts about the people in
+       the group — who they are, and when each of them last touched their
+       password — handed to any caller in one unauthenticated request. That is a
+       ROSTER, and a roster is what `memberList` withholds the pairing from and
+       what schema.mjs's `members.cover` comment says the cover/handle split
+       exists to protect (D-157: "the rare defect whose blast radius is OUTSIDE
+       the project").
+  
+       MEASURED BEFORE REMOVING IT, because a claim in a queue item is a claim and
+       not a measurement (REC-39 first, re-measured here 2026-08-05): NOTHING
+       consumes the field. `src/setup.mjs` reads `version`, `claimed`,
+       `bootstrapConfigured`, `rearmed` and `consumedAt` and never `roles` — its
+       "Roles with passwords" row is filled from the signed-in role, not from this
+       answer. `newgroup/src/index.mjs` calls the op twice and reads `version`
+       only. `civicos-ui` does not call the op at all. No suite asserted on it.
+       So the disclosure was not paying for anything, which is why the removal is
+       a straight subtraction rather than a trade.
+  
+       THE CREDENTIALS TABLE IS NO LONGER READ HERE AT ALL. The field is not
+       blanked, emptied or gated — the SELECT is gone, so there is no roster in
+       this answer to leak by a later refactor, and a caller cannot tell from the
+       shape that one was ever computed. */
   bootstrapState(tokenFp = null) {
     const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
-    const roles = this.#rows(`SELECT role, updated FROM credentials`);
     const spent = !!(b && b.consumed_at);
     const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
     return {
       claimed: spent && !rearmed,
       rearmed,
-      consumedAt: rearmed ? null : b?.consumed_at || null,
-      roles
+      consumedAt: rearmed ? null : b?.consumed_at || null
     };
   }
   /* Spending the bootstrap credential. Refuses if already spent, so a leaked
@@ -21748,15 +25678,143 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     );
     return { ok: true, role };
   }
+  /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
+       because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
+       credential row exists, and in the DO dispatch's `login:` wrapper, where a
+       credential exists and the member is not active. Two sentences would tell
+       those two arms apart at a glance, and telling them apart is exactly what
+       that wrapper exists to prevent.
+  
+       D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR. D-57 is a refusal whose
+       BASIS was false about the caller's own material — a self-reference reported
+       as a change — printed to a member verbatim because a surface renders the
+       plane's words rather than paraphrasing them. So a refusal detail must state
+       what THE MECHANISM FOUND and must never make a claim about who is asking.
+       Neither sentence below says "you", advises, or characterises the attempt:
+       one says a credential exists and the supplied password does not derive its
+       stored hash; the other says this instance holds no ACTIVE credential under
+       that role. Both are checkable statements about the store.
+  
+       WHY THE NO_SUCH_ROLE SENTENCE SAYS "ACTIVE" AND NOT "NO SUCH ROLE". The
+       obvious wording — "no role by that name is registered here" — is FALSE for
+       the revoked member, whose credential row is still there and whose sign-in is
+       refused by the wrapper. Writing the obvious sentence would have made
+       revocation distinguishable from never-having-existed in prose while the
+       reason code kept them identical, which is the enrollment rule (a spent, a
+       wrong and a never-existent invitation answer alike) broken by a comment.
+       "No active credential" is exactly true of both arms and separates neither,
+       and the sentence SAYS that it does not separate them rather than leaving a
+       reader to assume it does.
+  
+       ── REVISITED AND REVERSED, REC-41, 2026-08-05. READ THIS BEFORE THE HISTORY
+       BELOW IT. ──────────────────────────────────────────────────────────────────
+  
+       REC-39 kept `NO_SUCH_ROLE` and `BAD_PASSWORD` distinguishable on ONE ground,
+       recorded here so it could be re-opened: that `op=bootstrap` already handed
+       any stranger the whole role roster in a single unauthenticated call, "more
+       completely and more cheaply than login probing could ever assemble it", so
+       collapsing the two would have defended nothing. REC-41 CLOSED THAT ROSTER
+       (see `bootstrapState` above). The ground is gone, so the decision was not
+       inherited — it was made again, on evidence, in the same turn that removed
+       it. THE OUTCOME: the two refusals are COLLAPSED into one reason code and one
+       sentence. There is now exactly one way `op=login` says no.
+  
+       WHAT WAS MEASURED, 2026-08-05, rather than argued:
+  
+       1. `op=login` is `classes: null` and carries NO rate limit of any kind. The
+          only unauthenticated op in this plane that meters a caller is `op=knock`
+          (per-IP and global windows, `KNOCK` in index.mjs). So with distinct
+          codes, "does this role hold a credential" is an unmetered anonymous
+          oracle answering one guess per request, forever. Closing the wholesale
+          route while leaving that open would have made the plane disclose the
+          same set of facts more slowly, and let this file claim a closure the
+          plane does not deliver.
+       2. THIS PLANE ALREADY DECIDED THIS QUESTION, THREE TIMES, AND ALWAYS THE
+          OTHER WAY. `#INVITE_MISS`: a spent invitation and one that never existed
+          return byte-identical answers, "the security property and not tidiness".
+          `NOT_PUBLISHED` on the published read: never-published, no-such-edition
+          and never-existed are "one answer here". And `NO_SUCH_ROLE` ITSELF
+          already collapses its own two arms — a revoked member and a role that
+          was never registered — for exactly this reason. Login was the one
+          unauthenticated identity probe in the plane still separating its
+          outcomes, and it was separating them only because of a disclosure that
+          no longer exists.
+       3. THE DISTINCTION HAD ONE CONSUMER AND THE CONSUMER WAS PART OF THE
+          DEFECT. `src/setup.mjs` branched on `NO_SUCH_ROLE` to render "No member
+          by that name has set a password on this copy yet" — a PARAPHRASE that
+          stated the disclosure more plainly than the plane ever did, to an
+          anonymous visitor, on the instance's own front door. It now renders the
+          plane's own sentence (DEC-8: a surface renders what it received).
+          `civicos-ui` does not branch on the code at all — `signIn` hands the
+          refusal to `teach()` — so no UI edit was owed.
+  
+       WHAT THE COLLAPSE DOES NOT COST, since that is the case against it and it
+       deserves stating rather than skipping. A member who cannot get in is not
+       left guessing: the one sentence NAMES both possibilities — no active
+       credential under that role, or a stored credential whose derivation the
+       supplied password does not reproduce — and then says the record does not
+       report which. That is the same shape `NO_SUCH_ROLE` already used for its
+       own two arms and `#INVITE_MISS` for its two, and it is honest in the way
+       D-57 requires: it states what the mechanism did, including that the
+       mechanism deliberately declines to separate them. Nothing true was deleted;
+       one fact stopped being reported, and the answer SAYS it stopped.
+  
+       WHAT IS NOT CLAIMED BY THIS, because overclaiming a fix is the failure this
+       project exists to refuse. Member identity is NOT secret after this change,
+       and it was never this mechanism's to keep: `op=publishedcase` is `classes:
+       null` and publishes `attestor.member` on every ratified finding, because a
+       signature that does not name its signer is not a signature. A member who
+       has ratified something public is publicly named, deliberately. What closes
+       here is the general oracle over EVERYONE who holds a credential — including
+       the members who have never published anything, whom nothing else names.
+  
+       REVERSING THIS costs two lines: the two codes are additive to re-split, and
+       `login()` still knows which arm it took. If a future item finds a caller
+       that genuinely needs to tell a mistyped role from a mistyped password, the
+       honest way back is a rate limit plus an AUTHENTICATED diagnostic, not a
+       louder anonymous refusal.
+  
+       ── REC-39's original reasoning, kept because the parts of it that are still
+       true are still load-bearing. ──────────────────────────────────────────────
+  
+       D-57'S RULE, WHICH IS WHAT THESE SENTENCES ARE FOR, is unchanged: a refusal
+       detail must state what THE MECHANISM FOUND and must never make a claim about
+       who is asking. The sentence below says "you" nowhere, does not advise, and
+       does not characterise the attempt.
+  
+       WHY IT SAYS "ACTIVE" AND NOT "NO SUCH ROLE", also unchanged and now covering
+       three arms rather than two. The obvious wording — "no role by that name is
+       registered here" — is FALSE for the revoked member, whose credential row is
+       still there and whose sign-in is refused by the DO dispatch's wrapper.
+       Writing the obvious sentence would make revocation distinguishable from
+       never-having-existed in prose while the reason code keeps them identical,
+       which is the enrollment rule broken by a comment. "No active credential" is
+       exactly true of both of those arms and separates neither, and the sentence
+       SAYS that it does not separate them rather than leaving a reader to assume
+       it does. */
+  static LOGIN_REFUSAL_DETAIL = {
+    SIGN_IN_REFUSED: "no session was issued and nothing was written. Either this instance holds no active credential under that role \u2014 a role that was never registered and one whose membership is no longer active are the same answer here \u2014 or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential on this instance."
+  };
   /* Exchanges a password for a bearer token so the password does not travel on
      every later request. Constant-time comparison is not meaningful over a
      network round trip at this granularity, but the derived-hash compare avoids
      ever holding the password beyond this call. */
   async login({ role = "admin", password, ttlSeconds = 43200 } = {}) {
     const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    if (!c) return { ok: false, reason: "NO_SUCH_ROLE" };
+    if (!c) {
+      await _Store.#payLoginCost(password);
+      return {
+        ok: false,
+        reason: "SIGN_IN_REFUSED",
+        detail: _Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED
+      };
+    }
     const got = await _Store.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (got !== c.hash) return { ok: false, reason: "BAD_PASSWORD" };
+    if (got !== c.hash) return {
+      ok: false,
+      reason: "SIGN_IN_REFUSED",
+      detail: _Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED
+    };
     const token = _Store.#rand(32);
     const expires = Date.now() + ttlSeconds * 1e3;
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
@@ -22512,14 +26570,54 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return {
       ok: true,
       scope: "published",
+      /* REC-49, and it is CONDUCT's determination enacted rather than a
+         convenience: EVERY RATIFIED FINDING CARRIES ITS OWN FROZEN PAIR HERE,
+         inside the awaiting window as much as outside it.
+         `published_bundles.strength` is the member's OWN signed, ratified pair —
+         the same bytes op=publishedcase publishes for that finding and the same
+         value the container manifest copies at assembly — so stating it composes
+         nothing and makes no new claim. REC-44 already ruled that the findings
+         which ratified are published and answerable NOW; an index that withheld
+         their pairs until the LAST member landed would understate, for days,
+         what the record actually holds.
+         WHY IT MATTERS THAT IT IS HERE AND NOT ONLY IN `cases[].manifest`: the
+         container's manifest does not exist until the edition completes, so a
+         reader of an incomplete case would see nothing at all. A record that
+         understates what it holds is still a record that does not say what is
+         true, and understatement reads as modesty, which is why nobody
+         questions it.
+         AND THE ALTITUDE IS THE WHOLE POINT (DEC-44): the pair belongs to a
+         FINDING and there is no such thing as a case-level pair. These fields
+         sit on the finding rows and must NEVER appear on `cases[]`. */
       published: this.#rows(
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
-                p.gate_version, p.manifest_sha, p.manifest
+                p.gate_version, p.strength, p.required
          FROM published_bundles p ORDER BY p.bundle_id, p.edition`
+      ).map((r) => ({
+        ...r,
+        strength: r.strength ? JSON.parse(r.strength) : null,
+        required: r.required ? JSON.parse(r.required) : null
+      })),
+      /* REC-44: the CASES, beside the findings rather than instead of them. The
+         findings are what carry a signature and a frozen pair; the case is what
+         carries the container's manifest, its own hash and the scope. A
+         reconstruction needs both, and conflating them is what D-187 records. */
+      cases: this.#rows(
+        /* REC-47: the acknowledgement is on the PUBLIC index too, and that is
+           the point of it — a reader reconstructing the record from this op
+           alone must be able to see the bias each case edition was produced
+           under without asking us for it. */
+        `SELECT case_id, edition, scope, bias_acknowledgement, ratified_at, manifest_sha, manifest
+         FROM published_cases ORDER BY case_id, edition`
+      ),
+      caseMembers: this.#rows(
+        `SELECT case_id, edition, ord, bundle_id FROM published_case_members
+         ORDER BY case_id, edition, ord`
       ),
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`
       ),
+      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this instance's cooperation or continued existence. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus."
     };
   }
@@ -23166,6 +27264,23 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       publishedRegistry: this.publishedRegistryFor(
         bundleId,
         this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)
+      ),
+      /* REC-44: and C-21.1's fact is now a CASE fact, so it arrives in its own
+         registry rather than being fished out of the finding's. The case is
+         read from the DOCUMENT's own `case_id` — which is inside the bytes the
+         signature covers — and never from this table, so a document cannot be
+         gated against a case it does not claim. */
+      publishedCaseRegistry: this.publishedCaseRegistryFor([this.#caseClaimOf(bundleId)]),
+      /* REC-18: what each basis target EARNS, so an earned grade is confirmed at
+         the ratification gate and not only at the write. Both gates run the one
+         catalog function over the one registry shape, which is the whole reason
+         checkInquiryBasis is a catalog export rather than two implementations.
+         The subject comes from the PROJECTION here (the document is already
+         promoted and the column is current), where promote reads it from the
+         bytes because the column has not been written yet. */
+      earnedRegistry: this.earnedBasisRegistry(
+        this.#subjectEntityOf(bundleId),
+        this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, bundleId).map((r) => r.target_id)
       )
     };
   }
@@ -23201,9 +27316,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     completeness,
     strength,
     required,
-    manifest,
-    manifestSha,
-    edges
+    edges,
+    caseId = null,
+    caseScope = null,
+    caseFindings = null,
+    caseBiasAck = null,
+    group = null
   } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -23237,9 +27355,79 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           detail: `this case is published through edition ${highest}; a revision must increment the edition (DEC-12). Editions do not overwrite each other \u2014 edition ${highest} keeps its own signature, attestor, time and gate version, and a new one joins it.`
         };
       const now = (/* @__PURE__ */ new Date()).toISOString();
+      if (caseId) {
+        const roster = (Array.isArray(caseFindings) ? caseFindings : []).map((x) => String(x ?? "").trim()).filter(Boolean);
+        if (!roster.includes(bundleId))
+          return {
+            ok: false,
+            reason: "CASE_ROSTER_EXCLUDES_SELF",
+            bundleId,
+            caseId,
+            roster,
+            detail: `${bundleId} names case ${caseId} but is not in the roster its own bytes carry. A finding that is not a member of the case it claims cannot be placed in it.`
+          };
+        const cRow = this.#one(
+          `SELECT scope, completeness, bias_acknowledgement FROM published_cases WHERE case_id=? AND edition=?`,
+          caseId,
+          ed
+        );
+        const cScope = caseScope ?? null;
+        const cComp = completeness ? JSON.stringify(completeness) : null;
+        const cBias = caseBiasAck ?? null;
+        if (cRow) {
+          if ((cRow.scope ?? null) !== cScope || (cRow.completeness ?? null) !== cComp || (cRow.bias_acknowledgement ?? null) !== cBias)
+            return {
+              ok: false,
+              reason: "CASE_ASSERTION_DIVERGED",
+              bundleId,
+              caseId,
+              edition: ed,
+              detail: `this finding's signed bytes state a different scope, completeness assertion or bias acknowledgement for case ${caseId} edition ${ed} than the members already ratified into it. A case edition asserts ONE scope, ONE completeness claim and ONE acknowledgement of the bias it was produced under, and every member signed it.`
+            };
+        } else {
+          this.sql.exec(
+            `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,opened)
+             VALUES (?,?,?,?,?,?)`,
+            caseId,
+            ed,
+            cScope,
+            cComp,
+            cBias,
+            now
+          );
+        }
+        const declared = this.#rows(
+          `SELECT ord, bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
+          caseId,
+          ed
+        );
+        if (declared.length) {
+          const was = declared.map((r) => r.bundle_id).join(",");
+          if (was !== roster.join(","))
+            return {
+              ok: false,
+              reason: "CASE_MEMBERSHIP_DIVERGED",
+              bundleId,
+              caseId,
+              edition: ed,
+              declared: declared.map((r) => r.bundle_id),
+              signed: roster,
+              detail: `this finding's signed bytes name a different set of findings for case ${caseId} edition ${ed} than the members already ratified into it. The roster is part of what each member signed, so a disagreement is refused rather than reconciled.`
+            };
+        } else {
+          roster.forEach((m, i) => this.sql.exec(
+            `INSERT INTO published_case_members (case_id,edition,ord,bundle_id) VALUES (?,?,?,?)
+             ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`,
+            caseId,
+            ed,
+            i,
+            m
+          ));
+        }
+      }
       this.sql.exec(
-        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,completeness,strength,required,manifest_sha,manifest)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(bundle_id,edition) DO NOTHING`,
         bundleId,
         ed,
@@ -23250,11 +27438,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         attestorMember ?? null,
         gateVersion,
         sigArmored,
-        completeness ? JSON.stringify(completeness) : null,
         strength ? JSON.stringify(strength) : null,
         required ? JSON.stringify(required) : null,
-        manifestSha ?? null,
-        manifest ? JSON.stringify(manifest) : null
+        JSON.stringify(shas.map((s) => ({ path: s.path, sha256: s.sha256, kind: s.kind, bytes: s.bytes ?? null })))
       );
       for (const s of shas)
         this.sql.exec(
@@ -23268,7 +27454,128 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           now
         );
       const graph = this.#publishEdges(bundleId, edges, now);
-      return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now, edges: graph };
+      const caseState = caseId ? this.#caseEditionState(caseId, ed, group) : null;
+      return {
+        ok: true,
+        bundleId,
+        bundleSha,
+        edition: ed,
+        existed,
+        ratifiedAt: now,
+        edges: graph,
+        ...caseId ? { caseId, case: caseState } : {}
+      };
+    });
+  }
+  /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
+     the ratify path (which must know whether to assemble the container) and the
+     public read path (which must say so) cannot disagree about it. Returns the
+     facts the control plane needs to build the manifest and nothing derived:
+     in particular NO case-level strength, because there is no such thing —
+     every member's frozen PAIR travels with that member. */
+  #caseEditionState(caseId, ed, group = null) {
+    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, opened, ratified_at, manifest_sha
+                         FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
+    if (!c) return null;
+    const roster = this.#rows(
+      `SELECT ord, bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
+      caseId,
+      ed
+    );
+    const findings = [], awaiting = [];
+    for (const m of roster) {
+      const r = this.#one(
+        `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, gate_version,
+                sig_armored, strength, required, parts
+         FROM published_bundles WHERE bundle_id=? AND edition=?`,
+        m.bundle_id,
+        ed
+      );
+      if (!r) {
+        awaiting.push(m.bundle_id);
+        continue;
+      }
+      findings.push({
+        ord: m.ord,
+        bundle_id: r.bundle_id,
+        title: r.title,
+        bundle_sha: r.bundle_sha,
+        ratified_at: r.ratified_at,
+        gate_version: r.gate_version,
+        sig_armored: r.sig_armored,
+        attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+        strength: r.strength ? JSON.parse(r.strength) : null,
+        required: r.required ? JSON.parse(r.required) : null,
+        parts: r.parts ? JSON.parse(r.parts) : []
+      });
+    }
+    const complete = roster.length > 0 && awaiting.length === 0;
+    if (complete && !c.ratified_at) {
+      const at = findings.reduce((mx, x) => x.ratified_at > mx ? x.ratified_at : mx, findings[0].ratified_at);
+      this.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=?`, at, caseId, ed);
+      c.ratified_at = at;
+    }
+    return {
+      caseId,
+      edition: ed,
+      group: group ?? null,
+      scope: c.scope ?? null,
+      /* REC-47 / DEC-46 (a): the bias the case was produced under travels
+         with it, on every surface that serves the case block. DEC-20 is
+         the reason it is a plain disclosure here and not a verdict —
+         the reader weighs it; this plane never does. */
+      bias_acknowledgement: c.bias_acknowledgement ?? null,
+      completeness: c.completeness ? JSON.parse(c.completeness) : null,
+      opened: c.opened,
+      ratified_at: c.ratified_at ?? null,
+      manifest_sha: c.manifest_sha ?? null,
+      complete,
+      awaiting,
+      findings,
+      detail: complete ? "every finding in this case edition is ratified, so the container can be assembled whole" : `this case edition is INCOMPLETE: ${awaiting.length} of ${roster.length} findings are not yet ratified. The findings that are published answer individually; the container cannot be assembled until the last one lands, because it would otherwise claim to carry findings it does not have.`
+    };
+  }
+  /* REC-44: the case CONTAINER's manifest, handed back by the control plane
+     (which is where the SHA-256 and the R2 copy live) once the edition
+     completed. Stored on the case row rather than on any member's, because the
+     manifest describes the CASE — one manifest per case per edition, naming
+     every member finding's parts and every member's own signature. The
+     published_shas row is what makes it answerable by its own hash and what
+     op=publishedbytes checks before serving anything. */
+  recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
+    if (!caseId || !Number.isInteger(Number(edition)) || !manifest || !manifestSha)
+      return { ok: false, reason: "MALFORMED" };
+    const ed = Number(edition);
+    return this.ctx.storage.transactionSync(() => {
+      const c = this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
+      if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
+      if (c.manifest_sha && c.manifest_sha !== manifestSha)
+        return {
+          ok: false,
+          reason: "MANIFEST_EXISTS",
+          caseId,
+          edition: ed,
+          manifest_sha: c.manifest_sha,
+          detail: `case ${caseId} edition ${ed} already has a manifest at a different hash. An edition is a SEPARATE DOCUMENT and its container answers forever; a second manifest under the same number would leave a reader unable to say which container they checked.`
+        };
+      this.sql.exec(
+        `UPDATE published_cases SET manifest_sha=?, manifest=? WHERE case_id=? AND edition=?`,
+        manifestSha,
+        JSON.stringify(manifest),
+        caseId,
+        ed
+      );
+      this.sql.exec(
+        `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+         ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+        manifestSha,
+        caseId,
+        "MANIFEST.json",
+        "manifest",
+        bytes ?? null,
+        (/* @__PURE__ */ new Date()).toISOString()
+      );
+      return { ok: true, caseId, edition: ed, manifest_sha: manifestSha };
     });
   }
   /* REC-22 / R4: the PUBLISHED GRAPH, written inside the publishing act's own
@@ -23338,10 +27645,20 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
      the bytes to learn what each case is called. */
   publishedList() {
-    return { bundles: this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
+    return {
+      bundles: this.#rows(
+        `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`
-    ) };
+      ).map((r) => ({ ...r, case_id: this.#caseOf(r.bundle_id, r.edition) })),
+      cases: this.#rows(
+        `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
+       ORDER BY case_id, edition`
+      ).map((c) => ({ ...c, findings: this.#rows(
+        `SELECT bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
+        c.case_id,
+        c.edition
+      ).map((m) => m.bundle_id) }))
+    };
   }
   /* One case, every edition it has ever had, each with its OWN signature,
      attestor, time and gate version, and with the frozen assertion and the
@@ -23351,16 +27668,32 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-              gate_version, sig_armored, completeness, strength, required, manifest_sha
+              gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
       bundleId
     );
-    return { ok: true, bundleId, editions: rows.map((r) => ({
-      ...r,
-      completeness: r.completeness ? JSON.parse(r.completeness) : null,
-      strength: r.strength ? JSON.parse(r.strength) : null,
-      required: r.required ? JSON.parse(r.required) : null
-    })) };
+    return { ok: true, bundleId, editions: rows.map((r) => {
+      const cid = this.#caseOf(r.bundle_id, r.edition);
+      const c = cid ? this.#one(
+        `SELECT scope, completeness, bias_acknowledgement, manifest_sha
+         FROM published_cases WHERE case_id=? AND edition=?`,
+        cid,
+        r.edition
+      ) : null;
+      return {
+        ...r,
+        case_id: cid,
+        /* The container's manifest is the CASE edition's, so it is
+           reported from there — one manifest per case per edition,
+           naming every member finding's parts. */
+        manifest_sha: c ? c.manifest_sha ?? null : null,
+        scope: c ? c.scope ?? null : null,
+        bias_acknowledgement: c ? c.bias_acknowledgement ?? null : null,
+        completeness: c && c.completeness ? JSON.parse(c.completeness) : null,
+        strength: r.strength ? JSON.parse(r.strength) : null,
+        required: r.required ? JSON.parse(r.required) : null
+      };
+    }) };
   }
   /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about
        it from the store side. Reads published_bundles and published_edges and
@@ -23380,89 +27713,215 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        an edition that does not exist and an id that never existed, and it is
        identical by construction rather than by care: there is no other table in
        this method to tell them apart with. */
-  publishedCase({ id = null, edition = null, sha256: sha2562 = null } = {}) {
-    const COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-                  gate_version, sig_armored, completeness, strength, required, manifest_sha, manifest`;
-    let row = null;
+  /* REC-44 / DEC-44: RESOLUTION NOW HAS A FOURTH ROUTE and the surface answers
+       with a CASE. `id` may be the CASE identity or the bundle id of any member
+       FINDING — a stranger who was handed one finding's id must be able to reach
+       the case it was published in, since that case is the artifact the group put
+       its name on. A finding id is answered WITH the case and `asked` names which
+       finding was reached for, so the surface resolves without deciding on the
+       reader's behalf what they meant.
+  
+       AND THERE IS NO `strength` AT THIS LEVEL. Every member finding carries its
+       own frozen pair inside findings[]; a case-level letter would be R2's
+       forbidden composition arriving at case altitude, and its ABSENCE from this
+       answer is asserted by the suite rather than left to review. */
+  publishedCase({ id = null, edition = null, sha256: sha2562 = null, caseId = null } = {}) {
+    let theCase = caseId ? String(caseId).trim() : null, ed = null, asked = null;
     if (sha2562) {
-      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha2562);
-      id = row ? row.bundle_id : id;
-    } else if (id && edition != null && Number.isInteger(Number(edition))) {
-      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_id=? AND edition=?`, id, Number(edition));
+      const r = this.#one(
+        `SELECT bundle_id, edition FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`,
+        sha2562
+      );
+      if (r) {
+        asked = r.bundle_id;
+        ed = Number(r.edition);
+        theCase = this.#caseOf(r.bundle_id, ed);
+      }
     } else if (id) {
-      row = this.#one(`SELECT ${COLS} FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
+      const want = edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
+      if (this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, id)) {
+        theCase = id;
+      } else {
+        const m = want != null ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, id, want) : this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
+        if (m) {
+          theCase = m.case_id;
+          asked = id;
+        }
+      }
+      if (want != null) ed = want;
     }
-    if (!row)
+    if (theCase && ed == null) {
+      const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
+      ed = top && top.m != null ? Number(top.m) : null;
+    }
+    let state = theCase && ed != null ? this.#caseEditionState(theCase, ed) : null;
+    if (!state && (asked || sha2562 || id)) {
+      const who = asked || id;
+      const want = ed;
+      const r = sha2562 ? this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha2562) : want != null ? this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_id=? AND edition=?`, who, want) : this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who);
+      if (r && !this.#caseOf(r.bundle_id, r.edition)) {
+        const st = this.#looseEditionState(r.bundle_id, r.edition);
+        if (st) {
+          theCase = null;
+          ed = r.edition;
+          state = st;
+        }
+      }
+    }
+    if (!state)
       return {
         ok: false,
         reason: "NOT_PUBLISHED",
         detail: "no published edition answers to that. A case that was never published, an edition that does not exist and an id that never existed are one answer here, because the published projection is the only thing this read can see."
       };
-    const editions = this.#rows(
-      `SELECT edition, bundle_sha, ratified_at, manifest_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
-      row.bundle_id
+    const editions = theCase ? this.#rows(
+      `SELECT edition, ratified_at, manifest_sha FROM published_cases WHERE case_id=? ORDER BY edition`,
+      theCase
+    ) : this.#rows(
+      `SELECT edition, ratified_at FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
+      state.findings[0].bundle_id
     );
-    const serves = [], names = [], unresolved = [];
-    for (const e of this.#rows(
-      `SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind, to_bundle`,
-      row.bundle_id
-    )) {
-      if (e.disclosure === "name") {
-        names.push({ to: e.to_bundle, kind: e.kind });
-        continue;
+    const findings = state.findings.map((fnd) => {
+      const serves = [], names = [], unresolved = [];
+      for (const e of this.#rows(
+        `SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind, to_bundle`,
+        fnd.bundle_id
+      )) {
+        if (e.disclosure === "name") {
+          names.push({ to: e.to_bundle, kind: e.kind });
+          continue;
+        }
+        const t = this.#one(
+          `SELECT edition, title, bundle_sha, ratified_at FROM published_bundles
+           WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
+          e.to_bundle
+        );
+        if (!t) {
+          unresolved.push({ to: e.to_bundle, kind: e.kind });
+          continue;
+        }
+        const tCase = this.#caseOf(e.to_bundle, t.edition);
+        serves.push({
+          to: e.to_bundle,
+          kind: e.kind,
+          edition: t.edition,
+          title: t.title,
+          bundle_sha: t.bundle_sha,
+          ratified_at: t.ratified_at,
+          case_id: tCase,
+          manifest_sha: tCase ? this.#one(
+            `SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
+            tCase,
+            t.edition
+          )?.manifest_sha ?? null : null
+        });
       }
-      const t = this.#one(
-        `SELECT edition, title, bundle_sha, manifest_sha, ratified_at FROM published_bundles
-         WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
-        e.to_bundle
-      );
-      if (!t) {
-        unresolved.push({ to: e.to_bundle, kind: e.kind });
-        continue;
-      }
-      serves.push({
-        to: e.to_bundle,
-        kind: e.kind,
-        edition: t.edition,
-        title: t.title,
-        bundle_sha: t.bundle_sha,
-        manifest_sha: t.manifest_sha,
-        ratified_at: t.ratified_at
-      });
-    }
-    const division = {
-      parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
-      siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
-      detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."
-    };
-    const manifest = row.manifest ? JSON.parse(row.manifest) : null;
+      return {
+        ...fnd,
+        serves,
+        names,
+        unresolved,
+        division: {
+          parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
+          siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
+          detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."
+        }
+      };
+    });
+    const cRow = theCase ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
+    const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     return {
       ok: true,
-      bundleId: row.bundle_id,
-      edition: row.edition,
-      title: row.title,
-      bundle_sha: row.bundle_sha,
-      ratified_at: row.ratified_at,
-      attestor: { member: row.attestor_member, key_b64: row.attestor_key },
-      gate_version: row.gate_version,
-      sig_armored: row.sig_armored,
-      completeness: row.completeness ? JSON.parse(row.completeness) : null,
-      strength: row.strength ? JSON.parse(row.strength) : null,
-      required: row.required ? JSON.parse(row.required) : null,
-      manifest_sha: row.manifest_sha,
+      caseId: theCase,
+      edition: ed,
+      scope: state.scope,
+      bias_acknowledgement: state.bias_acknowledgement ?? null,
+      completeness: state.completeness,
+      ratified_at: state.ratified_at,
+      opened: state.opened,
+      complete: state.complete,
+      awaiting: state.awaiting,
+      ...asked ? { asked } : {},
+      findings,
+      manifest_sha: state.manifest_sha,
       manifest,
       files: (manifest && Array.isArray(manifest.parts) ? manifest.parts : []).map(
-        (p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null })
+        (p) => ({
+          path: p.path,
+          sha256: p.sha256,
+          kind: p.kind,
+          bytes: p.bytes ?? null,
+          finding: p.finding ?? null
+        })
       ),
       editions: editions.map((e) => e.edition),
       edition_index: editions,
-      latest_edition: editions.length ? editions[editions.length - 1].edition : row.edition,
-      serves,
-      names,
-      unresolved,
-      division,
-      graph_detail: "serves[] is what this surface may hand over \u2014 every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty."
+      latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
+      case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the group's acknowledgement of the bias the case was produced under \u2014 the last of these is a DISCLOSURE the reader weighs, never a verdict this plane reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids.",
+      graph_detail: "each finding's serves[] is what this surface may hand over \u2014 every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty."
     };
+  }
+  /* A ratified bundle that belongs to NO case, in the same shape as a case
+     edition so one renderer serves both — with `caseId: null`, no scope and no
+     completeness, because it is not a case and saying otherwise is the exact
+     claim DEC-44 corrects. This is what an information bundle's ratification
+     is: verifiable bytes with a signature and no case-level assertion. */
+  #looseEditionState(bundleId, ed) {
+    const r = this.#one(
+      `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, gate_version,
+              sig_armored, strength, required, parts
+       FROM published_bundles WHERE bundle_id=? AND edition=?`,
+      bundleId,
+      ed
+    );
+    if (!r) return null;
+    return {
+      caseId: null,
+      edition: ed,
+      scope: null,
+      completeness: null,
+      bias_acknowledgement: null,
+      opened: r.ratified_at,
+      ratified_at: r.ratified_at,
+      manifest_sha: null,
+      complete: true,
+      awaiting: [],
+      findings: [{
+        ord: 0,
+        bundle_id: r.bundle_id,
+        title: r.title,
+        bundle_sha: r.bundle_sha,
+        ratified_at: r.ratified_at,
+        gate_version: r.gate_version,
+        sig_armored: r.sig_armored,
+        attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+        strength: r.strength ? JSON.parse(r.strength) : null,
+        required: r.required ? JSON.parse(r.required) : null,
+        parts: r.parts ? JSON.parse(r.parts) : []
+      }],
+      detail: "this is a RATIFIED BUNDLE that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement \u2014 those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are."
+    };
+  }
+  /* Which case a published finding belongs to, at a given edition or at its
+     latest. ONE lookup on published_case_members' bundle_id index — the query
+     that earns the table its second keel. */
+  /* Which case a WORKING document claims, read out of its own bundle.md. It is
+     what C-21.1 must be judged against: the freshness comparison is "this case
+     edition against the previous edition of THAT SAME CASE", and the case is
+     the document's own assertion (it is in the bytes the member will sign), not
+     something the projection may substitute. */
+  #caseClaimOf(bundleId) {
+    const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    if (!f2 || f2.content === null) return null;
+    const fm = parseFrontmatter(f2.content).data || {};
+    return typeof fm.case_id === "string" && fm.case_id !== "null" ? fm.case_id : null;
+  }
+  #caseOf(bundleId, edition = null) {
+    const r = edition != null ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, bundleId, edition) : this.#one(
+      `SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
+      bundleId
+    );
+    return r ? r.case_id : null;
   }
   /* REC-22: which of these ids have a published edition, and what each one FROZE
      -- the one indexed lookup that lets the public read path say, per basis leg,
@@ -23473,6 +27932,55 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   publishedTargets(ids) {
     const list = (Array.isArray(ids) ? ids : String(ids || "").split(",")).map((s) => String(s || "").trim()).filter(Boolean).slice(0, 200);
     return { ok: true, registry: this.publishedRegistryFor(null, list) };
+  }
+  /** REC-18: op=earnedbasis — WHAT THE RECORD EARNS for each candidate leg,
+   *  BEFORE the leg is written.
+   *
+   *  THIS OP IS PART OF THE RULE, not a convenience beside it. The write path
+   *  refuses a leg whose earned grade is not the one the record holds; a member
+   *  with no way to LEARN that value is a member the refusal pressures into
+   *  guessing, and "a gate that pressures someone into inventing one is a bug in
+   *  the gate" is CLAUDE.md's own sentence about exactly this shape. So the
+   *  enforcement and the answer come from ONE function (`earnedBasisRegistry`)
+   *  and cannot disagree: what this read reports is what the write will accept.
+   *
+   *  Answers for the inquiry's OWN subject entity, over the targets asked about
+   *  — the caller's list, or the basis the inquiry already carries. It states
+   *  what is NOT earned as plainly as what is: a target absent from
+   *  `earned.connection` earns no A/B/C, and the honest leg for it is testimony
+   *  (grade D, with an author and a date) or no grade at all.
+   *
+   *  D-15: viewer-gated like every other read that can name a bundle, and it
+   *  fails closed on an absent viewer. TWO POSTURES, REC-30's: the OWNING
+   *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
+   *  the viewer may not see -> dropped from the registry, with the fact that
+   *  something was dropped stated and NO id and NO count leaked. */
+  earnedBasis({ id, targets = null, viewer = null } = {}) {
+    if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
+    if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    if (normalizeType(b.object_type) !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        target: id,
+        detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about an INQUIRY's legs \u2014 what each candidate target earns against the question's subject \u2014 and only an inquiry has a basis.`
+      };
+    const asked = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 200) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
+    const visible = asked.filter((t) => this.#viewerSees(t, viewer));
+    const withheld = visible.length !== asked.length;
+    const reg = this.earnedBasisRegistry(b.inquiry_subject_entity || null, visible);
+    return {
+      ok: true,
+      bundleId: id,
+      ...reg,
+      asked: visible,
+      /* Stated, never silently shortened — and with no id and no count,
+         because the count IS the leak (op=backlinks' posture). */
+      ...withheld ? { out_of_view: true } : {},
+      detail: reg.subject_entity ? `${id} names ${reg.subject_entity}${reg.subject_label ? ` (${reg.subject_label})` : ""} as its subject. A target listed under earned.connection may be written as a leg with grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be written with grade_source: capture at that grade. A target absent from a list earns nothing on that axis \u2014 the honest leg is testimony (grade D, with an author and a date) or no grade at all, which suspends the axis and names the leg rather than pretending to a number.` : `${id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a stated position, not a defect (DEC-15): the capture axis still earns from the capture record, and a connection a member can account for is testimony at grade D.`
+    };
   }
   /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
        a TABLE and not only as bytes: "WHICH CASES EXCLUDED THIS DOCUMENT" —
@@ -23513,12 +28021,19 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      leg: a case's own prior edition (freshness) and the frozen pair of every
      published case beneath it (inheritance) are the two facts neither the
      checker nor a caller can supply for itself. */
+  /* REC-44: THIS REGISTRY IS PER FINDING AND STAYS PER FINDING. It carries the
+     frozen PAIR of every published finding and it is what C-21.2 reads: a
+     basis leg rests on a FINDING (one proposition, one falsifier — DEC-32) and
+     inherits THAT finding's frozen strength on THAT axis at THAT edition. It no
+     longer carries `completeness`, which went up one altitude to the CASE with
+     C-21.1 (publishedCaseRegistryFor below). The two must not be collapsed:
+     collapsing them is what DEC-44 names as the mistake, one level down. */
   publishedRegistryFor(bundleId, extraTargets = []) {
     const ids = [...new Set([bundleId, ...extraTargets].filter(Boolean))];
     if (!ids.length) return {};
     const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, completeness, strength
+      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, strength
        FROM published_bundles WHERE bundle_id IN (${marks}) ORDER BY bundle_id, edition`,
       ...ids
     );
@@ -23534,9 +28049,41 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         title: r.title,
         bundle_sha: r.bundle_sha,
         ratified_at: r.ratified_at,
-        completeness: r.completeness ? JSON.parse(r.completeness) : null,
+        case_id: this.#caseOf(r.bundle_id, r.edition),
         capture: byAxis.capture || null,
         connection: byAxis.connection || null
+      };
+      if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
+    }
+    return reg;
+  }
+  /* REC-44 / C-21.1: the published projection AT CASE ALTITUDE — what each
+     EDITION OF A CASE asserted about its own limits. The freshness gate needs
+     exactly this and nothing from any finding: "was this completeness claim
+     carried forward byte-identical from the previous edition" is a question
+     about the CASE, because what a reader was given is a case edition.
+     Deliberately a SECOND function beside publishedRegistryFor rather than one
+     registry serving both: they answer at different altitudes and one shape
+     serving two altitudes is how the collapse DEC-44 corrects happened. */
+  publishedCaseRegistryFor(caseIds = []) {
+    const ids = [...new Set((Array.isArray(caseIds) ? caseIds : [caseIds]).filter(Boolean))];
+    if (!ids.length) return {};
+    const marks = ids.map(() => "?").join(",");
+    const reg = {};
+    for (const r of this.#rows(
+      `SELECT case_id, edition, scope, completeness, bias_acknowledgement, ratified_at FROM published_cases
+       WHERE case_id IN (${marks}) AND ratified_at IS NOT NULL ORDER BY case_id, edition`,
+      ...ids
+    )) {
+      const e = reg[r.case_id] || (reg[r.case_id] = { latest: 0, editions: {} });
+      e.editions[String(r.edition)] = {
+        edition: r.edition,
+        scope: r.scope ?? null,
+        ratified_at: r.ratified_at,
+        /* REC-47: carried BESIDE completeness, never folded into it — C-21.1
+           compares both and they are two claims (DEC-46). */
+        bias_acknowledgement: r.bias_acknowledgement ?? null,
+        completeness: r.completeness ? JSON.parse(r.completeness) : null
       };
       if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
     }
@@ -24782,10 +29329,19 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  on these two verbs the control plane stamps every machine credential
    *  `token:<class>` (never a bare class word), while the bare string "admin" is
    *  a LEGITIMATE actor here — it is ROOT_ADMIN's own session (`#isAdminMember`)
-   *  — so a bare-class arm would refuse the root administrator's browser. */
+   *  — so a bare-class arm would refuse the root administrator's browser.
+   *
+   *  REC-46 (2026-08-04): that difference SURVIVED the sweep rather than being
+   *  smoothed away, and it is the one site in this class that means something
+   *  narrower. These two verbs ask `isMachineStamp` — did the control plane
+   *  MINT this identity — while the nine act guards ask `isMachineIdentity`,
+   *  which additionally refuses a bare class word and a surface/AI name. Both
+   *  are derived from the SAME `MACHINE_STAMP_PREFIXES` in the catalog, so the
+   *  spelling still moves in one place and moves here too; what is deliberately
+   *  not shared is the bare-class arm, for the reason in the paragraph above. */
   taskForward({ id = null, to = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
-    if (/^token:/.test(String(actor)))
+    if (isMachineStamp(actor))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_FORWARD",
@@ -24834,7 +29390,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  rather than discharging it. Nothing a drain does closes an obligation. */
   taskResolve({ id = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
-    if (/^token:/.test(String(actor)))
+    if (isMachineStamp(actor))
       return {
         ok: false,
         reason: "MACHINE_CANNOT_RESOLVE",
@@ -24956,12 +29512,20 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const v = Number(this.env && this.env.MONITOR_TICK_MS);
     return Number.isFinite(v) && v >= 0 ? v : _Store.MONITOR_TICK_MS;
   }
-  /* The archive arm of op=acquire is admin/probe only. A dedicated MONITOR_TOKEN
-     is preferred so the monitoring surface can be scoped and rotated on its own;
-     ADMIN_TOKEN is the fallback, because monitoring writes the real record's
-     reachability, not scratch. */
+  /* REC-33 / DEC-37, and the ORDER is the whole mechanism. `DAEMON_TOKEN` is the
+     scoped credential this unattended path was minted for: classify() admits it
+     to exactly op=monitor and the archive arm of op=acquire, which is precisely
+     what the two consumers below call, so a leak of it is a monitoring nuisance
+     rather than the total instance compromise a leaked ADMIN_TOKEN is.
+     `ADMIN_TOKEN` IS RETAINED AS THE FALLBACK and that is not tidiness: an
+     instance installed before this class existed has no DAEMON_TOKEN binding,
+     and dropping the fallback would silently inert its monitoring at the next
+     update. It stays until the installer half has bound the new credential
+     everywhere and something can prove it. Neither is scratch-confined, because
+     monitoring writes the REAL record's reachability — which is why PROBE_TOKEN
+     was never the answer here. */
   #monitorToken() {
-    return this.env && (this.env.MONITOR_TOKEN || this.env.ADMIN_TOKEN) || null;
+    return this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN) || null;
   }
   #monitorConfigured() {
     return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());
@@ -25499,6 +30063,28 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
            give it a control-plane surface. Answers TWO axis objects and no
            scalar: there is nothing here for a caller to reduce to one letter. */
         strength: () => this.strengthOf(url.searchParams.get("id")),
+        /* REC-34: the SAME pair, GATED, and the one a control-plane caller
+           reaches. `viewer` is stamped by the control plane and never read
+           from a caller's own parameters there; an absent one fails closed in
+           `#viewerSees`, so a missing stamp withholds the answer rather than
+           widening it. The ungated `strength` route above stays DO-internal
+           (REC-11's basis/restson class) — it is what op=publish and
+           op=reevaluations derive from, where there is no reader to be
+           dependent on. */
+        inquirystrength: () => this.inquiryStrength({
+          id: url.searchParams.get("id"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        /* REC-18: what each candidate leg EARNS, before it is written. GATED —
+           `viewer` is stamped by the control plane and an absent one fails
+           closed. It answers from `earnedBasisRegistry`, which is the SAME
+           function op=promote and the ratification gate enforce with, so this
+           read and that refusal cannot disagree. */
+        earnedbasis: () => this.earnedBasis({
+          id: url.searchParams.get("id"),
+          targets: url.searchParams.get("targets"),
+          viewer: url.searchParams.get("viewer")
+        }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({
@@ -25512,6 +30098,21 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
            bundle back-reference is withheld rather than the answer refused. */
         reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
         readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
+        /* REC-36: the same reverse question asked by NAME rather than by the
+           source's own reference — section 8.1's grade-C tier. Entity-driven, so
+           the registry's aliases do the matching; the viewer stamp is the same
+           server-stamped one, and here it WITHHOLDS THE ROW (a candidate the
+           viewer cannot open is not a candidate). */
+        readingname: () => this.documentsNamingEntity({
+          entityId: url.searchParams.get("entity"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        readingnameplan: () => this.readingNamePlan(
+          (url.searchParams.get("terms") || "").split(",").map((s) => s.trim()).filter(Boolean)
+        ),
+        readingtermsclear: () => this.readingTermsClear(body || {}),
+        reindexnames: () => this.reindexNames(body || {}),
         /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY. Create an entity
            (with inline aliases), attach an alias, declare a constitutive relation;
            read an entity BY KEY, entities BY ALIAS, and one relation by id. A
@@ -25680,7 +30281,33 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-24 (f): the as-of instant for the derived action clock, the same
+             seam op=proposals and op=sourcereach opened. Absent, the derivation
+             uses env BIO_NOW_MS and then the wall clock (#nowMs). */
+          nowMs: url.searchParams.get("now")
+        }),
+        /* REC-24 (c)/(d). No `handle` and no selection: one action moves at a
+           time and one entry is recorded at a time, so both take the ONE target
+           and the viewer/author stamps the control plane sets. */
+        actionmove: () => this.actionMove({
+          target: url.searchParams.get("target"),
+          to: url.searchParams.get("to"),
+          reason: url.searchParams.get("reason"),
+          resolution: url.searchParams.get("resolution"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author")
+        }),
+        actioncorrespond: () => this.actionCorrespond({
+          target: url.searchParams.get("target"),
+          direction: url.searchParams.get("direction"),
+          at: url.searchParams.get("at"),
+          medium: url.searchParams.get("medium"),
+          party: url.searchParams.get("party"),
+          artifactSha: url.searchParams.get("artifact_sha"),
+          account: url.searchParams.get("account"),
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author")
         }),
         /* Retrieval. `viewer` is stamped by the control plane and is never taken
            from the caller's own parameters there; here it is simply read, and an
@@ -25738,7 +30365,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
+             REFUSED rather than dropped on the other. Absent stays null so a
+             case-arm caller that never heard of it is byte-identical. */
+          role: url.searchParams.get("role")
         }),
         /* The first STATE-CHANGING actions to refer to a selection, and the
            first callers of selectionResolve's refusing arm. Weight is not read
@@ -25780,7 +30411,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           const role = body?.role || "admin";
           if (role.startsWith("member:")) {
             const m = this.#one(`SELECT status FROM members WHERE member_id=?`, role.slice(7));
-            if (!m || m.status !== "active") return { ok: false, reason: "NO_SUCH_ROLE" };
+            if (!m || m.status !== "active") {
+              await _Store.#payLoginCost(body?.password);
+              return {
+                ok: false,
+                reason: "SIGN_IN_REFUSED",
+                detail: _Store.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED
+              };
+            }
           }
           return this.login(body || {});
         },
@@ -25874,6 +30512,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         publishcase: () => this.publishCase({
           ...body || {},
           target: url.searchParams.get("target") || (body || {}).target,
+          /* REC-44: the SET arrives in the BODY, for the reason above — a query
+             string cannot express an array honestly — with `targets=a,b` on the
+             search params as the one-line form a probe can reach. */
+          targets: (body || {}).targets || url.searchParams.get("targets") || null,
+          caseId: url.searchParams.get("caseId") || (body || {}).caseId || null,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
         }),
@@ -25884,6 +30527,22 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
            they are spread SECOND and a caller-supplied author in the body is
            overwritten, never honoured. */
         inquirydivide: () => this.divide({
+          ...body || {},
+          target: url.searchParams.get("target") || (body || {}).target,
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author")
+        }),
+        /* REC-45, inquirydivide's shape exactly, and the SPREAD ORDER is the
+           load-bearing part rather than a convention. The BODY carries the
+           authored material — the partition is an array of objects each holding
+           an array of ordinals, which a query string cannot express honestly —
+           and the viewer and the author come from the SEARCH PARAMS where the
+           control plane stamps them, so they are spread SECOND and a
+           caller-supplied `author` in the body is overwritten, never honoured.
+           A caller-supplied `asserted_by`/`at` never reaches this line at all:
+           groundInquiry reads them from NO input, which is the delete-then-stamp
+           discipline arriving one layer in. */
+        inquiryground: () => this.groundInquiry({
           ...body || {},
           target: url.searchParams.get("target") || (body || {}).target,
           viewer: url.searchParams.get("viewer"),
@@ -25908,6 +30567,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           edition: url.searchParams.get("edition"),
           sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null
         }),
+        /* REC-44: internal only, and deliberately NOT an op. The case container's
+           manifest is assembled at the control plane (SHA-256 and the R2 copy
+           live there) the moment the LAST member of an edition ratifies, and
+           handed back here to be recorded. No caller reaches it. */
+        recordcasemanifest: () => this.recordCaseManifest(body || {}),
         publishedtargets: () => this.publishedTargets(url.searchParams.get("ids")),
         excludedby: () => this.excludedBy(url.searchParams.get("id"), url.searchParams.get("viewer")),
         expertisedeclare: () => this.expertiseDeclare(body || {}),
@@ -26280,6 +30944,33 @@ var OPS = {
      of arrays and a query string cannot express one honestly (op=publish's
      precedent exactly). */
   inquirydivide: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-45: AUTHORING THE GROUNDS PARTITION on an inquiry (DEC-32). Conclude's
+     class list for conclude's reason — a machine class REACHES it and is
+     refused by the store (MACHINE_CANNOT_GROUND) rather than being absent, fail
+     closed, because "these reasons are enough on their own" is a member's
+     authored judgement about their own argument and the rule is about who the
+     caller IS. One `target`, like conclude, reopen and inquirydivide: one
+     question's structure is authored at a time. The PARTITION arrives in the
+     POST body because it is an array of objects each holding an array of
+     ordinals, which a query string cannot express honestly — op=publish's and
+     op=inquirydivide's precedent exactly. */
+  inquiryground: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-24 (c)/(d): THE TWO OPS THAT OPERATE AN ACTION — the first ops in this
+     table whose subject is an action at all. `STATES.action` has carried five
+     states and seven edges since the catalog was written and nothing wrote them,
+     so IMPACTING had zero reachable processes.
+     Conclude's class list for conclude's reason: a machine class REACHES both
+     and is refused BY THE STORE (MACHINE_CANNOT_MOVE_ACTION,
+     MACHINE_CANNOT_CORRESPOND) rather than being absent from the table, so the
+     refusal says what is wrong instead of saying "requires a credential you
+     have". An action reaches OUTSIDE this system and touches people who never
+     agreed to be in it, and testimony about an exchange is somebody's — neither
+     is a scheduler's to author.
+     One `target` each, like conclude and reopen: one action moves at a time and
+     one entry is appended at a time, and a bulk version of either would be the
+     checkbox these constructs exist to refuse. */
+  actionmove: { classes: ["admin", "member", "probe"], mutating: true },
+  actioncorrespond: { classes: ["admin", "member", "probe"], mutating: true },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -26308,6 +30999,28 @@ var OPS = {
      carries no working capability, so REC-19's NEEDS/NON_ACTS totality neither
      gains nor loses a row. */
   reevaluations: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-34: REC-12's derived PAIR for one inquiry, GATED — UI-11's delegation
+     and UI-12's hard blocker. It answers from `strengthOf()`, the authority,
+     and never from the five cached columns (a stale cache must not impersonate
+     the derivation). Working corpus, so member class and above, exactly as
+     op=backlinks and op=reevaluations are: the pair is what a member reading a
+     question needs in order to weigh it, and fencing it to admin would fence a
+     member off the one number the whole page is about. The viewer is stamped
+     server-side below like every retrieval read. It carries a NEEDS entry of
+     null rather than no entry at all — op=queue's precedent, not
+     op=reevaluations' — so REC-19's totality guard SEES the op and its
+     NON_ACTS row states why a read is not an act on an object. */
+  inquirystrength: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-18: what the RECORD earns for each candidate basis leg, GATED. It is
+     part of the earned rule rather than a convenience beside it: op=promote
+     refuses a leg whose earned grade is not the value the record holds, and a
+     member with no way to LEARN that value is a member the refusal pressures
+     into guessing — "a gate that pressures someone into inventing one is a bug
+     in the gate" (CLAUDE.md). The refusal and this answer come from ONE store
+     function, so they cannot disagree. Member class and above on
+     op=inquirystrength's reasoning exactly, and the viewer is stamped
+     server-side below. NEEDS entry of null with a NON_ACTS row, same shape. */
+  earnedbasis: { classes: ["admin", "member", "probe"], mutating: false },
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
@@ -26338,7 +31051,12 @@ var OPS = {
   /* Acquisition: the fetch layer the intake doctrine calls M2'. It writes bytes
      and no bundle state, because the doctrine is explicit that no intake path
      writes live state and the daemon and the member are writers like any other. */
-  acquire: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-33: `daemon` is admitted HERE so the class can reach the op at all, and
+     is then confined to the ARCHIVE ARM inside the handler — the direct arm
+     refuses it by name. The confinement cannot live in this table, which knows
+     only the op, so the two halves are asserted together in
+     test/daemon-token.test.mjs: admitted here, refused there. */
+  acquire: { classes: ["admin", "member", "probe", "daemon"], mutating: true },
   /* Co-attestation. Asks a timestamp authority to attest that a capture existed
      at a claimed instant, which is the one part of provenance a group cannot
      fabricate for itself. */
@@ -26346,7 +31064,10 @@ var OPS = {
   /* The monitor. Checks whether a monitored source still serves what was
      captured and records the answer as a mechanical monitor-tick, inside the
      field set C-20.1 holds that operation to. */
-  monitor: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-33: the FIRST of the daemon class's two verbs, and the whole of it —
+     op=monitor is admitted wholesale because the op IS the unattended job; it
+     has no second arm to confine the class to. */
+  monitor: { classes: ["admin", "member", "probe", "daemon"], mutating: true },
   /* A conformance pass over the whole store, run inside the Durable Object where
      the images already are. Read-only, paginated, and resumable by cursor. */
   audit: { classes: ["admin", "member", "probe"], mutating: false },
@@ -26422,6 +31143,32 @@ var OPS = {
      a document and which other documents mention the same reference. */
   reading: { classes: ["admin", "member", "probe"], mutating: false },
   readingref: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-36: the same reverse question asked by NAME. Entity-driven and not
+       name-driven on purpose: the measurement (MEASUREMENTS.md 2026-08-04) found
+       abbreviations in the corpus whose full names appear in no label, and only a
+       name somebody registered reaches those. Read-only, and it establishes nothing:
+       it offers CANDIDATES for a member to confirm, and op=resolve is still the only
+       thing that grades.
+  
+       REC-40 WIDENED IT TO EVERY TIER, and the two ops are no longer split by which
+       tier they can reach. As REC-36 shipped, `readingname` answered on the NAME a
+       reading recorded (8.1's grade C) and `readingref` on the REFERENCE STRING, so
+       the A and B tiers — a document whose reference, or whose reference key, is
+       spelled like one of the subject's registered names — were proposable only by a
+       caller who already knew the exact string to ask for, and after UI-26 traded the
+       per-name loop away they were proposable from no surface at all. The term index
+       now carries all three of the strings `#recognise` grades on, each under its own
+       source, so ONE `readingname` call answers every tier at one indexed lookup,
+       gated identically, and each candidate says which string carried the name and
+       what op=resolve WOULD mint for it.
+  
+       THE TWO OPS ANSWER DIFFERENT QUESTIONS AND ARE DELIBERATELY NOT COLLAPSED.
+       `readingref` takes a raw reference string FROM THE CALLER and answers which
+       documents carry exactly it, knowing nothing about the registry; `readingname`
+       takes a REGISTERED SUBJECT and walks its own aliases into the index. A caller
+       holding a reference string and no entity still has only the first, and one
+       answering on behalf of a subject wants the second. `readingref` is unchanged. */
+  readingname: { classes: ["admin", "member", "probe"], mutating: false },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry
      are ONE construct). Members BUILD the registry: entitycreate registers a subject
@@ -26566,10 +31313,12 @@ var OPS = {
   knock: { classes: null, mutating: true }
 };
 var RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
-var READING_READS = ["reading", "readingref"];
+var READING_READS = ["reading", "readingref", "readingname"];
 var EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
 var STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide"];
+var ACTION_ACTIONS = ["actionmove", "actioncorrespond"];
 var DECLARATION_ACTIONS = ["strengthbar"];
+var STRUCTURE_ACTIONS = ["inquiryground"];
 var PROJECT_ACTIONS = [
   "projectinvite",
   "projectjoin",
@@ -26629,11 +31378,13 @@ var SESSION_OPS = {
     ...PROGRESSION_ACTIONS,
     ...EDGE_ACTIONS,
     ...STATE_ACTIONS,
+    ...ACTION_ACTIONS,
     ...PROJECT_ACTIONS,
     ...EXPERTISE_ACTIONS,
     ...TASK_ACTIONS,
     ...QUEUE_ACTIONS,
-    ...DECLARATION_ACTIONS
+    ...DECLARATION_ACTIONS,
+    ...STRUCTURE_ACTIONS
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -26657,11 +31408,13 @@ var SESSION_OPS = {
     ...PROGRESSION_ACTIONS,
     ...EDGE_ACTIONS,
     ...STATE_ACTIONS,
+    ...ACTION_ACTIONS,
     ...PROJECT_ACTIONS,
     ...EXPERTISE_ACTIONS,
     ...TASK_ACTIONS,
     ...QUEUE_ACTIONS,
     ...DECLARATION_ACTIONS,
+    ...STRUCTURE_ACTIONS,
     "memberadd",
     "memberset",
     "signeradd",
@@ -26725,6 +31478,49 @@ var NEEDS = {
      conclude's and reopen's are, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   inquirydivide: "contribute",
+  /* REC-45: GROUPING RIDES `contribute` and NO NEW CAPABILITY TOKEN IS MINTED,
+       which the item states and which the reasoning above already settles.
+       Membership §5's four rights are the whole set and a fifth would need §5
+       reopened; there is nothing here a fifth would express that `contribute`
+       does not, because authoring the structure of a basis is a corpus write on a
+       question and a view-only member does not perform one.
+  
+       THE ARGUMENT FOR A NARROWER GATE IS REAL AND IS REJECTED, and it is worth
+       stating because this act raises a grade. One could argue that the act which
+       makes a finding STRONGER deserves `publish`'s right, or an owner's. It
+       would be the wrong mechanism twice over. First, `publish` gates the
+       PUBLICATION, which is where a stronger grade actually reaches a reader, and
+       it is untouched: a member may group their reasons all day and nothing
+       leaves the record until somebody with `publish` authors a case. Second — and
+       this is DEC-30's argument arriving from the other side — grouping is also
+       the only route BACK to an ungrouped basis, so an owner-only gate would let
+       an owner hold a structure in place that another member can see is an
+       overclaim, and DE-ESCALATION MUST NEVER REQUIRE PERMISSION FROM SOMEONE
+       WHOSE INCENTIVE MAY RUN THE OTHER WAY. What bounds misuse here is not a
+       gate: it is the NAME on every group, the legs staying visible under it, and
+       the frozen per-group breakdown a reader checks (DEC-32's three
+       containments). The named-member requirement is enforced by the store on the
+       author stamp, as release's, conclude's, reopen's and inquirydivide's are,
+       because capabilities gate SESSIONS and the rule here is about who a session
+       IS. */
+  inquiryground: "contribute",
+  /* REC-24: BOTH ACTION OPS RIDE `contribute`, and NO NEW CAPABILITY TOKEN is
+     minted — the item says so and the reasoning is the one every act above
+     already runs on. Membership §5's four rights are the whole set; a fifth
+     would need §5 reopened, and there is nothing here a fifth would express
+     that `contribute` does not: moving an action and recording what came back
+     are corpus writes, and a view-only member does neither.
+     It is tempting to argue the OUTWARD reach deserves its own right — an
+     action touches people outside the system. It would be the wrong mechanism:
+     what bounds that reach is the RISK TIER on the object and the counterparty
+     that must be named or honestly undetermined (REC-23), both of which are
+     properties of the act being composed. A capability is a property of the
+     SESSION and could not see either. The named-member requirement is enforced
+     by the store on the author stamp, as release's, conclude's and reopen's
+     are, because capabilities gate sessions and this rule is about who a
+     session IS. */
+  actionmove: "contribute",
+  actioncorrespond: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -26850,6 +31646,38 @@ var NEEDS = {
      NEEDS is either a published act or a NAMED non-act, and op=queue is named
      in NON_ACTS with its reason. */
   queue: null,
+  /* REC-34: reading the derived pair carries NO working capability, on op=queue's
+     reasoning exactly — the question is not "may this member contribute" but "what
+     does this question rest on", and a view-only member holds it precisely as a
+     contributor does; weighing a case is what viewing IS. It is non-mutating, so
+     SESSION_OPS does not gate it either, and what bounds it is the D-15 viewer
+     stamp rather than section 5. The entry exists rather than being absent so
+     REC-19's totality guard can SEE it: an op in NEEDS is either a published act
+     or a NAMED non-act, and op=inquirystrength is named in NON_ACTS with its
+     reason. (op=reevaluations' precedent — no entry at all — is the other legal
+     shape for a read; this one is taken because the op is a SURFACE a member acts
+     from, and a read that is silently absent from both registries is exactly how
+     REC-25's six ungated reads accumulated.) */
+  inquirystrength: null,
+  /* REC-18: NO CAPABILITY, on op=inquirystrength's reasoning exactly. Asking
+     what the record already earned for a document is reading the record, not
+     shaping it — the WRITE that puts the earned grade on a leg is op=promote,
+     which carries `contribute` and is where the capability belongs. A view-only
+     member weighing a case needs to see what its legs rest on precisely as a
+     contributor does. Present rather than absent so REC-19's totality guard
+     sees it; named in NON_ACTS with its reason. */
+  earnedbasis: null,
+  /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
+     documents NAME a subject is reading the record; the write that acts on the
+     answer is op=resolve, which carries its own gate and is where the capability
+     belongs. A view-only member weighing a case needs to see what mentions their
+     subject precisely as a contributor does. Present rather than absent so
+     REC-19's totality guard SEES it — a read silently absent from both registries
+     is how REC-25's six ungated reads accumulated — and named in NON_ACTS with
+     its reason. (Its two siblings op=reading/op=readingref take the other legal
+     shape, no entry at all; this op takes op=queue's because it is a SURFACE a
+     member acts from: the candidate list a resolve is chosen out of.) */
+  readingname: null,
   /* REC-21 / D-125: NO CAPABILITY, and the reason IS the doctrine rather than a
      convenience. `contribute` is the corpus-shaping surface — it is what
      separates a member who may change what the record says from one who may only
@@ -26871,7 +31699,7 @@ var NEEDS = {
 var decorateAct = (a) => ({
   id: a.id,
   label: a.label,
-  weight: a.weight,
+  weight: a.weight ?? null,
   needs: NEEDS[a.id] ?? null,
   mode: SESSION_OPS.member.has(a.id) ? "session" : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
   rung: RUNGS[a.id] ?? null,
@@ -26904,6 +31732,7 @@ async function classify(token, env) {
   if (token === env.ADMIN_TOKEN && await liveToken(env.ADMIN_TOKEN)) return "admin";
   if (token === env.MEMBER_TOKEN && await liveToken(env.MEMBER_TOKEN)) return "member";
   if (token === env.PROBE_TOKEN && await liveToken(env.PROBE_TOKEN)) return "probe";
+  if (token === env.DAEMON_TOKEN && await liveToken(env.DAEMON_TOKEN)) return "daemon";
   return null;
 }
 function scopeFor(cls, url) {
@@ -26915,6 +31744,24 @@ var json = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
 });
+var STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
+var STORE_SILENT_DETAIL = "this instance could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused \u2014 those are answers, and this is the absence of one. The question stands unanswered; ask again.";
+async function doAnswer(res) {
+  let out = null;
+  try {
+    out = await (await res).json();
+  } catch {
+    out = null;
+  }
+  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: void 0 };
+}
+var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+var StoreSilent = class extends Error {
+  constructor(op) {
+    super(`the store did not answer ${op}`);
+    this.op = op;
+  }
+};
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 function needsTier2(text) {
   const c = text && text.counts;
@@ -26953,47 +31800,48 @@ var index_default = {
           return json({ ok: false, error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard" }, 409);
         if (body2.bootstrapToken !== env.ADMIN_TOKEN)
           return json({ ok: false, error: "bootstrap credential does not match" }, 403);
-        const r2 = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        const r = await stub2.fetch(new Request(`http://do/claim?fp=${fp}`, {
           method: "POST",
           body: JSON.stringify({ role: "admin", password: body2.password })
         }));
-        return json(await r2.json(), 200);
+        return json(await r.json(), 200);
       }
       if (op === "login") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await stub2.fetch(new Request("http://do/login", {
+        const r = await stub2.fetch(new Request("http://do/login", {
           method: "POST",
           body: JSON.stringify({ role: body2.role || "admin", password: body2.password })
         }));
-        return json(await r2.json(), 200);
+        return json(await r.json(), 200);
       }
       if (op === "invitelook") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await invStub.fetch(new Request("http://do/invitelook", {
+        const r = await invStub.fetch(new Request("http://do/invitelook", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
-        return json(await r2.json(), 200);
+        return json(await r.json(), 200);
       }
       if (op === "enroll") {
         const body2 = await req.json().catch(() => ({}));
-        const r2 = await invStub.fetch(new Request("http://do/enroll", {
+        const r = await invStub.fetch(new Request("http://do/enroll", {
           method: "POST",
           body: JSON.stringify(body2)
         }));
-        return json(await r2.json(), 200);
+        return json(await r.json(), 200);
       }
       if (op === "verify") {
         const sha = (url.searchParams.get("sha256") || "").toLowerCase();
         if (!/^[0-9a-f]{64}$/.test(sha))
           return json({ ok: false, error: "verify requires sha256=<64 lowercase hex>" }, 400);
-        const r2 = await stub2.fetch(new Request(`http://do/verify?sha256=${sha}`));
-        const out2 = await r2.json();
+        const out2 = await doAnswer(stub2.fetch(new Request(`http://do/verify?sha256=${sha}`)));
+        if (!out2.answered) return storeSilent("verify");
         return json({ ok: true, ...out2.result }, 200);
       }
       if (op === "publishedmanifest") {
-        const r2 = await stub2.fetch(new Request("http://do/publishedmanifest"));
-        return json({ ok: true, result: (await r2.json()).result }, 200);
+        const out2 = await doAnswer(stub2.fetch(new Request("http://do/publishedmanifest")));
+        if (!out2.answered) return storeSilent("publishedmanifest");
+        return json({ ok: true, result: out2.result }, 200);
       }
       if (op === "publishedcase" || op === "publishedbytes") {
         const shaParam = (url.searchParams.get("sha256") || "").toLowerCase();
@@ -27006,7 +31854,9 @@ var index_default = {
         if (op === "publishedbytes") {
           if (!/^[0-9a-f]{64}$/.test(shaParam))
             return json({ ok: false, error: "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk." }, 400);
-          const v = (await (await stub2.fetch(`http://do/verify?sha256=${shaParam}`)).json()).result;
+          const vOut = await doAnswer(stub2.fetch(`http://do/verify?sha256=${shaParam}`));
+          if (!vOut.answered) return storeSilent("publishedbytes");
+          const v = vOut.result;
           const notFound = () => json({
             ok: false,
             reason: "NOT_FOUND",
@@ -27073,79 +31923,102 @@ var index_default = {
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
         if (/^[0-9a-f]{64}$/.test(shaParam)) q.set("sha256", shaParam);
-        const c = (await (await stub2.fetch(`http://do/publishedcase?${q}`)).json()).result;
-        if (!c || !c.ok) return json({ ok: false, ...c || { reason: "NOT_PUBLISHED" } }, 404);
-        const md = await pubBytes(c.bundle_sha);
-        const text = md ? new TextDecoder().decode(md) : null;
-        const fm = text ? parseFrontmatter(text).data || {} : null;
-        const body2 = text ? {
-          state: "published",
-          from_sha: c.bundle_sha,
-          question: sectionText(text, "## Question"),
-          conclusion: sectionText(text, "## Conclusion"),
-          falsifies: sectionText(text, "## What Would Falsify This"),
-          excludes: sectionText(text, "## What This Excludes"),
-          /* BOTH, because the document says it in two places and they are not
-             the same statement. The FRONTMATTER carries what op=conclude
-             authored and what the catalog gates — that is the conclusion of
-             record. The SECTION carries the prose beside it, which is where a
-             division writes its account and where a person reads. Returning
-             only one of them would either drop the gated claim or drop the
-             explanation; a renderer needs to know which is which. */
-          authored: {
-            conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
-            falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null
-          },
-          detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the case to; the section fields are the prose printed beside it in the signed bytes."
-        } : {
-          state: "unavailable",
-          from_sha: c.bundle_sha,
-          reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
-          detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes."
-        };
-        const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];
-        let registry = {};
-        if (legs.length) {
-          const ids = [...new Set(legs.map((l) => l.target))];
-          const rt = (await (await stub2.fetch(
-            `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`
-          )).json()).result;
-          registry = rt && rt.registry || {};
-        }
-        const basis = legs.map((l) => {
-          const reg = registry[l.target] || null;
-          const named = l.target_edition != null ? String(l.target_edition) : null;
-          const cited = reg ? named ? reg.editions[named] : reg.editions[String(reg.latest)] : null;
-          return {
-            target: l.target,
-            role: l.role ?? "supports",
-            grade: l.grade ?? null,
-            grade_axis: l.grade_axis ?? null,
-            grade_source: l.grade_source ?? null,
-            target_edition: l.target_edition ?? null,
-            served: !!cited,
-            cited_edition: cited ? {
-              edition: cited.edition,
-              title: cited.title,
-              bundle_sha: cited.bundle_sha,
-              ratified_at: cited.ratified_at,
-              capture: cited.capture,
-              connection: cited.connection
-            } : null,
-            detail: cited ? "this leg rests on a published edition, so it can be served from this surface." : "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the case cites it and can hand over nothing of it."
+        const cOut = await doAnswer(stub2.fetch(`http://do/publishedcase?${q}`));
+        if (!cOut.answered) return storeSilent("publishedcase");
+        const c = cOut.result;
+        if (!c) return storeSilent("publishedcase");
+        if (!c.ok) return json({ ok: false, ...c }, 404);
+        const renderFinding = async (fnd) => {
+          const md = await pubBytes(fnd.bundle_sha);
+          const text = md ? new TextDecoder().decode(md) : null;
+          const fm = text ? parseFrontmatter(text).data || {} : null;
+          const body2 = text ? {
+            state: "published",
+            from_sha: fnd.bundle_sha,
+            question: sectionText(text, "## Question"),
+            conclusion: sectionText(text, "## Conclusion"),
+            falsifies: sectionText(text, "## What Would Falsify This"),
+            excludes: sectionText(text, "## What This Excludes"),
+            /* BOTH, because the document says it in two places and they are not
+               the same statement. The FRONTMATTER carries what op=conclude
+               authored and what the catalog gates — that is the conclusion of
+               record. The SECTION carries the prose beside it, which is where a
+               division writes its account and where a person reads. Returning
+               only one of them would either drop the gated claim or drop the
+               explanation; a renderer needs to know which is which. */
+            authored: {
+              conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
+              falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null
+            },
+            detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the finding to; the section fields are the prose printed beside it in the signed bytes."
+          } : {
+            state: "unavailable",
+            from_sha: fnd.bundle_sha,
+            reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
+            detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes."
           };
-        });
+          const legs = Array.isArray(fm?.basis) ? fm.basis.filter((l) => l && typeof l.target === "string") : [];
+          let registry = {};
+          if (legs.length) {
+            const ids = [...new Set(legs.map((l) => l.target))];
+            const rtOut = await doAnswer(stub2.fetch(
+              `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`
+            ));
+            if (!rtOut.answered) throw new StoreSilent("publishedcase/publishedtargets");
+            const rt = rtOut.result;
+            registry = rt && rt.registry || {};
+          }
+          const basis = legs.map((l) => {
+            const reg = registry[l.target] || null;
+            const named = l.target_edition != null ? String(l.target_edition) : null;
+            const cited = reg ? named ? reg.editions[named] : reg.editions[String(reg.latest)] : null;
+            return {
+              target: l.target,
+              role: l.role ?? "supports",
+              grade: l.grade ?? null,
+              grade_axis: l.grade_axis ?? null,
+              grade_source: l.grade_source ?? null,
+              target_edition: l.target_edition ?? null,
+              served: !!cited,
+              cited_edition: cited ? {
+                edition: cited.edition,
+                title: cited.title,
+                bundle_sha: cited.bundle_sha,
+                ratified_at: cited.ratified_at,
+                case_id: cited.case_id ?? null,
+                capture: cited.capture,
+                connection: cited.connection
+              } : null,
+              detail: cited ? "this leg rests on a published finding, so it can be served from this surface." : "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it."
+            };
+          });
+          return {
+            ...fnd,
+            object_type: normalizeType(fm?.object_type) ?? null,
+            body: body2,
+            basis,
+            bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}`
+          };
+        };
+        const findings = [];
+        try {
+          for (const fnd of c.findings || []) findings.push(await renderFinding(fnd));
+        } catch (e) {
+          if (e instanceof StoreSilent) return storeSilent(e.op);
+          throw e;
+        }
         return json({
           ok: true,
           ...c,
-          object_type: normalizeType(fm?.object_type) ?? null,
-          body: body2,
-          basis,
+          findings,
           verification: {
-            bytes: `op=publishedbytes&sha256=${c.bundle_sha}`,
             container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
             manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
-            detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and the signature covers the bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
+            findings: findings.map((f2) => ({
+              bundle_id: f2.bundle_id,
+              bytes: `op=publishedbytes&sha256=${f2.bundle_sha}`
+            })),
+            detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
           }
         }, 200);
       }
@@ -27182,7 +32055,7 @@ var index_default = {
         const win = Math.floor(Date.now() / KNOCK.windowMs);
         const ipHash = await fingerprint(req.headers.get("cf-connecting-ip") || "unknown") || "unknown";
         const knockId = `KNOCK-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-        const rec = await (await stub2.fetch(new Request("http://do/knock", {
+        const rec = await doAnswer(stub2.fetch(new Request("http://do/knock", {
           method: "POST",
           body: JSON.stringify({
             knockId,
@@ -27197,7 +32070,8 @@ var index_default = {
             perIpLimit: KNOCK.perIp,
             globalLimit: KNOCK.global
           })
-        }))).json();
+        })));
+        if (!rec.answered) return storeSilent("knock");
         if (!rec.result?.ok) return json({ ok: false, ...rec.result }, 429);
         if (r2) await env.CAPTURES.put(
           `bio/inbox/${sha}`,
@@ -27212,8 +32086,8 @@ var index_default = {
           received: "Your material is in the group's inbox awaiting member review."
         }, 200);
       }
-      const r = await stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`));
-      const out = await r.json();
+      const out = await doAnswer(stub2.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
+      if (!out.answered) return storeSilent("bootstrap");
       return json({
         ok: true,
         service: "bio-plane",
@@ -27229,8 +32103,9 @@ var index_default = {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
         const st = env.STORE.get(env.STORE.idFromName("bio"));
-        const r = await (await st.fetch(`http://do/session?t=${t}`)).json();
-        const sess = r?.result?.session;
+        const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
+        if (!sOut.answered) return storeSilent("session");
+        const sess = sOut.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
           if (op === "export")
@@ -27295,44 +32170,56 @@ var index_default = {
           target: null,
           catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
-          detail: "pass target=<bundle id> for the acts available on that object right now; rung is null wherever no document assigns one (FW-14 assigns them)"
+          capture_acts: CAPTURE_ACTS.map(decorate),
+          detail: "pass target=<bundle id> for the acts available on that object right now; rung is null wherever no document assigns one (FW-14 assigns them); capture_acts are keyed by a capture sha rather than by a bundle, so they are published with their metadata and never derived against an object's state"
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const affViewer = viaSession ? `member:${sessMember}` : `class:${cls}`;
-      const facts = (await (await st.fetch(
+      const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const fOut = await doAnswer(st.fetch(
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
-      )).json()).result;
-      if (!facts || facts.ok !== true)
+      ));
+      if (!fOut.answered) return storeSilent("affordances");
+      const facts = fOut.result;
+      if (!facts) return storeSilent("affordances");
+      if (facts.ok !== true)
         return json(
-          {
-            ok: false,
-            ...facts || { reason: "NO_FACTS" },
-            store: storeName,
-            tokenClass: cls
-          },
-          facts && facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400
+          { ok: false, ...facts, store: storeName, tokenClass: cls },
+          facts.reason === "NO_SUCH_BUNDLE" ? 404 : 400
         );
       return json({ ok: true, result: {
         target: facts.target,
         object_type: facts.object_type,
         current_state: facts.current_state,
         acts: deriveActs(facts).map(decorate),
-        vocabularies: VOCABULARIES
+        vocabularies: VOCABULARIES,
+        /* REC-38. The SAME block the no-target catalogue answers, and it is
+           deliberately NOT filtered by this target: a capture act's subject is
+           a capture sha, and whether one is attestable turns on the bytes being
+           in the store — a fact `affordanceFacts` does not carry and this
+           handler must not guess at. So this is metadata a surface RENDERS
+           beside a capture it already holds, never a derivation about this
+           object; deriving one here would be the publication disagreeing with
+           op=attest's own NO_SUCH_CAPTURE. The reasoning is on CAPTURE_ACTS,
+           where both consumers of the distinction read it. */
+        capture_acts: CAPTURE_ACTS.map(decorate)
       }, store: storeName, tokenClass: cls }, 200);
     }
     if (op === "queue") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const inner2 = new URL("http://do/queue");
-      inner2.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+      inner2.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner2.searchParams.set("member", viaSession ? sessMember : "");
       for (const k of ["now", "limit"]) {
         const v = url.searchParams.get(k);
         if (v !== null) inner2.searchParams.set(k, v);
       }
-      const r = (await (await st.fetch(inner2.toString())).json()).result;
-      if (!r || r.ok !== true)
-        return json({ ok: false, ...r || { reason: "NO_QUEUE" }, store: storeName, tokenClass: cls }, 400);
+      const qOut = await doAnswer(st.fetch(inner2.toString()));
+      if (!qOut.answered) return storeSilent("queue");
+      const r = qOut.result;
+      if (!r) return storeSilent("queue");
+      if (r.ok !== true)
+        return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
       return json({ ok: true, result: {
         ...r,
         items: r.items.map((i) => ({ ...i, options: (i.options || []).map(decorateAct) })),
@@ -27341,7 +32228,9 @@ var index_default = {
     }
     if (op === "registeraudit") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const r = (await (await st.fetch("http://do/registeraudit")).json()).result;
+      const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
+      if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
+      const r = aOut.result;
       const canProbe = typeof env.CAPTURES?.head === "function";
       const captured = [], unbacked = [], mismatched = [];
       for (const row of r.unresolved) {
@@ -27387,7 +32276,15 @@ var index_default = {
           PUBLISHED: typeof env.PUBLISHED?.get === "function" ? true : "not configured",
           ADMIN_TOKEN: await liveToken(env.ADMIN_TOKEN),
           MEMBER_TOKEN: await liveToken(env.MEMBER_TOKEN),
-          PROBE_TOKEN: await liveToken(env.PROBE_TOKEN)
+          PROBE_TOKEN: await liveToken(env.PROBE_TOKEN),
+          /* REC-33: REPORTED, and deliberately NOT required below. An instance
+             that predates this class runs monitoring on the ADMIN_TOKEN
+             fallback and is HEALTHY; making the binding required would fail
+             every already-installed instance's own health check for holding the
+             posture it shipped with. Absence is a first-class state here, the
+             same way R2's is — and reporting it is what lets an operator SEE
+             whether the fallback is what is carrying their monitoring. */
+          DAEMON_TOKEN: typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN.length > 0 ? await liveToken(env.DAEMON_TOKEN) : "not configured"
         },
         r2Configured,
         schemaChars: SCHEMA.length
@@ -27397,8 +32294,11 @@ var index_default = {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const r = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://x/stats");
-        out.store = (await r.json()).result;
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://x/stats"));
+        if (!sOut.answered) {
+          out.ok = false;
+          out.store = "ERR the store did not answer /stats";
+        } else out.store = sOut.result;
       } catch (e) {
         out.ok = false;
         out.store = "ERR " + String(e && e.message || e);
@@ -27439,9 +32339,11 @@ var index_default = {
     }
     if (op === "runtime") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const obs = (await (await st.fetch("http://x/runtimeobservations")).json()).result;
-      const probe = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
-      const lim = (await (await st.fetch("http://x/capturelimit?runtime=subrequests")).json()).result;
+      const obsOut = await doAnswer(st.fetch("http://x/runtimeobservations"));
+      const probeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      const limOut = await doAnswer(st.fetch("http://x/capturelimit?runtime=subrequests"));
+      if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent("runtime");
+      const obs = obsOut.result, probe = probeOut.result, lim = limOut.result;
       return json({
         ok: true,
         measured: obs,
@@ -27452,7 +32354,9 @@ var index_default = {
     }
     if (op === "cpuprobe") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const before = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const beforeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      if (!beforeOut.answered || !beforeOut.result) return storeSilent("cpuprobe");
+      const before = beforeOut.result;
       const iters = Math.max(1e5, Number(url.searchParams.get("iterations")) || 2e6);
       const budget = Math.max(50, Number(url.searchParams.get("budget_ms")) || 2e4);
       const r = await cpuProbe({
@@ -27467,7 +32371,9 @@ var index_default = {
           });
         }
       });
-      const after = (await (await st.fetch("http://x/cpuprobestate")).json()).result;
+      const afterOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
+      if (!afterOut.answered) return storeSilent("cpuprobe");
+      const after = afterOut.result;
       return json({
         ok: true,
         run: r,
@@ -27481,13 +32387,15 @@ var index_default = {
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
         return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
       const bundle = url.searchParams.get("bundle");
-      const p = await (await st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : ""))).json();
+      const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "")));
+      if (!p.answered) return storeSilent("linkproject");
       return json({ ok: true, ...p.result });
     }
     if (op === "governorstate") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const host = url.searchParams.get("host");
-      const r = await (await st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`)).json();
+      const r = await doAnswer(st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
+      if (!r.answered) return storeSilent("governorstate");
       return json({ ok: true, ...r.result });
     }
     if (op === "governorconfig") {
@@ -27502,11 +32410,12 @@ var index_default = {
         if (!Number.isFinite(appetite) || appetite <= 0)
           return json({ ok: false, reason: "BAD_APPETITE", detail: "appetite_per_min must be a positive number, or omit it to reset to the instance default" }, 400);
       }
-      const r = await (await st.fetch("http://x/governorconfig", {
+      const r = await doAnswer(st.fetch("http://x/governorconfig", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ host, appetite_per_min: appetite })
-      })).json();
+      }));
+      if (!r.answered) return storeSilent("governorconfig");
       return json({ ok: true, ...r.result });
     }
     if (op === "links") {
@@ -27514,7 +32423,8 @@ var index_default = {
       const capture = url.searchParams.get("capture");
       const address = url.searchParams.get("address");
       if (address) {
-        const r2 = await (await st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`)).json();
+        const r2 = await doAnswer(st.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}`));
+        if (!r2.answered) return storeSilent("links");
         return json({ ok: true, ...r2.result });
       }
       if (!/^[0-9a-f]{64}$/.test(capture || ""))
@@ -27523,7 +32433,8 @@ var index_default = {
           reason: "NEED_CAPTURE_OR_ADDRESS",
           detail: "pass capture=<sha256> for a document's outbound links, or address=<url> for what points at it"
         }, 400);
-      const r = await (await st.fetch(`http://x/resolvelinks?capture=${capture}`)).json();
+      const r = await doAnswer(st.fetch(`http://x/resolvelinks?capture=${capture}`));
+      if (!r.answered) return storeSilent("links");
       return json({ ok: true, ...r.result });
     }
     if (op === "capture") {
@@ -27637,10 +32548,18 @@ var index_default = {
       if (typeof env.CAPTURES?.put !== "function")
         return json({ ok: false, error: "this instance has no evidence storage configured" }, 503);
       const body2 = await req.json().catch(() => null);
+      if (cls === "daemon" && body2?.via !== "archive.org")
+        return json({
+          ok: false,
+          reason: "NOT_PERMITTED",
+          op,
+          cls,
+          detail: `the daemon class reaches op=acquire only through the archive fallback (via: "archive.org"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the two verbs the monitoring path needs.`
+        }, 403);
       const stArc = env.STORE.get(env.STORE.idFromName(storeName));
       let archiveHopRecorded = null, archiveChosen = null, archiveAddress = null;
       if (body2?.via === "archive.org") {
-        if (cls !== "admin" && cls !== "probe")
+        if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
           return json({
             ok: false,
             reason: "NOT_PERMITTED",
@@ -28314,8 +33233,30 @@ var index_default = {
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop
                is one more party between us and the publisher, so it grades
                below a direct capture of the same document even though the
-               bytes may be identical and the method just as careful. */
-            grade: via === "archive.org" ? "C" : "B",
+               bytes may be identical and the method just as careful.
+               *
+               REC-50: THE DIRECT-FETCH LETTER IS THE ENFORCED CEILING, so it is
+               that value and not a copy of it. `EARNED_CAPTURE_CEILING` is what
+               `checkEarnedLeg` refuses a capture leg for exceeding, and R2-g's
+               doctrine — "Grade B is what a direct capture by this instance is
+               worth" — is a statement ABOUT this stamp. A typed letter here
+               agreed with the rule at zero cost and would have drifted silently
+               the moment the ceiling moved, handing a caller a grade the gate
+               will not accept: the same defect REC-43 closed on the attest
+               fence and REC-48 on this op's own `note:`, one field over.
+               *
+               THE ARCHIVE-SOURCED LETTER IS DELIBERATELY STILL TYPED, and that
+               is open BY DECISION rather than by oversight. Naming it would
+               assert what an archive-sourced capture EARNS and whether that is
+               a ceiling or a fixed grade — a second capture-axis doctrine
+               value, which is a ruling and not a worker's or CONDUCT's to make
+               by writing a constant (QUEUE.md REC-50). What IS already ruled is
+               the ORDERING stated at the top of this comment, and
+               acquire.test.mjs pins that the typed letter still ranks strictly
+               below the ceiling — so if the ceiling ever moves onto or past it,
+               the suite says so by name instead of the record quietly claiming
+               an archive capture is worth as much as a direct one. */
+            grade: via === "archive.org" ? "C" : EARNED_CAPTURE_CEILING,
             /* WHO SERVED US THESE BYTES, which is not who issued the document.
                Bob, 2026-07-31: recording that the capture came through the
                Internet Archive is proper even while the CONTENT authority is
@@ -28389,7 +33330,7 @@ var index_default = {
           }
         } : {},
         ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
-        note: "Grade B: bytes as fetched, hashed at receipt. Grade A needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises B toward evidentiary weight.",
+        note: ACQUIRE_GRADE_NOTE,
         store: storeName,
         tokenClass: cls
       }, 200);
@@ -28517,7 +33458,9 @@ var index_default = {
       if (typeof bundleId !== "string" || !bundleId)
         return json({ ok: false, error: "monitor needs a bundleId" }, 400);
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
-      const img = (await (await stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`)}`)).json()).result;
+      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
+      if (!imgOut.answered) return storeSilent("monitor");
+      const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
         return json({ ok: false, reason: "ABSENT", bundleId }, 404);
       const live = img["bundle.md"];
@@ -28645,7 +33588,7 @@ var index_default = {
       const liveSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(live)))].map((x) => x.toString(16).padStart(2, "0")).join("");
       const textSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((x) => x.toString(16).padStart(2, "0")).join("");
       const stamp = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      const promoted = await (await stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
+      const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
         bundleId,
         base: liveSha,
         snapKey: stamp,
@@ -28673,7 +33616,8 @@ var index_default = {
           ...carried
         ],
         register: []
-      }) })).json();
+      }) }));
+      if (!promoted.answered) return storeSilent("monitor/promote");
       return json({
         ok: !!promoted.result?.ok,
         checked,
@@ -28693,7 +33637,9 @@ var index_default = {
       const body2 = await req.json().catch(() => null);
       if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
-      const facts = (await (await stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}`)).json()).result;
+      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}`));
+      if (!factsOut.answered) return storeSilent("ratify/gatefacts");
+      const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
       if (facts.row.bundle_sha !== body2.expectedSha)
         return json({
@@ -28729,10 +33675,14 @@ var index_default = {
           tokenClass: cls
         }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `class:${cls}`);
-      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`)).json()).result;
+      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
+      if (!imgOut.answered) return storeSilent("ratify/image");
+      const image = imgOut.result;
       const r2 = typeof env.CAPTURES?.head === "function";
-      const known = new Set(((await (await stub.fetch(`http://do/list?viewer=${ratViewer}`)).json()).result || []).map((b) => b.bundle_id));
+      const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
+      if (!listOut.answered) return storeSilent("ratify/list");
+      const known = new Set((listOut.result || []).map((b) => b.bundle_id));
       const gate = await runGate({
         bundleId: body2.bundleId,
         image,
@@ -28745,6 +33695,16 @@ var index_default = {
            path judge against the same published record. Passing nothing here
            does not soften the gate, it blinds it. */
         publishedRegistry: facts.publishedRegistry,
+        /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
+           registry, from the same one place that has the rows. */
+        publishedCaseRegistry: facts.publishedCaseRegistry,
+        /* REC-18: and the third — what each basis target EARNS from the record
+           (resolutions against the question's subject entity; the capture
+           record for the capture axis). Same reasoning, same source: an earned
+           grade is computed by the record, so a gate that cannot see the record
+           cannot confirm one, and threading it here is what makes the gate and
+           op=promote's write path judge an earned leg identically. */
+        earnedRegistry: facts.earnedRegistry,
         hasCapture: async (sha) => {
           if (!r2) return { present: false, bytes: 0 };
           const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
@@ -28792,40 +33752,10 @@ var index_default = {
         author: ratifiedFm.completeness?.author ?? null,
         at: ratifiedFm.completeness?.at ?? null
       } : null;
-      const manifest = {
-        format: "bio-case-container/1",
-        case: body2.bundleId,
-        title: ratifiedFm.title ?? null,
-        edition,
-        group: ratifiedFm.group ?? null,
-        bundle_sha: body2.expectedSha,
-        gate_version: gate.gateVersion,
-        attestor: { member: attestor?.member_id ?? sessMember, key_b64: sv.keyB64 },
-        signature: {
-          namespace: NS_RATIFY,
-          statement: ratifyStatement(body2.bundleId, body2.expectedSha),
-          armored: body2.sig
-        },
-        strength: frozenStrength,
-        required_strength: isCase ? ratifiedFm.required_strength ?? null : null,
-        parts: shas.map(({ text, ...part }) => part),
-        layout: {
-          root: `${body2.bundleId}/`,
-          parts_at: "path",
-          manifest_at: "MANIFEST.json",
-          note: "the zip carries every part at its own path with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and the signature over bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
-        },
-        verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation."
-      };
-      const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 1));
-      const manifestSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", manifestBytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      shas.push({
-        sha256: manifestSha,
-        path: "MANIFEST.json",
-        kind: "manifest",
-        bytes: manifestBytes.length,
-        text: JSON.stringify(manifest, null, 1)
-      });
+      const caseId = isCase && typeof ratifiedFm.case_id === "string" && ratifiedFm.case_id !== "null" ? ratifiedFm.case_id : null;
+      const caseFindings = caseId && Array.isArray(ratifiedFm.case_findings) ? ratifiedFm.case_findings : null;
+      const caseScope = caseId && typeof ratifiedFm.case_scope === "string" ? ratifiedFm.case_scope : null;
+      const caseBiasAck = caseId ? biasAcknowledgementOf(ratifiedFm) : null;
       const fmRefs = Array.isArray(ratifiedFm.references) ? ratifiedFm.references : [];
       const edges = [
         ...fmRefs.filter((r) => r && typeof r.target === "string").map((r) => ({
@@ -28836,7 +33766,7 @@ var index_default = {
         ...typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null" ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : [],
         ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
       ];
-      const pub = (await (await stub.fetch(new Request("http://do/publish", {
+      const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST",
         body: JSON.stringify({
           bundleId: body2.bundleId,
@@ -28854,12 +33784,17 @@ var index_default = {
           completeness: frozenCompleteness,
           strength: frozenStrength,
           required: isCase ? ratifiedFm.required_strength ?? null : null,
-          manifest,
-          manifestSha,
+          caseId,
+          caseScope,
+          caseFindings,
+          caseBiasAck,
+          group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s)
         })
-      }))).json()).result;
+      })));
+      if (!pubOut.answered) return storeSilent("ratify/publish");
+      const pub = pubOut.result;
       if (!pub?.ok)
         return json(
           {
@@ -28868,7 +33803,7 @@ var index_default = {
             store: storeName,
             tokenClass: cls
           },
-          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS") ? 409 : 500
+          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF") ? 409 : 500
         );
       let copied = 0, present = 0, r2state = "not configured";
       if (typeof env.PUBLISHED?.put === "function" && r2) {
@@ -28892,11 +33827,125 @@ var index_default = {
           copied++;
         }
       }
+      let container = null;
+      if (pub.case && pub.case.complete && !pub.case.manifest_sha) {
+        const cs = pub.case;
+        const manifest = {
+          /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
+             bookkeeping. The container gains `bias_acknowledgement`, which is a
+             DISCLOSURE a reader is entitled to rely on being present: without a
+             version move, a /2 container carrying no acknowledgement and a /2
+             container that simply predates the field are indistinguishable to a
+             stranger holding the zip, and "the record is silent" would read as
+             "the group declared nothing". The whole premise of the container is
+             that it is readable without our cooperation, so the only place that
+             ambiguity could be resolved is the one place the reader cannot
+             reach. REC-44 bumped 1 -> 2 for the same class of reason. */
+          format: "bio-case-container/3",
+          case: cs.caseId,
+          edition: cs.edition,
+          group: cs.group ?? null,
+          /* DEC-44 determination 2: what the case is ABOUT, authored by the
+             group. Beside it, what it left OUT. A reader needs both. */
+          scope: cs.scope ?? null,
+          /* REC-47 / DEC-46 (a): INSIDE THE CONTAINER, which is the copy that
+             matters most. DEC-20 makes the bias part of the evidentiary record
+             that TRAVELS with publication, and the container is the artifact
+             that travels — a stranger holding the zip must be able to read the
+             lens this case was made under without coming back to this instance.
+             An acknowledgement served only from a live op would be a disclosure
+             that stops existing the moment the instance does. */
+          bias_acknowledgement: cs.bias_acknowledgement ?? null,
+          completeness: cs.completeness ?? null,
+          ratified_at: cs.ratified_at,
+          /* EVERY MEMBER FINDING, each with its OWN signature, its OWN attestor
+             and its OWN frozen PAIR. The signature is per finding because the
+             FINDING is the unit of truth: what a member signed is one
+             document's bytes, and a case-level signature would be a signature
+             over something nobody reviewed. */
+          findings: cs.findings.map((f2) => ({
+            bundle_id: f2.bundle_id,
+            title: f2.title,
+            edition: cs.edition,
+            bundle_sha: f2.bundle_sha,
+            ratified_at: f2.ratified_at,
+            gate_version: f2.gate_version,
+            attestor: f2.attestor,
+            signature: {
+              namespace: NS_RATIFY,
+              statement: ratifyStatement(f2.bundle_id, f2.bundle_sha),
+              armored: f2.sig_armored
+            },
+            strength: f2.strength,
+            required_strength: f2.required,
+            parts: f2.parts.map((p) => `${f2.bundle_id}/${p.path}`)
+          })),
+          /* The parts are NAMESPACED BY FINDING, and that is forced rather than
+             chosen: every finding carries a `bundle.md`, so a flat parts[]
+             would have two members claiming one path and the archive would say
+             two things about one name. */
+          parts: cs.findings.flatMap((f2) => f2.parts.map((p) => ({
+            path: `${f2.bundle_id}/${p.path}`,
+            finding: f2.bundle_id,
+            sha256: p.sha256,
+            kind: p.kind,
+            bytes: p.bytes ?? null
+          }))),
+          layout: {
+            root: `${cs.caseId}/`,
+            parts_at: "path",
+            manifest_at: "MANIFEST.json",
+            note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
+          },
+          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support."
+        };
+        const mText = JSON.stringify(manifest, null, 1);
+        const mBytes = new TextEncoder().encode(mText);
+        const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+        const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
+          method: "POST",
+          body: JSON.stringify({
+            caseId: cs.caseId,
+            edition: cs.edition,
+            manifest,
+            manifestSha: mSha,
+            bytes: mBytes.length
+          })
+        })));
+        const rec = recOut.result;
+        if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
+          const key = `${storeName}/published/${mSha}`;
+          if (!await env.PUBLISHED.head(key)) await env.PUBLISHED.put(key, mBytes);
+        }
+        container = !recOut.answered ? {
+          ok: false,
+          reason: STORE_SILENT_REASON,
+          op: "ratify/recordcasemanifest",
+          detail: STORE_SILENT_DETAIL
+        } : rec && rec.ok ? {
+          manifest_sha: mSha,
+          parts: manifest.parts.length,
+          findings: manifest.findings.length,
+          zip: `op=publishedbytes&sha256=${mSha}&format=zip`
+        } : { ok: false, ...rec || { reason: "MANIFEST_NOT_RECORDED" } };
+      }
       let reuseReport = null;
-      const reused = (await (await stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body2.bundleId)}`)).json()).result;
-      if (reused && Array.isArray(reused.parts) && reused.parts.length) {
-        const lim = (await (await stub.fetch("http://do/capturelimit?runtime=subrequests")).json()).result;
-        const observed = lim && lim.observed ? lim.observed : null;
+      const reusedOut = await doAnswer(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body2.bundleId)}`));
+      const reused = reusedOut.result;
+      if (!reusedOut.answered) {
+        reuseReport = {
+          ok: false,
+          reason: STORE_SILENT_REASON,
+          op: "ratify/reusedparts",
+          detail: STORE_SILENT_DETAIL,
+          note: "whether this bundle reused any part from the record is UNDETERMINED for this ratification, and that is NOT the same as no part having been reused. The bundle is ratified -- the signature, the gate and the published rows are all unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not happen. Re-ratifying converges it."
+        };
+      } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
+        const limOut = await doAnswer(stub.fetch("http://do/capturelimit?runtime=subrequests"));
+        const ceilingRead = limOut.answered;
+        const lim = limOut.result;
+        const observed = ceilingRead && lim && lim.observed ? lim.observed : null;
+        const ceilingWord = !ceilingRead ? "UNREAD -- the store did not answer the capture-limit read, so this budget is our own appetite and not a calibrated ceiling" : observed == null ? "none observed" : String(observed);
         const appetite = Number(env.RATIFY_REFETCH_BUDGET) || 500;
         const margin = env.RATIFY_REFETCH_MARGIN !== void 0 ? Number(env.RATIFY_REFETCH_MARGIN) || 0 : 4;
         const budget = observed != null ? Math.min(appetite, Math.max(0, observed - margin)) : appetite;
@@ -28924,7 +33973,7 @@ var index_default = {
               ...base,
               verdict: "not_attempted",
               observed_sha: null,
-              basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest ceiling ${observed == null ? "none observed" : observed}) was spent before this part; it is recorded as outstanding, not silently omitted`
+              basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest ceiling ${ceilingWord}) was spent before this part; it is recorded as outstanding, not silently omitted`
             });
             continue;
           }
@@ -28961,16 +34010,24 @@ var index_default = {
             });
         }
         const at = (/* @__PURE__ */ new Date()).toISOString();
-        await stub.fetch(new Request("http://do/recordreuseverdicts", {
+        const vOut = await doAnswer(stub.fetch(new Request("http://do/recordreuseverdicts", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ bundleId: body2.bundleId, at, verdicts })
-        }));
+        })));
         const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
         reuseReport = {
           reused_parts: reused.parts.length,
           budget,
-          ceiling: observed,
+          /* Both spreads are EMPTY on the answered path, so a working instance's
+             answer is byte-identical to what it was before this item; the extra
+             field exists only where the answer used to be a claim nobody could
+             support. */
+          ...ceilingRead ? { ceiling: observed } : { ceiling_unread: {
+            reason: STORE_SILENT_REASON,
+            op: "ratify/capturelimit",
+            detail: STORE_SILENT_DETAIL
+          } },
           confirmed: tally("confirmed"),
           changed: tally("changed"),
           unavailable: tally("unavailable"),
@@ -28982,7 +34039,14 @@ var index_default = {
             observed_sha: v.observed_sha,
             basis: v.basis
           })),
-          note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say different things; not_attempted names a part the budget could not reach. Re-fetch is a plain GET, hashed by us -- a reused part ratified in silence is what is forbidden."
+          note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say different things; not_attempted names a part the budget could not reach. Re-fetch is a plain GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
+          ...vOut.answered ? {} : { recorded: {
+            ok: false,
+            reason: STORE_SILENT_REASON,
+            op: "ratify/recordreuseverdicts",
+            detail: STORE_SILENT_DETAIL,
+            note: "the outcomes above are what this ratification OBSERVED; whether they reached the record is undetermined, so do not read their absence from the reuse history as their never having been checked. Re-ratifying converges it."
+          } }
         };
       }
       return json({
@@ -28996,11 +34060,20 @@ var index_default = {
            and `graph` reports what the published edges did: how many the
            surface may SERVE, how many it may only NAME, and how many
            references were dropped for pointing at unpublished material. */
-        container: {
-          manifest_sha: manifestSha,
-          parts: manifest.parts.length,
-          zip: `op=publishedbytes&sha256=${manifestSha}&format=zip`
-        },
+        ...pub.caseId ? {
+          caseId: pub.caseId,
+          case: {
+            edition: pub.case?.edition ?? null,
+            complete: !!pub.case?.complete,
+            awaiting: pub.case?.awaiting ?? [],
+            findings: (pub.case?.findings ?? []).map((f2) => f2.bundle_id),
+            detail: pub.case?.detail ?? null
+          }
+        } : {},
+        container: container ?? (pub.case && pub.case.manifest_sha ? {
+          manifest_sha: pub.case.manifest_sha,
+          zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip`
+        } : null),
         graph: pub.edges ?? null,
         existed: pub.existed,
         ratifiedAt: pub.ratifiedAt,
@@ -29020,12 +34093,13 @@ var index_default = {
     };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
-    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `token:${cls}`);
+    if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     const REC30_VIEWER_READS = [
       "dangling",
       "tasks",
       "reading",
       "readingref",
+      "readingname",
       "resolutions",
       "concerns",
       "connections",
@@ -29042,8 +34116,8 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || QUEUE_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
-      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `class:${cls}`);
+    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || QUEUE_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
     if (op === "memberlist")
       inner.searchParams.set(
@@ -29053,11 +34127,11 @@ var index_default = {
     if (QUEUE_ACTIONS.includes(op))
       inner.searchParams.set("member", viaSession ? sessMember : "");
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `class:${cls}`);
-    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op))
-      inner.searchParams.set("author", viaSession ? sessMember : `token:${cls}`);
+      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op))
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
-      inner.searchParams.set("by", viaSession ? sessMember : `class:${cls}`);
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     let passBody = req.method === "POST" ? await req.text() : void 0;
     if (op === "promote" && passBody) {
       try {
@@ -29068,7 +34142,7 @@ var index_default = {
         if (viaSession) {
           b.author = sessMember;
           b.actorMemberId = sessMember;
-        } else b.author = `token:${cls}`;
+        } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
@@ -29110,8 +34184,8 @@ var index_default = {
     if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `class:${cls}`;
-        else b.by = viaSession ? sessMember : `class:${cls}`;
+        if (op === "expertisedeclare") b.memberId = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
+        else b.by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29119,7 +34193,7 @@ var index_default = {
     if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29127,7 +34201,7 @@ var index_default = {
     if ((op === "resolve" || op === "resolvetestify") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.resolvedBy = viaSession ? sessMember : `class:${cls}`;
+        b.resolvedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29135,7 +34209,7 @@ var index_default = {
     if (op === "progressiondefine" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29151,7 +34225,7 @@ var index_default = {
     if (op === "thread" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.threadedBy = viaSession ? sessMember : `class:${cls}`;
+        b.threadedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29159,7 +34233,7 @@ var index_default = {
     if (op === "discharge" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.declaredBy = viaSession ? sessMember : `class:${cls}`;
+        b.declaredBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29167,7 +34241,7 @@ var index_default = {
     if (op === "proposedispose" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.decidedBy = viaSession ? sessMember : `class:${cls}`;
+        b.decidedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29175,7 +34249,7 @@ var index_default = {
     if (op === "inboxresolve" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.by = viaSession ? sessMember : `token:${cls}`;
+        b.by = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }
@@ -29183,7 +34257,7 @@ var index_default = {
     if ((op === "taskforward" || op === "taskresolve" || op === "taskdrain") && passBody) {
       try {
         const b = JSON.parse(passBody);
-        b.actor = viaSession ? sessMember : `token:${cls}`;
+        b.actor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
       } catch {
       }

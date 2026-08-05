@@ -1,11 +1,11 @@
 # The release baton
 
 <!-- BATON-STATE (machine-readable; scripts/deploy.mjs parses this block)
-holder: CAPTURE
-since: 2026-07-30
+holder: DIST
+since: 2026-08-04
 granted_by: bob
 scope: plane
-note: cut 0.49.0 through 0.53.0 on 2026-07-31; all five deployed byte-identical and live-verified
+note: taken from CAPTURE, whose session ended 2026-07-31 and which never released it - a baton held by a session that no longer exists is the stale-lock failure BATON.md exists to make visible, so it is TAKEN rather than forced past. Bob authorised DIST 2026-08-04 to deploy the accumulated work. Deploying 0.56.0 WITHOUT a signed release: BIO_RELEASE_SEED is not on this machine, so release/RELEASE.json and its signature stay at 0.55.0 and are NOT touched - the deployed asset is bio-plane/dist/, never release/, so nothing claims a signature it does not have.
 END-BATON-STATE -->
 
 **Holder: `CAPTURE`, since 2026-07-30, granted by Bob.**
