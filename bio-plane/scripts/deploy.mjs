@@ -237,7 +237,14 @@ const meta = {
     { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
     { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
   ],
-  keep_bindings: ["secret_text", "durable_object_namespace"],
+  /* `service` is here for the reason D-201 exists: a binding class this script
+     neither SENDS nor KEEPS is silently DELETED on every deploy. D-202 measured
+     the consequence on the live plane — `wrangler.jsonc` declares PDF_WORKER and
+     SELF, and biosmoke7 has NEITHER, because every deploy has gone through this
+     script. Keeping them is the protective half and changes nothing today (there
+     are none live to keep); SENDING them is a behavioural change that would arm
+     the monitoring consumers, and it is deliberately NOT made here. See D-202. */
+  keep_bindings: ["secret_text", "durable_object_namespace", "service"],
 };
 
 async function deployed() {
