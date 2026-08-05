@@ -1770,6 +1770,27 @@ export class Store extends DurableObject {
       : { class: "authored" };
   }
 
+  /* HAS THIS ANSWER CHANGED AT ALL — the ONE place the plane asks that, and it
+     is deliberately NOT `moved` (REC-55, 2026-08-05; measured by UI-25 against
+     this file, mechanism decided by CONDUCT).
+
+     `moved` means PER-ROW movement: a revision, a removal, an addition, counted
+     off `drift`. Six published surfaces read it with that meaning, so folding
+     the digest into it would silently move what every existing caller is told —
+     which is why the fix is here and not in the formula.
+
+     But a QUERY selection stores no rows at all. Its whole account of movement
+     is the digest, so a query whose membership SWAPS AT A CONSTANT COUNT has
+     `revised` empty, `added` 0 and `removed` 0 — `moved` is FALSE over a set
+     that is not the set the operator saw. Everything that must ask "is this
+     still the answer they were looking at" asks HERE rather than recomposing
+     the disjunction at its own site: a second composition is a second thing that
+     has to agree, and the one that disagreed would be the one deciding.
+
+     On an ENUMERATED selection `digestChanged` is never set, so this is exactly
+     `moved` there and no enumerated caller's behaviour moves by one branch. */
+  static #answerChanged(drift, moved) { return moved || drift?.digestChanged === true; }
+
   /** Resolve a selection to its current membership, with a drift report.
    *
    *  `weight` is the ACTION's weight, and it decides what drift means:
@@ -1845,7 +1866,13 @@ export class Store extends DurableObject {
     }
 
     const moved = drift.revised.length + drift.removed + drift.added > 0;
-    const stopped = moved && weight === "refuse";
+    /* THE REFUSE GATE ASKS THE ANSWER-CHANGED QUESTION, not the per-row one
+       (REC-55). `moved` alone let a query selection whose membership swapped at
+       a constant count past a state-changing act — which is exactly "a state
+       transition landing on a set the operator did not see", the failure the
+       paragraph above says this weight exists to prevent. `moved` itself is
+       PUBLISHED UNCHANGED below and still means per-row movement. */
+    const stopped = Store.#answerChanged(drift, moved) && weight === "refuse";
     return {
       ok: !stopped, handle, kind: sel.kind, q: sel.q, owner: sel.owner,
       n: members.length, snapshotN: sel.n, weight, moved,
@@ -5695,19 +5722,31 @@ export class Store extends DurableObject {
        learned that half of what they cited is not yet load-bearing. */
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
+    /* REC-55's SECOND SITE, and the one that is EXPOSED rather than latent: this
+       clause is what the append-only record says about whether the operator was
+       looking at the set they cited. It read `sel.moved`, which is per-row — so
+       a QUERY selection whose answer swapped at a constant count wrote a Session
+       Log entry with no drift clause at all, and in an entry that states the
+       clause whenever it applies, its absence reads as "the set had not moved".
+       The record was silent about the one drift a query selection can have.
+       Citing is the live caller of a query selection (UI-25 gave `kind:"query"`
+       its first surface and it offers `cite`), so unlike the gate this was
+       reachable today. Composed ONCE and used by both arms deliberately: two
+       copies of this sentence are two things that can be fixed apart, which is
+       how the two reference writers drifted (D-21). */
+    const setMovedNote = Store.#answerChanged(sel.drift, sel.moved)
+      ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
     const entry = ontoInquiry
       ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"}`
         + ` (${rl}) | ${author || "member"}\n`
-        + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
-            + "citing is report-weight and proceeded)" : ""}\n`
+        + `Trigger: selection ${handle}${setMovedNote}\n`
         + `Changes: basis legs added for ${listed}, each with role ${rl}. `
         + `Grades: ${graded} filled from the record's own resolutions to this question's subject; `
         + `${ungraded} left undetermined and stated.`
         + `${nt ? ` Note: ${nt}.` : ""}\n`
       : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
         + ` | ${author || "member"}\n`
-        + `Trigger: selection ${handle}${sel.moved ? " (the set had moved since it was made; "
-            + "citing is report-weight and proceeded)" : ""}\n`
+        + `Trigger: selection ${handle}${setMovedNote}\n`
         + `Changes: cites edges added to ${listed}.`
         + `${nt ? ` Note: ${nt}.` : ""}\n`;
     const at = text.indexOf("## Session Log");
