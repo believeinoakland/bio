@@ -3696,6 +3696,25 @@ recommendation: **(a), as shipped.** Refusing would introduce a NEW member-facin
 
 cost of reversal: LOW — one branch in `addGo`. The bound is already computed and already travels into the bundle, so (b) is a change of what to do with a fact that is already there.
 
+### DEC-59 · open
+for: bob
+raised: 2026-08-05 · CONDUCT (from UI-35, which measured it and deliberately did not fix it)
+subject: Should the public case page render the group's own `bias_acknowledgement`?
+
+**Measured by UI-35, driving the real op:** `op=publishedcase` publishes `bias_acknowledgement` and **no surface reads it**. It is not an unconsumed publication of the kind REC-41 removed — the gate ENFORCES it (C-21.1) and the battery asserts it 7 times. It is a SURFACE GAP.
+
+**Why it is worth your attention rather than mine.** The field carries the GROUP'S OWN acknowledgement of the bias the case was produced under — authored at export, fresh per edition, never prefilled (DEC-46(a), REC-47). DEC-34's per-page header does show a `Declared bias`, but that is computed from HUNCH legs and is **a different fact**. So today **a reader of the published record never meets the group's own sentence about its own lens** — on the surface that exists precisely so a stranger can read the case without our cooperation.
+
+the two shapes:
+  (a) **RENDER it** on the public case page, as the group's authored disclosure, beside the computed declared-bias line and clearly distinguished from it.
+  (b) **LEAVE it published and unrendered**, as now.
+
+provisional: (b), the status quo, is running and nothing is blocked.
+
+recommendation: **(a), as its own item, sequenced AFTER DEC-49 rules.** The disclosure exists to be read, and a disclosure the reader never meets is the shape this project refuses everywhere else. The reason it is not simply queued is that rendering it puts authored wording on a PRE-AUTHENTICATION surface, and who owns member-facing wording is exactly DEC-49's open subject — UI-35 declined to move that basis as a side effect of another item, which was the right call and follows UI-33's precedent.
+
+cost of reversal: LOW — one template line plus a DEC49_SUBJECT row. The cost of NOT doing it is not symmetrical: every edition published meanwhile carries a disclosure nobody sees, and editions are permanent.
+
 ### DEC-58 · open
 for: bob
 raised: 2026-08-05 · CONDUCT (from UI-39)
