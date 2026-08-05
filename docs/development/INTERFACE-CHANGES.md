@@ -1114,3 +1114,142 @@ used to reason about compatibility at all.
   is RUN and recorded in that suite's own `NEGATIVE CONTROL:` line.
 
 **Returns to STABLE at 8.0.0.**
+## IC-23 · I3: every capped op publishes the bound it applied and whether it truncated · PROPOSED, ACCEPTED AND CHANGED 2026-08-05 (REC-57, one act, additive, recorded from as-built code)
+
+- **Interface:** I3 (plane → UI), **8.0.0 STABLE** → **8.1.0**
+- **Proposer and owner to land it:** `RECORD` (session rec57-agent), from REC-57 —
+  which is UI-39's delegation, filed in `CLAIMS.md` on 2026-08-05.
+- **Consumers to answer:** `UI`, `DIST`, the content areas.
+- **Renumbered at integration:** filed as IC-22 against a worktree based on 6f14a0d; UI-40 took
+  that number and moved I3 to 8.0.0 while this was in flight. Renumbered rather than
+  reused, and the base skew is recorded rather than smoothed.
+
+### The change
+
+Eleven ops apply a numeric cap. The roster was READ OFF `store.mjs` by
+`test/bounds.test.mjs`'s walk rather than listed by hand, and it is nine ops wider
+than the two UI-39 could see. Each gains **`limit`** — the cap ACTUALLY APPLIED,
+after clamping, never the number the caller asked for. Three that published no
+truncation signal at all gain one in the vocabulary their own siblings already use:
+
+| op | added | already published, UNTOUCHED |
+| --- | --- | --- |
+| `readingname` | `limit`, `truncated`, a truncation clause in `detail` | — |
+| `tasks` | `limit`, `truncated` | `counts` (which answers a different question) |
+| `exportlog` | `limit`, `truncated`, an OPTIONAL `limit` parameter | — |
+| `reindexnames` | `limit`, `remaining` | `indexed`, `examined` |
+| `searchindexcheck` | `limit`, `orphans_limit`, `orphans_truncated` | `cursor` |
+| `queue` | `limit` | `truncated` |
+| `audit` | `limit` | `cursor`, `total` |
+| `list` | `limit` (paged arm only) | `cursor`, `total` |
+| `taskdrain` | `limit` | `remaining` |
+| `reproject` | `limit` | `remaining` |
+| `search` | nothing — it was already right, and is the model | `limit`, `offset`, `total`, `truncated` |
+
+**Additive for every existing caller.** No key is removed, renamed or reshaped; no
+refusal reason, class, gate or ordering moves; every existing key is byte-identical
+for every input. `op=exportlog` with no `limit` answers exactly as before.
+
+### Why, and why it is not cosmetic
+
+**The consumer is a COMPLETENESS CLAIM in every case.** A count of what was SENT and
+a count of what EXISTS are different claims, and a producer that published only the
+first has asserted the second. UI-25's whole item existed because a member with more
+than 500 hits could cite only the first 500 into a case. `op=audit` published `ok`
+over ONE PAGE. `op=exportlog` showed an administrator the newest 200 rows of a log
+the export manifest describes to them as append-only and complete — on a store past
+200 exports, the row being looked for is the one that has fallen off.
+
+**Two ops on one surface answered the same question in two shapes.** `op=queue`
+published `truncated` and `op=tasks` did not, so a consumer that read one correctly
+read the other wrongly — and UI-39 had to INFER the bound from `counts` arithmetic
+and word it as the inference it was. The same defect turned up a second time between
+two BACKFILLS: `reproject` published `remaining` and `reindexnames` published only
+`examined`, the count of what it TOOK, which equals the cap on exactly the run where
+more is left.
+
+### Why `truncated` is NOT added everywhere — the REC-55 rule, applied
+
+The plane answers "is this all of it" in four spellings, each giving the caller
+something a bare flag would not: `truncated`, `cursor` (non-null means *more, and
+resume HERE*), `remaining` (*run me again, this many left*), and `total` beside
+`limit`/`offset`. **Where an op already published the fact, a second spelling was
+NOT added** — REC-55 declined exactly that, and two spellings of one fact is the
+drift this project has measured repeatedly. `test/bounds.test.mjs` therefore asserts
+the PROPERTY (a caller can tell *this is all of it* from *this is the first N*) and
+reads each op in its own vocabulary, with an over-strictness arm proving the reader
+accepts honest shapes it did not write.
+
+### Responses
+
+- **`UI`: `AGREE`** — answered on its behalf by CONDUCT per protocol step 3 and the
+  IC-12 mechanics, recorded as CONDUCT answering FOR the area. UI-39 is the area's
+  own written request for exactly these two fields on exactly these two ops, filed as
+  a DELEGATION in `CLAIMS.md`; the change grants it and extends it. Every field is
+  additive, so no surface breaks by ignoring it, and `heldMatch`/`loadResolveCandidates`
+  can now quote the record's own figure instead of authoring one. A UI-10-class
+  follow-on may replace the surface-authored bound sentences with the published ones.
+- **`DIST`: `NOT-AFFECTED`** — the installer reads `version` and the bootstrap fields;
+  it calls none of the eleven.
+- **Content areas: `NOT-AFFECTED`** — none consumes a capped read's envelope.
+
+### Version
+
+I3 8.0.0 → **8.1.0** in `INTERFACES.md`. I5 is NOT touched: no table, column or index,
+and no `purge` change.
+
+---
+
+## IC-24 · I3: `op=projection`'s capped corpus arms answer with a BARE ARRAY, which can carry no bound · PROPOSED
+
+- **Interface:** I3 (plane → UI), **8.1.0 STABLE** after IC-23
+- **Proposer:** `RECORD` (session rec57-agent), 2026-08-05, from REC-57's sweep.
+  **Filed and NOT landed**, deliberately — see below.
+- **Consumers to answer:** `UI`, `DIST`, the content areas.
+
+### The finding
+
+`op=projection` is on REC-57's roster and is the one member of it that **could not be
+fixed additively.** Its single-bundle arm (`&id=`) returns one object and applies no
+cap. Its two CORPUS arms — the bare enumeration and the `jsonPath`/`jsonEquals` filter
+— return **a bare JSON array**, capped at 200. An array carries no keys, so there is
+no additive way to publish either the bound or whether it bit; and the dispatch does
+not forward `limit` from the wire at all, so a caller cannot even ask for more. It is
+the worst instance of the class on the roster and the only one still open.
+
+That this bound is invisible has already cost a reader: `test/disposition.test.mjs`
+carries the comment *"Ask for the ONE bundle rather than scanning the projection:
+op=projection caps…"* — a test author who had to learn the cap from the source
+because the answer would not say it.
+
+### The change proposed
+
+The corpus arms return an envelope, matching `op=list`'s paged arm, which already
+solved this exact problem for the same kind of answer:
+
+    { bundles: [ … ], limit: <cap applied>, cursor: <id|null>, total: <gated count> }
+
+and the dispatch forwards `limit` and `after`. The `&id=` arm is UNCHANGED.
+
+### Why it is filed rather than landed
+
+**It is not additive**, so it cannot be landed in the turn it is proposed: protocol
+steps 4–6 (CHANGING, CHANGED, SETTLED) exist precisely for a shape another area may
+be building against. The measured consumer impact inside this repository is **nil** —
+every one of the nine call sites found (`queue-conditions`, `queue-state`,
+`publishedcase`, `action-loop`, `inquirystrength`, `fence`, `gate-reads`,
+`disposition`, and the UI's `elicitation` fixture comment) uses the `&id=` arm, which
+does not move. But "nobody in this tree reads it" is not the same as "no consumer",
+and IC-3's settled reasoning applies: recording a break as additive because nobody
+happened to be reading it would teach the registry to lie.
+
+Until it resolves, `test/bounds.test.mjs` PINS the exception rather than exempting it:
+it MEASURES that `op=projection`'s capped arm really does answer with an array, and
+asserts the array-shaped set is **exactly one op wide**. A second op answering this
+way fails the suite rather than quietly joining a growing exception list.
+
+### Status
+
+**PROPOSED, 2026-08-05.** Awaiting responses. Nothing is built against either shape.
+A separate queue item should land it; this session did not, and says so rather than
+leaving the roster looking complete.
