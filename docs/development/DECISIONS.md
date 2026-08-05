@@ -4054,10 +4054,25 @@ what reversing costs: the ruling itself is cheap to reverse while nothing is bui
   IS-1..IS-7 are not started. It gets expensive once suggestions exist in volume, because a
   suggestion written under one acceptance model cannot be re-attributed afterwards. Nothing
   published is affected either way: effective strength never counts a suggestion.
+**ARCHITECTURE ADDED THE SAME DAY, and it changed the shape of the build.** The design was
+  rewritten once the SUPPORT/DEFEAT structure landed, and the piece that had been blocked
+  became the foundation. Three things a reader of this entry needs: (a) **support is
+  DEFEASIBLE** — an UNDERCUT attacks the INFERENCE from a leg to a claim and leaves the leg
+  true while the link dies; a REBUTTAL attacks the claim and creates opposing support;
+  **neither is negative strength and nothing is subtracted**, so the pressure to express
+  disagreement as one number never arises and R2 stays intact. Defeat is a member
+  determination that a link is not live — a judgement needing no scale. (b) **The inquiry's
+  QUESTION is a first-class object a suggestion can act on**, because Bob's contract case
+  showed that apparent contradiction is usually an imprecise question rather than a property
+  of the claims, and separating two questions wearing one sentence is often the run's
+  highest-leverage output. (c) **New evidence weakening ACCEPTED work arrives as a suggested
+  undercut or rebuttal**, which is the mechanism behind the rule that accepted claims are
+  never changed. Full design in `INVESTIGATIVE-SESSION.md` §5–§7.
 decided: 2026-08-05 · Bob, session BOB
 reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the full design, the
-  instruments, the open questions and the withdrawn positions), DEC-55/D-199 (the `ai` class
-  it extends), DEC-46 (regrade's home and the lens-preserved-not-applied rule).
+  support/defeat structure, the instruments, the open questions and the withdrawn positions),
+  DEC-55/D-199 (the `ai` class it extends), DEC-46 (regrade's home and the
+  lens-preserved-not-applied rule).
 
 ## Answered, awaiting enactment
 
