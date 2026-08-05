@@ -297,6 +297,7 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .q-assign{font-size:12.5px;color:var(--ink);margin:0 0 6px}
 .q-assign.flag{color:var(--signal-dk);background:var(--tint-note);border:1px solid #d6a48c;border-radius:var(--r-2);padding:6px 9px}
 .q-counts{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.q-bound{font-size:13px;background:var(--paper-2);border-left:3px solid var(--verdigris-dk);padding:8px 10px;margin:0 0 10px}
 .q-incomplete{font-size:12.5px;color:var(--muted);background:var(--tint-muted);border-radius:var(--r-2);padding:7px 10px;margin:0 0 8px;line-height:1.45}
 .q-gap{font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.45}
 .q-basis{font-size:12.5px;color:var(--muted);margin:0 0 8px}
@@ -8669,6 +8670,28 @@ function finderTextPanelHtml(t, overlapIds){
         ? `<table class="rec"><thead><tr><th class="pick"></th><th>Item</th><th>Type</th><th>State</th><th>Updated</th></tr></thead><tbody>${finderRowsHtml(t.hits, overlapIds)}</tbody></table>`
         : `<div class="empty">This route found nothing.</div>`);
 }
+/* ---- UI-39: ONE SENTENCE ABOUT WHAT A NAME LOOKUP CANNOT TELL YOU ----
+
+   The registry is reached by an EXACT match on the normalised alias
+   (`entitiesByAlias`: `WHERE a.alias_norm=?`), so NOT FOUND and NOT ENTERED are
+   different facts and this lookup cannot tell them apart. The finder has said so
+   correctly since REC-36. Forty screens away, `lookupSubject` said the OPPOSITE
+   as an affirmative claim — "a name that is not here has not been entered yet" —
+   which is FALSE about this record the moment a subject is registered under a
+   spelling the member did not type, and it is precisely the trap CLAUDE.md names:
+   absence at one level is not evidence of absence at the next.
+
+   THE FALSEHOOD IS DELETED BY SHARING THE TRUE SENTENCE, NOT BY WRITING A NEW ONE.
+   DEC-49 — who owns member-facing refusal wording — is OPEN, so this item is not
+   entitled to choose words for a member-facing absence, and it chooses none: the
+   words below are the ones ALREADY SHIPPED on the finder, lifted into one function
+   and rendered at both sites. Whoever DEC-49 hands this to owns ONE sentence
+   instead of two that contradict each other, and moving it moves both. The suite
+   pins the two sites as a RELATION — the same words in both places, no particular
+   words asserted — so a ruling can replace the wording without breaking the pin. */
+function registryNameBoundHtml(){
+  return `<b>What this route can and cannot find by name.</b> A typed name reaches the registry through an EXACT match on a subject&rsquo;s own names and aliases. A subject spelled differently in the record from the way you typed it here is not found, and this route cannot tell you it exists &mdash; the reverse read that would widen it does not exist yet.`;
+}
 function finderSubjectsPanelHtml(s, overlapIds){
   const head = `<h2 class="sec">Subjects</h2>`;
   if(!s || !s.asked)
@@ -8679,7 +8702,7 @@ function finderSubjectsPanelHtml(s, overlapIds){
      got two documents must still know that a third, spelled differently in the
      record, was never a candidate. */
   const bound = s.byId ? ""
-    : `<p class="subj-note" id="f-subj-bound"><b>What this route can and cannot find by name.</b> A typed name reaches the registry through an EXACT match on a subject&rsquo;s own names and aliases. A subject spelled differently in the record from the way you typed it here is not found, and this route cannot tell you it exists &mdash; the reverse read that would widen it does not exist yet. Address a subject by id with <span class="mono">concerns:ENT-&hellip;</span> and this bound does not apply.</p>`;
+    : `<p class="subj-note" id="f-subj-bound">${registryNameBoundHtml()} Address a subject by id with <span class="mono">concerns:ENT-&hellip;</span> and this bound does not apply.</p>`;
   const ents = (s.entities||[]).filter(e=>e.found);
   const entLine = ents.length
     ? `<p class="subj-note">${ents.length===1?"Subject":"Subjects"}: ${ents.map(e=>`<b>${esc((e.entity&&e.entity.label)||e.entity_id)}</b> <span class="mono">${esc(e.entity_id)}</span>`).join(", ")}${ents.length>1?" &mdash; this name is carried by more than one subject in the registry, and the record does not collapse that. Every one of them was asked.":""}</p>`
@@ -10062,11 +10085,19 @@ function queueReason(e){
    feed that failed, and the two are never collapsed. */
 function queueAbsent(e){ return !!(e && /unknown op/i.test(String(e.error || e.reason || ""))); }
 
+/* UI-39. What each feed ASKS FOR. Both ops cap — `op=queue` at 200 and
+   `op=tasks` at 200 — and both publish what they held back: the queue answers
+   `truncated` and `item_count`, and both answer a `counts` block counting the
+   WHOLE set rather than the page. All of it was read nowhere, so this screen
+   printed a page and a badge computed from that page's length as though the page
+   were the record's answer. Asked for explicitly, so the number the bound line
+   names is a number this surface can stand behind. */
+const QUEUE_LIMIT = 500, RESOLUTIONS_LIMIT = 500;
 async function queueLoadFeed(id){
   try{
     let data;
-    if(id === "queue")            data = await recR("queue");
-    else if(id === "resolutions") data = await recR("tasks", { status:"resolved" });
+    if(id === "queue")            data = await recR("queue", { limit:String(QUEUE_LIMIT) });
+    else if(id === "resolutions") data = await recR("tasks", { status:"resolved", limit:String(RESOLUTIONS_LIMIT) });
     else return { state:"failed", why:"this surface has no loader named for that feed" };
     /* The store can REFUSE inside a successful envelope. A refusal is the
        producer's and is rendered verbatim, and it makes the feed FAILED — never
@@ -10130,6 +10161,40 @@ function queueItems(){
 function queueResolutions(){
   const f = queueFeedState("resolutions");
   return (f.state === "answered" && f.data && Array.isArray(f.data.tasks)) ? f.data.tasks : [];
+}
+function queueResolutionsData(){
+  const f = queueFeedState("resolutions");
+  return (f.state === "answered" && f.data) ? f.data : null;
+}
+
+/* ---- UI-39: THE BOUND ON THIS SCREEN, STATED ----
+
+   Both feeds cap, both publish what they held back, and this screen read neither.
+   `op=queue` answers `truncated` and `item_count`; `op=tasks` answers a `counts`
+   block whose figures count the WHOLE set the viewer may see, not the page. So a
+   member on a busy record read a page of 200 as the queue, and the nav badge —
+   computed from `items.length` — put a page's size on the screen as a total.
+
+   TWO DIFFERENT FACTS, NEVER COLLAPSED. The queue's own `truncated` is the
+   plane SAYING it held items back. The resolutions feed publishes no truncation
+   flag, so its bound is INFERRED from the arithmetic the plane does publish
+   (`counts.resolved` against the rows delivered) and is worded as the inference
+   it is. A screen that reported the second in the first's voice would be
+   claiming a fact the record never gave it. */
+function queueBoundHtml(){
+  const rows = [];
+  const d = queueData();
+  if(d && d.truncated === true){
+    const n = Number(d.item_count);
+    rows.push(`<p class="q-bound"><b>This is not the whole queue.</b> The record says it held items back from this answer${Number.isFinite(n)?`, and sent ${n}`:""}. What is below is a page of what is waiting, not all of it.</p>`);
+  }
+  const r = queueResolutionsData();
+  const total = Number(r && r.counts && r.counts.resolved);
+  const got = Array.isArray(r && r.tasks) ? r.tasks.length : null;
+  if(Number.isFinite(total) && got != null && total > got){
+    rows.push(`<p class="q-bound"><b>Not everything that was answered is listed.</b> The record counts <b>${total}</b> resolved, and sent ${got}. The receipts below are that many, and the difference is older ones this screen did not ask for.</p>`);
+  }
+  return rows.join("");
 }
 
 /* ---- the AGE, and the one primitive ----
@@ -10515,7 +10580,16 @@ function queuePaint(){
   const shown = new Set(groups.map(g=>g.id));
   const orphanCases = [...byCase.keys()].filter(cid => !shown.has(cid));
 
-  const badge = $("#cnt-queue"); if(badge) badge.textContent = items.length ? String(items.length) : "";
+  /* UI-39. The badge is a COUNT OF THE PAGE, and when the plane says it held
+     items back the badge says so too — "12+" rather than "12". A bare figure over
+     a truncated answer is the smallest possible version of this item's defect and
+     the one a member sees most often, because the badge is on every screen. */
+  const badge = $("#cnt-queue");
+  if(badge){
+    const qd = queueData();
+    const more = !!(qd && qd.truncated === true);
+    badge.textContent = items.length ? String(items.length) + (more ? "+" : "") : "";
+  }
 
   const groupsHtml = groups.map(g => queueGroupHtml(g, byCase.get(g.id))).join("")
     + orphanCases.map(cid => `<section class="q-case" data-case="${esc(cid)}">
@@ -10547,6 +10621,7 @@ function queuePaint(){
     + queueFeedHtml()
     + queueAllClearHtml()
     + `<p class="q-rule">${esc(QUEUE_ORDER_RULE)}</p>`
+    + queueBoundHtml()
     + queueMuteReportHtml()
     + groupsHtml + ungroupedHtml + unknownHtml + emptyHtml;
   queueWire();
@@ -10757,7 +10832,12 @@ async function lookupSubject(){
     const r = await recR("entitybyalias", { alias:q });
     const ents = r.entities || [];
     if(ents.length === 0){
-      if(res) res.innerHTML = `<div class="empty">No subject in the registry is known by “${esc(q)}”. The registry holds only subjects a member has declared; a name that is not here has not been entered yet.</div>`;
+      /* UI-39. The clause that followed the semicolon here — "a name that is not
+         here has not been entered yet" — was an affirmative FALSE statement, and
+         it is gone rather than softened. The clause before it is true and stays.
+         What replaces the falsehood is the finder's own already-shipped sentence,
+         shared through one function so the two screens cannot drift again. */
+      if(res) res.innerHTML = `<div class="empty" id="subj-name-bound">No subject in the registry is known by &ldquo;${esc(q)}&rdquo;. The registry holds only subjects a member has declared. ${registryNameBoundHtml()} Address a subject by its id (<span class="mono">ENT-&hellip;</span>) and this bound does not apply.</div>`;
       return;
     }
     if(ents.length === 1){ await showEntity(ents[0].entity_id, ents[0]); return; }
@@ -11351,6 +11431,9 @@ async function resolvePreflight(){
     `<button class="intent-go" id="res-go" onclick="resolveGo()">Resolve this document&rsquo;s references to this subject</button>`,
     "Choose a document and the record will read its references.");
 }
+/* The number this screen asks op=readingname for. Asked, not assumed: the plane
+   clamps whatever it is given, and the sentence below states the ASK. */
+const RESOLVE_CAND_LIMIT = 500;
 async function loadResolveCandidates(){
   const out = $("#res-cands"); if(!out) return;
   const e = INTENT_SUBJ.entity;
@@ -11359,7 +11442,18 @@ async function loadResolveCandidates(){
      registered under into its own term index in one statement — so nothing here
      loops over names and nothing here knows how the join is done. */
   let ans = {};
-  try{ ans = (await recR("readingname", { entity:(e&&e.entity_id)||"" })) || {}; }catch(_){ ans = {}; }
+  /* UI-39: THE NUMERIC BOUND, ASKED FOR RATHER THAN INHERITED.
+     `op=readingname` caps its answer — the plane's own default is 100 — and,
+     unlike `op=search`, it publishes NEITHER the limit it applied NOR a total, so
+     there is nothing on the answer for this surface to read the bound off. The
+     honest move is therefore to SET it: a bound this screen chose is a bound this
+     screen can state truthfully, where a bound it merely inherited is one it can
+     only guess at. What is stated below is what this screen ASKS FOR, which is
+     true whatever the plane clamps to — and a clamp can only make the list
+     SHORTER than the sentence claims, which is UI-26's conservative direction.
+     THE PLANE PUBLISHING ITS OWN BOUND IS THE DURABLE FIX and is raised as a
+     delegation; until it does, this is the honest half the surface can hold. */
+  try{ ans = (await recR("readingname", { entity:(e&&e.entity_id)||"", limit:String(RESOLVE_CAND_LIMIT) })) || {}; }catch(_){ ans = {}; }
   /* The answer carries one candidate per document AND reference, ordered with
      the stronger correspondence first, so first-wins on the capture leaves each
      document showing the strongest way it corresponded.
@@ -11392,11 +11486,27 @@ async function loadResolveCandidates(){
      puts a WRONG subject on a document and the conservative direction is the one
      that does not assert. An unstated bound reads as completeness, which is why
      the sentence states one and never claims the list is all there is. */
+  /* UI-39: THE FIFTH CLAIM, AND IT IS THE ONE THE WORD-SCREEN COULD NOT SEE.
+     UI-26 pinned this sentence as FOUR SEPARATE CLAIMS — normalisation, alias
+     join, accents unfolded, absence-says-nothing — every one of them SEMANTIC.
+     The sentence never said HOW MANY, and UI-26's own finding is why that
+     mattered: an unstated bound uses no completeness word, so the completeness
+     screen stays green over a list that silently stops. The count bound is now
+     the fifth claim, stated on every answer rather than only when it bites,
+     because a bound a member is told about only sometimes is one they cannot
+     rely on. Which HALF it bounds is stated too: op=concerns below is uncapped,
+     so the already-resolved documents are whole and only the name-lookup half
+     stops — a bound reported over the wrong set would be its own overclaim. */
+  const candBound = ` This screen asks the record for at most ${RESOLVE_CAND_LIMIT} documents by name, so if more than that carry one of this subject&rsquo;s names, the ones past ${RESOLVE_CAND_LIMIT} are not on this list. (Documents already resolved to this subject are added separately and are not capped.)`;
+  const atBound = Number(ans.count) >= RESOLVE_CAND_LIMIT;
+  const atBoundNote = atBound
+    ? ` <b>This list is AT that limit</b> &mdash; ${RESOLVE_CAND_LIMIT} documents came back by name, which is every one this screen asked for, so there are very likely more it did not ask for.`
+    : "";
   const unusable = (ans.names_unusable||[]);
   const unusableNote = unusable.length
     ? ` ${unusable.length===1?"One name":`${unusable.length} names`} this subject is registered under &mdash; ${unusable.map(x=>`&ldquo;${esc(x)}&rdquo;`).join(", ")} &mdash; ${unusable.length===1?"has":"have"} no word in ${unusable.length===1?"it":"them"} to look anything up by, so nothing was looked up under ${unusable.length===1?"it":"them"}.`
     : "";
-  const note = `<p class="subj-note">These are the documents whose readings carry one of this subject&rsquo;s names &mdash; as the reference the source itself assigned, as that reference&rsquo;s key, or as the name the reading recorded &mdash; plus the ones already resolved to it. Nothing here is settled: these are candidates for you to confirm, and only resolving a document records anything. What the lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading recorded in none of those three places, or under a spelling none of its registered names reaches, is not here &mdash; and neither absence says anything about whether such a document exists.${unusableNote}</p>`;
+  const note = `<p class="subj-note">These are the documents whose readings carry one of this subject&rsquo;s names &mdash; as the reference the source itself assigned, as that reference&rsquo;s key, or as the name the reading recorded &mdash; plus the ones already resolved to it. Nothing here is settled: these are candidates for you to confirm, and only resolving a document records anything. What the lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading recorded in none of those three places, or under a spelling none of its registered names reaches, is not here &mdash; and neither absence says anything about whether such a document exists.${candBound}${atBoundNote}${unusableNote}</p>`;
   if(!INTENT_SUBJ.docs.length){
     out.innerHTML = note + `<div class="empty">No captured document&rsquo;s reading carries one of this subject&rsquo;s names &mdash; not as a reference, not as a reference key, and not as a recorded name.</div>`;
     return;
@@ -12868,6 +12978,13 @@ const ADD_TICKS = 8;
 /* When the source has published a CHANGED version of something the record already
    holds, both belong in the record and the new one should say which it follows. */
 let CHANGED_FROM = null;
+/* UI-39. When the held-check could NOT reach the end of what the record holds at
+   this address, it establishes nothing either way — and the completeness it would
+   otherwise imply is "nothing like this is here", the exact claim it is not
+   entitled to make. The fact travels into the BUNDLE BODY through the same
+   mechanism CHANGED_FROM uses, rather than into a progress line the next repaint
+   erases: a bound stated where nobody reads it is not stated. */
+let HELD_BOUNDED = null;
 
 function canContribute(){
   return !!(PLANE.session && PLANE.me && PLANE.me.session
@@ -13239,6 +13356,19 @@ function addErr(html){
 async function addGo(){
   if(ADD_BUSY) return;
   ADD_BUSY = true; addErr(""); addSay("");
+  /* BOTH CLEARED PER RUN, NEVER CARRIED: a fact measured about the LAST document
+     is not a fact about this one.
+
+     CHANGED_FROM's reset is a DEFECT FIX this item found rather than brought
+     (UI-39). It is assigned only inside the `if(loc)` branch below, so a typed
+     intake — an inquiry, a note, anything with no address — kept whatever the
+     PREVIOUS add had left there, and wrote into its body "The record already
+     holds an earlier capture of this same address (INFO-…)" naming a bundle it
+     has nothing to do with. That is the record stating something false about
+     itself in a document's own words, which is the failure this project ranks
+     above a missing feature; one line, at the only place that can hold it. */
+  HELD_BOUNDED = null;
+  CHANGED_FROM = null;
   const go = $("#a-go"); if(go) go.disabled = true;
   const type = ($("#a-type")||{}).value || "information";
   const title = (($("#a-title")||{}).value||"").trim();
@@ -13258,7 +13388,12 @@ async function addGo(){
       addSay(`<p class="count-line">Checking the record for this document&hellip;</p>`);
       const held = await heldMatch(doc.capture && doc.capture.sha256, loc,
         doc.capture && doc.capture.content_type, doc.file);
-      if(held && !held.proceed){
+      /* UI-39. A BOUNDED check is not a clean one, and it is handled BEFORE the
+         held branch because `bounded` carries no bundle: reading it as "already
+         held" would dereference nothing, and reading it as "not held" would let
+         a bound the member never saw decide a write. It is neither. */
+      HELD_BOUNDED = held && held.bounded ? held : null;
+      if(held && !held.bounded && !held.proceed){
         /* Already held, and the source is still serving the same document. Not an
            error, not a question, and not a lecture about why the bytes differed:
            one sentence, then the document it is already in. */
@@ -13283,10 +13418,23 @@ async function addGo(){
     const a = await recR("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
     const stem = a && a.id;
     const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    /* UI-39. The held-check's REACH is part of what this document is, so it goes
+       into the body beside the changed-from note and through the same mechanism.
+       A duplicate the record can explain is a different object from a duplicate
+       it cannot, and the difference is one sentence written at the only moment
+       anybody knows it. */
     const bodyText = CHANGED_FROM
       ? body + NL + NL + "The record already holds an earlier capture of this same address ("
              + CHANGED_FROM.bundle_id + "). The source has since published a changed document, so "
              + "this is a second capture rather than a repeat of the first."
+      : HELD_BOUNDED
+      ? body + NL + NL + "Whether the record already holds this document was NOT established before this "
+             + "was written. The check reads what the record holds at this address, and it "
+             + (HELD_BOUNDED.total == null
+                 ? "could not reach the end of that list."
+                 : "read " + HELD_BOUNDED.examined + " of the " + HELD_BOUNDED.total
+                   + " captures the record counts there.")
+             + " So this may be a second copy of a document already held, and nothing here says it is not."
       : body;
     const text = mdFor(id, type, vocabFor(FIRST_STATE, type), title, bodyText, now, !!doc,
       doc ? { locator: loc, authority: auth, retrieved: doc.retrieved || now,
@@ -13380,18 +13528,55 @@ const digestOf = async (b) => {
   const d = await crypto.subtle.digest("SHA-256", b);
   return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");
 };
+/* ---- UI-39: THE BOUND ON THIS READ GOVERNS A WRITE ----
+
+   `op=search` answers at the plane's LIMIT_DEFAULT of 50 (`bio-plane/src/query.mjs`)
+   and publishes `total` beside the page it served. Every OTHER site in this file
+   that dropped that bound narrowed a DISPLAY. This one decides whether `addGo`
+   calls `op=promote` — so a match at row 51 of an address the record already holds
+   sixty captures of was invisible here, `heldMatch` answered null, `CHANGED_FROM`
+   stayed null, and THE RECORD GREW A SECOND BUNDLE FOR ONE DOCUMENT carrying none
+   of the "a second capture rather than a repeat of the first" sentence that makes
+   a legitimate re-capture legible. The record then holds one document twice and
+   says nothing about it, which is the duplicate C-18.3's ring-once rule cannot
+   catch because it compares hashes WITHIN a single bundle.
+
+   So the address arm WALKS THE WHOLE ANSWER the plane counted, paging on the
+   plane's own `total`. `HELD_PAGE` is a REQUEST and never a copy of a plane
+   constant: the plane clamps whatever it is asked for and publishes the clamp, so
+   the walk advances by what ARRIVED and terminates on what the plane COUNTED. If
+   LIMIT_MAX moves tomorrow this still reaches the end.
+
+   Where the walk cannot reach the end, `heldMatch` says so rather than answering
+   null — because null here does not mean "not held", it means "not found", and
+   letting the write path read the second as the first is the whole defect. */
+const HELD_PAGE = 500;       /* asked for, not assumed: the plane clamps and publishes the clamp */
+const HELD_PAGES_MAX = 40;   /* 20,000 captures at ONE address before the walk states its bound */
 async function heldMatch(sha256, locator, contentType, name){
-  const search = async (q) => {
+  /* THE BOUND IS A REQUIRED ARGUMENT, not an optional bag spread in. Spreading
+     it made the bound invisible to the class sweep — the call site read
+     `{ q, ...extra }` and no walk anchored on the wire could tell whether a
+     caller had passed one. Naming it here means a call to this helper that
+     states no bound does not compile into anything sensible, which is the
+     difference between a rule and a habit. */
+  const search = async (q, limit, offset) => {
     try{
-      const r = await recR("search", { q });
+      const r = await recR("search", { q, limit:String(limit),
+                                       ...(offset ? { offset:String(offset) } : {}) });
       const hits = (r && (r.hits || r)) || [];
-      return Array.isArray(hits) ? hits : [];
-    }catch(_){ return []; }
+      return { hits: Array.isArray(hits) ? hits : [], answer: r };
+    }catch(_){ return { hits: [], answer: null }; }
   };
   /* The cheap key first: identical bytes are a question the store already
-     answers, and no comparison is needed to know the answer. */
+     answers, and no comparison is needed to know the answer.
+     THIS ARM ASKS FOR ONE ROW AND READS ONE ROW. `hash:sha256:` is an exact
+     field filter, so any row it returns is the match — but the bound is STATED
+     rather than inherited, because "this one does not need paging" is a judgement
+     the sweep cannot check and an unstated bound reads as completeness even when
+     it happens to be harmless. Asking for exactly what is read also makes the
+     wire cheaper, and it keeps every call to a bounded op uniform. */
   if(sha256){
-    const exact = (await search(`hash:sha256:${sha256}`))[0];
+    const exact = (await search(`hash:sha256:${sha256}`, 1)).hits[0];
     if(exact) return { bundle: exact, identical: true, changed: false, artifacts: [] };
   }
   if(!locator) return null;
@@ -13399,7 +13584,25 @@ async function heldMatch(sha256, locator, contentType, name){
      itself. Measured: two fetches of a Legistar calendar three seconds apart
      share no hash and differ only in page state, so a hash-only check lets the
      record grow a second bundle for one document with nothing complaining. */
-  for(const o of await search(`locator:"${String(locator).replace(/"/g,"")}"`)){
+  const q = `locator:"${String(locator).replace(/"/g,"")}"`;
+  const rows = []; let total = null, pages = 0, bounded = false;
+  for(;;){
+    const { hits, answer } = await search(q, HELD_PAGE, rows.length);
+    const t = Number(answer && answer.total);
+    if(Number.isFinite(t)) total = t;
+    const served = Number(answer && answer.limit);
+    for(const h of hits) rows.push(h);
+    pages++;
+    /* A SHORT PAGE IS THE END OF THE ANSWER, whatever anyone counted — measured
+       against what the plane said it served, falling back to what was asked. */
+    if(hits.length < (Number.isFinite(served) && served > 0 ? served : HELD_PAGE)) break;
+    if(total != null && rows.length >= total) break;
+    /* A FULL PAGE AND NO PUBLISHED COUNT. There is no honest way to call this the
+       end, so it is not called the end. */
+    if(total == null){ bounded = true; break; }
+    if(pages >= HELD_PAGES_MAX){ bounded = true; break; }
+  }
+  for(const o of rows){
     const p = await getProjection(o.bundle_id).catch(()=>null);
     const heldSha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
     if(!/^[0-9a-f]{64}$/.test(heldSha)) continue;
@@ -13422,7 +13625,11 @@ async function heldMatch(sha256, locator, contentType, name){
     return { bundle: o, identical: false, changed: true, verdict: v.verdict,
              artifacts: v.artifacts, profile: id.handler.key, proceed: true };
   }
-  return null;
+  /* NOT FOUND AND NOT HELD ARE DIFFERENT FACTS, and only one of them is a
+     licence to write. A walk that reached the end of the plane's own count
+     answers null and means "not held"; a walk that stopped short says which
+     bound stopped it, and the caller carries that into the record. */
+  return bounded ? { bounded: true, examined: rows.length, total } : null;
 }
 async function addCapture(locator, authority, wantSubs){
   let session = null, acq = null, ticks = 0;
