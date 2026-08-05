@@ -3724,6 +3724,12 @@ recommendation: **(a), as its own item, sequenced AFTER DEC-49 rules.** The disc
 cost of reversal: LOW — one template line plus a DEC49_SUBJECT row. The cost of NOT doing it is not symmetrical: every edition published meanwhile carries a disclosure nobody sees, and editions are permanent.
 
 ### DEC-58 · open
+
+**CONDUCT NOTE 2026-08-05 — THE QUESTION IS NOW MOOT, and closing it needs no ruling on the principle.** This entry asked whether *"numbers come from measurement, never from the surface"* admits an exception when the only alternative is a silence that reads as completeness. **It no longer has to.** REC-57 made eleven capped ops publish the bound they applied and whether they truncated; UI-41 then made every surface read the record's number instead of composing one, **enforced as a class rather than at the two known sites**, and where the record publishes no bound the surface now SAYS it does not know rather than substituting the figure it asked for. So the rule stands unamended and the exception it was raised to license does not exist in the code.
+
+**Recommendation: close as MOOT rather than answered** — no principle was decided, a dependency was removed. Left `open` rather than closed by CONDUCT because status is Bob's to set, and because if he would rather rule the principle explicitly (so a future session cannot re-open the exception by re-creating the gap), that is a ruling worth having and this entry is where it belongs.
+
+
 for: bob
 raised: 2026-08-05 · CONDUCT (from UI-39)
 subject: May a SURFACE author a bound the plane does not publish?
