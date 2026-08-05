@@ -842,6 +842,13 @@ export class Store extends DurableObject {
      because a Durable Object has a CPU budget: a large store finishes over
      successive constructions rather than timing out on one. */
   #backfillProjection(limit) {
+    /* REC-57: CLAMPED HERE RATHER THAN TRUSTED. `reproject` took `limit` straight
+       off a request body and handed it to SQL, so the bound this pass actually
+       applied depended on what a caller sent — including a string, or a number
+       big enough that the pass was not bounded at all. An op cannot publish the
+       bound it applied until it decides one, so deciding it is the first half of
+       publishing it. The construction-time callers pass 500 and are unaffected. */
+    limit = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
     const stale = this.#rows(
       `SELECT bundle_id, fm_json IS NULL AS need_proj, fts_id IS NULL AS need_text
          FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL ORDER BY bundle_id LIMIT ?`, limit);
@@ -855,6 +862,10 @@ export class Store extends DurableObject {
     }
     return {
       reprojected: n, reindexed: t,
+      /* REC-57: `remaining` was already here and is UNTOUCHED — it is this
+         backfill's honest "run me again", and no `truncated` is minted beside
+         it. `limit` is the bound this pass applied, after the clamp above. */
+      limit,
       remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL`).c,
     };
   }
@@ -1123,7 +1134,8 @@ export class Store extends DurableObject {
        allocated as MAX+1, so an orphan can be inherited by a later bundle and
        hand it a deleted document's text. */
     const orphans = this.#rows(
-      `SELECT rowid AS fts_id FROM bundles_fts WHERE rowid NOT IN (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL) LIMIT 100`)
+      `SELECT rowid AS fts_id FROM bundles_fts WHERE rowid NOT IN (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL) LIMIT ?`,
+      Store.SEARCH_ORPHAN_MAX)
       .map((r) => r.fts_id);
     const last = rows.length ? rows[rows.length - 1].bundle_id : null;
     return {
@@ -1137,7 +1149,23 @@ export class Store extends DurableObject {
                 indexed: this.#one(`SELECT count(*) c FROM bundles_fts`).c,
                 keyed: this.#one(`SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
                                  ...gate.args).c },
+      /* REC-57: `cursor` IS this op's truncation signal and is UNTOUCHED — a
+         non-null cursor says "there is more, resume here", which answers the
+         question a `truncated` flag would answer and answers it with the thing
+         a caller then needs. A second spelling is not added. What is added is
+         the bound that produced it. */
+      limit: cap,
       cursor: rows.length === cap ? last : null,
+      /* REC-57: THE ORPHAN LIST HAS ITS OWN, SEPARATE BOUND, hard-coded at 100
+         in the statement above, and nothing said so. `orphans.length === 100`
+         and "there are exactly 100 orphans" read alike, and `ok:false` below is
+         a COMPLETENESS CLAIM about index parity — so an operator repairing
+         orphans off this list could clear all 100, see the op still report
+         findings, and have no way to tell a partial list from a stuck repair.
+         Said separately from `limit`/`cursor` because it bounds a different
+         list and resuming it is a different question. */
+      orphans_limit: Store.SEARCH_ORPHAN_MAX,
+      orphans_truncated: orphans.length >= Store.SEARCH_ORPHAN_MAX,
       ok: findings.length === 0 && orphans.length === 0,
     };
   }
@@ -6153,6 +6181,13 @@ export class Store extends DurableObject {
       ok: true, checked: page.length, clean, withErrors, tally,
       ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
       offenders,
+      /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
+         them a caller can tell a full page from the whole corpus, so no second
+         spelling of that fact is minted. What was missing is the bound that
+         produced the page, and on THIS op it matters most: `checked` is the size
+         of one page and `ok` is a verdict over it, so "the audit is clean" and
+         "the first 200 are clean" published the same shape. */
+      limit: cap,
       cursor: page.length === cap ? last : null,
       total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
     };
@@ -6476,7 +6511,14 @@ export class Store extends DurableObject {
        has to learn a new answer. The total counts what the VIEWER may see:
        a count that included invisible rows would say "something is hidden",
        which is half the leak. */
-    return { bundles: rows, cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
+    /* REC-57: `cursor` and `total` were already here and are UNTOUCHED. `limit`
+       is the bound AFTER the 5000 ceiling, which is the half a caller could not
+       see: ask for 100000 and this op silently answers 5000, and until now the
+       only evidence of that was a `cursor` the caller had no figure to read
+       against. The unbounded arm above returns a bare array and applies NO cap,
+       so it has no bound to publish — a different answer, not a quieter one. */
+    return { bundles: rows, limit: cap,
+             cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
              total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
   }
 
@@ -7514,6 +7556,9 @@ export class Store extends DurableObject {
      excluded: that is a bounded cost the `examined` count reports, and it is the
      conservative direction now that being skipped means being invisible. */
   #backfillRefTerms(limit) {
+    /* REC-57: clamped, for #backfillProjection's reason — a bound taken from a
+       request body and passed to SQL unexamined is not a bound this op can name. */
+    limit = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
     const stale = this.#rows(
       `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_key, rr.label
          FROM reading_refs rr
@@ -7532,7 +7577,22 @@ export class Store extends DurableObject {
         }
       if (wrote) n++;
     }
-    return { indexed: n, examined: stale.length };
+    return {
+      indexed: n, examined: stale.length,
+      /* REC-57, and this one was NOT in the item's brief — it is the same defect
+         as `op=tasks` between two SIBLINGS one layer down. `#backfillProjection`
+         above publishes `remaining` and this one published only `examined`, the
+         count of what it TOOK, which equals the cap on exactly the run where more
+         is left. So `op=reproject` could tell an operator to run it again and
+         `op=reindexnames` could not, and the two backfills answered the same
+         question in two shapes. `remaining` is its sibling's word, deliberately,
+         rather than a third spelling. */
+      limit,
+      remaining: this.#one(
+        `SELECT count(*) c FROM reading_refs rr
+          WHERE NOT EXISTS (SELECT 1 FROM reading_ref_terms t
+                             WHERE t.capture_sha = rr.capture_sha AND t.ref = rr.ref)`).c,
+    };
   }
 
   /** Test and repair support, on `projectionClear`/`reproject`'s precedent
@@ -7652,6 +7712,14 @@ export class Store extends DurableObject {
     const cap = Math.max(1, Math.min(Number(limit) || 100, 500));
     const gate = this.#bundleGate("t.bundle_id", viewer);
     const found = new Map();
+    /* REC-57: THE BOUND BIT SOMEWHERE, and there are TWO places it can bite —
+       which is exactly why `count` could not be trusted to say so. Each alias's
+       own statement carries `LIMIT cap`, so an alias whose page FILLED may have
+       left rows this answer never saw; and the merged set is sliced to `cap` at
+       the end. Either one means "this is the first N", and both are tracked,
+       because reporting only the second would be honest about the arithmetic
+       this method can see and silent about the one it cannot. */
+    let aliasPageFilled = false;
     /* REC-40: the recogniser's tier per REFERENCE, computed once. */
     const tiers = new Map();
     /* A name that normalises to nothing (punctuation only) can look up nothing,
@@ -7664,6 +7732,7 @@ export class Store extends DurableObject {
       if (!terms.length) { unusable.push(a.alias); continue; }
       const rows = this.#rows(Store.#refTermsSql(terms.length, gate.sql),
         ...terms, ...gate.args, terms.length, cap);
+      if (rows.length >= cap) aliasPageFilled = true;
       for (const r of rows) {
         /* HOW it corresponded, said plainly, because these are not the same
            claim. The SOURCE says which of the reading's three strings carried
@@ -7720,15 +7789,31 @@ export class Store extends DurableObject {
       }
     }
     const rank = (c) => Store.#CORRESPONDENCE_RANK.indexOf(c.correspondence);
-    const documents = [...found.values()].sort((x, y) =>
+    const merged = [...found.values()].sort((x, y) =>
       (rank(x) - rank(y))
       || String(x.bundle_id).localeCompare(String(y.bundle_id))
       || String(x.capture_sha).localeCompare(String(y.capture_sha))
-      || String(x.ref).localeCompare(String(y.ref))).slice(0, cap);
+      || String(x.ref).localeCompare(String(y.ref)));
+    const documents = merged.slice(0, cap);
+    const truncated = merged.length > cap || aliasPageFilled;
     return {
       ok: true, entity_id: ent.entity_id, entity_label: ent.label, entity_kind: ent.kind,
       names_used: aliases.length - unusable.length, names_unusable: unusable,
       count: documents.length, documents,
+      /* REC-57 (UI-39's delegation): THE BOUND, AND WHETHER IT BIT. `count` is
+         the length of what was SENT and always was — which is precisely the
+         problem, because a full page and a complete answer produced the same
+         number and a consumer had no way to tell them apart. UI-39's surface
+         had to author its own bound and say "we asked for N" because the record
+         published none; this is the record publishing its own.
+         `limit` is the cap ACTUALLY APPLIED after clamping, never the number
+         the caller asked for: a caller who sends limit=5000 is answered at 500,
+         and echoing 5000 back would be a second way of lying about the same
+         fact. `op=search`'s spelling exactly (`limit` beside `total`/`offset`),
+         because two names for one fact is the drift this project keeps paying
+         for. */
+      limit: cap,
+      truncated,
       /* Said on every answer, empty or not, because an empty candidate list is
          the one a member is most likely to read as "no such document exists". */
       /* REC-40 RE-WIDENED THIS SENTENCE, and the old one is wrong rather than
@@ -7744,7 +7829,14 @@ export class Store extends DurableObject {
             + "the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name "
             + "merely sits inside a longer string and it would mint nothing. A document that carries this subject in "
             + "words the reading recorded in none of those three, or under a spelling none of its registered names "
-            + "reaches, is still not here, and its absence says nothing about whether it exists.",
+            + "reaches, is still not here, and its absence says nothing about whether it exists."
+            /* REC-57: the RECALL sentence above is about documents this lookup cannot
+               reach at all; this one is about documents it reached and did not send.
+               They are different claims and are said separately. */
+            + (truncated
+              ? ` THIS IS THE FIRST ${cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, `
+                + `so a count taken from this list is a floor and never a total.`
+              : ""),
     };
   }
 
@@ -9619,6 +9711,16 @@ export class Store extends DurableObject {
   /** How many subject bundles one FINDING derives its options from. An
    *  aggregated proposal spans N instances and therefore N documents; deriving
    *  acts over all of them would make one queue read O(corpus). */
+  /* REC-57: the orphan list inside searchIndexCheck was bounded by a literal
+     `LIMIT 100` buried in its statement, and the answer said nothing about it.
+     A bound an op publishes has to be a value the op can NAME, so the literal
+     becomes a named constant and the answer carries it. */
+  static SEARCH_ORPHAN_MAX = 100;
+  /* REC-57: `op=exportlog` read the append-only export log at a literal
+     `LIMIT 200` with no parameter and no published bound — the same shape, on
+     the one op whose whole sentence is a completeness claim to administrators. */
+  static EXPORT_LOG_LIMIT_DEFAULT = 200;
+  static EXPORT_LOG_LIMIT_MAX = 1000;
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
   /** REC-32. How many SUBJECT documents one CONDITION may gather before the
    *  gathering itself is reported `undetermined`.
@@ -10323,6 +10425,13 @@ export class Store extends DurableObject {
     const out = items.slice(0, cap);
     return {
       ok: true, member: me, items: out,
+      /* REC-57: `truncated` was already here and is UNTOUCHED — this op is the
+         one its siblings are being brought into line WITH, and adding a second
+         spelling of a fact it already publishes is the drift REC-55 declined.
+         What was missing is the other half of the pair: WHICH BOUND was
+         applied, so a caller that sees `truncated:true` knows what to ask for
+         next. `limit` is the cap after clamping, matching `op=search`. */
+      limit: cap,
       item_count: out.length, truncated: items.length > out.length,
       classes: Store.QUEUE_CLASSES,
       classes_deferred: Store.QUEUE_CLASSES_DEFERRED,
@@ -12863,10 +12972,31 @@ export class Store extends DurableObject {
             + "asserts about itself." };
   }
 
-  /** The log, readable by in-app administrators who cannot run an export. */
-  exportLog() {
-    return { ok: true, exports: this.#rows(
-      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT 200`) };
+  /** The log, readable by in-app administrators who cannot run an export.
+   *
+   *  REC-57 — NOT NAMED IN THE ITEM, and the worst instance of its class on the
+   *  roster. This op read the log at a literal `LIMIT 200` with no parameter at
+   *  all, and published neither the bound nor a truncation flag: an
+   *  administrator reading `exports` saw the newest 200 entries of an
+   *  APPEND-ONLY log and had no way to tell that from the whole of it. The
+   *  sentence the export manifest tells them is "this export is in the
+   *  append-only export log and is visible to every administrator" — a
+   *  completeness claim, which is exactly what UI-25 says an unstated bound
+   *  reads as. On a store past 200 exports, the export that is being looked for
+   *  is the one that has fallen off.
+   *
+   *  `limit` is now accepted (default 200, clamped to 1..1000) so a truncated
+   *  reader can ask for more, and the answer carries the bound it applied and
+   *  whether it bit. Ordering, columns and the `exports` key are unchanged, and
+   *  a caller that passes nothing gets byte-identical rows. */
+  exportLog({ limit = null } = {}) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.EXPORT_LOG_LIMIT_DEFAULT),
+                                     Store.EXPORT_LOG_LIMIT_MAX));
+    /* cap + 1 asked for, cap delivered: the extra row is the whole difference
+       between "there are 200 exports" and "here are the first 200". */
+    const page = this.#rows(
+      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT ?`, cap + 1);
+    return { ok: true, exports: page.slice(0, cap), limit: cap, truncated: page.length > cap };
   }
 
   /** 8.2: published-record reconstruction, requiring NOTHING.
@@ -15247,6 +15377,12 @@ export class Store extends DurableObject {
       out.drained++;
     }
     out.remaining = this.#one(`SELECT count(*) c FROM task_queue`).c;
+    /* REC-57: `remaining` was already here and is UNTOUCHED — it answers "is
+       this all of it" (a non-zero remainder says the queue is not drained), so
+       no `truncated` is minted beside it. The missing half is the bound: a
+       caller that sees work left needs to know what cap produced this pass to
+       decide between running it again and asking for a bigger one. */
+    out.limit = cap;
     return { ok: true, ...out };
   }
 
@@ -15272,14 +15408,29 @@ export class Store extends DurableObject {
     if (assignee) { where.push("tk.assignee = ?"); args.push(assignee); }
     if (status) { where.push("tk.status = ?"); args.push(status); }
     if (refersTo) { where.push("tk.refers_to = ?"); args.push(refersTo); }
-    const rows = this.#rows(
+    /* REC-57: cap + 1 asked for, cap delivered. `counts` cannot answer this and
+       never could — the three figures are per STATUS over the whole visible set
+       and take no notice of `assignee` or `refers`, so a caller filtering by
+       either was comparing its rows against a population they are not drawn
+       from. UI-39 inferred the bound from that arithmetic and worded it as an
+       inference because it was one; asking for one row past the cap is what
+       makes it a fact. */
+    const page = this.#rows(
       `SELECT tk.* FROM tasks tk WHERE ${where.join(" AND ")} ORDER BY tk.created DESC, tk.id LIMIT ?`,
-      ...args, cap);
+      ...args, cap + 1);
+    const rows = page.slice(0, cap);
     const n = (st) => this.#one(
       `SELECT count(*) c FROM tasks tk WHERE tk.status=? AND (${seen.sql})`, st, ...seen.args).c;
     return {
       ok: true,
       tasks: rows.map((r) => this.#taskOf(r)),
+      /* REC-57: THE BOUND, AND WHETHER IT BIT — `op=queue`'s spelling exactly.
+         These two ops sit on the same surface and answer the same question, and
+         until now `queue` published `truncated` and `tasks` did not, so a
+         consumer that read one correctly read the other wrongly. One shape, one
+         name; `limit` is the cap after clamping, matching `op=search`. */
+      limit: cap,
+      truncated: page.length > cap,
       counts: {
         open: n("open"),
         forwarded: n("forwarded"),
@@ -16570,7 +16721,10 @@ export class Store extends DurableObject {
         expertiseconfirm: () => this.expertiseConfirm(body || {}),
         expertiselist: () => this.expertiseList({ memberId: url.searchParams.get("memberId") }),
         export: () => this.exportManifest({ note: url.searchParams.get("note") }),
-        exportlog: () => this.exportLog(),
+        /* REC-57: `limit` forwarded from the wire so a truncated reader of the
+           append-only export log can ask for more. Absent, the op answers
+           exactly as it always did. */
+        exportlog: () => this.exportLog({ limit: url.searchParams.get("limit") }),
         publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),

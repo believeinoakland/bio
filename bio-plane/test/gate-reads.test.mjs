@@ -194,8 +194,24 @@ console.log("\n--- op=list: an uninvited member's list simply does not contain t
   const paged = await GET(`op=list&token=${dave}&limit=50`);
   t("the paged total counts what the viewer may see — a bigger total would say something is hidden",
     paged.body.result.total, 2);
+  /* CORRECTED 2026-08-05 (REC-57, IC-23), not exempted, and the reason matters
+     because this pin is a LEAK GUARD and widening one carelessly is how a leak
+     gets in. `limit` joined the paged answer: it is the BOUND THIS OP APPLIED
+     after clamping — a property of the request, identical for every viewer, and
+     derivable by the caller from the number it just sent. It counts nothing and
+     it is not viewer-dependent, so it cannot carry a withheld figure. The
+     assertion still enumerates the WHOLE key set rather than allow-listing, so
+     the next key added still has to come past this line. */
   t("no field of the paged answer discloses a withheld count",
-    Object.keys(paged.body.result).sort(), ["bundles", "cursor", "total"]);
+    Object.keys(paged.body.result).sort(), ["bundles", "cursor", "limit", "total"]);
+  /* The correction's own control: `limit` is the same for a viewer who may see
+     everything and one who may see two of four, while `total` is not. That is
+     the property that makes it safe here, asserted rather than asserted-about. */
+  const pagedAdmin = await GET("op=list&token=t-admin-rec25&limit=50");
+  t("REC-57: `limit` is viewer-INDEPENDENT — it is the bound applied, never a count of anything",
+    [paged.body.result.limit, pagedAdmin.body.result.limit], [50, 50]);
+  t("REC-57: while `total` IS viewer-dependent, which is why one is safe here and the other is gated",
+    paged.body.result.total !== pagedAdmin.body.result.total, true);
 }
 
 console.log("\n--- op=index: §7.9's 'one place the graph could escape' ---");
