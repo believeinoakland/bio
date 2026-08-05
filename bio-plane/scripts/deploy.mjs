@@ -68,9 +68,48 @@ async function batonHolder() {
   return { holder: holder[1], since: since ? since[1] : null };
 }
 
-/* The UI worker carries no version number in the shared repo and contends for
-   nothing, so it is not gated. Only a plane release is indivisible. */
-const GATED = slug !== "civicos";
+/* ---- D-201: this script deploys THE PLANE, and nothing else ----
+ *
+ * The metadata below is the plane's: it declares VERSION, INSTANCE_NAME and the
+ * two R2 buckets, and its keep_bindings is ["secret_text",
+ * "durable_object_namespace"] — which does NOT include `service`. Point this at
+ * a worker whose bindings are a different shape and the PUT does not merely
+ * deploy the wrong code, it DELETES the bindings that made that worker work.
+ *
+ * `civicos`, the UI worker, has exactly ONE binding — `service PLANE ->
+ * biosmoke7` — and it is what makes /api reach the plane at all. Deploying it
+ * through this script would drop that binding and leave the site serving HTML
+ * whose every request fails. Until now the only thing standing between that and
+ * a live outage was that nobody had tried it, and an earlier comment here said
+ * the UI "is not gated" — true about the BATON, and readable as permission.
+ *
+ * A slug ALLOWLIST is not available: plane instances are named by the groups
+ * that install them, so their slugs are arbitrary by design and cannot be
+ * enumerated here. What CAN be enumerated is the workers in this project that
+ * are known NOT to be planes, each with its own deploy path.
+ */
+const NOT_A_PLANE = {
+  civicos: "the UI worker. Its only binding is `service PLANE -> biosmoke7`, which this " +
+           "script's keep_bindings would delete. Deploy it with civicos-ui/deploy-ui.mjs, " +
+           "which carries the UI's own metadata and the same read-back-and-hash discipline.",
+  "pdf-worker": "a fleet member, not a plane. It reads R2 CAPTURES, holds no PUBLISHED " +
+                "binding and no Durable Object, and writes nothing — this script's metadata " +
+                "would bind it all three. Build it with pdf-worker/scripts/build.mjs.",
+};
+
+if (Object.hasOwn(NOT_A_PLANE, slug)) {
+  console.error(`REFUSING: \`${slug}\` is not a plane, and this script deploys the plane's metadata.`);
+  console.error(`  ${NOT_A_PLANE[slug]}`);
+  console.error("");
+  console.error("This refusal is D-201. The hazard is not the wrong code — it is that the PUT");
+  console.error("carries this script's bindings, so bindings the target worker needs and the");
+  console.error("plane does not are DELETED. Verifying the bytes afterwards would pass.");
+  process.exit(3);
+}
+
+/* Everything that reaches here is a plane, and a plane release is indivisible,
+   so the baton gates all of it. */
+const GATED = true;
 
 if (GATED) {
   if (forced !== null) {

@@ -60,38 +60,62 @@ suite is green at 103/103 with 0.55.0 still embedded, which is correct until you
 `CAPTURE`, whose session ended 2026-07-31 and never released it — a baton held by a session
 that no longer exists is the stale-lock shape that file exists to make visible.
 
-## The one thing blocking a release — **NO LONGER TRUE, corrected 2026-08-05 by CONDUCT**
+## The release seed — RESOLVED by DIST 2026-08-05, and **where it actually lives**
 
-**`BIO_RELEASE_SEED` IS on this machine and it is THE release key, not a new one.** The text
-below said it was absent and that is what the whole "deployed, not released" position rested
-on, so it is corrected here rather than left to be discovered. MEASURED 2026-08-05, and by
-USING the credential rather than printing it:
+**The seed is recovered and it is THE release key, not a new one. No rotation.** But the
+correction filed here at 05:35 by CONDUCT (715aa36) got the CAUSE backwards, and the cause is
+the part a future session needs, so it is corrected in turn with the timings.
 
-- The key is present in `.env` with a **68-character** value — not empty, as this file said.
-- Its envelope is `BIOKEY-RAW1.bio-release.…`, exactly the documented format, and it decodes
-  to a **32-byte** Ed25519 seed.
-- **Its derived public half is byte-identical to the trust root pinned in
-  `newgroup/src/index.mjs:73` `ARMED_SIGNERS`.** So this is the EXISTING signer: it is not a
-  rotation, it needs no `ARMED_SIGNERS` edit, no `newgroup` rebuild and no redeploy — the
-  expensive path the paragraphs below rightly warn against is NOT the path you are on.
-- The value does not appear anywhere in tracked repo content, so `tokens.mjs`'s
-  publication denylist does not treat it as revoked.
+**What CONDUCT measured was DIST's own write, four minutes earlier.** The sequence, and every
+timestamp is off the filesystem or the commit itself:
 
-**What this does NOT establish, and you must:** that gate step 5 passes end to end. Deriving
-a public key proves the seed is the right one; it does not sign anything. Run the gate's own
-SSHSIG path with its **four negative controls — altered bytes, wrong namespace, wrong key,
-and the previous release's signature against the new bytes, all four of which must fail to
-verify** — before you write `RELEASE.json` or cut a tag. CONDUCT deliberately did not sign
-anything: signing is DIST's gated act and this session is not DIST.
+| time (2026-08-05) | what happened |
+| --- | --- |
+| 05:31:0x | DIST reads `.env` at session start: **`BIO_RELEASE_SEED` EMPTY**, exactly as the handover said |
+| 05:31:42 | **DIST writes the seed into `.env`**, having found it OUTSIDE the repo (below) |
+| 05:33:35 | CONDUCT commits 6f9dd6f (the one-session-per-tree sweep) |
+| 05:35:29 | CONDUCT commits 715aa36: *"Measured today it is present with a 68-character value"* |
 
-**Still genuinely open and still Bob's:** whether to cut the release at all. The live plane
-runs 0.56.0 while `release/RELEASE.json` says 0.55.0, so a group installing through
-`newgroup` still receives 0.55.0 — that gap is a decision about distribution, not a missing
-credential. And `op=audit` is not clean (D-200, now owned by REC-54), which your gate step 8
-requires; closing that gap is RECORD's work and it is running.
+So the handover's premise was **CORRECT when written and when the DIST session opened**. It
+did not become false because it was wrong; it became false because DIST went and found the
+key. `715aa36`'s conclusion — *"only the premise was wrong"* — is the one thing in it that is
+not true, and it matters because it points the next session at `.env` as the key's home.
 
-The stale text is kept below because the format, the four controls and the rotation warning
-are all still correct and load-bearing — only the premise "the key is absent" was wrong.
+**`.env` IS NOT WHERE THE KEY LIVES.** `.env` is gitignored and machine-local: it does not
+survive a fresh clone, it is not on any other machine, and it was empty on this one for the
+whole life of the 0.56.0 deploy. The durable copy is:
+
+    /Users/sparky/Downloads/bio-signing-keys.txt        (mtime 2026-07-24)
+
+which holds BOTH `bio-release` and `bio-ratify` in the `BIOKEY-RAW1.<label>.<seed>` envelope,
+and whose date sits comfortably before 0.55.0 was cut — consistent with its being the key
+that signed it. **If `.env` is ever empty again, that file is the answer, not a rotation.**
+It is a browser download from `tools/sign-release.html`'s "Download as a file" button, which
+is why it is in `Downloads/` and why nothing in the repo references it.
+
+**It is the right key, and this was verified rather than assumed** — by deriving the public
+half from the seed and comparing, not by trusting the label:
+
+    derived: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl
+
+byte-identical to the trust root pinned at `newgroup/src/index.mjs:73` `ARMED_SIGNERS` and to
+the `signer` field of the 0.55.0 `RELEASE.json`. So: no `ARMED_SIGNERS` edit, no `newgroup`
+rebuild for the key's sake, no redeploy, and **every installer already distributed keeps
+working**. The expensive rotation path the paragraphs below warn about is not the path.
+
+**One thing worth Bob knowing, and it is not a blocker:** a signing key that only exists as a
+browser download in `~/Downloads` on one laptop is a single point of failure for the whole
+supply chain — losing it forces exactly the rotation this project has arranged to avoid.
+Where it gets backed up is his call, not a session's; the correct action is not to move,
+copy, or "tidy" it. Raised in the handover below.
+
+CONDUCT's own two riders were right and stand: deriving a public key proves the seed is the
+right one but signs nothing, so **gate step 5 and its four negative controls still have to
+pass** (they did — see the handover); and CONDUCT signed nothing, because signing is DIST's
+gated act.
+
+The text below is kept because the format note, the four controls and the rotation warning
+are all still correct and load-bearing.
 
 **`BIO_RELEASE_SEED` was recorded as not on this machine** — the key was present in `.env`
 but empty, and no in-tree script references it, so the signer is genuinely out-of-tree as
