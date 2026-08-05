@@ -558,6 +558,14 @@ const OPS = {
   /* A conformance pass over the whole store, run inside the Durable Object where
      the images already are. Read-only, paginated, and resumable by cursor. */
   audit:      { classes: ["admin", "member", "probe"],           mutating: false },
+  /* REC-54 / D-200. Rebuild a document's provenance chain FROM THE EVIDENCE the
+     capture record already holds, or refuse and name what is missing. Mutating,
+     but it REPORTS by default and writes only on `apply=1`, because every use of
+     it is a correction to the real record. NOT open to `daemon`: deciding that
+     the evidence supports a route is a named member's judgement, which is the
+     same line op=release and op=reopen already draw, and the whole risk this op
+     carries is a chain nobody witnessed being written by something unattended. */
+  provenancechain: { classes: ["admin", "member", "probe"],      mutating: true  },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -4592,6 +4600,11 @@ export default {
            as an absent one, and drops an invisible target with no id and no
            count. */
         || op === "earnedbasis"
+        /* REC-54: its subject is a bundle and it reads that bundle's register
+           before it rewrites it, so a document the caller may not see refuses
+           NO_SUCH_BUNDLE identically to an absent one. The store fails closed on
+           an absent stamp, like every op in this list. */
+        || op === "provenancechain"
         || QUEUE_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
@@ -4659,8 +4672,16 @@ export default {
        name this stamps is the name that goes against "these reasons were enough
        on their own", which is the one authored judgement in the record that
        makes a finding stronger. */
+    /* REC-54 joins them. Reconstructing a provenance chain is a named member's
+       judgement that the capture record supports the route being written — the
+       act D-200 exists to keep honest — so the name against it is stamped by the
+       server like every other authorship here, and a caller-supplied `author` is
+       overwritten rather than honoured. It is NOT added to STATE_ACTIONS: it
+       moves no state and applies to no selection, so it would inherit an `owner`
+       stamp and a set-application shape it does not have. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
-        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op))
+        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)
+        || op === "provenancechain")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

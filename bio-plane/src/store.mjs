@@ -2581,10 +2581,11 @@ export class Store extends DurableObject {
         requires verifying its co-attestations (doctrine section 3, F4), which
         is per-document work, and a batch containing crucial material is by
         definition not a low-variance collection.
-     4. NOTHING VERIFIED HERE AUDITS DIRTY. C-2.7's verified-state entry
-        requirements (well-formed content_hash, data/dataset.json, a file in
-        snapshots/) are checked per member BEFORE any state moves, offenders
-        named, set refused whole. */
+     4. NOTHING VERIFIED HERE AUDITS DIRTY. The verified-state entry
+        requirements — C-2.7's (well-formed content_hash, data/dataset.json, a
+        file in snapshots/) and, as of REC-54/D-200, C-18.9's provenance chain —
+        are checked per member BEFORE any state moves, offenders named, set
+        refused whole. */
   release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
@@ -2631,6 +2632,38 @@ export class Store extends DurableObject {
         missing.push("data/dataset.json");
       if (!this.#one(`SELECT 1 AS x FROM files WHERE bundle_id=? AND path LIKE 'snapshots/%' LIMIT 1`, id))
         missing.push("a file in snapshots/");
+      /* REC-54 / D-200: THE CHAIN IS AN ENTRY REQUIREMENT OF `verified`, and its
+         absence here is the write path the ten live bundles are a symptom of.
+         The catalog runs at op=ratify and NOWHERE ELSE — `runGate` has exactly
+         one call site — so this batch path, which is the OTHER way an
+         Information document reaches `verified`, checked three of C-2.7's entry
+         requirements and never asked C-18.9's question at all. A member could
+         release a hundred documents to verified, every one publishing a hash
+         that claims a route none of them names, and nothing in the plane would
+         object until an audit swept them afterwards. Checked HERE rather than
+         by running the whole catalog because this block is already the
+         entry-requirement gate and the refusal shape (`ENTRY_REQUIREMENTS`, the
+         offenders named, the set refused whole) is the one a caller of this op
+         already gets — a chain missing at release is the same KIND of fact as a
+         missing content_hash, and telling a member about it in a different
+         shape at a different moment would be the same defect wearing a
+         different hat. VERIFICATION.md 3a is the rule this satisfies: a rule
+         enforced in N places carries an assertion at EACH place, so the suite
+         asserts the audit arm AND this arm separately rather than letting one
+         absorb the other. */
+      const provRow = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
+      if (provRow && provRow.content !== null) {
+        let preg = null;
+        try { preg = JSON.parse(provRow.content); } catch { preg = null; }
+        const pdocs = preg && Array.isArray(preg.documents) ? preg.documents : [];
+        const noChain = [];
+        pdocs.forEach((d, di) => {
+          const ch = d && typeof d === "object" ? d.provenance_chain : undefined;
+          if (!Array.isArray(ch) || ch.length === 0) noChain.push(di);
+        });
+        if (noChain.length)
+          missing.push(`a provenance_chain for documents[${noChain.join("], documents[")}] (C-18.9)`);
+      }
       if (missing.length) entry.push({ id, missing });
     }
     if (notInfo.length)
@@ -2651,9 +2684,10 @@ export class Store extends DurableObject {
     if (entry.length)
       return { ok: false, reason: "ENTRY_REQUIREMENTS",
                offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "verified state has entry requirements (C-2.7): a well-formed content_hash, "
-                     + "data/dataset.json, and at least one file in snapshots/. Releasing these as they "
-                     + "stand would mint bundles the catalog immediately rejects." };
+               detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
+                     + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
+                     + "for every document in the register (C-18.9). Releasing these as they stand would mint "
+                     + "bundles the catalog immediately rejects." };
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     const released = [];
@@ -6064,6 +6098,222 @@ export class Store extends DurableObject {
       cursor: page.length === cap ? last : null,
       total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
     };
+  }
+
+  /* REC-54 / D-200: DERIVE a provenance chain from what the capture record
+   * ACTUALLY HOLDS, or refuse and say what is missing. Nothing here invents a
+   * hop, and the difference between deriving and inventing is the whole item.
+   *
+   * WHAT MAKES THIS A RECONSTRUCTION RATHER THAN A BACK-DATING. The ten bundles
+   * D-200 names were captured 2026-07-19..22; C-18.9's chain requirement was
+   * written 2026-07-31. The chain FIELD was never populated because the field
+   * did not exist yet — but the FACTS a hop carries were recorded at capture
+   * time, in the same register, by the path that fetched the bytes: `locator`
+   * (the address asked), `retrieved` (the instant), `capture.method` and
+   * `capture.actor_class` (who asked), `capture.sha256` (what came back). This
+   * moves those recorded facts into the field that now has to carry them. It
+   * asserts NOTHING the register did not already assert, which is exactly the
+   * test: if a fact is not already in the record, no hop may claim it.
+   *
+   * THREE RULES THAT ARE THE POINT, not implementation detail:
+   *
+   *  1. EVERY HOP IS STAMPED `reconstructed`. A chain derived today must not be
+   *     readable as one recorded at capture. Without the stamp the record would
+   *     silently claim these routes were witnessed when they were re-derived,
+   *     and THAT is the back-dating the gate exists to prevent — the invention
+   *     is not in the hop's content, it is in letting it pass as contemporaneous.
+   *
+   *  2. `co_archive` IS NEVER A HOP. Eight of the ten carry an archive.org
+   *     replay URL, and it is tempting to read it as a second hop. It is not: it
+   *     records that we ALSO asked an archive to keep a copy, not that the bytes
+   *     REACHED US THROUGH one. Writing it as a hop would state the capture was
+   *     archive-sourced, which is a WEAKER route than what happened, and would
+   *     contradict the `grade: B` the register already carries — B being what a
+   *     direct capture by this instance earns (EARNED_CAPTURE_CEILING). The
+   *     recorded grade is itself evidence the route was direct and single-hop.
+   *
+   *  3. REFUSAL IS A REAL OUTCOME AND NAMES WHAT IS MISSING. A document whose
+   *     route was never recorded is `undetermined`, and undetermined is
+   *     first-class and must be STATED (CLAUDE.md). It is not repaired here.
+   */
+  static chainFromEvidence(doc, { instanceName = "unnamed", at = null } = {}) {
+    if (!doc || typeof doc !== "object")
+      return { ok: false, missing: ["the document entry is not an object"] };
+    const str = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+    const cap = doc.capture && typeof doc.capture === "object" ? doc.capture : {};
+    const method = str(cap.method);
+    const sha = str(cap.sha256);
+    const retrieved = str(doc.retrieved);
+    const locator = str(doc.locator);
+    const custody = doc.custody && typeof doc.custody === "object" ? doc.custody : null;
+    const holder = custody ? str(custody.holder) : null;
+    const obtained = custody ? str(custody.obtained) : null;
+    const tsr = doc.timestamp && typeof doc.timestamp === "object" ? doc.timestamp : null;
+    const tsrAuth = tsr ? str(tsr.authority) : null;
+    const tsrFile = tsr ? str(tsr.token_file) : null;
+    /* The timestamp token binds THE BYTES TO AN INSTANT and says nothing about
+       where they came from, so it is cited as evidence and never as the hop's
+       attestor, and it never flips `bound` to true: what is unbound here is the
+       locator-to-bytes link, which is precisely what a TSR does not cover. */
+    const tsrNote = tsrAuth && tsrFile
+      ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address`
+      : "";
+    const stamp = (from) => ({
+      at: at || new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+      by: "op=provenancechain (REC-54)",
+      basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
+      from,
+    });
+
+    /* ARM A — A ROUTE THAT WAS FETCHED. The register names an address, an
+       instant and a method, so our own leg is reconstructible: we know what we
+       asked for and when, which is the one leg C-18.9's doctrine says we always
+       know. `bound: false` because the assertion is STATED, exactly as
+       op=acquire's own direct hop states it. */
+    if (method && retrieved && locator && locator !== "in hand") {
+      const actor = str(cap.actor_class);
+      return { ok: true, hops: [{
+        who: `instance ${instanceName} (${actor ? `${actor} ` : ""}capture method ${method})`,
+        asserts: `these bytes were served for ${locator} at ${retrieved}`,
+        evidence: `${method}, sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+        bound: false,
+        via: "direct",
+        reconstructed: stamp(["locator", "retrieved", "capture.method", "capture.actor_class", "capture.sha256"]),
+      }] };
+    }
+
+    /* ARM B — A MEMBER ORIGINAL. There is no fetch to describe: the bytes were
+       handed to the record by a person, and the custody block is the record of
+       who held them and in what setting. That IS the chain, and the attestor is
+       the member rather than the instance. */
+    if (holder && obtained) {
+      return { ok: true, hops: [{
+        who: `member ${holder}`,
+        asserts: `this member held these bytes and supplied them to the record at ${obtained}`,
+        evidence: `${str(custody.setting) || "setting not recorded"}${str(custody.attestation) ? `; ${str(custody.attestation)}` : ""}`
+                + `; sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+        bound: false,
+        via: "member",
+        reconstructed: stamp(["custody.holder", "custody.obtained", "custody.setting", "custody.attestation", "capture.sha256"]),
+      }] };
+    }
+
+    /* NEITHER ARM. Say what is absent rather than guessing between them. */
+    const missing = [];
+    if (!locator || locator === "in hand") missing.push("a fetched address (`locator`)");
+    if (!retrieved) missing.push("the instant it was retrieved (`retrieved`)");
+    if (!method) missing.push("how it was captured (`capture.method`)");
+    if (!holder) missing.push("a named custodian (`custody.holder`)");
+    if (!obtained) missing.push("when the custodian obtained it (`custody.obtained`)");
+    return { ok: false, missing };
+  }
+
+  /** REC-54 / D-200: rebuild the provenance chains of ONE bundle from the
+   *  evidence its own capture record holds, through the plane's own write path.
+   *
+   *  Reports before it writes and writes nothing unless `apply` is set, because
+   *  the dispositions this exists for are corrections to the REAL record and
+   *  each one is a decision that wants its evidence read first.
+   *
+   *  A document that ALREADY has a chain is never touched — overwriting a
+   *  recorded route with a derived one would destroy the better evidence and
+   *  replace a witnessed chain with a reconstructed one.
+   *
+   *  The bundle is refused WHOLE when any document cannot be derived, on
+   *  release()'s precedent: a register half-reconstructed is a record where the
+   *  reader cannot tell which documents were established and which were skipped.
+   */
+  provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who)
+      return { ok: false, reason: "NO_AUTHOR",
+               detail: "reconstructing a provenance chain is a named act: the record must show who decided "
+                     + "that the evidence supported this route" };
+    if (!bundleId)
+      return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+    const gate = viewerPredicate(viewer);
+    const seen = this.#one(
+      `SELECT bundle_id, bundle_sha, object_type, group_id, title, current_state, prior_state,
+              created, last_updated, criticality
+         FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
+    if (!seen)
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId };
+    const img = this.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    if (typeof raw !== "string")
+      return { ok: false, reason: "NO_REGISTER",
+               detail: "this bundle carries no readable data/provenance.json, so there is no capture record to derive from" };
+    let reg;
+    try { reg = JSON.parse(raw); } catch {
+      return { ok: false, reason: "UNPARSABLE_REGISTER", detail: "data/provenance.json is not valid JSON" };
+    }
+    const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+    if (!docs)
+      return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
+
+    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const instanceName = (this.env && this.env.INSTANCE_NAME) || "unnamed";
+    const report = [], refused = [];
+    let changed = 0;
+    const next = docs.map((d, i) => {
+      const existing = d && typeof d === "object" ? d.provenance_chain : undefined;
+      if (Array.isArray(existing) && existing.length) {
+        report.push({ index: i, file: d.file ?? null, outcome: "already_recorded", hops: existing.length });
+        return d;
+      }
+      const built = Store.chainFromEvidence(d, { instanceName, at });
+      if (!built.ok) {
+        report.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+        refused.push(i);
+        return d;
+      }
+      changed++;
+      report.push({ index: i, file: (d && d.file) ?? null, outcome: "reconstructed",
+                    hops: built.hops.length, who: built.hops.map((h) => h.who) });
+      return { ...d, provenance_chain: built.hops };
+    });
+
+    if (refused.length)
+      return { ok: false, reason: "EVIDENCE_INSUFFICIENT", bundleId, documents: report,
+               detail: "the capture record does not hold a route for every document in this register, and a "
+                     + "chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was "
+                     + "written. Stating the route these bytes took would be an invention, which is the one "
+                     + "thing this path exists to refuse." };
+    if (!apply || !changed)
+      return { ok: true, bundleId, applied: false, changed, documents: report,
+               detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain" };
+
+    /* Through promote, the plane's own write path, carrying every other file
+       BYTE-FOR-BYTE. bundle.md is NOT touched: this corrects the register, and
+       inventing a state transition or a new last_updated to describe that would
+       be a second claim nobody made. */
+    const text = JSON.stringify({ ...reg, documents: next }, null, 2);
+    const bytes = new TextEncoder().encode(text);
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'data/provenance.json'`, bundleId))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    /* `meta` is rebuilt from THE ROW THIS BUNDLE ALREADY HAS, not from the
+       frontmatter, and the difference is not cosmetic: bundle.md is deliberately
+       not touched here, so every one of these values must come back UNCHANGED,
+       and reading them from the projection is what guarantees that. Deriving
+       them from frontmatter instead made a bundle whose document omits `created`
+       fail promote's NOT NULL — a correction to the register destroying the
+       bundle's identity over a field this operation has no business touching. */
+    const promoted = this.promote({
+      bundleId, base: seen.bundle_sha, snapKey: `${at.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "data/provenance.json", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: seen.object_type, group: seen.group_id, title: seen.title,
+              current_state: seen.current_state, prior_state: seen.prior_state ?? null,
+              created: seen.created, last_updated: seen.last_updated,
+              criticality: seen.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, bundleId, documents: report };
+    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.sha ?? null };
   }
 
   /** The byte-complete image the gate consumes. One bundle, one call, no
@@ -16156,6 +16406,16 @@ export class Store extends DurableObject {
           acknowledgment: url.searchParams.get("acknowledgment"),
           mitigation: url.searchParams.get("mitigation"),
           viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
+          author: url.searchParams.get("author") }),
+        /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a
+           correction to a named document's register, not a set application, so
+           it takes the target and the viewer/author stamps the control plane
+           sets. `apply` is opt-in — the default is a REPORT, because every use
+           of this is a decision about the real record. */
+        provenancechain: () => this.provenanceChainRebuild({
+          bundleId: url.searchParams.get("bundleId"),
+          apply: url.searchParams.get("apply") === "1",
+          viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         dispose: () => this.dispose({ handle: url.searchParams.get("handle"),
           to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),

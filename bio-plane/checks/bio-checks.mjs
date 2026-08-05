@@ -1236,10 +1236,32 @@ function checkAuthorityPublishable(ctx, findings) {
   docs.forEach((d, i) => {
     if (!d || typeof d !== 'object') return; // C-18.1 reports the shape
     const chain = d.provenance_chain;
-    if (!Array.isArray(chain) || chain.length === 0) {
-      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified with no provenance_chain: a published hash claims these bytes came from somewhere by some route, and this document names none`,
+    /* REC-54 / D-200, 2026-08-05: THESE WERE ONE FINDING AND THEY ARE THREE
+       DIFFERENT FACTS ABOUT THE RECORD. `!Array.isArray(chain) || chain.length
+       === 0` collapsed "nobody ever recorded a chain here", "something wrote a
+       chain field that is not a chain" and "somebody recorded a chain and it
+       came out empty" into one message reading "with no provenance_chain".
+       They are not the same claim and they do not have the same repair: the
+       first is a gap in what was captured, the second is a writer producing
+       malformed output, and the third is a derivation that RAN and FOUND
+       NOTHING — which is a statement about the route, not an absence of one.
+       An operator reading the audit could not tell which they had, and the ten
+       live bundles D-200 names are ALL the first kind (measured 2026-08-05:
+       every one has the key ABSENT, not empty), a fact the old message could
+       not express. Nothing is weakened: every input that produced an error
+       before produces an error now, which `provenance-chain.test.mjs` asserts
+       arm by arm rather than leaving to inspection. */
+    if (!('provenance_chain' in d)) {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
         ['record the chain of custody for this capture, one hop per party, from us back to the source',
-         'or return the bundle to collected until the chain can be stated']));
+         'or, where the capture record already holds the route, derive it from that evidence with op=provenancechain']));
+    } else if (!Array.isArray(chain)) {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and its provenance_chain is ${chain === null ? 'null' : typeof chain}, not an array of hops: whatever wrote this did not write a chain`,
+        ['record the chain of custody as an array of hops, one per party, from us back to the source']));
+    } else if (chain.length === 0) {
+      findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
+        ['name the parties that actually served these bytes, one hop each',
+         'or state plainly that the route is undetermined rather than leaving an empty chain standing at verified']));
     } else {
       chain.forEach((hop, h) => {
         if (!hop || typeof hop !== 'object' || typeof hop.who !== 'string' || hop.who.trim() === '') {
