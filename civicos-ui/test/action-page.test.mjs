@@ -164,16 +164,25 @@ const PUBLISHED = {
    here published FOUR. This harness had never driven the intake the real
    application draws, and nothing could have told anybody.
 
-   WHAT IS NOT TIED, and it is a finding rather than an omission: the four
-   RESOLUTIONS below have no published home. They are enforced twice — an inline
-   literal in `bio-checks.mjs` C-2.10 and a second array in `store.mjs`
-   `actionMove()` — and `VOCABULARIES` does not carry them, so there is nothing to
-   import and the surface can only learn them from the store's own refusal (which
-   is what it does, and which this harness drives). Raised for CONDUCT rather
-   than closed here: publishing them is REC ground, not UI's.
+   WHAT IS NOT TIED — **CORRECTED 2026-08-05 (UI-25), AND THE OLD NOTE WAS
+   RIGHT WHEN IT WAS WRITTEN AND IS NOW FALSE ON EVERY CLAUSE.** It said the
+   four RESOLUTIONS had no published home, were enforced twice from two separate
+   literals, and could be learned by a surface only from the store's own
+   refusal. REC-39 closed all three: `RESOLUTIONS` is EXPORTED from
+   `bio-checks.mjs`, `store.mjs actionMove()` imports it instead of holding a
+   second array, and `affordances.mjs` publishes it as
+   `VOCABULARIES.resolutions`. So the literal that stood here had a source to be
+   tied to, and CLAUDE.md's rule is to CORRECT the assertion with a dated reason
+   rather than exempt it. It joins the tie below.
+
+   AND THE TIE IS WORTH MORE HERE THAN THE WORDS SUGGEST. Four words this file
+   typed out happened to agree with four words the plane enforces, and an
+   agreement that costs nothing to produce is not evidence — the same
+   measurement REC-38 made on `ACTION_KINDS` in this very file, where the
+   literal published FOUR of the plane's EIGHT and nothing could have said so.
    ============================================================ */
 import { VOCABULARIES } from "../../bio-plane/src/affordances.mjs";
-import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
+import { STATES, RESOLUTIONS as PLANE_RESOLUTIONS } from "../../bio-plane/checks/bio-checks.mjs";
 
 /* The plane's published vocabularies, as `op=affordances` answers them.
    `action_basis_kinds` is WITHHELD to begin with — not because the plane no
@@ -190,9 +199,11 @@ let VOCAB = { action_kind: VOCABULARIES.action_kind };
    deciding what an action may do. */
 const LEGAL = STATES.action.legal;
 const EDGES = STATES.action.edges;
-/* NOT PUBLISHED ANYWHERE — see the block above. Harvested by the surface from
-   the store's own refusal, which is the only source there is. */
-const RESOLUTIONS = ["complied","denied","escalated","withdrawn"];
+/* TIED 2026-08-05 (UI-25) — see the corrected block above. The refusal this
+   mock answers now carries the plane's OWN array, so a word that moves in
+   `bio-checks.mjs` moves here, and the surface is driven against the four the
+   record actually enforces rather than four this file remembered. */
+const RESOLUTIONS = PLANE_RESOLUTIONS;
 const DIRECTIONS = VOCABULARIES.correspondence_directions;
 
 /* THE TIE'S OWN NEGATIVE CONTROL, standing rather than run once.
@@ -238,11 +249,29 @@ const DIRECTIONS = VOCABULARIES.correspondence_directions;
       ["planned","active","awaiting_response","resolved","abandoned"].every(s=>LEGAL.includes(s)),
     "the one move the ILLEGAL_TRANSITION arm relies on being absent":
       !(EDGES.planned||[]).includes("resolved"),
+    /* UI-25's rider. The four words this harness names in the resolution
+       assertions, pinned to the plane's own array by name — so a rename in
+       `bio-checks.mjs` fails HERE saying which word moved, instead of the mock
+       and the assertions moving together and the drift being invisible. */
+    "the four resolutions the resolve dialog is asserted to offer":
+      ["complied","denied","escalated","withdrawn"].every(r=>PLANE_RESOLUTIONS.includes(r)),
   };
   for(const [what, held] of Object.entries(named))
     ok("THE TIE: the plane still publishes " + what, held);
   ok("THE TIE: this harness drives the plane's WHOLE action-kind set, not a subset of it",
      VOCAB.action_kind === VOCABULARIES.action_kind && VOCABULARIES.action_kind.length >= 8);
+  /* UI-25: and the WHOLE resolution set, on the ACTION_KINDS precedent — a
+     literal agreeing on a SUBSET is the failure REC-38 measured in this file. */
+  ok("THE TIE: this harness drives the plane's WHOLE resolution set, not a subset of it",
+     RESOLUTIONS === PLANE_RESOLUTIONS && PLANE_RESOLUTIONS.length >= 4);
+  /* THE RELATION REC-39 CREATED, PINNED RATHER THAN ASSUMED. The enforcement
+     lives in `bio-checks.mjs` and the PUBLICATION in `affordances.mjs`; they are
+     the same array today, and if they ever stop being it, a surface reading the
+     publication would offer a member a word the record refuses. This asserts no
+     VALUE — it rules nothing about what the four words should be — and it is
+     the assertion that would catch that split. */
+  ok("THE TIE: what op=affordances PUBLISHES as resolutions is the array C-2.10 ENFORCES, not a copy of it",
+     VOCABULARIES.resolutions === PLANE_RESOLUTIONS);
 }
 
 const DUE = "2026-09-10";

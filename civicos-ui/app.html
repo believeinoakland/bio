@@ -7547,21 +7547,103 @@ function citeRefusalHtml(r){
   return actRefusalHtml(r) + (parts.length ? `<div class="card" style="margin-top:8px">${parts.join("")}</div>` : "");
 }
 
+/* ============================================================
+   THE DRIFT REPORT, AND THE TWO KINDS ARE DIFFERENT FACTS (UI-25).
+
+   ONE FUNCTION, reached from the finder's lease card AND from the cite receipt,
+   on UI-27's precedent: a selection cannot be described one way on the screen
+   that holds it and another way on the receipt for the act that consumed it.
+
+   `op=selection` reports drift in TWO SHAPES, because the plane STORES two
+   different things and the difference is not a presentation detail:
+
+     ENUMERATED — the ROWS are stored. So the record names WHICH row was
+       revised, WHICH is gone from the record and WHICH is no longer visible to
+       this credential, by id. `added` is always zero, and that is a fact rather
+       than an omission: the member picked rows, so a bundle that STARTED
+       matching is not something they asked for.
+
+     QUERY — the CRITERION is stored and the rows are not. The record can say
+       THAT its answer changed and BY HOW MANY, and it CANNOT say WHICH rows
+       moved. There is no per-row report to render, and inventing one — or
+       letting the silence read as "no row changed" — is the whole defect this
+       function exists to prevent.
+
+   AND `digestChanged` IS NOT `moved`. The plane computes
+   `moved = revised.length + removed + added > 0`, and all three are ZERO for a
+   query selection whose answer swapped one document for another AT A CONSTANT
+   COUNT — while `digestChanged` is TRUE. A surface keyed on `moved` alone would
+   tell that member "nothing moved" over a set that is not the set they hold. So
+   the query arm reads `digestChanged`, and the count delta is reported BESIDE
+   it rather than AS it.
+   ============================================================ */
+function selectionIsQuery(x){
+  /* THE KIND IS THE RECORD'S OWN WORD, read from whichever of the two places
+     the plane put it — `kind` on the lease answer, `drift.kind` on the
+     re-resolution. Never inferred from the absence of ids: an enumerated
+     selection whose every row went hidden also has no ids left. */
+  if(!x) return false;
+  if(x.drift && x.drift.kind) return x.drift.kind === "query";
+  return x.kind === "query";
+}
+/* THE MOVEMENT QUESTION, ASKED THE WAY EACH KIND CAN ANSWER IT. */
+function selectionMoved(x){
+  if(!x) return false;
+  return selectionIsQuery(x) ? !!(x.drift && x.drift.digestChanged) : !!x.moved;
+}
+function selectionDriftHtml(d){
+  if(!d) return "";
+  const rows = [];
+  const idl = arr => arr.map(x=>`<span class="mono">${esc(String(x && x.bundleId ? x.bundleId : x))}</span>`).join(", ");
+  if(d.kind === "query"){
+    /* THE QUERY ARM. No per-row list is rendered because none exists, and the
+       ABSENCE IS STATED rather than left to be inferred — an unstated bound
+       reads as completeness (UI-26 measured exactly that), and this is that
+       rule applied to a drift report. */
+    if(!d.digestChanged)
+      return `<div class="kv"><span class="k">What the record compared</span><span class="v plain">The record ran your question again and got back the same documents in the same order. It holds the question rather than a list, so this is a comparison of the WHOLE answer &mdash; it is not a check of each document one by one, and it was never going to be.</span></div>`;
+    rows.push(`<div class="kv"><span class="k">What the record can say</span><span class="v plain">The record&rsquo;s answer to your question has <b>changed</b>. It holds the question rather than the documents it matched, so it can tell you the answer moved and it <b>cannot tell you which documents moved</b>. There is no list here because there is none to show &mdash; not because nothing changed.</span></div>`);
+    /* THE COUNT DELTA IS A COUNT DELTA. The plane derives `added` and `removed`
+       for a query selection from the SIZE of the two answers and from nothing
+       else, so both being zero beside a changed answer is meaningful and is
+       said outright: the set swapped members without changing size. */
+    if(d.added) rows.push(`<div class="kv"><span class="k">How many more it matches now</span><span class="v plain">${esc(String(d.added))} &mdash; a count, not a list. Which ${d.added===1?"document":"documents"} arrived is not recoverable.</span></div>`);
+    if(d.removed) rows.push(`<div class="kv"><span class="k">How many fewer it matches now</span><span class="v plain">${esc(String(d.removed))} &mdash; a count, not a list. Which ${d.removed===1?"document":"documents"} left is not recoverable.</span></div>`);
+    if(!d.added && !d.removed)
+      rows.push(`<div class="kv"><span class="k">How many</span><span class="v plain">The same number of documents as before. The answer changed WITHOUT changing size, so something the question matched has been replaced by something else &mdash; and a count alone could never have shown you that. This is why the record compares the whole answer rather than the total.</span></div>`);
+    if(d.detail) rows.push(`<div class="kv"><span class="k">The record&rsquo;s account</span><span class="v plain">${esc(d.detail)}</span></div>`);
+    return rows.join("");
+  }
+  /* THE ENUMERATED ARM. The record stored the rows, so every one that moved is
+     NAMED, and the surface says that is why. */
+  if(Array.isArray(d.revised) && d.revised.length)
+    rows.push(`<div class="kv"><span class="k">Revised since you picked them</span><span class="v">${idl(d.revised)}</span></div>`);
+  if(Array.isArray(d.purged) && d.purged.length)
+    rows.push(`<div class="kv"><span class="k">Gone from the record</span><span class="v">${idl(d.purged)}</span></div>`);
+  if(Array.isArray(d.hidden) && d.hidden.length)
+    rows.push(`<div class="kv"><span class="k">No longer visible to this credential</span><span class="v">${idl(d.hidden)}</span></div>`);
+  if(d.added) rows.push(`<div class="kv"><span class="k">Newly matching</span><span class="v plain">${esc(String(d.added))}</span></div>`);
+  if(d.removed) rows.push(`<div class="kv"><span class="k">No longer in the set</span><span class="v plain">${esc(String(d.removed))}</span></div>`);
+  if(d.detail) rows.push(`<div class="kv"><span class="k">The record&rsquo;s account</span><span class="v plain">${esc(d.detail)}</span></div>`);
+  if(rows.length)
+    rows.push(`<div class="kv"><span class="k">Why every one is named</span><span class="v plain">You picked these documents, so the record kept the list and can name each one that moved. Nothing was added: a document that only started matching afterwards is not something you asked for.</span></div>`);
+  return rows.join("");
+}
+
 /* WHAT MOVED, when the record says something moved. Report weight means the act
    ran anyway and told you; this renders the record's own drift object and adds
-   no judgment about whether it mattered. */
+   no judgment about whether it mattered.
+   UI-25: the movement question and the rendering both go through the shared
+   pair above, so a query selection's `digestChanged` is not silently read as
+   `moved` — the receipt for the act and the screen that held the set now
+   describe the same selection in the same words. */
 function citeDriftHtml(res){
-  if(!res || !res.moved) return "";
+  if(!res || !selectionMoved(res)) return "";
   const d = res.drift || {};
-  const rows = [];
-  if(Array.isArray(d.revised) && d.revised.length)
-    rows.push(`<div class="kv"><span class="k">Revised since you picked them</span><span class="v">${d.revised.map(x=>`<span class="mono">${esc(String(x.bundleId||x))}</span>`).join(", ")}</span></div>`);
-  if(Array.isArray(d.purged) && d.purged.length)
-    rows.push(`<div class="kv"><span class="k">Gone from the record</span><span class="v">${d.purged.map(x=>`<span class="mono">${esc(String(x))}</span>`).join(", ")}</span></div>`);
-  if(Array.isArray(d.hidden) && d.hidden.length)
-    rows.push(`<div class="kv"><span class="k">No longer visible to this credential</span><span class="v">${d.hidden.map(x=>`<span class="mono">${esc(String(x))}</span>`).join(", ")}</span></div>`);
-  if(d.detail) rows.push(`<div class="kv"><span class="k">The record's account</span><span class="v plain">${esc(d.detail)}</span></div>`);
-  return `<div class="card" style="margin-top:8px"><div class="kv"><span class="k">The set moved</span><span class="v plain">The act is report weight, so it ran and said so.</span></div>${rows.join("")}</div>`;
+  const head = selectionIsQuery(res)
+    ? `<div class="kv"><span class="k">The record&rsquo;s answer moved</span><span class="v plain">The act is report weight, so it ran over the record&rsquo;s answer AT THE MOMENT IT RAN and said so. What it cited is that answer, not the documents this page listed earlier.</span></div>`
+    : `<div class="kv"><span class="k">The set moved</span><span class="v plain">The act is report weight, so it ran and said so.</span></div>`;
+  return `<div class="card" style="margin-top:8px">${head}${selectionDriftHtml(d)}</div>`;
 }
 
 /* ---------------------------------------------------------------
@@ -7621,11 +7703,23 @@ async function openCite(id, title, act){
    member was shown; the MEMBERS the act runs over are the plane's, resolved
    from the handle at the moment it runs, which is what makes drift reportable
    rather than invented here. */
-async function citeOverSelection(handle, ids, act, title){
-  return citeOpen({ ids: Array.isArray(ids) ? ids : [], handle: handle || null, act, title: title || null });
+async function citeOverSelection(handle, ids, act, title, sel){
+  /* UI-25: the SELECTION'S KIND travels with it. A query selection's members
+     are the record's answer to a criterion at the moment the act runs — there
+     is no list of ids, and rendering the page's rows as "what you are citing"
+     would put the capped list back into the one place this item exists to keep
+     it out of. */
+  const q = sel && selectionIsQuery(sel);
+  return citeOpen({ ids: q ? [] : (Array.isArray(ids) ? ids : []),
+                    handle: handle || null, act, title: title || null,
+                    selKind: q ? "query" : "enumerated",
+                    criterion: q ? (sel.q || "") : null,
+                    selN: (sel && typeof sel.n === "number") ? sel.n : null });
 }
 async function citeOpen(init){
   CITE = { ids: init.ids || [], handle: init.handle || null, act: init.act, title: init.title || null,
+           selKind: init.selKind || null, criterion: init.criterion || null,
+           selN: (typeof init.selN === "number") ? init.selN : null,
            targets: null, targetsErr: null, target: null, targetType: null, role: null,
            note: "", result: null, refusal: null, busy: false };
   $("#dlg").innerHTML = `<h2>${esc(init.act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
@@ -7708,9 +7802,22 @@ function citePaint(){
   const act = CITE.act;
   if(CITE.result){ box.innerHTML = citeReceiptHtml(CITE.result); return; }
 
-  const what = CITE.ids.length
-    ? CITE.ids.map(i=>`<span class="mono">${esc(i)}</span>`).join(", ")
-    : `<span class="mono">${esc(CITE.handle||"")}</span>`;
+  const isQuerySel = CITE.selKind === "query";
+  const what = isQuerySel
+    ? `<span class="mono">${esc(String(CITE.criterion||""))}</span>`
+    : CITE.ids.length
+      ? CITE.ids.map(i=>`<span class="mono">${esc(i)}</span>`).join(", ")
+      : `<span class="mono">${esc(CITE.handle||"")}</span>`;
+  /* WHAT A QUERY SELECTION IS CITING, said before the member commits (UI-25).
+     A list would be a lie in both directions here: it is not the page they were
+     shown, and it is not fixed — the record resolves the criterion when the act
+     RUNS, so the honest statement is the criterion, the count the record gave
+     for it, and the fact that the count is as of now. */
+  const queryWhat = !isQuerySel ? "" : `<div class="card" id="cx-criterion" style="margin:8px 0">
+      <div class="kv"><span class="k">What is being cited</span><span class="v plain">Every document the record answers to this question &mdash; <b>not</b> a list of documents, and <b>not</b> the page you were looking at. The record works out which documents those are at the moment this act runs.</span></div>
+      ${CITE.selN !== null ? `<div class="kv"><span class="k">How many that was when you held it</span><span class="v plain"><b>${esc(String(CITE.selN))}</b> &mdash; the record&rsquo;s whole answer, not a page of it. It may be a different number now, and the receipt will say what the record actually cited.</span></div>` : ""}
+      <div class="kv"><span class="k">What it does not include</span><span class="v plain">Anything only the <b>subjects</b> route found. This question is answered by the record&rsquo;s query language over what documents say and what it projects about them, and that is the whole of what will be cited.</span></div>
+    </div>`;
 
   /* WHERE IT GOES. A closed list of what the record publishes this act on, and
      no free-text id: a member does not type a bundle id. Each candidate says
@@ -7783,7 +7890,8 @@ function citePaint(){
 
   box.innerHTML = `<h2>${esc(act.label)}</h2>
     <p class="what">This act writes into the citing object&rsquo;s own document, in your name, on the permanent record. It changes nothing about the material being cited. On a <b>case</b> it adds a citation edge; on a <b>question</b> it adds a leg to the basis the answer rests on.</p>
-    <div class="dz-what"><span class="dz-ttl">${CITE.ids.length===1?esc(CITE.title||CITE.ids[0]):`${CITE.ids.length||"the"} selected record${CITE.ids.length===1?"":"s"}`}</span><span class="id">${what}</span></div>
+    <div class="dz-what"><span class="dz-ttl">${isQuerySel?"Everything this question matches":(CITE.ids.length===1?esc(CITE.title||CITE.ids[0]):`${CITE.ids.length||"the"} selected record${CITE.ids.length===1?"":"s"}`)}</span><span class="id">${what}</span></div>
+    ${queryWhat}
     ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
 
     <h3 class="cx-h">What cites it</h3>
@@ -8305,6 +8413,10 @@ function sxClear(w){
      here, which a finder holding a live lease must never do (see the header). */
   FIND.q = ""; FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
   const r = $("#f-res"); if(r) r.innerHTML = "";
+  /* UI-25: with no query asked there is no criterion to hold, so the
+     hold-everything control must go with the results rather than stand there
+     offering a set that no longer has a definition. */
+  finderPaintSelection();
 }
 
 async function renderFinder(opts){
@@ -8366,9 +8478,20 @@ async function finderTextRoute(plan){
     return { asked:true, q, hits,
              /* THE PLANE'S OWN `total`, never `hits.length` dressed up as one.
                 Where they differ the panel says so, because "50 shown" and "50
-                found" are different claims and only one of them is checkable. */
-             total: (r && typeof r.total === "number") ? r.total : hits.length,
-             limit: r && r.limit,
+                found" are different claims and only one of them is checkable.
+                CORRECTED 2026-08-05 (UI-25): this fell back to `hits.length`
+                when the plane sent no numeric total, which is the ONE THING the
+                comment above forbids — the fallback silently turned "shown"
+                into "found", and it did it on exactly the path where the record
+                declined to say how many there were. `total` is now NULL when
+                the record did not say, `totalKnown` says which, and the panel
+                states the unknown rather than filling it in. */
+             total: (r && typeof r.total === "number") ? r.total : null,
+             totalKnown: !!(r && typeof r.total === "number"),
+             /* The plane's own page bound. It was captured here and read
+                NOWHERE (UI-25's sweep) — the record published the bound and the
+                surface dropped it, which is this defect's whole shape. */
+             limit: (r && typeof r.limit === "number") ? r.limit : null,
              warnings: (r && r.query && Array.isArray(r.query.warnings)) ? r.query.warnings : [],
              widen: (r && r.widen) || null };
   }catch(e){ return { asked:true, q, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }; }
@@ -8518,10 +8641,28 @@ function finderTextPanelHtml(t, overlapIds){
     return head + `<p class="subj-note">Not asked: nothing you typed is a term this route can answer.</p>`;
   if(t.err) return head + actRefusalHtml(t.err);
   const shown = (t.hits||[]).length;
-  const capped = t.total > shown;
+  /* CAPPED IS DECIDED TWO WAYS, and the second is the one the old code could
+     not see (UI-25). A page is short either because the record said it found
+     more, OR because the page came back exactly AT the record's published
+     limit — at which point the record has told us nothing about what is past
+     it. Both are bounds; only the first has a number. */
+  const capped = t.totalKnown && t.total > shown;
+  const atLimit = !capped && t.limit !== null && shown >= t.limit;
   return head
-    + `<p class="count-line" id="f-text-count"><b>${esc(String(t.total))}</b> ${t.total===1?"document":"documents"} on this route${capped?` &middot; showing the first ${esc(String(shown))}`:""}</p>`
+    + `<p class="count-line" id="f-text-count">${t.totalKnown
+        ? `<b>${esc(String(t.total))}</b> ${t.total===1?"document":"documents"} on this route${capped?` &middot; showing the first ${esc(String(shown))}`:""}`
+        : `<b>${esc(String(shown))}</b> ${shown===1?"document":"documents"} shown on this route &middot; the record did not say how many it found`}</p>`
     + `<p class="subj-note">The record&rsquo;s query language over what documents say and what it projects about them, ranked by relevance to the words you typed. This count is this route&rsquo;s own and stands for nothing else.</p>`
+    /* THE PAGE BOUND, STATED WHERE IT BITES (UI-25). "Showing the first 500" is
+       true and is not enough: what a member does NEXT with this list is tick
+       rows and cite them into a case, and a case makes a completeness claim. So
+       the consequence is spelled out at the list itself, and the one control
+       that is not bounded by it is named right there. */
+    + ((capped || atLimit)
+        ? `<div class="card" id="f-text-cap" style="margin:8px 0"><div class="kv"><span class="k">You are looking at part of the answer</span><span class="v plain">${capped
+              ? `The record found <b>${esc(String(t.total))}</b> and this page is showing <b>${esc(String(shown))}</b> of them${t.limit!==null?` &mdash; the most it will send in one go is ${esc(String(t.limit))}`:""}.`
+              : `This page came back exactly at the record&rsquo;s own limit of <b>${esc(String(t.limit))}</b>, and the record did not say how many it found in total. There may be nothing past this page and there may be a great deal; <b>this screen cannot tell you which</b>.`} <b>Anything you tick here comes from these ${esc(String(shown))} only.</b> If you need the whole answer, hold the question instead of the rows: <b>Hold everything this query matches</b> above gives the record your question and is not bounded by this page.</span></div></div>`
+        : "")
     + ((t.warnings||[]).length ? `<div class="card" style="margin:8px 0">${t.warnings.map(w=>`<div class="kv"><span class="k">The record&rsquo;s note on this query</span><span class="v plain">${esc(String(w))}</span></div>`).join("")}</div>` : "")
     + (t.widen ? `<div class="card" style="margin:8px 0"><div class="kv"><span class="k">The record&rsquo;s own offer</span><span class="v plain">${esc(String(t.widen.detail||""))} &mdash; ${esc(String(t.widen.total))} match any of them.</span></div></div>` : "")
     + (shown
@@ -8571,9 +8712,20 @@ function finderOverlapHtml(t, s, overlap){
   const tAsked = !!(t && t.asked && !t.err), sAsked = !!(s && s.asked && !s.err);
   if(!tAsked || !sAsked)
     return `<p class="subj-note" id="f-overlap">Only one route answered this query, so there is nothing to compare. Each route&rsquo;s count is its own.</p>`;
+  /* THE OVERLAP IS ITSELF TAKEN OVER A PAGE, AND THAT IS NOW SAID (UI-25).
+     This figure is an intersection of the ids the two routes named — and the
+     TEXT route named at most one page of them. Ninety lines above, this screen
+     REFUSES to compute an intersection a member asked for, on the grounds that
+     an intersection over a capped answer under-reports invisibly. Computing one
+     it did not ask for and calling it "the honest third figure" without saying
+     which side was a page was this file holding itself to a rule at one site
+     and not at the other. The word stays; the qualification joins it. */
+  const shown = (t.hits||[]).length;
+  const bounded = (t.totalKnown && t.total > shown) || (t.limit !== null && shown >= t.limit);
   return `<div class="card" id="f-overlap" style="margin:12px 0">
-    <div class="kv"><span class="k">Found by both routes</span><span class="v plain"><b>${esc(String(overlap.n))}</b> ${overlap.n===1?"document":"documents"}</span></div>
+    <div class="kv"><span class="k">Found by both routes</span><span class="v plain"><b>${esc(String(overlap.n))}</b> ${overlap.n===1?"document":"documents"}${bounded?" <b>of the documents on this page</b>":""}</span></div>
     <div class="kv"><span class="k">Why there is no single number</span><span class="v plain">These are two questions asked of two different indexes. A document can answer one, the other, or both, so adding the counts would produce a figure that measures nothing and counts the overlap twice. The overlap is the honest third figure, and it is an overlap and not a total.</span></div>
+    ${bounded?`<div class="kv"><span class="k">And what this figure is bounded by</span><span class="v plain">It is worked out from the <b>${esc(String(shown))}</b> documents the text and fields route put on this page, not from its whole answer. A document past the page that the subjects route also found is <b>not</b> counted here. This number can only ever be too low, and it cannot tell you by how much.</span></div>`:""}
   </div>`;
 }
 function finderPaintResults(){
@@ -8584,7 +8736,13 @@ function finderPaintResults(){
                 + finderSubjectsPanelHtml(FIND.subjects, overlapIds);
   res.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
   res.querySelectorAll("tr.row").forEach(r=>{ if(r.dataset.id) r.onclick=()=>openBundle(r.dataset.id); });
-  finderPickCount();
+  /* THE HOLD STRIP FOLLOWS THE ANSWER (UI-25). It offers a control whose whole
+     subject is the CRITERION the text route was just asked, and it states the
+     page bound in the answer's own numbers — so a strip painted before the
+     question was asked would be offering a set nobody had defined and quoting a
+     bound nobody had measured. `finderPaintSelection` re-runs `finderPickCount`
+     itself, so the ticked count survives the repaint. */
+  finderPaintSelection();
 }
 
 /* ============================================================
@@ -8630,9 +8788,62 @@ async function finderHold(){
   try{
     const s = await recPostR("select", { ids }, { kind:"enumerated" });
     FINDSEL = { handle:s.handle, ids, expires:s.expires, ttlSeconds:s.ttlSeconds,
-                kind:s.kind, n:s.n, snapshotN:undefined, drift:null, moved:false, err:null, busy:false };
+                kind:s.kind, n:s.n, q:null, snapshotN:undefined, drift:null, moved:false, err:null, busy:false };
   }catch(e){
     FINDSEL = { handle:null, ids, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } };
+  }
+  finderPaintSelection();
+}
+/* ============================================================
+   HOLD EVERYTHING THIS QUERY MATCHES — THE UNCAPPED SELECTION (UI-25).
+
+   WHY THIS EXISTS, and it is a completeness defect rather than a convenience.
+   The page above is drawn from `op=search` at `limit:500`. A member with more
+   than 500 hits who picks rows can only ever pick from the first 500, so the
+   set they cite into a case is SILENTLY SHORT — and a case is a document that
+   makes a COMPLETENESS CLAIM. That is the same reasoning that makes this screen
+   refuse the cross-seam intersection, one step further down the same path: the
+   refusal there stops a short answer being computed, and this stops a short
+   answer being CITED.
+
+   WHAT THE PLANE ALREADY DOES, and none of it is new here. `op=select` with
+   `kind:"query"` stores the CRITERION and not the rows (`selectionCreate`), so
+   it is bounded by nothing — `compile()` is run with no limit, and `n` is the
+   whole answer. `op=selection` re-runs the criterion under the CURRENT viewer
+   and reports a digest comparison. No plane change was needed for any of it;
+   what was missing was a caller.
+
+   THE ONE THING THIS SURFACE MUST NOT LET A MEMBER BELIEVE. A query selection
+   holds everything THE TEXT AND FIELDS ROUTE matches, because `op=select`
+   compiles the same query language `op=search` does. It holds NOTHING the
+   subjects route found — that is a different index over a different table, and
+   "everything" spanning both is precisely the cross-seam claim this screen
+   refuses to make. So the control is offered against the TEXT route's own
+   criterion, it is labelled with it, and the boundary is stated on the lease
+   itself rather than only at the moment of the click.
+   ============================================================ */
+function finderQueryCriterion(){
+  /* THE CRITERION IS THE STRING THE PLANE WAS ACTUALLY SENT, taken off the
+     route's own answer. Recomposing it here would be a second thing that has to
+     agree with `finderTextRoute`, and the one that disagreed would hold a set
+     the member never saw a count for. */
+  const t = FIND.text;
+  return (t && t.asked && !t.err && t.q) ? t.q : null;
+}
+async function finderHoldQuery(){
+  const q = finderQueryCriterion();
+  if(!q) return;
+  try{
+    /* NO `ids` IN THE BODY, and `kind` says so explicitly rather than letting
+       the plane infer it from their absence. `selectionCreate` decides the kind
+       from what it was handed, and an inferred kind is a kind nobody stated. */
+    const s = await recPostR("select", {}, { kind:"query", q });
+    FINDSEL = { handle:s.handle, ids:[], expires:s.expires, ttlSeconds:s.ttlSeconds,
+                kind:s.kind, n:s.n, q:(s.q != null ? s.q : q), snapshotN:undefined,
+                drift:null, moved:false, err:null, busy:false };
+  }catch(e){
+    FINDSEL = { handle:null, ids:[], q,
+                err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } };
   }
   finderPaintSelection();
 }
@@ -8643,6 +8854,12 @@ async function finderCheckSelection(){
     const r = await recR("selection", { handle: FINDSEL.handle });
     FINDSEL.n = r.n; FINDSEL.expires = r.expires; FINDSEL.drift = r.drift || null;
     FINDSEL.moved = !!r.moved; FINDSEL.snapshotN = r.snapshotN; FINDSEL.err = null;
+    /* THE KIND AND THE CRITERION COME BACK FROM THE RE-RESOLUTION TOO, and they
+       are taken rather than assumed: `selectionResolve` publishes both, and a
+       surface that kept only what the CREATE answered would be describing the
+       lease from a remembered fact instead of the record's current one. */
+    if(r.kind) FINDSEL.kind = r.kind;
+    if(r.q != null && r.q !== "") FINDSEL.q = r.q;
   }catch(e){ FINDSEL.err = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) }; }
   FINDSEL.busy = false;
   finderPaintSelection();
@@ -8660,7 +8877,12 @@ async function finderReleaseSelection(){
    refuse at commit, by name, with its offenders listed: this is a list of what
    the record publishes, never a judgement about a set. */
 const ACT_FLOW_SELECTION = {
-  cite: (act) => citeOverSelection(FINDSEL.handle, FINDSEL.ids, act, null),
+  /* UI-25: the SELECTION ITSELF is handed on, not only its handle and its ids.
+     A query selection has no ids to hand on and its criterion is the only thing
+     that describes what the act will run over, so a flow that received ids
+     alone would have to render the page's rows as "what you are citing" — which
+     is the capped list this item exists to stop citing. */
+  cite: (act) => citeOverSelection(FINDSEL.handle, FINDSEL.ids, act, null, FINDSEL),
 };
 function finderSelectionActs(){
   const cat = (ACT_SOURCE && Array.isArray(ACT_SOURCE.catalog)) ? ACT_SOURCE.catalog : [];
@@ -8670,27 +8892,39 @@ function finderActGo(id){
   const act = finderSelectionActs().find(a=>a.id===id);
   if(act && FINDSEL && FINDSEL.handle) ACT_FLOW_SELECTION[id](act);
 }
-function finderDriftHtml(d){
-  if(!d) return "";
-  const rows = [];
-  const idl = arr => arr.map(x=>`<span class="mono">${esc(String(x && x.bundleId ? x.bundleId : x))}</span>`).join(", ");
-  if(Array.isArray(d.revised) && d.revised.length)
-    rows.push(`<div class="kv"><span class="k">Revised since you picked them</span><span class="v">${idl(d.revised)}</span></div>`);
-  if(Array.isArray(d.purged) && d.purged.length)
-    rows.push(`<div class="kv"><span class="k">Gone from the record</span><span class="v">${idl(d.purged)}</span></div>`);
-  if(Array.isArray(d.hidden) && d.hidden.length)
-    rows.push(`<div class="kv"><span class="k">No longer visible to this credential</span><span class="v">${idl(d.hidden)}</span></div>`);
-  if(d.added) rows.push(`<div class="kv"><span class="k">Newly matching</span><span class="v plain">${esc(String(d.added))}</span></div>`);
-  if(d.removed) rows.push(`<div class="kv"><span class="k">No longer in the set</span><span class="v plain">${esc(String(d.removed))}</span></div>`);
-  if(d.detail) rows.push(`<div class="kv"><span class="k">The record&rsquo;s account</span><span class="v plain">${esc(d.detail)}</span></div>`);
-  return rows.join("");
+/* UI-25: the drift rendering moved to `selectionDriftHtml`, ONE function shared
+   with the cite receipt, because the two kinds of selection report two
+   DIFFERENT FACTS and a surface that spelled the difference out in one place
+   and blurred it in the other would be worse than one that blurred it in both.
+   This wrapper survives so the finder's own call site still reads as the
+   finder's. */
+function finderDriftHtml(d){ return selectionDriftHtml(d); }
+/* THE TWO WAYS TO HOLD MATERIAL, OFFERED SIDE BY SIDE AND DISTINGUISHED (UI-25).
+   The page lease holds THE ROWS YOU PICKED, and it can only reach what this
+   screen listed. The query lease holds THE QUESTION, and it reaches everything
+   the record answers to it. Which one a member is being offered, and what each
+   one can and cannot reach, is stated here rather than left to the verb. */
+function finderHoldChoiceHtml(){
+  const q = finderQueryCriterion();
+  const t = FIND.text;
+  const shown = (t && Array.isArray(t.hits)) ? t.hits.length : 0;
+  const total = (t && typeof t.total === "number") ? t.total : null;
+  const capped = q && total !== null && total > shown;
+  return `<div class="rv-bar" style="margin:0 0 6px;gap:8px">
+      <button class="btn" id="f-sel-go" disabled onclick="finderHold()">Hold these together</button>
+      ${q ? `<button class="btn ghost" id="f-sel-all" onclick="finderHoldQuery()">Hold everything this query matches</button>` : ""}
+      <span class="n" id="f-sel-n">Nothing picked. Check documents on either route to hold them together.</span></div>`
+    + (q
+        ? `<p class="subj-note" id="f-hold-bound"><b>The two are not the same thing, and the difference matters when you cite.</b>
+           <b>Hold these together</b> keeps the documents you ticked. You can only tick what is on this screen, and this screen is ${total===null?"one page of":`showing ${esc(String(shown))} of ${esc(String(total))}`} the record&rsquo;s answer${capped?` &mdash; so anything past the first ${esc(String(shown))} cannot be ticked and would not be in it`:""}.
+           <b>Hold everything this query matches</b> gives the record your question &mdash; <span class="mono">${esc(q)}</span> &mdash; instead of a list, and the record answers it in full every time it is used. It is not bounded by this page.
+           Both hold only what the <b>text and fields</b> route answers. Neither holds anything the <b>subjects</b> route found: that is a separate index, and one set spanning both is the cross-seam claim this screen refuses to make.</p>`
+        : `<p class="subj-note" id="f-hold-bound">Only picked documents can be held right now. Holding a whole question needs the <b>text and fields</b> route to have been asked one, and it has not been.</p>`);
 }
 function finderPaintSelection(){
   const host = $("#f-sel"); if(!host) return;
   if(!FINDSEL){
-    host.innerHTML = `<div class="rv-bar" style="margin:0 0 12px;gap:8px">
-      <button class="btn" id="f-sel-go" disabled onclick="finderHold()">Hold these together</button>
-      <span class="n" id="f-sel-n">Nothing picked. Check documents on either route to hold them together.</span></div>`;
+    host.innerHTML = finderHoldChoiceHtml();
     finderPickCount();
     return;
   }
@@ -8702,15 +8936,31 @@ function finderPaintSelection(){
   const acts = finderSelectionActs();
   const buttons = acts.map(a=>
     `<button class="btn ghost" onclick="finderActGo(${esc(JSON.stringify(a.id))})">${esc(a.label)}&hellip;</button>`).join("");
-  host.innerHTML = `<div class="card" id="f-lease" style="margin-bottom:12px;border-left:3px solid var(--verdigris)">
-    <div style="font-weight:600;margin-bottom:4px">The record is holding ${FINDSEL.n===1?"one document":`${esc(String(FINDSEL.n))} documents`} for you.</div>
+  /* WHICH KIND OF SET THIS IS, said in the member's own terms and never left to
+     be read off the presence of a list. The two leases behave differently in
+     every way that matters downstream — what they reach, what a drift report
+     can say about them, and what an act runs over — so the card leads with it. */
+  const isQ = selectionIsQuery(FINDSEL);
+  const moved = selectionMoved(FINDSEL);
+  const head = isQ
+    ? `<div style="font-weight:600;margin-bottom:4px">The record is holding your question, and everything it answers.</div>
+       <div class="kv"><span class="k">The question it is holding</span><span class="v"><span class="mono">${esc(String(FINDSEL.q||""))}</span></span></div>
+       <div class="kv"><span class="k">What it matches right now</span><span class="v plain"><b>${esc(String(FINDSEL.n))}</b> ${FINDSEL.n===1?"document":"documents"} &mdash; the record&rsquo;s count of its whole answer, not of a page. <b>This is not bounded by the ${esc(String(((FIND.text&&FIND.text.hits)||[]).length))} ${((FIND.text&&FIND.text.hits)||[]).length===1?"document":"documents"} this screen listed.</b></span></div>
+       <div class="kv"><span class="k">What is stored, and what follows from it</span><span class="v plain">The record kept the QUESTION rather than a list of documents. So the set is answered afresh every time it is used &mdash; and if the answer changes, the record can tell you THAT it changed and not WHICH documents changed. That is a real limit and it is the price of not being capped.</span></div>
+       <div class="kv"><span class="k">What it does not reach</span><span class="v plain">Only what the <b>text and fields</b> route answers. Nothing found by the <b>subjects</b> route is in it; that is a separate index over a separate table, and one set spanning both is a claim this record will not make.</span></div>`
+    : `<div style="font-weight:600;margin-bottom:4px">The record is holding ${FINDSEL.n===1?"one document":`${esc(String(FINDSEL.n))} documents`} for you.</div>
+       <div class="kv"><span class="k">What it is</span><span class="v plain">The documents you ticked, kept by the record as a list. It reaches exactly those and nothing else &mdash; if the record&rsquo;s answer to your query is longer than the page you ticked them on, the rest is not in here.</span></div>`;
+  host.innerHTML = `<div class="card" id="f-lease" data-selkind="${esc(String(isQ?"query":"enumerated"))}" style="margin-bottom:12px;border-left:3px solid var(--verdigris)">
+    ${head}
     <div class="kv"><span class="k">The record&rsquo;s name for this set</span><span class="v"><span class="mono">${esc(FINDSEL.handle)}</span></span></div>
     <div class="kv"><span class="k">Held until</span><span class="v plain"><span id="f-lease-expires">${esc(fmtWhenFull(FINDSEL.expires))}</span> &mdash; the record&rsquo;s own expiry, not a countdown this page invented. Using the set extends it.</span></div>
-    ${(FINDSEL.snapshotN !== undefined && FINDSEL.snapshotN !== null && FINDSEL.snapshotN !== FINDSEL.n) ? `<div class="kv"><span class="k">When you picked them</span><span class="v plain">${esc(String(FINDSEL.snapshotN))}</span></div>` : ""}
-    ${FINDSEL.moved ? `<div class="kv"><span class="k">The set moved</span><span class="v plain">The record reports these changes since you picked it.</span></div>${finderDriftHtml(FINDSEL.drift)}`
-                    : (FINDSEL.drift ? `<div class="kv"><span class="k">The set</span><span class="v plain">The record reports that nothing moved since you picked it.</span></div>` : "")}
+    ${(!isQ && FINDSEL.snapshotN !== undefined && FINDSEL.snapshotN !== null && FINDSEL.snapshotN !== FINDSEL.n) ? `<div class="kv"><span class="k">When you picked them</span><span class="v plain">${esc(String(FINDSEL.snapshotN))}</span></div>` : ""}
+    ${(isQ && FINDSEL.snapshotN !== undefined && FINDSEL.snapshotN !== null && FINDSEL.snapshotN !== FINDSEL.n) ? `<div class="kv"><span class="k">When you asked it</span><span class="v plain">${esc(String(FINDSEL.snapshotN))} &mdash; the answer was this size then.</span></div>` : ""}
+    ${moved ? `<div class="kv"><span class="k">${isQ?"The answer moved":"The set moved"}</span><span class="v plain">${isQ?"The record reports that its answer to your question is not the answer it was.":"The record reports these changes since you picked it."}</span></div>${finderDriftHtml(FINDSEL.drift)}`
+            : (FINDSEL.drift ? (isQ ? finderDriftHtml(FINDSEL.drift)
+                                    : `<div class="kv"><span class="k">The set</span><span class="v plain">The record reports that nothing moved since you picked it.</span></div>`) : "")}
     ${buttons?`<div class="rv-bar" style="margin:10px 0 0;gap:8px">${buttons}</div>`:`<p class="subj-note">The record publishes no act this page can carry over a held set with this credential.</p>`}
-    <div class="row-btns"><button class="btn ghost" onclick="finderCheckSelection()"${FINDSEL.busy?" disabled":""}>Ask the record what moved</button>
+    <div class="row-btns"><button class="btn ghost" onclick="finderCheckSelection()"${FINDSEL.busy?" disabled":""}>Ask the record what ${isQ?"its answer is now":"moved"}</button>
       <button class="btn ghost" onclick="finderReleaseSelection()">Let it go</button></div>
   </div>`;
 }
@@ -8723,6 +8973,17 @@ let REVIEW_ROWS = [];   // [{bundle_id,title,criticality,current_state,last_upda
    `paintReview` says it. `search` is the real answer; `list` is the weaker one
    and is labelled as weaker where it is shown, never presented as the same. */
 let REVIEW_VIA = null;   // "search" | "list" | null
+/* HOW MANY THE RECORD SAID THERE WERE, as against how many this screen holds
+   (UI-25, found by this item's sweep and NOT named in its brief).
+   `loadReviewRows` asks `op=search` at `limit:500` and returned `hits` — the
+   PAGE — while `paintReview` printed `REVIEW_ROWS.length` as a bare count
+   inside "Awaiting review (N)". With more collected material than the page
+   holds that heading is a SHORT NUMBER PRESENTED AS A COMPLETE ONE, which is
+   the same defect the finder's query selection exists to close, on a screen
+   whose bulk control then acts over the page and calls it "all". The plane's
+   own `total` was being discarded on the line that read `hits`; it is kept
+   here, and `paintReview` states the bound whenever the two disagree. */
+let REVIEW_TOTAL = null;   // the plane's own `total`, or null when it did not say
 async function loadReviewRows(){
   /* op=search carries criticality (op=list does not), which the flow needs to
      keep crucial material out of op=release before the plane has to refuse it.
@@ -8740,7 +9001,13 @@ async function loadReviewRows(){
     try{
       const r = await recR("search", { q: sel.join(" "), limit:"500", facets:"none" });
       const hits = r && r.hits;
-      if(Array.isArray(hits)){ REVIEW_VIA = "search"; return hits; }
+      if(Array.isArray(hits)){
+        REVIEW_VIA = "search";
+        /* THE PLANE'S OWN `total`, never `hits.length` dressed up as one — the
+           finder's rule, which this screen had never applied. */
+        REVIEW_TOTAL = (r && typeof r.total === "number") ? r.total : null;
+        return hits;
+      }
     }catch(_){}
   }
   /* The fallback survives — a review screen that cannot list is worse than one
@@ -8750,6 +9017,10 @@ async function loadReviewRows(){
      silent here would be showing a bulk-release control over material it could
      not tell was crucial. `REVIEW_VIA` is what makes that visible. */
   REVIEW_VIA = "list";
+  /* The weaker read publishes no total of its own, and saying nothing is not
+     the same as saying zero: null means the record did not tell us, which is
+     what `paintReview` renders. */
+  REVIEW_TOTAL = null;
   return (await loadRecord(true)).filter(b=>b.object_type==="information"&&b.current_state==="collected")
                                  .map(b=>({...b, criticality:null}));
 }
@@ -8788,8 +9059,15 @@ function paintReview(){
     const head = (able ? `<th class="pick"><input class="ck" type="checkbox" id="rv-all" onclick="rvAll(this.checked)"></th>` : "")
                + thSort("title","Item") + thSort("state","State") + thSort("updated","Updated");
     const crucialN = REVIEW_ROWS.filter(b=>b.criticality==="crucial").length;
+    /* THE BOUND ON THIS SCREEN, STATED (UI-25). The heading counts the rows
+       this screen HOLDS; when the record said it found more, the two numbers
+       are shown apart and the consequence for the bulk control is spelled out,
+       because "Awaiting review (500)" beside a select-all box reads as the
+       whole of what is waiting and would be wrong by however much was cut. */
+    const shortBy = (REVIEW_TOTAL !== null && REVIEW_TOTAL > REVIEW_ROWS.length) ? REVIEW_TOTAL - REVIEW_ROWS.length : 0;
     $("#rv").innerHTML =
-      `<h2 class="sec">Awaiting review (${REVIEW_ROWS.length})</h2>`
+      `<h2 class="sec">Awaiting review (${REVIEW_ROWS.length}${shortBy?` of ${esc(String(REVIEW_TOTAL))}`:""})</h2>`
+      + (shortBy ? `<p class="rel-note" id="rv-bound">The record found <b>${esc(String(REVIEW_TOTAL))}</b> documents awaiting review and sent this screen the first <b>${esc(String(REVIEW_ROWS.length))}</b>. <b>${esc(String(shortBy))}</b> ${shortBy===1?"is":"are"} not on this page, so nothing here &mdash; including the box that ticks every row &mdash; reaches ${shortBy===1?"it":"them"}. Releasing what is shown releases what is shown.</p>` : "")
       + (able ? `<div class="rv-bar"><button class="btn" id="rv-go" disabled onclick="openReleaseDialog()">Release</button><span class="n" id="rv-n">Nothing selected. Check documents to release them together, or open one and release it from its page.</span></div>` : "")
       + (REVIEW_ROWS.length
           ? `<table class="rec"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`
