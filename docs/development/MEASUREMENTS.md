@@ -2606,3 +2606,80 @@ and is reported. The consumer walk is anchored on the wire name and reads
 property access, computed access and destructuring; a field consumed through a
 SPREAD would be invisible to it, so the one spread in the return
 (`...(asked ? { asked } : {})`) is enumerated and pinned by its own assertion.
+
+## 2026-08-05 · UI-40 · the `op=publishedcase` consumer walk, RE-MEASURED across the whole repository
+
+Instrument: `civicos-ui/test/publishedcase.test.mjs`, the UI-40 consumer-walk
+block — **it is IN THE SUITE rather than in prose, so it can be RE-RUN rather
+than quoted.** The 2026-08-05 UI-35 table above was taken by hand and recorded as
+prose; this re-measurement exists because REC-41's precedent is that an item's
+claim about consumers is a claim until somebody measures it again, and REC-41's
+own item was WRONG ABOUT ITS OP while right about its field.
+
+**Corpus, printed on every run so a corpus that shrank is visible:** 226 files,
+7,730,838 characters, after comments are blanked and with newlines preserved so a
+reported line number is one a person can check by hand.
+
+| field | surface | installer | fleet | tools | plane battery | producer | reading |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `opened` | 0 | 0 | 0 | 0 | 0 | 2 | **zero consumers outside the producer.** Both reads are `store.mjs` reading its own SQL row. **CONFIRMS UI-35** — removed under IC-22 |
+| `case_detail` | **1** | 0 | 0 | 0 | 0 | 1 | now RENDERED verbatim by `pubPlaneAccount` (UI-40) |
+| `graph_detail` | **1** | 0 | 0 | 0 | 0 | 1 | now RENDERED verbatim per finding, beside the arrays it accounts for (UI-40) |
+| `bias_acknowledgement` | 0 | 0 | 0 | 0 | 7 | — | unchanged; DEC-59's, deliberately out of UI-40's scope |
+
+**THE RE-MEASUREMENT AGREES WITH UI-35 ON `opened` AND CONTRADICTS THE ITEM ON
+SOMETHING ELSE.** UI-40 states that this surface "already renders"
+`serves[]`/`names[]`/`unresolved[]`. It rendered **none of them**: measured ZERO
+reads of `.serves`, ZERO of `.names`, and the only two reads of `.unresolved` in
+`civicos-ui` belong to the subresource and reference surfaces and have nothing to
+do with this op. What the surface rendered was `division` — the PLANE's own
+derivation of `names[]` — and each basis leg's `served` flag, which the CONTROL
+PLANE derives from `publishedTargets`. Two derivations of the graph, and never
+the graph. A comment at the head of the published-case section asserted the split
+came from "its own `serves[]`/`names[]` arrays"; no line of the file read either.
+Corrected by BUILDING what the comment claimed (`pubGraphHtml`), not by softening
+the sentence.
+
+**THREE COUNTING TRAPS, and the second is the one no brief named.**
+
+1. `newgroup/src/release.mjs` embeds the whole bundled plane AS A STRING — a
+   3-line file whose second line is 1,737,506 characters — so a naive walk counts
+   the plane as its own consumer and every key looks consumed.
+2. **`release/bio-plane.bundled.mjs` is a SECOND embed of the same bytes
+   (1,681,700 characters).** A walk excluding only the file it was warned about
+   would still have counted the plane as its own consumer, through a different
+   file. Both are excluded STRUCTURALLY — by the generator's banner AT BYTE 0 and
+   by the bundler's own first line — and never by filename.
+   **AND THE FIRST VERSION OF THAT EXCLUSION WAS ITSELF WRONG IN THE DANGEROUS
+   DIRECTION:** testing whether a file CONTAINED the banner also excluded
+   `newgroup/scripts/embed-release.mjs`, the GENERATOR, which contains the banner
+   because it writes it. Excluding real source is the worst failure available to
+   this walk — a consumer living there would have been invisible and the answer
+   would still have read "zero". Caught by the arm that requires exactly two
+   exclusions, each over a megabyte.
+3. REGEX LITERALS. A scanner treating `'` as a string delimiter runs through
+   `/won't/` and swallows everything to the next apostrophe. The first version did
+   exactly that and reported FEWER sites than exist — a confident wrong answer in
+   the generous direction, the same shape as UI-35's 27,059-character "return
+   statement".
+
+**THE SPREAD, and it is why the removal is asserted through the op.** The control
+plane answers `json({ ok: true, ...c, findings, verification })`. `opened` reached
+the wire **without `index.mjs` ever naming it**, so grepping the control plane for
+the field returns nothing while the field ships. A source-level assertion that it
+was gone would have proved nothing about what a caller receives.
+
+**WHAT THIS DOES NOT ESTABLISH.** The walk reads property and computed access. A
+field consumed by DESTRUCTURING (`const { opened } = c`) is not matched by the
+read pattern; no such site exists for these fields today, but the walk does not
+prove it for a field added later. The `#looseEditionState` branch is still driven
+by no suite in the plane's battery — UI-35 reported that gap and it is unchanged
+here (M0-11).
+
+**AND THE MEASUREMENT THAT COST THE MOST TO GET RIGHT, recorded because it is the
+argument for the paired arm:** with the walk neutered so it collects no files, the
+headline assertion — *"`opened` has ZERO consumers"* — **STILL PASSES**. Zero
+consumers over an empty corpus is an outcome that costs nothing to produce. It is
+caught only by the PAIRED arm requiring the producer's own reads to still be
+found, and by the positive control requiring a key that IS read (`ratified_at`)
+to be found in `civicos-ui/app.html` on the same corpus.

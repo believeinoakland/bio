@@ -14061,7 +14061,22 @@ export class Store extends DurableObject {
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     return { ok: true, caseId: theCase, edition: ed, scope: state.scope,
              bias_acknowledgement: state.bias_acknowledgement ?? null,
-             completeness: state.completeness, ratified_at: state.ratified_at, opened: state.opened,
+             /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
+                the instant the case edition was opened, and NOTHING read it —
+                re-measured across the whole repository rather than inherited
+                from the item that found it: zero reads in `civicos-ui`, in
+                `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
+                one assertion in this battery. The surface renders `ratified_at`,
+                which is the instant the record can actually stand behind.
+                Removed rather than blanked, on REC-41's precedent: there is no
+                key in the answer for a later refactor to re-expose and a caller
+                cannot tell one was ever computed. `#caseEditionState` still
+                carries `opened` and STILL SHOULD — `op=publishcase` returns it
+                to the member who just published, which is a different op, a
+                different class and a different question; IC-22 is scoped to this
+                public read and says so rather than sweeping a sibling it did not
+                measure a need for. */
+             completeness: state.completeness, ratified_at: state.ratified_at,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
              findings,
