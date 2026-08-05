@@ -3679,6 +3679,40 @@ enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, exactly 
   Reasoning in this entry; `research/SEARCH-COMPLETENESS.md` carries the countable/
   uncountable finding, and `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
 
+### DEC-57 · open
+for: bob
+raised: 2026-08-05 · CONDUCT (from UI-39, which shipped a provisional and asked)
+subject: When the record cannot establish whether it already holds a document, may the surface write anyway?
+
+UI-39 fixed a real defect — `heldMatch` read the plane at a cap of 50 and `addGo` decided on that read whether to promote, so **a match past row 50 grew a SECOND BUNDLE for one document**, carrying none of the "a second capture rather than a repeat of the first" sentence. But the fix exposes the question underneath it: a walk cannot always reach the end (a full page with no published count is the case), and then the surface knows it does not know.
+
+the two shapes:
+  (a) **WRITE, and state the limit of the check IN THE BUNDLE** — which is what shipped. The bundle body carries that the held-check was bounded, what it examined and out of what, through the same mechanism `CHANGED_FROM` uses, deliberately not a progress line the next repaint erases.
+  (b) **REFUSE the write** until the check can complete.
+
+provisional: (a) IS SHIPPED and running. Nothing is blocked either way.
+
+recommendation: **(a), as shipped.** Refusing would introduce a NEW member-facing refusal, which is exactly what DEC-49 is unsettled about, and it would block a member over a condition they cannot fix and did not cause. It also fails the project's own posture on absence: the honest act when we cannot establish something is to STATE that we could not, not to withhold the member's work. A bundle that says what its check reached is a record that can be improved later; a refused capture is a document nobody has.
+
+cost of reversal: LOW — one branch in `addGo`. The bound is already computed and already travels into the bundle, so (b) is a change of what to do with a fact that is already there.
+
+### DEC-58 · open
+for: bob
+raised: 2026-08-05 · CONDUCT (from UI-39)
+subject: May a SURFACE author a bound the plane does not publish?
+
+This project's standing rule is that numbers come from measurement and never from the surface. UI-39 met the case the rule did not anticipate: `op=readingname` caps at 100/500 and **publishes neither the cap nor a truncation flag**, so the surface can either state the number it ASKED FOR, or state no number at all — and an unstated bound reads as completeness (UI-26 measured that the completeness-WORD screen stays green over a sentence with no bound in it, because such a sentence uses no completeness word).
+
+the two shapes:
+  (a) **the surface states the bound it REQUESTED** — true whatever the plane clamps to, since a clamp can only make the list shorter than the claim, never longer. Shipped.
+  (b) **state no number until the plane publishes one**, leaving the completeness gap open in the meantime.
+
+provisional: (a) IS SHIPPED, and the plane half is queued as REC-57 so the gap closes at the right layer rather than being papered over permanently.
+
+recommendation: **(a), plus REC-57.** The alternative to a surface-authored bound here is not a better number, it is SILENCE — and silence is the thing that reads as completeness. A requested bound is also a fact about what the surface did, which is exactly the kind of number a surface is entitled to state.
+
+cost of reversal: LOW — one sentence. **It is raised because of what it settles rather than what it costs:** it decides whether "numbers come from measurement, never from the surface" admits an exception when the only alternative is a silence that overclaims. That is doctrine, so it is Bob's rather than CONDUCT's, even though the immediate change is one line.
+
 ### DEC-56 · open
 for: bob
 raised: 2026-08-05 · CONDUCT (from REC-54, which met the gap while dispositioning D-200 and routed it rather than deciding it)
