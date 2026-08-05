@@ -13774,8 +13774,22 @@ function errPane(e, crumbHtml){
    WHAT THIS SURFACE NEVER COMPUTES. Every strength, every state and every
    sentence about them comes from the plane's own frozen axis objects; the
    declared bar comes from the plane's frozen `required_strength`; the
-   serve-or-name split comes from the plane's own `served` flag and its own
-   `serves[]`/`names[]` arrays. This file composes nothing out of two of them.
+   serve-or-name split comes from the plane's own `served` flag and, since
+   UI-40, from its own `serves[]`/`names[]`/`unresolved[]` arrays rendered as
+   the arrays they are. This file composes nothing out of two of them.
+
+   CORRECTED 2026-08-05 (UI-40), never exempted, and the correction is a
+   MEASUREMENT rather than a tidy-up. This sentence used to claim the split came
+   from "its own `serves[]`/`names[]` arrays" — and no line of this file read
+   either one. Measured: ZERO reads of `.serves`, ZERO of `.names`, and the only
+   two reads of `.unresolved` in the file belong to the subresource and reference
+   surfaces and have nothing to do with `op=publishedcase`. What the file
+   actually read was `division` (the PLANE's derivation of `names[]`) and each
+   leg's `served` flag (the CONTROL PLANE's derivation, from `publishedTargets`)
+   — two derivations OF the graph, described here as the graph itself. The
+   sentence is now true because `pubGraphHtml` was added to make it true, which
+   is the honest order: the claim was corrected by building what it claimed, not
+   by softening it.
    ============================================================ */
 
 /* DEC-40 (Bob, 2026-08-04) — THE READER SUPPLIES THE FLOORS, AND THERE IS NO
@@ -14440,6 +14454,109 @@ function pubDivisionHtml(f){
     </div>`;
 }
 
+/* A SENTENCE THE RECORD PUBLISHED, PRINTED VERBATIM AND ATTRIBUTED (UI-40).
+   UI-32's rule, and it is the whole reason this function exists rather than a
+   paragraph written here: LIFT WHAT THE RECORD PUBLISHED rather than
+   hand-writing doctrine at the surface. `op=publishedcase` answers two
+   top-level accounts of itself — `case_detail`, why a case has no case-level
+   strength, and `graph_detail`, what each finding's published edges are — and
+   until this item the surface rendered NEITHER while rendering its own
+   paraphrases of the same doctrine a few lines away. A paraphrase drifts from
+   the plane it paraphrases and nothing measures the drift; the record's own
+   sentence cannot.
+
+   IT IS ALSO WHY THIS ITEM DOES NOT PRE-EMPT DEC-49 (who owns member-facing
+   wording): NO WORD OF THESE SENTENCES IS AUTHORED HERE. What this function
+   adds is an attribution line and a container, and the sentence itself is
+   `esc()`d and printed whole — never translated, never trimmed, never blanked,
+   which are the two moves DEC-8 forbids in either direction.
+
+   NO FALLBACK, DELIBERATELY. If the record sent no such sentence this renders
+   NOTHING AT ALL. UI-35 deleted a `||` fallback on this very surface for the
+   reason that governs here too: an alternative that can never be taken is not a
+   fallback, it is a claim that the record speaks where it does not — and a
+   fallback would also make the harness's negative control unfalsifiable, since
+   blanking the field at the plane would then still render a box with words in
+   it. The arms in `publishedcase.test.mjs` blank each field AT THE PLANE and
+   require the harness to FAIL NAMING WHICH ACCOUNT WENT MISSING. */
+function pubPlaneAccount(key, text, of){
+  const s = typeof text === "string" ? text.trim() : "";
+  if(!s) return "";
+  return `<div class="pub-inband" data-planeaccount="${esc(key)}"${of ? ` data-of="${esc(String(of))}"` : ""}>
+    <p class="subj-note">In the record's own words, printed exactly as it published them and not restated here:</p>
+    <div class="pub-excl" data-accounttext="${esc(key)}">${esc(s)}</div></div>`;
+}
+
+/* THE PUBLISHED GRAPH OF ONE FINDING — `serves[]`, `names[]` and `unresolved[]`
+   — WITH THE RECORD'S OWN ACCOUNT OF THEM BESIDE THEM (UI-40).
+
+   **THE ITEM SAID THIS SURFACE ALREADY RENDERED ALL THREE ARRAYS. IT RENDERED
+   NONE OF THEM, AND THAT WAS MEASURED RATHER THAN ASSUMED** — `civicos-ui`
+   contained ZERO reads of `.serves` and ZERO of `.names`, and its only two reads
+   of `.unresolved` belong to the subresource and reference surfaces and have
+   nothing to do with this op. What this page rendered was `division` (which the
+   PLANE derives from `names[]`) and each basis leg's `served` flag (which the
+   CONTROL PLANE computes from `publishedTargets`) — two derivations of the
+   graph, and never the graph. A comment at the head of this section said the
+   serve-or-name split came from "its own `serves[]`/`names[]` arrays", which was
+   not true of any line of code in the file; it is corrected there.
+
+   **`unresolved[]` IS THE SHARP ONE AND IT IS WHY THIS BLOCK IS NOT COSMETIC.**
+   The plane's own comment calls a serve edge with nothing published behind it "a
+   CONTRADICTION in the index", REPORTED rather than swallowed, and says of the
+   array in `graph_detail` that "it should be empty". The plane went to the
+   trouble of publishing a contradiction it detected in the record — and the
+   surface dropped it on the floor, so a reader met a case whose index disagreed
+   with itself and was told nothing. That is the UI-25/UI-39 class exactly: the
+   plane published and the surface withheld.
+
+   NO NEW CONTROL IS ADDED HERE, and that is a decision rather than an omission.
+   `preauth-vocabulary.test.mjs` pins the number of call sites on this page
+   because "a new control on the page a stranger arrives on cannot arrive
+   unmeasured", and a second Verify button over bytes this page already offers a
+   Verify button for would add a control without adding a fact. Every address
+   below is therefore STATED as the address it is, in the same `op=publishedbytes`
+   form the rest of the page uses, and the reader can use it directly. */
+function pubGraphHtml(f, c){
+  const fid = String((f && f.bundle_id) || "");
+  const serves = Array.isArray(f && f.serves) ? f.serves : [];
+  const named  = Array.isArray(f && f.names) ? f.names : [];
+  const unres  = Array.isArray(f && f.unresolved) ? f.unresolved : [];
+  const of = esc(fid);
+  const account = pubPlaneAccount("graph_detail", c && c.graph_detail, fid);
+  const kind = (e) => esc(String((e && e.kind) || "not named"));
+  const head = `<h3>What finding ${of} points at in the published record</h3>`;
+
+  /* STATED IN BOTH DIRECTIONS, on `pubStateHtml`'s own precedent: if only the
+     non-empty case spoke, the absence of the block would become the ambiguity. */
+  if(!serves.length && !named.length && !unres.length)
+    return `${head}<p class="subj-note" data-graph="none" data-of="${of}">The published record carries no edges for this finding: it points at nothing this page can hand over and nothing it can name. That is what the record says, and this page adds none.</p>
+      ${account}`;
+
+  return `${head}
+    ${account}
+    ${serves.length
+      ? `<div data-graph="serves" data-graphcount="${esc(String(serves.length))}" data-of="${of}">
+          <p class="subj-note">${esc(String(serves.length))} edge${serves.length === 1 ? "" : "s"} this page can hand over. Each names a published edition, and each answers by its own hash.</p>
+          ${serves.map((e) => `<div class="pub-file" data-edge="serves" data-to="${esc(String(e.to))}" data-of="${of}"><span class="mono">${esc(String(e.to))}</span> &middot; ${kind(e)} &middot; edition ${esc(String(e.edition))} &middot; ${esc(e.title || "untitled")}
+            <div class="mono">ratified ${esc(String(e.ratified_at || "").slice(0, 10))}${e.case_id ? ` &middot; in case ${esc(String(e.case_id))}` : ""} &middot; <span data-addr="op=publishedbytes&amp;sha256=${esc(String(e.bundle_sha || ""))}">op=publishedbytes&amp;sha256=${esc(String(e.bundle_sha || ""))}</span></div></div>`).join("")}
+        </div>`
+      : `<p class="subj-note" data-graph="serves" data-graphcount="0" data-of="${of}">There is no edge of this finding that this page can hand over.</p>`}
+    ${named.length
+      ? `<div data-graph="names" data-graphcount="${esc(String(named.length))}" data-of="${of}">
+          <p class="subj-note">${esc(String(named.length))} edge${named.length === 1 ? "" : "s"} this page may only name. Nothing of ${named.length === 1 ? "it" : "them"} is served here — not a title, not a state, not a hash.</p>
+          ${named.map((e) => `<div class="pub-leg" data-edge="names" data-to="${esc(String(e.to))}" data-of="${of}"><span class="mono">${esc(String(e.to))}</span> &middot; ${kind(e)}</div>`).join("")}
+        </div>`
+      : `<p class="subj-note" data-graph="names" data-graphcount="0" data-of="${of}">There is no edge of this finding that this page may only name.</p>`}
+    ${unres.length
+      ? `<div class="pub-drop" data-graph="unresolved" data-graphcount="${esc(String(unres.length))}" data-of="${of}">
+          <b>${esc(String(unres.length))} edge${unres.length === 1 ? "" : "s"} of this finding ${unres.length === 1 ? "was" : "were"} classified as servable when this case was published, and the published record holds no edition behind ${unres.length === 1 ? "it" : "them"} now.</b>
+          The record reports ${unres.length === 1 ? "it" : "them"} rather than dropping ${unres.length === 1 ? "it" : "them"}, and this page does not drop ${unres.length === 1 ? "it" : "them"} either.
+          ${unres.map((e) => `<div class="mono" data-edge="unresolved" data-to="${esc(String(e.to))}" data-of="${of}">${esc(String(e.to))} &middot; ${kind(e)}</div>`).join("")}
+        </div>`
+      : `<p class="subj-note" data-graph="unresolved" data-graphcount="0" data-of="${of}">Every edge this case classified as servable still has a published edition behind it.</p>`}`;
+}
+
 /* ============================================================
    THE INDEX — over CASE EDITIONS, per DEC-12 and DEC-44. An edition is a
    separate document and edition 1 keeps answering after edition 2 lands, so the
@@ -14745,6 +14862,7 @@ function pubFindingPages(c, f, i, n, floors){
      <h3>What would overturn finding ${esc(String(i + 1))}</h3>
      <div class="pub-excl">${esc((f.body && f.body.authored && f.body.authored.falsifier) || (f.body && f.body.falsifies) || "The published bytes carry no falsifier.")}</div>
      ${pubDivisionHtml(f)}
+     ${pubGraphHtml(f, c)}
      <h3>This finding's own material and its signature</h3>
      <p class="subj-note">Every part of this finding's edition, with its own sha256 and its own length. Each answers by hash and by hash only. In the case container these sit under this finding's own directory, because two findings both carry a <span class="mono">bundle.md</span> and one flat list would say two things about one name.</p>
      ${(f.parts || []).map((p) => `<div class="pub-file">${esc(fid)}/${esc(p.path)} &middot; ${esc(p.kind || "file")} &middot; ${esc(p.bytes == null ? "length not recorded" : String(p.bytes) + " bytes")}
@@ -14792,7 +14910,9 @@ function pubCaseHtml(c, floors){
      <h2>What this case is about</h2>
      <p class="subj-note">Authored by the group, per case per edition, and never derived from the findings' titles: what the case is ABOUT is a different claim from what it leaves OUT, and a reader needs both.</p>
      <div class="pub-excl" data-scopetext="1">${esc(pubCaseId(c) ? ((c.scope) || "The published bytes carry no scope statement for this case.") : "These bytes are not a member of any published case, so there is no case scope statement and none is invented here.")}</div>
-     ${pubRosterHtml(c)}`);
+     ${pubRosterHtml(c)}
+     <h2>Why there is no single strength for this case</h2>
+     ${pubPlaneAccount("case_detail", c && c.case_detail)}`);
 
   /* PAGE 2 — WHAT THE CASE EXCLUDES, verbatim. Per CASE per EDITION (DEC-44
      (d)), which is the altitude C-21.1 checks it at. */

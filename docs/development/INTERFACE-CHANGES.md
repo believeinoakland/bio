@@ -968,3 +968,149 @@ used to reason about compatibility at all.
   `members.test.mjs`'s own `NEGATIVE CONTROL:` line.
 
 **Returns to STABLE at 6.0.0.**
+
+## IC-22 · I3: `op=publishedcase` stops answering `opened` · PROPOSED, RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-05 (UI-40)
+
+- **Interface:** I3 (plane → UI), **7.0.0 STABLE**
+- **Proposer:** `UI` (session ui40-agent), from QUEUE.md UI-40, routed out of UI-35's sweep
+- **Owner of I3:** `RECORD`. The change is ONE key in one return and is landed with this
+  proposal because UI-40 routes it that way; nothing else inside `bio-plane/**` is opened.
+- **Consumers to answer per `INTERFACES.md`:** `UI`, `DIST`, and every content area
+  that needs its work reachable
+
+### 1 · PROPOSED
+
+**`op=publishedcase` stops publishing the top-level `opened`.** It was the
+instant the case edition was OPENED, taken from `published_cases.opened`. It is
+REMOVED — not blanked, not emptied, not gated: the key is gone from
+`Store.publishedCase()`'s success return, so there is nothing in the answer for a
+later refactor to re-expose and a caller cannot tell from the shape that one was
+ever computed. That is REC-41's own form of removal and it is deliberate.
+
+Remaining top-level keys: `ok`, `caseId`, `edition`, `scope`,
+`bias_acknowledgement`, `completeness`, `ratified_at`, `complete`, `awaiting`,
+`asked` (when a finding id was the thing asked for), `findings`, `manifest_sha`,
+`manifest`, `files`, `editions`, `edition_index`, `latest_edition`,
+`case_detail`, `graph_detail`, and `verification` (added by the control plane).
+
+**`ratified_at` STAYS and the distinction is stated so it is not swept away next
+time.** `ratified_at` is the instant the LAST member finding landed — the instant
+the edition became a thing the group had signed, and the only one of the two the
+published record can stand behind. `opened` is the instant somebody started work.
+The published projection answers for what was PUBLISHED; when a case was opened
+is a fact about the working record, which this op deliberately cannot see.
+
+**WHAT IS EXPLICITLY NOT CLAIMED, because overclaiming a removal is the failure
+this project exists to refuse.** This is **not** a disclosure fix. Nothing about
+`opened` was sensitive, no D-number records it as a leak, and removing it closes
+no oracle — the ground here is that it is an UNCONSUMED PUBLICATION and nothing
+else. It is stated plainly so that a later reader does not infer a security
+motive the measurement never supported.
+
+**`#caseEditionState` KEEPS `opened`, and that is scoping rather than an
+oversight.** `op=publishcase` returns it to the member who has just published
+(`case: caseState`). That is a different op, a different token class and a
+different question, and this proposal measured a need on neither. Sweeping it
+because the field has the same name would be changing a shape this proposal did
+not examine. It is reported as a follow-on instead.
+
+### 2 · WHY, AND THE MEASUREMENT IT RESTS ON
+
+**The consumer impact is NIL, and it was RE-MEASURED FOR THIS PROPOSAL rather
+than taken from the queue item** — a claim in an item is a claim, not a
+measurement, and REC-41 is the precedent for why: its own item asserted no
+consumer for its OP and was wrong about the op while right about the field.
+
+Measured 2026-08-05 against source, over the WHOLE repository — 225 files,
+7,689,165 characters, comments blanked and line numbers preserved:
+
+| Caller | Reads `.opened` / `["opened"]`? |
+| --- | --- |
+| `civicos-ui/**` (the surface) | **no** — it renders `ratified_at` |
+| `newgroup/**` (the installer) | **no** |
+| `docprofile/**`, `pdf-worker/**`, `tools/**` | **no** |
+| `bio-plane/test/**` (the battery) | **no** — not one assertion named the field |
+| `bio-plane/src/store.mjs` | **yes, twice — and both are the PRODUCER reading its own SQL row** (`c.opened` in `#caseEditionState`, `state.opened` in `publishedCase`) |
+
+**THE TWO COUNTING TRAPS, INHERITED RATHER THAN REDISCOVERED, and the second one
+is not the one the item named:**
+
+1. `newgroup/src/release.mjs` embeds the whole bundled plane AS A STRING, so a
+   naive walk counts the plane as its own consumer and every key looks consumed.
+   It is a 3-line file whose second line is 1,737,506 characters.
+2. **`release/bio-plane.bundled.mjs` is a SECOND generated embed of the same
+   bytes (1,681,700 characters), and UI-40's brief named only the first.** A walk
+   that excluded the file it was warned about would still have counted the plane
+   as its own consumer, through a different file. Both are now excluded
+   STRUCTURALLY — by the generator's own banner and by the bundler's — never by
+   filename.
+
+**THE SPREAD, which is why a walk over `index.mjs` proves nothing here.** The
+control plane answers `json({ ok: true, ...c, findings, verification })`. The
+field reaches the wire WITHOUT `index.mjs` EVER NAMING IT, so grepping the
+control plane for `opened` returns nothing while the field ships. This is why the
+assertion that the field is gone is written THROUGH THE OP, over the real control
+plane, and not against the source.
+
+**ONE CORRECTION TO THE ITEM'S PREMISE, recorded because the register should not
+carry an inaccuracy even a harmless one.** UI-40 says the surface "already
+renders" `serves[]`, `names[]` and `unresolved[]`. It rendered **none of them**:
+zero reads of `.serves`, zero of `.names`, and the only two reads of
+`.unresolved` in `civicos-ui` belong to the subresource and reference surfaces.
+What it rendered was `division` (the plane's own derivation of `names[]`) and
+each basis leg's `served` flag (the control plane's derivation). That is not a
+finding about `opened` and it changes nothing in this proposal; it is recorded
+because the same item carries both halves.
+
+### 3 · RESPONSES
+
+- **`UI`: `AGREE`**, answered by the area itself — `ui40-agent` IS the live UI
+  session and holds the claim on the published-case renderer. Measured, not
+  assumed: `civicos-ui` contains no read of the field on any path, and the two
+  fixtures that CARRIED it (`publishedcase.test.mjs`, and
+  `preauth-vocabulary.test.mjs` — a second UI suite UI-35's table did not name)
+  are corrected in the same commit, because a fixture answering a key the plane
+  does not publish is the D-173 class that let a dead branch render as alive here
+  once already. Nothing in the UI migrates.
+- **`DIST`: `NOT-AFFECTED`, answered on its behalf by CONDUCT's standing
+  practice, IN WRITING, per protocol step 3, and recorded as answered FOR the
+  area and never as the area agreeing.** DIST is not live. The installer reads
+  `version` from `op=bootstrap` and does not call `op=publishedcase` at all. ONE
+  THING DIST MUST KNOW AND IT IS NOT A MIGRATION: both `newgroup/src/release.mjs`
+  and `release/bio-plane.bundled.mjs` embed a BUNDLED COPY of the previous
+  `store.mjs`, `opened` included. They are regenerated at the next release cut
+  and were deliberately NOT hand-edited — a signed artifact is not patched in
+  place, which is IC-20's own recorded position on the same two files.
+- **Content areas: `NOT-AFFECTED`**, answered in writing on the same standing.
+  No content area reaches this op; it is a pre-auth read surface.
+
+### 4 · RESOLUTION
+
+**ACCEPTED 2026-08-05.** All responses AGREE or NOT-AFFECTED; no counter.
+
+### 5 · CHANGING → CHANGED
+
+Landed by `UI` (ui40-agent) in one turn with the measurement above.
+**I3 7.0.0 → 8.0.0.**
+
+**IT IS A MAJOR BUMP AND THE NIL CONSUMER IMPACT DOES NOT MAKE IT A MINOR ONE.**
+Removing a published field from an op's answer is a break by definition. IC-3
+settled this reasoning for a single renamed wire string with impact equally nil:
+recording it as additive because nobody happened to be reading it "would teach
+this registry to lie", and IC-20 applied it again three items ago. A registry
+whose version numbers track who complained rather than what changed cannot be
+used to reason about compatibility at all.
+
+### 6 · SETTLED
+
+- **`UI`** — nothing to migrate; measured, not assumed. Two fixtures corrected
+  with a dated reason rather than exempted.
+- **`DIST`** — nothing to migrate; both embedded copies refresh at the next
+  release cut.
+- **Content areas** — nothing to migrate.
+- **The battery** — `publishedcase.test.mjs` asserts THROUGH THE OP that the key
+  is ABSENT from the answer (`"opened" in c` is false), which distinguishes
+  REMOVED from BLANKED where a value comparison could not. The negative control
+  is RUN and recorded in that suite's own `NEGATIVE CONTROL:` line.
+
+**Returns to STABLE at 8.0.0.**

@@ -34,6 +34,32 @@
  *   (g) THE REFUSAL'S OWN `detail` RENAMED IN THE PLANE — `reason:"NOT_PUBLISHED", detail:` -> `explanation:`. RUN: 204 pass, 1 FAIL. THE OTHER DIRECTION, and it earns its place: without it this block reads as "the plane never publishes a top-level `detail`", which is FALSE — the refusal does, `planeSaid` renders it (UI-37), and the two must not collapse into one claim.
  *   (h) THE SURFACE MADE TO READ AN UNREAD KEY — add `const planted = c.case_detail;` to `pubStateHtml`. RUN: 204 pass, 1 FAIL. The UNREAD set tracks what the surface ACTUALLY reads rather than being a hand-kept list that would go stale the moment somebody rendered one of them.
  * Restore after each.
+ *
+ *   (t) UI-40'S FOUR ARMS, ALL RUN 2026-08-05 by ui40-agent against the final files, every file restored
+ *       BYTE-IDENTICALLY with sha256 compared before and after (app.html unchanged throughout;
+ *       bio-plane/src/store.mjs 795d4f27…; this file 6458ed44…). The suite is 226 assertions whole.
+ *   (t1) `case_detail` BLANKED AT THE PLANE — in bio-plane/src/store.mjs replace the whole `case_detail:`
+ *       string with `""`. RUN: 219 pass, 7 FAIL, and the harness NAMES WHICH ACCOUNT WENT MISSING rather
+ *       than rendering an empty box: "UI-40: `case_detail` is RENDERED, and VERBATIM" fails reporting
+ *       `marked=false verbatim=false planeChars=0`, the case-altitude arm fails, and the in-suite blanking
+ *       arm for the OTHER account reports `marks now = none`. THE ARM ALSO CORRECTED THIS SUITE: on its
+ *       first run the failing assertion printed "found: verbatim", because `strip("")` is `""` and every
+ *       string contains it — a detail line contradicting its own verdict. Both verbatim details now report
+ *       `marked` and `verbatim` separately with the plane's character count beside them.
+ *   (t2) `graph_detail` BLANKED AT THE PLANE, same way. RUN: 220 pass, 6 FAIL, naming `graph_detail`
+ *       (`marked=false verbatim=false planeChars=0`) and reporting `finding pages carrying it=0`.
+ *   (t3) `opened` RESTORED TO THE PUBLISHED SHAPE — bio-plane/src/store.mjs reverted to its pre-IC-22
+ *       state. RUN: 225 pass, 1 FAIL here, naming it — `unread=bias_acknowledgement,opened` against
+ *       `listed=bias_acknowledgement` — AND 77 pass, 1 fail in bio-plane/test/publishedcase.test.mjs,
+ *       whose own arm names it. TWO SUITES CATCH IT INDEPENDENTLY, at the surface and through the op.
+ *   (t4) THE CONSUMER WALK NEUTERED — `if(false && EXT.has(...))` so the walk collects no files. RUN:
+ *       221 pass, 5 FAIL, every reach arm moving AS A DELTA (corpus `0 files / 0 chars`, `NONE EXCLUDED`,
+ *       `0 reads of .ratified_at`, `real=0 neutered=0`). **AND IT MEASURED THE THING THIS ARM EXISTS FOR:
+ *       the headline assertion — "`opened` has ZERO consumers" — STILL PASSED,** because zero consumers
+ *       over an empty corpus is an outcome that costs nothing to produce. It is caught only by the PAIRED
+ *       arm, which requires the producer's own reads to still be there and fails with "NONE AT ALL — the
+ *       walk found nothing, which is itself suspect". Do not delete the paired arm to tidy the block: it
+ *       is the only thing standing between this measurement and a confident zero over nothing.
  */
 /* UI-18 · O2 THE PUBLISHED CASE, AS UI-29 CORRECTS IT — the surface UI-PLAN
  * calls "the reason the rest exists", driven here against the public read path
@@ -98,6 +124,7 @@
  * to carry the argument against it.
  */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
+import { fileURLToPath } from "url";   /* UI-40: the consumer walk resolves the repo root from this file */
 import { appScript } from "./extract.mjs";
 
 let n = 0; const fails = [];
@@ -191,6 +218,16 @@ const L_CAP_D = "INFO-2026-8002";   // capture D, supports, NAMED — FIND_A's c
 const L_CAP_C = "INFO-2026-8003";   // capture C, CUTS AGAINST, NAMED — dropped at a capture floor of B
 const L_CON_C = "INFO-2026-8004";   // connection C, supports, NAMED, HUNCH — FIND_A's connection DETERMINING leg
 const L_CON_A = "INFO-2026-8005";   // connection A, supports, SERVED
+/* UI-40: THE CONTRADICTION IN THE INDEX, and the fixture had to grow to hold it.
+   An edge the case classified SERVABLE at publication with no published edition
+   behind it now — what the plane calls a contradiction and REPORTS in
+   `unresolved[]` rather than swallowing, on the reasoning that dropping it would
+   make the write-time restriction untestable from the outside. Before this item
+   NO fixture in this suite carried a non-empty `unresolved[]`, so the branch that
+   renders it could have been written any way at all and 205 assertions would have
+   agreed — the dead-branch-renders-as-alive shape UI-35 found here in its own
+   fixture. The honest cause is a target published and later purged. */
+const L_GONE = "INFO-2026-8009";    // classified servable at publication; nothing published behind it now
 
 const PAIR_A = [
   { axis:"capture", state:"graded", grade:"D", weakest:L_CAP_D, load_bearing:3, population:3,
@@ -275,7 +312,7 @@ function findingA(ed){
             { path:"snapshots/memo.bin", sha256:CAP_SHA, kind:"capture", bytes:8192 } ],
     serves:[ { to:L_CAP_B, kind:"reference", edition:1, title:"The transfer memo", bundle_sha:DOC_SHA,
                case_id:null, manifest_sha:null, ratified_at:"2026-06-01T00:00:00Z" } ],
-    names:[], unresolved:[],
+    names:[], unresolved:[ { to:L_GONE, kind:"reference" } ],
     division:{ parent:null, siblings:[],
       detail:"a division's parent and siblings are NAMED and never served." },
     object_type:"inquiry",
@@ -321,7 +358,6 @@ function caseEdition(ed){
       excluded: ed === 1 ? EXCLUDED_1 : "[]", subject_position:"sought_and_answered",
       author:"vera", at: ed === 1 ? "2026-07-01T09:00:00Z" : "2026-07-20T09:00:00Z" },
     ratified_at: ed === 1 ? "2026-07-01T10:00:00Z" : "2026-07-20T10:00:00Z",
-    opened: ed === 1 ? "2026-06-30T09:00:00Z" : "2026-07-19T09:00:00Z",
     complete:true, awaiting:[],
     findings:[ fa, fb ],
     manifest_sha:man,
@@ -357,7 +393,7 @@ const SOLO = {
   completeness:{ statement:"This case covers the lease extension only.",
     subject_justification:"The officer named declined to answer in writing.",
     excluded:"[]", subject_position:"sought_and_refused", author:"dan", at:"2026-07-05T09:00:00Z" },
-  ratified_at:"2026-07-05T09:00:00Z", opened:"2026-07-04T09:00:00Z", complete:true, awaiting:[],
+  ratified_at:"2026-07-05T09:00:00Z", complete:true, awaiting:[],
   findings:[ { ord:0, bundle_id:FIND_S, title:"Was the lease extended without a vote?", bundle_sha:S_SHA,
     ratified_at:"2026-07-05T09:00:00Z", gate_version:"1.20.0", sig_armored:SIG,
     attestor:{ member:"dan", key_b64:KEY_D },
@@ -398,7 +434,7 @@ const WAITING = {
   completeness:{ statement:"This case covers the two 2025 culvert contracts.",
     subject_justification:"The vendor has not been asked yet.", excluded:"[]",
     subject_position:"not_sought", author:"vera", at:"2026-07-28T09:00:00Z" },
-  ratified_at:null, opened:"2026-07-27T09:00:00Z",
+  ratified_at:null,
   complete:false, awaiting:[FIND_D],
   findings:[ { ord:0, bundle_id:FIND_C, title:"Who owns the vendor?", bundle_sha:C_SHA,
     ratified_at:"2026-07-28T09:00:00Z", gate_version:"1.20.0", sig_armored:SIG,
@@ -427,7 +463,7 @@ const WAITING = {
    case, and manufacturing one for it is D-187's conflation one level down. */
 const LOOSE = {
   ok:true, caseId:null, edition:1, scope:null, completeness:null,
-  ratified_at:"2026-06-01T00:00:00Z", opened:"2026-06-01T00:00:00Z", complete:true, awaiting:[],
+  ratified_at:"2026-06-01T00:00:00Z", complete:true, awaiting:[],
   findings:[ { ord:0, bundle_id:INFO, title:"The transfer memo", bundle_sha:INFO_SHA,
     ratified_at:"2026-06-01T00:00:00Z", gate_version:"1.20.0", sig_armored:SIG,
     attestor:{ member:"vera", key_b64:KEY_V },
@@ -578,6 +614,15 @@ const BYTES = new TextEncoder().encode("the ratified bytes of edition 1");
    case-level strength; this makes the PLANE hand one over anyway, so the
    surface's own refusal is measured rather than inherited. */
 let POISON = false;
+/* UI-40's DRIVER, and it drives the WIRE rather than the surface. When set, it
+   replaces the two top-level accounts on whatever the mock is about to answer —
+   which is the only honest way to run both of this item's controls: BLANKING
+   each field at the plane (the harness must FAIL naming which account went
+   missing, rather than rendering an empty box) and the OVER-STRICTNESS arm (a
+   correct account phrased unlike anything this suite wrote must render whole,
+   which is what proves the pins read the wire and not a constant). */
+let ACCOUNTS = null;
+const withAccounts = (c) => ACCOUNTS ? { ...c, ...ACCOUNTS } : c;
 
 function mockFetch(u, opts){
   const url = new URL(String(u), "https://plane.test");
@@ -595,10 +640,13 @@ function mockFetch(u, opts){
     const id = url.searchParams.get("id");
     const ed = url.searchParams.get("edition");
     const sha = url.searchParams.get("sha256");
-    const poison = (c) => POISON
-      ? { ...c, strength:PAIR_A, required:BAR_ABSENT, bundle_sha:A2,
-          manifest: c.manifest ? { ...c.manifest, strength:PAIR_A } : c.manifest }
-      : c;
+    const poison = (c0) => {
+      const c = withAccounts(c0);
+      return POISON
+        ? { ...c, strength:PAIR_A, required:BAR_ABSENT, bundle_sha:A2,
+            manifest: c.manifest ? { ...c.manifest, strength:PAIR_A } : c.manifest }
+        : c;
+    };
     if(id === CASE || sha === A1 || sha === A2 || sha === B1 || sha === B2 || id === FIND_A || id === FIND_B){
       const which = (sha === A1 || sha === B1) ? 1 : (sha === A2 || sha === B2) ? 2 : (ed ? Number(ed) : 2);
       if(which !== 1 && which !== 2)
@@ -1709,6 +1757,22 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
     let d = 0;
     for(let i = 0; i < region.length; i++){
       const ch = region[i];
+      /* COMMENTS ARE SKIPPED HERE TOO — CORRECTED 2026-08-05 (UI-40), and it is
+         a real defect found by tripping it rather than a tidy-up. `balanced()`
+         above was taught to skip comments because this file's prose is full of
+         apostrophes; THIS loop, which extracts the keys out of the region
+         `balanced()` returned, was never given the same treatment. The moment
+         UI-40 put an explanatory block comment INSIDE the return statement, an
+         apostrophe in it opened a "string" that swallowed the following keys and
+         a `(` inside it pushed the depth, and the walk reported a top-level key
+         set of `asked, bias_acknowledgement, caseId, edition, it, ok, scope,
+         strength` — SHORTER THAN THE TRUTH and containing `it`, a word out of
+         the English prose. It is the identical failure mode recorded four
+         paragraphs up: a CONFIDENT WRONG ANSWER rather than an error. It failed
+         loudly here only because the arm below happens to demand two specific
+         keys; a walk missing a key nobody names would have passed. */
+      if(ch === "/" && region[i + 1] === "*"){ const e = region.indexOf("*/", i + 2); i = e < 0 ? region.length : e + 1; continue; }
+      if(ch === "/" && region[i + 1] === "/"){ const e = region.indexOf("\n", i); i = e < 0 ? region.length : e; continue; }
       if(ch === '"' || ch === "'" || ch === "`"){ const q = ch; i++;
         while(i < region.length && region[i] !== q){ if(region[i] === "\\") i++; i++; } continue; }
       if(ch === "{" || ch === "[" || ch === "(") { d++; continue; }
@@ -1743,18 +1807,19 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
   const readsIt = (k) => new RegExp(`\\.${k}\\b|\\[\\s*["'\`]${k}["'\`]\\s*\\]`).test(app);
   /* STATED, not exempted: these three are published and read by NOTHING here.
      Each carries WHY it is on this list rather than being silently tolerated. */
+  /* CORRECTED 2026-08-05 (UI-40), never exempted, and the register SHRANK for
+     the right reason. `case_detail` and `graph_detail` left this list because
+     the surface now READS them — `pubPlaneAccount` prints each verbatim — which
+     is exactly the movement UI-35's arm (h) was built to detect, so the pin
+     fired on this edit and was answered by deleting the entries rather than by
+     relaxing the arm. `opened` left it because the field is GONE from the wire
+     under IC-22, so there is no published key left to be unread; the assertion
+     that it is no longer published lives in the plane's own suite, where the
+     removal is. `bias_acknowledgement` STAYS, and it is the only one left: it is
+     DEC-59's, deliberately out of UI-40's scope, and it is a SURFACE GAP rather
+     than an unconsumed publication — the gate enforces it (C-21.1) and the
+     battery asserts it. */
   const UNREAD = {
-    case_detail: "the plane's own account of why a case has no case-level strength (DEC-44). "
-               + "Rendered nowhere; the surface hand-writes its own doctrine instead. Candidate for "
-               + "RENDERING under UI-32's rule (lift what the record published), which moves DEC-49's "
-               + "SUBJECT and so is routed rather than done here.",
-    graph_detail: "the plane's own account of serves[]/names[]/unresolved[]. Rendered nowhere, though "
-                + "this surface renders all three arrays. Same routing.",
-    opened: "when the case edition was OPENED. The strongest instance of this item's shape: ZERO "
-          + "consumers anywhere — not this surface, not `newgroup`, not `docprofile`, not "
-          + "`pdf-worker`, and not one assertion in the plane's own battery. The surface renders "
-          + "`ratified_at` and never this. Found by THIS sweep and not by the item, which named a "
-          + "field that turned out not to be published at all.",
     bias_acknowledgement: "the GROUP's acknowledgement of the bias the case was produced under "
                         + "(REC-47, DEC-46 (a)), gated by C-21.1 and asserted by the battery. NOT an "
                         + "unconsumed publication — a SURFACE GAP. DEC-34's per-page header shows a "
@@ -1788,6 +1853,297 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      && typeof GRAPH_DETAIL === "string" && GRAPH_DETAIL.length > 100
      && caseEdition(1).case_detail === CASE_DETAIL && LOOSE.graph_detail === GRAPH_DETAIL,
      `case_detail=${(CASE_DETAIL || "").length} graph_detail=${(GRAPH_DETAIL || "").length}`);
+}
+
+/* ============================================================
+   UI-40 — THE TWO ACCOUNTS THE RECORD PUBLISHES ARE RENDERED, AND THEY ARE
+   RENDERED AS THE RECORD'S OWN WORDS
+   ============================================================
+   UI-35 measured that `case_detail` and `graph_detail` were published and read
+   by nothing. This block asserts they are read, and asserts the PROPERTY that
+   makes rendering them worth doing: the surface prints what the record said
+   rather than a paraphrase of it. A paraphrase would satisfy "the doctrine is on
+   the page" and drift from the plane the first time the plane's wording moved,
+   with nothing measuring the drift — so every arm here compares against
+   `CASE_DETAIL` / `GRAPH_DETAIL`, which are read OUT OF `bio-plane/src/store.mjs`
+   at load and never typed in this file.
+
+   AND ONE ARM DELIBERATELY GOES THE OTHER WAY (the over-strictness arm REC-56's
+   practice requires): a DIFFERENT, correct sentence, phrased unlike anything
+   this suite or that surface wrote, is fed through the wire and the surface must
+   render THAT. Without it, every arm above would still pass if `pubPlaneAccount`
+   ignored its argument and printed a constant copied from the plane — which is a
+   pin testing its author's phrasing rather than the wire. */
+console.log("\n--- UI-40: the record's own accounts, rendered ---");
+{
+  await ctx.__pubOpen(CASE);
+  const p = pubBody();
+  const t = strip(p);
+
+  /* (1) `case_detail`, AT CASE ALTITUDE. It is a statement about the CASE — why
+     a case has no case-level strength — so it belongs on a case page and not
+     inside a finding's. */
+  const acc = [...p.matchAll(/data-planeaccount="([^"]+)"/g)].map(m => m[1]);
+  ok("UI-40 REACH: the page carries the record's own accounts as marked blocks",
+     acc.length > 0, `marks=${acc.join(",") || "NONE"}`);
+  /* THE DETAIL REPORTS BOTH HALVES SEPARATELY, and that is a correction the
+     negative control earned. It first read `t.includes(strip(CASE_DETAIL))
+     ? "verbatim" : …`, and when NC arm (1a) blanked the field at the plane
+     `strip("")` became `""` — which every string contains — so a FAILING arm
+     printed "found: verbatim". A detail line that contradicts its own verdict
+     costs the next session exactly the time this instrument exists to save. */
+  const verbatimCase = CASE_DETAIL.length > 0 && t.includes(strip(CASE_DETAIL));
+  ok("UI-40: `case_detail` is RENDERED, and VERBATIM — the plane's own sentence, not a paraphrase",
+     acc.includes("case_detail") && verbatimCase,
+     `marked=${acc.includes("case_detail")} verbatim=${verbatimCase} planeChars=${CASE_DETAIL.length}`);
+  ok("UI-40: and it stands at CASE altitude, where the claim it makes belongs",
+     casePages(p).some(x => /data-planeaccount="case_detail"/.test(x))
+     && !findingPages(p).some(x => /data-planeaccount="case_detail"/.test(x)));
+
+  /* (2) `graph_detail`, PER FINDING, beside the arrays it is an account OF.
+     Placed with its subject rather than forty screens away: UI-39 measured that
+     a bound stated where its subject is not is a bound not stated. */
+  const verbatimGraph = GRAPH_DETAIL.length > 0 && t.includes(strip(GRAPH_DETAIL));
+  ok("UI-40: `graph_detail` is RENDERED, and VERBATIM",
+     acc.includes("graph_detail") && verbatimGraph,
+     `marked=${acc.includes("graph_detail")} verbatim=${verbatimGraph} planeChars=${GRAPH_DETAIL.length}`);
+  ok("UI-40: it stands beside the arrays it accounts for — on the FINDING pages, one per finding",
+     findingPages(p).filter(x => /data-planeaccount="graph_detail"/.test(x)).length === 2,
+     `finding pages carrying it=${findingPages(p).filter(x => /data-planeaccount="graph_detail"/.test(x)).length}`);
+
+  /* (3) THE ARRAYS THEMSELVES — the item said this surface already rendered all
+     three and the measurement said it rendered NONE of them. These are the
+     assertions that make `graph_detail` an account of something the reader can
+     see rather than a sentence about data that is not on the page. */
+  const graphOf = (fid) => [...p.matchAll(/data-graph="([a-z]+)" data-graphcount="(\d+)" data-of="([^"]+)"/g)]
+    .filter(m => m[3] === fid).reduce((o, m) => (o[m[1]] = Number(m[2]), o), {});
+  const gA = graphOf(FIND_A), gB = graphOf(FIND_B);
+  ok("UI-40: finding A's SERVES edge is rendered, with the edition and title the record published",
+     gA.serves === 1 && t.includes(L_CAP_B) && t.includes("The transfer memo"), JSON.stringify(gA));
+  ok("UI-40: finding B's two NAME-only edges are rendered as name-only",
+     gB.names === 2 && /data-edge="names" data-to="INQ-2026-4000"/.test(p), JSON.stringify(gB));
+  /* THE SHARP ONE. The plane calls an unresolved edge a CONTRADICTION in the
+     index and REPORTS it rather than swallowing it; the surface used to drop it
+     on the floor, so a reader met a case whose index disagreed with itself and
+     was told nothing. */
+  ok("UI-40: the UNRESOLVED edge — the contradiction the record reports — REACHES THE READER",
+     gA.unresolved === 1 && t.includes(L_GONE)
+     && /data-graph="unresolved"[^>]*data-of="INQ-2026-4101"/.test(p), JSON.stringify(gA));
+  ok("UI-40: and a finding with no unresolved edge SAYS SO, so absence of the warning is not the ambiguity",
+     gB.unresolved === 0 && t.includes("still has a published edition behind it"), JSON.stringify(gB));
+
+  /* (4) THE SURFACE AUTHORS NO DOCTRINE OF ITS OWN HERE. `pubPlaneAccount`'s
+     whole point is that the words come from the wire, so the file must not carry
+     a hand-written copy of either sentence — which is also what keeps DEC-49
+     un-pre-empted, since nothing here is wording anybody chose. */
+  const appSrc = appScript();
+  ok("UI-40: neither sentence is hand-copied into the surface — it prints what the wire sent, nothing else",
+     !appSrc.includes(CASE_DETAIL.slice(0, 60)) && !appSrc.includes(GRAPH_DETAIL.slice(0, 60)));
+
+  /* (5) THE OVER-STRICTNESS ARM, and it is the one that stops these pins from
+     testing their own author's phrasing. A CORRECT account, worded unlike
+     anything this suite or that surface ever wrote, is put on the wire and must
+     render WHOLE and unedited. REC-56's practice: feed in a correct alternative
+     phrased unlike anything you wrote and require 0 fail. */
+  const ALIEN_CASE = "Ravens counted the ledgers twice, and the second count is the one this container carries. "
+                   + "No single letter is offered for the whole of it, and that is deliberate rather than missing.";
+  const ALIEN_GRAPH = "Whatever this page can put in your hands is listed first; what it can only point at follows; "
+                    + "anything it promised and cannot produce is listed last and ought not to be there at all.";
+  ACCOUNTS = { case_detail: ALIEN_CASE, graph_detail: ALIEN_GRAPH };
+  await ctx.__pubOpen(CASE);
+  const alienPage = strip(pubBody());
+  ACCOUNTS = null;
+  ok("UI-40 CONTROL (over-strictness): a DIFFERENT correct `case_detail` renders WHOLE and unedited",
+     alienPage.includes(ALIEN_CASE) && !alienPage.includes(strip(CASE_DETAIL)),
+     alienPage.includes(ALIEN_CASE) ? "rendered whole" : "NOT RENDERED — the surface is not reading the wire");
+  ok("UI-40 CONTROL (over-strictness): and so does a DIFFERENT correct `graph_detail`",
+     alienPage.includes(ALIEN_GRAPH) && !alienPage.includes(strip(GRAPH_DETAIL)),
+     alienPage.includes(ALIEN_GRAPH) ? "rendered whole" : "NOT RENDERED — the surface is not reading the wire");
+
+  /* (6) THE BLANKING CONTROLS, RUN IN-SUITE rather than only recorded, because
+     the item requires the harness to FAIL NAMING WHICH ACCOUNT WENT MISSING
+     rather than rendering an empty box. `pubPlaneAccount` returns "" on an
+     absent field BY DESIGN — no fallback sentence — so what must be observable
+     is the MARK's disappearance, and these two arms assert exactly that in the
+     direction the negative control will drive them. */
+  for(const [key, other] of [["case_detail", "graph_detail"], ["graph_detail", "case_detail"]]){
+    ACCOUNTS = { [key]: null };
+    await ctx.__pubOpen(CASE);
+    const blanked = pubBody();
+    ACCOUNTS = null;
+    const marks = [...blanked.matchAll(/data-planeaccount="([^"]+)"/g)].map(m => m[1]);
+    ok(`UI-40 CONTROL (blanked at the plane): with \`${key}\` blanked the surface renders NO block for it — `
+       + "no empty box, no fallback sentence — while the other account is untouched",
+       !marks.includes(key) && marks.includes(other),
+       `marks now = ${marks.join(",") || "none"}`);
+  }
+  /* And back to the real answer, so nothing downstream inherits a driven state. */
+  await ctx.__pubOpen(CASE);
+  ok("UI-40 REACH: the real answer is restored after the controls, so nothing below inherits a driven state",
+     /data-planeaccount="case_detail"/.test(pubBody()) && strip(pubBody()).includes(strip(CASE_DETAIL)));
+}
+
+/* ============================================================
+   UI-40 — THE CONSUMER WALK, OVER THE WHOLE REPOSITORY
+   ============================================================
+   This is the measurement IC-22 rests on, and it lives here so it can be RE-RUN
+   rather than quoted. UI-35 measured the same question by hand and recorded the
+   answer in prose; a prose answer cannot be re-run, and REC-41's precedent is
+   that an item's assertion about consumers is a CLAIM until somebody measures it
+   again — REC-41's own item was wrong about its op while right about its field,
+   and only re-measuring caught it.
+
+   THE THREE TRAPS IT IS BUILT AROUND, two inherited and one found here:
+
+   1. `newgroup/src/release.mjs` embeds the whole bundled plane AS A STRING (a
+      3-line file whose second line is ~1.74 MB), so a naive walk counts the
+      plane as its own consumer and EVERY key looks consumed.
+   2. **`release/bio-plane.bundled.mjs` IS A SECOND EMBED OF THE SAME BYTES
+      (~1.68 MB) AND UI-40's OWN BRIEF NAMED ONLY THE FIRST.** A walk that
+      excluded the file it was warned about would still have counted the plane as
+      its own consumer, through a different file. Both are excluded
+      STRUCTURALLY — by the generator's banner and by the bundler's own first
+      line — and NEVER by filename, because the next generated artifact will have
+      a third name.
+   3. REGEX LITERALS. A scanner that treats `'` as a string delimiter runs
+      straight through `/won't/` and swallows everything to the next apostrophe.
+      The first version of this walk did exactly that and reported FEWER
+      declaration sites than exist — a confident wrong answer in the generous
+      direction, the same shape as UI-35's 27,059-character "return statement".
+      Newlines are preserved when a region is blanked, so a reported line number
+      is a line number somebody can check by hand.
+
+   AND ITS OWN REACH IS ASSERTED AS A DELTA, never as an absolute: a walk that
+   covers nothing finds no consumers and passes triumphantly. */
+console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
+{
+  const path = await import("node:path");
+  const ROOT = fileURLToPath(new URL("../../", import.meta.url));
+  const SKIP = new Set(["node_modules", ".git", "dist", ".claude", "coverage"]);
+  const EXT = new Set([".mjs", ".js", ".html"]);
+  const files = [];
+  (function walk(dir){
+    for(const e of fs.readdirSync(dir, { withFileTypes:true })){
+      if(e.name.startsWith(".")) continue;
+      const p = path.join(dir, e.name);
+      if(e.isDirectory()){ if(!SKIP.has(e.name)) walk(p); continue; }
+      if(EXT.has(path.extname(e.name))) files.push(p);
+    }
+  })(ROOT);
+
+  /* STRUCTURAL, never by filename — AND ANCHORED AT THE START OF THE FILE.
+     The first version tested whether the source CONTAINED the generator's
+     banner, and that excluded `newgroup/scripts/embed-release.mjs` — the
+     GENERATOR ITSELF, which contains the banner because it WRITES it. Excluding
+     a real source file is the walk's worst failure: a consumer living in the
+     generator would have been invisible and the answer would still have read
+     "zero". A generated artifact BEGINS with its banner; a file that merely
+     mentions one does not. */
+  const generatedReason = (src) =>
+      /^\/\* GENERATED by scripts\/embed-release\.mjs/.test(src) ? "embed-release banner, at byte 0"
+    : (/^\/\/ src\/schema\.mjs\n/.test(src) && /var SCHEMA = `/.test(src)) ? "bundler output, first line names the entry module"
+    : null;
+
+  const blank = (s) => s.replace(/[^\n]/g, " ");
+  function codeOf(src){
+    let out = "", i = 0;
+    const regexOk = () => {
+      for(let k = out.length - 1; k >= 0; k--){
+        const c = out[k];
+        if(/\s/.test(c)) continue;
+        if("(,=:[!&|?{};+-*%~^<>".includes(c)) return true;
+        if(/[A-Za-z0-9_$)\]]/.test(c))
+          return /\b(return|typeof|case|in|of|do|else|yield|await|new|delete|void|instanceof)$/
+            .test(out.slice(Math.max(0, k - 10), k + 1));
+        return false;
+      }
+      return true;
+    };
+    while(i < src.length){
+      const ch = src[i];
+      if(ch === "/" && src[i+1] === "*"){ const e = src.indexOf("*/", i+2), end = e < 0 ? src.length : e+2; out += blank(src.slice(i,end)); i = end; continue; }
+      if(ch === "/" && src[i+1] === "/"){ const e = src.indexOf("\n", i), end = e < 0 ? src.length : e; out += blank(src.slice(i,end)); i = end; continue; }
+      if(src.slice(i, i+4) === "<!--"){ const e = src.indexOf("-->", i), end = e < 0 ? src.length : e+3; out += blank(src.slice(i,end)); i = end; continue; }
+      if(ch === '"' || ch === "'" || ch === "`"){ const q = ch; let j = i+1;
+        while(j < src.length && src[j] !== q){ if(src[j] === "\\") j++; j++; }
+        out += src.slice(i, Math.min(j+1, src.length)); i = j+1; continue; }
+      if(ch === "/" && regexOk()){
+        let j = i+1, cls = false, closed = false;
+        for(; j < src.length; j++){
+          const c = src[j];
+          if(c === "\\"){ j++; continue; }
+          if(c === "\n") break;
+          if(c === "[") cls = true; else if(c === "]") cls = false;
+          else if(c === "/" && !cls){ closed = true; break; }
+        }
+        if(closed){ while(j+1 < src.length && /[a-z]/.test(src[j+1])) j++; out += src.slice(i, j+1); i = j+1; continue; }
+      }
+      out += ch; i++;
+    }
+    return out;
+  }
+
+  /* The corpus is built ONCE and reported, so a corpus that shrank is visible
+     rather than silent (this week's standing practice). */
+  const corpus = [];
+  const excluded = [];
+  for(const f of files){
+    const raw = fs.readFileSync(f, "utf8");
+    const g = generatedReason(raw);
+    if(g){ excluded.push({ f: path.relative(ROOT, f), why: g, chars: raw.length }); continue; }
+    corpus.push({ f: path.relative(ROOT, f), code: codeOf(raw) });
+  }
+  const chars = corpus.reduce((a, x) => a + x.code.length, 0);
+  console.log(`UI-40 CORPUS: ${corpus.length} files, ${chars} chars scanned; `
+            + `${excluded.length} generated artifact(s) excluded (${excluded.map(x => x.f + " " + x.chars).join("; ")})`);
+
+  /* `set` is the corpus to walk — a parameter, so the NEUTERING control has
+     something to neuter and the reach arm is a DELTA against it. */
+  const readsOf = (key, set = corpus) => {
+    const re = new RegExp(`\\.${key}\\b|\\[\\s*["'\`]${key}["'\`]\\s*\\]`);
+    const hits = [];
+    for(const { f, code } of set)
+      code.split("\n").forEach((l, n) => { if(re.test(l)) hits.push(`${f}:${n+1}`); });
+    return hits;
+  };
+
+  ok("UI-40 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it",
+     corpus.length > 200 && chars > 5_000_000, `${corpus.length} files / ${chars} chars`);
+  ok("UI-40 REACH: BOTH generated embeds are excluded, each recognised STRUCTURALLY and neither by name "
+     + "— the second one is the trap this item's own brief did not name",
+     excluded.length === 2 && excluded.every(x => x.chars > 1_000_000)
+     && excluded.some(x => /newgroup/.test(x.f)) && excluded.some(x => /release\/bio-plane\.bundled/.test(x.f)),
+     excluded.map(x => `${x.f} (${x.why})`).join(" | ") || "NONE EXCLUDED");
+
+  /* THE POSITIVE CONTROL ON THE REAL CORPUS. `ratified_at` is a key of the very
+     same answer that the surface really does read, so if this walk were passing
+     over nothing — or matching nothing — this arm fails. It is what makes the
+     ZERO below mean something. */
+  const ratifiedReads = readsOf("ratified_at");
+  ok("UI-40 REACH (positive control on the SAME corpus): a key of this op that IS read is found, and found "
+     + "in the surface — so a zero below is a measurement rather than an empty walk",
+     ratifiedReads.length > 0 && ratifiedReads.some(h => h.startsWith("civicos-ui/app.html")),
+     `${ratifiedReads.length} reads of .ratified_at`);
+
+  /* THE NEUTERING CONTROL, RUN IN-SUITE AND AS A DELTA. This is arm (3) of the
+     item's negative controls, and running it here means it cannot be forgotten:
+     an emptied corpus must take the positive control to ZERO. A walk that covers
+     nothing passes everything, and this is the arm that proves it does not. */
+  ok("UI-40 CONTROL (walk neutered): over an EMPTY corpus the positive control collapses to zero — "
+     + "the reach arms are answering the corpus and not themselves",
+     readsOf("ratified_at", []).length === 0 && ratifiedReads.length > 0,
+     `real=${ratifiedReads.length} neutered=${readsOf("ratified_at", []).length}`);
+
+  /* AND THE FINDING IC-22 RESTS ON. */
+  const openedReads = readsOf("opened");
+  const outsideProducer = openedReads.filter(h => !h.startsWith("bio-plane/src/store.mjs"));
+  ok("UI-40: `opened` has ZERO consumers anywhere outside the producer — the surface, the installer, the "
+     + "fleet, the tools and the battery all read it not once. IC-22's evidence, RE-MEASURED and not inherited",
+     outsideProducer.length === 0, outsideProducer.join(", ") || "none");
+  ok("UI-40: and the only reads of it that exist are the PRODUCER reading its own SQL row, which is what "
+     + "makes it an unconsumed publication rather than a field with one caller",
+     openedReads.length > 0 && openedReads.every(h => h.startsWith("bio-plane/src/store.mjs")),
+     openedReads.join(", ") || "NONE AT ALL — the walk found nothing, which is itself suspect");
 }
 
 console.log(`publishedcase: ${n - fails.length}/${n} assertions`);

@@ -693,11 +693,50 @@ const MANIFEST_ANSWER = {
   detail:"every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
        + "instance's cooperation or continued existence.",
 };
+/* THE TWO TOP-LEVEL ACCOUNTS `op=publishedcase` REALLY SENDS, READ OUT OF THE
+   PLANE — ADDED 2026-08-05 (UI-40), and adding them is the whole reason this
+   file's measurement is honest again.
+
+   UI-40 made the published-case surface RENDER `case_detail` and `graph_detail`
+   verbatim, which puts two long plane-authored sentences in front of an
+   UNCREDENTIALED reader — exactly this file's subject. The change should
+   therefore have moved DEC-49's subject, and on the first run it DID NOT AND THE
+   SUITE PASSED. The reason is the failure mode this file was built to catch,
+   arriving in its own fixture: `CASE_ANSWER` did not carry either field, so the
+   mock answered a SMALLER SHAPE than the wire and the guard measured vocabulary
+   that was not there to measure. A guard whose fixture is shorter than the
+   answer reports a clean surface by construction.
+
+   Read TEXTUALLY out of `store.mjs` rather than typed here, for the reason
+   stated above `planeLoginRefusal`: a hand-typed copy agrees with its source at
+   zero cost, and whether the plane's EXACT words reach a stranger is the only
+   question this file asks. The read is GUARDED below.
+
+   AND `opened` IS GONE from this fixture (UI-40, IC-22), never exempted: the
+   wire no longer sends it, and a fixture answering a key the plane does not
+   publish is the D-173 class UI-35 found on this very op. THIS SUITE WAS NOT
+   NAMED BY UI-35'S CONSUMER TABLE and was found by UI-40's own re-measurement,
+   which is the argument for re-measuring rather than inheriting a table. */
+function planeAccount(key, until){
+  const i = STORE_SRC.indexOf(key + ": \"");
+  if(i < 0) return null;
+  const j = STORE_SRC.indexOf(until, i);
+  const region = STORE_SRC.slice(i + key.length + 1, j < 0 ? STORE_SRC.length : j);
+  const parts = region.match(/"(?:[^"\\]|\\.)*"/g) || [];
+  return parts.map(s => JSON.parse(s)).join("");
+}
+const CASE_DETAIL_SENTENCE  = planeAccount("case_detail", "graph_detail");
+const GRAPH_DETAIL_SENTENCE = planeAccount("graph_detail", "\n  }");
+ok("the plane's two published ACCOUNTS are readable from here, whole, and are prose — the fixture "
+   + "below answers the wire's own words and not a shorter shape of them",
+   typeof CASE_DETAIL_SENTENCE === "string" && CASE_DETAIL_SENTENCE.length > 200
+   && typeof GRAPH_DETAIL_SENTENCE === "string" && GRAPH_DETAIL_SENTENCE.length > 100);
 const CASE_ANSWER = {
   ok:true, caseId:CASE_ID, edition:1,
   scope:"Whether the sewer transfer was authorised.",
   completeness:"Every finding this case declared has been ratified.",
-  ratified_at:"2026-07-01T10:00:00Z", opened:"2026-06-01T00:00:00Z", complete:true, awaiting:[],
+  ratified_at:"2026-07-01T10:00:00Z", complete:true, awaiting:[],
+  case_detail:CASE_DETAIL_SENTENCE, graph_detail:GRAPH_DETAIL_SENTENCE,
   findings:[{ ord:0, bundle_id:FIND_ID, title:"Was the sewer transfer authorised?", bundle_sha:SHA,
     ratified_at:"2026-07-01T09:00:00Z", gate_version:"1.20.0",
     sig_armored:"-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----",
@@ -1967,6 +2006,26 @@ const DEC49_SUBJECT = {
                           "case-address-at-load #v-part-" + CAP.slice(0, 12),
                           "case-address-at-load #v-f-" + FIND_ID,
                           "case-address-at-load #v-c-" + FIND_ID],
+  /* NEW ROW, UI-40, 2026-08-05 — AND IT IS A REAL GROWTH IN DEC-49'S SUBJECT
+     RATHER THAN AN INSTRUMENT ARTEFACT, so it is recorded here and REPORTED to
+     Bob rather than absorbed. UI-40 made the published-case surface print
+     `case_detail` VERBATIM (UI-32's rule: lift what the record published rather
+     than hand-write doctrine), and that sentence ends "composing two findings'
+     strengths into one letter is the substitution R2 forbids". `R2` is an
+     internal doctrine reference, and it now stands in front of a reader holding
+     no credential, on the page a stranger arrives at.
+     THE SURFACE CANNOT FIX THIS AND MUST NOT TRY: translating or blanking a
+     plane sentence are the two moves DEC-8 forbids, which is precisely why this
+     arm records the growth instead of demanding a repair. Only DEC-49 can
+     remove it — either the plane learns member-facing wording, or surfaces get a
+     licensed translation layer.
+     ONE THING THIS ROW DOES NOT COVER, stated rather than left to be found:
+     the same sentence also says "never a verdict this PLANE reached", and the
+     word `plane` is flagged by nothing here because no sibling sweep polices it
+     and it is not one of the four phrases DEC-49 quotes. The term list is
+     HARVESTED by design and is not hand-extended here; the gap is reported with
+     this item rather than papered over. */
+  "R2":                  ["case-address-at-load #pub-body"],
 };
 {
   const now = {};
