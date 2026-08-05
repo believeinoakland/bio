@@ -3934,7 +3934,44 @@ export default {
       if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
 
-      const facts = (await (await stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
+      /* REC-53: EVERY Durable Object read in this block goes through REC-52's
+         chokepoint (`doAnswer`/`storeSilent`), and not one of them keeps a local
+         guard — the whole point of that item is that there is now ONE place that
+         opens an envelope, so a rule remembered here would be the twenty-fifth
+         remembered check that gets forgotten. REC-52 found eleven caller-facing
+         instances of this class and converted them; it left these EIGHT alone
+         because the publish/ratify block was another item's ground, and they are
+         the same defect: a failure to ANSWER converted into a substantive claim
+         about the RECORD, at the layer beneath every surface.
+
+         THE ONE JUDGEMENT THIS BLOCK NEEDS, because it is the only handler in
+         the file with a COMMIT in the middle of it, and it is recorded here
+         rather than repeated at each site:
+
+           - BEFORE `do/publish` commits, a silence refuses the whole act with
+             `storeSilent`. Nothing has been written, the caller must ask again,
+             and 502 saying "nothing here is a statement about the record" is
+             exactly true.
+           - AFTER it commits, a silence may NOT refuse, because a ratification
+             genuinely LANDED and 502's own sentence would then be false in the
+             other direction — denying knowledge we have is the same overclaim
+             wearing modesty. So the post-commit sites keep the true `ok:true`
+             answer and state the UNDETERMINED part IN ITS OWN FIELD, which is
+             CLAUDE.md's "undetermined is first-class and must be STATED" applied
+             to the half of an act that did not answer.
+
+         Every post-commit conversion is byte-identical on the wire when the
+         store ANSWERS: the new fields appear only on the path that previously
+         lied, so no consumer of a working instance sees anything move. */
+      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}`));
+      /* A silence here previously threw a TypeError on `facts.ok` — a crash and
+         not a claim, which is the mildest member of this class and is converted
+         anyway because what this read answers is the GATE'S OWN FACTS: the
+         published registry, the earned registry and the signer set. A gate that
+         cannot see the record cannot confirm anything, and a 500 with a stack
+         trace tells a publisher nothing they can act on. */
+      if (!factsOut.answered) return storeSilent("ratify/gatefacts");
+      const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
       if (facts.row.bundle_sha !== body.expectedSha)
         return json({ ok: false, reason: "RATIFY_STALE",
@@ -3958,13 +3995,38 @@ export default {
          caller may not see cannot be assembled for their signature, and the
          answer is the same ABSENT a hidden bundle would give anywhere else. */
       const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
-      const image = (await (await stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`)).json()).result;
+      /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here
+         handed the gate an EMPTY BUNDLE and the ratification came back
+         GATE_REFUSED with the catalog's findings about missing required files —
+         a publisher told their document is empty when the plane simply failed to
+         read it. Same shape as `do/list` below, one field earlier. */
+      const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
+      if (!imgOut.answered) return storeSilent("ratify/image");
+      const image = imgOut.result;
       const r2 = typeof env.CAPTURES?.head === "function";
       /* The catalog resolves references against the whole store, so it needs
          to know which identifiers exist. One cheap query rather than a probe
-         per reference. */
-      const known = new Set(((await (await stub.fetch(`http://do/list?viewer=${ratViewer}`)).json()).result || [])
-        .map((b) => b.bundle_id));
+         per reference.
+
+         REC-53, AND THIS IS THE WORST REACHABLE FORM OF REC-52'S CLASS. The read
+         was `(…).result || []`, so a store silence gave `runGate` an EMPTY
+         known-id set and `resolveTarget` answered false for EVERY reference in
+         the bundle. The ratification was then refused with C-6.2 / C-8.1 /
+         C-19.1 findings reading "does not resolve in the store" — the plane
+         telling a publisher, at the moment they sign, that their case cites
+         things that are not there, when in fact NOTHING ANSWERED. A refusal ABOUT
+         THE RECORD manufactured out of a failure to consult it, on the one act
+         this whole product exists to make trustworthy.
+
+         `|| []` SURVIVES THE FIX and that is deliberate, not an oversight: once
+         `answered` is true an empty list is a REAL ANSWER — a viewer who can see
+         no bundles — and treating a genuinely empty result as a non-answer would
+         be this same collapse running in the opposite direction, which is what
+         REC-52's arm (f) measured and what `doAnswer` refuses to do by defining
+         `answered` as `ok === true` and nothing else. */
+      const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
+      if (!listOut.answered) return storeSilent("ratify/list");
+      const known = new Set((listOut.result || []).map((b) => b.bundle_id));
       const gate = await runGate({
         bundleId: body.bundleId, image, knownIds: known,
         registers: facts.registers,
@@ -4122,7 +4184,15 @@ export default {
           .map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" })),
       ];
 
-      const pub = (await (await stub.fetch(new Request("http://do/publish", {
+      /* REC-53: THE COMMIT, and the last site that may refuse. A silence here
+         synthesised `reason:"PUBLISH_FAILED"` at HTTP 500 — a ternary fallback,
+         which is why REC-52's detector B (built for the `||` form) could not see
+         it. It is the same invention: the plane asserting the ratification did
+         NOT publish when it does not know whether it did. The fallback SURVIVES
+         below and is now honest, because it is reached only when the store
+         ANSWERED with a result carrying no reason of its own — a description of
+         what the store said rather than of a silence. */
+      const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST", body: JSON.stringify({
           bundleId: body.bundleId, bundleSha: body.expectedSha,
           attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? sessMember,
@@ -4137,7 +4207,9 @@ export default {
           caseId, caseScope, caseFindings, caseBiasAck, group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s),
-        }) }))).json()).result;
+        }) })));
+      if (!pubOut.answered) return storeSilent("ratify/publish");
+      const pub = pubOut.result;
       if (!pub?.ok)
         return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
                       store: storeName, tokenClass: cls },
@@ -4246,17 +4318,32 @@ export default {
         const mBytes = new TextEncoder().encode(mText);
         const mSha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", mBytes))]
           .map((x) => x.toString(16).padStart(2, "0")).join("");
-        const rec = (await (await stub.fetch(new Request("http://do/recordcasemanifest", {
+        /* REC-53, THE FIRST POST-COMMIT SITE. A silence here made `rec`
+           undefined and the fallback minted `reason:"MANIFEST_NOT_RECORDED"` —
+           a statement that the published record does NOT hold this case's
+           container — and carried it inside an `ok:true` ratification answer.
+           Invisible to REC-52's detector B, which reads `json()` arguments, and
+           to detector A, which looks for a `.result` spread: this one travels to
+           the caller in a LOCAL VARIABLE and is spread twelve lines later.
+           The ratification has ALREADY COMMITTED here, so this may not refuse;
+           it states the exchange instead. The `MANIFEST_NOT_RECORDED` fallback
+           survives for the answered path, where it describes a store that said
+           `ok:false` without a reason of its own. */
+        const recOut = await doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
           method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
-                                                 manifest, manifestSha: mSha, bytes: mBytes.length }) }))).json()).result;
-        if (rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
+                                                 manifest, manifestSha: mSha, bytes: mBytes.length }) })));
+        const rec = recOut.result;
+        if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
           const key = `${storeName}/published/${mSha}`;
           if (!(await env.PUBLISHED.head(key))) await env.PUBLISHED.put(key, mBytes);
         }
-        container = rec && rec.ok
-          ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
-              zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
-          : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
+        container = !recOut.answered
+          ? { ok: false, reason: STORE_SILENT_REASON, op: "ratify/recordcasemanifest",
+              detail: STORE_SILENT_DETAIL }
+          : rec && rec.ok
+            ? { manifest_sha: mSha, parts: manifest.parts.length, findings: manifest.findings.length,
+                zip: `op=publishedbytes&sha256=${mSha}&format=zip` }
+            : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
       }
 
       /* CAP-4 / CAPTURE-SCALING item 6: re-fetch the reused parts at
@@ -4273,10 +4360,38 @@ export default {
          rare and deliberate, so the budget is available exactly when the stakes
          rise; this does not gate -- every outcome still ratifies. */
       let reuseReport = null;
-      const reused = (await (await stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`)).json()).result;
-      if (reused && Array.isArray(reused.parts) && reused.parts.length) {
-        const lim = (await (await stub.fetch("http://do/capturelimit?runtime=subrequests")).json()).result;
-        const observed = lim && lim.observed ? lim.observed : null;
+      /* REC-53, THE ITEM'S SECOND NAMED SITE. A silence made `reused` undefined,
+         the guard below fell through, `reuseReport` stayed null and the `reuse`
+         key was simply ABSENT from the answer — which reads as "no part of this
+         bundle was reused", a statement about WHAT THE GROUP DID, manufactured
+         out of a failure to look. Worse than it sounds against item 6b directly
+         above: "the one forbidden thing is ratifying with a reused part and
+         saying nothing" is precisely what a store silence made the plane do.
+         Post-commit, so it states the undetermined rather than refusing. */
+      const reusedOut = await doAnswer(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`));
+      const reused = reusedOut.result;
+      if (!reusedOut.answered) {
+        reuseReport = { ok: false, reason: STORE_SILENT_REASON, op: "ratify/reusedparts",
+                        detail: STORE_SILENT_DETAIL,
+                        note: "whether this bundle reused any part from the record is UNDETERMINED for this "
+                            + "ratification, and that is NOT the same as no part having been reused. The "
+                            + "bundle is ratified -- the signature, the gate and the published rows are all "
+                            + "unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not "
+                            + "happen. Re-ratifying converges it." };
+      } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
+        /* REC-53: a silence here left `observed` null, which is ALSO what a
+           genuine "nothing calibrated yet" answers — so the recorded basis of
+           every not_attempted part said "none observed" about a ceiling nobody
+           read, and that sentence is written into the RECORD by
+           recordreuseverdicts below. The two are separated by `ceilingRead`. */
+        const limOut = await doAnswer(stub.fetch("http://do/capturelimit?runtime=subrequests"));
+        const ceilingRead = limOut.answered;
+        const lim = limOut.result;
+        const observed = ceilingRead && lim && lim.observed ? lim.observed : null;
+        const ceilingWord = !ceilingRead
+          ? "UNREAD -- the store did not answer the capture-limit read, so this budget is our own appetite "
+            + "and not a calibrated ceiling"
+          : observed == null ? "none observed" : String(observed);
         /* Our APPETITE is ours and constant; the runtime's CAPACITY is the
            observed ceiling, discovered by being refused (capture_limits doctrine).
            A margin is reserved for the plane's own DO/R2 subrequests during this
@@ -4299,7 +4414,7 @@ export default {
           if (spent >= budget) {
             verdicts.push({ ...base, verdict: "not_attempted", observed_sha: null,
               basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest `
-                   + `ceiling ${observed == null ? "none observed" : observed}) was spent before this part; `
+                   + `ceiling ${ceilingWord}) was spent before this part; `
                    + `it is recorded as outstanding, not silently omitted` });
             continue;
           }
@@ -4324,12 +4439,26 @@ export default {
                    + "on the day, the divergence recorded as the dated fact it is" });
         }
         const at = new Date().toISOString();
-        await stub.fetch(new Request("http://do/recordreuseverdicts", {
+        /* REC-53: this write was FIRE-AND-FORGET, so a silence left the verdicts
+           out of the record while the report below handed the caller the
+           outcomes and the sentence "every reused part carries an outcome" —
+           true of the response, false of the record it names. Being unread, it
+           was invisible even to REC-52's detector C, which only sees a body that
+           is CONSUMED; the block-level assertion in `plane-envelope.test.mjs` is
+           what covers it now. */
+        const vOut = await doAnswer(stub.fetch(new Request("http://do/recordreuseverdicts", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ bundleId: body.bundleId, at, verdicts }) }));
+          body: JSON.stringify({ bundleId: body.bundleId, at, verdicts }) })));
         const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
         reuseReport = {
-          reused_parts: reused.parts.length, budget, ceiling: observed,
+          reused_parts: reused.parts.length, budget,
+          /* Both spreads are EMPTY on the answered path, so a working instance's
+             answer is byte-identical to what it was before this item; the extra
+             field exists only where the answer used to be a claim nobody could
+             support. */
+          ...(ceilingRead ? { ceiling: observed }
+                          : { ceiling_unread: { reason: STORE_SILENT_REASON, op: "ratify/capturelimit",
+                                                detail: STORE_SILENT_DETAIL } }),
           confirmed: tally("confirmed"), changed: tally("changed"),
           unavailable: tally("unavailable"), not_attempted: tally("not_attempted"),
           outcomes: verdicts.map((v) => ({ address_norm: v.address_norm, source_capture: v.source_capture,
@@ -4337,6 +4466,13 @@ export default {
           note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say "
               + "different things; not_attempted names a part the budget could not reach. Re-fetch is a plain "
               + "GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
+          ...(vOut.answered ? {}
+                            : { recorded: { ok: false, reason: STORE_SILENT_REASON,
+                                            op: "ratify/recordreuseverdicts", detail: STORE_SILENT_DETAIL,
+                                            note: "the outcomes above are what this ratification OBSERVED; "
+                                                + "whether they reached the record is undetermined, so do not "
+                                                + "read their absence from the reuse history as their never "
+                                                + "having been checked. Re-ratifying converges it." } }),
         };
       }
 
