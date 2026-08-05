@@ -165,6 +165,27 @@
  *       the field off the PUBLICATION instead of typing it.
  *       `auth-surface.test.mjs` restored byte-identical, sha256 12c78c52… .
  *
+ *   (f) STRIP THE PLANE'S DETAIL SENTENCE — RUN 2026-08-05 (UI-25), on disk,
+ *       against `bio-plane/src/store.mjs` and not against this package at all.
+ *       Every `detail: Store.LOGIN_REFUSAL_DETAIL.<CODE>` is deleted from the
+ *       arms that answer the refusal, leaving the code bare; `store.mjs`
+ *       restored byte-identical, sha256
+ *       95332d64f73e115445eb77f73eae887ab1c24eddad7dbbf5b40019ecc4b32dab before
+ *       and after.
+ *       ON-DISK RUN: **2 of 74 FAIL** — "EVERY arm that answers the refusal
+ *       code answers the sentence with it — none is left bare", plus the probe
+ *       child re-running this suite behind it.
+ *       WHY THIS ARM IS RECORDED HERE RATHER THAN CLOSING SOMETHING. UI-25
+ *       carried a batch rider routed out of REC-39, whose measurement was that
+ *       this suite stayed **green at all 62** under exactly this mutation,
+ *       because `PLANE_WORDS` was then a HAND COPY of the plane's sentences and
+ *       a hand copy agrees with its source at zero cost. **UI-30 had already
+ *       closed it** on 2026-08-04 by reading the constant out of `store.mjs`,
+ *       and this arm is the receipt: the same mutation that once moved NOTHING
+ *       now fails by name. The rider is recorded as CLOSED-BY-MEASUREMENT
+ *       rather than deleted unmeasured, because "someone else already fixed it"
+ *       is a claim, and running the control is the evidence.
+ *
  * Run alone: `node test/auth-surface.test.mjs`.
  */
 import vm from "vm"; import fs from "fs"; import path from "path"; import os from "os";

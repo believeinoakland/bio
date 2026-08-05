@@ -88,10 +88,131 @@
  *       BYTE-IDENTICAL UI and a member cannot tell which engine replied — which
  *       is D-142's third and worst clause, and the reason the deletion is
  *       asserted by a static sweep as well as by behaviour.
+ *
+ * ============ UI-25's ARMS (d)-(j), RUN 2026-08-05 (ui25-agent) ============
+ * Each arm is ONE anchored edit, run ON DISK against the FINAL files and
+ * restored byte-identically after every one: `civicos-ui/app.html` returned to
+ * sha256 1fdb2741d0b557f2a65ecccb1f3507620a388f12270230a7887ed533094a0c7c and
+ * this file to 70069885f1b73729bd4ec80c8f4e03fb5f3e913251b94da3ea21eb0275626ee6
+ * before and after all of them. The arms are scripted so a later session
+ * re-runs them in one step instead of re-deriving how to break the subject.
+ *
+ *   (d) THE ITEM'S OWN — CAP THE QUERY SELECTION AT THE PAGE. In
+ *       `finderHoldQuery`, hold the page's rows instead of the question:
+ *         recPostR("select", {}, { kind:"query", q })
+ *           -> recPostR("select", { ids:((FIND.text&&FIND.text.hits)||[]).map(h=>h.bundle_id) },
+ *                       { kind:"enumerated" })
+ *       -> RUN: **25 of 132 FAIL**, and the one the item turns on names the
+ *       bound in its own words: "THE COMPLETENESS BOUND IS BROKEN: the held set
+ *       reaches STRICTLY MORE than the page could ever tick". Every drift, cite
+ *       and receipt assertion falls with it, because a set that is secretly the
+ *       page cannot report a criterion's drift and cannot hand an act a
+ *       question. `cite-act.test.mjs` stays GREEN throughout — the defect is
+ *       invisible from a surface that never holds a query selection, which is
+ *       why the arm lives here.
+ *
+ *   (e) BLUR THE TWO DRIFTS — `selectionMoved` reads `moved` for both kinds:
+ *         return selectionIsQuery(x) ? !!(x.drift && x.drift.digestChanged) : !!x.moved;
+ *           -> return !!x.moved;
+ *       -> RUN: **3 of 132 FAIL** — "AND THE SURFACE SAYS THE ANSWER CHANGED
+ *       ANYWAY — digestChanged is read, not `moved`", plus BOTH receipt
+ *       assertions. THIS IS THE ARM WORTH READING. The plane's own `moved` is
+ *       `revised.length + removed + added > 0`, all three of which are ZERO for
+ *       a query selection whose answer swapped one document for another at a
+ *       constant count — so the fixture is not contrived, it is the condition.
+ *       AND THE INSTRUMENT FINDING: only 3 move, not more, because the drift
+ *       ROWS render off the drift object either way and stay correct. What is
+ *       lost is the HEADING on the lease and THE WHOLE RECEIPT — `citeDriftHtml`
+ *       returns "" when it thinks nothing moved, so the member who blurs these
+ *       two facts loses the report at exactly the moment it is written into a
+ *       case. The narrow failure count is the point rather than a weakness.
+ *
+ *   (f) RENDER PER-ROW LANGUAGE OVER A QUERY SELECTION — `selectionDriftHtml`'s
+ *       `if(d.kind === "query")` -> `if(false)`, so a criterion's drift falls
+ *       through to the arm written for stored rows.
+ *       -> RUN: **4 of 132 FAIL**, including "it says the record CANNOT say
+ *       which documents moved, rather than leaving the silence to read as 'none
+ *       did'" and the unchanged-digest arm. The enumerated branch renders no
+ *       rows for a query selection (there are none), so the surface goes SILENT
+ *       rather than wrong — and silence here reads as "nothing changed", which
+ *       is UI-26's measurement (an unstated bound reads as completeness)
+ *       arriving inside a drift report.
+ *
+ *   (g) DROP THE PAGE-BOUND STATEMENT from the results panel (`(capped ||
+ *       atLimit)` -> `(false)`).
+ *       -> RUN: **2 of 132 FAIL** — the consequence sentence and the record's
+ *       own published page limit. The COUNT LINE stays green and stays true
+ *       ("1200 documents on this route · showing the first 500"): the
+ *       arithmetic was never the lie, and a member reading it still would not
+ *       know that what they can TICK is bounded by it.
+ *
+ *   (h) THE REVIEW SCREEN — `REVIEW_TOTAL` discarded again, which is the state
+ *       this item found it in. Run against `release-flow.test.mjs`.
+ *       -> RUN: FAILS, quoting the defect verbatim: `Awaiting review (2)`
+ *       rendered over a record that answered 731.
+ *
+ *   (i) THE CITE FLOW STOPS DROPPING A LEAKED LIST — `citeOverSelection` passes
+ *       `ids` through regardless of kind.
+ *       -> FIRST RUN: **GREEN, 0 of 130**, AND THAT IS AN INSTRUMENT FINDING
+ *       KEPT RATHER THAN TIDIED. `finderHoldQuery` already stores an empty
+ *       `ids`, so the guard was handed `[]` whatever it did and the assertion
+ *       above it was passing at ZERO COST — a guard fed by the absence of the
+ *       thing it watches for. The suite now calls `citeOverSelection` AS THE
+ *       CALLER THAT DOES NOT EXIST YET (a query selection handed a full page of
+ *       ids) and the arm bites: **1 of 132 FAIL**.
+ *
+ *   (j) THE INSTRUMENT'S OWN — disarm the large corpus (`BIG = true` ->
+ *       `BIG = false`), so the fixture answers 4 hits with no cap.
+ *       -> RUN: **4 of 132 FAIL**, and they are exactly the four page-bound
+ *       assertions. The other 128 stay green, which is the honest reading: the
+ *       criterion mechanism does not need a large corpus to work, and only the
+ *       BOUND statements are claims about a page being short. An arm that had
+ *       moved everything would have meant the fixture, not the surface, was
+ *       carrying the assertions.
  * ======================================================================== */
 import vm from "vm";
+import fs from "fs";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+
+/* ============================================================
+   UI-25's WIRE CONTENT, READ OUT OF THE PLANE RATHER THAN TYPED HERE.
+
+   A mock must answer the wire CONTENT and not merely the wire SHAPE (D-173's
+   family, and REC-39's routed measurement on `auth-surface`'s `PLANE_WORDS`:
+   a hand-typed copy agrees with its source at ZERO COST, leaves every
+   behavioural assertion green, and goes on agreeing after the two have drifted).
+   This item's whole subject is a sentence the plane composes for a QUERY
+   selection whose rows it cannot name — so a hand copy of that sentence is
+   exactly the defect wearing this item's clothes.
+
+   `store.mjs` cannot be imported (it opens with `import … from
+   "cloudflare:workers"`, which only workerd provides), so it is read TEXTUALLY,
+   the way `check-semantics.mjs` and `auth-surface.test.mjs` already read it.
+
+   THE EXTRACTION IS GUARDED, because one that silently yielded "" would make
+   every `includes()` below trivially true — the costless equality arriving in
+   the INSTRUMENT rather than in the subject (UI-30's finding). */
+const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+function planeQueryDriftDetail(){
+  /* `selectionResolve`'s query arm: `drift.detail = "…" + "…";` — the
+     concatenated string literals, joined the way the source joins them. */
+  const m = /drift\.detail = ((?:\s*"(?:[^"\\]|\\.)*"\s*\+?)+);/.exec(STORE_SRC);
+  if(!m) return "";
+  return [...m[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)].map(x => JSON.parse('"' + x[1] + '"')).join("");
+}
+const PLANE_QUERY_DRIFT_DETAIL = planeQueryDriftDetail();
+/* AND THE PLANE'S OWN `moved` FORMULA, pinned as a RELATION rather than as a
+   value. This surface renders `digestChanged` as a fact SEPARATE from `moved`,
+   and the reason that is necessary rather than decorative is that the plane's
+   `moved` is computed from the three PER-ROW figures and `digestChanged` is not
+   a term in it — so a query selection whose answer swaps one document for
+   another at a constant count reports `moved:false` while its answer is not the
+   answer the member holds. Pinning the relation asserts no value and rules
+   nothing: if the plane ever folds `digestChanged` into `moved`, this fails
+   HERE and a session re-reads the surface deliberately instead of the surface
+   quietly becoming redundant. */
+const PLANE_MOVED_FORMULA = (/const moved = ([^;]+);/.exec(STORE_SRC) || [,""])[1];
 
 let n = 0, bad = 0;
 const ok = (what, cond) => { n++; if(!cond){ bad++; console.log("  FAIL " + what); } };
@@ -155,10 +276,33 @@ const SEARCHFIELDS = {
 const PUBLISHED_CITE = { id:"cite", label:"Cite into a case", weight:"report", needs:"contribute",
                          mode:"session", rung:null, prompt:null, appliesTo:["information","project","inquiry"] };
 
+/* ---- UI-25's CORPUS THAT DOES NOT FIT IN A PAGE ---------------------------
+   The plane's `LIMIT_MAX` is 500 and `finderTextRoute` asks for exactly that,
+   so a member with more hits than that can tick rows from the first 500 and
+   from nowhere else. The fixture is a REAL page of 500 against a record that
+   answers 1,200, because the assertion this item turns on is a DELTA between
+   what the page can reach and what the criterion reaches — an absolute would
+   be satisfied by a harness that walked nothing. */
+const PAGE_LIMIT = 500;
+const BIG_TOTAL = 1200;
+const BIG_PAGE = Array.from({ length: PAGE_LIMIT }, (_, i) => ({
+  bundle_id: `INFO-${String(9000 + i)}`, object_type:"information",
+  title:`Sewer fund ledger page ${i + 1}`, current_state:"verified", last_updated:"2026-07-26" }));
+/* The record's answer AFTER something moved: the same SIZE, different members.
+   This is the shape a count can never show and the digest always can, and it is
+   the one the surface must not report as "nothing moved". */
+const BIG_TOTAL_AFTER = BIG_TOTAL;
+
 /* ---------------- the mock plane ---------------- */
 const CALLS = [];
 let FAIL_SEARCH = false, FAIL_FIELDS = false, NO_ENTITY = false;
+/* UI-25: when on, `op=search` answers a full page against a much larger total. */
+let BIG = false;
 const SELECTION = { made:null, released:[], resolveN:2, moved:false };
+/* UI-25's query selection, kept apart from the enumerated one above so a test
+   cannot pass by confusing the two. `digestChanged` is the fact under test and
+   is set independently of the per-row arrays, exactly as the plane sets it. */
+const QSEL = { made:null, n:BIG_TOTAL, digestChanged:false, added:0, removed:0 };
 
 function ctxFor(){
   const els = new Map();
@@ -191,6 +335,13 @@ function ctxFor(){
         const q = p.q || "";
         /* A scoped query answers a SUBSET, so a scope that composed nothing
            would be visible as the wrong count rather than as no error. */
+        /* UI-25: the record answers MORE than it will send, which is the whole
+           condition this item exists for. `total` is the plane's own COUNT(*)
+           over the full scope; `hits` is one page of it. */
+        if(BIG)
+          return W({ query:{ q, terms:[], match:"and", sort:null, warnings:[], mode:"page" },
+                     gate:{ scope:"member", applied:2 }, total: BIG_TOTAL, limit: PAGE_LIMIT, offset:0,
+                     hits: BIG_PAGE, facets:{}, widen:null });
         const scoped = /type:inquiry/.test(q) ? [] : /state:collected/.test(q) ? TEXT_HITS.slice(1,2) : TEXT_HITS;
         return W({ query:{ q, terms:[], match:"and", sort:null, warnings: /nosuchfield/.test(q) ? ["unknown field 'nosuchfield'"] : [], mode:"page" },
                    gate:{ scope:"member", applied:2 }, total: scoped.length, limit:500, offset:0,
@@ -214,12 +365,43 @@ function ctxFor(){
       }
       if(op === "select"){
         const ids = (init && init.body ? JSON.parse(init.body).ids : []) || [];
+        /* UI-25: `selectionCreate` decides the kind from what it was handed and
+           a QUERY selection stores the CRITERION, not the rows — so it takes no
+           ids, it is bounded by nothing, and its `n` is the record's WHOLE
+           answer rather than a page of it. */
+        if(p.kind === "query"){
+          QSEL.made = { handle:"sel-q4e81b0c9d72", q: p.q || "" };
+          return W({ handle:QSEL.made.handle, kind:"query", n:QSEL.n, q:QSEL.made.q,
+                     expires:"2026-08-05T14:30:00Z", ttlSeconds:1800, gate:{applied:1} });
+        }
         if(!ids.length) return REFUSE({ reason:"EMPTY", detail:"an enumerated selection needs at least one id" });
         SELECTION.made = { handle:"sel-9f2c14ab0d31", ids:ids.slice() };
         return W({ handle:SELECTION.made.handle, kind:"enumerated", n:ids.length, q:"",
                    expires:"2026-08-05T14:30:00Z", ttlSeconds:1800, gate:{applied:1} });
       }
       if(op === "selection"){
+        if(QSEL.made && p.handle === QSEL.made.handle){
+          /* THE QUERY ARM, ANSWERED THE WAY `selectionResolve` ANSWERS IT.
+             The per-row arrays are EMPTY and stay empty — a query selection
+             stores no rows, so there is nothing for the plane to name — and
+             `moved` is computed from the plane's OWN formula over the three
+             per-row figures, which is why it can be FALSE beside a changed
+             digest. The mock does not hand-set it; hand-setting it would let
+             this fixture disagree with the plane about the one relation the
+             surface depends on. */
+          const drift = { revised:[], purged:[], hidden:[],
+                          added:QSEL.added, removed:QSEL.removed, kind:"query",
+                          ...(QSEL.digestChanged ? { digestChanged:true, detail:PLANE_QUERY_DRIFT_DETAIL } : {}) };
+          const moved = drift.revised.length + drift.removed + drift.added > 0;
+          return W({ ok:true, handle:p.handle, kind:"query", q:QSEL.made.q, owner:"member:alice",
+                     n:QSEL.digestChanged ? BIG_TOTAL_AFTER : QSEL.n, snapshotN:QSEL.n,
+                     weight:"report", moved, drift,
+                     /* The plane answers members even for a query selection —
+                        it re-runs the criterion — and the surface must still not
+                        present them as a list the member picked. */
+                     members: BIG_PAGE.slice(0, 3).map(h=>h.bundle_id),
+                     expires:"2026-08-05T15:00:00Z", gate:{applied:1} });
+        }
         if(!SELECTION.made || p.handle !== SELECTION.made.handle)
           return REFUSE({ reason:"NO_SUCH_SELECTION", detail:"unknown, released, or expired" });
         return W({ ok:true, handle:p.handle, kind:"enumerated", q:"", owner:"member:alice",
@@ -231,7 +413,22 @@ function ctxFor(){
                    members:SELECTION.made.ids.slice(0, SELECTION.resolveN),
                    expires:"2026-08-05T15:00:00Z", gate:{applied:1} });
       }
-      if(op === "selectionrelease"){ SELECTION.released.push(p.handle); SELECTION.made = null; return W({ ok:true, released:p.handle }); }
+      /* UI-25: the act the finder hands a selection to, answered the way
+         `cite()` answers it — the plane resolves the handle at the moment the
+         act runs and reports the drift it found, so a query selection's receipt
+         carries a query-shaped drift object. */
+      if(op === "cite"){
+        const isQ = !!(QSEL.made && p.handle === QSEL.made.handle);
+        const cited = isQ ? BIG_PAGE.slice(0, 3).map(h=>h.bundle_id) : ((SELECTION.made && SELECTION.made.ids) || []);
+        return W({ ok:true, project:p.project, handle:p.handle, citingObjectType:"project",
+                   weight:"report", moved:isQ ? false : SELECTION.moved,
+                   cited, alreadyCited:[], bundleSha:"d".repeat(64),
+                   drift: isQ
+                     ? { revised:[], purged:[], hidden:[], added:0, removed:0, kind:"query",
+                         ...(QSEL.digestChanged ? { digestChanged:true, detail:PLANE_QUERY_DRIFT_DETAIL } : {}) }
+                     : { revised:[], purged:[], hidden:[], added:0, removed:0, kind:"enumerated" } });
+      }
+      if(op === "selectionrelease"){ SELECTION.released.push(p.handle); SELECTION.made = null; QSEL.made = null; return W({ ok:true, released:p.handle }); }
       /* op=list carries the CITING objects too, because the cite flow's
          candidate list is built from it — a question among them, so the
          finder-to-cite handoff can be driven all the way to the role control. */
@@ -264,6 +461,13 @@ globalThis.__CUR = () => CUR;
 globalThis.__loadSearchFields = loadSearchFields;
 globalThis.__CITE = () => CITE;
 globalThis.__citeChoose = citeChoose;
+/* UI-25 */
+globalThis.__finderHoldQuery = finderHoldQuery;
+globalThis.__finderQueryCriterion = finderQueryCriterion;
+globalThis.__selectionIsQuery = selectionIsQuery;
+globalThis.__selectionMoved = selectionMoved;
+globalThis.__doCite = doCite;
+globalThis.__citeOverSelection = citeOverSelection;
 `, ctx);
   ctx.__PLANE.token = "tok"; ctx.__PLANE.session = true;
   ctx.__PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false, capabilities:["contribute"] };
@@ -587,6 +791,229 @@ let bothPane = "";
      CALLS.some(c=>c.op==="selectionrelease") && SELECTION.released.includes("sel-9f2c14ab0d31"));
   ok("and the surface returns to offering a fresh hold",
      /f-sel-go/.test(pane(ctx,"#f-sel")));
+  SELECTION.moved = false; SELECTION.resolveN = 2;
+}
+
+/* ================================================================
+   (9) UI-25 — THE UNCAPPED QUERY SELECTION, AND THE TWO DRIFTS THAT ARE
+       DIFFERENT FACTS.
+
+   The page above is `op=search` at `limit:500`. A member with more hits than
+   that can tick rows from the first 500 and from nowhere else, so the set they
+   cite into a case is SILENTLY SHORT — and a case is a document that makes a
+   COMPLETENESS CLAIM. Everything below is one of three things:
+
+     (i)   the page bound is STATED where a member is about to act on it,
+     (ii)  the criterion selection SURVIVES PAST THE PAGE — asserted as a DELTA
+           between what the page reaches and what the lease reaches, never
+           against an absolute a harness that walked nothing would also satisfy,
+     (iii) `digestChanged` is rendered as ITS OWN FACT and never as per-row
+           drift, in BOTH directions: the query arm names no row because there
+           is none to name, and the enumerated arm still names every one.
+   ================================================================ */
+{
+  BIG = true;
+  const ctx = ctxFor();
+  await ctx.__renderFinder({ scope:null });
+  type(ctx, "sewer fund");
+  await ctx.__runSearch();
+  const res = pane(ctx,"#f-res");
+  const askedQ = (CALLS.filter(c=>c.op==="search").pop()||{params:{}}).params.q;
+
+  /* ---- (i) THE PAGE IS BOUNDED, AND THE BOUND IS STATED WHERE IT BITES ---- */
+  ok("the route reports the RECORD's total and not the size of the page it was sent",
+     new RegExp(`<b>${BIG_TOTAL}</b> documents on this route`).test(res)
+     && new RegExp(`showing the first ${PAGE_LIMIT}`).test(res));
+  ok("THE CONSEQUENCE OF THE PAGE IS STATED, not merely the arithmetic — what a member can TICK is bounded by it",
+     /id="f-text-cap"/.test(res)
+     && new RegExp(`Anything you tick here comes from these ${PAGE_LIMIT} only`).test(res));
+  ok("and the record's own published page limit is rendered rather than captured and dropped",
+     new RegExp(`the most it will send in one go is ${PAGE_LIMIT}`).test(res));
+  const bar = pane(ctx,"#f-sel");
+  ok("a SECOND way to hold material is offered beside the picked-rows lease",
+     /id="f-sel-all"/.test(bar) && /id="f-sel-go"/.test(bar));
+  ok("and the difference between the two is stated before either is used",
+     /id="f-hold-bound"/.test(bar) && /Hold everything this query matches/.test(bar)
+     && /is not bounded by this page/.test(bar));
+  ok("the boundary neither lease crosses is named: the subjects route is a separate index",
+     /Neither holds anything the <b>subjects<\/b> route found/.test(bar));
+
+  /* ---- (ii) THE CRITERION SELECTION SURVIVES PAST THE PAGE ---- */
+  CALLS.length = 0;
+  await ctx.__finderHoldQuery();
+  const qcall = CALLS.find(c=>c.op==="select");
+  const qsel = ctx.__FINDSEL();
+  ok("holding everything takes a REAL lease through op=select, kind:query",
+     !!qcall && qcall.params.kind === "query");
+  ok("THE CRITERION IS SENT, AND NO ROWS ARE — the record stores the question, not the page",
+     !!qcall && qcall.params.q === askedQ
+     && !(qcall.body && Array.isArray(qcall.body.ids) && qcall.body.ids.length));
+  ok("the criterion held is BYTE-IDENTICAL to the one op=search was asked, so the member holds the answer to the question they were shown a count for",
+     qcall.params.q === askedQ && askedQ.length > 0);
+  /* THE COMPLETENESS BOUND, AS A DELTA. The page reaches 500; the lease reaches
+     1,200. Asserting `n === 1200` alone would also pass for a surface that
+     never sent the criterion at all, because the fixture would happily answer
+     it — the DIFFERENCE between the two is what this item bought. */
+  ok("THE COMPLETENESS BOUND IS BROKEN: the held set reaches STRICTLY MORE than the page could ever tick",
+     qsel && qsel.kind === "query" && qsel.n > BIG_PAGE.length
+     && qsel.n - BIG_PAGE.length === BIG_TOTAL - PAGE_LIMIT);
+  ok("and the lease carries NO list of the page's rows, because it is not a list",
+     Array.isArray(qsel.ids) && qsel.ids.length === 0);
+
+  const lease = pane(ctx,"#f-sel");
+  ok("the lease card says WHICH KIND of set it is, in the markup and in words",
+     /data-selkind="query"/.test(lease)
+     && /holding your question, and everything it answers/.test(lease));
+  ok("it renders the criterion the record is holding",
+     lease.includes(askedQ));
+  ok("IT STATES THAT IT IS NOT BOUNDED BY THE PAGE, naming the page's own size",
+     new RegExp(`not bounded by the ${PAGE_LIMIT} documents this screen listed`).test(lease));
+  ok("it states the count is the record's WHOLE answer rather than a page of it",
+     new RegExp(`<b>${BIG_TOTAL}</b> documents`).test(lease)
+     && /the record&rsquo;s count of its whole answer, not of a page/.test(lease));
+  ok("AND IT STATES WHAT THE CHOICE COSTS — the record can say the answer moved and not which documents did",
+     /cannot tell you WHICH documents changed|and not WHICH documents changed/.test(lease));
+  ok("no row from the page is presented as a member of the held set",
+     !lease.includes(BIG_PAGE[0].bundle_id));
+
+  /* ---- (iii) DIGEST DRIFT IS ITS OWN FACT ----
+     The plane reports `moved:false` here, because `moved` counts PER-ROW
+     movement and a query selection has none to count — while `digestChanged` is
+     true and the answer is not the answer the member holds. A surface keyed on
+     `moved` alone renders "nothing moved" over a set that changed. */
+  QSEL.digestChanged = true; QSEL.added = 0; QSEL.removed = 0;
+  CALLS.length = 0;
+  await ctx.__finderCheckSelection();
+  const drifted = pane(ctx,"#f-sel");
+  const answered = CALLS.find(c=>c.op==="selection");
+  ok("asking what the answer is now goes to op=selection, the plane's own re-resolution",
+     !!answered);
+  ok("THE PLANE ITSELF REPORTS moved:false HERE — this fixture is the condition, not a convenience",
+     ctx.__FINDSEL().moved === false && ctx.__FINDSEL().drift.digestChanged === true);
+  ok("AND THE SURFACE SAYS THE ANSWER CHANGED ANYWAY — digestChanged is read, not `moved`",
+     /The answer moved/.test(drifted)
+     && !/reports that nothing moved/.test(drifted));
+  ok("it says the record CANNOT say which documents moved, rather than leaving the silence to read as 'none did'",
+     /cannot tell you which documents moved/.test(drifted)
+     && /There is no list here because there is none to show &mdash; not because nothing changed/.test(drifted));
+  ok("NO PER-ROW REPORT IS INVENTED for a set the record stores no rows for",
+     !/Revised since you picked them/.test(drifted)
+     && !/Gone from the record/.test(drifted)
+     && !BIG_PAGE.slice(0,5).some(h=>drifted.includes(h.bundle_id)));
+  ok("THE CONSTANT-SIZE CASE IS NAMED — the answer changed without changing count, which no total could have shown",
+     /The same number of documents as before/.test(drifted)
+     && /replaced by something else/.test(drifted));
+  /* THE PLANE'S OWN SENTENCE, and it is the plane's because it was read out of
+     the plane rather than typed into this file. */
+  ok("the record's own account of the limit is rendered verbatim",
+     PLANE_QUERY_DRIFT_DETAIL.length > 60 && drifted.includes(PLANE_QUERY_DRIFT_DETAIL));
+  ok("and that sentence really is the plane's — extracted, whole, and about the criterion",
+     /stores the criterion rather than the rows/.test(PLANE_QUERY_DRIFT_DETAIL));
+  ok("THE RELATION THIS SURFACE DEPENDS ON, PINNED: the plane's `moved` is per-row and digestChanged is NOT a term in it",
+     PLANE_MOVED_FORMULA.length > 0
+     && /revised/.test(PLANE_MOVED_FORMULA) && !/digestChanged/.test(PLANE_MOVED_FORMULA));
+
+  /* AND THE OTHER DIRECTION: an unchanged digest is not silence either. */
+  QSEL.digestChanged = false;
+  await ctx.__finderCheckSelection();
+  const same = pane(ctx,"#f-sel");
+  ok("an UNCHANGED answer says what the record actually compared — the whole answer, not each document",
+     /ran your question again and got back the same documents in the same order/.test(same)
+     && /it is not a check of each document one by one/.test(same));
+  ok("and it does not claim per-document verification it never did",
+     !/Revised since you picked them/.test(same));
+
+  /* ---- THE CITE FLOW CONSUMES IT ---- */
+  QSEL.digestChanged = true;
+  await ctx.__finderCheckSelection();
+  CALLS.length = 0;
+  ctx.__finderActGo("cite");
+  await new Promise(r=>setTimeout(r,0));
+  const cite = ctx.__CITE();
+  ok("the cite flow receives the QUERY lease's own handle",
+     cite && cite.handle === "sel-q4e81b0c9d72");
+  ok("AND TAKES NO SECOND LEASE", !CALLS.some(c=>c.op==="select"));
+  ok("THE PAGE'S IDS ARE NOT CARRIED INTO THE ACT — there is no list, and the flow is not handed one",
+     Array.isArray(cite.ids) && cite.ids.length === 0 && cite.selKind === "query");
+  /* AND THE GUARD THAT DROPS THEM IS DRIVEN AT ITS OWN ALTITUDE, because the
+     assertion above does NOT reach it. FOUND BY THIS ITEM'S OWN ARM (i), which
+     came back GREEN: `finderHoldQuery` already stores an empty `ids`, so
+     `citeOverSelection` is handed `[]` whatever it does with it, and the check
+     inside it was passing at zero cost — an outcome nobody had to produce is
+     not evidence (CLAUDE.md). The guard exists for a caller that does not exist
+     yet, so it is called AS THAT CALLER: a query selection handed alongside a
+     full page of ids. If it ever stops dropping them, a member's case cites the
+     page instead of the answer. */
+  {
+    const leak = BIG_PAGE.slice(0, 4).map(h=>h.bundle_id);
+    await ctx.__citeOverSelection("sel-q4e81b0c9d72", leak, PUBLISHED_CITE, null,
+                                  { kind:"query", q:askedQ, n:BIG_TOTAL });
+    const forced = ctx.__CITE();
+    ok("A CALLER THAT HANDS A QUERY SELECTION A LIST OF ROWS HAS THE LIST DROPPED, not passed through",
+       Array.isArray(forced.ids) && forced.ids.length === 0
+       && forced.selKind === "query" && forced.criterion === askedQ);
+    ok("and not one of those rows reaches the dialog as something being cited",
+       !leak.some(id => pane(ctx,"#dlg").includes(id)));
+  }
+  ok("the criterion travels with it", cite.criterion === askedQ);
+  const dlg = pane(ctx,"#dlg");
+  ok("the dialog names WHAT IS BEING CITED as the question, not as a page of documents",
+     /id="cx-criterion"/.test(dlg) && dlg.includes(askedQ)
+     && /<b>not<\/b> a list of documents, and <b>not<\/b> the page you were looking at/.test(dlg));
+  ok("it says the record works out the members when the act RUNS",
+     /at the moment this act runs/.test(dlg));
+  ok("it reports the record's whole-answer count and says it may differ by the time the act runs",
+     new RegExp(`<b>${BIG_TOTAL}</b>`).test(dlg) && /It may be a different number now/.test(dlg));
+  ok("NO ROW FROM THE PAGE IS RENDERED AS THE THING BEING CITED",
+     !BIG_PAGE.slice(0,5).some(h=>dlg.includes(h.bundle_id)));
+  ok("and the cross-seam boundary is restated at the moment of commitment, where it is acted on",
+     /Anything only the <b>subjects<\/b> route found/.test(dlg));
+
+  /* AND IT RUNS, against the handle and not against a list. */
+  ctx.__citeChoose("INFO-0001");
+  CALLS.length = 0;
+  await ctx.__doCite();
+  const citeCall = CALLS.find(c=>c.op==="cite");
+  ok("THE ACT REACHES THE PLANE CARRYING THE QUERY LEASE'S HANDLE",
+     !!citeCall && citeCall.params.handle === "sel-q4e81b0c9d72");
+  ok("and no enumerated selection was minted behind the member's back",
+     !CALLS.some(c=>c.op==="select"));
+  const receipt = pane(ctx,"#dlg");
+  ok("THE RECEIPT DESCRIBES THE SAME SELECTION IN THE SAME WORDS as the screen that held it",
+     /cannot tell you which documents moved/.test(receipt)
+     && receipt.includes(PLANE_QUERY_DRIFT_DETAIL));
+  ok("and it says the act ran over the record's answer AT THE MOMENT IT RAN, not over the page",
+     /The record&rsquo;s answer moved/.test(receipt)
+     && /not the documents this page listed earlier/.test(receipt));
+  BIG = false; QSEL.digestChanged = false; QSEL.made = null;
+}
+
+/* ---- (iii) THE OTHER DIRECTION: AN ENUMERATED SELECTION STILL NAMES EVERY ROW.
+        The two kinds must not collapse into each other, and a suite that only
+        proved the query arm says nothing would be satisfied by a surface that
+        had stopped naming rows for BOTH. ---- */
+{
+  const ctx = ctxFor();
+  await ctx.__renderFinder({ scope:null });
+  type(ctx, "Ordinance 13579");
+  await ctx.__runSearch();
+  const picked = ["INFO-0001","INFO-0002","INFO-0003"];
+  ctx.__els.get("#f-res").querySelectorAll = () => picked.map(id => ({ dataset:{ id }, checked:true }));
+  await ctx.__finderHold();
+  SELECTION.moved = true; SELECTION.resolveN = 2;
+  await ctx.__finderCheckSelection();
+  const en = pane(ctx,"#f-sel");
+  ok("an ENUMERATED lease is marked as one and still names every row that moved",
+     /data-selkind="enumerated"/.test(en)
+     && /Revised since you picked them/.test(en) && /INFO-0001/.test(en)
+     && /Gone from the record/.test(en) && /INFO-0003/.test(en));
+  ok("and it SAYS WHY it can name them — the record kept the list because the member picked it",
+     /You picked these documents, so the record kept the list/.test(en));
+  ok("the query arm's sentences do NOT appear over a picked set",
+     !/cannot tell you which documents moved/.test(en)
+     && !/holding your question/.test(en));
+  ok("and the picked lease states ITS bound too: it reaches those documents and nothing else",
+     /if the record&rsquo;s answer to your query is longer than the page you ticked them on, the rest is not in here/.test(en));
   SELECTION.moved = false; SELECTION.resolveN = 2;
 }
 

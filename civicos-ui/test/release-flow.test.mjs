@@ -1,3 +1,20 @@
+/* THE RELEASE MOMENT — the review list, the release dialog and their refusals.
+ *
+ * NEGATIVE CONTROL: (h) UI-25, RUN 2026-08-05 on disk against the final
+ * `civicos-ui/app.html`, restored byte-identically (sha256
+ * 1fdb2741d0b557f2a65ecccb1f3507620a388f12270230a7887ed533094a0c7c before and
+ * after) -> DISCARD THE PLANE'S `total` AGAIN in `loadReviewRows`
+ * (`REVIEW_TOTAL = (r && typeof r.total === "number") ? r.total : null;` ->
+ * `REVIEW_TOTAL = null;`), which is the state UI-25's sweep found this screen
+ * in: it FAILS quoting the defect verbatim, `Awaiting review (2)` rendered over
+ * a record that answered 731 — a short number presented as a complete one,
+ * standing above a select-all box and a bulk Release control that writes a
+ * member's name onto a state transition. The fixture drives the page size and
+ * the record's total APART on purpose: where they agree, a surface reading
+ * `hits.length` and one reading `total` are indistinguishable, and an equality
+ * costing nothing to produce is not evidence (CLAUDE.md) — which is how this
+ * defect survived a green suite.
+ */
 import fs from "fs";
 import { appScript } from "./extract.mjs"; import vm from "vm";
 const els = new Map();
@@ -100,6 +117,60 @@ if(!rvHtml.includes("plain index"))
   throw new Error("D-142: a degraded review list must SAY which engine answered — a member cannot tell otherwise: "+rvHtml.slice(0,400));
 ctx.fetch = savedFetch;
 await ctx.__reload();
+
+/* ============================================================
+   UI-25 — THE REVIEW LIST IS A PAGE, AND IT MUST SAY SO.
+
+   FOUND BY UI-25's SWEEP AND NOT NAMED IN ITS BRIEF. `loadReviewRows` asks
+   `op=search` at `limit:500` and took `r.hits` while DISCARDING `r.total` — the
+   plane's own COUNT(*) over the whole scope — and `paintReview` then printed
+   `REVIEW_ROWS.length` as a bare figure inside "Awaiting review (N)". With more
+   collected material than one page holds, that heading is a SHORT NUMBER
+   PRESENTED AS A COMPLETE ONE, standing directly above a select-all box and a
+   bulk Release control that records a member's name against a state
+   transition. It is the finder's own rule — "the plane's own `total`, never
+   `hits.length` dressed up as one" — never applied on this screen.
+
+   The two numbers are driven APART here, because a fixture where they agree
+   cannot tell a surface that reads `total` from one that reads `hits.length`:
+   that is an equality costing nothing to produce (CLAUDE.md), and it is the
+   reason this defect survived a green suite.
+   ============================================================ */
+{
+  const savedF = ctx.fetch;
+  const PAGE = 2, FOUND = 731;
+  ctx.fetch = async (url, init) => {
+    const u = new URL(url, "https://x.test");
+    if(u.searchParams.get("op") === "search"){
+      ctx.__LASTQ = u.searchParams.get("q");
+      return { ok:true, json: async()=>({ ok:true, result:{ hits:[
+        {bundle_id:"INFO-1",title:"Doc one",object_type:"information",current_state:"collected",last_updated:"2026-07-20"},
+        {bundle_id:"INFO-9",title:"Crucial doc",object_type:"information",current_state:"collected",last_updated:"2026-07-21",criticality:"crucial"}],
+        total: FOUND, limit: 500, offset: 0 } }) };
+    }
+    return savedF(url, init);
+  };
+  await G.renderReview();
+  const capped = els.get("#rv").innerHTML || "";
+  if(!capped.includes(`Awaiting review (${PAGE} of ${FOUND})`))
+    throw new Error("UI-25: the heading must not print the page size as the count of what awaits review: " + capped.slice(0, 300));
+  if(!/id="rv-bound"/.test(capped))
+    throw new Error("UI-25: a review list short of the record's own total must STATE the bound; an unstated bound reads as completeness");
+  if(!capped.includes(String(FOUND - PAGE)))
+    throw new Error("UI-25: the bound must say HOW MANY are not on this page, in the record's own arithmetic");
+  if(!/box that ticks every row/.test(capped))
+    throw new Error("UI-25: the bound must name the consequence for the bulk control — select-all over a page is not select-all");
+  /* THE OTHER DIRECTION, so the sentence is not simply always on: when the
+     record's total AGREES with what it sent, there is no bound to state and
+     stating one would be this screen inventing a doubt the record does not
+     have. */
+  ctx.fetch = savedF;
+  await G.renderReview();
+  const whole = els.get("#rv").innerHTML || "";
+  if(!whole.includes("Awaiting review (2)") || /id="rv-bound"/.test(whole))
+    throw new Error("UI-25: with the whole answer in hand the screen states no bound and prints the plain count: " + whole.slice(0, 300));
+}
+
 ctx.document.querySelector("#rel-ack").value = "Batch is homogeneous, same capture run";
 ctx.document.querySelector("#rel-mit").value = "Sampled five against sources";
 try{
