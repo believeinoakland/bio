@@ -326,6 +326,39 @@ it the second step:
   UNBUILT work — stating it now is what stops the project surfaces being built bias-blind and
   retrofitted, which is the same reason the import ruling had to arrive before import does.
 
+### 2026-08-04 · BOB · THE ASSISTANT IS THE PILOT AI INTEGRATION — design mapped in `ASSISTANT-PILOT.md`
+
+Bob picked DEC-27's assistant as the first AI integration and sketched the flow (prompt →
+interpret → answer, or wizard in a sidebar → navigate to the surface; **the AI does not
+enter values into fields and does not press Submit**). The full design is
+[`ASSISTANT-PILOT.md`](../ASSISTANT-PILOT.md); it sits entirely under DEC-24/27/54/55 and
+amends none of them. The load-bearing choices, so this entry can be judged without the file:
+
+- **The "training" is SELF-DESCRIPTION, not a document.** Five layers by drift rate:
+  authored doctrine; the plane's PUBLISHED vocabulary; the op registry EMITTED (cannot
+  drift); surfaces that SELF-DESCRIBE (harness-enforced); and recipes as DATA whose steps
+  name surface ids and ops, **failing the build when they name one that does not exist** —
+  the D-106 defence applied to assistant knowledge. The ~305 teaching-grade refusal
+  `detail:` strings are surfaced VERBATIM as the answer key, never paraphrased.
+- **The pilot's `ai`-class task scope is READ-ONLY.** FIND needs reads; the wizard observes
+  progress by reads; CREATE/ACT proposals need nothing because the member executes the act
+  as themselves in the surface. Two identities, two steps; the DEC-55 negative control
+  ships WITH the class.
+- **An assistant answer that reports absence MUST name its LEVEL** (meaning / content /
+  documents / internet) — the four-level rule binds the assistant hardest, because it is
+  the component most likely to say "there is nothing."
+- **The wizard is a PLAN in D-82's dress**: navigates to the surface, stops, observes by
+  reading, advances; abandonment is a non-event. A CREATE proposal shows the member's own
+  words BESIDE the surface; their typing is the adoption. No DOM access at all in the
+  pilot.
+- **Ephemerality (BOB's determination, Bob may veto):** the conversation is the member's
+  thinking space, NOT record; what enters the record enters through member acts stamped
+  `surfaced_by: agent`; a member may save an exchange as their own authored note.
+- **Excluded on purpose**: PURSUE/EXTRACT/CHECK (post-pilot; CHECK first), field entry,
+  egress (DEC-47 stays open and unpreempted), and DEC-54's policy inhale (last).
+- **Build order starts with the surface registry + recipe validation, which needs no AI
+  and pays for itself as documentation immediately.**
+
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
