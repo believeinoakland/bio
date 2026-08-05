@@ -1,5 +1,16 @@
 /* UI-39 · THE PLANE PUBLISHED A BOUND AND THE SURFACE DROPPED IT.
+ * UI-41 · AND WHERE IT PUBLISHED NONE, THE SURFACE STOPPED AUTHORING ITS OWN.
  * ============================================================================
+ *
+ * UI-41's half, stated first because it SUPERSEDES part of what follows. UI-39
+ * shipped two bound sentences the SURFACE composed — `op=readingname`'s and the
+ * resolutions feed's — because those ops published no bound, and DEC-58 was
+ * raised to license exactly that. REC-57 ended the exception: eleven capped ops
+ * now publish `limit` (the cap AFTER clamping, never the number asked for) and a
+ * truncation signal in each op's own vocabulary. So ARM B and ARM C below are
+ * CORRECTED — the numbers come off the wire, and a hand-typed figure FAILS —
+ * and ARM E sweeps the class rather than trusting the two the item named.
+ * DEC-58's exception is retired: no surface here authors a bound any more.
  *
  * UI-25 fixed five sites of this class and REPORTED four more that sat outside
  * its claim. This suite drives those four, and it sweeps for the class rather
@@ -51,7 +62,7 @@
  * answer some other way (a depth walk, a gate, a time window), and it cannot
  * see a surface that renders a count it computed itself from a complete answer.
  *
- * NEGATIVE CONTROL: four arms, each RUN and recorded in the report.
+ * NEGATIVE CONTROL (UI-39): four arms, each RUN and recorded in the report.
  *   (1) restore each dropped bound in app.html (remove `limit:` from the four
  *       call sites) -> WALK 2 fails naming the file and the figure.
  *   (2) ARM A's own: the planted match sits past the plane's default and the
@@ -62,6 +73,26 @@
  *       because the broken-copy count stops exceeding the clean-copy count.
  *   (4) polarity checked on every pin: each is RED for the defect and GREEN for
  *       the fix, never the reverse.
+ *
+ * NEGATIVE CONTROL (UI-41, run 2026-08-05 by ui41-agent): three arms, each RUN,
+ * every file restored byte-identically afterwards with sha256 compared.
+ *   (1) THE NUMBER IS READ, NOT COPIED. In app.html replace
+ *       `const planeBound = Number(ans.limit);` with
+ *       `const planeBound = RESOLVE_CAND_LIMIT;` — a hand copy, which is the
+ *       defect exactly -> 9 FAIL, headed by "THE BOUND IS THE RECORD'S" and
+ *       "IT MOVES WITH THE RECORD". This is the arm that matters: the ask and
+ *       the plane's ceiling are BOTH 500, so a hand copy agrees with the wire
+ *       for free on the real plane and every arm would pass without it.
+ *   (2) NO FALLBACK. In `queueBoundHtml` replace
+ *       `const cut = r && r.truncated === true;` with the pre-REC-57 arithmetic
+ *       `Number(r.counts.resolved) > r.tasks.length` -> 4 FAIL, headed by
+ *       "A CUT ANSWER WHOSE COUNTS AGREE IS STILL REPORTED", which is the arm
+ *       that measures the difference between the record's flag and the
+ *       inference it replaced.
+ *   (3) NEUTER THE SWEEP. Make `authoredBounds` return `[]` -> 3 FAIL including
+ *       "REACH IS A DELTA" and the over-strictness instrument arm, so a walk
+ *       that finds nothing can no longer report zero and pass.
+ *   (4) polarity checked on every new pin: RED for the defect, GREEN for the fix.
  */
 import fs from "fs";
 import vm from "vm";
@@ -460,51 +491,117 @@ ok("ARM A · and it states which bound stopped it rather than implying completen
 }
 
 /* ==========================================================================
- * ARM B — op=readingname's numeric bound, STATED.
+ * ARM B — op=readingname's bound, THE RECORD'S OWN (UI-41).
+ *
+ * SUPERSEDED AND CORRECTED, NOT EXEMPTED (2026-08-05). UI-39 wrote this block to
+ * assert the sentence stated the number the SURFACE ASKED FOR — `at most 500` —
+ * because `op=readingname` published no bound and DEC-58 licensed exactly that
+ * as the only honest half available. REC-57 ended the exception: `limit` (the cap
+ * AFTER clamping, never the number asked for) and `truncated` are on the wire, so
+ * every arm below now asserts the RECORD's figure and the old assertions are
+ * rewritten rather than deleted or allowed to stand.
+ *
+ * THE HAZARD THIS ARM IS BUILT AROUND, and it is the reason for the odd numbers.
+ * This screen asks for 500 and `documentsNamingEntity` clamps to a ceiling of 500,
+ * so ON THE REAL PLANE THE ASK AND THE APPLIED CAP AGREE — a hand-typed 500 in the
+ * surface would satisfy any arm driven at the real ceiling, at zero cost, with the
+ * defect fully present. So the fixture serves a bound that is NOT the ask, and the
+ * sentence must carry the wire's number and must NOT carry the ask's.
  * ========================================================================== */
-const CAND_LIMIT = U.RESOLVE_CAND_LIMIT;
-const candRouter = (count) => async (op, p) => {
+const CAND_ASK = U.RESOLVE_CAND_LIMIT;
+
+/* THE PLANE'S REAL CEILING, READ OFF ITS OWN SOURCE rather than typed — UI-35's
+   class, where a fixture that invents a value makes a dead branch render alive.
+   This is not used as a fixture value; it is used to PROVE the hazard above is
+   real, which is what justifies driving the arms off-ceiling. */
+const RN_CEILING = Number((/documentsNamingEntity\(\{[\s\S]{0,2000}?Math\.min\(Number\(limit\)\s*\|\|\s*\d+,\s*(\d+)\)/.exec(STORE)||[])[1]);
+ok("ARM B · INSTRUMENT: the plane's own ceiling for this op is read out of store.mjs, not typed here",
+   Number.isFinite(RN_CEILING) && RN_CEILING > 0);
+ok("ARM B · THE HAZARD IS REAL, MEASURED: what this screen asks for and what the plane clamps to are the SAME NUMBER, so an arm driven at the real ceiling would pass over a hand-typed figure — which is why every arm below is driven off it",
+   CAND_ASK === RN_CEILING);
+
+const candRouter = (count, wire) => async (op, p) => {
   if(op === "readingname")
     return { ok:true, entity_id:"ENT-1", count,
              documents: Array.from({length:count}, (_,i)=>({
                capture_sha:`${i}`.padStart(64,"0"), bundle_id:`INFO-${i}`, ref:`R${i}`,
                label:"Oakland Police Department", correspondence:"name", grade_if_resolved:"C" })),
-             names_unusable:[], detail:"" };
+             names_unusable:[], detail:"",
+             /* THE WIRE'S OWN BOUND KEYS, spread LAST and only when the arm
+                supplies them — an arm that supplies none drives the branch where
+                the record published nothing, which is NC (2)'s permanent home. */
+             ...(wire || {}) };
   if(op === "concerns") return { documents:[] };
   return {};
 };
-const loadCands = async (count) => {
-  els.clear(); ROUTER = candRouter(count);
+const loadCands = async (count, wire) => {
+  els.clear(); ROUTER = candRouter(count, wire);
   U.INTENT_SUBJ.entity = { entity_id:"ENT-1", label:"Oakland Police Department" };
   await U.loadResolveCandidates();
   return html("#res-cands");
 };
 
-const few = await loadCands(3);
-ok("ARM B · THE NUMERIC BOUND IS STATED ON EVERY ANSWER, not only when it bites — a bound a member is told about sometimes is one they cannot rely on",
-   new RegExp(`at most ${CAND_LIMIT} documents`).test(few));
+/* Deliberately unlike the ask, unlike the plane's ceiling, and unlike any figure
+   in app.html — so the only way it can reach the screen is off the wire. */
+const WIRE_BOUND = 137;
+ok("ARM B · INSTRUMENT: the fixture's bound differs from the number this screen asks for, so a hand copy cannot agree with it for free",
+   WIRE_BOUND !== CAND_ASK && WIRE_BOUND !== RN_CEILING);
+
+const few = await loadCands(3, { limit: WIRE_BOUND, truncated: false });
+ok("ARM B · THE BOUND IS THE RECORD'S: the sentence states the cap the plane APPLIED, read off the wire",
+   new RegExp(`bound of ${WIRE_BOUND} documents`).test(few));
+ok("ARM B · A HAND-TYPED NUMBER FAILS THIS: the figure this screen ASKED FOR appears nowhere in what a member reads",
+   !new RegExp(`\\b${CAND_ASK}\\b`).test(few));
+ok("ARM B · THE BOUND IS STATED ON EVERY ANSWER, not only when it bites — a bound a member is told about sometimes is one they cannot rely on",
+   /bound of/.test(few));
 ok("ARM B · and it says WHICH HALF it bounds, because op=concerns is uncapped and reporting the bound over the wrong set would be its own overclaim",
    /already resolved to this subject are added separately and are not capped/.test(few));
-ok("ARM B · a list under the bound does not claim to be at it",
-   !/AT that limit/.test(few));
-/* UI-26's four SEMANTIC claims are untouched — this item added a fifth, it did
-   not replace the four. Corrected pins, never exempted ones. */
+ok("ARM B · an answer the record did not cut does not claim to have been cut",
+   !/was CUT/.test(few));
+/* UI-26's four SEMANTIC claims are untouched — UI-39 added a fifth and UI-41
+   re-sourced it; neither replaced the four. Corrected pins, never exempted. */
 ok("ARM B · UI-26's four semantic claims all survive: normalisation, the alias join, accents unfolded, absence-says-nothing",
    /ignores capitalisation and punctuation/.test(few)
    && /every name this subject is registered under/.test(few)
    && /does <b>not<\/b> ignore accents/.test(few)
    && /neither absence says anything about whether such a document exists/.test(few));
 
-const atCap = await loadCands(CAND_LIMIT);
-ok("ARM B · AT the bound, the list says it is at the bound and that there are likely more",
-   /AT that limit/.test(atCap) && /there are very likely more it did not ask for/.test(atCap));
-ok("ARM B · and the call actually carried the limit onto the wire, so the sentence describes the request that was made",
-   CALLS.some(c => c.op === "readingname" && Number(c.params.limit) === CAND_LIMIT));
+/* THE ARM THAT PROVES THE NUMBER IS READ RATHER THAN COPIED. Same screen, same
+   call, a plane publishing a DIFFERENT bound — and the sentence must MOVE. */
+const moved = await loadCands(3, { limit: WIRE_BOUND * 2, truncated: false });
+ok("ARM B · IT MOVES WITH THE RECORD: a plane publishing a different bound moves the member's sentence with it",
+   new RegExp(`bound of ${WIRE_BOUND * 2} documents`).test(moved));
+ok("ARM B · and the previous answer's figure does NOT survive into it, which is what a copy would do",
+   !new RegExp(`bound of ${WIRE_BOUND} documents`).test(moved));
+
+const cutAns = await loadCands(WIRE_BOUND, { limit: WIRE_BOUND, truncated: true });
+ok("ARM B · the record's own `truncated` is read and said, in place of this screen deciding it from a full page",
+   /The record says this answer was CUT/.test(cutAns));
+
+/* `truncated` IS NOT `count >= limit`, AND THIS ARM IS RED FOR THE OLD CODE.
+   The plane sets it on `merged.length > cap || aliasPageFilled` — so a SHORT
+   answer can still have been cut, at the alias page. UI-39's inference was
+   FALSE here (3 >= 137 is false) and reported nothing at all. */
+const aliasCut = await loadCands(3, { limit: WIRE_BOUND, truncated: true });
+ok("ARM B · A SHORT ANSWER CAN STILL BE CUT: the plane also sets `truncated` when the ALIAS page filled, and the old `count >= limit` inference could never report that and never did",
+   /The record says this answer was CUT/.test(aliasCut));
+
+/* NC (2), PERMANENT: the record publishes no bound. */
+const silent = await loadCands(3, null);
+ok("ARM B · NO FALLBACK: where the record published no bound, the screen SAYS it does not know",
+   /did not say what bound it applied/.test(silent));
+ok("ARM B · and it does not quietly substitute the number it asked for, which would read exactly as an answered bound does",
+   !new RegExp(`\\b${CAND_ASK}\\b`).test(silent));
+ok("ARM B · nor does it claim the answer was cut on an absent flag",
+   !/was CUT/.test(silent));
+
+ok("ARM B · and the call still carries a limit onto the wire, so the record has something to clamp",
+   CALLS.some(c => c.op === "readingname" && Number(c.params.limit) === CAND_ASK));
 
 /* ==========================================================================
  * ARM C — op=queue / op=tasks: `truncated` and `counts`, published and now read.
  * ========================================================================== */
-const queueRouter = (truncated, resolvedTotal, resolvedRows) => async (op) => {
+const queueRouter = (truncated, resolvedTotal, resolvedRows, tasksWire) => async (op) => {
   if(op === "queue") return { ok:true, member:"dana", items:[], item_count:2, truncated,
                               classes:["OBLIGATION","FINDING","CONDITION"], classes_deferred:[],
                               ancestor_depth_bound:3,
@@ -514,29 +611,75 @@ const queueRouter = (truncated, resolvedTotal, resolvedRows) => async (op) => {
   if(op === "tasks") return { ok:true, tasks: Array.from({length:resolvedRows},(_,i)=>({
                                 id:`T${i}`, status:"resolved", kind:"authority_undetermined",
                                 assignee:"dana", created:"2026-08-01T00:00:00Z", history:[] })),
-                              counts:{ open:0, forwarded:0, resolved:resolvedTotal, queued:0 } };
+                              counts:{ open:0, forwarded:0, resolved:resolvedTotal, queued:0 },
+                              /* Spread LAST, and only where the arm supplies it:
+                                 an arm that supplies none drives the branch where
+                                 `op=tasks` published no truncation signal at all,
+                                 which is what it did before REC-57. */
+                              ...(tasksWire || {}) };
   return {};
 };
-const paintQueue = async (truncated, resolvedTotal, resolvedRows) => {
-  els.clear(); ROUTER = queueRouter(truncated, resolvedTotal, resolvedRows);
+const paintQueue = async (truncated, resolvedTotal, resolvedRows, tasksWire) => {
+  els.clear(); ROUTER = queueRouter(truncated, resolvedTotal, resolvedRows, tasksWire);
   await U.queueRun(["queue","resolutions"]);
   return html("#q");
 };
 
-const clean = await paintQueue(false, 2, 2);
+/* THE SWEEP'S OWN FIND (UI-41), and this block is CORRECTED rather than exempted
+   (2026-08-05). UI-39 wrote the arm below to assert the resolutions bound was
+   INFERRED from `counts.resolved` against the rows delivered, and worded as the
+   inference it then was — because `op=tasks` published no truncation flag. REC-57
+   gave it `limit` and `truncated` in `op=queue`'s spelling exactly, so the
+   inference is retired here and the arms assert the RECORD's flag.
+   The plane says in its own words why the inference was never equivalent:
+   `counts` is per STATUS over the whole visible set and takes no notice of
+   `assignee` or `refers`, so it answers a question about a population the page's
+   rows are not always drawn from. */
+const TASKS_WIRE_BOUND = 89;   /* not RESOLUTIONS_LIMIT, not any figure in app.html */
+ok("ARM C · INSTRUMENT: the resolutions fixture's bound differs from what the screen asks for, so a hand copy cannot agree with it for free",
+   TASKS_WIRE_BOUND !== U.QUEUE_LIMIT);
+
+const clean = await paintQueue(false, 2, 2, { limit: TASKS_WIRE_BOUND, truncated: false });
 ok("ARM C · a complete answer states no bound, so the line means something when it appears",
    !/This is not the whole queue/.test(clean) && !/Not everything that was answered is listed/.test(clean));
+ok("ARM C · and a record that SAID it did not cut the answer earns silence, rather than an 'it did not say' line",
+   !/did not say whether it held resolved items back/.test(clean));
 ok("ARM C · and both feeds carried their limit onto the wire",
    CALLS.some(c => c.op==="queue" && Number(c.params.limit) === U.QUEUE_LIMIT)
    && CALLS.some(c => c.op==="tasks" && Number(c.params.limit) > 0));
 
-const cut = await paintQueue(true, 731, 200);
+const cut = await paintQueue(true, 731, 200, { limit: TASKS_WIRE_BOUND, truncated: true });
 ok("ARM C · the plane's own `truncated` is READ and SAID: this screen no longer shows a page as the queue",
    /This is not the whole queue/.test(cut) && /held items back/.test(cut));
-ok("ARM C · THE RESOLUTIONS BOUND IS INFERRED FROM THE ARITHMETIC THE PLANE PUBLISHES, and worded as the inference it is — the feed sends no truncation flag",
-   /Not everything that was answered is listed/.test(cut) && /counts <b>731<\/b> resolved, and sent 200/.test(cut));
-ok("ARM C · the two facts are never collapsed: one quotes the record's flag, the other quotes its count",
-   /held items back/.test(cut) && /counts <b>731<\/b>/.test(cut));
+ok("ARM C · THE RESOLUTIONS BOUND IS THE RECORD'S FLAG NOW, not this screen's arithmetic",
+   /Not everything that was answered is listed/.test(cut) && /held resolved items back/.test(cut));
+ok("ARM C · and the bound it names is the one the RECORD applied, read off the wire — a hand-typed figure fails this",
+   new RegExp(`at a bound of ${TASKS_WIRE_BOUND}`).test(cut));
+ok("ARM C · IT MOVES WITH THE RECORD: a plane publishing a different bound moves the sentence",
+   new RegExp(`at a bound of ${TASKS_WIRE_BOUND * 3}`).test(
+     await paintQueue(true, 731, 200, { limit: TASKS_WIRE_BOUND * 3, truncated: true })));
+ok("ARM C · `counts.resolved` is still stated beside it, because it is the record's own count of the whole visible set and a different fact",
+   /counts <b>731<\/b> resolved in all/.test(cut));
+
+/* RED FOR THE OLD INFERENCE, and this is the arm that measures the difference.
+   The record says it CUT the answer while `counts.resolved` EQUALS the rows
+   delivered — so UI-39's `total > got` is FALSE here and would have reported
+   nothing at all, on an answer the record itself says was cut. */
+const equalCounts = await paintQueue(false, 200, 200, { limit: TASKS_WIRE_BOUND, truncated: true });
+ok("ARM C · A CUT ANSWER WHOSE COUNTS AGREE IS STILL REPORTED: `counts.resolved` equals the rows sent, so the old `total > got` arithmetic said nothing — the record's own flag says it was cut, and the screen now says so",
+   /Not everything that was answered is listed/.test(equalCounts));
+
+/* NC (2), PERMANENT: `op=tasks` publishes no truncation signal — its pre-REC-57
+   shape. The screen must say it does not know, NOT fall back to the arithmetic. */
+const noFlag = await paintQueue(false, 731, 200, null);
+/* Anchored on the CUT HEADLINE, not on "held resolved items back" — the
+   does-not-know sentence contains that phrase too, and this suite's first draft
+   asserted its absence and went RED against correct behaviour. A pin that
+   measures a substring where the CLAIM is what matters is the D-160 shape. */
+ok("ARM C · NO FALLBACK TO ARITHMETIC: with no `truncated` on the wire the screen does not manufacture a bound out of `counts` against the rows",
+   !/Not everything that was answered is listed/.test(noFlag));
+ok("ARM C · IT SAYS IT DOES NOT KNOW instead, because an unstated bound reads as completeness",
+   /did not say whether it held resolved items back/.test(noFlag));
 
 /* ==========================================================================
  * ARM D — the FALSEHOOD, and DEC-49 held OPEN.
@@ -599,5 +742,117 @@ ok("ARM D · absence at one level is not offered as evidence about the next: the
 ok("ARM D · INSTRUMENT: and that pin bites — the sentence it replaced trips it",
    /has not been entered/i.test("a name that is not here has not been entered yet"));
 
-console.log(`bound-sweep: ${n} assertions${bad?`, ${bad} FAILED`:", all green"} — TWO WALKS whose reach is asserted AS A DELTA (the plane's own capped-op roster read off store.mjs/query.mjs, then every app.html call site anchored on the wire name) · ARM A drives the REAL addGo over a match planted at row ${HELD_AT} of ${ROWS_N} and asserts op=promote NEVER REACHES THE WIRE, with the trap proved armed (the match is absent from the page the unpaged read saw) · a bounded walk reports its bound instead of answering null, and that bound lands IN THE BUNDLE · ARM B states the numeric bound UI-26's four semantic claims never carried · ARM C reads the queue's published truncated flag and the tasks feed's published counts block · ARM D deletes an affirmative falsehood and holds DEC-49 OPEN as a RELATION, asserting no wording`);
+/* ==========================================================================
+ * ARM E — THE CLASS SWEEP (UI-41): every surface that composes a bound sentence,
+ * not the two this item named.
+ *
+ * THE RULE THIS WALK ENFORCES, in one line: a number a member reads as a BOUND
+ * must have come off the wire. A bound constant this file declares is a REQUEST
+ * PARAMETER — legitimate in a call, never in a sentence — so the walk flags any
+ * such constant that reaches a TEMPLATE INTERPOLATION, which is the only way a
+ * value in this file becomes text a member can read.
+ *
+ * WHY IT IS ANCHORED THIS WAY RATHER THAN ON WORDING. Anchoring on phrases ("at
+ * most", "the first N") would make the walk a test of its author's vocabulary,
+ * and the next screen to state a bound in different words would pass while doing
+ * exactly the thing this item exists to stop. The constant is the wire-side fact.
+ *
+ * WHAT IT DOES NOT MEASURE, stated so nobody trusts it for more: it cannot see a
+ * bound written as a LITERAL directly inside a sentence (no constant to catch),
+ * and it says nothing about ops bounded some other way. It is one walk, and its
+ * reach is asserted as a DELTA rather than as a zero.
+ * ========================================================================== */
+
+/* Bound constants this file declares. `const A = 500, B = 500;` yields both. */
+const boundConsts = (text) => {
+  const out = new Set();
+  const re = /\b([A-Z][A-Z0-9_]*(?:LIMIT|MAX|CAP|PAGE))\s*=\s*\d+/g;
+  let m; while((m = re.exec(text))) out.add(m[1]);
+  return out;
+};
+
+/* Is offset `i` inside a `${ ... }` interpolation? Scanned backwards counting
+   braces, NEVER with `[^}]*` — UI-39 measured that class of matcher stopping at
+   a `}` that was not the one it wanted, and reading a bound that was there as
+   missing. Brace-balanced, per CLAUDE.md's own instruction. */
+const insideInterpolation = (text, i) => {
+  let depth = 0;
+  for(let j = i; j > 1; j--){
+    const ch = text[j];
+    if(ch === "}") depth++;
+    else if(ch === "{"){
+      if(depth === 0) return text[j-1] === "$";
+      depth--;
+    }
+  }
+  return false;
+};
+ok("ARM E · INSTRUMENT: the interpolation detector says YES inside `${...}`",
+   insideInterpolation("x = `a ${FOO} b`", "x = `a ${F".length - 1));
+ok("ARM E · INSTRUMENT: and NO outside it, so it is not simply answering yes",
+   !insideInterpolation("const FOO = 5; call(FOO);", "const FOO = 5; call(F".length - 1));
+ok("ARM E · INSTRUMENT: and it is not fooled by a `}` that closes something else first",
+   !insideInterpolation("f({a:1}); FOO;", "f({a:1}); F".length - 1));
+
+/* Every bound constant that reaches member-facing text. */
+const authoredBounds = (text) => {
+  const consts = boundConsts(text);
+  const out = [];
+  for(const c of consts){
+    const re = new RegExp("\\b" + c + "\\b", "g");
+    let m; while((m = re.exec(text)))
+      if(insideInterpolation(text, m.index)) out.push(c);
+  }
+  return out;
+};
+
+const SURFACE_CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+ok("ARM E · INSTRUMENT: stripping comments leaves real code, so the walk is not passing over an empty string",
+   SURFACE_CODE.length > SRC.length * 0.4 && /function loadResolveCandidates/.test(SURFACE_CODE));
+ok("ARM E · WALK GUARD: the file really does declare bound constants, so the walk has something to find",
+   boundConsts(SURFACE_CODE).size >= 4);
+
+const AUTHORED = authoredBounds(SURFACE_CODE);
+if(AUTHORED.length) console.error("  bound constants reaching member-facing text:", [...new Set(AUTHORED)].join(", "));
+ok("ARM E · THE CLASS IS CLEAR: no bound constant this file declares reaches a sentence a member reads — every stated bound comes off the wire",
+   AUTHORED.length === 0);
+
+/* REACH AS A DELTA. A walk that matches nothing reports zero and passes forever.
+   So the same walk is run over a copy carrying UI-39's OWN authored sentence,
+   restored verbatim, and must find MORE. The absolute is worthless; the
+   difference is the evidence. */
+const REGRESSED = SURFACE_CODE.replace(
+  "const planeBound = Number(ans.limit);",
+  "const planeBound = Number(ans.limit);\n  const candBoundOld = ` This screen asks the record for at most ${RESOLVE_CAND_LIMIT} documents by name.`;");
+ok("ARM E · INSTRUMENT: the regression copy really was modified, so the delta below compares two different things",
+   REGRESSED !== SURFACE_CODE && REGRESSED.length > SURFACE_CODE.length);
+ok("ARM E · REACH IS A DELTA: restoring UI-39's authored bound makes this walk find MORE than it finds on the file as it stands",
+   authoredBounds(REGRESSED).length > AUTHORED.length);
+ok("ARM E · and it names the constant it caught, rather than merely counting",
+   authoredBounds(REGRESSED).includes("RESOLVE_CAND_LIMIT"));
+
+/* OVER-STRICTNESS. A genuinely correct alternative, phrased unlike anything in
+   this file and reading fields in a different style, must PASS — otherwise the
+   walk is testing its author's habits rather than the property. */
+const HONEST_ALT = "const MY_PAGE = 20;\n"
+  + "call({limit:String(MY_PAGE)});\n"
+  + "const s = `the record capped this answer at ${a.limit} rows`;\n"
+  + "const u = `it reports ${a.truncated ? 'more beyond this page' : 'nothing held back'}`;\n"
+  + "const v = `${b.remaining} still to go`;";
+ok("ARM E · OVER-STRICTNESS: a correct alternative that reads the wire in words this file never uses PASSES the walk",
+   authoredBounds(HONEST_ALT).length === 0);
+ok("ARM E · INSTRUMENT: and the same alternative with its bound AUTHORED instead is caught, so the arm above is not passing because the walk is blind",
+   authoredBounds(HONEST_ALT.replace("${a.limit} rows", "${MY_PAGE} rows")).length === 1);
+
+/* THE TWO SITES, PINNED ON THE FIELDS THEY READ — asserting no wording, so
+   DEC-49 can rule any way it likes and these hold. */
+ok("ARM E · op=readingname's surface reads the record's own `limit` and `truncated`, and derives neither",
+   /Number\(ans\.limit\)/.test(SURFACE_CODE) && /ans\.truncated === true/.test(SURFACE_CODE));
+ok("ARM E · and it no longer decides truncation from a full page, which was never what the plane's flag meant",
+   !/Number\(ans\.count\)\s*>=\s*RESOLVE_CAND_LIMIT/.test(SURFACE_CODE));
+ok("ARM E · op=tasks's surface reads the record's own `truncated`, and no longer infers a bound from `counts` arithmetic",
+   /r\.truncated === true/.test(SURFACE_CODE)
+   && !/Number\.isFinite\(total\) && got != null && total > got/.test(SURFACE_CODE));
+
+console.log(`bound-sweep: ${n} assertions${bad?`, ${bad} FAILED`:", all green"} — THREE WALKS whose reach is asserted AS A DELTA (the plane's own capped-op roster read off store.mjs/query.mjs, then every app.html call site anchored on the wire name) · ARM A drives the REAL addGo over a match planted at row ${HELD_AT} of ${ROWS_N} and asserts op=promote NEVER REACHES THE WIRE, with the trap proved armed (the match is absent from the page the unpaged read saw) · a bounded walk reports its bound instead of answering null, and that bound lands IN THE BUNDLE · ARM B states op=readingname's bound as the RECORD's own limit/truncated, driven at a bound the screen never asked for so a hand-typed figure FAILS, and with no fallback when the record publishes none · ARM C does the same for op=tasks, retiring the counts arithmetic UI-39 had to infer from, with an arm RED for that inference (a cut answer whose counts agree) · ARM E sweeps the CLASS: no bound constant this file declares reaches a sentence a member reads, proved as a DELTA against UI-39's restored wording and with an over-strictness arm · ARM D deletes an affirmative falsehood and holds DEC-49 OPEN as a RELATION, asserting no wording`);
 if(bad) process.exit(1);

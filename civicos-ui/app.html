@@ -10090,8 +10090,10 @@ function queueAbsent(e){ return !!(e && /unknown op/i.test(String(e.error || e.r
    `truncated` and `item_count`, and both answer a `counts` block counting the
    WHOLE set rather than the page. All of it was read nowhere, so this screen
    printed a page and a badge computed from that page's length as though the page
-   were the record's answer. Asked for explicitly, so the number the bound line
-   names is a number this surface can stand behind. */
+   were the record's answer. Asked for explicitly — but since UI-41 these two are
+   REQUEST PARAMETERS AND NOTHING ELSE: REC-57 gave `op=tasks` the same `limit`
+   and `truncated` `op=queue` already published, so the bound line names the cap
+   the RECORD applied and no member-facing sentence reads either constant. */
 const QUEUE_LIMIT = 500, RESOLUTIONS_LIMIT = 500;
 async function queueLoadFeed(id){
   try{
@@ -10175,12 +10177,26 @@ function queueResolutionsData(){
    member on a busy record read a page of 200 as the queue, and the nav badge —
    computed from `items.length` — put a page's size on the screen as a total.
 
-   TWO DIFFERENT FACTS, NEVER COLLAPSED. The queue's own `truncated` is the
-   plane SAYING it held items back. The resolutions feed publishes no truncation
-   flag, so its bound is INFERRED from the arithmetic the plane does publish
-   (`counts.resolved` against the rows delivered) and is worded as the inference
-   it is. A screen that reported the second in the first's voice would be
-   claiming a fact the record never gave it. */
+   TWO DIFFERENT FACTS, NEVER COLLAPSED — AND SINCE REC-57 THEY ARE THE SAME
+   KIND OF FACT (corrected 2026-08-05 by UI-41; the paragraph that stood here is
+   rewritten rather than left, because it is now false of this plane).
+
+   It said "the resolutions feed publishes no truncation flag, so its bound is
+   INFERRED from the arithmetic the plane does publish (`counts.resolved`
+   against the rows delivered) and is worded as the inference it is." REC-57
+   gave `op=tasks` its own `limit` and `truncated`, in `op=queue`'s spelling
+   exactly, so BOTH feeds now state a bound the RECORD applied and neither is
+   inferred here.
+
+   THE INFERENCE WAS NOT MERELY WEAKER, IT WAS OVER THE WRONG POPULATION, and
+   the plane says so in its own words at `taskList`: `counts` is per STATUS over
+   the whole visible set and "take[s] no notice of `assignee` or `refers`", so a
+   caller filtering by either was comparing its rows against a population they
+   are not drawn from. This screen filters by `status` only, which is the one
+   dimension `counts` shares — so the old sentence happened to be right here and
+   would have gone wrong the day this feed grew an assignee filter, with nothing
+   failing. `truncated` is the fact; asking for one row past the cap is what
+   makes it one. */
 function queueBoundHtml(){
   const rows = [];
   const d = queueData();
@@ -10189,10 +10205,24 @@ function queueBoundHtml(){
     rows.push(`<p class="q-bound"><b>This is not the whole queue.</b> The record says it held items back from this answer${Number.isFinite(n)?`, and sent ${n}`:""}. What is below is a page of what is waiting, not all of it.</p>`);
   }
   const r = queueResolutionsData();
+  /* THE RECORD'S OWN FLAG, NOT THIS SCREEN'S ARITHMETIC (UI-41). `truncated` is
+     the trigger; `counts.resolved` stays because it is the plane's own count of
+     the whole visible set and is a different fact worth stating beside it — but
+     it no longer DECIDES whether a bound is reported. */
+  const cut = r && r.truncated === true;
   const total = Number(r && r.counts && r.counts.resolved);
   const got = Array.isArray(r && r.tasks) ? r.tasks.length : null;
-  if(Number.isFinite(total) && got != null && total > got){
-    rows.push(`<p class="q-bound"><b>Not everything that was answered is listed.</b> The record counts <b>${total}</b> resolved, and sent ${got}. The receipts below are that many, and the difference is older ones this screen did not ask for.</p>`);
+  if(cut){
+    const bound = Number(r.limit);
+    rows.push(`<p class="q-bound"><b>Not everything that was answered is listed.</b> The record says it held resolved items back from this answer${Number.isFinite(bound)&&bound>0?`, at a bound of ${bound}`:""}${Number.isFinite(total)?`, and counts <b>${total}</b> resolved in all`:""}${got!=null?`; it sent ${got}`:""}. The receipts below are that many, and the rest are not on this screen.</p>`);
+  }
+  /* THREE STATES, NOT TWO. `truncated:true` is the record saying it cut the
+     answer; `truncated:false` is the record saying it did not, which is the one
+     that earns silence here; ABSENT is neither, and it is said rather than
+     filled in from `counts`. An unstated bound reads as completeness (UI-26), so
+     the gap is stated — but stated as a gap, never as a number. */
+  else if(r && r.truncated === undefined){
+    rows.push(`<p class="q-bound">The record did not say whether it held resolved items back from this answer, so this screen cannot tell you whether the receipts below are all of them. It will not decide that from arithmetic of its own.</p>`);
   }
   return rows.join("");
 }
@@ -11431,8 +11461,10 @@ async function resolvePreflight(){
     `<button class="intent-go" id="res-go" onclick="resolveGo()">Resolve this document&rsquo;s references to this subject</button>`,
     "Choose a document and the record will read its references.");
 }
-/* The number this screen asks op=readingname for. Asked, not assumed: the plane
-   clamps whatever it is given, and the sentence below states the ASK. */
+/* The number this screen ASKS op=readingname for, and since UI-41 that is ALL it
+   is. The plane clamps whatever it is given and now PUBLISHES the clamp, so the
+   sentences below state the bound the record APPLIED and never this figure. It
+   is a request parameter, not a claim, and nothing member-facing reads it. */
 const RESOLVE_CAND_LIMIT = 500;
 async function loadResolveCandidates(){
   const out = $("#res-cands"); if(!out) return;
@@ -11442,17 +11474,30 @@ async function loadResolveCandidates(){
      registered under into its own term index in one statement — so nothing here
      loops over names and nothing here knows how the join is done. */
   let ans = {};
-  /* UI-39: THE NUMERIC BOUND, ASKED FOR RATHER THAN INHERITED.
-     `op=readingname` caps its answer — the plane's own default is 100 — and,
-     unlike `op=search`, it publishes NEITHER the limit it applied NOR a total, so
-     there is nothing on the answer for this surface to read the bound off. The
-     honest move is therefore to SET it: a bound this screen chose is a bound this
-     screen can state truthfully, where a bound it merely inherited is one it can
-     only guess at. What is stated below is what this screen ASKS FOR, which is
-     true whatever the plane clamps to — and a clamp can only make the list
-     SHORTER than the sentence claims, which is UI-26's conservative direction.
-     THE PLANE PUBLISHING ITS OWN BOUND IS THE DURABLE FIX and is raised as a
-     delegation; until it does, this is the honest half the surface can hold. */
+  /* UI-41: THE BOUND IS THE RECORD'S NOW, AND THE COMMENT THAT STOOD HERE IS
+     CORRECTED RATHER THAN LEFT (dated 2026-08-05).
+
+     It said `op=readingname` "publishes NEITHER the limit it applied NOR a
+     total, so there is nothing on the answer for this surface to read the bound
+     off." That was true when UI-39 wrote it and is FALSE of this plane: REC-57
+     landed `limit` — the cap AFTER clamping, never the number asked for — and
+     `truncated`, which says whether the bound actually BIT. UI-39's delegation
+     is discharged, so the exception DEC-58 was raised to license is retired
+     here: the surface no longer authors a bound because it no longer has to.
+
+     WHY THE DIFFERENCE IS NOT COSMETIC, even though this screen asks for 500 and
+     the plane's ceiling is also 500 so the two numbers agree TODAY. A stated ASK
+     is a fact about the SURFACE; a stated `limit` is a fact about the RECORD.
+     The moment the plane's ceiling moves, the asked-for number becomes a claim
+     about an answer nobody gave — and it would keep reading true because the two
+     had agreed for free. That is why the sentences below read the wire and why
+     the suite drives a plane whose bound DISAGREES with the ask.
+
+     AND `truncated` REPLACES AN INFERENCE THAT WAS NOT EQUIVALENT. `count >=
+     limit` is the surface deciding a full page means more exists. The plane's
+     own flag is `merged.length > cap || aliasPageFilled` — so it is ALSO true
+     when the ALIAS page filled, a second place the bound bites that this screen
+     had no way to see and never once reported. */
   try{ ans = (await recR("readingname", { entity:(e&&e.entity_id)||"", limit:String(RESOLVE_CAND_LIMIT) })) || {}; }catch(_){ ans = {}; }
   /* The answer carries one candidate per document AND reference, ordered with
      the stronger correspondence first, so first-wins on the capture leaves each
@@ -11497,10 +11542,24 @@ async function loadResolveCandidates(){
      rely on. Which HALF it bounds is stated too: op=concerns below is uncapped,
      so the already-resolved documents are whole and only the name-lookup half
      stops — a bound reported over the wrong set would be its own overclaim. */
-  const candBound = ` This screen asks the record for at most ${RESOLVE_CAND_LIMIT} documents by name, so if more than that carry one of this subject&rsquo;s names, the ones past ${RESOLVE_CAND_LIMIT} are not on this list. (Documents already resolved to this subject are added separately and are not capped.)`;
-  const atBound = Number(ans.count) >= RESOLVE_CAND_LIMIT;
+  /* THE BOUND AND WHETHER IT BIT, BOTH READ OFF THE WIRE (UI-41). `limit` is the
+     cap the record APPLIED after clamping; `truncated` is the record saying that
+     cap actually cut this answer. Neither is re-derived here and NEITHER HAS A
+     FALLBACK: where the record published no bound this screen says it does not
+     know, because a number invented to fill that gap is the precise thing this
+     item exists to delete, and a screen that quietly substitutes its own ask
+     would read exactly as it does when the record answered. */
+  const planeBound = Number(ans.limit);
+  const boundKnown = Number.isFinite(planeBound) && planeBound > 0;
+  const candBound = boundKnown
+    ? ` The record answered this lookup at a bound of ${planeBound} documents by name, so if more than that carry one of this subject&rsquo;s names, the ones past ${planeBound} are not on this list. (Documents already resolved to this subject are added separately and are not capped.)`
+    : ` The record did not say what bound it applied to this lookup, so this screen cannot tell you where the list stops &mdash; and it will not put a number of its own there. (Documents already resolved to this subject are added separately and are not capped.)`;
+  /* The record's own flag, not `count >= limit`. The two are NOT equivalent: the
+     plane also sets this when the ALIAS page filled, a second place the bound
+     bites that this screen could never see and never once reported. */
+  const atBound = ans.truncated === true;
   const atBoundNote = atBound
-    ? ` <b>This list is AT that limit</b> &mdash; ${RESOLVE_CAND_LIMIT} documents came back by name, which is every one this screen asked for, so there are very likely more it did not ask for.`
+    ? ` <b>The record says this answer was CUT</b> &mdash; it held documents back, so more documents carry one of this subject&rsquo;s names than are on this list.`
     : "";
   const unusable = (ans.names_unusable||[]);
   const unusableNote = unusable.length
