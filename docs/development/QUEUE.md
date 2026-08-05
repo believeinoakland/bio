@@ -95,7 +95,7 @@ claims** — the last one (`rec10-agent`, 2026-08-03) was released as stale at h
 its evidence, having held `bio-checks.mjs` and a large region of `store.mjs` for a day
 after its session ended.
 
-**DIST IS NOW A SEPARATE SESSION.** The next CONDUCT does not cut releases, deploy, or
+**DIST IS NOW A SEPARATE SESSION, and its resume prompt is `docs/development/kickoffs/DIST-NEXT.md`.** The next CONDUCT does not cut releases, deploy, or
 touch `newgroup/**`, `release/**`, `deploy.mjs`, the plane version or tags. The baton reads
 `holder: DIST since 2026-08-04` and belongs to that session. **DIST-2 and DIST-3 are its
 items, not CONDUCT's.** Two things wait for it specifically: `BIO_RELEASE_SEED` is not on
