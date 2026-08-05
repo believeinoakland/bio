@@ -2511,3 +2511,43 @@ name. Recorded as D-203; the missing retraction route is D-204. (RENUMBERED at i
 per-file assertions over the new file). **No other suite moved by one assertion.**
 `node scripts/coverage.mjs --strict` run directly with `$?` read unpiped: exit 0,
 131/131 ops, 53/53 checks, 101/101 suites declaring a control, 300 arms.
+
+## REC-56 · repair advice measured against what the plane can do (2026-08-05, rec56-agent)
+
+Instrument: `bio-plane/test/repair-reachability.test.mjs` — a source-level walk over
+every `f(...)` call in `checks/bio-checks.mjs`, judged against `STATES` (the edge
+tables) and `deriveActs` (the plane's own published act derivation). Every figure below
+is read out of those tables at run time rather than written down, so it moves when they
+move.
+
+**The catalogue, measured by the walk itself (it prints the figure on every run, so a
+corpus that SHRANK is visible):** **213 repair strings across 41 of the 53 checks**, of
+which **6 are MOVE DIRECTIVES** after this item's corrections. **SEVEN sites in THREE
+state machines advised an act nobody can perform** — the routing predicted four.
+
+| site | machine | why it could not be followed |
+| --- | --- | --- |
+| C-18.1 ×2 (`checkReleaseAuthority`) | information | `verified -> collected` is not an edge |
+| C-18.8 ×2 (`checkSignedRelease`) | information | same |
+| C-2.8 (`checkPublishedExtension`) | inquiry | `published -> concluded` is not an edge (`published: ['open','surfaced']`) |
+| C-2.8 (`checkDividedExtension`) | inquiry | `divided` is TERMINAL (`divided: []`) |
+| C-2.8 (`checkConcludedExtension`) | inquiry | **the edge IS legal and the OP SURFACE refuses it**: `REOPENABLE_FROM` excludes `concluded`, `deriveActs` does not publish `reopen` there, and `store.reopen()` answers NOT_SET_DOWN |
+
+**The `collected` advice was unfollowable in BOTH readings, not one** — measured rather
+than assumed. Appending the transition fires C-4.2's edge arm; setting `current_state`
+without appending fires C-4.2's agreement arm (`current_state 'collected' disagrees with
+last transition to 'verified'`). There was no careful way to comply.
+
+**`op=release` is not repeatable, so the FIRST repair in each C-18.1 array was as
+unreachable as the second.** Both arms fire only at or past `verified`, and `release()`
+refuses anything already there (ILLEGAL_TRANSITION). Recorded as D-210; it is the same
+question as DEC-56 and is not decided here.
+
+**Battery, measured in this worktree:** 102/102 at **5,801** before any edit — the brief
+said 5,799, and the measurement governs, the same way REC-55's did. 103/103 at **5,845**
+after. The +44 is ATTRIBUTED per suite by diffing per-suite counts, not estimated:
+`repair-reachability.test.mjs` +39 (new), `hygiene.test.mjs` 429 -> 432 (its three
+per-file assertions over the new file), `planning-hygiene.test.mjs` 243 -> 245 (the two
+new DEBT rows). **No other suite moved by one assertion.**
+`node scripts/coverage.mjs --strict` run directly with `$?` read unpiped: exit 0,
+131/131 ops, 53/53 checks, 103/103 suites declaring a control, 309 arms (303 before).
