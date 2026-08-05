@@ -3389,6 +3389,14 @@ reversal cost: low either way — one predicate at the cite path plus the suites
   pin it.
 
 ### DEC-49 · open
+
+**INPUT ADDED 2026-08-05 · CONDUCT, from UI-40 — the subject grew again, and one addition is a WORD THE PLANE CHOSE reaching an unauthenticated reader.** Recorded here rather than acted on, because the wording is exactly what this entry is about:
+
+- **Rendering `case_detail` VERBATIM puts `R2` in front of a reader who is not signed in.** UI-40 shipped it rendered and PINNED, on the reasoning that withholding it re-creates the very withholding the item existed to end — a reader met a case whose index contradicted itself and was told nothing. The guard now measures the true cost, so whichever way this entry rules, the price is visible rather than discovered.
+- **The same published sentence says "never a verdict this PLANE reached", and `plane` is flagged by nothing** — no sibling sweep polices that term. UI-40 did NOT hand-extend the term list, correctly: the list is harvested by design, and extending it by hand would make the instrument agree with its author at zero cost, which is the equality this project refuses.
+- The practical consequence for whoever rules: the subject is no longer only *who owns member-facing refusal wording*, it is **which vocabulary the plane may put in front of an unauthenticated reader at all** — and the honest options are to accept the plane's own words as the record's words, or to require a translation layer that would itself be authored wording nobody has yet owned.
+
+
 raised: 2026-08-04 · CONDUCT (lifted from UI-30's report; D-174's own trigger condition fired)
 for: bob
 question: WHO OWNS MEMBER-FACING REFUSAL WORDING — the plane, or the surface? D-174 has
