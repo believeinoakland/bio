@@ -81,6 +81,34 @@ _(drained by CONDUCT 2026-08-03 — the 2026-08-01 case-making build order and e
 
 ---
 
+## SESSION HANDOVER 2026-08-04 (CONDUCT → next CONDUCT; DIST splits off)
+
+The CONDUCT session of 2026-08-04 ended when remote access was lost. **The resume prompt is
+`docs/development/kickoffs/CONDUCT-NEXT.md`** — paste the block below its rule.
+
+State at handover, all verified against `origin/main` rather than remembered: battery
+**100/100 / 5,664**, coverage `--strict` exit 0 at 130/130 ops and 100/100 controls, UI
+harness 34/34 with both guards, plancheck 0 fail / 0 warn. **Plane `biosmoke7` LIVE at
+0.56.0 and UI `civicos` LIVE at build `74cc1646044b`**, the served page byte-identical to
+`app.html` on main. No workers running, no worktrees but main and BOB's, and **no open
+claims** — the last one (`rec10-agent`, 2026-08-03) was released as stale at handover with
+its evidence, having held `bio-checks.mjs` and a large region of `store.mjs` for a day
+after its session ended.
+
+**DIST IS NOW A SEPARATE SESSION.** The next CONDUCT does not cut releases, deploy, or
+touch `newgroup/**`, `release/**`, `deploy.mjs`, the plane version or tags. The baton reads
+`holder: DIST since 2026-08-04` and belongs to that session. **DIST-2 and DIST-3 are its
+items, not CONDUCT's.** Two things wait for it specifically: `BIO_RELEASE_SEED` is not on
+this machine, so nothing has been signed and a group installing through `newgroup` still
+receives **0.55.0** while the live instance runs 0.56.0; and **D-201** stays open until
+`deploy.mjs` refuses the `civicos` slug by name.
+
+Landed this session, for the record: REC-40 through REC-53, UI-28 through UI-37, M0-9, and
+the first deploy of the accumulated work. Eight decisions are open with Bob, every one
+running under a provisional.
+
+---
+
 Item format:
 
     ### <ID> · <queued | active | done | blocked | superseded>
