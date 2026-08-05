@@ -4054,20 +4054,45 @@ what reversing costs: the ruling itself is cheap to reverse while nothing is bui
   IS-1..IS-7 are not started. It gets expensive once suggestions exist in volume, because a
   suggestion written under one acceptance model cannot be re-attributed afterwards. Nothing
   published is affected either way: effective strength never counts a suggestion.
-**ARCHITECTURE ADDED THE SAME DAY, and it changed the shape of the build.** The design was
-  rewritten once the SUPPORT/DEFEAT structure landed, and the piece that had been blocked
-  became the foundation. Three things a reader of this entry needs: (a) **support is
-  DEFEASIBLE** — an UNDERCUT attacks the INFERENCE from a leg to a claim and leaves the leg
-  true while the link dies; a REBUTTAL attacks the claim and creates opposing support;
-  **neither is negative strength and nothing is subtracted**, so the pressure to express
-  disagreement as one number never arises and R2 stays intact. Defeat is a member
-  determination that a link is not live — a judgement needing no scale. (b) **The inquiry's
-  QUESTION is a first-class object a suggestion can act on**, because Bob's contract case
-  showed that apparent contradiction is usually an imprecise question rather than a property
-  of the claims, and separating two questions wearing one sentence is often the run's
-  highest-leverage output. (c) **New evidence weakening ACCEPTED work arrives as a suggested
-  undercut or rebuttal**, which is the mechanism behind the rule that accepted claims are
-  never changed. Full design in `INVESTIGATIVE-SESSION.md` §5–§7.
+**THE ARCHITECTURE, settled the same day, and TWO WRONG TURNS ON THE WAY THAT ARE PART OF
+  THE RULING.** The mechanism is **VERSIONS**: a claim carries multiple complete alternative
+  accounts of the legs beneath it, each with a written description, each uniquely named within
+  its claim, each frozen once written so an edit derives a new one, each with its own state
+  (`suggested`/`considering`/`accepted`/`rejected`), and exactly one accepted version is
+  CURRENT. **Why versions and not added legs:** a set of legs is a composition that tells a
+  story, so the composition is the unit of meaning and therefore the unit of change — and it
+  is what lets new evidence weaken an accepted claim while NOTHING ACCEPTED IS EVER ALTERED,
+  because a new reading arrives as a whole alternative rather than a patch.
+  **THE TWO WRONG TURNS, kept because the ruling is partly what they ruled out.** This session
+  twice tried to give the record a structure for how claims relate. First as claims agreeing or
+  disagreeing along a range — refuted by Bob's contract case, where an award that skipped
+  competitive bidding and an emergency exemption *"taken together tell the story of what
+  happened and why"* rather than conflicting, and where relevance depends on which question the
+  inquiry asks. Then as three stored objects (support / undercut / rebuttal) — refuted more
+  fundamentally: *"There may be evidence, even a single sentence of evidence, that supports and
+  undercuts and rebuts a claim - all in the same sentence."* Roles are not types.
+  **THE RULING THAT REPLACED THEM, and it makes the system smaller:** *"the only way to make
+  sense of how the various legs of a claim come together is for an AI to be involved, for it to
+  understand the facts in context and adjust the legs so that they properly tell the story and
+  assign strength values that when calculated are supported by the evidence."* The calculation
+  stays as simple as it already is. The intelligence goes into how the legs are formed and
+  weighted, never into relationships the record computes over.
+  **TWO MODES, ONE PIECE OF WORK.** The AI runs as a background job leaving versions for later
+  review, or as an interactive session offered once that session's analysis is complete, in
+  which a member walks the evidence trail and may ask any applicable question. Both modes use
+  ONE write path — "export" means the AI adds a version — so nothing interactive lies outside
+  what the background job could do. **The conversation is NOT part of the permanent record**,
+  which is exactly why every version's written description is load-bearing: it is the durable
+  account of the reasoning the transcript would otherwise have carried away.
+  **CURRENT belongs to the project's relationship with the inquiry**, not to the inquiry, so a
+  shared inquiry keeps accumulating versions and evidence for everyone while each project
+  stands where it chooses. Cloning on divergence was considered and dropped (it duplicates the
+  evidence trail and the copies drift, ending the sharing); the notification survives. Verified
+  first: project association is edge-based, and a project already overrides settings in its own
+  file. **The published bundle carries only the current version** — the leg configuration for
+  reproducibility, the description for readability, and the version's NAME so a later reader
+  can tell which account was published after current has moved on.
+  Full design in `INVESTIGATIVE-SESSION.md`; the withdrawn positions in its §16.
 decided: 2026-08-05 · Bob, session BOB
 reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the full design, the
   support/defeat structure, the instruments, the open questions and the withdrawn positions),
