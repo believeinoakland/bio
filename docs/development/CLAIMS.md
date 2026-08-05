@@ -1991,3 +1991,22 @@ expected: QUEUE.md UI-39. The four bound-dropping sites UI-25 reported rather th
 accepts-when: as QUEUE.md UI-39. `node civicos-ui/test/run.mjs` green with `heldMatch`'s bound DRIVEN — a match past the plane's default must not produce a duplicate bundle and the suite must NAME THE WRITE IT PREVENTED (`op=promote`), asserting the write and not the display; `cd bio-plane && npm run test:battery` stays green at 101/101 / 5,733 with any delta ATTRIBUTED PER SUITE; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0. NEGATIVE CONTROLS run and recorded: (1) restore each dropped bound and the harness FAILS naming the file and the figure; (2) for (a), plant a match beyond the cap and assert the duplicate WOULD have been written without the fix; (3) neuter the sweep's walk and its REACH assertion fails AS A DELTA; (4) polarity checked on every pin — RED for the defect, GREEN for the fix. Every file restored byte-identically after each arm, sha256 compared. **No push, no merge — CONDUCT integrates.** QUEUE.md and DECISIONS.md are not written by this session.
 concurrency: the only other live claim is RECORD's REC-54, which is `released:` and is `bio-plane/**` ground this claim does not enter.
 released:
+
+---
+
+## DELEGATION 2026-08-05 UI → RECORD
+
+raised by: ui39-agent (worktree agent-ac6c0018a3d94d2c5), UI-39
+what UI needs: **two read ops publish a bound they do not name, so a surface has to assert its own.** `op=search` gets this right — it answers `total`, `limit` and `offset` beside the page, which is exactly what let UI-39 fix `heldMatch` by walking the plane's own count. Two of its siblings do not:
+  1. **`op=readingname` (`documentsNamingEntity`, store.mjs ~7583)** caps at `Math.min(Number(limit) || 100, 500)` and returns `count` — *the length of what it sent*, which is indistinguishable from the length of what exists. It publishes NO `limit` and NO truncation flag. So `loadResolveCandidates` cannot read the bound off the answer, and UI-39 shipped the honest half available to a surface: it SETS `limit` and states the number it ASKED FOR. That sentence is true whatever the plane clamps to (a clamp can only make the list shorter than the claim, UI-26's conservative direction) but it is a bound the surface authored, not one the record published. **Asked for: `limit` (the cap actually applied) and `truncated` on the answer.** Then the sentence states the record's own figure and the surface stops asserting one.
+  2. **`op=tasks` (`taskList`, store.mjs ~15194)** caps at 200 and publishes a `counts` block whose figures count the whole visible set — but no truncation flag, where its sibling `op=queue` publishes `truncated` explicitly. UI-39 therefore INFERS the resolutions bound from the arithmetic (`counts.resolved` against the rows delivered) and words it as the inference it is, kept deliberately distinct from the queue's line, which quotes the record's own flag. **Asked for: `truncated` on `op=tasks`, matching `op=queue`.**
+why it is not fixed here: `bio-plane/**` is RECORD's ground and this session opened none of it — the zero-byte battery delta is the evidence.
+severity: neither is a correctness defect today. Both are the same shape as the class UI-39 exists to close, one layer down: **a producer that caps without publishing the cap forces every consumer to guess or to assert.** Two surfaces have now had to.
+
+---
+
+## DELEGATION 2026-08-05 UI → M0 (VERIFICATION)
+
+raised by: ui39-agent (worktree agent-ac6c0018a3d94d2c5), UI-39
+what was observed: **`npm run test:battery` FAILED `migrate.test.mjs` when run CONCURRENTLY with `node scripts/coverage.mjs --strict` and a UI harness run on the same machine; re-run alone it is green at 101/101 / 5,735.** No `bio-plane/**` file was open in this worktree in either run (`git status` confirms), so the failure cannot be attributable to a change. Reported rather than smoothed, because the failing run is the one a worker under time pressure would report as a regression and then spend an hour attributing — which is exactly what the UI-39 brief says two workers already did over a missing `miniflare`.
+what UI needs: either the battery serialises against a lock, or `VERIFICATION.md` states plainly that the battery must not be run concurrently with another suite on the same machine and that a lone re-run is the authority.
