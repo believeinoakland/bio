@@ -266,6 +266,103 @@ stood on.
 skill at the source rather than bolting a report onto the output. The standard the skill is
 written against is the existing rule that a lens may be preserved and may not be applied.
 
+## 14a · INTEGRATION — how the AI attaches to the workflow
+
+**Bob, 2026-08-05, answering the four open integration questions.** The model is Claude
+Code, and the structural idea it gets right is the one this design adopts:
+
+> **The agent is not inside the product. It is a separate process that acts on the product
+> through the same interface a person could use.**
+
+That is what makes it auditable and replaceable, and it is why a misbehaving agent is a
+bounded problem rather than a compromised system. It is also DEC-55 already ruled — the AI
+is an agent against the plane's endpoint surface — with the rest following.
+
+### Which Claude account — a cascade, and it decides sovereignty too
+
+**Bob:** the instance may have a Claude account whose token the BIO configuration holds;
+every project and every member may have a different one. **Resolution order: the MEMBER's
+account if they have one, otherwise the PROJECT's, otherwise the INSTANCE's.**
+
+**This answers where the agent RUNS, not only who pays.** If the instance holds a token, the
+instance can make the calls, so the agent loop runs in the group's own infrastructure rather
+than on anything BIO operates. Sovereignty is preserved at exactly the point it matters
+most — the installer's whole promise is a sovereign instance in the group's own account, and
+an investigation running on someone else's servers would have put the most consequential
+part of a group's work outside it.
+
+**The shape is a FLEET MEMBER** — a separate Worker in the group's own account, as
+`pdf-worker` already is (I6). The plane stays a record-keeper: it grows no model runtime, no
+inference budget, and no new security posture.
+
+Two obligations that follow:
+
+- **The record names WHICH LEVEL of the cascade was used**, not only that a machine acted.
+  D-199's fourth determination already requires the record to name the principal; with three
+  possible principals it must say which. Never the token value.
+- **When no token resolves at any level the capability is UNAVAILABLE and says so.** An
+  honest absence, stated — never a silent no-op, which would be indistinguishable from a run
+  that found nothing.
+
+**To MEASURE before building, not assume:** an agent loop spends most of its time waiting on
+API responses and Workers bill CPU rather than wall time, so a whole run may sit well inside
+the paid ceiling — or may not. It decides whether a fleet member can hold an entire run or
+must be structured as many short invocations. → **D-218**
+
+### Running sessions are visible in context — and this is CROSS-CUTTING
+
+**Bob, 2026-08-05, and it is not investigation-specific.** A background session runs in a
+CONTEXT and is associated with a claim, an inquiry or a project. Any window focused on any of
+those objects shows **an animated indicator that a job is running**; clicking it opens the
+**live transcript**. **The state of those objects does not change while the session runs**,
+so there is no partial state to reconcile and no "come back later" notice is needed.
+
+**The same applies to the Assistant and to every other AI-based function**, so this is a
+GENERAL INTEGRATION SURFACE for AI sessions and should be designed once rather than per
+feature — the way the fleet-member pattern was. The investigation session is its first
+instance. `ASSISTANT-PILOT.md` carries a pointer to this section.
+
+It also settles the transcript question coherently rather than by exception: **the transcript
+is LIVE BUT NOT DURABLE.** Visible while the work happens, gone afterwards, with the version's
+written description (§6.1) carrying what survives. That is the same split Claude Code runs
+on, where the session is the thinking and the commit message is the durable account — which
+is why §6.1's description should be held to a commit message's standard: what changed and
+why, not what happened.
+
+### Evidence search may be a SUB-SESSION
+
+**Bob, 2026-08-05:** the search for evidence may itself be a sub-session, or mechanical, and
+it may go out to the internet.
+
+This is the ephemeral-worker pattern: a sub-session is spawned for one job, reports to its
+parent, and ends. The four levels — meaning, content, documents, the open internet — are the
+natural fan-out.
+
+**A search sub-session never touches the record.** It reads, fetches, and reports back to the
+parent, which remains the only thing holding a write. So the fence stays ONE endpoint no
+matter how many sub-sessions a run spawns, and no sub-session needs a write scope of its own.
+
+**Reaching the open internet is the EGRESS question and is still open** (DEC-47 — may an
+instance fetch from a source nobody named). Bob: *"We haven't gotten that far."* **This
+design must not settle it by accident**: a run that reaches a host no member named is the
+act DEC-47 governs, whoever performs it and whatever it is called.
+
+### What Claude Code's model maps onto, in one table
+
+| Claude Code | the investigative AI |
+| --- | --- |
+| runs on your machine, not inside the forge | a fleet member in the group's own account |
+| `settings.json` — routine pre-approved, consequential gated | the credential's declared scope: reads ungated, one write that can only suggest |
+| gated acts interrupt a human | **stronger here** — accept and make-current have no op the AI can call |
+| `CLAUDE.md` loaded every session, versioned in the repo | the skill's doctrine layer, and **the run records which version it ran under** |
+| one session per worktree; sessions share no state | one run; runs share no state |
+| an uncommitted change reaches nobody | a version reaches people because it is written; the conversation does not |
+| the commit message | the version's description (§6.1) |
+| review the diff | rotate between versions; comparison IS the diff |
+| interactive, scheduled, or CI — one agent, three triggers | one agent, two modes (§10) |
+| subagents for broad search, composed by the parent | evidence-search sub-sessions over the four levels |
+| refusals surfaced verbatim, never worked around | answers name their level; absence at one level is not absence at the next |
+
 ## 15 · Instruments — measure from the first run
 
 - **Does a run ever come back with nothing supportable?** If it never returns empty it is
@@ -302,6 +399,9 @@ intelligence belongs in the AI's work, not in a structure the record computes ov
 2. **Whether a version carries the conditions it was formed under** (§11). → **D-215**
 3. **Whether sharing is stronger in the data model than the edge association found**, which
    would force cloning after all (§7). → **D-216**
+3a. **Whether a fleet member can hold a whole run** inside the paid CPU ceiling (§14a).
+   → **D-218**
+3b. **Egress** — a run reaching a host no member named is DEC-47's act (§14a), still open.
 4. **Review burden.** A claim with eleven unreviewed versions is the pile-up problem in a new
    shape. Deduplication helps; it is not an answer. → **D-217**
 5. **Whether a reworded CLAIM is a new version or a new claim.** Kept out of §6 deliberately

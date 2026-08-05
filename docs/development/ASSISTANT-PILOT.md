@@ -103,11 +103,21 @@ machine-made, dismissible, never blocking.
 > mutating op.** But the `ai` CLASS is no longer read-only as a class. DEC-60 rules that an
 > **investigative session** may formulate claims proactively and write them as SUGGESTIONS
 > through one endpoint, under an `ai` credential with its own declared scope
-> (`INVESTIGATIVE-SESSION.md`, IS-3/IS-4). It is a SIBLING of this pilot, not a widening of
+> (`INVESTIGATIVE-SESSION.md`, the suggest endpoint and the credential scope in its §18). It is a SIBLING of this pilot, not a widening of
 > it: §5's exclusions below are unaffected, and nothing here gains a mutating op. The
 > distinction that matters is that DEC-55's *endpoint-surface-is-the-fence* now does real
 > work rather than being belt-on-top-of-an-absent-op — for the investigative session the
 > endpoint IS the entire fence, because its sole possible output is a suggestion.
+>
+> **AND ONE PIECE OF THAT DESIGN IS THE ASSISTANT'S TOO (Bob, 2026-08-05).** How a running
+> AI session is shown to a member is CROSS-CUTTING and is designed once for every AI-based
+> function, not per feature: a session runs in a CONTEXT (a claim, an inquiry, a project);
+> any window focused on an object in that context shows an ANIMATED INDICATOR that a job is
+> running; clicking it opens the LIVE TRANSCRIPT; and the objects DO NOT CHANGE while the
+> session runs, so there is no partial state and no "come back later" notice. It also
+> settles this file's ephemerality determination coherently rather than by exception — the
+> transcript is LIVE BUT NOT DURABLE. See `INVESTIGATIVE-SESSION.md` §14a; the investigation
+> session is the first instance of the surface, not the owner of it.
 
 - The assistant's model runs under the ORGANISATION's or the MEMBER's Claude API key
   (DEC-55's corrected architecture; both principals legal, the record says which).
