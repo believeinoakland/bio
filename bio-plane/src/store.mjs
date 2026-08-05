@@ -6094,7 +6094,18 @@ export class Store extends DurableObject {
     const sha256 = async (v) => hex(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te.encode(v) : v));
     const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
 
-    const tally = {}; const offenders = [];
+    /* REC-56 / D-206: `tallyDetail` beside `tally`, and the reasoning is on
+       `f()` in checks/bio-checks.mjs where the codes are minted.
+       `tally` is keyed by CHECK ID and does not move by one byte — a check id
+       is the rule, and every existing reader of this answer keeps the shape it
+       reads. `tallyDetail` is keyed `<check>/<code>` and exists because REC-54
+       split one C-18.9 finding into three DIFFERENT FACTS about the record, and
+       a tally that collapses them re-creates in the report the conflation the
+       check just removed from the data. It is DERIVED from the findings, so it
+       cannot fall out of step with them (not the D-113 class), and it is ABSENT
+       when nothing on the page carried a code, so an operator reading a store
+       with no coded findings sees exactly what they saw before. */
+    const tally = {}; const tallyDetail = {}; const offenders = [];
     let clean = 0, withErrors = 0;
     for (const row of page) {
       const img = this.readImage(row.bundle_id) || {};
@@ -6124,7 +6135,13 @@ export class Store extends DurableObject {
       const errs = findings.filter((f) => f.severity === "error");
       if (!errs.length) { clean++; continue; }
       withErrors++;
-      for (const e of errs) tally[e.check] = (tally[e.check] || 0) + 1;
+      for (const e of errs) {
+        tally[e.check] = (tally[e.check] || 0) + 1;
+        if (e.code) {
+          const k = `${e.check}/${e.code}`;
+          tallyDetail[k] = (tallyDetail[k] || 0) + 1;
+        }
+      }
       /* Bounded: a pass over a broken store must not answer with a megabyte of
          repetition. The tally says how much, these say what it looks like. */
       if (offenders.length < 20)
@@ -6133,7 +6150,9 @@ export class Store extends DurableObject {
     }
     const last = page.length ? page[page.length - 1].bundle_id : after;
     return {
-      ok: true, checked: page.length, clean, withErrors, tally, offenders,
+      ok: true, checked: page.length, clean, withErrors, tally,
+      ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
+      offenders,
       cursor: page.length === cap ? last : null,
       total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
     };

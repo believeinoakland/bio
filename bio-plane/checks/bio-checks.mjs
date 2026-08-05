@@ -382,13 +382,51 @@ const COUNTERPARTY_PLACEHOLDER = 'to be named';
 // ---------------------------------------------------------------------------
 
 /**
- * @typedef {{check: string, severity: 'error'|'warn'|'info', message: string, repairable?: boolean, repairs?: string[]}} Finding
+ * @typedef {{check: string, severity: 'error'|'warn'|'info', message: string, repairable?: boolean, repairs?: string[], code?: string}} Finding
  */
 
-/** @returns {Finding} */
-function f(check, severity, message, repairs) {
+/** REC-56 / D-206, 2026-08-05: THE OPTIONAL `code`, and why it exists.
+ *
+ *  REC-54 split C-18.9's chain arm into three findings because *no chain
+ *  recorded*, *a chain recorded and empty* and *a chain field that is not a
+ *  chain* are three different facts about the record with three different
+ *  repairs — a gap in what was captured, a derivation that RAN and FOUND
+ *  NOTHING, and a writer producing malformed output. It then stated the
+ *  residual rather than hiding it: `op=audit`'s TALLY is keyed by CHECK ID, so
+ *  all three land on `C-18.9` and the distinction reaches a reader only through
+ *  the offender detail, which is bounded at 20 bundles per page against a page
+ *  of up to 1,000. **A tally that collapses them re-creates in the REPORT the
+ *  conflation the check just removed from the DATA**, which is the whole of
+ *  D-206 and it is a real defect rather than a tidiness note.
+ *
+ *  IT IS DECIDED HERE AND THE TALLY CHANGES. CLAUDE.md is not ambiguous about
+ *  which way: *"Absence at one level is not evidence of absence at the next …
+ *  Saying which of those is true is a first-class obligation, not a diagnostic
+ *  detail."* An audit answer that can only say "thirty C-18.9 errors" is
+ *  refusing that obligation at exactly the surface an operator reads before
+ *  calling anything done.
+ *
+ *  WHY A CODE ON THE FINDING RATHER THAN A SECOND CHECK ID: a check id is a
+ *  RULE, versioned and registered, and three ids for one rule would be the
+ *  vocabulary drifting to serve a report. A code is a discriminator WITHIN a
+ *  rule, and it is minted at the same call site as the finding it describes.
+ *
+ *  WHY THIS IS NOT THE D-113 CLASS (a parallel list that falls out of step):
+ *  the tally is DERIVED from the findings the checks actually produced, not
+ *  from a hand-kept register beside them. A code cannot go stale, because there
+ *  is nowhere for it to go stale relative to. `test/repair-reachability.test.mjs`
+ *  holds the one property that could drift — a code is stable-shaped and unique
+ *  within its check — so a second arm cannot quietly reuse a first arm's code.
+ *
+ *  OPTIONAL AND ADDITIVE. 142 of the catalogue's 145 repairable findings pass
+ *  none, the property is then absent, and `op=audit`'s `tallyDetail` key is
+ *  absent when nothing on the page carried a code.
+ *
+ * @returns {Finding} */
+function f(check, severity, message, repairs, code) {
   const out = { check, severity, message };
   if (repairs) { out.repairable = true; out.repairs = repairs; }
+  if (code) out.code = code;
   return out;
 }
 
@@ -1254,14 +1292,21 @@ function checkAuthorityPublishable(ctx, findings) {
     if (!('provenance_chain' in d)) {
       findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records no provenance_chain at all: a published hash claims these bytes came from somewhere by some route, and this document names none`,
         ['record the chain of custody for this capture, one hop per party, from us back to the source',
-         'or, where the capture record already holds the route, derive it from that evidence with op=provenancechain']));
+         'or, where the capture record already holds the route, derive it from that evidence with op=provenancechain'],
+        /* REC-56 / D-206: the codes REC-54's three findings needed to reach a
+           reader through the TALLY and not only through the bounded offender
+           sample. One per arm, and they are the three facts in the comment
+           above in the order it states them. */
+        'chain-absent'));
     } else if (!Array.isArray(chain)) {
       findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and its provenance_chain is ${chain === null ? 'null' : typeof chain}, not an array of hops: whatever wrote this did not write a chain`,
-        ['record the chain of custody as an array of hops, one per party, from us back to the source']));
+        ['record the chain of custody as an array of hops, one per party, from us back to the source'],
+        'chain-not-an-array'));
     } else if (chain.length === 0) {
       findings.push(f('C-18.9', 'error', `provenance documents[${i}] is at or past verified and records an EMPTY provenance_chain: a chain was recorded for this document and it names no party, which is a different fact from never having recorded one and must not be repaired by assuming a route`,
         ['name the parties that actually served these bytes, one hop each',
-         'or state plainly that the route is undetermined rather than leaving an empty chain standing at verified']));
+         'or state plainly that the route is undetermined rather than leaving an empty chain standing at verified'],
+        'chain-empty'));
     } else {
       chain.forEach((hop, h) => {
         if (!hop || typeof hop !== 'object' || typeof hop.who !== 'string' || hop.who.trim() === '') {
@@ -1344,8 +1389,38 @@ function checkReleaseAuthority(ctx, findings) {
       if (!or.deeming_actor) findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin (sweep) missing 'deeming_actor'`));
     }
   });
-  // Release authority: the collected -> verified transition is a named
-  // member's decision, AI-assisted but member-made (doctrine 4a).
+  /* Release authority: the collected -> verified transition is a named
+     member's decision, AI-assisted but member-made (doctrine 4a).
+
+     REC-56 / D-203, 2026-08-05: BOTH ARMS BELOW ADVISED ACTS NOBODY CAN
+     PERFORM, and it was not only the `collected` half the item was routed for.
+
+       - `return the bundle to collected` / `set current_state to collected`.
+         `STATES.information.edges` carries no `verified -> collected`, so
+         appending that transition fires C-4.2 (`transition verified ->
+         collected is not a legal information edge`) and setting `current_state`
+         WITHOUT appending fires C-4.2's other arm (`current_state 'collected'
+         disagrees with last transition to 'verified'`). MEASURED here rather
+         than assumed: the advice produces a second error in BOTH readings, so
+         there was no careful way to follow it.
+       - `a named member re-makes the release decision` and `a named member
+         ratifies and records the collected -> verified transition`. Both arms
+         only fire on a bundle that is AT OR PAST `verified`, and `op=release`
+         — the one act that writes that edge — refuses anything already there
+         (ILLEGAL_TRANSITION, "release is not repeatable"). So the FIRST repair
+         in each array was as unreachable as the second, which is the part the
+         routing did not predict.
+
+     What replaces them names acts the plane actually offers, and nothing here
+     rules on DEC-56. `op=retire` is real, reachable from `verified`, and
+     terminal, and it is named with its edge; recording the defect and raising
+     it is always followable. The third line states the FENCE rather than a
+     destination — an operator who edits `current_state` by hand gets C-4.2
+     whatever DEC-56 decides, because C-4.2 checks the transition against
+     whatever the machine carries at the time. If Bob rules a retraction edge,
+     these strings do not become false; they become incomplete, and the
+     source-level walk in `test/repair-reachability.test.mjs` re-derives what is
+     reachable from `STATES` and `deriveActs` rather than from a list here. */
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
   const releases = hist.filter(e => e && e.from_state === 'collected' && e.to_state === 'verified');
   for (const e of releases) {
@@ -1354,7 +1429,9 @@ function checkReleaseAuthority(ctx, findings) {
        question and knew nothing of the two spellings the control plane mints. */
     if (!a || isMachineIdentity(a)) {
       findings.push(f('C-18.1', 'error', `collected -> verified transition authored by '${e.author}': release is a named member's decision, never a surface or AI identity (intake doctrine 4a)`,
-        ['a named member re-makes the release decision and records the transition under their identity', 'return the bundle to collected pending member ratification']));
+        ['retire this bundle with the reason recorded (verified -> retired, op=retire), if the release cannot stand as it is',
+         'or record the defect against this release in Review Notes and raise it, so the record carries the doubt rather than a repair nobody can perform',
+         'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine, so hand-editing current_state or state_history produces a second error on top of this one']));
     }
   }
   // The ratification fence: sweep intake lands at collected, never higher
@@ -1367,7 +1444,9 @@ function checkReleaseAuthority(ctx, findings) {
   const memberRelease = releases.some(e => { const a = String(e.author || '').toLowerCase(); return a && !isMachineIdentity(a); });
   if (sweepOrigin && everVerified && !memberRelease) {
     findings.push(f('C-18.1', 'error', 'sweep-origin intake lands at collected, never higher: verified requires per-document human ratification, a member-authored collected -> verified transition (intake doctrine Section 4)',
-      ['set current_state to collected pending ratification', 'a named member ratifies and records the collected -> verified transition']));
+      ['retire this bundle with the reason recorded (verified -> retired, op=retire), if this intake cannot be ratified as it stands',
+       'or record in Review Notes that it reached verified without the per-document ratification the doctrine requires, and raise it: op=release writes the collected -> verified edge and refuses a bundle already at verified, so the ratification cannot be re-made in place',
+       'the state is not moved back by hand: C-4.2 refuses any transition that is not an edge in this machine']));
   }
 }
 
@@ -1812,8 +1891,26 @@ function checkInquiryExtension(ctx, findings) {
      pass this gate; what is refused is silence, not uncertainty. */
   if (fm.current_state === 'concluded') {
     if (typeof fm.conclusion !== 'string' || fm.conclusion.trim() === '') {
+      /* REC-56 / D-203's SWEEP, and this one is the HARDER half of the class:
+         `concluded -> open` IS a legal edge (REC-13 added it — a conclusion is
+         revisable), so the state machine does not refuse this advice. THE OP
+         SURFACE DOES. `REOPENABLE_FROM` is `[...DISPOSITIONS, "published"]` and
+         excludes `concluded` DELIBERATELY and BY NAME: `deriveActs` does not
+         publish `reopen` on a concluded inquiry, and `store.reopen()` answers
+         NOT_SET_DOWN with the reason — a conclusion quietly reverting to open
+         still wearing its conclusion records nothing, and the edition machinery
+         is where that move belongs. So the old repair told an operator to do
+         exactly what the plane refuses, on an edge that looks legal, which is
+         why reading repair strings against `STATES` alone would not have found
+         it. affordances.mjs states the principle in its own words on
+         REOPENABLE_FROM: *an act the catalog permits that no caller can perform
+         is the state machine lying.* This is that sentence read backwards — a
+         repair the catalog advises that no caller can perform.
+         The replacement names no destination, so it cannot go stale if the FROM
+         set changes; the source-level walk re-derives reachability from
+         `deriveActs` rather than from anything written here. */
       findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty conclusion',
-        ['author the conclusion, or move the inquiry back to open']));
+        ['author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place']));
     }
     if (typeof fm.falsifier !== 'string' || fm.falsifier.trim() === '') {
       findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author',
@@ -1909,8 +2006,19 @@ function checkDividedExtension(fm, findings) {
   const d = (typeof fm.division === 'object' && fm.division && !Array.isArray(fm.division)) ? fm.division : null;
   if (!d) {
     findings.push(f('C-2.8', 'error', 'divided state requires a division block: a question recorded as divided with no account of the division is a state change wearing a correction\'s clothes',
+      /* REC-56 / D-203's sweep, third site: `divided` is TERMINAL — `divided:
+         []` — so `divided -> open` is not an edge and C-4.2 refuses it by name,
+         the same shape as `verified -> collected`. It is terminal
+         STRUCTURALLY rather than by policy (the parent's legs are owned by its
+         children now), so this is the one arm in the family where no state move
+         exists in either direction and the honest advice says so.
+         The first repair is UNCHANGED and is not a directive to run the op now
+         — `op=inquirydivide` does not apply at `divided` either — it states
+         where a division block legitimately comes from, which is C-20.1's
+         `re-produce the creation at collected` shape exactly. */
       ['divide through op=inquirydivide, which authors the block and stamps who apportioned and when',
-       'or move the inquiry back to open']));
+       'restore the division block from _history if the division was made and the block was lost',
+       'otherwise raise it: the repair here is not a state move, and C-4.2 refuses any transition this machine does not carry']));
     return;
   }
   const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === 'string') : [];
@@ -2031,7 +2139,17 @@ function checkPublishedExtension(fm, findings) {
   const c = (typeof fm.completeness === 'object' && fm.completeness) || null;
   if (!c) {
     findings.push(f('C-2.8', 'error', 'published state requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything',
-      ['author completeness.statement and the exclusion list, or move the inquiry back to concluded']));
+      /* REC-56 / D-203's sweep, fourth site, and this one had a REACHABLE act
+         available that the old string did not name. `published: ['open',
+         'surfaced']` — `published -> concluded` is NOT an edge, so "move the
+         inquiry back to concluded" fires C-4.2. What IS reachable is the full
+         ceremony the STATES table's own comment describes: `published -> open
+         -> concluded -> published` at edition 2, and `op=reopen` DOES apply at
+         `published` (REOPENABLE_FROM carries it, precisely so a legal edge is
+         not left with no caller). So the correction here names an act rather
+         than only refusing one. */
+      ['author completeness.statement and the exclusion list',
+       'or reopen this case for a second edition (published -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12)']));
   } else {
     if (typeof c.statement !== 'string' || c.statement.trim() === '') {
       findings.push(f('C-2.8', 'error', 'published state requires a non-empty completeness.statement'));
@@ -4733,8 +4851,15 @@ async function checkReleaseSignature(ctx, findings) {
       && e.timestamp && e.timestamp >= migration0);
     for (const e of post0) {
       findings.push(f('C-18.8', 'error', `release at ${e.timestamp} is at or after the migration instant ${migration0}, but this bundle is ${ctx.fm.schema || 'a pre-contract schema'}: the signed release register exists only at information@2, so this ratification cannot carry a signature the gate can check`,
+        /* REC-56 / D-203: `return the bundle to collected pending a signed
+           ratification` was the second of the four sites the item was routed
+           for. The migration repair above it is genuine and REACHABLE — it is
+           an edit to the bundle where it stands and needs no state move — so
+           it is unchanged; what is replaced is the alternative that had no
+           route. See checkReleaseAuthority for the measurement. */
         ['migrate the bundle to information@2, then sign the transition and add the releases[] entry',
-         'return the bundle to collected pending a signed ratification']));
+         'or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed',
+         'either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine']));
     }
     return;
   }
@@ -4776,7 +4901,12 @@ async function checkReleaseSignature(ctx, findings) {
     const rec = rels.find(r => r && r.transition === e.timestamp);
     if (!rec || !rec.signature_file) {
       findings.push(f('C-18.8', 'error', `release at ${e.timestamp} is at or after the migration instant ${migration} and carries no signed release record`,
-        ['sign the transition and add the releases[] entry', 'return the bundle to collected pending a signed ratification']));
+        /* REC-56 / D-203, the fourth site. Same correction as the pre-contract
+           arm above: signing in place is reachable and stays; the alternative
+           named an edge the machine does not carry. */
+        ['sign the transition and add the releases[] entry',
+         'or retire it with the reason recorded (verified -> retired, op=retire), if the release cannot be signed',
+         'either way the repair is made where the bundle stands: C-4.2 refuses any transition that is not an edge in this machine']));
       continue;
     }
     const author = String(e.author || '');
