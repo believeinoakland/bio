@@ -3335,6 +3335,26 @@ recommendation: refuse them, on D-151's own reasoning. A relation a machine decl
   But this touches what an automated instance may do unattended, which is your call.
 what reversing costs: small now, larger later — every stamped field written before a
   ruling is a row nobody can re-attribute afterwards.
+**SHARPENED BY DEC-60, 2026-08-05 — the question is now narrower and the answer is likelier
+  to be cheap.** DEC-60 licenses a machine to compose the reasoned object and write it as a
+  SUGGESTION. So this entry is no longer *may a machine touch these six fields at all*; it is
+  **may a machine perform these AS ACCEPTED**, because performing them as suggestions is
+  already licensed. Two things follow that were not available when this was raised. (1) The
+  usual cost of refusing — that it blocks an automated instance from doing useful work — is
+  much reduced: a refused machine can still propose, so the capability is not lost, only its
+  finality. (2) Two source facts verified this session and worth having at the ruling:
+  `index.mjs:668` says in its own words *"Members author and read the registry; probe is
+  admitted so the surface is exercisable"* — the hole exists as a TESTING affordance, not a
+  considered grant — and `strengthBarSet` (`store.mjs:5119`) already refuses the neighbouring
+  declaration with `MACHINE_CANNOT_DECLARE` on REC-46's one predicate, while `declareRelation`
+  (`store.mjs:7685`), whose own refusal text calls a declared relation *"constitutive"*, has
+  no fence at all. **One further distinction that should not be lost in a single ruling over
+  all six fields:** `resolve` is DERIVED — `#recogniseTier` is a deterministic cascade over
+  ALREADY-REGISTERED aliases and never mints D — so it asserts nothing a member's alias
+  declaration did not already imply, whereas `resolvetestify` is pure testimony and
+  `entityalias`/`relationdeclare`/`defineProgression` are constitutive. Fencing the derived
+  act buys little and costs the recognition capability; fencing the constitutive ones is
+  where the boundary actually is.
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
@@ -3963,6 +3983,81 @@ enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, as the r
   token stamping `token:ai` is already caught by every `MACHINE_CANNOT_*` refusal — that
   refactor is what makes this cheap, and it is worth saying that the ruling and the refactor
   met by luck rather than by plan.** Nothing queued; sequenced behind DEC-27.
+
+### DEC-60 · answered
+raised: 2026-08-05 · session BOB (Bob opened it, worked it as an explicit brainstorm, and
+  ruled it at the close of the same session)
+for: bob
+question: **May an AI session formulate CLAIMS proactively — reading an inquiry and its
+  project, searching for evidence, and composing claims and legs — with no human involvement
+  in the formulation?** Every machine fence in the plane today is an ACT refusal
+  (`MACHINE_CANNOT_PUBLISH`, `_CONCLUDE`, `_RELEASE`, …) over one identity predicate, and
+  that vocabulary is binary: an act is machine-permitted or it is not. DEC-24's *the machine
+  proposes, the member authors* has until now been read as bounding the machine to surfacing
+  and routing. This asks whether the machine may compose the reasoned object itself.
+why it is Bob's: doctrine — what the record means when it says a member made a claim — and
+  effects on the people the product exists for. It also changes what BIO IS for a member who
+  cannot construct an investigative claim unaided, which is most of them.
+provisional: n/a — answered in the session that raised it; nothing was running meanwhile and
+  nothing was blocked.
+alternative: keep formulation member-only, with the AI confined to reads (the assistant
+  pilot's shape). Safe, and it leaves the system demanding a standard of construction most of
+  its intended users cannot meet.
+recommendation: n/a — the session's own opening position was AGAINST parts of this and was
+  argued down on the merits. The withdrawn positions and why each fell are kept in
+  `INVESTIGATIVE-SESSION.md` §11 rather than lost, because four of the five were one error
+  repeated rather than four findings.
+response: **YES — the AI may formulate claims and legs proactively, and every write it makes
+  is a SUGGESTION.** Bob, 2026-08-05. The division between machine and member does NOT move;
+  what moves is the assumption that it had to be enforced as *the machine may not produce the
+  object*. It is enforced instead as **the machine may not accept the object**.
+  **The objective, and it is the load-bearing sentence:** *the session's goal is to formulate
+  claims and legs SUPPORTED BY EVIDENCE — not to support or disprove a position.* Positive and
+  therefore testable; a run producing claims that only ever point one way is failing its own
+  objective, visibly, without anyone knowing what the member wanted.
+  **Three arguments carry it.** (1) COVERAGE — `CLAUDE.md` already rules that the searching
+  which grows the document set is the same process that produces meaning, ONE process at
+  several altitudes; proactive claim formulation is that process at the meaning altitude, so
+  refusing it makes the system inconsistent with itself. (2) MEMBERS NEED IT — the rigor is
+  already past what an average user produces unaided, so withholding the tool is not a
+  safeguard but **a barrier that selects for users who already had the skill, and skill is not
+  good faith**. (3) IT STRENGTHENS THE BAD-ACTOR DEFENCES — a bad actor cannot beat BIO's
+  structural gates, so the attack that works is NOT LOOKING, which the system cannot see
+  (D-194, D-196). A session that formulates from the evidence regardless of what the member
+  hoped to find is the first instrument capable of detecting motivated omission.
+  **The fence needs no new primitive.** The session's only write is an endpoint whose sole
+  possible output is a suggestion, so **the op is the fence** — DEC-55 working exactly as
+  ruled. A proposed new "state-fence" primitive was withdrawn as unnecessary.
+  **The states are `suggested` / `considering` / `accepted` / `rejected`** (the fourth
+  recorded as likely, D-214), every transition a member act. `considering` is the piece that
+  makes the human gate observable: a member who moved a suggestion into consideration and did
+  not accept it has demonstrably weighed it — *reviewed and declined* distinguished from
+  *never looked*, recorded rather than inferred, and not a checkbox.
+  **Effective strength is computed on ACCEPTED legs only** and is what a finding rests on. The
+  strength function takes an argument naming which states to factor in, defaulting to
+  `accepted`; the return carries the state set that produced it, because a number travels and
+  a strength separated from its filter is the misread DEC-40 exists to prevent. A what-if
+  value is member-facing exploration and never a record value; its presentation is UI.
+  **The session reads the whole project and writes one inquiry** — project, net bias
+  (project + instance), all project inquiries, all claims with their states visible, and the
+  current evidence standard. Read-broad/write-narrow is already D-199's declared task scope in
+  `scopeFor`'s shape.
+  **Bob's corrections that shaped it, kept because they are the substance:** suggesting,
+  authoring and committing are three different things and CRITIQUE IS AUTHORSHIP; a proposed
+  claim must show its BASIS, so hiding an unaccepted underlay was a prohibition on structure
+  where the concern was arithmetic (the DEC-53 `grade_if_resolved` idiom answers it instead);
+  a published case is OUT IN THE WILD and cannot be affected, only a different published case
+  can be; confirmation and contradiction are two ends of a CONTINUUM and findings are not
+  uni-directional, so the relation between claims must be expressible in its full subtlety —
+  which is unsettled and is D-212.
+what reversing costs: the ruling itself is cheap to reverse while nothing is built —
+  IS-1..IS-7 are not started. It gets expensive once suggestions exist in volume, because a
+  suggestion written under one acceptance model cannot be re-attributed afterwards. Nothing
+  published is affected either way: effective strength never counts a suggestion.
+decided: 2026-08-05 · Bob, session BOB
+reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the full design, the
+  instruments, the open questions and the withdrawn positions), DEC-55/D-199 (the `ai` class
+  it extends), DEC-46 (regrade's home and the lens-preserved-not-applied rule).
 
 ## Answered, awaiting enactment
 

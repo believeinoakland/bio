@@ -98,6 +98,17 @@ machine-made, dismissible, never blocking.
 
 ## 4 · What the assistant runs as — DEC-55 applied, and the pilot's scope is READ-ONLY
 
+> **READ THIS BEFORE INFERRING ANYTHING ABOUT THE `ai` CLASS (added 2026-08-05, DEC-60).**
+> Everything in this section stands: **the ASSISTANT PILOT is read-only and holds no
+> mutating op.** But the `ai` CLASS is no longer read-only as a class. DEC-60 rules that an
+> **investigative session** may formulate claims proactively and write them as SUGGESTIONS
+> through one endpoint, under an `ai` credential with its own declared scope
+> (`INVESTIGATIVE-SESSION.md`, IS-3/IS-4). It is a SIBLING of this pilot, not a widening of
+> it: §5's exclusions below are unaffected, and nothing here gains a mutating op. The
+> distinction that matters is that DEC-55's *endpoint-surface-is-the-fence* now does real
+> work rather than being belt-on-top-of-an-absent-op — for the investigative session the
+> endpoint IS the entire fence, because its sole possible output is a suggestion.
+
 - The assistant's model runs under the ORGANISATION's or the MEMBER's Claude API key
   (DEC-55's corrected architecture; both principals legal, the record says which).
 - It reaches the plane as an **`ai`-class credential whose task scope for the pilot is
