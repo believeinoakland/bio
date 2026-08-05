@@ -2422,3 +2422,36 @@ UI-31's limit is unchanged and UI-36's is unchanged: `op=publishedmanifest` and
 plane-sourced column remains a lower bound. UI-37 drives their REFUSAL arms from
 sentences read textually out of `index.mjs` and `store.mjs`, which is stronger
 than a fixture for those arms and says nothing about their success answers.
+
+## 2026-08-04, DIST: the first deploy of the accumulated session work (plane 0.56.0 + UI)
+
+Instrument: `bio-plane/scripts/deploy.mjs` and `civicos-ui/deploy-ui.mjs`, both of which
+hash the local asset and compare it against the bytes read back from the account; plus
+`curl` against the live origins. Authorised by Bob 2026-08-04.
+
+| | before | after |
+| --- | --- | --- |
+| plane `biosmoke7` `/version` | 0.55.0 | **0.56.0** |
+| UI `civicos` `/build` | `0310e07894d8` | **`74cc1646044b`** |
+
+**Verified, not assumed.** The plane's deployed bytes were confirmed hash-identical to the
+built asset and the rollout gate waited for 0.56.0 to actually serve (4s, 2 checks). The UI's
+deployed module was confirmed hash-identical after extracting it from the multipart envelope
+the account returns, and **the served page is byte-identical to `civicos-ui/app.html` on
+`main`** (sha256 `74cc1646044b9429`, 940,664 bytes). The service binding survived: the UI's
+`/api/?op=instance` returns the plane's own `{"ok":false,"error":"unauthenticated"}` at HTTP
+401 — the plane answering through the binding rather than the UI inventing a reply.
+
+**What is now live that was not.** Grepped in the served bytes, not inferred: `Access token`
+present and `MEMBER_TOKEN` gone from anything a member reads (UI-33 — its two remaining
+occurrences are inside a source comment describing the change); `NOT ANSWERED` present
+(UI-37's refusal branch); `the group that published it` present (UI-33); `BAD_PASSWORD`
+absent (UI-30, the code REC-41 retired).
+
+**What this measurement does NOT establish**, stated because the gate says to. (1) It is a
+DEPLOY, not a RELEASE: `BIO_RELEASE_SEED` is not on this machine, so nothing was signed,
+`release/RELEASE.json` and its asset are untouched at 0.55.0, and **a group installing
+through `newgroup` still receives 0.55.0**. (2) `op=audit` is NOT clean — 10 `C-18.9`
+findings, recorded as D-200, and measured to be pre-existing record state rather than
+anything this deploy caused. (3) Durable-Object-routed ops can lag the Worker rollout, and
+no behavioural probe was run beyond the unauthenticated envelope above.
