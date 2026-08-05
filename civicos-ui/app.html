@@ -14276,9 +14276,30 @@ function pubStateHtml(c){
   const roster = pubRoster(c);
   const wait = (c && Array.isArray(c.awaiting)) ? c.awaiting : [];
   const got = roster.length - wait.length;
+  /* CORRECTED 2026-08-05 — UI-35, and the correction is the ITEM'S OWN PREMISE
+     TURNED AROUND. This branch used to read `esc((c.detail) || "…")`, deferring
+     to a sentence the plane was believed to publish beside a case that was
+     FOUND. IT PUBLISHES NO SUCH FIELD. Measured by driving the real plane
+     (`op=publishedcase` for a found case answers 21 top-level keys and `detail`
+     is not one of them; `Store.publishedCase()` has a SINGLE success return and
+     it names `case_detail` and `graph_detail`, never `detail`). A top-level
+     `detail` exists on exactly one path — the `{ok:false, reason:"NOT_PUBLISHED",
+     detail}` refusal — and `pubOpen` already renders that one through
+     `planeSaid` (UI-37). So this read could never succeed on a live instance and
+     the fallback below is the only thing that has ever rendered here.
+     WHY IT LOOKED ALIVE: the SUITE's `LOOSE` fixture invented a top-level
+     `detail` the wire does not send, so the mock answered a field rather than
+     the wire's CONTENT — D-173's class, the one UI-30 named. The fixture is
+     corrected in `publishedcase.test.mjs` in the same commit and a wire-anchored
+     sweep now fails if any surface read here names a key the plane does not
+     publish. The `||` is DELETED rather than re-pointed: an alternative that can
+     never be taken is not a fallback, it is a claim that the record speaks here
+     when it does not. These are this surface's OWN words about what it observed,
+     which is what it is entitled to say (UI-37's not-answered branch, same
+     rule). */
   if(!pubCaseId(c))
     return `<div class="pub-state" data-caseedition="notacase" data-awaiting="0">
-      <b>These bytes are not a member of any published case.</b> ${esc((c.detail) || "They were ratified and are verifiable by hash, and they carry no case identity, no scope statement and no completeness assertion, because they are not a case. None is invented for them here.")}</div>`;
+      <b>These bytes are not a member of any published case.</b> They were ratified and are verifiable by hash, and they carry no case identity, no scope statement and no completeness assertion, because they are not a case. None is invented for them here.</div>`;
   if(pubComplete(c))
     return `<div class="pub-state" data-caseedition="complete" data-awaiting="0">
       <b>This case edition is complete: all ${esc(String(roster.length))} of its declared findings are ratified.</b>

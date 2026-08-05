@@ -2021,3 +2021,17 @@ severity: neither is a correctness defect today. Both are the same shape as the 
 raised by: ui39-agent (worktree agent-ac6c0018a3d94d2c5), UI-39
 what was observed: **`npm run test:battery` FAILED `migrate.test.mjs` when run CONCURRENTLY with `node scripts/coverage.mjs --strict` and a UI harness run on the same machine; re-run alone it is green at 101/101 / 5,735.** No `bio-plane/**` file was open in this worktree in either run (`git status` confirms), so the failure cannot be attributable to a change. Reported rather than smoothed, because the failing run is the one a worker under time pressure would report as a regression and then spend an hour attributing — which is exactly what the UI-39 brief says two workers already did over a missing `miniflare`.
 what UI needs: either the battery serialises against a lock, or `VERIFICATION.md` states plainly that the battery must not be run concurrently with another suite on the same machine and that a lone re-run is the authority.
+
+---
+
+## CLAIM 2026-08-05 UI
+
+session: ui35-agent (worktree agent-ab13407cf67de9eaf)
+opened: 2026-08-05T20:05:00Z
+paths: **`civicos-ui/app.html`**, named by FUNCTION rather than by file: `pubLooseNote`'s not-a-case branch (the `c.detail` read at the "These bytes are not a member of any published case" line) and NOTHING else in the published-case renderer. `civicos-ui/test/publishedcase.test.mjs` (this op's own suite — the fixture correction and this item's new sweep block). `docs/development/CLAIMS.md`, `docs/development/MEASUREMENTS.md` (the consumer measurement this item exists to take). **NOT opened:** the gate, the act surfaces, `preauth-vocabulary.test.mjs`, `DEC49_SUBJECT`, the finder, the docprofile copy, the catalog block.
+interfaces consumed: I3 (the op contracts). **NOTHING INSIDE `bio-plane/**` IS OPENED** — a zero-delta battery is this claim's evidence, not its claim.
+interfaces owned: none.
+expected: QUEUE.md UI-35. Measure the consumers of `op=publishedcase`'s top-level `detail` across surface, installer, battery and fleet, then take the branch the measurement earns.
+accepts-when: as QUEUE.md UI-35.
+outcome: **the premise is contradicted and NEITHER branch applied** — `op=publishedcase` publishes no top-level `detail` for a case that was FOUND, so there was nothing to render and nothing to withdraw, and NO INTERFACE CHANGE WAS FILED because no field is being removed. The defect was the mirror: a SURFACE read of `c.detail` that the wire can never satisfy, kept alive by a fixture that invented the field. Both corrected; the sweep pins the four published top-level fields nothing reads. `bio-plane/**` untouched — battery 102/102 at 5,801, byte-identical to the baseline measured in this worktree before any edit.
+released:
