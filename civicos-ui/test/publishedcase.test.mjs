@@ -23,6 +23,17 @@
  *   (r) A LOOSE RATIFIED FINDING TOLD IT HAS NO PAIR WHILE IT IS HOLDING ONE — in `pubList`'s not-a-case branch, delete the `${loose ? …pubPairBadges…}` section. RUN: 195 pass, 1 FAIL. UI-29 stated four absences of a loose row in one breath and three of them are structural (a case identity, a scope statement and a completeness assertion are properties of a CASE); the fourth is not, because a frozen pair belongs to the FINDING. The row now says which of the two it is.
  *   (s) COMPLETENESS READ OFF THE ROSTER AGAIN — in `pubList`, replace `const assembled = !!cs.manifest_sha;` with `const assembled = !waiting.length;`. RUN: 195 pass, 1 FAIL. The container is recorded by the control plane AFTER the last ratification returns, so "every declared member ratified" and "the container exists" are two facts; in the gap the roster reading draws the row as ratified and prints `container sha256:` with nothing in front of the ellipsis.
  * Restore after each. The arms are scripted and re-runnable in one step; each is a single unique string replacement in `civicos-ui/app.html`, quoted above with its site.
+ *
+ * ==== UI-35's EIGHT, ALL RUN 2026-08-05 against THIS file, block 16. The suite is 205 assertions whole (196 before this item). Every file restored BYTE-IDENTICALLY, sha256 compared before and after each arm across `civicos-ui/app.html`, this file, and `bio-plane/src/store.mjs`. ====
+ *   (a) THE DEAD READ RESTORED — in `pubStateHtml`'s not-a-case branch, wrap the sentence back up as `${esc((c.detail) || "…")}`. RUN: 204 pass, 1 FAIL — "the not-a-case branch reads NO top-level `detail`". This is the state `main` is in today.
+ *   (b) THE INVENTED FIXTURE FIELD RESTORED — add `detail:"…"` back to the `LOOSE` fixture. RUN: 204 pass, 1 FAIL — "no fixture in this suite carries a top-level `detail` on a FOUND answer".
+ *   (c) THE PAIRED ARM, (a) AND (b) TOGETHER — the true pre-item state. RUN: 203 pass, 2 FAIL, and THE 196 PRE-EXISTING ASSERTIONS ARE ALL GREEN. That is the finding: the surface read a field the wire never sends, the fixture supplied it, and not one of 196 assertions could see it, because the fixture made the dead branch render exactly as if it were alive. An arm that only ran (a) or only (b) would have looked like a tidy-up; run together they show why neither was catchable from inside the suite.
+ *   (d) A NEW PUBLISHED KEY PLANTED IN THE PLANE — add `planted_note: "x",` to `publishedCase()`'s success return in `bio-plane/src/store.mjs`. RUN: 204 pass, 1 FAIL naming `planted_note` as published-and-unread. This is the sweep's REACH AS A DELTA against the REAL return rather than a specimen, and it is what stops a fifth unread field arriving unnoticed.
+ *   (e) THE WALK NEUTERED — break the anchor to `scope: NOPE,`. RUN: 201 pass, 4 FAIL, the first being the REACH assertion. **CORRECTED MID-RUN AND REPORTED:** the first version bound `region` to `null` and then THREW on `region.length`, taking every assertion behind it down with it — D-93's class inside one block, a control dying early and hiding the arms it sits in front of. It now binds `|| ""`, so the reach failure is reported AND the rest of the block still runs.
+ *   (f) THE UNREAD LIST SHRUNK — delete `opened`'s entry from `UNREAD`. RUN: 204 pass, 1 FAIL. The list cannot silently shrink to match a regression; it is a pinned SET, in both directions.
+ *   (g) THE REFUSAL'S OWN `detail` RENAMED IN THE PLANE — `reason:"NOT_PUBLISHED", detail:` -> `explanation:`. RUN: 204 pass, 1 FAIL. THE OTHER DIRECTION, and it earns its place: without it this block reads as "the plane never publishes a top-level `detail`", which is FALSE — the refusal does, `planeSaid` renders it (UI-37), and the two must not collapse into one claim.
+ *   (h) THE SURFACE MADE TO READ AN UNREAD KEY — add `const planted = c.case_detail;` to `pubStateHtml`. RUN: 204 pass, 1 FAIL. The UNREAD set tracks what the surface ACTUALLY reads rather than being a hand-kept list that would go stale the moment somebody rendered one of them.
+ * Restore after each.
  */
 /* UI-18 · O2 THE PUBLISHED CASE, AS UI-29 CORRECTS IT — the surface UI-PLAN
  * calls "the reason the rest exists", driven here against the public read path
@@ -119,6 +130,36 @@ function ok(msg, cond, detail){
    FIND_B is Documents B / Links UNRATED. There is no letter that is honestly
    "the case's", and the surface must not manufacture one.
    ============================================================ */
+/* UI-35: THE TWO TOP-LEVEL SENTENCES THE WIRE REALLY SENDS, READ TEXTUALLY OUT
+   OF THE PLANE rather than typed here. UI-37's practice, and this item is why it
+   matters: the previous fixture typed a TRUNCATED `case_detail` and invented a
+   top-level `detail` that does not exist, so the mock had drifted from the wire
+   in both directions at once. A fixture that reads the plane's own bytes cannot
+   drift, and if the plane's wording moves this suite moves with it. */
+const PLANE_STORE = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* Brace-balanced is the wrong tool here and a naive `[^"]*` is too: these are
+   ADJACENT string literals joined by `+` across lines. Take the region from the
+   key to the next top-level key and concatenate every double-quoted literal in
+   it — which is exactly what the JavaScript parser does to produce the value. */
+function planeSentence(key, until){
+  const i = PLANE_STORE.indexOf(key + ": \"");
+  if(i < 0) return null;
+  const j = PLANE_STORE.indexOf(until, i);
+  const region = PLANE_STORE.slice(i + key.length + 1, j < 0 ? PLANE_STORE.length : j);
+  const parts = region.match(/"(?:[^"\\]|\\.)*"/g) || [];
+  return parts.map((s) => JSON.parse(s)).join("");
+}
+const CASE_DETAIL = planeSentence("case_detail", "graph_detail");
+const GRAPH_DETAIL = planeSentence("graph_detail", "\n  }");
+/* The GROUP's own sentence, not the plane's — `bias_acknowledgement` carries
+   what the publishers wrote about the lens the case was produced under (REC-47,
+   DEC-46 (a)), gated by C-21.1 against being carried forward verbatim. It is a
+   FIXTURE value for that reason: unlike the two above there is no fixed wording
+   in the plane to read. Block 12 records that NOTHING on this surface renders
+   it. */
+const BIAS_ACK = "This case was produced by the group that raised the concern, working from documents "
+               + "the subject supplied. No independent custody of the originals was obtained.";
+
 const CASE = "CASE-2026-0001";
 const FIND_A = "INQ-2026-4101";
 const FIND_B = "INQ-2026-4102";
@@ -294,7 +335,11 @@ function caseEdition(ed){
     edition_index:[ { edition:1, ratified_at:"2026-07-01T10:00:00Z", manifest_sha:MAN1 },
                     { edition:2, ratified_at:"2026-07-20T10:00:00Z", manifest_sha:MAN2 } ],
     latest_edition:2,
-    case_detail:"a published case is a CONTAINER over one or more FINDINGS (DEC-44).",
+    /* UI-35: was a TRUNCATED hand-typed copy; now the plane's own bytes, and
+       `graph_detail` and `bias_acknowledgement` are added beside it because the
+       wire sends all three and this fixture sent one. */
+    case_detail:CASE_DETAIL, graph_detail:GRAPH_DETAIL,
+    bias_acknowledgement:BIAS_ACK,
     verification:{ container:"op=publishedbytes&sha256=" + man + "&format=zip",
       manifest:"op=publishedbytes&sha256=" + man,
       findings:[ { bundle_id:FIND_A, bytes:"op=publishedbytes&sha256=" + fa.bundle_sha },
@@ -397,7 +442,20 @@ const LOOSE = {
   manifest_sha:null, manifest:null, files:[],
   editions:[1], edition_index:[ { edition:1, ratified_at:"2026-06-01T00:00:00Z", manifest_sha:null } ],
   latest_edition:1,
-  detail:"this is a RATIFIED BUNDLE that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement and no completeness assertion. Its bytes are verifiable by hash exactly as any other ratified bytes are.",
+  /* CORRECTED 2026-08-05 — UI-35. This fixture used to carry a top-level
+     `detail` here, and THE WIRE DOES NOT SEND ONE. `Store.publishedCase()` has a
+     single success return, shared by the case path and this `#looseEditionState`
+     path, and it names `case_detail` and `graph_detail` — never `detail`.
+     Measured by driving the real plane, not read off the source alone. So the
+     old field was an INVENTION of this mock, and it kept `pubStateHtml`'s dead
+     `c.detail ||` read looking alive: the suite rendered a sentence no instance
+     has ever sent. That is D-173's class exactly — a mock answering a field
+     rather than the wire's CONTENT (UI-30 named it; REC-43's `prompt:null` was
+     the same shape). The invented field is REMOVED, the surface's dead read is
+     removed with it, and the sweep in block 12 now fails if either comes back.
+     `case_detail` and `graph_detail` are added below because the wire DOES send
+     them; nothing renders them, which is block 12's other finding. */
+  case_detail:CASE_DETAIL, graph_detail:GRAPH_DETAIL,
   verification:{ container:null, manifest:null,
     findings:[ { bundle_id:INFO, bytes:"op=publishedbytes&sha256=" + INFO_SHA } ], detail:VERIFY_DETAIL },
 };
@@ -1558,6 +1616,178 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      WIRE.length > 10 && WIRE.every(w => !w.token));
   ok("and none of them reached a working-record op",
      WIRE.every(w => !["list","search","projection","image","whoami","affordances","reevaluations"].includes(w.op)));
+}
+
+/* ============ 16. UI-35 — WHAT THE PLANE PUBLISHES AND NOBODY READS ============
+
+   THE ITEM WAS `op=publishedcase`'s top-level `detail`, said to be published for
+   a case that was FOUND and rendered nowhere. IT IS NOT PUBLISHED AT ALL on that
+   path — measured by driving the real plane under miniflare, not inferred:
+
+     found (a case)      21 top-level keys, and `detail` is NOT among them
+     found (loose bytes) the SAME single success return, so likewise not
+     refused              {ok, reason, detail} — the ONLY path with a top-level
+                          `detail`, and `pubOpen` already renders it (UI-37)
+
+   So neither branch the item offered applies to that field: there is nothing to
+   render and nothing to withdraw. What was really there was the MIRROR of the
+   premise — a SURFACE READ (`pubStateHtml`'s `c.detail ||`) for a field the wire
+   never sends, kept alive by a FIXTURE that invented it. Both are corrected in
+   this commit; this block is what stops either returning.
+
+   THE SWEEP IS WIRE-ANCHORED. It does not trust this fixture — a fixture is the
+   thing that was wrong. It reads the plane's OWN success return and asks, of
+   every key the plane really publishes, whether anything on this surface reads
+   it. Two lessons inherited from UI-39 rather than rediscovered: a field
+   consumed through a SPREAD is invisible to a wire-anchored walk, so the spread
+   sites are enumerated and asserted; and a matcher written `[^}]*` stops at the
+   `}` inside `...(extra||{})`, so the region is taken by BRACE BALANCE.
+
+   WHAT IT FOUND BEYOND THE ONE FIELD, and this is the item's real answer: THREE
+   published top-level keys that NOTHING in this repository reads — not the
+   surface, not `newgroup`, not `docprofile`, not `pdf-worker`, not the plane's
+   own battery. They are RECORDED here rather than removed, because removing a
+   field from a public I3 op is an INTERFACE-CHANGES matter and `bio-plane/**` is
+   not this claim's ground; and `bias_acknowledgement` in particular is NOT a
+   candidate for removal — the gate enforces it (C-21.1) and the battery asserts
+   it, so it is a SURFACE GAP and not an unconsumed publication. The three are
+   routed in this item's report. This block PINS THE SET so that the next one to
+   appear fails here instead of being found by a fourth measurement. */
+{
+  const src = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+  /* The success return of `publishedCase()`, taken by BRACE BALANCE from the
+     `return { ok: true,` that follows the `#caseEditionState` read. */
+  /* COMMENTS ARE SKIPPED, and that is not a detail: this file's comments are
+     English prose full of apostrophes ("each finding's serves[]"), and a walk
+     that treats `'` as a string delimiter inside one runs to the next apostrophe
+     hundreds of lines away, swallowing every brace in between. The first version
+     did exactly that and returned a 27,059-character "return statement" whose
+     keys came from elsewhere in the file. Both defects are recorded rather than
+     quietly fixed, because each produced a CONFIDENT WRONG ANSWER rather than an
+     error — which is the failure mode this block is written to catch. */
+  function balanced(text, from){
+    let d = 0, i = text.indexOf("{", from);
+    const start = i;
+    for(; i < text.length; i++){
+      const ch = text[i];
+      if(ch === "/" && text[i + 1] === "*"){ const e = text.indexOf("*/", i + 2); i = e < 0 ? text.length : e + 1; continue; }
+      if(ch === "/" && text[i + 1] === "/"){ const e = text.indexOf("\n", i); i = e < 0 ? text.length : e; continue; }
+      if(ch === '"' || ch === "'" || ch === "`"){ const q = ch; i++;
+        while(i < text.length && text[i] !== q){ if(text[i] === "\\") i++; i++; } continue; }
+      if(ch === "{") d++;
+      else if(ch === "}"){ d--; if(d === 0) return text.slice(start, i + 1); }
+    }
+    return null;
+  }
+  /* ANCHORED ON `publishedCase()`'s return SPECIFICALLY. The first anchor was
+     `return { ok: true, caseId: theCase` and it matched `publishCase()` — the
+     WRITE path — several thousand lines earlier: two methods one letter apart,
+     both returning `caseId: theCase`. The anchor now carries `edition: ed,
+     scope: state.scope` with it, which only the read path has. */
+  const anchor = src.indexOf("return { ok: true, caseId: theCase, edition: ed, scope: state.scope,");
+  /* `|| ""` RATHER THAN null, deliberately: NC arm (e) breaks this anchor, and
+     the first version then threw on `region.length` and took every assertion
+     BEHIND it down with it — D-93's class inside one block, where a control dies
+     early and hides the arms it was meant to sit in front of. It now reports the
+     REACH failure and lets the rest of the block run and report too. */
+  const region = (anchor < 0 ? null : balanced(src, anchor)) || "";
+  ok("UI-35 REACH: the plane's own success return for op=publishedcase is located and read",
+     region.length > 400 && region.includes("graph_detail"),
+     region ? `${region.length} chars` : "NOT FOUND");
+
+  /* TOP-LEVEL KEYS, in ONE depth-tracking pass. A `replace()`-based flattening
+     was written first and was WRONG IN BOTH DIRECTIONS — it substituted the
+     first textual match of a nested object rather than the one it had found, so
+     the walk escaped the return entirely and reported keys from elsewhere in
+     `store.mjs` (`orphans`, `cuts_against_orphans`, `child`). Corrected rather
+     than tuned, and recorded here because a sweep that silently reads the wrong
+     region is the failure this whole block exists to prevent. Depth 1 is the
+     object's own level; brackets count too, so `files: [...].map(...)` does not
+     leak its callback's keys. */
+  const declared = [];
+  {
+    let d = 0;
+    for(let i = 0; i < region.length; i++){
+      const ch = region[i];
+      if(ch === '"' || ch === "'" || ch === "`"){ const q = ch; i++;
+        while(i < region.length && region[i] !== q){ if(region[i] === "\\") i++; i++; } continue; }
+      if(ch === "{" || ch === "[" || ch === "(") { d++; continue; }
+      if(ch === "}" || ch === "]" || ch === ")") { d--; continue; }
+      if(d === 1){
+        const m = /^([a-z_][a-z0-9_]*)\s*:/i.exec(region.slice(i));
+        if(m && (i === 0 || /[{,\s]/.test(region[i - 1]))){ declared.push(m[1]); i += m[0].length - 1; }
+      }
+    }
+  }
+  /* `...(asked ? { asked } : {})` is a SPREAD and a wire-anchored walk cannot
+     see through it — UI-39's first lesson, named here rather than tripped over.
+     It is enumerated by hand and asserted to still be the only one. */
+  const spreads = [...(region || "").matchAll(/\.\.\.\(/g)].length;
+  ok("UI-35 REACH: exactly ONE spread in that return, and it is `asked` — a second would be invisible to this walk",
+     spreads === 1 && /\.\.\.\(asked \? \{ asked \} : \{\}\)/.test(region || ""), `spreads=${spreads}`);
+  const published = [...new Set([...declared, "asked"])].sort();
+  ok("UI-35: the plane publishes a top-level `case_detail` and `graph_detail` and NO top-level `detail`",
+     published.includes("case_detail") && published.includes("graph_detail")
+     && !published.includes("detail"), published.join(","));
+
+  /* THE REFUSAL, which is the ONLY place a top-level `detail` lives — and it IS
+     read, by `planeSaid`. Asserting this is what keeps the finding above from
+     reading as "the plane never says `detail`", which would be false. */
+  ok("UI-35: the NOT_PUBLISHED refusal DOES carry a top-level `detail`, and it is a different return",
+     /reason: "NOT_PUBLISHED",\s*\n\s*detail:/.test(src));
+
+  /* Now the consumers, anchored on the WIRE NAME at the surface. Comments are
+     stripped so a key merely NAMED in prose does not read as a reader. */
+  const app = appScript().replace(/\/\*[\s\S]*?\*\//g, " ")
+    .split("\n").map(l => l.replace(/^(\s*)\/\/.*$/, "$1")).join("\n");
+  const readsIt = (k) => new RegExp(`\\.${k}\\b|\\[\\s*["'\`]${k}["'\`]\\s*\\]`).test(app);
+  /* STATED, not exempted: these three are published and read by NOTHING here.
+     Each carries WHY it is on this list rather than being silently tolerated. */
+  const UNREAD = {
+    case_detail: "the plane's own account of why a case has no case-level strength (DEC-44). "
+               + "Rendered nowhere; the surface hand-writes its own doctrine instead. Candidate for "
+               + "RENDERING under UI-32's rule (lift what the record published), which moves DEC-49's "
+               + "SUBJECT and so is routed rather than done here.",
+    graph_detail: "the plane's own account of serves[]/names[]/unresolved[]. Rendered nowhere, though "
+                + "this surface renders all three arrays. Same routing.",
+    opened: "when the case edition was OPENED. The strongest instance of this item's shape: ZERO "
+          + "consumers anywhere — not this surface, not `newgroup`, not `docprofile`, not "
+          + "`pdf-worker`, and not one assertion in the plane's own battery. The surface renders "
+          + "`ratified_at` and never this. Found by THIS sweep and not by the item, which named a "
+          + "field that turned out not to be published at all.",
+    bias_acknowledgement: "the GROUP's acknowledgement of the bias the case was produced under "
+                        + "(REC-47, DEC-46 (a)), gated by C-21.1 and asserted by the battery. NOT an "
+                        + "unconsumed publication — a SURFACE GAP. DEC-34's per-page header shows a "
+                        + "`Declared bias` computed from HUNCH legs, which is a DIFFERENT fact, so a "
+                        + "reader of the public record never meets the group's own sentence.",
+  };
+  const unread = published.filter(k => !readsIt(k));
+  ok("UI-35: every top-level key the plane publishes is either READ by this surface or NAMED as unread with a reason",
+     unread.every(k => k in UNREAD) && Object.keys(UNREAD).every(k => unread.includes(k)),
+     `unread=${unread.join(",")} | listed=${Object.keys(UNREAD).sort().join(",")}`);
+
+  /* THE DEAD READ ITSELF. `c.detail` at case altitude can never be satisfied by
+     the wire, so any read of it here is a claim that the record speaks where it
+     does not. Pinned by ABSENCE at the not-a-case branch specifically, because
+     that is where it stood. POLARITY: this FAILS if the dead read comes back. */
+  const notACase = /data-caseedition="notacase"[\s\S]{0,600}?<\/div>`/.exec(app);
+  ok("UI-35 REACH: the not-a-case branch is located",  !!notACase);
+  ok("UI-35: the not-a-case branch reads NO top-level `detail` — the wire has none to give it",
+     !!notACase && !/\bc\.detail\b/.test(notACase[0]), notACase ? notACase[0].slice(0, 200) : "");
+
+  /* AND THE FIXTURE MAY NOT INVENT ONE AGAIN. This is the assertion that would
+     have caught the whole thing: the mock must answer the wire's CONTENT, not a
+     field of its own (D-173, named by UI-30). */
+  ok("UI-35: no fixture in this suite carries a top-level `detail` on a FOUND answer",
+     [LOOSE, SOLO, caseEdition(1)].every(f => !("detail" in f)),
+     [LOOSE, SOLO, caseEdition(1)].map(f => ("detail" in f) ? "HAS detail" : "ok").join(","));
+  /* And the two the wire DOES send are present, so the fixture stops being a
+     smaller shape than the answer it claims to be. */
+  ok("UI-35: the fixtures carry the two top-level sentences the wire really sends",
+     typeof CASE_DETAIL === "string" && CASE_DETAIL.length > 200
+     && typeof GRAPH_DETAIL === "string" && GRAPH_DETAIL.length > 100
+     && caseEdition(1).case_detail === CASE_DETAIL && LOOSE.graph_detail === GRAPH_DETAIL,
+     `case_detail=${(CASE_DETAIL || "").length} graph_detail=${(GRAPH_DETAIL || "").length}`);
 }
 
 console.log(`publishedcase: ${n - fails.length}/${n} assertions`);

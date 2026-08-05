@@ -2551,3 +2551,58 @@ per-file assertions over the new file), `planning-hygiene.test.mjs` 243 -> 245 (
 new DEBT rows). **No other suite moved by one assertion.**
 `node scripts/coverage.mjs --strict` run directly with `$?` read unpiped: exit 0,
 131/131 ops, 53/53 checks, 103/103 suites declaring a control, 309 arms (303 before).
+## 2026-08-05, UI-35: who reads what `op=publishedcase` publishes
+
+Instrument: the op DRIVEN under miniflare against the real plane (a probe built
+from `bio-plane/test/publishedcase.test.mjs`'s own fixture, dumping the answer's
+key paths), plus a consumer walk over `civicos-ui/`, `newgroup/`, `docprofile/`,
+`pdf-worker/`, `bio-plane/test/` and `civicos-ui/test/`. The standing assertion
+is `civicos-ui/test/publishedcase.test.mjs` block 16, which re-reads the plane's
+own success return rather than trusting any fixture.
+
+**THE ITEM'S PREMISE IS CONTRADICTED, and this is the measurement.**
+`op=publishedcase` publishes **NO top-level `detail` for a case that was FOUND**:
+
+| path | top-level keys | `detail` present |
+| --- | --- | --- |
+| found, a case | 21 | **no** |
+| found, ratified bytes in no case (`#looseEditionState`) | same single success return | **no** |
+| refused | 3 (`ok`, `reason`, `detail`) | yes — and `pubOpen` renders it (UI-37) |
+
+So the field UI-33 measured as "rendered nowhere for a case that was found" is
+not published on that path at all. Neither branch the item offered applies:
+there is nothing to render and nothing to withdraw. What was actually there is
+the MIRROR of the premise — the SURFACE read `c.detail` in `pubStateHtml`'s
+not-a-case branch, for a field the wire never sends, and the suite's `LOOSE`
+fixture INVENTED that field, so the dead branch rendered as though it were alive.
+196 assertions never noticed; the paired negative control measures exactly that.
+
+**FOUR PUBLISHED TOP-LEVEL FIELDS NO SURFACE READS**, which is the sweep and is
+larger than the one field the item named. Counts exclude vendored copies of the
+plane — `newgroup/src/release.mjs` embeds the whole of `store.mjs` as a STRING,
+and counting it reported the plane as its own consumer, which made every key look
+consumed on the first pass:
+
+| field | surface | installer | fleet | plane battery | reading |
+| --- | --- | --- | --- | --- | --- |
+| `opened` | 0 | 0 | 0 | 0 | **zero consumers anywhere.** The surface renders `ratified_at` and never this |
+| `case_detail` | 0 | 0 | 0 | 0 | the plane's account of why a case has no case-level strength (DEC-44) |
+| `graph_detail` | 0 | 0 | 0 | 0 | the plane's account of `serves[]`/`names[]`/`unresolved[]` — all three of which this surface renders |
+| `bias_acknowledgement` | 0 | 0 | 0 | 7 | **a SURFACE GAP, not an unconsumed publication**: the gate enforces it (C-21.1) and the battery asserts it |
+
+`bias_acknowledgement` is the one that bears on the record's honesty. It carries
+the GROUP's own acknowledgement of the bias the case was produced under (REC-47,
+DEC-46 (a)) — a DISCLOSURE the reader weighs. DEC-34's per-page header does show
+a `Declared bias`, but it is computed from HUNCH legs in `pubDeclaredBias`, which
+is a DIFFERENT fact. **A reader of the public record never meets the group's own
+sentence.** Not fixed here: rendering it adds plane wording to a pre-authentication
+surface, which is DEC-49's SUBJECT, and UI-33's precedent is that the measurement
+basis is not moved as a side effect of another item.
+
+**WHAT THIS DOES NOT ESTABLISH.** The loose (`#looseEditionState`) answer is
+measured at SOURCE level and by the shared success return, not driven end to end:
+no suite in the plane's battery drives that branch at all, which is itself a gap
+and is reported. The consumer walk is anchored on the wire name and reads
+property access, computed access and destructuring; a field consumed through a
+SPREAD would be invisible to it, so the one spread in the return
+(`...(asked ? { asked } : {})`) is enumerated and pinned by its own assertion.
