@@ -150,242 +150,23 @@ _(drained by CONDUCT 2026-08-04 — the calibration-drift entry: D-183 acknowled
 
 _(drained by CONDUCT 2026-08-04 — three entries. **DEC-42/Workers Paid:** the correction accepted with thanks (wasm OCR was never ruled out on SIZE — a dedicated third fleet member fits at 2.72 MB gz, 0.72 with the model in R2; it was ruled out on CPU, and Paid moves that line from 10 ms to 30 s), so (1) D-54 re-scoped as M7's sharpest item — the installer REQUIRES and VERIFIES Paid and refuses to complete honestly, queued as DIST-3; (2) CPDF-12 RE-SCOPED AGAIN, tesseract-fleet-member-first with the deployed wasm CPU probe (now unblocked — the third entry measured the plan, HTTP 200 with cpu_ms echoed, and measured the PLAN ONLY: a GO still has to be earned on the runtime, and memory is unmeasured at 33.6 MB per RGBA frame against 128 MB), carrying the observation that may remove the renderer entirely — on the measured exhibit each page is ONE full-page embedded image, so the image-only class wants EXTRACTION not rasterisation, to be verified across the corpus before anything is built; (3) CPDF-10's placement becomes in-account tesseract pending that probe, external still unfunded; (4) D-185 (the free-tier frugality code) is NOT deleted — recorded on its row. **The leak (D-186):** M0-8 moved into the M0 lane and spawned FIRST, ahead of every other item, because the leak scales with CONDUCT's own throughput — the sweep must spare a running battery, which is not hypothetical. Gratitude noted for the 37.2 GB reclaimed carefully. **The paid upgrade:** enacted into CPDF-12's scope as above. No entries outstanding.)_
 
-### 2026-08-04 · BOB · FOUR RULINGS — and DEC-40 SUPERSEDES SHIPPED UI-18 CODE
-
-**The `DECISIONS.md` open list is now EMPTY**, which is the healthy state. Four answered
-this turn; each carries its own `for CONDUCT to enact:` line and all four reach the queue.
-Read DEC-40 first — it is the only one that corrects something already landed.
-
-**DEC-40 · THE THRESHOLD STANCES ARE REFUSED AS A CONSTRUCT, not narrowed to a better
-set.** Bob: *"What's a stance? A published case is in the wild for anybody to use for
-whatever purpose they wish… the case speaks for itself."* A named stance claims to
-enumerate purposes we cannot know. **UI-18 shipped the four-stance selector, so this is a
-correction, not a scoping note.** Q6's FORM survives (a bar is a PAIR of independent
-floors — that is arithmetic and is untouched); the named SET and the idea that a case has
-modes do not. Four consequences, and (2) is the one a worker would otherwise miss:
-(1) the case renders WHOLE, always; (2) a reader may supply their own two floors, but what
-comes back is **a view THAT READER constructed** — it states its filter in DEC-34's
-per-page header and is never presented, printed or hash-described as "the case", because a
-filtered rendering that looks like the case IS the misrepresentation Bob named, manufactured
-by us and handed over pre-made; (3) the honest answer to *is this strong enough for me* is
-already built and is not a filter — both derived strengths beside DEC-17's declared bar,
-stated, for the reader to judge; (4) **publication does not mint a new kind of object** — an
-imported published case is a FINDING, re-graded in its new context, inheriting no standing.
-**A NEW NEGATIVE CONTROL the current suite cannot have:** strip the filter line from a
-filtered rendering and the harness must FAIL.
-
-**DEC-41 · THE CONTAINER CARRIES ITS PDF, and a case without one is IMPORT-ONLY and must
-SAY SO.** Bob: *"the PDF is a renderer of the case… a case could be published without a
-PDF, but such a case would only be useable as an import."* So the reserved `layout.note`
-join becomes real and a server-side renderer produces the parts. **Sequence it WITH the
-CPDF-12 renderer question, not beside it** — both need page-shaped output from workerd and
-building two renderers is the D-164 lesson repeated. The manifest gains `import_only`,
-stated before signing since it changes what the artifact IS; the plane's current assertion
-that no page-shaped artifact is produced there is superseded and its suite CORRECTED, never
-exempted. The PDF is a rendering and never the authority — the signed container wins.
-
-**DEC-32 · PLURALITY ADOPTED, inside one finding.** REC-11 and REC-12 are the pair.
-REC-12 models the AND/OR relationship from the start (MIN over AND legs, MAX over OR
-branches, min within a branch) — **a flat implicit-AND basis is now known WRONG**. The
-DEFAULT IS AND and that is a correctness requirement: independent sufficiency is only ever
-reached by an affirmative, attributed act, which is what stops a member repackaging legs to
-buy a grade. UI-11/UI-12 take the elicitation design in the entry: **no AND/OR vocabulary on
-any surface**, one consequence question per leg (*"if this turned out to be wrong, would
-your answer still hold?"*), the derived falsifier shown back in plain words, structure
-authored BEFORE strength is shown, restructuring-after recorded rather than blocked. Q14's
-contradiction case stays separate and undesigned.
-
-**DEC-39 · THE PLANE PUBLISHES THE CO-ATTESTATION FENCE, and it must state the QUESTION
-co-attestation answers.** The drafted three-part wording is in the entry. The UI stops
-authoring it: `ATTEST_YIELDS_GRADE` and the hand-written honesty block render the PUBLISHED
-wording, UI-24's rider widens to "renders the published label AND fence, inventing neither",
-and the existing Grade-A negative control is RETARGETED at the published source rather than
-deleted. **See D-184**, which the same exchange surfaced and this does not fix.
-
-### 2026-08-04 · BOB · DEC-44 — A CASE IS ONE OR **MORE** FINDINGS; the build assumed one and nobody chose it
-
-Bob asked for a FACT CHECK of his own definition and **the repository contradicted him —
-in his favour**. Measured against source, not recalled:
-
-- `store.mjs:3539`, verbatim: *"publishing publishes ONE case: pass target=<inquiry id>"*.
-- `published` is a state of an INQUIRY (`STATES.inquiry`); `published_bundles` is keyed
-  `(bundle_id, edition)`; `index.mjs:3667` builds the container as `case: body.bundleId`
-  with its own comment *"the parts listed here ARE the bundle's files"*.
-- `MILESTONES.md:428` said *"a concluded inquiry is published"* — corrected in this commit.
-
-**One-case-one-inquiry was never argued for. It was assumed by every item in the chain.**
-
-**AND DEC-32, RULED THE SAME DAY, CLOSES THE ESCAPE HATCH — which is what makes this an
-inconsistency rather than a preference.** The obvious workaround is a parent inquiry citing
-the children as basis legs. DEC-32's falsifier-count test forbids it: a finding is ONE
-proposition with ONE falsifier, and a project's several findings are several propositions
-with several falsifiers. Collapsing them into one parent conclusion is precisely the
-overclaim DEC-32 exists to prevent. **The two rulings are consistent only if a case is a
-CONTAINER OVER FINDINGS.** Second measured consequence: a published child *"NAMES its
-parent and siblings (serve neither)"* (UI-18), so even under composition a stranger holding
-the zip cannot read the findings it points at without coming back to the instance —
-defeating the read-without-our-cooperation premise the published surface exists for.
-
-**This is a CORRECTION to DONE items (REC-14, REC-22, UI-18), not new scope. Record it that
-way.** Nothing is in production — every instance is a development instance — so it is a
-schema correction, not a migration.
-
-- **The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION.** Each
-  finding keeps its own conclusion, falsifier, basis and its own derived PAIR of strengths.
-  **A case MUST NEVER derive a single case-level strength** — that is R2's forbidden
-  composition at a new altitude, and it is the one trap in this work.
-- **An authored SCOPE STATEMENT** (Bob's *"sufficient scope to address all the issues"*),
-  beside the completeness statement, never derived from the findings' titles. Completeness
-  says what was left OUT; scope says what the case is ABOUT. Different claims, both needed.
-- **The container carries EVERY member finding's bundle in full.** Naming is not enough.
-- **Editions stay over the CONTAINER** (DEC-12 unchanged) — adding, removing or revising a
-  finding makes a new edition; priors keep answering. A ONE-finding case stays legal as the
-  degenerate case, so nothing built is wasted.
-- Shape work: a case identity distinct from a bundle id, plus case→findings membership;
-  `publishCase` takes a SET and its ONE-case refusal string is rewritten; C-21.1 and the
-  scope statement are per CASE per edition, C-21.2's per-axis inheritance stays per FINDING.
-- **NEGATIVE CONTROL the suites cannot have today:** publish a case of two findings whose
-  strengths differ, and the harness must FAIL if any surface, rendering or export presents a
-  single case-level strength.
-
-**AND A CORRECTION TO MY OWN RULING FROM EARLIER TODAY:** DEC-40's determination 4 says *"an
-imported published case is A FINDING"*. That inherited the singular assumption and now reads
-**the findings it carries** — each arriving as a finding, re-graded in its new context, none
-inheriting standing. The principle is unchanged; the arity was wrong. DEC-44 carries the fix.
-
-### 2026-08-04 · BOB · DEC-45 ANSWERED — case import, per-finding project association, and REGRADE is the warning
-
-Import is **UNBUILT** (no `op=import` anywhere — measured), so this is design-ahead scope
-for **M6's interchange half**, not a correction. DEC-45 carries the full reasoning.
-
-**The shape:** findings arrive **PROJECTLESS by default** — a supported state, not a gap
-(DEC-17 and `store.mjs:4301`: an inquiry outside any project has no project bar and
-inherits none) — carrying the source's **bias manifest** as a fact. The surface then offers
-**each finding its own destination**: an existing project, a new one the member authors, or
-none. Per-FINDING and not per-case, because DEC-44 makes a case a container over separable
-findings and two of them may belong to different work.
-
-**THE DISTINCTION A BUILD SESSION MUST NOT COLLAPSE — preserved vs applied.** Bob put it as
-*"an imported finding MUST be added to a project if its bias is to be preserved"*, and the
-architecture is right while the mechanism is one step over:
-- **PRESERVED** is the travelling **bias manifest** — `BIO_Declared_Bias_v0_1.md`: *"Every
-  work product cites its BIAS MANIFEST… part of the evidentiary record and travels with
-  publication."* The lens that PRODUCED a finding survives import even with no project.
-  Build it the other way and a projectless import silently loses provenance.
-- **APPLIED** is what project assignment actually decides: the lens the finding is
-  evaluated under going forward. `Effective bias` = instance statements minus project
-  nullifications plus project additions — so **projectless means the INSTANCE layer alone**,
-  and the surface must SAY that rather than let it be inferred.
-
-**THE WARNING IS ALREADY SPECIFIED AND IT IS NOT A DIALOG — IT IS REGRADE.** *"Hold evidence
-and analysis fixed, swap effective bias B1 for B2, re-run the evaluations, and produce a
-structured diff: for each conclusion, its grade under each lens, and the causal chain from
-each differing statement to the finding it produced to the premise it touched to the
-conclusion it moved."* So the member is SHOWN which conclusions move and which named
-statement moved each — run against the chosen destination's effective bias **before the
-association is committed**. Building a modal that says *"conclusions may change"* would be
-the weaker thing built where the stronger thing is already designed.
-
-**Two more, both cheap and both easy to lose:**
-- **Regrade's honest limit ships WITH the diff, never buried** — *"it cannot synthesize the
-  analysis a different group would have written under a different lens."* A clean regrade
-  means the analysis that EXISTS survives, not that the finding survives our lens intact.
-- **Import is the front door to RERUN**, the no-transitive-trust rule made operational:
-  *"the receiving group re-establishes trust at its own hop by rerunning the work, not by
-  accepting the producing group's reputation."* Name it in the surface; import is not a
-  substitute for it.
-
-**And the constraint from DEC-45's original recommendation stands:** import may NOT author a
-project objective or a bias statement on the member's behalf. C-2.9's non-empty `objective`
-must never be satisfied by words nobody in the importing group wrote.
-
-**Nothing in the bias doctrine needed changing to support any of this**, which is the
-strongest evidence the construct was right.
-
-### 2026-08-04 · BOB · DEC-46 — five bias corrections, and one of them OVERRULES yesterday's DEC-45
-
-**No contradiction existed, and that is the first finding.** Bob flagged *"bias debt must
-clear before publication"* against *"bias is integral to a published case"* as a conflict.
-**DEC-20 already ruled it on 2026-08-02, in his own words** — only a HUNCH blocks; ordinary
-declared bias is disclosed and TRAVELS. The recorded principle: *bias debt is DISCLOSED;
-hunch debt is DISQUALIFYING, because a hunch inflates a GRADE and ordinary bias only frames
-interpretation.* **But the author of the ruling re-read his own text as contradictory, which
-is the evidence that the VOCABULARY is broken** — `debt` means specifically *hunch* in that
-sentence and nothing says so. **D-188**, the D-156 class, free right now: no table, op or
-surface names either sense. Fix is a documentation pass — say HUNCH DEBT where the
-disqualifying rule is meant.
-
-**DEC-45's determination 2 is OVERRULED — import lands in a NEW PROJECT, not projectless.**
-I wrote that the travelling bias manifest preserves the source lens, so findings could arrive
-projectless. **It preserves the lens as a RECORD and does not make it USABLE — that is the
-half I missed.** The manifest is *"(bias bundle id, revision) plus a hash of the computed
-effective statement set"*, and those bundle ids belong to the SOURCE instance. The importing
-instance holds no such bundles, so the manifest alone is a **dangling reference**: it proves
-which lens was used and cannot re-run it. Regrade needs the STATEMENTS; statements live in
-bias bundles adopted at instance or project level; adopting a foreign group's bias at
-INSTANCE level would re-lens the entire instance. **So project level is the only correct
-home, and it must be a NEW project so an import cannot quietly alter an existing project's
-effective bias for work already in it.**
-
-This RECONCILES with DEC-45's per-finding association rather than discarding it — it makes
-it the second step:
-- **IMPORT** → a NEW project per DISTINCT source bias, carrying the imported lens intact so
-  regrade is computable locally. (Per distinct bias, because merging two source lenses into
-  one landing project would compute every later diff against a lens nobody ever used.)
-- **THEN** association of a finding with an EXISTING project is a separate authored act, and
-  that is where regrade fires and shows what moves.
-
-**Three more, all adopted:**
-- **The bias acknowledgement is AUTHORED AT EXPORT, never a pre-check checkbox** (Bob).
-  DEC-13's shape one construct over: the publisher authors it in the ceremony, fresh per
-  edition, never prefilled — beside the completeness statement and the subject position in
-  REC-14's publish block, and carrying the same negative control (a carried-forward
-  acknowledgement must FAIL). The manifest is COMPUTED and stamped; the ACKNOWLEDGEMENT is
-  AUTHORED. Two different things travelling together.
-- **REGRADE is a first-class member capability, not an import side effect** — comparing a
-  finding set's conclusions under two effective biases is valuable in its own right, and
-  import is merely one CALLER. Place it on the bias work, not inside M6. Its honest limit
-  travels with every use: it cannot synthesise the analysis a different group would have
-  written, so a clean diff means the analysis that EXISTS survives.
-- **A project's own bias must be VISIBLE on its surfaces** — **D-189**. MEASURED: the UI's
-  only notion of declared bias today is hunch legs (`app.html:12776`, verbatim: *"DECLARED
-  BIAS is the HUNCH legs and nothing else"*), and D-84 records that `object_type: bias` does
-  not exist in the catalogue so a bias bundle cannot be written at all. A requirement on
-  UNBUILT work — stating it now is what stops the project surfaces being built bias-blind and
-  retrofitted, which is the same reason the import ruling had to arrive before import does.
-
-### 2026-08-04 · BOB · THE ASSISTANT IS THE PILOT AI INTEGRATION — design mapped in `ASSISTANT-PILOT.md`
-
-Bob picked DEC-27's assistant as the first AI integration and sketched the flow (prompt →
-interpret → answer, or wizard in a sidebar → navigate to the surface; **the AI does not
-enter values into fields and does not press Submit**). The full design is
-[`ASSISTANT-PILOT.md`](../ASSISTANT-PILOT.md); it sits entirely under DEC-24/27/54/55 and
-amends none of them. The load-bearing choices, so this entry can be judged without the file:
-
-- **The "training" is SELF-DESCRIPTION, not a document.** Five layers by drift rate:
-  authored doctrine; the plane's PUBLISHED vocabulary; the op registry EMITTED (cannot
-  drift); surfaces that SELF-DESCRIBE (harness-enforced); and recipes as DATA whose steps
-  name surface ids and ops, **failing the build when they name one that does not exist** —
-  the D-106 defence applied to assistant knowledge. The ~305 teaching-grade refusal
-  `detail:` strings are surfaced VERBATIM as the answer key, never paraphrased.
-- **The pilot's `ai`-class task scope is READ-ONLY.** FIND needs reads; the wizard observes
-  progress by reads; CREATE/ACT proposals need nothing because the member executes the act
-  as themselves in the surface. Two identities, two steps; the DEC-55 negative control
-  ships WITH the class.
-- **An assistant answer that reports absence MUST name its LEVEL** (meaning / content /
-  documents / internet) — the four-level rule binds the assistant hardest, because it is
-  the component most likely to say "there is nothing."
-- **The wizard is a PLAN in D-82's dress**: navigates to the surface, stops, observes by
-  reading, advances; abandonment is a non-event. A CREATE proposal shows the member's own
-  words BESIDE the surface; their typing is the adoption. No DOM access at all in the
-  pilot.
-- **Ephemerality (BOB's determination, Bob may veto):** the conversation is the member's
-  thinking space, NOT record; what enters the record enters through member acts stamped
-  `surfaced_by: agent`; a member may save an exchange as their own authored note.
-- **Excluded on purpose**: PURSUE/EXTRACT/CHECK (post-pilot; CHECK first), field entry,
-  egress (DEC-47 stays open and unpreempted), and DEC-54's policy inhale (last).
-- **Build order starts with the surface registry + recipe validation, which needs no AI
-  and pays for itself as documentation immediately.**
+_(drained by CONDUCT 2026-08-05 — five entries, and the outgoing handover was wrong about
+them. `kickoffs/CONDUCT-NEXT.md` records the inbox as empty and it was not. FOUR were in
+fact ENACTED and merely never deleted — DEC-40 → UI-27, DEC-41 → CPDF-12's scope, DEC-44 →
+REC-44/UI-29, DEC-45 → MILESTONES M6, DEC-46 → REC-47 + M4/M6 — every `enacted:` line read
+out of `DECISIONS.md` and checked against a real queue item before anything was deleted,
+rather than taken on trust. No change was lost by those four. **The fifth — THE ASSISTANT IS
+THE PILOT AI INTEGRATION — was GENUINELY UNDRAINED.** `ASSISTANT-PILOT.md` landed as a
+design (b78f979) and nothing in the queue pointed at it, so its build order reached no
+worker and would have reached none. Enacted now: §7 step 1 — the surface registry and the
+recipe format with their build-time validation, which needs no AI — is queued as **UI-38**;
+steps 2–6 stay deliberately unqueued behind it, because step 1's registry is the thing the
+later steps validate against and D-199 already carries the `ai` class design step 3 needs.
+**The lesson, recorded here rather than filed away, because it is the failure mode this
+channel exists to prevent: an inbox entry with no queue item is UNDRAINED no matter what the
+handover says. The check is the ITEM, not the note** — which is the same rule as
+`ORCHESTRATION.md`'s "a mechanism that is not in the loop the reader actually runs is not a
+mechanism", arriving one altitude up.)_
 
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
@@ -478,13 +259,28 @@ landed: 1605dba — pipeline-e2e.test.mjs (53 assertions) drives the WHOLE M4 ax
 
 ---
 
-## RECORD — ACTIVE (promoted 2026-08-03 into the slot CONTENT-OFFICE freed on draining; REC-10 first, per the 2026-08-01 handover order)
+## RECORD — ACTIVE (re-promoted 2026-08-05; the 2026-08-01 handover order is fully DRAINED and the area now runs D-200)
 
 Owns the store core and retrieval (`PARALLELISM.md`). Claim it in `CLAIMS.md` before
-editing; `store.mjs` is ~4,900 lines and CAPTURE holds its link/capture/task/
-reachability functions, so name paths precisely. On promotion the run order is the
-2026-08-01 handover's: REC-10, then REC-19 (two workers on DISJOINT claims — the type
-catalog/state sites vs the new read op), then REC-11 → REC-13 → REC-12 → REC-14.
+editing; **`store.mjs` is 16,287 lines (MEASURED 2026-08-04) and needs `grep -a`** — this
+was the THIRD site carrying the wrong ~4,900 figure, corrected 2026-08-05: REC-52 measured
+it and fixed the two files it knew about (CLAUDE.md and `kickoffs/RECORD.md`) and this one
+was not among them, which is the sweep-for-the-class lesson landing on the very item that
+taught it. CAPTURE holds the link/capture/task/reachability functions, so name paths
+precisely.
+
+The 2026-08-01 handover run order (REC-10 → REC-19 → REC-11 → REC-13 → REC-12 → REC-14) is
+DONE, and the area drained on 2026-08-04 — UI took the freed slot. It is re-promoted
+2026-08-05 because **D-200 is RECORD ground and had no owner**: ten live bundles claim a
+provenance route they cannot show, which is live record state no other area can touch.
+
+### REC-54 · queued
+milestone: M2
+scope: **D-200 — ten live bundles claim a route they cannot show.** `op=audit` on the live instance answers 31 checked / 21 clean / **10 with errors, every one `C-18.9`**: *"provenance documents[0] is at or past verified with no provenance_chain: a published hash claims these bytes came from somewhere by some route, and this document names none"*. MEASURED 2026-08-04 against the live plane and established as PRE-EXISTING RECORD STATE rather than deploy damage — `C-18.9` appears identically in the 0.55.0 and the 0.56.0 bundle, so the previous build would have reported the same ten. **This is the overclaim class this project ranks worst, sitting in live DATA where no code fix reaches it.** DIST's gate step 8 wants `op=audit` clean and it is not, so this item is what makes that honest. **DO NOT CLOSE IT BY WEAKENING `C-18.9` — the check is right and the record is wrong.** Decide PER BUNDLE, on evidence: either the chain is reconstructible from what was ACTUALLY captured (the capture rows, the R2 bytes, the CDX record) and is written from that evidence with each hop naming what produced it, or the honest act is to move the document BACK OFF `verified` and say so. **Back-dating a chain nobody recorded is exactly the invention the gate exists to prevent, and is forbidden here by name**; a bundle whose chain cannot be reconstructed is `undetermined`, and undetermined is first-class and must be STATED rather than quietly left at `verified`. Apply dispositions through the plane's OWN ops, never by hand-written SQL — if no op can move a document off `verified`, that absence is itself a finding: report it and route it rather than reaching around the plane. **SWEEP FOR THE CLASS, do not fix the ten:** eight items this week each found more than their brief predicted, so the questions this item must answer are (a) whether the ten share a WRITE PATH that lets a document reach `verified` with no chain — if one does, that path is the defect and the ten are its symptom; (b) whether any OTHER check tolerates a record state it cannot support; and (c) whether `op=audit`'s report can distinguish *no chain recorded* from *a chain recorded and empty*, which are different facts about the record and must not read alike.
+behind-interface: I5
+depends-on: none
+accepts-when: `cd bio-plane && npm run test:battery` green — **100/100 and 5,664 assertions on main today, any delta ATTRIBUTED per suite** — with a suite that drives a document to `verified` carrying no chain and asserts the write path REFUSES or the audit REPORTS it by name, and that the reconstruct-from-evidence path writes only hops the capture record actually holds; the ten live bundles dispositioned INDIVIDUALLY with the evidence for each recorded in the landing note (reconstructed, or moved off `verified`, and which); `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped — never `cmd | tail`, which reports tail's status — exit 0. NEGATIVE CONTROLS run and recorded: (1) hand a bundle a chain the capture record does not support and the suite FAILS naming the invention; (2) weaken `C-18.9` to tolerate a missing chain and the suite FAILS naming the check just neutered — **and the pin must go RED for the weakening and GREEN for a genuine fix, not the reverse**, which is the polarity error corrected three times in four items this week; (3) a document legitimately BELOW `verified` with no chain still reads CLEAN, because these must not collapse the other way either; (4) whatever instrument you build to walk the live bundles, neuter its walk and assert its REACH fails **as a delta** — a walk that covers nothing passes everything, and that class has eight sightings.
+added: 2026-08-05 · CONDUCT (D-200's owner — the first of the handover's two ownerless defects; D-201 is DIST's)
 
 ### REC-1 · done
 milestone: M1
@@ -1459,6 +1255,14 @@ constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 bui
 `T→J→B(+S)→P→A` order — MILESTONES M8 already carries v0.2, so the queue-first order governs.
 The display half of D-82 (`surfaced_by`) and the FW-4→UI already-held delegation are later
 UI items, not UI-1.
+
+### UI-38 · queued
+milestone: M8
+scope: **The SURFACE REGISTRY and the RECIPE format with their build-time validation — `ASSISTANT-PILOT.md` §7 step 1, and it needs no AI at all.** Bob picked DEC-27's assistant as the first AI integration (2026-08-04) and the design's load-bearing choice is that the assistant's "training" is **SELF-DESCRIPTION, not a document** — five layers ordered by drift rate. This item builds the two that drift fastest, and it pays for itself as documentation the day it lands whether or not an assistant is ever built. (a) **Surfaces SELF-DESCRIBE**: every member-facing surface in `civicos-ui/` carries an id and a machine-readable statement of what it is for and which acts it offers, and **the HARNESS enforces that the described set EQUALS the real set** — a surface that exists and describes nothing, and a description naming a surface that does not exist, must each FAIL the build. (b) **Recipes are DATA, never prose**: a recipe is an ordered list of steps whose steps NAME surface ids and plane ops, and **the build FAILS when a step names a surface or an op that does not exist** — the D-106 defence applied to assistant knowledge, and the entire reason this is worth building before any AI exists. Take the op names from **the registry the plane already EMITS** (that layer cannot drift), never from a hand-typed list: **a hand copy agrees at zero cost and this project has measured that five times on five subjects**, so the drift assertion must be STRUCTURAL. Two constraints from the design that a build session would otherwise lose: the ~305 teaching-grade refusal `detail:` strings are the answer key and are surfaced VERBATIM, never paraphrased; and an answer reporting absence must name its LEVEL (meaning / content / documents / internet), so a surface's self-description must make its level legible rather than leaving it to the caller. **SWEEP FOR THE CLASS:** the question is not whether the surfaces you start with are described, it is whether a NEW one can be added silently.
+behind-interface: I3
+depends-on: none
+accepts-when: `node civicos-ui/test/run.mjs` green with every surface described and the described set proved equal to the real set **in both directions**; at least one authored recipe whose every step resolves to a real surface id and a real EMITTED op, with the op names read from the plane's own registry and that sourcing asserted (a hand-typed list must fail the assertion); `cd bio-plane && npm run test:battery` stays green — 100/100 and 5,664 today, any delta attributed per suite; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0. NEGATIVE CONTROLS run and recorded: (1) a recipe step naming an op the plane does not emit FAILS the build, naming the step AND the op; (2) a recipe step naming a surface id that does not exist FAILS naming it; (3) add a real surface, describe it nowhere, and the harness FAILS; (4) **neuter the walk that discovers surfaces and the REACH assertion fails as a DELTA** — a walk that covers nothing passes everything, and that class has eight sightings this week including one instrument that compared a planted count to 1; (5) the pins must go RED when a described-but-absent surface is introduced and GREEN when it is removed, not the reverse.
+added: 2026-08-05 · CONDUCT (enacting the ASSISTANT-PILOT inbox entry the 2026-08-04 handover left undrained; §7 steps 2–6 stay unqueued behind this one, since the registry is what they validate against and D-199 already carries step 3's `ai`-class design)
 
 ### UI-1 · done
 milestone: M8
