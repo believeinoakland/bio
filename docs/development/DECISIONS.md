@@ -3527,7 +3527,7 @@ recommendation: leave it out until a group asks. A container that exists because
   thought through — and DEC-34's header rules are written for a CASE.
 reversal cost: low; it is a capability to add, not one to unwind.
 
-### DEC-47 · open
+### DEC-47 · answered
 raised: 2026-08-04 · session BOB (from the read-through-cache design pass,
   `STORE-AS-CACHE.md`)
 for: bob
@@ -3557,6 +3557,33 @@ recommendation: **acquire only on an authored act, and let the plan propose in b
 reversal cost: low now. High once instances are deployed and reaching hosts unattended:
   the outward behaviour of every installed instance would have to be changed by an update,
   and D-116's fleet-visibility problem means we could not enumerate who had taken it.
+
+response: **AN INVESTIGATION SESSION MAY REACH PUBLIC SOURCES NOBODY NAMED. THE INQUIRY AND
+  THE SESSION LAUNCH ARE THE AUTHORISATION.** Bob, 2026-08-06: *"I have no problem with an AI
+  routing around on the internet in areas that anybody can go through. None."*
+  **The recommendation on this entry — acquire only on an authored act, with plans proposing
+  in bulk — was REFUTED and is withdrawn.** Bob's ground, and it is fatal to it: *"the user
+  doesn't yet have enough informed context to authorize access to a site (or 40 sites)."* A
+  member asked to approve forty URLs has not done the research and cannot judge them, so the
+  approval adds accountability paperwork without adding judgement — the empty gate this
+  project refuses everywhere else, the same distinction DEC-46 drew between a checkbox and an
+  authored acknowledgement. And the positive half: *"the user has already said, in effect, I
+  (we) have opened this inquiry, which we're using this investigation session to answer.
+  That's your authorization."* A dialog asking permission to use the internet asks a member to
+  re-authorise what they just authorised — *"repetitious and redundant"*.
+  **WHAT IS AUTHORISED IS SCOPED BY "AREAS THAT ANYBODY CAN GO THROUGH."** Publicly reachable
+  is the line. What remains is not authorisation but CONDUCT, and it is build-time work rather
+  than a further ruling: where public stops (behind a login, behind a paywall, a `robots.txt`
+  disallow, a private individual's personal site), and how the instance behaves once out there
+  (rate, volume, and identifying honestly — `SOURCE-ACCESS.md` already commits us to not
+  disguising requests).
+  **THE GATE THAT REMAINS IS STRUCTURAL AND COSTS NOTHING**: the AI does not capture. It
+  REQUESTS, and the daemon captures with provenance preserved (DEC-60), so no fetch the AI
+  wants is performed by the AI.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the investigative session
+  this unblocks, its fence and the daemon relationship), docs/development/SOURCE-ACCESS.md
+  (the standing position that BIO does not disguise its requests).
 
 ### DEC-54 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)

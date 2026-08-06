@@ -10,7 +10,11 @@ turns were instructive.
 
 A member with an inquiry presses a button and a **skilled AI session** runs against that
 inquiry: it reads the project, finds evidence, and works out how the legs of each claim come
-together. Everything it produces is a SUGGESTION. The member explores, edits, accepts or
+together. **PURSUING EVIDENCE AND INVESTIGATING ARE ONE SESSION, not two** (Bob, 2026-08-06)
+— searching and forming versions interleave in a single loop under a single skill and a single
+credential scope. DEC-24 named PURSUE and the other roles separately; this merges two of them
+rather than overturning the boundary. Sub-sessions may still exist as FAN-OUT within one run
+(§14a), which is parallelism, not a second role. Everything it produces is a SUGGESTION. The member explores, edits, accepts or
 rejects.
 
 The machine/member division does not move. What moves is the assumption that it had to be
@@ -344,9 +348,32 @@ GENERAL INTEGRATION SURFACE for AI sessions and should be designed once rather t
 feature — the way the fleet-member pattern was. The investigation session is its first
 instance. `ASSISTANT-PILOT.md` carries a pointer to this section.
 
-It also settles the transcript question coherently rather than by exception: **the transcript
-is LIVE BUT NOT DURABLE.** Visible while the work happens, gone afterwards, with the version's
-written description (§6.1) carrying what survives. That is the same split Claude Code runs
+**TRANSCRIPT RETENTION — RULED, Bob 2026-08-06: DEVICE-LOCAL, with a TTL, AND deleted as part
+of the PUBLICATION process. Never in the record store.** Bob's framing is what decides the
+shape: these are *"internal notes - like a reporter's notes or internal deliberations… We've so
+far not identified any use for them. They need to be protected from subpoenas."*
+- **Device-local rather than instance-side, and the reason is the threat.** An instance-side
+  cache lives in the group's own Cloudflare account — a third party who can be served
+  directly, sometimes without telling the group, and who has no incentive to resist. On the
+  member's device a demand must reach the member, who knows about it and can contest it. **The
+  price, stated so nobody discovers it later: a teammate watching the running-session indicator
+  can see that work is happening and cannot read the reasoning.**
+- **Deletion at publication is a ROUTINE trigger and that is what makes it defensible.** The
+  governing principle in journalistic practice is that destruction on a schedule set in advance
+  and applied without regard to content is defensible; destruction begun once a demand is
+  anticipated is spoliation, which is far worse than having kept the material.
+- **THEREFORE THE PURGE MUST BE SUSPENDABLE — a litigation hold.** Recorded as a build
+  requirement rather than a question, because it follows from Bob's own stated purpose and
+  getting it wrong inverts the protection into liability: once a group is on notice, both the
+  TTL and the publication-deletion must stop for relevant material.
+- **Mechanical consequence:** device-local means publication cannot reach another member's
+  device. Each device clears on next contact and the TTL is the backstop.
+- *(General practice, not advice for this group's situation. California's shield law is among
+  the strongest in the country; whether it reaches a civic accountability group rather than a
+  newsroom is a question for counsel.)*
+
+So the transcript is **LIVE, LOCAL AND SHORT-LIVED**, with the version's written description
+(§6.1) carrying what survives. That is the same split Claude Code runs
 on, where the session is the thinking and the commit message is the durable account — which
 is why §6.1's description should be held to a commit message's standard: what changed and
 why, not what happened.
@@ -395,10 +422,17 @@ natural fan-out.
 parent, which remains the only thing holding a write. So the fence stays ONE endpoint no
 matter how many sub-sessions a run spawns, and no sub-session needs a write scope of its own.
 
-**Reaching the open internet is the EGRESS question and is still open** (DEC-47 — may an
-instance fetch from a source nobody named). Bob: *"We haven't gotten that far."* **This
-design must not settle it by accident**: a run that reaches a host no member named is the
-act DEC-47 governs, whoever performs it and whatever it is called.
+**REACHING THE OPEN INTERNET IS ANSWERED — DEC-47, Bob 2026-08-06: the inquiry and the session
+launch ARE the authorisation, for *"areas that anybody can go through."*** No per-fetch or
+per-batch dialog. The prior recommendation (acquire only on an authored act, plans proposing in
+bulk) was refuted: a member asked to approve forty URLs has not done the research and cannot
+judge them, so the approval would add paperwork without judgement — and asking permission to
+use the internet asks a member to re-authorise what opening the inquiry already authorised.
+**What remains is CONDUCT, not authorisation, and it is build-time work:** where "public" stops
+(logins, paywalls, `robots.txt` disallows, a private individual's site), and how the instance
+behaves out there (rate, volume, identifying honestly — we do not disguise requests). The
+structural gate costs nothing and stays: the AI never fetches, it REQUESTS, and the daemon
+captures.
 
 ### What Claude Code's model maps onto, in one table
 
