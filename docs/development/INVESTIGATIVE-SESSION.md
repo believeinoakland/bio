@@ -52,12 +52,34 @@ the **current evidence standard**.
 **WRITES:** one endpoint, adding a new VERSION to a claim under the subject inquiry.
 Everything it writes is a suggestion. Nothing else.
 
-## 4 · The fence is the endpoint
+## 4 · The fence: THE AI HOLDS NO OP THAT ACCEPTS
 
-The session's only write is an endpoint whose sole possible output is a suggested version,
-so **the op is the fence**. Act refusals stay binary and stay adequate; what was missing was
-an act whose only possible product is a proposal. No new primitive is needed. Every state
-change in §6 is a member act the session cannot reach.
+**Corrected 2026-08-05 by Bob, and the corrected form is stronger than what it replaced.**
+The first statement was *the session's only write is one endpoint*. That was wrong as soon as
+evidence gathering was designed, because a pursue session works through the plane's existing
+machinery — capture, OCR, extraction — and those write.
+
+The accurate statement, which survives the scope growing:
+
+> **The AI holds no op that ACCEPTS anything.** Nothing it can call concludes, accepts,
+> publishes, or makes a version current.
+
+Its interactions with the store fall in three groups, and the third is the fence:
+
+1. **It REQUESTS acquisition — it does not perform it.** Bob, 2026-08-05: *"capturing a
+   document (with provenance preserved) is something the daemon does (sometimes at the
+   suggestion of an AI)."* So the AI does not hold a capture write at all. It asks; the
+   daemon captures. **The AI therefore never touches the provenance chain**, which is the
+   foundation the entire trust model rests on, and the capture is attributable to the
+   instance's ordinary capture path rather than to an agent.
+2. **It SUGGESTS** — versions, in `suggested` state (§9).
+3. **It ACCEPTS nothing.** Every state change in §6 is a member act it cannot reach.
+
+**AND A CAPTURE IS NOT EVIDENCE.** Bob, 2026-08-05: *"the capture is an entry of a document
+to the cache (store), but not an entry of the document into the leg of a claim."* This is
+`CLAUDE.md`'s "CONTENT IS THE UNIT, AND A DOCUMENT IS NOT THE ANSWER" appearing one level
+down. A run that captures four hundred documents has changed the STORE and changed no CLAIM.
+Only a leg inside a version, accepted by a member, moves anything the record asserts.
 
 ---
 
@@ -328,6 +350,37 @@ written description (§6.1) carrying what survives. That is the same split Claud
 on, where the session is the thinking and the commit message is the durable account — which
 is why §6.1's description should be held to a commit message's standard: what changed and
 why, not what happened.
+
+### The pursue session and the daemon — request, wait, post-process
+
+**Bob, 2026-08-05:** a pursue AI that initiates a capture *"needs to be notified when the
+capture is complete and given a reference to the document so that it can post-process it."*
+
+So the cycle is **request → daemon captures → notify with a reference → post-process**, and
+each half belongs to whoever already owns it: the AI identifies what is worth having and
+what to make of it once it arrives; the store layer does the capturing, the OCR and the
+extraction, preserving provenance through the path that already exists.
+
+**The notification is not new machinery.** `NOTIFICATIONS.md` already catalogues *"a capture
+the member walked away from has completed"* (D-61) among its ~30 generators, with stable
+`N-<n>` ids precisely so that thirty sites do not each invent a wording. A pursue session
+waiting on a capture is that generator with a different subscriber — extend the subscriber,
+do not invent a channel.
+
+**This substantially de-risks D-218, and is worth saying before the measurement comes back.**
+A run has natural suspension points by construction: search → identify → request captures →
+**wait on the daemon** → post-process → form versions. The run must be able to stop and
+resume whatever the CPU ceiling turns out to be, because it has to wait on work it does not
+perform. So "many short invocations carrying state" is **the natural shape of the work rather
+than a workaround for a limit** — and the Durable Object with alarms that the plane already
+runs is where that state lives. Whichever way the measurement lands, the resumable shape is
+the one to build.
+
+**What post-processing may WRITE is not settled here.** Bob: *"it may be the AI that also
+scans the captured document for content and connections."* Extracting what a document
+literally contains asserts little; identifying a CONNECTION is closer to a constitutive
+statement — which is exactly DEC-52's open question, and this design is a reason to answer
+it rather than a place to answer it.
 
 ### Evidence search may be a SUB-SESSION
 
