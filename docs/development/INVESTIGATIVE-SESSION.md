@@ -492,8 +492,13 @@ intelligence belongs in the AI's work, not in a structure the record computes ov
 
 ## 17 · What is NOT settled
 
-1. **Leads for other inquiries have no home.** The session reads all of a project's
-   inquiries and writes only to the subject one. → **D-213**
+1. ~~Leads for other inquiries have no home.~~ **ANSWERED 2026-08-06 by Bob: discovered
+   evidence not related to the current inquiry is CAPTURED and recorded as an ACTIONABLE
+   NOTIFICATION the member can act on later.** Needs no new machinery — `NOTIFICATIONS.md`
+   already catalogues ~30 generators with stable `N-` ids so that thirty sites do not each
+   invent a wording, and the QUEUE construct defines what a member learns. It also sits
+   correctly against §4: the document is CAPTURED (entry to the store, not to any claim) and
+   the observation becomes the notification. → **D-213, closed**
 2. **Whether a version carries the conditions it was formed under** (§11). → **D-215**
 3. **Whether sharing is stronger in the data model than the edge association found**, which
    would force cloning after all (§7). → **D-216**

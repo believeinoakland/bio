@@ -3432,7 +3432,7 @@ recommendation: leaning to the shipped refusal, because the whole point of the
 reversal cost: low either way — one predicate at the cite path plus the suites that
   pin it.
 
-### DEC-49 · open
+### DEC-49 · answered
 
 **INPUT ADDED 2026-08-05 · CONDUCT, from UI-40 — the subject grew again, and one addition is a WORD THE PLANE CHOSE reaching an unauthenticated reader.** Recorded here rather than acted on, because the wording is exactly what this entry is about:
 
@@ -3529,6 +3529,36 @@ what reversing costs: little today and more each release. Two constants carry th
 NOTE: whichever way this goes, UI-31 (LANDED 2026-08-04) closed the measurement gap meanwhile —
   UI-4's vocabulary guard covers no sign-in surface today, so this tension is currently
   UNMEASURED rather than accepted, and that part is mine and is not waiting on an answer.
+
+response: **SURFACES MAY TRANSLATE — EVERY REFUSABLE CONDITION CARRIES AN ERROR CODE WITH A
+  CANNED TRANSLATION.** Bob, 2026-08-06: *"I have no problem with those messages being
+  translated, whether at development time or at runtime. These conditions should include an
+  error code that there's a canned translation for."* So the answer is (b), and **it amends
+  DEC-8**: a surface may now render an AUTHORED translation keyed on a code the plane sent. It
+  still may not COMPUTE a refusal — the code must be received, never inferred — so DEC-8's
+  actual protection is intact and only its wording changes.
+  **THE GUARD IS WHAT MAKES (b) SAFE AND IS NOT OPTIONAL**: every code a surface can receive
+  has a translation, and an untranslated code FAILS THE HARNESS rather than reaching a member.
+  Without it, (b) degrades into thirteen surfaces each inventing wording, which is the drift
+  REC-43 closed on the co-attestation fence. Build-time or runtime lookup is an implementation
+  choice Bob explicitly left open.
+  **THE SUBJECT WAS SMALLER THAN THE ENTRY ASSUMED, and two findings resize it.**
+  (1) **The published-case-page half is handled by a DIFFERENT ruling made the same day** —
+  word definitions become an ELEMENT OF THE CASE and a SECTION IN ITS PDF RENDERING (with the
+  effective bias, DEC-59). `sha256` and the file paths want DEFINING, not rewording: they name
+  what a reader must know to check a hash themselves, and a reworded address is a broken one.
+  (2) **What remains is the GATE, and there the jargon is the small part.** The sentence read
+  in full at `store.mjs:12362`: three of its four sentences explain the SYSTEM'S DESIGN — that
+  only a salted derivation is stored, and that the refusal deliberately will not say which of
+  two causes applied so it cannot be used to enumerate which roles hold credentials. Both are
+  true and the second is a real security property. **But a person who cannot get in did not ask
+  any of it.** So the translation must supply THE REMEDY — check the password; if you believe
+  your membership should be active, contact your group's admin — which is ROUTING rather than a
+  computed refusal, and therefore permitted. Note for the builder: mouseover does not exist on
+  touch, so an info affordance carries it, not a hover.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: this entry, DEC-8 (amended in wording, not in protection), DEC-59 (the
+  definitions/bias elements that handle the published-case half), MEASUREMENTS.md (UI-31/34/36/37).
 
 ### DEC-48 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
@@ -3793,7 +3823,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
 
-### DEC-59 · open
+### DEC-59 · answered
 for: bob
 raised: 2026-08-05 · CONDUCT (from UI-35, which measured it and deliberately did not fix it)
 subject: Should the public case page render the group's own `bias_acknowledgement`?
@@ -3811,6 +3841,23 @@ provisional: (b), the status quo, is running and nothing is blocked.
 recommendation: **(a), as its own item, sequenced AFTER DEC-49 rules.** The disclosure exists to be read, and a disclosure the reader never meets is the shape this project refuses everywhere else. The reason it is not simply queued is that rendering it puts authored wording on a PRE-AUTHENTICATION surface, and who owns member-facing wording is exactly DEC-49's open subject — UI-35 declined to move that basis as a side effect of another item, which was the right call and follows UI-33's precedent.
 
 cost of reversal: LOW — one template line plus a DEC49_SUBJECT row. The cost of NOT doing it is not symmetrical: every edition published meanwhile carries a disclosure nobody sees, and editions are permanent.
+
+response: **RENDER IT — AND AS AN ELEMENT OF THE CASE, NOT A LINE ON A PAGE.** Bob, 2026-08-06:
+  *"Word definitions can be an element in the published case and rendered as a section in a pdf
+  rendering. The same with the effective bias that case was published under: bias an element of
+  the case, and a section in the pdf rendering."*
+  **This is more than the (a)/(b) the entry offered.** It makes the group's own bias
+  acknowledgement, and a DEFINITIONS block, first-class parts of the published case rather than
+  fields a surface may or may not read — so they travel with the case wherever it goes instead
+  of existing only where a particular page happens to render them. It extends an artifact that
+  already exists: DEC-41 established that the container carries its PDF.
+  **It also disposes of the sequencing worry.** The entry held this behind DEC-49 because
+  rendering authored wording on a pre-authentication surface was DEC-49's subject. As an
+  element of the case that concern is gone — the group AUTHORED the acknowledgement, so it is
+  the group's own words in the group's own case, not a surface composing anything.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: this entry, DEC-49 (the definitions half), DEC-41 (the container carries
+  its PDF), DEC-46(a)/REC-47 (the acknowledgement is authored, fresh per edition, never prefilled).
 
 ### DEC-58 · answered
 
