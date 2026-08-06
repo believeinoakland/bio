@@ -3356,6 +3356,30 @@ what reversing costs: small now, larger later — every stamped field written be
   act buys little and costs the recognition capability; fencing the constitutive ones is
   where the boundary actually is.
 
+**BOB'S MECHANISM, 2026-08-06 — the HOW is ruled; the entry stays open for the yes/no it rests
+  on.** *"The AI should identify the connections it finds and present them in a sidebar of the
+  session (like SUB-sessions are shown in Claude Code) with the capabilities for users to
+  approve them individually and in bulk."* So the shape is settled: **the machine IDENTIFIES
+  and PRESENTS; the member APPROVES, one at a time or in bulk.** Two things follow that the
+  builder needs. **Bulk approval is not a weaker act than individual approval** — it is the
+  same act over a set, and it exists for the same reason DEC-47's authorisation is the inquiry
+  rather than forty dialogs: a member forced to click forty times is not exercising more
+  judgement than one who reviews a list and approves it, they are just being worn down. **And
+  the sidebar is the running-session surface** already established for every AI-based function
+  (`INVESTIGATIVE-SESSION.md` §14a), not a new one — connections appear there beside the
+  session that found them.
+  **WHAT REMAINS OPEN is the underlying rule this mechanism implies**: may a machine credential
+  write these six fields AS ACCEPTED at all? The mechanism says no — it proposes and a member
+  approves. Recording it rather than inferring it, because the fields are stamped today and
+  every one written before a ruling is a row nobody can re-attribute afterwards.
+  **AND THE DERIVED/CONSTITUTIVE SPLIT SHOULD SURVIVE WHATEVER IS RULED** (verified in source
+  2026-08-05): `resolve` is DERIVED — a deterministic cascade over aliases a member ALREADY
+  registered, which never mints the weakest grade — so it asserts nothing the member's own
+  alias declaration did not already imply. `resolvetestify` is pure testimony, and
+  `entityalias` / `relationdeclare` / `defineProgression` are constitutive. Fencing the derived
+  act costs the automated-recognition capability and buys no honesty; fencing the constitutive
+  ones is where the boundary actually sits.
+
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
 for: bob
@@ -3734,7 +3758,7 @@ enacted: 2026-08-04 · CONDUCT — recorded as SCOPE rather than built, exactly 
   Reasoning in this entry; `research/SEARCH-COMPLETENESS.md` carries the countable/
   uncountable finding, and `BIO_Declared_Bias_v0_1.md` takes the adoption-is-authored rule.
 
-### DEC-57 · open
+### DEC-57 · answered
 for: bob
 raised: 2026-08-05 · CONDUCT (from UI-39, which shipped a provisional and asked)
 subject: When the record cannot establish whether it already holds a document, may the surface write anyway?
@@ -3750,6 +3774,24 @@ provisional: (a) IS SHIPPED and running. Nothing is blocked either way.
 recommendation: **(a), as shipped.** Refusing would introduce a NEW member-facing refusal, which is exactly what DEC-49 is unsettled about, and it would block a member over a condition they cannot fix and did not cause. It also fails the project's own posture on absence: the honest act when we cannot establish something is to STATE that we could not, not to withhold the member's work. A bundle that says what its check reached is a record that can be improved later; a refused capture is a document nobody has.
 
 cost of reversal: LOW — one branch in `addGo`. The bound is already computed and already travels into the bundle, so (b) is a change of what to do with a fact that is already there.
+
+
+response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling the PRINCIPLE
+  across DEC-56, DEC-57 and DEC-58 together — they were put to him as one question wearing three
+  costumes (a provenance chain that cannot be reconstructed; a held-check that cannot reach the
+  end of the walk; a bound the plane never published), and the answer governs all three and any
+  fourth that arrives.
+  **What it settles, in the form a build session can apply:** when the system cannot establish
+  something, it does NOT refuse the member's work and it does NOT go silent. It acts, and it
+  STATES the limit of what it could establish, in the record rather than in a progress line.
+  Silence is the failure mode being ruled against, because an unstated limit reads as
+  completeness — which is this project's primary threat model, an overclaim arriving through
+  omission rather than through error.
+  **It is `undetermined is first-class and must be STATED` applied to the system's own
+  knowledge of itself**, which is why one ruling covers three entries.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
+  ruling), docs/development/VERIFICATION.md's posture on absence.
 
 ### DEC-59 · open
 for: bob
@@ -3770,7 +3812,7 @@ recommendation: **(a), as its own item, sequenced AFTER DEC-49 rules.** The disc
 
 cost of reversal: LOW — one template line plus a DEC49_SUBJECT row. The cost of NOT doing it is not symmetrical: every edition published meanwhile carries a disclosure nobody sees, and editions are permanent.
 
-### DEC-58 · open
+### DEC-58 · answered
 
 **CONDUCT NOTE 2026-08-05 — THE QUESTION IS NOW MOOT, and closing it needs no ruling on the principle.** This entry asked whether *"numbers come from measurement, never from the surface"* admits an exception when the only alternative is a silence that reads as completeness. **It no longer has to.** REC-57 made eleven capped ops publish the bound they applied and whether they truncated; UI-41 then made every surface read the record's number instead of composing one, **enforced as a class rather than at the two known sites**, and where the record publishes no bound the surface now SAYS it does not know rather than substituting the figure it asked for. So the rule stands unamended and the exception it was raised to license does not exist in the code.
 
@@ -3793,7 +3835,25 @@ recommendation: **(a), plus REC-57.** The alternative to a surface-authored boun
 
 cost of reversal: LOW — one sentence. **It is raised because of what it settles rather than what it costs:** it decides whether "numbers come from measurement, never from the surface" admits an exception when the only alternative is a silence that overclaims. That is doctrine, so it is Bob's rather than CONDUCT's, even though the immediate change is one line.
 
-### DEC-56 · open
+
+response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling the PRINCIPLE
+  across DEC-56, DEC-57 and DEC-58 together — they were put to him as one question wearing three
+  costumes (a provenance chain that cannot be reconstructed; a held-check that cannot reach the
+  end of the walk; a bound the plane never published), and the answer governs all three and any
+  fourth that arrives.
+  **What it settles, in the form a build session can apply:** when the system cannot establish
+  something, it does NOT refuse the member's work and it does NOT go silent. It acts, and it
+  STATES the limit of what it could establish, in the record rather than in a progress line.
+  Silence is the failure mode being ruled against, because an unstated limit reads as
+  completeness — which is this project's primary threat model, an overclaim arriving through
+  omission rather than through error.
+  **It is `undetermined is first-class and must be STATED` applied to the system's own
+  knowledge of itself**, which is why one ruling covers three entries.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
+  ruling), docs/development/VERIFICATION.md's posture on absence.
+
+### DEC-56 · answered
 for: bob
 raised: 2026-08-05 · CONDUCT (from REC-54, which met the gap while dispositioning D-200 and routed it rather than deciding it)
 subject: When a provenance chain CANNOT be reconstructed, may the record un-say a verification — or must it carry the doubt at `verified`?
@@ -3811,6 +3871,24 @@ provisional: NEITHER IS RUNNING, and nothing is blocked. All ten of D-200's bund
 recommendation: **(b), the marker.** Retracting a verification restates a group's own past act, and the project's standing posture is that the record ADDS rather than un-says — correction moves forward (DEC-19). A marker also matches what is actually true in this situation: the bytes may well be fine and the ROUTE is what we cannot show, which is a statement about our evidence rather than about the document. And undetermined is already first-class here; this is that rule applied to a state rather than to a field.
 
 cost of reversal: **LOW NOW, HIGH ONCE EITHER SHIPS.** Nothing is built, no live bundle needs it, and `STATES` plus one op is the whole surface area. Once (a) ships, retraction edges exist in history and removing them means deciding what past retractions meant. Once (b) ships, markers are in the record and withdrawing the construct leaves documents whose doubt was recorded and then deleted — which is the worse of the two, because it is the record forgetting something it had said.
+
+
+response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling the PRINCIPLE
+  across DEC-56, DEC-57 and DEC-58 together — they were put to him as one question wearing three
+  costumes (a provenance chain that cannot be reconstructed; a held-check that cannot reach the
+  end of the walk; a bound the plane never published), and the answer governs all three and any
+  fourth that arrives.
+  **What it settles, in the form a build session can apply:** when the system cannot establish
+  something, it does NOT refuse the member's work and it does NOT go silent. It acts, and it
+  STATES the limit of what it could establish, in the record rather than in a progress line.
+  Silence is the failure mode being ruled against, because an unstated limit reads as
+  completeness — which is this project's primary threat model, an overclaim arriving through
+  omission rather than through error.
+  **It is `undetermined is first-class and must be STATED` applied to the system's own
+  knowledge of itself**, which is why one ruling covers three entries.
+decided: 2026-08-06 · Bob, session BOB
+reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
+  ruling), docs/development/VERIFICATION.md's posture on absence.
 
 ### DEC-55 · answered
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)

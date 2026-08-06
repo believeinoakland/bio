@@ -140,6 +140,17 @@ reading arrives as a whole alternative account and the accepted one stays exactl
 3. **A version is frozen once written. Editing produces a new version** derived from it.
    Otherwise two members exploring the same version collide, and comparison stops meaning
    anything because the thing being compared shifts underneath.
+3a. **Versions form a DERIVATION TREE, and accepting one offers to prune its ancestors**
+   (Bob, 2026-08-06, answering the review-burden problem — D-217a). Each version records what
+   it was derived from, null where a run composed it fresh. Accepting a version OFFERS deletion
+   of the ancestors it descends from; the offer is not automatic, because a member may want a
+   rejected reading kept as the record of what was considered. **Deletion is a member act** —
+   the AI can no more delete a version than accept one.
+3b. **Rewording a CLAIM is USER SELECTABLE — new version, or new claim** (Bob, 2026-08-06,
+   D-217b). Not a schema decision but a runtime one, so the schema supports both. A tightened
+   wording that leaves the legs meaning what they meant is a version; a rewording that changes
+   what the legs are answering is a different claim wearing a similar sentence. §8's
+   question-sharpening offers the same choice rather than deciding for the member.
 4. **Each version has its own state: `suggested` · `considering` · `accepted` ·
    `rejected`.** As everywhere else in this design, `considering` and `rejected` are
    reversible, the states are not a one-way ladder, and every transition is a member act.
