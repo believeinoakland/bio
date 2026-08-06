@@ -53,6 +53,13 @@ Read broad, write narrow.
 project's inquiries including the subject · all claims and all versions with their states ·
 the **current evidence standard**.
 
+**AND IT MUST READ DOCUMENT VERSIONS AS VERSIONS (D-220, Bob 2026-08-06).** Sixty captures
+of one calendar are sixty versions of ONE document, not sixty documents. A run that counts
+them as sixty has a distorted picture of what the record holds — the false-coverage hazard
+`STORE-AS-CACHE.md` names, arriving at the document level, and it would make an inquiry look
+far better covered than it is. The record already holds the version chain (`captured_locators`
+joined to `register`); D-220 exposes it. The session is consumer (2) on that row.
+
 **WRITES:** one endpoint, adding a new VERSION to a claim under the subject inquiry.
 Everything it writes is a suggestion. Nothing else.
 
