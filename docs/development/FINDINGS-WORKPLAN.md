@@ -81,3 +81,8 @@ F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
   family's DEBT tokens still read M4 (D-199/213/214/216/217/218) and MILESTONES' backfill
   table places them under M4 flagged "token under correction" — Wave 2's session corrects
   BOTH surfaces together to M9 so they cannot disagree mid-edit.
+- 2026-08-07 · Wave 2 landed: INVESTIGATIVE-SESSION.md v3 (~1160 lines) — §0 vocabulary
+  (D-226 discharged; sub-session returns are REPORTS), the four §4b rulings stated as
+  settled, all fifteen conflicts absorbed, F8 corrected on both surfaces, only
+  [BOB-2]/[BOB-3]/[BOB-4] open. Wave 3 (hand Family E to CONDUCT) waits on Bob's three
+  answers plus his read of v3.

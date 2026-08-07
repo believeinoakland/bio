@@ -463,9 +463,9 @@ layer, which ships entire.
 >
 > The D-127 precedent applies: when case-making had no rung, the answer was new rungs
 > (M9/M10), not filing it under substrate — same answer here. The debt rows' M4 tokens
-> (D-199, D-213/214/216/217/218) are being corrected in `DEBT.md` to match; where the
-> backfill table below still reads M4 on a DEC-60 row, that is the token awaiting the
-> correction.
+> (D-199, D-213/214/216/217/218) were corrected to M9 in `DEBT.md` AND in the backfill
+> table below in the same edit (2026-08-07, finding F8 in `FINDINGS-WORKPLAN.md`), so
+> the two surfaces cannot disagree.
 
 ### M10 · The group can stand behind what it found, and act on it
 **Capability:** a finding becomes a published case carrying an authored statement of what
@@ -683,8 +683,9 @@ and handed to CONDUCT through the BOB INBOX.
 this table's own preamble rule. Every OPEN row D-157..D-224 is placed below by the
 disposition token its own row carries in `DEBT.md`; closed, resolved and superseded rows
 (D-157, D-173, D-186, D-188, D-197, D-198, D-201, D-206, D-212, D-215) are placed
-nowhere, and D-185 was already in the first table. DEC-60-family rows still reading M4
-are awaiting the token correction the M9 note above records.
+nowhere, and D-185 was already in the first table. The DEC-60-family rows carry M9 per
+the M9 placement note above (tokens corrected 2026-08-07, finding F8, both surfaces
+together with `DEBT.md`).
 
 | item | area | milestone |
 | --- | --- | --- |
@@ -723,7 +724,7 @@ are awaiting the token correction the M9 note above records.
 | D-194 a LEAD and an empty search have no record | FRAMEWORK · RECORD | M4 · the authored frontier, pair with D-184 |
 | D-195 OR's MAX assumes an independence nothing checks | RECORD | M9 · pair with REC-12's strength derivation |
 | D-196 the completeness statement is prose with nothing behind it | RECORD | M10 · gains a search record from the observation log |
-| D-199 the `ai` credential class and its task scope (DEC-60) | RECORD | M4 (token under correction — see the M9 note) |
+| D-199 the `ai` credential class and its task scope (DEC-60) | RECORD | M9 · per the M9 placement note |
 | D-200 live audit not clean: ten C-18.9 rows, application pending a deploy | RECORD · DIST | M2 · mechanism built (REC-54) |
 | D-202 declared vs deployed configuration diverged | DIST · RECORD | M1 · derive bindings, arm SELF |
 | D-203 five checks advise a repair the state machine refuses | RECORD | M2 · four repair strings |
@@ -734,11 +735,11 @@ are awaiting the token correction the M9 note above records.
 | D-209 the repair walk judges move directives only | RECORD | M2 · provisional; one static guard closes it |
 | D-210 `op=release` is not repeatable | RECORD · DIST | M2 · DOCTRINE (Bob), rides DEC-56 |
 | D-211 a clean FIRST PAGE satisfies the audit gate's wording | DIST | M0 · one clause, latent past 200 documents |
-| D-213 discovered evidence becomes an actionable notification (DEC-60) | RECORD | M4 (token under correction) · closes when the slug lands |
-| D-214 `rejected` is both an act and a state (DEC-60) | RECORD | M4 (token under correction) · closes with IS-1 |
-| D-216 one stance or per-project, for a shared inquiry (DEC-60) | RECORD | M4 (token under correction) · BLOCKS IS-3 |
-| D-217 derivation tree, prune offer, version-or-new-claim (DEC-60) | RECORD | M4 (token under correction) · lands with IS-1 |
-| D-218 can a Worker hold a whole run under the CPU ceiling (DEC-60) | RECORD | M4 (token under correction) · measurement; shapes IS-9 |
+| D-213 discovered evidence becomes an actionable notification (DEC-60) | RECORD | M9 · closes when the slug lands |
+| D-214 `rejected` is both an act and a state (DEC-60) | RECORD | M9 · closes with IS-1 |
+| D-216 one stance or per-project, for a shared inquiry (DEC-60) | RECORD | M9 · BLOCKS IS-3 |
+| D-217 derivation tree, prune offer (hide, never delete), version-or-new-claim (DEC-60) | RECORD | M9 · lands with IS-1 |
+| D-218 can a Worker hold a whole run under the CPU ceiling (DEC-60) | RECORD | M9 · measurement; shapes IS-9 |
 | D-219 "with no captured basis" reads as "no basis" | RECORD | M8 · rides the next resolution-path touch |
 | D-220 version chains are recorded and nothing exposes them | RECORD | M3 · generalise the join, wire `capturedLocators` |
 | D-221 the "changed from" sentence names the wrong predecessor | UI | M3 · closed by D-220's consumer (1) |
