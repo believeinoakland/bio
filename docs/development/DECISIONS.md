@@ -3329,7 +3329,7 @@ what reversing costs: one predicate at the read, and the ranking already exists 
 2026-08-06 bulk-approval mechanism; re-put before the sidebar is built. *(Note added by
 session BOB.)*
 
-### DEC-52 · open
+### DEC-52 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
 for: bob
 question: May a MACHINE credential declare a relation, resolve a reference, or thread a
@@ -3409,8 +3409,21 @@ what reversing costs: small now, larger later — every stamped field written be
   fields, now sharpened to AS ACCEPTED) is UNANSWERED. What stands: the 2026-08-06 sidebar
   mechanism (identify → present → member approves, individually or in bulk), the
   derived/constitutive split, and the source facts above.
-provisional: the sidebar approval is the act of record for the constitutive fields; the
-  machine writes nothing into them as accepted. Nothing is blocked.
+response: **THE MACHINE MAY RULE.** Bob, 2026-08-07: *"allowing the machine to rule doesn't
+  go against doctrine. So it can rule."* A machine credential may perform these acts —
+  declare a relation, resolve a reference, thread a progression — directly into the record.
+  The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate;
+  the sidebar remains a visibility and bulk-review surface, not a required approval.
+  **What the ruling carries with it, from standing doctrine:** the record names the machine
+  principal on every such act (DEC-55 det 4 / D-199.4 — `token:<class>`, never a person's
+  name); a machine-declared statement is visibly machine-attributed (D-82's look-derived);
+  and the ORIGINAL DEFECT this entry measured is now closed the OTHER way — the six fields'
+  comments claiming "a member's constitutive statement" are WRONG and must be corrected to
+  match the code, not the code fenced to match the comments. Grades stay earned (§8.1);
+  DEC-15's hunch-is-a-member-act stands; the expertise pair's comment likewise corrects.
+decided: 2026-08-07 · Bob, session BOB
+reasoning recorded in: this entry (the derived/constitutive split and source facts above),
+  DEC-24 (the boundary this ruling deliberately moves for these acts), D-82/D-199.
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
