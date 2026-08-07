@@ -3329,7 +3329,7 @@ what reversing costs: one predicate at the read, and the ranking already exists 
 2026-08-06 bulk-approval mechanism; re-put before the sidebar is built. *(Note added by
 session BOB.)*
 
-### DEC-52 · open
+### DEC-52 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
 for: bob
 question: May a MACHINE credential declare a relation, resolve a reference, or thread a
@@ -3399,6 +3399,17 @@ what reversing costs: small now, larger later — every stamped field written be
   `entityalias` / `relationdeclare` / `defineProgression` are constitutive. Fencing the derived
   act costs the automated-recognition capability and buys no honesty; fencing the constitutive
   ones is where the boundary actually sits.
+
+response: **NO — a machine credential may not perform these acts AS ACCEPTED.** Bob,
+  2026-08-07. The constitutive fields (declaredBy, resolvedBy-testimony, threadedBy, the
+  expertise pair) take the MACHINE_CANNOT_* fence on REC-46's one predicate; the ruled
+  sidebar mechanism (2026-08-06) is the approval path — the machine identifies and presents,
+  the member approves individually or in bulk. The derived/constitutive split recorded above
+  stands: `resolve`'s automatic cascade writes earned grades and is not an acceptance, so it
+  keeps its machine path.
+decided: 2026-08-07 · Bob, session BOB
+reasoning recorded in: this entry (the split and the sidebar mechanism), D-151/REC-46 (the
+  fence pattern), INVESTIGATIVE-SESSION.md §5 (grades earned or absent).
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)

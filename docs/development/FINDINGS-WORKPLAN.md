@@ -86,3 +86,8 @@ F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
   settled, all fifteen conflicts absorbed, F8 corrected on both surfaces, only
   [BOB-2]/[BOB-3]/[BOB-4] open. Wave 3 (hand Family E to CONDUCT) waits on Bob's three
   answers plus his read of v3.
+- 2026-08-07 · Bob's three answers landed (SWEEP §4c): no disclosure of pruned
+  alternatives; DEC-52 answered NO-as-accepted; public documents are accessible regardless
+  of robots.txt, member-browser UA permitted. Wave 3 residue: clear the three [BOB-n]
+  markers in INVESTIGATIVE-SESSION.md, correct SOURCE-ACCESS.md's UA-reserve posture, then
+  hand Family E to CONDUCT.
