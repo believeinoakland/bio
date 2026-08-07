@@ -3329,7 +3329,7 @@ what reversing costs: one predicate at the read, and the ranking already exists 
 2026-08-06 bulk-approval mechanism; re-put before the sidebar is built. *(Note added by
 session BOB.)*
 
-### DEC-52 · answered
+### DEC-52 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
 for: bob
 question: May a MACHINE credential declare a relation, resolve a reference, or thread a
@@ -3400,18 +3400,17 @@ what reversing costs: small now, larger later — every stamped field written be
   act costs the automated-recognition capability and buys no honesty; fencing the constitutive
   ones is where the boundary actually sits.
 
-response: **Bob, 2026-08-07 (mapping corrected the same day — an earlier recording of "NO as
-  accepted" was the SESSION'S misread of a mislabelled answer and is WITHDRAWN):** *"if the
-  documents are publicly available, then we are in our rights to have access to them without
-  regard for whether they're being captured directly by users or indirectly (mechanically) as
-  part of this workflow. That includes using the same UA that the member's browser was using
-  when the inquiry was created."*
-  **The principle: a mechanical act within the workflow carries the same standing as the
-  member act it extends.** Application to this entry's six fields is being confirmed with Bob
-  before enactment — the ruled sidebar mechanism (identify → present → member approves,
-  individually or in bulk) stands either way, so nothing is blocked.
-decided: 2026-08-07 · Bob, session BOB (provisional: the sidebar approval remains the act of record, per the never-block rule; Bob confirms or corrects)
-reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §4 (capture rights and the UA).
+**RECORDING CORRECTED 2026-08-07, twice, and the entry is OPEN again.** The session twice
+  misattributed Bob's public-documents statement to this entry. Bob's own clarification:
+  *"All I'm ruling on is that the members of this workflow should/must have rightful access
+  to the same public documents any manual user has access to. So the use of the BIO workflow
+  should not diminish nor disqualify that access."* That is ACCESS PARITY — recorded on
+  DEC-47's territory, not here. This entry's question (may a machine write the constitutive
+  fields, now sharpened to AS ACCEPTED) is UNANSWERED. What stands: the 2026-08-06 sidebar
+  mechanism (identify → present → member approves, individually or in bulk), the
+  derived/constitutive split, and the source facts above.
+provisional: the sidebar approval is the act of record for the constitutive fields; the
+  machine writes nothing into them as accepted. Nothing is blocked.
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
@@ -3673,6 +3672,12 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the investigat
   this unblocks, its fence and the daemon relationship), docs/development/SOURCE-ACCESS.md
   (the standing position that BIO does not disguise its requests).
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+**AMENDED 2026-08-07 (Bob) — ACCESS PARITY:** *"members of this workflow should/must have
+  rightful access to the same public documents any manual user has access to. So the use of
+  the BIO workflow should not diminish nor disqualify that access."* Consequences: robots.txt
+  disallows do not bar capture of publicly available documents (his "no", same day), and the
+  member-browser UA from inquiry creation is permitted for these fetches — SOURCE-ACCESS.md's
+  browser-UA reserve amended in part accordingly.
 
 ### DEC-54 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)

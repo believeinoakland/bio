@@ -27,7 +27,7 @@ CivicOS string is what ships and what runs; browser-UA delegation is a
 documented fallback with a named trigger (admission stops) and a named veto
 (counsel), not a default.
 
-**AMENDED 2026-08-07 (Bob; DECISIONS.md DEC-52, IS-SWEEP-2026-08-07.md §4c) — the
+**AMENDED 2026-08-07 (Bob; DECISIONS.md DEC-47 (access-parity amendment), IS-SWEEP-2026-08-07.md §4c) — the
 paragraph above is retained as the historical record but is superseded IN PART.**
 For PUBLICLY AVAILABLE documents fetched as part of the workflow, the member-browser
 UA (the UA the member's browser was using when the inquiry was created) is now
