@@ -1414,3 +1414,50 @@ Step 6. Every consumer has migrated or has recorded that it had nothing to migra
   capped op now fails the build with no list to join.
 
 I5 is NOT touched: no table, column, index or `purge` change.
+
+---
+
+## IC-25 · I3: three meaning-layer reads apply a bound where they applied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED 2026-08-07 (REC-60, D-225)
+
+### 1 · PROPOSED
+
+**Interface:** I3 (the op contracts), owned by RECORD, currently 9.0.0. **I5 is NOT touched** — no table, column, index or `purge` change.
+
+**The change, on three read ops.** Each previously returned **every matching row**, with no bound, no paging and no truncation marker. Each now:
+
+- applies a bound — **default 500, ceiling 5000** — and accepts an OPTIONAL `limit` parameter it previously ignored;
+- publishes `limit`, the cap **AFTER clamping** (never the number the caller asked for), and `truncated`, whether it bit.
+
+Neither figure is new: **500** is `op=readingname`'s ceiling and `query.mjs`'s `LIMIT_MAX`; **5000** is `op=list`'s ceiling, which `op=projection` reused at REC-59 rather than inventing a second. Neither is the spelling new: `limit` beside `truncated` is `op=readingname`'s pair — the closest sibling, a keyed read over the same meaning layer — under REC-55's declined-second-copy rule. **No key is removed, renamed or reshaped**; `count`, `resolution_count`, `entity`, `found`, every refusal, every class, the D-15 gate and every ordering are unchanged, and the bound is **viewer-independent** (asserted).
+
+On `op=concerns` one thing is stated rather than left to be inferred: **the bound is over the RESOLUTION ROWS the join reads**, not over `documents`. That op collapses rows to distinct captures, so a bound over the collapsed set could only be applied after an unbounded scan — which is the defect. `resolution_count` is what it always was, the rows read; `count` is what they collapsed to and may be far smaller.
+
+### 2 · WHY, AND WHY IT IS A BREAK RATHER THAN ADDITIVE
+
+The keys are additive. **The bound is not**: a caller that received everything today receives the first 500 tomorrow. It is filed as a break for IC-3's settled reason — recording a break as additive because the impact looks small would teach this registry to lie.
+
+**D-225's defect is BOUNDEDNESS, not honesty, and the two are different.** REC-57's discipline is *a bound APPLIED must be PUBLISHED*; these three applied none, so they published none and told no lie. What they did was **grow without limit** — and `op=connections` grows on D-224's **k(k−1)/2** curve, so a hundred documents about one subject is 4,950 rows in one answer and **the most important entity produces the largest response**. Fixing boundedness is what forces the REC-57 envelope: once a bound exists it must be published.
+
+**WHY REC-57'S SWEEP DID NOT CATCH THEM, which is the part worth carrying:** its roster enumerated ops **WITH ENVELOPES**, built by finding methods that CARRY A CAP. **An op with no envelope at all was invisible to the instrument that would have flagged it.** REC-60's walk therefore starts from **RETURN SHAPES** — what a method PUBLISHES, not what it clamps — and reads two shapes, an object with an array-valued key and a **bare array returned as the whole answer**, the second because a return-object-only reader carries REC-57's blind spot in a new costume.
+
+### 3 · CONSUMER IMPACT, MEASURED IN THIS TREE AND NOT INHERITED
+
+Walked over the repository, excluding the four generated copies of the plane structurally (byte 0 / `dist/` as a directory skip) and keeping the generator in:
+
+- **`civicos-ui` — AFFECTED, and it is a member-facing overclaim rather than a red build.** `civicos-ui/app.html:11542` tells a member in words: *"Documents already resolved to this subject are added separately and are not capped."* That sentence rested on `op=concerns` being uncapped, and it is pinned at `civicos-ui/test/bound-sweep.test.mjs:557`. **Nothing in the UI battery fails**, because that suite drives a fixture and not the plane — so this will not announce itself. Delegated to UI in `CLAIMS.md` 2026-08-07 with the exact site and the exact fix, which is small because UI-41 already built the read-it-off-the-wire mechanism for `op=readingname` on the same screen.
+- **`newgroup`, `docprofile`, `pdf-worker`, `tools` — NOT-AFFECTED**, no call site.
+- **The battery — 12 assertions across 4 suites reference these ops and NONE broke**: every existing consumer asks for fewer rows than the default 500, so the bound does not bite them. That is a measurement, not a claim of nil impact: the impact is real and lands on any record with more than 500 resolutions on one subject.
+
+**RECORD'S POSITION, stated with the proposal rather than after it:** capping is right even though it makes a live UI sentence falsifiable. Before this change the truth was available to NOBODY; after it the truth is on the wire and the only defect left is a consumer not yet reading it. That is strictly better, and it is a defect with a named owner and a named fix.
+
+### 4 · WHAT IS NOT CLAIMED
+
+**No cursor is minted**, so a caller cut at the CEILING has no way past it — reachable on the quadratic read with about a hundred documents on one subject. That is the honest bound rather than the complete answer, and the complete answer needs the query surface D-222/REC-62 is for. Stated here rather than discovered later.
+
+### 5 · CONSUMER RESPONSES
+
+Awaited. **RECORD does not answer on UI's behalf** — CONDUCT holds the IC-1/IC-24 precedent for answering for a dormant area, and this consumer is not dormant but AFFECTED, which is a different answer requiring a different act.
+
+### 6 · STATUS
+
+**PROPOSED, with the code landed on REC-60's branch and the RESOLUTION routed to CONDUCT at integration.** REC-57's precedent — do not land a non-additive I3 change in the turn it is proposed — is deliberately weighed rather than ignored: its reasoning was that the consumers had not been measured in that turn, and here they HAVE been, with one real consumer found and delegated. REC-62 is a hard precondition of the whole investigative-session set and depends on this item, so stalling the cap into a second item stalls the chain. CONDUCT holds the choice the precedent protects: accept at integration, as it did for REC-59, or hold the item. **The I3 version bump is NOT taken by this session** — the registry entry is CONDUCT's to move at resolution.

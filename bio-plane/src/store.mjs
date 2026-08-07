@@ -6554,6 +6554,48 @@ export class Store extends DurableObject {
     if (filter.after) { w.push(`b.bundle_id > ?`); a.push(filter.after); }
     q += ` WHERE ` + w.join(" AND ");
     q += ` ORDER BY b.bundle_id`;
+    /* ============ REC-60 / D-225 · THE RIDER, DECIDED HERE RATHER THAN ELSEWHERE ==========
+     *
+     * REC-59 left this and routed it to REC-60 to DECIDE: `op=list` keeps an UNBOUNDED
+     * BARE-ARRAY arm while `op=projection` just lost its capped one, so two answers over the
+     * same rows of the same table now differ in shape. The decision is **KEEP**, and the
+     * reasoning is here because a decision recorded only in a queue item is a decision the
+     * next reader will re-open.
+     *
+     * THE DISCRIMINATOR IS NOT "HAS AN ENVELOPE". It is whether a BOUND WAS APPLIED AND NOT
+     * PUBLISHED. Those are two different defects and this sweep separated them:
+     *
+     *   HONESTY   — a bound applied must be published. That is REC-57's discipline, and it is
+     *               what `op=projection` violated: its corpus arms had been capped at 200
+     *               since they were written, the cap was invisible on the wire, and the caller
+     *               could neither see it nor ask past it. It was answering LESS than
+     *               everything while looking like everything.
+     *   BOUNDEDNESS — a response must not grow without limit. That is D-225's concern, and it
+     *               is what the three meaning-layer reads violated.
+     *
+     * THIS ARM VIOLATES NEITHER IN THE WAY `op=projection` DID. It applies NO cap, so it has
+     * no bound to publish, and a bare array that is genuinely COMPLETE tells no lie — the
+     * array IS the answer. Capping it silently would create exactly the defect REC-57 spent
+     * an item removing; enveloping it while leaving it uncapped would add two keys that say
+     * "no bound, nothing withheld", which is what an unbounded bare array already says.
+     *
+     * IT IS ALSO CALLER-SELECTED AND DOCUMENTED. The shape here is chosen by the caller: send
+     * a `limit` and you get the paged envelope, send none and you get everything. That is a
+     * contract, not a trap — unlike `op=projection`, where no parameter existed to ask with.
+     * REC-59's own words on why the unbounded arm is deliberate: *a caller that wants
+     * everything can still have it… breaking that would break the browser, the audit, and the
+     * migration verifier at once.*
+     *
+     * WHAT IS NOT CLAIMED, and it is the honest half. This arm DOES grow without limit, so
+     * D-225's concern applies to it too — it is simply outweighed here by three named
+     * consumers that require completeness, which none of the three meaning-layer reads had.
+     * That is the test this item used and it is the test to re-run if it is ever re-opened:
+     * IS THERE A NAMED CONSUMER THAT REQUIRES COMPLETENESS? Yes here; no there.
+     *
+     * AND THE LICENCE IS PINNED, NOT ASSERTED. `test/meaning-bounds.test.mjs` requires this
+     * arm to be COMPLETE — it returns every row a bounded call totals — because a bare array
+     * is honest only while it is whole. The day this arm quietly caps, that pin fails and the
+     * exception it rests on is gone with it. */
     const limit = Number(filter.limit);
     if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a);
     const cap = Math.min(5000, Math.floor(limit));
@@ -8284,6 +8326,36 @@ export class Store extends DurableObject {
      awaiting a member's confirmation; D is bare testimony. */
   static #isEstablished(grade) { return grade === "A" || grade === "B"; }
 
+  /* ===================== REC-60 / D-225 · THE MEANING-LAYER BOUND ==========================
+   *
+   * THE THREE READS BELOW WERE UNBOUNDED, and the reason nothing caught it is worth more
+   * than the fix. REC-57 swept the CAPPED ops and made every one of them publish the bound
+   * it applied — but its roster was built by finding methods that CARRY A CAP, so a method
+   * with no cap at all was invisible to the instrument that would have flagged it. A walk
+   * that enumerates the ops with envelopes cannot see the op with no envelope. That is why
+   * `test/meaning-bounds.test.mjs` starts from RETURN SHAPES instead: it asks what a method
+   * PUBLISHES, not what it clamps, and an unbounded collection is exactly what it looks for.
+   *
+   * THE GROWTH HAS TEETH, and it is not linear on the worst one. `connections` for one
+   * entity is one row per PAIR of captures concerning it — D-224's k(k-1)/2 — so a hundred
+   * documents about one subject is 4,950 rows in a single answer, and THE MOST IMPORTANT
+   * ENTITY PRODUCES THE LARGEST RESPONSE. `concerns` and `resolutions` grow linearly, but
+   * they grow with the record and nothing stopped them.
+   *
+   * NEITHER NUMBER IS NEW, deliberately. 500 is `op=readingname`'s ceiling and `query.mjs`'s
+   * `LIMIT_MAX`; 5000 is `op=list`'s ceiling, which `op=projection` reused at REC-59 rather
+   * than inventing a second one. A twelfth figure would be a twelfth thing to remember.
+   *
+   * AND NO CURSOR IS MINTED. REC-55's declined-second-copy rule: `op=readingname` — the
+   * closest sibling, a keyed read over the same meaning layer — answers with `limit` and
+   * `truncated` and no cursor, and a caller that is cut raises `limit` toward the published
+   * ceiling. WHAT THAT DOES NOT GIVE, said plainly rather than left to be discovered: a
+   * caller cut at the CEILING has no way past it. On the quadratic read that is reachable
+   * with about a hundred documents on one subject. It is the honest bound rather than the
+   * complete answer, and the complete answer needs the query surface D-222/REC-62 is for. */
+  static #MEANING_LIMIT_DEFAULT = 500;
+  static #MEANING_LIMIT_MAX = 5000;
+
   /* Upsert one resolution with the improvable-grade rule: a first resolution INSERTs; a
      re-resolution at a STRONGER grade RAISES in place (recording raised_from); an equal
      or weaker one is kept (idempotent, never a downgrade, never a duplicate row). Runs
@@ -8485,18 +8557,32 @@ export class Store extends DurableObject {
   }
 
   /* op=resolutions: every resolution the recogniser (or a member's testimony) recorded
-     for one captured document, by its capture sha. */
-  resolutionsForCapture({ captureSha, viewer = null } = {}) {
+     for one captured document, by its capture sha.
+     REC-60 / D-225: BOUNDED, and the bound is PUBLISHED. This read was unbounded — one row
+     per (reference, entity) pair the document resolved to, growing with the reading rather
+     than with anything the caller chose. `limit` is the cap AFTER clamping, never the number
+     asked for; `truncated` is REC-57's own word, taken from `op=readingname` beside it rather
+     than a twelfth spelling. `count` is what it always was, the length of what was SENT — and
+     that is precisely why `truncated` had to exist: a full page and a complete answer produced
+     the same number and nothing told them apart. */
+  resolutionsForCapture({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return { ok: false, reason: "NO_SHA", detail: "resolutions are read for a captured document, by its capture sha256" };
+    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
+    /* cap + 1 is asked for and the extra row is DROPPED: reading one past the bound is how
+       `truncated` is a MEASUREMENT rather than the guess `rows.length === cap` would be —
+       that guess is wrong on exactly the answer that is complete and happens to fill the page. */
     const rows = this.#rows(
       `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
-         FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id`, captureSha);
+         FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
     /* REC-30: a resolution is a fact about a CAPTURE's reference and an entity;
        the bundle back-reference takes the D-15 projection. */
     const keep = this.#bundleRedactor(viewer);
-    return { ok: true, capture_sha: captureSha, count: rows.length,
-             resolutions: rows.map((r) => this.#resolutionView(r, keep)) };
+    return { ok: true, capture_sha: captureSha, count: page.length,
+             resolutions: page.map((r) => this.#resolutionView(r, keep)),
+             limit: cap, truncated };
   }
 
   /* op=concerns: THE REVERSE INDEX -- every document (capture, with its bundle) that
@@ -8506,7 +8592,7 @@ export class Store extends DurableObject {
      X" means a reference in the document resolved to X itself, not to a proxy of X.
      Each document reports the STRONGEST grade any of its references resolved to X at,
      with established/needs_confirmation surfaced so a C is never presented as settled. */
-  documentsConcerning({ entityId, viewer = null } = {}) {
+  documentsConcerning({ entityId, limit = null, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "the reverse index answers by entity id (op=concerns&id=ENT-...)" };
     /* REC-30: "which documents concern this subject" is the framework's single
@@ -8515,9 +8601,21 @@ export class Store extends DurableObject {
        back-reference takes the D-15 projection. */
     const keep = this.#bundleRedactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
-    const rows = this.#rows(
+    /* REC-60 / D-225: BOUNDED, and the bound is over the RESOLUTION ROWS the join reads —
+       which is stated rather than left to be inferred, because this op is the one of the three
+       where the two are NOT the same number. The answer COLLAPSES rows to distinct captures, so
+       a bound over `documents` could only be applied by scanning an unbounded number of rows
+       first, which is the defect. `limit` therefore says what it honestly is: the number of
+       resolution rows this answer looked at. `resolution_count` is what it always was, the rows
+       read; `count` is the documents they collapsed to and may be far smaller. `truncated` says
+       more rows exist — and it is the only one of the three figures that can say so, which is
+       the whole reason it is published. */
+    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
+    const scan = this.#rows(
       `SELECT capture_sha, bundle_id, ref, grade, method, established, at
-         FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha`, entityId);
+         FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`, entityId, cap + 1);
+    const truncated = scan.length > cap;
+    const rows = truncated ? scan.slice(0, cap) : scan;
     /* Collapse to distinct captures, keeping the strongest grade per capture. */
     const byCapture = new Map();
     for (const r of rows) {
@@ -8530,7 +8628,8 @@ export class Store extends DurableObject {
     const documents = [...byCapture.values()];
     return { ok: true, entity_id: entityId, found: !!ent,
              entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
-             count: documents.length, resolution_count: rows.length, documents };
+             count: documents.length, resolution_count: rows.length, documents,
+             limit: cap, truncated };
   }
 
   /* ---- CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA, and the PROGRESSION
@@ -8653,17 +8752,28 @@ export class Store extends DurableObject {
      subject) or by capture sha (every connection this document is an end of, either side).
      established and needs_confirmation come from the WEAKER grade, so a caller can never
      read a connection resting on a C as settled. */
-  connectionsFor({ entityId = null, captureSha = null, viewer = null } = {}) {
-    let rows;
+  connectionsFor({ entityId = null, captureSha = null, limit = null, viewer = null } = {}) {
+    /* REC-60 / D-225: BOUNDED, and this is the read the bound was raised for. The entity arm
+       is one row per PAIR of captures concerning the subject — D-224's k(k-1)/2 — so the
+       answer grows QUADRATICALLY in the size of the record about one subject, and the subject
+       that matters most is the one that produces the largest response. It returned every row
+       and said nothing about it. `limit` is the cap AFTER clamping; `truncated` is whether it
+       bit. Both arms take the same bound: an answer whose shape depended on which key you
+       held would be a second thing to know. */
+    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
+    let scan;
     if (entityId) {
-      rows = this.#rows(
-        `SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha`, entityId);
+      scan = this.#rows(
+        `SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha LIMIT ?`, entityId, cap + 1);
     } else if (captureSha) {
-      rows = this.#rows(
-        `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id`, captureSha, captureSha);
+      scan = this.#rows(
+        `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
+        captureSha, captureSha, cap + 1);
     } else {
       return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
     }
+    const truncated = scan.length > cap;
+    const rows = truncated ? scan.slice(0, cap) : scan;
     /* REC-30: a connection is between two CAPTURES through one entity, and its
        grade is the weaker of its two ends — the record's own, not the reader's.
        Both bundle back-references take the D-15 projection, INDEPENDENTLY: a
@@ -8673,7 +8783,8 @@ export class Store extends DurableObject {
     return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
              connections: rows.map((r) => ({
                ...this.#connectionView(r),
-               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })) };
+               a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })),
+             limit: cap, truncated };
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -16429,9 +16540,14 @@ export class Store extends DurableObject {
            concerns an entity, by joining on entity_id (never through a relation). */
         resolve: () => this.resolveReferences(body || {}),
         resolvetestify: () => this.testifyResolution(body || {}),
+        /* REC-60: `limit` is forwarded on all three meaning-layer reads. No control-plane
+           change was needed for it to arrive — index.mjs copies every query parameter but
+           `token` and `op` into this request (REC-59's finding, re-verified here). */
         resolutions: () => this.resolutionsForCapture({ captureSha: url.searchParams.get("sha256"),
+                                                        limit: url.searchParams.get("limit"),
                                                         viewer: url.searchParams.get("viewer") }),
         concerns: () => this.documentsConcerning({ entityId: url.searchParams.get("id"),
+                                                   limit: url.searchParams.get("limit"),
                                                    viewer: url.searchParams.get("viewer") }),
         /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
            two-node base case of a progression), and the PROGRESSION DEFINITION as data.
@@ -16442,6 +16558,7 @@ export class Store extends DurableObject {
         connect: () => this.deriveConnections(body || { entityId: url.searchParams.get("id") }),
         connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
                                                  captureSha: url.searchParams.get("sha256"),
+                                                 limit: url.searchParams.get("limit"),
                                                  viewer: url.searchParams.get("viewer") }),
         progressiondefine: () => this.defineProgression(body || {}),
         progression: () => this.readProgression({ progressionKey: url.searchParams.get("key") }),

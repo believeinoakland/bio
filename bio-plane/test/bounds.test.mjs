@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-08-05, rec57-agent) FOUR arms, each RUN. (1) DROP THE PUBLISHED BOUND — in src/store.mjs delete `limit: cap,` from any roster op's return block (e.g. taskList) -> the LIVE arm for that op fails naming it and what a consumer can no longer tell. (2) COUNT WHAT IT SENT — in documentsNamingEntity replace `truncated: merged.length > cap || aliasPageFilled` with `truncated: false` (the pre-REC-57 behaviour: `count` is the length of what was SENT and nothing says more exists) -> the DELTA arm fails, because a bitten call and a complete call read alike. (3) NEUTER THE ROSTER WALK — replace the body of `cappedMethods` with `return new Map()` -> the three REACH assertions fail AS DELTAS and the roster-vs-driven pin fails. (4) OVER-STRICTNESS — a correct answer phrased unlike anything this file wrote must not fail; asserted in the last block. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
+/* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ============================================================================
  *
@@ -209,9 +210,18 @@ t("WALK GUARD: and it reaches ops through the dispatch", OPS.size >= 8, true);
    source, never listed here. */
 t("WALK: op=readingname and op=tasks, the two the item named, are on the roster the source yields",
   [OPS.get("readingname"), OPS.get("tasks")], ["documentsNamingEntity", "taskList"]);
-/* AND THE ITEM'S PREMISE IS WIDENED BY THE MEASUREMENT: nine more. */
-t("WALK: the class is NINE ops wider than the two named — the sweep is the item, not the pair",
-  OPS.size, 11);
+/* AND THE ITEM'S PREMISE IS WIDENED BY THE MEASUREMENT: nine more.
+   CORRECTED 2026-08-07 (REC-60 / D-225): 11 -> 14, and the old figure is SUPERSEDED rather
+   than wrong — it was the true measurement on the day it was written. `op=resolutions`,
+   `op=concerns` and `op=connections` were UNCAPPED, so REC-57's roster could not see them:
+   it enumerates methods that CARRY A CAP, and a method with no cap at all is invisible to
+   it. REC-60 gave all three a bound, which is what puts them on this roster — and this
+   assertion failing on a clean tree is how the two instruments were made to agree. The
+   label no longer says "nine wider" because the count of what the sweep found beyond the
+   two named ops is now twelve, and a stale sentence beside a corrected number is the drift
+   this suite exists to catch. */
+t("WALK: the class is TWELVE ops wider than the two the item named — the sweep is the item, not the pair",
+  OPS.size, 14);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -344,6 +354,34 @@ for (const note of ["first", "second"]) {
 t("FIXTURE ARMS THE TRAP: the append-only export log carries two rows, so a cap of 1 cuts it",
   (await GET("op=exportlog&token=adm-r57&limit=200")).exports.length, 2);
 
+/* ------------------------------------------------- REC-60 / D-225's FIXTURE.
+   The three meaning-layer reads joined this roster when they gained a bound, so
+   they must have MORE THAN ONE of whatever they count or every `truncated:false`
+   below passes at zero cost. Resolve all three documents against the subject (a
+   resolution row each, so op=concerns has three), derive the connections among
+   them (three pairs, D-224's k(k-1)/2 at k=3), and testify a SECOND subject onto
+   one document's reference so op=resolutions has two rows on one capture. */
+for (const c of CAPS) {
+  const r = await POST("op=resolve&token=mem-r57", { captureSha: c, resolvedBy: "r57" });
+  if (r?.ok === false) throw new Error(`resolve ${c}: ${JSON.stringify(r)}`);
+}
+const ENT2 = (await POST("op=entitycreate&token=mem-r57", { kind: "contract", label: "Second Subject r60" })).entity_id;
+if (!ENT2) throw new Error("entitycreate (second) failed");
+const testified = await POST("op=resolvetestify&token=mem-r57",
+  { captureSha: CAPS[0], ref: "legislation:26-0901", entityId: ENT2,
+    basis: "REC-60 fixture: a second subject on the same reference, so one capture carries two resolutions",
+    resolvedBy: "r57" });
+if (testified?.ok === false) throw new Error(`resolvetestify: ${JSON.stringify(testified)}`);
+const derived = await POST("op=connect&token=mem-r57", { entityId: ENT, assertedBy: "r57" });
+if (derived?.ok === false) throw new Error(`connect: ${JSON.stringify(derived)}`);
+t("FIXTURE ARMS THE TRAP: three documents concern the subject, so op=concerns' cap of 1 has something to cut",
+  (await GET(`op=concerns&token=mem-r57&id=${ENT}&limit=5000`)).count, 3);
+t("FIXTURE ARMS THE TRAP: the three documents form THREE connections — k(k-1)/2 at k=3, D-224's curve, "
++ "which is why this is the read the bound was raised for",
+  (await GET(`op=connections&token=mem-r57&id=${ENT}&limit=5000`)).count, 3);
+t("FIXTURE ARMS THE TRAP: one capture carries TWO resolutions, so op=resolutions' cap of 1 cuts it",
+  (await GET(`op=resolutions&token=mem-r57&sha256=${CAPS[0]}&limit=5000`)).count, 2);
+
 /* ------------------------------------------------------------------ the pins.
    ONE DESCRIPTOR PER ROSTER OP: how to drive it, and how IT says "there is
    more". The `more` reader is each op's OWN vocabulary — see the header on why
@@ -385,6 +423,25 @@ const DRIVEN = [
     drive: (n) => GET(`op=projection&token=mem-r57&limit=${n}`),
     more: (a) => a.cursor !== null, says: "a non-null `cursor`",
     lost: "that the corpus was cut at 200 by a bound the wire could not see, ask for, or resume past" },
+  /* REC-60 / D-225, 2026-08-07: the three MEANING-LAYER reads, which reached this
+     roster from the direction it could not see — they carried NO cap, and a roster
+     built from methods that carry one cannot enumerate the method that carries none.
+     They answer in `op=readingname`'s vocabulary (`limit` beside `truncated`), the
+     closest sibling and a keyed read over the same layer, rather than a twelfth
+     spelling; see `test/meaning-bounds.test.mjs` for the walk that found them. */
+  { op: "resolutions", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=resolutions&token=mem-r57&sha256=${CAPS[0]}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether a document's subjects are all of them, or the first N of an answer that grew with the reading" },
+  { op: "concerns", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=concerns&token=mem-r57&id=${ENT}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether the reverse index answered over every document concerning the subject or over the first N rows of it" },
+  { op: "connections", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=connections&token=mem-r57&id=${ENT}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether the graph around a subject is whole, on the one read that grows as k(k-1)/2 so the most "
+        + "important subject produces the largest answer" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");
