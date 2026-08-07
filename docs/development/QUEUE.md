@@ -63,6 +63,16 @@ everything below this section and drains the inbox as part of its loop, deleting
 entry only once it has been enacted below. The two parties write to disjoint regions,
 so neither has to stop for the other.
 
+**BOB 2026-08-07 — THE CONFIRMED BUILD PLAN IS THE AUTHORITY: `IS-BUILD-PLAN.md`.** It
+supersedes the earlier IS sequencing you drained. 40 items, six tracks, ten waves; the
+critical path already corrected for what you landed (PL-6/REC-59 done; UI-38's one-surface
+rule done — both marked). It survived an independent confirmation pass (the plan's final
+section): six defect classes found and fixed, including wave-safety on the shared plane
+files — the ordered-handoff rule there is written for your two slots; the lanes carry the
+real parallelism. One flagged follow-up: the post-processing task scope that produces live
+machine connections for UI-44 has no item — raise it when W5 approaches, or UI-44 ships
+fixture-verified. Fences, placements and controls from the earlier handover stand.
+
 An entry names: what changed, which queue items it affects, and whether any in-flight
 work is superseded. It does NOT decide worker lifecycle — stopping a running worker is
 CONDUCT's call.
