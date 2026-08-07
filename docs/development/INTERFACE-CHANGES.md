@@ -1417,7 +1417,7 @@ I5 is NOT touched: no table, column, index or `purge` change.
 
 ---
 
-## IC-25 · I3: three meaning-layer reads apply a bound where they applied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED 2026-08-07 (REC-60, D-225)
+## IC-25 · I3: three meaning-layer reads apply a bound where they applied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-60, D-225)
 
 ### 1 · PROPOSED
 
@@ -1461,3 +1461,31 @@ Awaited. **RECORD does not answer on UI's behalf** — CONDUCT holds the IC-1/IC
 ### 6 · STATUS
 
 **PROPOSED, with the code landed on REC-60's branch and the RESOLUTION routed to CONDUCT at integration.** REC-57's precedent — do not land a non-additive I3 change in the turn it is proposed — is deliberately weighed rather than ignored: its reasoning was that the consumers had not been measured in that turn, and here they HAVE been, with one real consumer found and delegated. REC-62 is a hard precondition of the whole investigative-session set and depends on this item, so stalling the cap into a second item stalls the chain. CONDUCT holds the choice the precedent protects: accept at integration, as it did for REC-59, or hold the item. **The I3 version bump is NOT taken by this session** — the registry entry is CONDUCT's to move at resolution.
+
+
+### 2 · RESPONSES
+
+**CONDUCT answered for the consuming areas 2026-08-07 at REC-60's integration** (the IC-1 precedent: CONDUCT answers in writing for an area that cannot answer for itself; here UI is ACTIVE but its consumer was found by the producing item rather than by UI).
+
+- **RECORD (producer)** — AGREE. The bound is the item's subject and the figures are reused rather than invented.
+- **UI — AFFECTED, and this is the response that decides the version.** REC-60's own sweep found a **LIVE member-facing sentence that rests on `op=concerns` being uncapped**: `civicos-ui/app.html:11857` and `:11858` each end *"(Documents already resolved to this subject are added separately and are not capped.)"*, on BOTH branches, and it is pinned at `civicos-ui/test/bound-sweep.test.mjs:557` **against a fixture, so no suite fails.** That is a consumer whose correctness depended on the absence of a bound. Routed as **UI-42**, first in the UI queue.
+- **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — NOT AFFECTED; none reaches these three reads.
+
+### 3 · RESOLUTION — ACCEPTED, and recorded as **MAJOR** rather than additive
+
+**The shape change is additive; the BEHAVIOUR change is a break, and the break is what gets versioned.** Three reads that returned every matching row now return at most 500. **A caller that required completeness is now silently incomplete unless it reads `truncated`** — and REC-60 measured that exactly such a caller exists and is member-facing.
+
+Recorded as MAJOR on **IC-3's settled reasoning**, which this project has now applied at IC-20, IC-22 and IC-24: *recording a break as additive because nobody happened to be reading it would teach this registry to lie.* Here it is stronger than at those three, because the impact is **not** nil — it is measured, live, and in front of a member.
+
+**What is NOT claimed:** this closes no oracle and fixes no disclosure. The ground is unbounded growth (D-225) and nothing else. **And the honest cost is stated rather than buried:** no cursor is minted, so a caller cut at the 5,000 ceiling has no way past it — reachable at roughly a hundred documents on one subject. That is deliberate (REC-55's declined-second-copy rule; the complete answer is what D-222/REC-62 exists to provide), and it is Bob's to revisit if it bites before REC-62 lands.
+
+### 4 · CHANGING / CHANGED
+
+Landed with REC-60 (worker `1f5f95f`, merged on `main`). `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` each clamp to **default 500 / ceiling 5000** and publish `limit` **after clamping** beside `truncated` — `op=readingname`'s pair, the closest sibling on the same layer. `count`, `resolution_count`, every refusal, class, ordering and the D-15 gate are **byte-unchanged**, and `limit` is asserted **viewer-independent**. `index.mjs` needed no edit. **`op=concerns` states at the site that its bound is over the RESOLUTION ROWS the join reads, not over `documents`** — it collapses to captures, and a bound over the collapsed set would need an unbounded scan first, which is the defect.
+
+The three joined REC-57's roster in `bounds.test.mjs`, whose `OPS.size` pin **failed at 11 on a clean tree and was corrected 11 → 14 with a dated reason** rather than exempted, with all three driven there.
+
+### 5 · SETTLED
+
+**I3 8.1.0 → 9.0.0 → 10.0.0.** I5 NOT touched: no table, column, index or `purge` change. Recorded by CONDUCT 2026-08-07. **Open against it: UI-42** (the live sentence), and **D-227** — CONDUCT measured at integration that these suites pin the PUBLISHED ENVELOPE and not the SQL BOUND, so a regression removing `LIMIT ?` while leaving the slice and the envelope passes both green.
+
