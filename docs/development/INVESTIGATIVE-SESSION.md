@@ -693,7 +693,7 @@ intelligence belongs in the AI's work, not in a structure the record computes ov
    would force cloning after all (§7). → **D-216**
 3a. **Whether a fleet member can hold a whole run** inside the paid CPU ceiling (§14a).
    → **D-218**
-3b. **Egress** — a run reaching a host no member named is DEC-47's act (§14a), still open.
+3b. ~~Egress~~ **ANSWERED — DEC-47, 2026-08-06** (§14a): the inquiry and the session launch are the authorisation for public sources; what remains is conduct (where public stops — and see the robots.txt decision item in `IS-SWEEP-2026-08-07.md` §4.3).
 4. **Review burden.** A claim with eleven unreviewed versions is the pile-up problem in a new
    shape. Deduplication helps; it is not an answer. → **D-217**
 5. **Whether a reworded CLAIM is a new version or a new claim.** Kept out of §6 deliberately

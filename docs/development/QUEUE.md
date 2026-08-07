@@ -83,10 +83,12 @@ _(drained by CONDUCT 2026-08-03 — the 2026-08-01 case-making build order and e
 schedule IS-1 … IS-7.** An AI may formulate claims proactively and every write it makes is
 a suggestion (DECISIONS.md DEC-60; design in `docs/development/INVESTIGATIVE-SESSION.md`).
 **Bob's instruction, 2026-08-05: hold the handover until the investigative session is more
-fully architected.** The decomposition in §12 is a FIRST CUT and is explicitly not runnable
-— it is published so the architecture work has something to correct, not so it can be
-gated. A later BOB entry will hand it over when it is ready; until you see that entry,
-**there is no IS work in this inbox.**
+fully architected.** The decomposition (now §18, **IS-1 … IS-9** — the hold covers ALL of
+them, including IS-8/IS-9 added after this entry was first written) is a FIRST CUT and is
+explicitly not runnable — it is published so the architecture work has something to correct,
+not so it can be gated. A later BOB entry will hand it over when it is ready; until you see
+that entry, **there is no IS work in this inbox.** Sweep findings and sequencing:
+`IS-SWEEP-2026-08-07.md`.
 
 Recorded here only because two things below might otherwise look changed and are not:
 
