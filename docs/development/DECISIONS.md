@@ -2691,7 +2691,7 @@ for CONDUCT to enact: unblock REC-33; rename its `MONITOR_TOKEN` to `DAEMON_TOKE
 enacted: 2026-08-04 · CONDUCT — REC-33 unblocked and renamed to Bob's DAEMON_TOKEN (the class is the unattended path; scoped to its two verbs, widened by decision), ADMIN_TOKEN fallback kept, DIST-1's never-bind-an-unclassifiable-token constraint carried as binding; the installer half stays a follow-on DIST item behind REC-33's landing. Reasoning in this entry and REC-33's scope.
 
 **NOTE 2026-08-07:** a third consumer of the daemon class is proposed — the AI
-capture-request path; widen-by-decision pending, Bob item 1 in IS-SWEEP-2026-08-07.md §4.
+capture-request path; widening RESOLVED 2026-08-07 by session BOB under Bob's delegation of tactical decisions (the policy was already Bob's own AI-requests/daemon-captures ruling): a `capture_requests` table drained by the daemon — no control-plane enqueue, the daemon stays the sole fetcher. IS-SWEEP-2026-08-07.md §4b.
 *(Note added by session BOB.)*
 
 ### DEC-39 · answered

@@ -70,3 +70,8 @@ F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
 ## Status log
 
 - 2026-08-07 · plan created; Wave 1 launched (three sub-sessions).
+- 2026-08-07 · Wave 1A (DECISIONS.md) landed and pushed (79ed92b).
+- 2026-08-07 · Bob: tactical/module decisions are the session's to resolve. Items F1/F5/F6/F7
+  RESOLVED by session (SWEEP §4b): capture_requests table; versions attach to the inquiry's
+  basis; prune hides, never deletes; CHECK is the first deployed mode. E9 and D1's shape,
+  prune and sequencing markers are UNBLOCKED. Bob retains F2, F3, F4 only.
