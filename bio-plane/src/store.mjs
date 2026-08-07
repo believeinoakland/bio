@@ -747,6 +747,15 @@ export class Store extends DurableObject {
     return next < today;
   }
 
+  /* IC-24 / REC-59: the bound `op=projection`'s CORPUS arms apply, NAMED rather
+     than buried in the statement, on the same reasoning REC-57 applied to
+     `op=exportlog`'s literal `LIMIT 200` — a cap nothing names is a cap the
+     roster walk can only find by matching a number. `_MAX` is `op=list`'s
+     ceiling, deliberately, because these two answer the same question about the
+     same table and a second ceiling would be a second fact to keep in step. */
+  static PROJECTION_LIMIT_DEFAULT = 200;
+  static PROJECTION_LIMIT_MAX = 5000;
+
   static PROJECTION_COLS = [
     "schema_id", "produced_mode", "capability_tier", "source_locator",
     "source_authority", "source_retrieved", "source_status", "content_hash",
@@ -887,8 +896,8 @@ export class Store extends DurableObject {
    *  that reaches this read without a server-stamped identity sees nothing
    *  rather than everything. An invisible bundle answers EXACTLY as an absent
    *  one (null), because "hidden" said out loud is half the leak. */
-  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = 200, viewer = null,
-               nowMs = null } = {}) {
+  projection({ bundleId = null, jsonPath = null, jsonEquals = null, limit = null, after = null,
+               viewer = null, nowMs = null } = {}) {
     const cols = ["b.bundle_id", "b.object_type", "b.group_id", "b.title", "b.current_state",
                   "b.prior_state", "b.created", "b.last_updated", "b.criticality",
                   "b.bundle_sha", ...Store.PROJECTION_COLS.map((c) => "b." + c)].join(", ");
@@ -910,12 +919,54 @@ export class Store extends DurableObject {
         ? { ...row, action: this.#actionDerived(row, nowMs) }
         : row;
     }
-    if (jsonPath !== null && jsonEquals !== null)
-      return this.#rows(
-        `SELECT ${cols} FROM bundles b WHERE json_extract(b.fm_json, ?) = ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
-        jsonPath, jsonEquals, ...gate.args, limit);
-    return this.#rows(`SELECT ${cols} FROM bundles b WHERE (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
-                      ...gate.args, limit);
+    /* IC-24 / REC-59, landed 2026-08-07 — THE TWO CORPUS ARMS, IN op=list's
+       PAGED ENVELOPE. They returned a BARE JSON ARRAY capped at 200, and an
+       array has nowhere to put a key: this op could not join REC-57's honesty
+       sweep additively, which is why it was filed as a BREAK and carried through
+       the protocol rather than reshaped quietly.
+       WHY op=list's SHAPE AND NOT A TWELFTH SPELLING. `op=list`'s paged arm
+       already solved this exact problem for the same rows of the same table:
+       `{ bundles, limit, cursor, total }`. Minting a new vocabulary here would
+       make two answers about one table read differently for no reason, which is
+       REC-55's declined-second-copy rule at the level of shape rather than
+       field. The `&id=` arm above is UNCHANGED and still answers the row itself.
+       THE CAP IS UNCONDITIONAL AND THAT IS THE DIFFERENCE FROM op=list. `op=list`
+       pages only when a caller opts in, so its bare arm has no bound to publish;
+       here the 200 has ALWAYS bitten, and the wire could not even ask for more —
+       so an envelope that appears only on request would publish nothing in
+       exactly the case that has been lying since the op was written. */
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0
+      ? Math.min(Store.PROJECTION_LIMIT_MAX, Math.floor(asked))
+      : Store.PROJECTION_LIMIT_DEFAULT;
+    const filtered = jsonPath !== null && jsonEquals !== null;
+    /* ONE predicate, built once and reused for the page and the count, so the
+       two cannot drift into disagreeing about what the caller asked for. The
+       CURSOR is deliberately NOT in the count: `total` answers "how many are
+       there", not "how many are left", which is the same reading `op=list`
+       publishes and the one a caller reads a progress figure against. */
+    const base = [`(${gate.sql})`], baseArgs = [...gate.args];
+    if (filtered) { base.unshift(`json_extract(b.fm_json, ?) = ?`); baseArgs.unshift(jsonPath, jsonEquals); }
+    const pageWhere = after ? [...base, `b.bundle_id > ?`] : base;
+    const pageArgs = after ? [...baseArgs, after] : baseArgs;
+    const bundles = this.#rows(
+      `SELECT ${cols} FROM bundles b WHERE ${pageWhere.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
+      ...pageArgs, cap);
+    return {
+      bundles,
+      /* The bound ACTUALLY APPLIED after clamping, never the number asked for —
+         REC-57's rule, because answering 99999 to a caller who asked 99999 and
+         got 5000 is a second way of lying about the same fact. */
+      limit: cap,
+      /* Resumable and independent of any snapshot, exactly as op=list and the
+         audit sweep already are: the last identifier seen, and both arms order
+         by it. */
+      cursor: bundles.length === cap ? bundles[bundles.length - 1].bundle_id : null,
+      /* COUNTS WHAT THIS VIEWER MAY SEE, through the same gate predicate. A
+         total over rows the caller cannot read would say "something is hidden",
+         which is half the leak — D-15's rule, and op=list's own comment. */
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE ${base.join(" AND ")}`, ...baseArgs).n,
+    };
   }
 
   /** REC-24 (f)/(g): everything about ONE action that is DERIVED rather than
@@ -16502,6 +16553,14 @@ export class Store extends DurableObject {
           bundleId: url.searchParams.get("id"),
           jsonPath: url.searchParams.get("jsonPath"),
           jsonEquals: url.searchParams.get("jsonEquals"),
+          /* IC-24 / REC-59: forwarded from the wire at last. The corpus arms
+             have been capped at 200 since they were written and this dispatch
+             did not carry `limit` at all, so a caller could not ask for more
+             AND could not see that it had been cut — the two halves of the same
+             defect. `after` is the cursor the envelope now publishes, so a
+             truncated reader can resume rather than start again. */
+          limit: url.searchParams.get("limit"),
+          after: url.searchParams.get("after"),
           viewer: url.searchParams.get("viewer"),
           /* REC-24 (f): the as-of instant for the derived action clock, the same
              seam op=proposals and op=sourcereach opened. Absent, the derivation

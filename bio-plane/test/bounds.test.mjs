@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-08-05, rec57-agent) FOUR arms, each RUN. (1) DROP THE PUBLISHED BOUND — in src/store.mjs delete `limit: cap,` from any roster op's return block (e.g. taskList) -> the LIVE arm for that op fails naming it and what a consumer can no longer tell. (2) COUNT WHAT IT SENT — in documentsNamingEntity replace `truncated: merged.length > cap || aliasPageFilled` with `truncated: false` (the pre-REC-57 behaviour: `count` is the length of what was SENT and nothing says more exists) -> the DELTA arm fails, because a bitten call and a complete call read alike. (3) NEUTER THE ROSTER WALK — replace the body of `cappedMethods` with `return new Map()` -> the three REACH assertions fail AS DELTAS and the roster-vs-driven pin fails. (4) OVER-STRICTNESS — a correct answer phrased unlike anything this file wrote must not fail; asserted in the last block. */
+/* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ============================================================================
  *
@@ -74,14 +75,31 @@
  * sweeps ops whose answer is bounded by a COUNT. It says nothing about an answer
  * bounded some other way (a depth walk, a gate, a time window), and `op=queue`'s
  * ancestor walk is bounded by depth and reports `undetermined` on its own terms.
- * One roster op — `op=projection` — answers its capped arms with a BARE ARRAY,
- * which can carry no key at all; that is measured, named, pinned to exactly one
- * op, and filed as IC-23, because it cannot be fixed additively.
+ * REC-59, 2026-08-07 — THE LAST MEMBER OF THE CLASS, AND THE PIN INVERTED.
+ * This header said: *"One roster op — `op=projection` — answers its capped arms
+ * with a BARE ARRAY, which can carry no key at all; that is measured, named,
+ * pinned to exactly one op, and filed as IC-23."* Two corrections, both dated,
+ * neither exempted:
+ *
+ *   (a) THE IC NUMBER WAS WRONG. It is **IC-24**, not IC-23. IC-23 is REC-57's
+ *       own additive change; IC-24 is this exception. The two were renumbered at
+ *       integration when UI-40 took IC-22 in flight, and this sentence kept the
+ *       pre-rebase number while `INTERFACE-CHANGES.md` and `INTERFACES.md` both
+ *       carried the corrected one. Left alone it would have sent the next reader
+ *       to the wrong contract to find out why an op is shaped as it is.
+ *   (b) THE EXCEPTION IS CLOSED. IC-24 walked RESPONSES -> SETTLED and landed:
+ *       both corpus arms now answer `op=list`'s envelope. So the pin no longer
+ *       reads "exactly ONE op may answer with a bare array" — it reads **ZERO**,
+ *       and it is MEASURED by driving every roster op rather than by comparing a
+ *       hand-written Set against its own length. That is strictly stronger and it
+ *       is the point of keeping the pin alive through the change: an exemption
+ *       would have let the next such op join a list, and a pin makes it fail.
  */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { join, extname, relative } from "node:path";
 import { createHash } from "node:crypto";
 
 let pass = 0, fail = 0;
@@ -359,6 +377,14 @@ const DRIVEN = [
     drive: (n) => GET(`op=exportlog&token=adm-r57&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",
     lost: "that an append-only log described as complete was shown newest-first and cut" },
+  /* REC-59 / IC-24, 2026-08-07: the last member of the class, joining the roster
+     it was the one exception to. It answers `op=list`'s envelope now, so it
+     answers `op=list`'s completeness question in `op=list`'s own word — a
+     non-null `cursor` — rather than being given a twelfth spelling of its own. */
+  { op: "projection", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=projection&token=mem-r57&limit=${n}`),
+    more: (a) => a.cursor !== null, says: "a non-null `cursor`",
+    lost: "that the corpus was cut at 200 by a bound the wire could not see, ask for, or resume past" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");
@@ -456,21 +482,232 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    also the task fixture, the two backfills because each must CLEAR a derived
    structure to arm itself and `reindexnames` has no control-plane entry at all. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject"]);
-/* ONE ROSTER OP ANSWERS ITS CAPPED ARMS WITH A BARE ARRAY, which can carry no
-   key at all, so it cannot be fixed additively and is filed as IC-23 rather than
-   quietly reshaped. MEASURED, NAMED and PINNED TO EXACTLY ONE: a second op
-   answering this way fails here rather than joining a growing exception. */
-const ARRAY_SHAPED = new Set(["projection"]);
-t("PIN: op=projection's capped corpus arm really does answer with a bare ARRAY — measured, not asserted",
-  Array.isArray(await GET("op=projection&token=mem-r57&jsonPath=$.group&jsonEquals=believe-in-oakland")), true);
-t("PIN: and it is the ONLY roster op that does — the exception is one op wide and pinned at one",
-  ARRAY_SHAPED.size, 1);
-const covered = new Set([...DRIVEN.map((d) => d.op), ...DRIVEN_ELSEWHERE, ...ARRAY_SHAPED]);
+/* ==========================================================================
+ * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
+ *
+ * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
+ * assertion `ARRAY_SHAPED.size === 1`. That pin was RIGHT to exist and WRONG in
+ * one respect worth stating, because the correction is the lesson: it compared a
+ * HAND-WRITTEN Set against its own length. `size === 1` was true because the
+ * literal above it had one element, and it would have stayed true no matter what
+ * any op actually answered. Only `op=projection` itself was genuinely measured.
+ * A second op could have gone bare-array and this pin would not have noticed —
+ * it would have failed only when a person remembered to add it to the Set, which
+ * is a convention wearing a pin's clothes.
+ *
+ * NOW THE SET IS PRODUCED BY DRIVING THE ROSTER. Every capped op the walk found
+ * is called and its answer inspected, and the pin is that the set is EMPTY. That
+ * is what makes negative control (2) meaningful: adding a bare-array capped op
+ * anywhere in `store.mjs` puts a member into this set and fails here, with no
+ * list for it to be quietly added to.
+ * ========================================================================== */
+const answersByOp = new Map([
+  ...await Promise.all(DRIVEN.map(async (d) => [d.op, await d.drive(d.whole)])),
+  /* Driven above and REUSED rather than re-driven: both backfills CLEAR a
+     derived structure to arm themselves, so calling them again here would
+     re-arm them and change what the arms above measured. */
+  ["taskdrain", td2], ["reproject", rp2], ["reindexnames", rn2],
+]);
+const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
+t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
++ "through the op rather than asserted about it",
+  Array.isArray(await GET("op=projection&token=mem-r57&jsonPath=$.group&jsonEquals=believe-in-oakland")), false);
+t("PIN: ZERO capped ops answer with a bare array — the set is DRIVEN off the roster, not written here, so a "
++ "new member of the class fails the build instead of joining an exception list",
+  [...ARRAY_SHAPED], []);
+/* THE PIN MUST BE ABLE TO SEE ONE. A set that is empty because the measurement
+   reaches nothing is the equality that costs nothing to produce — the failure
+   this whole suite exists to prevent, met here in its own instrument. */
+t("PIN GUARD: the array test can actually SEE a bare array — the same reader over a known array-shaped answer "
++ "reports it, so the empty set above is a measurement and not an unarmed check",
+  [...new Set([...new Map([...answersByOp, ["__control", [1, 2, 3]]])]
+    .filter(([, a]) => Array.isArray(a)).map(([op]) => op))], ["__control"]);
+t("PIN GUARD: and the sweep drove every roster op — an answer per op, none skipped",
+  answersByOp.size, OPS.size);
+const covered = new Set([...DRIVEN.map((d) => d.op), ...DRIVEN_ELSEWHERE]);
 const uncovered = [...OPS.keys()].filter((o) => !covered.has(o));
 t("PIN: every capped op the walk found is DRIVEN here — an op that grows a cap tomorrow fails until somebody drives it",
   uncovered, []);
 t("PIN: and nothing is driven that the walk did NOT find — the roster is the source's, not this file's",
   [...covered].filter((o) => !OPS.has(o)), []);
+
+/* ==========================================================================
+ * REC-59 · THE CONSUMER WALK, RE-MEASURED — and IC-24's own count was WRONG.
+ *
+ * IC-24 recorded: *"every one of the nine call sites found … uses the `&id=`
+ * arm, which does not move."* RE-MEASURED HERE, and the number is right about
+ * nothing it was used for. There are **38** call sites, and **NINE OF THEM
+ * TARGET THE CORPUS ARMS** — the coincidence in the figure is what makes this
+ * worth pinning rather than reporting: a reader comparing "nine" to "nine" would
+ * have concluded the count was confirmed. It was a count of the wrong
+ * population. REC-41's lesson for the fourth time: right about the FIELD, wrong
+ * about the OP, and only re-measuring catches it.
+ *
+ * THE EXCLUSION RULE, STATED IN THE INSTRUMENT RATHER THAN IN A REPORT, and it
+ * is REC-58's, reused deliberately because it was measured there:
+ *   - Files that embed the whole bundled plane AS A STRING are excluded
+ *     STRUCTURALLY, by what stands at BYTE 0, never by filename — the next
+ *     generated artifact will have a third name. A walk excluding only one still
+ *     counts the plane as its own consumer through the other.
+ *   - THE GENERATOR IS KEPT IN. UI-40's first exclusion tested whether a file
+ *     CONTAINED the banner, which also excluded the generator that WRITES it.
+ *     That is the DANGEROUS direction: a consumer living in the generator would
+ *     have been invisible while the answer still read "zero". A generated file
+ *     BEGINS with its banner; the anchor is `^`.
+ *   - `dist/` is skipped as a DIRECTORY, which is what covers the two artifacts
+ *     the brief did not name (`bio-plane/dist/` and `newgroup/dist/`): there are
+ *     FOUR generated copies of this plane in the tree, not two.
+ *
+ * WHAT THIS WALK CANNOT SEE, said plainly: it reads REQUEST-FORMING STRING
+ * LITERALS. A caller that builds its query by concatenation from a variable, or
+ * that reaches the op through a helper this file does not know, is invisible to
+ * it — which is why the migrated consumers are ALSO asserted through the op in
+ * their own suites, and why the number below is a floor and not a census.
+ * ========================================================================== */
+console.log("\n--- REC-59: the consumer walk, re-measured over the whole repository ---");
+const REPO = fileURLToPath(new URL("../..", import.meta.url));
+const SKIP = new Set(["node_modules", ".git", "dist", ".claude", "coverage"]);
+const EXT = new Set([".mjs", ".js", ".html"]);
+const allFiles = [];
+(function walkDir(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name.startsWith(".")) continue;
+    const p = join(dir, e.name);
+    if (e.isDirectory()) { if (!SKIP.has(e.name)) walkDir(p); continue; }
+    if (EXT.has(extname(e.name))) allFiles.push(p);
+  }
+})(REPO);
+const generatedReason = (src) =>
+    /^\/\* GENERATED by scripts\/embed-release\.mjs/.test(src) ? "embed-release banner, at byte 0"
+  : (/^\/\/ src\/schema\.mjs\n/.test(src) && /var SCHEMA = `/.test(src)) ? "bundler output, first line names the entry module"
+  : null;
+/* Comment-blind in BOTH directions. `op=projection` appears in dozens of prose
+   comments in this repository — including in this very block — and a walk that
+   counted them would report consumers that are sentences. */
+const blankComments = (text) => {
+  let out = "", i = 0;
+  const n = text.length;
+  while (i < n) {
+    if (text.startsWith("/*", i)) { const e = text.indexOf("*/", i + 2); const seg = text.slice(i, e < 0 ? n : e + 2); out += seg.replace(/[^\n]/g, " "); i = e < 0 ? n : e + 2; continue; }
+    if (text.startsWith("<!--", i)) { const e = text.indexOf("-->", i + 4); const seg = text.slice(i, e < 0 ? n : e + 3); out += seg.replace(/[^\n]/g, " "); i = e < 0 ? n : e + 3; continue; }
+    /* `//` guarded on the preceding `:` so `https://` inside a URL survives. */
+    if (text.startsWith("//", i) && text[i - 1] !== ":") {
+      const e = text.indexOf("\n", i); const seg = text.slice(i, e < 0 ? n : e); out += seg.replace(/[^\n]/g, " "); i = e < 0 ? n : e; continue;
+    }
+    out += text[i]; i++;
+  }
+  return out;
+};
+/* Every string literal, quote- and escape-aware. The call sites are LITERALS,
+   never lines: a line-anchored walk classified `t("op=projection: hidden and
+   absent…")` as a bare-corpus call site on the first draft of this instrument. */
+const literals = (code) => {
+  const out = [];
+  let i = 0;
+  const n = code.length;
+  while (i < n) {
+    const q = code[i];
+    if (q === '"' || q === "'" || q === "`") {
+      let j = i + 1, body = "";
+      while (j < n) {
+        if (code[j] === "\\") { body += code[j] + (code[j + 1] || ""); j += 2; continue; }
+        if (code[j] === q) break;
+        if (q !== "`" && code[j] === "\n") break;
+        body += code[j]; j++;
+      }
+      if (j < n && code[j] === q) { out.push({ at: i, body, end: j }); i = j + 1; continue; }
+    }
+    i++;
+  }
+  return out;
+};
+const consumerCorpus = [], consumerExcluded = [];
+for (const f of allFiles) {
+  const raw = readFileSync(f, "utf8");
+  const g = generatedReason(raw);
+  if (g) { consumerExcluded.push({ f: relative(REPO, f), why: g, chars: raw.length }); continue; }
+  consumerCorpus.push({ f: relative(REPO, f), code: blankComments(raw) });
+}
+const walkChars = consumerCorpus.reduce((a, x) => a + x.code.length, 0);
+/* PRINTED EVERY RUN, so a corpus that SHRANK to nothing is visible rather than
+   silent. Three walks this week kept a headline assertion green over an empty
+   corpus, twice inside the instrument built to prevent it. */
+console.log(`  REC-59 CORPUS: ${consumerCorpus.length} files, ${walkChars} chars scanned; `
+          + `${consumerExcluded.length} generated artifact(s) excluded (${consumerExcluded.map((x) => `${x.f} ${x.chars}`).join("; ")})`);
+
+/* `op=projection` request shapes: the wire query, the Durable Object path, and
+   the helper form. The wire form requires a query SEPARATOR after the op name,
+   which is what tells a request from a sentence beginning with the same word. */
+const callSites = (files) => {
+  const out = [];
+  for (const c of files) {
+    for (const L of literals(c.code)) {
+      let params = null;
+      if (/^(?:\/api\/\?)?op=projection(?:&|$)/.test(L.body)) params = L.body.replace(/^(?:\/api\/\?)?op=projection&?/, "");
+      else if (/^\/projection(?:\?|$)/.test(L.body)) params = L.body.replace(/^\/projection\??/, "");
+      else if (L.body === "projection" && /(?:\brecR|\brec|\bcall|\bDO|\bget|\bj|\bGET)\(\s*$/.test(c.code.slice(Math.max(0, L.at - 12), L.at)))
+        params = c.code.slice(L.end + 1, L.end + 160).split("\n")[0];
+      if (params === null) continue;
+      /* An object KEY is not a request. `publishedcase.test.mjs` keys an
+         expected-answer map by `"op=projection"`, derived from a request made on
+         another line — counting it would be counting one call twice. */
+      if (/^\s*:/.test(c.code.slice(L.end + 1))) continue;
+      out.push({ f: c.f, arm: /(?:^|[?&,{\s])id[=:}]|`id=/.test(params) ? "id"
+                            : /jsonPath|jsonEquals/.test(params) ? "corpus-filter" : "corpus-bare" });
+    }
+  }
+  return out;
+};
+const SITES = callSites(consumerCorpus);
+const armCount = (a) => SITES.filter((s) => s.arm === a).length;
+console.log(`  REC-59 CALL SITES: ${SITES.length} total — id-arm ${armCount("id")}, `
+          + `corpus-bare ${armCount("corpus-bare")}, corpus-filter ${armCount("corpus-filter")}`);
+
+t("REC-59 RE-MEASURED: IC-24 said NINE call sites and that all of them used the `&id=` arm. The walk finds "
++ "MANY more than nine, so the count was not merely stale — it was a count of a different population",
+  SITES.length > 9, true);
+/* MEASURED WITH THIS SUITE'S OWN PROBES REMOVED. This file drives the corpus arm
+   deliberately, so a claim that "the corpus arms have consumers" would pass on
+   its own test code — an equality that costs nothing to produce, in the suite
+   whose whole subject is claims that cost nothing. The consumers below are other
+   people's. */
+const foreignSites = callSites(consumerCorpus.filter((c) => c.f !== "bio-plane/test/bounds.test.mjs"));
+const foreignCorpusArm = foreignSites.filter((s) => s.arm !== "id");
+console.log(`  REC-59 CORPUS-ARM CONSUMERS OUTSIDE THIS SUITE: ${foreignCorpusArm.length}`);
+t("REC-59 RE-MEASURED: and the corpus arms are NOT unconsumed — IC-24's `measured consumer impact is nil` "
++ "was false in this tree, measured with THIS suite's own probes excluded so the claim is not self-served",
+  foreignCorpusArm.length > 0, true);
+t("REC-59 RE-MEASURED: the `&id=` arm is nonetheless the overwhelming majority, so IC-24's CONCLUSION "
++ "(the break is small and worth taking) survives its arithmetic being wrong",
+  armCount("id") > armCount("corpus-bare") + armCount("corpus-filter"), true);
+/* THE UI IS THE CONSUMER CONDUCT ANSWERED FOR, so what it actually does is
+   asserted rather than described: `civicos-ui` reaches this op through ONE
+   helper and that helper passes an id. NOT-AFFECTED is now evidenced. */
+const uiSites = callSites(consumerCorpus.filter((c) => c.f.startsWith("civicos-ui/")));
+t("REC-59 RE-MEASURED: `civicos-ui` reaches op=projection ONLY through the `&id=` arm, which does not move — "
++ "so CONDUCT's NOT-AFFECTED answer on UI's behalf is a measurement and not a courtesy",
+  [uiSites.length > 0, uiSites.every((s) => s.arm === "id")], [true, true]);
+
+/* REACH AS A DELTA. A walk that matches nothing reports zero and passes forever.
+   The same reader is re-run over an EMPTY corpus and must find FEWER; the
+   difference is the evidence, and the failure mode is NAMED in-suite so it
+   cannot be lost the way it was lost three times this week. */
+t("REC-59 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it",
+  consumerCorpus.length > 200 && walkChars > 5_000_000, true);
+t("REC-59 REACH: BOTH string embeds of the plane are excluded, each recognised STRUCTURALLY at byte 0 and "
++ "neither by name, and each is over a megabyte — so neither counts the plane as its own consumer",
+  [consumerExcluded.length, consumerExcluded.every((x) => x.chars > 1_000_000)], [2, true]);
+t("REC-59 REACH: THE GENERATOR IS KEPT IN — `newgroup/scripts/embed-release.mjs` is in the corpus and not in "
++ "the exclusions, which is the arm UI-40's first exclusion would have failed",
+  [consumerCorpus.some((x) => x.f === "newgroup/scripts/embed-release.mjs"),
+   consumerExcluded.some((x) => /embed-release/.test(x.f))], [true, false]);
+t("REC-59 REACH (DELTA): the same reader over an EMPTY corpus finds ZERO, while over the real one it does "
++ "not — so every count above answers the corpus and not itself",
+  [callSites([]).length, SITES.length > 0], [0, true]);
+t("REC-59 REACH (THE FAILURE MODE NAMED): over that same empty corpus, a `no corpus-arm consumers` claim — "
++ "IC-24's exact claim — STILL READS TRUE. That is how a walk covering nothing passes triumphantly, and it "
++ "is asserted here so the reason the DELTA arm above exists cannot be forgotten",
+  callSites([]).filter((s) => s.arm !== "id").length === 0, true);
 
 /* ==========================================================================
  * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is

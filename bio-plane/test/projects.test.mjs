@@ -217,8 +217,20 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
      check catalog already permits, and `closed` back to `investigating`, which
      is the one reverse transition it allows. Nothing is added to the state
      vocabulary. */
-  const state = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).current_state;
-  const cur = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).bundle_sha;
+  /* SUPERSEDED PIN, CORRECTED 2026-08-07 (REC-59 / IC-24), not exempted. These
+     five reads walked `op=projection`'s corpus arm as a BARE ARRAY. That arm was
+     capped at 200 and could not say so, which is the whole of IC-24; it now
+     answers `op=list`'s envelope, so the rows live under `.bundles`. The old
+     form was not merely a different spelling — it was a `.find()` over a page
+     this suite could not tell from the whole corpus, and on a store past 200
+     bundles it would have started answering `undefined` with no way to know
+     why. Read through one helper so the shape is stated once. */
+  /* `|| []` so the negative control for IC-24 (revert the op to a bare array)
+     makes these arms FAIL by name rather than THROW on `.find` of undefined,
+     which would kill the suite and hide everything behind it — D-93's class. */
+  const projRows = async () => (await call(`/projection?viewer=class:member`)).bundles || [];
+  const state = async (id) => (await projRows()).find((r) => r.bundle_id === id)?.current_state;
+  const cur = async (id) => (await projRows()).find((r) => r.bundle_id === id)?.bundle_sha;
   const move = (id, to, reason, actor) => {
     const body = `---\nid: ${id}\nobject_type: project\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
     return { text: body, to, reason, actor };
@@ -332,9 +344,9 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
 
   /* A fork starts at the beginning of the lifecycle. Inheriting `matured` would
      claim a readiness the clone has not earned. */
-  const st = (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
-  t("the clone starts at the beginning of the lifecycle", st.current_state, "forming");
-  t("and carries its own name", st.title, "Fork one");
+  const st = ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
+  t("the clone starts at the beginning of the lifecycle", st?.current_state, "forming");
+  t("and carries its own name", st?.title, "Fork one");
 
   /* Put the fixture back for 7.8 below. */
   await call(`/projectremove?projectId=${P}&handle=dave&by=carol`);
@@ -365,7 +377,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
   /* Held across every lifecycle state. A deactivated project has not gone
      anywhere: it is still cited, and its name must still resolve to what was
      cited, or a later project silently inherits an earlier one's references. */
-  const cur = async (id) => (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === id).bundle_sha;
+  const cur = async (id) => ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === id)?.bundle_sha;
   const doc2 = `---\nid: PROJ-2026-0105-f\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
   await call("/promote", { bundleId: "PROJ-2026-0105-f", base: await cur("PROJ-2026-0105-f"),
     snapKey: "f-closed", author: "suite",
@@ -416,7 +428,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
     meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-05T00:00:00Z" } });
   t("a revision that omits the title carries the old one forward",
-    (await call(`/projection?viewer=class:member`)).find((r) => r.bundle_id === "PROJ-2026-0107-h").title, "Kept Name");
+    ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === "PROJ-2026-0107-h")?.title, "Kept Name");
   t("and the name is still held against a later collision",
     (await mkNamed("PROJ-2026-0108-i", "kept name")).reason, "NAME_TAKEN");
 }
