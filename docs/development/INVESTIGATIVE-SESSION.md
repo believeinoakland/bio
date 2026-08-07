@@ -19,9 +19,11 @@ where it belongs rather than appended. Four decisions the sweep raised were reso
 session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions
 attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request
 door is a **`capture_requests` table drained by the daemon**; **CHECK is the first
-deployed mode**. Exactly three points remain Bob's and are marked inline: `[BOB-2]`
-(pruned-alternatives disclosure in the published case), `[BOB-3]` (robots.txt conduct),
-`[BOB-4]` (DEC-52's remaining yes/no).
+deployed mode**. The three points that remained Bob's are now resolved inline (SWEEP §4c,
+2026-08-07): `[BOB-2 — RULED NO 2026-08-07]` (pruned-alternatives disclosure in the
+published case), `[BOB-3 — RULED 2026-08-07: disallows do not bar capture]` (robots.txt
+conduct), `[BOB-4 — RULED 2026-08-07, PROVISIONAL pending Bob's confirmation]` (DEC-52's
+remaining yes/no).
 
 A member with an inquiry presses a button and a **skilled AI session** runs against that
 inquiry: it reads the project, finds evidence, and works out how the legs of the inquiry's
@@ -321,7 +323,8 @@ reading arrives as a whole alternative account and the accepted one stays exactl
    and per DEC-29(b) **the offer's wording states what hiding does**: hidden versions stay
    in the record and stay queryable. Hiding is a member act; the AI can no more hide a
    version than accept one. What a PUBLISHED case says about pruned alternatives is
-   `[BOB-2]` — §13.
+   `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden
+   alternatives]` — §13.
 3b. **Rewording the inquiry's CLAIM is USER SELECTABLE — new version, or new inquiry**
    (Bob, 2026-08-06, D-217b, restated under §3's basis ruling). Not a schema decision but
    a runtime one, so the schema supports both. A tightened wording that leaves the legs
@@ -587,14 +590,17 @@ what publication freezes. So:
   or moving which version a finding stands on — is a new edition, and prior editions keep
   answering.
 
-**`[BOB-2]` — WHAT THE PUBLISHED CASE SAYS ABOUT PRUNED ALTERNATIVES.** R4's division rule
+**`[BOB-2 — RULED NO 2026-08-07 (SWEEP §4c)]` — WHAT THE PUBLISHED CASE SAYS ABOUT PRUNED
+ALTERNATIVES.** R4's division rule
 is that a published child names its parent and its siblings, because division without
 disclosure is *"a laundering path with a tidy name"* — and a published case that discloses
 nothing about alternative accounts considered and hidden is structurally the same hazard
 (SWEEP §1.6). The existing idiom is the exclusion statement (`inquiry_exclusions`,
 completeness statements scoped to an edition); the recommendation on file is one authored
 sentence per edition in the same shape. Reversal is impossible for editions already
-published, which is the argument for deciding before IS-8 builds. Bob's, open.
+published, which is the argument for deciding before IS-8 builds. **RULED NO, 2026-08-07:
+the published case carries the current version only and states nothing about hidden
+alternatives — prune already only hides, so the record itself loses nothing.**
 
 ## 14 · Bias — a FENCE first, and a requirement on the skill second
 
@@ -738,7 +744,10 @@ than a workaround for a limit** — and the Durable Object with alarms that the 
 runs is where that state lives. Whichever way the measurement lands, the resumable shape is
 the one to build.
 
-**What post-processing may WRITE: the MECHANISM is ruled; the yes/no is `[BOB-4]`.** Bob:
+**What post-processing may WRITE: the MECHANISM is ruled; the yes/no is `[BOB-4 — RULED
+2026-08-07, PROVISIONAL: Bob's mechanical-standing principle is recorded on DEC-52, pending
+his confirmation; the sidebar approval (identify → present → member approves) remains the
+act of record for the constitutive fields]`.** Bob:
 *"it may be the AI that also scans the captured document for content and connections."*
 Extracting what a document literally contains asserts little; identifying a CONNECTION is
 closer to a constitutive statement — DEC-52's open question. Bob ruled the mechanism
@@ -780,12 +789,15 @@ distinguishes capture from monitoring, so an investigation fetch introduces or r
 purpose token deliberately — `SOURCE-ACCESS.md:133-169`). The structural gate costs nothing
 and stays: the AI never fetches, it REQUESTS, and the daemon captures.
 
-**`[BOB-3]` — robots.txt and "areas anybody can go through."** Measured: Oakland's
+**`[BOB-3 — RULED 2026-08-07 (SWEEP §4c)]` — robots.txt and "areas anybody can go
+through."** Measured: Oakland's
 robots.txt carries 82 Disallow rules of which **63 are Public Ethics Commission
 publications**, including sixteen years of annual reports. On this instance's most relevant
 corpus, the conduct rule DEC-47 deferred decides whether the session can reach transparency
 publications at all. This is doctrine — posture toward sources, and what "public" means —
-not build detail. Nothing is built; no fetch happens. Bob's, open.
+not build detail. Nothing is built; no fetch happens. **RULED, 2026-08-07: robots.txt
+disallows do not bar capture of publicly available documents, and the member-browser UA
+from inquiry creation is permitted for these fetches (DEC-52; SOURCE-ACCESS.md amended).**
 
 ### What Claude Code's model maps onto, in one table
 
@@ -1100,15 +1112,18 @@ the correction each time was to CITE the ruling, not to reconstruct it.
    sizes the work rather than deciding its shape. → **D-218**
 3b. ~~Egress~~ **ANSWERED — DEC-47, 2026-08-06** (§14a): the inquiry and the session launch
    are the authorisation for public sources. What remains of conduct is enforced at the
-   `capture_requests` drain — except **robots.txt, which is `[BOB-3]`** (§14a).
+   `capture_requests` drain — except **robots.txt, which is `[BOB-3 — RULED 2026-08-07:
+   disallows do not bar capture of public documents]`** (§14a).
 4. ~~Review burden.~~ **ANSWERED** — D-217a's derivation tree with the prune offer (§6.3a,
    prune hides per SWEEP §4b), plus the proposal rules: aggregate never multiply, age
    never vanish, reasons on deferral and dismissal (§6.4). → **D-217, answered**
 5. ~~Whether a reworded claim is a new version or a new claim.~~ **ANSWERED** — user
    selectable, D-217b (§6.3b).
-6. **`[BOB-2]`** — pruned-alternatives disclosure in the published case (§13).
-7. **`[BOB-4]`** — DEC-52's remaining yes/no: may a machine write the constitutive fields
-   AS ACCEPTED (§14a). The sidebar mechanism is ruled; the underlying rule is not.
+6. ~~Pruned-alternatives disclosure.~~ **`[BOB-2 — RULED NO 2026-08-07]`** — the published
+   case carries the current version only, no disclosure of hidden alternatives (§13).
+7. **`[BOB-4 — RULED 2026-08-07, PROVISIONAL]`** — DEC-52's remaining yes/no: Bob's
+   mechanical-standing principle recorded on DEC-52, pending his confirmation; the sidebar
+   approval remains the act of record for the constitutive fields (§14a).
 8. **D-84** — the bias object type, now named as the second unbuildable read's precondition
    (§3): until it lands, "no manifest was in force," stated, is the only discharge.
 9. **D-222 / D-164** — the two declared preconditions (§14b.2).
@@ -1134,7 +1149,7 @@ error code and canned translation.
 | **IS-5** | The **`ai` credential's investigative scope**: reads across the project under a STATED viewer (§3), writes only IS-4 and `capture_requests`. | **NC: DEC-55.5 whole** — mint an `ai`-class credential, assert every `MACHINE_CANNOT_*` refusal fires BY NAME, **and that removing the predicate makes them all pass** (owed control 1 — the second half was never run) | IS-4 |
 | **IS-6** | The **run object and its observation log** (§11), on the `capture_sessions` shape — scratch, ticks, expiry, resumable; log never in `bundle.md`; D-129 vocabulary, D-104's governed/unreachable split, shell captures `LOOKED_INDETERMINATE`. | the log is written **whether or not the run succeeds** and **names the bound that stopped it** (§14b.6); **NC: a run KILLED mid-flight whose log must exist and name the bound** — the failure path is the only one that matters | none |
 | **IS-7** | **The strength PAIR over the current version** — per axis, MIN/MAX per DEC-32, the state-set argument, the state set on the return, ungraded legs inert-and-named, hunches excluded, what-if in-band (§12). | **NC: DEC-40's** — produce a what-if rendering, strip its filter/state-set line, the harness fails (owed control 3) | IS-1 |
-| **IS-8** | **The published case per §13** — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2]` resolved before build. | **NC: DEC-44's** — publish a case of two findings with differing strength pairs; the harness fails if any surface presents a single case-level strength (owed control 2); **NC: DEC-34's** — a page rendered without the header, now including the version name, fails (owed control 4); **NC: DEC-46(a)'s** — a carried-forward bias acknowledgement fails (owed control 5) | IS-1, IS-3, D-187, DEC-59's elements, the DEC-33-blocked ceremony |
+| **IS-8** | **The published case per §13** — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved. | **NC: DEC-44's** — publish a case of two findings with differing strength pairs; the harness fails if any surface presents a single case-level strength (owed control 2); **NC: DEC-34's** — a page rendered without the header, now including the version name, fails (owed control 4); **NC: DEC-46(a)'s** — a carried-forward bias acknowledgement fails (owed control 5) | IS-1, IS-3, D-187, DEC-59's elements, the DEC-33-blocked ceremony |
 | **IS-9** | **THE RUN HARNESS — the run's execution model**: fan-out to evidence sub-sessions, resumption, budget; the CHECK mode is its first deployment (§2). | **(a)** a sub-session returns REPORTS, not documents (§14b.1), ENFORCED at its return contract — **NC: neuter the check and a document-returning sub-session must fail an assertion**; **(b)** the run **queries and never loads** the project; **(c)** it joins `#schedConsumers` per `SCHEDULER.md` as ONE appended entry — **no second alarm and no cron**; **(d)** it builds the `runtime-ceiling-reached` producer and exhausting a budget is RECORDED, never silent; **(e)** versions are written as formed, never batched; **(f)** the spawn contract carries no bias manifest (§14); **NC, the objective's own (owed control 7): feed a run an inquiry the evidence does not support and assert it proposes nothing — an empty-handed run emits §9's empty-level kind and no version** | IS-1, IS-6 |
 
 **Cross-cutting, belonging to no single item and checked on all of them (§14b.4):** control

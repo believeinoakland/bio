@@ -27,6 +27,18 @@ CivicOS string is what ships and what runs; browser-UA delegation is a
 documented fallback with a named trigger (admission stops) and a named veto
 (counsel), not a default.
 
+**AMENDED 2026-08-07 (Bob; DECISIONS.md DEC-52, IS-SWEEP-2026-08-07.md §4c) — the
+paragraph above is retained as the historical record but is superseded IN PART.**
+For PUBLICLY AVAILABLE documents fetched as part of the workflow, the member-browser
+UA (the UA the member's browser was using when the inquiry was created) is now
+PERMITTED by ruling — the reserve's trigger-and-counsel-veto framing no longer
+governs that path. Bob: publicly available documents may be accessed without regard
+for whether they are captured directly by users or indirectly (mechanically) as part
+of this workflow, including with the member's own browser UA. Everything else
+stands: the CivicOS-UA identification rule remains the default for all other
+traffic, and D-94's measured finding — that admission turns on the contact URL —
+stands for the CivicOS UA path.
+
 ## The measurement
 
 2026-07-30, from Anthropic egress, `curl`, one URL
@@ -241,7 +253,10 @@ are admitted because Akamai does not recognise `CivicOS`, and that will change.
 **What does NOT change: BIO does not disguise its requests.** That position stands and
 is not weakened by expecting hostility. A system whose product is the trustworthiness
 of a record does not lie about who is asking, and browser-UA delegation remains HELD
-IN RESERVE with a named trigger, not adopted pre-emptively. Being blocked honestly is
+IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for
+publicly available documents fetched as part of the workflow, the member-browser UA is
+now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*. Being
+blocked honestly is
 a fact we can record; being admitted dishonestly is a claim we could not defend.
 
 One consequence worth stating so it is not discovered later: the instance-name

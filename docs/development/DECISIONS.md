@@ -3410,7 +3410,7 @@ response: **Bob, 2026-08-07 (mapping corrected the same day — an earlier recor
   member act it extends.** Application to this entry's six fields is being confirmed with Bob
   before enactment — the ruled sidebar mechanism (identify → present → member approves,
   individually or in bulk) stands either way, so nothing is blocked.
-decided: 2026-08-07 · Bob, session BOB (application under confirmation)
+decided: 2026-08-07 · Bob, session BOB (provisional: the sidebar approval remains the act of record, per the never-block rule; Bob confirms or corrects)
 reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §4 (capture rights and the UA).
 
 ### DEC-51 · open
