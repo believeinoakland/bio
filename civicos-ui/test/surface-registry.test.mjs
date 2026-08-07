@@ -648,8 +648,11 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
     ok(bh.includes(frag), `ARM Y7: the budget line carries the published '${frag}'`);
   ok(A.aiSessionPrincipalHtml(withBudget).includes("project"),
      "ARM Y8: WHICH ACCOUNT PAYS is on the surface — §14a already requires the record to name the cascade level");
-  ok(!A.aiSessionPrincipalHtml(withBudget).includes("token:ai") === false,
-     "ARM Y8b: the plane-credential principal is named beside it (DEC-27(b), DEC-55.4)");
+  /* Written positively. This arm was first spelled `!x.includes(...) === false`,
+     which is correct and unreadable — and an assertion nobody can read at a
+     glance is one that gets "fixed" into its own opposite later. */
+  ok(A.aiSessionPrincipalHtml(withBudget).includes("token:ai"),
+     "ARM Y8b: the plane-credential principal is named BESIDE the Claude account — two different principals, and an act must say both (DEC-27(b), DEC-55.4)");
 
   /* Y9 · IT DERIVES NOTHING. A percentage, a remainder or a judgement would be
      this surface computing a fact the record did not state. The pin is over the
