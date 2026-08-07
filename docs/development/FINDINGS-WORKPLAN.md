@@ -57,6 +57,17 @@ Detail lives in `IS-SWEEP-2026-08-07.md` (cited as SWEEP §n); this file is the 
 **Family F · BOB'S SEVEN** — SWEEP §4/§4a. Blocking markers: F5→D1(shape), F6→D1(prune),
 F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
 
+**Family G · FINAL-COMPARISON GAPS** (INVESTIGATIVE-SESSION.md §19, 2026-08-07 — the two
+partial rows of the fourteen-practice comparison)
+- F9 §14a's `[BOB-4]` provisional is stale against DEC-52's decided entry (machine may
+  rule; sidebar review, not gate) — rewrite the paragraph to the register. Wave 3 residue,
+  session BOB (joins the existing clear-the-markers item).
+- F10 No denied-means-adjust rule: the run's response to a plane refusal is unspecified and
+  a verbatim resubmit must be a structural no-op — deterministic-table row on IS-9, refusal
+  idempotence on IS-4. Family E handover, CONDUCT (IS-4/IS-9 builder).
+- F11 The run's budget (§14b.6) is recorded but never member-visible — launch-time budget
+  and live consumption belong on the running-session surface. E10/UI-38 scope, CONDUCT.
+
 ## Execution waves
 
 - **WAVE 1 (now, parallel, disjoint files):** A (DECISIONS.md) ∥ B (DEBT+MEASUREMENTS) ∥
@@ -94,3 +105,8 @@ F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
   of robots.txt, member-browser UA permitted. Wave 3 residue: clear the three [BOB-n]
   markers in INVESTIGATIVE-SESSION.md, correct SOURCE-ACCESS.md's UA-reserve posture, then
   hand Family E to CONDUCT.
+- 2026-08-07 · Final Claude Code comparison written as INVESTIGATIVE-SESSION.md §19:
+  12/14 CONFORMS, 2 partial GAPs, 0 N-A. Family G added (F9 Wave 3 residue; F10/F11 join
+  the Family E handover). Note: DEC-52's FINAL register entry (decided 2026-08-07, "the
+  machine may rule") supersedes the NO-as-accepted line above — F9 tracks the design-doc
+  correction.

@@ -1174,3 +1174,37 @@ preconditions the bias half (§3). D-225's caps land before D-222's surface.
 IS-1 is the spine. IS-6 is independent of everything, is the one unblocked start (it
 discharges D-196 and makes §15's instruments computable), and IS-9 is what makes a run
 survive contact with a real project.
+
+## 19 · The final Claude Code comparison (2026-08-07)
+
+**Session BOB, against the fourteen practices Claude Code actually integrates by.** Read
+under DEC-52's final ruling: the machine may rule — constitutive acts machine-writable and
+machine-attributed, the sidebar review, not a gate; the §4 version fence is untouched.
+
+| # | Claude Code practice | verdict | where / what is missing |
+| --- | --- | --- | --- |
+| 1 | separate process, same interface as a person, no privileged hooks | **CONFORMS** | §14a — fleet member in the group's account; the plane grows no model runtime; DEC-55's endpoint surface |
+| 2 | permission tiers; the gate is the HARNESS, never model self-restraint; denied = adjust, never retry verbatim | **GAP (partial)** | the gate half CONFORMS and is stronger (§4 — no accept op exists; §14b.4 — a fence is code; IS-2's three-layer NC). Missing: (a) §14a's `[BOB-4]` tier text is stale against DEC-52's final ruling (F9); (b) no denied-adjust rule — nothing tells the run what it must do after a plane refusal, so a verbatim-retry loop is caught only by the budget (F10) |
+| 3 | context economy: sub-agents return conclusions, query-never-load, progressive disclosure | **CONFORMS** | §14b.1 — all three, verbatim; a document-returning sub-session fails IS-9(a)'s NC |
+| 4 | versioned doctrine loaded every session; the run records which version | **CONFORMS** | §14a table; §11 — the run records the skill version it ran under |
+| 5 | deterministic policy enforcement outside the model at lifecycle points, unskippable | **CONFORMS** | §14b.5 pre-write checks PLANE-side at the one endpoint; conduct enforced at the `capture_requests` drain (§4); the log written by code whether or not the run succeeds (IS-6) |
+| 6 | tools small, orthogonal, typed; refusals as structured data | **CONFORMS** | §14c option D — composable vocabulary over per-question ops; every refusal a C-number with a DEC-49 code and canned translation (§14b.5) |
+| 7 | verification loop: run it, READ it, never declare success unverified | **CONFORMS** | §14b.5 — the run verifies before proposing; a failing version is not proposed |
+| 8 | resumable sessions; local transcripts; compaction without losing working state | **CONFORMS** | §14b.3/§14b.7 — `#schedConsumers`, resumed run reads its own log; transcripts device-local with TTL (DEC-61, §14a); the store is the memory, the description the durable summary |
+| 9 | isolation: parallel workers, one session per tree, merge through one channel | **CONFORMS** | §14a fan-out — sub-sessions hold no write and no lens; one write path for both modes (§10) |
+| 10 | background tasks notify on completion, never polled | **CONFORMS** | §14a — request → daemon → FINDING-slug notify → post-process; extend the subscriber, not a channel |
+| 11 | plan mode: propose-before-act; the human approves the plan, not each keystroke | **CONFORMS** | approval sits at the launch (DEC-47 — the inquiry IS the authorisation) and at acceptance (§4); per-plan bulk URL approval was considered and REFUTED by ruling, and the accept gate is stronger than plan mode |
+| 12 | machine work stamped as machine work, never the human's | **CONFORMS** | §4 — daemon-at-the-session's-request, both principals named (DEC-27(b), DEC-55.4); D-82's look-derived (§6.4); DEC-52's ruling itself carries machine attribution |
+| 13 | escalation discipline: ask only the human's own; provisional over blocking; report failures faithfully | **CONFORMS** | §9's empty-level kind, §11's failure-path log, honest absences stated (§3, §14a); SWEEP §4b — four of seven resolved without blocking on Bob |
+| 14 | cost/budget visibility: effort bounded, the bound visible | **GAP (partial)** | bounded and recorded CONFORMS (§14b.6; IS-9(d) — `runtime-ceiling-reached` gets its producer). Missing: the bound is visible only in the log after the fact — no member-facing budget at launch and no live spend on the running-session surface (F11) |
+
+Twelve of fourteen conform, several by construction stronger than the practice they mirror
+(no accept op beats a permission prompt). The two partials name three narrow gaps.
+**F9** — §14a's `[BOB-4]` provisional is superseded by DEC-52's decided entry; rewrite the
+paragraph to the register (machine may rule; sidebar review, not gate; version fence
+unchanged). **F10** — the design specifies how the plane refuses, never how the run must
+respond: IS-9 needs the denied-means-adjust rule as a deterministic-table row, and IS-4's
+refusal should make a verbatim resubmit a structural no-op rather than churn. **F11** —
+§14b.6's budget is recorded, never shown: the running-session surface (UI-38's absorbed
+scope) should carry the budget and its live consumption, since which account pays is
+already named on the record. Nothing found contradicts a standing ruling; no N-A rows.
