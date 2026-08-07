@@ -511,11 +511,40 @@ ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
 /* A NEW ROUTER IS A NEW ADDRESS, and an address that resolves before sign-in is
    a pre-authentication surface. This does not judge the new one; it stops it
    from arriving unclassified. */
-ok("WALK 2 REACH: the script declares exactly the four routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (a fifth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 4
-   && ["actionRouteFromHash","projectRouteFromHash","publishedRouteFromHash","routeFromHash"]
-        .every(f => ROUTE_FNS.includes(f)));
+/* CORRECTED 2026-08-07 BY UI-38, four -> FIVE, and the old assertion was RIGHT
+   to fail rather than wrong to exist: `aiSessionRouteFromHash` arrived with the
+   once-only running-session surface and this arm stopped it arriving
+   UNCLASSIFIED, which is exactly what it is for. The classification, made
+   against this walk's own rule ("`boot()` cannot run without a credential, so
+   the routers it asks are not pre-authentication surfaces"):
+
+     `aiSessionRouteFromHash` is POST-AUTHENTICATION. It is asked inside
+     `boot()`'s router chain and NOWHERE at the top level, so `#session/<id>`
+     resolves for nobody holding nothing. It is therefore not a pre-auth
+     surface and adds no member-facing pre-auth vocabulary.
+
+   Asserted rather than asserted-by-comment: the two pins below check both
+   halves of that classification, so a later edit that hoists the router above
+   the gate fails HERE and the surface is re-classified rather than drifting
+   into the pre-auth set unnoticed. */
+ok("WALK 2 REACH: the script declares exactly the five routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (a sixth must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 5
+   && ["actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
+       "publishedRouteFromHash","routeFromHash"].every(f => ROUTE_FNS.includes(f)));
+{
+  /* The running-session router is asked in boot()'s chain ... */
+  const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
+  ok("WALK 2 REACH: the boot() router chain was found and is the real one",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("routeFromHash"));
+  ok("WALK 2 CLASSIFICATION: aiSessionRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("aiSessionRouteFromHash()"));
+  /* ... and NOWHERE outside it. The published router is asked at the top level
+     on purpose; a second one appearing there would be a new pre-auth surface. */
+  const TOPLEVEL = SCRIPT.slice(SCRIPT.indexOf("/*__AI_SESSION_END__*/"));
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #session/<id> resolves for nobody holding nothing",
+     !TOPLEVEL.includes("aiSessionRouteFromHash()"));
+}
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
    || SCRIPT.slice(SCRIPT.indexOf("/*__PUBLISHED_CASE_END__*/")).includes("publishedRouteFromHash()"));
