@@ -1128,10 +1128,18 @@ the correction each time was to CITE the ruling, not to reconstruct it.
    (§3): until it lands, "no manifest was in force," stated, is the only discharge.
 9. **D-222 / D-164** — the two declared preconditions (§14b.2).
 
-## 18 · Decomposition — a first cut, NOT HANDED OVER
+## 18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED
 
-**Bob, 2026-08-05: hold the handover until the integration architecture is finished.** The
-`BOB INBOX` says so and instructs CONDUCT not to schedule any of it. Milestones per the
+**~~Bob, 2026-08-05: hold the handover until the integration architecture is finished. The
+`BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold
+was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same
+day. Corrected here in the same turn rather than left standing, because §18 is exactly what
+an IS worker reads and the struck sentence would have told them to stop.** The items are in
+`QUEUE.md` under RECORD, keeping their `IS-` ids so each traces back to this section by name
+— placed there rather than in a new area because a second area would contend for `store.mjs`
+with RECORD, which is the one thing a `CLAIMS.md` claim cannot protect against. Preconditions
+queued ahead of them: REC-60 (D-225's caps), REC-61 (D-220's join), REC-62 (D-222 staged A
+then C), and REC-59 before any new IS op. Milestones per the
 2026-08-07 placement (MILESTONES.md M9 note): **IS-1/2/4/7 are M9; IS-5/6/9 are M9
 substrate; IS-3 and the running-session surface are M8 (UI-38 should absorb the latter);
 IS-8 is M10.** Sequencing per §2: the CHECK mode deploys first; REC-59 lands before any
