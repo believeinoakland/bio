@@ -3400,16 +3400,18 @@ what reversing costs: small now, larger later — every stamped field written be
   act costs the automated-recognition capability and buys no honesty; fencing the constitutive
   ones is where the boundary actually sits.
 
-response: **NO — a machine credential may not perform these acts AS ACCEPTED.** Bob,
-  2026-08-07. The constitutive fields (declaredBy, resolvedBy-testimony, threadedBy, the
-  expertise pair) take the MACHINE_CANNOT_* fence on REC-46's one predicate; the ruled
-  sidebar mechanism (2026-08-06) is the approval path — the machine identifies and presents,
-  the member approves individually or in bulk. The derived/constitutive split recorded above
-  stands: `resolve`'s automatic cascade writes earned grades and is not an acceptance, so it
-  keeps its machine path.
-decided: 2026-08-07 · Bob, session BOB
-reasoning recorded in: this entry (the split and the sidebar mechanism), D-151/REC-46 (the
-  fence pattern), INVESTIGATIVE-SESSION.md §5 (grades earned or absent).
+response: **Bob, 2026-08-07 (mapping corrected the same day — an earlier recording of "NO as
+  accepted" was the SESSION'S misread of a mislabelled answer and is WITHDRAWN):** *"if the
+  documents are publicly available, then we are in our rights to have access to them without
+  regard for whether they're being captured directly by users or indirectly (mechanically) as
+  part of this workflow. That includes using the same UA that the member's browser was using
+  when the inquiry was created."*
+  **The principle: a mechanical act within the workflow carries the same standing as the
+  member act it extends.** Application to this entry's six fields is being confirmed with Bob
+  before enactment — the ruled sidebar mechanism (identify → present → member approves,
+  individually or in bulk) stands either way, so nothing is blocked.
+decided: 2026-08-07 · Bob, session BOB (application under confirmation)
+reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §4 (capture rights and the UA).
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
