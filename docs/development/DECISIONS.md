@@ -595,6 +595,9 @@ for CONDUCT to enact: nothing new in the queue — REC-19 and REC-15 already car
   honest until REC-19 lands.
 enacted: 2026-08-03 · CONDUCT — 5318b53: the plane-sourced pre-flight doctrine is stated on REC-19's scope (no act surface before it exists); the renders-no-refusal-it-computed-itself clause added to UI-12, UI-14, UI-16, UI-19 and UI-20's acceptance; UI-10 carries the D-138 half (check-semantics.mjs must read bio-checks.mjs) as not optional. Reasoning in QUEUE.md (REC-19, UI-10/12/14/16/19/20).
 
+**AMENDED 2026-08-06 by DEC-49:** surfaces may render an AUTHORED translation keyed on a code
+the plane SENT; still never compute or infer. *(Note added 2026-08-07 by session BOB.)*
+
 ### DEC-9 · answered
 raised: 2026-07-31 · FRAMEWORK (FW-9, progression instances + the missing-predecessor finding)
 for: bob-session
@@ -1834,6 +1837,11 @@ response: **AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MA
 decided: 2026-08-03 · Bob
 enacted: 2026-08-03 · CONDUCT — 5318b53: the four roles and four boundary rules are doctrine, recorded here and referenced from REC-13's pursue path; no role is decomposed into items (deliberately — architecture is later, and the S-item decompositions are parked with Bob's thread). Nothing queued contradicts a rule; a machine credential is refusable on every authored act already queued (REC-13, REC-28, CPDF-10's attestation). Reasoning in this entry.
 
+**NOTE 2026-08-07:** DEC-60 licenses proactive claim formulation and DEC-62 merges
+PURSUE+FIND into one investigative session — rule 3's machine-proposed-connection-is-a-hunch
+is under reconciliation in INVESTIGATIVE-SESSION.md; DEC-55's CHECK-first sequencing is Bob
+decision item 7 in IS-SWEEP-2026-08-07.md §4a. *(Note added by session BOB.)*
+
 ### DEC-25 · deferred
 raised: 2026-08-03 · session BOB, from Bob's action-plan ruling
 for: bob
@@ -2062,6 +2070,10 @@ response: **ADOPT.** Bob, 2026-08-03: *"Just as most full featured UXs include a
   prompt with wide reach does not widen the system's attack surface in the way one might expect.
 decided: 2026-08-03 · Bob
 enacted: 2026-08-03 · CONDUCT — nothing queued yet: S12 and its wizard are parked with Bob's thread; the assistant holds no copy of the rules (asks the plane, bound by DEC-8, no new trust boundary) and that constraint is recorded for its decomposition. Reasoning in this entry.
+
+**NOTE 2026-08-07:** limit 2 (may not add unstated propositions) is SUPERSEDED for the
+investigative session by DEC-60, which licenses claim formulation as suggestions; it STANDS
+for the assistant pilot. *(Note added by session BOB.)*
 
 ### DEC-28 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q8 / SB-CORE §5, working the open questions at
@@ -2677,6 +2689,10 @@ for CONDUCT to enact: unblock REC-33; rename its `MONITOR_TOKEN` to `DAEMON_TOKE
   next unattended consumer knows the class is the PATH and not the verb; sequence the
   plane's recognition of the class BEFORE the installer binds it (DIST-1).
 enacted: 2026-08-04 · CONDUCT — REC-33 unblocked and renamed to Bob's DAEMON_TOKEN (the class is the unattended path; scoped to its two verbs, widened by decision), ADMIN_TOKEN fallback kept, DIST-1's never-bind-an-unclassifiable-token constraint carried as binding; the installer half stays a follow-on DIST item behind REC-33's landing. Reasoning in this entry and REC-33's scope.
+
+**NOTE 2026-08-07:** a third consumer of the daemon class is proposed — the AI
+capture-request path; widen-by-decision pending, Bob item 1 in IS-SWEEP-2026-08-07.md §4.
+*(Note added by session BOB.)*
 
 ### DEC-39 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
@@ -3309,6 +3325,10 @@ recommendation: ship as-is, and revisit if a real group ever resolves in bulk. A
 what reversing costs: one predicate at the read, and the ranking already exists — cheap
   now, and cheaper than it will ever be again once resolutions exist in volume.
 
+**NOTE 2026-08-07:** this entry's revisit trigger — bulk resolution — FIRED via DEC-52's
+2026-08-06 bulk-approval mechanism; re-put before the sidebar is built. *(Note added by
+session BOB.)*
+
 ### DEC-52 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-46's report)
 for: bob
@@ -3559,6 +3579,7 @@ response: **SURFACES MAY TRANSLATE — EVERY REFUSABLE CONDITION CARRIES AN ERRO
 decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry, DEC-8 (amended in wording, not in protection), DEC-59 (the
   definitions/bias elements that handle the published-case half), MEASUREMENTS.md (UI-31/34/36/37).
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-48 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
@@ -3638,6 +3659,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the investigative session
   this unblocks, its fence and the daemon relationship), docs/development/SOURCE-ACCESS.md
   (the standing position that BIO does not disguise its requests).
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-54 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)
@@ -3822,6 +3844,7 @@ response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling
 decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-59 · answered
 for: bob
@@ -3858,6 +3881,7 @@ response: **RENDER IT — AND AS AN ELEMENT OF THE CASE, NOT A LINE ON A PAGE.**
 decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry, DEC-49 (the definitions half), DEC-41 (the container carries
   its PDF), DEC-46(a)/REC-47 (the acknowledgement is authored, fresh per edition, never prefilled).
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-58 · answered
 
@@ -3899,6 +3923,7 @@ response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling
 decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-56 · answered
 for: bob
@@ -3936,6 +3961,7 @@ response: **ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.** Bob, 2026-08-06, ruling
 decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
+enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
 
 ### DEC-55 · answered
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
@@ -4157,7 +4183,7 @@ alternative: keep formulation member-only, with the AI confined to reads (the as
   its intended users cannot meet.
 recommendation: n/a — the session's own opening position was AGAINST parts of this and was
   argued down on the merits. The withdrawn positions and why each fell are kept in
-  `INVESTIGATIVE-SESSION.md` §11 rather than lost, because four of the five were one error
+  `INVESTIGATIVE-SESSION.md` §16 rather than lost, because the first five of eight were one error
   repeated rather than four findings.
 response: **YES — the AI may formulate claims and legs proactively, and every write it makes
   is a SUGGESTION.** Bob, 2026-08-05. The division between machine and member does NOT move;
@@ -4250,6 +4276,43 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the full desig
   support/defeat structure, the instruments, the open questions and the withdrawn positions),
   DEC-55/D-199 (the `ai` class it extends), DEC-46 (regrade's home and the
   lens-preserved-not-applied rule).
+
+### DEC-61 · answered
+raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
+  design document (INVESTIGATIVE-SESSION.md §14a) — the register's founding rule is that a
+  Bob ruling lives HERE, and this one did not.
+for: bob
+question: What happens to an investigative session's TRANSCRIPT — where does it live, how
+  long does it live, and who may read it?
+response: **TRANSCRIPTS ARE INTERNAL NOTES — DEVICE-LOCAL, TTL'd, AND DELETED AS PART OF THE
+  PUBLICATION PROCESS. NEVER IN THE RECORD STORE.** Bob, 2026-08-06, in the reporter's-notes
+  framing: transcripts are internal deliberations with no identified use, and they need
+  protecting from subpoenas. Device-local rather than instance-side because an instance-side
+  cache lives with a third party who can be served directly and has no incentive to resist;
+  on the member's device a demand must reach the member, who can contest it. Deletion at
+  publication is a ROUTINE trigger, and that is what makes it defensible: destruction on a
+  routine schedule set in advance is defensible; destruction after notice is spoliation —
+  **therefore the purge is SUSPENDABLE (a litigation hold)**: once a group is on notice, both
+  the TTL and the publication-deletion stop for relevant material. The price, stated so
+  nobody discovers it later: teammates see the running-session indicator, not the reasoning.
+decided: 2026-08-06 · Bob
+reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full ruling: the
+  threat model, the routine-trigger defensibility, the litigation hold, the mechanical
+  consequences).
+
+### DEC-62 · answered
+raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
+  design document (INVESTIGATIVE-SESSION.md) — the register's founding rule is that a Bob
+  ruling lives HERE, and this one did not.
+for: bob
+question: Are pursuing evidence and investigating one session or two?
+response: **ONE SESSION.** Bob, 2026-08-06: pursue and investigation are ONE session — one
+  skill, one credential scope, one loop in which searching and forming versions interleave.
+  This merges two of DEC-24's four roles without moving the machine/member boundary.
+  Sub-sessions remain as FAN-OUT within one run, which is parallelism, not a second role.
+decided: 2026-08-06 · Bob
+reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the one-session shape,
+  its sub-session fan-out, and the request → daemon → post-process cycle).
 
 ## Answered, awaiting enactment
 
