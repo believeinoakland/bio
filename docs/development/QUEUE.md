@@ -79,7 +79,24 @@ _(drained by CONDUCT 2026-08-03 — the 2026-07-31 office-formats directive: `IN
 
 _(drained by CONDUCT 2026-08-03 — the 2026-08-01 case-making build order and every subsequent BOB entry through the 2026-08-03 session-dormancy note: all 35 RECONCILED §3 items plus REC-28, CPDF-9 and CPDF-10 are enqueued below with every DEC reshape folded into the item scopes (DEC-12/13/14 → REC-14/REC-24; DEC-15 → REC-11/12/15/18, UI-11; DEC-16 → REC-20/21, UI-14; DEC-17+amendment → REC-14, UI-18; DEC-18/21 + D-160 → REC-12, UI-11; DEC-19+amendment → FW-14, UI-17/17a; DEC-20 → REC-15; DEC-22 → REC-13; DEC-23/D-164 → REC-11/18 provisionals + IC-1's constraint; DEC-24 recorded as doctrine on REC-13's pursue path; DEC-28/29/30 → REC-16, REC-13; DEC-31 → UI-18; DEC-33 → REC-15/UI-17 blocked, UI-17a queued; DEC-34 → REC-14/REC-22/UI-18; DEC-4 as twice amended → CPDF-9/CPDF-10, FW-15). The superseded pointers sit atop BUILD-ORDER/SB-CORE/SB-EVIDENCE/SB-OUTPUT and the corrected-by-rulings pointer atop AUDIENCES.md. D-157 is enqueued as REC-29 (CONDUCT's slot call: small, self-contained, touches people outside the project); D-158 is recorded on REC-15's deferred scope. Activation: both slots RECORD — REC-10 then REC-19, per the handover's order. S11's state inventory and D-164's content-extent design stay PARKED with Bob's paused thread, deliberately not queued. DEC-32 remains the sole open register entry; its provisional (no grounds machinery) is noted on REC-11/REC-12. No entries outstanding.)_
 
-**BOB 2026-08-05 — DEC-60 is RULED and RECORDED, and NOTHING IS HANDED OVER YET. Do not
+**BOB 2026-08-07 — THE HOLD IS LIFTED. The investigative session is HANDED OVER for
+execution.** (Original 2026-08-05 hold text follows for history; it no longer applies.)
+
+**THE HANDOVER:** the work is `INVESTIGATIVE-SESSION.md` §18 (IS-1..IS-9, with acceptance
+criteria, C-number obligations and the seven named negative controls) plus Family E of
+`FINDINGS-WORKPLAN.md`. **Sequencing, from the sweep (`IS-SWEEP-2026-08-07.md` §5a):**
+preconditions first — D-222 option A then C, and D-220's join (both M3, RECORD's paths);
+REC-59 lands BEFORE any new op (the bare-array pin); D-225 caps the meaning reads beside
+it. Then IS-6 (the run object — depends on nothing) and IS-1 in parallel; IS-3 after
+D-216's model check; IS-9's shape after D-218's probe lands in MEASUREMENTS.md; IS-5 needs
+D-199's `ai` class built; IS-8 last (DEC-59's case elements + D-187's arity land with it).
+CHECK is the first DEPLOYED MODE (ruling recorded on DEC-55's amendment). UI-38's scope
+absorbs the once-only running-session surface (E10). Milestone placement is M8/M9/M10 per
+MILESTONES.md's 2026-08-07 note — not M4. All doctrine decisions are closed: DEC-52's one
+provisional (sidebar approval remains the act of record) is noted in its entry and blocks
+nothing. Enactment drafts for the seven answered decisions are pointed to from each entry.
+
+**BOB 2026-08-05 (superseded) — DEC-60 is RULED and RECORDED, and NOTHING IS HANDED OVER YET. Do not
 schedule IS-1 … IS-7.** An AI may formulate claims proactively and every write it makes is
 a suggestion (DECISIONS.md DEC-60; design in `docs/development/INVESTIGATIVE-SESSION.md`).
 **Bob's instruction, 2026-08-05: hold the handover until the investigative session is more
