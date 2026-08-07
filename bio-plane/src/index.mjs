@@ -774,6 +774,30 @@ const OPS = {
      authoring; a preference is not even a disposition. */
   queuemute:          { classes: ["admin", "member"],               mutating: true  },
   queuesnooze:        { classes: ["admin", "member"],               mutating: true  },
+  /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
+     and two reads, and the class lists say two things worth stating.
+
+     PROBE IS ADMITTED on all five, unlike the queue pair above, and the
+     distinction is the same one D-151 drew: a mute with no member behind it is
+     not a thing that exists, whereas a RUN is a real object with a real subject
+     that a machine credential legitimately drives — the whole design has the run
+     executing in a FLEET MEMBER (§14a), which is a machine. What bounds it is
+     not the class list but `scopeFor`, which confines probe to the scratch
+     namespace, and the store's own two-principal requirement.
+
+     NO `ai` CLASS IS MINTED HERE. D-199's `ai` credential class is IS-5's, and
+     inventing one now would be choosing its shape before the item that owns it
+     measures anything. These ops ride the existing classes and IS-5 narrows
+     them; that direction is safe and the other is not.
+
+     THE TWO READS ARE GATED (D-15) on the run's context, which is an inquiry or
+     a project bundle — classified in test/gate-reads.test.mjs, where every read
+     op must be. `viewer` is stamped server-side below. */
+  airunopen:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  airuntick:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  airun:              { classes: ["admin", "member", "probe"],      mutating: false },
+  airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -950,6 +974,16 @@ const TASK_ACTIONS = ["taskforward", "taskresolve"];
    change nothing for anyone but the member who made them. Naming them together
    would be the first step toward one control. */
 const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
+/* IS-6: the investigative run's three WRITES. Its two reads are not here, for
+   the reason stated on QUEUE_ACTIONS above and restated by capability.test.mjs:
+   SESSION_OPS gates MUTATING ops alone, so a read appears in it nowhere.
+   Named as one array rather than folded into an existing set because a run is
+   neither a task act (it changes nothing for anyone else yet) nor a personal
+   preference (it spends the group's Claude budget and will propose versions to
+   the record). Naming them together would be the first step toward one control
+   over two different doctrines — the same reason QUEUE_ACTIONS was kept apart
+   from TASK_ACTIONS. */
+const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose"];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -995,13 +1029,13 @@ const SESSION_OPS = {
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
-                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS,
+                   ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
@@ -1299,6 +1333,23 @@ const NEEDS = {
      capability one. */
   queuemute:        null,
   queuesnooze:      null,
+  /* IS-6. Opening an investigative run rides the CONTRIBUTE surface, and the
+     reasoning is the one op=proposedispose records two entries up rather than a
+     new one: a run shapes what the working corpus surfaces as open — it will
+     propose versions of an inquiry's basis and it spends the group's Claude
+     budget against their account. A view-only member does not start work the
+     group pays for and the record then carries. It is deliberately NOT
+     `publish`: a run proposes and nothing it does is the group putting its name
+     on anything (§1's suggesting / authoring / committing, kept apart).
+
+     `airuntick` and `airunclose` carry the SAME capability rather than none.
+     The alternative — gate the open and leave the tick free — would mean a
+     credential that may not start a run may still spend its budget and close
+     it, which is the fence in the wrong place. The two READS are ungated by
+     capability and gated by VIEWER, like every other read here. */
+  airunopen:        "contribute",
+  airuntick:        "contribute",
+  airunclose:       "contribute",
 };
 
 /* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
@@ -4626,6 +4677,11 @@ export default {
            an absent stamp, like every op in this list. */
         || op === "provenancechain"
         || QUEUE_ACTIONS.includes(op)
+        /* IS-6: a run names an inquiry or a project bundle, so a run over a
+           project the caller was never invited to must answer exactly as a
+           nonexistent run does — REC-25/REC-30's leak, one object over. The
+           store fails closed on an absent stamp, like every op in this list. */
+        || op === "airun" || op === "airunlog"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -4711,6 +4767,22 @@ export default {
        administrator, so it is refused by the store rather than let through. */
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* IS-6 / §14a, DEC-27(b), DEC-55.4: THE PLANE-CREDENTIAL PRINCIPAL on a run,
+       decided by the SERVER from the credential that authenticated and set after
+       the caller's parameters were copied, so a caller-supplied `principal` is
+       overwritten rather than honoured. A principal a caller can name is not a
+       principal.
+
+       This is only HALF of what the run must name. The other half — WHICH LEVEL
+       of the Claude-account cascade pays (member, then project, then instance)
+       — is NOT stamped here and cannot be: it is resolved where the token
+       actually resolves, in the fleet member, and the plane learns it by being
+       told. So the store REFUSES to open a run that does not carry it, which is
+       the fail-closed direction: a run with no payer named is a run nobody can
+       be billed for and nobody can audit. Never a token value, on either half. */
+    if (op === "airunopen")
+      inner.searchParams.set("principal",
+        viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
      *

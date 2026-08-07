@@ -5072,3 +5072,106 @@ export async function checkBundle(input, opts = {}) {
   const pass = !findings.some(x => x.severity === 'error');
   return { pass, findings };
 }
+
+/* ===========================================================================
+ * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
+ * and §14b.6). SIX C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ *
+ * WHY THEY ARE IN THIS FILE AT ALL, since none of them judges a bundle
+ * document. §14b.4 is explicit: *every refusal this design promises "BY NAME"
+ * is a C-number in the check catalogue* — "the IS work allocated none in v2,
+ * and each IS item now allocates its C-numbers at build, same as every other
+ * gate". The catalogue is where a C-number is MINTED; where the refusal FIRES
+ * is a separate question, and these fire in the plane (`src/airun.mjs`, called
+ * from `store.mjs`), because §14b.5's rule is that the checks are the PLANE'S
+ * and never the model's. They are therefore ALLOCATIONS carrying their
+ * enforcement site, not `checkX(ctx, findings)` functions, and `checkBundle`
+ * does not call them — a bundle document has no run object in it, and inventing
+ * a document arm so the shape matched would be a check over an empty
+ * population, which is a defect this repository has already measured twice.
+ *
+ * WHY THE ALLOCATION AND THE TRANSLATION ARE ONE ROW. DEC-49 (Bob, 2026-08-06;
+ * QUEUE.md REC-64) rules that every refusable condition carries an ERROR CODE
+ * with a CANNED TRANSLATION and that an untranslated code FAILS THE HARNESS
+ * rather than reaching a member. Its acceptance also requires the
+ * code-to-translation map to be read from ONE place rather than copied — "a
+ * hand copy agrees at zero cost — measured five times". So the C-number, the
+ * wire code and the translation are ONE ROW here; `src/airun.mjs` imports this
+ * and holds no second copy, and REC-64 can absorb the family whole when it
+ * builds the general map. LOOKUP IS AT RUNTIME rather than at build, which
+ * REC-64 explicitly leaves open: the refusal's `detail` names the offending
+ * value and the run it came from, so a build-time table would have to carry
+ * either a template language or a sentence with the facts taken out of it.
+ * ========================================================================= */
+export const AI_RUN_CHECKS = {
+  /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
+     LOOKED_INDETERMINATE / PRESENT, plus `partial`. Which absence is a stated
+     fact, never a diagnostic detail." An entry outside the vocabulary is not a
+     weaker statement of absence; it is an ungoverned one. */
+  AI_LOG_STATE_UNKNOWN: {
+    check: 'C-22.1',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    translation: 'That observation does not say which kind of absence it found. '
+      + 'The record distinguishes never having looked, having looked and found nothing, '
+      + 'having looked and being unable to tell, having found it, and having found part of it.',
+  },
+  /* D-104, and CLAUDE.md states the general rule it instantiates: "our governor
+     refusing is not the source failing". An entry recording LOOKED_ABSENT when
+     it was OUR pacing that stopped the fetch MANUFACTURES a false absence —
+     §11's own word. The governed flag is the fact; a governed observation can
+     only be LOOKED_INDETERMINATE, and either definitive claim is refused. */
+  AI_LOG_GOVERNED_ABSENCE: {
+    check: 'C-22.2',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    translation: 'That observation was stopped by our own pacing of the source, not by the source. '
+      + 'It can only record that we could not tell — recording an absence there would be a claim '
+      + 'about the world made from a fact about us.',
+  },
+  /* §11's third rule, SWEEP §3's false-coverage hazard: "A client-rendered
+     shell capture is LOOKED_INDETERMINATE, never PRESENT". `client-rendered-shell`
+     is catalogued with no producer, and an evidentially empty capture that reads
+     as coverage is the defect the whole absence vocabulary exists to prevent. */
+  AI_LOG_SHELL_PRESENT: {
+    check: 'C-22.3',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    translation: 'That capture is a page shell with nothing evidential in it, so it cannot be '
+      + 'recorded as having found the material. It records that we could not tell.',
+  },
+  /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
+     code the plane SENT, which only holds if the plane never sends a condition
+     nobody has translated. The condition vocabulary is `queuestate.mjs`'s, read
+     LIVE rather than copied, and a run naming a kind outside it is a loud
+     refusal instead of a silent new vocabulary — queuestate.mjs's own words for
+     the same fence one surface over. */
+  AI_RUN_CONDITION_UNKNOWN: {
+    check: 'C-22.4',
+    where: 'src/airun.mjs checkCondition, called from store.mjs #aiRunTerminate',
+    translation: 'The run tried to end on a condition the record has no name for. '
+      + 'A condition nobody can read is not an explanation.',
+  },
+  /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
+     which bound and where it stopped". A close with no bound named is the
+     `heldMatch` defect exactly — not found and did not finish looking made
+     indistinguishable — so the terminate path REFUSES it rather than writing an
+     unattributed ending. This is what makes "names the bound" a mechanism
+     rather than an intention. */
+  AI_RUN_BOUND_UNNAMED: {
+    check: 'C-22.5',
+    where: 'src/airun.mjs checkBound, called from store.mjs #aiRunTerminate',
+    translation: 'The run stopped without saying what stopped it. '
+      + 'Not finding something and not finishing the search are different facts, '
+      + 'and only one of them licenses a conclusion.',
+  },
+  /* §11: "the observation log cannot live in bundle.md, which is written only on
+     success — the log's whole value is the failure path." The log is a different
+     object from the record, and a different object again from a TRANSCRIPT,
+     which DEC-61 puts device-local with a TTL and out of the record store
+     altogether. This refusal is the fence AT THE APPEND: an entry offered for a
+     bundle is refused, so the separation is enforced at the one write rather
+     than asserted about every reader. */
+  AI_LOG_NOT_A_BUNDLE: {
+    check: 'C-22.6',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    translation: 'The observation log is not part of any published document and cannot be filed into one.',
+  },
+};

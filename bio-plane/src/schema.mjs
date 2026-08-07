@@ -1581,6 +1581,112 @@ CREATE TABLE IF NOT EXISTS correspondence (
 CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
 CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
 
+-- IS-6 / INVESTIGATIVE-SESSION.md §11: THE RUN IS AN OBJECT, and it is built on
+-- the capture_sessions shape above rather than on a new one — "SCRATCH, not
+-- record… a work list with an expiry": ticks, an expiry, opaque state,
+-- resumable across invocations. Every column beyond that shape is one §11 or
+-- §14b.6 names, and each is here because a version is only interpretable
+-- against the conditions it was formed under.
+--
+-- THE LEASE IS THE HEARTBEAT AND 'expires' IS IT. A run extends it on every
+-- tick. A run that is KILLED extends nothing, so the lease lapses and the
+-- ai-run-reap scheduler consumer terminates it — which is how the observation
+-- log gets its terminal entry for a run that never ran its own exit path. That
+-- is the whole of §14b.6's guarantee and the reason this column is not merely a
+-- TTL for tidiness.
+--
+-- TWO PRINCIPALS, NEVER ONE (§14a, DEC-27(b), DEC-55.4). 'principal_plane' is
+-- the plane credential ('token:<class>' or a member id); 'principal_claude' is
+-- WHICH LEVEL of the Claude-account cascade paid — member, then project, then
+-- instance. They are two different principals and an act must say both. NEITHER
+-- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
+-- configured, not a secret, and nothing in the plane writes a credential here.
+--
+-- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
+-- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
+-- record store. 'state' is the run's resumable SCRATCH — its work list — and
+-- the observation log below is a structured account of where the search went.
+-- Neither is a transcript, and there is no column here one could be put in.
+CREATE TABLE IF NOT EXISTS ai_runs (
+  run                   TEXT PRIMARY KEY,
+  status                TEXT NOT NULL DEFAULT 'running',
+  label                 TEXT,
+  mode                  TEXT,
+  context_type          TEXT NOT NULL,
+  context_id            TEXT NOT NULL,
+  principal_plane       TEXT NOT NULL,
+  principal_claude      TEXT NOT NULL,
+  principal_claude_ref  TEXT,
+  skill_version         TEXT,
+  bias_manifest         TEXT,
+  standard_pair         TEXT,
+  created               TEXT NOT NULL,
+  updated               TEXT NOT NULL,
+  expires               TEXT NOT NULL,
+  ticks                 INTEGER NOT NULL DEFAULT 1,
+  state                 TEXT NOT NULL,
+  stopped_bound         TEXT,
+  stopped_condition     TEXT,
+  stopped_at            TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
+CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
+
+-- §14b.6's budget, ONE ROW PER BOUND, with its live consumption beside it.
+-- Rows rather than columns because F11 (§19, carried by UI-38) requires the
+-- surface to render the budget and its consumption while the run is live, and
+-- its renderers are field-name-blind — they walk what the record published. A
+-- bound added later is a row, and nothing on any surface moves.
+--
+-- BOTH NUMBERS ARE STORED. UI-38 derives nothing and its suite fails any
+-- arithmetic in the rendered output, so the record must publish 'allowed' and
+-- 'consumed' separately; a percentage or a remainder computed here would only
+-- move the same defect one layer down.
+CREATE TABLE IF NOT EXISTS ai_run_bounds (
+  run       TEXT NOT NULL,
+  bound     TEXT NOT NULL,
+  allowed   INTEGER NOT NULL,
+  consumed  INTEGER NOT NULL DEFAULT 0,
+  unit      TEXT,
+  PRIMARY KEY (run, bound)
+);
+
+-- THE OBSERVATION LOG (§11). Where the run searched across the four levels,
+-- what it established, where it STOPPED and why. APPEND-ONLY: 'seq' is
+-- monotonic per run and no row is ever updated, because a resumed run reads its
+-- own log and continues (§14b.7) and a log that can be rewritten is not
+-- evidence of anything.
+--
+-- IT IS NEVER WRITTEN INTO bundle.md. §11: "the observation log cannot live in
+-- bundle.md, which is written only on success — the log's whole value is the
+-- failure path." C-22.6 refuses an entry that names a bundle at the one append
+-- site, so the separation is enforced where the write happens rather than
+-- asserted about every reader.
+--
+-- 'state' is D-129's vocabulary and the column is deliberately not an enum in
+-- SQL: the refusal is C-22.1 in airun.mjs, where it can NAME the five legal
+-- values and say why. A CHECK constraint here would refuse with a SQLite error
+-- nobody can translate, which is precisely what DEC-49 exists to prevent.
+--
+-- 'governed' is D-104's split as a stored fact: 1 means OUR pacing held us,
+-- which is a fact about us and never about the source. C-22.2 refuses any
+-- definitive state on a governed row.
+CREATE TABLE IF NOT EXISTS ai_run_log (
+  run        TEXT NOT NULL,
+  seq        INTEGER NOT NULL,
+  at         TEXT NOT NULL,
+  level      TEXT NOT NULL,
+  subject    TEXT,
+  state      TEXT NOT NULL,
+  governed   INTEGER NOT NULL DEFAULT 0,
+  condition  TEXT,
+  bound      TEXT,
+  terminal   INTEGER NOT NULL DEFAULT 0,
+  detail     TEXT,
+  PRIMARY KEY (run, seq)
+);
+CREATE INDEX IF NOT EXISTS ai_run_log_terminal ON ai_run_log(run, terminal);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

@@ -873,6 +873,21 @@ export const NON_ACTS = {
   readingname: "read: which captured documents' readings name a registered subject (framework §8.1's grade-C tier), keyed by entity — the candidate list op=resolve is chosen from, never an act on an object",
   queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
+  /* IS-6. The three run verbs are NOT acts on a bundle and must not appear on
+     one, which is why they are named here rather than added to ACTS. A run is
+     keyed by RUN ID; its `context` names an inquiry or a project, but the run
+     changes NOTHING about that object — INVESTIGATIVE-SESSION.md §14a is
+     explicit that "the state of those objects does not change while the session
+     runs, so there is no partial state to reconcile". An act offered beside an
+     inquiry implies the inquiry moves when it is taken, and this one does not.
+     What a run eventually proposes IS an act on an object, and it is IS-1's and
+     IS-2's; that act will be an ACTS row, and this one is not it.
+     REC-19's totality guard caught this within a minute of the NEEDS entries
+     landing, which is the guard doing exactly what `attest`'s six-item history
+     bought it. */
+  airunopen: "investigative run lifecycle, keyed by run id: starts a background session in the context of an inquiry or a project and changes NOTHING about that object (§14a)",
+  airuntick: "investigative run lifecycle, keyed by run id: the run's own heartbeat, budget spend and observation log — no bundle, no state, no record act",
+  airunclose: "investigative run lifecycle, keyed by run id: ends a run and names the bound that stopped it (§14b.6); what the run PROPOSED is a separate act with its own author",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));

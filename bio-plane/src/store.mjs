@@ -127,6 +127,14 @@ import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate } from "./query.mjs";
+/* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
+   reason queuestate.mjs is: a rule reachable only through a Durable Object is a
+   rule that gets exercised less. `finishedBound` is imported rather than
+   re-derived here because the ordinary close and the reaper must compute the
+   bound through ONE function — two paths that agree is the failure this
+   repository has measured five times. */
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
+         checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -1612,6 +1620,35 @@ export class Store extends DurableObject {
         due:  (now) => this.#monitorCadencePlan(now).due.length > 0 ? now : null,
         wake: (now) => this.#monitorCadenceWake(now),
         tick: (now) => this.#monitorCadenceTick(now) },
+      /* IS-6 / INVESTIGATIVE-SESSION.md §14b.3: the INVESTIGATIVE RUN REAPER —
+         the EIGHTH consumer on the one alarm, and ONE APPENDED ENTRY exactly as
+         SCHEDULER.md instructs: *"append an entry to #schedConsumers… Do NOT add
+         a second alarm or a cron; that is the decision this file records."* No
+         cron line is added to wrangler.jsonc and no second alarm exists; this
+         run inherits earliest-wake reconciliation and idle self-termination for
+         free, which is the whole reason REC-1 decided the shape once.
+
+         WHAT IT IS FOR, AND IT IS THE ITEM'S ACCEPTANCE RATHER THAN HOUSEKEEPING.
+         §14b.6 requires the observation log to be written WHETHER OR NOT THE RUN
+         SUCCEEDS, naming the bound that stopped it. A run that is KILLED
+         MID-FLIGHT runs no exit path of its own — that is what killed means — so
+         a log written by the run on its way out is a log about the runs that did
+         not need one. This consumer is the third party that observes the death:
+         a live run heartbeats by ticking, which extends its lease; a dead one
+         stops, its lease lapses, and this tick terminates it through
+         #aiRunTerminate — the SAME and ONLY exit from `running`, which appends
+         the terminal entry in the same transaction as the status change. The
+         guarantee is therefore structural: there is no state in which a run is
+         over and its log is silent.
+
+         INTERVAL-consumer shape, like queue-renotify and monitor-cadence: due
+         only when a lease has ACTUALLY lapsed, so it fires at its own moment and
+         no other's. Its wake is the earliest lease expiry across live runs, so
+         an instance with no run in flight holds no alarm at all. */
+      { name: "ai-run-reap",
+        due:  (now) => this.#aiRunReapPending(now) > 0 ? now : null,
+        wake: (now) => this.#aiRunReapWake(now),
+        tick: (now) => ({ airunreap: this.#aiRunReap(now) }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -1639,7 +1676,7 @@ export class Store extends DurableObject {
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
-        queuerenotify = null, monitorcadence = null; const probes = [];
+        queuerenotify = null, monitorcadence = null, airunreap = null; const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -1662,6 +1699,10 @@ export class Store extends DurableObject {
          is reported as a test probe, which is how a real clock disappears from
          the alarm's own account of itself. */
       else if (c.name === "monitor-cadence") monitorcadence = r && r.monitorcadence;
+      /* IS-6, named for the third time for the same reason: an unnamed consumer
+         is reported as a test probe, and a reaper that disappears into `probes`
+         is a run whose death nobody can see was noticed. */
+      else if (c.name === "ai-run-reap") airunreap = r && r.airunreap;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -1681,7 +1722,8 @@ export class Store extends DurableObject {
              ...(connderive ? { connderive } : {}),
              ...(overduescan ? { overduescan } : {}),
              ...(queuerenotify ? { queuerenotify } : {}),
-             ...(monitorcadence ? { monitorcadence } : {}) };
+             ...(monitorcadence ? { monitorcadence } : {}),
+             ...(airunreap ? { airunreap } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -11051,6 +11093,12 @@ export class Store extends DurableObject {
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
       queueState: n("queue_state"),
+      /* IS-6: the investigative runs, their budgets and their observation logs,
+         reported so a whole-store purge can PROVE it took them (D-113) and so an
+         operator can see how many runs are in flight without opening one. A
+         COUNT AND NOTHING ELSE — what a run is looking into is not an operator
+         surface, the same line queueState draws one row up. */
+      aiRuns: n("ai_runs"), aiRunBounds: n("ai_run_bounds"), aiRunLog: n("ai_run_log"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -12235,6 +12283,19 @@ export class Store extends DurableObject {
            the caller believes the store is empty. hygiene.test.mjs asserts this
            list against schema.mjs. */
         this.sql.exec(`DELETE FROM queue_state`);
+        /* IS-6 / D-113. The investigative run, its budget and its observation
+           log. Every one is keyed to a run whose CONTEXT is an inquiry or a
+           project this purge just removed, so a whole-store purge that reported
+           scope ALL while leaving them is the silent-leftover exactly: the
+           corpus is gone and the reaper's next tick would still find a run in
+           flight over a project that no longer exists, and terminate it against
+           a context nobody can resolve. Bounds and log first, then the run, so
+           nothing outlives the run it belongs to. A per-bundle purge leaves them:
+           a run is not a file of the bundle it is about, and killing a run
+           because one document went is a decision nobody made. */
+        this.sql.exec(`DELETE FROM ai_run_log`);
+        this.sql.exec(`DELETE FROM ai_run_bounds`);
+        this.sql.exec(`DELETE FROM ai_runs`);
       }
     });
     const after = this.stats();
@@ -12268,7 +12329,10 @@ export class Store extends DurableObject {
                  /* REC-27 / D-137: the participation graph and pending owner votes a purge
                     took — per-bundle for a project bundle, everything for scope ALL. */
                  projectParticipants: d("projectParticipants"),
-                 projectOwnerVotes: d("projectOwnerVotes") },
+                 projectOwnerVotes: d("projectOwnerVotes"),
+                 /* IS-6 / D-113: the runs, their budgets and their observation
+                    logs a whole-store purge took. */
+                 aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog") },
     };
   }
 
@@ -15184,6 +15248,446 @@ export class Store extends DurableObject {
     return { session, dropped: true };
   }
 
+  /* ==================================================================== *
+   *  IS-6 — THE INVESTIGATIVE RUN AND ITS OBSERVATION LOG
+   *
+   *  `INVESTIGATIVE-SESSION.md` §11, §14b.3, §14b.6, §14b.7. The vocabulary,
+   *  the refusals and their C-numbers are in `src/airun.mjs` and
+   *  `checks/bio-checks.mjs`; this is the mechanism.
+   *
+   *  IT SITS DIRECTLY BELOW `capture_sessions` BECAUSE IT IS THE SAME SHAPE.
+   *  §11: *"The proven model is capture_sessions — SCRATCH, not record… a work
+   *  list with an expiry: ticks, an expiry, opaque state, resumable across
+   *  invocations. IS-6 and IS-9 extend that shape rather than inventing one."*
+   *  Three methods above, five here, and the family resemblance is the point.
+   *
+   *  ------------------------------------------------------------------
+   *  THE ONE EXIT, AND WHY EVERYTHING ELSE FOLLOWS FROM IT
+   *  ------------------------------------------------------------------
+   *
+   *  `#aiRunTerminate` is the ONLY thing in this file that moves a run out of
+   *  `running`, and it writes the status change and the terminal log entry in
+   *  ONE transaction. So "the log is written whether or not the run succeeds"
+   *  is not a discipline anyone has to keep: there is no code path that ends a
+   *  run and leaves its log silent, because ending a run IS writing the entry.
+   *
+   *  Three callers reach it, and the third is the item:
+   *    1. `aiRunClose` — the run says it is done, or a member stops it.
+   *    2. `aiRunTick`  — a bound was exhausted by the work just recorded, so
+   *       the tick that spends the last of a budget is also the tick that ends
+   *       the run. A run cannot spend past its bound and then decline to say so.
+   *    3. `#aiRunReap` — the LEASE lapsed. A run that was KILLED calls nothing;
+   *       this is the third party on the clock that notices, and it is why the
+   *       scheduler join is acceptance rather than housekeeping.
+   *
+   *  All three compute WHICH bound through `finishedBound` in airun.mjs — one
+   *  function, not three that agree. A hand-written second copy in the reaper is
+   *  precisely the parallel-path failure this repository has measured five
+   *  times, most recently on the sourcing arm that went green with the defect
+   *  present because it validated a copy rather than the set in use.
+   * ==================================================================== */
+
+  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
+     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
+     that stops heartbeating is dead within the lease and is reaped. */
+  static AI_RUN_LEASE_MS = 3600000;
+
+  static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
+
+  /** Append ONE observation. The single write site for `ai_run_log`, which is
+   *  what makes C-22.6 a fence rather than a promise: an entry that names a
+   *  bundle is refused HERE, so there is no second door through which the log
+   *  could be filed into a document.
+   *
+   *  Returns the refusal object on refusal and null on success, so callers can
+   *  collect refusals per entry and still write the rest — §14b.7's partial
+   *  results survive, applied to the log itself. */
+  #aiRunAppend(run, entry, at, terminal = 0) {
+    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);
+    if (bad) return bad;
+    const next = (this.#one(`SELECT COALESCE(MAX(seq), 0) m FROM ai_run_log WHERE run = ?`, run) || { m: 0 }).m + 1;
+    this.sql.exec(
+      `INSERT INTO ai_run_log (run, seq, at, level, subject, state, governed, condition, bound, terminal, detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      run, next, at,
+      String(entry.level || "document"),
+      entry.subject == null ? null : String(entry.subject),
+      String(entry.state),
+      entry.governed === true ? 1 : 0,
+      entry.condition == null || entry.condition === "" ? null : String(entry.condition),
+      entry.bound == null || entry.bound === "" ? null : String(entry.bound),
+      terminal ? 1 : 0,
+      entry.detail == null ? null : String(entry.detail));
+    return null;
+  }
+
+  /** What the run's SEARCH established overall, reduced from the log the run
+   *  actually wrote rather than declared by the run about itself.
+   *
+   *  The order is a strength order over D-129's vocabulary and it is stated
+   *  here because it is a judgement: a run that found something says PRESENT
+   *  (that is a positive finding, not a coverage claim); otherwise the weakest
+   *  honest word wins, and a run with no observations at all says NEVER_LOOKED.
+   *
+   *  THE OVERRIDE IS THE POINT. When a BOUND stopped the run, a definitive
+   *  absence is unavailable to it — not finding something and not finishing the
+   *  search are different facts, and only one licenses a conclusion
+   *  (`heldMatch`'s lesson, §14b.6's own citation). So LOOKED_ABSENT and
+   *  NEVER_LOOKED both become LOOKED_INDETERMINATE on a bounded stop. PRESENT
+   *  survives, because a document the run did hold does not stop existing
+   *  because the run ran out of time afterwards. */
+  #aiRunSearchState(run, stoppedByBound) {
+    const seen = new Set(this.#rows(
+      `SELECT DISTINCT state FROM ai_run_log WHERE run = ? AND terminal = 0`, run).map((r) => r.state));
+    let s = seen.has("PRESENT") ? "PRESENT"
+          : seen.has("partial") ? "partial"
+          : seen.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE"
+          : seen.has("LOOKED_ABSENT") ? "LOOKED_ABSENT"
+          : "NEVER_LOOKED";
+    if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
+    return s;
+  }
+
+  /** THE ONE EXIT. Every ending goes through here, and the terminal log entry
+   *  is written in the same transaction as the status change.
+   *
+   *  `offered` is what the caller SAYS stopped the run; it is honoured when
+   *  given and otherwise derived from the budget rows. Either way the answer
+   *  comes out of `finishedBound`, so the reaper holds no arithmetic of its
+   *  own. */
+  /*  `derive` is the difference between the two kinds of caller, and it is the
+   *  thing that makes C-22.5 REACHABLE rather than dead code. Found by this
+   *  item's own suite on its first run: with derivation on every path, a close
+   *  offering NO bound fell through `finishedBound` to "completed" — a legal
+   *  answer — so the refusal that IS §14b.6 could never fire, and an ending
+   *  nobody named would have been recorded as a run that finished. So:
+   *
+   *    - `aiRunClose` derives NOTHING. It is a caller SAYING why the run ended,
+   *      and a caller who does not say is refused by name. Inferring "completed"
+   *      from silence is exactly the manufactured fact this design refuses
+   *      everywhere else.
+   *    - `aiRunTick` and `#aiRunReap` DO derive, because there is no caller to
+   *      ask: the budget rows and the clock are the only evidence there is, and
+   *      `finishedBound` is the one function that reads them.
+   */
+  #aiRunTerminate({ run, offered = null, condition = null, at, expired = false, derive = true }) {
+    const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    if (!row) return { run, found: false,
+      note: "no such run: it either never existed or was purged" };
+    if (row.status !== "running")
+      return { run, found: true, terminated: false, status: row.status,
+               bound: row.stopped_bound, condition: row.stopped_condition,
+               note: "this run already ended; a second ending would overwrite the first, "
+                   + "and the log is append-only for the same reason state history is" };
+
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const bound = derive ? finishedBound(bounds, { expired, offered })
+                         : (offered == null ? "" : String(offered));
+
+    /* C-22.5 — the refusal that IS §14b.6. A run may not leave `running`
+       without saying what stopped it. */
+    const badBound = checkBound(bound);
+    if (badBound) return { run, found: true, terminated: false, ...badBound };
+    /* C-22.4 — and it is checked against the LIVE vocabulary in queuestate.mjs,
+       never a copy, so a kind that file removes cannot keep being emitted here. */
+    const badCondition = checkCondition(condition, QUEUE_CONDITION_KINDS);
+    if (badCondition) return { run, found: true, terminated: false, ...badCondition };
+
+    const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
+    const state = this.#aiRunSearchState(run, stoppedByBound);
+    const last = this.#one(
+      `SELECT level FROM ai_run_log WHERE run = ? AND terminal = 0 ORDER BY seq DESC LIMIT 1`, run);
+
+    return this.ctx.storage.transactionSync(() => {
+      /* THE TERMINAL ENTRY FIRST, then the status. The order is deliberate: if
+         anything could fail it is the append, and a run left `running` with its
+         log written is recoverable by the reaper, while a run marked finished
+         with no entry is the exact silence this item exists to prevent. */
+      const bad = this.#aiRunAppend(run, {
+        level: last ? last.level : "document",
+        subject: row.context_id,
+        state,
+        governed: false,
+        condition,
+        bound,
+        detail: stoppedByBound
+          ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})`
+          : `the run ended: ${RUN_ENDINGS[bound]}`,
+      }, at, 1);
+      if (bad) return { run, found: true, terminated: false, ...bad };
+      this.sql.exec(
+        `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
+         WHERE run = ?`,
+        stoppedByBound ? "stopped" : "finished", at, bound, condition, at, run);
+      return { run, found: true, terminated: true,
+               status: stoppedByBound ? "stopped" : "finished",
+               bound, condition, state, at };
+    });
+  }
+
+  /** op=airunopen. Open a run over an inquiry or a project.
+   *
+   *  Every `conditions it was formed under` field §11 names is taken as given
+   *  and stored verbatim — the bias manifest in force, the launching project's
+   *  declared standard pair, the skill version. NONE of them is derived here,
+   *  and where one is absent it is stored as absent rather than defaulted: §11
+   *  says "until D-84 lands, 'no manifest was in force,' STATED", and a default
+   *  would be this plane inventing a condition a version is later interpreted
+   *  against.
+   *
+   *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
+   *  DEC-27(b), DEC-55.4). `principalClaude` is WHICH LEVEL of the cascade paid
+   *  — member, then project, then instance — and the plane refuses to open a
+   *  run that cannot say. */
+  aiRunOpen({ run, contextType, contextId, label = null, mode = null,
+              principalPlane = null, principalClaude = null, principalClaudeRef = null,
+              skillVersion = null, biasManifest = null, standardPair = null,
+              bounds = null, state = null, leaseMs = null, at = null } = {}) {
+    const nowMs = at ? Date.parse(at) : Date.now();
+    const now = Store.#aiIso(nowMs);
+    /* `started`, deliberately NOT `opened`. REC-58's consumer walk in
+       test/case-opened.test.mjs sweeps the WHOLE repository for `.opened` to
+       prove a published case's field has no consumers, and its own header
+       records that "a region-wide regex cannot tell the case's field from a
+       member's". A run answering `opened: true` would have made that headline
+       assertion read false for a reason that has nothing to do with published
+       cases — so the collision is avoided here rather than the other suite's
+       pin being weakened, which is the direction that keeps a real measurement
+       real. `started` is also the truer word: the run's own state vocabulary is
+       `running`, and nothing about it is ever "closed" without a named bound. */
+    if (!run || !contextType || !contextId)
+      return { run: run || null, started: false,
+               note: "a run needs an id and the context it runs in (an inquiry or a project): "
+                   + "a run nothing is in the context of has nowhere to be visible" };
+    if (!principalPlane || !principalClaude)
+      return { run, started: false,
+               note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
+                   + "Claude-account cascade pays (member, then project, then instance). They are "
+                   + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
+    if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
+      return { run, started: false, note: "a run with this id already exists" };
+
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
+           principal_plane, principal_claude, principal_claude_ref, skill_version,
+           bias_manifest, standard_pair, created, updated, expires, ticks, state)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+        run, label, mode, String(contextType), String(contextId),
+        String(principalPlane), String(principalClaude), principalClaudeRef, skillVersion,
+        biasManifest, standardPair, now, now, Store.#aiIso(nowMs + lease),
+        JSON.stringify(state == null ? {} : state));
+      for (const b of Array.isArray(bounds) ? bounds : []) {
+        if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(run, bound) DO NOTHING`,
+          run, String(b.bound), Number(b.allowed) || 0, Number(b.consumed) || 0,
+          b.unit == null ? null : String(b.unit));
+      }
+    });
+    return { run, started: true, status: "running", ticks: 1, created: now,
+             expires: Store.#aiIso(nowMs + lease) };
+  }
+
+  /** op=airuntick. The heartbeat, the work list, and the log — one call.
+   *
+   *  A tick does four things and the order matters: it appends what the run
+   *  OBSERVED (so partial results survive a death that happens next), it spends
+   *  the budget, it extends the lease, and only then does it ask whether a
+   *  bound is now exhausted. A tick that spent the last of a budget ENDS the
+   *  run through the one exit — a run cannot overspend and then decline to say
+   *  so.
+   *
+   *  A tick for a run that has already ended is a STATED no-op rather than a
+   *  refusal, following `saveCaptureSession`'s `{ saved: false }` precedent: it
+   *  is a fact about the run's state, and a late tick from a straggling
+   *  sub-session must not resurrect a run whose log is already closed. */
+  aiRunTick({ run, state = null, consume = null, log = null, leaseMs = null, at = null } = {}) {
+    const nowMs = at ? Date.parse(at) : Date.now();
+    const now = Store.#aiIso(nowMs);
+    const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    if (!row) return { run: run || null, found: false,
+      note: "no such run: it either never existed or was purged" };
+    if (row.status !== "running")
+      return { run, found: true, ticked: false, status: row.status,
+               bound: row.stopped_bound,
+               note: "this run has ended; its log is closed and a later tick does not reopen it" };
+
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
+    const refused = [];
+    let appended = 0;
+    this.ctx.storage.transactionSync(() => {
+      for (const e of Array.isArray(log) ? log : []) {
+        const bad = this.#aiRunAppend(run, e, now, 0);
+        if (bad) refused.push(bad); else appended += 1;
+      }
+      for (const [k, v] of Object.entries(consume && typeof consume === "object" ? consume : {})) {
+        if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, k)) continue;
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
+           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
+          run, k, Number(v) || 0, Number(v) || 0);
+      }
+      this.sql.exec(
+        `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}
+         WHERE run = ?`,
+        ...(state == null ? [now, Store.#aiIso(nowMs + lease), run]
+                          : [now, Store.#aiIso(nowMs + lease), JSON.stringify(state), run]));
+    });
+
+    /* The exhaustion check reads the rows back rather than trusting the deltas
+       just written, so a bound that was ALREADY over before this tick is caught
+       too. `finishedBound` answers "completed" when nothing is exhausted, which
+       is not a stop — so the run continues and no ending is written. */
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const hit = finishedBound(bounds, { expired: false, offered: null });
+    const ended = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, hit)
+      ? this.#aiRunTerminate({ run, offered: hit,
+          condition: hit === "runtime" ? "runtime-ceiling-reached" : null, at: now })
+      : null;
+
+    const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
+    return { run, found: true, ticked: true, ticks: after.ticks, status: after.status,
+             expires: after.expires, appended, refused,
+             ...(ended ? { ended } : {}) };
+  }
+
+  /** op=airunclose. The ordinary exit — the run is done, or a member stopped
+   *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
+   *  to the one exit, and a caller who names no bound is refused by C-22.5
+   *  rather than having "completed" inferred from its silence. */
+  aiRunClose({ run, bound = null, condition = null, at = null } = {}) {
+    const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
+    return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+  }
+
+  /* ---- the reaper's three parts, and none of them decides anything ----
+
+     Each is a QUESTION about the clock; the answer to "which bound" comes from
+     `finishedBound` inside `#aiRunTerminate`, the same function the ordinary
+     close uses. That is the structural half of "the real path and the mutated
+     path go through ONE function". */
+
+  #aiRunReapPending(now) {
+    return this.#one(`SELECT count(*) c FROM ai_runs WHERE status = 'running' AND expires < ?`,
+      Store.#aiIso(now)).c;
+  }
+
+  #aiRunReapWake(now) {
+    const r = this.#one(`SELECT MIN(expires) e FROM ai_runs WHERE status = 'running'`);
+    if (!r || !r.e) return null;                       // no run in flight: no alarm at all
+    const at = Date.parse(r.e);
+    return Number.isFinite(at) ? Math.max(at, now) : null;
+  }
+
+  /** THE NEGATIVE CONTROL THE DESIGN NAMES, as a mechanism: a run KILLED
+   *  mid-flight never calls anything, so this is what writes its log. It closes
+   *  every lapsed run through the one exit; `expired: true` is the only thing it
+   *  contributes, and `finishedBound` turns that into `lease` — or into whatever
+   *  budget was ALREADY exhausted, because a run that overspent and then died
+   *  was stopped by the budget, and reporting the lease there would name the
+   *  symptom and hide the cause. */
+  #aiRunReap(now) {
+    const iso = Store.#aiIso(now);
+    const lapsed = this.#rows(
+      `SELECT run FROM ai_runs WHERE status = 'running' AND expires < ? ORDER BY run`, iso);
+    const reaped = [];
+    for (const r of lapsed) {
+      const t = this.#aiRunTerminate({ run: r.run, offered: null, condition: null, at: iso, expired: true });
+      reaped.push({ run: r.run, terminated: t.terminated === true, bound: t.bound || null });
+    }
+    return { at: iso, lapsed: lapsed.length, reaped };
+  }
+
+  /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
+   *
+   *  The shape is chosen to be what UI-38's renderers already walk, because
+   *  they are FIELD-NAME-BLIND: they print published name/value pairs verbatim
+   *  in publication order and know no field names, so they cannot invent one
+   *  and cannot go stale. `budget` is an ARRAY of scalar rows, `principal` and
+   *  `condition` are flat objects, and nothing here is derived — `allowed` and
+   *  `consumed` travel separately because a percentage computed anywhere fails
+   *  that surface's own pin.
+   *
+   *  WHERE NO RUN EXISTS THIS ANSWERS `session: null`, which is a supported
+   *  state and not a gap: §14a's surface shows NO INDICATOR rather than an
+   *  invented "nothing is running".
+   *
+   *  NO TRANSCRIPT IS PUBLISHED HERE OR ANYWHERE (DEC-61). The plane holds
+   *  none; the surface reads the device's own.
+   *
+   *  GATED. The run names an inquiry or a project bundle, and a run over a
+   *  project the viewer may not see would disclose that the project exists —
+   *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
+   *  through query.mjs's one compilation point (D-15). */
+  aiRunRead({ run, viewer = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+    if (!row) return { run: run || null, found: false, session: null };
+    const bounds = this.#rows(
+      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound`, run);
+    const cond = row.stopped_bound
+      ? { kind: row.stopped_condition || "",
+          detail: row.stopped_condition
+            ? `${row.stopped_bound}: ${RUN_BOUNDS[row.stopped_bound] || RUN_ENDINGS[row.stopped_bound] || ""}`
+            : `the run stopped on '${row.stopped_bound}'`,
+          bound: row.stopped_bound, at: row.stopped_at }
+      : null;
+    return { run, found: true, session: {
+      id: row.run,
+      label: row.label,
+      mode: row.mode,
+      status: row.status,
+      ticks: row.ticks,
+      created: row.created,
+      updated: row.updated,
+      expires: row.expires,
+      context: { type: row.context_type, id: row.context_id },
+      /* §14a: the record names WHICH LEVEL of the cascade was used, BESIDE the
+         plane-credential principal — two principals, never one, and never a
+         token value. `ref` is the operator's own label for the account. */
+      principal: { plane: row.principal_plane, claude: row.principal_claude,
+                   ref: row.principal_claude_ref, skill: row.skill_version },
+      budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
+                                   consumed: b.consumed, unit: b.unit })),
+      condition: cond,
+    } };
+  }
+
+  /** op=airunlog — THE OBSERVATION LOG. A different read from the one above and
+   *  deliberately a different op: the surface renders the run, and this is what
+   *  lets anyone else CHECK it (§11 — "search completeness is trained into the
+   *  skill, which is COMPETENCE; the log is what lets anyone else CHECK").
+   *
+   *  It is also what a RESUMED run reads to continue rather than restart
+   *  (§14b.7), which is why the entries come back in `seq` order with their
+   *  levels and states intact rather than summarised.
+   *
+   *  Gated on the same column for the same reason as the read above. */
+  aiRunLog({ run, viewer = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+    if (!row) return { run: run || null, found: false, entries: [], stopped: null };
+    const entries = this.#rows(
+      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
+       FROM ai_run_log WHERE run = ? ORDER BY seq`, run)
+      .map((e) => ({ ...e, governed: e.governed === 1, terminal: e.terminal === 1 }));
+    return { run, found: true, status: row.status, entries,
+             stopped: row.stopped_bound
+               ? { bound: row.stopped_bound, condition: row.stopped_condition, at: row.stopped_at }
+               : null,
+             /* The vocabularies travel WITH the answer rather than being looked
+                up by a reader who would then hold a copy of them — the same
+                reason op=affordances publishes the act set instead of naming it
+                (DEC-8: a surface renders what it received). */
+             vocabulary: { states: OBSERVATION_STATES, levels: OBSERVATION_LEVELS,
+                           bounds: RUN_BOUNDS, endings: RUN_ENDINGS } };
+  }
+
   /* ------------------------------------------------------------------ *
    * What a host has served
    * ------------------------------------------------------------------ */
@@ -16660,6 +17164,21 @@ export class Store extends DurableObject {
         governorreport: () => this.governorReport(body || {}),
         governorconfig: () => this.governorConfig(body || {}),
         governorstate: () => this.governorState(body || { host: url.searchParams.get("host") }),
+        /* IS-6. The investigative run, on the capture-session shape and routed
+           beside it. `viewer` on the two READS is the control plane's
+           server-side stamp and never a caller's word: the run names an inquiry
+           or a project, and whose view that resolves against is a server
+           decision (D-15's fail-closed, the same rule op=queue states). The two
+           PRINCIPALS on the open are stamped server-side too, for the reason §14a
+           gives — a principal a caller can name is not a principal. */
+        airunopen: () => this.aiRunOpen({ ...(body || {}),
+                                          principalPlane: url.searchParams.get("principal") }),
+        airuntick: () => this.aiRunTick(body || {}),
+        airunclose: () => this.aiRunClose(body || {}),
+        airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
+                                      viewer: url.searchParams.get("viewer") }),
+        airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
+                                        viewer: url.searchParams.get("viewer") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

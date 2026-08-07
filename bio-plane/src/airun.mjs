@@ -1,0 +1,285 @@
+/* IS-6 — THE INVESTIGATIVE RUN'S VOCABULARY AND ITS REFUSALS, kept PURE.
+ *
+ * `INVESTIGATIVE-SESSION.md` §11 (the run is an object), §14b.6 (a run is
+ * bounded and the bound is RECORDED), §14b.7 (partial results survive). The
+ * mechanism lives in `store.mjs`; this file holds the words and the decisions
+ * that can be made without a database, for `queuestate.mjs`'s stated reason:
+ *
+ *   "It is PURE — no storage, no clock, no viewer — so a suite can hold the
+ *    decision to the store's own behaviour directly … store.mjs cannot be
+ *    imported outside workerd, and a rule that can only be exercised through a
+ *    Durable Object is a rule that gets exercised less."
+ *
+ * ---------------------------------------------------------------------------
+ * WHAT THE RUN OBJECT IS, AND WHAT IT IS NOT
+ * ---------------------------------------------------------------------------
+ *
+ * §11 says the proven model is `capture_sessions` — *"SCRATCH, not record… a
+ * work list with an expiry"*: ticks, an expiry, opaque state, resumable across
+ * invocations. The run EXTENDS that shape rather than inventing one, and the
+ * three additions are the ones §11 and §14b.6 name: the conditions the run was
+ * formed under, the BOUNDS it carries with their live consumption, and the
+ * OBSERVATION LOG.
+ *
+ * THREE OBJECTS ARE DELIBERATELY KEPT APART AND THE LINES ARE STATED HERE
+ * BECAUSE THEY HAVE BEEN CONFLATED IN CONVERSATION:
+ *
+ *   1. THE RECORD — bundles, `bundle.md`, the published projection. Written on
+ *      SUCCESS. A version the run proposes lands here through IS-1's write
+ *      site, and nothing in this file writes it.
+ *   2. THE OBSERVATION LOG — where the run searched across the four levels,
+ *      what it found, where it STOPPED and why. It lives in `ai_run_log` in the
+ *      instance's own Durable Object, it is APPEND-ONLY, and §11 is explicit
+ *      that it "cannot live in bundle.md, which is written only on success —
+ *      the log's whole value is the failure path". C-22.6 is the fence.
+ *   3. THE TRANSCRIPT — the model's reasoning. DEC-61 (Bob, 2026-08-06):
+ *      DEVICE-LOCAL, TTL'd, deleted as part of publication, NEVER in the record
+ *      store. Nothing in this file, in `store.mjs`, or in any table this item
+ *      adds holds one. The observation log is NOT a transcript and is not
+ *      governed by DEC-61: it is a structured account of where the search went,
+ *      it carries no reasoning, and it is the thing that lets someone else
+ *      CHECK the run — which is exactly why it is instance-side and durable
+ *      while the reasoning is neither.
+ *
+ * ---------------------------------------------------------------------------
+ * THE ACCEPTANCE, AND HOW IT IS A MECHANISM RATHER THAN AN INTENTION
+ * ---------------------------------------------------------------------------
+ *
+ * §14b.6: *the log is written WHETHER OR NOT THE RUN SUCCEEDS, and it NAMES THE
+ * BOUND THAT STOPPED IT.* A log that exists only when the run finished is a log
+ * about the runs that did not need one.
+ *
+ * "The run writes its log on the way out" is an INTENTION, and it fails in the
+ * one case that matters: a run that is killed does not run its own exit path.
+ * So the terminal entry is NOT the run's to write. Two properties carry it:
+ *
+ *   (a) ONE TERMINATION FUNCTION. `store.mjs #aiRunTerminate` is the only thing
+ *       that can move a run out of `running`, and it appends the terminal log
+ *       entry in the SAME transaction as the status change. There is no state
+ *       in which a run is finished and its log is silent, because the two are
+ *       one write. `finishedBound` below is the pure half of that decision, so
+ *       the ordinary path and the reaped path compute the bound through ONE
+ *       function rather than two that agree.
+ *
+ *   (b) A THIRD PARTY ON THE CLOCK. A killed run never calls anything. Its
+ *       LEASE lapses, and the scheduler consumer `ai-run-reap` — ONE appended
+ *       entry in `#schedConsumers`, per SCHEDULER.md, no second alarm and no
+ *       cron — terminates it through the same (a). The run's death is therefore
+ *       observed by something that is not the run. That is the whole guarantee:
+ *       the log is not written because the run remembered, it is written
+ *       because the only exit from `running` writes it, and something outside
+ *       the run takes that exit when the run cannot.
+ *
+ * ---------------------------------------------------------------------------
+ * D-129, AND WHY `partial` IS A FIFTH MEMBER RATHER THAN A FLAG
+ * ---------------------------------------------------------------------------
+ *
+ * D-129 began as a two-value split (we do not know / there is positively none)
+ * and was widened twice by the surveys in `STORE-AS-CACHE.md`: Software
+ * Heritage stores crawl outcomes as DATA rather than inferring them from
+ * missing rows, and RFC 2308 separates "does not exist" from "exists but not
+ * this record" from "we asked and could not tell". The settled set is
+ * `NEVER_LOOKED / LOOKED_ABSENT / LOOKED_INDETERMINATE / PRESENT`, plus SWH's
+ * `partial`.
+ *
+ * `partial` is a member of the same enumeration and not a boolean beside it,
+ * because the question every consumer asks is "what did this observation
+ * establish", and that question has one answer. A flag would let an entry be
+ * both PRESENT and partial, and CPDF-5's measured Tier-1-at-88% case is exactly
+ * the reading that must NOT report as PRESENT.
+ * ========================================================================= */
+
+import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+
+/* THE FOUR LEVELS a run searches, from CLAUDE.md's own standing section: when
+   anything goes looking it "may need to search meaning, content, documents, AND
+   the open internet, in any order". A log entry names which level it is about,
+   because "sparse is the normal condition at every level" and an absence at one
+   level is not evidence of absence at the next. */
+export const OBSERVATION_LEVELS = {
+  meaning:  "the framework layer: findings, legs, connections",
+  content:  "extracted content within documents (DEC-23: content is the unit)",
+  document: "documents the store holds",
+  internet: "the open internet, through the capture path",
+};
+
+/* D-129's vocabulary. The value is what the state MEANS, in the words a refusal
+   and a reader can both use; nothing derives behaviour from the key's spelling
+   anywhere, so this object is the vocabulary and not a switch. */
+export const OBSERVATION_STATES = {
+  NEVER_LOOKED:         "nobody looked at this level for this subject",
+  LOOKED_ABSENT:        "we looked and it is positively not there",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT:              "we looked and it is there",
+  partial:              "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)",
+};
+
+/* THE STATES THAT ARE DEFINITIVE ABOUT THE WORLD. C-22.2 and C-22.3 both turn
+   on this set rather than on a list of literals repeated at each site: a
+   governed refusal and a client-rendered shell are both facts about OUR run,
+   and neither licenses a definitive claim either way. Naming the set once means
+   a sixth state added later inherits both refusals or fails loudly, instead of
+   quietly escaping two checks that each hard-coded four names. */
+export const DEFINITIVE_STATES = new Set(["LOOKED_ABSENT", "PRESENT"]);
+
+/* §14b.6's bounds, in its own enumeration: "a budget — fetches requested,
+   sub-sessions spawned, wall time across resumptions". `lease` is the fifth and
+   it is OURS rather than the design's: it is the heartbeat whose lapse is how a
+   killed run is noticed at all, and it is named as a bound because when it is
+   what stopped a run, that is the true and only honest answer to "which bound".
+
+   `runtime` is here and is NOT this item's producer. §14b.6 says the record
+   already has the word and lacks the writer — `runtime-ceiling-reached` in
+   `queuestate.mjs` with no producer — and names IS-9(d) as the item that builds
+   it. IS-6 publishes the RECORD that names the bound; the queue-feed
+   notification stays IS-9's, and nothing in this file or in store.mjs emits a
+   queue item. */
+export const RUN_BOUNDS = {
+  fetches:     "fetches requested of the capture path",
+  subsessions: "evidence sub-sessions spawned",
+  wallclock:   "wall time across resumptions, in milliseconds",
+  runtime:     "CPU or subrequest ceiling (D-54, D-56) — IS-9(d) builds its producer",
+  lease:       "the run stopped heartbeating and its lease lapsed: it died rather than finished",
+};
+
+/* The conditions a run may end on that are NOT a bound being reached. Kept
+   apart from RUN_BOUNDS because "the member asked for it to stop" and "the
+   budget ran out" are different facts, and collapsing them would put this item
+   on the wrong side of its own doctrine two lines after stating it. */
+export const RUN_ENDINGS = {
+  completed:  "the run finished its work",
+  cancelled:  "a member stopped it",
+};
+
+export const RUN_STATUS = { running: 1, finished: 1, stopped: 1 };
+
+/* ------------------------------------------------------------------ refusals
+
+   Each returns null when the subject is acceptable, or a REFUSAL object built
+   from AI_RUN_CHECKS — the ONE place a C-number, a wire code and its canned
+   translation live (DEC-49; the code-to-translation map read from one place
+   rather than copied). `detail` is composed here because the useful sentence
+   names the offending value, and a build-time table cannot.
+
+   NULL-TOLERANT ON PURPOSE. Every read below tolerates an absent or wrongly
+   typed field rather than throwing on `.length` of undefined: a control that
+   dies early hides the arms behind it, and a refusal function that throws
+   cannot NAME what it broke. */
+
+function refusal(key, detail) {
+  const row = AI_RUN_CHECKS[key];
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+}
+
+/** C-22.1 / C-22.2 / C-22.3 / C-22.6 — one observation log entry.
+ *
+ *  `conditionKinds` is passed IN rather than imported here, so the caller
+ *  supplies the live vocabulary and this function cannot hold a stale copy of
+ *  it. The store passes `queuestate.mjs`'s own object. */
+export function checkObservation(entry, conditionKinds) {
+  const e = entry && typeof entry === "object" ? entry : {};
+
+  /* C-22.6 first, because it is about WHERE the entry is going and the others
+     are about what it says. An entry that names a bundle is refused before its
+     contents are judged at all. */
+  if (e.bundle != null && String(e.bundle) !== "")
+    return refusal("AI_LOG_NOT_A_BUNDLE",
+      `this entry names bundle '${String(e.bundle)}'; the observation log is its own object `
+      + `(INVESTIGATIVE-SESSION.md §11) and bundle.md is written only on success`);
+
+  const state = typeof e.state === "string" ? e.state : "";
+  if (!Object.prototype.hasOwnProperty.call(OBSERVATION_STATES, state))
+    return refusal("AI_LOG_STATE_UNKNOWN",
+      `'${state || "(absent)"}' is not one of ${Object.keys(OBSERVATION_STATES).join(", ")} (D-129)`);
+
+  /* C-22.2 — D-104's split. `governed` is the fact that OUR pacing held us. */
+  if (e.governed === true && DEFINITIVE_STATES.has(state))
+    return refusal("AI_LOG_GOVERNED_ABSENCE",
+      `a governed refusal cannot support '${state}': our governor holding a host is a fact about us, `
+      + `not about the source (D-104). LOOKED_INDETERMINATE is the only state a governed observation carries`);
+
+  const condition = typeof e.condition === "string" && e.condition ? e.condition : null;
+
+  /* C-22.3 — the shell. Stated against the CONDITION rather than against a
+     boolean of our own, so the fact travels in the record's existing vocabulary
+     and a surface reading the entry needs no second word for it. */
+  if (condition === "client-rendered-shell" && state === "PRESENT")
+    return refusal("AI_LOG_SHELL_PRESENT",
+      "a client-rendered shell capture is LOOKED_INDETERMINATE and never PRESENT (§11, D-64): "
+      + "an evidentially empty capture that reads as coverage is the false-coverage hazard");
+
+  /* C-22.4 on the entry's own condition, and it DELEGATES rather than restating
+     the check — an untranslatable word on a log line is as unreadable as one on
+     the run, so it is the same rule and must be the same code.
+     CORRECTED 2026-08-07 BY THIS ITEM'S OWN NEGATIVE CONTROL, and the finding is
+     worth carrying: this was a SECOND COPY of the vocabulary test, and removing
+     `checkCondition` entirely left the suite GREEN at 98/98 because this copy
+     absorbed the control. A rule with two implementations is a rule whose
+     control proves nothing about either — C-5's "a second copy of a rule is a
+     second place for it to drift", measured here rather than argued. One
+     function now, reached through two doors. */
+  const badCondition = checkCondition(condition, conditionKinds);
+  if (badCondition) return badCondition;
+
+  return null;
+}
+
+/** C-22.4 — a condition, checked against the LIVE vocabulary. THE ONLY
+ *  implementation of that rule in this file; `checkObservation` calls it. */
+export function checkCondition(condition, conditionKinds) {
+  if (condition == null || condition === "") return null;   // no condition is a supported state
+  if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
+    return refusal("AI_RUN_CONDITION_UNKNOWN",
+      `'${String(condition)}' is not in the record's condition vocabulary (queuestate.mjs)`);
+  return null;
+}
+
+/** C-22.5 — THE ITEM'S OWN REFUSAL. A run may not leave `running` without
+ *  naming what stopped it. Both vocabularies are legal: a bound that was
+ *  reached, or one of the two endings that are not bounds. Anything else, and
+ *  anything absent, is refused. */
+export function checkBound(bound) {
+  const b = bound == null ? "" : String(bound);
+  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
+  if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
+  return refusal("AI_RUN_BOUND_UNNAMED",
+    `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; `
+    + `endings: ${Object.keys(RUN_ENDINGS).join(", ")} (§14b.6)`);
+}
+
+/** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and
+ *  the reaper compute it through ONE function instead of two that agree.
+ *
+ *  A hand-written second copy in the reaper is the failure this repository has
+ *  measured repeatedly: a parallel path that never touches the set the real
+ *  path uses, agreeing at zero cost. The reaper therefore does not decide
+ *  anything; it supplies rows and a clock and takes this answer.
+ *
+ *  `bounds` is the run's live budget rows: { bound, allowed, consumed }.
+ *  An EXHAUSTED bound wins over the lease, because a run whose fetch budget ran
+ *  out and then stopped heartbeating was stopped by the budget — reporting the
+ *  lease there would name the symptom and hide the cause. Ties are broken by
+ *  RUN_BOUNDS' declaration order so the answer is deterministic and a suite can
+ *  pin it. */
+export function finishedBound(bounds, { expired = false, offered = null } = {}) {
+  if (offered != null && offered !== "") return String(offered);
+  const rows = Array.isArray(bounds) ? bounds : [];
+  const order = Object.keys(RUN_BOUNDS);
+  const hit = rows
+    .filter((r) => r && Number(r.allowed) > 0 && Number(r.consumed) >= Number(r.allowed))
+    .sort((a, b) => order.indexOf(String(a.bound)) - order.indexOf(String(b.bound)))[0];
+  if (hit) return String(hit.bound);
+  if (expired) return "lease";
+  return "completed";
+}
+
+/** The DEC-49 translation for a code, read from the one map. Exported so a
+ *  surface (and the suite that stands in for one) resolves a code it RECEIVED
+ *  rather than computing a refusal — DEC-8 as amended, whose protection is that
+ *  the code must be received and never inferred. */
+export function translationOf(code) {
+  const row = AI_RUN_CHECKS[String(code)];
+  return row ? row.translation : null;
+}
+
+export { AI_RUN_CHECKS };

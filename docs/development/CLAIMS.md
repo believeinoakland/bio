@@ -2171,3 +2171,47 @@ released:
 ### CORRECTION 2026-08-07 to the CLAIM above (rec60-agent, at the close of its own turn)
 
 The claim's `accepts-when:` line said *"INTERFACE-CHANGES.md ... are not written by this session; the I3 registry bump and IC are ROUTED to CONDUCT."* **The second half stands and the first half was wrong, so it is corrected here rather than quietly departed from.** This item BREAKS I3 — three reads that returned everything now return the first 500 — and a break routed only in a worker's report is a break on a channel the protocol's reader does not run. **`IC-25` is therefore FILED as PROPOSED in `INTERFACE-CHANGES.md`**, append-only, carrying the measured consumer impact and RECORD's position; the RESOLUTION, the consumer responses and the `INTERFACES.md` version bump are NOT taken by this session and remain CONDUCT's. `INTERFACES.md` is untouched, exactly as claimed.
+## CLAIM 2026-08-07 RECORD
+
+session: is6-agent (worktree agent-adefd8db6571e8b30)
+opened: 2026-08-07T00:00:00Z
+paths: **`bio-plane/src/airun.mjs` (NEW)** — the PURE half: D-129's observation vocabulary, §14b.6's bound vocabulary, the DEC-49 code→translation map and the pure refusal functions the store calls. Its own module for `queuestate.mjs`'s stated reason (store.mjs cannot be imported outside workerd, so a rule reachable only through a Durable Object is a rule that gets exercised less). **`bio-plane/src/schema.mjs`** — THREE new tables inserted BEFORE the `host_governor` block: `ai_runs`, `ai_run_bounds`, `ai_run_log`. No existing table, column or index moves. **`bio-plane/src/store.mjs` — named by METHOD:** the NEW `aiRunOpen` / `aiRunTick` / `aiRunClose` / `aiRunRead` / `aiRunLog` and their privates (`#aiRunTerminate`, `#aiRunAppend`, `#aiRunReapPending`, `#aiRunReapWake`, `#aiRunReap`); ONE appended entry in `#schedConsumers` (`ai-run-reap`) and the four lines in `onAlarm` that name it, per `SCHEDULER.md`'s own instruction — **no second alarm and no cron**; three `DELETE FROM` lines in `purge`'s whole-store arm and their `removed` keys (D-113); five entries in the DO dispatch map. **NOT opened:** any existing consumer's `due`/`wake`/`tick`, `#reconcileAlarm`, `#armScheduler`, `capture_sessions` and its three methods, `promote`, the gate, `viewerPredicate`, `bundle.md` generation, any existing refusal, any existing return shape. **`bio-plane/src/index.mjs`** — five `OPS` entries, one new `AI_RUN_ACTIONS` const joined into both `SESSION_OPS` sets, three `NEEDS` entries, and the server-side stamps for the two principals. **`bio-plane/checks/bio-checks.mjs`** — an APPENDED export `AI_RUN_CHECKS` allocating **C-22.1 … C-22.6**; no existing check function, finding or constant moves. **`bio-plane/src/affordances.mjs` — ADDED TO THIS CLAIM AFTER THE FACT AND NAMED RATHER THAN ABSORBED: three APPENDED `NON_ACTS` rows.** REC-19's totality guard (`test/affordances.test.mjs`: "every op in NEEDS is a published act or a named NON_ACT") went RED the moment the three `NEEDS` entries landed, which is that guard doing exactly what `attest`'s six-item history bought it. The three run verbs are named as NON_ACTS with their reason — a run changes NOTHING about the object it runs in (§14a), so an act offered beside an inquiry would imply the inquiry moves when it is taken. No `ACTS` row, no existing NON_ACT, no vocabulary and no derivation moves. **`bio-plane/test/airun.test.mjs` (NEW — this item's own suite).** **`bio-plane/test/gate-reads.test.mjs`** — the two new read ops CLASSIFIED in the GATED table, which is that sweep doing its job. **`bio-plane/test/hygiene.test.mjs` — NOT opened**; it gained four assertions on its own, because it is a per-file sweep and this item added one file to `src/` and one to `test/`. `docs/development/CLAIMS.md` (this entry).
+interfaces owned: I3 (the op contracts) and I5 (the store schema). **I3 is ADDITIVE ONLY** — five new ops, no existing op's shape moves, so no interface change is filed. **I5 GAINS three tables**, all cleared by the whole-store purge; no existing table is reshaped.
+interfaces consumed: none. **`civicos-ui/**` IS NOT OPENED** — UI-38's `aiSessionRead()` is a DELEGATION, not an edit; a zero-delta UI harness is not this item's claim to make.
+expected: QUEUE.md IS-6 with its UI-38 rider. `INVESTIGATIVE-SESSION.md` §11 (the run is an object), §14b.3 (the scheduler join), §14b.6 (a run is bounded and the bound is RECORDED), §14b.7 (partial results survive). Discharges D-196; adopts D-129's four states plus `partial` and D-104's governed/unreachable split.
+accepts-when: as QUEUE.md IS-6. **Battery baseline 105/105 at 5,989 MEASURED IN THIS WORKTREE BEFORE ANY EDIT** — the brief's figure was right and is CONFIRMED rather than inherited; any delta ATTRIBUTED PER SUITE by diffing per-suite counts, never estimated. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0, every new op carrying a control-plane assertion in the same turn. NEGATIVE CONTROLS run and recorded in the suite's own `NEGATIVE CONTROL:` line — **(1) THE ITEM'S OWN, and it is first: a run KILLED MID-FLIGHT whose log must EXIST and must NAME THE BOUND that stopped it**; (2) make the log write only on success and the suite FAILS naming the killed run that left nothing; (3) put the log in `bundle.md` and it FAILS; (4) add a second alarm or a cron and it FAILS naming SCHEDULER.md's one-mechanism rule; (5) polarity checked on every pin; (6) an over-strictness arm — a correct alternative phrased unlike anything written here must PASS. No push, no merge — CONDUCT integrates. QUEUE.md, DECISIONS.md, MEASUREMENTS.md and INTERFACE-CHANGES.md are not written by this session.
+concurrency: no other worker is claiming these paths right now (checked: every RECORD, UI and DIST claim above this one is `released:`). `gate-reads.test.mjs` was last touched by rec59-agent (released). `bio-plane/src/airun.mjs` and `bio-plane/test/airun.test.mjs` do not exist on main.
+delivered: 2026-08-07 · is6-agent, committed on `worktree-agent-adefd8db6571e8b30`, NOT pushed and NOT merged — CONDUCT integrates. **Battery 106/106 at 6,094, from a measured in-worktree baseline of 105/105 at 5,989 (the brief's figure, CONFIRMED rather than inherited). Delta +105, ATTRIBUTED BY DIFFING PER-SUITE COUNTS and only TWO suites move: `airun.test.mjs` +101 (new), `hygiene.test.mjs` 436 -> 440.** Those four are hygiene's own per-file arms over the two files this item adds (dispose, deterministic exit, sandbox import, control-byte scan) — a per-file sweep gaining two files, not a behaviour change. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped: **exit 0, OPS 131 -> 136 all reached through the control plane (100%), CHECKS 53 -> 59 all named, 106/106 suites declaring a control.** THE C-22 FAMILY IS REACHABLE BECAUSE IT WAS BUILT REACHABLE: two refusals were found unreachable by this item's own controls and both are recorded at the site — C-22.5 could not fire at all while `aiRunClose` derived a bound (silence became "completed"), and C-22.4's control left the suite GREEN AT 98/98 because a second copy of the vocabulary test absorbed it. **DELEGATION to UI, and it is the rider's other half:** `civicos-ui/app.html`'s `aiSessionRead()` still returns null and is the ONE function that changes — `op=airun&run=<id>` now publishes exactly the shape its field-name-blind renderers walk, proved by driving the plane's own answer through those renderers from this suite (ARM U). Nothing inside `civicos-ui/**` was opened.
+
+## DELEGATION 2026-08-07 · RECORD (is6-agent) → UI · `aiSessionRead()` has its op
+
+**The seam UI-38 declared is now supplied.** `civicos-ui/app.html`'s `aiSessionRead(_ctx)`
+returns null with the comment *"No op publishes a run record yet… When IS-6 and IS-9 land,
+this ONE function gains its read and nothing else moves."* IS-6 has landed and the op is
+**`op=airun&run=<id>`**, gated (viewer stamped server-side), member/admin/probe classes, and
+its `session` value is EXACTLY the shape the block's renderers already walk:
+
+    { id, label, mode, status, ticks, created, updated, expires,
+      context:   { type, id },
+      principal: { plane, claude, ref, skill },
+      budget:    [ { bound, allowed, consumed, unit }, … ],
+      condition: { kind, detail, bound, at } | null }
+
+**Nothing else in that block should move**, and three things are worth stating so they are
+not rediscovered: (a) `found:false` / `session:null` is the SUPPORTED absence — the plane
+answers it for an unknown run and for a run the viewer may not see, identically, so the
+existing "no record means NO INDICATOR" branch is already correct; (b) `allowed` and
+`consumed` travel separately and the plane publishes NO percentage, so F11's
+derive-nothing pin holds without any change at the surface; (c) `condition.kind` is a slug
+from the plane's own vocabulary (`queuestate.mjs`) and is rendered verbatim, exactly as the
+block already does — it is null for a run that ENDED rather than being stopped by a bound,
+which is a real distinction and not a gap.
+
+**NOT delegated and still open, deliberately:** `runtime-ceiling-reached` as a QUEUE-FEED
+notification is IS-9(d)'s producer, not this one. IS-6 records the condition ON THE RUN;
+nothing here emits a queue item, and the boundary is asserted in `test/airun.test.mjs`
+ARM V8.
+
+**RECORD has not edited `civicos-ui/**`** — a one-function change in another area's file is
+still that area's change, and the zero-delta UI harness is UI's evidence to produce.
+

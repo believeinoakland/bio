@@ -730,6 +730,27 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "record's own facts in that row — the source, the date, both derived strengths — stand unchanged "
       + "for every reader: a derivation that got weaker or stronger with the reader would be the record "
       + "claiming something different to different people, which is worse than the leak.",
+    /* IS-6's two reads, classified by the item that adds them (2026-08-07,
+       is6-agent). This sweep did its job at the merge again: both were written
+       gated, and being made to say WHY in the strong form is what settled that
+       the WHOLE ROW is withheld rather than the context id redacted. */
+    airun: "IS-6: the run's SUBJECT is the inquiry or project it runs in, so a run over a project the "
+      + "viewer was never invited to is WITHHELD WHOLE and byte-identically to an absent one — the surface "
+      + "shows NO INDICATOR either way (INVESTIGATIVE-SESSION.md §14a), so the leak and the honest answer "
+      + "are already the same shape and nothing is lost by withholding. The REDACT posture would be wrong "
+      + "here: `context` is the whole point of the answer (the surface renders an indicator only when the "
+      + "run is in the context of the object in view), so a row with its context nulled is not a weaker "
+      + "answer, it is an answer that says a job is running and refuses to say where. No count of the "
+      + "withheld is reported (op=backlinks' rule) — a count is exactly the disclosure that somebody is "
+      + "investigating something you cannot see.",
+    airunlog: "IS-6: the observation log, gated on the same column and for the same reason as op=airun. "
+      + "This one carries MORE than the run row does and is the sharper case: an entry's `subject` names "
+      + "what the run went looking for, so a log a viewer could read for a project they were not invited "
+      + "to would disclose the group's line of inquiry rather than merely its existence. The row-withhold "
+      + "is at the RUN, before any entry is read, so no entry of an invisible run is ever assembled. "
+      + "NOTE what is NOT here and never will be: the model's reasoning. DEC-61 puts the transcript "
+      + "device-local with a TTL and out of the record store, so there is no transcript for any gate to "
+      + "protect — the strongest form of this classification is that the material does not exist here.",
     /* REC-34's read, classified by the item that adds it (2026-08-04,
        rec34-agent). op=reevaluations' posture is the model and both of the
        sweep's shapes appear here too, with one addition the earlier reads did
