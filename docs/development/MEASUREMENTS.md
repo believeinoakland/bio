@@ -2755,3 +2755,39 @@ only that it drops this one, by name.
    field arriving by SPREAD** — that is caught only by the no-spread arm and by the
    through-the-op drive in `multifinding.test.mjs`, which is why both instruments
    exist.
+
+---
+
+## 2026-08-07, the consistency sweep (session BOB, instruments: grep/ls/wc against the tree at 81d3dc3)
+
+The numbers `IS-SWEEP-2026-08-07.md` cites, recorded here with their instruments so
+the sweep's citations rest on measurements rather than on prose. Each was re-run by
+the recording session against the current worktree and answered identically.
+
+- **105 of 105 test suites declare a `NEGATIVE CONTROL:` line.** Instruments:
+  `ls bio-plane/test/*.test.mjs | wc -l` → 105;
+  `grep -l 'NEGATIVE CONTROL' bio-plane/test/*.test.mjs | wc -l` → 105. The suite
+  count and the declaring count are the SAME number, measured separately — the
+  0/42 floor `VERIFICATION.md` carried before the sweep was stale on both terms.
+- **`query.mjs` FIELDS = 34 entries; FTS_COLUMNS = 5** (`title`, `body`, `meta`,
+  `locator`, `authority`, the literal at `src/query.mjs:113`). Instrument: grep of
+  `src/query.mjs` — the `FIELDS` object's top-level keys counted, the
+  `FTS_COLUMNS` array read whole.
+- **`compile()` registers SIX statement builders** — `page`, `count`, `ids`,
+  `snapshot`, `facets`, `facetScan`, the `statements:` return at
+  `src/query.mjs:827`. Instrument: grep for the `statements:` literal.
+- **OPS table = 131 entries, 63 non-mutating.** Instrument: grep over the
+  `const OPS` literal in `src/index.mjs` — `mutating: false` → 63,
+  `mutating: true` → 68, and 63 + 68 = 131 is the arithmetic check that no entry
+  escaped the count.
+- **STATES = FIVE machines** (`information`, `inquiry`, `focus`, `project`,
+  `action` — `checks/bio-checks.mjs:127`; `STATES.problem` at line 253 is an ALIAS
+  of `focus`, not a sixth machine). Instrument: grep/count of the `STATES`
+  export's top-level keys.
+- **The register's decision count is 59, and DEC-38 is ABSENT from the
+  sequence** — 59 unique DEC-ids, the maximum is DEC-60, and exactly one number in
+  1..60 never appears: 38. Instrument:
+  `grep -o 'DEC-[0-9]*' docs/development/DECISIONS.md | sort -u`, gap-checked
+  against the full 1..60 range. A reader counting headings and a reader reading
+  "DEC-60" as a count of sixty will disagree by one; this row is which of them is
+  right.

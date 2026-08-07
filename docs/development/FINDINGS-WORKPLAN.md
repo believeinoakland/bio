@@ -75,3 +75,9 @@ F1→E9, F7→D1(sequencing). F2/F3/F4 block nothing in A-D.
   RESOLVED by session (SWEEP §4b): capture_requests table; versions attach to the inquiry's
   basis; prune hides, never deletes; CHECK is the first deployed mode. E9 and D1's shape,
   prune and sequencing markers are UNBLOCKED. Bob retains F2, F3, F4 only.
+- 2026-08-07 · Wave 1B (DEBT D-225/D-226 + five stale rows; MEASUREMENTS section, every
+  number re-verified by the sub-session) and Wave 1C (MILESTONES: M9/M10 placement note,
+  M10 pointer, 57-row backfill table) landed. **New finding F8, joins Wave 2:** the DEC-60
+  family's DEBT tokens still read M4 (D-199/213/214/216/217/218) and MILESTONES' backfill
+  table places them under M4 flagged "token under correction" — Wave 2's session corrects
+  BOTH surfaces together to M9 so they cannot disagree mid-edit.

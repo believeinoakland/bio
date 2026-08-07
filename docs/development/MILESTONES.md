@@ -446,6 +446,27 @@ authority it claims to check) · the `focus → inquiry` rename, the concept's t
 **Areas:** RECORD, UI. **Depends on:** nothing — the claim layer rests on the projection
 layer, which ships entire.
 
+> **The investigative session (DEC-60) — placed 2026-08-07 (session BOB).** The DEC-60
+> debt family arrived carrying M4, inherited from D-199's placement by proximity — but
+> M4's acceptance is readings, progressions and junction findings, and THIS rung's
+> acceptance IS the claim layer: legs, basis, per-axis strength, undetermined suspending
+> an axis. By the rung's own words (`INVESTIGATIVE-SESSION.md` §18;
+> `IS-SWEEP-2026-08-07.md` §5a):
+>
+> - **IS-1/2/4/7 are M9** — versions, the state machine over them, the suggest endpoint,
+>   strength over the current version: the claim layer this acceptance already names.
+> - **IS-5/6/9 are M9 substrate** — the `ai` credential's scope, the run object and its
+>   observation log, the run harness: what the claim-layer pieces run on.
+> - **IS-3 and the running-session surface are M8** — CURRENT as a project property and
+>   the once-only session surface are member reach (UI-38 should absorb the latter, §5a).
+> - **IS-8 is M10** — the published bundle carrying the current version is publication.
+>
+> The D-127 precedent applies: when case-making had no rung, the answer was new rungs
+> (M9/M10), not filing it under substrate — same answer here. The debt rows' M4 tokens
+> (D-199, D-213/214/216/217/218) are being corrected in `DEBT.md` to match; where the
+> backfill table below still reads M4 on a DEC-60 row, that is the token awaiting the
+> correction.
+
 ### M10 · The group can stand behind what it found, and act on it
 **Capability:** a finding becomes a published case carrying an authored statement of what
 was left out; a stranger with no credential can read and check it; and an outward action
@@ -461,6 +482,10 @@ destroys the prior attestation) · D-150 (the completeness claim) · D-130's rec
 D-147 / D-148 (the records-request lifecycle and the fee quote as evidence) ·
 `AUDIENCES.md` H4/H5 (threshold and exclusions travel in-band).
 **Areas:** RECORD, UI. **Depends on:** M9.
+
+> **The investigative session's publication half (IS-8) lands HERE — see the DEC-60
+> placement note under M9, 2026-08-07.** The published bundle carrying the claim's
+> current version is this rung's ceremony, behind D-187's reshape and DEC-59's elements.
 
 > **These two rungs are not appended after the substrate; they are what the other eight
 > serve.** D-127 records the structural finding and it is worth keeping in front of a
@@ -652,6 +677,74 @@ and handed to CONDUCT through the BOB INBOX.
 | D-154 a hunch is temporary declared bias, and is HUNCH DEBT (DEC-15; term corrected 2026-08-05 per D-188 — "bias debt" names the DISCLOSED class that does not block) | RECORD · UI | M9 · REC-11/12/15/18, UI-11/12 |
 | D-155 a project declares the strength its work requires (DEC-17) | RECORD · UI | M10 · REC-14, REC-15, UI-18 |
 | D-156 "audience" names two things — reader of a case vs user type (DEC-17) | — | M10 · a documentation pass, no code |
+
+**The backfill, 2026-08-07 (session BOB).** The tables above stopped at D-156 while
+`DEBT.md` had reached D-224 — roughly fifty rows had accumulated outside them, against
+this table's own preamble rule. Every OPEN row D-157..D-224 is placed below by the
+disposition token its own row carries in `DEBT.md`; closed, resolved and superseded rows
+(D-157, D-173, D-186, D-188, D-197, D-198, D-201, D-206, D-212, D-215) are placed
+nowhere, and D-185 was already in the first table. DEC-60-family rows still reading M4
+are awaiting the token correction the M9 note above records.
+
+| item | area | milestone |
+| --- | --- | --- |
+| D-158 a never-enrolled member's key reads `active` on signerlist | RECORD | M10 · REC-15/UI-17 pre-flight |
+| D-159 an ungraded leg costs a conclusion nothing | RECORD | M10 · WATCH — re-raise after a real group runs |
+| D-160 RECONCILED says SUSPEND, the canonical word is UNRATED | RECORD | M9 · REC-12 carries it |
+| D-161 a connection's passage anchors are thrown away | RECORD | M4 · design agreed in outline |
+| D-162 connections run through NAMED things; ideas cannot connect | FRAMEWORK | M4 · DOCTRINE (Bob) — a DEC at the entity axis |
+| D-163 a citation cannot point inside a document | RECORD | M4 · folds into D-123 |
+| D-164 L3 content has no object — the content-extent primitive | RECORD | M4 · D-161/D-163/D-123 fold into it |
+| D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger |
+| D-166 the CPDF-5 corpus URLs went stale | CONTENT-PDF | M1 · re-locate the corpus |
+| D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item |
+| D-168 `op=cite` is type-only, so RETIRED is citable | RECORD | M9 · bounds REC-11/UI-20 |
+| D-169 `#setScalar` cannot ADD a frontmatter key | RECORD | M7 · batch with the honesty defects |
+| D-170 an ungrouped condition cannot be muted | RECORD | M8 · WATCH |
+| D-171 `#revisionKind` tiebreaks on a backdatable time | RECORD | M7 · beside D-169 |
+| D-172 the DO alarm can re-enter a tick still in flight | RECORD | M1 · decide at the next scheduler consumer |
+| D-174 plane vocabulary on the sign-in gate | RECORD · UI | M8 · open until DEC-49 is answered |
+| D-175 the battery varies by 2 assertions run-to-run | CONDUCT | M0 · next M0-lane pass |
+| D-176 UI-14's all-clear rests on interpreted feed-emptiness | UI | M8 · WATCH |
+| D-177 the capture axis below the ceiling is still authored | CAPTURE | M9 · CAPTURE's next activation |
+| D-178 `op=audit` never injects publishedRegistry | RECORD | M10 · small, pair with the next M10 item |
+| D-179 `register.capture_sha` is global — a re-register MOVES the row | RECORD | M7 · beside D-169/D-171 |
+| D-180 `#migrate` splits SCHEMA on `;` | RECORD | M0 · with D-175 |
+| D-181 C-2.8 refuses an ACTION as a basis leg | RECORD | M10 · raise to Bob only if a real case needs it |
+| D-182 `risk_tier` is D-130's unreached residue | RECORD · UI | M10 · pair with the next action-surface item |
+| D-183 nothing binds a transcription to the measurement that graded it | CONTENT-PDF | M2 · CPDF-12, behind CPDF-11 |
+| D-184 a firsthand observation has no home as a leg | RECORD | M9 · pair with DEC-39's wording + REC-11 |
+| D-187 a published case was built as exactly ONE inquiry | RECORD | M10 · DEC-44's enactment |
+| D-189 no surface says a project carries its own bias | UI · RECORD | M4 · with D-84's bias bundle |
+| D-190 the DO's 10 GB ceiling is recorded nowhere | RECORD | M6 · measure the storage curve first |
+| D-191 a composite capture's temporal spread is unstated | CAPTURE | M2 · state the spread |
+| D-192 stored-byte integrity is not what a reader SEES (replay) | CAPTURE | M2 · measure what the viewer executes |
+| D-193 the installer embeds a pre-REC-41 `setup.mjs` | DIST | M7 · closes at the next release cut |
+| D-194 a LEAD and an empty search have no record | FRAMEWORK · RECORD | M4 · the authored frontier, pair with D-184 |
+| D-195 OR's MAX assumes an independence nothing checks | RECORD | M9 · pair with REC-12's strength derivation |
+| D-196 the completeness statement is prose with nothing behind it | RECORD | M10 · gains a search record from the observation log |
+| D-199 the `ai` credential class and its task scope (DEC-60) | RECORD | M4 (token under correction — see the M9 note) |
+| D-200 live audit not clean: ten C-18.9 rows, application pending a deploy | RECORD · DIST | M2 · mechanism built (REC-54) |
+| D-202 declared vs deployed configuration diverged | DIST · RECORD | M1 · derive bindings, arm SELF |
+| D-203 five checks advise a repair the state machine refuses | RECORD | M2 · four repair strings |
+| D-204 nothing moves a document off `verified` except `retired` | RECORD | M2 · DOCTRINE (Bob), raised by REC-54 |
+| D-205 the admin token was printed by a stack trace | RECORD | M7 · rotation is Bob's; the guard is unassigned |
+| D-207 pre-REC-55 cite-over-drift Session Log silence | RECORD | M8 · behind D-200's deploy; sweep first |
+| D-208 one question composed in two layers that cannot read each other | UI | M8 · DEFERRED on its trigger |
+| D-209 the repair walk judges move directives only | RECORD | M2 · provisional; one static guard closes it |
+| D-210 `op=release` is not repeatable | RECORD · DIST | M2 · DOCTRINE (Bob), rides DEC-56 |
+| D-211 a clean FIRST PAGE satisfies the audit gate's wording | DIST | M0 · one clause, latent past 200 documents |
+| D-213 discovered evidence becomes an actionable notification (DEC-60) | RECORD | M4 (token under correction) · closes when the slug lands |
+| D-214 `rejected` is both an act and a state (DEC-60) | RECORD | M4 (token under correction) · closes with IS-1 |
+| D-216 one stance or per-project, for a shared inquiry (DEC-60) | RECORD | M4 (token under correction) · BLOCKS IS-3 |
+| D-217 derivation tree, prune offer, version-or-new-claim (DEC-60) | RECORD | M4 (token under correction) · lands with IS-1 |
+| D-218 can a Worker hold a whole run under the CPU ceiling (DEC-60) | RECORD | M4 (token under correction) · measurement; shapes IS-9 |
+| D-219 "with no captured basis" reads as "no basis" | RECORD | M8 · rides the next resolution-path touch |
+| D-220 version chains are recorded and nothing exposes them | RECORD | M3 · generalise the join, wire `capturedLocators` |
+| D-221 the "changed from" sentence names the wrong predecessor | UI | M3 · closed by D-220's consumer (1) |
+| D-222 the meaning layer has no query surface | RECORD | M3 · PRECONDITION on the whole IS set |
+| D-223 hunch debt cannot be enumerated | RECORD | M3 · rides D-222, named in its acceptance |
+| D-224 `connections` grows quadratically per entity | RECORD | M3 · measure first |
 
 ### Deliberately not scheduled, and why
 
