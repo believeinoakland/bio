@@ -4342,6 +4342,24 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full
   consequences).
 enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
+### DEC-63 · open
+for: bob
+raised: 2026-08-07 · CONDUCT (from IS-6, which shipped a provisional and asked)
+subject: Which CAPABILITY does starting an investigative run cost — `contribute`, `publish`, or something else?
+
+IS-6 built the run object and had to gate its three verbs. **The question is genuinely ambiguous and IS-6 named both sides rather than picking quietly:**
+
+- It reads like **`publish`**: a run **spends the group's Claude budget against their account**, and it will propose versions the record then carries.
+- It reads like **`contribute`**: it **authors nothing and commits nothing.** `INVESTIGATIVE-SESSION.md` §1 keeps *suggesting*, *authoring* and *committing* deliberately apart, and a run only ever suggests.
+
+provisional: **`contribute` on all three run verbs, and running.** Nothing is blocked.
+
+recommendation: **keep `contribute`.** Two reasons, and the second is the one that decides it for me. First, a **view-only member should not be able to start work the group pays for** — which `contribute` already prevents and `publish` would prevent more than necessary, since a contributor who may add legs may reasonably ask the system to look. Second, **a fourth capability token is refused by `CAPABILITIES.md` §4**, so "mint one for this" is not on the table without reopening that.
+
+**And the safe direction is already available:** IS-5's `ai` credential class can only NARROW this. If `contribute` proves too wide, the narrowing happens at the credential rather than by re-cutting the capability, which is the cheaper and more reversible lever.
+
+cost of reversal: **LOW — one line each in `NEEDS`.** No schema change, no op shape change, no data migration. It is raised despite being cheap because **it decides who in a group can spend that group's money**, which is a question about people rather than about mechanism, and that makes it yours rather than mine.
+
 ### DEC-62 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
   design document (INVESTIGATIVE-SESSION.md) — the register's founding rule is that a Bob
