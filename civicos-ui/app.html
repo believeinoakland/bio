@@ -61,6 +61,18 @@ html,body{margin:0;min-height:100vh}
 .hidden{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 
+/* ---- the running-session surface (UI-38, INVESTIGATIVE-SESSION.md §14a) ----
+   ONE surface for every AI feature, so ONE rule. `prefers-reduced-motion` is
+   honoured because the indicator's job is to say a job is RUNNING, and a
+   steady dot says that just as well as a pulsing one. */
+.ai-run{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
+.ai-run .dot{width:8px;height:8px;border-radius:50%;background:var(--verdigris);animation:ai-pulse 1.4s ease-in-out infinite}
+@keyframes ai-pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@media (prefers-reduced-motion: reduce){ .ai-run .dot{animation:none;opacity:1} }
+.ai-panel{border:1px solid var(--rule);padding:12px;margin:10px 0}
+.ai-panel .ai-bound{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}
+.ai-panel .ai-bound b{font-weight:600}
+
 /* ---- connect gate ---- */
 #gate{max-width:440px;margin:9vh auto;padding:0 24px}
 #gate .mark{font-family:var(--font-record);font-size:26px;font-weight:600;margin-bottom:6px}
@@ -1303,7 +1315,17 @@ async function boot(){
      same way for a caller holding something — a member who reloads on a case
      file lands back on the case file WITH THEIR SESSION, which is the dead end
      BUILD-ORDER named when it asked for a URL space of its own. */
-  if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash() && !actionRouteFromHash()) go("queue", true);
+  /* UI-38: FIVE real addresses. `#session/<id>` is the running-session surface
+     and it is asked HERE, inside boot(), which is what classifies it as
+     POST-authentication: unlike the published one it is NOT asked at the top
+     level before the gate, so it resolves for nobody holding nothing. It is
+     asked at all because the comment three lines up records exactly this
+     defect — `projectRouteFromHash` was written and never reached from boot, so
+     a reload landed on the queue with the url still claiming otherwise. Adding
+     the router without adding it to this chain would have repeated that, in the
+     same file, against a written warning. */
+  if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
+     && !actionRouteFromHash() && !aiSessionRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -1737,6 +1759,286 @@ const SEMANTICS = {
    the catalog declares must be a key this table declares. */
 SEMANTICS.types.problem = SEMANTICS.types.focus;
 /*__SEMANTICS_END__*/
+
+/*__SURFACES_START__*/
+/* ============================================================
+   THE SURFACE REGISTRY, AND RECIPES AS DATA (UI-38, ASSISTANT-PILOT §7 step 1).
+
+   WHY THIS IS DATA IN THE RUNTIME AND NOT A DOCUMENT BESIDE IT. The assistant
+   pilot needs to know the language of this workflow — the set of surfaces, what
+   can be done in each, and how to string steps together to reach a result. The
+   wrong way to give it that is a hand-written training document, because a
+   description of the system MAINTAINED BESIDE THE SYSTEM is the D-106 defect
+   class built in on day one: this file changes weekly and a parallel prose
+   catalogue of forty surfaces is stale by the second release. A confidently
+   wrong assistant is worse than none, because it walks a member into the wrong
+   act with authority in its voice.
+
+   So the surfaces SELF-DESCRIBE, here, beside the code they describe, and
+   `test/surface-registry.test.mjs` proves the described set EQUALS the real set
+   IN BOTH DIRECTIONS: a surface that exists and describes nothing fails, and a
+   description naming a surface that does not exist fails. The real set is not
+   read from this block — it is WALKED out of the runtime's own routing, three
+   independent arms (the screen table, the `CUR` object-page assignments, the
+   hash-route regexes), so a NEW surface cannot be added silently. That is the
+   question the item asks, and it is not the same as asking whether the surfaces
+   we started with are described.
+
+   WHAT IS DECLARED HERE AND WHAT IS BORROWED, because the difference is the
+   whole drift defence:
+
+     routes    NOT declared as truth — CHECKED against the walk, both ways.
+     acts      act ids, checked against the PLANE's own `ACTS`/`CAPTURE_ACTS`
+               exports, IMPORTED as live modules by the suite. There is no copy
+               of the act catalogue in this file and there must never be one.
+     reads     plane ops, checked against the `OPS` table PARSED OUT OF
+               `bio-plane/src/index.mjs`, and also required to appear as a
+               call-shaped occurrence in this file. A hand-typed op list is made
+               to FAIL by the suite's sourcing arm, which renames an op in a
+               COPY of the plane's source and asserts the answer moves.
+     levels    which of the four search levels this surface's answers can reach.
+     purpose   the one thing genuinely authored — and it is DOCUMENTATION, not
+               member-facing wording. Nothing in this block is ever rendered,
+               and the suite asserts that, so DEC-49 (who owns member-facing
+               refusal wording) is not preempted by a single word here.
+
+   `reads` IS THE SURFACE'S PRINCIPAL READS, NOT AN EXHAUSTIVE LIST, and that is
+   stated rather than left for a reader to assume. Proving exhaustiveness needs
+   per-renderer function-boundary extraction over a 15,000-line file, which is a
+   confident-wrong-answer machine; the honest bound is declared instead. Every
+   op named here is real and reached; the list does not claim to be all of them.
+   ============================================================ */
+
+/* THE FOUR LEVELS (CLAUDE.md, "NEVER ASSUME THE LOWER LEVELS ARE COMPLETE").
+   Absence at one level is not evidence of absence at the next, so an answer
+   that reports absence must say WHICH LEVEL it searched. A surface therefore
+   has to make its level legible rather than leaving it to the caller to guess.
+   The suite pins this array to CLAUDE.md's own sentence: the doctrine lives
+   there, and a copy that cannot drift is a copy that is checked. */
+const SURFACE_LEVELS = ["meaning", "content", "documents", "internet"];
+
+/* A surface's level list may be EMPTY, and empty is a real answer rather than a
+   gap: a workflow surface answers no question about what the record holds, so
+   it can never ground a claim that something is absent. That is the honest
+   reading and the assistant depends on it. */
+const SURFACES = {
+  queue: {
+    routes: ["screen:queue", "screen:home", "screen:tasks", "screen:proposals"],
+    purpose: "Everything the record is asking of somebody, in one list, filed under the case it belongs to. Decides nothing itself: every option on an item is one the record published for it.",
+    levels: [],
+    acts: [],
+    reads: ["queue", "tasks", "queuemute"],
+  },
+  record: {
+    routes: ["screen:record"],
+    purpose: "The whole record as rows: every bundle the instance holds, with its type and its state.",
+    levels: ["documents"],
+    acts: [],
+    reads: ["list"],
+  },
+  finder: {
+    /* UI-21: inquiries, monitoring and actions are FINDER ROUTES with a scope,
+       not screens of their own, and all four keys land on this one surface. */
+    routes: ["screen:search", "screen:inquiries", "screen:monitoring", "screen:actions"],
+    purpose: "One query surface over the record. Text and published field selectors reach documents and their extracted content; `concerns:` reaches the meaning layer. It refuses a query that crosses seams rather than silently answering half of it.",
+    levels: ["documents", "content", "meaning"],
+    acts: [],
+    reads: ["search", "searchfields", "concerns"],
+  },
+  subjects: {
+    routes: ["screen:subjects"],
+    purpose: "What the record knows about a subject — a source, an office, an ordinance, a person: its declared relations, the documents that concern it, and how strongly each concern was established.",
+    levels: ["meaning", "documents"],
+    acts: [],
+    reads: ["entity", "entitybyalias", "concerns", "relationdeclare"],
+  },
+  progressions: {
+    routes: ["screen:progressions"],
+    purpose: "How something is supposed to go, declared once as ordered stages, with real captured documents threaded through it by a subject so a missing stage becomes visible.",
+    levels: ["meaning", "documents"],
+    acts: [],
+    reads: ["progression", "progressiondefine", "captureprogressions"],
+  },
+  projects: {
+    routes: ["screen:projects"],
+    purpose: "The cases this group is building, as rows. A row opens the case's workspace rather than a document page.",
+    levels: ["documents"],
+    acts: [],
+    reads: ["list"],
+  },
+  review: {
+    routes: ["screen:review"],
+    purpose: "What has been collected and not yet released — the holding area between capture and the record proper.",
+    levels: ["documents"],
+    acts: ["release"],
+    reads: ["list"],
+  },
+  members: {
+    routes: ["screen:members"],
+    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding.",
+    levels: [],
+    acts: [],
+    reads: ["memberlist", "whoami"],
+  },
+  add: {
+    routes: ["screen:add"],
+    purpose: "Where a document enters the record from outside it: an address is fetched, the bytes are hashed as they arrive, and the address, the instant and the claimed issuer are recorded as three separate claims.",
+    levels: ["internet", "documents"],
+    acts: ["monitor", "attest"],
+    reads: ["acquire", "allocid"],
+  },
+  bundle: {
+    /* `bundle: null` is a real key of the screen table and a deliberate
+       sentinel — the document page is reached as an OBJECT, never as a screen,
+       so `go('bundle')` does nothing. Declared rather than hidden: the walk
+       finds the key, so something has to own it. */
+    routes: ["screen:bundle", "object:bundle"],
+    purpose: "One document as the record holds it: the captured bytes, what was extracted from them, what the record made of it, and what cites it.",
+    levels: ["documents", "content"],
+    acts: ["release", "retire", "dispose", "cite", "sever", "reinstate", "attest", "monitor"],
+    reads: ["image", "projection", "links", "backlinks"],
+  },
+  inquiry: {
+    routes: ["object:inquiry", "hash:inquiry"],
+    purpose: "A question the record is working on: the legs its basis rests on, how strongly each was established, and what it has concluded if it has concluded anything.",
+    levels: ["meaning", "content", "documents"],
+    /* `publish` is here because the inquiry page is where the record publishes
+       it (UI-17a's entry point renders only where the act is carried, and
+       `publicationEntryHtml` is called from `openInquiry`). This placement was
+       NOT authored from memory — the suite's ARM A4 failed naming `publish` as
+       an act the plane publishes that no described surface hosted, and the
+       placement was then found in the code. That is the arm earning its keep on
+       the first run, over the author's own description. */
+    acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish"],
+    reads: ["image", "inquirystrength", "inquiryground", "resolutions"],
+  },
+  project: {
+    routes: ["object:project", "hash:project"],
+    purpose: "A case's workspace: who is on it, what it holds, how ready its work product is, and what it is waiting on.",
+    levels: ["documents"],
+    acts: [],
+    reads: ["projectparticipants", "projectownerarith", "projection"],
+  },
+  action: {
+    routes: ["object:action", "hash:action"],
+    purpose: "Something this group has asked of somebody outside it: the counterparty, the clock, the correspondence and what came back.",
+    levels: ["documents"],
+    acts: ["actionmove", "actioncorrespond"],
+    reads: ["image", "projection"],
+  },
+  published: {
+    routes: ["hash:published"],
+    purpose: "The cases this instance has published, readable by somebody holding no credential at all.",
+    levels: ["meaning"],
+    acts: [],
+    reads: ["publishedcase"],
+  },
+  "published-case": {
+    routes: ["hash:case"],
+    purpose: "One published case at one edition, with the plane's own account of why it carries no single case-level strength and of what its index does and does not resolve.",
+    levels: ["meaning", "documents"],
+    acts: [],
+    reads: ["publishedcase", "publishedmanifest"],
+  },
+
+  /* ---- THE ONCE-ONLY RUNNING-SESSION SURFACE (E10, absorbed into UI-38) ----
+     INVESTIGATIVE-SESSION.md §14a: how a running AI session is shown to a
+     member is CROSS-CUTTING and is designed ONCE for every AI-based function,
+     not per feature. The assistant pilot and the investigative session are two
+     consumers of ONE surface. Left unabsorbed, this item would have built the
+     assistant's registry while the investigative session grew a second surface,
+     which is the mirror-and-drift class arriving at the UI layer.
+
+     The `kind` below is what makes that structural rather than a promise: the
+     suite asserts there is EXACTLY ONE surface of this kind, so a second AI
+     session surface FAILS THE BUILD. That single assertion is what "designed
+     once" means when it is enforced instead of documented. */
+  "ai-session": {
+    kind: "ai-session",
+    consumers: ["assistant", "investigative-session"],
+    routes: ["hash:session"],
+    purpose: "One running AI session as it runs: that a job is running in this context, the bound it is running under, what it has consumed of that bound so far, and which account is paying. Clicking the indicator opens the live transcript, which is device-local (DEC-61) and therefore readable only on the device that ran it.",
+    levels: [],
+    acts: [],
+    reads: [],
+    /* NO OP IS NAMED, AND THE ABSENCE IS THE POINT. The run's CONTENT belongs
+       to IS-6 and IS-9, which are unbuilt: there is no session read op to name,
+       and naming one that does not exist is precisely what the recipe validator
+       exists to refuse. So this surface reads nothing today, renders nothing
+       today, and shows NO INDICATOR — which is honest, because an indicator
+       over an invented state would be worse than no indicator. When IS-6 and
+       IS-9 publish, ONE function gains its read and nothing else moves. */
+    pending: {
+      publishers: ["IS-6", "IS-9"],
+      what: "the run record: its budget, its live consumption, the Claude-account principal that pays, and its condition when a bound stops it",
+    },
+  },
+};
+
+/* RECIPES ARE DATA, NEVER PROSE. A recipe is an ordered list of steps and each
+   step NAMES a surface id and a plane op. The build FAILS when a step names a
+   surface or an op that does not exist — the D-106 defence applied to assistant
+   knowledge, and the whole reason this is worth building before any AI exists.
+
+   The op names are NOT a hand-typed list. They are checked against the registry
+   the plane itself emits, and the suite's sourcing arm renames an op in a copy
+   of the plane's source and asserts these steps then fail: a hand copy agrees at
+   ZERO COST, and an agreement that costs nothing is not evidence.
+
+   `answers` is the levels a recipe can honestly speak to — the union of the
+   levels of the surfaces it visits. It is DERIVED by the suite from SURFACES
+   rather than declared here, so a recipe cannot claim a reach its own steps do
+   not have. */
+const RECIPES = [
+  {
+    id: "does-the-record-hold-anything-on-this",
+    intent: "FIND",
+    goal: "Establish what the record already holds on a question, and say which levels were searched.",
+    steps: [
+      { surface: "finder", op: "searchfields",
+        why: "Learn which fields the record publishes as searchable, so the answer can name what it could and could not filter on." },
+      { surface: "finder", op: "search",
+        why: "Search the documents and the content extracted from them." },
+      { surface: "subjects", op: "concerns",
+        why: "The meaning layer: what the record connects to this subject. Nothing found here is not evidence that nothing was extracted." },
+      { surface: "bundle", op: "image",
+        why: "Open a document the search returned and read what the record actually holds of it." },
+    ],
+  },
+  {
+    id: "capture-a-document-and-ground-a-question-on-it",
+    intent: "HELP",
+    goal: "Bring a document into the record from outside it and put it under an existing question.",
+    steps: [
+      { surface: "add", op: "acquire",
+        why: "The fourth level: fetch what the address serves now and record the address, the instant and the claimed issuer as three separate claims." },
+      { surface: "bundle", op: "projection",
+        why: "Read back what the record made of the capture before relying on it." },
+      { surface: "inquiry", op: "inquiryground",
+        why: "Ground the question on the captured document. The member performs the act; this step navigates to it." },
+    ],
+  },
+  {
+    id: "what-is-the-record-asking-of-me",
+    /* HELP, NOT FIND, AND THE SUITE IS WHAT SETTLED IT. This was authored as a
+       FIND and ARM P5 failed it: every surface it visits reaches NO level, so
+       as a FIND it could never honestly report an absence — and §2's FIND
+       contract is "run read ops -> ANSWER with record citations AND THE LEVEL
+       SEARCHED". A queue is a feed of what the record has already noticed, not
+       a search over what the record holds; "nothing here" from this recipe is
+       a statement about the feed and not about the corpus. Relabelled rather
+       than exempted, and the reason is recorded at the site. */
+    intent: "HELP",
+    goal: "Show what is outstanding for this member, and under which case, then navigate to it.",
+    steps: [
+      { surface: "queue", op: "queue",
+        why: "What the record noticed on its own and what our own machinery is doing to the work." },
+      { surface: "queue", op: "tasks",
+        why: "What a named person owes." },
+    ],
+  },
+];
+/*__SURFACES_END__*/
 
 /* The glossary: system terms and the civic-finance shorthand this record
    swims in, disclosed on click wherever they appear in rendered prose.
@@ -15301,6 +15603,201 @@ function publishedRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!PUB_HASH_LOCK) publishedRouteFromHash(); }); }catch(_){}
 /*__PUBLISHED_CASE_END__*/
+
+/*__AI_SESSION_START__*/
+/* ============================================================
+   THE RUNNING-SESSION SURFACE — ONE surface for EVERY AI feature (UI-38, E10).
+
+   INVESTIGATIVE-SESSION.md §14a, Bob 2026-08-05, and it is not
+   investigation-specific: a background session runs in a CONTEXT and is
+   associated with an inquiry or a project; any window focused on any of those
+   objects shows an ANIMATED INDICATOR that a job is running; clicking it opens
+   the LIVE TRANSCRIPT; and the state of those objects DOES NOT CHANGE while the
+   session runs, so there is no partial state and no "come back later" notice.
+   **The same applies to the Assistant and to every other AI-based function**,
+   so this is designed ONCE rather than per feature.
+
+   That "once" is enforced and not merely written down: `SURFACES["ai-session"]`
+   carries `kind: "ai-session"` and the suite asserts there is EXACTLY ONE
+   surface of that kind. A second AI feature growing a second surface FAILS THE
+   BUILD. Without that assertion this paragraph would be a promise, and the
+   mirror-and-drift class is exactly what promises do not stop.
+
+   ---- WHAT THIS FILE MAY DECIDE, AND WHAT IT MAY NOT ----
+
+   THE RUN'S CONTENT IS NOT THIS SURFACE'S. It belongs to IS-6 and IS-9, both
+   unbuilt. So this surface READS what they publish and renders it; it does not
+   derive state, and where they publish nothing it says nothing. Concretely:
+
+     - `aiSessionRead()` returns null today, because no op publishes a run.
+       There is no session read op in the plane's OPS table, and naming one that
+       does not exist is precisely what the recipe validator refuses. When IS-6
+       and IS-9 land, this ONE function gains its read and nothing else moves.
+     - No session record means NO INDICATOR. Not a "nothing is running" notice —
+       that would be a claim about the record made by a surface that did not ask
+       anything, which is the class UI-39 and UI-40 were raised to remove.
+
+   THE RENDERERS ARE FIELD-NAME-BLIND ON PURPOSE. They walk what the record
+   published, in the order it published it, and print it. They know no field
+   names, so they cannot invent one and cannot go stale when IS-6 chooses its
+   shape. A fixture that invents a field makes a dead branch render as alive;
+   the defence against that is a renderer with no branches over field names.
+
+   THEY DERIVE NOTHING. `bound` and `consumed` are both published, so printing
+   them both is reporting. A percentage, a remainder, a "nearly exhausted"
+   judgement or a colour threshold would be this surface computing a fact the
+   record did not state, and the suite fails any arithmetic in the output.
+
+   ---- F11, AND IT IS A FINDING RATHER THAN A PREFERENCE (§19) ----
+
+   §14b.6 bounds a run's effort and RECORDS the bound; §19 measured that the
+   bound is visible ONLY IN THE LOG, AFTER THE FACT. **A bound a member can only
+   read afterwards is not a bound they can act on.** So this surface carries the
+   budget AND its live consumption while the session runs, and it names the
+   account that pays — which costs nothing to add, because §14a already requires
+   the record to name WHICH LEVEL of the Claude-account cascade was used
+   (member, then project, then instance) beside the plane-credential principal.
+
+   ---- THE TRANSCRIPT IS DEVICE-LOCAL AND SHORT-LIVED (DEC-61) ----
+
+   Ruled by Bob 2026-08-06: device-local, with a TTL, deleted as part of
+   publication, never in the record store. So the transcript is NOT fetched from
+   the plane, and an address handed to a teammate opens the indicator and not the
+   reasoning. §14a states that price explicitly. This surface therefore renders a
+   transcript only when the device holds one and renders nothing when it does
+   not — it does not tell a member why, because that sentence is member-facing
+   refusal wording and DEC-49 has not ruled on who owns it. Left for the ruling
+   rather than authored here, the way UI-39 deleted a falsehood without writing a
+   new word and UI-40 rendered the plane's accounts verbatim with no fallback.
+   ============================================================ */
+
+/* THE READ. Null until IS-6/IS-9 publish a run. Stated as one function so the
+   seam is a single line rather than a search. */
+function aiSessionRead(_ctx){
+  /* No op publishes a run record yet — see `SURFACES["ai-session"].pending`.
+     Returning null is the honest answer and it is what makes the indicator
+     absent rather than invented. */
+  return null;
+}
+
+/* THE DEVICE-LOCAL TRANSCRIPT (DEC-61). Never the plane. */
+function aiSessionTranscript(id, store){
+  const S = store || (typeof localStorage !== "undefined" ? localStorage : null);
+  if(!S || !id) return null;
+  let raw = null;
+  try{ raw = S.getItem("ai-transcript:" + String(id)); }catch(_){ return null; }
+  if(!raw) return null;
+  try{ const t = JSON.parse(raw); return Array.isArray(t) ? t : null; }catch(_){ return null; }
+}
+
+/* Is this session running in the context of the object in view? The record says
+   what context it runs in; this compares, and decides nothing else. */
+function aiSessionInContext(session, ctx){
+  if(!session || !ctx) return false;
+  const c = session.context;
+  if(!c || typeof c !== "object") return false;
+  return String(c.type||"") === String(ctx.type||"") && String(c.id||"") === String(ctx.id||"");
+}
+
+/* THE INDICATOR. Absent when nothing is running — never a notice. */
+function aiSessionIndicatorHtml(session, ctx){
+  if(!aiSessionInContext(session, ctx)) return "";
+  const id = String(session.id || "");
+  /* The only word this surface contributes is the record's own: if the run
+     published a label, it is the label; otherwise the indicator is the dot and
+     the address, and carries no sentence at all. */
+  const label = typeof session.label === "string" && session.label ? esc(session.label) : "";
+  return `<span class="ai-run" onclick="aiSessionOpen(${esc(JSON.stringify(id))})"`
+       + ` title="${esc(id)}"><span class="dot"></span>${label}</span>`;
+}
+
+/* Published name/value pairs, VERBATIM, in publication order. No field is
+   known by name, so none can be invented and none can go stale. Values that are
+   themselves objects are not flattened — an unrendered nested shape is a gap a
+   later item closes, and it is stated rather than papered over with a guess. */
+function aiSessionPairsHtml(row){
+  if(!row || typeof row !== "object") return "";
+  const out = [];
+  for(const [k, v] of Object.entries(row)){
+    if(v === null || v === undefined) continue;
+    if(typeof v === "object") continue;
+    out.push(`<span><b>${esc(String(k))}</b> ${esc(String(v))}</span>`);
+  }
+  return out.join("");
+}
+
+/* THE BUDGET AND ITS LIVE CONSUMPTION (F11). Every bound the record published,
+   with everything the record published about it. Nothing computed. */
+function aiSessionBudgetHtml(session){
+  const rows = session && Array.isArray(session.budget) ? session.budget : [];
+  if(!rows.length) return "";
+  return rows.map(r=>`<div class="ai-bound">${aiSessionPairsHtml(r)}</div>`).join("");
+}
+
+/* WHO PAYS. §14a: the record names WHICH LEVEL of the cascade was used, beside
+   the plane-credential principal. Rendered verbatim, never the token value. */
+function aiSessionPrincipalHtml(session){
+  const p = session && session.principal;
+  if(!p || typeof p !== "object") return "";
+  const pairs = aiSessionPairsHtml(p);
+  return pairs ? `<div class="ai-bound">${pairs}</div>` : "";
+}
+
+/* THE CONDITION, when a bound stopped the run. The record's own words: the
+   plane's condition vocabulary carries the explanation (`runtime-ceiling-reached`
+   among them) and it is surfaced VERBATIM, never paraphrased. This surface holds
+   no copy of that vocabulary — it prints what arrived. */
+function aiSessionConditionHtml(session){
+  const c = session && session.condition;
+  if(!c || typeof c !== "object") return "";
+  const kind = typeof c.kind === "string" ? c.kind : "";
+  const detail = typeof c.detail === "string" ? c.detail : "";
+  if(!kind && !detail) return "";
+  return `<div class="ai-bound">${kind?`<span><b>${esc(kind)}</b></span>`:""}`
+       + `${detail?`<span>${esc(detail)}</span>`:""}</div>`;
+}
+
+/* THE PANEL — the indicator's click target. The live transcript if this device
+   holds one, the budget and its consumption, who pays, and the condition. */
+function aiSessionPanelHtml(session, transcript){
+  if(!session) return "";
+  const lines = Array.isArray(transcript) ? transcript : [];
+  const body = lines.map(l=>`<div class="mono">${esc(typeof l==="string"?l:JSON.stringify(l))}</div>`).join("");
+  return `<div class="ai-panel">${aiSessionPrincipalHtml(session)}`
+       + `${aiSessionBudgetHtml(session)}${aiSessionConditionHtml(session)}${body}</div>`;
+}
+
+let AI_SESSION_HASH_LOCK = false;
+function aiSessionOpen(id, fromNav){
+  const session = aiSessionRead({ session: id });
+  if(!fromNav){
+    try{
+      if(typeof location !== "undefined" && location.hash !== undefined && location.hash !== "#session/"+id){
+        AI_SESSION_HASH_LOCK = true; try{ location.hash = "#session/"+id; }finally{ AI_SESSION_HASH_LOCK = false; }
+      }
+    }catch(_){}
+  }
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  /* Nothing published means nothing rendered. The address resolves and the
+     panel is empty rather than carrying a sentence nobody ruled on. */
+  el.innerHTML = aiSessionPanelHtml(session, aiSessionTranscript(id));
+}
+
+/* `#session/<id>` is a real address, the same way `#inquiry/<id>` is: it
+   survives a reload and it can be handed to another member — who gets the
+   indicator and, per DEC-61, not the reasoning, because the transcript never
+   left the device that ran it. */
+function aiSessionRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#session\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  aiSessionOpen(m[1], true);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!AI_SESSION_HASH_LOCK) aiSessionRouteFromHash(); }); }catch(_){}
+/*__AI_SESSION_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}
