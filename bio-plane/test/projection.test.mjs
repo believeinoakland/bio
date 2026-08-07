@@ -189,8 +189,25 @@ t("fields no information bundle has are absent from the typed columns", prob.sou
   t("and present in the tail", fm.surfaced_by, "agent");
   t("including a nested per-type array", fm.recheck_triggers[0].text, "Revisit after the next budget cycle");
 }
+/* SUPERSEDED PIN, CORRECTED 2026-08-07 (REC-59 / IC-24), not exempted. This read
+   took the json_extract corpus arm as a BARE ARRAY. That arm was capped at 200
+   and an array has nowhere to put a key, so it could say neither what bound it
+   applied nor whether the bound bit — the defect IC-24 was filed for and this
+   item landed. It now answers `op=list`'s envelope; the rows are `.bundles`. */
 const q = (await call(`/projection?jsonPath=$.surfaced_by&jsonEquals=agent&viewer=class:member`)).result;
-t("json_extract finds bundles by a field with no column", q.map((r) => r.bundle_id), [PROB_ID]);
+/* Null-tolerant for the same reason gate-reads.test.mjs is: the negative control
+   for this change makes `.bundles` undefined, and an arm that THROWS there kills
+   the suite and hides everything behind it instead of naming what broke. */
+t("json_extract finds bundles by a field with no column", (q.bundles || []).map((r) => r.bundle_id), [PROB_ID]);
+/* AND THE FILTER'S OWN TOTAL IS THE FILTER'S, not the corpus's — the arm that
+   catches the easy mistake in this change. A `total` that counted every bundle
+   would read as "1 of N shown" on a query that matched exactly one, which is a
+   new way of overstating what an answer covers rather than a fix for the old
+   one. Asserted against a corpus that is deliberately LARGER than the match. */
+t("op=projection: the FILTER arm's `total` counts what the FILTER matched, not the corpus it searched",
+  [q.total, (q.bundles || []).length], [1, 1]);
+t("op=projection: and the corpus is genuinely bigger, so that equality cost something to produce",
+  (await call(`/projection?viewer=class:member`)).result?.total > q.total, true);
 
 console.log("\n--- the projection is indexed, so a filter is a seek and not a scan ---");
 const plans = (await call(`/projectionplan`)).result;

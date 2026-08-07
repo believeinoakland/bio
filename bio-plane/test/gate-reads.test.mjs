@@ -235,9 +235,36 @@ console.log("\n--- op=projection / op=image / op=file: an invisible bundle IS an
   const [fHid, fAbs] = [await GET(`op=file&token=${dave}&id=${PROJ}&path=bundle.md`),
                         await GET(`op=file&token=${dave}&id=${MISSING}&path=bundle.md`)];
   t("op=file: hidden and absent answer byte-identically", fHid, fAbs);
+  /* SUPERSEDED PIN, CORRECTED 2026-08-07 (REC-59 / IC-24), not exempted. This
+     read walked the enumeration as a BARE ARRAY. That arm was capped at 200 and
+     an array can carry no key, so it could publish neither the bound nor whether
+     it bit — IC-24, now landed. The rows moved under `.bundles` in `op=list`'s
+     own envelope, and this suite's subject (WHAT dave may see) is unchanged. */
+  /* READ DEFENSIVELY, and this is not decoration: the negative control for this
+     change (revert the op to a bare array) made `result.bundles` undefined, and
+     the first draft of these arms THREW on `.length` — killing the suite and
+     hiding every assertion behind it, which is D-93's class inside a control.
+     A control must NAME what it broke, so each arm reports its own failure. */
   const enumd = await GET(`op=projection&token=${dave}`);
+  const enumRows = (r) => (r && r.body && r.body.result && r.body.result.bundles) || [];
   t("the projection enumeration carries only the shared corpus",
-    (enumd.body.result || []).map((b) => b.bundle_id).sort(), SHARED);
+    enumRows(enumd).map((b) => b.bundle_id).sort(), SHARED);
+  /* AND THE NEW KEYS TAKE THIS SUITE'S GATE, which is the whole reason the
+     migration is asserted HERE and not only in bounds.test.mjs. `total` is a
+     COUNT and a count over rows the caller cannot read would say "something is
+     hidden" — half the leak, and D-15's own argument. It must therefore be
+     VIEWER-DEPENDENT, exactly as REC-57 established for op=list's `total`,
+     while `limit` is a property of the request and must NOT be. */
+  const enumCarol = await GET(`op=projection&token=${carol}`);
+  t("op=projection: `total` counts what THIS viewer may see — the uninvited member's total is the shared corpus, "
+  + "and it does not count the project he cannot read",
+    [enumd.body.result?.total, enumRows(enumd).length], [SHARED.length, SHARED.length]);
+  t("op=projection: and a viewer who CAN see the project counts one more — the total moves with position, "
+  + "so it is gated and not a corpus-wide figure handed to everyone",
+    enumCarol.body.result?.total > enumd.body.result?.total, true);
+  t("op=projection: `limit` is a property of the REQUEST and is viewer-INDEPENDENT — the two positions "
+  + "are told the same bound and differ only in what they may read",
+    enumd.body.result?.limit !== undefined && enumd.body.result?.limit === enumCarol.body.result?.limit, true);
 }
 
 console.log("\n--- op=affordances (the 2026-08-03 amendment): existence and state stay invisible ---");

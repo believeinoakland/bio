@@ -1227,7 +1227,7 @@ and no `purge` change.
 
 ---
 
-## IC-24 · I3: `op=projection`'s capped corpus arms answer with a BARE ARRAY, which can carry no bound · PROPOSED
+## IC-24 · I3: `op=projection`'s capped corpus arms answer with a BARE ARRAY, which can carry no bound · PROPOSED 2026-08-05 (REC-57), then RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-59) — the one IC here whose steps were taken by two different sessions on two different days, which was the point of filing it rather than landing it
 
 - **Interface:** I3 (plane → UI), **8.1.0 STABLE** after IC-23
 - **Proposer:** `RECORD` (session rec57-agent), 2026-08-05, from REC-57's sweep.
@@ -1280,3 +1280,137 @@ way fails the suite rather than quietly joining a growing exception list.
 **PROPOSED, 2026-08-05.** Awaiting responses. Nothing is built against either shape.
 A separate queue item should land it; this session did not, and says so rather than
 leaving the roster looking complete.
+### RESPONSES, 2026-08-07 (REC-59, session rec59-agent)
+
+Protocol step 2. The proposal named `UI`, `DIST` and the content areas as consumers to
+answer. All three are dormant for this interface today, so **CONDUCT answers on their
+behalf, IN WRITING, on the IC-1 precedent** — recorded as CONDUCT answering FOR each
+area and never as the area agreeing. What is new here is that the answers are
+**EVIDENCED BY A RE-MEASUREMENT rather than by the proposal's own count**, because the
+proposal's count turned out to be wrong.
+
+- **`UI` — NOT-AFFECTED (answered by CONDUCT).** Measured, not asserted: `civicos-ui`
+  reaches this op through exactly one helper, `getProjection(id)` at `app.html:1048`,
+  which passes an id and therefore takes the `&id=` arm that does not move. The
+  corpus-arm consumer the surface once had — `reverseRefs`, which walked the projection
+  of every inquiry and project and unioned it with `op=list` — **was deleted by UI-21
+  on 2026-08-05** in favour of `op=backlinks`, and its removal is documented in place
+  with the three reasons. So the one surface that would have broken had already stopped
+  reading this arm two days before the break landed, for unrelated reasons. This is
+  asserted in `bounds.test.mjs` as its own arm, so NOT-AFFECTED stays a measurement.
+- **`DIST` — NOT-AFFECTED (answered by CONDUCT).** No call site in `newgroup/**`,
+  `docprofile/**`, `pdf-worker/**` or `tools/**`, on either arm, in any of the four
+  invocation forms the walk recognises.
+- **The content areas — NOT-AFFECTED (answered by CONDUCT).** No call site.
+
+### THE RE-MEASUREMENT, AND IT CONTRADICTS THIS PROPOSAL'S OWN COUNT
+
+The proposal says: *"every one of the nine call sites found … uses the `&id=` arm, which
+does not move."* **Re-measured 2026-08-07 across 228 files and 7,843,070 characters:
+there are 38 call sites, and NINE OF THEM TARGET THE CORPUS ARMS.**
+
+| arm | sites | what they do with the answer |
+| --- | --- | --- |
+| `&id=` (unchanged) | 29 | read one row |
+| corpus, bare enumeration | 7 | `.find()` / `.map()` over the array |
+| corpus, `jsonPath`/`jsonEquals` | 2 | `.map()` over the array |
+
+The nine, named: `test/projects.test.mjs` ×5 (`.find()` over the enumeration, at 220,
+221, 335, 368, 419), `test/gate-reads.test.mjs`:238 (`.map()` over the enumeration —
+the D-15 arm proving an uninvited member sees only the shared corpus),
+`test/projection.test.mjs`:192 (`.map()` over the filter arm),
+`test/bounds.test.mjs`:465 (the pin itself), and `test/fence.test.mjs`:99 (a corpus-arm
+request that is refused `unauthenticated` before any shape is reached).
+
+**THE COINCIDENCE IS THE HAZARD AND IS RECORDED AS SUCH.** The proposal's figure was
+NINE and the number of corpus-arm sites is also NINE. A reader re-deriving the count and
+comparing totals would have found "nine" against "nine" and concluded the measurement
+was confirmed. It was a count of a different population. This is REC-41's lesson for the
+fourth time — right about one thing, wrong about which thing — and it is the whole
+argument for the queue item's instruction to re-measure rather than inherit.
+
+**WHAT THE PROPOSAL GOT RIGHT, and it is the part that decides:** the conclusion holds
+even though its arithmetic did not. The `&id=` arm is 29 of 38 sites and is untouched;
+every corpus-arm consumer is inside this repository's own battery, so the migration is
+one commit rather than a coordination problem; and no consumer outside this tree is
+known. The break is worth taking, and taking it through the protocol rather than around
+it is what made the wrong count visible before it landed rather than after.
+
+**THE WALK'S OWN LIMIT, STATED:** it reads request-forming string literals. A caller
+that composes its query from a variable, or reaches the op through a helper the walk
+does not know, is invisible to it. So the figure is a FLOOR, not a census — which is why
+every migrated consumer is additionally asserted THROUGH THE OP in its own suite rather
+than trusted to the walk.
+
+### RESOLUTION, 2026-08-07
+
+Protocol step 3. All consumer answers are NOT-AFFECTED (CONDUCT answering for three
+dormant areas, named above), and no counter was raised. **ACCEPTED.**
+
+The amendment forced by the re-measurement is to the proposal's IMPACT STATEMENT, not to
+its SHAPE: the change is exactly as proposed, and "measured consumer impact is nil" is
+corrected to "nine in-tree call sites, all inside the battery, all migrated in the
+landing commit". The proposal's decision to record this as a BREAK per IC-3's reasoning
+is now doubly right — it was recorded as a break when it was believed to be unconsumed,
+and it turned out to be consumed.
+
+### CHANGING → CHANGED, 2026-08-07
+
+Steps 4 and 5, taken in one commit because every affected consumer is in this repository
+and this session migrated all of them; there is no window in which a second shape could
+be built against. **I3 8.1.0 → 9.0.0**, MAJOR, in `INTERFACES.md`.
+
+What landed, in `store.mjs`'s `projection()`:
+
+    // before — both corpus arms
+    return this.#rows(`SELECT … LIMIT ?`, …, limit);        // a bare JSON array, capped 200
+
+    // after
+    { bundles: […], limit: <cap applied>, cursor: <bundle_id|null>, total: <gated count> }
+
+- **The `&id=` arm is UNCHANGED**, byte for byte, including REC-24's derived `action`
+  block. Only the two corpus arms move.
+- **The envelope is `op=list`'s**, deliberately, and not a twelfth spelling: the same
+  rows of the same table already answer in that shape when `op=list` pages, and minting a
+  second vocabulary for one producer is REC-55's declined-second-copy rule at the level
+  of shape. This is also why the completeness signal is `cursor` and not a new
+  `truncated` — `op=list` already settles the question that way.
+- **The dispatch now forwards `limit` and `after`**, which it did not carry at all. The
+  two halves of the defect were that the caller could not see the cut AND could not ask
+  for more; publishing the bound without accepting one would have fixed the smaller half.
+- **The cap is UNCONDITIONAL, unlike `op=list`'s.** `op=list` pages only on request, so
+  its bare arm applies no bound and has none to publish. Here the 200 has always bitten,
+  so an envelope that appeared only when asked for would publish nothing in exactly the
+  case that was lying.
+- **`limit` is the bound AFTER clamping** (default 200, ceiling 5000 — `op=list`'s
+  ceiling, reused rather than duplicated), never the number asked for. **`total` is
+  gated**, counting only what the viewer may see, and on the filter arm it counts what
+  the FILTER matched rather than the corpus searched — both asserted, the second against
+  a corpus deliberately larger than the match.
+- The bound is now NAMED (`Store.PROJECTION_LIMIT_DEFAULT` / `_MAX`) rather than a bare
+  literal, so the roster walk finds it by name the way REC-57 made `op=exportlog`'s
+  findable.
+
+### SETTLED, 2026-08-07
+
+Step 6. Every consumer has migrated or has recorded that it had nothing to migrate:
+
+- **`UI`, `DIST`, the content areas** — nothing to migrate (measured above; asserted
+  in-suite for `civicos-ui`).
+- **`RECORD`'s own battery** — all nine corpus-arm sites migrated in the landing commit.
+  `projects.test.mjs` reads through one `projRows()` helper so the shape is stated once;
+  `gate-reads.test.mjs` and `projection.test.mjs` read `.bundles`. **Each is CORRECTED
+  with a dated reason at the site and none is exempted**, and two of them gained arms the
+  old shape could not carry: that `total` is viewer-dependent while `limit` is not
+  (`gate-reads`, the D-15 suite, where that distinction belongs), and that the filter
+  arm's `total` is the filter's rather than the corpus's (`projection`).
+- **The one-op pin is KEPT ALIVE AND INVERTED.** `bounds.test.mjs` pinned this at
+  exactly one array-shaped op rather than exempting it. That pin now reads **ZERO**, and
+  in the course of this item it was found to be **weaker than it looked**: it compared a
+  hand-written `Set(["projection"])` against its own `.size`, which was true because the
+  literal had one element and would have stayed true whatever any op answered. It is now
+  PRODUCED by driving every op on the roster and inspecting the answer, with a guard
+  proving the reader can still see an array when one is present. A second bare-array
+  capped op now fails the build with no list to join.
+
+I5 is NOT touched: no table, column, index or `purge` change.
