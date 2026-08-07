@@ -2100,3 +2100,21 @@ expected: QUEUE.md REC-58, UI-40's delegation. RE-MEASURE the consumers of `case
 accepts-when: as QUEUE.md REC-58. **Battery baseline 104/104 at 5921 MEASURED IN THIS WORKTREE BEFORE ANY EDIT** (the brief said 104/104 at 5,920; the measurement governs and is one assertion higher), any delta ATTRIBUTED PER SUITE by diffing per-suite counts, never estimated; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0. NEGATIVE CONTROLS run and recorded in each suite's own `NEGATIVE CONTROL:` line: (1) the ruling is KEEP, so restoring the other state — publishing `opened` on each of the three surfaces that could carry it — FAILS naming the field; (2) neuter the consumer walk and assert its REACH as a DELTA, with a paired positive arm so an empty corpus cannot read as a clean answer; (3) polarity checked on every pin; (4) an over-strictness arm — a genuinely correct alternative phrasing must pass. No push, no merge — CONDUCT integrates. QUEUE.md, DECISIONS.md and INTERFACE-CHANGES.md are not written by this session.
 concurrency: no other worker is claiming these paths right now (checked: every RECORD, UI and DIST claim above this one is `released:`). `bio-plane/test/multifinding.test.mjs` was last touched by rec49-agent/rec47-agent, both released.
 released: 2026-08-05 · CONDUCT at integration — merged on main (worker b5238a5). Verified FROM THE MAIN CHECKOUT: battery 105/105 at 5,954 with the +33 attributed and ONLY three suites moving (case-opened +28 new, multifinding 70 -> 74, hygiene 435 -> 436); coverage --strict run DIRECTLY, $? unpiped, exit 0 at 131/131 ops. **CONDUCT RE-RAN NC (1a) ITSELF**: restoring `opened` to the public read is caught INDEPENDENTLY by three suites — case-opened 26/2, publishedcase 77/1, multifinding 73/1 — exactly as reported; store.mjs restored byte-identically, sha256 compared. **THE ITEM'S PREMISE WAS FALSE AND CONDUCT WROTE IT**: `op=publishcase` does not publish `case.opened` and never did. CONDUCT copied the claim out of IC-22's own SETTLED text without re-measuring — REC-41's lesson for the THIRD time, right about the FIELD and wrong about the OP. **IC-22's sentence is corrected in place at integration** (struck rather than deleted, with the propagation path recorded), which is CONDUCT's act because amending a SETTLED IC is a protocol act with an owner and the worker correctly routed it instead of editing it. The item's scope carries the same correction. Routed: M0-12, the mechanical defence.
+
+## DELEGATION 2026-08-06 · BOB → FRAMEWORK · a stale claim in DOCUMENT-PROFILES.md
+
+`docs/development/DOCUMENT-PROFILES.md:309-310` says the duplicate sweep and the
+contemporaneity bracket arm both still compare raw hashes. **The first half is now wrong.**
+Verified in source 2026-08-06: `checkRegisterIntegrity` (`bio-plane/checks/bio-checks.mjs:3553-3558`)
+buckets on `docs[i].profile.digests.evidentiary` when `determined === true`, beside the raw
+arm, firing only when two or more different raw shas share a digest. The bracket-arm half is
+still accurate (`store.mjs:14859-14873` brackets over raw `capture_sha` rows).
+
+Worth stating precisely when it is corrected, because the scope is narrower than either
+phrase implies: the duplicate check is **intra-bundle** — `auditPass` iterates bundles and
+calls `checkBundle` per bundle — and **no cross-bundle duplicate sweep exists at all**. D-60
+and (until today) D-220 both referred to one; that was a category error inherited between
+rows, now corrected on both.
+
+FRAMEWORK's file, so BOB has not edited it. Same correction noted on D-60.
+

@@ -597,6 +597,59 @@ A resumed run reads its own log and continues rather than restarting — the sam
 makes Claude Code's workflow resume cheap, and the reason §7's version identity (frozen,
 uniquely named) matters operationally as well as conceptually.
 
+## 14c · D-222 — THE OPTIONS, GRADED
+
+**Researched 2026-08-06 across four parallel sub-sessions** (query compiler, meaning-layer
+tables, versioning surfaces, op/interface conventions). Every option below was re-confirmed
+against source rather than reasoned about; the constraints each must clear are measured, not
+asserted.
+
+### What must hold, whichever option wins
+
+| constraint | why, and where it is enforced |
+| --- | --- |
+| **ONE compilation point for visibility (D-15)** | `viewerPredicate` (`query.mjs:189`) is the only one, and `Store#runQuery` **throws** if a statement reaches the store without `GATE_MARK`. Not a convention |
+| The gate is a **WHERE predicate, not a CTE** | measured: 283 ms against 5 ms for a facet sidebar at 20,000 bundles |
+| **A meaning-layer answer is a CANDIDATE LIST**, so REC-36's stricter rule applies | most reads redact a back-reference; a candidate list **withholds the whole row**, because even a nameless candidate discloses that something mentioning the subject sits in a project the viewer was not invited to |
+| **Envelope, never a bare array** | `bounds.test.mjs` pins the bare-array exception at **exactly one op**; a second one fails the suite (IC-24, proposed not landed) |
+| `limit` means the cap **actually applied**, and truncation is said in the op's existing vocabulary | REC-57 / IC-23, roster read off the source by a walk rather than listed by hand |
+| Hidden and absent answer **identically**; a published `total` is gated with the rows | *"a total larger than the pages says something is hidden"* |
+| **MAX_COMPOUND = 4** | workerd's compound-SELECT ceiling is **FIVE**, not SQLite's documented 500 — found by the 2026-07-25 scale bench; six ordinary filters already reach it |
+| Every arm keys on `fts_id` | a bundle not text-indexed is invisible to every arm; a new arm must join back through `bundles.fts_id` or it will not compose |
+
+### The options
+
+**A · A new SET-ALGEBRA ARM in the compiler** — e.g. `leg:hunch`, `resolves:>=B`, `concerns:ENT-1`.
+*Viability CONFIRMED*: `setSql` dispatches on node type and every leaf returns `{sql,args,compound}`; **all five meaning tables carry `bundle_id` with an index**, so the join exists. The `ids` arm is the precedent for adding a whole CTE arm, and its comment is the argument for doing it here: *"an ARM of the query, not a filter applied after it… it passes the viewer gate, it obeys the sort, and it is executed by the one guarded executor."*
+- **For:** composes with every existing operator, sort, paging and facets for free; no new gate; no new answer shape; `op=search` simply gains vocabulary; **discharges D-223 immediately** (*which inquiries carry a hunch leg*).
+- **Against:** **grain collapse** — it selects BUNDLES, so you learn which inquiries, never which legs; each arm spends one of only four compound terms; grade columns are **unindexed**, so a grade predicate scans until an index is added.
+
+**B · A SECOND ADDRESSABLE SURFACE beside the compiler.**
+*Viability: possible, and it costs a ruling.* `query.mjs:701-705` says a selection resolved by another route *"would be the second query path this design exists to prevent"*, and D-15 gives visibility exactly one compilation point enforced by a throw. A second surface either duplicates the gate — forbidden in spirit and the one place the graph could escape — or imports `viewerPredicate`, at which point it is not separate.
+- **For:** preserves grain natively; no compound-term pressure.
+- **Against:** contradicts two standing decisions; ~24 ops to reconcile. **Not recommended.**
+
+**C · A new STATEMENT SHAPE on the SAME compiler, returning meaning-grain rows.**
+*Viability CONFIRMED*: `compile()` already returns six statement builders registered in one place (`{page, count, ids, snapshot, facets, facetScan}`, `query.mjs:827`). A seventh projects the meaning rows belonging to the bundles already in `scope`, using the `ranked` CTE as the template for per-row payload.
+- **For:** **preserves grain** — returns the legs and resolutions themselves; same compiler, same gate, same executor, so it is *not* a second query path; scope stays bundle-shaped, which is exactly what keeps gating correct.
+- **Against:** more work than A; needs one new op to expose it (additive to I3).
+
+**D · HYBRID — A for SELECTION, C for GRAIN.** The arm chooses the set; the statement shape returns the meaning rows in it. Together they answer *"every hunch leg in this project, with its role and its ground."*
+
+**E · MORE PER-QUESTION OPS, following the existing pattern.**
+- **For:** cheapest; matches a coherent house pattern (one op per question, single key, derived on read, `{ok, key, count, rows[]}`); zero compiler risk.
+- **Against, and it is decisive here:** the pattern's defect *is* that the ops do not compose, and **the investigative session's questions are not knowable in advance** — which is what distinguishes it from every existing consumer. Enumerating ops for an agent that formulates its own questions is a category error. It also grows a 131-entry table one question at a time.
+
+### RECOMMENDATION — **D, staged as A then C**
+
+1. **A first.** Small, composable, no new answer shape, and it discharges D-223 — the enumeration of hunch debt that the schema calls publication-disqualifying — at inquiry grain, which is the grain a group asking *"what is our exposure?"* actually wants. Add the missing index on any grade column the arm filters, or measure and record why not.
+2. **C second**, when the session needs the legs themselves rather than the inquiries carrying them. This is the half the investigative session genuinely blocks on.
+3. **Not B.** It buys grain at the price of two standing decisions, and C buys the same grain without them.
+
+**Related finding to fold in:** the existing meaning-layer reads — `concerns`, `resolutions`, `connections` — are **uncapped**, which is why they never appeared on REC-57's bounded-ops roster. Whatever lands here should bring them onto the same footing rather than leaving a bounded surface beside unbounded siblings.
+
+**Interface work:** I3 (RECORD's) — additive, minor bump, IC entry recorded even though I3 says adding an op needs no protocol, because IC-3's settled reasoning is that recording a break as additive *"would teach this registry to lie"*. I5 is untouched unless the grade index lands, which is a schema change.
+
 ## 15 · Instruments — measure from the first run
 
 - **Does a run ever come back with nothing supportable?** If it never returns empty it is
