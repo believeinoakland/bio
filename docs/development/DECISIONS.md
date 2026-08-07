@@ -528,6 +528,8 @@ for CONDUCT to enact: **REC-28**, handed over in the BOB INBOX — a small RECOR
 enacted: 2026-08-03 · CONDUCT — 5318b53: REC-28 enqueued verbatim from the handover (refuse at the ACT on the MACHINE_CANNOT_RELEASE precedent; keep the fence; leave taskdrain alone). Reasoning in QUEUE.md (REC-28) and D-151.
 
 ### DEC-8 · answered
+
+**AMENDED 2026-08-07 by DEC-49, and the amendment note is added here because the sweep found DEC-8 carrying none — a ruling that amends another and leaves no note in the amended entry gives a builder the opposite instruction.** DEC-49 (Bob, 2026-08-06) rules that **a surface MAY render an AUTHORED translation keyed on an error code the plane SENT.** **DEC-8's actual protection is intact and only its wording changes:** a surface still may NOT COMPUTE a refusal — **the code must be RECEIVED, never inferred** — so the plane remains the only thing that decides what is refused, which is what this entry exists to guarantee. The guard that makes the amendment safe is not optional and is enforced, not conventional: every code a surface can receive has a translation, and **an untranslated code FAILS THE HARNESS rather than reaching a member** — without it this degrades into thirteen surfaces each inventing wording, the drift REC-43 closed on the co-attestation fence. Enacted as REC-64.
 raised: 2026-07-31 · UI (UI-2, the first ACT — focus disposition)
 for: bob-session
 question: The ACT construct's DEFINING property (v0.2, the `ACT` row) is "see what it will refuse and why BEFORE it runs". v0.2 does not say HOW that pre-flight is produced, and there are two readings with different costs. (a) The surface COMPUTES it from the op's declared refusal contract plus the state the surface already holds — a client-side mirror of the plane's refusal logic. (b) The plane exposes a DRY-RUN — an op that runs the real op's refusal checks and writes nothing, returning the named refusals — and the surface just renders them. UI-2 used (a), because every one of `op=dispose`'s refusals is client-knowable: the C-2.8 reason requirement is unconditional, the reason grammar is a static rule, and the legal-transition gate is computable from the focus's own `current_state` against the plane's `LEGAL` table (mirrored, and already guarded by `check-semantics.mjs`). So which is the doctrine for the ACT construct in GENERAL, once an act's refusals depend on server-side state the surface cannot see?
@@ -3424,6 +3426,7 @@ response: **THE MACHINE MAY RULE.** Bob, 2026-08-07: *"allowing the machine to r
 decided: 2026-08-07 · Bob, session BOB
 reasoning recorded in: this entry (the derived/constitutive split and source facts above),
   DEC-24 (the boundary this ruling deliberately moves for these acts), D-82/D-199.
+enacted: 2026-08-07 · CONDUCT — **REC-65 queued**: the machine MAY rule, so the six fields' comments claiming 'a member's constitutive statement' are the WRONG half and are corrected to match the code, rather than the code being fenced to match the comments. The doctrine the ruling carries is pinned rather than left in prose: the record NAMES the machine principal (`token:<class>`, never a person's name), a machine-declared statement is visibly machine-attributed (D-82), grades stay EARNED, and DEC-15's hunch-is-a-member-act stands. The earlier provisional — sidebar approval as the act of record — is SUPERSEDED as a GATE; the sidebar remains visibility and bulk review. **DEC-53's revisit trigger (bulk resolution) HAS FIRED via that sidebar, and REC-65 is instructed to SAY so rather than let it pass** — routed, not decided in a worker. Reasoning in this entry and QUEUE.md (REC-65).
 
 ### DEC-51 · open
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
@@ -3605,6 +3608,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry, DEC-8 (amended in wording, not in protection), DEC-59 (the
   definitions/bias elements that handle the published-case half), MEASUREMENTS.md (UI-31/34/36/37).
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+enacted: 2026-08-07 · CONDUCT — **REC-64 queued**: every refusable condition carries an error code with a canned translation, and **an untranslated code FAILS THE HARNESS**, which the ruling calls the guard that makes this safe and not optional. **It AMENDS DEC-8** — a surface may render an AUTHORED translation keyed on a code the plane SENT, and may still never COMPUTE a refusal, so DEC-8's protection is intact and only its wording changes; **DEC-8's entry now carries that amendment note**, which the sweep found missing. The subject is resized by two findings and both are on the item: the published-case-page half belongs to DEC-59 (definitions become a case ELEMENT and a PDF section), and `sha256` and the file paths want DEFINING rather than rewording, because a reworded address is a broken one. The gate's two true sentences — only a salted derivation is stored, and the refusal will not say which of two causes applied so it cannot enumerate which roles hold credentials — are KEPT. **Every IS item's fences inherit this**, and each says so. Reasoning in this entry, DEC-8's amendment note, and QUEUE.md (REC-64).
 
 ### DEC-48 · open
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
@@ -3691,6 +3695,7 @@ enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED
   disallows do not bar capture of publicly available documents (his "no", same day), and the
   member-browser UA from inquiry creation is permitted for these fetches — SOURCE-ACCESS.md's
   browser-UA reserve amended in part accordingly.
+enacted: 2026-08-07 · CONDUCT — the authorisation half needs no build: the inquiry and the session launch ARE the authorisation, and the recommendation this entry carried (acquire only on an authored act, plans proposing in bulk) is WITHDRAWN as refuted — a member asked to approve forty URLs has not done the research and cannot judge them, so it adds accountability paperwork without judgement. What remains is CONDUCT, not authorisation, and it is build-time: **where public stops (a login, a paywall, a `robots.txt` disallow, a private individual's personal site) and how the instance behaves once out there (rate, volume, identifying honestly — `SOURCE-ACCESS.md` already commits us to not disguising requests).** Enforced at ONE point per the sweep — the `capture_requests` drain — and recorded on the IS items that build it: **IS-4 (the request door) and IS-9 (the run harness)**. The structural gate that costs nothing is already in the design and is carried on both: **the AI does not capture; it REQUESTS, and the daemon captures with provenance preserved.** Reasoning in this entry, SOURCE-ACCESS.md, and QUEUE.md (IS-4/IS-9).
 
 ### DEC-54 · answered
 raised: 2026-08-04 · session BOB (Bob's question, after the search-completeness research)
@@ -3876,6 +3881,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+enacted: 2026-08-07 · CONDUCT — no new work: the ruling CONFIRMS what UI-39 shipped, so the provisional becomes the settled behaviour. `heldMatch` writes when the held-check could not reach the end of the walk, and states the limit of that check **in the bundle body**, through the same mechanism `CHANGED_FROM` uses — deliberately not a progress line the next repaint erases, which is precisely the ruling's own distinction (the limit goes in the RECORD, not in a progress line). The alternative (refuse the write) is now closed by ruling. Reasoning in this entry, DEC-56's shared response, and QUEUE.md (UI-39's landed line).
 
 ### DEC-59 · answered
 for: bob
@@ -3913,6 +3919,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry, DEC-49 (the definitions half), DEC-41 (the container carries
   its PDF), DEC-46(a)/REC-47 (the acknowledgement is authored, fresh per edition, never prefilled).
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+enacted: 2026-08-07 · CONDUCT — RENDER IT, and as an ELEMENT OF THE CASE rather than a line on a page, which is a bigger change than the entry asked for and is carried where it belongs: **IS-8's scope and depends-on both name DEC-59's case elements**, since the container is what gains an element and its PDF section (with the effective bias, and with word definitions by the same ruling — see DEC-49's enactment, which is resized by it). Not queued as a surface-only item, deliberately: rendering it as a page line is the shape the ruling refused. Reasoning in this entry and QUEUE.md (IS-8).
 
 ### DEC-58 · answered
 
@@ -3955,6 +3962,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+enacted: 2026-08-07 · CONDUCT — no new work, and the entry is settled TWICE OVER. (a) The ruling confirms the principle: a surface acts and states what it could not establish, so a stated bound was never the exception it looked like. (b) Independently, **the exception is RETIRED in code** — REC-57 made eleven capped ops publish the bound they APPLIED, and UI-41 made every surface read the record's number instead of composing one, enforced as a CLASS rather than at the two known sites, with the surface now saying it does not know where the record publishes no bound. So the rule stands unamended and the dependency that raised this is gone. Reasoning in this entry, DEC-56's shared response, and QUEUE.md (REC-57/UI-41's landed lines).
 
 ### DEC-56 · answered
 for: bob
@@ -3993,6 +4001,7 @@ decided: 2026-08-06 · Bob, session BOB
 reasoning recorded in: this entry and the two it was ruled with (DEC-56/57/58 share one
   ruling), docs/development/VERIFICATION.md's posture on absence.
 enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes.
+enacted: 2026-08-07 · CONDUCT — the shared ruling (ACT, AND SAY WHAT YOU COULD NOT ESTABLISH) applied to the provenance case: **REC-63 queued** for a standing marker at `verified` stating the route cannot be shown — NOT a `verified -> collected` retraction edge and NOT silence. Bob's principle independently reaches the shape CONDUCT recommended, and the item pins the rejected shape OUT rather than merely not building it. The hard part is carried onto the item: **the state and the finding disagree ON PURPOSE and that must be legible rather than look like a bug.** Closes the honest route D-200 named and REC-56 measured has no act behind it (D-204). Reasoning in this entry, D-204's row and QUEUE.md (REC-63).
 
 ### DEC-55 · answered
 raised: 2026-08-04 · session BOB (Bob's question on integrating skilled AIs)
@@ -4307,6 +4316,7 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md (the full desig
   support/defeat structure, the instruments, the open questions and the withdrawn positions),
   DEC-55/D-199 (the `ai` class it extends), DEC-46 (regrade's home and the
   lens-preserved-not-applied rule).
+enacted: 2026-08-07 · CONDUCT — the hold was lifted in the BOB INBOX and the whole decomposition is now in the queue: **IS-1..IS-9 enqueued inside the RECORD section** (a second area would contend for `store.mjs`, which a CLAIMS claim cannot protect against), keeping their IS- ids so each traces to `INVESTIGATIVE-SESSION.md` §18 by name, at M9/M8/M10 per Bob's placement — not M4. Preconditions queued ahead of them: REC-60 (D-225's uncapped meaning reads), REC-61 (D-220's join), REC-62 (D-222 staged A then C), and REC-59 named as a hard precondition before any new IS op. IS-3/5/8/9 are queued BLOCKED with their blockers NAMED rather than left implicit. §18's stale 'NOT HANDED OVER' heading and hold text were corrected in the same turn, because §18 is what an IS worker reads. Reasoning in this entry, INVESTIGATIVE-SESSION.md §18, IS-SWEEP-2026-08-07.md §5a, and QUEUE.md.
 
 ### DEC-61 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
@@ -4330,6 +4340,7 @@ decided: 2026-08-06 · Bob
 reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full ruling: the
   threat model, the routine-trigger defensibility, the litigation hold, the mechanical
   consequences).
+enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
 ### DEC-62 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
@@ -4352,3 +4363,4 @@ _(none)_
 ## Enacted
 
 _(none — entries move here with their commit and the document carrying the reasoning)_
+enacted: 2026-08-07 · CONDUCT — ONE SESSION: pursue and investigation are one session, not two, so nothing in the decomposition splits them and no item is owed. Recorded here because the ruling existed only in a design document and the register is where a Bob ruling lives; the practical effect is that **D-199's 'SEQUENCE THE CHECK ROLE FIRST' is now STALE against DEC-60** (a mutating investigative scope lands first), which IS-5's `blocked-on` names explicitly so it is resolved deliberately rather than silently. Reasoning in this entry, INVESTIGATIVE-SESSION.md, and QUEUE.md (IS-5).
