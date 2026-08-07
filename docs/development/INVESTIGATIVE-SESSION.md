@@ -468,6 +468,135 @@ captures.
 | subagents for broad search, composed by the parent | evidence-search sub-sessions over the four levels |
 | refusals surfaced verbatim, never worked around | answers name their level; absence at one level is not absence at the next |
 
+## 14b · THE RUN'S ARCHITECTURE — derived from Claude Code, grounded in what exists
+
+**Bob, 2026-08-06: build the best-of-breed architecture, learning from Claude Code.** This
+section is the result of a rigorous pass over the repo. Three findings change the design
+materially; the rest is Claude Code's structure mapped onto machinery BIO already has.
+
+### 1 · CONTEXT ECONOMY — the largest gap in the design as written, and it was absent
+
+Everything above says the session "reads the project." **A run cannot hold a project.** A
+project with forty inquiries, hundreds of claims and thousands of captured documents exceeds
+any context window, and a design that does not say how it copes will discover this on its
+first real corpus.
+
+Claude Code's answer is three mechanisms, and all three transfer:
+
+- **Sub-sessions return CONCLUSIONS, not their reading.** A search sub-session reads widely
+  in its own context and hands back what it found — never the documents. This is why §14a's
+  fan-out is not merely a speed optimisation: **it is the memory model.** Without it a run
+  drowns in its own evidence.
+- **Query, never load.** The run holds the inquiry, its claims and its working set. Everything
+  else it reaches by asking. The store is the memory; the context is the workspace.
+- **Progressive disclosure.** The skill's doctrine layer is always resident; its recipes,
+  vocabularies and per-format knowledge load when the run reaches work that needs them.
+
+**The consequence for the fan-out is a rule, not a preference: a sub-session that returns
+documents rather than findings has defeated the architecture.** Its contract is a finding with
+a citation, and the parent re-reads by address if it needs the bytes.
+
+### 2 · THE READ SURFACE HAS A HOLE, and it is exactly where the session lives
+
+Measured in `STORE-AS-CACHE.md` and re-verified here: BIO has **two retrieval routes**, and
+the session needs both while only one has a query surface.
+
+- **Route 1, the query compiler** (`query.mjs`): **34 filterable fields, 5 FTS columns**
+  (`title`, `body`, `meta`, `locator`, `authority`).
+- **Route 2, the meaning tables**: `readings`, `reading_refs`, `resolutions`, `connections`,
+  `inquiry_basis` — **none of them reachable by the query compiler.**
+
+**And the projection makes the hole invisible, which is worse than the hole.** Route 1 carries
+SCALAR SUMMARIES of the meaning layer onto the bundle row — `capture` →
+`inquiry_capture_strength`, `legs` → `inquiry_basis_count`, and so on. So a caller can filter
+by a finding's strength and never reach the legs that produced it. `STORE-AS-CACHE.md` names
+this exactly: **the projection creates a false sense of coverage — the meaning layer is
+visible as a number and unreachable as a structure.**
+
+**The investigative session is the first consumer that genuinely needs route 2**, because
+forming a version of a claim's legs is meaning-layer work. As written, §3's read scope is not
+achievable: the session can see that a claim scores 0.7 and cannot see what it rests on.
+
+**So a meaning-layer read surface is a PRECONDITION of this design, not an enhancement.**
+Recorded as **D-222**. Whether it becomes an extension of the query compiler or a second
+addressable surface is a build decision; that it must exist before the session can do its job
+is not.
+
+**And D-220's version join belongs to the same gap**: sixty versions read as sixty documents
+is the identical false-coverage failure one axis over.
+
+### 3 · RESUMABILITY IS ALREADY BUILT, and joining it is a documented step
+
+§14a established that a run must suspend and resume — it waits on the daemon for captures it
+requested, whatever the CPU ceiling turns out to be. **The mechanism exists and the repo tells
+the next consumer how to join it.**
+
+`SCHEDULER.md` records the decision: ONE reconciling Durable Object alarm with a consumer
+registry, `#schedConsumers(probe)`, each entry `{ name, due(now), wake(now), tick(now) }`.
+Three properties matter here and all three are already proven:
+
+- **No starvation** — the reconcile keeps EVERY active consumer's wake, not only the one that
+  just ran, so a fast consumer cannot shut out a slow one.
+- **Self-termination** — an idle instance carries no timer and spends nothing, which the
+  sovereign-instance distribution model needs since most instances sit on the Free tier.
+- **Locality** — the consumer runs beside the DO's own SQLite, which is where a run's state
+  lives anyway.
+
+The file's own instruction is explicit: *"To add the monitoring / eligibility / cadence /
+ageing consumers: append an entry to `#schedConsumers`… Do NOT add a second alarm or a cron;
+that is the decision this file records."* **The investigative run is such a consumer.** It
+needs no new scheduling machinery, and building one would violate a recorded decision.
+
+### 4 · WHAT IS SCRIPTED AND WHAT IS JUDGED
+
+Claude Code's clearest structural lesson: **do not let the model decide control flow that
+should be guaranteed.** Loops, fan-out and gates are deterministic; judgement happens inside a
+step.
+
+| deterministic — code, not skill | the model's judgement |
+| --- | --- |
+| how many search passes, and when the loop stops | what to search for |
+| the fan-out across the four levels | what each level's findings mean |
+| a version is written in `suggested` and no other state | what the version says |
+| dedup against existing versions before writing | whether this reading differs in substance |
+| the observation log is written whether or not the run succeeds | where it stopped and why |
+| every machine fence | — |
+
+**The gates must not depend on the skill behaving well.** A skill is instructions; a fence is
+code. Where this design says the AI "may not" do something, that must be a refusal in the
+plane, not a sentence in a prompt — which is DEC-55's endpoint-is-the-fence, restated as a
+build rule.
+
+### 5 · THE RUN VERIFIES ITS OWN WORK BEFORE PROPOSING
+
+Claude Code runs the tests and reads the output rather than declaring success. The session's
+equivalent is deterministic and cheap, and it runs on every version before it is written:
+
+- every leg cites something that **exists** and is reachable at the address given;
+- the strengths **compute** — the version's own arithmetic runs and produces a result;
+- the version **differs in substance** from every existing version (Bob's rule), which is the
+  same check that prevents duplicate churn;
+- nothing in it is in a state the session may not write.
+
+A version failing any of these is not proposed. This is a check, not a judgement, so it
+belongs in code beside the endpoint rather than in the skill.
+
+### 6 · A RUN IS BOUNDED, AND THE BOUND IS RECORDED
+
+An unbounded run over a large project is the failure mode a background job invites. A run
+carries a budget — fetches requested, sub-sessions spawned, wall time across resumptions — and
+**when a bound stops a run, the observation log says which bound and where it stopped.** That
+is the same discipline `heldMatch` learned the hard way: *not found* and *did not finish
+looking* are different facts, and only one of them is a licence to conclude anything.
+
+### 7 · PARTIAL RESULTS SURVIVE
+
+A run that dies halfway must not lose what it found. Versions are written as they are formed
+rather than in one batch at the end, and the observation log is appended as the run goes.
+A resumed run reads its own log and continues rather than restarting — the same property that
+makes Claude Code's workflow resume cheap, and the reason §7's version identity (frozen,
+uniquely named) matters operationally as well as conceptually.
+
 ## 15 · Instruments — measure from the first run
 
 - **Does a run ever come back with nothing supportable?** If it never returns empty it is
