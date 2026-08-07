@@ -31,30 +31,30 @@ the discipline an instrument rather than a hope. **DIST** puts it in a group's a
 
 | id | scope | interface | depends-on | accepts-when | NC |
 | --- | --- | --- | --- | --- | --- |
-| PL-1 | **Basis versions (IS-1).** Versions attach to the INQUIRY'S BASIS (SWEEP §4b.5): frozen once written, unique name per inquiry, required description, ground partition + AND/OR relationship carried, `derived_from` edge (its first real producer), hide-only prune flag. Built through `promote`'s one write site (`store.mjs:7288`) — no second version table (D-21). New tables before the `host_governor` block; added to `purge` (D-113). | I5, I3 | PL-6 | `node scripts/battery.mjs versions` green: write v1, derive v2, assert v1 byte-frozen, names unique per inquiry, partition + relationship present on both | edit a frozen version in place → the write refuses by C-number; strip the relationship field → the version is refused (the flat-AND re-ship REC-42 corrected) |
+| PL-1 | **Basis versions (IS-1).** Versions attach to the INQUIRY'S BASIS (SWEEP §4b.5): frozen once written, unique name per inquiry, required description, ground partition + AND/OR relationship carried, `derived_from` edge (its first real producer), hide-only prune flag; reword USER-SELECTABLE — new version or new inquiry (§6.3b, D-217b); an edit that regroups the partition rides REC-45's attributed regroup act (DEC-50 — §6.7 licenses no unattributed structural edit). Built through `promote`'s one write site (`store.mjs:7288`) — no second version table (D-21). New tables before the `host_governor` block; added to `purge` (D-113). | I5, I3 | PL-6 | `node scripts/battery.mjs versions` green: write v1, derive v2, assert v1 byte-frozen, names unique per inquiry, partition + relationship present on both; a version SURVIVES the death of the run that proposed it (§14b.7 — identity is not the run's) | edit a frozen version in place → the write refuses by C-number; strip the relationship field → the version is refused (the flat-AND re-ship REC-42 corrected) |
 | PL-2 | **The sixth state machine (IS-2).** `suggested/considering/accepted/rejected` + hide + make-current: six member ops (accept · reject · consider · revert · current · hide), each a member act with the four beats, authored reason required on reject/defer/dismiss, proposals aggregate and age (§6.4), machine identity refused on every transition. Publishes itself through `op=affordances` (NEEDS/NON_ACTS row). Requires D-78's `surfaced_by` fix landed real, in the same item. | I3 | PL-1 | `node scripts/battery.mjs versionstate` green: all six transitions through the control plane, rejection without a reason refused `NO_REASON`, affordances row present | **three-layer control (VERIFICATION rule 3a):** break the credential layer, the endpoint layer, and the transition layer EACH with the other two held open — each layer's OWN assertion must fail; the vacuous single-layer control is the one SWEEP corrected |
 | PL-3 | **The suggest endpoint (IS-4).** One write path for both modes; §9's five kinds including *this level is empty*; sole possible output a `suggested` version carrying its run. Pre-write checks PLANE-side (SWEEP C11): leg exists AND reachable at address (D-168), pair computes per axis over the partition, differs-in-substance, D-195 independence over OR-branches, no boilerplate, no unwritable state — each a C-number with a DEC-49 code. **F10:** a verbatim resubmit of a refused version is a structural no-op (idempotence key on the refusal). | I3 | PL-1, PL-2, PL-9 | `node scripts/battery.mjs suggest` green: every kind writable, a failing version not proposed, refusal carries code + translation; resubmit-after-refusal returns the same refusal without a second evaluation | remove any ONE of the six pre-write refusals → its suite fails naming that check (owed control 6); neuter the idempotence key → the resubmit arm fails |
 | PL-4 | **`capture_requests` (SWEEP §4b.1).** Scratch-class table in `capture_sessions`' family, written by PL-3's endpoint, drained by the daemon — DEC-47's conduct enforced ONCE at the drain (UA with contact URL, `purpose` token, rate; robots.txt disallows do not bar public documents and the member-browser UA is permitted, BOB-3). Attribution states BOTH principals (DEC-27(b)/DEC-55.4): daemon-at-the-session's-request, Claude-account principal AND plane-credential principal, never a token value. Completion notifies via the existing FINDING-class slug (D-61's generator, subscriber extended). | I5, I3 | PL-3 | `node scripts/battery.mjs capturerequests` green: request row → drain → capture lands at `collected` never higher → notify slug fires; the record names both principals | let a control-plane path enqueue directly → the OPS-table fence fails it by name; drop one principal from the attribution → the attribution assertion fails |
 | PL-5 | **Run object + observation log (IS-6).** On `capture_sessions`' shape: scratch, ticks, expiry, opaque state, resumable. Log written whether or not the run succeeds, never in `bundle.md`; D-129 vocabulary (`NEVER_LOOKED/LOOKED_ABSENT/LOOKED_INDETERMINATE/PRESENT` + `partial`); D-104's governed/unreachable split; client-rendered shells are `LOOKED_INDETERMINATE`; names the bound that stopped it; builds the `runtime-ceiling-reached` producer (`queuestate.mjs:82`, first producer). Carries the conditions: standard pair, skill version, bias manifest — until PL-12 lands, "no manifest was in force," stated. Discharges D-196's searched-record gap for runs. | I5 | none — the one unblocked start | `node scripts/battery.mjs runobject` green: run created, ticked, resumed across two invocations, log addressable, absence vocabulary asserted per level | **kill a run mid-flight → the log must EXIST and NAME the bound** — the failure path is the only one that matters; write "source unreachable" where the governor held → the D-104 arm fails |
-| PL-6 | **REC-59 (already queued)** lands FIRST — the bare-array pin (`bounds.test.mjs`) allows exactly one exception, the op REC-59 fixes; every new IS op ships enveloped. | I3 | none | REC-59's own `accepts-when` in QUEUE.md passes; `bounds.test.mjs` still pins the exception at exactly one op | add a second bare-array op → `bounds.test.mjs` fails |
+| PL-6 | **REC-59 — ALREADY LANDED** (confirmed 2026-08-07: QUEUE marks REC-59 done, IC-24 SETTLED, I3 at 9.0.0; the pin now reads **ZERO** bare-array capped ops, driven off the roster — `bounds.test.mjs:515`). This row is satisfied before scheduling; W1 slot A begins at PL-7. Every new IS op ships enveloped, and the pin catches any that does not. | I3 | none | REC-59's own `accepts-when` in QUEUE.md passed (landed, merge on main); `bounds.test.mjs` pins ZERO bare-array capped ops | add a bare-array op → the `PIN: ZERO capped ops answer with a bare array` arm fails naming it |
 | PL-7 | **D-225 caps.** `concerns`, `resolutions`, `connections` join REC-57's envelope discipline (`limit` = cap actually applied, truncation in each op's own vocabulary) BEFORE any new meaning surface lands beside them. | I3 | PL-6 | `node scripts/battery.mjs bounds` green with the three reads on the roster walk, each publishing its applied cap | count-what-was-SENT restored on any of the three → the DELTA arm fails ("this is all of it" ≠ "the first N") |
 | PL-8 | **D-222 option A.** A set-algebra ARM in the query compiler (`leg:hunch`, `resolves:>=B`, `concerns:ENT-x`): every arm keys on `fts_id`, passes `viewerPredicate`, obeys MAX_COMPOUND=4. Discharges D-223 (hunch debt enumerable at inquiry grain). Grade-column index added, or the measurement recorded why not. | I3, I5 | PL-7 | `node scripts/battery.mjs query` green: `leg:hunch` composes with existing operators/sort/paging/facets; D-223's question answerable in one query | route the arm around `GATE_MARK` → `Store#runQuery` throws; a viewer outside the project sees zero rows where a member sees N (hidden ≡ absent) |
 | PL-9 | **D-222 option C.** A seventh statement shape on the SAME compiler returning meaning-grain rows (legs, resolutions) for the bundles in scope; one new op, additive to I3 with an IC entry, enveloped, REC-36's stricter withhold-the-row rule on candidate lists. NOT option B — no second query path (D-15). | I3 | PL-8 | `node scripts/battery.mjs meaningread` green: legs returned with role/ground/grade_source; the op's envelope carries limit + truncation; IC recorded | the candidate-list gate weakened to redaction → the withhold-whole-row assertion fails; a `total` larger than gated rows → fails |
 | PL-10 | **D-220's op.** The document-version chain read off `captured_locators ⋈ register` — every version at an address, date order, with bundle. The run is consumer (3); fixes D-221's wrong-predecessor ("changed from" names the previous version by address equality, not FTS relevance) at the same join. | I3 | PL-6 | `node scripts/battery.mjs versionchain` green: sixty captures of one address answer as ONE document's chain; the predecessor is the temporally previous version | feed the FTS-relevance predecessor → the address-equality assertion fails; two documents at similar addresses never join one chain |
-| PL-11 | **The `ai` credential class (IS-5).** D-199's five determinations whole: (1) one class + declared task scope in `scopeFor`'s shape; (2) scope declared IN THE RECORD, never a settings row; (3) minting is a member act; (4) the act names token identity AND principal; (5) `token:ai` caught by every `MACHINE_CANNOT_*` via REC-46's one predicate. Investigative scope: reads across the project under a STATED viewer (member-scoped default), writes ONLY PL-3's endpoint and PL-4's table. | I3 | PL-3, PL-4 | `node scripts/battery.mjs aicredential` green: mint by member, scope read from the record, an `ai` call to any accept/current/publish op refused by name | **DEC-55.5 WHOLE (owed control 1):** mint an `ai` credential, assert every `MACHINE_CANNOT_*` fires BY NAME, **and that removing the predicate makes them all pass** — the second half was never run |
+| PL-11 | **The `ai` credential class (IS-5).** D-199's five determinations whole: (1) one class + declared task scope in `scopeFor`'s shape; (2) scope declared IN THE RECORD, never a settings row; (3) minting is a member act; (4) the act names token identity AND principal; (5) `token:ai` caught by every `MACHINE_CANNOT_*` via REC-46's one predicate. Investigative scope: reads across the project under a STATED viewer (member-scoped default), writes ONLY PL-3's endpoint and PL-4's table — THIS task scope, not the class (D-199.1): DEC-52-final's post-processing connection writes ride their OWN member-minted task scope, unbuilt here and scoped when that half is scheduled, so this item's fence does not contradict the ruling. | I3 | PL-3, PL-4 | `node scripts/battery.mjs aicredential` green: mint by member, scope read from the record, an `ai` call to any accept/current/publish op refused by name | **DEC-55.5 WHOLE (owed control 1):** mint an `ai` credential, assert every `MACHINE_CANNOT_*` fires BY NAME, **and that removing the predicate makes them all pass** — the second half was never run |
 | PL-12 | **D-84 — the bias object.** `object_type: bias`, its states, heading set, statement-anatomy checks, and DEC-54's four scopes (split bars from bias, unenforceable residue as published output, inhale-proposes-never-installs, the malformedness refusal). Unblocks the run's manifest-carrying read (§3) and the accept ceremony's lens diff. | I5, I3 | none | `node scripts/battery.mjs bias` green: a bias bundle writable and conformant; a run now carries the manifest in force rather than the stated absence | a manifest reaching a SEARCH sub-session's spawn payload → the no-field-by-construction assertion fails (the fence, not the skill) |
 | PL-13 | **CURRENT as a project property (IS-3).** D-216's model check FIRST (sharing is the `refs` edge, else this item is wrong and cloning is the honest answer — checkable fact, recorded). Then: a project-authored, DATED frontmatter field beside `required_strength`, never a settings row; the two FINDING-class notification slugs (stance-changed-here-not-elsewhere; new-version-arrived-from-another-team) minted in `queuestate.mjs`'s vocabulary, refused at the mint if unknown. | I3, I5 | PL-1, D-216 | `node scripts/battery.mjs current` green: two projects share one inquiry and stand on different versions; moving one fires the slug and moves nothing else; the pointer is dated frontmatter | write CURRENT via a settings row → refused; suppress the notification as a personally-mutable CONDITION → the FINDING-class assertion fails |
-| PL-14 | **The strength PAIR (IS-7).** Per axis over the current version's accepted legs; DEC-32's MIN over AND, MAX over OR, MIN within a branch; state-set argument defaulting to accepted; the return carries the state set that produced it; ungraded legs inert AND named; hunches excluded; grades arrive from `earnedBasisRegistry`, never minted; what-if values in-band per DEC-40. | I3 | PL-1 | `node scripts/battery.mjs strengthpair` green: pair never composed to one number, arithmetic asserted over a mixed AND/OR fixture, ungraded leg named in the answer | **DEC-40's (owed control 3):** produce a what-if rendering, strip its filter/state-set line → the harness fails; compose the two axes into one value anywhere → DEC-44's refusal fires |
-| PL-15 | **The out-of-inquiry lead (D-213).** The FINDING-class slug with a producer: discovered evidence for inquiry B is CAPTURED (store entry, no basis entry) and surfaced as an actionable notification with a real `basis` and `options[]`; its `case` set derives from inquiry B's ancestors. | I3 | PL-4, PL-9 | `node scripts/battery.mjs leadslug` green: a run against inquiry A surfaces a B-lead as the slug; the capture landed at `collected`; the store refuses an unknown kind at the mint | mint the lead under an `N-<n>` id or an uncatalogued slug → refused at the mint (D-213's corrected close condition) |
+| PL-14 | **The strength PAIR (IS-7).** Per axis over the current version's accepted legs; DEC-32's MIN over AND, MAX over OR, MIN within a branch; state-set argument defaulting to accepted; the return carries the state set that produced it; ungraded legs inert AND named; hunches excluded; grades arrive from `earnedBasisRegistry`, never minted; what-if values in-band per DEC-40; D-159 re-read against a machine shaping legs at volume, outcome STATED either way (QUEUE IS-7's instruction). | I3 | PL-1 | `node scripts/battery.mjs strengthpair` green: pair never composed to one number, arithmetic asserted over a mixed AND/OR fixture, ungraded leg named in the answer; M9's acceptance fixture verbatim — a single-ground basis with one ungraded leg reads `undetermined` on that axis AND names the leg that is why | **DEC-40's (owed control 3):** produce a what-if rendering, strip its filter/state-set line → the harness fails; compose the two axes into one value anywhere → DEC-44's refusal fires |
+| PL-15 | **The out-of-inquiry lead (D-213).** The FINDING-class slug with a producer: discovered evidence for inquiry B is CAPTURED (store entry, no basis entry) and surfaced as an actionable notification with a real `basis` and `options[]`; its `case` set derives from inquiry B's ancestors. | I3 | PL-4, PL-9 | `node scripts/battery.mjs leadslug` green: a fixture-driven run against inquiry A (the real harness arrives with FL-3) surfaces a B-lead as the slug; the capture landed at `collected`; the store refuses an unknown kind at the mint | mint the lead under an `N-<n>` id or an uncatalogued slug → refused at the mint (D-213's corrected close condition) |
 | PL-16 | **The published case (IS-8, M10).** The container carries, per included finding, the publishing project's current version: legs + ground partition + description + version NAME in DEC-34's per-page header; DEC-54's policy pin at the case; editions over the container (DEC-12); NO case-level strength; NO disclosure of hidden alternatives (BOB-2 ruled). | I3 | PL-1, PL-13, D-187's reshape, DEC-59's elements, the DEC-33-blocked ceremony | `node scripts/battery.mjs publishedcase` green: a two-finding case publishes with per-finding version names in the header and the policy pin present; hash-checkable with no credential | **DEC-44's (owed control 2):** two findings with differing pairs — any surface presenting one case-level strength fails; **DEC-34's (4):** a page without the header incl. version name fails; **DEC-46(a)'s (5):** a carried-forward bias acknowledgement refused |
 
 ## FLEET track (FL) — the agent Worker in the group's account
 
 | id | scope | interface | depends-on | accepts-when | NC |
 | --- | --- | --- | --- | --- | --- |
-| FL-1 | **D-218 probe FIRST.** Deploy the CPU probe; measure whether an agent invocation waiting on API responses sits inside the paid ceiling; result into `MEASUREMENTS.md` with date + instrument. The resumable shape is built either way (§14a) — the probe SIZES the work, it does not gate the start. | none | none | a MEASUREMENTS.md row dated with the instrument named, `cpu_ms` echoed from the deployed probe, not from vendor docs | the probe timing itself in-Worker only → refused as the fabrication `cpu.mjs` records; the number must come from the platform's observed billing surface |
+| FL-1 | **D-218 probe FIRST.** Deploy the CPU probe; measure whether an agent invocation waiting on API responses sits inside the paid ceiling; result into `MEASUREMENTS.md` with date + instrument. D-190 rides the same measurement (QUEUE IS-9): record the DO storage ceiling posture in the same row, since three IS mechanisms grow the same object. The resumable shape is built either way (§14a) — the probe SIZES the work, it does not gate the start. | none | none | a MEASUREMENTS.md row dated with the instrument named, `cpu_ms` echoed from the deployed probe, not from vendor docs | the probe timing itself in-Worker only → refused as the fabrication `cpu.mjs` records; the number must come from the platform's observed billing surface |
 | FL-2 | **The agent Worker.** `agent-worker/` on `pdf-worker`'s pattern: `wrangler.jsonc` with pinned `account_id`, its own fleet-member manifest (`fleet-member.json`: name, version, declared SURFACE table of its endpoints), called only by the plane / calling only the plane's op surface under PL-11's credential. Holds no store binding, writes nothing directly, no member-facing surface. New interface entry registered on I6's precedent BEFORE build (PARALLELISM's rule), PROVISIONAL → STABLE when re-read from code. | I6-pattern (new entry) | FL-1, PL-11 | the interface entry exists before the first commit of code; `node scripts/coverage.mjs --strict` enumerates the member's SURFACE table (VF-3) in the same turn it ships | give the worker a direct store write or a second credential → the source-scan + behavioural (bytes unchanged) assertions fail, as I6's do for pdf-worker |
-| FL-3 | **The run harness (IS-9).** Deterministic control flow table (code, never skill): pass count and loop termination, four-level fan-out, dedup-before-write, log-always, **denied-means-adjust as a table row (F10)** — a plane refusal routes to an adjust step, never a verbatim retry (the budget is the backstop, not the mechanism). Query-never-load; versions written as formed, never batched; budget (fetches, sub-sessions, wall time across resumptions) enforced and recorded via PL-5's producer. CHECK is the first deployed mode (§2). | I3 | PL-3, PL-5, FL-2 | `node scripts/battery.mjs harness` green: a resumed run reads its own log and continues; a budget exhaustion writes `runtime-ceiling-reached`; a refusal is followed by an adjusted submission in the trace | **the objective's own (owed control 7):** feed a run an inquiry the evidence does not support → it proposes NOTHING and emits §9's empty-level kind — an empty run and a silent failure distinguishable; exhaust a budget with the producer neutered → the recorded-never-silent arm fails |
+| FL-3 | **The run harness (IS-9).** Deterministic control flow table (code, never skill): pass count and loop termination, four-level fan-out, dedup-before-write, log-always, **denied-means-adjust as a table row (F10)** — a plane refusal routes to an adjust step, never a verbatim retry (the budget is the backstop, not the mechanism). Query-never-load (the meaning-grain read is PL-9's op — this item consumes it); versions written as formed, never batched; budget (fetches, sub-sessions, wall time across resumptions) enforced and recorded via PL-5's producer. CHECK is the first deployed mode (§2), and the investigate-mode gate is a ROW IN THIS TABLE — code, never skill; SK-4 records the sequencing it enforces. | I3 | PL-3, PL-5, PL-9, FL-2 | `node scripts/battery.mjs harness` green: a resumed run reads its own log and continues; a budget exhaustion writes `runtime-ceiling-reached`; a refusal is followed by an adjusted submission in the trace | **the objective's own (owed control 7):** feed a run an inquiry the evidence does not support → it proposes NOTHING and emits §9's empty-level kind — an empty run and a silent failure distinguishable; exhaust a budget with the producer neutered → the recorded-never-silent arm fails |
 | FL-4 | **Scheduler consumer.** ONE appended entry to `#schedConsumers` (`{name, due, wake, tick}`, `store.mjs:1452`) waking suspended runs on daemon completion and on resumption ticks. **No second alarm and no cron** — `SCHEDULER.md`'s recorded decision. | I5 | PL-5 | `node scripts/battery.mjs scheduler` green: the eighth consumer registered; a run suspended on a capture request wakes when the drain completes; idle instance carries no timer | add the run's own alarm or cron → the one-alarm assertion in the scheduler suite fails; starve a slow consumer → the reconcile-keeps-every-wake arm fails |
 | FL-5 | **Sub-session fan-out with REPORT contracts (§14b.1).** Spawn contract: the four levels, no write scope, **no bias-manifest field by construction**; return contract: a REPORT with a citation — never documents; the parent re-reads by address. Sub-sessions share no state; the parent holds the only write and the only manifest. | I3 | FL-3 | `node scripts/battery.mjs fanout` green: a sub-session's return validated against the REPORT shape; the spawn payload has no manifest field to read | **IS-9(a)'s:** neuter the return-contract check → a document-returning sub-session must fail an assertion — a sub-session that returns documents has defeated the architecture |
 | FL-6 | **The Claude-account cascade at runtime.** Resolve member → project → instance; the run records WHICH level paid beside the plane-credential principal (two principals, both named, PL-4's rule); when no token resolves the capability is UNAVAILABLE and says so — never a silent no-op. DEC-43 read before any fallback-instance deployment (§14a). | none | FL-2, DS-3 | `node scripts/battery.mjs cascade` green: three fixtures resolve to the right level and the run object names it; the no-token fixture answers a stated absence | remove every token → assert the response is the named UNAVAILABLE, not an empty success (an honest absence, stated — the silent no-op is indistinguishable from a run that found nothing) |
@@ -75,7 +75,7 @@ the discipline an instrument rather than a hope. **DIST** puts it in a group's a
 | UI-38 (scope widened) | **The running-session surface — designed ONCE for all AI features (§14a), absorbed here per SWEEP §5a/E10.** Animated indicator on any window focused on the run's context; click opens the LIVE transcript (device-local, TTL'd, purge-at-publication with the suspendable litigation hold — DEC-61); objects do not change while the run runs. **F11:** launch-time budget and live consumption shown on this surface (which account pays is already on the record). Existing UI-38 registry scope unchanged beneath it. | I3 | PL-5, PL-11 | `node civicos-ui/test/run.mjs` green: indicator bound to run state; transcript never persisted server-side; budget and spend rendered from the run object | persist a transcript to the instance store → the device-local assertion fails; hide the budget while a run spends → the F11 arm fails (bounded-but-invisible is §19's named gap) |
 | UI-42 | **Version review: rotation and diff.** Rotate between versions (comparison IS the diff), the derivation tree rendered, the hide-prune offer whose WORDING states what hiding does (DEC-29(b): hidden versions stay in the record, stay queryable); hidden and rejected versions reachable — display shrinks, acts remain (D-214). No "ground partition" or AND/OR vocabulary on any surface (DEC-32's ban; D-226). | I3 | PL-1, PL-2 | `node civicos-ui/test/run.mjs` green: two versions rotated and diffed; the prune offer's wording asserted verbatim; a hidden version reachable via its query | grep the surface strings for "ground"/"AND/OR" as member-facing words → the ban assertion fails on a hit; make hide delete → the acts-persist query fails |
 | UI-43 | **The accept ceremony.** The four beats on every transition; the derived falsifier back in plain words ("your answer fails only if ALL of these fail"); **per-branch independent-sufficiency AFFIRMED by the member before their name lands over machine-composed OR** (DEC-32's keystone, mechanism (b)); D-195's derived shared-origin surfaced (derived informs, authored binds); DEC-46's lens diff IN the ceremony, never a toast; REC-36's stricter withholding when an org-scoped run composed beyond the accepter's gate. | I3 | PL-2, PL-14, UI-42 | `node civicos-ui/test/run.mjs` green: an OR-carrying accept requires the per-branch affirmation; the lens diff renders when run-manifest ≠ accepter's; refusals shown as the plane's own canned translations (DEC-49) | remove the affirmation step → accepting an OR version fails the ceremony assertion; demote the lens diff to a notification → the DEC-46(3) arm fails |
-| UI-44 | **The connections sidebar (DEC-52 final).** The machine may rule: connections it identifies land machine-attributed (D-82 look-derived, `token:ai` named), and the sidebar is a VISIBILITY and bulk-review surface on the running-session surface — not a required approval gate. Bulk review is the same act over a set. | I3 | UI-38 | `node civicos-ui/test/run.mjs` green: machine-declared connections visibly machine-attributed; bulk review operates over a set; no approval gate blocks the write | strip the derived dress from a machine connection → the D-82 assertion fails; re-introduce approval as a write gate → the DEC-52-final assertion fails (the superseded provisional) |
+| UI-44 | **The connections sidebar (DEC-52 final).** The machine may rule: connections it identifies land machine-attributed (D-82 look-derived, `token:ai` named), and the sidebar is a VISIBILITY and bulk-review surface on the running-session surface — not a required approval gate. Bulk review is the same act over a set. (Fixture-driven until a post-processing task scope produces live machine connections — see PL-11's note.) | I3 | UI-38, PL-11 | `node civicos-ui/test/run.mjs` green: machine-declared connections visibly machine-attributed; bulk review operates over a set; no approval gate blocks the write | strip the derived dress from a machine connection → the D-82 assertion fails; re-introduce approval as a write gate → the DEC-52-final assertion fails (the superseded provisional) |
 | UI-45 | **Notifications rendered.** The FINDING-class slugs surfaced: stance-changed, new-version-arrived, capture-complete, the out-of-inquiry lead with its `options[]`; suggestion kinds LOOK derived, aggregate, and age rather than vanish (§6.4). | I3 | PL-13, PL-15 | `node civicos-ui/test/run.mjs` green: each slug rendered from the plane's published wording; an aged proposal leaves the open list and stays queryable | render a slug with surface-authored wording → the published-words assertion fails (DEC-8's drift class); a dismissed proposal vanishing from the record → fails |
 
 ## VERIFY track (VF) — instruments, controls, live verification
@@ -135,6 +135,7 @@ carry it. An obligation with no item would be this plan's own defect class.
 | D-115 / D-116 / D-117 installer installs the fleet; version authority; coverage counts it | DS-1, DS-2, VF-3 |
 | D-196 what-was-searched, computable for runs | PL-5 (the log), §15's instruments over it |
 | D-223 hunch debt enumerable | PL-8 (discharged by the arm) |
+| D-224 connections' k(k−1)/2 growth measured before anything trusts the capped read at scale (Family E's E6) | W1's slot-free lane — measurement only, no item; a decision row only if the numbers say so |
 | DEC-47 conduct at the drain; BOB-3 robots ruling | PL-4 |
 | DEC-49 codes + canned translations, harness-guarded | VF-2, and every fence item |
 | DEC-52 final: the machine may rule; sidebar as review | UI-44 |
@@ -162,13 +163,13 @@ compose document-grain legs and say so (declared, not discovered).
 | wave | slot A | slot B | slot-free lanes |
 | --- | --- | --- | --- |
 | W0 | — | — | FL-1 (D-218 probe → MEASUREMENTS) · D-216 model check · VF-2 (DEC-49 guard) · SK-1 authoring · DIST: DEC-43 re-read |
-| W1 | PL-6 (REC-59) then PL-7 (caps — small, same slot) | PL-5 (IS-6 — the one unblocked start) | SK-2/SK-3 authoring · VF-1 ledger opened |
+| W1 | PL-7 (caps — PL-6/REC-59 already landed) | PL-5 (IS-6 — the one unblocked start) | SK-2/SK-3 authoring · VF-1 ledger opened · D-224 measured (Family E's E6 — cheap, measurement only, before anyone trusts the capped `connections` read at scale) |
 | W2 | PL-8 (D-222 A; discharges D-223) | PL-1 (IS-1 versions) | PL-12 (D-84) queued to the first free slot; DIST: DS-3 config design |
 | W3 | PL-9 (D-222 C) | PL-2 (IS-2 state machine) + PL-13 (IS-3, after W0's D-216 check) | UI-38 design (surface spec, no code yet) |
 | W4 | PL-3 (IS-4 suggest + pre-write checks + F10) | PL-10 (D-220 op) then PL-12 (D-84) | SK skill text frozen against PL-3's check list |
-| W5 | PL-11 (IS-5 `ai` class) then PL-4 (capture_requests + drain) | PL-14 (IS-7 pair) then PL-15 (D-213 slug) | VF-5 script written; DIST: DS-1/DS-2 build |
+| W5 | PL-4 (capture_requests + drain) then PL-11 (IS-5 `ai` class) — this order, PL-11 depends on PL-4 | PL-14 (IS-7 pair) then PL-15 (D-213 slug) | VF-5 script written; DIST: DS-1/DS-2 build, DS-3 build |
 | W6 | FL-2 (agent worker + interface entry) + VF-3 (same turn) | UI-38 (running session + F11 budget) | DIST: DS-4 staged |
-| W7 | FL-3 (IS-9 harness incl. F10 row) + FL-4 (consumer) + FL-5 (fan-out) | UI-42 then UI-43 (review + ceremony) | VF-1 controls run as owners land |
+| W7 | FL-3 (IS-9 harness incl. F10 row) + FL-4 (consumer) + FL-5 (fan-out) | UI-42 then UI-43 (review + ceremony) | VF-1 controls run as owners land · FL-6 (cascade fixtures — DS-3 built in W5, FL-2 in W6) |
 | W8 | VF-5 (fence proof, CONDUCT re-runs) then SK-4 (CHECK deploys) | UI-44 + UI-45 | DIST: DS-4 ships → VF-4 live-verify in scratch |
 | W9 (M10) | PL-16 (IS-8 published case) | UI case surfaces for PL-16 (DEC-34 header + version name) | VF-1 controls 2/4/5 run on PL-16 |
 
@@ -190,11 +191,23 @@ compose document-grain legs and say so (declared, not discovered).
   registry entry). PL-1/PL-2/PL-3 all touch `store.mjs`/`schema.mjs`, which is why they
   are SEQUENCED on slots rather than parallelized into a merge conflict on a 16,300-line
   file that greps as binary without `-a`.
+- **Shared-file handoff inside a wave (added by the confirmation pass):** in W1–W5 the
+  two slots' items BOTH touch `store.mjs`/`schema.mjs`/`index.mjs` (W1 PL-7∥PL-5, W2
+  PL-8's grade index∥PL-1's tables, W3 PL-9∥PL-2 both in the OPS table, W4 PL-3∥PL-10/
+  PL-12, W5 PL-4/PL-11∥PL-14/PL-15), and a CLAIMS claim is path-grained — two sessions
+  may not hold one file. So within a wave the shared file is an ORDERED HANDOFF, not a
+  parallel edit: slot A's item takes the claim first (the existing slot-A-wins rule),
+  lands and merges, and slot B's same-file item rebases behind it. The waves' plane
+  items are therefore partly serial by construction; the real parallelism is the lanes,
+  UI, SKILL, FLEET-scaffolding and DIST. Stated so nobody reads the table as promising
+  two concurrent `store.mjs` writers — the one collision CLAIMS cannot survive.
 
-**Critical path:** PL-6 → PL-7 → PL-8 → PL-9 → PL-3 → PL-11 → FL-2 → FL-3 → VF-5 →
-SK-4 → (DS-4) → VF-4 — the meaning-layer read surface, the suggest endpoint, the
-credential, the worker, the harness, the fence proof, first CHECK deployment, live
-verification. Eleven items; every other item hangs off it with slack. PL-16 (M10) joins
+**Critical path:** PL-6 (already landed) → PL-7 → PL-8 → PL-9 → PL-3 → PL-4 → PL-11 →
+FL-2 → FL-3 → VF-5 → SK-4 → (DS-4) → VF-4 — the meaning-layer read surface, the suggest
+endpoint, the capture door, the credential, the worker, the harness, the fence proof,
+first CHECK deployment, live verification. Eleven open items (PL-4 was on the path all
+along — PL-11 depends on it — and PL-6 is done, so the count holds); every other item
+hangs off it with slack. PL-16 (M10) joins
 after VF-4 and additionally waits on D-187's reshape, DEC-59's elements, and the
 DEC-33-blocked publication ceremony — the three external dependencies this plan inherits
 rather than owns. The IS-1/IS-2 spine runs entirely on slot B and joins the path at
@@ -253,3 +266,119 @@ PL-3, so it never extends it. Everything in W0's lanes is off-path by constructi
 
 Open markers: none — every point this plan rests on is a recorded ruling, a landed
 mechanism, or an item above with a measurement or check ahead of it.
+
+## Confirmation pass (2026-08-07)
+
+Independent adversarial pass, session BOB worktree, by a session that did not write this
+plan. Every claim below was checked against the current tree: `INVESTIGATIVE-SESSION.md`
+v3 §0–§19, `IS-SWEEP-2026-08-07.md`, `MILESTONES.md` M8/M9/M10 verbatim, `VERIFICATION.md`,
+`INTERFACES.md` (I1–I7 all registered), `INTERFACE-CHANGES.md` (IC-24 SETTLED),
+`DEBT.md` D-84/164/190/195/199/213–226, `DECISIONS.md` (DEC-32/34/40/43/44/46/47/49/
+52/54/55/59/60/61/62 read in full at their final states), `QUEUE.md` (REC-59..65,
+IS-1..IS-9, UI-38..41), `CLAUDE.md`, `PARALLELISM.md`, `FINDINGS-WORKPLAN.md` — and the
+source: `store.mjs` (promote/inquiry_basis write at :7333-7339, `#schedConsumers` with
+SEVEN consumers at :1503, `MACHINE_CANNOT_*`), `index.mjs` (`scopeFor` :1422, the OPS
+no-taskenqueue comment :295-299, `op=affordances` :357), `queuestate.mjs:82`
+(`runtime-ceiling-reached`, no producer), `bio-checks.mjs:127` (STATES = five),
+`schema.mjs:358` (`capture_sessions`), `query.mjs` (`GATE_MARK` :134, MAX_COMPOUND
+MEASURED :588), `bounds.test.mjs` (the pin now reads ZERO), `scripts/coverage.mjs`
+(fleet-member.json enumeration already live), `scripts/control-register.mjs` (exists),
+`src/cpu.mjs` (exists), `civicos-ui/test/run.mjs` (exists). Verdicts per check area:
+
+1. **COVERAGE — DEFECTS FOUND, FIXED IN PLACE.** The map covered IS-1..IS-9, F9–F11,
+   D-84/164/195/213/214/216/217/218/220/221/222/223/225/226, and DEC-47/49/52/61/62
+   correctly. Missed and now fixed: **(a)** D-224 / Family E's E6 (the plan claims
+   Families E/G as authority and covered 9 of E's 10 items) — added to W1's lane and the
+   map; **(b)** PL-1 had dropped two obligations its own queue item (IS-1) carries:
+   reword-user-selectable (§6.3b/D-217b) and version-identity-survives-the-run's-death
+   (§14b.7) — both added; **(c)** DEC-50/§6.7's attributed-regroup constraint on the
+   version-edit path appeared nowhere — added to PL-1; **(d)** D-159's re-read (QUEUE
+   IS-7's explicit instruction) was dropped from PL-14 — added; **(e)** D-190 rides
+   D-218's measurement (QUEUE IS-9's blocked-on) — added to FL-1; **(f)** DEC-52-final's
+   WRITE half: UI-44 reviewed machine connections no item produces, while PL-11's
+   "writes ONLY" sentence read as fencing the whole `ai` class off the constitutive acts
+   DEC-52 permits — resolved via D-199.1 (scope is per TASK): PL-11 now says its fence is
+   the investigative task scope only, and the post-processing task scope is named as
+   unbuilt and to-be-scoped; UI-44 runs on fixtures until then and gains the missing
+   PL-11 edge. DEC-56/57/58 owe this plan nothing (REC-63 / shipped / retired by UI-41 —
+   verified). Remaining, non-blocking: the plan's rows do not carry their milestone
+   tokens (the conformance section claims the mapping; it is derivable through the QUEUE
+   items, which do carry them).
+2. **DEPENDENCY TRUTH — HOLDS, with one contradiction fixed and two edges added.**
+   Twelve edges spot-checked against §18, QUEUE and source: PL-2←PL-1, PL-3←PL-1/PL-2,
+   PL-4←PL-3, PL-11←PL-3/PL-4, FL-2←FL-1/PL-11, FL-3←PL-3/PL-5/FL-2, FL-6←FL-2/DS-3,
+   PL-13←PL-1/D-216, PL-16's four, UI-43←PL-2/PL-14/UI-42, VF-3-with-FL-2, SK-4←FL-3/
+   VF-5 — no FALSE edge found. Defect: W5 slot A ordered PL-11 BEFORE PL-4 while PL-11
+   depends on PL-4 — swapped. Added: FL-3←PL-9 (query-never-load consumes the
+   meaning-grain op; the edge existed only transitively through PL-3, which was
+   over-strict in the other direction) and UI-44←PL-11. PL-6/REC-59 is DONE (landed,
+   IC-24 SETTLED, pin at ZERO) — row and W1 corrected; the plan had scheduled landed
+   work.
+3. **WAVE SAFETY — DEFECT, mitigated by an added rule.** Every wave W1–W5 paired
+   `store.mjs`/`schema.mjs`/`index.mjs` writers ACROSS the two slots (named per wave in
+   the new wave-rules bullet), while the plan's own discipline bullet had considered the
+   hazard only for PL-1/2/3 across waves. A CLAIMS claim is path-grained, so the pairs
+   cannot in fact run concurrently — the honest statement, now added as a wave rule, is
+   an ordered handoff on the shared file (slot A first, per the existing slot-A-wins
+   rule), with the waves' plane items partly serial and the lanes/UI/FLEET/DIST carrying
+   the real parallelism. W6–W9 pairs verified genuinely disjoint (fleet/UI/tests).
+   Schema traps re-verified present in PL-1 (before `host_governor`, into `purge`).
+4. **ACCEPTS-WHEN QUALITY — HOLDS.** Ten sampled (PL-1, PL-2, PL-5, PL-13, PL-16, FL-1,
+   FL-2, VF-1, VF-4, DS-1): each is a runnable command (`battery.mjs <suite>` subsets are
+   real; `control-register.mjs` and the UI harness exist) or a checkable fact with a
+   stated place to check it. Two were weak and are fixed/noted: PL-15's accepts-when
+   presumed a run two waves before the harness exists — now fixture-driven; SK-2's
+   "sampled run's descriptions" arm is uncheckable at authoring time (W1) and becomes
+   checkable at VF-4 — acceptable for a lane item, noted here rather than edited.
+5. **NC QUALITY — HOLDS.** PL-2's three-layer control is rule 3a done right (each layer
+   broken with the others HELD OPEN); PL-11 carries DEC-55.5 BOTH halves; VF-5's
+   remove-the-predicate-then-all-six-PASS is the strongest control in the plan; PL-5's
+   kill-mid-flight, PL-7's DELTA arm, PL-3's one-refusal-at-a-time and FL-3's empty-run
+   control each fail when their subject breaks. Two weaker ones, judged acceptable with
+   the fix stated: SK-2's NC is a review criterion, not a runnable control — its code
+   half is FL-3's deterministic table, and a source-scan over the skill text should ship
+   with SK-2; SK-4's NC needed a GATE no code item owned (and the SKILL track's own
+   intent forbids a skill holding one) — the investigate-mode gate is now assigned to
+   FL-3's table by edit. FL-1's NC is a methodological rule rather than a breakable
+   subject, which is the honest shape for a measurement item.
+6. **CONFORMANCE — ONE OVERSTATEMENT, FIXED; the rest holds.** The M9 bullet claimed the
+   suspends-axis/`undetermined`/names-the-leg behaviour was "asserted in PL-14's
+   accepts-when fixture" while PL-14 asserted only inert-and-named — the M9-verbatim
+   fixture (single-ground basis, one ungraded leg, axis reads `undetermined` and names
+   the leg) is now IN PL-14's accepts-when, which also reconciles DEC-18/DEC-32's
+   branch-level suspension with M9's sentence (the single-ground case is the degenerate
+   branch). Smaller: PL-10's flat "fixes D-221" — the defective site (`heldMatch`) is in
+   `civicos-ui/app.html`, UI's paths; QUEUE REC-61's conditional ("check rather than
+   assuming; if a different defect, say so") plus a DELEGATION is the honest shape, left
+   as a note here since the join itself is the fix's substance. The M10 bullet, the
+   only-DIST-cuts-releases bullet, the measure-don't-assume bullet and the fence-is-code
+   bullet all check out against their sources.
+7. **CRITICAL PATH — HOLDS after correction.** PL-6 is already landed (path start moves
+   to PL-7) and PL-4 was silently ON the path (PL-11 depends on it) — both corrected;
+   the count of eleven open items survives both changes. Nothing on the path is
+   deferrable: PL-7 before PL-8 is D-225-before-D-222 (recorded), PL-9 before PL-3 is
+   arguable but harmless (the endpoint's checks read `inquiry_basis` plane-side; the
+   HARNESS is what blocks on the C-shape read, and FL-3 now carries that edge — moving
+   PL-9 off the PL-3 edge would buy one wave at the cost of re-sequencing W3/W4, not
+   taken here), and VF-5 → SK-4 → VF-4 is the fence-proof-before-deployment order
+   VERIFICATION rule 5 requires. PL-16's three external dependencies are correctly
+   inherited, not owned; QUEUE IS-8's raise-don't-infer instruction on the DEC-33
+   ceremony trigger stands and is CONDUCT's at W9 scheduling.
+
+**Fixes applied by this pass** (each named above): PL-6 marked landed + pin corrected to
+ZERO; PL-1 gains reword-user-selectable, the DEC-50 regroup clause, and the
+survives-run-death arm; PL-14 gains the D-159 re-read and the M9-verbatim fixture; PL-11
+gains the per-task-scope clarification; UI-44 gains the PL-11 edge and the fixture note;
+FL-1 gains the D-190 rider; FL-3 gains the PL-9 edge and the investigate-mode-gate row;
+PL-15's accepts-when made fixture-honest; W1 corrected (PL-6 out, D-224 lane in); W5
+slot A order swapped; W7 lane gains FL-6 and W5's DIST lane gains DS-3's build (both
+were depended on and never scheduled); the shared-file handoff wave rule added; the
+critical path corrected (PL-6 landed, PL-4 inserted). `tools/plancheck.mjs` was NOT run
+by this pass (it requires git, which this pass was instructed not to touch) — it remains
+owed before the handover, per CLAUDE.md.
+
+**VERDICT: CONFIRMED FOR SCHEDULING**, with the fixes above applied in place. One
+follow-up owed before W8, not blocking W0–W7: the post-processing task scope that
+produces live machine connections for UI-44 (DEC-52-final's write half) has no item and
+must be scoped — raise it at W5 when PL-11's scope is written, or UI-44 ships
+fixture-verified only.
