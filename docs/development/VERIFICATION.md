@@ -51,7 +51,7 @@ cd bio-plane && node scripts/coverage.mjs --strict
 | ops unreached by any suite | 3 · `archivelookup`, `linkproject`, `signerlist` | one is mutating |
 | checks in the catalog | 51 | |
 | checks named by an assertion | 18 (35.3%) | 33 are exercised only in the direction that passes |
-| suites declaring a negative control | 0 of 42 | the discipline is real and has never been recorded |
+| suites declaring a negative control | **105 of 105 — REMEASURED 2026-08-07** (this row said 0 of 42, which was true when written and is now stale in the generous direction; `ls test/*.test.mjs | wc -l` = 105, `grep -l 'NEGATIVE CONTROL:'` = 105) | the backfill in item 2 below is DONE and the register is complete |
 
 **The control-plane figure is honestly an upper bound and the instrument says so.**
 A suite that drives both the worker and the store directly is credited to the worker

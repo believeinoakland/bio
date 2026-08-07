@@ -707,7 +707,7 @@ intelligence belongs in the AI's work, not in a structure the record computes ov
 | piece | what it is | acceptance ALSO carries (§14b) | depends on |
 | --- | --- | --- | --- |
 | **IS-1** | **Versions**: a claim carries many; frozen once written; unique name per claim; description required; derivation tree with prune-on-accept; reword user-selectable (§6). | version identity survives a run's death (§14b.7) | none |
-| **IS-2** | The **state machine** over versions — four states, reversible, every transition a member act, machine identity refused on each. NC: an `ai` credential refused BY NAME on every transition. | **every fence is CODE, never a line in the skill** (§14b.4) | IS-1 |
+| **IS-2** | The **state machine** over versions — four states, reversible, every transition a member act, machine identity refused on each. **NC, corrected 2026-08-07 — the first draft would have passed VACUOUSLY** (`VERIFICATION.md` rule 3a: a rule enforced in N places carries an assertion at EACH place, and an `ai` credential refused at the CREDENTIAL layer absorbs the control before the transition refusal ever runs). The fence lives in three layers — credential scope (IS-5), endpoint (IS-4), transition (IS-2) — so the control breaks EACH layer with the others held open and requires THAT layer's own assertion to fail. | **every fence is CODE, never a line in the skill** (§14b.4) | IS-1 |
 | **IS-3** | **CURRENT as a project-to-inquiry property** (§7), with the notification when other projects reference the inquiry. | — | IS-1, D-216 |
 | **IS-4** | The **suggest endpoint** — §9's kinds, sole possible output a suggested version, carrying its run. One write path for both modes. | **the pre-write checks of §14b.5** — legs cite something reachable, strengths compute, the version differs in substance, nothing in a state it may not write | IS-1, IS-2 |
 | **IS-5** | The **`ai` credential's investigative scope**: reads across the project, writes only IS-4. | — | IS-4 |
@@ -720,6 +720,16 @@ intelligence belongs in the AI's work, not in a structure the record computes ov
 flow is deterministic and judgement is the model's; a gate is code and never a sentence in a
 prompt; and **a sub-session that returns documents rather than findings has defeated the
 architecture** — a review criterion, not a preference.
+
+**NEGATIVE CONTROLS THE TABLE OWES BEYOND IS-2's (added 2026-08-07, from the verification
+sweep — the battery's register is 105/105 and eight undeclared suites would be its first
+regression):** every IS item ships a `NEGATIVE CONTROL:` line; §14b.5's pre-write checks each
+get one (remove the refusal, the suite fails); §14b.1's return contract is ENFORCED not
+reviewed (neuter the check, a document-returning sub-session fails an assertion); IS-6's
+control is a run KILLED mid-flight whose log must exist and name the bound — the failure path
+is the only one that matters; and §15's first instrument (a run must be ABLE to return
+empty-handed) is acceptance on IS-9, not only an instrument. Any new op carries a
+control-plane assertion in the same turn.
 
 **PRECONDITION ON THE WHOLE SET: D-222.** The session's read scope is not achievable until
 the meaning layer has a read surface, and D-220's version join is the same gap one axis over.
