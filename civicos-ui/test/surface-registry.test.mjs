@@ -76,6 +76,26 @@
  *      controls reported a byte-identical restore over a file that had not been
  *      restored, so the sha comparison alone is not trusted here.
  *
+ *  (6a) UI-47, 2026-08-07 — FOUR ARMS OF THIS FILE WERE SUPERSEDED BY IS-6
+ *      LANDING AND ARE CORRECTED IN PLACE WITH DATED REASONS, NEVER EXEMPTED.
+ *      X4, X5, Y1 and Y14 all rested on "no op publishes a run yet", which was
+ *      true when this file was written and is false since `op=airun` shipped.
+ *      Left standing, every one of them would have made the honest wiring FAIL
+ *      THE BUILD. **The sharpest of the four is Y14, and it is worth reading:**
+ *      it asserted `!src[1].includes("recR(")` under the heading *"the block
+ *      reaches the plane for NO transcript"* — but that tested that the block
+ *      called NOTHING, which is indistinguishable from DEC-61's actual rule only
+ *      while the block has no read at all. A rule satisfied by the code doing
+ *      nothing is not a rule. Y14 now pins the ops the block asks for against
+ *      the PLANE'S OWN emitted set (exactly one, `airun`) and proves the
+ *      transcript function itself reaches no transport. **Y1 is the same shape
+ *      one layer down:** this context supplied no `recR`, so the wired read's
+ *      `catch` would have swallowed a ReferenceError and answered null — the
+ *      superseded assertion would have gone on PASSING over a read that never
+ *      happened. It now OBSERVES THE ASK. Controls run for all four, through the
+ *      whole harness: restoring `reads: []` with the stale `pending` fails X4b;
+ *      adding a second `recR` call inside the block fails Y1; un-wiring the read
+ *      fails ARM D4 ("a described read nothing performs is fiction").
  *  (7) over-strictness (ARM Y15-Y17): a running-session record shaped unlike
  *      anything written here — different field names, a bound this file never
  *      mentions — must RENDER, not fail. Driven with `{gauge, cap, used, note}`
@@ -595,11 +615,33 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
   ok(ai.consumers.includes("assistant") && ai.consumers.includes("investigative-session"),
      "ARM X3: the assistant pilot and the investigative session are BOTH consumers of the one surface");
 
-  /* THE CONTENT IS IS-6'S AND IS-9'S, AND THAT IS DECLARED RATHER THAN FAKED. */
-  ok(ai.pending && Array.isArray(ai.pending.publishers) && ai.pending.publishers.length > 0,
-     "ARM X4: the surface names what publishes its content rather than deriving it");
-  eq(ai.reads, [],
-     "ARM X5: the surface names NO op, because no op publishes a run yet — naming one that does not exist is exactly what the recipe validator refuses");
+  /* ARMS X4 AND X5 ARE CORRECTED 2026-08-07 (UI-47), NOT EXEMPTED, AND THE
+     REASON IS DATED HERE BECAUSE THE OLD ASSERTIONS WERE RIGHT WHEN WRITTEN.
+
+     X4 read `ai.pending.publishers.length > 0` and X5 read `ai.reads === []`,
+     both justified by "no op publishes a run yet". **IS-6 LANDED ON 2026-08-07
+     AND `op=airun` PUBLISHES THE RUN**, so both assertions now pin a world that
+     has moved: X4 would require the surface to keep declaring a gap that has
+     closed, and X5 would forbid it from naming the op it actually reads. Left
+     standing, they would have made the honest change fail the build — which is
+     the exact inversion `CLAUDE.md`'s correct-superseded-tests rule exists to
+     prevent.
+
+     WHAT REPLACES THEM IS A PROPERTY RATHER THAN EITHER STATE, so it survives
+     the next publisher too: a surface must be able to say where its content
+     comes from — by NAMING the ops it reads, or by DECLARING what is still
+     pending. **NEITHER is the failure**, and so is BOTH: a surface that reads an
+     op while still advertising the gap is describing a system that no longer
+     exists. This is the shape UI-46 measured the cost of one register over — a
+     stated-and-now-false claim is worse than an unstated one. */
+  const namesItsRead = Array.isArray(ai.reads) && ai.reads.length > 0;
+  const declaresAGap = !!(ai.pending && Array.isArray(ai.pending.publishers) && ai.pending.publishers.length > 0);
+  ok(namesItsRead !== declaresAGap,
+     `ARM X4 (corrected 2026-08-07, UI-47): the surface says where its content comes from — it NAMES the ops it reads (${JSON.stringify(ai.reads||[])}) or DECLARES what is still pending (${declaresAGap ? JSON.stringify(ai.pending.publishers) : "nothing"}), and exactly one of those is true. Neither would be a surface that cannot account for what it renders; BOTH would be a surface still advertising a gap that has closed.`);
+  ok(namesItsRead,
+     "ARM X4b: and as of IS-6 it is the naming side — the run is published, so the gap is closed rather than declared");
+  eq(ai.reads, ["airun"],
+     "ARM X5 (corrected 2026-08-07, UI-47): the surface reads `op=airun` and NOTHING ELSE. The once-only surface renders ONE run record; the observation log (`op=airunlog`) is a different read for a different question, and the transcript is never asked of the plane at all (DEC-61). That the op is real is not asserted here — ARM D3 resolves it through `opFailures` against the plane's own source, the same function ARM S drives with mutated bytes.");
 }
 
 /* ---- ARM Y · the renderers. Driven as pure functions over published records. */
@@ -608,19 +650,54 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
   ok(src, "ARM Y0: the AI_SESSION block markers were found in app.html");
   ok(src[1].length > 1000, `ARM Y0b: the AI_SESSION block is ${src[1].length} chars — an empty block would make every arm below vacuous`);
 
+  /* THE ASKED-OPS RECORDER. `recR` is the block's one door to the plane, and
+     the context supplies it so the read can be OBSERVED rather than inferred.
+     It answers whatever the arm queued, in the plane's own envelope-opened
+     shape (`recR` returns `j.result`, so the block sees `{run, found, session}`). */
+  const ASKED = [];
+  let ANSWER = { run: null, found: false, session: null };
+  /* NORMALISED ACROSS THE REALM BOUNDARY. Objects the vm builds carry the vm's
+     own `Object.prototype`, so `deepStrictEqual` reports two identical-looking
+     values as different — which is a comparison failing for a reason that has
+     nothing to do with the subject. Round-tripping through JSON is the same
+     equality the rest of this repository's harnesses use for exactly this. */
+  const plain = (v) => JSON.parse(JSON.stringify(v === undefined ? null : v));
   const ctx = { window: { addEventListener(){} }, localStorage: null, location: undefined,
                 esc: s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),
-                $: () => null, JSON, Object, Array, console };
+                $: () => null, JSON, Object, Array, console,
+                recR: async (op, params) => { ASKED.push({ op, params }); return ANSWER; } };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
   vm.runInContext(src[1] + `;globalThis.__A={aiSessionRead,aiSessionTranscript,aiSessionInContext,aiSessionIndicatorHtml,aiSessionPairsHtml,aiSessionBudgetHtml,aiSessionPrincipalHtml,aiSessionConditionHtml,aiSessionPanelHtml,aiSessionRouteFromHash};`, ctx);
   const A = ctx.__A;
 
-  /* Y1 · NOTHING PUBLISHED MEANS NOTHING RENDERED. Not a "nothing is running"
-     notice — that is a claim about the record made by a surface that asked
-     nothing, which is the class UI-39 and UI-40 exist to remove. */
-  eq(A.aiSessionRead({ session: "S1" }), null,
-     "ARM Y1: the read returns null today, because no op publishes a run — an honest absence, not a silent no-op dressed as an answer");
+  /* ARM Y1 IS CORRECTED 2026-08-07 (UI-47), NOT EXEMPTED. It read
+     `eq(A.aiSessionRead({session:"S1"}), null)` with the reason *"the read
+     returns null today, because no op publishes a run"*. IS-6 landed and
+     `op=airun` publishes one, so that assertion now pins the opposite of what
+     the surface must do.
+
+     AND IT WOULD HAVE GONE ON PASSING, WHICH IS THE PART WORTH RECORDING. This
+     context is isolated and used to supply no `recR` at all, so the wired read's
+     `catch` would have swallowed a ReferenceError and answered null — the
+     superseded assertion would have stayed GREEN over a read that never
+     happened. A pin satisfied by the code doing nothing stops being a pin the
+     moment the code does something. So the corrected arm OBSERVES THE ASK. */
+  ASKED.length = 0;
+  ANSWER = { run: "S1", found: true, session: { id: "S1", status: "running", ticks: 4 } };
+  const y1 = await A.aiSessionRead({ session: "S1" });
+  eq(plain(ASKED), [{ op: "airun", params: { run: "S1" } }],
+     "ARM Y1 (corrected 2026-08-07, UI-47): the read ASKS THE PLANE — one call, op=airun, carrying the run id and nothing else");
+  eq(plain(y1), { id: "S1", status: "running", ticks: 4 },
+     "ARM Y1b: and it returns the record's own `session`, unwrapped and unreshaped");
+  ASKED.length = 0;
+  ANSWER = { run: "S2", found: false, session: null };
+  eq(await A.aiSessionRead({ session: "S2" }), null,
+     "ARM Y1c: `session: null` reads as null — the honest absence the plane publishes for a run that does not exist AND for one the viewer may not see, which answer identically on purpose");
+  eq(await A.aiSessionRead({}), null,
+     "ARM Y1d: and no run id is asked for at all rather than asked as an empty one");
+  eq(ASKED.length, 1,
+     "ARM Y1e: exactly one ask happened across Y1c and Y1d — an id-less read must not reach the plane");
   eq(A.aiSessionIndicatorHtml(null, { type: "inquiry", id: "INQ-1" }), "",
      "ARM Y2: no session record means NO INDICATOR at all");
   eq(A.aiSessionPanelHtml(null, null), "",
@@ -679,8 +756,43 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
      "ARM Y12: a transcript this device does not hold reads as absent");
   ok((A.aiSessionTranscript("AIS-4", store) || []).length === 2,
      "ARM Y13: a transcript this device holds is read from the DEVICE, not fetched");
-  ok(!src[1].includes("recR(") && !src[1].includes("recPostR("),
-     "ARM Y14: the running-session block reaches the plane for NO transcript — DEC-61 puts it on the device, and a fetch here would be the ruling undone in code");
+  /* ARM Y14 IS CORRECTED 2026-08-07 (UI-47), NOT EXEMPTED, AND THE CORRECTION
+     IS THE MORE INTERESTING HALF OF THIS ITEM.
+
+     It read `!src[1].includes("recR(") && !src[1].includes("recPostR(")` under
+     the heading *"the running-session block reaches the plane for NO
+     transcript"*. That assertion did not test DEC-61. It tested that the block
+     called NOTHING — which was indistinguishable from DEC-61 only while the
+     block had no read at all, and became false the moment IS-6 gave it one. **A
+     rule that is satisfied by the code doing nothing is not a rule; it is a
+     coincidence with the same shape.**
+
+     THE RULE DEC-61 ACTUALLY STATES SURVIVES AND IS NARROWER: the transcript is
+     device-local, so the block may ask the plane for the RUN and must never ask
+     it for the TRANSCRIPT. Pinned three ways, none of them a spelling:
+       (a) the ONLY op names the block passes to a transport are checked against
+           the plane's emitted set and against a whitelist of exactly one;
+       (b) `aiSessionTranscript`'s own body — sliced from the source — reaches no
+           transport at all, so the device read cannot quietly become a fetch;
+       (c) no write transport appears anywhere in the block: this surface reads a
+           run, and a running-session surface that POSTs is a different item. */
+  {
+    const stripped = src[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+    const asked = [...stripped.matchAll(/\b(?:recR|recPostR|rec|recPost|api|apiR|apiQ|actAsk|intentAsk)\(\s*"([a-z]+)"/g)]
+      .map(m => m[1]);
+    console.log(`  ARM Y14 corpus: ${stripped.length} chars of comment-stripped block; ops asked of the plane: ${asked.length ? asked.join(", ") : "(none)"}`);
+    eq(asked, ["airun"],
+       "ARM Y14 (corrected 2026-08-07, UI-47): the block asks the plane for EXACTLY the run — op=airun, once — and for nothing else. `op=airunlog` is a different read for a different question and the transcript is never asked of the plane at all (DEC-61).");
+    ok(OPS.has("airun"),
+       "ARM Y14b: and `airun` is an op the PLANE EMITS, resolved against its own source rather than against this file's opinion");
+    const tSlice = /function aiSessionTranscript\([\s\S]*?\n\}/.exec(stripped);
+    ok(tSlice && tSlice[0].length > 100,
+       `ARM Y14c: aiSessionTranscript's body is locatable and non-trivial (${tSlice ? tSlice[0].length : 0} chars) — a slice that found nothing would make Y14d vacuous`);
+    ok(tSlice && !/\b(?:recR|recPostR|rec|recPost|api|apiR|apiQ|fetch)\s*\(/.test(tSlice[0]),
+       "ARM Y14d: THE TRANSCRIPT ITSELF reaches no transport — DEC-61 puts it on the device, and a fetch inside this function would be the ruling undone in code");
+    ok(!/\b(?:recPost|recPostR|actAsk|intentAsk)\s*\(/.test(stripped),
+       "ARM Y14e: and the block WRITES nothing — it renders a run it did not cause");
+  }
 
   /* Y15 · OVER-STRICTNESS. A record shaped unlike anything written here must
      RENDER. A renderer that only accepts the shapes its author imagined is a

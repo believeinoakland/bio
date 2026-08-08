@@ -1960,18 +1960,23 @@ const SURFACES = {
     purpose: "One running AI session as it runs: that a job is running in this context, the bound it is running under, what it has consumed of that bound so far, and which account is paying. Clicking the indicator opens the live transcript, which is device-local (DEC-61) and therefore readable only on the device that ran it.",
     levels: [],
     acts: [],
-    reads: [],
-    /* NO OP IS NAMED, AND THE ABSENCE IS THE POINT. The run's CONTENT belongs
-       to IS-6 and IS-9, which are unbuilt: there is no session read op to name,
-       and naming one that does not exist is precisely what the recipe validator
-       exists to refuse. So this surface reads nothing today, renders nothing
-       today, and shows NO INDICATOR — which is honest, because an indicator
-       over an invented state would be worse than no indicator. When IS-6 and
-       IS-9 publish, ONE function gains its read and nothing else moves. */
-    pending: {
-      publishers: ["IS-6", "IS-9"],
-      what: "the run record: its budget, its live consumption, the Claude-account principal that pays, and its condition when a bound stops it",
-    },
+    /* ~~NO OP IS NAMED, AND THE ABSENCE IS THE POINT.~~ **SUPERSEDED 2026-08-07
+       (UI-47) — IS-6 LANDED AND `op=airun` PUBLISHES THE RUN.** The old note
+       said the run's content belonged to IS-6 and IS-9, that there was no
+       session read op to name, and that naming one that did not exist is what
+       the recipe validator refuses. Every clause of that was true when written
+       and the first two are now false: the op exists, the plane emits it, and
+       the surface names it. `pending` is REMOVED rather than left carrying a
+       publisher that has published, because a declared gap that has closed is a
+       claim about the system that is no longer true — the same class UI-46 was
+       raised to remove, one register over.
+
+       IS-9 IS NOT STILL PENDING HERE, and that is a fact rather than an
+       omission: IS-9 was superseded by FL-3, its `runtime-ceiling-reached` half
+       is a QUEUE-FEED notification with its own producer, and nothing this
+       surface reads waits on it. `condition.kind` already arrives on the run
+       record from `op=airun` and is rendered verbatim. */
+    reads: ["airun"],
   },
 };
 
@@ -15722,13 +15727,24 @@ try{ window.addEventListener("hashchange", ()=>{ if(!PUB_HASH_LOCK) publishedRou
    unbuilt. So this surface READS what they publish and renders it; it does not
    derive state, and where they publish nothing it says nothing. Concretely:
 
-     - `aiSessionRead()` returns null today, because no op publishes a run.
-       There is no session read op in the plane's OPS table, and naming one that
-       does not exist is precisely what the recipe validator refuses. When IS-6
-       and IS-9 land, this ONE function gains its read and nothing else moves.
+     - ~~`aiSessionRead()` returns null today, because no op publishes a run.~~
+       **SUPERSEDED 2026-08-07 (UI-47), and the correction is written here rather
+       than in a commit message, because a paragraph describing a world that has
+       moved is how the next reader is misled.** IS-6 landed and `op=airun`
+       publishes the run, so `aiSessionRead()` now READS it. That is the whole of
+       this item: ONE function gained its read and the renderers did not move —
+       which is what UI-38 said would happen and is the reason the consumer was
+       built first.
      - No session record means NO INDICATOR. Not a "nothing is running" notice —
        that would be a claim about the record made by a surface that did not ask
        anything, which is the class UI-39 and UI-40 were raised to remove.
+     - AND `session: null` ANSWERS IDENTICALLY FOR AN UNKNOWN RUN AND FOR ONE THE
+       VIEWER MAY NOT SEE. That is the plane's decision, not this surface's
+       (`store.mjs`, `aiRunRead` — the `#bundleGate` on `context_id`, REC-25/REC-30's
+       leak one object over), and this surface must not undo it: rendering
+       anything that told the two apart would be an ORACLE, letting somebody
+       enumerate projects they were never invited to by watching which absence
+       they got. So the read looks at ONE field, `session`, and never at `found`.
 
    THE RENDERERS ARE FIELD-NAME-BLIND ON PURPOSE. They walk what the record
    published, in the order it published it, and print it. They know no field
@@ -15762,15 +15778,42 @@ try{ window.addEventListener("hashchange", ()=>{ if(!PUB_HASH_LOCK) publishedRou
    refusal wording and DEC-49 has not ruled on who owns it. Left for the ruling
    rather than authored here, the way UI-39 deleted a falsehood without writing a
    new word and UI-40 rendered the plane's accounts verbatim with no fallback.
+
+   UI-38 pinned this as *the block reaches the plane for NOTHING AT ALL*, which
+   was true while the block called nothing. It is the WRONG RULE now that the
+   block reads `op=airun`, and a rule that is merely satisfied by the code doing
+   nothing stops being a rule the moment the code does something. The rule DEC-61
+   actually states is narrower and survives: **the block asks the plane for the
+   run and NEVER for the transcript.** So `aiSessionTranscript` reaches no
+   transport, and the ONLY op this block names is `airun` — which is checked
+   against the plane's own emitted op set, not against a list anybody typed.
    ============================================================ */
 
-/* THE READ. Null until IS-6/IS-9 publish a run. Stated as one function so the
-   seam is a single line rather than a search. */
-function aiSessionRead(_ctx){
-  /* No op publishes a run record yet — see `SURFACES["ai-session"].pending`.
-     Returning null is the honest answer and it is what makes the indicator
-     absent rather than invented. */
-  return null;
+/* THE READ — `op=airun` (IS-6). UI-38 stated this as ONE function so the seam
+   would be a single line rather than a search, and UI-47 is that line.
+
+   IT READS EXACTLY ONE FIELD, AND THE OTHER ONE IS DELIBERATELY UNREAD. The
+   plane answers `{ run, found, session }`, and `found` is FALSE in two
+   different situations that it takes care to make indistinguishable: the run
+   does not exist, and the run is over a project this viewer was never invited
+   to. Reading `found` here could only ever be to tell them apart, and telling
+   them apart is an oracle. `session` is null in both, so the surface renders
+   the same nothing for both by CONSTRUCTION rather than by discipline.
+
+   A REFUSAL RENDERS AS THE SAME NOTHING, and that is a judgement rather than an
+   oversight. `recR` throws when the plane refuses or the transport fails. This
+   surface has no ruled member-facing sentence to say about that (DEC-49 has not
+   ruled on refusal wording), and authoring one here is exactly what UI-39 and
+   UI-40 established must not happen. So a refusal shows NO INDICATOR, which is
+   the same answer the plane already gives for a run the viewer may not see —
+   the two collapse for the same reason and the surface invents nothing. */
+async function aiSessionRead(ctx){
+  const id = ctx && ctx.session != null ? String(ctx.session) : "";
+  if(!id) return null;
+  let ans = null;
+  try{ ans = await recR("airun", { run: id }); }
+  catch(_){ return null; }
+  return (ans && ans.session) || null;
 }
 
 /* THE DEVICE-LOCAL TRANSCRIPT (DEC-61). Never the plane. */
@@ -15851,18 +15894,34 @@ function aiSessionConditionHtml(session){
 }
 
 /* THE PANEL — the indicator's click target. The live transcript if this device
-   holds one, the budget and its consumption, who pays, and the condition. */
+   holds one, the budget and its consumption, who pays, and the condition.
+
+   UI-47 ADDED THE RUN'S OWN SCALARS, through the SAME field-name-blind renderer
+   the budget and the principal already go through. `status` and `ticks` are
+   published at the top level of the record and UI-38's panel rendered neither,
+   because when it shipped nothing published them; the item's acceptance
+   requires both. This is the smallest change that says so: no new function, no
+   new field name, no authored word, and `aiSessionPairsHtml` skips objects and
+   arrays, so `context`, `principal`, `condition` and `budget` are not rendered
+   twice by it. */
 function aiSessionPanelHtml(session, transcript){
   if(!session) return "";
   const lines = Array.isArray(transcript) ? transcript : [];
   const body = lines.map(l=>`<div class="mono">${esc(typeof l==="string"?l:JSON.stringify(l))}</div>`).join("");
-  return `<div class="ai-panel">${aiSessionPrincipalHtml(session)}`
+  const own = aiSessionPairsHtml(session);
+  return `<div class="ai-panel">${own?`<div class="ai-bound">${own}</div>`:""}`
+       + `${aiSessionPrincipalHtml(session)}`
        + `${aiSessionBudgetHtml(session)}${aiSessionConditionHtml(session)}${body}</div>`;
 }
 
 let AI_SESSION_HASH_LOCK = false;
-function aiSessionOpen(id, fromNav){
-  const session = aiSessionRead({ session: id });
+/* ASYNC SINCE UI-47, because the read is now a read. `aiSessionRouteFromHash`
+   below still answers a synchronous boolean — `boot()`'s chain asks *did an
+   address claim this hash*, which is knowable without waiting for the plane —
+   so the render lands when the plane answers, exactly as every other screen's
+   does. */
+async function aiSessionOpen(id, fromNav){
+  const session = await aiSessionRead({ session: id });
   if(!fromNav){
     try{
       if(typeof location !== "undefined" && location.hash !== undefined && location.hash !== "#session/"+id){
