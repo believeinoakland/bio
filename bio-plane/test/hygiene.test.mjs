@@ -1568,6 +1568,35 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     t(`every file these walks counted is in the commit at HEAD, or is NAMED above (${c.off.length} named)`,
       c.off.every((r) => r.state !== "in the commit"), true);
 
+  /* (5) THE PRINTING ITSELF, DRIVEN — and this arm exists because the control
+     found the other four blind to exactly the failure they were written for.
+     Neutering `reportProvenance`'s naming branch moved `coverage-provenance`
+     23 -> 14 and `battery-provenance` 28 -> 17, and left THIS suite at 531 pass,
+     because arms (1)-(4) all read `classifyDiscovered`'s return and none of them
+     read a printed WORD. On a clean tree the naming branch never runs, so it can
+     go dark here in silence. So the printer is driven over a SYNTHETIC item that
+     is certainly in no commit, into a captured sink, and the output is asserted to
+     NAME it — a delta that costs nothing when the tree is honest and bites the
+     moment the report stops reporting. A surprising green is a finding about the
+     arm, not a pass. */
+  const sink = [];
+  const ghost = repoPath(REPO, join(DIR, "no-such-suite-m016.test.mjs"));
+  reportProvenance({
+    prov, items: [{ path: ghost, what: "a synthetic item", counted: "nothing — it does not exist" }],
+    instrument: "the arm (5) probe", corpus: "1 synthetic item",
+    totals: [{ label: "synthetic units", contaminated: 1, reproducible: 0, source: "nothing" }],
+    log: (s) => sink.push(s),
+  });
+  const printed = sink.join("\n");
+  t("(5) the report NAMES an item that is in no commit, rather than only classifying it",
+    prov.inHead === null
+      ? [/UNVERIFIED/.test(printed), true]
+      : [printed.includes(ghost), /NOT IN ANY COMMIT/.test(printed)],
+    [true, true]);
+  t("(5) ...and states the reproducible total beside the contaminated one",
+    prov.inHead === null ? true : /1 synthetic units were counted above; 0 of them come from nothing/.test(printed),
+    true);
+
   /* ---- THE CLASS CENSUS, AND IT IS A RATCHET RATHER THAN A VERDICT ----------
    *
    * D-238's brief asked what ELSE in this repository walks a directory it does
