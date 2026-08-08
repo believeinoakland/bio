@@ -20,13 +20,83 @@
  *
  *   node scripts/battery.mjs             all suites
  *   node scripts/battery.mjs search cite only suites whose name contains these
- */
+ *
+ * ---- M0-15, 2026-08-08: DISCOVERY IS THIS RUNNER'S WHOLE MECHANISM, AND THE
+ * DIRECTORY IT DISCOVERS OVER IS NOT CONTROLLED. THE MECHANISM IS NAMED BELOW.
+ *
+ * THE DEFECT. On 2026-08-08 a worker's first baseline discovered 124 suites
+ * including `machinefences-dec49.test.mjs` (57 pass) — another worker's file,
+ * UNTRACKED, IN NO COMMIT, and gone by the next run. The worker re-measured at
+ * HEAD and could not determine how the file entered its worktree. That is worse
+ * than any stale figure this project has caught: every worker here is instructed
+ * to MEASURE ITS OWN BASELINE AND TRUST IT OVER ITS BRIEF, and a baseline that
+ * silently includes a phantom suite makes that instruction produce a WRONG
+ * NUMBER WITH FULL CONFIDENCE. A stale brief is corrected by measurement; this
+ * defeats measurement itself, and every item's `+N attributed by re-running the
+ * true baseline` is computed against it.
+ *
+ * THE MECHANISM, MEASURED RATHER THAN SUSPECTED — `git stash` IS REPOSITORY-WIDE,
+ * NOT PER-WORKTREE. `refs/stash` is NOT one of git's per-worktree refs (those are
+ * HEAD, refs/bisect/*, refs/worktree/*, refs/rewritten/*). Measured here: a
+ * `git stash push` run INSIDE the worktree `agent-a0e79024273135242` wrote
+ * `refs/stash` and `logs/refs/stash` into the COMMON git directory
+ * (`bio/.git/`), while that worktree's own `.git/worktrees/<id>/refs/` stayed
+ * EMPTY. Sixty checkouts of this repository share ONE stash stack, so `stash@{0}`
+ * does not mean "what I pushed" — it means "what any of the sixty pushed last".
+ *
+ * WHY THAT PRODUCES A PHANTOM SUITE EXACTLY. `git stash push -u` takes a
+ * worker's UNTRACKED files with it; `git stash pop` in a DIFFERENT worktree then
+ * materialises them THERE. A suite that exists only in worker A's tree lands in
+ * worker B's `test/`, is discovered by this runner on the next line, runs, and is
+ * counted — untracked, in no commit, and gone from B the moment B stashes again.
+ * That reproduces every reported symptom including "gone by the next run".
+ *
+ * THE EVIDENCE IT IS THE MECHANISM AND NOT A CORRELATE, verified from the object
+ * database rather than taken on report: stash commit `8706832`, headed
+ * `On worktree-agent-a773e28c7c7d0fb8b: RESTORED BY UI-50 SESSION: another
+ * session's D-228 work, accidentally popped from stash by ui50`, CONTAINS ANOTHER
+ * WORKER'S WORK — `src/query.mjs`, `test/search.test.mjs`,
+ * `test/meaningquery.test.mjs` — deposited into a worktree that never wrote it,
+ * by a `pop` whose stack had been pushed to by a third session in between. That
+ * is one worker's uncommitted `.test.mjs` files arriving in another worker's
+ * `test/` directory, byte-for-byte, with no second session and no copying
+ * mechanism required.
+ *
+ * WHAT WAS ELIMINATED RATHER THAN ASSUMED, because the two previous items handed
+ * an obvious suspect were BOTH WRONG:
+ *   - `.worktreeinclude` names exactly `.env` and `.env.local`, two literal
+ *     filenames with no glob. It cannot carry a `.test.mjs`.
+ *   - THIS RUNNER CANNOT REACH A SIBLING WORKTREE. The plane walk is
+ *     `readdirSync(ROOT/test)` and does not descend; the fleet walk filters
+ *     `!d.startsWith(".")`, and worktrees live under `.claude/worktrees/`.
+ *   - The shared scratchpad is outside the repository altogether, so nothing it
+ *     holds can appear in `test/`. It can corrupt a harness (ORCHESTRATION's
+ *     failure table) and cannot enrol a suite.
+ *   - A suite in the MAIN checkout that is in no commit of `main` looked like a
+ *     leak and is not: `MERGE_HEAD` was present, i.e. an integration in flight.
+ *
+ * THE FIX MAKES THE PHANTOM VISIBLE, NOT ABSENT. A battery that silently SKIPPED
+ * untracked suites would hide the next one — the same principle M0-14 landed for
+ * the control register (a declaration it cannot classify is NAMED, never scored
+ * zero) and CPDF-9 for the dark fleet member. So this runner checks every suite
+ * it RAN against the commit at HEAD and NAMES the ones that are not in it,
+ * whether they passed or failed — a PASSING phantom is the case that actually
+ * happened — and prints, beside the contaminated total, the total another
+ * checkout could reproduce.
+ *
+ * SWEEP FOR THE CLASS: THERE ARE TWO DISCOVERY PATHS HERE, NOT ONE, and the
+ * second is newer than the defect. Suites are discovered BY FILENAME in
+ * `test/`; fleet members are discovered BY MANIFEST (`fleet-member.json`) since
+ * CPDF-9, hours ago. An untracked manifest enrols a whole DIRECTORY of suites,
+ * so the manifest is checked too and named the same way. Both are fed by anything
+ * that can put a file into this tree without a commit, which is now known to
+ * include an ordinary `git stash pop`. */
 
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const filters = process.argv.slice(2).filter((a) => !a.startsWith("-"));
@@ -236,9 +306,15 @@ const planeSuites = readdirSync(join(ROOT, "test"))
  * instead of the member being invisible. */
 const REPO = join(ROOT, "..");
 const fleetSuites = [];
+/* M0-15: the manifests this run was ENROLLED BY, kept so their own provenance can
+   be checked. A manifest is the second discovery path and it admits a whole
+   directory at once, so an untracked one is a larger hole than an untracked
+   suite, not a smaller one. */
+const fleetManifests = [];
 for (const dir of readdirSync(REPO).filter((d) => !d.startsWith("."))) {
   let meta;
   try { meta = JSON.parse(readFileSync(join(REPO, dir, "fleet-member.json"), "utf8")); } catch { continue; }
+  fleetManifests.push({ member: meta.name || dir, path: join(dir, "fleet-member.json") });
   const testDir = join(REPO, dir, meta.testDir || "test");
   let files = [];
   try { files = readdirSync(testDir).filter((f) => f.endsWith(".test.mjs")).sort(); } catch { /* none */ }
@@ -341,7 +417,12 @@ for (const entry of suites) {
   const r = await run(entry);
   const t = tally(r.out);
   const skip = (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
-  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip });
+  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip,
+    /* M0-15: the path a COMMIT would have to carry for this suite to be
+       reproducible anywhere but here. Recorded per suite at the moment it RAN,
+       so the provenance line below describes what was actually counted rather
+       than what the directory holds afterwards. */
+    repoRel: relative(REPO, join(entry.cwd, entry.rel)) });
   const failedRun = r.code !== 0 && !skip;
   const status = failedRun ? "FAIL" : skip ? "skip" : "ok  ";
   const counts = skip
@@ -385,6 +466,86 @@ if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")
   if (byMember.length !== ranMembers.length)
     console.log(`  a member whose suite did not run is a component coverage credits from a source read`
       + ` alone (D-117) — that is the generous direction, and it is named here rather than left green.`);
+}
+
+/* ---- M0-15: IS EVERYTHING THIS RUN COUNTED ACTUALLY IN A COMMIT? -----------
+ *
+ * The header states the mechanism. This is the part a reader sees. Two rules,
+ * and both of them are the difference between this line and silence:
+ *
+ * IT NAMES, IT DOES NOT SKIP. Discovery stays exactly as it was and a suite in
+ * no commit still RUNS and is still COUNTED — a runner that quietly dropped it
+ * would hide the next phantom as effectively as the silence that hid this one,
+ * and would also break every worker legitimately writing a suite before
+ * committing it. What changes is that the run says so, by name.
+ *
+ * IT REPORTS AND DOES NOT FAIL, and that is a deliberate provisional rather than
+ * an oversight. A worker writes a suite and runs the battery before committing
+ * it dozens of times an hour; failing on that would be a FALSE RED on the
+ * battery, which this file already argues (D-186's attribution note) is worse
+ * than the condition it reports. THE RESIDUAL, stated rather than discovered
+ * later: a run whose totals include a phantom is still GREEN, and only this line
+ * says so. Closing that means failing on an uncommitted suite, which is the
+ * reverse of this provisional and is a decision about how workers work, not
+ * about the runner.
+ *
+ * `git status` IS THE WRONG INSTRUMENT and is deliberately not used: an IGNORED
+ * file does not appear in it, and `.claude/worktrees/` is ignored in this
+ * repository. The question is "is this file in the commit", so the answer comes
+ * from `ls-tree HEAD`. A file present in the INDEX but not in HEAD is a
+ * different claim again and is named as such.
+ *
+ * AND WHEN GIT CANNOT ANSWER, THE RUN SAYS UNVERIFIED RATHER THAN CLEAN. An
+ * instrument that reports "all good" when it could not look is the exact failure
+ * D-233 was worth an item for. */
+{
+  const git = (args) => {
+    const r = spawnSync("git", args, { cwd: REPO, encoding: "utf8", timeout: 30_000,
+      maxBuffer: 128 * 1024 * 1024 });
+    return (r.error || r.status !== 0 || typeof r.stdout !== "string") ? null : r.stdout;
+  };
+  const setOf = (out) => out === null ? null : new Set(out.split("\0").filter(Boolean));
+  const inHead = setOf(git(["ls-tree", "-r", "--name-only", "-z", "HEAD"]));
+  const inIndex = setOf(git(["ls-files", "-z"]));
+  const headSha = (git(["rev-parse", "--short", "HEAD"]) || "").trim();
+
+  /* Everything discovery admitted: the suites that RAN, and the manifests that
+     enrolled them. Both paths, because both are discovery. */
+  const admitted = [
+    ...results.map((r) => ({ path: r.repoRel, what: r.file,
+      counted: r.tally ? `${r.tally.pass} pass${r.tally.fail ? `, ${r.tally.fail} FAIL` : ""}`
+        : r.skip ? "skipped" : "assertions unknown" })),
+    ...fleetManifests.map((m) => ({ path: m.path, what: `${m.member}'s fleet manifest`,
+      counted: "enrols a whole directory" })),
+  ];
+
+  if (inHead === null) {
+    console.log(`provenance: UNVERIFIED over all ${admitted.length} discovered item(s) — git could not`
+      + ` answer \`ls-tree HEAD\` in ${REPO}.`);
+    console.log(`  Nothing above was checked against a commit, so the totals may include suites no other`);
+    console.log(`  checkout of this repository has. That is not the same claim as "all in a commit" (M0-15).`);
+  } else {
+    const off = admitted.filter((a) => !inHead.has(a.path));
+    const reproducible = results
+      .filter((r) => inHead.has(r.repoRel))
+      .reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0);
+    console.log(`provenance: ${admitted.length - off.length} of ${admitted.length} discovered item(s)`
+      + ` are in the commit at HEAD (${headSha})`
+      + ` · ${results.length} suite(s) run · ${fleetManifests.length} fleet manifest(s)`);
+    if (off.length) {
+      console.log(`  NOT IN ANY COMMIT — this run COUNTED work no other checkout can see (M0-15):`);
+      for (const a of off) {
+        const state = inIndex === null ? "index unreadable"
+          : inIndex.has(a.path) ? "staged, not yet committed" : "UNTRACKED";
+        console.log(`    ${a.path}  (${state}) — ${a.what}: ${a.counted}`);
+      }
+      console.log(`  ${assertions} assertions were counted above; ${reproducible} of them come from suites`);
+      console.log(`  that are in the commit. ${reproducible} is the figure another checkout at ${headSha} reproduces,`);
+      console.log(`  and it is the one a baseline may be quoted from. An UNTRACKED suite here did not have to`);
+      console.log(`  be written in this tree: \`git stash\` is REPOSITORY-WIDE across every worktree, so a`);
+      console.log(`  \`pop\` can deposit another worker's untracked files here. See this file's header.`);
+    }
+  }
 }
 
 /* D-186's assertion. The comparison IS the control: this run has just built and
