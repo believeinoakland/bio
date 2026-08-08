@@ -365,6 +365,14 @@ const OPS = {
      caller-supplied value is overwritten, because the D-15 visibility gate is
      only a gate if the caller cannot choose whose view it compiles. */
   search:     { classes: ["admin", "member", "probe"],           mutating: false },
+  /* PL-9 / D-222 option C: the SAME query compiler, read at MEANING grain — the
+     legs a claim rests on and the resolutions a document carries, for the
+     bundles `q` selects. Fenced exactly as op=search is and for a STRONGER
+     reason: a search result names what the group is looking into, and this names
+     what it thinks the evidence establishes. `viewer` is stamped below from the
+     authenticated identity, because a gate the caller can choose the view of is
+     not a gate. */
+  meaningrows: { classes: ["admin", "member", "probe"],          mutating: false },
   /* The vocabulary of the query language, so a UI builds its controls from the
      plane rather than from a copy that drifts. Working-corpus field names, so
      the same fence applies. */
@@ -846,7 +854,13 @@ const OPS = {
    `cite` needed them, 2026-07-25. They read the working corpus, which a member
    session already reads through op=index and op=audit, so this widens no fence:
    `viewer` and `owner` are stamped from the session's own identity below. */
-const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist"];
+/* PL-9 adds `meaningrows` here rather than to a new list, and that is the point:
+   it is a statement shape on op=search's own compiler, so it takes op=search's
+   own session reach and op=search's own server-side `viewer` stamp. A second
+   list would be one more place for the member and admin sets to drift apart —
+   the defect class this file keeps naming. */
+const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selection", "selectionlist",
+                         "meaningrows"];
 /* CONSTRUCTS Step 3 (FW-5): the reading reads. A member session viewing a
    captured document may read what the plane read out of it and which other
    documents' readings carry the same entity reference. Reads of the working
@@ -4648,7 +4662,14 @@ export default {
                                    walk arriving by a new door. The VALUE stays whole for every
                                    reader (DEC-17) — only the names are withheld. */
                                 "strengthbarof"];
-    if (op === "search" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
+    /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
+       takes op=search's stamp beside op=search rather than joining a list of
+       reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
+       sense and takes REC-36's stronger posture in the store — the whole ROW is
+       withheld, never a redacted reference — and, like every op here, it fails
+       closed on an absent stamp: the deny predicate answers zero rows AND a zero
+       total, so hidden and absent are the same answer. */
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op)
         || STATE_ACTIONS.includes(op)
         /* REC-24: both action acts read the bundle behind the fail-closed gate
            before they write it, so an action the caller may not see refuses

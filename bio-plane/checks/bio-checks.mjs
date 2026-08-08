@@ -5175,3 +5175,49 @@ export const AI_RUN_CHECKS = {
     translation: 'The observation log is not part of any published document and cannot be filed into one.',
   },
 };
+
+/* ===========================================================================
+ * PL-9 / D-222 OPTION C — THE MEANING-GRAIN READ'S REFUSALS.
+ *
+ * `op=meaningrows` is a SEVENTH STATEMENT SHAPE on the query compiler, not a
+ * second query path (D-15, and `query.mjs`'s own note at the `ids` arm). Its
+ * selector vocabulary is PL-8's and needs no refusals of its own — an unknown
+ * sub-field there is DROPPED with a warning, because a dropped arm WIDENS the
+ * answer and on a debt question narrowing silently is the sentence "you have
+ * none". What this op adds is one genuinely new argument, `rows=<arm>`, which
+ * names WHICH meaning table to answer at grain from, and that one cannot be
+ * widened away: there is no honest default, because answering with legs when a
+ * caller asked for resolutions is a confidently wrong answer about a different
+ * table. So it is REFUSED, twice, for the two ways it can be wrong.
+ *
+ * DEC-49's shape, on AI_RUN_CHECKS' precedent above: the C-number, the wire code
+ * and the CANNED TRANSLATION are ONE ROW, read from one place rather than
+ * copied, so a surface rendering a translation keyed on a code the plane sent
+ * cannot drift from what the plane refuses. The refusal's own `detail` names the
+ * offending value and the arms that DO exist — derived from the compiler's
+ * registry at the refusal site, never listed here, because a hand copy agrees at
+ * zero cost and this project has measured that five times.
+ * ========================================================================= */
+export const MEANING_READ_CHECKS = {
+  /* No grain was named at all. The op cannot fall back to a default arm: `leg`
+     and `resolves` read different tables and answer different questions, and
+     picking one would answer a question the caller did not ask. */
+  MEANING_ROWS_NO_ARM: {
+    check: 'C-23.1',
+    where: 'src/store.mjs meaningRows, reached from op=meaningrows',
+    translation: 'That request did not say which kind of meaning to read. '
+      + 'The record holds the legs a claim rests on and the resolutions a document carries, '
+      + 'and they are different things — so it asks rather than choosing one for you.',
+  },
+  /* A grain was named and the record has no such thing. Refused rather than read
+     as free text: this argument selects a TABLE, and a mistyped table name that
+     silently answered from another one would be the false-coverage failure the
+     whole meaning-layer surface exists to remove. */
+  MEANING_ROWS_UNKNOWN_ARM: {
+    check: 'C-23.2',
+    where: 'src/store.mjs meaningRows, reached from op=meaningrows',
+    translation: 'The record has no meaning of that kind to read. '
+      + 'Rather than answer from a different one and let the answer look complete, '
+      + 'it says so and names the kinds it does hold.',
+  },
+};

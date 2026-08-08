@@ -169,6 +169,19 @@ const cappedMethods = (code) => {
     if (/\bLIMIT\s+([2-9]|\d{2,})\b/.test(body)) why.push("sql-literal");
     if (/\bLIMIT\s+\?/.test(body) && CAP_CONST.test(body)) why.push("named-cap");
     if (/Math\.min\([^)]*\blimit/i.test(body) || /\blimit[^\n]*Math\.min\(/i.test(body)) why.push("clamp");
+    /* A FIFTH CAP SHAPE, added 2026-08-07 by PL-9, and it closes a blind spot
+       this walk has carried since REC-57 rather than merely admitting a new op.
+       All four shapes above look for the bound INSIDE the method. `op=search`'s
+       bound is not there: it lives in `query.mjs` as `LIMIT_DEFAULT`/`LIMIT_MAX`,
+       is applied by `compile()`, and reaches the answer as `plan.limit`. So THE
+       ONE OP REC-57's header calls *"the model the rest were brought to"* was
+       itself invisible to the roster that drives the bare-array pin — and PL-9's
+       `op=meaningrows`, capped the same way in the same module, would have been
+       invisible for the same reason. The property is real and not a spelling:
+       a method that PUBLISHES a bound taken off a compiled plan is a capped
+       method. The detector is widened; neither source is reworded to suit it,
+       which is REC-57's own rule for this walk. */
+    if (/\bplan\.(?:[a-z][\w$]*\.)?limit\b/.test(body)) why.push("compiler-cap");
     if (why.length) out.set(name, why);
   }
   return out;
@@ -220,8 +233,19 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    label no longer says "nine wider" because the count of what the sweep found beyond the
    two named ops is now twelve, and a stale sentence beside a corrected number is the drift
    this suite exists to catch. */
-t("WALK: the class is TWELVE ops wider than the two the item named — the sweep is the item, not the pair",
-  OPS.size, 14);
+/* CORRECTED 2026-08-07 (PL-9), not exempted, and 14 was the true measurement on
+   the day it was written. 14 -> 16 for TWO reasons that are one reason: the walk
+   gained its fifth cap shape (`compiler-cap`, at `cappedMethods` above) and
+   therefore now sees `op=search`, whose bound has always lived in `query.mjs`
+   and was never on this roster; and `op=meaningrows`, PL-9's new meaning-grain
+   read, is capped the same way in the same module. So one of the two is a NEW
+   op and the other is an op this instrument could not previously see — the same
+   correction REC-60 made when three uncapped reads gained a bound, arriving from
+   the other direction. The label no longer counts "wider than the pair", because
+   a stale sentence beside a corrected number is the drift this suite exists to
+   catch. */
+t("WALK: the roster is SIXTEEN ops — the sweep is the item, not the two the item named",
+  OPS.size, 16);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -442,6 +466,23 @@ const DRIVEN = [
     more: (a) => a.truncated, says: "`truncated`",
     lost: "whether the graph around a subject is whole, on the one read that grows as k(k-1)/2 so the most "
         + "important subject produces the largest answer" },
+  /* PL-9 / D-222 option C, 2026-08-07: the two COMPILER-CAPPED ops, which reached
+     this roster only when the walk grew its fifth shape. Both answer completeness
+     in `op=search`'s own vocabulary — `total` beside `limit` and `offset` — which
+     is not a twelfth spelling but the FIRST one: REC-57's header calls op=search
+     "the model the rest were brought to", and it is on the roster at last. */
+  { op: "search", bite: 1, whole: 500,
+    drive: (n) => GET(`op=search&token=mem-r57&q=&limit=${n}&facets=none`),
+    more: (a) => a.offset + (a.hits?.length ?? 0) < a.total,
+    says: "`total` beside `limit` and `offset`",
+    lost: "that a corpus-wide read was answered at a bound the caller did not name — the very defect UI-25 "
+        + "found when a member could cite only the first 500 hits into a case" },
+  { op: "meaningrows", bite: 1, whole: 1000,
+    drive: (n) => GET(`op=meaningrows&token=mem-r57&rows=concerns&q=${encodeURIComponent("has:resolves")}&limit=${n}`),
+    more: (a) => a.offset + a.count < a.total,
+    says: "`total` beside `limit` and `offset`",
+    lost: "whether a basis was returned WHOLE or cut — and a basis returned in part reads as a basis, which "
+        + "is a record claiming more than it can support" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");

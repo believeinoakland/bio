@@ -99,6 +99,10 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             index.mjs — it is now the same string rather than a proven-equal
             one. */
          isMachineIdentity, isMachineStamp,
+         /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
+            for the meaning-grain read's two refusals, as ONE row read from the
+            catalog rather than restated here. */
+         MEANING_READ_CHECKS,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -127,7 +131,7 @@ import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate,
-         meaningVocabulary } from "./query.mjs";
+         meaningVocabulary, MEANING } from "./query.mjs";
 /* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
    reason queuestate.mjs is: a rule reachable only through a Durable Object is a
    rule that gets exercised less. `finishedBound` is imported rather than
@@ -1130,6 +1134,90 @@ export class Store extends DurableObject {
     }
     out.gate.applied = tally.applied;
     return out;
+  }
+
+  /** PL-9 / D-222 OPTION C — THE MEANING-GRAIN READ.
+   *
+   *  WHAT WAS WRONG. `STORE-AS-CACHE.md`: *the projection creates a false sense
+   *  of coverage — the meaning layer is visible as a NUMBER and unreachable as a
+   *  STRUCTURE.* PL-8 made it reachable as a SET (`leg:hunch` answers which
+   *  inquiries carry hunch debt); this makes it reachable as ROWS (which legs,
+   *  with their role, their ground and their grade_source). §14c calls the pair
+   *  option D and the two halves must COMPOSE rather than duplicate: THE ARM
+   *  CHOOSES THE SET, THIS RETURNS THE GRAIN. There is no new selector here.
+   *  `q` is PL-8's language verbatim, and every operator, negation, parenthesis
+   *  and id restriction it already supports selects the bundles whose meaning
+   *  rows this answers with.
+   *
+   *  IT IS THE SAME COMPILER, WHICH IS THE WHOLE POINT. `compile()` returns a
+   *  seventh statement shape; `#runQuery` executes it and THROWS if it arrives
+   *  without the gate; `viewerPredicate` is still the only place a gate is
+   *  minted. Option B — a second addressable surface — was closed by a standing
+   *  ruling (D-15, and `query.mjs`'s own note that a set resolved by another
+   *  route "would be the second query path this design exists to prevent"), and
+   *  option C buys the grain without spending it.
+   *
+   *  ENVELOPE, IN op=search'S OWN VOCABULARY, because this IS a statement of
+   *  op=search's compiler and a twelfth spelling of "there is more" is what
+   *  REC-55 declined to add. `limit` is the cap APPLIED after clamping, never
+   *  the number asked for; `total` is the gated count of matching rows and
+   *  `offset + count < total` is how a caller tells "this is all of it" from
+   *  "this is the first N" — exactly as op=search has said it since S-10.
+   *
+   *  `total` IS COUNTED THROUGH THE SAME JOINS AND THE SAME PREDICATE as the
+   *  rows, which is what makes hidden identical to absent here: a total larger
+   *  than what the pages can reach is precisely how a viewer learns something
+   *  was withheld. And NOTHING publishes how many rows the gate removed, because
+   *  that count is the leak (REC-36).
+   *
+   *  THE REFUSALS ARE DEC-49's SHAPE. `reason` is the plane's existing word for
+   *  a wire code and is not renamed to `code` here — one fact, one spelling —
+   *  and `check` and `translation` come from `MEANING_READ_CHECKS`, the one row
+   *  that holds all three, so a surface cannot render a translation the plane
+   *  does not send. The known arms in the detail are DRIVEN off the compiler's
+   *  registry rather than typed. */
+  meaningRows(input = {}) {
+    const known = Object.keys(MEANING);
+    const refuse = (key, detail) => {
+      const row = MEANING_READ_CHECKS[key];
+      return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
+    };
+    const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
+    if (!asked)
+      return refuse("MEANING_ROWS_NO_ARM",
+        `op=meaningrows answers at MEANING grain and must be told which: rows=${known.join("|")}. `
+        + "Each reads a different table and answers a different question, so there is no default that "
+        + "would not be answering something you did not ask.");
+    if (!known.includes(asked))
+      return refuse("MEANING_ROWS_UNKNOWN_ARM",
+        `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: `
+        + known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; "));
+
+    const plan = compile({
+      q: String(input.q ?? ""), viewer: input.viewer ?? null,
+      ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
+      rows: asked, rowLimit: input.limit, rowOffset: input.offset,
+    });
+    const tally = { applied: 0 };
+    /* The count FIRST, so a statement that somehow lost the gate throws before
+       any row is assembled rather than after. */
+    const total = this.#runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
+    const rows = this.#runQuery(plan.statements.meaning(), tally);
+
+    return {
+      ok: true,
+      /* The GRAIN travels with the answer, in words, because a consumer that
+         read these rows as bundles would rebuild the false coverage this op
+         exists to remove: an inquiry resting on four legs is FOUR rows here and
+         ONE row through op=search, and both are right. */
+      arm: plan.meaning.arm, table: plan.meaning.table,
+      grain: plan.meaning.grain, identity: plan.meaning.identity,
+      query: { q: String(input.q ?? ""), warnings: plan.warnings,
+               meaningArms: plan.meaningArms },
+      gate: { scope: plan.gate, applied: tally.applied },
+      rows, count: rows.length,
+      limit: plan.meaning.limit, offset: plan.meaning.offset, total,
+    };
   }
 
   /** The fields the surface knows, so a UI can build its own controls from the
@@ -17253,6 +17341,19 @@ export class Store extends DurableObject {
           facetMode: url.searchParams.get("facetmode"),
           widen: url.searchParams.get("widen") !== "0",
           snippetChars: Number(url.searchParams.get("snippet")) || 12,
+        }),
+        /* PL-9 / D-222 option C: the SAME compiler, answered at meaning grain.
+           `q` is the arm language verbatim — PL-8's `leg:`/`resolves:`/`concerns:`
+           select the bundles, `rows` names which meaning table to return at
+           grain. `viewer` is stamped by the control plane exactly as op=search's
+           is, and an absent one compiles to the deny predicate. */
+        meaningrows: () => this.meaningRows({
+          q: url.searchParams.get("q") ?? "",
+          rows: url.searchParams.get("rows"),
+          viewer: url.searchParams.get("viewer"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          ids: Array.isArray(body?.ids) ? body.ids : null,
         }),
         searchfields: () => this.searchFields(),
         /* REC-19: the facts behind op=affordances. The control plane derives

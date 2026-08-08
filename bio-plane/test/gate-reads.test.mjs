@@ -686,6 +686,19 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
   const GATED = {
     list: "REC-25", index: "REC-25", projection: "REC-25", image: "REC-25", file: "REC-25",
     search: "the first gated read", backlinks: "REC-25", affordances: "REC-25",
+    /* PL-9 / D-222 option C, 2026-08-07. It is a SEVENTH STATEMENT SHAPE on
+       op=search's own compiler, so it inherits op=search's gate rather than
+       carrying one — D-15's single compilation point, enforced by the throw in
+       Store#runQuery. Its posture is REC-36's STRONGER one, like op=readingname
+       and for §14c's stated reason: a meaning-layer answer is a CANDIDATE LIST,
+       so a row whose bundle the viewer may not see is WITHHELD ENTIRELY rather
+       than answered with a redacted reference, and no count of what was withheld
+       is published because that count is the leak. `total` is counted through
+       the same joins and the same predicate as the rows, so a total larger than
+       the pages — the way hidden stops being identical to absent — cannot
+       arise. */
+    meaningrows: "PL-9: the meaning-GRAIN read. Same compiler, same gate, and REC-36's withhold-the-row "
+      + "posture because the answer is a candidate list rather than a back-reference.",
     selection: "viewer + owner, both server-stamped",
     selectionlist: "owner, server-stamped: a selection is readable only by the credential that made it",
     dangling: "REC-30: the citing bundle is the row's subject",
