@@ -104,9 +104,27 @@ const OP_ROWS = [...OPS_BLOCK.matchAll(/^ {2}([a-z]+):\s*\{\s*classes:\s*(null|\
 console.log("\n--- the class's REACH, parsed out of the OPS table and asserted whole ---");
 t("the OPS table was actually read (a silent parse failure would make every sweep below vacuous)",
   OP_ROWS.length > 60, true);
-t("EXACTLY TWO ops admit the daemon class, and they are the two verbs DEC-37 scoped it to",
+/* CORRECTED 2026-08-08 BY PL-4, AND NOT EXEMPTED — the rule changed and the
+   assertion changes with it, which is the only honest way to move a totality.
+   THE OLD ASSERTION WAS `["acquire", "monitor"]` AND IT WAS RIGHT WHEN WRITTEN:
+   DEC-37 scoped the daemon to two verbs and said the scope may be *"widened by
+   decision, not by drift"*. THE DECISION EXISTS. SWEEP §4b item 1, taken
+   2026-08-07 by session BOB on Bob's own ruling that *"capturing a document
+   (with provenance preserved) is something the daemon does (sometimes at the
+   suggestion of an AI)"*, decided the capture-request table drained by the
+   daemon. `capturerequestdrain` is that third verb.
+
+   WHAT DID NOT CHANGE, and it is why this widening is not drift: the two READS
+   PL-4 adds deliberately do NOT admit the class (op=acquire's capture-request
+   arm asks the Durable Object directly, so the daemon needs no read), and the
+   new verb's own reach is narrower than its class list — inside op=acquire it
+   admits only a request row the drain itself has put in `draining`. The
+   deny-side sweeps below therefore still range over both new reads, and this
+   assertion still fails the moment a fourth op admits the class. */
+t("EXACTLY THREE ops admit the daemon class: DEC-37's two verbs, plus the capture-request "
+  + "drain widened BY DECISION (SWEEP §4b item 1, 2026-08-07)",
   OP_ROWS.filter((r) => r.classes && r.classes.includes("daemon")).map((r) => r.op).sort(),
-  ["acquire", "monitor"]);
+  ["acquire", "capturerequestdrain", "monitor"]);
 t("and neither of the two lost a class it already had — this widening takes nothing away",
   OP_ROWS.filter((r) => r.op === "acquire" || r.op === "monitor").map((r) => r.classes),
   [["admin", "member", "probe", "daemon"], ["admin", "member", "probe", "daemon"]]);
@@ -354,14 +372,18 @@ try {
      the only thing being asserted and it sits ahead of every handler — so a GET
      reaches it for a POST-only op exactly as a POST would. A representative
      handful would have proved a handful. */
-  const gated = OP_ROWS.filter((r) => r.classes && !["acquire", "monitor"].includes(r.op));
+  /* CORRECTED 2026-08-08 BY PL-4 with the totality above: the exclusion list is
+     the class's OWN reach and it is now three, for the recorded decision stated
+     at that assertion. Everything else in the table is still swept. */
+  const gated = OP_ROWS.filter((r) => r.classes
+    && !["acquire", "monitor", "capturerequestdrain"].includes(r.op));
   const answered = [];
   for (const r of gated) {
     const got = await A.GET(`op=${r.op}&token=${DAEMON}`);
     if (got.status !== 403 || got.body?.error !== "forbidden for token class") answered.push(r.op);
   }
   t("the sweep covered the whole gated surface", gated.length > 60, true);
-  t("and NOT ONE op outside the daemon's two verbs answered it anything but the class refusal",
+  t("and NOT ONE op outside the daemon's three verbs answered it anything but the class refusal",
     answered, []);
 
   console.log("\n--- THE READ SURFACES, called out of the sweep because the posture is a DECISION ---");

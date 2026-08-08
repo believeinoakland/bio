@@ -6865,3 +6865,230 @@ export const BIAS_CHECKS = {
       + 'becoming binding without anybody having offered it.',
   },
 };
+
+/* =========================================================================
+ * PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR AND DEC-47's CONDUCT.
+ *
+ * DEC-47 CLOSED THE AUTHORISATION QUESTION AND LEFT CONDUCT OPEN. Bob,
+ * 2026-08-06: *"the user has already said, in effect, I (we) have opened this
+ * inquiry, which we're using this investigation session to answer. That's your
+ * authorization."* A member asked to approve forty URLs *"has not done the
+ * research and cannot judge them"*, so a per-fetch dialog adds paperwork without
+ * judgement — the empty gate this project refuses everywhere else. NOTHING IN
+ * THIS FAMILY ASKS PERMISSION. EVERY ROW IS ABOUT BEHAVIOUR.
+ *
+ * AND THE CONDUCT IS ENFORCED ONCE, AT THE DRAIN. Not at the request, not at
+ * op=acquire, not in the fleet member. One point, so the rules cannot be half
+ * applied by a caller that reached the store another way, and so a reader
+ * looking for "how does this instance behave out there" finds one span.
+ *
+ * THE THREE CONDUCT RULES, and each is MEASURED rather than stylistic:
+ *   1. A UA WITH A CONTACT URL. D-94's nine-rung ladder, second-path confirmed:
+ *      removing the contact component flips admission 200 -> 403 UNIFORMLY. So
+ *      this is not politeness, it is the thing that decides whether the fetch
+ *      happens at all — and SOURCE-ACCESS.md's standing position is that BIO
+ *      does not disguise its requests. BOB-3 permits the MEMBER'S OWN browser UA
+ *      for publicly available documents, which is delegation rather than
+ *      disguise (authorship is the distinction), and this family admits it as a
+ *      SECOND LEGIBLE FORM rather than as an exemption from legibility.
+ *   2. A PURPOSE TOKEN. The UA's `purpose` component is what lets a source tell
+ *      a capture from a monitoring re-check, so an investigation fetch names
+ *      itself rather than borrowing a word that means something else.
+ *   3. RATE. The per-host governor already paces every outbound fetch; what the
+ *      drain adds is that a host in COOL-OFF is not drained at all, and that one
+ *      tick fetches at most once per host. DEC-47: a stranger's server has no
+ *      relationship with this instance.
+ *
+ * WHAT IS DELIBERATELY NOT A RULE HERE, and it is a RULING rather than an
+ * omission: `robots.txt` DISALLOWS DO NOT BAR CAPTURE OF PUBLICLY AVAILABLE
+ * DOCUMENTS (BOB-3, RULED 2026-08-07, DEC-47's access-parity amendment —
+ * *"members of this workflow should/must have rightful access to the same public
+ * documents any manual user has access to"*). There is no robots row in this
+ * family and the drain fetches no `robots.txt`. The suite drives a document
+ * under a `Disallow` path and asserts it CAPTURES, because a rule that is absent
+ * BY DECISION needs an arm proving the absence is real.
+ * ========================================================================= */
+
+/** The UA `purpose` component this door may name. A CLOSED set: an unknown
+ *  purpose is not a harmless label, it is this instance telling a source
+ *  something false about why it is asking. `investigate` is the token DEC-47
+ *  said an investigation fetch *"introduces or reuses deliberately"*; `acquire`
+ *  is the existing one and is admitted so a run re-fetching a source a member
+ *  already named does not have to misdescribe that either. */
+export const CAPTURE_PURPOSES = ['investigate', 'acquire'];
+
+/** The two LEGIBLE user-agent forms, and there is no third. `civicos` is the
+ *  honest product string with its contact URL (`userAgent()` in index.mjs);
+ *  `member-browser` is BOB-3's delegation of the member's OWN browser UA, which
+ *  is permitted for publicly available documents and is a member speaking as
+ *  themselves through a tool they run. A fabricated string is neither, and this
+ *  door cannot express one. */
+export const CAPTURE_UA_MODES = ['civicos', 'member-browser'];
+
+/** Is this user-agent LEGIBLE — does it name a contact a third party can reach?
+ *  ONE predicate, used by the drain's conduct check and by the suite, so the
+ *  rule and its test cannot disagree. It matches the `(+<url>)` component
+ *  D-94's ladder measured, and it is deliberately a SHAPE test rather than a
+ *  reachability test: whether the URL resolves is SOURCE-ACCESS.md's own open
+ *  item, and a conduct check that fetches would be a conduct check that can fail
+ *  for the network's reasons. */
+export function userAgentIsLegible(ua) {
+  if (typeof ua !== 'string' || ua.trim() === '') return false;
+  return /\(\+https?:\/\/[^\s)]+/.test(ua);
+}
+
+/** THE ONE COMPOSER FOR THE HONEST CIVICOS AGENT, and it is HERE rather than in
+ *  `index.mjs` so that the Durable Object can read the string it is about to
+ *  cause to be sent. `index.mjs`'s `userAgent(env, purpose)` now delegates to
+ *  this and keeps its own name and every call site, so `subresources.test.mjs`'s
+ *  pin — every outbound `"user-agent":` in the control plane goes through
+ *  `userAgent(env, …)` — is untouched.
+ *
+ *  WHY THE MOVE RATHER THAN A SECOND COPY. SOURCE-ACCESS.md records that this
+ *  string replaced *"two bare tokens spread across three call sites that did not
+ *  agree with each other"*, and the 403 that cost three sessions of wrong
+ *  reasoning was the consequence. A conduct check reading a copy would be that
+ *  defect rebuilt one layer down: the drain would approve a string nobody sends.
+ *
+ *  The components are D-94's, and the contact URL is the LOAD-BEARING one:
+ *  removing it flips admission 200 -> 403 uniformly (MEASURED 2026-07-30, nine
+ *  rungs, second path confirmed). */
+export const CIVICOS_CONTACT_URL = 'https://github.com/believeinoakland/bio';
+export function civicosUserAgent(version, instance, purpose) {
+  return `CivicOS/${version || '0.0.0'} (+${CIVICOS_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
+}
+
+export const CAPTURE_REQUEST_CHECKS = {
+  /* ---- THE DOOR. Refused at the request, before any row exists. These are
+     SHAPE rules and NOT conduct: conduct is enforced once, at the drain. ---- */
+  CAPTURE_REQUEST_NO_RUN: {
+    check: 'C-28.1',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'This request did not name the piece of work asking for it, or named one that is not '
+      + 'running here. Every fetch this instance makes on its own is traceable to a session somebody '
+      + 'opened, because that opening is what authorises it.',
+  },
+  CAPTURE_REQUEST_NOT_PUBLIC: {
+    check: 'C-28.2',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'What was asked for is not a public web address. What an investigation session may '
+      + 'reach is what anybody could reach by typing it into a browser, so an address that is not '
+      + 'public on its face is not asked for at all.',
+  },
+  CAPTURE_REQUEST_NOT_AN_INQUIRY: {
+    check: 'C-28.3',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'A capture is requested under a question, and the thing named here is not one. '
+      + 'The question is what the request is accountable to, and a fetch belonging to nothing is a '
+      + 'fetch nobody can later account for.',
+  },
+  /* THE SPINE, AT THE DOOR. Section 4: *"capturing a document (with provenance
+     preserved) is something the daemon does (sometimes at the suggestion of an
+     AI)"* — so the requester holds no capture write at all and never touches the
+     provenance chain, which is the foundation the trust model rests on. A
+     request arriving WITH bytes, a sha or a provenance hop is a caller trying to
+     be the fetcher, and it is refused by name rather than having its fields
+     quietly dropped: a caller told nothing learns nothing. */
+  CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
+    check: 'C-28.4',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'A request asks for a document; it never brings one. The fetch is performed by this '
+      + 'instance itself so that where the bytes came from is something the record established rather '
+      + 'than something it was told, and a provenance chain anybody could hand us is one anybody could '
+      + 'invent.',
+  },
+  /* WHAT IS NOT HERE, AND WHY IT WAS REMOVED RATHER THAN KEPT FOR SYMMETRY.
+     The door also refused an incomplete attribution at one point in this item's
+     construction (C-28.5). DRIVING THE FAMILY EXPOSED IT AS A DEFECT: with the
+     same predicate at the door and at the drain, the door's refusal makes the
+     DRAIN'S unreachable, so one of the two codes could never be driven — and a
+     refusal nobody can drive is a refusal nobody can prove fires, which is
+     DEC-49's floor failing in the same way a control that asserts nothing does.
+     Attribution is judged ONCE, at the drain, for the same reason conduct is:
+     the drain is the last point before anything leaves, and a row can outlive
+     the rules the door applied to it. C-28.5 is therefore UNALLOCATED. */
+
+  /* ---- DEC-47's CONDUCT. ALL OF IT FIRES AT THE DRAIN AND NOWHERE ELSE. ---- */
+
+  /* CONDUCT 1: legibility. */
+  CAPTURE_CONDUCT_UA_ILLEGIBLE: {
+    check: 'C-28.6',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'This instance will not fetch without saying who is asking and how to reach whoever '
+      + 'is running it. Being refused honestly is a fact that can be recorded; being admitted by '
+      + 'disguise is a claim that could not be defended later.',
+  },
+  /* CONDUCT 1b: the member-browser form, which is DELEGATION and not disguise —
+     but only if the member's own agent was actually RECORDED. Inventing one
+     would be the fabricated-Mozilla case wearing BOB-3's clothes, so an
+     unrecorded member agent is refused rather than substituted. */
+  CAPTURE_CONDUCT_UA_UNRECORDED: {
+    check: 'C-28.7',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'This request asked to fetch as the member\'s own browser, and the record does not '
+      + 'hold what that browser is. Presenting an agent nobody actually used would be inventing a '
+      + 'client rather than speaking as one, so it asks rather than guessing.',
+  },
+  /* CONDUCT 2: the purpose token. */
+  CAPTURE_CONDUCT_NO_PURPOSE: {
+    check: 'C-28.8',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'Every request this instance makes says what it is for, so a source can tell a first '
+      + 'capture from a routine re-check and throttle one without blocking the other. This one names '
+      + 'a purpose that is not one of the things it could truthfully be doing.',
+  },
+  /* CONDUCT 3: rate. */
+  CAPTURE_CONDUCT_HOST_HELD: {
+    check: 'C-28.9',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'The site this would fetch from has asked us to slow down, or has refused us recently, '
+      + 'and we are waiting the interval it named. The request is still queued and will be made when '
+      + 'the wait is over — nothing has been lost and nothing needs re-asking.',
+  },
+  CAPTURE_CONDUCT_TICK_SPENT: {
+    check: 'C-28.10',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'This round of fetching has already been to that site once. Requests are spread out '
+      + 'rather than sent in a burst, so this one waits for the next round. It is still queued.',
+  },
+
+  /* ---- THE ATTRIBUTION, composed at the drain, and its own two refusals. ---- */
+  /* DEC-27(b) IS EXPLICIT THAT THE RECORD STATES BOTH — *"the assistant captured
+     this, at Anna's request"* — and this design adds one distinction: the
+     Claude-account principal (WHICH LEVEL of the cascade paid for the reasoning)
+     and the plane-credential principal (whose scope the writes ran under) are
+     DIFFERENT principals. A record naming only one of them is the defect, so the
+     composer REFUSES rather than composing half an attribution, and no capture
+     is performed on a request it cannot account for. */
+  CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: {
+    check: 'C-28.11',
+    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    translation: 'This capture could not be recorded as belonging to anybody in particular, so it was '
+      + 'not made. An act that names one party where two acted reads as though a person did something '
+      + 'a machine did, or the other way round, and that is worse than a missing document.',
+  },
+  /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION AND HAS NO CODE, which is
+     the second thing driving this family corrected. REC-2's `token:<class>`
+     stamp is the record's only durable trace of an unattended write, and a
+     capture attributed to a person's name would be this record claiming a member
+     fetched something they never touched. But the composer builds the actor from
+     `MACHINE_AUTHOR_PREFIX` and a literal, so it CANNOT be a person's name: a
+     refusal for that condition would be a gate for something the code cannot
+     produce — the empty gate this project refuses everywhere else — and it would
+     mint a code nobody could ever drive. The property is ASSERTED over the
+     composer's output instead. C-28.12 is therefore UNALLOCATED.
+
+     THE DRAIN IS THE SOLE FETCHER. op=acquire's capture-request arm admits a row
+     in `draining` and nothing else, and `draining` is set by the drain inside
+     the tick that then fetches. So a caller holding a real request id still
+     cannot make the plane fetch for it. This is the AI-does-not-capture gate
+     expressed as a SHAPE rather than as a class list, which is what makes it
+     hold for a credential class that does not exist yet (PL-11). */
+  CAPTURE_NOT_DRAINING: {
+    check: 'C-28.13',
+    where: 'src/index.mjs captureRequestArm > is-capture-request-arm',
+    translation: 'Only this instance\'s own background worker fetches documents, and it does so from '
+      + 'its own queue. Nothing else can ask it to fetch something right now — including the assistant '
+      + 'that asked for the document in the first place.',
+  },
+};

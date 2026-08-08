@@ -130,6 +130,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* And the catalog's OWN canonical serializer, used for F10's
             idempotence key rather than a second one written here. */
          canonicalJson,
+         /* PL-4 / IS-4 / SWEEP 4b.1: the capture-request door's DEC-49 rows, the
+            two CLOSED vocabularies DEC-47's conduct is expressed in, and the ONE
+            user-agent legibility predicate. Imported for the same reason as
+            everything above it: the drain's conduct check and the suite that
+            drives it must be reading the SAME roster, or the rule and its test
+            can only agree by coincidence. */
+         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
+         civicosUserAgent,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -1815,6 +1823,27 @@ export class Store extends DurableObject {
         due:  (now) => this.#aiRunReapPending(now) > 0 ? now : null,
         wake: (now) => this.#aiRunReapWake(now),
         tick: (now) => ({ airunreap: this.#aiRunReap(now) }) },
+      /* PL-4 / IS-4 / SWEEP 4b.1: THE CAPTURE-REQUEST DRAIN — the NINTH consumer
+         on the one alarm, and ONE APPENDED ENTRY exactly as SCHEDULER.md
+         instructs: *"append an entry to #schedConsumers… Do NOT add a second
+         alarm or a cron; that is the decision this file records."* No cron line
+         is added to wrangler.jsonc and no second alarm exists.
+
+         THIS CONSUMER IS THE DAEMON THE DESIGN MEANS. §4: the AI does not
+         capture, it REQUESTS, and the daemon captures. The request door writes a
+         row and cannot fetch; this tick is the only thing in the plane that
+         turns a row into a fetch, and DEC-47's conduct is enforced inside it and
+         nowhere else.
+
+         Its `tick` is ASYNC (it does a governed acquire through env.SELF, the
+         archive-monitor's precedent) and onAlarm awaits it. Its WAKE is null
+         unless a request is actually waiting AND the instance is configured, so
+         an unconfigured or idle instance holds no alarm at all — the
+         self-termination property REC-1 prized and the Free tier is paid for. */
+      { name: "capture-request-drain",
+        due:  (now) => this.#captureRequestPending() > 0 ? now : null,
+        wake: (now) => this.#captureRequestPending() > 0 ? now + this.#captureRequestTickMs() : null,
+        tick: (now) => this.captureRequestDrain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -1842,7 +1871,8 @@ export class Store extends DurableObject {
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
-        queuerenotify = null, monitorcadence = null, airunreap = null; const probes = [];
+        queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null;
+    const probes = [];
     for (const c of reg) {
       const d = c.due(now);
       if (d === null || d > now + grace) continue;
@@ -1869,6 +1899,11 @@ export class Store extends DurableObject {
          is reported as a test probe, and a reaper that disappears into `probes`
          is a run whose death nobody can see was noticed. */
       else if (c.name === "ai-run-reap") airunreap = r && r.airunreap;
+      /* PL-4, named for the fourth time and for the same reason: an unnamed
+         consumer is reported as a test probe, and a DRAIN that disappears into
+         `probes` is this instance's outward behaviour becoming invisible in the
+         alarm's own account of itself. */
+      else if (c.name === "capture-request-drain") capturerequests = r && r.capturerequests;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -1889,7 +1924,8 @@ export class Store extends DurableObject {
              ...(overduescan ? { overduescan } : {}),
              ...(queuerenotify ? { queuerenotify } : {}),
              ...(monitorcadence ? { monitorcadence } : {}),
-             ...(airunreap ? { airunreap } : {}) };
+             ...(airunreap ? { airunreap } : {}),
+             ...(capturerequests ? { capturerequests } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -11099,13 +11135,94 @@ export class Store extends DurableObject {
     return out;
   }
 
-  /** The three generators, in catalogue order, and the ONE place a CONDITION
+  /** `capture-completed-unattended` (D-61) — ITS SECOND PRODUCER, and PL-4's
+   *  completion notification.
+   *
+   *  THE DESIGN SAYS *"extend the subscriber, do not invent a channel"* (§4, on
+   *  the pursue session waiting on a capture), and this is that: the SAME
+   *  catalogued kind, the same class, a different subject and a different basis.
+   *  A second producer for one kind is not novel — `C-27.13` has two, and PL-3's
+   *  own control arm 6 turns on the distinction.
+   *
+   *  WHY THE FIRST PRODUCER CANNOT COVER THIS CASE, stated rather than left to
+   *  be discovered. `#conditionsCaptureUnattended` requires an EARLIER manifest
+   *  entry authored by a PERSON — its whole condition is "a person's document
+   *  finished by a daemon". A requested capture was never a person's document:
+   *  the run asked for a URL nobody had captured. So the walk finds no `started`
+   *  row and correctly emits nothing, and the member waiting on this capture
+   *  would be told nothing at all.
+   *
+   *  WHAT IT NAMES: BOTH PRINCIPALS, through the one composer the drain used. A
+   *  row whose attribution cannot be composed emits NO ITEM — a notification
+   *  that could not say whose act it was would be the defect DEC-27(b) names,
+   *  surfaced to a member.
+   *
+   *  RECORDED FOR THE NEXT READER: the plan row and INVESTIGATIVE-SESSION.md §4
+   *  both call this "the existing FINDING-class slug". IT IS NOT ONE.
+   *  `queuestate.mjs` has classed `capture-completed-unattended` as a CONDITION
+   *  since REC-32 and has a live producer for it. It is built here as the
+   *  CONDITION it actually is rather than reclassified to match the prose: a
+   *  kind's class decides whether leaving the list is a personal mute or an
+   *  authored record act (D-125, DEC-16), and moving one to match a sentence in
+   *  a plan would be changing doctrine to fix a citation. The discrepancy is
+   *  reported rather than silently absorbed. */
+  #conditionsCaptureRequested(viewer, now) {
+    const out = [];
+    const seen = this.#bundleGate("cr.target", viewer);
+    for (const r of this.#rows(
+      `SELECT cr.* FROM capture_requests cr
+        WHERE cr.state='captured' AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
+      const attribution = this.#captureRequestAttribution(r);
+      /* DEFENCE IN DEPTH, AND STATED AS SUCH RATHER THAN CLAIMED AS A CONTROL.
+         The drain refuses to capture a row it cannot attribute, so no `captured`
+         row reaching this walk can fail the composer today and this `continue`
+         is UNDRIVABLE. It stays because this is a READ over stored rows, which
+         outlive the rules that wrote them, and a member-facing item that could
+         not say whose act it announces is DEC-27(b)'s defect surfaced to a
+         person. It mints no DEC-49 code, which is why it is kept where the two
+         undrivable CODES this item found were removed: an unreachable branch
+         costs a reader a moment, an unreachable code costs the whole family its
+         floor. */
+      if (!attribution.ok) continue;
+      const capturedMs = Date.parse(r.captured_at);
+      out.push({
+        id: `CONDITION::capture-completed-unattended::${r.request}`,
+        class: "CONDITION",
+        kind: "capture-completed-unattended",
+        case: this.#conditionHomes([r.target], viewer),
+        subject: { kind: "capture_request", id: r.request },
+        summary: `${r.address} was captured by the daemon at the investigative session's request`,
+        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT `
+              + "an entry of that document into the leg of a claim: it lands at 'collected' and never "
+              + "higher, and nothing about the record's conclusions has moved.",
+        basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
+                 address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
+                 capture_sha: r.capture_sha, captured_at: r.captured_at,
+                 attribution,
+                 detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, "
+                       + "performed at the session's request, under the plane credential the run holds "
+                       + "and paid for by the level of the Claude-account cascade the run named. Never a "
+                       + "token value, and never a person's name on the act itself." },
+        age: Number.isFinite(capturedMs)
+          ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
+          : { state: "undetermined", reason: "unparseable_captured_at",
+              detail: "the request row carries a completion stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#queueOptions([r.target], viewer),
+      });
+    }
+    return out;
+  }
+
+  /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
   #queueConditions(viewer, now) {
     return [
       ...this.#conditionsGovernorHolding(viewer, now),
       ...this.#conditionsPartialCapture(viewer, now),
       ...this.#conditionsCaptureUnattended(viewer, now),
+      ...this.#conditionsCaptureRequested(viewer, now),
     ];
   }
 
@@ -11783,6 +11900,12 @@ export class Store extends DurableObject {
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
       suggestRefusals: n("suggest_refusals"),
+      /* PL-4 / IS-4: the outbound work list, reported for the same reason and
+         with one more of its own — this is the only counter in the store that
+         says how much traffic this instance is about to send to somebody else's
+         server, and a purge that reported scope ALL while it stood would leave a
+         leftover visible from OUTSIDE the instance. */
+      captureRequests: n("capture_requests"),
 
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
@@ -12906,6 +13029,16 @@ export class Store extends DurableObject {
            good suggestion had already been turned down. For a non-inquiry
            bundleId this DELETE matches no rows. */
         this.sql.exec(`DELETE FROM suggest_refusals WHERE target=?`, bundleId);
+        /* PL-4 / IS-4 / D-113. A capture request is keyed on `request`, so it
+           CANNOT ride the TABLES list and takes its own DELETE in each arm —
+           PL-3's trap arriving through a column name, exactly as delegated. It
+           is found here by `target`, which IS a bundle id. Leaving it would keep
+           a live work item pointed at a question that no longer exists, and the
+           drain would then fetch from somebody's server on behalf of an inquiry
+           nobody can read — a request outliving its accountability, which is the
+           one thing DEC-47's structure is for. For a non-inquiry bundleId this
+           DELETE matches no rows. */
+        this.sql.exec(`DELETE FROM capture_requests WHERE target=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -13048,6 +13181,14 @@ export class Store extends DurableObject {
            silent leftover in its most confusing form — a run resubmitting into
            an empty store, told its submission had already been refused. */
         this.sql.exec(`DELETE FROM suggest_refusals`);
+        /* PL-4 / IS-4 / D-113, the whole-store half of the same trap. A purge
+           reporting scope ALL while a queue of outbound requests stood would be
+           worse than the ordinary silent leftover: the next tick would go and
+           fetch from a stranger's server on behalf of a corpus that no longer
+           exists, so the leftover would be visible from OUTSIDE the instance.
+           The table is keyed on `request` and cannot ride TABLES, so it is
+           cleared here explicitly. */
+        this.sql.exec(`DELETE FROM capture_requests`);
       }
     });
     const after = this.stats();
@@ -13087,7 +13228,10 @@ export class Store extends DurableObject {
                  aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog"),
                  /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
                     by consequence rather than asserted. */
-                 suggestRefusals: d("suggestRefusals") },
+                 suggestRefusals: d("suggestRefusals"),
+                 /* PL-4 / IS-4 / D-113: the outbound request queue a purge took,
+                    proved by consequence rather than asserted. */
+                 captureRequests: d("captureRequests") },
     };
   }
 
@@ -17160,6 +17304,543 @@ export class Store extends DurableObject {
     };
   }
 
+  /* ==============================================================
+   * PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR AND ITS DRAIN.
+   *
+   * THE SPINE, AND IT IS THE ITEM: THE AI DOES NOT CAPTURE. IT REQUESTS, AND
+   * THE DAEMON CAPTURES WITH PROVENANCE PRESERVED. Bob, 2026-08-05: *"capturing
+   * a document (with provenance preserved) is something the daemon does
+   * (sometimes at the suggestion of an AI)."* So the requester holds no capture
+   * write at all and never touches the provenance chain, which is the foundation
+   * the whole trust model rests on. `captureRequest` writes a ROW and cannot
+   * fetch; `captureRequestDrain` fetches and cannot be reached by a caller.
+   *
+   * THE GATE IS A SHAPE, NOT A CLASS LIST, and that is deliberate. op=acquire's
+   * capture-request arm admits a row in `draining`, and `draining` is set by the
+   * drain inside the tick that then fetches — so a caller holding a real request
+   * id still cannot make the plane fetch for it. A class list would have to name
+   * `ai`, a class PL-11 has not minted yet; a shape holds the day it arrives.
+   *
+   * DEC-47's CONDUCT IS ENFORCED ONCE, AT THE DRAIN. The authorisation question
+   * is CLOSED — the inquiry and the session launch ARE the authorisation, and a
+   * member asked to approve forty URLs *"has not done the research and cannot
+   * judge them"*. What remains is behaviour: a UA with a contact URL, a purpose
+   * token, and rate. All three fire in `is-capture-conduct` and nowhere else.
+   *
+   * AND ROBOTS.TXT IS NOT ONE OF THEM. BOB-3, RULED 2026-08-07: disallows do not
+   * bar capture of publicly available documents, and the member-browser UA is
+   * permitted. There is no robots rule in this span and the drain fetches no
+   * `robots.txt`. The suite drives a document under a `Disallow` path and
+   * asserts it CAPTURES, because an absence by decision needs an arm.
+   *
+   * ATTRIBUTION STATES BOTH PRINCIPALS (DEC-27(b), DEC-55.4). The act is the
+   * DAEMON'S, performed AT THE SESSION'S REQUEST, and the record names the
+   * plane-credential principal AND the Claude-account principal — never a token
+   * value, and never a person's name in the actor slot. A record naming one of
+   * the two is the defect, so the composer refuses and the capture is not made.
+   * ================================================================== */
+
+  /** How many requests one drain tick will act on, and how many per host. The
+   *  per-host figure is ONE and it is DEC-47's rate rule in its smallest honest
+   *  form: *"a stranger's server has no relationship with this instance"*, so a
+   *  tick does not burst one host even when the token bucket would admit it. */
+  static CAPTURE_REQUEST_TICK_BATCH = 10;
+  static CAPTURE_REQUEST_PER_HOST_PER_TICK = 1;
+  /** How long a request stays interesting. SCRATCH, on `capture_sessions`'
+   *  shape: a work list with an expiry, not record. */
+  static CAPTURE_REQUEST_TTL_MS = 86_400_000;   // 24h
+  /** The cadence between drain ticks when work is waiting. */
+  static CAPTURE_REQUEST_TICK_MS = 60_000;
+
+  #captureRequestTickMs() {
+    const v = Number(this.env && this.env.CAPTURE_REQUEST_TICK_MS);
+    return Number.isFinite(v) && v >= 0 ? v : Store.CAPTURE_REQUEST_TICK_MS;
+  }
+  /** INERT unless configured, exactly as the archive monitor is: no self
+   *  binding and no daemon credential means no wake, no alarm and no behaviour
+   *  change on an instance that has not wired this. */
+  #captureRequestConfigured() {
+    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());
+  }
+  #captureRequestPending() {
+    if (!this.#captureRequestConfigured()) return 0;
+    return this.#one(`SELECT count(*) c FROM capture_requests WHERE state='requested'`).c;
+  }
+
+  /** op=capturerequest — THE DOOR. It writes a row. It fetches NOTHING.
+   *
+   *  Read this function looking for an outbound call and there is none, which is
+   *  the item's whole claim expressed as an absence: the suite asserts that
+   *  absence over this span's own source, because a fence you can only see by
+   *  reading carefully is a fence that grows a hole nobody notices. */
+  captureRequest(a = {}) {
+    const args = a || {};
+    const refusal = (code, detail, extra) => {
+      const row = CAPTURE_REQUEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+
+    /* DEC-49 REGION is-capture-request
+     *
+     * THE SPAN `CAPTURE_REQUEST_CHECKS`' door rows name (REC-71). A REGION and
+     * not the whole function, so a refusal that arrives here later is not
+     * conscripted into this family by a `where` that claims too much. The local
+     * helper is `refusal` and every code is a STRING LITERAL at its site, which
+     * is what makes arm C of the DEC-49 guard able to COMPARE them rather than
+     * merely read past them (REC-71's measurement, PL-3's fix). */
+    const run = String(args.run ?? "").trim();
+    const runRow = run
+      ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run)
+      : null;
+    if (!runRow || runRow.status !== "running")
+      return refusal("CAPTURE_REQUEST_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
+              + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
+              + `live session is a fetch nothing authorised.`
+            : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
+              + "(DEC-47), and a request naming no session names no authorisation.",
+        { run: run || null });
+
+    const address = String(args.address ?? "").trim();
+    if (!isPublicHttpsLocator(address))
+      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
+        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a `
+        + `session may reach to "areas that anybody can go through", and this address is not one on `
+        + `its face.`, { address: address || null });
+    let host = null;
+    try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
+    if (!host)
+      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
+        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is "
+        + "computed from one.", { address });
+
+    const target = String(args.target ?? "").trim();
+    const gate = viewerPredicate(args.viewer ?? null);
+    const b = target
+      ? this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                  target, ...gate.args)
+      : null;
+    if (!b || normalizeType(b.object_type) !== "inquiry")
+      return refusal("CAPTURE_REQUEST_NOT_AN_INQUIRY",
+        `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is `
+        + `accountable to the question it was asked under, and a fetch belonging to nothing is a fetch `
+        + `nobody can account for afterwards.`, { target: target || null });
+
+    /* THE SPINE, AT THE DOOR. A request that arrives carrying bytes, a digest or
+       a provenance hop is a caller trying to be the fetcher. Refused BY NAME
+       rather than by dropping the fields: CLAUDE.md's rule is that a provenance
+       hop a caller can hand us is one a caller can invent, and a caller whose
+       fields were silently ignored learns nothing about where the fence is. */
+    const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]
+      .filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
+    if (brought.length)
+      return refusal("CAPTURE_REQUEST_CARRIES_A_CAPTURE",
+        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does `
+        + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
+        + `structural gate, DEC-60).`, { fields: brought });
+
+    /* END DEC-49 REGION is-capture-request */
+
+    /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
+       caller that could name its own principals could name somebody else's —
+       AND THEY ARE NOT JUDGED HERE. The first draft of this door refused an
+       incomplete attribution at the write as well as at the drain, and DRIVING
+       THE FAMILY EXPOSED THAT AS A DEFECT: with identical predicates at both
+       points, the door's refusal makes the DRAIN'S unreachable, so one of the
+       two codes could never be driven and a refusal nobody can drive is a
+       refusal nobody can prove fires (DEC-49's floor, and the same defect class
+       as a control that passes while asserting nothing). It is judged ONCE, at
+       the drain, which is also where this item's conduct is judged and for the
+       same reason: the drain is the last point before anything leaves, and a row
+       can outlive the rules the door applied to it. */
+
+    /* Conduct is NOT checked here and that is the design rather than an
+       omission: one enforcement point at the drain. What IS recorded here is
+       what the drain will enforce over — the purpose token and the UA mode ride
+       the row unvalidated, and the drain turns away what it cannot honour. */
+    const purpose = String(args.purpose ?? "").trim();
+    const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+
+    const nowMs = args.at ? Date.parse(args.at) : Date.now();
+    const now = Store.#aiIso(nowMs);
+    const request = String(args.request ?? "").trim()
+      || `CR-${now.replace(/[-:TZ]/g, "")}-${Store.#rand(6)}`;
+
+    /* IDEMPOTENT ON (run, address). A run that asks twice for the same document
+       has asked once: the second ask returns the standing row rather than
+       queueing a second fetch at somebody else's server. That is DEC-47's rate
+       rule arriving at the door as arithmetic rather than as politeness. */
+    const standing = this.#one(
+      `SELECT * FROM capture_requests WHERE run=? AND address=? AND state IN ('requested','draining','captured')`,
+      run, address);
+    if (standing)
+      return { ok: true, request: standing.request, run, target: standing.target, address,
+               host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
+               state: standing.state, requested: false, already: true,
+               principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
+
+    this.sql.exec(
+      `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?)`,
+      request, run, target, address, host, purpose, uaMode,
+      runRow.principal_plane, runRow.principal_claude,
+      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS));
+    return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
+             state: "requested", requested: true, already: false,
+             principals: { plane: runRow.principal_plane, claude: runRow.principal_claude },
+             detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
+                   + "this queue, and DEC-47's conduct rules are applied there." };
+  }
+
+  /** THE ATTRIBUTION, composed in ONE place, refusing rather than half-stating.
+   *
+   *  DEC-27(b): *"the assistant captured this, at Anna's request"* — the record
+   *  states BOTH. Here that is three names and not two: the ACTOR is the daemon
+   *  and must be MACHINE-SHAPED (REC-2's `token:<class>`, never a person's
+   *  name), and behind it stand the run's two principals, which are different
+   *  principals and not two spellings of one. A record naming only one of the
+   *  two is the defect this composer exists to make impossible. */
+  #captureRequestAttribution(row) {
+    const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
+    /* TRIMMED, and that is not tidiness. `aiRunOpen`'s own guard is `!principal`
+       — so a run opened with a principal of WHITESPACE passes it and stores " ",
+       and a record naming " " names nobody while looking like it names
+       somebody. That is the worse direction of the two: an absent principal is
+       visibly absent, a blank one reads as present. Caught here rather than
+       repaired in PL-5's landed check, which is a neighbouring family's rule and
+       is delegated rather than reached into (REC-71's lesson). */
+    const plane = String((row && row.principal_plane) || "").trim();
+    const claude = String((row && row.principal_claude) || "").trim();
+    if (!row || !plane || !claude)
+      return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
+               plane: plane || null, claude: claude || null };
+    /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION, and there is deliberately
+       NO REFUSAL FOR IT. `actor` is `MACHINE_AUTHOR_PREFIX` — REC-2's
+       `token:` — concatenated with a literal, so it cannot be a person's name
+       and a branch refusing one would be a gate for a condition this code cannot
+       produce. That is the empty gate this project refuses everywhere else, and
+       it would also mint a DEC-49 code nobody could ever drive. The property is
+       asserted instead, over this composer's own output, in
+       test/capturerequests.test.mjs. */
+    return {
+      ok: true, actor, machine_attributed: true,
+      at_the_request_of: { run: row.run, inquiry: row.target },
+      principals: { plane, claude },
+      /* The sentence a surface renders, composed from the fields above so it
+         cannot say something the fields do not. Both principals appear in it
+         because DEC-27(b) is about what the RECORD STATES, and a structured
+         field a surface may or may not open is not a statement. */
+      statement: `the daemon captured this, at the investigative session's request `
+               + `(run ${row.run}), under ${plane}, paid by ${claude}`,
+    };
+  }
+
+  /** op=capturerequestdrain, and the `capture-request-drain` alarm consumer.
+   *  THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH. */
+  async captureRequestDrain({ limit = null, actor = "consumer", now = null } = {}) {
+    if (!this.#captureRequestConfigured())
+      return { configured: false, drained: 0, captured: [], refused: [], held: [], remaining: 0,
+               detail: "no self binding or no daemon credential: this instance drains nothing and "
+                     + "holds no alarm for it" };
+    /* NOT RE-ENTRANT, for the reason MEASURED on the archive monitor: a tick
+       that reaches op=acquire over env.SELF re-enters this same Durable Object
+       and can arm an alarm underneath the tick still awaiting its own fetch. */
+    if (this.#tickRunning.has("capture-request-drain"))
+      return { configured: true, busy: true, drained: 0, captured: [], refused: [], held: [],
+               remaining: this.#captureRequestPending() };
+    this.#tickRunning.add("capture-request-drain");
+    try {
+      const nowMs = Number.isFinite(now) ? now : Date.now();
+      const at = Store.#aiIso(nowMs);
+      const cap = Math.max(1, Math.min(Number(limit) || Store.CAPTURE_REQUEST_TICK_BATCH,
+                                       Store.CAPTURE_REQUEST_TICK_BATCH));
+      const queued = this.#rows(
+        `SELECT * FROM capture_requests WHERE state='requested' ORDER BY requested_at, request LIMIT ?`, cap);
+      const captured = [], refused = [], held = [];
+      const hostsThisTick = new Map();
+
+      for (const q of queued) {
+        const verdict = this.#captureRequestConduct(q, nowMs, hostsThisTick);
+        if (!verdict.ok) {
+          const row = CAPTURE_REQUEST_CHECKS[verdict.code];
+          const answer = { request: q.request, address: q.address, host: q.host,
+                           code: verdict.code, check: row.check, translation: row.translation,
+                           detail: verdict.detail };
+          this.sql.exec(
+            `UPDATE capture_requests SET state=?, code=?, detail=?, attempts=attempts+1, updated=? WHERE request=?`,
+            verdict.terminal ? "refused" : "requested", verdict.code, verdict.detail, at, q.request);
+          /* THE RUN IS TOLD, IN THE RECORD'S OWN VOCABULARY. A governed hold is
+             D-104's split and carries `governed: true` with
+             LOOKED_INDETERMINATE, because OUR pacing holding a host is a fact
+             about US and never about the source — writing "source unreachable"
+             here is the exact thing D-104 exists to stop. */
+          this.#aiRunAppend(q.run, {
+            level: "document", subject: q.address, state: "LOOKED_INDETERMINATE",
+            governed: verdict.governed === true,
+            condition: verdict.condition || null,
+            detail: `${row.check} ${verdict.code}: ${verdict.detail}`,
+          }, at, 0);
+          (verdict.terminal ? refused : held).push(answer);
+          continue;
+        }
+
+        /* `draining` IS THE FENCE. It is set HERE, by the drain, in the tick
+           that then fetches — and op=acquire's capture-request arm admits
+           nothing else. So the window in which this plane will fetch for a
+           request is exactly the window in which the drain is doing it. */
+        this.sql.exec(`UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
+                      at, q.request);
+        hostsThisTick.set(q.host, (hostsThisTick.get(q.host) || 0) + 1);
+        const r = await this.#fireCaptureRequest(q);
+        if (r.ok) {
+          this.sql.exec(
+            `UPDATE capture_requests SET state='captured', code=NULL, detail=?, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
+            verdict.attribution.statement, r.sha || null, at, at, q.request);
+          /* PRESENT, and the detail is the ATTRIBUTION — so the run's own log
+             carries the sentence naming both principals rather than a bare
+             "captured". */
+          this.#aiRunAppend(q.run, {
+            level: "document", subject: q.address, state: "PRESENT", governed: false,
+            detail: verdict.attribution.statement,
+          }, at, 0);
+          captured.push({ request: q.request, address: q.address, sha: r.sha || null,
+                          grade: r.grade ?? null, attribution: verdict.attribution });
+        } else {
+          this.sql.exec(
+            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
+            "CAPTURE_FETCH_FAILED", String(r.reason || "").slice(0, 400), at, q.request);
+          this.#aiRunAppend(q.run, {
+            level: "document", subject: q.address, state: "LOOKED_INDETERMINATE", governed: false,
+            detail: `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`,
+          }, at, 0);
+          held.push({ request: q.request, address: q.address, host: q.host,
+                      code: "CAPTURE_FETCH_FAILED", detail: String(r.reason || "") });
+        }
+      }
+      return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
+               captured, refused, held, remaining: this.#captureRequestPending() };
+    } finally { this.#tickRunning.delete("capture-request-drain"); }
+  }
+
+  /** DEC-47's CONDUCT, and this is the ONE place it is applied. */
+  #captureRequestConduct(q, nowMs, hostsThisTick) {
+    /* DEC-49 REGION is-capture-conduct
+     *
+     * THE SPAN `CAPTURE_REQUEST_CHECKS`' conduct and attribution rows name
+     * (REC-71). Everything between this marker and its `END` is a DEC-49
+     * GOVERNED SITE: every refusal inside it owes a code with a canned
+     * translation, and the codes are STRING LITERALS at their sites so arm C can
+     * compare them rather than read past them.
+     *
+     * ORDER IS DELIBERATE. Attribution first, because a capture nobody can
+     * account for should not be made even if every other rule passes; then the
+     * two rules about WHAT WE SAY (purpose, agent), because they are facts about
+     * this submission and cost nothing; then RATE last, because it is the only
+     * one that is TEMPORARY — a held request is still queued, and running it
+     * last means a request refused for what it says is never also reported as
+     * merely paced. */
+    const attribution = this.#captureRequestAttribution(q);
+    if (!attribution.ok)
+      return { ok: false, terminal: true, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
+               detail: `this request names `
+                     + `${attribution.plane && !attribution.claude ? "only the plane principal" : ""}`
+                     + `${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}`
+                     + `${!attribution.plane && !attribution.claude ? "neither principal" : ""}`
+                     + `, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes `
+                     + `ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made `
+                     + `for an act the record could not attribute.` };
+
+    /* CONDUCT 2 — THE PURPOSE TOKEN. Checked before the agent because it is a
+       COMPONENT of the agent: `purpose` is what lets a source tell a first
+       capture from a routine re-check, so a purpose outside the roster would
+       produce an agent string that misdescribes what we are doing. */
+    if (!CAPTURE_PURPOSES.includes(q.purpose))
+      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
+               detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
+                     + `this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
+                     + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
+                     + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
+
+    /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms. */
+    if (!CAPTURE_UA_MODES.includes(q.ua_mode))
+      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
+               detail: `'${String(q.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible `
+                     + `agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, `
+                     + `and a mode this door cannot express is a string nobody could account for.` };
+    /* THE TWO FORMS ARE LEGIBLE FOR DIFFERENT REASONS, and conflating them was a
+       real defect in the first draft of this check — caught by driving BOB-3's
+       own permitted case, which the contact-URL test REFUSED. A browser agent
+       carries no `(+url)` component and never has: what makes it honest is that
+       it is an agent a member ACTUALLY USED, recorded on the question, delegated
+       rather than invented. What makes the CivicOS form honest is the contact
+       component D-94 measured. So the rule is applied per form, and a single
+       predicate over both would have made the ruling unimplementable. */
+    let ua;
+    if (q.ua_mode === "member-browser") {
+      /* BOB-3 / DEC-47's access-parity amendment: the member's OWN browser agent
+         is PERMITTED for publicly available documents, because delegating an
+         agent a member actually uses is speaking as themselves through a tool
+         they run. What it is NOT is a licence to invent one — so the agent must
+         have been RECORDED on the inquiry, and an unrecorded one is refused
+         rather than substituted. */
+      ua = this.#captureRequestMemberAgent(q.target);
+      if (!ua)
+        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",
+                 detail: `this request asked to fetch as the member's own browser and `
+                       + `${q.target} records no member agent. BOB-3 permits DELEGATING an agent a `
+                       + `member actually used; composing one would be inventing a client that does `
+                       + `not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.` };
+    } else {
+      /* The honest product string, composed by the catalog's ONE composer — the
+         same function op=acquire will send, not a copy of it. THE CONTACT-URL
+         RULE APPLIES HERE and only here: D-94's ladder measured that removing
+         the component flips admission 200 to 403 uniformly, so a CivicOS string
+         without it is both dishonest and useless. */
+      ua = civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, q.purpose);
+      if (!userAgentIsLegible(ua))
+        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
+                 detail: `the agent this fetch would carry names no contact anybody could reach. D-94's `
+                       + `ladder MEASURED that removing the contact component flips admission 200 to 403 `
+                       + `uniformly, so this is the component that decides whether the fetch happens at `
+                       + `all — and being blocked honestly is a fact we can record.` };
+    }
+
+    /* CONDUCT 3 — RATE, and BOTH halves are NON-TERMINAL: a held request is
+       still queued and is fetched when the wait is over. */
+    if (this.#captureRequestHostHeld(q.host, nowMs))
+      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
+               code: "CAPTURE_CONDUCT_HOST_HELD",
+               detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
+                     + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
+                     + `more tightly than re-fetch because a stranger's server has no relationship `
+                     + `with this instance.` };
+    if ((hostsThisTick.get(q.host) || 0) >= Store.CAPTURE_REQUEST_PER_HOST_PER_TICK)
+      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
+               code: "CAPTURE_CONDUCT_TICK_SPENT",
+               detail: `this tick has already fetched from ${q.host} once. A person opens a few tabs `
+                     + `and then reads; a loop opens forty, so the drain spreads requests across ticks `
+                     + `rather than emptying the queue at one host's expense.` };
+    /* END DEC-49 REGION is-capture-conduct */
+
+    return { ok: true, ua, attribution };
+  }
+
+  /** Is the per-host governor holding this host? A NON-CONSUMING read — the
+   *  drain must not spend a token it is not about to use, because op=acquire's
+   *  own `governedFetch` spends one on the way out and a double spend would
+   *  make this instance pace itself twice as hard as it declared. */
+  #captureRequestHostHeld(host, nowMs) {
+    const r = this.#one(`SELECT cooloff_until FROM host_governor WHERE host=?`, host);
+    return !!(r && Number(r.cooloff_until) > nowMs);
+  }
+
+  /** The member agent RECORDED on the inquiry, or null. Read from the question's
+   *  own frontmatter, which is where inquiry creation would put it — and null is
+   *  answered honestly rather than defaulted, because a default here is exactly
+   *  the invented client BOB-3 does not license. */
+  #captureRequestMemberAgent(target) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!md || md.content === null) return null;
+    const fm = parseFrontmatter(md.content).data || {};
+    const ua = fm.member_user_agent;
+    return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
+  }
+
+  /** The fetch, through op=acquire, exactly as the archive monitor fires its
+   *  own — the capture path, its provenance and its grade stay where they
+   *  already live, and this consumer only DECIDES and INVOKES.
+   *
+   *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
+   *  the purpose and the agent are read by op=acquire FROM THE ROW, through
+   *  `captureRequestDraining`, so what leaves this instance is exactly what the
+   *  conduct check judged. Passing them in the body would have made the check an
+   *  assertion about a value the sender could still differ from, which is the
+   *  "checked one thing, sent another" gap in its smallest form. */
+  async #fireCaptureRequest(q) {
+    const token = this.#monitorToken();
+    try {
+      const res = await this.env.SELF.fetch(
+        new Request(`https://self/api/?op=acquire&token=${encodeURIComponent(token)}`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ via: "capture-request", request: q.request }),
+        }));
+      const out = await res.json().catch(() => null);
+      const doc = out && out.ok && out.document;
+      if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256,
+                        grade: doc.capture && doc.capture.grade };
+      return { ok: false, reason: (out && (out.reason || out.error)) || `http ${res.status}` };
+    } catch (e) {
+      /* D-205: the message is the plane's own, never the exception's, because a
+         thrown error can carry a query string and a query string can carry a
+         credential. */
+      return { ok: false, reason: "the fetch did not complete and this plane did not record why" };
+    }
+  }
+
+  /** Is this request row in `draining`? op=acquire's capture-request arm asks
+   *  exactly this and admits nothing else.
+   *
+   *  IT ANSWERS WITH THE ROW'S OWN address, purpose AND agent, and that is the
+   *  point rather than a convenience: op=acquire then takes NONE of them from
+   *  the request body. The drain sends two fields — `via` and `request` — and
+   *  everything that decides what leaves this instance is read from the row the
+   *  conduct check just judged. A value a caller can supply is a value a caller
+   *  can differ from what was checked. */
+  captureRequestDraining({ request }) {
+    const r = request
+      ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request)
+      : null;
+    if (!r)
+      return { request: request || null, found: false, state: null, draining: false,
+               address: null, purpose: null, ua_mode: null, agent: null };
+    const agent = r.ua_mode === "member-browser"
+      ? this.#captureRequestMemberAgent(r.target)
+      : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
+    return { request: r.request, found: true, state: r.state, draining: r.state === "draining",
+             address: r.address, purpose: r.purpose, ua_mode: r.ua_mode, agent: agent || null,
+             run: r.run, target: r.target };
+  }
+
+  /** op=capturerequests — a read, for a run and for an operator.
+   *
+   *  GATED AT THE TARGET through `#bundleGate`, the one predicate every read
+   *  here compiles (D-15's single compilation point), and `count` is counted
+   *  BEHIND the gate rather than beside it, so a total larger than the rows
+   *  cannot arise. A request under a question the caller was never invited to is
+   *  absent exactly as one that was never made, and nothing publishes how many
+   *  the gate removed, because that count is the leak. An absent or unrecognised
+   *  viewer stamp compiles to DENY, so a missing stamp is an outage and never a
+   *  disclosure. */
+  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
+    const cap = Math.max(1, Math.min(Number(limit) || 200, 1000));
+    const seen = this.#bundleGate("cr.target", viewer);
+    const where = [`(${seen.sql})`], args = [...seen.args];
+    if (run) { where.push("cr.run=?"); args.push(String(run)); }
+    if (target) { where.push("cr.target=?"); args.push(String(target)); }
+    if (state) { where.push("cr.state=?"); args.push(String(state)); }
+    /* CAP + 1 SO THE ANSWER CAN SAY IT WAS CUT. REC-57's rule and this suite's
+       own: a read cut at its cap must SAY SO or a caller believes it saw
+       everything. `limit` is the bound APPLIED after clamping, never the number
+       asked for, so an over-ask is answered at the ceiling and the ceiling is
+       what is published. */
+    const found = this.#rows(
+      `SELECT cr.* FROM capture_requests cr WHERE ${where.join(" AND ")}
+        ORDER BY cr.requested_at, cr.request LIMIT ?`, ...args, cap + 1);
+    const rows = found.slice(0, cap);
+    return { count: rows.length, limit: cap, truncated: found.length > cap, requests: rows.map((r) => ({
+      request: r.request, run: r.run, target: r.target, address: r.address, host: r.host,
+      purpose: r.purpose, ua_mode: r.ua_mode, state: r.state, code: r.code, detail: r.detail,
+      capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
+      updated: r.updated, expires: r.expires, captured_at: r.captured_at,
+      /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
+         drain used. A row whose principals cannot both be named answers with the
+         refusal rather than with a half attribution — the read cannot state less
+         carefully than the write did. */
+      attribution: this.#captureRequestAttribution(r) })) };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -20151,6 +20832,22 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer"),
         }),
+        /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
+           `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`
+           writes a row and cannot fetch, `capturerequestdrain` fetches and is
+           not a member verb, and `capturerequestdraining` is a READ op=acquire's
+           capture-request arm asks so it can admit the drain and nobody else. */
+        capturerequest: () => this.captureRequest({
+          ...(body || {}),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        capturerequestdrain: () => this.captureRequestDrain(body || {}),
+        capturerequestdraining: () => this.captureRequestDraining(
+          body || { request: url.searchParams.get("request") }),
+        capturerequests: () => this.captureRequests({
+          run: url.searchParams.get("run"), target: url.searchParams.get("target"),
+          state: url.searchParams.get("state"), limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer") }),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are

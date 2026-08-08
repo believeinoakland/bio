@@ -1994,6 +1994,69 @@ CREATE TABLE IF NOT EXISTS suggest_refusals (
 );
 CREATE INDEX IF NOT EXISTS suggest_refusals_target ON suggest_refusals(target);
 
+-- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
+--
+-- THE AI DOES NOT CAPTURE. IT REQUESTS, AND THE DAEMON CAPTURES. That is the
+-- structural gate DEC-47 kept when it withdrew the authorisation gate, and this
+-- table IS the gate: a row here is an ASK, it carries no bytes, no sha and no
+-- provenance, and nothing that writes it can fetch anything. The daemon drains
+-- it, and DEC-47's conduct rules are enforced at that drain and nowhere else.
+--
+-- WHY A TABLE RATHER THAN A CONTROL-PLANE ENQUEUE. index.mjs deliberately omits
+-- taskenqueue from the OPS table, with the reasoning written into the table
+-- itself: no control-plane route may put an event in the queue on its own
+-- account. A scoped enqueue op would have crossed that. The table keeps the door
+-- the OPS comment closed still closed, keeps the daemon the sole fetcher, and
+-- gives DEC-47's conduct ONE enforcement point.
+--
+-- SCRATCH-CLASS, in capture_sessions' and ai_runs' family and NOT record. It
+-- holds no member act, nothing derived from one, and nothing a case is built on:
+-- it is a work list with an expiry. The CAPTURE it produces is record and lands
+-- exactly where the daemon's captures always have, at collected and never
+-- higher.
+--
+-- BOTH PRINCIPALS ARE COLUMNS AND NEITHER IS NULLABLE (DEC-27(b), DEC-55.4).
+-- They are COPIED FROM THE RUN at the request rather than resolved at the drain,
+-- because a run is scratch with an expiry and the attribution must survive it:
+-- an act attributable only while the run that asked is still alive is an act
+-- nobody can account for afterwards. A record naming ONE of the two is the
+-- defect DEC-27(b) names, so the drain refuses to compose an attribution that
+-- cannot state both.
+--
+-- host IS DERIVED AT THE WRITE and stored, so the drain's rate rule reads one
+-- column instead of re-parsing a locator inside the enforcement point. A URL
+-- this plane cannot parse never becomes a row at all.
+--
+-- state IS THE FENCE AS WELL AS THE LIFECYCLE. requested -> draining -> captured
+-- is the only route to bytes, and draining is set by the drain alone, inside the
+-- tick that then fetches. op=acquire admits the capture-request arm only for a
+-- row in draining, so a control-plane caller holding a real request id still
+-- cannot make the plane fetch for it: the AI capturing directly rather than
+-- requesting is refused by that shape and not by a class list.
+CREATE TABLE IF NOT EXISTS capture_requests (
+  request           TEXT PRIMARY KEY,
+  run               TEXT NOT NULL,    -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down
+  target            TEXT NOT NULL,    -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find
+  address           TEXT NOT NULL,    -- the public https locator asked for
+  host              TEXT NOT NULL,    -- derived at the write from address
+  purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
+  ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
+  principal_plane   TEXT NOT NULL,    -- copied from the run: whose scope the writes ran under
+  principal_claude  TEXT NOT NULL,    -- copied from the run: WHICH LEVEL of the cascade paid
+  state             TEXT NOT NULL,    -- requested | draining | captured | refused
+  code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
+  detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
+  capture_sha       TEXT,             -- what the daemon captured. WRITTEN BY THE DRAIN ONLY
+  attempts          INTEGER NOT NULL DEFAULT 0,
+  requested_at      TEXT NOT NULL,
+  updated           TEXT NOT NULL,
+  expires           TEXT NOT NULL,
+  captured_at       TEXT
+);
+CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
+CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
+CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
