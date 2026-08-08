@@ -8804,7 +8804,7 @@ async function finderSubjectsRoute(plan){
   if(plan.subjects.length){
     const ids = plan.subjects.map(s=>s.subject);
     const answers = await Promise.all(ids.map(id=>
-      recR("concerns", { id }).then(r=>({ id, r }),
+      recR("concerns", { id, limit:String(MEANING_ASK_LIMIT) }).then(r=>({ id, r }),
         e=>({ id, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }))));
     return finderSubjectsCollect(answers, true);
   }
@@ -8820,7 +8820,7 @@ async function finderSubjectsRoute(plan){
   if(!ents.length) return { asked:true, alias, byId:false, exactOnly:true,
                             entities:[], errors:[], documents:[], count:0 };
   const answers = await Promise.all(ents.map(e=>
-    recR("concerns", { id:e.entity_id }).then(r=>({ id:e.entity_id, entity:e, r }),
+    recR("concerns", { id:e.entity_id, limit:String(MEANING_ASK_LIMIT) }).then(r=>({ id:e.entity_id, entity:e, r }),
       err=>({ id:e.entity_id, entity:e, err:(err && typeof err === "object") ? err : { reason:"NO_ANSWER", detail:String(err) } }))));
   return { ...finderSubjectsCollect(answers, false), alias, exactOnly:true };
 }
@@ -11198,8 +11198,8 @@ async function showEntity(entityId, known, skipActs){
     }
     /* The reverse index, and the connections among what it returns. */
     let concerns = { documents:[] }, connections = { connections:[] };
-    try{ concerns = await recR("concerns", { id:entityId }); }catch(_){ concerns = { documents:[], _err:true }; }
-    try{ connections = await recR("connections", { id:entityId }); }catch(_){ connections = { connections:[] }; }
+    try{ concerns = await recR("concerns", { id:entityId, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ concerns = { documents:[], _err:true }; }
+    try{ connections = await recR("connections", { id:entityId, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ connections = { connections:[] }; }
     if(res) res.innerHTML =
         subjEntityHtml(entity)
       + subjRelationsHtml(entity)
@@ -11250,14 +11250,81 @@ function subjRelationsHtml(e){
   return `<section class="tsec"><h2>Declared relations</h2><div class="subj-ent">${cards}</div></section>`;
 }
 
+/* THE NUMBER THIS FILE ASKS THE THREE MEANING-LAYER READS FOR — op=concerns,
+   op=connections and op=resolutions — and that is ALL it is. REC-60 gave all
+   three the same default of 500 and a ceiling of 5000; the plane clamps whatever
+   it is given and PUBLISHES the clamp, so every sentence below states the bound
+   the record APPLIED and never this figure. It is a request parameter, not a
+   claim, and nothing member-facing reads it. Named to end in `LIMIT` so ARM E's
+   walk in `bound-sweep.test.mjs` tracks it: a bound constant that reaches a
+   sentence a member reads is the defect that walk exists to catch, and a
+   constant it cannot see is a constant nothing is watching. */
+const MEANING_ASK_LIMIT = 500;
+
+/* UI-42, 2026-08-07 — `op=concerns`'s BOUND, IN ONE PLACE, READ OFF THE WIRE.
+   ==========================================================================
+   WHY THIS FUNCTION EXISTS AT ALL, and it is a correction rather than a feature.
+   Until REC-60 landed on 2026-08-07, `op=concerns` applied NO bound, and two
+   member-facing surfaces said so in words — `loadResolveCandidates` told a member
+   verbatim that documents already resolved to a subject "are added separately and
+   are not capped", on BOTH branches, so they read it whether or not the plane had
+   stated its other bound. REC-60 capped the op at a default of 500 and a ceiling
+   of 5000. THE SENTENCE BECAME FALSE TO A MEMBER'S FACE and nothing went red,
+   because the UI suite pinned it against a fixture. This project ranks a surface
+   claiming more than the record can support as its worst defect class, and a
+   stated-and-now-false completeness claim is worse than an unstated bound.
+
+   WHAT THE BOUND IS OVER, AND IT IS NOT DOCUMENTS. This is REC-60's own
+   distinction and it must travel with the number, because reporting the bound
+   over the wrong set would be a SECOND overclaim replacing the first. `op=concerns`
+   scans RESOLUTION ROWS — one per (reference, entity) pair — and COLLAPSES them to
+   distinct captures. `limit` is the cap on the ROWS SCANNED; `count` is the
+   documents they collapsed to and may be far smaller. The plane says at the site
+   why it cannot be otherwise: a bound over `documents` could only be applied by
+   scanning an unbounded number of rows first, which is the defect being fixed. So
+   the sentence names resolutions, and a member reading it is not invited to think
+   the number is a count of documents.
+
+   NEITHER FIGURE IS RE-DERIVED AND NEITHER HAS A FALLBACK, which is UI-41's rule
+   on this same screen and is kept: `limit` is the cap the record APPLIED after
+   clamping, never the number asked for; `truncated` is the record saying that cap
+   actually cut this answer. Where the record published no bound this screen SAYS
+   IT DOES NOT KNOW, because a number invented to fill that gap reads exactly as an
+   answered bound does. Three-way and not two: stated-and-not-cut earns the bound
+   sentence, stated-and-cut earns the cut sentence with it, and ABSENT earns
+   neither and says so.
+
+   ONE FUNCTION, BOTH SCREENS — ARM D's pattern, and the reason is DEC-49. Who owns
+   member-facing wording is DEC-49's open subject, so this item lifts what the
+   record publishes and puts the wording in ONE place: a ruling moves both screens
+   by editing here, and the two can never drift apart into saying different things
+   about one op's bound. `what` names the set being bounded on the calling screen
+   and is the only authored part. */
+function concernsBoundHtml(ans, what){
+  const bound = Number(ans && ans.limit);
+  const boundKnown = Number.isFinite(bound) && bound > 0;
+  if(!boundKnown)
+    return ` The record did not say what bound it applied to ${what}, so this screen cannot tell you whether all of them are here &mdash; and it will not put a number of its own there.`;
+  const cut = !!ans && ans.truncated === true;
+  return ` The record answered ${what} at a bound of ${bound} resolutions read &mdash; that bound is over the resolutions the record reads, not over the documents they collapse to, because it cannot know how many documents they make until it has read them.`
+    + (cut
+       ? ` <b>The record says that answer was CUT</b> &mdash; more resolutions carry this subject than it read, so a document already resolved to this subject can be missing from this list.`
+       : ``);
+}
+
 /* (2) Every document that concerns the subject (op=concerns), each with its
    resolution grade shown HONESTLY. The established / needs_confirmation flags are
    the op's, read straight through subjGradeBadge — a Grade C reads "unconfirmed",
-   never as established. */
+   never as established.
+
+   UI-42: AND THE BOUND THE RECORD APPLIED, which this panel never stated because
+   until 2026-08-07 there was none to state. An unstated bound reads as
+   completeness, and this heading — "Documents that concern this subject" — reads
+   as all of them. The figure comes off the wire through the one function above. */
 function subjConcernsHtml(c){
   const docs = c.documents || [];
   const head = `<section class="tsec"><h2>Documents that concern this subject</h2>`
-    + `<p class="subj-note">Each document below carries a reference the record resolved to this subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.</p>`;
+    + `<p class="subj-note">Each document below carries a reference the record resolved to this subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.${c._err ? "" : concernsBoundHtml(c, "this list")}</p>`;
   if(c._err) return head + `<div class="empty">The record could not answer which documents concern this subject.</div></section>`;
   if(!docs.length) return head + `<div class="empty">No captured document has been resolved to this subject yet.</div></section>`;
   const rows = docs.map(d=>{
@@ -11815,8 +11882,16 @@ async function loadResolveCandidates(){
   /* And the documents already resolved to this subject, so a member can run the
      recogniser again after registering a new name — a grade is IMPROVABLE, and a
      C becomes an A the moment the record can match an identifier. */
-  let already = [];
-  try{ already = (await recR("concerns", { id:(e&&e.entity_id) })).documents || []; }catch(_){ already = []; }
+  let already = [], concernsAns = null;
+  /* UI-42: THE ASK IS STATED ON THE WIRE NOW. This call inherited whatever cap the
+     plane happened to apply and said nothing about it, which is the shape
+     `bound-sweep`'s WALK 2 exists to forbid — and the walk could not see it,
+     because REC-60 caps with `limit = null` plus an internal clamp and WALK 1's
+     old extractor only recognised `limit = <digits>`. Both are corrected. */
+  try{
+    concernsAns = await recR("concerns", { id:(e&&e.entity_id), limit:String(MEANING_ASK_LIMIT) });
+    already = (concernsAns && concernsAns.documents) || [];
+  }catch(_){ already = []; concernsAns = null; }
   for(const d of already) if(!seen.has(d.capture_sha)) seen.set(d.capture_sha, { ...d, already_resolved:true });
   INTENT_SUBJ.docs = [...seen.values()];
   /* WHAT THIS LIST IS AND IS NOT, said plainly rather than left to be inferred,
@@ -11841,9 +11916,24 @@ async function loadResolveCandidates(){
      screen stays green over a list that silently stops. The count bound is now
      the fifth claim, stated on every answer rather than only when it bites,
      because a bound a member is told about only sometimes is one they cannot
-     rely on. Which HALF it bounds is stated too: op=concerns below is uncapped,
-     so the already-resolved documents are whole and only the name-lookup half
-     stops — a bound reported over the wrong set would be its own overclaim. */
+     rely on. Which HALF it bounds is stated too — and the CLAUSE THAT SAID SO IS
+     CORRECTED HERE RATHER THAN LEFT (UI-42, dated 2026-08-07).
+
+     IT SAID: "op=concerns below is uncapped, so the already-resolved documents
+     are whole and only the name-lookup half stops." That was TRUE when UI-39
+     wrote it and REC-60 made it FALSE on 2026-08-07: op=concerns now applies a
+     default of 500 and a ceiling of 5000, and publishes the cap it applied. The
+     member-facing sentence built on it — "(Documents already resolved to this
+     subject are added separately and are not capped.)", on BOTH branches — was a
+     LIVE OVERCLAIM to a member's face for as long as it stood, and nothing went
+     red over it because the pin drove a fixture.
+
+     The second half of the old clause SURVIVES AND IS THE REASON FOR THE NEW
+     SENTENCE'S SHAPE: a bound reported over the wrong set would be its own
+     overclaim. op=concerns bounds the RESOLUTION ROWS it reads, not the documents
+     they collapse to, so `concernsBoundHtml` names resolutions and never
+     documents. Replacing one overclaim with another was the failure available
+     here, and it is what that function's own comment guards. */
   /* THE BOUND AND WHETHER IT BIT, BOTH READ OFF THE WIRE (UI-41). `limit` is the
      cap the record APPLIED after clamping; `truncated` is the record saying that
      cap actually cut this answer. Neither is re-derived here and NEITHER HAS A
@@ -11854,8 +11944,11 @@ async function loadResolveCandidates(){
   const planeBound = Number(ans.limit);
   const boundKnown = Number.isFinite(planeBound) && planeBound > 0;
   const candBound = boundKnown
-    ? ` The record answered this lookup at a bound of ${planeBound} documents by name, so if more than that carry one of this subject&rsquo;s names, the ones past ${planeBound} are not on this list. (Documents already resolved to this subject are added separately and are not capped.)`
-    : ` The record did not say what bound it applied to this lookup, so this screen cannot tell you where the list stops &mdash; and it will not put a number of its own there. (Documents already resolved to this subject are added separately and are not capped.)`;
+    ? ` The record answered this lookup at a bound of ${planeBound} documents by name, so if more than that carry one of this subject&rsquo;s names, the ones past ${planeBound} are not on this list.`
+    : ` The record did not say what bound it applied to this lookup, so this screen cannot tell you where the list stops &mdash; and it will not put a number of its own there.`;
+  /* THE OTHER HALF'S BOUND, off ITS OWN op's wire — not assumed, not inherited
+     from the sentence above, and not stated as an absence of one. */
+  const alreadyBound = concernsBoundHtml(concernsAns, "the documents already resolved to this subject");
   /* The record's own flag, not `count >= limit`. The two are NOT equivalent: the
      plane also sets this when the ALIAS page filled, a second place the bound
      bites that this screen could never see and never once reported. */
@@ -11867,7 +11960,7 @@ async function loadResolveCandidates(){
   const unusableNote = unusable.length
     ? ` ${unusable.length===1?"One name":`${unusable.length} names`} this subject is registered under &mdash; ${unusable.map(x=>`&ldquo;${esc(x)}&rdquo;`).join(", ")} &mdash; ${unusable.length===1?"has":"have"} no word in ${unusable.length===1?"it":"them"} to look anything up by, so nothing was looked up under ${unusable.length===1?"it":"them"}.`
     : "";
-  const note = `<p class="subj-note">These are the documents whose readings carry one of this subject&rsquo;s names &mdash; as the reference the source itself assigned, as that reference&rsquo;s key, or as the name the reading recorded &mdash; plus the ones already resolved to it. Nothing here is settled: these are candidates for you to confirm, and only resolving a document records anything. What the lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading recorded in none of those three places, or under a spelling none of its registered names reaches, is not here &mdash; and neither absence says anything about whether such a document exists.${candBound}${atBoundNote}${unusableNote}</p>`;
+  const note = `<p class="subj-note">These are the documents whose readings carry one of this subject&rsquo;s names &mdash; as the reference the source itself assigned, as that reference&rsquo;s key, or as the name the reading recorded &mdash; plus the ones already resolved to it. Nothing here is settled: these are candidates for you to confirm, and only resolving a document records anything. What the lookup reaches, so this list is not read as the whole of what exists: it ignores capitalisation and punctuation; it tries every name this subject is registered under, which is the only way a document that writes just an abbreviation is ever reached &mdash; register the abbreviation as one of this subject&rsquo;s names and it will be; and it does <b>not</b> ignore accents, so &ldquo;Protege&rdquo; will not find &ldquo;Prot&eacute;g&eacute;&rdquo;, because putting the wrong subject on a document is the costlier mistake. A document that names this subject in words its reading recorded in none of those three places, or under a spelling none of its registered names reaches, is not here &mdash; and neither absence says anything about whether such a document exists.${candBound}${atBoundNote}${alreadyBound}${unusableNote}</p>`;
   if(!INTENT_SUBJ.docs.length){
     out.innerHTML = note + `<div class="empty">No captured document&rsquo;s reading carries one of this subject&rsquo;s names &mdash; not as a reference, not as a reference key, and not as a recorded name.</div>`;
     return;
@@ -12117,7 +12210,7 @@ async function progPaintInstance(){
   const out = $("#pg-inst"); if(!out) return;
   let inst = null, docs = [];
   try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }catch(_){ inst = null; }
-  try{ docs = (await recR("concerns", { id: PROG.entity.entity_id })).documents || []; }catch(_){ docs = []; }
+  try{ docs = (await recR("concerns", { id: PROG.entity.entity_id, limit:String(MEANING_ASK_LIMIT) })).documents || []; }catch(_){ docs = []; }
   PROG.instance = inst; PROG.docs = docs;
   const stages = (inst && inst.found && inst.stages && inst.stages.length) ? inst.stages : (PROG.def.stages||[]).map(s=>({
     stage_key:s.stage_key, label:s.label, required:s.required, present:false, documents:[], discharged:false, exceptions:[] }));
@@ -12282,8 +12375,8 @@ function docFindingOverdue(f){ return !!f && f.kind === "overdue_successor"; }
 async function docKnowsPanel(captureSha){
   if(!captureSha) return "";   // no primary capture on this bundle: nothing per-document to say
   let resolutions = null, connections = null;
-  try{ resolutions = await recR("resolutions", { sha256:captureSha }); }catch(_){ resolutions = { _err:true }; }
-  try{ connections = await recR("connections", { sha256:captureSha }); }catch(_){ connections = { _err:true }; }
+  try{ resolutions = await recR("resolutions", { sha256:captureSha, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ resolutions = { _err:true }; }
+  try{ connections = await recR("connections", { sha256:captureSha, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ connections = { _err:true }; }
   const prog = await docProgressions(captureSha);
   /* pre-resolve subject labels for the resolutions rows (bounded, deduped) */
   const labels = new Map();
