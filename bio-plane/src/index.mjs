@@ -450,6 +450,23 @@ const OPS = {
      ordinals, which a query string cannot express honestly — op=publish's and
      op=inquirydivide's precedent exactly. */
   inquiryground:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* PL-2 / IS-2: THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE — the acts that
+     settle which reading of the evidence a question's answer rests on.
+     Conclude's class list for conclude's reason: a machine class REACHES all six
+     and is refused BY THE STORE (MACHINE_CANNOT_MOVE_VERSION) rather than being
+     absent from this table, fail closed, because "the AI holds no op that
+     accepts" (INVESTIGATIVE-SESSION.md section 4) is a rule about who the caller IS
+     and is enforced on the author stamp below.
+     One `target` and one `version` each, like conclude and reopen: one reading
+     is settled at a time, and a bulk version would be the checkbox these
+     constructs exist to refuse. The REASON arrives in the POST body because it
+     is prose and a query string is a poor place for a sentence a member wrote. */
+  versionaccept:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  versionreject:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  versionconsider: { classes: ["admin", "member", "probe"],      mutating: true  },
+  versionrevert:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  versioncurrent:  { classes: ["admin", "member", "probe"],      mutating: true  },
+  versionhide:     { classes: ["admin", "member", "probe"],      mutating: true  },
   /* REC-24 (c)/(d): THE TWO OPS THAT OPERATE AN ACTION — the first ops in this
      table whose subject is an action at all. `STATES.action` has carried five
      states and seven edges since the catalog was written and nothing wrote them,
@@ -995,6 +1012,33 @@ const DECLARATION_ACTIONS = ["strengthbar"];
    `asserted_by`/`at` on every row before stamping — the op=promote
    `ownerMemberId` discipline — and this stamp is where the name comes from. */
 const STRUCTURE_ACTIONS = ["inquiryground"];
+/* PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS, in their own array
+   for the reason STRUCTURE_ACTIONS has one: they share a stamp, a capability and
+   a class list, and a list written out six times in four places is the drift
+   that made DISPOSITIONS one array.
+
+   THE `author` STAMP IS THE FIRST OF THE THREE LAYERS the fence around these
+   acts is made of, and it is worth naming all three here because a reader
+   meeting one of them will assume it is the whole thing:
+
+     1. HERE — a machine credential is stamped `token:<class>` and a
+        caller-supplied `author` is OVERWRITTEN, never honoured. Without this a
+        machine could sign a member's name to the decision.
+     2. THE ENDPOINT — `NEEDS` requires `contribute`, so a session that does not
+        hold it is refused before the store is reached.
+     3. THE TRANSITION — the store refuses a machine identity BY SHAPE through
+        REC-46's one predicate (MACHINE_CANNOT_MOVE_VERSION).
+
+   Each layer absorbs the others when it is whole, which is exactly why
+   VERIFICATION rule 3a requires the control to break EACH ONE with the other two
+   HELD OPEN; `test/versionstate.control.mjs` does that and nothing less would
+   prove any of the three is doing anything.
+
+   Machine classes REACH all six and are refused by the store rather than being
+   absent from the table — conclude's posture, fail closed, so the refusal says
+   what is wrong instead of "requires a credential you have". */
+const VERSION_ACTIONS = ["versionaccept", "versionreject", "versionconsider",
+                         "versionrevert", "versioncurrent", "versionhide"];
 const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue"];
@@ -1105,14 +1149,14 @@ const SESSION_OPS = {
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
-                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS]),
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
-                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, "memberadd", "memberset",
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
 
@@ -1217,6 +1261,24 @@ const NEEDS = {
      because capabilities gate SESSIONS and the rule here is about who a session
      IS. */
   inquiryground:    "contribute",
+  /* PL-2 / IS-2: the six version acts ride `contribute` like every other corpus
+     write and mint NO fifth capability token. CAPABILITIES.md §4 is explicit
+     that a fifth would break the pattern and would need §5 reopened, and what a
+     group's record stands on is not a permission question — a group does not
+     hold a "settle a reading" right distinct from the right to write the record.
+     The NAMED-MEMBER requirement is enforced by the store on the author stamp,
+     exactly as release's, conclude's and inquiryground's are, because
+     capabilities gate SESSIONS and the rule here is about who a session IS.
+     THIS IS FENCE LAYER 2 (see VERSION_ACTIONS above). A member session without
+     `contribute` is refused here and never reaches the store — which is exactly
+     why the negative control has to break this row with the other two layers
+     standing, or the transition refusal absorbs it and proves nothing. */
+  versionaccept:    "contribute",
+  versionreject:    "contribute",
+  versionconsider:  "contribute",
+  versionrevert:    "contribute",
+  versioncurrent:   "contribute",
+  versionhide:      "contribute",
   /* REC-24: BOTH ACTION OPS RIDE `contribute`, and NO NEW CAPABILITY TOKEN is
      minted — the item says so and the reasoning is the one every act above
      already runs on. Membership §5's four rights are the whole set; a fifth
@@ -1566,11 +1628,9 @@ const json = (o, status = 200) =>
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
 
-/* ======================================================================
-   REC-52: A FAILURE TO ANSWER IS NOT AN ANSWER, AND THE PLANE MUST NOT
+/* ===============================================================   REC-52: A FAILURE TO ANSWER IS NOT AN ANSWER, AND THE PLANE MUST NOT
    CONVERT ITS OWN INTO A CLAIM ABOUT THE RECORD.
-   ======================================================================
-
+   ===============================================================
    THE DEFECT THIS CLOSES, stated once so the next reader does not have to
    reconstruct it. The Durable Object answers in exactly one envelope:
 
@@ -1793,8 +1853,7 @@ export default {
         return json({ ok: true, result: out.result }, 200);
       }
 
-      /* ===================================================================
-         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
+      /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
          part that matters — nothing withheld, because there is nothing here
          that was not deliberately published.
 
@@ -4797,6 +4856,11 @@ export default {
            gates through the same `#bundleGate` every read here compiles and
            fails closed on an absent stamp, like every op in this list. */
         || op === "biasmanifest"
+        /* PL-2 / IS-2: the six acts name an inquiry, and make-current also names
+           a project. A question the caller was never invited to must refuse
+           exactly as an absent one does, so the store gates both through the same
+           predicate and fails closed on an absent stamp, like every op here. */
+        || VERSION_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -4895,8 +4959,19 @@ export default {
        overwritten rather than honoured. It is NOT added to STATE_ACTIONS: it
        moves no state and applies to no selection, so it would inherit an `owner`
        stamp and a set-application shape it does not have. */
+    /* PL-2 / IS-2 joins them, and this is FENCE LAYER 1 (see VERSION_ACTIONS
+       above). The name this stamps is the name that goes against "this is the
+       reading this record stands on" and against the reason a member gave for
+       turning one down — the two facts D-214 says the whole rejection record
+       exists to hold. A caller-supplied `author` is OVERWRITTEN rather than
+       honoured, which is what makes the store's MACHINE_CANNOT_MOVE_VERSION
+       refusal possible at all: a machine arrives honestly named `token:<class>`
+       instead of borrowing a person's. It is NOT added to STATE_ACTIONS: these
+       move no bundle state and apply to no selection, so they would inherit an
+       `owner` stamp and a set-application shape they do not have. */
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
         || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)
+        || VERSION_ACTIONS.includes(op)
         || op === "provenancechain")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
