@@ -573,6 +573,25 @@ t("REC-60: in the SPELLING THE PLANE ALREADY USES — `limit` beside `truncated`
     return [r.bound.includes("limit"), r.more.includes("truncated")];
   }), [[true, true], [true, true], [true, true]]);
 
+/* ------------------------------------------------- REC-66 · op=connect, AT SOURCE.
+   The op D-225's sweep FOUND and REC-60 deliberately did not fold in, because bounding it
+   needed its own interface break. It is this walk's class read one step earlier: the three
+   above returned an unbounded ANSWER, this one did unbounded WORK to produce it. The walk
+   cannot see that difference — it grades what a method publishes — so these two arms are
+   only the half it CAN judge, and `test/derivation-bounds.test.mjs` is the half it cannot.
+   Stated here rather than left implicit, because a walk trusted past its reach is how
+   `op=airunlog` sat outside every bucket for two days. */
+t("REC-66: `op=connect` is OFF the bare roster and ON the bounded one — the scan behind the "
++ "derivation carries a LIMIT, measured off the source rather than asserted about it",
+  [BARE_OPS.includes("connect"), BOUNDED_OPS.includes("connect")], [false, true]);
+t("REC-66: and it publishes in the spelling the plane already uses — `limit` beside `truncated`, "
++ "REC-60's pair on the three reads next door, with `document_limit` as the second bound rather "
++ "than a second vocabulary",
+  (() => { const r = READS.get(OPS.get("connect"));
+           return r ? [r.bound.includes("limit"), r.bound.includes("document_limit"), r.more.includes("truncated")]
+                    : "WALK FOUND NO READ FOR op=connect"; })(),
+  [true, true, true]);
+
 /* ------------------------------------------------------- THE RATCHET.
    The residual roster is REAL and this item does not pretend to have emptied it. What is
    pinned is that it cannot GROW: a new read that publishes a collection off an unbounded
@@ -607,11 +626,21 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    it can only now say that what it publishes is not this. A phantom member of a
    CEILING is the shape PL-15 named one correction earlier: a ceiling that counts
    non-defects cannot be held. */
+/* CORRECTED 2026-08-08 (REC-66), not exempted, and 39 was the true measurement on
+   the day REC-67 wrote it. 39 -> 38 for ONE reason and it is the OTHER kind of
+   arrival from REC-67's: no phantom left the roster and the reader did not
+   change — `op=connect` was a REAL member and it was FIXED. `deriveConnections`
+   read the entity's resolutions with no LIMIT and emitted every pair, which is
+   this roster's own definition twice over, and it now bounds the SCAN and
+   publishes `limit`/`document_limit` beside `truncated`.
+   THE MEASUREMENT IS THE WALK'S, TAKEN BY RUNNING IT: it printed 38 against a
+   ceiling of 39 and the FLOOR below is what forced this figure to be moved
+   deliberately rather than quietly enjoyed. Both halves moved in one edit. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom) and fails here",
-  BARE_OPS.length <= 39, true);
++ "phantom; REC-66 FIXED one member) and fails here",
+  BARE_OPS.length <= 38, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -623,8 +652,13 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
   /* MOVED 2026-08-08 (REC-67) IN THE SAME EDIT AS THE CEILING, and this arm is
      exactly the reason the move is deliberate rather than silent: the roster
      shrank by one and this floor is what forced somebody to say WHY. The answer
-     is recorded above the ceiling — a phantom left, no read was fixed. */
-  BARE_OPS.length >= 39, true);
+     is recorded above the ceiling — a phantom left, no read was fixed.
+     MOVED AGAIN 39 -> 38, 2026-08-08 (REC-66), same edit as the ceiling and for
+     the OPPOSITE reason to REC-67's: this time a read WAS fixed. The arm did its
+     job on a clean tree — it failed the moment `op=connect` came off the roster,
+     which is the only reason this figure is being written by hand rather than
+     drifting down unremarked. */
+  BARE_OPS.length >= 38, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.

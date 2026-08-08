@@ -294,6 +294,15 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    publishes. Both are driven below the loop rather than inside it, on
    `op=suggest`'s precedent, because the loop's descriptor asks for a small bite
    and a completeness flag and a tick has no bite to take. */
+/* CORRECTED 2026-08-08 (REC-66), not exempted, and 25 was the true measurement on
+   the day PL-14 wrote it. 25 -> 26, MEASURED by running the walk in this worktree
+   and taking what it PRINTED (it reported 26 against a pin of 25), never by adding
+   one to PL-14's figure. The arrival is `op=connect`, and it is a SEVENTH kind on
+   this roster: not a new capped read, not a read that gained a bound, but a
+   DERIVATION that gained one — the bound is on the SCAN and the WRITE, and the
+   answer is bounded only as a consequence. It carries `LIMIT ?` against
+   `#MEANING_LIMIT_DEFAULT`/`_MAX`, the `named-cap` shape this walk has recognised
+   since REC-57, so nothing about the detector had to move to admit it. */
 t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two the item named",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
@@ -362,7 +371,7 @@ t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two th
    can produce a version over 500 legs — the WRITE cap is 120 — so the refusal
    would be a code nobody could drive, which PL-4 recorded as the reason to
    delete rather than ship one. The honest fact is published instead. */
-  OPS.size, 25);
+  OPS.size, 26);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -806,6 +815,27 @@ const DRIVEN = [
     lost: "whether these are ALL the readings of the evidence this question carries or the first N — and a "
         + "member choosing between accounts of the evidence while an account they were never shown sits "
         + "behind a cut is the record deciding an argument by omission" },
+  /* REC-66 / D-224, 2026-08-08: the DERIVATION, and it is a SEVENTH kind of arrival
+     on this roster. Every read above bounds an ANSWER over rows that already
+     exist; this op bounds the WORK that CREATES them — it read the entity's
+     resolutions with no LIMIT and wrote k(k-1)/2 rows, so a cap on the array it
+     returned would have left the scan and the write exactly as they were (D-227,
+     one step earlier). It takes a `limit` in PAIRS and answers in
+     `op=readingname`'s vocabulary, `limit` beside `truncated`, because a caller's
+     question is the same one — is this all of them — even though what was cut is
+     the derivation rather than the page.
+     IT IS DRIVEN IN THE LOOP RATHER THAN BESIDE IT, unlike op=suggest and the
+     drain, and that is a fact about the op: it does have a bite to take, and the
+     bite is measured in documents the derivation was allowed to read. The half
+     the loop CANNOT see — that the SCAN and not the slice is what shrank — is
+     `test/derivation-bounds.test.mjs`, which drives a store with more documents
+     than the bound admits. */
+  { op: "connect", bite: 1, whole: 5000,
+    drive: (n) => POST(`op=connect&token=mem-r57`, { entityId: ENT, assertedBy: "r57", limit: n }),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether the record worked out the connections among ALL the documents concerning this subject "
+        + "or among the first N of them — and a derivation silently cut is a graph a member reads as "
+        + "whole, on the one act whose cost grows as k(k-1)/2" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");

@@ -3649,3 +3649,58 @@ unreachable arm from an absent one — DRIVEN against the real control plane:**
 `{ok:false, reason:"NOT_A_PROJECT", got:"inquiry"}`, and `op=reinstate` answers identically.
 `#spliceBasis` has exactly ONE caller in the plane. **A basis leg has a producer and no
 withdrawal**, which is REC-72's own shape one altitude up and is delegated open.
+
+## 2026-08-08 · D-224 — THE CONNECTION CURVE, MEASURED AT LAST (REC-66, worktree agent-a6c072dccb45cdaae)
+
+**D-224 was raised on 2026-08-06 with an explicit instruction — *"a measurement first, and it
+is cheap … Do not cap it before measuring; the point of the row is that nobody knows the
+curve"* — and it had never been taken.** REC-66 took it before choosing a bound, and the
+figures decided the bound rather than confirming one.
+
+INSTRUMENT: `bio-plane/test/connections-growth.measure.mjs`, run directly
+(`cd bio-plane && node test/connections-growth.measure.mjs 10 100 500 1000`). It promotes k
+synthetic documents, testifies each onto one synthetic subject, and drives **one `op=connect`**
+per subject. Bytes are the STORE's own (`op=stats` → `dbBytes`, i.e. workerd's
+`ctx.storage.sql.databaseSize`); the duration is the harness's wall clock around the single
+call. Miniflare on a laptop, so **the duration is an order of magnitude and never a latency
+budget; `dbBytes` is the figure that transfers.** Measured against the UNBOUNDED derivation —
+the state the op was in — with the bound removed by simply predating it.
+
+| k (documents on one subject) | connection rows | k(k−1)/2 | dbBytes delta | bytes/row | one derive |
+| --- | --- | --- | --- | --- | --- |
+| 10 | 45 | 45 | 28,672 | 637 | 1 ms |
+| 50 | 1,225 | 1,225 | 974,848 | 796 | 15 ms |
+| 100 | 4,950 | 4,950 | 3,948,544 | 798 | 53–65 ms |
+| 200 | 19,900 | 19,900 | 15,872,000 | 798 | 268 ms |
+| 500 | 124,750 | 124,750 | 100,155,392 | 803 | 2,038 ms |
+| 1,000 | 499,500 | 499,500 | 397,930,496 | 797 | 10,348 ms |
+
+**THE ROW COUNT IS EXACTLY k(k−1)/2 AT EVERY LEVEL** — the curve D-224 predicted, now
+measured rather than argued — and the cost per row is FLAT at ~798 bytes, so the storage
+curve is the pair curve times a constant.
+
+**WHAT THE NUMBERS DECIDE, and they are the reason the bound is where it is:**
+
+- **ONE subject at k=1,000 consumes 398 MB — about 4% of the 10 GB per-object ceiling
+  D-190 records as a VENDOR CLAIM — and takes 10.3 s inside a single synchronous
+  `transactionSync`.** On a Durable Object that is one thread. D-190's own row says its
+  slope "prices CAPTURE ONLY … a FLOOR on cost / an OVERSTATEMENT of capacity" precisely
+  because its measured store had an EMPTY meaning layer; this is the missing half.
+  **60,800 bundles of headroom is not headroom** if one heavily-covered subject can take a
+  twenty-fifth of the object.
+- **The bound REC-66 shipped is 500 pairs by default and 5,000 at the ceiling** —
+  `#MEANING_LIMIT_DEFAULT`/`#MEANING_LIMIT_MAX`, the pair REC-60 already brought
+  `op=concerns`, `op=resolutions` and `op=connections` to, so no figure is invented. Read
+  against this table: the ceiling is **~4 MB and ~65 ms of write in one transaction**
+  (k=100, 4,950 pairs) and the default is **~400 KB and under 2 ms** (32 documents, 496
+  pairs). What it refuses to do in one call is the k=1,000 row above.
+- **The DOCUMENT bound is not a second figure**: it is the inverse of the quadratic taken
+  from the pair bound (`#maxEndsForPairs`), so 500 pairs admits 32 documents and 5,000
+  admits 100, and the two can never disagree.
+
+**WHAT THIS DOES NOT MEASURE, stated rather than left to be assumed:** the alarm-driven
+sweep's cost across MANY dirty entities in one tick (this measures one entity per call);
+read-side cost of `op=connections` over a large connection table; and whether pairs should
+be materialised at all above some k, which is D-224's remaining design question and is
+NOT closed by this measurement — the bound makes the cost knowable and refusable, it does
+not decide the model.

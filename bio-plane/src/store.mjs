@@ -1637,7 +1637,16 @@ export class Store extends DurableObject {
      delete in that order means a crash between the two leaves the entity dirty and
      it is simply re-derived next tick — the safe failure direction (re-derive, not
      skip). The whole body is synchronous (deriveConnections uses transactionSync),
-     so no resolve can interleave between reading the batch and clearing it. */
+     so no resolve can interleave between reading the batch and clearing it.
+
+     REC-66: THE SWEEP TAKES THE DEFAULT PAIR BOUND, AND THAT IS A CHOICE RATHER THAN AN
+     OMISSION. This is the path D-224 (ii) is about — background write amplification on a
+     Durable Object whose storage ceiling is itself unrecorded debt (D-190) — so the batch
+     bound and the per-entity bound now compose: at most `#connectionDeriveBatch()` entities
+     per tick, at most 496 pairs (32 documents) each. A caller who wants an entity derived
+     wider asks for it explicitly through op=connect, where the bound it applied is
+     published; an alarm that quietly derived at the CEILING would be the largest write in
+     the plane happening where nobody asked for it. */
   #deriveConnectionsSweep() {
     const batch = this.#rows(
       `SELECT entity_id FROM connection_dirty ORDER BY stamped_at, entity_id LIMIT ?`,
@@ -9659,6 +9668,19 @@ export class Store extends DurableObject {
              asserted_by: r.asserted_by, basis: r.basis, at: r.at };
   }
 
+  /* THE INVERSE OF THE QUADRATIC (REC-66). How many ENDS may be derived over before the
+     pairs they form exceed `pairCap` -- k(k-1)/2 <= pairCap solved for k, then walked to
+     the exact integer rather than trusted to `Math.sqrt`'s last bit. It is the whole
+     mechanism by which a bound on the ANSWER becomes a bound on the SCAN: the derivation
+     reads DOCUMENTS and produces PAIRS, so the only way to bound the work is to bound the
+     documents it may read, and the figure that bounds them is not free to choose. */
+  static #maxEndsForPairs(pairCap) {
+    let e = Math.max(2, Math.floor((1 + Math.sqrt(1 + 8 * Math.max(1, pairCap))) / 2));
+    while (e > 2 && (e * (e - 1)) / 2 > pairCap) e--;
+    while (((e + 1) * e) / 2 <= pairCap) e++;
+    return e;
+  }
+
   /* op=connect: DERIVE and persist the connections among every captured document that
      concerns one entity. Reads the entity's resolutions (FW-7) exactly as the reverse
      index does, collapses them to the STRONGEST grade each capture resolved to the entity
@@ -9667,13 +9689,63 @@ export class Store extends DurableObject {
      (the framework inferred it). Canonical pair order (a < b) means (X,Y) and (Y,X) are
      ONE row; a re-derivation after a resolution's grade was RAISED (FW-7) upserts in place,
      so a connection is improvable too. A PROGRESSION INSTANCE -- an N-stage chain of real
-     documents threaded by an entity -- is slice B; this forms the two-node base case. */
-  deriveConnections({ entityId, assertedBy = "system" } = {}) {
+     documents threaded by an entity -- is slice B; this forms the two-node base case.
+
+     REC-66 / D-224 / D-227 -- THE BOUND IS ON THE DERIVATION, AND THAT IS THE WHOLE ITEM.
+     This op was D-225's class one step earlier and strictly worse than the three REC-60
+     fixed: it read the entity's resolutions with NO LIMIT and emitted every pair, so the
+     WORK was unbounded and not merely the answer. Capping the answer here would have left
+     the unbounded scan and the unbounded WRITE exactly where they were -- D-227's finding
+     on this file's own siblings, arriving one step earlier -- so the bound is applied where
+     the work happens and the answer's bound is a CONSEQUENCE of it rather than a slice.
+
+     THE ONE FIGURE A CALLER GIVES IS THE PAIR BOUND, and the document bound is DERIVED
+     from it by #maxEndsForPairs, so the two can never disagree: at the default 500 pairs
+     the scan may read 32 documents (496 pairs), at the 5000 ceiling 100 documents (4,950).
+     NEITHER FIGURE IS NEW -- 500/5000 is #MEANING_LIMIT_DEFAULT/#MEANING_LIMIT_MAX, the
+     pair REC-60 brought op=concerns, op=resolutions and op=connections to.
+
+     MEASURED, NOT CHOSEN BY FEEL (D-224's own instruction, `test/connections-growth.measure.mjs`,
+     2026-08-08): 798 bytes per connection row and a synchronous derive of 65 ms at k=100.
+     So the 5000-pair ceiling is ~4 MB and ~65 ms of write in ONE transaction on the object,
+     and the shape it refuses to do is what the same instrument measured at k=1000 -- 499,500
+     rows. A ROW BUDGET sits under the document bound as well, because one capture may carry
+     many resolution rows to one entity: the scan may return #MEANING_LIMIT_MAX rows and no
+     more, and a trailing PARTIAL capture group is dropped rather than collapsed, since a
+     group cut mid-way would take a WEAKER grade than the record holds.
+
+     WHAT A TRUNCATED DERIVATION MEANS, said here because it is a fact about the RECORD and
+     not about this answer: every connection written is TRUE, and the set is the first N
+     documents by capture_sha rather than all of them. `truncated` says so on this answer;
+     op=connections cannot see it, which is raised as D-237 rather than left implicit. */
+  deriveConnections({ entityId, assertedBy = "system", limit = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)" };
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
-    const rows = this.#rows(
-      `SELECT capture_sha, bundle_id, grade FROM resolutions WHERE entity_id=? ORDER BY capture_sha`, entityId);
+    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
+    const endsCap = Store.#maxEndsForPairs(cap);
+    const rowCap = Store.#MEANING_LIMIT_MAX;
+    /* THE SCAN ITSELF IS BOUNDED, TWICE AND FOR TWO DIFFERENT REASONS. The inner select
+       bounds it by DOCUMENTS -- the quantity the derivation is quadratic in -- and the
+       outer LIMIT bounds the ROWS those documents may return, because resolution rows per
+       capture are small in practice and bounded by nothing in the schema. `+ 1` on each is
+       how the answer learns that more existed, exactly as the meaning-layer reads do. */
+    const scan = this.#rows(
+      `SELECT capture_sha, bundle_id, grade FROM resolutions
+        WHERE entity_id=? AND capture_sha IN (
+          SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
+           ORDER BY capture_sha LIMIT ?)
+        ORDER BY capture_sha LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);
+    const rowsCut = scan.length > rowCap;
+    const rows = rowsCut ? scan.slice(0, rowCap) : scan;
+    if (rowsCut && rows.length) {
+      /* The last capture in a row-budgeted scan may be HALF READ, and a half-read capture
+         collapses to whatever grade happened to fit -- weaker than the record holds. Drop
+         it whole: a document left out is stated by `truncated`, a document mis-graded is
+         the record claiming something that is not so. */
+      const partial = rows[rows.length - 1].capture_sha;
+      while (rows.length && rows[rows.length - 1].capture_sha === partial) rows.pop();
+    }
     /* Collapse to distinct captures, keeping the STRONGEST grade each resolved to the
        entity at -- the same collapse op=concerns makes, so a connection end's grade is
        exactly the grade that document appears at in the reverse index. */
@@ -9683,7 +9755,9 @@ export class Store extends DurableObject {
       if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade])
         byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
     }
-    const ends = [...byCapture.values()];
+    const distinct = [...byCapture.values()];
+    const truncated = rowsCut || distinct.length > endsCap;
+    const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;
     const at = new Date().toISOString();
     const label = ent ? ent.label : entityId;
     const connections = [];
@@ -9716,9 +9790,16 @@ export class Store extends DurableObject {
         }
       }
     });
+    /* `documents` is the number of ends the derivation ACTUALLY read, which is what the
+       pairs below were formed from; `document_limit` is the bound that produced it and
+       `resolution_rows` is what the scan returned, so a caller can tell a small subject
+       from a bounded read of a large one WITHOUT the plane doing a second unbounded count
+       to tell them. `limit` is the pair cap AFTER clamping and `truncated` is whether the
+       DERIVATION was cut -- not whether the array was sliced, because it never is. */
     return { ok: true, entity_id: entityId, found: !!ent,
              entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
-             documents: ends.length, count: connections.length, connections };
+             documents: ends.length, document_limit: endsCap, resolution_rows: scan.length,
+             count: connections.length, connections, limit: cap, truncated };
   }
 
   /* op=connections: read the persisted connections, by entity (every connection through a
@@ -22197,7 +22278,14 @@ export class Store extends DurableObject {
            each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
            reads them by entity or by capture; progressiondefine authors an ordered stage
            set (both example progressions expressible as rows); progression reads one. */
-        connect: () => this.deriveConnections(body || { entityId: url.searchParams.get("id") }),
+        /* REC-66: the pair bound reaches the derivation from EITHER door — a POST body key
+           or `&limit=` — because the two arms of this op were already both real (the UI
+           POSTs a body, a probe passes `&id=`) and a bound reachable from only one of them
+           would be a bound half the callers could not ask for. */
+        connect: () => this.deriveConnections({
+          entityId: (body && body.entityId) || url.searchParams.get("id"),
+          assertedBy: (body && body.assertedBy) || undefined,
+          limit: (body && body.limit) || url.searchParams.get("limit") }),
         connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
                                                  captureSha: url.searchParams.get("sha256"),
                                                  limit: url.searchParams.get("limit"),
