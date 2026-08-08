@@ -163,10 +163,52 @@ cannot prove the prose is true.
 ## Concurrency: sized to CONDUCT, not to the subscription
 
 CONDUCT integrates serially, so it is the bottleneck; parallelism is sized to
-what it can verify-and-land, not to the raw subscription ceiling. Standing
-budget: **two active development areas at once**, plus the BOB session and DIST
-when a release is being cut. That is about all CONDUCT keeps integrated cleanly;
-more workers pile up behind it.
+what it can verify-and-land, not to the raw subscription ceiling.
+
+**RAISED 2026-08-08 ON BOB'S INSTRUCTION, from two behavioural slots to FIVE
+CONCURRENT WORKERS — and the reason the old number was wrong is worth more than
+the new number.** Bob: *"I have the sense that you're spawning sessions much more
+slowly than you could."* He was right, and the measurement was already in this
+file's own ledger: a worker runs 30–55 minutes and an integration costs CONDUCT
+10–20, so a budget of two left CONDUCT **idle for most of every wave** — waiting
+on workers rather than being the bottleneck it was sized to be. **The old number
+was a guess that had never been checked against a measured integration cost**,
+which is this project's most-repeated finding arriving in its own orchestration.
+
+**THE STANDING BUDGET:**
+
+- **Up to FIVE concurrent workers**, plus the BOB session and DIST when a release
+  is being cut.
+- **Of those five, AT MOST TWO may touch the contended plane files** —
+  `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs`,
+  `bio-plane/src/index.mjs`. **This constraint, not the count, is the real
+  limit**, and it is measured rather than assumed: every merge on 2026-08-08
+  conflicted, and **the conflicts were in those three files plus `CLAIMS.md` every
+  time.** Two parallel items each measured a C-number family as free and both were
+  right; two others each remeasured the same DEC-49 floor block from their own
+  tree and both were right; a third pair each took the same debt number within the
+  hour. **Conflict cost scales with the number of workers in ONE file, not with
+  the number of workers**, so the way to spend the raised budget is on items whose
+  paths are disjoint — the UI, the fleet, the test estate, the docs, measurement
+  lanes — and to keep the store queue at two.
+- **`CLAIMS.md` conflicts on every parallel merge and that is fine.** It is
+  append-only prose; the resolution is mechanical (keep both entries) and has
+  never once lost content. Do not let it argue for fewer workers.
+
+**WHAT THE BUDGET RATIONS IS CONDUCT'S VERIFICATION ATTENTION, NOT AGENT COUNT.**
+The failure mode of too many workers is not cost — it is unintegrated work piling
+up behind a serial integrator, and merges getting harder the longer a branch sits.
+**So the rule that actually protects the tree is: INTEGRATE BEFORE SPAWNING.** A
+finished worker waiting is worse than a slot sitting empty for a minute, because
+every other worker is branched from a tree that does not yet carry it.
+
+**THE REFILL IS NOW ON A TIMER, because relying on CONDUCT to notice failed
+twice.** A one-minute cron checks whether the slots are as full as the budget
+allows and spawns the next runnable item if not (Bob's instruction, same
+conversation). It is session-only and expires after seven days; **when it is gone
+the rule in `kickoffs/CONDUCT.md` is what remains, and that rule is the durable
+half.** A mechanism that is not in the loop the reader actually runs is not a
+mechanism — and a mechanism that dies with the session is not a durable one.
 
 **Refined 2026-07-31: a slot is held by work that CHANGES PLANE BEHAVIOUR.** The limit
 exists because verification and integration are serial and expensive, and two kinds of

@@ -41,6 +41,24 @@ because "free" with no successor named is the shape of the mistake. **Slot-free 
 (measurement, test-estate, D-216-class checks) do NOT occupy a slot and are therefore not a
 substitute for filling one — run them BESIDE the two, not instead of them.**
 
+**THE BUDGET WAS RAISED 2026-08-08 AND THE RULE CHANGED SHAPE WITH IT — READ
+`ORCHESTRATION.md`'s "Concurrency" SECTION RATHER THAN THE NUMBER YOU REMEMBER.** Bob:
+*"I have the sense that you're spawning sessions much more slowly than you could."* He was
+right. **FIVE concurrent workers, of which AT MOST TWO may touch `store.mjs`,
+`bio-checks.mjs` or `index.mjs`** — the file contention is the real limit and the count
+never was. **A worker runs 30–55 minutes and an integration costs 10–20, so a budget of two
+left CONDUCT idle for most of every wave**, waiting on workers rather than being the
+bottleneck it was sized to be. Spend the raised budget on items whose PATHS ARE DISJOINT:
+the UI, the fleet, the test estate, the docs, the measurement lanes.
+
+**AND THE ORDERING THAT PROTECTS THE TREE: INTEGRATE BEFORE SPAWNING.** A finished worker
+waiting is worse than a slot empty for a minute, because every other worker is branched
+from a tree that does not yet carry it, and a branch gets harder to merge the longer it
+sits. **The refill now also runs on a one-minute timer** (Bob's instruction, same
+conversation) — **but the timer is SESSION-ONLY and expires in seven days, so this rule is
+the durable half and the timer is the convenience.** A mechanism that dies with the session
+is not a mechanism; do not let its existence excuse not filling a slot yourself.
+
 2. **When a worker reports:** VERIFY (full battery from the main checkout; **AND
    `node civicos-ui/test/run.mjs`, exit read UNPIPED — on 2026-08-08 CONDUCT pushed
    `origin/main` with that harness RED at 32 failures, having verified the battery and
