@@ -717,6 +717,19 @@ const ACTS_AWAITING_SURFACE = [
   { id: "versionrevert",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
   { id: "versionhide",     published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-42 (W7) — version review: the hide-prune offer (DEC-29(b), D-214)", since: "2026-08-08" },
   { id: "versioncurrent",  published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-45 (W8) — IS-3 CURRENT as a project property", since: "2026-08-08" },
+  /* CPDF-10. Registered as a DEBT rather than exempted, which is what this arm
+     asked for by name. The act is `op=attesttext`: a member says they compared a
+     capture's transcribed text against the IMAGE of the page, over a stated
+     extent, and a leg citing outside that extent does not inherit it.
+     THE SURFACE IS NOT A BUTTON, which is why it is owed to a UI item rather
+     than bolted on here. It has to put the page image and the transcribed text
+     side by side and let a member mark WHAT THEY ACTUALLY CHECKED — a region, a
+     page, or the document — because an unscoped attestation is refused (C-35.11)
+     and an over-scoped one is precisely the failure the extent exists to
+     prevent: one carefully checked paragraph standing behind a whole scanned
+     budget book. Until that surface exists the act is reachable only through the
+     API, which is the honest state and is what this row records. */
+  { id: "attesttext",      published_by: "CPDF-10 (the Tier-3 OCR path)", owed_by: "UI — the transcription check: the page image beside the transcribed text, with the member marking the extent they checked", since: "2026-08-08" },
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls

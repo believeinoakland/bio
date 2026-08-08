@@ -401,6 +401,39 @@ t("every row names the SMALLEST SPAN — a REGION, never a whole file",
 t("the family is exactly the codes the module uses — no orphan rows",
   Object.keys(TEXT_CHAIN_CHECKS).sort(), [...codesUsed].sort());
 
+/* EACH C-NUMBER NAMED ON A REFUSAL THE MODULE ACTUALLY PRODUCED, never read off
+   the table beside it. A hand copy of a catalogue agrees with the catalogue for
+   free — this repository has measured that five times, including a complete hand
+   copy of 131 op names that passed — so every row below DRIVES the condition and
+   reads the C-number off the refusal that came back. `coverage.mjs` counts a
+   check as NAMED when an assertion names it; these assertions name it because
+   the CODE PATH put it there. */
+const CHECK_ARMS = [
+  ["C-35.1",  () => checkChain("ocr")],
+  ["C-35.2",  () => checkChain([])],
+  ["C-35.3",  () => checkChain([["not", "an", "object"]])],
+  ["C-35.4",  () => checkChain([{ step: "transcribed-somehow" }])],
+  ["C-35.5",  () => checkChain([{ step: "ocr", cap: "C" }])],
+  ["C-35.6",  () => appendStep([{ step: "ocr", engine: "e", version: "1", cap: "D" }],
+                               { step: "ai", engine: "f", version: "1", cap: "A" })],
+  ["C-35.7",  () => checkConfidence({ value: 0.99, basis: "how sure I feel" })],
+  ["C-35.8",  () => checkConfidence({ basis: "engine" })],
+  ["C-35.9",  () => checkAnchor({ kind: "pdf-page", page: 0 })],
+  ["C-35.10", () => checkAttestation({ member: "token:member", at: NOW, extent: { kind: "document" } })],
+  ["C-35.11", () => checkAttestation({ member: "bob", at: NOW, extent: { kind: "the whole thing" } })],
+];
+for (const [number, drive] of CHECK_ARMS) {
+  const r = drive();
+  t(`${number} is carried by the refusal the code path produced, not read off the table`,
+    [r?.check, typeof r?.translation === "string" && r.translation.length > 40], [number, true]);
+}
+/* AND THE REACH ARM: every row in the family was driven above. A per-code loop
+   that silently skipped one would look identical to one that covered them all,
+   which is how a walk over a short corpus reports clean. */
+t("REACH: every row in the family was DRIVEN by the arms above, none skipped",
+  Object.values(TEXT_CHAIN_CHECKS).map((r) => r.check).sort()
+    .filter((c) => !CHECK_ARMS.map(([n]) => n).includes(c)), []);
+
 /* ===================================================================== *
  * THROUGH THE OP. A store-level pass is not evidence a caller can reach it.
  * ===================================================================== */

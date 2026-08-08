@@ -191,9 +191,16 @@ const REGISTER_FLOOR = {
      UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
      at the site — one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
-  arms:       570,  // arms stated across the classified declarations
-  classified: 129,  // declarations the detector could count arms in
-  corpus:     130,  // suites the register reads
+  /* CPDF-10, 2026-08-08: 570 -> 576 / 129 -> 130 / 130 -> 131, ALL THREE MOVED IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
+     PRINTED (`arms 576/570 · classified 130/129 · corpus 131/130 · GREW by 6`),
+     never by adding to the numbers above. One new suite (`textchain.test.mjs`)
+     whose declaration states six arms — the six negative-control arms driven by
+     `test/nc-cpdf10.mjs` — so `corpus` and `classified` each rise by one and
+     `arms` by six. Nothing FELL. */
+  arms:       576,  // arms stated across the classified declarations
+  classified: 130,  // declarations the detector could count arms in
+  corpus:     131,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
