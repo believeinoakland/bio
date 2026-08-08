@@ -204,7 +204,7 @@ const NOT_A_FLEET_MEMBER = {
 
 const FLEET_FLOOR = {
   members:    2,   // pdf-worker (I6, CPDF-6) + agent-worker (I8, FL-2).
-  surfaceOps: 3,   // pdf-worker: structure. agent-worker: run, version.
+  surfaceOps: 4,   // pdf-worker: structure, version (CPDF-9). agent-worker: run, version.
 };
 
 function discoverFleet() {

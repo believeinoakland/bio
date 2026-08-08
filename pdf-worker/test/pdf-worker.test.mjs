@@ -14,12 +14,58 @@
  * RUN 2026-07-31: added `await env.CAPTURES.put(store+"/x", bytes)` in
  * handleStructure, rebuilt, the unchanged-key-set assertion went 1 fail; removed
  * and rebuilt, back to 0. (Recorded in the report.)
+ *
+ * MINIFLARE IS RESOLVED FROM THE PLANE'S INSTALL WHEN THIS DIRECTORY HAS NONE,
+ * and that is CPDF-9 / D-232's open half rather than a convenience. This suite
+ * imported `miniflare` bare and `pdf-worker/` has no `node_modules` in a fresh
+ * checkout, so from 2026-07-31 to 2026-08-08 IT WAS RUN BY NOTHING — first
+ * because the battery discovered only `bio-plane/test/`, and then, once FL-2/VF-3
+ * taught the battery to discover fleet members by manifest, because the import
+ * threw and the member was reported as a NAMED SKIP: `DARK: pdf-worker` on every
+ * run. Throughout, `scripts/coverage.mjs` credited this member's surface as
+ * REACHED, because reach there is read out of this file's SOURCE. A coverage
+ * figure standing on a suite nobody executed is D-93's defect one directory out
+ * and D-117's own failure mode inside D-117's instrument.
+ *
+ * The mechanism is COPIED FROM `agent-worker/test/agent-worker.test.mjs` (I8) and
+ * is deliberately not a second one: try this directory's own install, fall back
+ * to resolving through `bio-plane/package.json`, which is present wherever the
+ * battery can run at all. Two mechanisms for one job is how the next member goes
+ * dark differently.
  */
-/* NEGATIVE CONTROL: have the worker call env.CAPTURES.put()/.delete() -> the "R2 is byte-for-byte unchanged after a call" assertion fails. */
-import { Miniflare } from "miniflare";
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/pdf-worker.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (PL-3/PL-4/PL-11/FL-2's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`) against a pristine pre-arm copy, and every arm names what MUST fail AND what MUST NOT.
+   ALL SEVEN ARMS RUN 2026-08-08 (CPDF-9), baseline 48 pass / 0 fail before each, every one AS DECLARED on the recorded pass. Figures below are MEASURED.
+   (A1) THE ORIGINAL, STILL THE SUBJECT'S OWN: have the worker call env.CAPTURES.put() beside its read, rebuild -> **45 pass, 3 FAIL** — both "R2 is byte-for-byte unchanged" arms AND the `.put(` source scan. Tier 2, the envelope, the refusals and the version arms all HELD. (First run 2026-07-31: put, rebuilt, 1 fail; removed, rebuilt, 0.)
+   (A2) THE BATTERY ACTUALLY RUNS THIS SUITE (CPDF-9's reason for existing). Break one assertion here -> `battery.mjs pdf-worker` **EXITS 1** and NAMES this suite in FAILED, not as a skip. Before CPDF-9 the identical edit changed nothing anywhere, because nothing executed the file.
+   (A3) RE-ARM THE DEPENDENCY FAILURE. Point the plane-install fallback at a package that does not exist -> battery **exit 0 with the member NAMED TWICE**: `SKIPPED (named): … cannot resolve …` and `fleet: … 0 member(s) actually RAN · DARK: pdf-worker`. Never counted among the suites that ran green. The generous direction stays closed.
+   (A4) THE COMMENT STRIPPER EATS A URL AGAIN. Restore the naive `//`-to-end-of-line idiom -> **46 pass, 2 FAIL**, both anchored-stripper arms by name; the `THE TRAP, DRIVEN` arms HELD, because they describe the naive form rather than the fix.
+   (A5) FLEET RULE 4. Remove `GET /version` from the worker, rebuild -> **44 pass, 4 FAIL**, the version arms by name. `coverage.mjs --strict` STILL EXITED 0, as declared: fleet reach is read from the SUITE's source and not the worker's, so the two halves are independent.
+   (A6) THE SURFACE ROW WITHOUT ITS REACH, two stages. Stage 1 (delete the driven /version arms, keep the SURFACE row) -> `--strict` **exit 0, 4/4 reached** — DECLARED IN ADVANCE AS DOUBTFUL and it came back exactly as doubted: **the fleet reach matcher counts `/version` MENTIONED IN A COMMENT as reach.** Stage 2 (remove every textual `/version` too) -> `--strict` **EXIT 1, 3/4 reached**, naming the unreached op, fleet FLOOR silent. The gate has teeth; what it cannot see is a mention versus a driven call. Delegated, not narrowed here (REC-67's class).
+   (O1) OVER-STRICTNESS, nothing broken: a correct fleet suite under a filename this session did not anticipate is DISCOVERED, RUN and `ok`, battery exit 0, member still reported as RAN.
+   Every declared-versus-actual line, and the two arms that came back wrong on the FIRST pass (A1 and A5 could not be honoured at all until the harness learned to provide `esbuild` for a rebuild — recorded, not smoothed), are in `test/pdf-worker.control.mjs`'s header. */
+
+/* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
+   `dispose()` disarms its own exit hook and then does not wait for the removal,
+   so the leak is on the SUCCESS path; the battery leaked 41.0 GB that way and
+   filled the machine's disk. A fleet suite the battery now RUNS must own its
+   ground like every plane suite does — and this suite mints one miniflare
+   sandbox per `newMf()`, four of them, so it is not a hypothetical debt. */
+import "../../bio-plane/test/sandbox.mjs";
+
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+
+/* Prefer this directory's own install; fall back to the PLANE's, which is
+   present wherever the battery can run at all. Neither path is a guess: both are
+   resolved and the one that answers is used. */
+const { Miniflare } = await (async () => {
+  try { return await import("miniflare"); } catch { /* fall through */ }
+  const planePkg = fileURLToPath(new URL("../../bio-plane/package.json", import.meta.url));
+  const resolved = createRequire(planePkg).resolve("miniflare");
+  return await import(pathToFileURL(resolved).href);
+})();
 
 const BUNDLE = fileURLToPath(new URL("../dist/pdf-worker.bundled.mjs", import.meta.url));
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -94,18 +140,106 @@ console.log("\n--- Tier 2: a no-/ToUnicode font PDF, decoded on workerd through 
   await mf.dispose();
 }
 
-/* ---- The write-nothing property, structurally, from the source ---- */
+/* ---- The write-nothing property, structurally, from the source ---------------
+ *
+ * THE STRIPPER IS AN INSTRUMENT, AND THIS ONE WAS A TRAP (CPDF-9, D-232's rider).
+ * These scans read the source with its comments removed, because the comments
+ * carry this project's reasoning at length and a scan that read them would match
+ * its own explanation of what must not appear. The idiom used here was `//` to
+ * END OF LINE — correct over this file today and silently wrong the moment any
+ * source it reads holds a URL literal, because `"http://…"` CONTAINS those two
+ * slashes: the naive form deletes the literal AND THE REST OF ITS LINE. FL-2
+ * copied this idiom into `agent-worker`'s suite, where the source does hold a
+ * URL, and its only-one-absolute-URL arm then read 6,029 characters of a 17,265
+ * character file and came back GREEN over a source truncated by two thirds. A
+ * walk that has gone blind reads exactly like a subject that is clean.
+ *
+ * Requiring a NON-COLON before the two slashes keeps every real line comment and
+ * every scheme-bearing string literal. The fix is asserted BOTH DIRECTIONS below
+ * over a fixture that DOES carry a URL — this member's own source carries none
+ * today, so a fixture is the only way to drive the failing direction at all —
+ * and the corpus size is PRINTED, because an instrument that quietly reads less
+ * than its corpus reports a clean verdict over bytes it never saw. */
+const stripNaive = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+const strip      = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+const schemes = (s) => (s.match(/:\/\//g) || []).length;
+
+console.log("\n--- THE COMMENT STRIPPER MUST NOT EAT A URL (D-232's rider, driven both directions) ---");
+{
+  /* Spelled by concatenation so this fixture is not itself mistaken for a URL
+     literal by any walk reading THIS file (PL-11's finding: a source scan could
+     not see a token spelled by concatenation — here that property is wanted). */
+  const FIXTURE = [
+    "const PLANE = " + JSON.stringify("http:" + "//plane/structure") + ";",
+    "// a real line comment that MUST be removed",
+    "const KEEP = " + JSON.stringify("https:" + "//example.gov/doc.pdf") + "; // trailing comment removed",
+  ].join("\n");
+  t("the fixture is non-empty and carries two schemes", [FIXTURE.length > 0, schemes(FIXTURE)], [true, 2]);
+  t("THE TRAP, DRIVEN: the naive idiom loses the URL literal", stripNaive(FIXTURE).includes("plane/structure"), false);
+  t("THE TRAP, DRIVEN: the naive idiom truncates that line mid-literal",
+    stripNaive(FIXTURE).split("\n")[0], "const PLANE = \"http:");
+  t("the naive idiom leaves 0 of the 2 schemes", schemes(stripNaive(FIXTURE)), 0);
+  t("the anchored stripper keeps both schemes", schemes(strip(FIXTURE)), 2);
+  t("the anchored stripper keeps the URL literal whole", strip(FIXTURE).includes("//example.gov/doc.pdf"), true);
+  t("...and still removes a whole-line comment", strip(FIXTURE).includes("a real line comment"), false);
+  t("...and still removes a trailing comment", strip(FIXTURE).includes("trailing comment removed"), false);
+}
+
 console.log("\n--- WRITES NOTHING: no put/delete anywhere in the Worker source, no STORE/PUBLISHED binding ---");
 {
   const src = readFileSync(WORKER_SRC, "utf8");
-  const codeOnly = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const codeOnly = strip(src);
+  /* The guard against the OTHER failure: a walk over an empty or truncated
+     corpus reports its verdict triumphantly. Both figures are printed and the
+     floor is asserted, so a scan that silently stopped reading FAILS instead of
+     passing. The floor is a DELTA-style lower bound, not the exact size, which
+     would turn every edit to the Worker into a red suite. */
+  console.log(`  corpus: src/index.mjs ${src.length} chars -> ${codeOnly.length} chars of code`
+    + ` (the naive idiom would have read ${stripNaive(src).length})`);
+  t("the scan read a real corpus, not an empty string", [src.length > 4000, codeOnly.length > 1500], [true, true]);
+  t("no scheme-bearing literal was lost from this source", schemes(codeOnly), schemes(src));
   t("no .put( call in source", /\.put\s*\(/.test(codeOnly), false);
   t("no .delete( call in source", /\.delete\s*\(/.test(codeOnly), false);
   const wr = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8");
-  const cfg = wr.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const cfg = strip(wr);
+  console.log(`  corpus: wrangler.jsonc ${wr.length} chars -> ${cfg.length} chars of config`);
+  t("the config scan read a real corpus", [wr.length > 500, cfg.length > 200], [true, true]);
   t("no PUBLISHED binding declared", /PUBLISHED/.test(cfg), false);
   t("no durable_objects (STORE) binding declared", /durable_objects/.test(cfg), false);
   t("holds the CAPTURES read binding", /CAPTURES/.test(cfg), true);
+  t("declares the VERSION var the /version endpoint reports", /"VERSION"/.test(cfg), true);
+}
+
+/* ---- Fleet rule 4: which build ANSWERED (CPDF-9, IC-33) ----------------------
+ *
+ * *"A verification must establish which build ANSWERED, for the member as well as
+ * the plane."* That was UNVERIFIABLE for this member until CPDF-9: nothing on its
+ * wire named its build, so DS-4's rollout gate would have discovered it at deploy
+ * time — which is D-108 one component out, and D-108 is the afternoon lost to a
+ * byte-identical verification of 0.52.0 followed by `/version` answering 0.51.0.
+ *
+ * The value is asserted to come FROM THE BINDING and not from a constant beside
+ * it: a version endpoint that reports a compiled-in string would answer the same
+ * thing whichever build was serving, which is an equality that costs nothing to
+ * produce. */
+console.log("\n--- VERSION: the member says which build is answering, from its binding ---");
+{
+  const mf = newMf({ VERSION: "9.9.9-probe" });
+  const res = await mf.dispatchFetch("http://pdf-worker/version", { method: "GET" });
+  t("GET /version is 200", res.status, 200);
+  const body = await res.json();
+  t("ok", body.ok, true);
+  t("names the member", body.name, "pdf-worker");
+  t("reports the BOUND build, not a compiled-in constant", body.version, "9.9.9-probe");
+  const wr = strip(readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8"));
+  t("and the deployed binding is a real version, not the 0.0.0 fallback",
+    /"VERSION"\s*:\s*"(?!0\.0\.0")[0-9]+\.[0-9]+\.[0-9]+"/.test(wr), true);
+  const post = await mf.dispatchFetch("http://pdf-worker/version", { method: "POST" });
+  t("POST /version is not the version endpoint (404)", post.status, 404);
+  const src = strip(readFileSync(WORKER_SRC, "utf8"));
+  t("the SURFACE table declares version", /version\s*:\s*\{[^}]*method:\s*"GET"/.test(src), true);
+  t("fleet rule 2: no surface op declares mutating: true", /mutating:\s*true/.test(src), false);
+  await mf.dispose();
 }
 
 /* ---- Over the envelope: text-UNDETERMINED, never truncated (I6) ---- */

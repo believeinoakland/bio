@@ -40841,7 +40841,8 @@ if (typeof Math.sumPrecise !== "function") {
   };
 }
 var SURFACE = {
-  structure: { method: "POST", mutating: false }
+  structure: { method: "POST", mutating: false },
+  version: { method: "GET", mutating: false }
 };
 var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
@@ -40908,14 +40909,18 @@ async function handleStructure(req, env) {
   }
   return json(structure);
 }
+function handleVersion(env) {
+  return json({ ok: true, name: "pdf-worker", version: env.VERSION || "0.0.0" });
+}
 var index_default = {
   async fetch(req, env) {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/+/, "");
+    if (req.method === "GET" && path === "version") return handleVersion(env);
     if (req.method === "POST" && (path === "structure" || path === "")) {
       return handleStructure(req, env);
     }
-    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure only" }, 404);
+    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" }, 404);
   }
 };
 export {

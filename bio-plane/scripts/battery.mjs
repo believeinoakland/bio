@@ -298,7 +298,33 @@ const skipReason = (out) => {
    Converted to a NAMED skip for fleet suites only, and only for this one cause;
    every other non-zero exit is a failure exactly as before. The package is named
    so the reader knows what to install rather than being told something is wrong
-   somewhere. */
+   somewhere.
+
+   ---- CPDF-9, 2026-08-08: THIS PATH IS NOW UNREACHABLE FOR EVERY MEMBER THAT
+   EXISTS, AND IT IS KEPT DELIBERATELY. Said here rather than deleted silently.
+
+   WHAT IT WAS FOR. A running provisional decision taken in the GENEROUS
+   direction: a member whose suite cannot resolve its dependencies is SKIPPED and
+   NAMED, never FAILED, because failing would have redded `main` on every fresh
+   checkout over a dependency the plane does not own. Its whole cost was that
+   `pdf-worker` sat behind it printing `DARK: pdf-worker` on every run.
+
+   WHY IT NO LONGER FIRES. Both members now resolve `miniflare` through the
+   PLANE's install when their own directory has none (`agent-worker` since FL-2,
+   `pdf-worker` since CPDF-9 — ONE mechanism, copied, not two). The plane's
+   install is present wherever this battery can run at all, so the only way to
+   reach this branch today is to break that fallback on purpose — which is
+   exactly what CPDF-9's control arm (3) does, and the member is then NAMED as
+   dark rather than silently counted as green.
+
+   WHY IT STAYS ANYWAY. It is the landing pad for the NEXT member, which will be
+   written before it has adopted the idiom, and it is what makes that member's
+   first fresh-checkout run a named skip instead of a red `main`. Deleting it
+   buys nothing and removes the sentence that tells the author of member three
+   what to do. THE RESIDUAL, which is the fleet's to weigh and not `pdf-worker`'s
+   to decide: a named skip still leaves the battery GREEN while a component is
+   dark, and only the `fleet:` line below says so. Closing that means FAILING the
+   run on a dark member, which is the reverse of this provisional. */
 const fleetDepSkip = (entry, out) => {
   if (!entry.fleet) return null;
   const m = out.match(/Cannot find (?:package|module) '([^']+)'/);

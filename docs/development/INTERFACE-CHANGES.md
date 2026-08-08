@@ -2141,3 +2141,75 @@ UI harness exit 0, **the DEC-49 guard's output byte-identical to baseline** (no 
 moved and none owed — no member receives this Worker's codes), and `bio-plane/src/**` not
 edited. The single plane-side change is one `services` entry in `bio-plane/wrangler.jsonc`,
 inert until DIST deploys the member — **the same posture `PDF_WORKER` shipped in.**
+
+---
+
+## IC-33 · I6 GAINS `GET /version` — the gap IC-32 named, closed · PROPOSED 2026-08-08 (CPDF-9) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, AND IT IS PURELY ADDITIVE.** `pdf-worker` gains one endpoint:
+
+    GET /version  ->  200 { ok: true, name: "pdf-worker", version: <env.VERSION> }
+
+and one row in its `SURFACE` table (`version: { method: "GET", mutating: false }`),
+which is the table `scripts/coverage.mjs` reads to hold a fleet member to the plane's
+own surfaces. Nothing existing moves: `POST /structure` keeps its request shape, its
+response shape and its refusals byte for byte. The only other observable difference is
+the 404 detail string on an unknown path, which now reads `POST /structure or GET
+/version only` — a human-readable `detail`, not a code, and nothing parses it.
+
+**WHY IT IS OWED.** Fleet rule 4 — *"a verification must establish which build ANSWERED,
+for the member as well as the plane"* — **was unverifiable for this member**, because
+nothing on its wire named its build. IC-32 §1 named exactly this gap when I8 shipped
+with the endpoint I6 lacked, and CONDUCT's RESOLUTION recorded it as **I6's gap, not
+I8's gain**, delegated to CONTENT-PDF. This closes it.
+
+**THE EVIDENCE THAT IT IS NOT COSMETIC.** `CLAUDE.md`: *a deploy verified is not a build
+serving.* Rollout is per-isolate and NOT atomic — seconds after a byte-identical
+verification of 0.52.0, `/version` answered 0.51.0 and a probe answered by the old build
+looked exactly like a security defect in the new one (D-108). The plane has an endpoint
+that answers that question about itself; `pdf-worker` deploys and versions SEPARATELY,
+so the same window exists for it and there was no way to ask. **DS-4's rollout gate
+would have discovered that at deploy time**, which is the worst moment to discover it.
+
+**THE VALUE COMES FROM THE BINDING, NOT FROM A CONSTANT.** It reads `env.VERSION`, which
+`pdf-worker/wrangler.jsonc` has carried in `vars` since the member was written and which
+NO handler read until now. A version endpoint reporting a compiled-in string would answer
+the same thing whichever build was serving — an equality that costs nothing to produce.
+The suite asserts the answer tracks the binding (bound to `9.9.9-probe`, answered
+`9.9.9-probe`) and separately that the DEPLOYED binding is a real version rather than the
+`0.0.0` fallback.
+
+**IT IS THE SAME THREE LINES AS I8's, DELIBERATELY.** Copied from `agent-worker`, not
+generalised: two members answering one question two ways is what makes a rollout gate
+special-case its fleet. Same path, same method, same body keys (`ok`, `name`, `version`).
+
+**WHAT IS *NOT* CHANGED.** No new binding, no new var, no `wrangler.jsonc` edit at all.
+`agent-worker/**` is not touched. `bio-plane/src/**` is not touched — the plane does not
+call `/version` today, and this proposal does not ask it to; DS-4's gate is the first
+consumer. I1, I3, I5 and I8 are untouched.
+
+**MEASURED CONSUMER IMPACT.** `civicos-ui` reaches none of this (UI harness exit 0, no
+act, no refusal code — the member has no member-facing surface and `check-refusal-codes`
+does not walk the fleet). `newgroup` and `docprofile` reach none of it. The one
+instrument figure that MOVES is the fleet floor: `coverage.mjs`'s `FLEET_FLOOR.surfaceOps`
+goes **3 -> 4**, taken from the figure the instrument PRINTED on a green run
+(`FLEET 2 members beside the plane · 4/4 surface ops reached`), never by adding one to
+the previous number.
+
+**THE VERSION BUMP IS NOT TAKEN HERE.** I6 sits at 0.1.0 PROVISIONAL. This is additive,
+so it is a MINOR under this file's own rules, but CPDF-9 does not write `INTERFACES.md`
+and does not bump it — **CONDUCT takes the bump at integration**, exactly as IC-32's
+resolution took I8's registration.
+
+### 2 · RESPONSES
+
+*(Awaiting. `CONTENT-PDF` owns the code and proposes. `DIST` is the affected consumer —
+DS-4's rollout gate is the first caller of this endpoint and DS-1 installs the member;
+the DELEGATION is in `CLAIMS.md`. `RECORD` owns the plane's calling side of I6 and is
+unaffected: `op=pdfstructure` still calls `POST /structure` and nothing else.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's.)*
