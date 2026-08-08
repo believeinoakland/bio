@@ -1,4 +1,45 @@
-/* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) FOUR arms, SIX runs, every
+/* NEGATIVE CONTROL: (run 2026-08-07, rec70-agent, REC-70) FIVE arms, every file restored and
+   verified by CONTENT as well as sha256. THE SUBJECT IS THE WALK'S REACH, not one op.
+   (1) RESTORE THE UNBOUNDED READ — in src/store.mjs `aiRunLog`, drop `LIMIT ?` and the
+   `cap + 1` argument, drop the `limit:`/`truncated:` keys from both returns, and drop the
+   `.slice(0, cap)`. THE ARM THAT PROVES THE BLINDNESS IS FIXED, and it must fail for the
+   RIGHT REASON: the walk prints `op=airunlog -> aiRunLog [entries]` back on the BARE roster
+   and the RATCHET fails at 41 of a ceiling of 40, so the failure NAMES the op with no list
+   to add it to; the D-227 SQL-bound pin and every live arm name it too.
+     MEASURED: meaning-bounds 68/13, bounds 108/4 — the walk printed
+     `op=airunlog -> aiRunLog [entries]` on the BARE roster and the RATCHET failed at
+     **41 of a ceiling of 40**. `airun.test.mjs` stayed GREEN, which is the finding
+     inside the control: that suite drives the op at six sites and none asks for more
+     than 200 rows, so the op's OWN suite could never have caught this.
+     (1b) AND THE D-227 VARIANT, run separately because it fails DIFFERENTLY: drop ONLY
+     `LIMIT ?`/`cap + 1` and leave the envelope honest. MEASURED: **meaning-bounds 80/1
+     and bounds 112/0 — FULLY GREEN except the one direct SQL-bound pin.** The walk
+     grades what a method PUBLISHES, so an honest envelope over an unbounded scan reads
+     as bounded — D-227's open finding, reproduced here on a second op. That single
+     surviving arm is the whole reason the SQL pin exists beside the roster verdict.
+   (2) A SECOND OP THE WALK CANNOT REACH — `ncOpaqueRead`, which scans `ai_run_log`, pushes
+   the rows into a local through a `for…of` this reader cannot follow, publishes only a
+   count, and IS dispatched. MEASURED: **2 fail, both REACH/OPAQUE arms, at 9 of 8 and
+   naming `ncopaque->ncOpaqueRead`.** Every other arm stayed green, which is the point:
+   the tripwire fired on reach alone, with no collection and no bound involved.
+   (3) NEUTER THE WALK — `if (1) return out;` at the head of `collectionReads`. MEASURED:
+   **20 fail**, corpus PRINTED AS ZERO (`0 publishing a collection, reaching 0 ops`;
+   `REACH: 0 of 156 DISPATCHED ops judged`; BARE 0), every REACH-AS-A-DELTA arm among them.
+   **AND THE RATCHET CEILING STAYED GREEN AT 0 OF 40** — a ceiling passes trivially over
+   nothing, which is exactly how REC-60's 27 survived a walk that could see 55 of 156 ops.
+   The FLOOR is what fires, and this control is why it exists.
+   (4) OVER-STRICTNESS — four arms in the last block, all PASSING on the clean tree, two of
+   them REC-70's own: success spelled `found: true` (graded BOUNDED) and success spelled with
+   NO marker (graded BARE); plus a refusal carrying a list, still NOT graded.
+   (5) POLARITY on the marker inversion — restore `if (!/ok: true/.test(ro)) continue;`.
+   MEASURED: **7 fail** — `op=airunlog` returns to the OPAQUE bucket (the exact state REC-60
+   shipped in and CONDUCT found by hand), the OPAQUE ceiling fails at 9 of 8, the RATCHET
+   FLOOR fails, and BOTH REC-70 over-strictness arms go red. **The RATCHET CEILING stayed
+   green here too.**
+   EVERY ARM: anchor guarded unique before mutation, bytes asserted changed, and every file
+   restored and verified by CONTENT and sha256 (driver kept out of the suite tree).
+   ---- REC-60's own controls, retained verbatim; still re-runnable ---------------------------
+   (run 2026-08-07, rec60-agent, REC-60/D-225) FOUR arms, SIX runs, every
    file restored BYTE-IDENTICALLY (sha256 compared after each).
    (1) RESTORE EACH UNBOUNDED READ, run once PER OP so each names its own — in src/store.mjs
    drop the `LIMIT ?` and its `cap + 1` argument and remove the `limit:`/`truncated` keys.
@@ -213,6 +254,36 @@ const rowCalls = (body) => {
   return { total: out.length, unbounded: out.filter((x) => !x).length };
 };
 
+/* ===================== REC-70 · THE CAUSE OF THE WALK'S BLINDNESS ==============
+ * THIS LINE IS THE ITEM. It read `if (!/\bok\s*:\s*true/.test(ro)) continue;` —
+ * ONE success spelling, hard-coded as if it were the only one, FOUR LINES AFTER
+ * `BOUND_KEY`/`MORE_KEY` were written as SETS precisely because "the plane
+ * answers the second in five spellings on purpose". The instrument avoided the
+ * one-vocabulary mistake in its leaves and committed it at its root.
+ *
+ * WHAT IT COST, MEASURED 2026-08-07 rather than argued: `store.mjs` dispatches
+ * 156 ops; the walk graded 55 of them. Twenty-seven dispatched ops answer
+ * success WITHOUT `ok: true` — `found: true` (`op=airunlog`, `op=airun`,
+ * `op=airuntick`) or NO marker at all (`op=signerlist` returns `{ signers }`,
+ * `op=publishedlist` `{ bundles, cases }`, `op=inboxlist` `{ inbox }`,
+ * `op=memberlist`, `op=verify`, `op=index`, `op=thread`, …) — and EVERY ONE of
+ * them was invisible to a walk built to find exactly this class. `op=airunlog`
+ * was merely the one that got caught, by hand, at another item's integration.
+ *
+ * THE FIX INVERTS THE TEST rather than lengthening a list. A list of success
+ * spellings goes stale the moment a fourth is written and fails SILENTLY, which
+ * is the failure mode being fixed. So the walk now grades every return object
+ * that does not DECLARE ITSELF A REFUSAL: refusals in this plane are `ok: false`
+ * with a `reason`, they are the one shape a bounds walk has no business
+ * grading, and they are the only shape excluded. A read that invents a fifth
+ * success spelling is graded from the day it is written.
+ *
+ * AND THE INVERSION IS NOT TRUSTED ON ITS OWN — see REACH below, which asserts
+ * that every DISPATCHED op lands in a bucket and that the ops this walk still
+ * cannot judge are a RATCHETED, PRINTED figure rather than a silence. That
+ * assertion is what would have named `op=airunlog` on the day IS-6 added it. */
+const REFUSAL_RETURN = /\bok\s*:\s*false/;
+
 /* The roster: method -> what it publishes, and whether it is bounded and says so. */
 const collectionReads = (code) => {
   const out = new Map();
@@ -221,7 +292,7 @@ const collectionReads = (code) => {
     const rows = rowCalls(body);
     let keys = [], bound = [], more = [], bareReturn = false;
     for (const ro of returnObjects(body)) {
-      if (!/\bok\s*:\s*true/.test(ro)) continue;
+      if (REFUSAL_RETURN.test(ro)) continue;
       const pairs = topPairs(ro);
       const arr = pairs.filter(([k, v]) => ARRAY_EXPR.test(v) || locals.has(v) || (k === v && locals.has(k))).map(([k]) => k);
       if (!arr.length) continue;
@@ -255,10 +326,41 @@ const opsFor = (code, methods) => {
   let m; while ((m = re.exec(code))) if (methods.has(m[2])) out.set(m[1], m[2]);
   return out;
 };
+/* REC-70: THE SAME ARROW READ WITHOUT THE `methods` FILTER — the DENOMINATOR.
+   `opsFor` above can only ever report ops the classifier already accepted, so it
+   cannot say how much of the plane the walk MISSED; asking it was how a walk
+   that reached 55 of 156 ops read as a complete sweep. This is the roster the
+   REACH assertions divide. */
+const dispatchedOps = (code) => {
+  const out = new Map();
+  const re = /^\s+([a-z][a-z0-9]*):\s*(?:async\s*)?\(\)\s*=>\s*(?:await\s+)?this\.([A-Za-z_$][\w$]*)\(/gm;
+  let m; while ((m = re.exec(code))) out.set(m[1], m[2]);
+  return out;
+};
 
 const CODE = decomment(SRC_STORE);
 const READS = collectionReads(CODE);
 const OPS = opsFor(CODE, READS);
+const DISPATCHED = dispatchedOps(CODE);
+const SEGMENTS = segments(CODE);
+/* REC-70 · THE FOURTH BUCKET AND THE TRIPWIRE.
+   An op the walk does not reach is currently INVISIBLE — it is simply absent
+   from `OPS`, which is how `op=airunlog` sat outside all three buckets for two
+   days without anything going red. Absence is now split in two, and only one
+   half is acceptable:
+     NO COLLECTION  the method's returns carry no array-valued key and no bare
+                    array — there is nothing to bound, so no verdict is owed.
+     OPAQUE         the method SCANS ROWS (`#rows(`) and is DISPATCHED, yet the
+                    walk reached no verdict on it. That is a blind spot by
+                    definition: rows came out of the store and this reader could
+                    not say what happened to them. `aiRunLog` was in here.
+   OPAQUE is a RATCHETED figure, exactly like the bare roster: it may shrink, it
+   may not grow, and it is printed every run so a failure names its members. */
+const opaqueOps = (dispatched, reads, segs) => [...dispatched]
+  .filter(([, meth]) => !reads.has(meth) && rowCalls(segs.get(meth) || "").total > 0)
+  .map(([op, meth]) => `${op}->${meth}`).sort();
+const OPAQUE = opaqueOps(DISPATCHED, READS, SEGMENTS);
+const NO_COLLECTION = [...DISPATCHED].filter(([, meth]) => !READS.has(meth)).map(([op]) => op).sort();
 const opsWhere = (v) => [...OPS].filter(([, meth]) => READS.get(meth).verdict === v).map(([op]) => op).sort();
 const BARE_OPS = opsWhere("bare"), BOUNDED_OPS = opsWhere("bounded"), UNJUDGED_OPS = opsWhere("unjudged");
 
@@ -268,6 +370,10 @@ const BARE_OPS = opsWhere("bare"), BOUNDED_OPS = opsWhere("bounded"), UNJUDGED_O
 console.log("\n--- WALK: every published collection, read off store.mjs's own return shapes ---");
 console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${segments(CODE).size} method segments, `
           + `${READS.size} publishing a collection, reaching ${OPS.size} ops`);
+/* REC-70: the DENOMINATOR beside the numerator, because "reaching 55 ops" read
+   as a complete sweep for two days while 101 dispatched ops went ungraded. */
+console.log(`  REACH: ${OPS.size} of ${DISPATCHED.size} DISPATCHED ops judged; `
+          + `${NO_COLLECTION.length} publish no collection; ${OPAQUE.length} OPAQUE (scan rows, no verdict)`);
 console.log(`  BARE — a collection off an UNBOUNDED row source, no bound published: ${BARE_OPS.length} ops`);
 for (const op of BARE_OPS) {
   const r = READS.get(OPS.get(op));
@@ -284,6 +390,11 @@ for (const op of BOUNDED_OPS) {
    failure mode this whole file exists to prevent. */
 console.log(`  UNJUDGED — no row scan in the method, so this walk reaches no verdict: ${UNJUDGED_OPS.length} ops`);
 console.log(`    ${UNJUDGED_OPS.map((o) => `op=${o}`).join(", ")}`);
+/* PRINTED FOR THE SAME REASON THE UNJUDGED BUCKET IS. These ops put rows into
+   the world and this walk cannot say what became of them. Naming them is the
+   difference between a limitation and a blind spot. */
+console.log(`  OPAQUE — DISPATCHED and scanning rows, yet outside every bucket above: ${OPAQUE.length} ops`);
+console.log(`    ${OPAQUE.join(", ")}`);
 
 /* ------------------------------------------------------------------- GUARDS.
    A reader that silently yielded nothing makes every assertion below vacuous —
@@ -345,9 +456,122 @@ t("REC-60: in the SPELLING THE PLANE ALREADY USES — `limit` beside `truncated`
 const BARE_ROSTER_MEASURED_2026_08_07 = BARE_OPS.length;
 console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read ops remain, `
           + `listed above and measured 2026-08-07`);
+/* REC-70 MOVED THIS FIGURE, and the direction is the finding rather than an
+   embarrassment. It read 27 while the walk could only see 55 of 156 dispatched
+   ops; correcting the success-marker gate (above) brought 27 more ops into
+   view, 14 of which were bare all along — `op=signerlist`, `op=publishedlist`,
+   `op=inboxlist`, `op=memberlist`, `op=verify`, `op=index`, `op=thread`,
+   `op=selection`, `op=reusedparts`, `op=reuseverdicts`, `op=readingnameplan`,
+   `op=airun`, `op=airuntick`, and `op=airunlog`. `op=airunlog` is the one this
+   item BOUNDED, so the honest figure is 41 members of the class MINUS the one
+   fixed = 40. **The old 27 was never a smaller problem; it was a smaller
+   measurement**, and a ratchet over a corpus the instrument could not see is
+   the failure this item exists to record. The residual is REAL, is printed
+   above, and is not claimed to be graded — only fixed in place. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
-+ "off an unbounded row source pushes this over the figure measured on 2026-08-07 and fails here",
-  BARE_OPS.length <= 27, true);
++ "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-07 over the "
++ "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops) and fails here",
+  BARE_OPS.length <= 40, true);
+/* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
+   read was fixed" from "the roster shrank because the reader broke again" —
+   which is precisely how this walk spent two days reporting 27. A DROP is not a
+   failure, but it must be DELIBERATE, so the floor moves only when someone
+   moves it. */
+t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this figure being moved "
++ "means the READER lost sight of ops, not that the plane got better. REC-60's 27 was a shrunken "
++ "measurement nobody could distinguish from progress",
+  BARE_OPS.length >= 40, true);
+
+/* ==========================================================================
+ * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
+ *
+ * REC-60's file said plainly what it could not see, in prose, in its header.
+ * The prose was correct AND `op=airunlog` still slipped past it, because a
+ * limitation nobody counts is indistinguishable from a limitation nobody has.
+ * So the same statements are now ASSERTIONS over the DISPATCH ROSTER.
+ * ========================================================================== */
+console.log("\n--- REC-70: REACH over the DISPATCH roster, asserted rather than described ---");
+t("REACH: the denominator is REAL — store.mjs dispatches a plausible number of ops, so the "
++ "fractions below are measurements and not divisions by a number this file chose",
+  [DISPATCHED.size > 120, DISPATCHED.size >= OPS.size], [true, true]);
+t("REACH: every DISPATCHED op is accounted for EXACTLY ONCE — bare, bounded, unjudged, or "
++ "publishing no collection at all. An op in none of them is one this walk never saw, which is "
++ "the state `op=airunlog` was in when REC-60's ratchet read green over it",
+  [BARE_OPS.length + BOUNDED_OPS.length + UNJUDGED_OPS.length + NO_COLLECTION.length, DISPATCHED.size],
+  [DISPATCHED.size, DISPATCHED.size]);
+/* THE TRIPWIRE, and it is the arm that would have caught this item's own
+   subject on the day it was written. "Publishes no collection" is a verdict a
+   broken reader produces for free; "scans rows and publishes nothing this
+   reader can find" is not. */
+t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPATCHED, and lands "
++ "outside every bucket is a BLIND SPOT and not a clean bill. `op=airunlog` was one of 24 on "
++ "2026-08-07; correcting the success-marker gate left the 8 printed above, and a NEW one fails here",
+  OPAQUE.length <= 8, true);
+t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
++ "is ever returned to the state this item found it in",
+  OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
+/* NOT AN EXEMPTION LIST — a NAMED residual with a reason, which is what the
+   item asked for when it said "name exactly which it cannot reach and why".
+   Every one of the eight is a WRITE path that scans rows for its own logic and
+   answers a scalar or a status; none publishes a collection. They are pinned by
+   NAME so that "8" cannot be satisfied by a different eight. */
+t("REACH: and the residual is NAMED, not merely counted — a bare count is satisfied by ANY eight "
++ "ops, so the identities are pinned and a swap fails here",
+  OPAQUE, ["projectfork->forkProject", "projectionplan->projectionPlan",
+           "projectowneradd->projectOwnerAdd", "publish->publish",
+           "registeraudit->registerAudit", "select->selectionCreate",
+           "selectionrelease->selectionRelease", "taskdrain->taskDrain"]);
+t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
++ "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "
++ "would keep reading '82 of 156' over a source this reader could no longer parse",
+  dispatchedOps(CODE.replace(/\)\s*=>\s*this\./g, ") => that.")).size < DISPATCHED.size, true);
+
+/* ==========================================================================
+ * REC-70 · THE OP ITSELF, at source. The live arms are below.
+ * ========================================================================== */
+t("REC-70: `op=airunlog` is now ON the BOUNDED roster and OFF the bare one — measured off the "
++ "source by the corrected walk, which is the whole evidence that the blindness is fixed",
+  [BARE_OPS.includes("airunlog"), BOUNDED_OPS.includes("airunlog")], [false, true]);
+t("REC-70: and it is graded WITHOUT `ok: true` — this method still answers `found: true`, "
++ "deliberately, so a walk that had merely been taught one more literal would still miss it",
+  [/\bfound\s*:\s*true/.test(SEGMENTS.get("aiRunLog") || "NOPE"),
+   /\bok\s*:\s*true/.test(SEGMENTS.get("aiRunLog") || "ok: true")], [true, false]);
+/* D-227 IS OPEN AND BITES EXACTLY HERE. The walk grades what a method
+   PUBLISHES, so removing `LIMIT ?` while leaving the envelope honest still
+   reads as bounded — CONDUCT measured that at REC-60's integration. The SQL
+   bound is therefore pinned DIRECTLY off this method's own segment rather than
+   inferred from its answer. Text-anchored over COMMENT-STRIPPED source so the
+   prose above the method (which names `LIMIT` twice) cannot satisfy it. */
+t("REC-70 / D-227: the SQL BOUND itself, pinned off aiRunLog's own comment-stripped segment — "
++ "the scan carries `LIMIT ?` and asks for `cap + 1`. The published envelope cannot stand in for "
++ "this: D-227 measured an envelope staying honest over a scan whose LIMIT had been removed",
+  [/FROM ai_run_log WHERE run = \? ORDER BY seq LIMIT \?/.test(SEGMENTS.get("aiRunLog") || ""),
+   /run,\s*cap \+ 1\)/.test(SEGMENTS.get("aiRunLog") || "")], [true, true]);
+t("REC-70: the cap comes from the plane's OWN figures and is not a literal at the call site — "
++ "`AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` are named constants, so the pair can be read and re-decided "
++ "in one place rather than found by grep",
+  [/Store\.AI_RUN_LOG_LIMIT_DEFAULT/.test(SEGMENTS.get("aiRunLog") || ""),
+   /Store\.AI_RUN_LOG_LIMIT_MAX/.test(SEGMENTS.get("aiRunLog") || "")], [true, true]);
+t("REC-70: NEITHER FIGURE IS NEW — 200 is op=exportlog's default (the plane's only other "
++ "append-only seq-ordered log) and 5000 is op=list's ceiling, which op=projection and the "
++ "meaning layer both reused rather than minting a second",
+  [/static AI_RUN_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
+   /static AI_RUN_LOG_LIMIT_MAX = 5000;/.test(SRC_STORE),
+   /static EXPORT_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
+   /static PROJECTION_LIMIT_MAX = 5000;/.test(SRC_STORE)], [true, true, true, true]);
+/* A MARKER PIN, stated as one: it proves the reasoning was WRITTEN where the
+   next reader meets the code, and claims nothing about what it says. The cause
+   of the blindness belongs at the site, not only in a queue item — the whole
+   complaint against REC-60's header is that prose nobody counts is prose nobody
+   reads. */
+/* ANCHORED ON THE SEGMENT, WHICH STARTS AT THE SIGNATURE — so a reasoning block
+   written in the doc comment ABOVE the method does NOT satisfy this, and the
+   first draft of this arm proved it by failing. That is the same mistake in
+   miniature: an explanation placed where the instrument cannot read it. */
+t("REC-70: THE CAUSE IS RECORDED AT THE SITE — `aiRunLog` carries, IN ITS BODY, why the ratchet "
++ "could not see it, so the next reader meets the blind spot at the code and the segmenter that "
++ "reads this file meets it too",
+  /REC-70[^]{0,6000}?found\s*:\s*true/i.test(segments(SRC_STORE).get("aiRunLog") || ""), true);
 
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a
@@ -528,6 +752,93 @@ t("op=concerns: the bound APPLIED is the same figure for every reader — a view
   [asMember.limit, asProbe.limit], [3, 3]);
 
 /* ==========================================================================
+ * REC-70 · op=airunlog DRIVEN THROUGH ITS REAL ROUTE.
+ *
+ * The source arms above prove the walk can now SEE this op. These prove the op
+ * is actually bounded, because a corrected instrument agreeing with a broken
+ * plane is the failure mode this whole file was built around.
+ * ========================================================================== */
+console.log("\n--- LIVE: op=airunlog, the op REC-60's ratchet could not see ---");
+const RUN = "RUN-2026-0807-rec70";
+{
+  const opened = await POST("op=airunopen&token=mem-r60", {
+    run: RUN, contextType: "inquiry", contextId: "INFO-2026-0001-r60",
+    label: "REC-70 fixture — a log long enough for a bound to bite", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }],
+    leaseMs: 600000, at: NOW,
+  });
+  t("REC-70 FIXTURE: the run opens — the arms below are over a REAL run, not an empty answer",
+    opened?.started, true);
+  /* SIX observations, because the bound must be driven at a figure BELOW the
+     row count and at one ABOVE it, and a fixture of one row cannot tell a bound
+     that bit from a bound that did not. */
+  const entries = [];
+  for (let i = 1; i <= 6; i++) entries.push({
+    level: "document", subject: `observation:rec70-${i}`, state: "PRESENT",
+    detail: `REC-70 fixture observation ${i} — the log grows one row per tick and nothing capped it` });
+  const ticked = await POST("op=airuntick&token=mem-r60", { run: RUN, at: NOW, leaseMs: 600000, log: entries });
+  t("REC-70 FIXTURE: and it records SIX observations, so a bound of 2 CUTS and a bound of 5000 does not",
+    ticked?.ticked, true);
+
+  const whole = await GET(`op=airunlog&token=mem-r60&run=${RUN}&limit=5000`);
+  t("REC-70 FIXTURE: ARMED — the whole log is six entries, measured before anything is asserted "
+  + "over a cut of it",
+    Array.isArray(whole?.entries) ? whole.entries.length : "MISSING entries", 6);
+
+  const cut = await GET(`op=airunlog&token=mem-r60&run=${RUN}&limit=2`);
+  t("op=airunlog: publishes the bound it APPLIED — the clamped cap, never the number asked for",
+    cut.limit, 2);
+  t("op=airunlog: a cut answer SAYS SO — whether these are the run's observations or its first N "
+  + "is READABLE, and §14b.7's resumed run is the reader that cannot afford to guess",
+    cut.truncated, true);
+  t("op=airunlog: a complete answer says the opposite", whole.truncated, false);
+  t("op=airunlog: DELTA — 'this is the whole log' and 'this is the first N' do NOT read alike",
+    cut.truncated !== whole.truncated, true);
+  t("op=airunlog: and the collection itself is still there, cut to the bound",
+    Array.isArray(cut?.entries) ? cut.entries.length : "MISSING entries", 2);
+  /* ASCENDING ORDER IS THE CONTRACT AND THE CUT FALLS AT THE END. op=exportlog
+     — the sibling this default came from — orders DESC because an administrator
+     wants the newest export; §14b.7 replays this log FROM THE START, so
+     reusing that ordering with the bound would have silently handed a resumed
+     run the END of its own history and called it the beginning. */
+  t("op=airunlog: the cut falls at the END — a bounded log still starts at seq 1, because the "
+  + "resumed run replays forward and op=exportlog's newest-first ordering would have handed it "
+  + "the wrong half",
+    cut.entries.map((e) => e.seq), [1, 2]);
+  const over = await GET(`op=airunlog&token=mem-r60&run=${RUN}&limit=99999`);
+  t("op=airunlog: an over-ask is answered at the CEILING and the CEILING is what is published — "
+  + "echoing 99999 back would be a second way of lying about the same fact",
+    over.limit, 5000);
+  const dflt = await GET(`op=airunlog&token=mem-r60&run=${RUN}`);
+  t("op=airunlog: a caller that asks for NO bound is answered at the DEFAULT and is TOLD which — "
+  + "the state this op shipped in was a caller who could not know a bound had been applied",
+    [dflt.limit, dflt.truncated], [200, false]);
+  /* REC-30's rule, and the bound must not become a second oracle. An absent run
+     and an unviewable one already read identically; publishing the cap on one
+     and not the other would reintroduce the difference through the envelope. */
+  const absent = await GET("op=airunlog&token=mem-r60&run=RUN-2026-0807-nope");
+  t("op=airunlog: the ABSENT run publishes the same bound — REC-30's rule is that the unknown run "
+  + "and the unviewable one read identically, and an envelope present on one answer and missing "
+  + "from the other is a difference a caller can measure",
+    [absent.found, absent.limit, absent.truncated], [false, 200, false]);
+  t("op=airunlog: the bound APPLIED is viewer-INDEPENDENT — a viewer-dependent bound would let a "
+  + "caller measure what is being withheld from them (D-15, REC-57's pin on op=list)",
+    [(await GET(`op=airunlog&token=mem-r60&run=${RUN}&limit=3`)).limit,
+     (await GET(`op=airunlog&token=prb-r60&run=${RUN}&limit=3`)).limit], [3, 3]);
+  /* THE VOCABULARIES ARE UNCHANGED BY THE BOUND. The log publishes four of them
+     precisely so its reader holds no copy (DEC-8); a truncated answer that also
+     truncated the vocabulary would leave a cut reader unable to read the rows
+     it DID get. */
+  t("op=airunlog: a CUT answer still carries the four vocabularies whole — they describe the "
+  + "entries, they are not entries, and a reader cut at 2 rows still has to read those 2",
+    [Object.keys(cut.vocabulary || {}).sort().join(","),
+     Object.keys(whole.vocabulary || {}).sort().join(",")],
+    ["bounds,endings,levels,states", "bounds,endings,levels,states"]);
+}
+
+/* ==========================================================================
  * THE RIDER — `op=list`'s unbounded bare-array arm, DECIDED: KEEP, and the
  * licence PINNED rather than asserted in a comment.
  * ========================================================================== */
@@ -596,6 +907,48 @@ const offender = collectionReads(`class Z {
 t("OVER-STRICTNESS: and the classifier still CALLS BARE the exact shape this item existed to fix, "
 + "so it is a measurement and not a permissive reader",
   [offender.has("ncUncapped"), offender.get("ncUncapped")?.bare], [true, true]);
+
+/* ---------------------------------------------- REC-70's OWN OVER-STRICTNESS.
+   The inverted success gate is the change this item makes to the reader, so it
+   gets its own over-strictness arm rather than riding the two above — which
+   both spell success `ok: true` and would have passed before the change too. */
+console.log("\n--- OVER-STRICTNESS (REC-70): success spelled ways this file does not, graded anyway ---");
+const REC70_ALTERNATIVES = [
+  /* `found: true`, correctly bounded, in a vocabulary neither this file nor the
+     plane's meaning layer emits — the SPELLING that hid `op=airunlog`, phrased
+     unlike the fix that was written for it. */
+  ["ncFoundBounded", `  ncFoundBounded({ q, n } = {}) {
+    const hits = this.#rows(\`SELECT * FROM t WHERE q=? LIMIT ?\`, q, n);
+    return { found: true, rows_out: hits.map((r) => r), row_limit: n, rows_truncated: hits.length > n };
+  }`, "bounded"],
+  /* NO marker at all, which is how op=signerlist, op=publishedlist, op=inboxlist
+     and op=memberlist answer — and every one of them was invisible. Unbounded,
+     so it must be called BARE: reaching it is worth nothing if reaching it
+     forgives it. */
+  ["ncNoMarkerUncapped", `  ncNoMarkerUncapped({ q } = {}) {
+    return { things: this.#rows(\`SELECT * FROM t WHERE q=?\`, q) };
+  }`, "bare"],
+];
+for (const [name, src, want] of REC70_ALTERNATIVES) {
+  const probe = collectionReads(`class Z {\n${src}\n  end() { return 1; }\n}`);
+  t(`OVER-STRICTNESS (REC-70): \`${name}\` spells success without \`ok: true\` and is graded ${want.toUpperCase()}`,
+    [probe.has(name), probe.get(name)?.verdict], [true, want]);
+}
+/* AND THE DENY-LIST IS NOT A LICENCE TO GRADE EVERYTHING. A refusal carrying a
+   list is still a refusal, and grading it would put refusal shapes on the bare
+   roster — an inverted gate that excluded nothing would be a different kind of
+   broken reader, so the one exclusion is asserted rather than assumed. */
+const refusal = collectionReads(`class Z {
+  ncRefusal({ q } = {}) {
+    const missing = this.#rows(\`SELECT * FROM t WHERE q=?\`, q);
+    if (missing.length) return { ok: false, reason: "MISSING", missing: missing.map((r) => r.id) };
+    return { ok: true, q };
+  }
+  end() { return 1; }
+}`);
+t("OVER-STRICTNESS (REC-70): a REFUSAL that carries a list is still a refusal and is NOT graded — "
++ "inverting the gate excludes exactly one shape, and excluding nothing would be its own defect",
+  refusal.has("ncRefusal"), false);
 
 await mf.dispose();
 

@@ -2,8 +2,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
- * ============================================================================
- *
+ * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
  * every consumer to guess or to author its own bound. It named two ops. THE
  * ITEM IS NOT THE TWO OPS — it is the CLASS, so the roster is read off
@@ -110,8 +109,7 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
-/* ==========================================================================
- * WALK — THE ROSTER OF CAPPED OPS, READ OFF THE PLANE'S OWN SOURCE.
+/* =================================================================== * WALK — THE ROSTER OF CAPPED OPS, READ OFF THE PLANE'S OWN SOURCE.
  * ========================================================================== */
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
@@ -243,8 +241,8 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    correction REC-60 made when three uncapped reads gained a bound, arriving from
    the other direction. The label no longer counts "wider than the pair", because
    a stale sentence beside a corrected number is the drift this suite exists to
-   catch. */
-/* CORRECTED 2026-08-07 (PL-10), not exempted, and 16 was the true measurement on
+   catch.
+   CORRECTED 2026-08-07 (PL-10), not exempted, and 16 was the true measurement on
    the day it was written. 16 -> 17 for ONE reason: `op=versionchain`, D-220's
    document-version chain, is a NEW capped read — the third kind of arrival this
    number has seen, after "an uncapped read gained a bound" (REC-60) and "the
@@ -253,9 +251,27 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    the `named-cap` shape this walk has recognised since REC-57, so nothing about
    the detector had to move to admit it. The label no longer counts against the
    pair the item named, because a stale sentence beside a corrected number is the
-   drift this suite exists to catch. */
+   drift this suite exists to catch.
+
+   CORRECTED AGAIN 2026-08-07 (REC-70), not exempted, and 16 was the true
+   measurement on the day PL-9 wrote it. 16 -> 17: `op=airunlog` gained a cap.
+   It is a plain JOIN — a read that carried no bound now carries one — and the
+   arrival is worth a sentence because of HOW it was found. It was NOT found by
+   this walk, which enumerates methods that carry a cap and therefore cannot see
+   a method that carries none; and it was NOT found by the sibling walk built for
+   exactly that blind spot either, because `meaning-bounds.test.mjs` graded only
+   returns spelling success `ok: true` while `aiRunLog` answers `found: true`.
+   TWO instruments, each blind to it for its own reason, and it was found by hand
+   at another item's integration. Both are corrected; both now name it. */
 t("WALK: the roster is SEVENTEEN ops — the sweep is the item, not the two the item named",
-  OPS.size, 17);
+/* CORRECTED TO 18 AT INTEGRATION, 2026-08-07 by CONDUCT — and the correction is the point.
+   PL-10 and REC-70 landed in the same integration and EACH corrected this pin 16 -> 17,
+   for DIFFERENT ops: `op=versionchain` (a new capped read) and `op=airunlog` (a read that
+   carried no bound and gained one). Both comment blocks above are true and both are kept.
+   Taking either worker's number would have left this pin asserting 17 over a roster of 18 —
+   a hand-carried count going stale in the very suite whose subject is that counts go stale.
+   Two items may not both be right about a shared number, and merging them is the integrator's. */
+  OPS.size, 18);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -282,8 +298,7 @@ t("REACH IS A DELTA (ops): and shrinks the ops it reaches",
 t("REACH IS A DELTA (dispatch): breaking the dispatch arrow shape shrinks the ops found, with the roster unchanged",
   cappedOps(CODE.replace(/\)\s*=>\s*this\./g, ") => that."), METHODS).size < OPS.size, true);
 
-/* ==========================================================================
- * LIVE — every roster op driven through its real route, twice: once with the
+/* =================================================================== * LIVE — every roster op driven through its real route, twice: once with the
  * bound BITING and once with it NOT. The pair is the assertion.
  * ========================================================================== */
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -436,6 +451,27 @@ t("FIXTURE ARMS THE TRAP: one capture carries TWO resolutions, so op=resolutions
    ONE DESCRIPTOR PER ROSTER OP: how to drive it, and how IT says "there is
    more". The `more` reader is each op's OWN vocabulary — see the header on why
    a fifth spelling is not minted. */
+/* REC-70, 2026-08-07: the observation log needs a RUN with more than one entry
+   before its bound can be shown to bite. Driven here rather than borrowed,
+   because a descriptor on this roster that could not actually be called is the
+   coverage-on-paper shape both these files exist to catch. */
+const R70_RUN = "RUN-2026-0807-bounds70";
+{
+  const opened = await POST(`op=airunopen&token=mem-r57`, {
+    run: R70_RUN, contextType: "inquiry", contextId: "INFO-2026-0001-r57",
+    label: "REC-70 fixture — the observation log, bounded", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`REC-70 fixture airunopen: ${JSON.stringify(opened)}`);
+  const ticked = await POST(`op=airuntick&token=mem-r57`, { run: R70_RUN, leaseMs: 600000,
+    log: [1, 2, 3].map((i) => ({ level: "document", subject: `observation:r70-${i}`,
+      state: "PRESENT", detail: `REC-70 fixture observation ${i}` })) });
+  if (ticked?.ticked !== true) throw new Error(`REC-70 fixture airuntick: ${JSON.stringify(ticked)}`);
+}
+t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=airunlog's cap of 1 cuts it",
+  (await GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=5000`)).entries?.length, 3);
+
 const DRIVEN = [
   { op: "readingname", bite: 1, whole: 500,
     drive: (n) => GET(`op=readingname&token=mem-r57&entity=${ENT}&limit=${n}`),
@@ -520,6 +556,22 @@ const DRIVEN = [
     lost: "whether these are ALL the versions the record holds at this address or the first N of them — "
         + "and a version history that is silently the first N is the false-coverage failure D-220 exists "
         + "to remove, reappearing inside the op built to remove it" },
+  /* REC-70, 2026-08-07: the OBSERVATION LOG, and it reached this roster the same
+     way REC-60's three did — it carried no cap, so a roster built from methods
+     that carry one could not enumerate it. It answers in `op=exportlog`'s
+     vocabulary (`limit` beside `truncated`) because op=exportlog is the plane's
+     only other append-only, `seq`-ordered log and this is its sibling by KIND,
+     not a twelfth spelling.
+     WHY IT IS HERE AND NOT MERELY IN meaning-bounds.test.mjs: that walk found it
+     only after REC-70 corrected its success-marker gate — it had been grading
+     just `ok: true` returns while this method answers `found: true`, hiding 27
+     dispatched ops. Two instruments now name this op independently, which is the
+     point: neither one's blind spot is the other's. */
+  { op: "airunlog", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are the run's observations or its first N — and §14b.7's RESUMED run reads its own "
+        + "log to continue rather than restart, so a cut it cannot see is work silently redone" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");
@@ -608,8 +660,7 @@ t("op=searchindexcheck: the ORPHAN list carries its own bound and its own trunca
 t("op=searchindexcheck: and that bound is NOT the page's — two lists, two bounds, resumed differently",
   sic.orphans_limit !== sic.limit, true);
 
-/* ==========================================================================
- * THE ROSTER DRIVES THE SUITE — the pin that stops this file covering less
+/* =================================================================== * THE ROSTER DRIVES THE SUITE — the pin that stops this file covering less
  * than the sweep claims.
  * ========================================================================== */
 console.log("\n--- PIN: the ops driven are the ops the walk found ---");
@@ -617,8 +668,7 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    also the task fixture, the two backfills because each must CLEAR a derived
    structure to arm itself and `reindexnames` has no control-plane entry at all. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject"]);
-/* ==========================================================================
- * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
+/* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
  * assertion `ARRAY_SHAPED.size === 1`. That pin was RIGHT to exist and WRONG in
@@ -666,8 +716,7 @@ t("PIN: every capped op the walk found is DRIVEN here — an op that grows a cap
 t("PIN: and nothing is driven that the walk did NOT find — the roster is the source's, not this file's",
   [...covered].filter((o) => !OPS.has(o)), []);
 
-/* ==========================================================================
- * REC-59 · THE CONSUMER WALK, RE-MEASURED — and IC-24's own count was WRONG.
+/* =================================================================== * REC-59 · THE CONSUMER WALK, RE-MEASURED — and IC-24's own count was WRONG.
  *
  * IC-24 recorded: *"every one of the nine call sites found … uses the `&id=`
  * arm, which does not move."* RE-MEASURED HERE, and the number is right about
@@ -844,8 +893,7 @@ t("REC-59 REACH (THE FAILURE MODE NAMED): over that same empty corpus, a `no cor
 + "is asserted here so the reason the DELTA arm above exists cannot be forgotten",
   callSites([]).filter((s) => s.arm !== "id").length === 0, true);
 
-/* ==========================================================================
- * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is
+/* =================================================================== * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is
  * measuring its author. These are answers that are GENUINELY HONEST and look
  * nothing like what this file emits, and they must NOT fail.
  * ========================================================================== */

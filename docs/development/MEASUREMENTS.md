@@ -2833,3 +2833,56 @@ the noise, because `role` has two values and an index is worth least where the v
 is commonest. `connections(grade)` — no arm reads it; `concerns:` joins
 `resolutions`, which is the base relation a connection is derived from, and
 `meaningquery.test.mjs` DEMONSTRATES the superset rather than asserting it.
+
+---
+
+## 2026-08-07 — REC-70: how much of the plane `meaning-bounds.test.mjs` could actually see
+
+**Instrument:** `bio-plane/test/meaning-bounds.test.mjs`'s own readers (`segments`,
+`collectionReads`, and a new unfiltered `dispatchedOps` denominator), run over
+`bio-plane/src/store.mjs` at 17,643 lines. Not an estimate — the same functions the suite
+asserts with, re-run with the success-marker gate as the only variable.
+
+**THE HEADLINE: a walk built to catch unbounded collection reads was grading 55 of the
+plane's 156 dispatched ops, and read as a complete sweep.**
+
+| | ops reached | BARE | BOUNDED | UNJUDGED | OPAQUE¹ |
+| --- | --- | --- | --- | --- | --- |
+| gate = `ok: true` (REC-60, as shipped) | **55** / 156 | 27 | 8 | 20 | **24** |
+| gate = not `ok: false` (REC-70) | **82** / 156 | 41² | 10 | 31 | **8** |
+
+¹ OPAQUE = DISPATCHED **and** calls `#rows(` **and** the walk reaches no verdict. This is the
+blind-spot count, and `op=airunlog` was in it.
+² 40 after REC-70 bounds `op=airunlog`. The ratchet moved **27 → 40**: the old figure was
+never a smaller problem, it was a smaller measurement.
+
+**THE CAUSE, and it was one line.** `collectionReads` graded only return objects containing
+the literal `ok: true`. **27 dispatched ops answer success another way** — `found: true`
+(`op=airunlog`, `op=airun`, `op=airuntick`) or **no marker at all**: `op=signerlist` →
+`{ signers }`, `op=publishedlist` → `{ bundles, cases }`, `op=inboxlist` → `{ inbox }`.
+**The 27, by the bucket they landed in once the gate was inverted:**
+
+- **BARE (14)** — `airun`, `airunlog`, `airuntick`, `inboxlist`, `index`, `memberlist`,
+  `publishedlist`, `readingnameplan`, `reusedparts`, `reuseverdicts`, `selection`,
+  `signerlist`, `thread`, `verify`. **Every one a real unbounded collection read, hidden
+  by one literal.**
+- **BOUNDED (3)** — `projection`, `searchindexcheck`, and `airunlog` after REC-70 bounded it.
+- **UNJUDGED (11)** — `cpuprobestate`, `discharge`, `governorstate`, `linksto`,
+  `projectlinks`, `recordlinkverdict`, `recordsiteassets`, `resolvelinks`,
+  `runtimeobservations`, `searchfields`, `sitechrome`.
+
+The literal sat **four lines after** the same file's `BOUND_KEY`/`MORE_KEY` regexes, which
+were deliberately written as SETS *"because the plane answers the second in five spellings
+on purpose"*. **The instrument avoided the one-vocabulary mistake in its leaves and
+committed it at its root.**
+
+**A THIRD FIGURE, from the same run and not asked for:** under a NEUTERED walk
+(`collectionReads` returning nothing) the RATCHET **stayed green at 0 of 40** while the
+corpus printed as zero. A ceiling passes trivially over nothing. A FLOOR was added beside
+it, and the neutering control now fails.
+
+**Related:** D-227 (open) reproduces on this op — dropping only `LIMIT ?` and leaving the
+envelope honest left `meaning-bounds` at 80/1 and `bounds` at **112/0, fully green**, with
+only the direct SQL-bound pin firing. And `airun.test.mjs`, the op's OWN suite, stayed
+**GREEN under the full restore**: it drives `op=airunlog` at six sites and none asks for
+more than 200 rows, so it could never have caught this.
