@@ -1,3 +1,13 @@
+/* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) ONE arm, this file's share of REC-67's
+   six, armed ALONE and restored from a PRISTINE copy verified by sha256 AND by `cmp`.
+   Baseline 83/0. RESTORE THE STRING-TRIM ADMISSION — `const collectionExpr = (v) =>
+   ARRAY_EXPR.test(String(v))`, dropping `deTrim`, so a `.slice(` on a trimmed STRING is read as
+   a collection again -> **80/3**: the REC-67 both-directions guard fails, the bare-roster
+   CEILING fails at 40 of 39 with the walk PRINTING `BARE … 40 ops` and `OPAQUE … 9 ops`, and the
+   NAMED opaque residual fails missing `thread->threadInstance`. The failure NAMES the op, which
+   is what makes this a pin rather than a count. Note the FLOOR arm stays green under this arm by
+   design — a floor cannot catch a roster that GREW, which is what the ceiling is for. To re-run:
+   make that one substitution, run this suite, restore. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec70-agent, REC-70) FIVE arms, every file restored and
    verified by CONTENT as well as sha256. THE SUBJECT IS THE WALK'S REACH, not one op.
    (1) RESTORE THE UNBOUNDED READ — in src/store.mjs `aiRunLog`, drop `LIMIT ?` and the
@@ -178,6 +188,40 @@ const segments = (code) => {
 /* An expression that PRODUCES a collection. Deliberately syntactic: the walk reads code,
    not types, and says so. */
 const ARRAY_EXPR = /(?:\.map\(|\.filter\(|\.slice\(|\.sort\(|\[\s*\.\.\.|Array\.from\(|#rows\(|\.concat\(|\.values\(\)\])/;
+/* CORRECTED 2026-08-08 (REC-67), not exempted, and it is the THIRD instance of one
+   defect in this file rather than a new one. `.slice(` is an Array method and a
+   STRING method, and this plane trims a value with `String(x).slice(0, N)` in
+   almost every act it records. PL-1 corrected the mis-read where it produced a
+   bare-ARRAY return, PL-15 corrected it again where the refusal helper was
+   spelled `refusal(` instead of `refuse(` — and it survived in the two places
+   neither of them was looking at: `localCollections`, which promoted a trimmed
+   string to a "local collection", and the pair filter below, which reads
+   ARRAY_EXPR straight off a published VALUE.
+   MEASURED rather than argued, on 2026-08-08 over `store.mjs`: three methods sat
+   on this roster for no other reason — `#upsertResolution` (`basis: String(basis)
+   .slice(0, 400)`), `threadInstance` (`by: String(threadedBy).slice(0, 200)`) and
+   `projectLeave` (`comment: String(comment).slice(0, 280)`) — and two more,
+   `defineProgression` and `dischargeStage`, published a phantom `declared_by`
+   "collection" that is a trimmed name. `op=thread` was on the ratcheted BARE
+   roster on the strength of it.
+   THE DIRECTION IS THE SAFE ONE AND THAT IS WHY IT MUST STILL BE FIXED: a walk
+   that INVENTS a member of the class inflates a CEILING, and a ceiling that
+   counts non-defects cannot be held — PL-15's own words, one correction earlier.
+   THE EXCLUSION IS DELIBERATELY INCOMPLETE, IN THE SAFE DIRECTION. It excludes a
+   `.slice(` whose receiver chain is ROOTED IN A PROVABLE STRING — a `String(…)`
+   call, a `.toISOString()`, a `.join(…)`, or a string literal — and nothing
+   else. A string this reader cannot prove is a string keeps its old reading, so
+   what survives is a FALSE POSITIVE (alarming, catchable) and never a missed
+   collection. Dropping `.slice(` outright would have been the other shape and is
+   refused: `rows.slice(0, cap)` is how half the bounded reads in this plane take
+   their page, and losing those would HIDE the class this file exists to find. */
+const STRING_TRIM =
+  /(?:String\s*\([^;]*?\)|\.toISOString\s*\(\s*\)|\.join\s*\([^;]*?\)|"[^"\n]*"|'[^'\n]*')(?:\s*\.[A-Za-z_$][\w$]*\s*\([^;]*?\))*\s*\.slice\s*\(/g;
+/* The expression with its provable string trims neutralised, so ARRAY_EXPR is
+   asked about what is left. Everything except the `.slice(` survives, because a
+   value may trim a string AND build a list in the same breath. */
+const deTrim = (v) => String(v).replace(STRING_TRIM, (m) => m.replace(/\.slice\s*\($/, ".trimmedString("));
+const collectionExpr = (v) => ARRAY_EXPR.test(deTrim(v));
 /* Identifiers assigned from one, in the same segment — `documentsConcerning` returns
    `documents`, a plain name, and a walk that only read inline expressions would have
    missed the very read D-225 was raised about. */
@@ -185,7 +229,7 @@ const localCollections = (body) => {
   const out = new Set();
   let m;
   const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]*)/g;
-  while ((m = re.exec(body))) if (ARRAY_EXPR.test(m[2]) || /^\s*\[\s*\]/.test(m[2])) out.add(m[1]);
+  while ((m = re.exec(body))) if (collectionExpr(m[2]) || /^\s*\[\s*\]/.test(m[2])) out.add(m[1]);
   return out;
 };
 
@@ -325,14 +369,14 @@ const collectionReads = (code) => {
     for (const ro of returnObjects(body)) {
       if (REFUSAL_RETURN.test(ro)) continue;
       const pairs = topPairs(ro);
-      const arr = pairs.filter(([k, v]) => ARRAY_EXPR.test(v) || locals.has(v) || (k === v && locals.has(k))).map(([k]) => k);
+      const arr = pairs.filter(([k, v]) => collectionExpr(v) || locals.has(v) || (k === v && locals.has(k))).map(([k]) => k);
       if (!arr.length) continue;
       keys = [...new Set([...keys, ...arr])];
       bound = [...new Set([...bound, ...pairs.map(([k]) => k).filter((k) => BOUND_KEY.test(k))])];
       more = [...new Set([...more, ...pairs.map(([k]) => k).filter((k) => MORE_KEY.test(k))])];
     }
     for (const expr of returnBare(body))
-      if (ARRAY_EXPR.test(expr) && !REFUSAL_CALL.test(expr)) bareReturn = true;
+      if (collectionExpr(expr) && !REFUSAL_CALL.test(expr)) bareReturn = true;
     if (!keys.length && !bareReturn) continue;
     /* THREE VERDICTS, and the third is where this walk stops rather than where the plane is
        clean — a distinction the first draft of this file collapsed, and collapsing it would
@@ -474,14 +518,38 @@ t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a ret
   const refusalOnlyLongName = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n"
     + "    if (!a) return refusal(\"NO_A\", `a=${String(a).slice(0, 60)} is not an id`);\n"
     + "    return { ok: true, rows, limit: 1, truncated: false };\n  }";
+  /* ADDED 2026-08-08 (REC-67) SO PL-1's ARM KEEPS ITS TEETH. This item taught the
+     reader that a `.slice(` rooted in `String(…)` is a trim, which means the two
+     fixtures above would now read `false` even with `REFUSAL_CALL` deleted — a
+     guard passing for a reason its author did not intend, which is the shape
+     this whole sweep is about. So a THIRD fixture refuses with a REAL ARRAY
+     slice: it survives `deTrim` and only `REFUSAL_CALL` can exclude it, so
+     PL-1's narrowing is still the thing being measured here. */
+  const refusalWithRealArray = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n"
+    + "    if (!a) return refusal(\"TOO_MANY\", rows.slice(0, 3));\n"
+    + "    return { ok: true, rows, limit: 1, truncated: false };\n  }";
   const bareOf = (src) => {
     const b = [...segments(src).values()][0] || "";
-    return returnBare(b).some((e) => ARRAY_EXPR.test(e) && !REFUSAL_CALL.test(e));
+    return returnBare(b).some((e) => collectionExpr(e) && !REFUSAL_CALL.test(e));
   };
   t("WALK GUARD (PL-1, 2026-08-07): the bare-array reader still SEES a real bare array, and no longer "
   + "counts a refusal that trims a value with `.slice(` — measured in both directions, so the "
   + "narrowing is a correction and not an exemption",
-    [bareOf(realBare), bareOf(refusalOnly), bareOf(refusalOnlyLongName)], [true, false, false]);
+    [bareOf(realBare), bareOf(refusalOnly), bareOf(refusalOnlyLongName), bareOf(refusalWithRealArray)],
+    [true, false, false, false]);
+  /* REC-67's own direction, driven beside PL-1's: a trimmed STRING is not a
+     collection, and a real array slice still is. Both, or the narrowing is an
+     exemption wearing a measurement's clothes. */
+  t("WALK GUARD (REC-67, 2026-08-08): `String(x).slice(0, N)` is a TRIM and is no longer read as a "
+  + "collection, while `rows.slice(0, cap)` — how half the bounded reads in this plane take their "
+  + "page — still is. The narrowing is measured in both directions",
+    [collectionExpr("String(basis).slice(0, 400)"),
+     collectionExpr("new Date(n).toISOString().slice(0, 10)"),
+     collectionExpr("comment === null ? null : String(comment).slice(0, 280)"),
+     collectionExpr("merged.slice(0, cap)"),
+     collectionExpr("Array.isArray(terms) && terms.length ? terms.slice(0, 24) : [\"oakland\"]"),
+     collectionExpr("`${String(x).slice(0, 60)} and ` + rows.slice(0, 5)")],
+    [false, false, false, true, true, true]);
 }
 
 /* ------------------------------------------------------- THE ITEM'S OWN (a).
@@ -524,10 +592,22 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    measurement**, and a ratchet over a corpus the instrument could not see is
    the failure this item exists to record. The residual is REAL, is printed
    above, and is not claimed to be graded — only fixed in place. */
+/* CORRECTED 2026-08-08 (REC-67), not exempted, and 40 was the true measurement
+   on the day REC-70 wrote it. 40 -> 39 for ONE reason and it is a correction to
+   the READER, not to the plane: `op=thread` was on this roster because
+   `threadInstance` publishes `by: String(threadedBy).slice(0, 200)` and the
+   collection detector read `.slice(` on a trimmed STRING as an array. It never
+   published a collection at all. **THE OP DID NOT GET BETTER — IT WAS NEVER A
+   MEMBER**, and it moves to the OPAQUE residual below rather than to a clean
+   bill, because this reader still cannot say what `threadInstance` publishes;
+   it can only now say that what it publishes is not this. A phantom member of a
+   CEILING is the shape PL-15 named one correction earlier: a ceiling that counts
+   non-defects cannot be held. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
-+ "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-07 over the "
-+ "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops) and fails here",
-  BARE_OPS.length <= 40, true);
++ "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
++ "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
++ "phantom) and fails here",
+  BARE_OPS.length <= 39, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -536,7 +616,11 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
 t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this figure being moved "
 + "means the READER lost sight of ops, not that the plane got better. REC-60's 27 was a shrunken "
 + "measurement nobody could distinguish from progress",
-  BARE_OPS.length >= 40, true);
+  /* MOVED 2026-08-08 (REC-67) IN THE SAME EDIT AS THE CEILING, and this arm is
+     exactly the reason the move is deliberate rather than silent: the roster
+     shrank by one and this floor is what forced somebody to say WHY. The answer
+     is recorded above the ceiling — a phantom left, no read was fixed. */
+  BARE_OPS.length >= 39, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
@@ -572,11 +656,24 @@ t("REACH: every DISPATCHED op is accounted for EXACTLY ONCE — bare, bounded, u
    one layer down and is why the figure moves with a date rather than being
    argued away. PL-15's own new work adds NOTHING here: `op=queue` came OFF the
    bare roster by the same correction and is on neither residual. */
+/* MOVED 9 -> 10 ON 2026-08-08 (REC-67), AND IT IS PL-15's MOVE HAPPENING AGAIN
+   FOR THE SAME REASON ONE FALSE POSITIVE OVER. `op=thread` sat on the BARE
+   roster because the collection detector read `String(threadedBy).slice(0, 200)`
+   — a trimmed NAME — as an array. Teaching it that a `.slice(` rooted in a
+   provable string is a TRIM moves the op out of BARE and reveals what it
+   actually is: DISPATCHED, scanning rows, and outside every bucket.
+   THIS IS THE HONEST DIRECTION AND IT LOOKS LIKE THE WRONG ONE, so it is said
+   plainly: the walk did not get blinder, it stopped claiming a verdict it never
+   had. A FABRICATED verdict replaced by a STATED unknown is the trade this
+   project makes everywhere else — undetermined is first-class and must be
+   stated — and the ceiling is safe to move only because the residual below is
+   pinned BY NAME, so the +1 cannot hide anything but the op that earned it. */
 t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPATCHED, and lands "
 + "outside every bucket is a BLIND SPOT and not a clean bill. `op=airunlog` was one of 24 on "
-+ "2026-08-07; correcting the success-marker gate left 8, and correcting REFUSAL_CALL's spelling "
-+ "on 2026-08-08 revealed a 9th that had been hiding inside the bare roster. A NEW one fails here",
-  OPAQUE.length <= 9, true);
++ "2026-08-07; correcting the success-marker gate left 8, correcting REFUSAL_CALL's spelling on "
++ "2026-08-08 revealed a 9th, and REC-67's string-trim correction a 10th — every one of them "
++ "already hiding inside the bare roster. A NEW one fails here",
+  OPAQUE.length <= 10, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
   OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
@@ -591,6 +688,15 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
            "projectowneradd->projectOwnerAdd", "publish->publish",
            "registeraudit->registerAudit", "select->selectionCreate",
            "selectionrelease->selectionRelease", "taskdrain->taskDrain",
+           /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
+              path, and it arrives the same way PL-15's did: it was on the BARE
+              roster on the strength of a `String(threadedBy).slice(0, 200)` the
+              collection detector read as an array. `threadInstance` writes
+              placements and answers a status; what it publishes is not a
+              collection this reader can find, and saying THAT is honest where
+              calling it bare was not. Named rather than absorbed, because "10"
+              satisfied by a different ten is what this arm exists to refuse. */
+           "thread->threadInstance",
            /* ADDED 2026-08-08 (PL-15) — and it is the ONE member of this list
               that is NOT a write path scanning rows for its own logic. It is a
               READ, and it is here because the reader could not classify what it

@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) ONE arm, this file's share of REC-67's six, armed ALONE and restored from a PRISTINE copy verified by sha256 AND by `cmp`. Baseline 54/0. RESTORE THE SPELLING-ONLY ANCHOR — `jsonCalls`' `const re = /(?<![.\w$])json\(/g` back to `/\bjson\(/g` -> **53/1**, and the ONE failure is the REC-67 CORPUS GUARD, with the corpus line printing `144 json() call sites` where the structural anchor reads 117. NOTHING ELSE FAILS, and that is the measurement rather than a claim: it is what shows the 27 `.json()` METHOD calls this anchor was admitting were INERT — detectors A and B both require argument text a zero-argument method call cannot have, so nothing was invented and nothing was hidden. The defect was a corpus 19% larger than the walk's real one. To re-run: swap that one regex, run this suite, restore. */
 /* NEGATIVE CONTROL: RUN 2026-08-05 (rec52-agent), NINE ARMS, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY — sha256 index.mjs 469c2af3b2e1af0a…, plane-envelope.test.mjs 719222e59aead07e…, do-fail-worker.mjs 77be03389e432c26… before and after ALL of them. Whole = 46/46. (a) THE ITEM'S SITE (a) — section 7a's `const out = await r.json(); return json({ok:true, ...out.result}, 200)` restored -> 43 pass, 3 FAIL: the SOURCE sweep names the site ("1628:out"), the unconverted-set arm goes with it, and the DRIVEN arm reports the lie in the words of the defect ("got 200 true"). (b) THE ITEM'S SITE (b) — `(c || { reason: "NOT_PUBLISHED" })` restored -> 43 pass, 3 FAIL: detector B names line 1786, its own REACH DELTA fails because only 2 of the 3 fallbacks are now plantable, and the drive reports `got "NOT_PUBLISHED"` for a store that never answered. (c) op=publishedmanifest's `result: (await r.json()).result` restored -> 45/1, the published INDEX indistinguishable from an empty record. (d) op=publishedbytes' `if (!v || !v.published)` restored as ONE test -> 44/2, and DETECTOR C fires too because `verify` rejoins the unconverted path set — two independent instruments on one edit. (e) the session lookup's silence restored -> 45/1. (f) THE OTHER DIRECTION, and it is the arm that keeps this from collapsing the wrong way: `answered` made to require a NON-EMPTY result -> 44/2, the chokepoint's own arm plus "a bundle that genuinely is not there still answers ABSENT" — a real absence read as a silence, which UI-37 measured is one character away. (g) THE SWEEP'S OWN, AND IT HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED: the first version neutered `handlerRegion` to return the whole file and the suite stayed 46/46 GREEN, so it measured NOTHING — with every guard removed by the reach delta there is no `.answered` anywhere and a whole-file region gives the same answer as a scoped one. The property the bound actually protects is that a guard in ONE handler must not vouch for a spread in ANOTHER, and `out` is the identifier in BOTH op=verify and op=bootstrap. Corrected to two paired arms: (g1) op=verify's guard removed ALONE with the sweep intact -> 43 pass, 3 FAIL, detector A naming "1627:out"; (g2) THE SAME single guard removed AND `handlerRegion` neutered -> 45 pass, 1 FAIL — the source sweep goes BLIND and only the live drive still bites, because op=bootstrap's own `out.answered` vouches for op=verify's missing one. The delta between (g1) and (g2) is the whole value of the handler bound. (h) THE INSTRUMENT'S OWN — `fixtures/do-fail-worker.mjs`'s injection disarmed (`if (false && …)`) so the store is asked to fail and does not -> 29 pass, 17 FAIL, every driven arm in the file naming its own site, which is what proves the drives are answering an actual Durable Object failure and not a belief about one. To re-run: node the arms in the order above, one file mutated at a time, restoring from a pristine copy and comparing sha256 after each. */
 /* NEGATIVE CONTROL: RUN 2026-08-05 (rec53-agent), REC-53's ELEVEN ARMS over this file and `ratify-envelope.test.mjs`, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY with sha256 compared before and after — index.mjs 8b8515b42b882f9f…, plane-envelope.test.mjs 163292ca7cdbe63e…, ratify-envelope.test.mjs 7d9180199be94898…, do-fail-worker.mjs 77be03389e432c26…. (index.mjs and do-fail-worker.mjs are the SHIPPED shas; the two test files' are their shas AS RUN, before their own NEGATIVE CONTROL headers were appended — a file cannot state its own sha, and REC-52's line above has the same property. The shipped test files are plane-envelope 18190d7f… and ratify-envelope fa2d83e8….) **THE WHOLE FOR THIS FILE IS NOW 53/53, CORRECTED FROM REC-52's 46/46 ABOVE** — +5 for REC-53's corrected pins and detector D, +2 for detector D2, and the line above is left as REC-52 measured it rather than rewritten. The arms are stated in full in `ratify-envelope.test.mjs`'s own NEGATIVE CONTROL line, because seven of them are edits to `src/index.mjs`'s publish/ratify block that BOTH files see; what they do to THIS file: (a) `do/list` restored -> 47/6 (CLOSED (i) and its other-direction arm, detector C, detector D naming "4027:list", and both D reach arms); (b) `do/reusedparts` restored -> 48/5 (CLOSED (ii) plus the same four); (c) `do/image` -> 50/3; (d) `do/gatefacts` -> 50/3; (e) `do/publish`'s guard removed -> 51/2, **and this arm is why detector D2 exists: run before D2 it left this file 51/51 FULLY GREEN while the live drive reported `PUBLISH_FAILED`, because D proves an envelope is OPENED through the chokepoint and says nothing about the handler ACTING on the answer, and A is correctly silent since `pub` is spread into a REFUSAL rather than a success envelope**; (f) `capturelimit`'s `ceilingRead` forced true -> 52/1, D2 naming "limOut"; (g) `recordreuseverdicts` back to fire-and-forget -> 50/3; (h) `recordcasemanifest`'s branches swapped -> **53/53 SILENT here**, the one arm this file cannot see — D2 passes because the binding IS read with `.answered`, only in the wrong order — and it is `ratify-envelope.test.mjs`'s ordering pin that bites; (i) the other direction, a genuinely empty reused-part set treated as a silence -> 52/1; (j) the injector disarmed -> **36/17, REC-52's own seventeen reproduced exactly**; (k) detector D's region bound neutered to the whole file -> 50/3, D reporting 23 violations ALL OUTSIDE the block, so an unbounded detector stops being a claim about the BLOCK. */
 /* REC-52 — THE PLANE MUST NOT CONVERT ITS OWN FAILURE INTO A CLAIM ABOUT THE RECORD.
@@ -122,9 +123,24 @@ const blank = (s) => s
    line it starts on. Bracket-matched rather than regexed, because these
    arguments run to twenty lines and contain nested objects and template
    literals. */
+/* CORRECTED 2026-08-08 (REC-67), not exempted. This anchor was `/\bjson\(/g`,
+   and `\b` matches between a DOT and a letter — so every `await r.json()` and
+   `await req.json()` in the control plane was collected as a call to the
+   module's own `json()` helper. MEASURED over `src/index.mjs` on 2026-08-08:
+   144 matches, of which **27 were `.json()` METHOD calls on a Response or a
+   Request**, so nearly a fifth of this walk's corpus was a phantom.
+   IT WAS INERT, AND IT IS STILL WORTH FIXING. A `.json()` call takes no
+   argument, so detector A (which requires an argument opening `{ ok: true`) and
+   detector B (which scans the argument for a `|| { reason:` fallback) could
+   never have produced a finding from one — nothing was invented and nothing was
+   hidden. But a walk whose reported corpus is 19% larger than its real one is
+   an instrument nobody can hold to a number, and this is REC-67's class exactly:
+   an anchor that admits a METHOD NAME because it matched the callee's spelling
+   rather than its structure. The negated class is what makes it structural — a
+   receiver is what turns `json(` into somebody else's method. */
 function jsonCalls(src) {
   const out = [];
-  const re = /\bjson\(/g;
+  const re = /(?<![.\w$])json\(/g;
   let m;
   while ((m = re.exec(src))) {
     let i = m.index + m[0].length, depth = 1;
@@ -277,6 +293,23 @@ function doFetchSites(src) {
 const SRC = blank(RAW);
 
 console.log("\n--- PART 1: the source-level sweep over src/index.mjs ---");
+/* REC-67 · THE CORPUS THIS WALK ACTUALLY READS, PRINTED AND GUARDED IN BOTH
+   DIRECTIONS. Narrowing an anchor must not narrow its reach to nothing, so the
+   site count is printed every run and the reader is driven over a synthetic
+   pair: a bare `json(` is FOUND and a `.json()` method call is REFUSED. Without
+   the second half the correction is unprovable; without the first it could have
+   been made by matching nothing at all. */
+console.log(`  CORPUS: src/index.mjs ${SRC.split("\n").length} lines · `
+          + `${jsonCalls(SRC).length} json() call sites (the anchor excludes \`.json()\` method calls; `
+          + `${[...SRC.matchAll(/\bjson\(/g)].length} match a spelling-only anchor)`);
+t("REC-67 CORPUS GUARD: the walk reads a real corpus of json() sites, and the anchor refuses a "
++ "`.json()` METHOD call — measured in BOTH directions over a synthetic pair, because an anchor "
++ "made precise by matching nothing is the failure this correction could otherwise introduce",
+  [jsonCalls(SRC).length > 80,
+   jsonCalls(`return json({ ok: true, x }, 200);`).length,
+   jsonCalls(`const out = await r.json();`).length,
+   jsonCalls(`const body = await req.json().catch(() => null);`).length],
+  [true, 1, 0, 0]);
 
 const aBad = detectA(SRC);
 t(`DETECTOR A — no handler spreads a Durable Object result into a success envelope `
