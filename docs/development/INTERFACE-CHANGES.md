@@ -2353,3 +2353,85 @@ unaffected: `op=pdfstructure` still calls `POST /structure` and nothing else.)*
 ### 3 · RESOLUTION
 
 *(CONDUCT's.)*
+
+## IC-35 · I3: `op=connect` bounds the DERIVATION and publishes what it bounded · PROPOSED 2026-08-08 (REC-66 / D-224, D-225's class one step earlier) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**WHAT MOVES.** `op=connect` (`store.mjs deriveConnections`) accepts a `limit` — from the POST
+body or from `&limit=` — and its success answer gains four keys:
+
+    limit             the PAIR bound APPLIED, after clamping (default 500, ceiling 5,000)
+    document_limit    the DOCUMENT bound derived from it (32 at the default, 100 at the ceiling)
+    documents         (EXISTING KEY, NARROWED) the documents the derivation actually READ
+    resolution_rows   the rows the bounded scan returned
+    truncated         whether the DERIVATION was cut — not whether an array was sliced
+
+**THIS IS NOT REC-57's ENVELOPE ARRIVING LATE, AND THE DIFFERENCE IS THE ITEM.** IC-25 gave
+three meaning-layer READS a bound on what they ANSWER. This op did **unbounded WORK**: it read
+the entity's resolutions with no `LIMIT` and wrote one row per PAIR — k(k−1)/2 — so a cap on
+the array it returned would have left the scan and the write exactly where they were. The
+bound is therefore on the SCAN, and the answer's bound is a consequence of it. The document
+bound is the INVERSE of the quadratic taken from the pair bound (`#maxEndsForPairs`), so the
+two figures cannot disagree.
+
+**THE BREAKING HALF, STATED PLAINLY.** For a subject with more than 32 documents (or 100 at
+the ceiling), `op=connect` now derives and persists FEWER connections than it used to, and
+says so. `count` and `documents` may be smaller than before for exactly those subjects; every
+row it does write is unchanged, byte for byte, in grade, ordering, basis and `asserted_by`.
+Below 32 documents **nothing moves at all** — the answer is the old answer plus four keys.
+
+**THE FIGURES ARE MEASURED, NOT CHOSEN.** D-224 asked for a measurement before any cap and had
+never had one. `bio-plane/test/connections-growth.measure.mjs` (2026-08-08, in
+`MEASUREMENTS.md`): the row count is exactly k(k−1)/2 at every level, ~798 bytes per row, and
+**one subject at k=1,000 is 499,500 rows, 398 MB and 10.3 s inside one synchronous
+transaction — ~4% of the 10 GB per-object ceiling D-190 records as a vendor claim.** At the
+5,000-pair ceiling the same instrument measures ~4 MB and ~65 ms. The pair 500/5,000 is
+`#MEANING_LIMIT_DEFAULT`/`#MEANING_LIMIT_MAX`, REC-60's, so no figure is minted here.
+
+**MEASURED CONSUMER IMPACT — RUN, NOT PREDICTED.**
+
+- **`civicos-ui/` reaches this op at ONE site**: `connectGo()` in `app.html` (~12,258), which
+  POSTs `{ entityId }` and renders `r.count` (falling back to `r.connections.length`). Both
+  keys are unmoved, and it sends no `limit`, so it is answered at the default. **`node
+  civicos-ui/test/run.mjs` from the repo root: exit 0**, all harnesses green, and its op probe
+  reports `connect` among the 68 ops it exercises — so the change is measured through the
+  surface's own mocks rather than argued about.
+- **WHAT THE UI DOES NOT YET SAY, delegated rather than reached into (CLAIMS.md):** the receipt
+  reads *"The record derived N connections…"* with no room for *"…among the first 32 of the 40
+  documents that concern this subject"*. UI-48 already surfaces `op=connections`' bound; this is
+  its sibling and it is UI's to write.
+- **`newgroup/` and `docprofile/` reach none of it** (grep: no `connect` call site). `pdf-worker`
+  and `agent-worker` do not call the plane's meaning layer.
+- **INSTRUMENT FIGURES THAT MOVE, from what each PRINTED on a green run:**
+  `bounds.test.mjs`'s capped-op roster **25 → 26**; `meaning-bounds.test.mjs`'s bare-collection
+  ratchet **39 → 38**, ceiling and floor in one edit. No refusal code is added, so
+  `check-refusal-codes --strict`'s floors are BYTE-IDENTICAL before and after (59 sites / 60
+  lines / 46 regions / 1,263 region lines / 115 codes) and no governed DEC-49 region is touched.
+
+**I5 IS UNTOUCHED.** No schema change: no table, no column, no index. The `connections` table,
+its key and its `purge` membership are exactly as they were.
+
+**WHAT IS DELIBERATELY NOT SHIPPED, so the next reader does not think it was missed.** The op
+does NOT REFUSE a subject too large to derive whole, which is the other honest posture and is
+`op=suggest`'s (a WRITE over its cap is turned away naming the bound). It is recorded as a
+decision for Bob in `CLAIMS.md` with the reasoning; the short form is that a refusal would
+leave the MOST IMPORTANT subject with no connections at all and would leave the alarm-driven
+sweep refusing the same entity every tick, while a bounded derivation writes only true rows,
+states that it was cut, and is resumable by asking for a wider bound. The gap it leaves —
+`op=connections` cannot see that the derivation behind its rows was bounded — is raised as
+**D-237** in the same turn rather than left implicit.
+
+**THE VERSION BUMP IS NOT TAKEN HERE.** This is a change to what an existing op ANSWERS for
+large subjects, so it is I3's to rule; REC-66 does not write `INTERFACES.md` and does not bump
+it. **CONDUCT takes the bump and the RESOLUTION**, as IC-28's and IC-29's rows say.
+
+### 2 · RESPONSES
+
+*(Awaiting. `RECORD` owns the plane's meaning layer and proposes. `UI` is the one measured
+consumer — one call site, no key it reads is moved; the receipt wording is delegated in
+`CLAIMS.md`.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's.)*
