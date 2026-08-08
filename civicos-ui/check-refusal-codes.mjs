@@ -121,15 +121,51 @@ const NOTE = m => notes.push(m);
    grown rows still have to pass every arm, so growth cannot arrive
    unguarded.
    ============================================================ */
+/* REMEASURED 2026-08-08 (REC-71), AND THE STALENESS WAS A MEASURED DEFECT
+   RATHER THAN AN UNTIDY NUMBER. PL-1 landed a fourth family and 18 rows, so the
+   census grew 311 -> 330 and the reach 98 -> 116 while these floors stayed where
+   VF-2 set them. **That left 19 codes of SLACK, and slack in a floor is not
+   harmless: it is the floor not being a ratchet.** Arm (e) of
+   `test/refusal-codes.control.mjs` — neuter the widest matcher, M2 — went from
+   RED to GREEN on it: the walk lost an entire spelling, the census fell to 325,
+   and 325 is still above 311, so the guard passed a reader that had gone
+   partially blind. That is REC-70's own lesson arriving on the FLOOR side, and
+   it is why every figure below is now the MEASURED one. Move them WITH the
+   corpus, in the same turn, or they stop meaning anything. */
 const FLOOR = {
-  families:      3,    // AI_RUN_CHECKS, MEANING_READ_CHECKS, VERSION_CHAIN_CHECKS
-  rows:         11,    // C-22.1..6, C-23.1..2, C-24.1..3
-  census:      311,    // distinct refusal codes the plane can mint, UNION of the matcher set.
-                       // A plain `reason: "CODE"` grep answers 294; the set finds 17 more.
-  reach:        98,    // codes a surface can receive (R1 + R2 + R3)
-  governedSites: 5,    // (file, function) pairs named by a row's `where`
+  families:      4,    // AI_RUN, MEANING_READ, VERSION_CHAIN, BASIS_VERSION (was 3, pre-PL-1)
+  rows:         29,    // C-22.1..6, C-23.1..2, C-24.1..3, C-25.1..18 (was 11, pre-PL-1)
+  census:      330,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+                       // A plain `reason: "CODE"` grep answers 297; the set finds 33 more.
+                       // (was 311, pre-PL-1 — and see the block above for what the slack cost)
+  reach:       116,    // codes a surface can receive (R1 + R2 + R3) (was 98, pre-PL-1)
+  governedSites: 9,    // spans named by a row's `where` — a function, or a region inside one
+                       // (was 5; 7 whole functions + REC-71's 2 regions)
   surfaceTables: 1,    // PART_REASON
-  bodyLines:    60,    // total lines of governed function body arm C actually reads
+  bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
+                       // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
+                       // Every other floor above only ever moves UP as the plane grows, so
+                       // ratcheting them costs nothing. This one FALLS whenever a `where` is
+                       // correctly narrowed from a function to a region, which is exactly the
+                       // work REC-71 licensed and REC-64 will keep doing. A gate set above the
+                       // current state gets switched off (VERIFICATION.md's own reason for not
+                       // making `--strict` the gate yet), so this stays a COLLAPSE DETECTOR —
+                       // its stated purpose, a parameter list read as a body — and
+                       // `codesChecked` below carries the ratchet instead.
+  /* REC-71's three, measured 2026-08-08 in worktree agent-ab9e84c9e27f4eff7 by
+     this file, on the tree carrying PL-1. */
+  regions:       2,    // region `where`s resolved — basis-version-freeze, basis-version-resolve
+  regionLines:  25,    // lines inside them. MEASURED 35 (19 + 16); floored BELOW the figure
+                       // on purpose, so an ordinary edit inside a governed arm does not
+                       // fail the guard while a COLLAPSE still does. The per-region
+                       // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
+                       // the aggregate one; they fail for different reasons.
+  codesChecked: 10,    // refusal codes actually COMPARED against a family row. MEASURED 10.
+                       // NOT the same as refusals judged (11) and NOT the same as lines
+                       // read: FOUR governed sites read 449 lines and compare NOTHING,
+                       // because they refuse through a local `refuse(key, …)` helper (the
+                       // code is a variable) or by pushing findings rather than returning
+                       // `ok:false`. See arm C's NOTE and REC-71's delegation to REC-64.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
   vocabularyTerms: 40, // terms across them
 };
@@ -141,6 +177,19 @@ const FLOOR = {
 const CEILING = {
   reachGap:     74,    // codes in reach with no canned translation — may only FALL
 };
+
+/* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
+   failure this whole item is about, a walk taking the WRONG SPAN and reporting a
+   clean verdict over bytes that could not have carried what it sought. The two
+   live regions MEASURE 19 and 16 lines; a real governed arm is not three lines,
+   and a pair of markers that have collapsed onto each other is. */
+const REGION_MIN_LINES = 4;
+const REGION_MIN_CHARS = 120;
+/* Built rather than written, because the literal two-character sequence closes
+   THIS comment and every other one in this file — the same trap as the backticks
+   in `schema.mjs`'s template literals (CLAUDE.md), and it cost a parse error here
+   before it was noticed. */
+const CLOSE_COMMENT = "*" + "/";
 
 /* ============================================================
    THE CODE WALK — a SET of matchers, each yield printed
@@ -318,11 +367,47 @@ function armA(families) {
   return rows;
 }
 
-/* `where` reads "src/airun.mjs checkObservation, called from …" — the path, then
-   the function this guard must open. Tolerant of the trailing prose. */
+/* WHAT A `where` MEANS, and REC-71 is the whole reason this has a second form.
+ *
+ * A `where` names THE SMALLEST SPAN IN WHICH THE ROW'S REFUSAL IS ENFORCED, and
+ * arm C judges exactly that span and nothing else. Two spellings:
+ *
+ *   "src/airun.mjs checkObservation, called from …"
+ *       the WHOLE FUNCTION BODY is the governed site. Correct only when every
+ *       refusal that function makes is the family's business.
+ *
+ *   "src/store.mjs promote > basis-version-freeze, NOT reachable from …"
+ *       a NAMED REGION inside that function is the governed site, delimited in
+ *       the source by `DEC-49 REGION <name>` / `END DEC-49 REGION <name>` block
+ *       comments.
+ *
+ * A GOVERNED SITE AND A GOVERNED FUNCTION ARE DIFFERENT CLAIMS. Before REC-71
+ * only the first form existed, so PL-1's two rows — whose own prose said *"(the
+ * basis-version freeze arm)"* — were read as governing the whole of `promote`:
+ * 870 lines, the plane's largest function, 34 refusals. **32 long-standing
+ * refusals that pre-dated the rows instantly owed canned translations they were
+ * never in scope for, and `main`'s UI harness went red.** The rows meant a
+ * region and there was no way to say so. Now there is.
+ *
+ * WHY A SOURCE MARKER RATHER THAN A LINE RANGE OR AN ANCHOR SIGNATURE. Both of
+ * the alternatives go stale SILENTLY, and this repository has now been bitten
+ * twice in one week by a source walk anchored on a signature taking the wrong
+ * span and reporting a clean verdict over bytes that could not have carried what
+ * it sought — including by this very file, whose first draft read
+ * `versionChain`'s PARAMETER LIST as its body and passed. A marker cannot go
+ * stale quietly: it sits in front of the person moving the code, and every way
+ * it can be wrong FAILS below rather than narrowing the span to nothing. */
+const REGION_START = name => new RegExp(`/\\*[\\s*]*DEC-49 REGION\\s+(${name})\\b`, "g");
+const REGION_END   = name => new RegExp(`/\\*[\\s*]*END DEC-49 REGION\\s+(${name})\\b`, "g");
+/* Any marker at all, used to find ORPHANS — a region declared in the source that
+   no `where` claims. Region names are `[\w-]+`, which is deliberately narrower
+   than prose: the `<region>` placeholders in bio-checks.mjs's own explanatory
+   block are not markers and must not be harvested as one. */
+const ANY_REGION_MARKER = /\/\*[\s*]*(END )?DEC-49 REGION\s+([\w-]+)/g;
+
 function parseWhere(where) {
-  const m = /^([\w./-]+\.mjs)\s+([#\w$]+)/.exec(String(where || ""));
-  return m ? { file: m[1], fn: m[2] } : null;
+  const m = /^([\w./-]+\.mjs)\s+([#\w$]+)(?:\s*>\s*([\w-]+))?/.exec(String(where || ""));
+  return m ? { file: m[1], fn: m[2], region: m[3] || null } : null;
 }
 
 /* ============================================================
@@ -430,44 +515,61 @@ function armB(rows, census, surfaceTables) {
    Read as text over the function's body because the plane runs in workerd and
    cannot be exercised from this harness at all. */
 function armC(rows) {
-  const sites = new Map();          // "file::fn" -> {file, fn, codes:Set}
+  const sites = new Map();          // "file::fn::region" -> {file, fn, region, codes:Set}
+  const claimedRegions = new Set(); // "file::region" — used to find ORPHAN markers below
   for (const r of rows) {
     const w = parseWhere(r.where);
     if (!w) continue;
-    const key = `${w.file}::${w.fn}`;
+    const key = `${w.file}::${w.fn}::${w.region || ""}`;
     if (!sites.has(key)) sites.set(key, { ...w, codes: new Set(), fams: new Set() });
     sites.get(key).codes.add(r.code);
     sites.get(key).fams.add(r.fam);
+    if (w.region) claimedRegions.add(`${w.file}::${w.region}`);
   }
 
   if (sites.size < FLOOR.governedSites)
-    FAIL(`${sites.size} governed (file, function) sites derived from the rows' \`where\` fields, floor is `
+    FAIL(`${sites.size} governed sites derived from the rows' \`where\` fields, floor is `
        + `${FLOOR.governedSites}. Arm C only judges what \`where\` points it at, so a site that stopped `
        + `resolving is an arm that stopped running while still reporting green.`);
 
   let bodiesRead = 0, refusalsJudged = 0, bodyLines = 0;
+  let regionsResolved = 0, regionLines = 0, codesChecked = 0;
   const perSite = [];
   for (const [key, site] of sites) {
     const full = path.join(PLANE, site.file);
     let src;
     try { src = fs.readFileSync(full, "utf8"); }
     catch (_) { FAIL(`arm C cannot read ${site.file} for ${key} — the site named by \`where\` is unreadable`); continue; }
-    const body = functionBody(src, site.fn);
-    if (!body) {
+    const fnBody = functionBody(src, site.fn);
+    if (!fnBody) {
       FAIL(`arm C could not find function ${site.fn} in ${site.file} (named by \`where\` on `
          + `${[...site.codes].join(", ")}). The row points at a site that is not there under that name, `
          + `so nothing is checking that site for a codeless refusal.`);
       continue;
     }
+    /* THE NARROWING (REC-71). A region `where` reduces the judged span from the
+       whole function to the marked arm. EVERY way that can go wrong FAILS —
+       narrowing a span is exactly how a walk goes quietly blind, so none of it
+       is inferred from a green run. */
+    let body = fnBody;
+    if (site.region) {
+      body = regionSpan(src, fnBody, site.region, key, site);
+      if (!body) continue;
+      regionsResolved++;
+      regionLines += body.text.split("\n").length;
+    }
     bodiesRead++;
     const nLines = body.text.split("\n").length;
     bodyLines += nLines;
-    perSite.push(`${site.fn} ${nLines}L`);
+    perSite.push(`${site.fn}${site.region ? ` > ${site.region}` : ""} ${nLines}L`);
+    const judgedHereStart = refusalsJudged;
+    let checkedHere = 0;
 
     /* Every refusal the body states. `ok: false` is the plane's one spelling of
        a refusal object; the family helper is the other way one is built. Both
        are collected, and a refusal object that carries neither a `code` in the
        family nor a `reason` naming one FAILS. */
+    const at_ = site.region ? ` > ${site.region}` : "";
     for (const m of body.text.matchAll(/\bok\s*:\s*false\b/g)) {
       const at = m.index;
       const stmt = objectLiteralAround(body.text, at);
@@ -476,28 +578,49 @@ function armC(rows) {
       const named = [...stmt.matchAll(/\b(?:code|reason)\s*:\s*"([A-Z][A-Z0-9_]{2,})"/g)].map(x => x[1]);
       const viaVar = /\b(?:code|reason)\s*:\s*(?!["'])[\w.[\]]+/.test(stmt);
       if (!named.length && !viaVar)
-        FAIL(`${site.file}:${line} (in ${site.fn}) returns a CODELESS REFUSAL — an \`ok:false\` with no `
+        FAIL(`${site.file}:${line} (in ${site.fn}${at_}) returns a CODELESS REFUSAL — an \`ok:false\` with no `
            + `\`code\` and no \`reason\`. This site is governed by DEC-49 (${[...site.fams].join(", ")}), `
            + `so every refusal it makes owes a code with a canned translation. A refusal with no code is `
            + `a sentence a surface can only render verbatim or blank, which is the state DEC-49 ended. `
            + `Offending text: ${JSON.stringify(stmt.split("\n")[0].trim().slice(0, 120))}`);
-      for (const c of named)
+      for (const c of named) {
+        codesChecked++; checkedHere++;
         if (!site.codes.has(c))
-          FAIL(`${site.file}:${line} (in ${site.fn}) refuses with code ${c}, which is NOT a row in `
+          FAIL(`${site.file}:${line} (in ${site.fn}${at_}) refuses with code ${c}, which is NOT a row in `
              + `${[...site.fams].join("/")}. A code minted at a governed site with no row has no canned `
              + `translation, so it reaches a member as machine vocabulary — the exact failure DEC-49's `
-             + `guard exists to prevent. Add the row, or refuse with one of: ${[...site.codes].sort().join(", ")}.`);
+             + `guard exists to prevent. Add the row, or refuse with one of: ${[...site.codes].sort().join(", ")}.`
+             + (site.region ? "" : ` (This \`where\` names a WHOLE FUNCTION. If the row governs only an arm `
+                                 + `of it, the fix is a REGION \`where\` and not a translation for this code — `
+                                 + `see bio-checks.mjs's "WHAT A \`where\` MEANS" block, REC-71.)`));
+      }
     }
     /* The family helper's own call sites, judged the same way. */
     for (const m of body.text.matchAll(/\brefusal\s*\(\s*"([A-Z][A-Z0-9_]{2,})"/g)) {
-      refusalsJudged++;
+      refusalsJudged++; codesChecked++; checkedHere++;
       if (!site.codes.has(m[1])) {
         const line = body.startLine + body.text.slice(0, m.index).split("\n").length - 1;
-        FAIL(`${site.file}:${line} (in ${site.fn}) calls refusal("${m[1]}"), which is NOT a row in `
+        FAIL(`${site.file}:${line} (in ${site.fn}${at_}) calls refusal("${m[1]}"), which is NOT a row in `
            + `${[...site.fams].join("/")} — the helper would read \`undefined.translation\` and the code `
            + `would go out with no canned translation behind it.`);
       }
     }
+    /* A REGION THAT JUDGES NOTHING IS A WRONG SPAN, and this is the arm that says
+       so. A `where` names where the refusal FIRES; markers that have drifted off
+       the arm they were put around leave a well-formed, non-trivial, correctly
+       nested span containing no refusal at all — and every other check above
+       would pass over it. Gated at zero for regions and NOT for functions: a
+       function `where` may legitimately point at a site whose refusals arm C's
+       matchers cannot see (four of them do today — see the arm's own NOTE), and
+       failing on that would be doing REC-64's and REC-70's work here. */
+    const judgedHere = refusalsJudged - judgedHereStart;
+    if (site.region && !judgedHere)
+      FAIL(`arm C judged NO refusal inside the region \`${site.region}\` of ${site.fn} in ${site.file}, `
+         + `named by ${[...site.codes].sort().join(", ")}. A region \`where\` says THIS is where the refusal `
+         + `fires; a span containing none is a marker that has drifted off the arm it was put around. The `
+         + `span resolved, was non-trivial and was correctly nested, so nothing else here would have caught `
+         + `it. Move the markers back around the refusal, or point the \`where\` somewhere true.`);
+    perSite[perSite.length - 1] += ` (${judgedHere} judged, ${checkedHere} code(s) checked)`;
   }
   if (!refusalsJudged)
     FAIL(`arm C judged NO refusals across ${sites.size} governed sites. A guard that passes on nothing `
@@ -508,13 +631,145 @@ function armC(rows) {
      is not. Both the total and the per-site counts are printed, so a body that
      collapses is visible rather than inferred from a green run. */
   if (bodyLines < FLOOR.bodyLines)
-    FAIL(`arm C read only ${bodyLines} lines of governed function body across ${bodiesRead} site(s), floor `
+    FAIL(`arm C read only ${bodyLines} lines of governed span across ${bodiesRead} site(s), floor `
        + `is ${FLOOR.bodyLines} (${perSite.join(", ")}). A body that shrinks to a handful of lines is this `
        + `walk matching a PARAMETER LIST rather than a body — the defect this arm was measured to have and `
        + `the reason the count is printed. Establish which site collapsed before moving the floor.`);
-  NOTE(`arm C: ${sites.size} governed (file, function) sites from the rows' \`where\`; ${bodiesRead} bodies `
-     + `read, ${bodyLines} lines total (${perSite.join(", ")}); ${refusalsJudged} refusals judged, every one `
-     + `carrying a code with a row · floors ${FLOOR.governedSites} sites / ${FLOOR.bodyLines} lines`);
+
+  /* THE REGION FLOORS (REC-71). Narrowing a span is the single most likely way
+     this arm goes blind, so the narrowed spans carry their own floors on BOTH
+     the number of regions resolved and the lines inside them. A region that
+     silently stopped resolving would otherwise just remove itself from the
+     judged set — green, and asserting nothing. */
+  if (regionsResolved < FLOOR.regions)
+    FAIL(`arm C resolved ${regionsResolved} region \`where\`(s), floor is ${FLOOR.regions}. A region that `
+       + `stopped resolving takes its refusals out of the judged set and leaves this arm green over them.`);
+  if (regionsResolved && regionLines < FLOOR.regionLines)
+    FAIL(`arm C read ${regionLines} lines inside ${regionsResolved} governed region(s), floor is `
+       + `${FLOOR.regionLines}. A region that has SHRUNK is a narrowing that went too far — the guard would `
+       + `stop seeing refusals the row governs, which is the failure the narrowing must not buy.`);
+
+  /* THE TEETH FLOOR, and it is the answer to "a control can pass while asserting
+     nothing". Body lines measure what was READ; this measures what was actually
+     COMPARED against a row. They come apart badly: four governed sites today read
+     449 lines and check ZERO codes, because they refuse through a local
+     `refuse(key, …)` helper (the code is a variable) or by pushing findings
+     rather than returning `ok:false`. Those sites are neither passing nor failing
+     on merit and this figure is how that stays visible. */
+  if (codesChecked < FLOOR.codesChecked)
+    FAIL(`arm C compared only ${codesChecked} refusal code(s) against a family row, floor is `
+       + `${FLOOR.codesChecked}. Lines read is not the measure — a site can be read in full and assert `
+       + `nothing. Establish which site stopped yielding a literal code before moving the floor.`);
+
+  /* AN ORPHAN MARKER — a `DEC-49 REGION` declared in the plane that no `where`
+     claims. It reads at the site as if that span were governed, and nothing is
+     governing it: a comment asserting a guarantee nobody enforces, which is the
+     "unreachable defence" class (REC-68) one file over. Gated at zero. */
+  const marked = new Map();          // "file::region" -> file
+  for (const rel of markerFiles()) {
+    const src = fs.readFileSync(path.join(PLANE, rel), "utf8");
+    for (const m of src.matchAll(ANY_REGION_MARKER)) marked.set(`${rel}::${m[2]}`, rel);
+  }
+  const orphans = [...marked.keys()].filter(k => !claimedRegions.has(k)).sort();
+  if (orphans.length)
+    FAIL(`${orphans.length} \`DEC-49 REGION\` marker(s) in the plane that NO row's \`where\` claims: `
+       + `${orphans.join(", ")}. The marker tells the next reader that span is a governed site and nothing `
+       + `is governing it. Point a \`where\` at it with the \`<file> <fn> > <region>\` spelling, or remove `
+       + `the marker — a defence that is documented and not wired is worse than a missing one.`);
+
+  NOTE(`arm C: ${sites.size} governed sites from the rows' \`where\` — ${sites.size - regionsResolved} whole `
+     + `function(s), ${regionsResolved} narrowed REGION(s) (${regionLines} lines inside them, ${marked.size} `
+     + `marker pair(s) in the plane, all claimed); ${bodiesRead} spans read, ${bodyLines} lines total; `
+     + `${refusalsJudged} refusals judged and ${codesChecked} code(s) actually COMPARED against a row `
+     + `· ${perSite.join(" · ")} · floors ${FLOOR.governedSites} sites / ${FLOOR.bodyLines} lines / `
+     + `${FLOOR.regions} regions / ${FLOOR.regionLines} region lines / ${FLOOR.codesChecked} codes checked`);
+}
+
+/* WHICH FILES CAN HOLD A REGION MARKER. The plane's sources and its check
+   catalog — the two places a `where` can name. Read from the directory rather
+   than listed, so a new source file cannot hide an orphan marker. */
+function markerFiles() {
+  const out = fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs")).map(f => path.join("src", f));
+  out.push(path.join("checks", "bio-checks.mjs"));
+  return out;
+}
+
+/* THE REGION SPAN (REC-71) — resolved from the source's own markers, and every
+ * way it can be wrong FAILS rather than narrowing the judged span to nothing.
+ *
+ * The span is taken from the END of the opening marker's comment to the START of
+ * the closing marker's, so the marker prose itself is never judged: a marker that
+ * mentions a code in its explanation must not be read as a refusal.
+ *
+ * It returns null on every failure, and the caller skips the site. That is
+ * deliberate: a site whose span could not be established must not be judged as
+ * though it were empty — an empty span passes everything. */
+function regionSpan(src, fnBody, region, key, site) {
+  const esc = region.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const label = `region \`${region}\` for ${key} (${[...site.codes].sort().join(", ")})`;
+
+  const starts = [...src.matchAll(REGION_START(esc))];
+  const ends   = [...src.matchAll(REGION_END(esc))];
+  /* An END marker also matches the START pattern's prefix in some spellings; the
+     patterns are anchored on the literal words, so subtract any overlap by
+     position rather than trusting the two counts independently. */
+  const endAt = new Set(ends.map(m => m.index));
+  const pureStarts = starts.filter(m => !endAt.has(m.index) && !/END\s+DEC-49/.test(src.slice(Math.max(0, m.index), m.index + m[0].length + 4)));
+
+  if (pureStarts.length !== 1) {
+    FAIL(`${label}: found ${pureStarts.length} \`DEC-49 REGION ${region}\` opening marker(s) in ${site.file}, `
+       + `expected exactly 1. ${pureStarts.length ? "A duplicated marker makes the span ambiguous and the guard "
+       + "would silently pick one." : "A `where` naming a region the source does not declare is an arm that "
+       + "stopped running while still reporting green — this is the failure the marker exists to make loud."}`);
+    return null;
+  }
+  if (ends.length !== 1) {
+    FAIL(`${label}: found ${ends.length} \`END DEC-49 REGION ${region}\` marker(s) in ${site.file}, expected `
+       + `exactly 1. An unclosed region has no end, and a doubled one has two — either way the judged span `
+       + `is not the one the row claims.`);
+    return null;
+  }
+
+  const openTag = pureStarts[0];
+  /* The span starts where the opening marker's own block comment CLOSES, so the
+     marker's prose is never judged: it explains the region and mentions codes. */
+  const afterOpen = src.indexOf(CLOSE_COMMENT, openTag.index);
+  const start = afterOpen < 0 ? openTag.index + openTag[0].length : afterOpen + 2;
+  const end = ends[0].index;
+  if (end <= start) {
+    FAIL(`${label}: the END marker at offset ${end} comes BEFORE the opening marker's span start (${start}) `
+       + `in ${site.file}. The region is inside out, so there is no span to judge.`);
+    return null;
+  }
+
+  /* THE SPAN MUST BE INSIDE THE FUNCTION THE `where` NAMES. A marker pair that
+     drifted out of `promote` into a neighbouring method would resolve cleanly
+     and judge somebody else's refusals under this family's rows. */
+  const fnStart = src.indexOf(fnBody.text);
+  const fnEnd = fnStart + fnBody.text.length;
+  if (fnStart < 0 || start < fnStart || end > fnEnd) {
+    FAIL(`${label}: the marked region is NOT inside ${site.fn}'s body in ${site.file} (region ${start}..${end}, `
+       + `function ${fnStart}..${fnEnd}). A \`where\` claims a span inside the function it names; a region that `
+       + `has drifted out of it would have this family's rows judging another function's refusals.`);
+    return null;
+  }
+
+  const text = src.slice(start, end);
+  const nLines = text.split("\n").length;
+  /* THE NON-TRIVIAL-SPAN ARM. A source walk that takes the WRONG SPAN and
+     reports a clean verdict over bytes that could not have carried what it
+     sought has now been sighted twice in a week in this repository, including
+     inside this very file (a parameter list read as a body). A span of a line or
+     two is that failure, and it is cheap to refuse. */
+  if (nLines < REGION_MIN_LINES || text.trim().length < REGION_MIN_CHARS) {
+    FAIL(`${label}: the marked span is ${nLines} line(s) / ${text.trim().length} characters, below the `
+       + `${REGION_MIN_LINES}-line / ${REGION_MIN_CHARS}-character floor. A span that small is markers that `
+       + `have collapsed onto each other, and it would pass every other arm here while judging nothing. `
+       + `This is the same defect class as this file's own parameter-list-read-as-a-body, recorded in `
+       + `\`functionBody\`'s header.`);
+    return null;
+  }
+  return { text, startLine: src.slice(0, start).split("\n").length };
 }
 
 /* THE REFUSAL OBJECT AROUND AN `ok: false`, by brace balance in both

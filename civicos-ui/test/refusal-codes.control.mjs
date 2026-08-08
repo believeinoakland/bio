@@ -41,6 +41,7 @@ const PLANE = path.join(UI, "..", "bio-plane");
 const F = {
   catalog: path.join(PLANE, "checks", "bio-checks.mjs"),
   airun:   path.join(PLANE, "src", "airun.mjs"),
+  store:   path.join(PLANE, "src", "store.mjs"),
   app:     path.join(UI, "app.html"),
   guard:   path.join(UI, "check-refusal-codes.mjs"),
   runner:  path.join(HERE, "run.mjs"),
@@ -74,14 +75,32 @@ function arm(name, spec, runIt, expect) {
   for (const e of edits) before.set(e.file, { text: fs.readFileSync(e.file, "utf8"), hash: sha(e.file) });
   for (const f of aside) before.set(f, { text: fs.readFileSync(f, "utf8"), hash: sha(f) });
 
+  /* EDITS ARE APPLIED CUMULATIVELY PER FILE, and this is a CORRECTION rather
+     than a detail (REC-71, 2026-08-08 — corrected, never exempted).
+
+     This loop used to read `before.get(e.file).text` as its base EVERY time, so
+     TWO edits to the SAME file each started from the original and **the second
+     silently discarded the first**. REC-71's arm (r2) has to revert two `where`
+     fields in `bio-checks.mjs` at once; it armed only one, the tree was left in
+     a state nobody designed, and the arm failed with a count (34) that was the
+     honest answer to a question it had not meant to ask. **A control that does
+     not arm what it says it arms is the exact failure this whole file exists to
+     catch, and it caught itself for the second time** — arm (a) did the same in
+     VF-2's own first run, by a different mechanism.
+
+     The `includes` check now runs against the RUNNING text too, so an edit whose
+     anchor was consumed by an earlier edit throws instead of passing silently. */
+  const working = new Map();
   for (const e of edits) {
-    const t = before.get(e.file).text;
+    const t = working.has(e.file) ? working.get(e.file) : before.get(e.file).text;
     if (!t.includes(e.from))
       throw new Error(`${name}: the text this control removes is not in ${path.basename(e.file)} — the `
-        + `subject moved. A control that cannot find what it breaks proves nothing and MUST NOT pass `
-        + `silently. Looked for: ${JSON.stringify(e.from.slice(0, 90))}`);
-    fs.writeFileSync(e.file, t.replace(e.from, e.to));
+        + `subject moved, or an earlier edit in this same arm already consumed it. A control that cannot `
+        + `find what it breaks proves nothing and MUST NOT pass silently. Looked for: `
+        + `${JSON.stringify(e.from.slice(0, 90))}`);
+    working.set(e.file, t.replace(e.from, e.to));
   }
+  for (const [file, text] of working) fs.writeFileSync(file, text);
   for (const f of aside) fs.rmSync(f);
 
   let result;
@@ -227,6 +246,73 @@ arm("(f)", [
 ], guard, r => ({
   ok: r.exit === 1 && /VF2_BRAND_NEW_CONDITION/.test(r.out) && /may only ever move it DOWN/.test(r.out),
   what: "the guard exits 1 naming VF2_BRAND_NEW_CONDITION and saying the ceiling may only fall",
+}));
+
+/* ================================================================ REC-71
+   THE REGION `where` — ARMED AGAINST THE REAL `store.mjs`, not a fixture.
+
+   `test/refusal-codes.test.mjs` arms all of this over fixture trees. These four
+   arms are the same claims against the ACTUAL 18,000-line `store.mjs`, the
+   ACTUAL `promote`, and the ACTUAL two rows — because the item exists precisely
+   because a span behaved differently on the real file than anyone expected.
+   ================================================================ */
+const FREEZE_ANCHOR = `        for (const v of offered) {
+          const prior = this.#one(`;
+const REGION_MARK = `/* DEC-49 REGION basis-version-freeze`;
+
+console.log("\n(r1) THE TEETH INSIDE THE NARROWED REGION — REC-71's whole point: narrowing must not blind the guard");
+arm("(r1)", [{
+  file: F.store,
+  from: FREEZE_ANCHOR,
+  to: `        if (pkg.__rec71_control__) return { ok: false, detail: "a refusal nobody gave a code" };
+${FREEZE_ANCHOR}`,
+}], guard, r => ({
+  ok: r.exit === 1
+      && /src\/store\.mjs:\d+ \(in promote > basis-version-freeze\) returns a CODELESS REFUSAL/.test(r.out),
+  what: "the guard exits 1 naming src/store.mjs, the LINE, promote AND the region",
+}));
+
+console.log("\n(r2) THE FIX IS THE FIX — put the WHOLE-FUNCTION `where` back and the 32 conscripted refusals RETURN");
+arm("(r2)", [
+  { file: F.catalog,
+    from: `    where: 'src/store.mjs promote > basis-version-freeze, NOT reachable from a pure document check',`,
+    to: `    where: 'src/store.mjs promote (the basis-version freeze arm), NOT reachable from a pure document check',` },
+  { file: F.catalog,
+    from: `    where: 'src/store.mjs promote > basis-version-resolve, NOT reachable from a pure document check',`,
+    to: `    where: 'src/store.mjs promote (the basis-version resolve arm), NOT reachable from a pure document check',` },
+], guard, r => {
+  const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row/g) || []).length;
+  return {
+    ok: r.exit === 1 && n === 32,
+    what: `the guard exits 1 with EXACTLY 32 conscripted refusals again (measured ${n}) — the number `
+        + `main's red harness reported, so the narrowing is shown to be what removed them`,
+  };
+});
+
+console.log("\n(r3) OVER-STRICTNESS ON THE REAL TREE — a codeless refusal OUTSIDE the regions must still PASS");
+arm("(r3)", [{
+  file: F.store,
+  /* Planted in `promote` but well outside both marked arms — the same position
+     as the ~32 long-standing refusals REC-64 will reach on its own schedule.
+     Narrowing a `where` narrows what is governed, and this arm is that boundary
+     stated rather than implied. */
+  from: `      if (basisLegs.length) {`,
+  to: `      if (pkg.__rec71_outside__) return { ok: false, detail: "outside every governed span" };
+      if (basisLegs.length) {`,
+}], guard, r => ({
+  ok: r.exit === 0,
+  what: "the guard exits 0 — a span no row claims is not a governed site, and failing here would be "
+      + "REC-64's sweep arriving early in the worst possible place",
+}));
+
+console.log("\n(r4) THE MARKER REMOVED from the real store.mjs — the `where` must FAIL, not judge an empty span");
+arm("(r4)", [{
+  file: F.store,
+  from: REGION_MARK,
+  to: `/* (rec-71 control: the marker taken out)`,
+}], guard, r => ({
+  ok: r.exit === 1 && /found 0 `DEC-49 REGION basis-version-freeze` opening marker\(s\)/.test(r.out),
+  what: "the guard exits 1 naming the region the `where` claims and the source no longer declares",
 }));
 
 /* ---------------------------------------------------------------- */

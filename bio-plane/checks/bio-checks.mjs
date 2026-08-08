@@ -5083,6 +5083,61 @@ export async function checkBundle(input, opts = {}) {
 }
 
 /* ===========================================================================
+ * WHAT A `where` MEANS — READ THIS BEFORE WRITING ONE (REC-71, 2026-08-08).
+ *
+ * Every DEC-49 row below carries a `where`. It is NOT prose and NOT a comment:
+ * `civicos-ui/check-refusal-codes.mjs` arm C OPENS it and reads the source it
+ * names, and every refusal it finds there must carry a code this family holds.
+ *
+ * **A `where` NAMES THE SMALLEST SPAN IN WHICH THIS ROW'S REFUSAL IS ENFORCED,
+ * AND THE GUARD JUDGES EXACTLY THAT SPAN AND NOTHING ELSE.** Two spellings:
+ *
+ *   `<file> <fn>`              — THE WHOLE FUNCTION BODY is the governed site.
+ *                                Correct only when EVERY refusal that function
+ *                                makes is this family's business.
+ *   `<file> <fn> > <region>`   — A NAMED REGION INSIDE that function is the
+ *                                governed site. The span is delimited in the
+ *                                source by a matching pair of BLOCK COMMENTS,
+ *                                the first opening with `DEC-49 REGION <region>`
+ *                                and the second with `END DEC-49 REGION
+ *                                <region>` (see `src/store.mjs`'s
+ *                                `basis-version-freeze` for the live example),
+ *                                so it is DECLARED where the code is edited,
+ *                                rather than inferred from a signature or a
+ *                                line number. Both go stale silently; a marker
+ *                                sits in front of the person moving the code.
+ *
+ * **A GOVERNED SITE AND A GOVERNED FUNCTION ARE DIFFERENT CLAIMS, and naming the
+ * function when you meant a region CONSCRIPTS EVERY UNRELATED REFUSAL IN IT.**
+ * That is not hypothetical and it is why this block exists. PL-1's two store-side
+ * rows carried `where: 'src/store.mjs promote (the basis-version freeze arm)'`.
+ * The parenthesis said "a region" to a human and nothing at all to the guard,
+ * which read `promote` — 870 lines, the largest function in the plane, ~34
+ * refusals — as the governed site. **32 long-standing refusals that pre-dated the
+ * row instantly owed canned translations they were never in scope for, and the
+ * UI harness went red on `main`.** Three workers (PL-2, PL-12, UI-51) measured it
+ * independently and each correctly declined to silence another item's guard.
+ * UI-51 put the general lesson best: *function-granularity `where` makes a
+ * governed site as wide as its widest function.*
+ *
+ * SO, WHEN YOU ALLOCATE A ROW:
+ *   - Name the region if the refusal lives in an arm of a bigger function. The
+ *     guard FAILS if the marker is missing, unclosed, duplicated, outside the
+ *     named function, trivially short, or judges no refusal at all — a `where`
+ *     that quietly stops resolving is an arm that stopped running while still
+ *     reporting green, and that failure mode is what arm C is for.
+ *   - Name the function ONLY when the whole body is yours. `checkObservation`,
+ *     `checkCondition` and `checkBound` in `src/airun.mjs` are the model: small,
+ *     single-purpose, and every refusal in them is an AI_RUN row.
+ *   - **Widening a `where` widens what must be translated TODAY.** If you find
+ *     yourself widening one to cover a refusal, you are doing REC-64's sweep, in
+ *     the worst possible place. Add the row, or narrow the `where`.
+ *
+ * THE GUARD PRINTS, EVERY RUN, the span of every governed site and how many
+ * refusals it judged, so a `where` that has quietly stopped meaning anything is
+ * visible rather than inferred from a green run.
+ * ===========================================================================
+ *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
  * and §14b.6). SIX C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
  *
@@ -5442,7 +5497,13 @@ export const BASIS_VERSION_CHECKS = {
      enforcement site says where it actually fires, which is not this file. */
   VERSION_FROZEN: {
     check: 'C-25.11',
-    where: 'src/store.mjs promote (the basis-version freeze arm), NOT reachable from a pure document check',
+    /* A REGION `where`, NOT a function `where` — see this file's "WHAT A `where`
+       MEANS" block above. `promote` is 870 lines and refuses ~34 things; this row
+       governs the freeze arm and nothing else. The prose `(the basis-version
+       freeze arm)` said exactly this before REC-71 and no instrument could read
+       it, so the guard widened the claim to the whole function and conscripted 32
+       unrelated refusals. The span is now DECLARED at the site. */
+    where: 'src/store.mjs promote > basis-version-freeze, NOT reachable from a pure document check',
     translation: 'That version already exists and has been changed in place. '
       + 'A version is frozen once written, because two people comparing it must be comparing the same thing — '
       + 'so an edit becomes a NEW version derived from this one, and the original stays exactly as it was.',
@@ -5498,7 +5559,9 @@ export const BASIS_VERSION_CHECKS = {
      told the wrong one is worse off than one told nothing. */
   VERSION_LEG_UNRESOLVED: {
     check: 'C-25.16',
-    where: 'src/store.mjs promote (the basis-version resolve arm), NOT reachable from a pure document check',
+    /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
+       block at the head of this file. */
+    where: 'src/store.mjs promote > basis-version-resolve, NOT reachable from a pure document check',
     translation: 'One part of that version rests on something this record does not hold. '
       + 'A reading of the evidence that points at a document nobody can open is a reading nobody can check.',
   },

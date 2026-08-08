@@ -69,8 +69,55 @@
  *       only accepts the wording its author wrote is a guard that will be
  *       switched off the first time somebody writes well.
  *
+ *
+ *   REC-71's FOUR, ADDED AND RUN 2026-08-08 in worktree agent-ab9e84c9e27f4eff7,
+ *   against the REAL `store.mjs` and the REAL two rows — because this item exists
+ *   precisely because a span behaved differently on the real file than anyone
+ *   expected, and a fixture alone would not have found it:
+ *
+ *   (r1) THE TEETH INSIDE THE NARROWED REGION, and it is the whole point of the
+ *        item: put a codeless `ok:false` inside `promote`'s marked
+ *        `basis-version-freeze` arm. RUN: the guard exits 1 with
+ *          FAIL: src/store.mjs:7568 (in promote > basis-version-freeze) returns a
+ *          CODELESS REFUSAL …
+ *        naming FILE, LINE, FUNCTION and REGION. **Narrowing the scope did not
+ *        blind the guard, and that is PROVED rather than asserted.**
+ *   (r2) THE FIX IS THE FIX — put the WHOLE-FUNCTION `where` back on both rows.
+ *        RUN: the guard exits 1 with **EXACTLY 32** `refuses with code … which is
+ *        NOT a row` failures — the same 32 that turned `main` red — plus the
+ *        region floor and two now-orphaned markers. So the narrowing is SHOWN to
+ *        be what removed them rather than assumed to be.
+ *        **A DEFECT IN `refusal-codes.control.mjs`'s OWN `arm()` FOUND BY THIS
+ *        ARM, and corrected rather than worked around:** two edits to the SAME
+ *        file each started from the ORIGINAL text, so the second silently
+ *        discarded the first. This arm reverts two `where` fields in one file; it
+ *        armed only one and measured 34. `arm()` now applies edits cumulatively
+ *        and throws if an anchor was consumed by an earlier edit. **A control
+ *        that does not arm what it says it arms is that file's own subject, and
+ *        it caught itself for the second time.**
+ *   (r3) OVER-STRICTNESS ON THE REAL TREE — put a codeless `ok:false` in
+ *        `promote` but OUTSIDE both marked arms. RUN: the guard exits 0.
+ *        Narrowing a `where` narrows what is GOVERNED, on purpose: the rest of
+ *        `promote` answers to REC-64's sweep on its own schedule. An arm that
+ *        failed here would be REC-64 arriving early in the worst possible place.
+ *   (r4) THE MARKER REMOVED from the real `store.mjs`. RUN: the guard exits 1
+ *        with `found 0 DEC-49 REGION basis-version-freeze opening marker(s)`.
+ *        A `where` whose region has vanished FAILS rather than judging an empty
+ *        span — an empty span passes everything.
+ *
+ *   AND ONE MORE FOUND WHILE RUNNING THEM (REC-71): **arm (e) had gone GREEN.**
+ *   PL-1 grew the census 311 -> 330 while the FLOOR stayed at 311, so neutering
+ *   the widest matcher dropped it to 325 — still above the floor, so the guard
+ *   passed a reader that had gone partially blind. **19 codes of slack, and slack
+ *   in a floor is the floor not being a ratchet.** Every corpus floor in the
+ *   guard is now the MEASURED figure, with the reason recorded at the site.
+ *
  *   (a),(b),(d),(e),(f),(g) are ALSO re-run mechanically by arms 2-7 below over
- *   fixture trees, every run of the battery.
+ *   fixture trees, every run of the battery; (r1)-(r4) by ARM 9's fifteen fixture
+ *   arms, which additionally cover the ways a span can be wrong that are awkward
+ *   to arm on the real tree — a DUPLICATED marker, a COLLAPSED span, a region
+ *   that judges NOTHING, an ORPHAN region no `where` claims, and a region that
+ *   has DRIFTED OUT of the function its `where` names.
  * ============================================================================
  */
 import fs from "fs";
@@ -194,6 +241,13 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
   guard = guard.replace(/const FLOOR = \{[\s\S]*?\n\};/, `const FLOOR = ${JSON.stringify(Object.assign({
     families: 1, rows: 3, census: 7, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
     vocabularies: 2, vocabularyTerms: 4,
+    /* REC-71's three, STATED for the fixture rather than left undefined. An
+       absent floor compares `n < undefined` -> false and never fails, so an
+       omitted key is a floor that silently does not exist — the generous
+       direction, which is the one this file is for. The default tree has no
+       region, so `regions`/`regionLines` are 0 and the arms that need a floor
+       set one explicitly. */
+    regions: 0, regionLines: 0, codesChecked: 3,
   }, over.floor || {}))};`);
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(over.ceiling || { reachGap: 0 })};`);
   guard = guard.replace(/PART_REASON: "src\/subresources\.mjs"/, `PART_REASON: "src/parts.mjs"`);
@@ -540,6 +594,264 @@ export const FIXTURE_ENDINGS = {
    Every arm above ran; this one says so with a figure rather than by the
    absence of a crash.
    ============================================================ */
+/* ============================================================
+   ARM 9 — REGION `where`s (REC-71). THE NARROWING, AND ITS TEETH.
+
+   A `where` may name a REGION inside a function instead of the whole function.
+   The whole risk of that is a walk that takes the WRONG SPAN and reports a
+   clean verdict over bytes that could not have carried what it sought — sighted
+   twice in one week in this repository, including inside this very guard (a
+   parameter list read as a body). So every arm below is a way the span can be
+   wrong, and each one must FAIL rather than narrow to nothing.
+
+   THE FIXTURE. `checkFixture` holds a governed REGION containing one coded
+   refusal, and — outside it — a refusal with a code NO ROW HOLDS. On the
+   function `where` that second refusal fails the guard; on the region `where`
+   it must not. That is the whole of REC-71 in one fixture, in both polarities.
+   ============================================================ */
+const REGION_OPEN = "/* DEC-49 REGION fixture-arm\n     the governed span. */";
+const REGION_SHUT = "/* END DEC-49 REGION fixture-arm */";
+const REGION_SRC = `
+export function checkFixture(input = {}) {
+  /* OUTSIDE the region, and it refuses with a code no row holds — the ~32
+     long-standing refusals inside \`promote\` in one line. */
+  if (input.other) return { ok: false, code: "FIXTURE_UNGOVERNED", detail: "not this row's business" };
+  ${REGION_OPEN}
+  if (!input.address) return { ok: false, code: "FIXTURE_NO_ADDRESS", detail: "no address" };
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || ""))) {
+    return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };
+  }
+  ${REGION_SHUT}
+  return null;
+}
+export function checkSecond(rows = {}) {
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  return null;
+}
+`;
+const REGION_ROWS = (where) => ({
+  FIXTURE_NO_ADDRESS: { check: "C-90.1", where, translation: DEFAULT_TRANSLATION },
+  FIXTURE_BAD_ANCHOR: { check: "C-90.2", where,
+    translation: "That is not the shape a capture identity has, so nothing was looked up at all and the "
+      + "request is reported as malformed rather than as a document the record does not hold." },
+  FIXTURE_TWO_NO_ARM: { check: "C-91.1", where: "src/fixture.mjs checkSecond",
+    translation: "That request did not say which kind of meaning to read, and the record holds two "
+      + "kinds that answer different questions, so it asks rather than choosing one for you." },
+});
+const REGION_WHERE = "src/fixture.mjs checkFixture > fixture-arm";
+const FN_WHERE = "src/fixture.mjs checkFixture";
+const regionTree = (over = {}) => Object.assign({
+  fixtureSrc: REGION_SRC, rows: REGION_ROWS(REGION_WHERE),
+  floor: { families: 1, rows: 3, census: 7, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
+           vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 3, codesChecked: 3 },
+}, over);
+
+/* THE POLARITY PAIR, and it is the item itself. Same tree, same refusals, ONE
+   field different: the `where`. RED on the function, GREEN on the region. */
+console.log("\n--- ARM 9 · the FUNCTION `where` conscripts an unrelated refusal — RED (this is REC-71's defect) ---");
+withTree(regionTree({ rows: REGION_ROWS(FN_WHERE), floor: undefined }), tree => {
+  const r = runGuard(tree);
+  t("ARM 9: a whole-function `where` exits 1", r.exit, 1);
+  t("ARM 9: naming the UNRELATED refusal it conscripted — not the row's business, and the row never said it was",
+    /refuses with code FIXTURE_UNGOVERNED, which is NOT a row/.test(r.out), true);
+  t("ARM 9: and the failure TELLS the next allocator the fix is a region `where`, not a translation",
+    /names a WHOLE FUNCTION[\s\S]*REGION `where`/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9b · the REGION `where` judges the arm and nothing else — GREEN (the fix) ---");
+withTree(regionTree(), tree => {
+  const r = runGuard(tree);
+  t("ARM 9b: the region `where` exits 0 over the SAME source", r.exit, 0);
+  t("ARM 9b: and the span it judged is PRINTED, so a narrowing that went too far is visible",
+    /checkFixture > fixture-arm \d+L \(\d+ judged, \d+ code\(s\) checked\)/.test(r.out), true);
+  t("ARM 9b: it reports the region as narrowed rather than as a whole function",
+    /1 narrowed REGION\(s\)/.test(r.out), true);
+});
+
+/* ---- THE TEETH, and the whole point of the item: narrowing must not blind it. */
+console.log("\n--- ARM 9c · a CODELESS refusal INSIDE the narrowed region still FAILS (the teeth survive) ---");
+withTree(regionTree({
+  fixtureSrc: REGION_SRC.replace(`  if (!input.address)`,
+    `  if (input.broken) return { ok: false, detail: "a refusal nobody gave a code" };\n  if (!input.address)`),
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9c: exits 1", r.exit, 1);
+  t("ARM 9c: naming file, line, function AND region",
+    /src\/fixture\.mjs:\d+ \(in checkFixture > fixture-arm\) returns a CODELESS REFUSAL/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9d · a codeless refusal OUTSIDE the region PASSES — the over-strictness arm ---");
+/* THIS ARM ASSERTS A **PASS**, which is the shape that can succeed while
+   asserting nothing: if the edit below silently failed to apply, the tree would
+   be arm 9b's and exit 0 for a reason that has nothing to do with this claim.
+   So the planted text is CHECKED ON DISK, and checked to be OUTSIDE the markers,
+   before the verdict is believed. A control that cannot find what it planted
+   proves nothing and must not pass silently. */
+const OUTSIDE_PLANT = `  if (input.elsewhere) return { ok: false, detail: "outside every governed span" };`;
+const outsideSrc = REGION_SRC.replace(`  ${REGION_OPEN}`, `${OUTSIDE_PLANT}\n  ${REGION_OPEN}`);
+withTree(regionTree({ fixtureSrc: outsideSrc }), tree => {
+  const onDisk = fs.readFileSync(path.join(tree.root, "bio-plane", "src", "fixture.mjs"), "utf8");
+  t("ARM 9d: the codeless refusal this arm plants is ACTUALLY IN THE FIXTURE (else the pass below is vacuous)",
+    onDisk.includes(OUTSIDE_PLANT.trim()), true);
+  t("ARM 9d: and it sits OUTSIDE the marked region, which is the only reason it may pass",
+    onDisk.indexOf(OUTSIDE_PLANT.trim()) < onDisk.indexOf("DEC-49 REGION fixture-arm"), true);
+  const r = runGuard(tree);
+  /* THE BOUNDARY, STATED RATHER THAN IMPLIED. Narrowing a `where` narrows what
+     is GOVERNED, and that is the point: the rest of the function answers to
+     REC-64's sweep on its own schedule, not to this row today. An arm that
+     failed here would be the guard doing REC-64's work in the worst place. */
+  t("ARM 9d: exits 0 — a span nobody claimed is not this row's site", r.exit, 0);
+});
+
+/* AND THE SAME PLANT, MOVED INSIDE, MUST FAIL. Two arms differing only in WHERE
+   the identical line sits is the strongest form this pair takes: it removes the
+   possibility that 9d passed because of anything about the line itself. */
+console.log("\n--- ARM 9d2 · the IDENTICAL line moved INSIDE the region FAILS (the pair that isolates position) ---");
+withTree(regionTree({
+  fixtureSrc: REGION_SRC.replace(`  if (!input.address)`, `${OUTSIDE_PLANT}\n  if (!input.address)`),
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9d2: exits 1 — the same bytes, inside the span, are the guard's business", r.exit, 1);
+  t("ARM 9d2: naming it as codeless at the region",
+    /\(in checkFixture > fixture-arm\) returns a CODELESS REFUSAL/.test(r.out), true);
+});
+
+/* ---- EVERY WAY THE SPAN CAN BE WRONG. Each must FAIL, not narrow to nothing. */
+console.log("\n--- ARM 9e · a `where` naming a region the source does not declare FAILS ---");
+withTree(regionTree({ fixtureSrc: REGION_SRC.replace(REGION_OPEN, "").replace(REGION_SHUT, "") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 9e: exits 1", r.exit, 1);
+  t("ARM 9e: naming the undeclared region rather than judging an empty span",
+    /found 0 `DEC-49 REGION fixture-arm` opening marker\(s\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9f · an UNCLOSED region FAILS ---");
+withTree(regionTree({ fixtureSrc: REGION_SRC.replace(REGION_SHUT, "") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 9f: exits 1", r.exit, 1);
+  t("ARM 9f: naming the missing END marker", /found 0 `END DEC-49 REGION fixture-arm` marker\(s\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9g · a DUPLICATED region marker FAILS rather than the guard picking one ---");
+withTree(regionTree({ fixtureSrc: REGION_SRC.replace(`  ${REGION_OPEN}`, `  ${REGION_OPEN}\n  ${REGION_OPEN}`) }), tree => {
+  const r = runGuard(tree);
+  t("ARM 9g: exits 1", r.exit, 1);
+  t("ARM 9g: naming the ambiguity", /found 2 `DEC-49 REGION fixture-arm` opening marker\(s\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9h · a COLLAPSED span FAILS on the trivial-span floor (the wrong-span defence) ---");
+withTree(regionTree({
+  fixtureSrc: REGION_SRC.replace(`  ${REGION_OPEN}\n`, `  ${REGION_OPEN}\n  ${REGION_SHUT}\n`).replace(
+    /\n  \/\* END DEC-49 REGION fixture-arm \*\/\n  return null;/, "\n  return null;"),
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9h: exits 1", r.exit, 1);
+  t("ARM 9h: naming the collapsed span rather than reporting a clean verdict over nothing",
+    /below the \d+-line \/ \d+-character floor/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9i · a region that judges NO refusal FAILS — a marker drifted off its arm ---");
+withTree(regionTree({
+  /* The markers are well-formed, non-trivial and correctly nested; they have
+     simply drifted onto code that refuses nothing. EVERY other arm passes over
+     this, which is exactly why it needs one of its own. */
+  fixtureSrc: `
+export function checkFixture(input = {}) {
+  if (!input.address) return { ok: false, code: "FIXTURE_NO_ADDRESS", detail: "no address" };
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || ""))) {
+    return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };
+  }
+  ${REGION_OPEN}
+  const a = String(input.at || "");
+  const b = a.trim().toLowerCase();
+  const c = b.length;
+  const d = c > 0 ? b : null;
+  ${REGION_SHUT}
+  return d === null ? null : null;
+}
+export function checkSecond(rows = {}) {
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  return null;
+}
+`,
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9i: exits 1", r.exit, 1);
+  t("ARM 9i: naming the region that judged nothing",
+    /judged NO refusal inside the region `fixture-arm`/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9j · an ORPHAN marker — a region declared that no `where` claims — FAILS ---");
+withTree(regionTree({
+  fixtureSrc: REGION_SRC + `
+export function checkThird(x) {
+  /* DEC-49 REGION nobody-claims-this
+     a span that reads as governed and is not. */
+  if (!x) return { ok: false, code: "FIXTURE_NO_ADDRESS" };
+  /* END DEC-49 REGION nobody-claims-this */
+  return null;
+}
+`,
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9j: exits 1", r.exit, 1);
+  t("ARM 9j: naming the unclaimed region — a documented defence nobody wired is worse than a missing one",
+    /marker\(s\) in the plane that NO row's `where` claims: src\/fixture\.mjs::nobody-claims-this/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9k · a region that has DRIFTED OUT of the function its `where` names FAILS ---");
+withTree(regionTree({
+  /* Markers live in `checkSecond`; the `where` says they are in `checkFixture`.
+     The pair is well-formed and non-trivial, so only the CONTAINMENT check sees
+     it — and without that check this family's rows would be judging another
+     function's refusals. */
+  fixtureSrc: `
+export function checkFixture(input = {}) {
+  if (!input.address) return { ok: false, code: "FIXTURE_NO_ADDRESS", detail: "no address" };
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || ""))) {
+    return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };
+  }
+  return null;
+}
+export function checkSecond(rows = {}) {
+  ${REGION_OPEN}
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  if (rows.other) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "again" };
+  ${REGION_SHUT}
+  return null;
+}
+`,
+}), tree => {
+  const r = runGuard(tree);
+  t("ARM 9k: exits 1", r.exit, 1);
+  t("ARM 9k: naming the containment failure rather than judging another function's refusals",
+    /the marked region is NOT inside checkFixture's body/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9l · the REGION FLOORS catch a narrowing that lost sight ---");
+withTree(regionTree({ rows: REGION_ROWS(FN_WHERE), floor: {
+  families: 1, rows: 3, census: 7, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
+  vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 3, codesChecked: 3,
+} }, ), tree => {
+  const r = runGuard(tree);
+  /* The rows went back to a FUNCTION `where`, so no region resolves — the exact
+     shape of a narrowing silently reverted. A ceiling could never see this. */
+  t("ARM 9l: exits 1", r.exit, 1);
+  t("ARM 9l: on the REGION floor, naming that a region stopped resolving",
+    /resolved 0 region `where`\(s\), floor is 1/.test(r.out), true);
+});
+
+console.log("\n--- ARM 9m · the CODES-CHECKED floor catches a site that reads lines and asserts nothing ---");
+withTree(regionTree({ floor: {
+  families: 1, rows: 3, census: 7, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
+  vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 3, codesChecked: 99,
+} }), tree => {
+  const r = runGuard(tree);
+  t("ARM 9m: exits 1", r.exit, 1);
+  t("ARM 9m: saying plainly that lines read is not the measure",
+    /compared only \d+ refusal code\(s\) against a family row, floor is 99/.test(r.out), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
