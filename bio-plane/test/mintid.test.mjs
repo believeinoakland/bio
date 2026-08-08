@@ -35,18 +35,34 @@
  * (6) the OVER-STRICTNESS arm, armed from the strict side — make `mint` refuse
  * any `count` above 1 -> the "nine at once is not refused" arms FAIL, which is
  * what proves an item legitimately taking several ids at once is protected and
- * not merely unmentioned.
+ * not merely unmentioned;
+ * (7) drop `allocPattern` from the `D` namespace -> the "a number in a SENTENCE
+ * still raises the floor" section loses its strict floor and the "the gap it
+ * will cost is NAMED rather than silent" arm FAILS, which is the arm that came
+ * out of this tool catching its own documentation poisoning its own corpus.
  * RUN 2026-08-08 m0-17-mintid, each arm ALONE, restores verified by sha256 AND
- * by `cmp` against uniquely-named per-arm pristine copies (20,017 B tool /
- * 15,855 B brief, both digests printed and guarded against the empty-string
- * sha256): baseline 27 pass 0 fail; (1) 5 fail — ALL EIGHT RACERS GOT D-242,
- * the collision reappearing on demand; (2) 1 fail; (3) 2 fail; (4) 1 fail;
- * (5) 1 fail; (6) 4 fail. Six declared MUST-FAIL, six failed. ONE INSTRUMENT
- * FINDING, recorded rather than quietly fixed: arm (6)'s first run reached its
- * verdict by THROWING out of the module — `null pass, null fail`, no assertion
- * involved — and only the FOOT sentinel showed it. The bulk take is caught now
- * and a refusal is a NAMED failure. The MUST-NOT-FAIL arm is the bulk section
- * itself, green on the mechanism at every run.
+ * by `cmp` against uniquely-named per-arm pristine copies (22,547 B tool /
+ * 15,865 B brief, both digests printed and guarded against the empty-string
+ * sha256): baseline 33 pass 0 fail; (1) 5 fail — ALL EIGHT RACERS GOT THE SAME
+ * NUMBER, the collision reappearing on demand; (2) 1 fail; (3) 2 fail;
+ * (4) 1 fail; (5) 1 fail; (6) 4 fail; (7) 3 fail. SEVEN declared MUST-FAIL,
+ * seven failed, and the suite returned to 33/0 after every restore. The
+ * MUST-NOT-FAIL arm is the bulk section itself, green on the mechanism at every
+ * run.
+ *
+ * TWO INSTRUMENT FINDINGS, recorded rather than quietly fixed — and in this
+ * project the controls find the instrument wrong more often than the subject.
+ * (a) Arm (6)'s FIRST run reached its declared verdict by THROWING out of the
+ * module — `null pass, null fail`, no assertion involved, D-93's unreadable
+ * failure inside a control — and only the FOOT sentinel showed it. The bulk take
+ * is caught now and a refusal is a NAMED failure.
+ * (b) Arm (7) does not exist because it was designed; it exists because THE TOOL
+ * CAUGHT ITS OWN DOCUMENTATION POISONING ITS OWN CORPUS, minutes after landing.
+ * A debt row written for M0-17 explained the gap cost with a worked example
+ * naming the next free number, in `DEBT.md`, which is D's own corpus, and
+ * `--list` read `floor 244` off the prose. Over-counting only costs a gap, so the
+ * behaviour stands and the strict floor was added beside it — but the example is
+ * gone, exactly as the C-29 catalogue comment removed its own.
  */
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from "node:fs";
@@ -206,6 +222,40 @@ section("the floor refuses year-shaped noise, and SAYS it did");
   t("...and it is NAMED rather than swallowed", f.discarded, ["C-2024 in bio-plane/checks/bio-checks.mjs"]);
   t("a corpus file that has been renamed away is reported, not read as zero",
     corpusFloor("D", { repo }).missing.length > 0, true);
+
+  /* AND THE FLOOR COUNTS A MENTION, NOT ONLY AN ALLOCATION — the safe direction,
+     and it was MEASURED WITHIN MINUTES OF THIS TOOL LANDING, BY THIS TOOL. A debt
+     row written for M0-17 explained the gap cost with a worked example naming the
+     next free number, in `DEBT.md`, which is D's own corpus; `--list` read that
+     number off the PROSE. Over-counting only costs a gap so the behaviour stands,
+     but it is now SAID. Same lesson as the C-29 catalogue comment, whose own first
+     draft spelled its warning with real C-numbers. */
+  const prose = join(SANDBOX, "proserepo");
+  mkdirSync(join(prose, "docs/development"), { recursive: true });
+  writeFileSync(join(prose, "docs/development/DEBT.md"),
+    "| D-100 | defect | ... a worked example: a worker writes D-150 by hand |\n");
+  const pf = corpusFloor("D", { repo: prose });
+  t("a number in a SENTENCE still raises the floor (over-counting is the safe direction)", pf.floor, 150);
+  t("...but the highest REAL allocation is read separately", pf.allocFloor, 100);
+  t("...and the gap it will cost is NAMED rather than silent", pf.proseDriven, true);
+
+  /* Over-strictness: a corpus with no prose-shaped number must NOT be flagged. */
+  writeFileSync(join(prose, "docs/development/DEBT.md"), "| D-100 | defect | nothing id-shaped here |\n");
+  const cf = corpusFloor("D", { repo: prose });
+  t("a clean corpus is not flagged", [cf.floor, cf.allocFloor, cf.proseDriven], [100, 100, false]);
+
+  /* On the REAL corpus, and this is the arm that matters: this repository's own
+     prose must not be driving any floor it declares an allocation pattern for. */
+  const live = ["D", "C"].map((ns) => ({ ns, ...corpusFloor(ns) }));
+  for (const l of live) console.log(`  live ${l.ns}: floor ${l.floor} · highest real allocation ${l.allocFloor} · prose-driven ${l.proseDriven}`);
+  t(`no live floor is driven by prose (${JSON.stringify(live.filter((l) => l.proseDriven).map((l) => l.ns))})`,
+    live.filter((l) => l.proseDriven), []);
+
+  /* UNDETERMINED IS FIRST-CLASS. A namespace that has not declared what an
+     allocation looks like answers `null`, never 0 — a strict floor guessed wrong
+     would be wrong in the DANGEROUS direction. */
+  t("a namespace with no declared allocation site answers null, not zero",
+    [corpusFloor("IC").allocFloor, corpusFloor("IC").proseDriven], [null, false]);
 }
 
 /* ========================================================================== */

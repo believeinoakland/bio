@@ -180,9 +180,21 @@ losing the ledger is a **degradation to today's convention and no further**: the
 ledger is deliberately NOT committed, because a committed ledger races exactly as
 the file does.
 
-**What it costs when it fails: GAPS.** An id minted and never used is gone, so
-`D-244` existing no longer implies `D-243` does. That is one grep, against a
-renumber sweep across the estate. **It has no failure mode that produces a WRONG
+**What it costs when it fails: GAPS.** An id minted and never used is gone, so a
+number existing no longer implies the one below it does. That is one grep,
+against a renumber sweep across the estate.
+
+**AND THE RULE IS STATED IN WORDS BECAUSE THE EXAMPLE POISONED THE FLOOR —
+MEASURED WITHIN MINUTES OF LANDING, BY THE TOOL ITSELF.** The first draft of the
+sentence above wrote the gap as a worked example with a real-looking number in
+it, in `DEBT.md`, which is `D`'s own corpus. `mintid --list` then read `floor
+244` off the PROSE and the ledger would have skipped a number nobody had taken.
+**This is the C-29 comment's lesson arriving in a second place on the same day**
+— that comment's first draft spelled its warning with real C-numbers, the
+integration's sweep renumbered THE EXAMPLE along with the code, and
+`coverage.mjs` reported a catalog check no assertion names. **An instrument
+cannot tell a number in a sentence from a number in a row, and neither can a
+sweep. So: never write an id-shaped example in a file that is a corpus.** **It has no failure mode that produces a WRONG
 id — only a SKIPPED one**, and that asymmetry is the whole argument for it over
 mechanising the renumber. The scope limits are D-242; the fact that nothing
 *detects* an id taken without it is D-243.

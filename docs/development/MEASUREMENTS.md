@@ -4200,3 +4200,31 @@ missed a regex literal (`C-29\.` is not the text `C-29.`), one mangled the worke
 the very comment warning about renumbering, which `coverage.mjs` then read as a catalog check
 nobody names. **A mint has no failure mode that produces a WRONG id, only a SKIPPED one**, and
 that asymmetry — not throughput — is the measurement the design rests on.
+
+### ADDENDUM, SAME DAY: THE TOOL CAUGHT ITS OWN DOCUMENTATION POISONING ITS OWN CORPUS
+
+Minutes after `tools/mintid.mjs` landed, `--list` reported `D floor 244` when the highest debt
+row was `D-243`. **The cause was the debt row this item had just written**: it explained the
+gap cost with a WORKED EXAMPLE naming the next free number, and `DEBT.md` is `D`'s own corpus.
+The floor read that number off the PROSE.
+
+**This is the C-29 catalogue comment's lesson arriving a second time on the same day, in a
+different file, to a different author.** That comment's first draft spelled its warning with
+real C-numbers; the integration's own sweep renumbered THE EXAMPLE along with the code, and
+`coverage.mjs` — which harvests C-numbers by pattern, comments included — then reported a
+catalog check no assertion names. **An instrument cannot tell a number in a sentence from a
+number in a row, and neither can a sweep.**
+
+**The behaviour was NOT changed, and that is the judgement worth recording.** Over-counting
+costs a GAP; under-counting costs a COLLISION; only one of those is recoverable, so the floor
+stays generous. What changed is that it now SAYS so: each namespace may declare what an actual
+allocation site looks like (`| D-n |` for a debt row, `check: 'C-n.m'` for a catalog entry), the
+strict floor is read beside the generous one, and any number above it is **named as
+prose-driven** with the gap it will cost. A namespace that has not declared one answers `null`,
+never 0 — undetermined is first-class, and a strict floor guessed wrong would be wrong in the
+dangerous direction. The example itself is gone from every file that is a corpus.
+
+Driven both ways: over a scratch corpus holding `| D-100 |` and the sentence `D-150`, floor 150
+· strict floor 100 · prose-driven **true**; over the same corpus with the sentence removed,
+100 · 100 · **false**; over this repository's live corpus, `D` 243/243 and `C` 34/34, **neither
+prose-driven**. Control arm (7): drop the allocation pattern and three arms fail.

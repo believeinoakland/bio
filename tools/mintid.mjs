@@ -90,7 +90,7 @@
  * failure mode is unstated is a mechanism nobody can trust:
  *
  *   - GAPS.  An id minted and never used is gone forever.  The sequence is no
- *     longer dense, so `D-244` existing does not imply `D-243` does.  This is
+ *     longer dense, so a number existing does not imply the one below it does.  This is
  *     cheap and it is the price: a gap is a question a reader can answer in one
  *     grep, where a collision is a sweep across the estate.
  *   - A LOST OR ABSENT LEDGER degrades to the corpus floor — today's behaviour,
@@ -160,6 +160,19 @@ export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
  * `...C-2024-...`, and a floor poisoned by a year hands out `C-2027` and orphans
  * the catalog forever.  So the corpus is where the namespace ALLOCATES, and a
  * `ceiling` discards year-shaped noise LOUDLY rather than silently.
+ *
+ * AND THE FLOOR IS DELIBERATELY GENEROUS — IT COUNTS A MENTION, NOT ONLY AN
+ * ALLOCATION — WHICH IS THE SAFE DIRECTION AND IS STILL WORTH SAYING OUT LOUD.
+ * MEASURED WITHIN MINUTES OF THIS FILE LANDING, BY THIS FILE: a debt row written
+ * for M0-17 explained the gap cost with a WORKED EXAMPLE naming the next free
+ * number, in `DEBT.md`, which is `D`'s own corpus.  `--list` then read that
+ * number off the PROSE and the ledger would have skipped one nobody had taken.
+ * Over-counting only costs a gap, so the behaviour is kept; what changes is that
+ * `allocPattern` below states, per namespace, what an ACTUAL allocation site
+ * looks like, and any number above the strict floor is NAMED as prose-driven.
+ * (This is the C-29 catalogue comment's lesson arriving a second time on the
+ * same day: an instrument cannot tell a number in a sentence from a number in a
+ * row.  Never write an id-shaped example in a file that is a corpus.)
  */
 const QUEUE_CORPUS = [
   "docs/development/QUEUE.md",
@@ -174,11 +187,17 @@ const item = (what) => ({ kind: "prose", what, corpus: QUEUE_CORPUS, ceiling: 99
 export const NAMESPACES = {
   /* (i) code-referenced */
   C: { kind: "code", what: "check families in the catalog (the dotted members of a family are the family owner's)",
-       corpus: ["bio-plane/checks/bio-checks.mjs"], ceiling: 999 },
+       corpus: ["bio-plane/checks/bio-checks.mjs"], ceiling: 999,
+       /* an allocation is a `check: 'C-n.m'` row in the catalog; anything else in
+          this file is a mention, including inside the comment that warns about
+          exactly this. */
+       allocPattern: () => /check:\s*['"]C-(\d+)\./g },
 
   /* (ii) prose-referenced */
   D: { kind: "prose", what: "debt rows",
-       corpus: ["docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/CLAIMS.md"], ceiling: 9999 },
+       corpus: ["docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/CLAIMS.md"], ceiling: 9999,
+       /* an allocation is a table ROW opening the id; a number in a sentence is not */
+       allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm },
   DEC: { kind: "prose", what: "decisions",
          corpus: ["docs/development/DECISIONS.md", "docs/development/QUEUE.md"], ceiling: 9999 },
   IC: { kind: "prose", what: "interface-change entries",
@@ -213,6 +232,11 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
   if (!spec) throw new Error(`unknown namespace ${ns}`);
   const re = spec.pattern ? spec.pattern(ns) : new RegExp(`\\b${ns}-(\\d+)`, "g");
   let floor = 0, from = null, seen = 0;
+  /* The STRICT floor: the highest id at a site that is unmistakably an
+     ALLOCATION rather than a mention. `null` where the namespace has not
+     declared what one looks like — stated rather than guessed, because a
+     strict floor guessed wrong would be wrong in the DANGEROUS direction. */
+  let allocFloor = spec.allocPattern ? 0 : null;
   const discarded = [];
   const missing = [];
   for (const rel of spec.corpus) {
@@ -226,8 +250,16 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
       if (n > spec.ceiling) { discarded.push(`${m[0]} in ${rel}`); continue; }
       if (n > floor) { floor = n; from = rel; }
     }
+    if (spec.allocPattern) {
+      const ar = spec.allocPattern(ns);
+      let a; ar.lastIndex = 0;
+      while ((a = ar.exec(src))) { const n = Number(a[1]); if (n <= spec.ceiling && n > allocFloor) allocFloor = n; }
+    }
   }
-  return { floor, from, seen, discarded, missing, corpus: spec.corpus };
+  /* Minting still uses the GENEROUS floor — over-counting costs a gap and
+     under-counting costs a collision, and only one of those is recoverable. */
+  const proseDriven = allocFloor !== null && floor > allocFloor;
+  return { floor, allocFloor, proseDriven, from, seen, discarded, missing, corpus: spec.corpus };
 }
 
 /* ----------------------------------------------------------------- the ledger */
@@ -335,6 +367,8 @@ function main(argv) {
       console.log(`  ${ns.padEnd(5)} floor ${String(f.floor).padEnd(5)} from ${String(f.from ?? "(nothing found)").padEnd(46)}`
         + ` · ${f.seen} ref(s) read · ledger holds ${h.length}${h.length ? ` (${h[0]}..${h[h.length - 1]})` : ""}`
         + (f.discarded.length ? ` · ${f.discarded.length} above ceiling ${NAMESPACES[ns].ceiling} IGNORED (${f.discarded[0]})` : "")
+        + (f.proseDriven ? ` · NOTE the floor is PROSE-DRIVEN: the highest real allocation is ${ns}-${f.allocFloor}, so ${f.floor - f.allocFloor} number(s) will be skipped — an id-shaped example was written into a file that is a corpus` : "")
+        + (f.allocFloor === null ? " · (no allocation pattern declared: this namespace's floor counts mentions)" : "")
         + (f.missing.length ? ` · corpus file(s) absent: ${f.missing.join(", ")}` : ""));
     }
     return 0;

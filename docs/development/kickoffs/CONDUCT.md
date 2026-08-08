@@ -50,8 +50,8 @@ making a change another session must know about.**
    reserved block you would have to allocate at every spawn** — and it covers the BOB and
    DIST sessions too, which a block of yours would not: D-184 and D-185 both collided
    with BOB-SESSION rows, and BOB is not spawned by you. **What it costs when it fails:
-   GAPS.** An id minted and never used is gone, so `D-244` existing no longer implies
-   `D-243` does. That is the price, and it is one grep against a renumber sweep across
+   GAPS.** An id minted and never used is gone, so a number existing no longer implies
+   the one below it does. That is the price, and it is one grep against a renumber sweep across
    code, suites, claims and reports — one of which already missed a REGEX LITERAL, where
    `C-29\.` is not the text `C-29.`.
 
