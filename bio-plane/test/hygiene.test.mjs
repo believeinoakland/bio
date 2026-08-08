@@ -1690,6 +1690,18 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        phantom deposited beside it cannot inflate a baseline — which is the exposure the
        guarded walks carry and this one does not. */
     "bio-plane/test/ref-variance-probe.mjs",      // bio-plane/test/fixtures/, one named PDF, no census
+    /* ADDED 2026-08-08 by FW-13, WHICH IS THE RATCHET WORKING AGAIN: the item
+       retired C-8.1 and put a walk of `src/`, `civicos-ui/`, `docprofile/`,
+       `tools/`, `agent-worker/`, `pdf-worker/` and `newgroup/src/` behind the
+       retirement, to assert that the retired shape grew no PRODUCER. The census
+       named it on its first full battery, before any human read the diff.
+       WHY IT IS NAMED AND NOT GUARDED: the number it prints is a REACH figure
+       floored at 50 over a real 118 and nothing quotes it into a moving floor,
+       so a phantom deposited beside it cannot install slack anywhere — and the
+       assertion it feeds fails in the SAFE direction, because an untracked file
+       naming the retired path makes the estate arm go RED rather than quietly
+       green. Provenance would tell it something true and useless. */
+    "bio-plane/test/check-firing.test.mjs",       // the estate, reports a producer census for a retired shape
     "civicos-ui/test/auth-surface.test.mjs",      // civicos-ui/, reports a surface census
     "civicos-ui/test/bound-sweep.test.mjs",       // civicos-ui/, reports a bound census
     "civicos-ui/test/preauth-vocabulary.test.mjs",// civicos-ui/test/, reports a suite census

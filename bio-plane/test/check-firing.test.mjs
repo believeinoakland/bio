@@ -22,10 +22,25 @@
  *   C-9.1 C-10.1 C-11.1 C-12.1 C-12.2 C-13.1 C-14.1 C-14.2 C-14.3 C-14.4 C-15.1
  *   C-16.1 C-16.2 C-16.3 C-16.4 C-16.5 C-17.1 C-18.3 C-18.4 C-18.7 C-18.8
  *
- * NEGATIVE CONTROL: remove any tamper (bundle == the conformant base) -> that check's `fires` assertion fails. Spot-checked 2026-07-31 on C-2.1, C-13.1, C-16.4: deleting the tamper drops the finding and flips fires true->false; the paired `absent on clean base` assertion encodes this for all 33.
+ * SUPERSEDED 2026-08-08 (FW-13), and CORRECTED here rather than exempted. C-8.1
+ * is in that list of 33 and its `fires` proof has been REPLACED by a RETIREMENT
+ * proof at the foot of this file. The old assertion was not wrong when it was
+ * written — it proved the check fired on a tampered `data/citations.json`, which
+ * it did. It became wrong the moment the claim layer landed as rows: C-8.1 gated
+ * a per-bundle citation register that NOTHING in the estate has ever written,
+ * and keeping it left the record carrying a second claim structure overlapping
+ * `inquiry_basis`. So 32 of the 33 are still proven to FIRE; the 33rd is now
+ * proven NOT to, and proven to have no producer. Retiring a check without an
+ * assertion behind the retirement would be a deletion nobody is enforcing, which
+ * is the same defect one altitude down.
+ *
+ * NEGATIVE CONTROL: remove any tamper (bundle == the conformant base) -> that check's `fires` assertion fails. Spot-checked 2026-07-31 on C-2.1, C-13.1, C-16.4: deleting the tamper drops the finding and flips fires true->false; the paired `absent on clean base` assertion encodes this for all 32 that still fire.
+ * (run 2026-08-08, FW-13) FOUR ARMS ON THE RETIREMENT ITSELF, each armed ALONE with the other three held open, each DECLARING BEFORE IT RAN what must fail and what must not, and every touched file restored from a UNIQUELY NAMED per-arm pristine copy verified by sha256 AND by a byte compare. Re-run in one step: `node test/retirement.control.mjs all` from bio-plane/. Baseline at the moment they ran: this suite 83 pass, 0 fail. ZERO arms behaved other than declared. (i) PUT THE RETIRED CHECK BACK — a MINIMAL restoration of `checkCitationRegister` (ONE of its four refusing branches) plus its call site in checks/bio-checks.mjs -> 81 pass, 2 FAIL: the behavioural arm for that branch ("no finding when the register is not {claims:[...]}") and the SOURCE arm, which names the file and the LINE ("C-8.1 at line 3235"). Exactly one behavioural arm bites BECAUSE the plant is minimal, and that is the arm's point: the source arm catches ANY branch of any reintroduction, which is why the retirement does not depend on guessing which branch somebody puts back. MUST NOT move, and did not: the 32 surviving `fires` arms, and the estate arm — restoring a CHECK grows no PRODUCER. (ii) GROW A PRODUCER — append `data/citations.json` to a real module under src/ -> 82 pass, 1 FAIL, the ESTATE arm naming `bio-plane/src/cdx.mjs`, while every behavioural arm stays GREEN, because a second claim structure appearing in the estate is invisible to any bundle-level assertion. (iii) NEUTER THE ESTATE WALK so its matcher can never match -> 82 pass, 1 FAIL, and it is the REACH arm alone ("the estate walk CATCHES a planted producer"), WHILE the corpus floor and the clean-estate arm BOTH STILL PASS — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (iv) OVER-STRICTNESS — nothing planted, a LEGITIMATE bundle carrying a well-formed citation register -> 83 pass, 0 fail, NOTHING drawn, because retirement means the shape is ordinary data and not forbidden data.
  */
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join as joinPath } from "node:path";
+import { checkBundle, CHECK_RETIREMENTS } from "../checks/bio-checks.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -168,12 +183,14 @@ await proves("C-6.3", "a basis leg's target is absent from references[]", "focus
   new Map([["bundle.md", fmInsert(baseMd("focus"),
     "basis:", "  - target: INFO-2026-0001-somedoc", "    role: supports")]]));
 
-/* ---- deletion and citation registers (C-7.1, C-8.1) ---- */
-console.log("\n--- deletion and citation registers ---");
+/* ---- deletion register (C-7.1) ----
+   C-8.1's citation-register proof stood here until FW-13 retired the check
+   (2026-08-08). It is not deleted and it is not exempted: it MOVED, to the
+   RETIREMENT block at the foot of this file, where the same tamper is now
+   required to draw NOTHING. */
+console.log("\n--- deletion register ---");
 await proves("C-7.1", "a deletions record lacks its required fields", "information",
   new Map([["bundle.md", baseMd("information")], ["data/deletions.json", JSON.stringify({ records: [{}] })]]));
-await proves("C-8.1", "the citations register is not {claims:[...]}", "information",
-  new Map([["bundle.md", baseMd("information")], ["data/citations.json", JSON.stringify({ nope: 1 })]]));
 
 /* ---- project readiness ladder (C-9.1) ---- */
 console.log("\n--- project readiness ladder ---");
@@ -285,6 +302,131 @@ await proves("C-18.7", "an @2 collected->verified transition is unsigned", "info
 await proves("C-18.8", "a release at/after the migration instant carries no checkable signature", "information",
   new Map([["bundle.md", verifiedInfoMd("information@1", "2026-07-01T00:00:00Z")]]),
   { releaseRegistry: { migrationInstant: "2026-01-01T00:00:00Z" } });
+
+/* ================= RETIRED CHECKS (FW-13) =================================
+ *
+ * The other half of this suite's job. Above, a check is judged in the direction
+ * that FAILS. Here a RETIRED check is judged in the only direction left: it must
+ * not fire, nothing must push a finding under its id, and — the assertion the
+ * retirement actually rests on — the shape it gated must still have no producer,
+ * so a second claim structure cannot creep back in while everything stays green.
+ *
+ * WHY A RETIREMENT NEEDS AN ASSERTION AT ALL: an item that vanishes is
+ * indistinguishable from one nobody did. A check deleted with nothing behind it
+ * is a rule nobody is enforcing and nobody remembers dropping — the exempted
+ * test, one altitude up.
+ *
+ * The table is READ OUT OF THE CATALOGUE, never hand-listed here, for the same
+ * reason coverage.mjs reads the OPS table out of index.mjs: a row added there
+ * and not here would be a retirement nothing checks. */
+console.log("\n--- retired checks: they no longer fire, and nothing grew a producer ---");
+
+const RETIRED_CHECK_IDS = Object.keys(CHECK_RETIREMENTS);
+t("the retired-check table is non-empty (a walk over nothing passes everything)",
+  RETIRED_CHECK_IDS.length > 0, true);
+
+/* (1) BEHAVIOURAL. Every shape C-8.1 used to refuse, replayed. Each must now
+   draw NO finding under the retired id. The last one is the OVER-STRICTNESS
+   arm and it is the point of the retirement rather than a formality: a
+   legitimate register is ORDINARY DATA now, not forbidden data. */
+const citeReg = (o) => new Map([["bundle.md", baseMd("information")],
+  ["data/citations.json", typeof o === "string" ? o : JSON.stringify(o)]]);
+const RETIRED_SHAPES = [
+  ["the register is not {claims:[...]}", citeReg({ nope: 1 })],
+  ["a claim lacks claim_id/claim/cites[]/snapshot/as_of", citeReg({ claims: [{}] })],
+  ["a claim's hash is not sha256:<64 hex>", citeReg({ claims: [{ claim_id: "C-014", claim: "x",
+    cites: [idFor("information")], snapshot: "s.json", as_of: "2026-07-01", hash: "nonsense" }] })],
+  ["a claim cites an id that does not resolve in the store", citeReg({ claims: [{ claim_id: "C-014",
+    claim: "x", cites: ["INFO-2026-0002-not-in-this-store"], snapshot: "s.json",
+    as_of: "2026-07-01", hash: "sha256:" + H64 }] })],
+  ["a WELL-FORMED register is carried (the over-strictness arm)", citeReg({ claims: [{ claim_id: "C-014",
+    claim: "Transfers continued under cost-allocation labels.", cites: [idFor("information")],
+    snapshot: "INFO-2026-0002/snapshots/opengov-fy24.json", as_of: "2026-07-01",
+    hash: "sha256:" + H64 }] })],
+];
+for (const [label, files] of RETIRED_SHAPES) {
+  const fs = await findingsFor("information", files);
+  t(`C-8.1 is RETIRED: no finding when ${label}`, has(fs, "C-8.1"), false);
+}
+/* And the retirement removed the CLAIM rule and nothing else: the generic file
+   hygiene every other data file gets still applies to this one. Without this
+   arm, deleting the whole format-hygiene family would leave the arms above
+   green — they would be passing over a catalogue that judges nothing. */
+{
+  const fs = await findingsFor("information", citeReg("{oops"));
+  t("a retired path is still ORDINARY data: an unparsable data/citations.json draws C-14.3",
+    [has(fs, "C-14.3"), has(fs, "C-8.1")], [true, false]);
+}
+
+/* (2) SOURCE. Nothing in the catalogue pushes a finding under a retired id.
+   This is the arm that fails the moment somebody restores the check. */
+const CHECKS_SRC_PATH = new URL("../checks/bio-checks.mjs", import.meta.url);
+const checksSrc = readFileSync(CHECKS_SRC_PATH, "utf8");
+const pushesRetired = (src) => {
+  const out = [];
+  const lines = src.split(NL);
+  for (let i = 0; i < lines.length; i++) {
+    for (const id of RETIRED_CHECK_IDS) {
+      if (lines[i].includes(`f('${id}'`) || lines[i].includes(`f("${id}"`)) out.push(`${id} at line ${i + 1}`);
+    }
+  }
+  return out;
+};
+t("no retired check id is pushed as a finding anywhere in the catalogue",
+  pushesRetired(checksSrc), []);
+/* REACH, because a detector that matches nothing passes everything. */
+t("the push detector CATCHES a planted restoration",
+  pushesRetired(`  findings.push(f('${RETIRED_CHECK_IDS[0]}', 'error', 'planted'));`).length, 1);
+
+/* (3) ESTATE — the assertion the accepts-when names: the record carries ONE
+   claim structure. A retired shape with a producer is not retired, and the
+   producer is the half no bundle-level assertion can see.
+   WHAT THIS WALK CANNOT SEE, stated rather than smoothed over: a path assembled
+   at runtime; a file a MEMBER hand-authors into a bundle (every bundle path is
+   member-authorable, so this means no MACHINE producer, never "cannot exist");
+   and a producer living in a document rather than in code. */
+const ESTATE_ROOTS = ["bio-plane/src", "civicos-ui", "docprofile", "tools",
+                      "agent-worker", "pdf-worker", "newgroup/src"];
+/* EXCLUSIONS, each with why. dist/ and release/ are BUILD OUTPUTS of the
+   catalogue, and `newgroup/src/release.mjs` is one `RELEASE_SOURCE` string
+   holding the same bundle — all three contain every gated path because they are
+   COPIES of the checks, not producers of the file. On this sweep's first run
+   `release.mjs` alone made the orphan count read zero. */
+const ESTATE_SKIP = /(^|\/)(node_modules|dist|\.git|coverage)(\/|$)|newgroup\/src\/release\.mjs$/;
+const ESTATE_EXT = /\.(mjs|js|html|md|json|jsonc)$/;
+const REPO = new URL("../../", import.meta.url);
+const estate = [];
+const walkEstate = (dir) => {
+  let ents; try { ents = readdirSync(dir); } catch { return; }
+  for (const e of ents) {
+    const p = joinPath(dir, e);
+    if (ESTATE_SKIP.test(p)) continue;
+    let st; try { st = statSync(p); } catch { continue; }
+    if (st.isDirectory()) walkEstate(p);
+    else if (ESTATE_EXT.test(e)) estate.push({ p, text: readFileSync(p, "utf8") });
+  }
+};
+for (const r of ESTATE_ROOTS) walkEstate(joinPath(REPO.pathname, r));
+console.log(`  estate corpus: ${estate.length} file(s) across ${ESTATE_ROOTS.length} roots`
+  + ` — ${ESTATE_ROOTS.join(", ")}`);
+/* THE CORPUS FLOOR. M0-15 and M0-16 both recorded a restore check that passed
+   over an EMPTY manifest and a digest reading e3b0c442… — print the size and
+   floor it, or the walk below is an equality that costs nothing to produce. */
+t("the estate walk READ a plausible corpus (floor 50)", estate.length >= 50, true);
+
+const producersOf = (path, corpus) => corpus.filter((f) => f.text.includes(path))
+  .map((f) => f.p.slice(REPO.pathname.length));
+for (const id of RETIRED_CHECK_IDS) {
+  const gated = CHECK_RETIREMENTS[id].gated_path;
+  t(`${id} is retired and the estate grew NO producer for ${gated} — the record keeps ONE claim structure`,
+    producersOf(gated, estate), []);
+}
+/* REACH on the estate walk, for the reason above: neuter the matcher and this
+   is the arm that bites while the clean-estate arm stays green. */
+t("the estate walk CATCHES a planted producer",
+  producersOf(CHECK_RETIREMENTS[RETIRED_CHECK_IDS[0]].gated_path,
+    [{ p: REPO.pathname + "planted/probe.mjs", text: `writeFile("${CHECK_RETIREMENTS[RETIRED_CHECK_IDS[0]].gated_path}", x)` }]),
+  ["planted/probe.mjs"]);
 
 console.log(`\ncheck-firing: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
