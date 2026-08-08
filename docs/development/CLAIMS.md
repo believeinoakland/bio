@@ -2444,3 +2444,27 @@ released:
 **What PL-12 did about its own share, recorded so the pattern is reusable:** the guard found exactly one code of ours — `BIAS_REFUSED`, the ENVELOPE of the write-path refusal, whose `findings[]` all carried translations while the envelope itself carried none. That is a REAL defect and the guard is why it is fixed: **C-26.11** now gives it a row and a canned translation, its `where` names `src/store.mjs promote` (where it fires, unlike its ten siblings), the refusal ships `check` and `translation` on the envelope, and **negative-control arm 7 removes it and the suite fails.**
 
 **status:** open — CONDUCT's to route. RECORD does not edit `civicos-ui/**`, and the `promote` rows are PL-1's family rather than this item's.
+
+## CLAIM 2026-08-08 UI
+
+session: ui-51-bias-vocabulary (worktree agent-a188bf2ac3c783ab6)
+opened: 2026-08-08T00:00:00Z
+paths: **`civicos-ui/app.html`** — the CATALOG block's `PREFIX`, `FIRST_STATE`, `HEADINGS`, `SCHEMA_OF`, `STATE_EDGES` and `TYPE_LABEL` (the `bias` KEY ADDED TO EACH, nothing else in any of them touched), and the SEMANTICS block's new `SEMANTICS.types.bias` row. **NOT** `ADD_TYPES`, **NOT** `PHASE`/`PHASE_LABEL`, **NOT** any basis/strength/workproduct vocabulary, **NOT** any renderer or act. **`civicos-ui/check-semantics.mjs`** — the `SCHEMA_OF` arm only, TIGHTENED with a dated reason, plus a floor on the knownSchemas extraction. **`civicos-ui/test/bias-vocabulary.test.mjs`** (new, this item's suite). `docs/development/CLAIMS.md` (this entry and its DELEGATION).
+interfaces consumed: I3 (read-only — the catalogue's `OBJECT_TYPES`, `STATES`, `HEADINGS` and `knownSchemas` are IMPORTED, never restated). interfaces owned: none. No interface changed.
+expected: QUEUE UI-51 as briefed by CONDUCT — the seven UI entries PL-12's DELEGATION named, closing the eight `has no entry for the catalog type 'bias'` lines that had `civicos-ui/test/run.mjs`'s drift guard red since PL-12 merged.
+**`bio-plane/**` IS NOT OPENED BY THIS SESSION.** `git diff --stat` names two files, both under `civicos-ui/`. The battery delta is therefore expected to be ZERO and is measured rather than assumed.
+accepts-when: `check-semantics.mjs` reporting no missing type, read UNPIPED; the five catalogue-sourced values asserted to come from the PLANE with a hand-typed value FAILING; battery green with the delta attributed; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped. NEGATIVE CONTROLS run and recorded in the suite's own header. No push, no merge — CONDUCT integrates. QUEUE.md, DECISIONS.md, MEASUREMENTS.md, INTERFACES.md and DEBT.md are not written by this session.
+concurrency: checked over every unreleased block in this file. The live RECORD claim (PL-12) states explicitly that `civicos-ui/**` is NOT opened by it and routes these seven entries here as a DELEGATION; no other unreleased claim names `app.html`, `check-semantics.mjs` or `civicos-ui/test/**`.
+released:
+
+### DELEGATION 2026-08-08 UI -> CONDUCT / VERIFY: `node civicos-ui/test/run.mjs` CANNOT REACH EXIT 0, AND THE REMAINING RED IS NOT UI-51's
+
+**MEASURED, not inferred, and by the same method PL-12 used.** With this item's two changed files STASHED — the tree then byte-identical to `main` at 25ae3ad — `node civicos-ui/check-refusal-codes.mjs` exits 1 with **32 failures**. With them restored it exits 1 with **the same 32**. Both files were restored and verified by sha256 AND by content afterwards. **UI-51 contributes ZERO.**
+
+**What UI-51 DID close, so the two halves are not confused.** All 40 suites PASS (39 before, plus this item's new one); `check-semantics.mjs` is GREEN and prints `bias` in its catalog-types line; `check-mock-envelope.mjs` passes. The eight `has no entry for the catalog type 'bias'` lines are gone, together with the three `has drifted` lines and the `states the store writes with no semantics row: adopted` line that the brief did not count — **twelve failures, not eight.**
+
+**What remains is exactly the delegation PL-12 already filed** — every one of the 32 is inside `promote`, governed by PL-1's `BASIS_VERSION_CHECKS` rows whose `where` is `src/store.mjs promote`, and `promote` is 945 lines refusing for a dozen reasons that predate both items. **The fix is in `bio-plane/**`, which this session does not open.** It is one of the two shapes PL-12 named: give every `promote` refusal a row, or let a `where` name a narrower site than a whole function.
+
+**Why this needs saying to CONDUCT rather than being left in the item's report:** UI-51's acceptance line says the harness exits 0, and it cannot until the `promote` rows land. **If the push is being held for a green `civicos-ui/test/run.mjs`, it is being held on a `bio-plane` item and not on this one.**
+
+**status:** open — CONDUCT's to route.

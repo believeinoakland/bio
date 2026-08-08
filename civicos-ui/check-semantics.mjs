@@ -165,9 +165,34 @@ const ksm = /knownSchemas:\s*opts\.knownSchemas\s*\?\?\s*\[([^\]]*)\]/.exec(cata
 if (!ksm) bad("could not read the catalog's known-schema list (knownSchemas in checkBundle) — the extraction needs updating");
 else {
   const known = [...ksm[1].matchAll(/'([^']+)'|"([^"]+)"/g)].map((m) => m[1] || m[2]);
-  for (const [t, schema] of Object.entries(C.SCHEMA_OF))
-    if (!known.includes(schema))
+  if (known.length < 6)
+    bad(`the catalog's known-schema list extracted only ${known.length} entries, which cannot be right — the extraction needs updating`);
+  for (const [t, schema] of Object.entries(C.SCHEMA_OF)) {
+    if (!known.includes(schema)) {
       bad(`SCHEMA_OF.${t} is '${schema}', which the catalog does not know (it knows ${known.join(", ")})`);
+      continue;
+    }
+    /* TIGHTENED 2026-08-08 (UI-51), and the old assertion was WRONG rather than
+       merely weak — corrected, never exempted. Membership in `knownSchemas` was
+       the ONLY thing asserted, so `SCHEMA_OF.bias = 'action@1'` PASSED THIS
+       CHECK AT EXIT 0. MEASURED, not reasoned: the value was planted, the guard
+       run, and it reported OK on both lines before app.html was restored and
+       compared by sha256 AND by content. The hole was never bias-specific —
+       every one of the seven types could have been stamped with any other
+       type's schema, in either direction.
+       WHY IT IS A DEFECT AND NOT AN UNTIDINESS: `mdFor` writes this stamp into
+       `bundle.md` at promote, so a wrong stamp is PERMANENT in the bundle and
+       makes the document declare a contract it was not written under — the
+       record claiming more than it can support, which CLAUDE.md ranks above a
+       missing feature. UI-50's "changed from" sentence is the same class.
+       The stem before `@` IS the catalog's declared type spelling — which is
+       why `focus@1` and `problem@1` exist alongside `inquiry@1` — so the stem
+       is compared against the DECLARED key, not the normalized one, exactly as
+       `vocabFor` resolves every other vocabulary question. */
+    const stem = schema.slice(0, schema.indexOf("@"));
+    if (stem !== t)
+      bad(`SCHEMA_OF.${t} is '${schema}', whose schema stem is '${stem}' and not '${t}' — the catalog knows that stamp, but it belongs to a different type, and this stamp is written permanently into bundle.md`);
+  }
 }
 
 /* UI-16 · WORKPRODUCT_STATES: the project readiness ladder the workspace
