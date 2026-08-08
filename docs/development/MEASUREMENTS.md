@@ -4131,3 +4131,72 @@ an ordering a SURFACE applies after the plane answers; and any ordering in any o
 (`index.mjs` has 0 `ORDER BY` and 0 ranked sorts, checked; `affordances.mjs`, `cdx.mjs`,
 `subresources.mjs` and `civicos-ui/` were not walked by this detector). **It is a shape
 detector over one file, not a census of every order in BIO.**
+
+## 2026-08-08 · M0-17 · the id-collision class: how many shared namespaces, and does a race actually race
+
+**Instrument:** `tools/mintid.mjs` (its `--list` mode and its `corpusFloor`), `bio-plane/test/mintid.test.mjs`
+(the driven race), and the M0-17 negative-control harness. Tree: `47b4199` plus this item's files.
+**Population:** every id space this repository allocates into by reading a file and incrementing.
+
+### HOW MANY NAMESPACES — SIXTEEN, NOT FOUR
+
+The queue row named four (C, IC, D, queue item ids). Enumerated over the repository, the class is
+**sixteen**, and the queue "item id" is not one namespace but **ten sibling families** that happen to
+share a corpus:
+
+| kind | namespaces | corpus the floor is read from | floor measured 2026-08-08 |
+| --- | --- | --- | --- |
+| code-referenced | `C` | `bio-plane/checks/bio-checks.mjs` | 34 |
+| prose-referenced | `D` | `DEBT.md` (+ `QUEUE.md`, `CLAIMS.md`) | 241 |
+| prose-referenced | `DEC` | `DECISIONS.md` (+ `QUEUE.md`) | 66 |
+| prose-referenced | `IC` | `INTERFACE-CHANGES.md` (+ `QUEUE.md`) | 37 |
+| prose-referenced | `M` | `MEASUREMENTS.md` (+ `QUEUE.md`) | 4 |
+| prose-referenced | `REC UI CPDF FL PL SK IS VF M0 DIST` | `QUEUE.md`, `MILESTONES.md`, `IS-BUILD-PLAN.md`, `UI-PLAN.md`, `PLAN.md` | 77 · 52 · 13 · 6 · 16 · 4 · 9 · 5 · 17 · 3 |
+| structural | `I` | `INTERFACES.md` | 8 |
+
+**DO THEY NEED DIFFERENT ANSWERS? THE MECHANISM, NO. THE CORPUS, YES — and the difference is
+measured rather than asserted.** A `C`-number is named by the catalog, by suites, by
+`coverage.mjs`'s harvester and by at least one **regex literal**; a `D`-number is named almost
+entirely by prose, but that prose includes **claims and reports written by sessions that have
+ENDED and cannot correct themselves**; an `I`-number is a contract identity two areas build
+against. All three collide the same way and are protected the same way. What each needs
+separately is **where its floor is read from**, and that is the only per-namespace knowledge the
+tool holds.
+
+### THE FLOOR CANNOT BE READ REPOSITORY-WIDE — MEASURED, AND IT IS WHY THE CORPUS IS PER-NAMESPACE
+
+A naive repo-wide scan for `\bC-(\d+)` over 425 files returns **2026**, not 34. The hits are
+fixture ids shaped `…C-2024-…` in `progression-instance.test.mjs`, `progression-exception.test.mjs`
+and `CLAIMS.md`. **A floor poisoned by a year hands out `C-2027` and orphans the catalog
+permanently.** So the corpus is where a namespace ALLOCATES, and matches above a per-namespace
+ceiling are discarded **and named in the output** rather than dropped in silence.
+
+A second finding about the same throwaway probe, recorded because the practice is to distrust the
+instrument first: it reported `M max=7`, and `grep -r` over the whole tree finds **no `M-5` or
+higher anywhere**. The probe over-reported and the tool's own corpus scan (max 4) agrees with grep.
+**Two instruments, one subject, one of them wrong — and it was the ad-hoc one.**
+
+### DOES THE RACE ACTUALLY RACE — YES, AND IT IS MEASURED FROM BOTH SIDES
+
+Eight real processes (the standing concurrency budget), started together, minting `D` from one
+ledger, driven by `bio-plane/test/mintid.test.mjs`:
+
+- last child started **+4 ms** after the first; first child finished **+51 ms** — an
+  **every-child-alive overlap of 47 ms**, so the eight are genuinely contended and not serialised
+  by spawn latency.
+- **7 of the 8 reported LOSING a take and stepping over an id another child already held.** Eight
+  distinct ids came out.
+- **The negative control closes it from the other side, and this is what makes the arm a
+  diagnosis rather than a demonstration: with the exclusive create neutered (`wx` -> `w`), the
+  SAME driver gave ALL EIGHT PROCESSES `D-242`.** The collision is reproducible on demand, which
+  is what nobody had done for the seven real ones.
+
+### THE PRICE, STATED AS A NUMBER
+
+The ledger is not committed, so every id it hands out is a potential **gap**: two `D`-numbers were
+minted for this item's own debt rows and both were used, but an abandoned item leaves its number
+dead forever. **Against that: two of 2026-08-08's renumbers were already found defective** — one
+missed a regex literal (`C-29\.` is not the text `C-29.`), one mangled the worked example inside
+the very comment warning about renumbering, which `coverage.mjs` then read as a catalog check
+nobody names. **A mint has no failure mode that produces a WRONG id, only a SKIPPED one**, and
+that asymmetry — not throughput — is the measurement the design rests on.

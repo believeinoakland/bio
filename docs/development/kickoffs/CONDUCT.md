@@ -29,6 +29,32 @@ making a change another session must know about.**
    `miniflare` BEFORE making any edit, and each spent time establishing it was
    not their change. It recurs per worktree, so it belongs in the brief rather
    than in anyone's memory.
+
+   **AND EVERY BRIEF MUST SAY: TAKE IDS WITH `node tools/mintid.mjs <NS>`, NEVER BY
+   READING THE FILE AND ADDING ONE.** M0-17, 2026-08-08. **Seven items collided on an
+   id in ONE day** — a C-number family (PL-11 vs PL-14 on C-29), two IC numbers (IC-33,
+   IC-35) and four D-numbers (D-235 x3, D-237 x2, D-238 x2) — and **in every case both
+   workers measured the number free over the real file and BOTH WERE RIGHT WHEN THEY
+   LOOKED.** Read-the-file-and-add-one is a check-then-act with no atomicity between the
+   check and the act, so it is **a measured property of the concurrency budget, not a run
+   of accidents: ONE collision at a budget of two, SEVEN at eight**, and worse at sixteen
+   because what collides is PAIRS. **THE VIGILANCE FIX WAS ALREADY TRIED AND IT FAILED —
+   every brief for two days told workers to measure first and every one of them DID**, so
+   do not write a better warning; write the command. The tool takes each id by an
+   exclusive create in the ONE `.git` all sixty worktrees share (the same fact
+   `refs/stash` taught this project from the painful side), floored by the namespace's
+   own corpus so a lost ledger degrades to today's convention and no further.
+   `node tools/mintid.mjs --list` shows all sixteen namespaces it knows —
+   C · D · DEC · IC · M · I and the ten queue-item families. **It costs the worker one
+   command and costs you nothing per spawn, which is why it is here rather than a
+   reserved block you would have to allocate at every spawn** — and it covers the BOB and
+   DIST sessions too, which a block of yours would not: D-184 and D-185 both collided
+   with BOB-SESSION rows, and BOB is not spawned by you. **What it costs when it fails:
+   GAPS.** An id minted and never used is gone, so `D-244` existing no longer implies
+   `D-243` does. That is the price, and it is one grep against a renumber sweep across
+   code, suites, claims and reports — one of which already missed a REGEX LITERAL, where
+   `C-29\.` is not the text `C-29.`.
+
 **THE REFILL RULE, AND IT IS STEP 2's LAST ACT — NOT A SEPARATE HABIT.** A slot that has
 just been freed by an integration is filled BEFORE the turn ends, in the same turn, from
 the area's own column. **Reporting that a slot is free is not the same as filling it, and

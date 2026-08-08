@@ -144,6 +144,49 @@ diligence at the time:
 | **a worker's negative-control harness was OVERWRITTEN MID-TURN by another worker running in parallel** (PL-10, 2026-08-07) | **the scratchpad directory is SHARED between concurrent worker sessions.** Two workers wrote a harness to the same path; the second replaced the first while it was between arming a control and restoring the file. PL-10's controls had already run and its tree was verified, so nothing was lost — **but a harness silently replaced between ARM and RESTORE could report a restore it never performed**, and this project has already met an NC harness that reported a byte-identical restore over a file that had not been restored (UI-38). **THE RULE, and it is now in every brief CONDUCT writes: a worker writes its control harness INSIDE ITS OWN WORKTREE, never to a shared scratchpad — and verifies every restore by CONTENT as well as by hash.** A worktree is the one place a worker owns alone; that is what it is for |
 | **AN UNTRACKED `.test.mjs` FROM ANOTHER WORKER RAN IN A WORKER'S BATTERY AND DEFEATED ITS BASELINE** (REC-68 found it, M0-15 named the cause, 2026-08-08) | **`git stash` IS REPOSITORY-WIDE, NOT PER-WORKTREE — and a worktree is NOT the one place a worker owns alone after all, which corrects the row above.** MEASURED: `refs/stash` is not among git's per-worktree refs, so a `git stash push` inside a worktree writes `refs/stash` into the COMMON git directory while the worktree's own `refs/` stays empty. **Sixty checkouts share ONE stack**, `stash@{0}` means *whatever any of the sixty pushed last*, and `push -u` carries UNTRACKED files — so a `pop` deposits another worker's files, and an untracked suite among them is then DISCOVERED and RUN by the battery, counted, and gone by the next run. The instance is in the object database: stash `8706832` on UI-50's branch contains a different worker's D-228 work. **THE PART THAT MAKES THIS AN ORCHESTRATION FAILURE RATHER THAN A GIT FACT: the recipe every worker is briefed to use for a TRUE BASELINE is `git stash`.** The practice that defends this project against stale figures was itself the delivery mechanism for a phantom, and a contaminated baseline is a WRONG NUMBER CARRYING FULL CONFIDENCE — strictly worse than the stale brief it was written to defeat, because a stale brief is corrected by measurement and this defeats measurement itself. The battery now NAMES any suite it ran that is not in a commit (M0-15, D-238); the recipe changes below |
 
+| **SEVEN ITEMS TOOK AN ID SOMEBODY ELSE WAS ALSO TAKING, IN ONE DAY** (2026-08-08) — a C-number family (PL-11 vs PL-14 on C-29), two IC numbers (FL-3 vs CPDF-9 on IC-33; REC-63 vs REC-66 on IC-35) and four debt numbers (D-235 x3, D-237 x2, D-238 x2) | **IN EVERY CASE BOTH WORKERS MEASURED THE NUMBER FREE OVER THE REAL FILE AND BOTH WERE RIGHT WHEN THEY LOOKED.** Nobody was careless: read-the-file-and-add-one is a CHECK-THEN-ACT with no atomicity between the check and the act, and eight workers perform it against the same file at the same time. **It is a measured property of the budget, not a run of accidents — ONE collision at a budget of two, SEVEN at eight**, and worse at sixteen because what collides is PAIRS. **A VIGILANCE FIX HAD ALREADY BEEN TRIED AND FAILED: every brief for two days told workers to measure before allocating and every one of them DID.** The cost is paid by the serial integrator — a renumber is a by-the-number sweep across code, suites, claims and reports, **and one of them missed a REGEX LITERAL, where `C-29\.` is not the text `C-29.`**, caught only by a suite; another mangled its own worked example, which `coverage.mjs` then read as a catalog check nobody names. Closed by M0-17: `tools/mintid.mjs`, below |
+
+### TAKING AN ID: MINT IT, DO NOT READ THE FILE AND ADD ONE (M0-17, 2026-08-08)
+
+    node tools/mintid.mjs <NAMESPACE> [--count N]      # take
+    node tools/mintid.mjs --list                       # what exists, and where each floor comes from
+
+**Every shared id space in this project is allocated by reading a file and
+incrementing, and that convention is the defect** (the row above). The tool takes
+an id with an **exclusive create** — `O_CREAT|O_EXCL`, of which two racing
+processes see exactly one succeed — inside the **ONE `.git` directory every
+worktree of this clone shares.** That is the same fact `refs/stash` taught this
+project from the painful side, used from the useful one: the shared common gitdir
+is *precisely* the scope the collisions have.
+
+**Sixteen namespaces, and the sweep found that they do not all cost the same to
+get wrong**, which is why the register states a KIND for each:
+
+- **code-referenced** — `C` (the check catalog). Named by `bio-checks.mjs`, by
+  suites, by `coverage.mjs`'s harvester and at least once by a **regex literal**.
+  The most expensive to renumber and the one where minting pays most.
+- **prose-referenced** — `D`, `DEC`, `IC`, `M`, and the ten queue-item families
+  (`REC` `UI` `CPDF` `FL` `PL` `SK` `IS` `VF` `M0` `DIST`). Cheaper to sweep, but
+  the sweep reaches **claims and reports written by sessions that have ENDED and
+  cannot correct themselves.**
+- **structural** — `I`, the interface identities. Allocated a handful of times
+  ever, and the worst of the three to collide on, because an interface number is
+  a contract identity two areas build against.
+
+**Two layers, and the order is the design.** A **corpus floor** — the highest id
+already allocated in that namespace's own authoritative file — is kept, but
+demoted from *the allocator* to *the number an allocation may not go below*. So
+losing the ledger is a **degradation to today's convention and no further**: the
+ledger is deliberately NOT committed, because a committed ledger races exactly as
+the file does.
+
+**What it costs when it fails: GAPS.** An id minted and never used is gone, so
+`D-244` existing no longer implies `D-243` does. That is one grep, against a
+renumber sweep across the estate. **It has no failure mode that produces a WRONG
+id — only a SKIPPED one**, and that asymmetry is the whole argument for it over
+mechanising the renumber. The scope limits are D-242; the fact that nothing
+*detects* an id taken without it is D-243.
+
 ### RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15)
 
 **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is
