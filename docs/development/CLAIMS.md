@@ -3837,3 +3837,99 @@ interfaces consumed: none
 interfaces owned: none
 expected: M-4 — the partial-reference tier ships UNMEASURED. Re-run REC-36's variance measurement over REFERENCE STRINGS (`reading_refs.ref` and `ref_key`) rather than over labels, record n / instrument / population / date, and state what it does and does not license. MEASUREMENT ONLY: no op, field, shape, surface or behaviour changes, and the instrument is a `.probe.mjs` so `scripts/battery.mjs` (which discovers `*.test.mjs`) does not run it. Holds no area slot.
 released: 2026-08-08 — done and committed on branch `worktree-agent-ad6cca371e6828415`, NOT pushed (CONDUCT integrates). No plane, surface or schema path was edited; the battery moved by ZERO (125/125 · 7,872 before and after). The measurement VINDICATES the tier's no-grade posture and CONTRADICTS the ORDER of the two partial correspondences in `Store.#CORRESPONDENCE_RANK` — routed to CONDUCT for a queue row rather than fixed here, because `QUEUE.md` has one writer and this item may change no behaviour.
+
+## CLAIM 2026-08-08 RECORD (REC-76 / D-236)
+session: rec76-refusal-shapes (worktree agent-a7c06631e829a208f)
+opened: 2026-08-08T00:00:00Z
+paths:
+  - `civicos-ui/check-refusal-codes.mjs` — **arm C's refusal classifier INVERTED** (the
+    return-position walk, the verdict rule, the UNCLASSIFIED bucket) plus the `FLOOR`/`CEILING`
+    constant block, every figure re-measured from what the guard PRINTS on a green run.
+  - `civicos-ui/test/refusal-codes.test.mjs` — the new fixture arms (counted-or-named,
+    over-strictness) and the `NEGATIVE CONTROL:` header they are recorded in.
+  - `civicos-ui/test/refusal-codes.control.mjs` — the real-tree arms for this item.
+  - `bio-plane/checks/bio-checks.mjs` — THREE new rows in the existing `ACT_SHAPE_CHECKS`
+    family (C-33.30/31/32). **No new family**, on SK-1's rule that a family is a floor and a
+    new one buys slack for everybody else's walk.
+  - `bio-plane/src/store.mjs` — ONE new `DEC-49 REGION is-selection-moved` marker pair around
+    `selectionResolve`'s refuse-gate return, and the DEC-49 `code`/`check`/`translation` fields
+    added to `aiRunOpen`'s TWO codeless refusals (additive on the wire; REC-64's own precedent
+    one guard over).
+  - `docs/development/DEBT.md` (D-236's disposition, and any row this item raises),
+    `docs/development/VERIFICATION.md`, `docs/development/MEASUREMENTS.md`,
+    `docs/development/CLAIMS.md` (this entry).
+  - **NOT** `bio-plane/scripts/**`, **NOT** `bio-plane/test/**`, **NOT** `civicos-ui/app.html`,
+    **NOT** `newgroup/**`, **NOT** `pdf-worker/**`, **NOT** `agent-worker/**`. `QUEUE.md` is
+    CONDUCT's and is not written here.
+interfaces consumed: I3 (two refusals at `op=airunopen` gain an additive `code`/`check`/
+  `translation`; no field is removed, renamed or re-typed)
+interfaces owned: none
+expected: REC-76 — arm C stops grading a refusal by one literal and asks what makes something a
+  refusal IN PRINCIPLE; the eight refusal objects it was blind to become visible; a shape it
+  cannot classify is NAMED rather than silently scored zero; and `SET_MOVED` gets the region
+  `where` and the canned translation the blindness had cost it.
+accepts-when: as QUEUE.md REC-76, plus: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY
+  EDIT and trusted over the brief (arrived with no `bio-plane/node_modules`; `npm ci` exit read
+  UNPIPED, 0 — measured **130/130 green · 8,142 assertions**, which is exactly what the brief
+  said, the first item in twelve for which that is true). `node scripts/coverage.mjs --strict`
+  run DIRECTLY, `$?` unpiped. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit unpiped.
+  Negative controls RUN, each arm ALONE, declared before arming, restores verified by sha256
+  AND by `cmp` against uniquely-named per-arm pristine copies kept INSIDE this worktree.
+  No push, no merge.
+concurrency: several workers are in `store.mjs`. This item's `store.mjs` diff is one marker
+  pair and three additive fields on two existing returns. **`regionLines` is a property of the
+  MERGED source and has moved at integration four times — this item ADDS a region, so CONDUCT
+  must re-read it from a green run of the merged tree.**
+paths ADDED after opening, with the reason: `bio-plane/test/machinefences-dec49.test.mjs` — its
+  `PINNED` list and its ARM D0 corpus floor are pinned BOTH WAYS against ACT_SHAPE_CHECKS, so the
+  three new rows turned it red. **CORRECTED, never exempted** (CLAUDE.md's standing rule): the three
+  C-numbers were added to the pin with the reason at the site and the corpus moved 40 -> 43. **The
+  pin going red is that arm working** — a copy that could absorb three new rows in silence would be
+  the drift the block exists to stop.
+released: 2026-08-08 — committed on `worktree-agent-a7c06631e829a208f`, NOT pushed and NOT merged;
+  CONDUCT integrates. Battery **130/130 green · 8,145 assertions** against a true baseline MEASURED
+  IN THIS WORKTREE BEFORE ANY EDIT of **130/130 · 8,142** — the brief's own figure, and the FIRST
+  item in twelve to find its brief exactly right rather than stale. **Delta +3, attributed per suite
+  by diffing the two runs rather than by subtraction: `machinefences-dec49.test.mjs` 57 -> 60, ALL
+  127 other suites unmoved.** `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped,
+  **exit 0** — OPS 159/159, CHECKS 208/208 named (the three new C-numbers among them), REGISTER
+  FLOOR unmoved at `526/526 · 126/126 · 127/127`. `node civicos-ui/test/run.mjs` from the REPO ROOT,
+  exit unpiped, **0**. The guard PRINTS: census 410 -> 412, reach 204 -> 206, rows 149 -> 152,
+  governed sites 60 -> 61, regions 47 -> 48, region lines 1289 -> 1310, codes compared 119 -> 122,
+  outcome corpus 70, refusals judged 124, declared successes 7, unclassified 3; `reachGap`
+  42 -> **41**, the fall being `SET_MOVED`. **13 fixture arms (ARM 10a-10g) and 6 real-tree arms
+  (n1)-(n6), each armed ALONE with the others held open, declared before arming, every restore
+  verified by sha256 AND by content AND by re-running; all 19 behaved as declared, and REC-64's and
+  REC-71's twelve existing arms still behave.**
+
+### DELEGATION 2026-08-08 RECORD (REC-76) -> whoever next owns `bio-plane/test/meaning-bounds.test.mjs` AND `bio-plane/test/plane-envelope.test.mjs`: **TWO MORE INSTRUMENTS GRADE A RETURN BY ONE LITERAL, AND ONE IS REC-70's OWN FILE ON THE HALF IT DID NOT TOUCH** (D-240)
+
+REC-76 swept the class D-236 named. **Corpus: 232 instrument-candidate files across 8 directories
+(`bio-plane/scripts`, `bio-plane/test`, `civicos-ui`, `civicos-ui/test`, `tools`, `agent-worker`,
+`pdf-worker`, `newgroup`), 6,309,940 chars, 214 of them reading or matching source text. Reach: 36
+regex literals naming a verdict-shaped field beside a boolean literal, hand-verified down to TWO
+real classifiers** — the rest are single-site PINS (a regex anchoring one named return, which is a
+different and legitimate thing) or `NEGATIVE CONTROL:` prose.
+
+- **`meaning-bounds.test.mjs:361` — `const REFUSAL_RETURN = /\bok\s*:\s*false/`.** REC-70 inverted
+  this walk's SUCCESS side and left the EXCLUDER that decides what a refusal is at one literal.
+  MEASURED over `store.mjs`: **489 return-object literals excluded as refusals, 72 more
+  refusal-shaped and NOT excluded, across 37 distinct verdict fields** (`found: false` x16,
+  `started: false` x4, `terminated`/`recorded`/`configured: false` x4 each, `ok: !s`, and thirty
+  more). The direction is the generous one — it inflates the BARE roster REC-70 ratcheted.
+- **`plane-envelope.test.mjs:180` — DETECTOR A's `if (!/^\s*\{\s*ok:\s*true\b/.test(c.arg)) continue;`.**
+  MEASURED over `index.mjs`: **152 `json()` calls, 26 graded, 126 skipped; 4 of the skipped spread a
+  Durable Object `.result`.** Three are `ok:false` refusal envelopes and outside its subject; the
+  fourth, `index.mjs:4587`, is `{ ok: !!promoted.result?.ok, … }` — **a COMPUTED verdict spreading a
+  store result, D-236's exact shape arriving in a second instrument.**
+
+**WHAT THE SWEEP'S OWN MATCHER CANNOT SEE, stated rather than implied:** a classifier built from a
+string concatenated into a `RegExp` at runtime, one whose verdict field is held in a variable, and
+one that tests a PARSED value rather than source text — it reads regex LITERALS in source. It also
+cannot tell a classifier from a pin without a human reading it, which is why the 36 were
+hand-verified rather than reported as the answer.
+
+**NOT FIXED HERE, and the reason is not scope alone:** both files carry RATCHETED figures, and
+widening the first MOVES REC-70's bare roster. That is a measurement whose owner must make it, not
+an edit a passing item should land. The recipe is D-236's: invert, and NAME what cannot be
+classified. Raised as **D-240**.

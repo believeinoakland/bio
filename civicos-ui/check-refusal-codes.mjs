@@ -84,9 +84,13 @@
  *     no attempt. It checks that a translation EXISTS, is not a restatement of
  *     the machine code, and is not a copy of another code's translation.
  *   - It does not gate the whole plane's 294-code census (above).
- *   - Arm C is textual over a function body. A refusal built by a helper this
- *     guard cannot see would not be judged; arm A's row completeness and arm B's
- *     reach are what cover the ground arm C cannot.
+ *   - Arm C is textual over a function body, and it grades an OUTCOME by its
+ *     verdict rather than by one spelling (REC-76 — see "WHAT MAKES SOMETHING A
+ *     REFUSAL" at the arm). A refusal built by a helper this guard cannot see, or
+ *     built into a variable and returned later, would not be judged; arm A's row
+ *     completeness and arm B's reach are what cover the ground arm C cannot, and
+ *     what the walk CANNOT classify is printed by name on every run rather than
+ *     silently scored zero.
  *   - It says nothing about a LIVE plane. A green harness is not a serving
  *     build (D-108).
  *
@@ -222,18 +226,46 @@ const FLOOR = {
      four codes into the census and the reach. **`reachGap` DOES NOT MOVE and is
      deliberately left at 42**: all four new codes arrive translated, so this
      item neither closes nor widens REC-64's named gap, and a ceiling nudged for
-     bookkeeping reasons stops being a measurement of that gap. */
+     bookkeeping reasons stops being a measurement of that gap.
+
+     REC-76 (agent-a7c06631e829a208f), 2026-08-08 — D-236, THE ARM C CLASSIFIER
+     INVERTED. Every figure below is one THIS FILE PRINTED on a green run of this
+     worktree, read off the run and never added to the number that was here.
+     **REC-76 FOUND NO PRE-EXISTING SLACK: every floor sat exactly at the value
+     REC-63 left**, which is the fourth item running for which that has been true.
+     What moved is what REC-76 grew: three rows into the existing ACT_SHAPE_CHECKS
+     (C-33.30/31/32 — no new family, on SK-1's rule), one new REGION
+     (is-selection-moved, 21 lines, judging 1 refusal and COMPARING 2 codes), and
+     three codes into the census and the reach.
+
+     **AND ONE FIGURE MOVED FOR A REASON THAT IS NOT GROWTH, WHICH IS WHY IT IS
+     WRITTEN HERE RATHER THAN LEFT TO BE INFERRED.** `codesChecked` read 119 under
+     the old matcher and 118 under the new one on the SAME tree, before a single
+     row was added. The difference is a DE-DUPLICATION, not a loss of sight:
+     `captureRequestArm > is-capture-request-arm` returns a refusal NESTED inside
+     an envelope (`{ ok:false, silent:false, refusal:{ ok:false, reason:…, code:… }}`),
+     the old walk found TWO `ok: false` in it and graded the same object twice —
+     `2 judged, 4 code(s) checked` over ONE return. It now reads `1 judged, 2
+     code(s) checked`, which is what is there. **A figure that falls because the
+     instrument stopped counting one thing twice is not slack, and a figure that
+     falls for any other reason is** — so the distinction is measured and named
+     rather than left for the next reader to re-derive. The floor below is above
+     the old figure regardless, because the three new rows put it at 122.
+
+     `outcomeReturns`, `refusalsJudged` and `unclassifiedOutcomes` are NEW here
+     and are explained at their own keys. */
   families:     14,    // + ROUTE_MARK_CHECKS (REC-63);
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
                        // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        149,    // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
+  rows:        152,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
+                       // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      410,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      412,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // (was 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
                           answer is SIX. Arm 3 of `bio-plane/test/nc-rec64.mjs` neuters M2 — the widest
                           matcher, the one that earned the matcher set — and the union falls 406 -> 401.
@@ -243,9 +275,9 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       204,    // codes a surface can receive (R1 + R2 + R3) (was 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 60,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
+  reach:       206,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 61,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -256,7 +288,9 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      47,    // + REC-63's ONE (is-route-mark, judging 4 and comparing 4). + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
+  regions:      48,    // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
+                       // that could not be written until arm C could see a computed verdict).
+                       // + REC-63's ONE (is-route-mark, judging 4 and comparing 4). + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
                        // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
                        // is-correspond-artifact, is-release-account, is-release-entry,
                        // is-dispose-inquiries, is-publish-statement, is-cite-note, is-cite-role,
@@ -268,7 +302,16 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1289,   /* MOVED 1263 -> 1289 BY REC-63, 2026-08-08, from what this file PRINTED on a
+  regionLines: 1310,   /* MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
+                          green run of that worktree. The 21 are `is-selection-moved`'s own span and
+                          nothing else — REC-76 opened no line inside another item's region. **NOTE FOR
+                          THE INTEGRATOR: THIS FIGURE HAS MOVED AT INTEGRATION FOUR TIMES OUT OF FIVE
+                          AND A REGION'S LINE COUNT IS A PROPERTY OF THE MERGED SOURCE.** Several
+                          workers were running against `store.mjs` beside REC-76. If any of them landed
+                          a line inside one of the 48 spans, RE-READ this from a green run of the merged
+                          tree rather than trusting this number.
+                          PRIOR ENTRY, kept as the receipt for how this figure moves:
+                          MOVED 1263 -> 1289 BY REC-63, 2026-08-08, from what this file PRINTED on a
                           green run of that worktree. The 26 are `is-route-mark`'s own span and
                           nothing else — REC-63 opened no line inside another item's region. **NOTE
                           FOR THE INTEGRATOR, because this figure has moved at integration three
@@ -324,8 +367,9 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 119,   // refusal codes actually COMPARED against a family row — NOT the same as
-                       // refusals JUDGED, and not the same as lines read. Was 76, 58, 46, 30, 11.
+  codesChecked: 122,   // refusal codes actually COMPARED against a family row — NOT the same as
+                       // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
+                       // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
                           BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed
                           sites unfalsifiable — 776 lines read, ZERO codes compared — and said the
@@ -342,9 +386,15 @@ const FLOOR = {
                           eight refusal objects in the plane, and a codeless refusal in any of them
                           would pass this guard silently. Two of those five are inside `aiRunOpen`
                           itself and one of them was codeless until REC-64 gave it a code by hand.
-                          NOT fixed here: widening the matcher is a change to VF-2's instrument under
+                          NOT fixed there: widening the matcher is a change to VF-2's instrument under
                           `civicos-ui/`, which REC-64 did not claim beyond this constant block.
-                          Delegated in CLAIMS.md with the measurement. */
+                          Delegated in CLAIMS.md with the measurement.
+                          **CLOSED BY REC-76, 2026-08-08 (D-236).** The matcher was not lengthened by
+                          two spellings — it was INVERTED: arm C now takes every RETURN-POSITION
+                          outcome and grades it by whether it DECLARES ITSELF A SUCCESS. `aiRunOpen`
+                          went from `92L (0 judged, 0 checked)` to 4 judged, and TWO of its four
+                          refusals turned out to be CODELESS at a governed site. See "WHAT MAKES
+                          SOMETHING A REFUSAL" above the arm. */
                        // The growth is a convention landing, not luck: PL-3 named its helper
                        // `refusal` and passed a STRING LITERAL at every site, and every family
                        // since has done the same, because a local `refuse(key, …)` passes the code
@@ -352,6 +402,16 @@ const FLOOR = {
                        // thirteen governed sites once read 776 lines and checked zero — arm C's
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
+  outcomeReturns: 70,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+                          literals across the governed spans. Set from what the guard PRINTED on
+                          a green run of this worktree. It is floored SEPARATELY from
+                          `refusalsJudged` because the two fail for different reasons — the
+                          corpus collapses when the return reader goes blind, the yield when the
+                          verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
+                          CORPUS is this project's most recent instrument defect. */
+  refusalsJudged: 124,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
+                          successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
+                          a walk that had lost every spelling but one would still have cleared. */
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
   vocabularyTerms: 51, // + PL-15's `out-of-inquiry-lead` FINDING slug. Terms across them. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
@@ -364,7 +424,7 @@ const FLOOR = {
    this to zero, one family at a time, and until then no new receivable code may
    arrive without a translation. Measured 2026-08-07 by this file. */
 const CEILING = {
-  reachGap:     42,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
+  reachGap:     41,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
                           REC-64, the enactment itself: 31 codes inside the reach gained a canned
                           translation in one item. Was 74 before PL-15, which took it to 73 by giving
                           `NO_CLASS` its first translation.
@@ -394,6 +454,10 @@ const CEILING = {
                           So this ceiling does NOT fall to zero by continuing REC-64's method, and
                           saying so here is the point: a ratchet whose next move is unavailable reads
                           as neglect unless the reason is written where the number is. */
+  unclassifiedOutcomes: 3, /* REC-76 — return-position outcomes at a governed site carrying NO
+                          verdict this walk can read. NAMED every run and ceilinged: a new one is
+                          a new place a codeless refusal could hide, so it FAILS here rather than
+                          being scored zero. Set from what the guard PRINTED on a green run. */
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
@@ -732,6 +796,58 @@ function armB(rows, census, surfaceTables) {
    fail the harness rather than reach a member, and this is the arm that fails.
    Read as text over the function's body because the plane runs in workerd and
    cannot be exercised from this harness at all. */
+
+/* ---------------------------------------------------------------------------
+ * WHAT MAKES SOMETHING A REFUSAL — ASKED IN PRINCIPLE, NOT BY SPELLING.
+ * REC-76 / D-236, and it is REC-70's lesson on its fourth outing in this repo.
+ *
+ * THIS ARM USED TO GRADE A REFUSAL BY ONE LITERAL, `ok: false`. The cost is
+ * MEASURED rather than argued. Over `bio-plane/src`: **704 `ok: false`, 5
+ * `started: false`, 3 computed `ok: !<expr>`** — so eight refusal objects were
+ * invisible to the one arm whose entire job is to fail on a codeless refusal.
+ * It was found the only way this class ever is: REC-64's own new governed site,
+ * `aiRunOpen`, came back `92L (0 judged, 0 code(s) checked)` — read in full,
+ * asserting nothing, and green. **And it had already cost a translation**:
+ * `selectionResolve`'s `SET_MOVED` could not be given a region `where`, because
+ * it refuses through `ok: !stopped` and a region around it would have judged
+ * zero refusals and failed as a drifted marker.
+ *
+ * THE FIX INVERTS. It does not lengthen a list, because a list of spellings goes
+ * stale SILENTLY the moment a fourth is written — which is the failure being
+ * fixed. So:
+ *
+ *   THE CORPUS is every object literal in RETURN POSITION inside the governed
+ *   span: what the code HANDS BACK. That is a property of the language, not of
+ *   this plane's vocabulary.
+ *
+ *   THE VERDICT is the FIRST BOOLEAN-SHAPED top-level property of that object.
+ *   `ok`, `started`, `found`, `proposed`, `preview` are five field names in this
+ *   plane today and there will be a sixth; what every one of them has in common
+ *   is that it is a BOOLEAN, and the set of boolean-producing operators is fixed
+ *   by JavaScript's grammar rather than by anybody's next commit.
+ *
+ *   - verdict is the literal `true`  -> the outcome DECLARES ITSELF A SUCCESS.
+ *     Not a refusal, not judged. This is the direction that must not over-fire.
+ *   - verdict is the literal `false`, or a COMPUTED boolean (`!stopped`, a
+ *     comparison, `Boolean(x)`) -> a refusal, or a refusal on at least one path.
+ *     JUDGED: it owes a code with a canned translation.
+ *   - NO boolean-shaped property at all -> the walk CANNOT CLASSIFY it. It is
+ *     NAMED and ceilinged, never silently scored zero, because a shape scored
+ *     zero is indistinguishable from a site with nothing to judge.
+ *
+ * WHAT THIS WALK STILL CANNOT SEE, stated rather than left to be discovered:
+ *   - a refusal BUILT INTO A VARIABLE and returned later (`const r = { ok:false,
+ *     … }; return r;`). `subresources.mjs` writes refusals that way. MEASURED
+ *     when this landed: 0 of the 60 governed sites do, and every `ok:false` the
+ *     old matcher judged is inside a return-position object — so this widening
+ *     lost nothing, and that was checked rather than assumed.
+ *   - a NEGATIVE-POLARITY verdict (`failed: true`, `error: true`). A `true`
+ *     verdict reads as a success by construction. The cross-check below is the
+ *     cheap half: a declared success carrying a refusal CODE is a contradiction
+ *     and FAILS, gated at zero.
+ *   - a refusal a HELPER builds out of sight. Arm A's row completeness and arm
+ *     B's reach are what cover that ground, as they always were.
+ * ------------------------------------------------------------------------ */
 function armC(rows) {
   const sites = new Map();          // "file::fn::region" -> {file, fn, region, codes:Set}
   const claimedRegions = new Set(); // "file::region" — used to find ORPHAN markers below
@@ -752,6 +868,8 @@ function armC(rows) {
 
   let bodiesRead = 0, refusalsJudged = 0, bodyLines = 0;
   let regionsResolved = 0, regionLines = 0, codesChecked = 0;
+  let outcomeReturnsRead = 0, successesSeen = 0;
+  const unclassified = [];
   const perSite = [];
   for (const [key, site] of sites) {
     const full = path.join(PLANE, site.file);
@@ -783,21 +901,53 @@ function armC(rows) {
     const judgedHereStart = refusalsJudged;
     let checkedHere = 0;
 
-    /* Every refusal the body states. `ok: false` is the plane's one spelling of
-       a refusal object; the family helper is the other way one is built. Both
-       are collected, and a refusal object that carries neither a `code` in the
-       family nor a `reason` naming one FAILS. */
+    /* Every OUTCOME the span hands back, graded by whether it DECLARES ITSELF A
+       SUCCESS — see "WHAT MAKES SOMETHING A REFUSAL" above. The family helper is
+       the other way a refusal is built and is judged below. A refusal object
+       that carries neither a `code` in the family nor a `reason` naming one
+       FAILS; an outcome this walk cannot classify at all is NAMED. */
     const at_ = site.region ? ` > ${site.region}` : "";
-    for (const m of body.text.matchAll(/\bok\s*:\s*false\b/g)) {
-      const at = m.index;
-      const stmt = objectLiteralAround(body.text, at);
-      const line = body.startLine + body.text.slice(0, at).split("\n").length - 1;
-      refusalsJudged++;
+    for (const [s, e] of outcomeReturns(body.text)) {
+      const stmt = body.text.slice(s, e + 1);
+      const line = body.startLine + body.text.slice(0, s).split("\n").length - 1;
+      outcomeReturnsRead++;
       const named = [...stmt.matchAll(/\b(?:code|reason)\s*:\s*"([A-Z][A-Z0-9_]{2,})"/g)].map(x => x[1]);
       const viaVar = /\b(?:code|reason)\s*:\s*(?!["'])[\w.[\]]+/.test(stmt);
+      const v = verdictOf(stmt);
+      /* (1) NO VERDICT AT ALL — the walk does not understand this outcome's
+         shape. It is NAMED and counted against a ceiling, never silently scored
+         zero: a shape scored zero is indistinguishable from a site with nothing
+         to judge, which is the whole of D-236. */
+      if (!v) {
+        unclassified.push(`${site.file}:${line} (${site.fn}${at_}) ${JSON.stringify(stmt.replace(/\s+/g, " ").slice(0, 90))}`);
+        continue;
+      }
+      /* (2) IT DECLARES ITSELF A SUCCESS. Not a refusal, not judged — and this
+         is the direction that must NOT over-fire: a success spelled in a way
+         nobody anticipated, graded as a refusal, floods the guard with false
+         sites and gets it switched off (VERIFICATION.md's own reason for not
+         making `--strict` the gate yet). The ONE cross-check is cheap and is
+         gated at zero rather than ratcheted: a declared success carrying a
+         refusal CODE is a contradiction, and it is also the only way this rule
+         could hide a negative-polarity verdict such as `failed: true`. */
+      if (v.kind === "true") {
+        successesSeen++;
+        if (named.length)
+          FAIL(`${site.file}:${line} (in ${site.fn}${at_}) returns an outcome whose verdict \`${v.key}\` `
+             + `DECLARES SUCCESS (\`true\`) while carrying refusal code(s) ${named.join(", ")}. Those are two `
+             + `different claims in one object and this arm grades it as a success, so the refusal would go `
+             + `unjudged. If the verdict is negative-polarity (\`failed: true\`), say so at the site — this `
+             + `walk reads a \`true\` verdict as a success by construction and cannot see that on its own.`);
+        continue;
+      }
+      /* (3) EVERYTHING ELSE IS A REFUSAL — a `false` verdict, or a COMPUTED one
+         (`ok: !stopped`), which refuses on at least one path and owes a code on
+         that path. */
+      refusalsJudged++;
       if (!named.length && !viaVar)
-        FAIL(`${site.file}:${line} (in ${site.fn}${at_}) returns a CODELESS REFUSAL — an \`ok:false\` with no `
-           + `\`code\` and no \`reason\`. This site is governed by DEC-49 (${[...site.fams].join(", ")}), `
+        FAIL(`${site.file}:${line} (in ${site.fn}${at_}) returns a CODELESS REFUSAL — an outcome whose verdict `
+           + `\`${v.key}\` is ${v.kind === "false" ? "`false`" : "computed, so it refuses on at least one path"}, `
+           + `with no \`code\` and no \`reason\`. This site is governed by DEC-49 (${[...site.fams].join(", ")}), `
            + `so every refusal it makes owes a code with a canned translation. A refusal with no code is `
            + `a sentence a surface can only render verbatim or blank, which is the state DEC-49 ended. `
            + `Offending text: ${JSON.stringify(stmt.split("\n")[0].trim().slice(0, 120))}`);
@@ -872,12 +1022,44 @@ function armC(rows) {
      COMPARED against a row. They come apart badly: four governed sites today read
      449 lines and check ZERO codes, because they refuse through a local
      `refuse(key, …)` helper (the code is a variable) or by pushing findings
-     rather than returning `ok:false`. Those sites are neither passing nor failing
-     on merit and this figure is how that stays visible. */
+     rather than returning an outcome at all. Those sites are neither passing nor
+     failing on merit and this figure is how that stays visible. */
   if (codesChecked < FLOOR.codesChecked)
     FAIL(`arm C compared only ${codesChecked} refusal code(s) against a family row, floor is `
        + `${FLOOR.codesChecked}. Lines read is not the measure — a site can be read in full and assert `
        + `nothing. Establish which site stopped yielding a literal code before moving the floor.`);
+
+  /* THE OUTCOME WALK'S OWN FLOORS (REC-76). The corpus is the returns READ; the
+     yield is the ones GRADED AS REFUSALS. They are floored separately because
+     they fail for different reasons: the corpus collapses when the return
+     reader goes blind, and the yield collapses when the verdict rule does — and
+     a walk that read every return and graded none of them would clear a corpus
+     floor alone. This is REC-70's lesson stated as two numbers rather than one. */
+  if (outcomeReturnsRead < FLOOR.outcomeReturns)
+    FAIL(`arm C read ${outcomeReturnsRead} return-position outcome(s) across ${bodiesRead} governed span(s), `
+       + `floor is ${FLOOR.outcomeReturns}. THE CORPUS COLLAPSED — the return reader stopped finding what `
+       + `the spans hand back, and every verdict below it is a verdict over nothing.`);
+  if (refusalsJudged < FLOOR.refusalsJudged)
+    FAIL(`arm C graded ${refusalsJudged} of ${outcomeReturnsRead} outcome(s) as REFUSALS, floor is `
+       + `${FLOOR.refusalsJudged}. The corpus may be intact while the VERDICT RULE has gone blind: a walk `
+       + `that reads every return and declares them all successes asserts nothing and reports green.`);
+
+  /* AND WHAT THE WALK COULD NOT CLASSIFY IS NAMED (D-236's second half, and the
+     fix M0-14 landed for the control register and CPDF-9 for the dark fleet
+     member). An outcome with no boolean-shaped property has no verdict this walk
+     can read. Scoring it zero would make it indistinguishable from a site with
+     nothing to judge — which is the failure this whole item exists to close — so
+     it is PRINTED by name and held under a ceiling that may only FALL. */
+  if (unclassified.length > CEILING.unclassifiedOutcomes)
+    FAIL(`${unclassified.length} return-position outcome(s) at governed sites carry NO verdict this walk can `
+       + `read; the ceiling is ${CEILING.unclassifiedOutcomes} and it may only ever move DOWN. The `
+       + `${unclassified.length - CEILING.unclassifiedOutcomes} beyond it are new. An outcome whose shape the `
+       + `walk does not understand is not judged, so a codeless refusal hiding in one would pass silently — `
+       + `give it a verdict this walk can read (a boolean-shaped property), or lower the ceiling in the same `
+       + `turn if one has been retired. They are: ${unclassified.join(" · ")}`);
+  NOTE(`arm C: UNCLASSIFIED — ${unclassified.length} of ${outcomeReturnsRead} return-position outcome(s) carry no `
+     + `verdict this walk can read and are NAMED rather than scored zero (ceiling ${CEILING.unclassifiedOutcomes}, `
+     + `may only fall)${unclassified.length ? `: ${unclassified.join(" · ")}` : ""}`);
 
   /* AN ORPHAN MARKER — a `DEC-49 REGION` declared in the plane that no `where`
      claims. It reads at the site as if that span were governed, and nothing is
@@ -901,6 +1083,11 @@ function armC(rows) {
      + `${refusalsJudged} refusals judged and ${codesChecked} code(s) actually COMPARED against a row `
      + `· ${perSite.join(" · ")} · floors ${FLOOR.governedSites} sites / ${FLOOR.bodyLines} lines / `
      + `${FLOOR.regions} regions / ${FLOOR.regionLines} region lines / ${FLOOR.codesChecked} codes checked`);
+  NOTE(`arm C: THE OUTCOME WALK — ${outcomeReturnsRead} return-position outcome(s) read, graded `
+     + `${refusalsJudged} REFUSAL(s) / ${successesSeen} declared SUCCESS(es) / ${unclassified.length} `
+     + `unclassified, by verdict rather than by spelling · floors ${FLOOR.outcomeReturns} corpus / `
+     + `${FLOOR.refusalsJudged} refusals`
+     + `${outcomeReturnsRead > FLOOR.outcomeReturns ? ` · corpus GREW by ${outcomeReturnsRead - FLOOR.outcomeReturns}` : ""}`);
 }
 
 /* WHICH FILES CAN HOLD A REGION MARKER. The plane's sources and its check
@@ -1001,19 +1188,162 @@ function regionSpan(src, fnBody, region, key, site) {
  * code. Arm 3 of `test/refusal-codes.test.mjs` is that fixture, and it was RED
  * on the first run of this file's own suite. A refusal is an object literal;
  * its bounds are its braces and nothing else. */
-function objectLiteralAround(text, at) {
-  let start = at, depth = 0;
-  for (; start >= 0; start--) {
-    if (text[start] === "}") depth++;
-    else if (text[start] === "{") { if (!depth) break; depth--; }
+/* ---------------------------------------------------------------------------
+ * THE OUTCOME WALK (REC-76 / D-236) — three small readers, and every one of
+ * them is about SHAPE rather than about a field name.
+ *
+ * `outcomeReturns`  — the CORPUS: every object literal in RETURN POSITION.
+ * `topLevelProps`   — its depth-0 `key: value` pairs, strings and comments skipped.
+ * `verdictOf`       — the FIRST boolean-shaped one, which is the verdict.
+ * ------------------------------------------------------------------------ */
+
+/* Skip a quoted string starting at `i`; returns the index of its closing quote. */
+function skipString(text, i) {
+  const q = text[i];
+  for (let j = i + 1; j < text.length; j++) {
+    if (text[j] === "\\") { j++; continue; }
+    if (text[j] === q) return j;
   }
-  if (start < 0) return text.slice(at, at + 200);
-  let end = start, d = 0;
-  for (; end < text.length; end++) {
-    if (text[end] === "{") d++;
-    else if (text[end] === "}") { d--; if (!d) break; }
+  return text.length - 1;
+}
+
+/* The `}` matching the `{` at `open`, with strings and block comments skipped —
+ * a brace inside a comment or a sentence is not a brace. */
+function matchBrace(text, open) {
+  let d = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"' || c === "'" || c === "`") { i = skipString(text, i); continue; }
+    if (c === "/" && text[i + 1] === "*") { const j = text.indexOf(CLOSE_COMMENT, i + 2); i = j < 0 ? text.length : j + 1; continue; }
+    if (c === "{") d++;
+    else if (c === "}") { d--; if (!d) return i; }
   }
-  return text.slice(start, Math.min(end + 1, text.length));
+  return -1;
+}
+
+/* RETURN POSITION, and the two forms the plane actually writes:
+ *   return { … }            — including `return (\n  { … })`
+ *   return cond ? { … } : { … }   — both branches are outcomes
+ * An object literal handed to a HELPER (`refusal("CODE", detail, { … })`) is an
+ * ARGUMENT and not an outcome; it is deliberately outside this corpus, because
+ * grading detail objects is exactly the over-strictness that would flood the
+ * guard with false sites. The helper's own call is judged separately below.
+ * MEASURED before that decision: taking every object literal in the span instead
+ * graded FIVE detail objects at real governed sites as refusals.
+ *
+ * THE BOUNDS ARE THE OBJECT'S OWN BRACES, and the receipt is kept from the
+ * `objectLiteralAround` reader this replaced — which itself replaced a FIXED
+ * 400-CHARACTER WINDOW that failed in the GENEROUS direction: a codeless refusal
+ * followed within 400 characters by a properly coded one read as coded, because
+ * the window ran past the end of its own statement and found the NEXT refusal's
+ * code. Arm 3 of `test/refusal-codes.test.mjs` is that fixture and it was RED on
+ * the first run of this file's own suite. */
+function outcomeReturns(text) {
+  const out = [];
+  const seen = new Set();
+  const push = (s, e) => { if (e > s && !seen.has(s)) { seen.add(s); out.push([s, e]); } };
+  for (const m of text.matchAll(/\breturn\b/g)) {
+    /* the direct form: only whitespace and opening parens may sit in front.
+       `lead` is how many of those parens there were, and it is what the
+       conditional reader below measures its own depth against. */
+    let lead = 0;
+    for (let i = m.index + 6; i < text.length; i++) {
+      const c = text[i];
+      if (/\s/.test(c)) continue;
+      if (c === "(") { lead++; continue; }
+      if (c === "{") { const e = matchBrace(text, i); if (e > 0) push(i, e); }
+      break;
+    }
+    /* the conditional form: `return cond ? { … } : { … }` — both branches are
+       outcomes. THE DEPTH TEST IS LOAD-BEARING and was added after measuring
+       what its absence cost: without it, a `pair ? { … } : null` sitting inside
+       a DETAIL ARGUMENT four calls deep was read as a returned branch and
+       reported as an outcome the walk could not classify. A branch of the
+       returned expression sits at the return's OWN depth and nowhere else. */
+    const seg = text.slice(m.index, Math.min(text.length, m.index + 6000));
+    if (!/^return\s*[^;{]{0,240}\?/.test(seg)) continue;
+    let d = 0;
+    for (let k = 6; k < seg.length; k++) {
+      const c = seg[k];
+      if (c === '"' || c === "'" || c === "`") { k = skipString(seg, k); continue; }
+      if (c === "(" || c === "[") { d++; continue; }
+      if (c === ")" || c === "]") { d--; continue; }
+      if (c === ";" && d <= lead) break;
+      if (c === "{" && d === lead && /[?:]\s*$/.test(seg.slice(Math.max(0, k - 40), k))) {
+        const e = matchBrace(seg, k);
+        if (e > 0) { push(m.index + k, m.index + e); k = e; }
+      }
+    }
+  }
+  return out.sort((a, b) => a[0] - b[0]);
+}
+
+/* The depth-0 `key: value` pairs of an object literal. Strings, block comments
+ * and line comments are skipped, so a `,` or a `:` inside a member-facing
+ * sentence — and this plane's refusals are full of them — does not split a
+ * property. */
+function topLevelProps(objText) {
+  const parts = [];
+  let buf = "", depth = 0;
+  for (let i = 1; i < objText.length - 1; i++) {
+    const c = objText[i];
+    if (c === '"' || c === "'" || c === "`") { const j = skipString(objText, i); buf += objText.slice(i, j + 1); i = j; continue; }
+    if (c === "/" && objText[i + 1] === "*") { const j = objText.indexOf(CLOSE_COMMENT, i + 2); i = j < 0 ? objText.length : j + 1; continue; }
+    if (c === "/" && objText[i + 1] === "/") { const j = objText.indexOf("\n", i); i = j < 0 ? objText.length : j; continue; }
+    if (c === "{" || c === "[" || c === "(") depth++;
+    else if (c === "}" || c === "]" || c === ")") depth--;
+    if (c === "," && depth === 0) { parts.push(buf); buf = ""; continue; }
+    buf += c;
+  }
+  parts.push(buf);
+  const props = [];
+  for (const p of parts) {
+    const m = /^\s*([A-Za-z_$][\w$]*)\s*:([\s\S]*)$/.exec(p);
+    if (m) props.push({ key: m[1], value: m[2] });
+  }
+  return props;
+}
+
+/* IS THIS VALUE BOOLEAN-SHAPED? The two literals, or an expression whose DEPTH-0
+ * operator is one the LANGUAGE guarantees produces a boolean. That distinction is
+ * the whole reason this is not a list that goes stale: `ok`, `started`, `found`,
+ * `proposed`, `preview` are five field names in this plane and there will be a
+ * sixth next week, but the set of boolean-producing operators is fixed by
+ * JavaScript's grammar and cannot grow when somebody writes a new refusal.
+ * `=>` is excluded explicitly — an arrow is not a comparison, and reading one as
+ * a verdict is how the first draft of this walk graded five detail objects. */
+function verdictKind(value) {
+  const s = value.trim();
+  if (s === "true") return "true";
+  if (s === "false") return "false";
+  if (/^!/.test(s)) return "expr";
+  if (/^Boolean\s*\(/.test(s)) return "expr";
+  let d = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '"' || c === "'" || c === "`") { i = skipString(s, i); continue; }
+    if (c === "(" || c === "[" || c === "{") { d++; continue; }
+    if (c === ")" || c === "]" || c === "}") { d--; continue; }
+    if (d) continue;
+    if (c === "=" && s[i + 1] === ">") { i++; continue; }
+    if ((c === "=" || c === "!") && s[i + 1] === "=") return "expr";
+    if ((c === "<" || c === ">") && s[i - 1] !== "=" && s[i + 1] !== "=") return "expr";
+  }
+  return null;
+}
+
+/* THE VERDICT IS THE FIRST BOOLEAN-SHAPED TOP-LEVEL PROPERTY, and that ordering
+ * is load-bearing rather than incidental: `{ ok: false, terminal: true }` is a
+ * refusal carrying a datum, and reading ANY `true` as a success would have
+ * un-judged seven of `#captureRequestConduct`'s refusals that the old one-literal
+ * matcher did judge. Measured over all 60 governed sites when this landed: no
+ * outcome leads with a datum. */
+function verdictOf(objText) {
+  for (const p of topLevelProps(objText)) {
+    const kind = verdictKind(p.value);
+    if (kind) return { key: p.key, kind };
+  }
+  return null;
 }
 
 /* The body of a top-level `function NAME(` / `NAME(` method.

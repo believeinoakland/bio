@@ -3970,3 +3970,58 @@ eyeballed:
 - **Finding 8 expires the day a reader supplies its own `ref`.** `#writeReadings`
   honours `e.ref` when a reading carries one; no reader in this tree does, and the
   probe FAILS rather than reprinting the conclusion if that changes.
+
+## HOW THIS PLANE SPELLS A REFUSAL, AND WHAT ONE-LITERAL CLASSIFIERS COST — 2026-08-08, REC-76 (D-236, D-240)
+
+**Instrument:** `civicos-ui/check-refusal-codes.mjs`'s own printed output, plus
+two read-only sweeps over `bio-plane/src` and the repository's instrument files.
+Every figure below is one an instrument PRINTED, not one carried by hand.
+
+**THE SPELLINGS, over `bio-plane/src`:**
+
+| shape | count |
+| --- | --- |
+| `ok: false` | **704** |
+| `started: false` | **5** |
+| computed `ok: !<expr>` | **3** |
+
+That is the whole of D-236: arm C of the DEC-49 guard graded a refusal by the
+first of those three, so **eight refusal objects were invisible to the one arm
+whose job is to fail on a codeless refusal**, and `SET_MOVED` went untranslated
+because a region drawn around a computed verdict would have judged zero.
+
+**WHAT THE INVERSION CHANGED, at the 60 governed sites (guard's own print):**
+
+| | before | after |
+| --- | --- | --- |
+| refusals judged | 119 | **124** |
+| codes COMPARED against a row | 119 | **122** (118 on the same tree before the 3 new rows — see below) |
+| `aiRunOpen` | `92L (0 judged, 0 checked)` | `113L (4 judged, 3 checked)` — **2 of its 4 refusals were CODELESS** |
+| return-position outcome corpus | not measured | **70** (124 refusals, 7 declared successes, 3 unclassified) |
+| governed sites / regions / region lines | 60 / 47 / 1289 | **61 / 48 / 1310** |
+| `reachGap` | 42 | **41** — the fall is `SET_MOVED` |
+
+**AND ONE FALL THAT IS NOT SLACK, measured so the next reader need not re-derive
+it:** `codesChecked` read 119 old / 118 new on the *same* tree. The old walk found
+TWO `ok: false` inside `captureRequestArm`'s NESTED refusal envelope
+(`{ok:false, silent:false, refusal:{ok:false, reason, code}}`) and graded the same
+return twice — `2 judged, 4 checked` over ONE return. **A figure that falls
+because an instrument stopped counting one thing twice is not slack; a figure that
+falls for any other reason is.**
+
+**MEASURED BEFORE THE WIDENING WAS TRUSTED — it lost nothing:** every `ok: false`
+the old matcher judged at a governed site sits inside a return-position object
+literal. **0 of 60 governed sites** build a refusal into a variable and return it
+later, which is the one shape the new walk cannot see (`subresources.mjs` does
+write refusals that way, outside any governed site).
+
+**THE CLASS SWEEP (D-240).** Corpus: **232 instrument-candidate files across 8
+directories, 6,309,940 chars**, 214 of them reading or matching source text.
+Reach: **36 regex literals** naming a verdict-shaped field beside a boolean
+literal, hand-verified down to **2 real classifiers**; the rest are single-site
+pins or `NEGATIVE CONTROL:` prose.
+
+| instance | corpus | graded | not graded |
+| --- | --- | --- | --- |
+| `meaning-bounds.test.mjs`'s `REFUSAL_RETURN = /\bok\s*:\s*false/` (the EXCLUDER REC-70 left) | `store.mjs` return-object literals | 489 excluded as refusals | **72 refusal-shaped and NOT excluded, across 37 distinct verdict fields** |
+| `plane-envelope.test.mjs` DETECTOR A's `/^\s*\{\s*ok:\s*true\b/` | 152 `json()` calls in `index.mjs` | 26 | **126 skipped, 4 of which spread a Durable Object `.result`** — one, `index.mjs:4587`, under a COMPUTED verdict |

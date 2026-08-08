@@ -361,6 +361,128 @@ arm("(r6)", [{
   };
 });
 
+/* ================================================================
+   REC-76 / D-236 — THE CLASSIFIER INVERTED. Six arms, each DECLARED before it
+   was armed, each armed ALONE with the others held open, against the REAL tree.
+
+   The point of the pair (n1)/(n2) is that neither alone is evidence. (n1) shows
+   the new classifier catches a refusal in a shape nobody taught it; (n2) shows
+   the OLD one did not, over the SAME planted refusal. A widening that fires is
+   only interesting if what it replaced did not.
+   ================================================================ */
+
+/* ---------------------------------------------------------------- (n1)
+   DECLARED: MUST FAIL. This is the arm the item exists for. */
+console.log("\n(n1) A REFUSAL IN A SHAPE THE MATCHER WAS NEVER TAUGHT — planted at a REAL governed site");
+arm("(n1)", [{
+  file: F.airun,
+  from: `export function checkBound(bound) {`,
+  to: `export function checkBound(bound) {
+  if (bound === "__rec76_control__") return { started: false, detail: "a refusal nobody gave a code" };`,
+}], guard, r => ({
+  ok: r.exit === 1 && /\(in checkBound\) returns a CODELESS REFUSAL — an outcome whose verdict `started` is `false`/.test(r.out),
+  what: "the guard exits 1 naming checkBound AND the verdict field it read — `started`, a field name "
+      + "this walk has never been told about, graded because it is a boolean verdict that is not `true`",
+}));
+
+/* ---------------------------------------------------------------- (n2)
+   DECLARED: MUST PASS (exit 0). THE DEFECT, DEMONSTRATED RATHER THAN ASSERTED.
+
+   The classifier is reverted to the one-vocabulary form — a verdict is read only
+   when the field is called `ok` — over the SAME planted refusal as (n1). The
+   three ratchet figures are relaxed IN THIS ARM ONLY, and the reason is stated
+   because relaxing a floor inside a control is otherwise indistinguishable from
+   buying a green run: with the old classifier in place the plane's own
+   `started: false` refusals fall out of the judged set, so the FLOORS would fire
+   on the emulation and hide the thing this arm is measuring. What is being
+   measured is whether the PLANTED refusal is seen, and it is not. */
+console.log("\n(n2) THE SAME PLANTED REFUSAL, UNDER THE OLD ONE-VOCABULARY CLASSIFIER — it PASSES");
+arm("(n2)", [
+  {
+    file: F.airun,
+    from: `export function checkBound(bound) {`,
+    to: `export function checkBound(bound) {
+  if (bound === "__rec76_control__") return { started: false, detail: "a refusal nobody gave a code" };`,
+  },
+  { file: F.guard, from: `    if (kind) return { key: p.key, kind };`, to: `    if (kind && p.key === "ok") return { key: p.key, kind };` },
+  { file: F.guard, from: `  refusalsJudged: 124,`, to: `  refusalsJudged: 0,` },
+  { file: F.guard, from: `  codesChecked: 122,`, to: `  codesChecked: 0,` },
+  { file: F.guard, from: `  unclassifiedOutcomes: 3,`, to: `  unclassifiedOutcomes: 999,` },
+], guard, r => ({
+  ok: r.exit === 0,
+  what: "the guard exits 0 — a CODELESS refusal sits at a governed site and the one-vocabulary "
+      + "classifier does not see it. That is D-236 reproduced on the real tree, and it is what "
+      + "makes (n1) evidence rather than a tautology",
+}));
+
+/* ---------------------------------------------------------------- (n3)
+   DECLARED: MUST PASS (exit 0). THE OVER-STRICTNESS DIRECTION, and it is the
+   one that protects the guard: a widening that grades SUCCESSES as refusals
+   floods it with false sites and gets it switched off, which is
+   VERIFICATION.md's own reason for not making `--strict` the gate yet.
+   `found: true` is REC-70's own example — the success spelling that hid 27 ops
+   one instrument over. */
+console.log("\n(n3) A SUCCESS IN AN UNANTICIPATED SPELLING — it must NOT be graded a refusal");
+arm("(n3)", [{
+  file: F.airun,
+  from: `export function checkBound(bound) {`,
+  to: `export function checkBound(bound) {
+  if (bound === "__rec76_control__") return { found: true, rows: [], more: false };`,
+}], guard, r => ({
+  ok: r.exit === 0,
+  what: "the guard exits 0 — a return that declares itself a success is not a refusal and owes no code",
+}));
+
+/* ---------------------------------------------------------------- (n4)
+   DECLARED: MUST FAIL. **EACH NEWLY NARROWED REGION OWES ITS OWN TEETH ARM**
+   (REC-71's (r5) rule); inheriting another region's proves nothing about this
+   one. `is-selection-moved` is the region that could not be written until this
+   item landed, so this is the arm that shows the narrowing did not blind the
+   guard at the very site the blindness cost a translation. */
+console.log("\n(n4) THE TEETH INSIDE `is-selection-moved` — SET_MOVED's code taken off the real refusal");
+arm("(n4)", [{
+  file: F.store,
+  from: `      ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
+                      check: ACT_SHAPE_CHECKS.SET_MOVED.check,
+                      translation: ACT_SHAPE_CHECKS.SET_MOVED.translation,`,
+  to: `      ...(stopped ? { rec76_control_no_code: true,`,
+}], guard, r => ({
+  ok: r.exit === 1 && /\(in selectionResolve > is-selection-moved\) returns a CODELESS REFUSAL/.test(r.out)
+      && /verdict `ok` is computed/.test(r.out),
+  what: "the guard exits 1 naming FILE, LINE, FUNCTION and REGION — and saying the verdict is COMPUTED, "
+      + "which is the shape the old matcher could not see at all",
+}));
+
+/* ---------------------------------------------------------------- (n5)
+   DECLARED: MUST FAIL. A `where` whose region has vanished must FAIL rather
+   than judge an empty span — an empty span passes everything. */
+console.log("\n(n5) THE NEW REGION'S MARKER REMOVED from the real store.mjs");
+arm("(n5)", [{
+  file: F.store,
+  from: `    /* DEC-49 REGION is-selection-moved`,
+  to: `    /* REC-76 CONTROL: the marker taken out`,
+}], guard, r => ({
+  ok: r.exit === 1 && /found 0 `DEC-49 REGION is-selection-moved` opening marker\(s\)/.test(r.out),
+  what: "the guard exits 1 saying the region the `where` names is not declared in the source",
+}));
+
+/* ---------------------------------------------------------------- (n6)
+   DECLARED: MUST FAIL. The walk neutered, and the failure must arrive as a
+   DELTA against a floor with the CORPUS PRINTED — a headline that passes over
+   an EMPTY CORPUS is this repository's most recent instrument defect, and a
+   ceiling alone would have stayed green through it (REC-70). */
+console.log("\n(n6) THE OUTCOME WALK NEUTERED — the CORPUS floor fires, with the corpus printed");
+arm("(n6)", [{
+  file: F.guard,
+  from: `function outcomeReturns(text) {`,
+  to: `function outcomeReturns(text) { return [];`,
+}], guard, r => ({
+  ok: r.exit === 1 && /THE CORPUS COLLAPSED/.test(r.out)
+      && /THE OUTCOME WALK — 0 return-position outcome\(s\) read/.test(r.out),
+  what: "the guard exits 1 on the CORPUS floor, and the printed line shows the corpus at 0 rather than "
+      + "leaving a reader to infer that a green run meant anything",
+}));
+
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");
 const after = guard();

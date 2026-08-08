@@ -302,6 +302,18 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.27", "KIND_NOT_PERSONAL"],
     ["C-33.28", "LAST_OWNER"],
     ["C-33.29", "AI_RUN_CAPABILITY_UNAVAILABLE"],
+    /* REC-76 / D-236 — CORRECTED HERE RATHER THAN EXEMPTED. Three rows landed in
+       ACT_SHAPE_CHECKS when the DEC-49 guard's arm C stopped grading a refusal by
+       the single literal `ok: false`: the two CODELESS refusals the widened
+       classifier found at `aiRunOpen` (a governed site that had read `0 judged, 0
+       code(s) checked` for as long as its row had existed), and `SET_MOVED`,
+       whose region `where` could not be written at all while a computed verdict
+       `ok: !stopped` was invisible. **THE PIN GOING RED IS THIS ARM WORKING** —
+       a copy that could absorb three new rows in silence would be the drift the
+       block above says it exists to stop. */
+    ["C-33.30", "AI_RUN_NO_CONTEXT"],
+    ["C-33.31", "AI_RUN_ALREADY_OPEN"],
+    ["C-33.32", "SET_MOVED"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -358,7 +370,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      run zero arms and report green — the "passes while asserting nothing" shape
      this whole block is written against. */
   t("ARM D0: the row corpus is the size REC-64 landed — a walk that lost a family would run fewer "
-    + "arms and every one of them would still pass", rowsSeen, 40);
+    + "arms and every one of them would still pass", rowsSeen, 43);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

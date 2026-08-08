@@ -2271,6 +2271,23 @@ export class Store extends DurableObject {
     }
 
     const moved = drift.revised.length + drift.removed + drift.added > 0;
+    /* DEC-49 REGION is-selection-moved
+     *
+     * THE SPAN `SET_MOVED`'s `where` names (REC-76 / D-236), and it is the
+     * region that could not be written until the guard's teeth were fixed.
+     *
+     * `selectionResolve` does not answer `ok: false` here. It answers ONE
+     * outcome whose verdict is COMPUTED — `ok: !stopped` — and spreads the
+     * refusal's code in only on the path that refuses. The DEC-49 guard graded a
+     * refusal by the single literal `ok: false`, so a region drawn around this
+     * would have judged ZERO refusals and FAILED as a marker that had drifted off
+     * the arm it was put around. **So this code went untranslated, and a real
+     * translation was not written because the instrument could not see the
+     * refusal** — which is the whole of D-236, recorded at the site it cost.
+     *
+     * The code is a STRING LITERAL at its site so arm C can COMPARE it against
+     * the row rather than read past a variable, which is the convention PL-3
+     * landed and every family since has kept. */
     /* THE REFUSE GATE ASKS THE ANSWER-CHANGED QUESTION, not the per-row one
        (REC-55). `moved` alone let a query selection whose membership swapped at
        a constant count past a state-changing act — which is exactly "a state
@@ -2281,13 +2298,16 @@ export class Store extends DurableObject {
     return {
       ok: !stopped, handle, kind: sel.kind, q: sel.q, owner: sel.owner,
       n: members.length, snapshotN: sel.n, weight, moved,
-      ...(stopped ? { reason: "SET_MOVED",
+      ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
+                      check: ACT_SHAPE_CHECKS.SET_MOVED.check,
+                      translation: ACT_SHAPE_CHECKS.SET_MOVED.translation,
                       detail: "this action changes state, so it will not run against a set that moved "
                             + "since it was selected. Look at the selection again and re-select." } : {}),
       drift, members: stopped ? [] : members.map((m) => m.bundle_id),
       expires: new Date(now.getTime() + Store.SELECTION_TTL_MS).toISOString(),
       gate: { applied: tally.applied },
     };
+    /* END DEC-49 REGION is-selection-moved */
   }
 
   selectionList({ owner = null } = {}) {
@@ -20255,8 +20275,21 @@ export class Store extends DurableObject {
        pin being weakened, which is the direction that keeps a real measurement
        real. `started` is also the truer word: the run's own state vocabulary is
        `running`, and nothing about it is ever "closed" without a named bound. */
+    /* REC-76 — THIS REFUSAL WAS CODELESS UNTIL THE GUARD COULD SEE IT, and that
+       is the item's own evidence rather than a tidy-up. `aiRunOpen` refuses with
+       `started: false`; the DEC-49 guard's arm C graded a refusal by the single
+       literal `ok: false`, so this whole function read as `92L (0 judged, 0
+       code(s) checked)` — a governed site read in full, asserting nothing, and
+       green. The moment the classifier asked what makes something a refusal IN
+       PRINCIPLE, two codeless refusals appeared here. The code, its C-number and
+       its canned translation are read from the catalogue at the moment of
+       refusal, on REC-64's precedent three guards down; the `note` is kept
+       unchanged beside it because it is the OPERATOR's sentence. */
     if (!run || !contextType || !contextId)
       return { run: run || null, started: false,
+               code: "AI_RUN_NO_CONTEXT",
+               check: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
+               translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
     /* REC-64 — UI-38's §14a RIDER, DISCHARGED HERE AND NOT AT A SURFACE.
@@ -20303,8 +20336,16 @@ export class Store extends DurableObject {
     if (badSkill)
       return { run, started: false, code: badSkill.code, check: badSkill.check,
                translation: badSkill.translation, note: badSkill.detail };
+    /* REC-76 — the second of the two codeless refusals the widened classifier
+       found here. It is a real member-facing condition (an id that is already in
+       use), and it was answering with a bare sentence a surface could only
+       render verbatim or blank. */
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
-      return { run, started: false, note: "a run with this id already exists" };
+      return { run, started: false,
+               code: "AI_RUN_ALREADY_OPEN",
+               check: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.check,
+               translation: ACT_SHAPE_CHECKS.AI_RUN_ALREADY_OPEN.translation,
+               note: "a run with this id already exists" };
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     this.ctx.storage.transactionSync(() => {
