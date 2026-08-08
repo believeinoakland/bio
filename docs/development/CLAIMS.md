@@ -3417,3 +3417,57 @@ REC-64 took the `reachGap` ceiling from **73 to 42**. The 42 that remain do NOT 
 - **The alternative:** emit the code-to-translation map into the surface bundle at build, the way the docprofile copy is embedded in `app.html` today.
 - **Recommendation: runtime, as shipped, for two reasons that are not performance.** (i) A baked map is a COPY, and this project has measured five times that a copy agrees with its author at zero cost — including a complete hand copy of 131 op names that passed its own guard. (ii) A sovereign instance running an older surface against a newer plane would render the sentence frozen at ITS build, so two instances would tell a member different things about the same refusal. Runtime lookup makes the plane the single author of what it refuses, which is what DEC-8 protects and DEC-49 only narrowed.
 - **What reversing it costs: LOW NOW, RISING WITH THE NUMBER OF SURFACES.** Today it is a build step plus one accessor, and the guard's arm D already proves a surface table TOTAL against its producer, so the machinery to keep a baked map honest exists. It gets expensive once more than one surface holds a copy, because then reversing means proving every copy total, and the drift REC-43 closed on the co-attestation fence is exactly what a second copy re-opens. **The decision point is before the second surface table, not before the next translation.** The reasoning is written at `MACHINE_FENCE_CHECKS`' header, where the next allocator reads it.
+
+---
+
+## CLAIM 2026-08-08 RECORD (REC-65)
+session: rec65-dec52-comments
+opened: 2026-08-08T00:00:00Z
+paths:
+  - `bio-plane/src/index.mjs` — **COMMENTS ONLY.** The identity STAMP SITES (FW-6/7/8/9/10, the
+    expertise pair, `proposedispose`) and the two OPS-table comments that restate the same claim
+    (`REGISTRY_ACTIONS`, `PROGRESSION_ACTIONS`). **No executable line in this file is edited by this
+    item** — the code is the half DEC-52 says is RIGHT. Five other workers are in
+    `store.mjs`/`index.mjs`; a comment-only diff conflicts as a hunk at worst, never semantically.
+  - `bio-plane/scripts/identity-claims.mjs` (new — the sweep instrument)
+  - `bio-plane/test/identity-claims.test.mjs` (new suite)
+  - `bio-plane/test/rec65.control.mjs` (this item's negative-control harness, INSIDE this worktree)
+  - `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` constant block ONLY, moved from the
+    figures the register PRINTS on a green run.
+  - `docs/development/CLAIMS.md`, `docs/development/VERIFICATION.md` (the register row's figures)
+interfaces consumed: I5 (read only — no op contract moves; this item adds no op and changes no shape)
+interfaces owned: none
+expected: REC-65 — DEC-52's enactment. The six fields' comments claiming "a member's constitutive
+  statement" are the WRONG half and are corrected to match the CODE and the ruling, **not the code
+  fenced to match the comments**. Plus the class sweep: which comments in the plane state a constraint
+  on WHO may write an identity field, and which of those are actually enforced.
+accepts-when: as QUEUE.md REC-65, plus: battery baseline MEASURED IN THIS WORKTREE before any edit and
+  trusted over the brief (this worktree arrived with no `bio-plane/node_modules`; `npm ci` run, exit
+  read UNPIPED). An ordinary behavioural arm CANNOT fail on a comment-only diff — so the controls are
+  built around that fact and say so. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped.
+  `node civicos-ui/test/run.mjs` from the REPO ROOT, exit unpiped. No push, no merge.
+concurrency: `index.mjs` is claimed for COMMENTS ONLY and the claim names the exact blocks.
+  `store.mjs` is NOT claimed and NOT edited. QUEUE.md, DECISIONS.md, INTERFACES.md and
+  IS-BUILD-PLAN.md are not written by this session.
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-65) -> CONDUCT / BOB: **TWO IDENTITY CLAIMS DEC-52 RAISES AND DOES NOT ANSWER, MEASURED AND LEFT OPEN ON PURPOSE**
+
+REC-65's sweep judged **21 identity stamp sites** in `bio-plane/src/index.mjs`. Six carry DEC-52's ruling; two carry a member-only claim that **nothing enforces and DEC-52 does not reach.** Both are MEASURED, not inferred, and both are pinned by name in `bio-plane/test/identity-claims.test.mjs` so they cannot quietly become normal.
+
+- **`op=proposedispose` / `decidedBy`.** Driven under a machine credential through the control plane: **it SUCCEEDS, and the row reads `decided_by: "class:member"`.** An agent can defer or dismiss the record's own derived question, addressed to nobody but itself, and the record will say so honestly and permit it. The comment at the site describes it as "a member's decision to set aside the record's question."
+- **`op=provenancechain` / `author`.** `provenanceChainRebuild` carries **no identity fence of any kind**, while the comment says reconstructing a chain is "a named member's judgement that the capture record supports the route being written" — the act D-200 exists to keep honest.
+
+**WHY THEY ARE NOT DECIDED HERE.** Bob ruled on THREE VERBS — declare a relation, resolve a reference, thread a progression. Neither of these is one of them. Fencing them would be a worker deciding doctrine nobody asked for; blessing them would be worse, because extending a ruling by analogy is precisely how a ruling drifts. **Reversal cost is low now and rises the same way DEC-52's did: every stamped row written before a ruling is a row nobody can re-attribute afterwards.**
+
+**What is owed:** a yes/no on each, in DEC-52's own shape. What is NOT at risk meanwhile: the stamp. A machine arrives honestly named, so whatever is ruled can be enforced on a real identity rather than a guessed one.
+
+### DELEGATION 2026-08-08 RECORD (REC-65) -> CONDUCT: **DEC-53's REVISIT TRIGGER (BULK RESOLUTION) HAS FIRED, AND REC-65 SAYS SO RATHER THAN LETTING IT PASS**
+
+DEC-52's 2026-08-06 mechanism established the running-session sidebar with **"capabilities for users to approve them individually AND IN BULK"** (`INVESTIGATIVE-SESSION.md` §14a). That is DEC-53's revisit trigger — bulk resolution — and it has fired through a surface DEC-53 was not written against. **Routed, not decided:** REC-65 is an enactment item and re-opening DEC-53 is CONDUCT's allocation, not a worker's. Recorded here so it is not lost between the two entries, exactly as REC-65's queue row instructs.
+
+### DELEGATION 2026-08-08 RECORD (REC-65) -> WHOEVER NEXT WIDENS THE COMMENT-CLAIM SWEEP: **WHAT `scripts/identity-claims.mjs` CANNOT SEE, MEASURED**
+
+The judged corpus is **21 stamp sites**; the WIDE ledger is **103 member-actor comment lines across 26 source files** (`store.mjs` 48, `checks/bio-checks.mjs` 15, `index.mjs` 16, `schema.mjs` 12, the rest in ones and threes). **The wide ledger is REPORTED and never judged, on purpose:** the sweep cannot tell which act a free-standing sentence governs, and guessing would be the over-strict direction — the error that looks like diligence. Four further limits are stated in the instrument's own header and repeated here because they are what a widening has to attack: enforcement is read from the store method the DISPATCH TABLE names plus ONE level of private helper, so a fence two helpers deep reads as absent; an op the dispatch table does not name (`op=promote`) is reported UNDETERMINED rather than collapsed into either answer; **the sweep measures the PRESENCE of a machine refusal, never that it FIRES for every payload** — that is REC-73's half and it is not re-done here; and a comment QUOTING an old claim in order to correct it would be flagged.
+
+**Reversal cost: none.** The instrument is one file with no callers but its own suite.

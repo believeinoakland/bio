@@ -159,7 +159,7 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       471,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+  arms:       483,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
                        and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
@@ -168,9 +168,23 @@ const REGISTER_FLOOR = {
                        IC number. A worker cannot see it and should not be asked to.
                        THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
                        RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
-                       accumulate any, which is exactly what D-233 and REC-71 were about. */
-  classified: 119,  // declarations the detector could count arms in
-  corpus:     120,  // suites the register reads
+                       accumulate any, which is exactly what D-233 and REC-71 were about.
+                       MOVED 471 -> 483 by REC-65, 2026-08-08, from the figure this
+                       instrument PRINTED on a green run (`GREW by 12 arm(s)`). **AND
+                       REC-65 FOUND IT ALREADY STALE BEFORE ITS OWN SUITE EXISTED: with
+                       `identity-claims.test.mjs` moved aside the same worktree printed
+                       475 / 120 / 121 against a floor of 471 / 119 / 120** — so 4 of
+                       the 12 arms, and the whole of the classified and corpus moves,
+                       belong to work that landed without moving the floor. REC-65's own
+                       contribution is +8 arms and +1 of each. That is the SIXTH
+                       consecutive item to find a hand-carried figure in this block stale
+                       BY MEASURING IT, and the reason the instrument prints its own
+                       slack rather than leaving it to be discovered. */
+  classified: 121,  /* declarations the detector could count arms in — 119 -> 121, +1 of
+                       which was already owed when REC-65 arrived (see above). */
+  corpus:     122,  /* suites the register reads — 120 -> 122, same split. A CORPUS floor
+                       is the half a ceiling could never catch: a matcher narrowed to
+                       nothing reports a beautiful 100% over an empty estate. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
