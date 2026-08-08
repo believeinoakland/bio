@@ -44,8 +44,9 @@ substitute for filling one — run them BESIDE the two, not instead of them.**
 **THE BUDGET WAS RAISED 2026-08-08 AND THE RULE CHANGED SHAPE WITH IT — READ
 `ORCHESTRATION.md`'s "Concurrency" SECTION RATHER THAN THE NUMBER YOU REMEMBER.** Bob:
 *"I have the sense that you're spawning sessions much more slowly than you could."* He was
-right. **FIVE concurrent workers, of which AT MOST TWO may touch `store.mjs`,
-`bio-checks.mjs` or `index.mjs`** — the file contention is the real limit and the count
+right. **EIGHT concurrent workers, of which AT MOST THREE may touch `store.mjs`,
+`bio-checks.mjs` or `index.mjs`** (raised 2 → 5 → 8 in one conversation; the first
+correction was still too timid and Bob said so) — the file contention is the real limit and the count
 never was. **A worker runs 30–55 minutes and an integration costs 10–20, so a budget of two
 left CONDUCT idle for most of every wave**, waiting on workers rather than being the
 bottleneck it was sized to be. Spend the raised budget on items whose PATHS ARE DISJOINT:
@@ -58,6 +59,15 @@ sits. **The refill now also runs on a one-minute timer** (Bob's instruction, sam
 conversation) — **but the timer is SESSION-ONLY and expires in seven days, so this rule is
 the durable half and the timer is the convenience.** A mechanism that dies with the session
 is not a mechanism; do not let its existence excuse not filling a slot yourself.
+
+**THE STATE THE TIMER IS ACTUALLY FOR IS ZERO, NOT ONE-OF-N.** CONDUCT's first
+response to being told to add it was that a poll *"will answer full nearly every
+time"* — which is an argument that a check will usually find nothing, and this
+project runs a battery, a strict coverage walk and a negative control on exactly
+that basis. **Both recorded refill failures were slots at ZERO with work queued.**
+So when the timer fires: do not check whether the slots are *nominally* filled,
+check whether anything is actually RUNNING, and treat every empty one as the
+defect it is.
 
 2. **When a worker reports:** VERIFY (full battery from the main checkout; **AND
    `node civicos-ui/test/run.mjs`, exit read UNPIPED — on 2026-08-08 CONDUCT pushed

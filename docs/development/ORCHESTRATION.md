@@ -177,9 +177,14 @@ which is this project's most-repeated finding arriving in its own orchestration.
 
 **THE STANDING BUDGET:**
 
-- **Up to FIVE concurrent workers**, plus the BOB session and DIST when a release
-  is being cut.
-- **Of those five, AT MOST TWO may touch the contended plane files** —
+- **Up to EIGHT concurrent workers**, plus the BOB session and DIST when a release
+  is being cut. **RAISED TWICE IN ONE CONVERSATION, 2 → 5 → 8, because CONDUCT's
+  first correction was still too timid and Bob said so:** *"this can take more than
+  2 slots"*, and *"this work would have been completed hours ago if this build plan
+  were operating as it should have been."* **That is the cost of the old number,
+  stated as a measurement rather than a worry, and it is the number that matters
+  here — not the throughput gained but the hours already lost.**
+- **Of those eight, AT MOST THREE may touch the contended plane files** —
   `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs`,
   `bio-plane/src/index.mjs`. **This constraint, not the count, is the real
   limit**, and it is measured rather than assumed: every merge on 2026-08-08
@@ -205,7 +210,19 @@ every other worker is branched from a tree that does not yet carry it.
 **THE REFILL IS NOW ON A TIMER, because relying on CONDUCT to notice failed
 twice.** A one-minute cron checks whether the slots are as full as the budget
 allows and spawns the next runnable item if not (Bob's instruction, same
-conversation). It is session-only and expires after seven days; **when it is gone
+conversation).
+
+**AND CONDUCT'S FIRST ANSWER TO THAT INSTRUCTION WAS WRONG, WHICH IS THE PART
+WORTH KEEPING.** It replied that a one-minute poll against a small ceiling *"will
+answer full nearly every time"* — a defence of the mechanism dressed as an
+objection to it. Bob's correction: *"except the many times you're not running the
+full complement — or not running any at all. And those are the situations it
+appears you need to actively identify and handle."* **He is right, and the ledger
+proves it: the two recorded refill failures were both slots at ZERO with work
+queued, not slots at one-of-two.** A poll is not for the steady state; **it is for
+the state nobody is watching, which is the only state a poll is ever for.** An
+argument that a check will usually find nothing is an argument for exactly the
+checks this project already runs — the negative control usually passes too. It is session-only and expires after seven days; **when it is gone
 the rule in `kickoffs/CONDUCT.md` is what remains, and that rule is the durable
 half.** A mechanism that is not in the loop the reader actually runs is not a
 mechanism — and a mechanism that dies with the session is not a durable one.
