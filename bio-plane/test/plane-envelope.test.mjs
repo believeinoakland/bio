@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (run 2026-08-08, d240-agent, D-240) TEN arms in `test/verdict-excluder.control.mjs`, shared with `meaning-bounds.test.mjs` — that file's header states all ten in full and the harness prints its own register. Baseline for THIS file **60/0**, restored exactly after every arm. **10 of 10 behaved AS DECLARED.** This file's share: (2) restore the one-literal GATE (`canReportSuccess` -> `SUCCESS_ENVELOPE_OLD.test(arg)`) -> **57/3**, D-240 (b), (c) and (d) failing while **DETECTOR A ITSELF STAYS GREEN AT 0 VIOLATIONS** — the gate decides what the detector may see, which is the whole defect and the reason a green detector proved nothing here. (3) drift ONE CHARACTER inside `verdictKind` in `test/verdict-reader.mjs` -> **58/2**, D-240 (a) naming `verdictKind`; (3b) the over-strictness half, a COMMENT edited outside the six shared functions -> **60/0**. (4) remove the REAL `promoted.answered` guard from `src/index.mjs` -> **58/2**, DETECTOR A firing and NAMING `promoted`, with the unconverted-set arm going with it. (4b) THE RECEIPT, and it is the pair that matters: **the SAME removed guard read by the OLD one-literal gate reports ZERO violations.** A real defect at a real site, invisible to the classifier this item replaced and caught by the one that replaced it. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) ONE arm, this file's share of REC-67's six, armed ALONE and restored from a PRISTINE copy verified by sha256 AND by `cmp`. Baseline 54/0. RESTORE THE SPELLING-ONLY ANCHOR — `jsonCalls`' `const re = /(?<![.\w$])json\(/g` back to `/\bjson\(/g` -> **53/1**, and the ONE failure is the REC-67 CORPUS GUARD, with the corpus line printing `144 json() call sites` where the structural anchor reads 117. NOTHING ELSE FAILS, and that is the measurement rather than a claim: it is what shows the 27 `.json()` METHOD calls this anchor was admitting were INERT — detectors A and B both require argument text a zero-argument method call cannot have, so nothing was invented and nothing was hidden. The defect was a corpus 19% larger than the walk's real one. To re-run: swap that one regex, run this suite, restore. */
 /* NEGATIVE CONTROL: RUN 2026-08-05 (rec52-agent), NINE ARMS, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY — sha256 index.mjs 469c2af3b2e1af0a…, plane-envelope.test.mjs 719222e59aead07e…, do-fail-worker.mjs 77be03389e432c26… before and after ALL of them. Whole = 46/46. (a) THE ITEM'S SITE (a) — section 7a's `const out = await r.json(); return json({ok:true, ...out.result}, 200)` restored -> 43 pass, 3 FAIL: the SOURCE sweep names the site ("1628:out"), the unconverted-set arm goes with it, and the DRIVEN arm reports the lie in the words of the defect ("got 200 true"). (b) THE ITEM'S SITE (b) — `(c || { reason: "NOT_PUBLISHED" })` restored -> 43 pass, 3 FAIL: detector B names line 1786, its own REACH DELTA fails because only 2 of the 3 fallbacks are now plantable, and the drive reports `got "NOT_PUBLISHED"` for a store that never answered. (c) op=publishedmanifest's `result: (await r.json()).result` restored -> 45/1, the published INDEX indistinguishable from an empty record. (d) op=publishedbytes' `if (!v || !v.published)` restored as ONE test -> 44/2, and DETECTOR C fires too because `verify` rejoins the unconverted path set — two independent instruments on one edit. (e) the session lookup's silence restored -> 45/1. (f) THE OTHER DIRECTION, and it is the arm that keeps this from collapsing the wrong way: `answered` made to require a NON-EMPTY result -> 44/2, the chokepoint's own arm plus "a bundle that genuinely is not there still answers ABSENT" — a real absence read as a silence, which UI-37 measured is one character away. (g) THE SWEEP'S OWN, AND IT HAD TO BE CORRECTED MID-RUN, REPORTED RATHER THAN SMOOTHED: the first version neutered `handlerRegion` to return the whole file and the suite stayed 46/46 GREEN, so it measured NOTHING — with every guard removed by the reach delta there is no `.answered` anywhere and a whole-file region gives the same answer as a scoped one. The property the bound actually protects is that a guard in ONE handler must not vouch for a spread in ANOTHER, and `out` is the identifier in BOTH op=verify and op=bootstrap. Corrected to two paired arms: (g1) op=verify's guard removed ALONE with the sweep intact -> 43 pass, 3 FAIL, detector A naming "1627:out"; (g2) THE SAME single guard removed AND `handlerRegion` neutered -> 45 pass, 1 FAIL — the source sweep goes BLIND and only the live drive still bites, because op=bootstrap's own `out.answered` vouches for op=verify's missing one. The delta between (g1) and (g2) is the whole value of the handler bound. (h) THE INSTRUMENT'S OWN — `fixtures/do-fail-worker.mjs`'s injection disarmed (`if (false && …)`) so the store is asked to fail and does not -> 29 pass, 17 FAIL, every driven arm in the file naming its own site, which is what proves the drives are answering an actual Durable Object failure and not a belief about one. To re-run: node the arms in the order above, one file mutated at a time, restoring from a pristine copy and comparing sha256 after each. */
 /* NEGATIVE CONTROL: RUN 2026-08-05 (rec53-agent), REC-53's ELEVEN ARMS over this file and `ratify-envelope.test.mjs`, each broken ALONE against the FINAL files and every file restored BYTE-IDENTICALLY with sha256 compared before and after — index.mjs 8b8515b42b882f9f…, plane-envelope.test.mjs 163292ca7cdbe63e…, ratify-envelope.test.mjs 7d9180199be94898…, do-fail-worker.mjs 77be03389e432c26…. (index.mjs and do-fail-worker.mjs are the SHIPPED shas; the two test files' are their shas AS RUN, before their own NEGATIVE CONTROL headers were appended — a file cannot state its own sha, and REC-52's line above has the same property. The shipped test files are plane-envelope 18190d7f… and ratify-envelope fa2d83e8….) **THE WHOLE FOR THIS FILE IS NOW 53/53, CORRECTED FROM REC-52's 46/46 ABOVE** — +5 for REC-53's corrected pins and detector D, +2 for detector D2, and the line above is left as REC-52 measured it rather than rewritten. The arms are stated in full in `ratify-envelope.test.mjs`'s own NEGATIVE CONTROL line, because seven of them are edits to `src/index.mjs`'s publish/ratify block that BOTH files see; what they do to THIS file: (a) `do/list` restored -> 47/6 (CLOSED (i) and its other-direction arm, detector C, detector D naming "4027:list", and both D reach arms); (b) `do/reusedparts` restored -> 48/5 (CLOSED (ii) plus the same four); (c) `do/image` -> 50/3; (d) `do/gatefacts` -> 50/3; (e) `do/publish`'s guard removed -> 51/2, **and this arm is why detector D2 exists: run before D2 it left this file 51/51 FULLY GREEN while the live drive reported `PUBLISH_FAILED`, because D proves an envelope is OPENED through the chokepoint and says nothing about the handler ACTING on the answer, and A is correctly silent since `pub` is spread into a REFUSAL rather than a success envelope**; (f) `capturelimit`'s `ceilingRead` forced true -> 52/1, D2 naming "limOut"; (g) `recordreuseverdicts` back to fire-and-forget -> 50/3; (h) `recordcasemanifest`'s branches swapped -> **53/53 SILENT here**, the one arm this file cannot see — D2 passes because the binding IS read with `.answered`, only in the wrong order — and it is `ratify-envelope.test.mjs`'s ordering pin that bites; (i) the other direction, a genuinely empty reused-part set treated as a silence -> 52/1; (j) the injector disarmed -> **36/17, REC-52's own seventeen reproduced exactly**; (k) detector D's region bound neutered to the whole file -> 50/3, D reporting 23 violations ALL OUTSIDE the block, so an unbounded detector stops being a claim about the BLOCK. */
@@ -91,6 +92,9 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+/* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
+   above DETECTOR A, and `verdict-reader.mjs`'s own header. */
+import { verdictOf, readerDrift } from "./verdict-reader.mjs";
 
 const SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const RAW = readFileSync(SRC_PATH, "utf8");
@@ -170,14 +174,67 @@ function handlerRegion(src, at) {
 }
 
 /* ---- DETECTOR A: THE SUCCESS ENVELOPE ------------------------------------
-   No handler may spread a Durable Object result into `json({ ok: true, … })`
-   without having checked that the store answered. `.answered` is the ONLY way
-   `ok` is ever checked, because `doAnswer` is the only thing that reads it —
-   which is what makes a textual search for it a real check and not a guess. */
+   No handler may spread a Durable Object result into an answer that can report
+   a SUCCESS without having checked that the store answered. `.answered` is the
+   ONLY way `ok` is ever checked, because `doAnswer` is the only thing that reads
+   it — which is what makes a textual search for it a real check and not a guess.
+
+   CORRECTED 2026-08-08 (D-240), NOT EXEMPTED, and it is D-236's defect arriving
+   in a second instrument exactly as REC-76's class sweep predicted. THE GATE
+   READ `if (!/^\s*\{\s*ok:\s*true\b/.test(c.arg)) continue;` — ONE LITERAL
+   deciding which of this file's answers can report a success, in a detector
+   whose entire subject is a handler telling a caller something the store never
+   said.
+
+   MEASURED over `src/index.mjs` on this tree, rather than argued: **117 `json()`
+   call sites, 23 graded by the literal and 94 skipped** — and of the skipped,
+   **three spread a Durable Object `.result`**. Two are declared refusals
+   (`{ ok: false, ...rec.result }`, `{ ok: false, ...(minted.result || {}) }`)
+   and are outside this detector's subject; they are NAMED below rather than
+   left implicit. **The third is `json({ ok: !!promoted.result?.ok, …,
+   ...promoted.result… })` — a COMPUTED verdict spreading a store result, which
+   is D-236's own shape, and the old gate could not see it at all.**
+
+   THE FIX IS REC-76's VERDICT READING, IMPORTED AND NOT RE-DERIVED
+   (`verdict-reader.mjs`): the verdict is the FIRST BOOLEAN-SHAPED top-level
+   property of the answer object.
+
+     A LITERAL `true` IS GRADED — it declares a success.
+     A COMPUTED VERDICT IS GRADED TOO — `!!promoted.result?.ok` EVALUATES TRUE
+       whenever the store answered ok, so the answer can report a success, and
+       that is the only question this detector asks.
+     A LITERAL `false` IS SKIPPED — a declared refusal is not this subject.
+     ANYTHING ELSE IS UNCLASSIFIED, and is NAMED and CEILINGED below rather
+       than silently skipped.
+
+   **THIS IS THE OPPOSITE POLICY TO `meaning-bounds.test.mjs`'s OVER THE SAME
+   READER, AND THAT IS DELIBERATE.** REC-76's guard and that walk both ask
+   whether something is a REFUSAL, where a computed verdict is safely read as
+   one. This detector asks whether an answer can report a SUCCESS, where the safe
+   reading is the opposite. One reader, two stated polarities, each with the
+   reason at its own site — what is refused is a second READER.
+
+   WHAT THE WIDENING BOUGHT, MEASURED: graded sites 23 -> 25, violations on a
+   clean tree 0 -> 0, **and the reach delta goes from 9 to 15** — because
+   removing the answered-guards makes the `promoted` site fire SIX times where
+   the old detector saw nothing. So `index.mjs:4608` was correctly guarded all
+   along and NOTHING WAS CHECKING THAT IT STAYED SO: a mechanism believed on the
+   strength of its existence rather than its behaviour, which is the defect this
+   project meets most. It is now driven. */
+const declaresRefusalEnvelope = (arg) => {
+  const i = arg.indexOf("{");
+  if (i < 0 || !/^\s*\{/.test(arg)) return null;      /* not an object literal at all */
+  return verdictOf(arg.slice(i));
+};
+/* GRADED: an answer whose verdict is a literal `true` or is COMPUTED. */
+const canReportSuccess = (arg) => { const v = declaresRefusalEnvelope(arg); return !!v && (v.kind === "true" || v.kind === "expr"); };
+/* KEPT AS THE DELTA, NOT AS THE GATE — so "the widening loses nothing" is a
+   comparison this suite runs on every tree rather than a claim from a report. */
+const SUCCESS_ENVELOPE_OLD = /^\s*\{\s*ok:\s*true\b/;
 function detectA(src) {
   const bad = [];
   for (const c of jsonCalls(src)) {
-    if (!/^\s*\{\s*ok:\s*true\b/.test(c.arg)) continue;
+    if (!canReportSuccess(c.arg)) continue;
     const region = handlerRegion(src, c.start);
     for (const r of c.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g)) {
       const id = r[1];
@@ -312,9 +369,136 @@ t("REC-67 CORPUS GUARD: the walk reads a real corpus of json() sites, and the an
   [true, 1, 0, 0]);
 
 const aBad = detectA(SRC);
-t(`DETECTOR A — no handler spreads a Durable Object result into a success envelope `
+t(`DETECTOR A — no handler spreads a Durable Object result into an answer that can report a success `
   + `without checking that the store answered (violations: ${JSON.stringify(aBad.map((x) => x.line + ":" + x.id))})`,
   aBad.length, 0);
+
+/* ==========================================================================
+ * D-240 · DETECTOR A's GATE, DRIVEN. The gate decides what the detector is
+ * ALLOWED TO SEE, so a detector reporting zero says nothing until the gate has
+ * been measured — which is how a computed verdict spreading a store result sat
+ * in this file's corpus, unseen, while the suite read 54/0.
+ * ========================================================================== */
+console.log("\n--- D-240: detector A's gate, measured rather than trusted ---");
+/* THE CENSUS ASKS `canReportSuccess` AND NEVER RE-IMPLEMENTS IT — a correction
+   this file's own control forced. Its first draft read `verdictOf` directly, so
+   restoring the one-literal gate left the printed `graded` figure unchanged and
+   arm (b) stayed green over a gate that had been reverted. A census derived from
+   a COPY of its subject is a census of nothing. */
+const A_CENSUS = (() => {
+  const c = { total: 0, graded: 0, success: 0, computed: 0, refusal: 0, unclassified: [], oldGraded: 0,
+              refusalSpreadingResult: [], unclassifiedSpreadingResult: [] };
+  for (const site of jsonCalls(SRC)) {
+    c.total++;
+    if (SUCCESS_ENVELOPE_OLD.test(site.arg)) c.oldGraded++;
+    if (canReportSuccess(site.arg)) c.graded++;         /* THE DETECTOR'S OWN DECISION */
+    const v = declaresRefusalEnvelope(site.arg);
+    const ids = [...new Set([...site.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g)].map((m) => m[1]))];
+    if (!v) { c.unclassified.push(`${site.line}${/^\s*\{/.test(site.arg) ? "(no verdict)" : "(not a literal)"}`);
+              if (ids.length) c.unclassifiedSpreadingResult.push(`${site.line}:${ids.join("+")}`); continue; }
+    if (v.kind === "true") c.success++;
+    else if (v.kind === "expr") c.computed++;
+    else { c.refusal++; if (ids.length) c.refusalSpreadingResult.push(`${site.line}:${ids.join("+")}`); }
+  }
+  return c;
+})();
+console.log(`  GATE: ${A_CENSUS.total} json() sites · ${A_CENSUS.graded} GRADED by the detector · `
+          + `${A_CENSUS.success} declare a success · `
+          + `${A_CENSUS.computed} carry a COMPUTED verdict · ${A_CENSUS.refusal} declare a refusal · `
+          + `${A_CENSUS.unclassified.length} UNCLASSIFIED`);
+console.log(`    the OLD one-literal gate graded ${A_CENSUS.oldGraded}; this gate grades ${A_CENSUS.graded}`);
+console.log(`    UNCLASSIFIED, NAMED rather than scored zero: ${A_CENSUS.unclassified.join(", ")}`);
+console.log(`    DECLARED REFUSALS spreading a store .result (outside this detector's subject, named): `
+          + `${A_CENSUS.refusalSpreadingResult.join(", ") || "none"}`);
+/* (a) ONE MECHANISM, NOT TWO — the same drift pin `meaning-bounds.test.mjs`
+   carries, asserted here too rather than inherited: each suite must be
+   falsifiable standing alone, and a shared reader nobody in THIS file checks is
+   a shared reader this file cannot rely on. */
+{
+  const drift = readerDrift(readFileSync(new URL("../../civicos-ui/check-refusal-codes.mjs", import.meta.url), "utf8"),
+                            readFileSync(new URL("./verdict-reader.mjs", import.meta.url), "utf8"));
+  console.log(`  READER: ${drift.read} of ${drift.expected} shared functions, ${drift.chars} chars, `
+            + `differing from REC-76's copy: ${drift.differing.length ? drift.differing.join(", ") : "none"}`);
+  t("D-240 (a) ONE MECHANISM: this gate reads the verdict with REC-76's own functions, byte-identical "
+  + "to `civicos-ui/check-refusal-codes.mjs` — so the DEC-49 guard and this detector cannot drift "
+  + "into disagreeing about what a verdict is. Floored and counted, because two empty extractions agree",
+    [drift.differing, drift.read, drift.chars > drift.minChars], [[], drift.expected, true]);
+}
+/* (b) THE WIDENING, AS A DELTA IN BOTH DIRECTIONS. It must grade MORE than the
+   literal, and it must grade EVERYTHING the literal graded — a gate that traded
+   one blind spot for another would pass a count and fail the file's purpose. */
+{
+  const lost = jsonCalls(SRC).filter((c) => SUCCESS_ENVELOPE_OLD.test(c.arg) && !canReportSuccess(c.arg))
+    .map((c) => c.line);
+  t("D-240 (b) THE GATE SEES MORE AND LOSES NOTHING — it grades strictly more json() sites than "
+  + "`/^\\s*\\{\\s*ok:\\s*true\\b/`, and NOT ONE site the literal graded is now skipped. The gain is "
+  + "the COMPUTED verdicts, which is D-236's shape arriving in this instrument",
+    [A_CENSUS.graded > A_CENSUS.oldGraded, A_CENSUS.computed > 0, lost],
+    [true, true, []]);
+}
+/* (c) REACH, AS A DELTA ON THE GATE ITSELF — and this is the arm that shows the
+   widening bought something REAL rather than a larger number. With every
+   answered-guard mechanically removed, the OLD gate finds the sites it always
+   could; the NEW gate finds those AND the computed-verdict site. The difference
+   between the two planted counts IS the blind spot D-240 named. */
+{
+  const GUARD_A = /^[ \t]*if \(![A-Za-z_$][\w$]*(?:Out)?\.answered.*$\n/gm;
+  const stripped = SRC.replace(GUARD_A, "");
+  const withOld = [];
+  for (const c of jsonCalls(stripped)) {
+    if (!SUCCESS_ENVELOPE_OLD.test(c.arg)) continue;
+    const region = handlerRegion(stripped, c.start);
+    for (const r of c.arg.matchAll(/(?:\.\.\.)?\b([A-Za-z_$][\w$]*)\s*(?:\?)?\.result\b/g))
+      if (!new RegExp(`\\b${r[1]}\\.answered\\b`).test(region)) withOld.push(`${c.line}:${r[1]}`);
+  }
+  const withNew = detectA(stripped).map((x) => `${x.line}:${x.id}`);
+  const onlyNew = [...new Set(withNew.filter((x) => !withOld.includes(x)))];
+  console.log(`  GATE REACH: with every answered-guard removed the OLD gate finds ${withOld.length} `
+            + `spreads and this gate finds ${withNew.length}; ONLY the new gate sees ${onlyNew.join(", ")}`);
+  t("D-240 (c) THE WIDENING IS LOAD-BEARING, NOT COSMETIC — un-guarding the source makes this gate "
+  + "report a spread the old gate CANNOT SEE AT ALL, and it is the computed-verdict site. So that "
+  + "site was correctly guarded all along and NOTHING WAS CHECKING THAT IT STAYED SO: a mechanism "
+  + "believed on the strength of its existence rather than its behaviour",
+    [withNew.length > withOld.length, onlyNew.length > 0,
+     onlyNew.every((x) => x.endsWith(":promoted"))], [true, true, true]);
+}
+/* (d) OVER-STRICTNESS, over synthetic answers rather than the tree, because the
+   tree cannot show what the gate would do to a shape nobody has written yet.
+   A declared refusal must stay OUT of the subject — grading those would flood
+   the detector with the ~78 refusal envelopes this file legitimately writes. */
+t("D-240 (d) OVER-STRICTNESS: the gate admits a declared success and a COMPUTED verdict, and still "
++ "refuses a declared refusal and a non-literal argument. A gate that started grading refusals would "
++ "turn this detector's whole subject inside out",
+  [canReportSuccess("{ ok: true, ...out.result }"),
+   canReportSuccess("{ ok: !!promoted.result?.ok, checked }"),
+   canReportSuccess("{ ok: Boolean(r.result), n }"),
+   canReportSuccess("{ started: true, run, ...r.result }"),
+   canReportSuccess("{ ok: false, ...rec.result }"),
+   canReportSuccess("{ ...arm.refusal, op }"),
+   canReportSuccess("out, out.ok ? 200 : 500")],
+  [true, true, true, true, false, false, false]);
+/* (e) WHAT THE GATE CANNOT CLASSIFY, NAMED AND CEILINGED — REC-76's rule, and
+   M0-14's and CPDF-9's before it: a thing the matcher does not understand must
+   be NAMED, never silently scored zero. Eleven of these hand `json()` a VARIABLE
+   rather than a literal (`json(out, …)`, `json(sel.payload, sel.status)`), which
+   is the same blind spot REC-76 recorded for arm C — an outcome built into a
+   variable and returned later. Three are object literals carrying no
+   boolean-shaped property at all. The CROSS-CHECK is what makes the ceiling
+   honest rather than a shrug: none of them spreads a store `.result`, gated at
+   zero, so today the residual cannot be hiding this detector's own subject. */
+t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED: not one "
++ "unclassified json() site spreads a Durable Object `.result`, so the ceiling is a statement about "
++ "reach and not a place for this detector's subject to hide",
+  [A_CENSUS.unclassified.length <= 14, A_CENSUS.unclassifiedSpreadingResult], [true, []]);
+/* (f) AND THE DECLARED REFUSALS THAT DO SPREAD ONE — outside this detector's
+   subject by construction, so they are pinned BY SITE rather than left as a
+   sentence. `{ ok: false, ...rec.result }` cannot report a success, but it is
+   the same class one field over and D-197's ground; if one of them ever becomes
+   a success envelope, this arm fails before detector A gets the chance. */
+t("D-240 (f) THE DECLARED REFUSALS THAT SPREAD A STORE RESULT ARE PINNED BY SITE — they are outside "
++ "this detector's subject because they cannot report a success, and saying so with the sites is what "
++ "keeps that a measurement rather than an assumption",
+  A_CENSUS.refusalSpreadingResult.length <= 2, true);
 
 const bBad = detectB(SRC);
 t(`DETECTOR B — no answer takes its reason or error from a fallback over a Durable Object value `

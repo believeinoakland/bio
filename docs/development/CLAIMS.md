@@ -4196,3 +4196,101 @@ why it is not fixed here: `bio-plane/scripts/**` is not this item's paths, and
   items moved in parallel on 2026-08-08 with keep-both merges leaving duplicate
   `arms:` keys four times. That number must be re-read from a PRINTED green run
   of the MERGED tree, which is the integrator's position, not a branch's.
+### CLAIM 2026-08-08 PLANE-TEST · d240-agent — **D-240: THE TWO REMAINING CLASSIFIERS THAT GRADE A RETURN BY ONE LITERAL**
+
+item: D-240 (DEBT.md), delegated by REC-76's class sweep because both files carry ratcheted
+figures only their owner can move honestly.
+
+paths: **`bio-plane/test/meaning-bounds.test.mjs`** — the `REFUSAL_RETURN` excluder, its census, its
+arms and its `NEGATIVE CONTROL:` header. **`bio-plane/test/plane-envelope.test.mjs`** — DETECTOR A's
+gate, its census, its arms and its `NEGATIVE CONTROL:` header. **`bio-plane/test/verdict-reader.mjs`
+(NEW)** — REC-76's six reader functions, byte-identical, plus `readerDrift()`.
+**`bio-plane/test/verdict-excluder.control.mjs` (NEW)** — the ten control arms, deliberately NOT a
+`.test.mjs` because it mutates five files while it runs. `docs/development/DEBT.md` (D-240's
+disposition and the new D-254 row), `docs/development/MEASUREMENTS.md` (one appended entry),
+`docs/development/CLAIMS.md` (this entry and its DELEGATION).
+**NOT OPENED: no file under `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/scripts/` or
+`civicos-ui/`.** The control MUTATES `src/index.mjs` and `src/store.mjs` transiently while it runs
+and restores both, verified by sha256 AND by content — `check-mock-envelope.mjs`'s and
+`refusal-codes.control.mjs`'s own precedent. `civicos-ui/check-refusal-codes.mjs` is READ ONLY, by
+`readerDrift()`; the one line that would make the reader single-homed is a DELEGATION below.
+
+accepts-when: both classifiers grade by whether the return DECLARES itself, what cannot be
+classified is NAMED, every floor invalidated moved in the same turn from a PRINTED figure, and the
+class sweep re-run rather than inherited.
+
+numbers: **MEASURED TWICE, BEFORE AND AFTER THE REBASE, AND EVERY BASELINE RE-RUN RATHER THAN
+SUBTRACTED.** On the spawn tree (bb426ac): baseline **133/133 · 8,319 · 124.4s · exit 0** ->
+final **133/133 · 8,332 · 130.2s**. On the SHIPPED tree, rebased onto `origin/main` 86f0e73:
+baseline **134/134 · 8,387 · 119.3s** -> final **134/134 · 8,400 · 126.4s · exit 0**. **The +13 is
+identical on both and is meaning-bounds 85 -> 92 and plane-envelope 54 -> 60; no other suite
+moved.** `node scripts/coverage.mjs --strict` exit 0 read UNPIPED; `node civicos-ui/test/run.mjs`
+from the REPO ROOT exit 0; `node tools/plancheck.mjs` 0 fail, 0 warn, clean but for UNPUSHED.
+**The worktree arrived without `bio-plane/node_modules` (`npm ci` run) and FIVE commits behind
+`origin/main` — checked before trusting anything: `git diff HEAD origin/main` over `store.mjs`,
+`index.mjs`, both suites, `check-refusal-codes.mjs` and `coverage.mjs` was EMPTY, so no figure
+below was taken over a stale copy of its own subject.** The branch was then rebased onto
+`origin/main`; the only conflicts were append-vs-append in `CLAIMS.md`, `DEBT.md` and
+`MEASUREMENTS.md`, resolved KEEP-BOTH, and **the minted D-254 stepped over 244-253 so it does not
+collide with CPDF-12's D-244..D-247, which landed in those five commits.** The whole battery,
+`--strict`, the UI harness and all ten control arms were re-run AFTER the rebase; the ten arms
+came back as declared a second time and the tree was byte-clean afterwards.
+
+floors: **NONE MOVED, AND THAT IS A MEASUREMENT RATHER THAN AN OMISSION.** (i) The BARE ratchet
+(38 ceiling / 38 floor) and the OPAQUE ceiling (10) are UNCHANGED because the corrected excluder
+moves no op between buckets on this tree — every roster is identical, printed, and the value of the
+correction is prospective, which control arm (5)/(5b) demonstrates by planting the case that would
+otherwise break the ceiling over a non-defect. (ii) `REGISTER_FLOOR` is UNCHANGED at 570/570 ·
+129 classified · 130 corpus, **verified by restoring both suites to HEAD and re-running
+`coverage.mjs --strict`, which printed the same 570** — the register records the FULLEST SINGLE
+declaration per suite and both files already declare fuller ones (REC-60's eleven, REC-53's eleven).
+**`REGISTER_FLOOR` WAS THEREFORE NOT TOUCHED, which is the right answer under a raised concurrency
+budget and is stated here so a conflict resolver does not have to guess:** if this file conflicts
+there, it is not this item's edit.
+
+**A FIGURE THAT LOOKS LIKE A REGRESSION AND IS NOT, said before anyone finds it:** the first draft
+of the excluder used REC-76's own policy verbatim (a COMPUTED verdict is a refusal) and the suite
+went **85/0 -> 82/3 with BOUNDED falling 20 -> 16 and OPAQUE rising 10 -> 16.** That is the reader
+getting BLINDER, not the plane getting worse, and the cause is that a COMPARISON in this plane is
+usually a CURSOR or a TRUNCATION FLAG rather than a verdict. The policy shipped is `false` only, the
+divergence from REC-76 is written at both sites with the numbers that chose it, and the fixtures
+that refused the first draft are standing arms rather than a sentence in a report.
+
+concurrency: checked over every unreleased block in this file. No live claim names
+`meaning-bounds.test.mjs`, `plane-envelope.test.mjs`, `verdict-reader.mjs` or
+`verdict-excluder.control.mjs`. The live VERIFY amendment (rec71-agent) names
+`bio-plane/checks/bio-checks.mjs` and `bio-plane/src/store.mjs` BY SITE — neither is opened here
+except transiently by the control, which restores both. `civicos-ui/check-refusal-codes.mjs` is not
+edited.
+
+released:
+
+### DELEGATION 2026-08-08 PLANE-TEST (D-240) -> WHOEVER OWNS `civicos-ui/check-refusal-codes.mjs` (VERIFY): **MAKE REC-76's VERDICT READER SINGLE-HOMED — IT IS ONE LINE, AND THE PIN THAT HOLDS IT UNTIL THEN IS ALREADY GREEN**
+
+D-240 needed REC-76's verdict reader in two `bio-plane/test/` instruments. **It could not be
+imported**: `check-refusal-codes.mjs` exports nothing, and its work runs at the top level ending in
+`process.exit`, so importing it runs the whole DEC-49 guard as a side effect of loading a test. It is
+also VERIFY's file. So the six functions were COPIED, byte-identically, into
+`bio-plane/test/verdict-reader.mjs`, and the copy is held falsifiable by `readerDrift()`, which
+extracts them from both files and compares — asserted by BOTH suites, floored and counted, and driven
+in both directions by control arms (3) and (3b).
+
+**WHAT WOULD CLOSE IT (D-254):** replace the six declarations in `check-refusal-codes.mjs` with
+`import { skipString, matchBrace, outcomeReturns, topLevelProps, verdictKind, verdictOf } from
+"../bio-plane/test/verdict-reader.mjs";`, then delete the drift-pin half of `verdict-reader.mjs`'s
+header and turn its two `D-240 (a)` arms into an import assertion. **Do not do the reverse** (move
+the reader into `civicos-ui/`): `bio-plane/test/` files may not import from `civicos-ui/` without
+the same top-level-execution hazard reappearing in the other direction.
+
+**ONE THING VERIFY SHOULD KNOW BEFORE TOUCHING THE READER, because it is a finding about REC-76's
+rule rather than about the copy.** `verdictOf` takes the FIRST boolean-shaped top-level property, and
+REC-76 measured over its SIXTY governed sites that no outcome leads with a datum. **That does not
+hold over `store.mjs`'s 843 return-object literals.** Two SUCCESS returns lead with a boolean DATUM —
+`#sessionRights` (`rootOfTrust: false`) and `#conditionHomes` (`ungrouped: false`) — and a
+COMPARISON is how this plane spells a CURSOR (`bundles.length === cap ? …`) and a TRUNCATION FLAG
+(`found.length > cap`) in at least seven reads, including `projection`, `listBundles`,
+`aiCredentials`, `captureRequests`, `searchIndexCheck` and `verifySha`. **Neither fact makes REC-76's
+guard wrong** — its corpus is the governed sites and its polarity is the safe one there — **but it
+means the ordering rule is a property of that corpus and not of the plane**, and if arm C's reach
+ever widens beyond the governed sites it will meet both. Both are named and pinned in
+`meaning-bounds.test.mjs`; nothing is asked of VERIFY today.

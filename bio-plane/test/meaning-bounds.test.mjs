@@ -1,3 +1,40 @@
+/* NEGATIVE CONTROL: (run 2026-08-08, d240-agent, D-240) TEN arms in
+   `test/verdict-excluder.control.mjs` — run it, it is one command and it prints its own register.
+   Every arm armed ALONE with the others held open, every file restored from a UNIQUELY-NAMED
+   per-arm pristine copy verified by sha256 AND by CONTENT with the byte count printed and floored,
+   and every arm reads the suite's own FOOT LINE rather than a tally (a missing foot is reported as
+   -1, never 0). **BASELINE meaning-bounds 92/0 · plane-envelope 60/0, and the tree came back to it
+   after every restore. 10 of 10 arms behaved AS DECLARED.**
+   (0) BASELINE -> both suites green with a foot line.
+   (1) restore the one-literal EXCLUDER (`declaresRefusal` -> `REFUSAL_RETURN_OLD.test(ro)`) ->
+       **89/3**, D-240 (b), (c) and (e) failing; plane-envelope untouched at 60/0; **and the BARE and
+       OPAQUE RATCHETS STAY GREEN** — a ceiling cannot catch a reader that is too generous, which is
+       why the widening needed its own arms rather than the existing ones.
+   (2) restore plane-envelope's one-literal GATE -> **57/3** there, meaning-bounds green.
+   (3) drift ONE CHARACTER inside `verdictKind` in `test/verdict-reader.mjs` -> **both** suites red
+       on D-240 (a), the printed READER line naming `verdictKind` (mb 91/1, pe 58/2).
+   (3b) OVER-STRICTNESS on that pin — edit a COMMENT outside the six shared functions -> both GREEN.
+   (4) remove the real `promoted.answered` guard in `src/index.mjs` -> plane-envelope **58/2**,
+       DETECTOR A firing and NAMING `promoted`.
+   (4b) THE RECEIPT — the SAME removed guard under the OLD gate -> **DETECTOR A reports ZERO
+       violations.** The same real defect is invisible to the classifier this item replaced.
+   (5) plant a DISPATCHED read whose refusal is spelled `found: false` and carries a collection off
+       an unbounded scan -> **the BARE ratchet stays GREEN at 38** (the refusal is excluded); the
+       plant does move the OPAQUE roster, which is the walk correctly reporting a method it cannot
+       reach.
+   (5b) THE RECEIPT — the SAME plant under the OLD excluder -> **BARE 39 ops and the RATCHET FAILS
+       at 39 of 38 over a NON-DEFECT**, which is the false positive that makes REC-70's ceiling
+       unholdable.
+   (6) OVER-STRICTNESS on the tree — plant a correctly-bounded read whose completeness flag is a
+       COMPARISON in a spelling this plane never writes (`overflowed: rows.length > cap`) ->
+       **92/0 and the planted `ncd240` on the BOUNDED roster**: not excluded, not vanished. This is the arm
+       that refused this edit's first draft, kept as a standing control.
+   THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run compared the declared
+   SENTENCE with the observed one and reported every arm — including the working ones — as NOT AS
+   DECLARED. `record()` takes a PREDICATE now. AND THE FIRST RUN FOUND A REAL DEFECT IN THIS FILE:
+   arm (1) left every printed EXCLUDER figure unchanged, because `excluderCensus` read `verdictOf`
+   directly instead of asking `declaresRefusal` — a census derived from a COPY of its subject.
+   Corrected at the site with the receipt in the comment. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) ONE arm, this file's share of REC-67's
    six, armed ALONE and restored from a PRISTINE copy verified by sha256 AND by `cmp`.
    Baseline 83/0. RESTORE THE STRING-TRIM ADMISSION — `const collectionExpr = (v) =>
@@ -136,6 +173,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+/* D-240: REC-76's verdict reader, SHARED rather than re-derived. See the block
+   above `declaresRefusal` below, and `verdict-reader.mjs`'s own header. */
+import { verdictOf, readerDrift } from "./verdict-reader.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -259,7 +299,8 @@ const returnBare = (body) => {
    counted as a BARE ARRAY return, because ARRAY_EXPR matches `.slice(` and every
    refusal in this plane trims the offending value with exactly that call before
    putting it in a sentence. The classifier already excludes RETURN OBJECTS that
-   declare themselves refusals (REFUSAL_RETURN, above); a bare return of the
+   declare themselves refusals (`declaresRefusal`, below — it was `REFUSAL_RETURN`
+   when PL-1 wrote this and D-240 replaced the literal with a verdict reading); a bare return of the
    plane's own `refuse()` helper is the same class arriving in the other shape,
    and `op=versionchain`, `op=meaningrows` and `op=basisversions` all write it.
    THE MIS-READ IS A FALSE POSITIVE, so it inflates the bare roster rather than
@@ -358,7 +399,95 @@ const rowCalls = (body) => {
  * that every DISPATCHED op lands in a bucket and that the ops this walk still
  * cannot judge are a RATCHETED, PRINTED figure rather than a silence. That
  * assertion is what would have named `op=airunlog` on the day IS-6 added it. */
-const REFUSAL_RETURN = /\bok\s*:\s*false/;
+/* ============ D-240 · REC-70 INVERTED THE SUCCESS SIDE AND LEFT THE EXCLUDER ==
+ * THIS LINE READ `const REFUSAL_RETURN = /\bok\s*:\s*false/;`, and the sentence
+ * four lines above it stated the claim it could not keep: *refusals in this
+ * plane are `ok: false` with a `reason` … they are the only shape excluded.*
+ * **They are not.** REC-70 inverted the half that decides what a SUCCESS is and
+ * left the half that decides what a REFUSAL is at one literal — so this file is
+ * D-236's defect standing in the file that fixed D-236's twin, on the half its
+ * own item did not touch. Found by REC-76's class sweep (36 regex candidates
+ * hand-verified to two); this is instance (1) of two.
+ *
+ * MEASURED HERE, on this tree, rather than taken from the row (`wc -l` says
+ * store.mjs is 23,523 lines and the walk finds 391 method segments — the row's
+ * figures were taken over a smaller file):
+ *   843 return-object literals in store.mjs
+ *   487 excluded by the old one-literal excluder
+ *   520 excluded by the DECLARED-REFUSAL rule shipped here — **+33 refusals in
+ *       14 verdict spellings the old excluder could not see**: `found: false`
+ *       x10, `recorded: false` x4, `started: false` x4, `admitted: false` x3,
+ *       `targetMayVote: false` x2, `configured: false` x2, and eight singletons
+ *       (`declared`, `applies`, `ungrouped`, `bounded`, `rootOfTrust`,
+ *       `repeated`, `saved`, `known`)
+ *   0   excluded by the OLD rule and NOT by the new one — **the widening loses
+ *       nothing**, which is REC-76's own finding reproduced on a second corpus
+ *   23  more carry a COMPUTED verdict the old excluder also could not see, and
+ *       this walk GRADES them on purpose. See the policy paragraph below; it is
+ *       the half that had to be measured rather than inherited.
+ *   115 carry NO boolean-shaped property at all and are graded by BOTH rules.
+ *       That is REC-70's inversion still doing its work: `{ signers }` declares
+ *       nothing, so it is graded, and it must stay that way.
+ *
+ * WHY THE DIRECTION MATTERS AND IS NOT A TIGHTENING. Every one of those was
+ * being GRADED, so any collection key in a refusal envelope could put its method
+ * on the BARE roster. That is the generous direction — it INFLATES the ratchet
+ * REC-70 built — and PL-1, PL-15 and REC-67 have each corrected one instance of
+ * exactly this false positive by hand. *A ceiling that counts non-defects cannot
+ * be held* is this file's own sentence, written three times already.
+ *
+ * THE RULE IS REC-76's, IMPORTED AND NOT RE-DERIVED (`verdict-reader.mjs`): the
+ * verdict is the FIRST BOOLEAN-SHAPED top-level property. **THE POLICY OVER THAT
+ * READING IS THIS SITE'S, AND IT IS NOT REC-76's — a DIFFERENCE THAT WAS
+ * MEASURED RATHER THAN REASONED, BY WRITING REC-76's POLICY FIRST AND WATCHING
+ * IT BREAK FOUR CLEAN BILLS.**
+ *
+ *   ONLY A LITERAL `false` IS A DECLARED REFUSAL AND EXCLUDED.
+ *   A COMPUTED VERDICT (`!x`, `a === b`, `Boolean(x)`) IS **GRADED**.
+ *
+ * REC-76's guard asks *does this refusal owe a code*, so a computed verdict is a
+ * refusal there — the safe direction when the cost of being wrong is an unjudged
+ * refusal. This walk asks *does this method publish an unbounded collection*, and
+ * the safe direction is the opposite one. **THE FIRST DRAFT OF THIS EDIT TOOK
+ * REC-76's POLICY AND THE MEASUREMENT REFUSED IT: 85/0 -> 82/3**, because a
+ * COMPARISON is how this plane spells a CURSOR and a TRUNCATION FLAG, not only a
+ * verdict — `projection` (`cursor: bundles.length === cap ? … : null`),
+ * `listBundles`, `aiCredentials` and `captureRequests`
+ * (`truncated: found.length > cap`), `searchIndexCheck`, `verifySha`
+ * (`published: matches.length > 0`) and `selectionResolve`. Excluding them took
+ * BARE 38 -> 36, **BOUNDED 20 -> 16 — four correctly-bounded reads losing their
+ * clean bill** — and OPAQUE 10 -> 16. An instrument that goes blind on the reads
+ * it is FOR is worse than one that grades a refusal, so the policy is `false`
+ * only, and it is written here with the numbers that chose it.
+ *
+ * WHAT THAT COSTS, MEASURED AND NAMED RATHER THAN ABSORBED. REC-76's ordering
+ * rule — *no outcome leads with a datum*, measured over its SIXTY governed sites
+ * — **DOES NOT HOLD over store.mjs's 843 returns**, and it fails for the literal
+ * `false` too, not only for comparisons. Two SUCCESS returns lead with a boolean
+ * DATUM and are therefore excluded as refusals by this walk:
+ * `#sessionRights` (`rootOfTrust: false`) and `#conditionHomes`
+ * (`ungrouped: false`). They are PRINTED and PINNED BY NAME below under a
+ * ceiling, because a return this reader mis-reads must be visible rather than
+ * silently absent — neither is reached by a dispatched op, so no ratchet moves
+ * on their account, and that is asserted rather than assumed.
+ *
+ * WHAT THIS EXCLUDER STILL CANNOT SEE, stated at the site rather than left to be
+ * found: a refusal built into a VARIABLE and returned later; a NEGATIVE-POLARITY
+ * verdict (`failed: true`), which reads as a declaration of success and is
+ * therefore GRADED — the generous direction, and the cross-check is that such a
+ * method appears on a PRINTED roster rather than vanishing; a verdict below the
+ * object's top level; and a COMPUTED refusal (`ok: !stopped` in
+ * `selectionResolve`, D-236's own site), which stays graded by the policy above
+ * and so can still put a method on the BARE roster as a false positive. That
+ * last one is a known, stated, SAFE-direction residual and not an oversight. */
+const declaresRefusal = (ro) => {
+  const v = verdictOf(ro.slice(ro.indexOf("{")));
+  return !!v && v.kind === "false";
+};
+/* KEPT, AND NO LONGER THE EXCLUDER. The old literal is now only the DELTA the
+   arms below measure the widening against, so "the widening loses nothing" is a
+   comparison this suite runs on every tree rather than a claim from 2026-08-08. */
+const REFUSAL_RETURN_OLD = /\bok\s*:\s*false/;
 
 /* The roster: method -> what it publishes, and whether it is bounded and says so. */
 const collectionReads = (code) => {
@@ -368,7 +497,7 @@ const collectionReads = (code) => {
     const rows = rowCalls(body);
     let keys = [], bound = [], more = [], bareReturn = false;
     for (const ro of returnObjects(body)) {
-      if (REFUSAL_RETURN.test(ro)) continue;
+      if (declaresRefusal(ro)) continue;
       const pairs = topPairs(ro);
       const arr = pairs.filter(([k, v]) => collectionExpr(v) || locals.has(v) || (k === v && locals.has(k))).map(([k]) => k);
       if (!arr.length) continue;
@@ -396,6 +525,61 @@ const collectionReads = (code) => {
   }
   return out;
 };
+/* D-240 · THE EXCLUDER'S OWN CENSUS, so every number this file says about it is
+   PRINTED off the tree it ran on rather than carried from a report. Four buckets
+   over every return-object literal in `store.mjs`, and the fourth is the one that
+   must never be silent:
+     declared   a literal `false` verdict — EXCLUDED as a refusal.
+     computed   a verdict decided at runtime — GRADED, by the stated policy.
+     success    a literal `true` verdict — GRADED.
+     silent     no boolean-shaped property at all — GRADED (REC-70's inversion).
+   `newlyDeclared` is the DELTA against the old one-literal excluder, and
+   `lostByWidening` must stay EMPTY: a return the old rule excluded and the new
+   one does not would be the widening losing something, which is the direction a
+   ratchet cannot survive.
+
+   **THE CENSUS ASKS `declaresRefusal` AND NEVER RE-IMPLEMENTS IT — and that is a
+   correction this file's own control forced.** Its first draft read `verdictOf`
+   directly, so arm (1) of `verdict-excluder.control.mjs` — which restores the
+   one-literal excluder — left EVERY PRINTED FIGURE UNCHANGED and only one arm
+   went red. A census derived from a COPY of its subject reports on a subject
+   nobody is running: the same class as a hand copy agreeing for free, arriving
+   inside an instrument written to prevent it. `excluded` below is now the walk's
+   own decision, so every number printed is a fact about the excluder in use. */
+const excluderCensus = (code) => {
+  const c = { total: 0, declared: 0, computed: 0, success: 0, silent: 0, excluded: 0,
+              newlyDeclared: 0, lostByWidening: [], spellings: new Map(), excludedWithCollection: [] };
+  for (const [name, body] of segments(code)) {
+    const locals = localCollections(body);
+    for (const ro of returnObjects(body)) {
+      c.total++;
+      const v = verdictOf(ro.slice(ro.indexOf("{")));
+      const kind = v ? v.kind : "silent";
+      if (kind === "false") c.declared++;
+      else if (kind === "expr") c.computed++;
+      else if (kind === "true") c.success++;
+      else c.silent++;
+      const old = REFUSAL_RETURN_OLD.test(ro);
+      const excluded = declaresRefusal(ro);            /* THE WALK'S OWN DECISION */
+      if (excluded) c.excluded++;
+      if (excluded && !old) {
+        c.newlyDeclared++;
+        c.spellings.set(v ? v.key : "(none)", (c.spellings.get(v ? v.key : "(none)") || 0) + 1);
+      }
+      if (old && !excluded) c.lostByWidening.push(`${name}[${v ? v.key + ":" + v.kind : "silent"}]`);
+      /* A return this walk EXCLUDES while it publishes a collection is the one
+         the reader could be wrong about, so it is collected by NAME. */
+      if (excluded && !old) {
+        const pairs = topPairs(ro);
+        const arr = pairs.filter(([k, val]) => collectionExpr(val) || locals.has(val) || (k === val && locals.has(k))).map(([k]) => k);
+        if (arr.length) c.excludedWithCollection.push(`${name}[${v ? v.key : "?"}:${arr.join("+")}]`);
+      }
+    }
+  }
+  c.excludedWithCollection.sort();
+  return c;
+};
+
 /* op -> method, off the dispatch arrow. `bounds.test.mjs`'s reader, reused. */
 const opsFor = (code, methods) => {
   const out = new Map();
@@ -472,6 +656,19 @@ console.log(`    ${UNJUDGED_OPS.map((o) => `op=${o}`).join(", ")}`);
    difference between a limitation and a blind spot. */
 console.log(`  OPAQUE — DISPATCHED and scanning rows, yet outside every bucket above: ${OPAQUE.length} ops`);
 console.log(`    ${OPAQUE.join(", ")}`);
+/* D-240 · THE EXCLUDER, PRINTED. Every figure the block above `declaresRefusal`
+   states is re-derived here on the tree the run is happening on, so a reader
+   never has to trust a date. */
+const EX = excluderCensus(CODE);
+console.log(`  EXCLUDER (D-240): ${EX.total} return-object literals · ${EX.excluded} EXCLUDED by the walk · `
+          + `${EX.declared} declare a refusal · ${EX.computed} computed and GRADED · `
+          + `${EX.success} declared successes · ${EX.silent} with no verdict at all`);
+console.log(`    the OLD one-literal excluder saw ${EX.excluded - EX.newlyDeclared}; `
+          + `this rule newly excludes ${EX.newlyDeclared} in ${EX.spellings.size} verdict spellings `
+          + `(${[...EX.spellings].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} x${n}`).join(", ")})`);
+console.log(`    LOST BY WIDENING (must be none): ${EX.lostByWidening.length ? EX.lostByWidening.join(", ") : "none"}`);
+console.log(`    EXCLUDED WHILE PUBLISHING A COLLECTION — the returns this reader could be WRONG about, `
+          + `named rather than absent: ${EX.excludedWithCollection.length ? EX.excludedWithCollection.join(", ") : "none"}`);
 
 /* ------------------------------------------------------------------- GUARDS.
    A reader that silently yielded nothing makes every assertion below vacuous —
@@ -551,6 +748,122 @@ t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a ret
      collectionExpr("Array.isArray(terms) && terms.length ? terms.slice(0, 24) : [\"oakland\"]"),
      collectionExpr("`${String(x).slice(0, 60)} and ` + rows.slice(0, 5)")],
     [false, false, false, true, true, true]);
+}
+
+/* ==========================================================================
+ * D-240 · THE EXCLUDER, DRIVEN. Six arms, and (c) is the one that rejected this
+ * edit's first draft. The whole failure mode being fixed is a classifier that
+ * grades a return by ONE LITERAL and reads as complete, so an arm that only
+ * proved the new rule sees MORE would be the same mistake wearing the other
+ * polarity: the over-strictness half is not optional here.
+ * ========================================================================== */
+console.log("\n--- D-240: the refusal excluder, driven in both directions ---");
+/* (a) ONE MECHANISM, NOT TWO. The verdict reader is REC-76's, and this is what
+   makes "shared" a fact rather than an intention: the six functions are
+   extracted from BOTH files and compared byte for byte. A drift in either copy
+   fails here NAMING the function, which is the whole reason a copy was
+   acceptable at all — see verdict-reader.mjs's header for why it is a copy and
+   what the delegated single-home version is. */
+{
+  const guardSrc = readFileSync(new URL("../../civicos-ui/check-refusal-codes.mjs", import.meta.url), "utf8");
+  const mineSrc = readFileSync(new URL("./verdict-reader.mjs", import.meta.url), "utf8");
+  const drift = readerDrift(guardSrc, mineSrc);
+  console.log(`  READER: ${drift.read} of ${drift.expected} shared functions extracted, ${drift.chars} chars, `
+            + `differing from REC-76's copy: ${drift.differing.length ? drift.differing.join(", ") : "none"}`);
+  t("D-240 (a) ONE MECHANISM: the verdict reader in `test/verdict-reader.mjs` is BYTE-IDENTICAL to "
+  + "REC-76's in `civicos-ui/check-refusal-codes.mjs`, function by function — so a third reader "
+  + "cannot appear by drift, which is how the next component goes dark differently. The extraction "
+  + "is FLOORED and COUNTED, because two empty extractions agree for free",
+    [drift.differing, drift.read, drift.chars > drift.minChars],
+    [[], drift.expected, true]);
+}
+/* (b) THE WIDENING, AS A DELTA AND IN THE SAFE DIRECTION. Both halves are
+   required: that it sees MORE than the one literal, and that it sees everything
+   the one literal saw. The second is what makes it a widening rather than a
+   different matcher — REC-76 measured the same property over its own corpus and
+   it is re-measured here rather than inherited. */
+t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal rule excludes strictly "
++ "more return objects than `/\\bok\\s*:\\s*false/`, in more than one verdict spelling, and NOT ONE "
++ "return the old literal excluded is now graded. A widening that dropped a refusal would inflate the "
++ "BARE ceiling, which is the failure this correction exists to remove",
+  [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
+  [true, true, []]);
+/* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
+   recorded rather than smoothed. The first version took REC-76's own policy
+   (a COMPUTED verdict is a refusal) and the real tree went 85/0 -> 82/3: a
+   COMPARISON is how this plane spells a CURSOR (`bundles.length === cap ? …`)
+   and a TRUNCATION FLAG (`found.length > cap`), so `projection`, `listBundles`,
+   `aiCredentials`, `captureRequests`, `searchIndexCheck` and `verifySha` were
+   all excluded as refusals and FOUR CORRECTLY-BOUNDED READS LOST THEIR CLEAN
+   BILL (BOUNDED 20 -> 16, OPAQUE 10 -> 16). Fixtures 4-6 are those three real
+   shapes, and they are the reason the policy is `false` only. */
+t("D-240 (c) OVER-STRICTNESS: a DECLARED refusal is excluded in ANY verdict spelling, and an answer "
++ "that publishes a bound is NOT excluded because its cursor or truncation flag is a COMPARISON. The "
++ "last three are `store.mjs`'s own shapes and they are what refused REC-76's policy here",
+  [declaresRefusal('return { ok: false, reason: "NO_A", rows }'),
+   declaresRefusal('return { started: false, reason: "ALREADY_OPEN", entries }'),
+   declaresRefusal('return { found: false, run, entries: [] }'),
+   declaresRefusal("return { bundles, limit: cap, cursor: bundles.length === cap ? bundles[0].id : null }"),
+   declaresRefusal("return { count: rows.length, limit: cap, truncated: found.length > cap, credentials: rows.map((r) => r) }"),
+   declaresRefusal("return { published: matches.length > 0, sha256: sha, matches }"),
+   declaresRefusal("return { ok: true, rows, limit: 1, truncated: false }"),
+   declaresRefusal("return { signers }")],
+  [true, true, true, false, false, false, false, false]);
+/* (d) THE POLICY IS A MEASUREMENT, NOT AN OPINION. REC-76's reading is applied
+   to the SAME corpus here and the roster it would produce is compared with the
+   shipped one. If the two ever agree, the paragraph above is stale prose and
+   this arm says so — which is the difference between a decision with a receipt
+   and a decision with a comment. */
+{
+  const asRefusalToo = (ro) => { const v = verdictOf(ro.slice(ro.indexOf("{"))); return !!v && (v.kind === "false" || v.kind === "expr"); };
+  const wouldExclude = [];
+  for (const [name, body] of segments(CODE)) {
+    const locals = localCollections(body);
+    for (const ro of returnObjects(body)) {
+      if (declaresRefusal(ro) || !asRefusalToo(ro)) continue;
+      const pairs = topPairs(ro);
+      if (pairs.filter(([k, val]) => collectionExpr(val) || locals.has(val) || (k === val && locals.has(k))).length) wouldExclude.push(name);
+    }
+  }
+  console.log(`  POLICY: treating a COMPUTED verdict as a refusal would additionally un-grade `
+            + `${new Set(wouldExclude).size} collection-publishing method(s) — ${[...new Set(wouldExclude)].sort().join(", ")}`);
+  t("D-240 (d) THE COMPUTED-VERDICT POLICY IS MEASURED: REC-76's reading, applied to this corpus, "
+  + "would take real collection-publishing reads out of the walk — including `projection` and "
+  + "`listBundles`, whose comparison is a CURSOR. The set is non-empty and NAMES them, so the "
+  + "divergence from REC-76 is a receipt rather than a preference",
+    [new Set(wouldExclude).size > 0,
+     ["projection", "listBundles", "verifySha"].every((m) => wouldExclude.includes(m))], [true, true]);
+}
+/* (e) WHAT THE READER IS PROBABLY WRONG ABOUT, NAMED AND CEILINGED. REC-76's
+   ordering rule — the first boolean-shaped property is the verdict, measured
+   over its SIXTY governed sites where no outcome leads with a datum — does NOT
+   hold over `store.mjs`'s 843 returns. Two SUCCESS returns lead with a boolean
+   DATUM and are excluded as refusals by this walk. They are pinned BY NAME
+   rather than counted, because "2" satisfied by a different two is exactly what
+   this class of arm exists to refuse, and the ceiling may only FALL. */
+t("D-240 (e) THE MIS-READ IS NAMED, NOT ABSORBED — a return excluded while it publishes a collection "
++ "is one this reader could be wrong about. Two are, both SUCCESS answers whose first boolean-shaped "
++ "property is a DATUM (`rootOfTrust: false`, `ungrouped: false`), and they are pinned by name",
+  EX.excludedWithCollection,
+  ["#conditionHomes[ungrouped:reasons]", "#sessionRights[rootOfTrust:capabilities+member]"]);
+t("D-240 (e2) AND NEITHER OF THEM IS REACHED BY A DISPATCHED OP, so no ratchet in this file moves on "
++ "their account — asserted rather than assumed, because that is the only reason (e) is a named "
++ "residual instead of a defect this item owes a fix for",
+  ["#conditionHomes", "#sessionRights"].filter((m) => [...DISPATCHED.values()].includes(m)), []);
+/* (f) REACH AS A DELTA, on the excluder itself. Every other delta arm in this
+   file breaks a reader and asserts it finds FEWER; this one breaks the CORPUS
+   and asserts the census collapses with it, so a census that quietly stopped
+   reading store.mjs cannot keep printing four confident buckets. */
+{
+  const empty = excluderCensus("");
+  console.log(`  EXCLUDER REACH CONTROL: the same census over an EMPTY corpus — `
+            + `${empty.total} returns, ${empty.declared} declared, ${empty.newlyDeclared} newly excluded`);
+  t("D-240 (f) THE CENSUS IS A DELTA: over an EMPTY corpus it finds nothing, while over store.mjs it "
+  + "finds a four-bucket partition that ADDS UP to the corpus — a partition that does not add up is a "
+  + "reader dropping returns on the floor, which no count above would show",
+    [empty.total, empty.newlyDeclared,
+     EX.declared + EX.computed + EX.success + EX.silent === EX.total, EX.total > 500],
+    [0, 0, true, true]);
 }
 
 /* ------------------------------------------------------- THE ITEM'S OWN (a).
