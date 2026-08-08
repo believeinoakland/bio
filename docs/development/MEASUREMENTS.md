@@ -3001,3 +3001,60 @@ REC-71 licensed, and a gate that fires on correct work gets switched off.
 ZERO delta** (the `store.mjs` edit is comments only, proved by stripping comments from both
 revisions and comparing byte for byte), `node scripts/coverage.mjs --strict` exit **0** run
 directly, OPS 139/139, CHECKS 82/82.
+
+### REC-71 · THE SAME DEFECT IN THE FAMILY NEXT DOOR — re-measured 2026-08-08 on the merged tree
+
+Re-integrated onto `main` carrying **PL-1 + PL-12 + UI-51**. `node civicos-ui/test/run.mjs`
+exited **1 with 36 failures, every one `NOT a row in BIAS_CHECKS`.** REC-71's original 32
+were gone; these were **PL-12's `BIAS_CHECKS.BIAS_REFUSED` carrying `where: 'src/store.mjs
+promote'` at whole-function granularity** and conscripting the same refusals. PL-12 was
+rebased onto PL-1 but neither could see the region mechanism, which did not exist yet.
+**A second overstating family within hours of the first is the measurement saying the
+convention needed to exist.**
+
+**36 AND NOT 34, and the extra two are the sharpest part.** A whole-function `where` also
+conscripts the refusals **the other family's regions correctly govern** — `VERSION_FROZEN`
+and `VERSION_LEG_UNRESOLVED` failed against `BIAS_CHECKS`. Two families naming one function
+means each one's rows judge the other's refusals.
+
+**THE JUDGEMENT CONDUCT ASKED FOR: `BIAS_REFUSED` GETS A REGION.** PL-12 named `promote`
+deliberately, and its reasoning was right — the code fires there rather than in
+`checkBiasExtension` with its ten siblings, and naming the site is what puts it inside the
+guard's governed set. **Only the GRAIN was wrong. Being an ENVELOPE is a fact about the
+refusal's SHAPE — it wraps per-finding codes — and says nothing about its SPAN.**
+`BIAS_REFUSED` fires at one statement inside one `if`. What WOULD justify the wider
+spelling is stated at the marker: a `where` may name a whole function when every refusal
+that function makes is the family's business — true of `airun.mjs`'s three check functions,
+and unlikely ever to be true of a function that both validates and writes.
+
+**THE SWEEP, RE-RUN — 5 families, 13 governed sites:**
+
+| | before the fix | after |
+| --- | --- | --- |
+| whole functions / regions | 11 / 2 | 10 / 3 |
+| **OVERSTATING** (span holds refusals the family does not govern) | **1** (`promote`, 970L, 34 conscripted) | **0** |
+| **UNFALSIFIABLE** (span read in full, ZERO codes compared) | **7** | **7** |
+| total span lines | 1,843 | 896 |
+
+**SEVEN OF THIRTEEN GOVERNED SITES ARE UNFALSIFIABLE, and PL-12 added three of them** —
+`checkBiasExtension` (158L), `biasInhale` (111L), `biasAdopt` (58L), alongside
+`basisVersionFindings`, `basisVersions`, `meaningRows`, `versionChain`. **776 lines read,
+zero codes compared.** Arm C's teeth reach **5 of 13 sites**. That is a measurement, not an
+impression, and the guard now prints it every run with a `codesChecked` floor beneath it.
+
+**THE FLOORS HAD GONE STALE AGAIN WITHIN HOURS** — census 330 → 341, reach 116 → 127,
+11 codes of slack in each. Remeasured. **A floor with slack is not a ratchet, and a family
+added without moving the floors is a family whose codes buy slack for everybody else's
+walk.**
+
+**A PIN CORRECTED, NOT EXEMPTED, and it is the defect in miniature.** Control (r2) pinned
+**32** — `main`'s figure on the PL-1-only tree — and measured **33** once PL-12 landed,
+because PL-12 added a refusal to `promote`. **A whole-function `where` conscripts refusals
+that arrive AFTER the row is written: the set it claims is not fixed when it is written, it
+grows with the function.**
+
+**AFTER**: 13 governed sites (10 functions, 3 regions of 19L/16L/23L), `node
+civicos-ui/test/run.mjs` exit **0** read unpiped at **40 suites**, battery **112/112 at
+6,746 with ZERO delta**, `--strict` exit **0** run directly, OPS 143/143, CHECKS 93/93.
+The `store.mjs` edit is comments only, proved by stripping comments from both revisions and
+comparing byte for byte.

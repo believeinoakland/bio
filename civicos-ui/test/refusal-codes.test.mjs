@@ -105,6 +105,31 @@
  *        A `where` whose region has vanished FAILS rather than judging an empty
  *        span — an empty span passes everything.
  *
+ *   REC-71's TWO MORE, ADDED AT RE-INTEGRATION 2026-08-08 onto a tree carrying
+ *   PL-12 and UI-51 — **because the same defect appeared in a second family
+ *   within hours, before the convention that fixes it existed.** PL-12's
+ *   `BIAS_CHECKS.BIAS_REFUSED` carried `where: 'src/store.mjs promote'` at
+ *   whole-function granularity and conscripted **36** refusals in exactly the way
+ *   PL-1's two rows had:
+ *
+ *   (r5) THE TEETH INSIDE THE **BIAS** REGION — a codeless `ok:false` planted in
+ *        the newly marked `bias-set-refusal` arm. RUN: the guard exits 1 naming
+ *        file, line, function and region. **Each newly narrowed region owes its
+ *        own teeth arm**; a narrowing is only as good as the arm showing it did
+ *        not blind the guard, and inheriting another region's is not that.
+ *   (r6) THE FIX IS THE FIX, SECOND FAMILY — restore `BIAS_REFUSED`'s
+ *        whole-function `where`. RUN: exactly **36** conscripted into
+ *        `BIAS_CHECKS`. **36 and not 34**, because a whole-function `where` also
+ *        conscripts the two refusals the OTHER family's regions correctly govern.
+ *
+ *   **(r2)'s PIN WAS CORRECTED HERE, NOT EXEMPTED, and the correction is the
+ *   defect in miniature.** It pinned 32 — `main`'s figure on the PL-1-only tree —
+ *   and measured 33 once PL-12 landed, because PL-12 added a refusal to `promote`
+ *   and **a whole-function `where` conscripts refusals that arrive AFTER the row
+ *   is written.** The set such a `where` claims is not fixed when it is written;
+ *   it grows with the function. Both counts are now family-specific so (r2) and
+ *   (r6) cannot borrow each other's failures.
+ *
  *   AND ONE MORE FOUND WHILE RUNNING THEM (REC-71): **arm (e) had gone GREEN.**
  *   PL-1 grew the census 311 -> 330 while the FLOOR stayed at 311, so neutering
  *   the widest matcher dropped it to 325 — still above the floor, so the guard

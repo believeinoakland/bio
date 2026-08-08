@@ -133,14 +133,21 @@ const NOTE = m => notes.push(m);
    it is why every figure below is now the MEASURED one. Move them WITH the
    corpus, in the same turn, or they stop meaning anything. */
 const FLOOR = {
-  families:      4,    // AI_RUN, MEANING_READ, VERSION_CHAIN, BASIS_VERSION (was 3, pre-PL-1)
-  rows:         29,    // C-22.1..6, C-23.1..2, C-24.1..3, C-25.1..18 (was 11, pre-PL-1)
-  census:      330,    // distinct refusal codes the plane can mint, UNION of the matcher set.
-                       // A plain `reason: "CODE"` grep answers 297; the set finds 33 more.
-                       // (was 311, pre-PL-1 — and see the block above for what the slack cost)
-  reach:       116,    // codes a surface can receive (R1 + R2 + R3) (was 98, pre-PL-1)
-  governedSites: 9,    // spans named by a row's `where` — a function, or a region inside one
-                       // (was 5; 7 whole functions + REC-71's 2 regions)
+  /* REMEASURED AGAIN 2026-08-08, at REC-71's re-integration onto a tree carrying
+     PL-12 and UI-51. **The slack had already come back: census 330 -> 341, reach
+     116 -> 127, 11 codes in each within hours.** That is the point of the block
+     above rather than a contradiction of it — these figures track a growing plane
+     and must be moved WITH it, in the turn that grows it, or the ratchet quietly
+     stops being one. A family added without moving them is a family whose codes
+     buy slack for everybody else's walk. */
+  families:      5,    // + BIAS_CHECKS (was 4 pre-PL-12, 3 pre-PL-1)
+  rows:         40,    // + C-26.1..11 (was 29 pre-PL-12, 11 pre-PL-1)
+  census:      341,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+                       // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
+                       // (was 330 pre-PL-12, 311 pre-PL-1 — see the block above for the cost)
+  reach:       127,    // codes a surface can receive (R1 + R2 + R3) (was 116, 98)
+  governedSites: 13,   // spans named by a row's `where` — a function, or a region inside one
+                       // (was 9, 5; 10 whole functions + REC-71's 3 regions)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
                        // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -154,18 +161,21 @@ const FLOOR = {
                        // `codesChecked` below carries the ratchet instead.
   /* REC-71's three, measured 2026-08-08 in worktree agent-ab9e84c9e27f4eff7 by
      this file, on the tree carrying PL-1. */
-  regions:       2,    // region `where`s resolved — basis-version-freeze, basis-version-resolve
-  regionLines:  25,    // lines inside them. MEASURED 35 (19 + 16); floored BELOW the figure
-                       // on purpose, so an ordinary edit inside a governed arm does not
-                       // fail the guard while a COLLAPSE still does. The per-region
+  regions:       3,    // region `where`s resolved — basis-version-freeze, basis-version-resolve,
+                       // bias-set-refusal (was 2, before PL-12's row was narrowed too)
+  regionLines:  45,    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
+                       // figure on purpose, so an ordinary edit inside a governed arm does
+                       // not fail the guard while a COLLAPSE still does. The per-region
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
-  codesChecked: 10,    // refusal codes actually COMPARED against a family row. MEASURED 10.
-                       // NOT the same as refusals judged (11) and NOT the same as lines
-                       // read: FOUR governed sites read 449 lines and compare NOTHING,
-                       // because they refuse through a local `refuse(key, …)` helper (the
-                       // code is a variable) or by pushing findings rather than returning
-                       // `ok:false`. See arm C's NOTE and REC-71's delegation to REC-64.
+  codesChecked: 11,    // refusal codes actually COMPARED against a family row. MEASURED 11.
+                       // NOT the same as refusals judged (12) and NOT the same as lines
+                       // read: **SEVEN of the thirteen governed sites read 776 lines and
+                       // compare NOTHING AT ALL** — they refuse through a local
+                       // `refuse(key, …)` helper (the code is a variable) or by pushing
+                       // findings rather than returning `ok:false`. PL-12 added three more
+                       // of them. See arm C's NOTE and REC-71's delegation to REC-64:
+                       // arm C's teeth reach 5 of 13 sites, and that is a measurement.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
   vocabularyTerms: 40, // terms across them
 };

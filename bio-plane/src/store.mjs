@@ -7840,6 +7840,31 @@ export class Store extends DurableObject {
          the one place they live.
          The replay exemption is the gathering check's, for the gathering check's
          reason: the record's own history must be holdable verbatim. */
+      /* DEC-49 REGION bias-set-refusal
+       *
+       * THE SPAN `BIAS_CHECKS.BIAS_REFUSED`'s `where` NAMES (REC-71), on the same
+       * terms as `basis-version-freeze` and `basis-version-resolve` above.
+       * Everything between this marker and its `END` is a DEC-49 GOVERNED SITE.
+       *
+       * WHY AN ENVELOPE REFUSAL STILL GETS A REGION, because this is the one row
+       * where the question was live and the answer should not have to be re-derived.
+       * PL-12 named `promote` deliberately and its reasoning was RIGHT — the code
+       * fires HERE rather than in `checkBiasExtension` with its ten siblings, and
+       * naming the site is what puts it inside the guard's governed set. **What was
+       * wrong was only the GRAIN.** Being an ENVELOPE is a fact about the refusal's
+       * SHAPE — it wraps per-finding codes — and says nothing whatever about its
+       * SPAN. `BIAS_REFUSED` fires at exactly one statement inside one `if`; it is
+       * not enforced across the other ~960 lines of `promote`, and claiming it was
+       * conscripted 34 unrelated refusals and turned `main`'s harness red a second
+       * time within hours of the first. **So "it is an envelope" is NOT a reason to
+       * name a whole function, and no future allocator should read it as one.**
+       *
+       * WHAT WOULD JUSTIFY THE WIDER SPELLING, stated so the exception is a real
+       * test rather than a closed door: a `where` may name a whole function when
+       * EVERY refusal that function makes is the family's business. That is true of
+       * `checkObservation`, `checkCondition` and `checkBound` in `airun.mjs`. It is
+       * not true of `promote`, and it is unlikely ever to be true of any function
+       * that both validates and writes. */
       if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
         const bf = [];
         checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
@@ -7861,6 +7886,7 @@ export class Store extends DurableObject {
                    }) };
         }
       }
+      /* END DEC-49 REGION bias-set-refusal */
       /* PL-12 / D-84: bias_statements, projected WHOLE from the bias bundle's
          own statements[] in this SAME transaction and by the same
          delete-then-insert discipline as inquiry_basis above — a projection of
