@@ -66,7 +66,23 @@ html,body{margin:0;min-height:100vh}
    honoured because the indicator's job is to say a job is RUNNING, and a
    steady dot says that just as well as a pulsing one. */
 .ai-run{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
-.ai-run .dot{width:8px;height:8px;border-radius:50%;background:var(--verdigris);animation:ai-pulse 1.4s ease-in-out infinite}
+.ai-runs{margin:6px 0;display:flex;gap:12px;flex-wrap:wrap}
+.ai-run .ai-status{font-size:11px;opacity:.75}
+/* UI-49 — THE ANIMATION IS THE RECORD'S CLAIM AND THIS IS THE ONE PLACE THE
+   PLANE'S RUNNING-STATUS WORD IS WRITTEN ANYWHERE IN THIS APPLICATION.
+   §14a promises an animated indicator that A JOB IS RUNNING; a dot that pulsed
+   for a run the record says ENDED would be this surface asserting something the
+   record does not support. So the dot is STILL by default and pulses only on
+   the record's own status, carried verbatim into `data-status` by
+   `aiSessionIndicatorHtml`. The word is deliberately NOT in the JS block —
+   `ai-session-wire.test.mjs` ARM V requires that block to hold no copy of the
+   plane's run vocabulary — and it is PINNED here against the plane's live
+   `RUN_STATUS` export by `ai-session-context.test.mjs`, so a rename in the
+   plane FAILS THE BUILD instead of silently killing the animation. The failure
+   direction is safe either way: an unrecognised status renders a still dot,
+   never a false pulse. */
+.ai-run .dot{width:8px;height:8px;border-radius:50%;background:var(--verdigris);opacity:.35}
+.ai-run .dot[data-status="running"]{animation:ai-pulse 1.4s ease-in-out infinite}
 @keyframes ai-pulse{0%,100%{opacity:.35}50%{opacity:1}}
 @media (prefers-reduced-motion: reduce){ .ai-run .dot{animation:none;opacity:1} }
 .ai-panel{border:1px solid var(--rule);padding:12px;margin:10px 0}
@@ -5868,13 +5884,22 @@ async function openInquiry(id, fromNav){
     /* WHAT RELIES ON THIS — REC-25's gated reverse read, never a walk here.
        WHAT CAN BE DONE HERE — UI-12's act bar, from op=affordances. Both are
        plane reads and they are asked together. */
-    let back = null, backErr = null, actsR = null;
+    /* AND WHETHER A JOB IS RUNNING ON THIS QUESTION (UI-49, §14a). ONE call,
+       into the running-session block's one door; it asks the record about the
+       run addresses this device holds and renders the indicator for whichever
+       of them THE RECORD places in this context. Nothing here decides that, and
+       where the record answers nothing this is the empty string — no notice. */
+    let back = null, backErr = null, actsR = null, runs = "";
     try{
-      const [b, a] = await Promise.all([
+      const [b, a, r] = await Promise.all([
         recR("backlinks",{target:id}).then(r=>r||null, e=>{ backErr = e; return null; }),
         actsFor(id),
+        /* Its own failure is its own: a running-session read that goes wrong
+           must not be reported as the backlinks read failing, which is what
+           sharing this batch's rejection would have done. */
+        aiSessionContextHtml({ type:"inquiry", id }).then(h=>h, ()=>""),
       ]);
-      back = b; actsR = a;
+      back = b; actsR = a; runs = r;
     }catch(e){ backErr = backErr || e; }
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
@@ -5903,6 +5928,7 @@ async function openInquiry(id, fromNav){
     $("#content").innerHTML = `${crumb}
       <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
       <p class="lede">${esc(PHASE_LABEL[phase])} &middot; <span class="mono">${esc(state)}</span></p>
+      ${runs}
       ${credentialSentence(PLANE.me)}
       <h2 class="sec">The question, as authored</h2>${questionPane}
       <h2 class="sec">What it rests on</h2>
@@ -6325,9 +6351,18 @@ async function openProjectWorkspace(id, fromNav){
                              : projectContentsHtml(refs, (back && back.backlinks) || []);
 
     const controls = projectRosterBarHtml(pos);
+    /* AND WHETHER A JOB IS RUNNING ON THIS PROJECT (UI-49, §14a). ASKED AFTER
+       THE VISIBILITY GATE CLEARED, with the rest of this page's reads — 7.9's
+       discipline is that nothing is asked until `projectparticipants` answers,
+       and this read is no exception even though `op=airun` carries its own gate
+       on `context_id`. It is in the HEADER, so the skeleton an invited member
+       sees carries it too: whether they may see the run is the record's answer
+       through that gate, not this page's to decide a second time. */
+    const runs = await aiSessionContextHtml({ type:"project", id }).then(h=>h, ()=>"");
     const header = `${crumb}
       <div class="trow"><h1 class="rec">${esc(title)}</h1></div>
       <p class="lede">Project &middot; <span class="mono">${esc(state)}</span></p>
+      ${runs}
       ${projectCredentialSentence(pos, !!controls)}
       <h2 class="sec">What this project is for</h2>
       ${projectObjectiveHtml(objective)}`;
@@ -15835,7 +15870,26 @@ function aiSessionInContext(session, ctx){
   return String(c.type||"") === String(ctx.type||"") && String(c.id||"") === String(ctx.id||"");
 }
 
-/* THE INDICATOR. Absent when nothing is running — never a notice. */
+/* THE INDICATOR. Absent when nothing is running — never a notice.
+
+   UI-49 GAVE THE ANIMATION A SOURCE, AND THE REASON IS AN OVERCLAIM RATHER THAN
+   A PREFERENCE. §14a's promise is *an animated indicator that A JOB IS RUNNING*.
+   While this function had no call site the point was moot; now that the inquiry
+   and project windows render it for whatever run the record places in their
+   context, an unconditionally pulsing dot would be this surface asserting that
+   a run is under way over a record that says it ended. That is a claim the
+   surface makes and the record does not support, which is the worst class of
+   defect here — so the dot carries the record's OWN status word and the CSS
+   animates on it. The word itself lives in `tokens.css` and NOWHERE in this
+   block, and it is PINNED against the plane's live `RUN_STATUS` export by
+   `ai-session-context.test.mjs`, so renaming it in the plane FAILS THE BUILD
+   rather than silently stopping the animation. The failure direction is the
+   safe one either way: a status this surface does not recognise renders a
+   STILL dot, never a false pulse.
+
+   The status is also rendered as a word, because a member cannot read a dot.
+   It is the record's own word, verbatim, exactly as the panel prints it — no
+   sentence is authored here and none is DEC-49's to rule on. */
 function aiSessionIndicatorHtml(session, ctx){
   if(!aiSessionInContext(session, ctx)) return "";
   const id = String(session.id || "");
@@ -15843,8 +15897,139 @@ function aiSessionIndicatorHtml(session, ctx){
      published a label, it is the label; otherwise the indicator is the dot and
      the address, and carries no sentence at all. */
   const label = typeof session.label === "string" && session.label ? esc(session.label) : "";
+  const status = typeof session.status === "string" ? session.status : "";
   return `<span class="ai-run" onclick="aiSessionOpen(${esc(JSON.stringify(id))})"`
-       + ` title="${esc(id)}"><span class="dot"></span>${label}</span>`;
+       + ` title="${esc(id)}"><span class="dot" data-status="${esc(status)}"></span>${label}`
+       + `${status ? `<span class="ai-status">${esc(status)}</span>` : ""}</span>`;
+}
+
+/* ============================================================
+   THE CALL SITE — §14a's PROMISE, AND THE HALF THAT MAKES THE OTHER TWO REACH
+   ANYBODY (UI-49).
+
+   UI-38 built this surface and UI-47 wired its read, and until this item
+   `aiSessionIndicatorHtml` appeared EXACTLY ONCE in this file — its own
+   definition. A member saw a run only if they already held its `#session/<id>`
+   address, which is precisely the member who did not need telling.
+
+   ---- WHAT THIS ITEM FOUND, AND IT RESIZES THE PROMISE ----
+
+   **NO OP ANSWERS "WHICH RUNS ARE IN THIS CONTEXT".** `op=airun` and
+   `op=airunlog` are BOTH keyed by run id (`store.mjs`, `SELECT ... WHERE
+   r.run = ?`), and every one of `ai_runs`' query sites reads it by `run`.
+   `op=airunopen` has no UI consumer either, so this application never learns a
+   run id by opening one. A window therefore CANNOT ASK the plane whether a run
+   is happening in it — the question does not exist yet.
+
+   So what this seam feeds on is the only source there is: the ADDRESSES THIS
+   DEVICE HAS ALREADY OPENED. That is the member's own word, exactly as the
+   `#session/<id>` address they typed is their own word, and it discloses
+   nothing — the same reasoning `ai-session-wire.test.mjs` ARM N1 records for
+   the id echoed back in an absence.
+
+   **AND THE DEVICE SUPPLIES AN ADDRESS AND NOTHING ELSE.** The label, the
+   status, and — the part that matters — WHETHER THE RUN BELONGS TO THIS WINDOW
+   AT ALL are the record's answers, read through `op=airun` and compared by
+   `aiSessionInContext`. A device that remembered a run's context could claim a
+   run belonged to a window the record never put it in; this one cannot, because
+   it holds no context to claim with.
+
+   The half that reaches a TEAMMATE who never held the address needs the op that
+   does not exist. It is DELEGATED (see CLAIMS.md, UI -> RECORD) rather than
+   faked here, and when it lands THIS function is the only one that changes:
+   the call sites, the renderers and every pin over them stay as they are.
+
+   ---- `op=airunlog`: DECIDED, AND THE REASONING IS HERE RATHER THAN IN A
+        COMMIT MESSAGE ----
+
+   UI-49 was asked to decide whether the indicator's click-through reaches the
+   observation log or whether that is a separate surface. **IT IS A SEPARATE
+   SURFACE, and the click-through stays on the transcript.** Four reasons, in
+   the order they decide it:
+
+     1. §14a says what the click does: *"clicking it opens the LIVE
+        TRANSCRIPT"*. That is what `aiSessionOpen` already does, and the log is
+        not the transcript — `airun.mjs` is explicit that the observation log
+        "is NOT a transcript and is not governed by DEC-61".
+     2. They answer different questions for different readers. The run surface
+        shows a member what is happening in their context NOW; the log is what
+        lets ANYONE ELSE CHECK the run (§11), including long after it ended.
+        A reader arriving to audit is not a member glancing at an inquiry.
+     3. `op=airunlog` publishes FOUR VOCABULARIES with its answer (states,
+        levels, bounds, endings) precisely so its reader holds no copy of them.
+        Rendering four vocabularies is a surface with its own doctrine, not a
+        line on a panel — and its `detail:` sentences are member-facing wording
+        DEC-49 now owns, so building it today would render un-ruled wording at
+        scale.
+     4. **AND IT PUBLISHES AN UNBOUNDED COLLECTION.** `aiRunLog` selects the
+        whole append-only log with no `LIMIT`, no `limit` and no `truncated`.
+        A surface built on it today would be a surface with a bound it cannot
+        state — exactly what UI-46 spent an item removing. Delegated.
+   ============================================================ */
+
+/* THE DEVICE-LOCAL ADDRESS ROSTER. Addresses, never reasoning: DEC-61 governs
+   the TRANSCRIPT, and a run's id is not the run's thinking. It is kept apart
+   from the transcript store on purpose — the transcript is TTL'd and deleted at
+   publication, and an indicator that vanished when the reasoning was purged
+   would be §14a's price paid twice.
+
+   BOUNDED, AND THE BOUND IS THIS SURFACE'S OWN RATHER THAN THE RECORD'S. Each
+   remembered address costs one `op=airun` when a window opens, so an unbounded
+   roster is an unbounded read on every page. The cap is stated here and it
+   bounds THIS SURFACE'S ASKING; it is not a claim about how many runs exist,
+   and nothing renders it. */
+const AI_SESSION_SEEN_KEY = "ai-runs-seen";
+const AI_SESSION_SEEN_MAX = 8;
+
+function aiSessionSeenStore(store){
+  if(store) return store;
+  try{ return (typeof localStorage !== "undefined") ? localStorage : null; }catch(_){ return null; }
+}
+function aiSessionSeen(store){
+  const S = aiSessionSeenStore(store);
+  if(!S) return [];
+  let raw = null;
+  try{ raw = S.getItem(AI_SESSION_SEEN_KEY); }catch(_){ return []; }
+  if(!raw) return [];
+  let a = null;
+  try{ a = JSON.parse(raw); }catch(_){ return []; }
+  if(!Array.isArray(a)) return [];
+  return a.filter(x => typeof x === "string" && x).slice(0, AI_SESSION_SEEN_MAX);
+}
+/* Remembered only when the RECORD answered for it. An address that resolved to
+   nothing is not remembered, so the roster cannot grow into a list of run ids
+   somebody guessed at — and because the device only ever learns this by reading
+   the run itself, remembering it tells the device nothing it did not have. */
+function aiSessionRemember(id, store){
+  const S = aiSessionSeenStore(store);
+  const key = String(id == null ? "" : id);
+  if(!S || !key) return;
+  const next = [key, ...aiSessionSeen(store).filter(x => x !== key)].slice(0, AI_SESSION_SEEN_MAX);
+  try{ S.setItem(AI_SESSION_SEEN_KEY, JSON.stringify(next)); }catch(_){}
+}
+
+/* THE ONE DOOR. Every window that shows a running indicator calls THIS and
+   nothing else in this block — `ai-session-wire.test.mjs` ARM C2 pins that, so
+   the containment UI-47 measured survives the call site UI-49 adds.
+
+   NOTHING TO SHOW RENDERS NOTHING. No roster, no answer, or an answer the
+   record does not place in this context all return the empty string, and the
+   empty string is what the window interpolates. There is no "nothing is
+   running" notice, and there is no branch that could tell an unknown run from
+   one this viewer may not see: both answer `session: null` from the plane, and
+   `aiSessionIndicatorHtml(null, ctx)` is "" for the same reason as any other
+   run that is not here. */
+async function aiSessionContextHtml(ctx, store){
+  if(!ctx || !ctx.type || !ctx.id) return "";
+  const ids = aiSessionSeen(store);
+  if(!ids.length) return "";
+  const out = [];
+  for(const id of ids){
+    const session = await aiSessionRead({ session: id });
+    const h = aiSessionIndicatorHtml(session, ctx);
+    if(h) out.push(h);
+  }
+  return out.length ? `<p class="ai-runs">${out.join("")}</p>` : "";
 }
 
 /* Published name/value pairs, VERBATIM, in publication order. No field is
@@ -15929,6 +16114,10 @@ async function aiSessionOpen(id, fromNav){
       }
     }catch(_){}
   }
+  /* UI-49: an address the RECORD answered for is remembered, so the windows
+     this run belongs to can show it. Only on an answer — see the roster's own
+     note — and it is the one line of state this block keeps. */
+  if(session) aiSessionRemember(id);
   const el = (typeof $ === "function") ? $("#content") : null;
   if(!el) return;
   /* Nothing published means nothing rendered. The address resolves and the

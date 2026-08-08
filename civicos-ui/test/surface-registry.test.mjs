@@ -96,6 +96,38 @@
  *      whole harness: restoring `reads: []` with the stale `pending` fails X4b;
  *      adding a second `recR` call inside the block fails Y1; un-wiring the read
  *      fails ARM D4 ("a described read nothing performs is fiction").
+ *  (6b) UI-49, 2026-08-07 — THE FAIL-FAST DEFECT, FIXED AND PROVED BY THE ONE
+ *      CONTROL THAT COULD PROVE IT: THE SAME MUTATION RUN AGAINST BOTH SHAPES.
+ *      `ok`/`eq` were `assert.ok`/`assert.deepStrictEqual`, which throw, so the
+ *      first failing arm ended the module. CONDUCT reproduced that at UI-47's
+ *      integration (a control breaking several arms reported only ARM D4).
+ *
+ *      THE CONTROL: ONE mutation of `app.html`'s registry breaking arms in
+ *      THREE different sections at once — the `ai-session` surface loses its
+ *      `kind`, its `consumers`, its `purpose`, its `levels` and its `acts`.
+ *      Run against the PRE-RIDER file (taken from `git show HEAD:` and copied
+ *      into `test/` under a non-`.test.mjs` name so the runner could not pick it
+ *      up, then removed) and against this one, with app.html restored and
+ *      verified by CONTENT and sha256 afterwards:
+ *
+ *        PRE-RIDER (assert throws):  exit 1, ONE arm reported —
+ *          `AssertionError: ARM L2: surface 'ai-session' declares a levels array`
+ *          and the module ended there. L4, A1, X1, X2, X3, X4, X4b and X5 were
+ *          never run and nobody would have known they were broken.
+ *        ACCUMULATING (this file):   exit 1, **NINE arms reported**, across
+ *          ARM L (L2, L4), ARM A (A1) and ARM X (X1, X2, X3, X4, X4b, X5),
+ *          every one printed at the point of failure AND listed again at the end.
+ *
+ *      **AN ACCUMULATING `ok` IS ONLY HALF THE FIX, and the other half is why
+ *      the arms are grouped into SECTIONS.** A `TypeError` never goes through
+ *      `ok` at all — and this file had SIX places where a malformed registry
+ *      produced exactly one (`topKeys(null)`, `s.routes` of undefined,
+ *      `RECIPES[0].steps[1].op`, `SURFACES[st.surface].levels`, the `aiKind[0]`
+ *      destructure, `src[1]` of a null match). Every one is now guarded with a
+ *      dated reason at the site, and each section runs inside its own catch so a
+ *      throw is RECORDED AS A FAILURE NAMING ITS SECTION rather than ending the
+ *      file. ARM Z drives all of this through the file's own collector on every
+ *      run, so the fix cannot silently regress.
  *  (7) over-strictness (ARM Y15-Y17): a running-session record shaped unlike
  *      anything written here — different field names, a bound this file never
  *      mentions — must RENDER, not fail. Driven with `{gauge, cap, used, note}`
@@ -103,14 +135,59 @@
  *      only accepts the shapes its author imagined would be a fixture testing
  *      itself, and it would break the day IS-6 chooses its field names.
  */
-import assert from "assert";
 import fs from "fs";
 import vm from "vm";
 import { ACTS, ACT_IDS, CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
 
+/* ============================================================
+   THE COLLECTOR — UI-49's RIDER, AND IT IS A REAL DEFECT BEING FIXED RATHER
+   THAN A STYLE CHANGE.
+
+   Until 2026-08-07 this file's `ok` and `eq` were `assert.ok` and
+   `assert.deepStrictEqual`, which THROW. An `assert` that throws ends the
+   module, so THE FIRST FAILING ARM HIDES EVERY ARM BEHIND IT — and CONDUCT
+   reproduced exactly that at UI-47's integration, where a control that broke
+   several arms reported only ARM D4. That is D-93's class (`npm test` chained
+   with `&&`, stopping at the first failure and hiding the rest) arriving inside
+   a UI suite, and it now has SIX recorded sightings across this project:
+   D-93 itself; two of IS-6's own controls; REC-58's spelling arm throwing on
+   `.bound` of undefined; UI-47's report of this file; and this.
+
+   WHY A COLLECTOR IS NOT ENOUGH ON ITS OWN, which is the part worth reading.
+   Replacing `assert` with an accumulator only fixes the failures that go
+   through the accumulator. A `TypeError` — destructuring an empty match,
+   reading `.steps` of undefined, a vm that would not compile — still ends the
+   module and still hides everything after it, and this file has SIX places
+   where a broken registry produces exactly that. So the arms are grouped into
+   SECTIONS, each of which runs inside its own catch: a section that throws is
+   recorded AS A FAILURE NAMING ITSELF and the sections after it still run.
+   A suite that dies is a suite reporting one defect out of however many exist,
+   and the whole reason to run a control that breaks several arms is to see all
+   of them.
+   ============================================================ */
 let n = 0;
-const ok = (cond, msg) => { n++; assert.ok(cond, msg); };
-const eq = (a, b, msg) => { n++; assert.deepStrictEqual(a, b, msg); };
+const fails = [];
+function ok(cond, msg){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
+function eq(a, b, msg){
+  n++;
+  const A = JSON.stringify(a), B = JSON.stringify(b);
+  if(A !== B){
+    const m = `${msg}\n         want ${B}\n         got  ${A}`;
+    fails.push(m); console.error("  FAIL", m);
+  }
+}
+/* A SECTION IS A FIREBREAK. `fn` may be async; every caller awaits. */
+const SECTIONS = [];
+async function section(name, fn){
+  SECTIONS.push(name);
+  try{ await fn(); }
+  catch(e){
+    n++;
+    const m = `SECTION '${name}' THREW and every arm inside it after the throw was not run — `
+            + `${String((e && e.stack) || e).split("\n").slice(0, 3).join(" / ")}`;
+    fails.push(m); console.error("  FAIL", m);
+  }
+}
 
 const APP_PATH = new URL("../app.html", import.meta.url).pathname;
 const PLANE_INDEX = new URL("../../bio-plane/src/index.mjs", import.meta.url).pathname;
@@ -182,7 +259,7 @@ const code = stripComments(app);
    The stripper must remove comments and NOT remove code. A stripper that
    returned "" would make every walk below green over an empty corpus, which is
    the exact failure this file exists to refuse. */
-{
+await section("ARM I · the comment stripper", () => {
   const probe = stripComments(`const a = 1; /* c1 */ const b = "/* not a comment */"; // c2\nconst c = 3;`);
   ok(!probe.includes("c1"), "ARM I: the comment stripper removes block comments");
   ok(!probe.includes("c2"), "ARM I: the comment stripper removes line comments");
@@ -190,7 +267,7 @@ const code = stripComments(app);
   ok(probe.includes("const c = 3"), "ARM I: the stripper keeps code after a line comment");
   ok(code.length > app.length * 0.5,
      `ARM I: the stripped corpus is ${code.length} of ${app.length} chars — a stripper that ate the file would make every walk below trivially green`);
-}
+});
 
 /* ============================================================ THE REAL SET
    Three independent arms. Each prints its corpus size and asserts a floor. */
@@ -199,7 +276,11 @@ const code = stripComments(app);
 const rBody = tableBody(code, /const\s+R\s*=\s*\{/);
 ok(rBody && rBody.length > 100,
    `ARM W1: go()'s screen table was found and is ${rBody ? rBody.length : 0} chars — a table read as empty passes everything`);
-const screenKeys = topKeys(rBody);
+/* `|| ""` ADDED 2026-08-07 (UI-49's rider): `topKeys(null)` THREW, and a throw
+   here ended the module and took every arm in the file with it — the precise
+   failure the accumulator above exists to stop, arriving one line below the
+   arm that reports the same fact honestly. */
+const screenKeys = topKeys(rBody || "");
 const W1 = screenKeys.map(k => "screen:" + k);
 
 /* ARM W2 · object pages, from their own `CUR = {type:...}` assignment. The
@@ -233,7 +314,7 @@ console.log(`  REAL route set: ${REAL.length}`);
    nothing, or finds dramatically less than it did, fails NAMING THE FIGURE.
    `>=` rather than `===` so adding a surface does not fail the harness for the
    wrong reason — the both-directions equality below is what catches that. */
-{
+await section("ARM R · reach as a delta", () => {
   ok(W1.length >= 16, `ARM R1: the screen walk found ${W1.length} routes, floor 16 (measured 2026-08-07) — a walk that covers nothing passes everything`);
   ok(W2.length >= 4,  `ARM R2: the object-page walk found ${W2.length} routes, floor 4 (measured 2026-08-07)`);
   ok(W3.length >= 6,  `ARM R3: the hash-route walk found ${W3.length} routes, floor 6 (measured 2026-08-07)`);
@@ -250,16 +331,30 @@ console.log(`  REAL route set: ${REAL.length}`);
   ok(o1.length > 0, `ARM R5: the screen walk contributes ${o1.length} routes no other arm sees (${o1.join(", ")})`);
   ok(o3.length > 0, `ARM R6: the hash walk contributes ${o3.length} routes no other arm sees (${o3.join(", ")}) — dropping it would lose them silently`);
   void only;
-}
+});
 
-/* ======================================================== THE DESCRIBED SET */
+/* ======================================================== THE DESCRIBED SET
+
+   CORRECTED 2026-08-07 (UI-49's rider) — this function used to `assert.ok` on
+   the markers and let a `vm` compile error propagate, so a registry block that
+   would not parse ended the module and reported ONE line about a missing
+   marker while thirty arms downstream never ran. It now RECORDS the failure and
+   answers an EMPTY registry, which is the honest shape: every arm below then
+   fails on its own floor, naming what it could not find, and the reader sees
+   the whole extent of the damage instead of its first symptom. */
 function block(marker, exportNames){
   const re = new RegExp(`\\/\\*__${marker}_START__\\*\\/([\\s\\S]*?)\\/\\*__${marker}_END__\\*\\/`);
   const m = re.exec(app);
-  assert.ok(m, `FAIL: ${marker} markers not found in app.html`);
-  const ctx = {}; vm.createContext(ctx);
-  vm.runInContext(m[1] + `;globalThis.__B={${exportNames.join(",")}};`, ctx);
-  return ctx.__B;
+  const empty = Object.fromEntries(exportNames.map(k => [k, k === "RECIPES" ? [] : {}]));
+  if(!m){ ok(false, `FAIL: ${marker} markers not found in app.html`); return empty; }
+  try{
+    const ctx = {}; vm.createContext(ctx);
+    vm.runInContext(m[1] + `;globalThis.__B={${exportNames.join(",")}};`, ctx);
+    return ctx.__B;
+  }catch(e){
+    ok(false, `FAIL: the ${marker} block did not evaluate — ${String((e && e.message) || e)}`);
+    return empty;
+  }
 }
 const RAW = block("SURFACES", ["SURFACE_LEVELS", "SURFACES", "RECIPES"]);
 
@@ -275,7 +370,7 @@ const RAW = block("SURFACES", ["SURFACE_LEVELS", "SURFACES", "RECIPES"]);
    fails on the prototype while printing two identical-looking arrays. That cost
    a cycle here and is written down so it does not cost the next one. */
 const B = JSON.parse(JSON.stringify(RAW));
-{
+await section("ARM J · the registry is DATA", () => {
   const rawKeys = Object.keys(RAW.SURFACES).sort();
   const roundKeys = Object.keys(B.SURFACES).sort();
   eq(roundKeys, rawKeys, "ARM J1: the registry survives a JSON round trip unchanged — it is DATA, not code");
@@ -286,20 +381,24 @@ const B = JSON.parse(JSON.stringify(RAW));
   };
   ok(!hunt(RAW.SURFACES) && !hunt(RAW.RECIPES),
      "ARM J2: no surface description and no recipe step carries a function");
-}
+});
 const { SURFACE_LEVELS, SURFACES, RECIPES } = B;
 
 const DESCRIBED = [];
 for(const [id, s] of Object.entries(SURFACES)){
-  ok(Array.isArray(s.routes), `every surface declares routes: '${id}' does not`);
-  for(const r of s.routes) DESCRIBED.push({ id, route: r });
+  ok(Array.isArray(s && s.routes), `every surface declares routes: '${id}' does not`);
+  /* GUARDED 2026-08-07 (UI-49's rider): the arm above already SAYS the routes
+     array is missing, and then the line below threw on it — reporting the same
+     defect twice would be harmless, but ending the module over a defect already
+     named is how thirty later arms went unreported. */
+  for(const r of (s && Array.isArray(s.routes) ? s.routes : [])) DESCRIBED.push({ id, route: r });
 }
 console.log(`  DESCRIBED: ${Object.keys(SURFACES).length} surfaces carrying ${DESCRIBED.length} routes`);
 
 /* ------------------------------- ARM E · EQUALITY, PROVED IN BOTH DIRECTIONS
    This is the item's centre. Each direction fails on its own, naming the route,
    because "the sets differ" is not an actionable failure. */
-{
+await section("ARM E · equality in both directions", () => {
   const describedRoutes = DESCRIBED.map(d => d.route);
 
   /* E1 · a surface that EXISTS and describes nothing. */
@@ -324,13 +423,13 @@ console.log(`  DESCRIBED: ${Object.keys(SURFACES).length} surfaces carrying ${DE
     ok(!seen.has(d.route), `ARM E4: route '${d.route}' is claimed by both '${seen.get(d.route)}' and '${d.id}'`);
     seen.set(d.route, d.id);
   }
-}
+});
 
 /* ------------------------------------------- ARM L · the levels are legible
    CLAUDE.md: absence at one level is not evidence of absence at the next, so an
    answer reporting absence must name its LEVEL. A surface has to make that
    legible rather than leaving it to the caller. */
-{
+await section("ARM L · the levels are legible", () => {
   /* The vocabulary is pinned to CLAUDE.md's own sentence rather than kept as a
      fourth copy of it. Read textually, and stated as such — the same shape and
      the same caveat as check-semantics.mjs's knownSchemas pin. */
@@ -340,18 +439,25 @@ console.log(`  DESCRIBED: ${Object.keys(SURFACES).length} surfaces carrying ${DE
   eq(SURFACE_LEVELS, ["meaning", "content", "documents", "internet"],
      "ARM L1: SURFACE_LEVELS is the four levels CLAUDE.md names, in its order");
 
+  /* NULL-TOLERANT THROUGHOUT, 2026-08-07 (UI-49's rider). Every read below used
+     to throw on a surface missing `levels`, so ONE malformed surface reported
+     "declares a levels array" and hid L3, L4, L5 and L6 for every OTHER surface
+     — the failure mode that made a control breaking several arms look like a
+     control breaking one. `lv()` states the absence once and the arms carry on. */
+  const lv = (s) => (s && Array.isArray(s.levels)) ? s.levels : [];
+  const LEVELS = Array.isArray(SURFACE_LEVELS) ? SURFACE_LEVELS : [];
   for(const [id, s] of Object.entries(SURFACES)){
-    ok(Array.isArray(s.levels), `ARM L2: surface '${id}' declares a levels array`);
-    for(const l of s.levels)
-      ok(SURFACE_LEVELS.includes(l), `ARM L3: surface '${id}' declares level '${l}', which is not one of the four`);
-    ok(typeof s.purpose === "string" && s.purpose.length > 20,
+    ok(Array.isArray(s && s.levels), `ARM L2: surface '${id}' declares a levels array`);
+    for(const l of lv(s))
+      ok(LEVELS.includes(l), `ARM L3: surface '${id}' declares level '${l}', which is not one of the four`);
+    ok(typeof (s && s.purpose) === "string" && s.purpose.length > 20,
        `ARM L4: surface '${id}' says what it is for`);
   }
 
   /* Every level is reachable SOMEWHERE. A level no surface reaches is a level
      the application cannot honestly report on, and nothing else would say so. */
-  for(const l of SURFACE_LEVELS){
-    const reach = Object.entries(SURFACES).filter(([, s]) => s.levels.includes(l)).map(([id]) => id);
+  for(const l of LEVELS){
+    const reach = Object.entries(SURFACES).filter(([, s]) => lv(s).includes(l)).map(([id]) => id);
     ok(reach.length > 0, `ARM L5: no surface reaches the '${l}' level`);
   }
 
@@ -360,11 +466,11 @@ console.log(`  DESCRIBED: ${Object.keys(SURFACES).length} surfaces carrying ${DE
      capture-directed op — otherwise the claim is a surface asserting a reach it
      does not have, which is the overclaim class this project is built against. */
   for(const [id, s] of Object.entries(SURFACES)){
-    if(!s.levels.includes("internet")) continue;
-    ok((s.reads||[]).includes("acquire"),
+    if(!lv(s).includes("internet")) continue;
+    ok((s && s.reads || []).includes("acquire"),
        `ARM L6: surface '${id}' claims the internet level but holds no capture op — a surface cannot claim a reach it does not have`);
   }
-}
+});
 
 /* ============================== THE OP REGISTRY THE PLANE EMITS (SOURCING) */
 
@@ -402,24 +508,35 @@ function opsFrom(src){
 /* THE ONE PLACE any op name is resolved. Returns a list of human-readable
    failures, each naming the step or the surface AND the op, because "the sets
    differ" is not an actionable failure. */
+/* NULL-TOLERANT SINCE 2026-08-07 (UI-49's rider) AND THE REASON IS NOT
+   TIDINESS: this function is DRIVEN BY ARM S with mutated bytes, so a throw
+   inside it is a throw inside the arm whose whole subject is that the parse is
+   load-bearing. A recipe with no `steps` used to end the module here. */
 function opFailures(surfaces, recipes, planeSource){
   const ops = opsFrom(planeSource);
   const out = [];
-  for(const r of recipes)
-    for(let i = 0; i < r.steps.length; i++)
-      if(!ops.has(r.steps[i].op))
-        out.push(`RECIPES[${r.id}].steps[${i}] names op '${r.steps[i].op}', which the plane does not emit`);
-  for(const [id, s] of Object.entries(surfaces))
-    for(const op of (s.reads || []))
+  for(const r of (Array.isArray(recipes) ? recipes : [])){
+    const steps = (r && Array.isArray(r.steps)) ? r.steps : [];
+    for(let i = 0; i < steps.length; i++)
+      if(!ops.has(steps[i] && steps[i].op))
+        out.push(`RECIPES[${r && r.id}].steps[${i}] names op '${steps[i] && steps[i].op}', which the plane does not emit`);
+  }
+  for(const [id, s] of Object.entries(surfaces || {}))
+    for(const op of ((s && s.reads) || []))
       if(!ops.has(op))
         out.push(`SURFACES.${id} declares read '${op}', which the plane does not emit`);
   return out;
 }
 
-const OPS = opsFrom(planeSrc);
-/* THE ONE resolution of every op name in this file, computed once against the
-   plane's real bytes and read by ARM D3 and the recipe arms alike. */
-const liveOpFailures = opFailures(SURFACES, RECIPES, planeSrc);
+/* THE PARSE AND THE RESOLUTION, both recorded as failures rather than thrown —
+   a plane source this file cannot parse is a real and reportable fact, and it
+   used to be the last thing this suite said. */
+let OPS = new Set();
+let liveOpFailures = [];
+try{ OPS = opsFrom(planeSrc); }
+catch(e){ ok(false, `FAIL: the plane's OPS table could not be parsed — ${String((e && e.message) || e)}`); }
+try{ liveOpFailures = opFailures(SURFACES, RECIPES, planeSrc); }
+catch(e){ ok(false, `FAIL: op resolution threw — ${String((e && e.message) || e)}`); }
 console.log(`  plane OPS emitted: ${OPS.size}`);
 
 /* The parse is cross-validated against a figure measured by a DIFFERENT
@@ -427,12 +544,14 @@ console.log(`  plane OPS emitted: ${OPS.size}`);
    instruments agreeing on a number neither derived from the other is evidence;
    this arm is what would have caught the first cut of this parse, which read
    comment text and answered 58. */
-ok(OPS.size >= 131,
-   `ARM S0: the OPS parse found ${OPS.size} ops; coverage.mjs independently reported 131. A parse that answers low is reading comments, not code`);
-ok(OPS.has("search") && OPS.has("acquire") && OPS.has("publishedcase"),
-   "ARM S0b: the parse found ops known to exist by name");
-ok(!OPS.has("classes") && !OPS.has("mutating"),
-   "ARM S0c: the parse did NOT pick up the tables' own property names — that is what a comment-blind, depth-zero read is for");
+await section("ARM S0 · the op parse", () => {
+  ok(OPS.size >= 131,
+     `ARM S0: the OPS parse found ${OPS.size} ops; coverage.mjs independently reported 131. A parse that answers low is reading comments, not code`);
+  ok(OPS.has("search") && OPS.has("acquire") && OPS.has("publishedcase"),
+     "ARM S0b: the parse found ops known to exist by name");
+  ok(!OPS.has("classes") && !OPS.has("mutating"),
+     "ARM S0c: the parse did NOT pick up the tables' own property names — that is what a comment-blind, depth-zero read is for");
+});
 
 /* ---------------------------------------------------- ARM S · THE SOURCING
    THE ASSERTION THE ITEM TURNS ON, and the one that had to be rebuilt.
@@ -446,7 +565,7 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
    The words "through the very function the real run uses" are load-bearing and
    were bought with a failed control — see the note on `opFailures` above.
    Nothing on disk is touched. */
-{
+await section("ARM S · the sourcing", () => {
   /* THE REAL RUN. Zero failures against the real bytes. */
   const live = opFailures(SURFACES, RECIPES, planeSrc);
   /* THE HEADLINE NAMES THE STEP AND THE OP. `deepStrictEqual` would print them
@@ -455,8 +574,15 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
   ok(live.length === 0,
      `ARM S1: against the plane's real source, ${live.length} op name(s) do not resolve — ${live.join(" | ")}`);
 
-  const target = RECIPES[0].steps[1].op;
-  ok(OPS.has(target), `ARM S2: the recipe step's op '${target}' is emitted by the plane as it stands`);
+  /* GUARDED 2026-08-07 (UI-49's rider). `RECIPES[0].steps[1].op` threw over an
+     empty or malformed recipe set, and the arms below it — including S4, the
+     one arm in this file that can tell a hand copy apart — never ran. The
+     absence is now STATED and S2 onwards report on their own. */
+  const target = (((RECIPES || [])[0] || {}).steps || [])[1]
+              && (((RECIPES || [])[0] || {}).steps || [])[1].op;
+  ok(!!target,
+     `ARM S2a: RECIPES[0].steps[1] names an op for the sourcing arm to rename — without one, ARM S4 below cannot tell a hand-typed op list apart from a live parse`);
+  ok(!!target && OPS.has(target), `ARM S2: the recipe step's op '${target}' is emitted by the plane as it stands`);
 
   /* DERIVED, NOT TYPED. The first cut asserted `length + 26` for a suffix that
      is 23 characters long — a hand-typed constant wrong by three, in the arm
@@ -494,21 +620,22 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
   /* The plane's source is untouched on disk. Asserted rather than assumed. */
   ok(fs.readFileSync(PLANE_INDEX, "utf8") === planeSrc,
      "ARM S9: the sourcing arm left bio-plane/src/index.mjs byte-identical");
-}
+});
 
 /* -------------------------------------- ARM A · acts come from the PLANE too
    `ACTS`, `ACT_IDS` and `CAPTURE_ACTS` are IMPORTED as live module exports.
    There is no copy of the act catalogue in app.html and there must never be
    one, so this cannot drift by construction rather than by discipline. */
-{
+await section("ARM A · acts come from the plane", () => {
   const planeActs = new Set([...ACT_IDS, ...CAPTURE_ACTS.map(a => a.id)]);
   ok(planeActs.size >= 15, `ARM A0: the plane publishes ${planeActs.size} act ids (ACTS ${ACT_IDS.size} + CAPTURE_ACTS ${CAPTURE_ACTS.length})`);
   ok(ACTS.length === ACT_IDS.size, "ARM A0b: ACT_IDS is derived from ACTS and has not been hand-kept beside it");
 
   let hosted = 0;
   for(const [id, s] of Object.entries(SURFACES)){
-    ok(Array.isArray(s.acts), `ARM A1: surface '${id}' declares an acts array`);
-    for(const a of s.acts){
+    ok(Array.isArray(s && s.acts), `ARM A1: surface '${id}' declares an acts array`);
+    /* GUARDED 2026-08-07 (UI-49's rider) — see ARM L. */
+    for(const a of ((s && Array.isArray(s.acts)) ? s.acts : [])){
       hosted++;
       ok(planeActs.has(a),
          `ARM A2: surface '${id}' hosts act '${a}', which the plane's own act catalogue does not publish`);
@@ -518,31 +645,32 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
 
   /* AND THE PLANE'S ACTS ARE ALL HOUSED. An act the plane publishes that no
      surface hosts is an act a member cannot reach, and nothing else says so. */
-  const allHosted = new Set(Object.values(SURFACES).flatMap(s => s.acts));
+  const allHosted = new Set(Object.values(SURFACES).flatMap(s => (s && Array.isArray(s.acts)) ? s.acts : []));
   const homeless = [...planeActs].filter(a => !allHosted.has(a));
   ok(homeless.length === 0,
      `ARM A4: the plane publishes ${homeless.length} act(s) no described surface hosts: ${homeless.join(", ")}`);
-}
+});
 
 /* --------------------------------- ARM D · declared reads are real and reached */
-{
+await section("ARM D · declared reads are real and reached", () => {
   /* The five seams `check-mock-envelope.mjs` declares. Pinned to that file so a
      sixth seam added there cannot leave this walk reading the wrong shapes —
      two instruments over one fact, neither one holding a private copy. */
   const cme = fs.readFileSync(new URL("../check-mock-envelope.mjs", import.meta.url).pathname, "utf8");
   const seamDecl = /const SEAMS = new Set\(\[([^\]]*)\]\)/.exec(cme);
   ok(seamDecl, "ARM D0: check-mock-envelope.mjs's SEAMS declaration was found — if this fails the extraction needs updating");
-  const seams = [...seamDecl[1].matchAll(/"([a-z]+)"/gi)].map(m => m[1]);
+  /* GUARDED 2026-08-07 (UI-49's rider): D0 already SAYS the declaration was not found, and then this line threw on it, taking D1..D5 with it. */
+  const seams = [...String(seamDecl ? seamDecl[1] : "").matchAll(/"([a-z]+)"/gi)].map(m => m[1]);
   ok(seams.length >= 4, `ARM D0b: ${seams.length} transport seams read from check-mock-envelope.mjs (${seams.join(", ")})`);
 
-  const callRe = new RegExp(`\\b(?:${seams.join("|")}|apiR|apiQ|intentPreflight)\\(\\s*"([a-z]+)"`, "g");
+  const callRe = new RegExp(`\\b(?:${(seams.length ? seams : ["recR"]).join("|")}|apiR|apiQ|intentPreflight)\\(\\s*"([a-z]+)"`, "g");
   const called = new Set([...code.matchAll(callRe)].map(m => m[1]));
   ok(called.size >= 50, `ARM D1: ${called.size} ops are called statically from app.html, floor 50 — an empty call set would make D3 vacuous`);
 
   let declared = 0;
   for(const [id, s] of Object.entries(SURFACES)){
-    ok(Array.isArray(s.reads), `ARM D2: surface '${id}' declares a reads array`);
-    for(const op of s.reads){
+    ok(Array.isArray(s && s.reads), `ARM D2: surface '${id}' declares a reads array`);
+    for(const op of ((s && Array.isArray(s.reads)) ? s.reads : [])){
       declared++;
       /* Resolved through `opFailures`, the SAME function ARM S drives with
          mutated bytes, so there is exactly one path from a declared op name to
@@ -553,22 +681,31 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
     }
   }
   ok(declared >= 30, `ARM D5: ${declared} reads are described, floor 30`);
-}
+});
 
 /* ================================================= RECIPES ARE DATA, VALIDATED */
-{
+await section("RECIPES are data, validated", () => {
   ok(Array.isArray(RECIPES) && RECIPES.length >= 1, "ARM P0: at least one recipe is authored");
+  /* GUARDED THROUGHOUT 2026-08-07 (UI-49's rider). `r.steps.length` and
+     `SURFACES[st.surface].levels` both threw over a recipe this file's own arms
+     had ALREADY reported as malformed — so P3 named one broken recipe and P4,
+     P5 and P6 never ran for any of the others. `stepsOf` and `surfOf` state the
+     absence once and let every remaining recipe be judged. */
+  const RECIPE_LIST = Array.isArray(RECIPES) ? RECIPES.filter(r => r && typeof r === "object") : [];
+  const stepsOf = (r) => (r && Array.isArray(r.steps)) ? r.steps.map(s => s && typeof s === "object" ? s : {}) : [];
+  const surfOf = (st) => (SURFACES && SURFACES[st && st.surface]) || {};
   const ids = new Set();
   let steps = 0;
-  for(const r of RECIPES){
+  for(const r of RECIPE_LIST){
     ok(typeof r.id === "string" && r.id.length > 3, "ARM P1: every recipe has an id");
     ok(!ids.has(r.id), `ARM P1b: recipe id '${r.id}' is declared twice`);
     ids.add(r.id);
     ok(typeof r.goal === "string" && r.goal.length > 10, `ARM P2: recipe '${r.id}' states its goal`);
     ok(Array.isArray(r.steps) && r.steps.length >= 2, `ARM P3: recipe '${r.id}' is an ORDERED LIST of steps, not prose`);
 
-    for(let i = 0; i < r.steps.length; i++){
-      const st = r.steps[i]; steps++;
+    const ss = stepsOf(r);
+    for(let i = 0; i < ss.length; i++){
+      const st = ss[i]; steps++;
       /* THE TWO BUILD-FAILING RESOLUTIONS, each naming the step AND the thing. */
       ok(Object.prototype.hasOwnProperty.call(SURFACES, st.surface),
          `RECIPES[${r.id}].steps[${i}] names surface '${st.surface}', which is not a described surface`);
@@ -584,8 +721,10 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
   /* ARM P5 · A RECIPE MAY NOT CLAIM A REACH ITS OWN STEPS DO NOT HAVE. The
      levels a recipe can honestly answer at are DERIVED from the surfaces it
      visits, never declared beside them, so the two cannot disagree. */
-  for(const r of RECIPES){
-    const answers = [...new Set(r.steps.flatMap(s => SURFACES[s.surface].levels))];
+  for(const r of RECIPE_LIST){
+    const answers = [...new Set(stepsOf(r).flatMap(s => {
+      const L = surfOf(s).levels; return Array.isArray(L) ? L : [];
+    }))];
     if(r.intent === "FIND")
       ok(answers.length > 0,
          `ARM P5: recipe '${r.id}' is a FIND but every surface it visits reaches NO level — it could never honestly report an absence`);
@@ -593,26 +732,32 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
 
   /* ARM P6 · a step naming a surface with `pending` content cannot be relied on
      to answer anything, because the thing that publishes it does not exist. */
-  for(const r of RECIPES)
-    for(let i = 0; i < r.steps.length; i++)
-      ok(!SURFACES[r.steps[i].surface].pending,
-         `ARM P6: RECIPES[${r.id}].steps[${i}] routes through '${r.steps[i].surface}', whose content is still unpublished`);
-}
+  for(const r of RECIPE_LIST){
+    const ss = stepsOf(r);
+    for(let i = 0; i < ss.length; i++)
+      ok(!surfOf(ss[i]).pending,
+         `ARM P6: RECIPES[${r.id}].steps[${i}] routes through '${ss[i].surface}', whose content is still unpublished`);
+  }
+});
 
 /* ============ THE ONCE-ONLY RUNNING-SESSION SURFACE (E10) ============
    This is where the two halves of UI-38 SHARE ONE SURFACE rather than growing
    two: the running-session surface is an entry in the same registry as every
    other surface, walked by the same three arms, and its `kind` is what makes
    "designed once for all AI features" a build failure rather than a promise. */
-{
-  const aiKind = Object.entries(SURFACES).filter(([, s]) => s.kind === "ai-session");
+await section("ARM X · the once-only running-session surface", () => {
+  const aiKind = Object.entries(SURFACES).filter(([, s]) => s && s.kind === "ai-session");
   ok(aiKind.length === 1,
      `ARM X1: THERE IS EXACTLY ONE RUNNING-SESSION SURFACE. Found ${aiKind.length} (${aiKind.map(a=>a[0]).join(", ")}) — a second AI feature growing a second surface is the mirror-and-drift class arriving at the UI layer, and §14a says this surface is designed ONCE for every AI-based function.`);
 
-  const [aiId, ai] = aiKind[0];
+  /* GUARDED 2026-08-07 (UI-49's rider): destructuring `aiKind[0]` threw when
+     there was no such surface, so X1 reported the absence and X2..X5 — four
+     further facts about the SAME defect — were never reached. */
+  const [aiId, ai] = aiKind[0] || ["(no ai-session surface)", {}];
+  const consumers = Array.isArray(ai.consumers) ? ai.consumers : [];
   ok(Array.isArray(ai.consumers) && ai.consumers.length >= 2,
-     `ARM X2: '${aiId}' names the features that share it (${(ai.consumers||[]).join(", ")}) — one consumer would mean it had not been shared`);
-  ok(ai.consumers.includes("assistant") && ai.consumers.includes("investigative-session"),
+     `ARM X2: '${aiId}' names the features that share it (${consumers.join(", ")}) — one consumer would mean it had not been shared`);
+  ok(consumers.includes("assistant") && consumers.includes("investigative-session"),
      "ARM X3: the assistant pilot and the investigative session are BOTH consumers of the one surface");
 
   /* ARMS X4 AND X5 ARE CORRECTED 2026-08-07 (UI-47), NOT EXEMPTED, AND THE
@@ -642,12 +787,15 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
      "ARM X4b: and as of IS-6 it is the naming side — the run is published, so the gap is closed rather than declared");
   eq(ai.reads, ["airun"],
      "ARM X5 (corrected 2026-08-07, UI-47): the surface reads `op=airun` and NOTHING ELSE. The once-only surface renders ONE run record; the observation log (`op=airunlog`) is a different read for a different question, and the transcript is never asked of the plane at all (DEC-61). That the op is real is not asserted here — ARM D3 resolves it through `opFailures` against the plane's own source, the same function ARM S drives with mutated bytes.");
-}
+});
 
 /* ---- ARM Y · the renderers. Driven as pure functions over published records. */
-{
-  const src = /\/\*__AI_SESSION_START__\*\/([\s\S]*?)\/\*__AI_SESSION_END__\*\//.exec(app);
-  ok(src, "ARM Y0: the AI_SESSION block markers were found in app.html");
+await section("ARM Y · the renderers", async () => {
+  const srcM = /\/\*__AI_SESSION_START__\*\/([\s\S]*?)\/\*__AI_SESSION_END__\*\//.exec(app);
+  ok(srcM, "ARM Y0: the AI_SESSION block markers were found in app.html");
+  /* GUARDED 2026-08-07 (UI-49's rider): `src[1]` on a null match threw, and the
+     twenty-odd renderer arms below never ran. */
+  const src = srcM || [null, ""];
   ok(src[1].length > 1000, `ARM Y0b: the AI_SESSION block is ${src[1].length} chars — an empty block would make every arm below vacuous`);
 
   /* THE ASKED-OPS RECORDER. `recR` is the block's one door to the plane, and
@@ -808,10 +956,10 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
      "ARM Y16: a principal shape the author never wrote still names who pays");
   ok(A.aiSessionPanelHtml(alien, null).includes("ceiling"),
      "ARM Y17: the whole panel composes over an unfamiliar shape");
-}
+});
 
 /* ---- ARM N · THE REGISTRY IS NOT MEMBER-FACING, so DEC-49 is not preempted */
-{
+await section("ARM N · the registry is not member-facing", () => {
   /* Nothing in the SURFACES block is rendered. The `purpose` strings are
      DOCUMENTATION for the assistant's training pack, and the proof is that no
      render path reads them: `SURFACES` and `RECIPES` are referenced nowhere
@@ -826,18 +974,83 @@ ok(!OPS.has("classes") && !OPS.has("mutating"),
      `ARM N1: the registry is read by NO render path (${refs.length} reference(s) outside its own block) — its purpose strings are documentation, so no member-facing wording DEC-49 would decide has been authored here`);
   ok(afterBlock.length > 100000,
      `ARM N2: the "outside the block" corpus is ${afterBlock.length} chars — an empty corpus would make N1 pass over nothing`);
-}
+});
 
 /* ---- ARM V · refusal text is SURFACED, never COPIED
    The plane's ~305 teaching-grade `detail:` strings are the assistant's answer
    key and are to be surfaced VERBATIM. A COPY of one in this runtime is the
    drift hazard, not the fidelity: the copy is what goes stale. */
-{
+await section("ARM V · refusal text is surfaced, never copied", () => {
   const planeDetails = [...planeSrc.matchAll(/detail:\s*"([^"]{50,})"/g)].map(m => m[1]);
   ok(planeDetails.length >= 20, `ARM V0: ${planeDetails.length} long detail strings read from the plane, floor 20 — an empty corpus would make V1 vacuous`);
   const copied = planeDetails.filter(d => app.includes(d));
   ok(copied.length === 0,
      `ARM V1: ${copied.length} of the plane's own refusal explanations are COPIED into app.html: ${copied.slice(0,2).join(" | ")}`);
+});
+
+/* ============================================================
+   ARM Z · THE HARNESS ITSELF ACCUMULATES — UI-49's RIDER, PROVED IN-SUITE ON
+   EVERY RUN RATHER THAN ONLY WHEN SOMEBODY REMEMBERS TO BREAK SOMETHING.
+
+   The rider is *make it accumulate*, and the acceptance is *proved by a control
+   that breaks SEVERAL arms and requires ALL of them to report*. That control is
+   RUN against the real registry and recorded in this file's NEGATIVE CONTROL
+   header. This arm is the half that runs unattended: it drives the SAME `ok`,
+   `eq` and `section` machinery every arm above went through — a second, gentler
+   collector built here would be an instrument testing itself — and requires
+   that several failures and a THROW all report, instead of the first one
+   ending the file.
+
+   IT IS ALSO A POLARITY CHECK IN BOTH DIRECTIONS: passing checks must not be
+   counted as failures, or "everything reports" would be satisfied by a
+   collector that simply calls everything broken. */
+{
+  const REAL_FAILS = fails.length;   /* the file's own state, restored below */
+  const REAL_N = n;
+  const probe = [];
+  const pushed = (m) => probe.push(m);
+  /* THE SAME FUNCTIONS. `fails` is the array `ok`/`eq`/`section` write to, so
+     driving them here writes into it — and the arm reads what THEY wrote and
+     then puts the file's own tally back exactly as it found it. */
+  const silence = console.error; console.error = () => {};
+  try{
+    ok(false, "ARM Z probe 1 — a failing check");
+    ok(false, "ARM Z probe 2 — a SECOND failing check, which a throwing assert would never have reached");
+    eq([1, 2], [1, 3], "ARM Z probe 3 — a failing deep comparison");
+    ok(true,  "ARM Z probe 4 — a PASSING check, which must not be counted as a failure");
+    await section("ARM Z probe section", () => { throw new TypeError("probe: reading 'steps' of undefined"); });
+    ok(false, "ARM Z probe 5 — a check AFTER a section threw");
+  } finally { console.error = silence; }
+  for(const m of fails.slice(REAL_FAILS)) pushed(m);
+  /* RESTORE, so this arm's deliberate failures do not fail the file. The
+     restore is by SLICE rather than by count, and the arm below re-reads the
+     array to prove it actually happened — a control that left the collector
+     dirty would turn every future run red for the wrong reason. */
+  fails.length = REAL_FAILS;
+  n = REAL_N;
+
+  const namedAll = ["probe 1", "probe 2", "probe 3", "probe 5"]
+    .filter(t => probe.some(m => m.includes(t)));
+  ok(namedAll.length === 4,
+     `ARM Z1: FIVE failures were driven through this file's OWN collector and ${namedAll.length} of the 4 non-section ones reported (${namedAll.join(", ") || "none"}). `
+     + `Before 2026-08-07 this file's \`ok\` was \`assert.ok\`, so probe 1 would have ended the module and probes 2, 3 and 5 would never have been seen — `
+     + `which is exactly what CONDUCT observed at UI-47's integration, where a control breaking several arms reported only ARM D4.`);
+  ok(probe.some(m => m.includes("SECTION 'ARM Z probe section' THREW")),
+     "ARM Z2: AND A THROW IS RECORDED AS A FAILURE NAMING ITS SECTION rather than ending the file — an accumulating `ok` alone does not fix this, because a TypeError never goes through `ok` at all, and six of this file's own walks could raise one over a malformed registry");
+  ok(probe.some(m => m.includes("probe 5")),
+     "ARM Z3: and the checks AFTER the throwing section still ran — the firebreak is what makes 'all arms report' true rather than 'all arms up to the first crash'");
+  ok(!probe.some(m => m.includes("probe 4")),
+     "ARM Z4 (polarity): the PASSING check was not counted as a failure — otherwise 'everything reports' would be satisfied by a collector that calls everything broken");
+  ok(fails.length === REAL_FAILS,
+     `ARM Z5: the probe left the file's own tally exactly as it found it (${fails.length} vs ${REAL_FAILS}) — a control that dirtied the collector would turn later runs red for a reason that has nothing to do with the registry`);
+  console.log(`  ARM Z: ${probe.length} deliberate failures reported by this file's own collector across ${SECTIONS.length} firebreaked sections`);
 }
 
-console.log(`surface-registry.test.mjs: ${n} pass`);
+console.log(`  sections run: ${SECTIONS.length} — ${SECTIONS.join(" | ")}`);
+console.log(`surface-registry.test.mjs: ${n - fails.length} pass, ${fails.length} fail`);
+if(fails.length){
+  console.error(`\nsurface-registry: ${fails.length} of ${n} assertions FAILED — ALL of them are listed above and again here, `
+    + `because this suite's whole rider is that the first failure must not hide the rest:`);
+  for(const f of fails) console.error("  - " + f);
+  process.exit(1);
+}

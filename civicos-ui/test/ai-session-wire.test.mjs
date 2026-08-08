@@ -7,6 +7,7 @@
    (5) A SECOND OP ASKED FROM THE BLOCK (DEC-61's real rule). Add `await recR("airunlog", {run:id})` beside the run read -> `surface-registry.test.mjs` ARM Y1 fails (*one call, op=airun, and nothing else*), with ARM Y14's op-set pin behind it.
    (6) THE STALE REGISTRY ENTRY RESTORED — `reads: []` with `pending: {publishers:["IS-6","IS-9"]}` -> `surface-registry.test.mjs` ARM X4b fails: the surface would be advertising a gap that has closed.
    (6b) A SECOND SURFACE RENDERS THE RUN — the CLASS control, and the one that reaches past this single read. Add `function someOtherScreenShowsTheRun(s){ return aiSessionPanelHtml(s, null); }` immediately after the block's END marker -> 1 FAIL / 69 pass: ARM C2, naming that a path outside the swept functions can now put run data in front of a member. `SURFACES["ai-session"].kind` guards the REGISTRY against a second AI-session surface; this guards the CODE, one layer below it.
+   (6c) UI-49, 2026-08-07 — **ARM C2 IS SUPERSEDED AND CORRECTED IN PLACE WITH A DATED REASON, NEVER EXEMPTED.** It forbade ANY call to the block's renderers from outside the block, which was true when written — and UI-47's own sweep is what found out WHY: `aiSessionIndicatorHtml` had NO CALL SITE AT ALL, so §14a's promise was undelivered. UI-49 adds exactly the call C2 forbade; left standing it would have made delivering the promise FAIL THE BUILD. The replacement is NARROWER rather than weaker — the outside world may call ONE named door (`aiSessionContextHtml`) and none of the raw renderers — and **ARM C3 is new and is what stops C2 from passing because nothing outside renders a run at all**, which is the state UI-47 measured. **BOTH CONTROLS RUN 2026-08-07 through the whole harness, app.html restored and verified by CONTENT and sha256 after each:** removing the call from BOTH windows -> this suite fails 1 (ARM C3) and `ai-session-context.test.mjs` fails 20 INDEPENDENTLY, naming each window; adding `aiSessionPanelHtml(null, null)` to `openBundle` — a window reaching PAST the door — -> this suite fails 1 (ARM C2) and nothing else in the harness notices, which is exactly the containment this arm exists to hold. ARM V's vocabulary is also WIDENED to include `RUN_STATUS`, because UI-49 gave the indicator's animation a source and the natural wrong way to do that would have been a `=== "running"` inside this block.
    (7) POLARITY was confirmed on every pin: GREEN with the tree intact FIRST, then RED with the defect, never the reverse. ARM N5 and ARM V2 are the in-suite polarity arms and run on every pass.
    (8) OVER-STRICTNESS, IN-SUITE AND ON EVERY RUN: ARM O drives a run record shaped unlike anything this file writes — `{meter, ceiling, spent_so_far}` and `{paid_by, who}` — and requires it to RENDER, judged by the SAME function ARM W used rather than by a second, gentler one.
    (9) THE HAND COPY, IN-SUITE AND ON EVERY RUN: ARM W6 runs a hand-authored record through the SAME `wireFailures` the real record passed, and it must FAIL. It also PRINTS what the hand copy gets for free — measured at 3 of 12 top-level values (`id`, `status`, `ticks`), which are real vocabulary rather than instance data — so the arm names what a hand copy cannot know instead of counting how much it got wrong. */
@@ -83,7 +84,7 @@ import { appScript } from "./extract.mjs";
 /* THE VOCABULARIES, LIVE-IMPORTED. Not read as text and not copied: if IS-6
    renames a bound, this import moves with it and ARM V keeps meaning the same
    thing. */
-import { RUN_BOUNDS, RUN_ENDINGS, OBSERVATION_STATES, OBSERVATION_LEVELS }
+import { RUN_BOUNDS, RUN_ENDINGS, OBSERVATION_STATES, OBSERVATION_LEVELS, RUN_STATUS }
   from "../../bio-plane/src/airun.mjs";
 
 let n = 0; const fails = [];
@@ -690,11 +691,19 @@ console.log("\n--- ARM V · no branch could render a word the record did not sen
      widened's opposite done to it soon enough. The containment that makes the
      narrow scope SOUND is not assumed either: ARM C measures that nothing
      outside the block can render run data at all. */
+  /* `RUN_STATUS` ADDED 2026-08-07 (UI-49). The item gave the indicator's
+     animation a SOURCE — the record's own status word, carried verbatim into a
+     `data-status` attribute — and the natural wrong way to do that would have
+     been `if(session.status === "running")` inside this block. Widening the walk
+     is what makes the right way structural rather than remembered: the word
+     lives in one CSS rule and `ai-session-context.test.mjs` pins THAT against
+     this same live export, so the plane renaming it fails the build. */
   const terms = [
     ...Object.keys(RUN_BOUNDS), ...Object.values(RUN_BOUNDS),
     ...Object.keys(RUN_ENDINGS), ...Object.values(RUN_ENDINGS),
     ...Object.keys(OBSERVATION_STATES), ...Object.values(OBSERVATION_STATES),
     ...Object.keys(OBSERVATION_LEVELS), ...Object.values(OBSERVATION_LEVELS),
+    ...Object.keys(RUN_STATUS),
   ];
   console.log(`  ARM V corpus: ${stripped.length} chars of comment-stripped block against ${terms.length} live-imported vocabulary terms`);
   ok(`ARM V0 (REACH): ${terms.length} vocabulary terms were imported live from the plane, floor 20 — an empty `
@@ -738,14 +747,43 @@ console.log("\n--- ARM C · nothing outside the block can render run data ---");
      + "would be a second AI-session surface grown in code while the registry still asserted there was one",
      runOpsOutside, []);
 
-  /* (b) NO OTHER FUNCTION RENDERS ONE. */
+  /* (b) NO OTHER FUNCTION RENDERS ONE — AND ARM C2 IS CORRECTED 2026-08-07
+     (UI-49), NOT EXEMPTED, BECAUSE IT WAS RIGHT WHEN WRITTEN AND IS NOW THE
+     WRONG RULE.
+
+     It read: none of the block's renderers is called from outside the block.
+     That was true, and UI-47's own sweep is what discovered WHY — the indicator
+     had NO CALL SITE AT ALL, so §14a's actual promise (*any window focused on an
+     inquiry or project shows an animated indicator that a job is running*) was
+     undelivered. UI-49 exists to add exactly the call this arm forbade. Left
+     standing it would have made delivering the promise FAIL THE BUILD, which is
+     the inversion CLAUDE.md's correct-superseded-tests rule exists to prevent.
+
+     WHAT REPLACES IT KEEPS THE CONTAINMENT AND IS NARROWER RATHER THAN WEAKER:
+     the outside world may call ONE named entry point, `aiSessionContextHtml`,
+     and NONE of the raw renderers. Everything a member can see still goes
+     through the functions this suite sweeps, because that one door composes
+     them; what changes is that there is now a door at all, and it is named. A
+     window reaching past it to `aiSessionPanelHtml` — the shape that would let
+     run data onto a screen this sweep never drove — still fails. */
+  const DOOR = "aiSessionContextHtml";
   const rendererNames = ["aiSessionRead", "aiSessionPanelHtml", "aiSessionIndicatorHtml", "aiSessionBudgetHtml",
                          "aiSessionPrincipalHtml", "aiSessionConditionHtml"];
   const calledOutside = rendererNames.filter(f => new RegExp(`\\b${f}\\s*\\(`).test(outside));
-  eq("ARM C2: and none of the block's renderers is called from outside it, so every path that can put run data in "
-     + "front of a member goes through the functions this suite swept", calledOutside, []);
+  eq("ARM C2 (corrected 2026-08-07, UI-49): none of the block's RAW renderers is called from outside it — every path "
+     + "that can put run data in front of a member goes through the functions this suite swept, and since UI-49 it "
+     + "reaches them through ONE named door rather than not at all", calledOutside, []);
   ok(`ARM C2b (polarity): the same matcher DOES find those calls inside the block — ${rendererNames.filter(f => new RegExp(`\\b${f}\\s*\\(`).test(blockM[1])).length} of ${rendererNames.length} — so C2's empty answer is a measurement rather than a broken regex`,
      rendererNames.filter(f => new RegExp(`\\b${f}\\s*\\(`).test(blockM[1])).length >= 4);
+  /* AND THE DOOR IS REAL, WHICH IS WHAT STOPS C2 FROM PASSING BECAUSE NOTHING
+     OUTSIDE RENDERS A RUN AT ALL — the state UI-47 measured and UI-49 fixed.
+     `ai-session-context.test.mjs` names WHICH WINDOWS call it; this arm only
+     requires that the containment has an opening rather than being a wall. */
+  ok(`ARM C3 (UI-49): the one door '${DOOR}' IS called from outside the block — a containment arm that passed because `
+     + `nothing outside renders a run is exactly the undelivered promise UI-47's sweep found, and it must not read as clean`,
+     new RegExp(`\\b${DOOR}\\s*\\(`).test(outside));
+  ok(`ARM C3b: and the door is DECLARED inside the block, so the composition it performs is swept with everything else`,
+     new RegExp(`function\\s+${DOOR}\\s*\\(`).test(blockM[1]));
 }
 
 /* ============================================================
