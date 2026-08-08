@@ -3342,3 +3342,87 @@ UI-48's WALK 1 run (the plane's own roster, read off `store.mjs` and printed eve
 - `SURFACES.subjects` and `SURFACES.finder` both name `concerns`; `progressions` is the odd one out.
 - **UI-48 did not add it**, because `surface-registry.test.mjs` is not in this item's claim and its ARM A drives the declaration in both directions — adding a row without running that arm's sourcing control is how a registry becomes a hand-typed list again.
 - **Reversal cost: none.** One array entry.
+
+## CLAIM 2026-08-08 UI
+session: ui50-wrong-predecessor
+opened: 2026-08-08T00:00:00Z
+paths: `civicos-ui/app.html` (`heldMatch`'s ADDRESS arm only — the hash arm, `addGo`, the bundle sentence's shape and every other function are untouched; plus the REC-70 rider, four words of a comment block at `:16141`), `civicos-ui/test/version-predecessor.test.mjs` (NEW — the item's suite and its class sweep), `civicos-ui/test/bound-sweep.test.mjs` (ARM A's header note and ARM A2's router only — ARM A2 now needs `op=versionchain` mocked because the changed-from sentence is composed off it, which IS the item), `civicos-ui/test/version-predecessor.control.mjs` (NEW — the negative-control driver, deliberately NOT a `.test.mjs`: it EDITS `app.html` while it runs and `test/run.mjs` must not discover it), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `docs/development/DEBT.md` (the **D-221** disposition cell, which this closes, and ONE new row **D-236** for the sentences already written), `docs/development/kickoffs/UI.md` (APPENDED to, never rewritten — several UI workers are live — one "Decisions for Bob" section).
+**NOT OPENED:** nothing under `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/test/`, `newgroup/`, `pdf-worker/`, `agent-worker/` or `release/`. **`op=versionchain` is CALLED, never changed** — PL-10 built the join and the op and proved both; this item makes the writer use it. `bio-plane/src/store.mjs` and `src/query.mjs` are READ TEXTUALLY by the class sweep, exactly as `bound-sweep.test.mjs` already reads them, and no plane file is written. Every other `civicos-ui/test/*.test.mjs` is READ ONLY.
+interfaces consumed: I3 (`op=versionchain`, I3 10.2.0, landed by PL-10). interfaces owned: none. No op added, no check minted, no schema touched, no refusal code named in `app.html` (so the DEC-49 guard's reach does not move).
+expected: **UI-50** — `heldMatch` composed the *"changed from"* sentence, PERMANENTLY WRITTEN INTO THE BUNDLE, off the FIRST row of a `locator:"<url>"` FULL-TEXT query, which is bm25-ordered over rows whose URL text is identical; PL-10 measured it returning the OLDEST version at the address over sixty. The address arm now asks `op=versionchain` and takes the LAST version in `first_retrieved` order as the predecessor. Plus a class SWEEP for the sites that pick ONE row out of a relevance-ordered answer and compose a sentence, a field or a link from it.
+concurrency: checked over the whole file. No live claim names `civicos-ui/test/version-predecessor.test.mjs`. UI-48's claim names `civicos-ui/app.html` and `civicos-ui/test/bound-sweep.test.mjs` and its `released:` line is BLANK — but its work is MERGED at `bf69c27` (`conduct: UI-48 integrated`), which is this worktree's HEAD, so it is the same stale-but-landed shape UI-48's own claim recorded about UI-52. Named here rather than assumed away.
+released: 2026-08-08 — committed on branch `worktree-agent-a773e28c7c7d0fb8b`, NOT pushed and NOT merged; CONDUCT integrates. **THE JOIN ALREADY EXISTED: PL-10 built and proved it, and this item's work was making the writer use it.** `heldMatch`'s address arm asks `op=versionchain` for the chain's `total` and seeks the LAST version at `offset = total - 1`; that version is the predecessor of a capture not yet written. `at=<sha>` is NOT used and the reason is MEASURED rather than preferred — the chain joins `register`, whose row `op=promote` writes, so at this moment the fresh capture is not in the chain and cannot be an anchor. The paged `op=search` walk survives as an IDENTITY-ONLY backstop (hash equality, order-free) for a bundle registered without a `captured_locators` row. NEW `civicos-ui/test/version-predecessor.test.mjs` (41 assertions) driving the REAL `addGo` over SIXTY chain lengths with ground truth computed in JavaScript and never read back from the op, the trap proved armed on every subset. **BATTERY BASELINE MEASURED IN THIS WORKTREE and it AGREED with the brief: 123 suites (120 plane + 3 fleet) · 123/123 green · 7,752 assertions · NO skip.** The worktree arrived without `bio-plane/node_modules`; `npm ci` was run there first. FINAL 123/123 · **7,753**, delta **+1 ATTRIBUTED**: `planning-hygiene.test.mjs` 270 -> 271, one new DEBT row (D-236), measured by re-running that suite alone; every other suite byte-identical, and the TRUE baseline re-run with this item's files removed reported 7,752. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` UNPIPED, **exit 0**, unchanged (OPS 158/158 · CHECKS 160/160 · controls 120/120, 471 arms · FLEET 2 members / 4 ops). `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **exit 0**; `bound-sweep.test.mjs` stays at 202 assertions. `check-refusal-codes` floors did NOT move and the figures were READ OFF THE GUARD rather than predicted: **REACH stayed 191**, while its components moved R2 50 -> 51 and R3 66 -> 68 — the two `VERSION_CHAIN_*` literals this item added (one in an `app.html` comment, two in the new suite) are already R1 family rows, so they joined two matchers without joining the union. *(A first draft of this line said the reach grew to 194. It was wrong, and it was caught by reading the guard's own output — which is the failure this project names most often, arriving inside the sentence claiming to have measured.)* No refusal code is keyed on in `app.html`'s executable code. **8 NEGATIVE-CONTROL ARMS RUN** through `test/version-predecessor.control.mjs`, each armed ALONE with the others held open, declared before arming, restores verified by sha256 AND `cmp` against a per-arm pristine copy named with the ARM ID as well as the path, plus a pristine-of-record taken before any arm — final 8/8 as declared, and **TWO were NOT as declared on their first run and are recorded in that driver's header rather than smoothed away** (an arm that could never have been honoured, and an arm whose declared pin was overtaken by the licence FLOOR). A BASELINE arm is included. D-221 CLOSED; **D-236 raised for the sentences already written**, with the decision written up for Bob in `kickoffs/UI.md` and a DELEGATION to RECORD below. **AND A DELEGATION TO CONDUCT: another session is working in THIS worktree** (D-228's `query.mjs` work), which cost two false battery readings and a `git stash` collision — nothing was lost, the other session's stash was restored unchanged and sits at `stash@{0}` of this worktree; do not discard it.
+
+### DELEGATION 2026-08-08 UI (UI-50) -> RECORD: **THE WRONG "CHANGED FROM" SENTENCES ARE STILL IN THE RECORD, AND EVERY ONE OF THEM IS DECIDABLE TODAY**
+
+UI-50 closed D-221 — `heldMatch` now asks `op=versionchain` and names the version that
+actually preceded the capture. **The fix does not reach backwards.** Every bundle written
+by the pre-2026-08-08 `addGo` whose body carries *"The record already holds an earlier
+capture of this same address (`<ID>`)"* had that `<ID>` chosen by bm25 tiebreak among rows
+with identical url text, and PL-10 measured that answer coming back as the OLDEST version
+at the address. The sentence is in the bundle body and is permanent there.
+
+- **The set is enumerable and each member is decidable, which is what makes this a task
+  and not a regret.** The sentence has ONE fixed literal shape, so the bundles carrying it
+  are findable; each names its own address and its own capture; and — unlike at write time —
+  **the capture is now IN the register, so `op=versionchain&address=&at=<that capture>`
+  answers with the TRUE `predecessor` for it.** `at` works here precisely where it did not
+  work in the writer, and that is the whole reason this is cheap.
+- **Three outcomes, and they must be reported separately:** (a) PROVABLY WRONG — the chain
+  names a different predecessor; (b) PROVABLY RIGHT — the address held exactly one prior
+  version, where the two routes cannot disagree; (c) UNDETERMINED — the chain holds no
+  version at that address (a bundle registered without a `captured_locators` row), where
+  the record can only say it cannot check. **Collapsing (a) and (c) into one number would
+  be this defect's own mistake repeated.**
+- **Why UI-50 did not do it, and it is not scope-avoidance.** Every act it needs is outside
+  `civicos-ui/**`: a read over bundle BODIES that no surface has, a WRITE to bundles already
+  in the record, and a member-facing correction sentence DEC-49 owns. A UI worker doing any
+  of the three would be authoring the record's own correction from the surface.
+- **Correction moves FORWARD (DEC-19).** Rewriting the bodies is not available and is not
+  being asked for. The decision — appended correction per bundle, or one published report —
+  is Bob's and is written up in `kickoffs/UI.md` under "Decisions for Bob", with the
+  recommendation that the ENUMERATION runs first because the ruling should be made with the
+  size of the *provably wrong* set in front of it.
+- **Raised as `D-236`.** The number was measured free at the moment of writing (D-235 is
+  REC-75's, landed hours earlier); a parallel slot taking it at the same moment is CONDUCT's
+  renumber, not this session's error.
+
+### DELEGATION 2026-08-08 UI (UI-50) -> CONDUCT: **ANOTHER SESSION IS WORKING IN THIS WORKTREE, AND IT COST A MEASUREMENT BEFORE IT WAS NOTICED**
+
+**MEASURED, not inferred.** Two battery runs from this worktree reported **124 suites ·
+7,811 assertions** and **123 · 7,806** while a foreground run minutes later, and the true
+baseline with this item's files removed, both reported **123 · 7,752**. The difference was
+not this item: `bio-plane/src/query.mjs`, `src/schema.mjs`, `scripts/coverage.mjs`,
+`test/query.test.mjs`, `test/search.test.mjs`, `test/meaningquery.test.mjs`,
+`test/hygiene.test.mjs`, `DEBT.md`, `MEASUREMENTS.md`, `VERIFICATION.md` and `CLAIMS.md`
+were modified in this tree by **another session working on D-228** (the quoted-value defect
+in `query.mjs`), and an UNTRACKED plane suite `bio-plane/test/machinefences-dec49.test.mjs`
+(57 assertions) appeared in `bio-plane/test/` and later vanished.
+
+- **`CLAUDE.md` says ONE SESSION PER WORKING TREE, no exceptions**, and `PARALLELISM.md`
+  records what two sessions in one tree cost the day it last happened. A claim reserves
+  PATHS between checkouts and does nothing about two sessions writing one tree.
+- **It also produced a `git stash` collision, and it is recorded because it nearly ate
+  somebody's work.** UI-50 stashed its own three files to measure the true baseline; the
+  other session pushed a stash in between; `git stash pop` therefore popped THEIRS. The
+  other session's changes were captured to a patch, RE-STASHED unchanged with a message
+  naming what happened, and UI-50's own stash was then popped by explicit index and
+  verified byte-identical against copies taken before any git operation. **Nothing was
+  lost, and that was diligence rather than luck — but the next collision is a merge or a
+  force.**
+- **What is owed:** whoever is running the D-228 item needs its own worktree, and its
+  `CLAIMS.md` entry does not yet appear on disk in a form this session could see (its claim
+  is inside the stash, which is exactly why the collision was invisible until it happened).
+- **For the integrator specifically:** this item's `CLAIMS.md` and `DEBT.md` edits and the
+  D-228 session's are in the same files. The D-228 session's were held in `stash@{0}` of this
+  worktree; **by the end of this session that stash was gone from `git stash list` and its
+  content was in neither the working tree nor any commit here.** It is not lost and here is
+  exactly where it is, because a recovery instruction that lives only in a report is not a
+  channel: the stash commit is UNREACHABLE-BUT-PRESENT in this worktree's object store at
+  **`8706832`** (`git show 8706832`, `git stash apply 8706832`), and a plain diff of the same
+  eleven files was written to this session's scratchpad as `OTHER-SESSION-changes.patch`.
+  **Recover it before this worktree is pruned** — an unreachable object survives only until
+  `git gc`. The eleven files are `bio-plane/src/query.mjs`, `src/schema.mjs`,
+  `scripts/coverage.mjs`, `test/query.test.mjs`, `test/search.test.mjs`,
+  `test/meaningquery.test.mjs`, `test/hygiene.test.mjs`, `docs/development/DEBT.md`,
+  `MEASUREMENTS.md`, `VERIFICATION.md` and `CLAIMS.md`.

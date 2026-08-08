@@ -148,3 +148,46 @@ shape `kickoffs/README.md` defines. Read its three tests before writing an item.
 An empty list is a real answer. At the close, rewrite ONLY this file for the
 session after; append to `DEBT.md` and `MEASUREMENTS.md`, prepend to
 `CIVICOS_UI_STATE.md`.
+
+## Decisions for Bob — appended 2026-08-08 by UI-50 (append, not a rewrite: several UI workers are live)
+
+**ONE ITEM. THE SENTENCES ALREADY WRITTEN.**
+
+- **What runs NOW, provisionally.** UI-50 fixed the lookup, so no NEW bundle can
+  be written with a wrong *"changed from"* sentence. **The bundles that already
+  carry one are left exactly as they are, and the correction is DEFERRED to a
+  ruling rather than made by a worker.** Nothing has been rewritten and nothing
+  has been marked. The defect is enumerated as **D-236** so it cannot be lost.
+- **Why it was genuinely ambiguous.** The record is append-only and *correction
+  moves forward* (DEC-19), so the false sentence in a bundle body cannot be
+  edited away — but leaving it unmarked means the record keeps asserting
+  something it cannot support, which this project ranks as worse than a missing
+  feature. Both halves of the doctrine point in opposite directions here, and
+  choosing between them is a statement about what the record MEANS.
+- **The alternative, stated fairly.** Append a correction to each affected
+  bundle: a new revision saying, in the record's own voice, that the earlier
+  sentence was composed by a lookup that returned the oldest version at the
+  address and that the version which actually preceded this capture is `<X>`.
+  The original sentence stays in the body, visibly superseded rather than
+  removed. That is the fuller correction and it is entirely within DEC-19; it
+  costs a write to every affected bundle, and it needs an AUTHOR, because a
+  machine appending a correction on nobody's behalf is the shape DEC-54 (c)
+  warns about.
+- **Recommendation.** Take the alternative, in two steps and in this order.
+  **First the enumeration, which needs no ruling at all** — the affected set is
+  findable (the sentence has one fixed literal shape) and every member is
+  decidable today, because the capture is now in the register and
+  `op=versionchain&at=` answers with the true predecessor for it. That report
+  splits into *provably wrong*, *provably right* (one prior version, where the
+  two routes cannot disagree) and *undetermined* (no chain rows), and those
+  three must be reported separately or the report repeats the defect's own
+  mistake. **Then rule on whether the correction lands in the bundles or in one
+  published report**, with the size of the *provably wrong* set in front of you.
+  A ruling made before that number exists is a ruling about an unknown.
+- **What reversing it costs.** Reversing the DEFERRAL costs nothing today and
+  gets no more expensive with time — the fix has stopped the set growing, and
+  every affected bundle stays decidable as long as its capture is registered.
+  Reversing the ALTERNATIVE, once correction revisions exist in bundles, costs
+  the ordinary price of an append-only record: they cannot be removed, only
+  superseded in turn. That asymmetry is the reason the enumeration comes first
+  and the writing second.

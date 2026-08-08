@@ -14220,9 +14220,77 @@ const digestOf = async (b) => {
 
    Where the walk cannot reach the end, `heldMatch` says so rather than answering
    null — because null here does not mean "not held", it means "not found", and
-   letting the write path read the second as the first is the whole defect. */
+   letting the write path read the second as the first is the whole defect.
+
+   ---- UI-50: AND THE ROW IT PICKED OUT OF THAT WALK WAS THE WRONG ONE --------
+
+   UI-39 made this walk reach every capture at the address. It did not decide
+   WHICH of them the record would then name, and the answer was: whichever bm25
+   put first. The address arm asked `locator:"<url>"` — a FULL-TEXT query on a
+   text-indexed field, which compiles to a text atom, which creates a rank arm.
+   Every capture at one address carries IDENTICAL url text, so every score ties
+   and the tiebreak decided. **PL-10 MEASURED it over a sixty-version fixture
+   with ground truth computed in JavaScript: the FTS route returned the OLDEST
+   version while the correct join returned the fifty-ninth, and all 59 links
+   were walked, so one lucky answer could not carry it.**
+
+   THAT IS THE WORSE OF THE TWO FAILURE MODES, and PL-10 established which one
+   this is rather than assuming: D-228's quoted-value defect does NOT bite these
+   FTS columns — both spellings matched 63 hits and both returned the oldest —
+   **so this was not silently matching nothing, it was confidently matching the
+   WRONG ROW.** A lookup that finds nothing degrades honestly. One that finds
+   the wrong thing composes a false sentence with full confidence, and the
+   sentence `addGo` composes off this answer is WRITTEN INTO THE BUNDLE and is
+   PERMANENT in it: *"The record already holds an earlier capture of this same
+   address (INFO-…)"*, naming a version that is not the one this capture
+   followed. A member reading it is entitled to believe the record establishes
+   that. It did not.
+
+   **THE ANSWER ALREADY EXISTED AND THIS ITEM DID NOT REBUILD IT.** PL-10 landed
+   `op=versionchain&address=&at=` (I3 10.2.0) — one CTE over `captured_locators`
+   joined to `register`, keyed on `address_norm`, ordered on `first_retrieved`
+   with `capture_sha` as a total tiebreak, and NOT ONE NEW BYTE OF SCHEMA. This
+   item's whole job was to make the writer use it.
+
+   WHY THE PREDECESSOR IS SOUGHT BY OFFSET RATHER THAN BY `at`, and it is a fact
+   about WHEN this runs rather than a preference. `at=<sha>` anchors on a version
+   the chain already holds, and the chain joins `register` — whose row is written
+   by `op=promote`. At this moment the fresh capture has bytes and a
+   `captured_locators` row (op=acquire files that unconditionally, D-58) and NO
+   register row, so it is not in the chain and cannot be an anchor; `at` would
+   refuse `VERSION_CHAIN_NO_SUCH_VERSION`. The predecessor of a version that has
+   not been written yet is the LAST version in the chain, and the chain publishes
+   its own `total`, so the last row is one indexed seek at `offset = total - 1`.
+   `predecessor: null` at index 0 has its exact analogue here — `total: 0`, an
+   address the record holds no earlier version of — and it is rendered the way
+   PL-10 renders that one: as an honest absence, no sentence at all, not a
+   failure and not a lookup that fell through.
+
+   THE ORDER OF THE TWO READS, and what each is entitled to answer:
+     1. THE CHAIN decides who the predecessor is and whether this document
+        changed, because both questions are about IDENTITY at an address and the
+        chain answers them by address equality with no relevance to get wrong.
+     2. THE SEARCH WALK below survives as an IDENTITY-ONLY backstop for the one
+        thing the chain cannot see: a bundle registered without a
+        `captured_locators` row — anything promoted outside `op=acquire`, and
+        anything captured before D-58 filed the address unconditionally. It asks
+        only "does any bundle at this address hold exactly these bytes", which is
+        hash equality and therefore ORDER-FREE: the defect above cannot live in
+        it. It no longer compares documents and no longer decides what the record
+        SAYS about one, because that is the question order was deciding.
+     3. WHERE THE CHAIN NAMES A PREDECESSOR WHOSE BYTES CANNOT BE READ, this
+        answers `bounded` rather than reaching for an older version. An older
+        version is a true "earlier capture" and a false "the one this followed",
+        and substituting the second for the first is the defect wearing a
+        different hat. */
 const HELD_PAGE = 500;       /* asked for, not assumed: the plane clamps and publishes the clamp */
 const HELD_PAGES_MAX = 40;   /* 20,000 captures at ONE address before the walk states its bound */
+/* UI-50. The chain is sought ONE ROW AT A TIME, by offset, because the LAST row
+   is what is wanted and not a page of them. The ask is STATED rather than
+   inherited — `op=versionchain` is on the plane's own unconditionally-capped
+   roster (bound-sweep WALK 1), and an unstated bound reads as completeness even
+   where it happens to be harmless. */
+const HELD_CHAIN_ASK = 1;
 async function heldMatch(sha256, locator, contentType, name){
   /* THE BOUND IS A REQUIRED ARGUMENT, not an optional bag spread in. Spreading
      it made the bound invisible to the class sweep — the call site read
@@ -14251,10 +14319,84 @@ async function heldMatch(sha256, locator, contentType, name){
     if(exact) return { bundle: exact, identical: true, changed: false, artifacts: [] };
   }
   if(!locator) return null;
-  /* Then the address, because the hash MISSES on any page that rebuilds part of
-     itself. Measured: two fetches of a Legistar calendar three seconds apart
-     share no hash and differ only in page state, so a hash-only check lets the
-     record grow a second bundle for one document with nothing complaining. */
+
+  /* ---- UI-50 · THE CHAIN. Who came before this is an IDENTITY question ------
+     One seek to learn how many versions the record holds at this address, one
+     more to read the LAST of them. Both are indexed and neither consults a text
+     index, so there is no relevance to order by and nothing to get wrong. */
+  const chainSeek = async (offset) => {
+    try{
+      const chainAnswer = await recR("versionchain",
+        { address: locator, limit: String(HELD_CHAIN_ASK), offset: String(offset) });
+      if(!chainAnswer || chainAnswer.ok !== true) return null;
+      const total = Number(chainAnswer.total);
+      /* THE BOUND IS THE RECORD'S AND IS READ OFF THE ANSWER, never assumed from
+         what was asked: the plane clamps and publishes the clamp it applied, and
+         `truncated` is what settles whether the row read is really the last one.
+         An answer that publishes neither is not an answer this may act on. */
+      const served = Number(chainAnswer.limit);
+      if(!Number.isFinite(total) || !Number.isFinite(served) || served < 1) return null;
+      return { total, served, truncated: chainAnswer.truncated === true,
+               versions: Array.isArray(chainAnswer.versions) ? chainAnswer.versions : [] };
+    }catch(_){ return null; }
+  };
+  /* `chainTotal` stays null while the chain is UNESTABLISHED, and 0 when the
+     chain is established and empty. They are different facts and only the second
+     one is a licence to say "the record holds nothing here". */
+  let chainTotal = null, predecessor = null;
+  {
+    const head = await chainSeek(0);
+    if(head){
+      chainTotal = head.total;
+      if(head.total > 0){
+        const tail = head.total === 1 ? head : await chainSeek(head.total - 1);
+        if(tail && !tail.truncated && tail.total === head.total && tail.versions.length === 1)
+          predecessor = tail.versions[0];
+        else chainTotal = null;   /* the end moved or could not be reached */
+      }
+    }
+  }
+  if(predecessor){
+    const heldSha = String(predecessor.capture_sha || "").toLowerCase();
+    const proj = await getProjection(predecessor.bundle_id).catch(()=>null);
+    const bundle = { bundle_id: predecessor.bundle_id, title: (proj && proj.title) || "" };
+    if(heldSha === sha256) return { bundle, identical:true, changed:false, artifacts:[] };
+    const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
+    if(held.ok && held.sha === heldSha && fresh.ok){
+      /* Profile the document, then ask the profile. Which kind of page this is
+         decides what counts as a change: page state on a WebForms page is not
+         one, a new headline on a listing is, and a new item in a nav bar is not.
+         It is asked about the version the record says came IMMEDIATELY BEFORE —
+         which is the half UI-50 corrected, because comparing against whichever
+         version bm25 handed back made even the verdict arbitrary. */
+      const text = new TextDecoder("utf-8", { fatal:false }).decode(fresh.bytes);
+      const id = identify({ text, locator, headers: {}, sha256: digestOf });
+      const v = await compare(held.bytes, fresh.bytes, id.handler,
+        { text, locator, headers: {}, sha256: digestOf, confidence: id.confidence });
+      /* changed and undetermined both mean the record should hold this too: an
+         undetermined verdict is the system declining to claim the substance is
+         the same, and declining is not the same as saying it is. */
+      if(v.evidentiary_change === false)
+        return { bundle, identical:false, changed:false, verdict: v.verdict,
+                 artifacts: v.artifacts, profile: id.handler.key };
+      return { bundle, identical:false, changed:true, verdict: v.verdict,
+               artifacts: v.artifacts, profile: id.handler.key, proceed:true };
+    }
+    /* The predecessor is NAMED and its bytes cannot be read, so whether this
+       document changed is not established. Reaching past it to an older version
+       would name a capture this one did not follow, which is the defect this
+       item exists to remove. */
+    return { bounded:true, examined:0, total: chainTotal };
+  }
+
+  /* ---- THE IDENTITY-ONLY BACKSTOP. Reached when the chain holds no version at
+     this address (a bundle registered without a `captured_locators` row) or
+     could not be established at all. It answers ONE question — does any bundle
+     at this address hold exactly these bytes — and hash equality has no order to
+     get wrong. It composes nothing and decides nothing the record then says.
+     The hash MISSES on any page that rebuilds part of itself, which is why the
+     address is asked at all. Measured: two fetches of a Legistar calendar three
+     seconds apart share no hash and differ only in page state. */
   const q = `locator:"${String(locator).replace(/"/g,"")}"`;
   const rows = []; let total = null, pages = 0, bounded = false;
   for(;;){
@@ -14278,29 +14420,17 @@ async function heldMatch(sha256, locator, contentType, name){
     const heldSha = String((p && p.content_hash) || "").replace(/^sha256:/, "");
     if(!/^[0-9a-f]{64}$/.test(heldSha)) continue;
     if(heldSha === sha256) return { bundle: o, identical: true, changed: false, artifacts: [] };
-    const held = await fetchCapture(heldSha), fresh = await fetchCapture(sha256);
-    if(!held.ok || held.sha !== heldSha || !fresh.ok) continue;
-    /* Profile the document, then ask the profile. Which kind of page this is
-       decides what counts as a change: page state on a WebForms page is not one,
-       a new headline on a listing is, and a new item in a nav bar is not. */
-    const text = new TextDecoder("utf-8", { fatal:false }).decode(fresh.bytes);
-    const id = identify({ text, locator, headers: {}, sha256: digestOf });
-    const v = await compare(held.bytes, fresh.bytes, id.handler,
-      { text, locator, headers: {}, sha256: digestOf, confidence: id.confidence });
-    /* changed and undetermined both mean the record should hold this too: an
-       undetermined verdict is the system declining to claim the substance is the
-       same, and declining is not the same as saying it is. */
-    if(v.evidentiary_change === false)
-      return { bundle: o, identical: false, changed: false, verdict: v.verdict,
-               artifacts: v.artifacts, profile: id.handler.key };
-    return { bundle: o, identical: false, changed: true, verdict: v.verdict,
-             artifacts: v.artifacts, profile: id.handler.key, proceed: true };
   }
   /* NOT FOUND AND NOT HELD ARE DIFFERENT FACTS, and only one of them is a
      licence to write. A walk that reached the end of the plane's own count
      answers null and means "not held"; a walk that stopped short says which
-     bound stopped it, and the caller carries that into the record. */
-  return bounded ? { bounded: true, examined: rows.length, total } : null;
+     bound stopped it, and the caller carries that into the record.
+     UI-50 adds a third way to stop short and it is treated the same: the chain
+     could not be established, so an address the record plainly holds captures at
+     is one this check did not finish reading. */
+  if(bounded) return { bounded: true, examined: rows.length, total };
+  if(chainTotal === null && rows.length) return { bounded: true, examined: rows.length, total };
+  return null;
 }
 async function addCapture(locator, authority, wantSubs){
   let session = null, acq = null, ticks = 0;
@@ -16121,8 +16251,9 @@ function aiSessionIndicatorHtml(session, ctx){
 
    UI-49 was asked to decide whether the indicator's click-through reaches the
    observation log or whether that is a separate surface. **IT IS A SEPARATE
-   SURFACE, and the click-through stays on the transcript.** Four reasons, in
-   the order they decide it:
+   SURFACE, and the click-through stays on the transcript.** THREE reasons, in
+   the order they decide it — it was four when UI-49 wrote it, and the fourth
+   EXPIRED (see below).
 
      1. §14a says what the click does: *"clicking it opens the LIVE
         TRANSCRIPT"*. That is what `aiSessionOpen` already does, and the log is
@@ -16138,10 +16269,23 @@ function aiSessionIndicatorHtml(session, ctx){
         line on a panel — and its `detail:` sentences are member-facing wording
         DEC-49 now owns, so building it today would render un-ruled wording at
         scale.
-     4. **AND IT PUBLISHES AN UNBOUNDED COLLECTION.** `aiRunLog` selects the
-        whole append-only log with no `LIMIT`, no `limit` and no `truncated`.
-        A surface built on it today would be a surface with a bound it cannot
-        state — exactly what UI-46 spent an item removing. Delegated.
+     4. **STRUCK 2026-08-08 (UI-50, on REC-70's finding), NOT DELETED — a
+        support that has gone is worth more visible than tidied away.** It read:
+        *"AND IT PUBLISHES AN UNBOUNDED COLLECTION. `aiRunLog` selects the whole
+        append-only log with no `LIMIT`, no `limit` and no `truncated`."*
+        **THAT IS NO LONGER TRUE OF THIS PLANE.** REC-70 bounded it, and the
+        claim was re-MEASURED here against `bio-plane/src/store.mjs` rather than
+        taken from a queue row: `aiRunLog` now computes a `cap` from
+        `AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX`, asks the store for `cap + 1` under
+        `ORDER BY seq LIMIT ?`, and publishes `limit` and `truncated` — on the
+        ABSENT answer too, so an unviewable run and an unknown one read alike.
+        `op=airunlog` is on bound-sweep WALK 1's UNCONDITIONAL roster today.
+        **REASONS 1–3 STAND AND THE DECISION STANDS.** This removes a support; it
+        does not reopen the question, and nothing here licenses building the
+        surface on the strength of the removal. What it does mean is that the
+        NEXT session to weigh it is weighing three reasons, not four — and that
+        no suite failed when this became false, which is why it is written down
+        rather than left for the next reader to re-measure.
    ============================================================ */
 
 /* THE DEVICE-LOCAL ADDRESS ROSTER. Addresses, never reasoning: DEC-61 governs
