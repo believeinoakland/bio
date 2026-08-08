@@ -133,138 +133,98 @@ const NOTE = m => notes.push(m);
    it is why every figure below is now the MEASURED one. Move them WITH the
    corpus, in the same turn, or they stop meaning anything. */
 const FLOOR = {
-  /* REMEASURED AGAIN 2026-08-08, at REC-71's re-integration onto a tree carrying
-     PL-12 and UI-51. **The slack had already come back: census 330 -> 341, reach
-     116 -> 127, 11 codes in each within hours.** That is the point of the block
-     above rather than a contradiction of it — these figures track a growing plane
-     and must be moved WITH it, in the turn that grows it, or the ratchet quietly
-     stops being one. A family added without moving them is a family whose codes
-     buy slack for everybody else's walk. */
-  /* REMEASURED 2026-08-08 at PL-3's landing, in worktree agent-acad3e0b337d0848f,
-     BY THIS FILE — every figure below is the number it PRINTED on a green run and
-     not one this item added up. Moved IN THE SAME TURN that grew the plane,
-     which is REC-71's rule and the reason it exists: its census floor sat 19
-     codes low, had already turned a control from RED to GREEN, and went stale
-     AGAIN within hours.
+  /* THE PER-ITEM REMEASUREMENT NOTES WERE CONSOLIDATED HERE 2026-08-08 by
+     CONDUCT, at PL-14's integration, and the consolidation is itself a finding.
+     Seven items in a row had each prepended its own dated block, and two
+     keep-both merges had left continuation comments attached to keys they were
+     never written about — `codesChecked` carrying PL-3's sentence about
+     `vocabularyTerms`, and `regionLines` carrying a fragment of a line that had
+     been split by a conflict marker. **A comment block that has become
+     unreadable has stopped carrying its findings**, which is the same failure
+     as a stale number, one layer out. Nothing measured is dropped: every
+     item's finding is below, in one line each, with its worktree.
 
-     AND THE FAMILY FLOOR WAS ALREADY STALE WHEN THIS ITEM ARRIVED. It read 5;
-     the tree carried SIX families before PL-3 added a seventh (VERSION_CHAIN_CHECKS
-     landed with PL-10 and nobody moved it). One of slack, found the only way slack
-     is ever found — by measuring rather than by adding one to the number in the
-     file. */
-  /* REMEASURED 2026-08-08 AT PL-4's LANDING, in worktree agent-ad191a5dd58a9327f,
-     BY THIS FILE — every figure below is the number it PRINTED on a green run and
-     not one this item added up, which is the rule PL-3 restated and the reason
-     PL-12's and PL-1's collision on `bounds`' roster could not be resolved by
-     arithmetic. Moved IN THE SAME TURN that grew the plane.
+     WHAT THE SEVEN NOTES ALL SAID, and it is the reason this block exists:
+     **EVERY FIGURE HERE IS ONE THIS FILE PRINTED ON A GREEN RUN — never one an
+     item added to the previous figure.** VF-2 set them; PL-1 grew the plane
+     without moving them, leaving 19 codes of slack, and arm (e) of
+     `test/refusal-codes.control.mjs` went from RED to GREEN on that slack: the
+     walk lost an entire spelling, the census fell to 325, and 325 still cleared
+     a floor of 311. **A floor with slack is not a ratchet.** The slack came
+     back within hours of being cleared (census 330 -> 341), which is why the
+     rule is `move them in the turn that grows the plane`.
 
-     AND THE GUARD EARNED ITS KEEP TWICE ON THIS ITEM BEFORE ANY FLOOR MOVED.
-     It failed the first run naming (a) a region marker that had drifted OUT of
-     the function its `where` named — the conduct region lives in
-     `#captureRequestConduct`, not in `captureRequestDrain` — which is precisely
-     the wrong-span-clean-verdict class, caught rather than assumed; and (b) a
-     `where` pointing at `src/index.mjs acquire`, a name that does not exist
-     because the op lives inside the fetch handler, so nothing would have been
-     checking that site at all. The arm is now its own named function. */
-  /* REMEASURED 2026-08-08 AT PL-11's LANDING, in worktree agent-a6feaaff20bdaf423,
-     BY THIS FILE — every figure below is the number it PRINTED on a green run of
-     `node civicos-ui/test/run.mjs`, not one this item added up. Moved IN THE SAME
-     TURN that grew the plane, which is now the fourth consecutive item to have to
-     say so.
+     AND FIVE ITEMS RUNNING FOUND A FLOOR ALREADY STALE BY MEASURING IT:
+     - PL-3   (agent-acad3e0b337d0848f): `families` read 5 over a tree of 6 —
+              VERSION_CHAIN_CHECKS landed with PL-10 and nobody moved it.
+     - PL-4   (agent-ad191a5dd58a9327f): the guard failed BEFORE any floor moved,
+              naming (a) a region marker that had drifted out of the function its
+              `where` named and (b) a `where` pointing at `src/index.mjs acquire`,
+              a name that does not exist — so nothing had been checking that site.
+     - PL-11  (agent-a6feaaff20bdaf423): `vocabularyTerms` read 40 over a tree of
+              50, and PL-11 added no vocabulary at all. Ten of pre-existing slack.
+     - SK-1   (agent-a1f06561dfc61e51c): the same ten, measured independently from
+              a tree without PL-11 — and added ONE row to the existing
+              `AI_RUN_CHECKS` rather than minting a family, because a family is a
+              floor here and a new one buys slack for everybody else's walk.
+     - PL-14  (agent-a78ca0f9b029b7dfa): added ZERO unfalsifiable sites, the number
+              REC-71 delegated to REC-64. Its first draft gave the pair guard a
+              WHOLE-FUNCTION `where` and this guard reported 6 refusals judged and
+              5 COMPARED — the sixth being the local helper's own variable-coded
+              return. Narrowed to a REGION before any floor moved.
 
-     AND `vocabularyTerms` WAS ALREADY STALE WHEN THIS ITEM ARRIVED — it read 40
-     over a tree carrying 50, TEN of slack, and PL-11 added no vocabulary at all.
-     Found the only way slack is ever found: by measuring rather than by adding to
-     the number in the file. That is the same finding PL-3 recorded on `families`
-     and PL-4 on the census, three items running, which is why the instruction in
-     the block above is now the COMMAND rather than the answer. */
-  /* MOVED AT INTEGRATION 2026-08-08 by CONDUCT, and the reason is the block's own subject.
-     PL-11 and SK-1 ran in parallel and EACH remeasured this block from its own tree — PL-11
-     from a tree without SK-1, SK-1 from a tree without PL-11 — so both were correct where
-     they stood and BOTH WERE WRONG ON THE MERGED TREE. Taking either side's numbers would
-     have left one of slack in four floors, and one is enough: REC-71 measured a floor
-     sitting 19 codes low that had ALREADY flipped a control from RED to GREEN, and PL-11
-     and SK-1 each found ten of slack in `vocabularyTerms` by measuring rather than adding.
-     So these are the figures the guard PRINTED on a green run of the MERGED tree, taken by
-     the integrator because only the integrator can see both items at once. Both worker
-     comment blocks are kept below verbatim — each is true of the tree it was written on. */
-  families:      9,    // + AI_CREDENTIAL_CHECKS (was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5)
-  rows:         91,    // + C-29.1..9, all nine DRIVEN (was 81 at PL-4, 70 at PL-3)
-  census:      393,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+     THE TWO INTEGRATION COLLISIONS, both created by parallel slots and neither
+     visible to any worker: **PL-11 and SK-1 each remeasured this whole block
+     from its own tree**, so both were right where they stood and both were wrong
+     on the merged tree, every floor sitting exactly one low; and **PL-11 and
+     PL-14 each allocated a nine-row C-29 family**, PL-14's renumbered to C-30 at
+     integration (the note is at the catalogue, where the next allocator reads).
+     **The figures below are the ones the guard PRINTED on a green run of the
+     tree carrying all three** — neither worker's numbers, because on a merged
+     tree neither worker's numbers are true. */
+  families:     10,    // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
+                       // Was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
+  rows:        100,    // + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
+                       // Was 81 at PL-4, 70 at PL-3.
+  census:      402,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       178,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
-  governedSites: 25,   // spans named by a row's `where` — a function, or a region inside one
-                       // (was 20, 17, 13, 9, 5; 11 whole functions + 13 regions, four of them PL-11's)
-  /* REMEASURED 2026-08-08 AT SK-1's LANDING, in worktree agent-a1f06561dfc61e51c,
-     BY THIS FILE — every figure below is the number it PRINTED on a green run and
-     not one this item added up. SK-1 adds ONE row (C-22.7,
-     `AI_RUN_SKILL_VERSION_UNNAMED`) to the EXISTING `AI_RUN_CHECKS` family and
-     one governed site (`src/skillpack.mjs checkSkillVersion`, a whole function —
-     small, single-purpose, and every refusal in it is an AI_RUN row, which is
-     the case this file's own convention blesses). No new family: a family is a
-     floor here, and a code that buys slack for everybody else's walk is the
-     defect REC-71 measured. */
-                       // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-                       // (was 20, 17, 13, 9, 5; 12 whole functions + 9 regions, three of them PL-4's)
+                       // (was 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+  reach:       187,    // codes a surface can receive (R1 + R2 + R3) (was 178, 168, 157, 127, 116, 98)
+  governedSites: 27,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
-  bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
-                       // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
-                       // Every other floor above only ever moves UP as the plane grows, so
-                       // ratcheting them costs nothing. This one FALLS whenever a `where` is
-                       // correctly narrowed from a function to a region, which is exactly the
-                       // work REC-71 licensed and REC-64 will keep doing. A gate set above the
-                       // current state gets switched off (VERIFICATION.md's own reason for not
-                       // making `--strict` the gate yet), so this stays a COLLAPSE DETECTOR —
-                       // its stated purpose, a parameter list read as a body — and
-                       // `codesChecked` below carries the ratchet instead.
-  /* REC-71's three, measured 2026-08-08 in worktree agent-ab9e84c9e27f4eff7 by
-     this file, on the tree carrying PL-1. */
-  /* MOVED 2026-08-08 BY PL-4, MEASURED. 6 -> 9 regions and 483 -> 632 region
-     lines: PL-4's three (is-capture-request, is-capture-conduct,
-     is-capture-request-arm) all resolved, all non-trivial. `codesChecked` 30 ->
-     46, and 16 of the 16 are this item's — every refusal it mints names its code
-     as a STRING LITERAL through a helper called `refusal`, which is REC-71's
-     delegated fix applied at allocation time rather than paid for later. */
-  regions:      13,    // was 9 — PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
-                       // is-ai-task-scope, is-ai-scope-declaration) all resolved, all non-trivial,
-                       // and every one of them COMPARES every code it judges (3/3, 2/2, 3/3, 2/2).
-                       // region `where`s resolved — basis-version-freeze, basis-version-resolve,
-                       // bias-set-refusal, and PL-3's three (is-suggest-shape, is-suggest-checks,
-                       // is-suggest-write). Was 3; PL-3 gave EVERY row it minted a region rather
-                       // than a whole function, which is REC-71's rule applied at allocation time
-                       // instead of paid for at integration.
-  regionLines:  724,  // was 632, was 45 — PL-3's three regions are 425 lines of the 483    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
-                       // figure on purpose, so an ordinary edit inside a governed arm does
-                       // not fail the guard while a COLLAPSE still does. The per-region
-                       // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
-                       // the aggregate one; they fail for different reasons.
-  codesChecked: 58,  // was 46, was 11. PL-3 nearly TRIPLED it, and deliberately: a local
-                       // one helper named `refusal`, a STRING LITERAL at each site, which is the
-                       // shape that makes arm C able to COMPARE a code rather than read past it.
-                       // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
-                       // `refuse(key, …)` passes the code as a VARIABLE and arm C compares NOTHING,
-                       // which is why seven of thirteen governed sites read 776 lines and checked zero.
-                       // PL-3's three regions name their helper `refusal` and pass a string LITERAL at
-                       // every site, so 19 of its 19 refusals are actually COMPARED against a row.    // refusal codes actually COMPARED against a family row. MEASURED 11.
-                       // NOT the same as refusals judged (12) and NOT the same as lines
-                       // read: **SEVEN of the thirteen governed sites read 776 lines and
-                       // compare NOTHING AT ALL** — they refuse through a local
-                       // `refuse(key, …)` helper (the code is a variable) or by pushing
-                       // findings rather than returning `ok:false`. PL-12 added three more
-                       // of them. See arm C's NOTE and REC-71's delegation to REC-64:
-                       // arm C's teeth reach 5 of 13 sites, and that is a measurement.
+  bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
+                       // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
+                       // Every other floor only ever moves UP as the plane grows, so ratcheting
+                       // them costs nothing. This one FALLS whenever a `where` is correctly
+                       // narrowed from a function to a region, which is exactly the work REC-71
+                       // licensed and REC-64 will keep doing. A gate set above the current state
+                       // gets switched off (VERIFICATION.md's own reason for not making `--strict`
+                       // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
+                       // parameter list read as a body — and `codesChecked` carries the ratchet.
+  regions:      15,    // + PL-14's two (is-version-strength, is-pair-composed). Was 13 with
+                       // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
+                       // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
+                       // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
+  regionLines: 851,    // lines inside the regions. Floored BELOW the measured figure on purpose,
+                       // so an ordinary edit inside a governed arm does not fail the guard while
+                       // a COLLAPSE still does. The per-region trivial-span arm (REGION_MIN_LINES)
+                       // is the tight half and this is the aggregate one; they fail for different
+                       // reasons. (was 724, 632, 45)
+  codesChecked: 71,    // refusal codes actually COMPARED against a family row — NOT the same as
+                       // refusals JUDGED, and not the same as lines read. Was 58, 46, 30, 11.
+                       // The growth is a convention landing, not luck: PL-3 named its helper
+                       // `refusal` and passed a STRING LITERAL at every site, and every family
+                       // since has done the same, because a local `refuse(key, …)` passes the code
+                       // as a VARIABLE and arm C then compares NOTHING. That is how seven of
+                       // thirteen governed sites once read 776 lines and checked zero — arm C's
+                       // teeth reached 5 of 13 sites, and that is a measurement, delegated to
+                       // REC-64 rather than smoothed away.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 50, // terms across them. WAS 40 OVER A TREE CARRYING 50 when PL-11
-                       // arrived, and PL-11 added no vocabulary: ten of pre-existing slack,
-                       // found by measuring rather than by adding one to the number here.
-                       // this item grew the corpus — it grew none of it. The floor was printing 50
-                       // against a floor of 40, and TEN of slack is the floor not being a ratchet:
-                       // a walk that lost a whole vocabulary would still have cleared 40. Found the
-                       // only way slack is ever found, by reading what the instrument printed
-                       // rather than by adding to the number in the file (PL-3's finding, and
-                       // REC-71's before it, arriving on a different row of the same block).
+  vocabularyTerms: 50, // terms across them. Read 40 over a tree carrying 50 for long enough that
+                       // PL-11 and SK-1 each found the same ten of slack independently, neither
+                       // having added any vocabulary. A walk that lost a whole vocabulary would
+                       // still have cleared 40.
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a

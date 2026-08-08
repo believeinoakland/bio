@@ -7290,3 +7290,171 @@ export const AI_CREDENTIAL_CHECKS = {
       + 'to an agent, so this cannot be written into a credential at all.',
   },
 };
+
+/* TWO FAMILIES COLLIDED ON C-29 AND PL-14's WAS RENUMBERED TO C-30 AT
+   INTEGRATION, 2026-08-08 by CONDUCT. PL-11 and PL-14 ran in parallel; each
+   MEASURED C-29 as free over this file and each was right when it looked, and
+   each allocated exactly nine numbers in it. PL-11 merged first, so its numbers
+   stand and PL-14's move — the same rule and the same direction as PL-1/PL-12's
+   C-25 collision one week earlier, and the note is here rather than in a commit
+   message because THE NEXT ALLOCATOR READS THIS FILE. A renumbering with no
+   note at the catalogue reads as a family somebody skipped. Renumbered BY THE
+   NUMBER, never by prefix: a prefix rule rewriting the FIRST dotted segment
+   mangles a two-digit suffix, which is how PL-12's renumbering of C-25 nearly
+   lost a reference. PL-14's report, claim and suite header all name the old
+   family, and that is recorded rather than silently corrected.
+
+   AND THIS COMMENT PAID FOR ITS OWN LESSON, WHICH IS WHY IT NO LONGER SPELLS
+   THE NUMBERS OUT. Its first draft wrote the warning as a worked example with
+   real C-numbers in it, the integration's own sweep renumbered THE EXAMPLE
+   along with the code, and `scripts/coverage.mjs` — which harvests C-numbers
+   out of this file by pattern, comments included — then reported a check in
+   the catalog that no assertion names. Exit 1 on a family that was complete.
+   The instrument was right: it cannot tell a number in a sentence from a
+   number in a row, and neither can the sweep. So the rule is stated in words
+   and the example is gone. */
+
+/* ===========================================================================
+ * C-29 — THE STRENGTH PAIR OVER A VERSION (PL-14 / IS-7,
+ * INVESTIGATIVE-SESSION.md §12). NINE C-NUMBERS ALLOCATED HERE AND NOWHERE
+ * ELSE. C-25 is PL-1/PL-2's, C-26 is PL-12's, C-27 is PL-3's and C-28 is
+ * PL-4's — all four MEASURED as taken over this file before C-29 was claimed,
+ * and C-29 measured as free.
+ *
+ * WHY A FAMILY AT ALL FOR A PURE READ. §14b.4's rule is that every refusal a
+ * design promises BY NAME is a C-number in this catalogue, and this read
+ * refuses six things a caller can actually do wrong — most importantly asking
+ * for a pair over a reading NOBODY HAS ADOPTED, which §6.6 makes legal only by
+ * WIDENING THE STATE SET rather than by making the reading current.
+ *
+ * TWO OF THE NINE ARE SELF-GUARDS AND THAT IS DELIBERATE (C-30.7, C-30.8).
+ * PL-4 DELETED C-28.12 because the composer could not produce the condition at
+ * all — an empty gate, a code nobody could ever drive. These two are the other
+ * case and the difference is worth stating so the next allocator does not read
+ * one as the other: **the builder CAN produce both conditions the moment an
+ * edit composes the two axes or drops the state-set line**, which is precisely
+ * what R2's forbidden composition and DEC-40's stripped filter line are. They
+ * are DRIVEN — `test/strengthpair.control.mjs` arms each one and records what
+ * failed — so neither is a refusal nobody can prove fires.
+ *
+ * NO MEMBER-FACING TRANSLATION BELOW SAYS "ground", "partition", "AND" or "OR"
+ * as a member-facing word (DEC-32's elicitation clause 1, D-226). The
+ * vocabulary is the analyst's and a member who must learn it to read a strength
+ * will read a worse strength.
+ * ========================================================================= */
+export const VERSION_STRENGTH_CHECKS = {
+  VERSION_STRENGTH_NO_INQUIRY: {
+    check: 'C-30.1',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'This asks how strongly one question is answered, and no question was named. '
+      + 'There is no default question here and there must not be one.',
+  },
+  VERSION_STRENGTH_NOT_AN_INQUIRY: {
+    check: 'C-30.2',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'That is not a question, so there is nothing here to say how strongly it is answered. '
+      + 'Only a question carries readings of the evidence, and only a reading has a strength.',
+  },
+  /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
+     same reason: there is no "the latest reading" and no default. A strength
+     computed over a reading the caller did not mean is a number about the wrong
+     thing, which is worse than being asked which was meant. */
+  VERSION_STRENGTH_NO_VERSION: {
+    check: 'C-30.3',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'Say which reading of the evidence to measure, or say which project is asking so '
+      + 'that the reading it stands on can be used. There is no default reading, because a strength '
+      + 'reported for a reading nobody meant is a number about something else.',
+  },
+  VERSION_STRENGTH_NO_SUCH_VERSION: {
+    check: 'C-30.4',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'No reading by that name belongs to this question, or this project has not said '
+      + 'which reading it stands on. An empty answer here would say the question rests on nothing '
+      + 'when the truth is that nobody has pointed at anything yet.',
+  },
+  VERSION_STRENGTH_UNKNOWN_STATE: {
+    check: 'C-30.5',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'One of the words used to say which readings to count is not one this record knows. '
+      + 'The set is closed on purpose: a strength that quietly counted readings nobody recognises '
+      + 'would be a number no reader could check.',
+  },
+  /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
+     unaccepted version is done by CALCULATING OVER IT, never by making it
+     current."* So this is not a dead end — it names the widening that turns the
+     request into an honest WHAT-IF, and the what-if answer then carries its own
+     state-set line (DEC-40) wherever it renders. */
+  VERSION_STRENGTH_STATE_EXCLUDED: {
+    check: 'C-30.6',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'Nobody has adopted that reading, so it is not what this record answers with. '
+      + 'You can still see what it would come to — ask for it as a what-if by saying which kinds of '
+      + 'reading to count — and the answer will say on its face that that is what it is.',
+  },
+  /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
+     super-conclusion over them and MUST NOT derive a single case-level
+     strength — that would be R2's forbidden composition at a new altitude, and
+     it is exactly the 'one letter' the project has refused four times."* The
+     same refusal one altitude DOWN, because the temptation is identical and the
+     harm is identical: two measurements over two populations reported as one
+     number is the record claiming something neither population supports. */
+  VERSION_STRENGTH_COMPOSED: {
+    check: 'C-30.7',
+    where: 'src/store.mjs #refusePairComposed > is-pair-composed',
+    translation: 'This answer tried to report one overall figure for a question, and there is no such '
+      + 'figure. How well the documents were captured and how firmly they connect to the subject are '
+      + 'two separate measurements over two separate things, and averaging them or picking one would '
+      + 'state something neither of them says.',
+  },
+  /* DEC-40 determination 2, and its own negative control: *"a filtered
+     rendering states its filter IN DEC-34's per-page header … An unfiltered
+     rendering says so too, or absence of the line becomes the ambiguity."* §12
+     transplants it verbatim: *"A what-if pair carries its state-set line
+     wherever it renders."* So EVERY answer carries the line, including the
+     default one — an answer with no line is the shape a reader cannot tell from
+     the record's own. */
+  VERSION_STRENGTH_UNFILTERED: {
+    check: 'C-30.8',
+    where: 'src/store.mjs #refusePairComposed > is-pair-composed',
+    translation: 'This answer did not say which readings it counted, and a strength separated from '
+      + 'that is a misreading waiting to happen. Every answer here says on its face whether it is '
+      + 'the record\'s own or a view somebody constructed.',
+  },
+  VERSION_STRENGTH_TOO_MANY_STATES: {
+    check: 'C-30.9',
+    where: 'src/store.mjs versionStrength > is-version-strength',
+    translation: 'More kinds of reading were named than this record has. The bound is said here '
+      + 'rather than applied quietly, so nothing is dropped without you being told.',
+  },
+};
+
+/* The state set the pair is computed over WHEN NOBODY SAYS OTHERWISE, and it is
+   `accepted` alone. §12: *"The strength function takes an argument naming which
+   states to factor in, defaulting to accepted. Safe by default, and it is also
+   how §6.6's exploration works."* SAFE BY DEFAULT is the load-bearing half: a
+   caller who says nothing gets the record's own answer over the reading a
+   member adopted, never a number a machine proposed and nobody stood behind.
+   DERIVED from `VERSION_STATES` rather than typed beside it, so a vocabulary
+   that moves cannot leave this naming a state that no longer exists. */
+export const VERSION_STRENGTH_DEFAULT_STATES =
+  VERSION_STATES.filter((s) => s === 'accepted');
+
+/* THE HUNCH RULE, AT THIS ALTITUDE ONLY, and it is named here rather than
+   inlined because it DIVERGES from the finding layer and a silent divergence is
+   the drift this catalogue exists to prevent.
+
+   §12: *"A leg marked as a HUNCH (§6.7 — a member marking, always) is visible
+   as such and does not count as evidence."* So a hunch leg is INERT in this
+   arithmetic and NAMED as a hunch in the answer.
+
+   AND `store.mjs`'s `strengthOf()` SAYS THE OPPOSITE ONE ALTITUDE DOWN — *"A
+   HUNCH COMPOSES NORMALLY (DEC-15)"* — which is not a defect in either and is
+   not resolved by this item. DEC-15 is Bob's: a hunch is *"temporary bias"*
+   given *"a temporary high enough grade that otherwise disconnected evidence
+   can be brought together"*, cleared before publication. That licenses a hunch
+   to make the graph TRAVERSABLE; §12 declines to let it make a READING look
+   supported. The two are consistent under that split and they are stated
+   differently, so PL-14 implements §12 HERE, leaves `strengthOf()` untouched,
+   and RAISES the difference rather than settling doctrine from a build item. */
+export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];

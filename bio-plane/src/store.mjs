@@ -143,6 +143,19 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             index.mjs, because what a scope may REACH is a question only the OPS
             table can answer and this file must not keep a copy of it. */
          AI_CREDENTIAL_CHECKS,
+         /* PL-14 / IS-7 (§12): the strength pair's DEC-49 rows, the DEFAULT
+            state set (derived from `VERSION_STATES` in the catalog, never typed
+            here) and the roster of grade sources that are INERT at the version
+            altitude. `VERSION_STATES` itself arrives through `VERSION_MACHINE`
+            above, so this file still re-types no state name. */
+         VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES,
+         VERSION_STRENGTH_INERT_SOURCES,
+         /* MERGED AT INTEGRATION 2026-08-08: PL-11 and PL-14 each appended to
+            this import and each ended its own list with `MACHINE_AUTHOR_PREFIX`,
+            so the two tails collided textually while agreeing perfectly about
+            what is imported. PL-11's list is the longer one — it also needs
+            `MACHINE_CLASS_PREFIX` for REC-46's one machine-identity predicate —
+            and it is kept whole. Nothing is dropped from either side. */
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -16304,6 +16317,478 @@ export class Store extends DurableObject {
     return null;
   }
 
+  /* ==================================================================
+   * PL-14 / IS-7 — THE STRENGTH PAIR OVER ONE VERSION (§12).
+   *
+   * §12's first sentence is the whole item and it is written as a correction:
+   * *"STRENGTH IS A PAIR, AND THIS SECTION'S v2 SINGULAR WAS THE REFUSED
+   * NUMBER (SWEEP C5). DEC-21/DEC-44 refuse the composition four ways: strength
+   * is a pair over two populations — the capture axis and the connection axis —
+   * never composed into one value."*
+   *
+   * **THE PAIR IS NEVER COMPOSED INTO ONE NUMBER, AND THAT IS ASSERTED RATHER
+   * THAN MERELY AVOIDED.** `#refusePairComposed` runs over EVERY answer this
+   * function returns, refusing C-30.7 if a single figure ever appears beside the
+   * two axes. Avoiding a mistake leaves nothing behind that fails when somebody
+   * makes it; DEC-44 refuses exactly this composition one altitude UP (*"a case
+   * does NOT compose a super-conclusion … MUST NOT derive a single case-level
+   * strength"*), and the reason is identical here: two measurements over two
+   * populations reported as one number is the record claiming what neither
+   * population says. `test/strengthpair.control.mjs` arms it.
+   *
+   * THE ARITHMETIC IS NOT WRITTEN HERE AND MUST NOT BE. DEC-32's MIN over
+   * AND-related legs, MAX over OR-related branches and MIN within a branch are
+   * already implemented ONCE, in `#axisResult` / `#groundResult` (REC-42), and
+   * this function reaches them through the `legsOverride` seam PL-3 opened for
+   * exactly this reason. A second implementation of the composition is the shape
+   * that absorbed IS-6's C-22.4 control — one rule, two implementations, either
+   * one covering for the other — and `test/strengthpair.test.mjs` pins the
+   * implementation count over comment-stripped real source rather than trusting
+   * this paragraph.
+   *
+   * A VERSION LEG'S `ground` IS NOT NULL (PL-1's schema says so in SQL, because
+   * §3 requires the partition to be TOTAL on a version), so every version leg
+   * lands in a labelled branch and the axis is the MAX over them, each branch
+   * being the MIN within itself. The implicit-AND part `#axisResult` keeps for
+   * legs written before REC-42 has no members here, and that is a property of
+   * the version schema rather than of this function.
+   *
+   * GRADES ARRIVE FROM `earnedBasisRegistry` AND ARE NEVER MINTED. §5 states it
+   * as the rule for a machine composing legs at volume: *"the grades arrive from
+   * the record — from the resolutions the legs rest on (earnedBasisRegistry) …
+   * Where the record has earned nothing, the leg is ungraded, inert, and named
+   * as such. 'Assign strength values' means composing legs whose EARNED grades
+   * produce a supported calculation — not minting numbers."* And §12 explains
+   * why the FROZEN letter on the version row is not the value: *"A frozen
+   * version freezes the COMPOSITION and the grade-REFERENCES — not the grades …
+   * the effective calculation always uses the CURRENT earned grades behind the
+   * version's references, a frozen version's displayed arithmetic can honestly
+   * move beneath it."* So the stored `grade` column is a REFERENCE and the
+   * registry is the value. Three cases and the third is the one a build session
+   * would get wrong:
+   *
+   *   CONNECTION — the registry's entry is `mode: 'value'` (*"resolutions holds
+   *     the grade ITSELF, so the leg must state this letter and no other"*), so
+   *     the effective grade IS the registry's letter. Nothing earned, nothing
+   *     graded: inert and named.
+   *   CAPTURE — the registry's entry is `mode: 'ceiling'` and NOT a value; there
+   *     is no per-document capture grade anywhere in this schema. Writing the
+   *     ceiling in as the grade would be *"the record asserting a maximum as a
+   *     measurement"* (the earned-fill's own words). So the AUTHORED letter
+   *     stands and is CAPPED at the ceiling — never raised, which is what
+   *     "never minted" means on an axis whose earned value is a bound.
+   *   TESTIMONY — grade D is a member's own signed account (op=resolvetestify)
+   *     and the registry deliberately drops D rows: *"a document known to concern
+   *     the subject only by testimony earns NOTHING here and its leg is
+   *     testimony, with its own author and date."* A member's authored testimony
+   *     is not a machine minting a grade, so it stands. Erasing it would be this
+   *     function deciding a member's signed account is worth nothing, which no
+   *     ruling says.
+   *
+   * HUNCHES ARE EXCLUDED (§12: *"A leg marked as a HUNCH … is visible as such
+   * and does not count as evidence"*), through the catalog's
+   * `VERSION_STRENGTH_INERT_SOURCES` roster and never a literal here. That
+   * roster's own comment records the divergence from `strengthOf()`'s
+   * "a hunch composes normally (DEC-15)" one altitude down, why the two are
+   * consistent, and that PL-14 RAISES it rather than settling doctrine.
+   *
+   * UNGRADED LEGS ARE INERT **AND** NAMED, and those are two different facts
+   * that fail separately. INERT is what the arithmetic does — `#groundResult`
+   * decides load-bearing membership by `grade != null`, so a leg with no
+   * effective grade contributes nothing, floors nothing and unrates nothing
+   * (DEC-18). NAMED is what the reader is owed — DEC-18's plural clause,
+   * *"more than one leg may have no established grade, in which case every such
+   * leg will be named"* — so `not_load_bearing` carries every one of them per
+   * axis WITH THE REASON, and this function additionally publishes `ungraded`
+   * and `hunches` at the top level so a surface does not have to walk two axes
+   * to answer "what is present and not yet carrying anything".
+   *
+   * THE STATE-SET ARGUMENT IS §6 RULE 6'S MECHANISM. *"Exploring an unaccepted
+   * version is done by CALCULATING OVER IT, never by making it current … the
+   * strength function takes an argument naming which states to include."* It
+   * DEFAULTS TO ACCEPTED, from the catalog's `VERSION_STRENGTH_DEFAULT_STATES`.
+   *
+   * AND THE RETURN CARRIES THE STATE SET THAT PRODUCED IT, IN BAND. §12:
+   * *"The return carries the state set that produced it, in the same object — a
+   * pair travels, and a strength separated from its filter is a misread waiting
+   * to happen"*, and *"A what-if pair carries its state-set line wherever it
+   * renders."* DEC-40 determination 2 is where that comes from and it is the
+   * load-bearing half of that ruling: a filtered rendering that looks like the
+   * record's own answer IS the misrepresentation, *"manufactured by us and
+   * handed over pre-made"*. So `state_set` (the machine-readable set) and
+   * `filter` (the SENTENCE, which is what actually renders) are on every answer
+   * including the default one — because *"an unfiltered rendering says so too,
+   * or absence of the line becomes the ambiguity"*. `#refusePairComposed`
+   * refuses C-30.8 when the line is missing, which is DEC-40's own owed negative
+   * control (strip the filter line, the harness fails) enforced in code rather
+   * than only in a suite.
+   * ================================================================== */
+
+  /** How many state words a caller may name. The bound is the machine's own
+   *  size, so it can never be stale, and it is PUBLISHED in the refusal that
+   *  hits it rather than applied silently. */
+  static VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
+
+  /* THE FORBIDDEN COMPOSITION, AS A SET OF KEYS. Every spelling this record has
+     ever reached for when it meant "the strength" — and the point is that the
+     guard fails on the NAME, before anybody has to reason about what the value
+     means. A key called `grade` beside the pair is a single letter for a
+     question, whatever its author intended.
+     `pair` itself is checked separately and by TOTALITY: it holds the two axes
+     and nothing else, so a third key is caught even if it is called something
+     nobody predicted. The list catches the obvious; the totality catches the
+     rest. */
+  static #PAIR_COMPOSED_KEYS = ["strength", "grade", "score", "overall",
+                                "composed", "letter", "rating", "value"];
+
+  /* DEC-44 AND DEC-40, ENFORCED OVER THE ANSWER ON ITS WAY OUT — one function,
+     because both are properties of the SHAPE of what leaves rather than of any
+     branch that built it, and a guard that ran on some paths would be a guard
+     whose coverage nobody could state. Returns null when the answer is well
+     formed, and the refusal itself when it is not, so the caller's `return` is
+     the only place either verdict can be acted on. */
+  #refusePairComposed(out) {
+    const refusal = (code, detail) => {
+      const row = VERSION_STRENGTH_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail };
+    };
+    if (!out || out.ok !== true) return null;
+
+    /* DEC-49 REGION is-pair-composed
+     *
+     * THE SPAN THE TWO SELF-GUARD ROWS NAME (REC-71). A REGION rather than the
+     * whole function, and the reason is MEASURED rather than stylistic: with the
+     * `where` naming the function, the DEC-49 guard read 6 refusals here and
+     * could COMPARE only 5 — the sixth being the `refusal` helper's own return,
+     * where the code is a variable and therefore invisible to it. That is the
+     * unfalsifiable-site class REC-71 flagged and delegated, and adding one more
+     * of them while its ratio *"is getting worse"* would be this item paying for
+     * a convenience out of somebody else's instrument. The helper sits ABOVE the
+     * marker; every refusal inside names its code as a STRING LITERAL. */
+    /* R2's forbidden composition, by name. */
+    for (const k of Store.#PAIR_COMPOSED_KEYS)
+      if (Object.prototype.hasOwnProperty.call(out, k))
+        return refusal("VERSION_STRENGTH_COMPOSED",
+          `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure `
+          + `standing for both axes. Strength is a PAIR over two populations — the capture axis and `
+          + `the connection axis — and there is no value that is both.`);
+    const pair = out.pair;
+    if (!pair || typeof pair !== "object")
+      return refusal("VERSION_STRENGTH_COMPOSED",
+        "this answer carries no pair at all, so whatever it reports is not the two measurements this "
+        + "record makes.");
+    /* TOTALITY, both ways: exactly the axes `Store.STRENGTH_AXES` names, no
+       more and no fewer. A third key here is the composition arriving under a
+       name this guard's list did not predict. */
+    const keys = Object.keys(pair).sort();
+    const want = [...Store.STRENGTH_AXES].sort();
+    if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
+      return refusal("VERSION_STRENGTH_COMPOSED",
+        `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. `
+        + `Two populations, two answers, and nothing beside them that reads as a summary of both.`);
+    /* DEC-40's line, and its absence is the ambiguity the ruling names. */
+    if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
+      return refusal("VERSION_STRENGTH_UNFILTERED",
+        "this answer does not state which readings it was computed over. Every answer says so on its "
+        + "face — the record's own as plainly as a view somebody constructed — because absence of the "
+        + "line is exactly what makes the two indistinguishable.");
+    if (!Array.isArray(out.state_set) || !out.state_set.length)
+      return refusal("VERSION_STRENGTH_UNFILTERED",
+        "this answer carries no machine-readable state set beside its sentence, so a consumer would "
+        + "have to parse prose to learn what it counted.");
+    /* END DEC-49 REGION is-pair-composed */
+    return null;
+  }
+
+  /* THE VERSION'S LEGS AS THE WALK'S MEMBERS, with the EFFECTIVE grade resolved
+     from `earnedBasisRegistry` rather than read off the frozen row. The shape
+     returned is exactly `basisFor()`'s leg shape, because that is what
+     `#strengthWalk`'s `legsOverride` consumes — one arithmetic, reached through
+     the seam, never restated.
+
+     `why` travels on every leg the arithmetic will find inert, because
+     `#strengthWalk` composes its own `why` for the members it builds and a leg
+     that is inert for THIS layer's reasons (a hunch, nothing earned) would
+     otherwise be named with the wrong explanation. Two reasons for one outcome
+     is how a reader ends up checking the wrong thing. */
+  #versionLegsAsMembers(rows, subjectEntity) {
+    const targets = rows.map((r) => r.target_id).filter((t) => typeof t === "string" && t);
+    /* ONE registry call for the whole version — `earnedBasisRegistry` is
+       bounded by the targets asked about and runs two indexed reads per call
+       rather than a probe per leg, which is the shape it was built in. */
+    const reg = this.earnedBasisRegistry(subjectEntity || null, targets);
+    const earnedConn = (reg && reg.earned && reg.earned.connection) || {};
+    const earnedCap = (reg && reg.earned && reg.earned.capture) || {};
+    /* THE THREE PUBLISHED LISTS, and they are this LAYER's facts rather than the
+       walk's. `#namedMember` carries a fixed set of fields up out of
+       `#strengthWalk`, and the walk composes its own `why` for the members it
+       builds — correctly, because that `why` is about the ARITHMETIC. Where a
+       grade came from is about the RECORD, and pushing it through the walk would
+       either be dropped or would overwrite the arithmetic's own explanation with
+       a different one. Two reasons for one outcome is how a reader ends up
+       checking the wrong thing, so they are published side by side instead. */
+    const named = { ungraded: [], hunches: [], graded: [] };
+    const legs = rows.map((r) => {
+      const axis = r.grade_axis === "capture" || r.grade_axis === "connection" ? r.grade_axis : null;
+      const authored = typeof r.grade === "string" && r.grade ? r.grade : null;
+      const source = typeof r.grade_source === "string" && r.grade_source ? r.grade_source : null;
+      const base = { ord: r.ord, target_id: r.target_id, target_type: r.target_type,
+                     role: r.role, ground: r.ground, grade_axis: axis, grade_source: source };
+      const inert = (why, bucket) => {
+        const entry = { target_id: r.target_id, ord: r.ord, ground: r.ground,
+                        role: r.role, grade_axis: axis, grade_source: source, why };
+        named[bucket].push(entry);
+        return { ...base, grade: null, why };
+      };
+      /* A LEG THAT CARRIES A GRADE, with WHERE THE LETTER CAME FROM and what
+         the row claimed if the two differ. `authored` is published beside
+         `grade` deliberately: a reader comparing a frozen version to the answer
+         it produces today is exactly §12's *"a frozen version's displayed
+         arithmetic can honestly move beneath it"*, and that is only checkable if
+         both numbers are visible. */
+      const carries = (grade, why) => {
+        named.graded.push({ target_id: r.target_id, ord: r.ord, ground: r.ground,
+                            grade_axis: axis, grade_source: source, grade,
+                            authored, why });
+        return { ...base, grade };
+      };
+      /* §12, THE HUNCH: visible as such, and not counted as evidence. Read from
+         the catalog's roster so this file holds no literal 'hunch'. */
+      if (source && VERSION_STRENGTH_INERT_SOURCES.includes(source))
+        return inert("this leg is marked as a hunch, so it is visible here and does not count as "
+                     + "evidence", "hunches");
+      if (!axis)
+        return inert("this leg states no axis, so there is no population it belongs to", "ungraded");
+      if (axis === "connection") {
+        /* mode 'value': the registry HOLDS the letter, so the leg is worth that
+           letter and no other. A member's TESTIMONY is the one authored grade
+           that survives, because the recogniser never mints a D and erasing one
+           would be this function overruling a signed account. */
+        const e = earnedConn[r.target_id];
+        if (e && e.grade) return carries(e.grade, e.why);
+        if (source === "testimony" && authored)
+          return carries(authored,
+            `${r.target_id} carries a member's own signed account of how it connects to this subject, `
+            + `with its own author and date; the record earns nothing further for it and the machine `
+            + `neither mints that letter nor erases it.`);
+        return inert(`the record has earned nothing connecting ${r.target_id} to this question's `
+                     + `subject, so this leg is present and not yet load-bearing`, "ungraded");
+      }
+      /* CAPTURE. The earned entry is a CEILING and not a value, so the member's
+         letter stands and is CAPPED — never raised to the ceiling, which would
+         be the record asserting a maximum as a measurement. */
+      const c = earnedCap[r.target_id];
+      if (!c || !c.grade)
+        return inert(`the record holds no captured bytes for ${r.target_id}, so there is nothing here `
+                     + `to measure how it was captured`, "ungraded");
+      if (!authored)
+        return inert(`${r.target_id} is captured, but no capture grade was authored for this leg and `
+                     + `the record cannot mint one — what it holds is a ceiling, not a measurement`,
+                     "ungraded");
+      const capped = Store.#GRADE_RANK[authored] > Store.#GRADE_RANK[c.grade] ? c.grade : authored;
+      return carries(capped, capped === authored ? c.why
+        : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the `
+        + `record cannot support the stronger claim.`);
+    });
+    return { legs, ...named, subject_entity: reg ? reg.subject_entity : null,
+             subject_known: reg ? reg.subject_known : false };
+  }
+
+  /** op=versionstrength — the strength PAIR over ONE reading of one question's
+   *  evidence (IS-7 / §12). A pure read: it writes nothing, mints nothing, and
+   *  makes no version current. */
+  versionStrength(a = {}) {
+    const args = a || {};
+    const refusal = (code, detail, extra) => {
+      const row = VERSION_STRENGTH_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+
+    /* DEC-49 REGION is-version-strength
+     *
+     * THE SPAN `VERSION_STRENGTH_CHECKS`' argument rows name (REC-71). Every
+     * refusal between this marker and its `END` owes a code with a canned
+     * translation, and `civicos-ui/check-refusal-codes.mjs` arm C fails the
+     * harness on one that does not. A REGION and not the whole function
+     * deliberately: the two SELF-GUARD rows (C-30.7, C-30.8) live in
+     * `#refusePairComposed` and carry their own `where`, so neither site
+     * conscripts the other's refusals — which is the defect REC-71 measured on
+     * PL-1's two rows. The helper is named `refusal` and every code below is a
+     * STRING LITERAL at its site, because a code held in a variable is invisible
+     * to the guard and PL-3 shipped `translation: undefined` to a member exactly
+     * that way. */
+    const inq = String(args.id ?? "").trim();
+    if (!inq)
+      return refusal("VERSION_STRENGTH_NO_INQUIRY",
+        "this answers for ONE question: pass id=<INQ-…>. A strength belongs to a question's reading "
+        + "of its evidence, and there is no default question.");
+    if (normalizeType(OBJECT_TYPES[inq.split("-")[0]]) !== "inquiry")
+      return refusal("VERSION_STRENGTH_NOT_AN_INQUIRY",
+        `${inq.slice(0, 60)} is not a question, so it holds no readings of evidence and has no `
+        + `strength to report.`, { inquiry: inq });
+
+    /* THE STATE SET, §6 rule 6's argument, DEFAULTING TO ACCEPTED from the
+       catalog's derived roster. Accepts a comma-separated list or an array, so
+       a query string and a body say the same thing. */
+    const rawStates = args.states == null || args.states === ""
+      ? null
+      : (Array.isArray(args.states) ? args.states : String(args.states).split(","));
+    const asked = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
+    if (asked && asked.length > Store.VERSION_STRENGTH_STATES_MAX)
+      return refusal("VERSION_STRENGTH_TOO_MANY_STATES",
+        `${asked.length} kinds of reading were named and this record has `
+        + `${Store.VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied `
+        + `silently, so nothing is dropped without the caller being told.`,
+        { inquiry: inq, limit: Store.VERSION_STRENGTH_STATES_MAX });
+    const unknown = asked ? asked.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
+    if (unknown.length)
+      return refusal("VERSION_STRENGTH_UNKNOWN_STATE",
+        `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: `
+        + `${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly `
+        + `counted readings in states nobody recognises is a number no reader could check.`,
+        { inquiry: inq, unknown, legal: VERSION_MACHINE.legal });
+    /* DEDUPED and put in the MACHINE's own order rather than the caller's, so
+       two callers naming the same set produce the same sentence and the same
+       `state_set`, and a reader comparing two answers is comparing them. */
+    const stateSet = asked
+      ? VERSION_MACHINE.legal.filter((s) => asked.includes(s))
+      : [...VERSION_STRENGTH_DEFAULT_STATES];
+
+    /* THE VIEWER GATE, fail-closed, applied to the INQUIRY once — the same
+       shape and the same honest bound `basisVersions` states: `viewerPredicate`
+       filters PROJECT bundles and an inquiry is not a project, so for an
+       identified member the participation arm cannot bite here. What it DOES
+       buy is that an absent or unrecognised stamp compiles to DENY and this
+       read answers as it does for a question that does not exist. Claiming more
+       would be overclaiming about our own machinery. */
+    const seen = this.#bundleGate("bx.bundle_id", args.viewer ?? null);
+    const present = !!this.#one(
+      `SELECT bx.bundle_id FROM bundles bx WHERE bx.bundle_id=? AND (${seen.sql})`, inq, ...seen.args);
+    if (!present)
+      return refusal("VERSION_STRENGTH_NOT_AN_INQUIRY",
+        "no question by that id is readable here, so there is no reading of it to measure.",
+        { inquiry: inq });
+
+    /* WHICH READING. Named outright, or the one THIS PROJECT stands on (§7 —
+       current is a property of the project's relationship to the inquiry, never
+       of the inquiry, so there is no default project and must not be one). Read
+       through `#currentVersionOf`, the ONE reader the make-current act writes
+       through, so the answer and the act cannot disagree. */
+    const wantVersion = String(args.version ?? "").trim();
+    const project = String(args.project ?? "").trim();
+    const current = project ? this.#currentVersionOf(project, inq, args.viewer ?? null) : null;
+    const name = wantVersion || (current ? current.version : "");
+    if (!name)
+      return refusal("VERSION_STRENGTH_NO_VERSION",
+        project
+          ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is `
+            + `no default reading. Name one explicitly to measure it.`
+          : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-…>) "
+            + "so the reading it stands on can be used. There is no default reading here.",
+        { inquiry: inq, project: project || null });
+
+    const row = this.#one(
+      `SELECT name, state, description, relationship, hidden, derived_from, kind, run, author, at, leg_count
+         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, inq, name);
+    if (!row)
+      return refusal("VERSION_STRENGTH_NO_SUCH_VERSION",
+        `no reading named '${name.slice(0, 60)}' belongs to ${inq}.`
+        + (current && current.version === name
+            ? ` ${project.slice(0, 60)} points at it, so the pointer has outlived the reading it names.`
+            : ``),
+        { inquiry: inq, version: name });
+
+    /* §6 RULE 6, AND THIS IS THE MECHANISM RATHER THAN A GATE: a reading outside
+       the state set is not measured, and the refusal NAMES THE WIDENING that
+       turns the request into an honest what-if. Exploration is calculating over
+       an unaccepted reading — never making it current, which would move a whole
+       team's ground so one member could look at a possibility. */
+    if (!stateSet.includes(row.state))
+      return refusal("VERSION_STRENGTH_STATE_EXCLUDED",
+        `'${name.slice(0, 60)}' is ${row.state} and this answer counts ${stateSet.join(", ")}. `
+        + `Ask again naming ${row.state} among the states to see what it would come to — the answer `
+        + `will say on its face that it is a view you constructed and not what this record stands on.`,
+        { inquiry: inq, version: name, version_state: row.state, state_set: stateSet });
+    /* END DEC-49 REGION is-version-strength */
+
+    const legRows = this.#rows(
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, ground
+         FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+      inq, name, Store.BASIS_VERSION_LEGS_MAX);
+    /* THE SUBJECT, through `#subjectEntityOf` — the EXISTING reader every other
+       consumer of the earned registry uses, rather than a second SELECT that
+       could come to disagree with it. A question naming no subject earns nothing
+       on the connection axis, and its legs are honestly ungraded rather than
+       filled with a plausible letter. */
+    const resolved = this.#versionLegsAsMembers(legRows, this.#subjectEntityOf(inq));
+
+    /* THE ARITHMETIC, THROUGH THE ONE SEAM. `legsOverride` is PL-3's parameter
+       and this is its second caller: DEC-32's MIN over AND, MAX over OR and MIN
+       within a branch all happen in `#axisResult`/`#groundResult`, which this
+       function does not touch. A leg naming another question still recurses into
+       THAT question's own stored basis, which is right — a reading of THIS
+       question does not restate what the questions beneath it rest on. */
+    const bound = Store.QUEUE_ANCESTOR_DEPTH;
+    const pair = this.#strengthWalk(inq, 0, bound, resolved.legs);
+
+    const whatIf = !(stateSet.length === VERSION_STRENGTH_DEFAULT_STATES.length
+                     && stateSet.every((s, i) => s === VERSION_STRENGTH_DEFAULT_STATES[i]));
+    /* DEC-40's LINE, IN BAND, ON EVERY ANSWER. The what-if sentence says whose
+       view it is — *"A VIEW THAT READER CONSTRUCTED, labelled as such, never
+       'the case at threshold X'"* — and the default sentence says it is
+       unfiltered, because absence of the line is the ambiguity the ruling
+       names. Colour may decorate this line on a surface and may never BE it. */
+    const filter = whatIf
+      ? `WHAT-IF — a view you constructed, not what this record stands on. `
+        + `Computed over the reading '${name}', counting readings that are: ${stateSet.join(", ")}.`
+      : `Computed over the reading '${name}', counting only readings a member has adopted `
+        + `(${stateSet.join(", ")}). This is the record's own answer for this question and is not filtered.`;
+
+    const out = {
+      ok: true,
+      inquiry: inq,
+      version: name,
+      version_state: row.state,
+      ...(project ? { project, current: current ? current.version : null } : {}),
+      /* THE STATE SET THAT PRODUCED IT, machine-readable, in the same object as
+         the pair — §12: *"a pair travels, and a strength separated from its
+         filter is a misread waiting to happen"*. */
+      state_set: stateSet,
+      what_if: whatIf,
+      filter,
+      depth_bound: bound,
+      /* TWO MEASUREMENTS OVER TWO POPULATIONS. There is no third key here and
+         there must never be one; `#refusePairComposed` enforces that by
+         totality below rather than by this comment. */
+      pair: { capture: pair.capture, connection: pair.connection },
+      /* INERT AND NAMED — the second half, and it is a separate fact from the
+         first. The arithmetic already excluded these; this is what the reader is
+         owed (DEC-18's plural clause: every such leg is named, one or many). */
+      ungraded: resolved.ungraded,
+      hunches: resolved.hunches,
+      /* AND THE LEGS THAT DO CARRY SOMETHING, each with the letter, what the
+         frozen row claimed, and WHY the record supports it. This is what makes
+         "the grades arrive from the registry" checkable by a reader rather than
+         a property they must take from a comment. */
+      graded: resolved.graded,
+      /* WHERE THE GRADES CAME FROM, said rather than assumed: a reader checking
+         a letter is sent to the registry that holds it, and a question with no
+         registered subject learns that is why its connection axis is thin. */
+      grades_from: "earnedBasisRegistry",
+      subject_entity: resolved.subject_entity,
+      subject_known: resolved.subject_known,
+      legs_read: legRows.length,
+      legs_complete: legRows.length === row.leg_count,
+      hidden: row.hidden === 1,
+      derived_from: row.derived_from,
+    };
+    /* DEC-44 AND DEC-40, ON THE WAY OUT. The composition is REFUSED rather than
+       merely absent, which is the difference between a rule and a habit. */
+    return this.#refusePairComposed(out) ?? out;
+  }
+
   /* ==============================================================   * PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS.
    *
    * `VERSION_MACHINE` in the catalog is the machine and says, where it is
@@ -21003,6 +21488,22 @@ export class Store extends DurableObject {
              team's stance is never everybody's, expressed as the absence of a
              default rather than as a note about one. */
           project: url.searchParams.get("project"),
+        }),
+        /* PL-14 / IS-7: the strength PAIR over ONE reading of this question's
+           evidence (§12). A pure READ — it writes nothing and makes nothing
+           current, which is §6 rule 6's whole point: an unaccepted reading is
+           explored by CALCULATING OVER IT and never by moving a team's ground.
+           `states` defaults to accepted inside the store, from the catalog's
+           derived roster, so an absent parameter is the SAFE answer rather than
+           a permissive one. `viewer` is stamped by the control plane and an
+           absent one compiles to the deny predicate, so this fails closed like
+           every other gated read. */
+        versionstrength: () => this.versionStrength({
+          id: url.searchParams.get("id"),
+          version: url.searchParams.get("version"),
+          project: url.searchParams.get("project"),
+          states: url.searchParams.get("states"),
+          viewer: url.searchParams.get("viewer"),
         }),
         /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the
            control plane from the SESSION and any caller-supplied value is
