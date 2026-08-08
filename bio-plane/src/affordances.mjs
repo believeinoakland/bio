@@ -762,7 +762,16 @@ export const ACTS = [
 
      THE LABEL IS TYPE-NEUTRAL NOW, because one act publishing itself as "in a
      project" on a question would be the publication disagreeing with the op it
-     fronts — the disagreement this file exists to prevent. */
+     fronts — the disagreement this file exists to prevent.
+
+     REC-72 CHANGES NOTHING IN THIS ENTRY AND THAT IS THE POINT, stated so the
+     next reader does not go looking for the edit. Widening `op=cite`'s CASE arm
+     to admit a question as a MEMBER is a change to which sets the op accepts,
+     not to which objects publish the act: an inquiry already published `cite`
+     (as a citing object since REC-37, and as a member of somebody else's
+     selection all along), and this row was already as wide as the op. What
+     REC-72 did move is `sever`/`reinstate` below, because those two were
+     NARROWER than the op they front. */
   /* REC-24 (c). An action whose own machine offers ANY onward state — which is
      everything except `resolved` and `abandoned`, and the table says so rather
      than this file listing them. ONE condition and no second: the entry
@@ -852,16 +861,49 @@ export const ACTS = [
   { id: "cite", label: "Cite material into a case or a question", weight: "report",
     types: ["information", "project", "inquiry"],
     applies: (f, ty) => ty === "information" || ty === "project" || ty === "inquiry" },
-  /* S-11 step 2: withdrawing a citation without deleting it. From the
-     information side: some project holds a live cites edge to it. From the
-     project side: its own references carry a confirmed cites edge. */
+  /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
+     side: some CASE holds a live cites edge to it. From the case's own side:
+     its references carry a confirmed cites edge.
+
+     REC-72 CHANGED BOTH HALVES OF THE CITED SIDE, and each change is a rule.
+
+     (i) A QUESTION IS NOW A CITED SIDE. `op=cite`'s case arm admits an inquiry
+         (REC-72), so a case can draw on a question — and a case that could join
+         a question and never leave it is a worse shape than one that can do
+         neither, because there would then be no recorded way to stop drawing on
+         it. The withdrawal is the same act on the same block of the same
+         document, so it is offered wherever the edge can exist.
+
+     (ii) THE FACT IS `cited_by_case` AND NOT `cites_in`, WHICH FIXES A LATENT
+          DEC-8 DISAGREEMENT REC-37 LEFT. `#edgeTransition` — the one helper
+          behind both these acts — refuses a citing object that is not a project
+          (`NOT_A_PROJECT`). `cites_in` counts EVERY citer, and since REC-37 a
+          QUESTION also writes `rel: cites` into its own references when it
+          takes a basis leg. So an Information cited only by a question published
+          `sever` on a target where the op would have refused. Nothing was
+          looking for it: every suite's citer was a project. Withdrawing a basis
+          LEG is a real gap and it is a different act — it belongs to the basis
+          family (`inquiryground`, the version machine), not to this pair, and it
+          is reported as a class finding rather than smuggled in here. */
+  /* THE FACT IS READ DEFENSIVELY (`?? 0`), the posture every fact added since
+     REC-16 takes — `basis_legs`, `rested_on`, `basis_version_states` — and
+     REC-72 learned why the hard way rather than by copying a style. `deriveActs`
+     is EXPORTED and two suites call it with hand-built facts objects; a fact
+     read through a bare `.` threw a TypeError there, `repair-reachability`'s own
+     `actsAt` helper SWALLOWED it in a `try/catch` and returned "no acts at any
+     state", and its A3 judgement then reported six offenders that do not exist.
+     An instrument reporting a wrong number is harder to notice than one
+     reporting zero. In the plane the same crash would have taken the whole
+     `op=affordances` answer down for every object. Absent reads as ZERO, which
+     is the SAFE direction: an act is not published where the fact behind it is
+     not known, and DEC-8's rule is about never publishing one the op refuses. */
   { id: "sever", label: "Sever a citation", weight: "refuse",
-    types: ["information", "project"],
-    applies: (f, ty) => (ty === "information" && f.cites_in.confirmed.length > 0)
+    types: ["information", "inquiry", "project"],
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.confirmed > 0) },
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
-    types: ["information", "project"],
-    applies: (f, ty) => (ty === "information" && f.cites_in.severed.length > 0)
+    types: ["information", "inquiry", "project"],
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.severed > 0) },
 ];
 

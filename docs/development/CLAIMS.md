@@ -3417,3 +3417,94 @@ REC-64 took the `reachGap` ceiling from **73 to 42**. The 42 that remain do NOT 
 - **The alternative:** emit the code-to-translation map into the surface bundle at build, the way the docprofile copy is embedded in `app.html` today.
 - **Recommendation: runtime, as shipped, for two reasons that are not performance.** (i) A baked map is a COPY, and this project has measured five times that a copy agrees with its author at zero cost — including a complete hand copy of 131 op names that passed its own guard. (ii) A sovereign instance running an older surface against a newer plane would render the sentence frozen at ITS build, so two instances would tell a member different things about the same refusal. Runtime lookup makes the plane the single author of what it refuses, which is what DEC-8 protects and DEC-49 only narrowed.
 - **What reversing it costs: LOW NOW, RISING WITH THE NUMBER OF SURFACES.** Today it is a build step plus one accessor, and the guard's arm D already proves a surface table TOTAL against its producer, so the machinery to keep a baked map honest exists. It gets expensive once more than one surface holds a copy, because then reversing means proving every copy total, and the drift REC-43 closed on the co-attestation fence is exactly what a second copy re-opens. **The decision point is before the second surface table, not before the next translation.** The reasoning is written at `MACHINE_FENCE_CHECKS`' header, where the next allocator reads it.
+
+## CLAIM 2026-08-08 RECORD (REC-72)
+session: worker-rec72 (worktree `agent-ac01538437c27982e`)
+opened: 2026-08-08
+paths:
+  - `bio-plane/src/store.mjs` — TWO refusal predicates and nothing else: `cite`'s member
+    citability test (the case arm) and `#edgeTransition`'s member test (the one helper behind
+    `op=sever` AND `op=reinstate`). No new method, no schema, no new op, no region marker moved.
+  - `bio-plane/src/affordances.mjs` — the `sever` / `reinstate` ACTS rows only (their `types`
+    and `applies`), plus the reasoning comment on the `cite` row.
+  - `bio-plane/test/citeproject-inquiry.test.mjs` (NEW suite — the act driven through the
+    CONTROL PLANE and read back through `op=backlinks`, never through the op that wrote it)
+  - `bio-plane/test/citeinquiry.test.mjs` — §8's two arms are SUPERSEDED by this item and are
+    CORRECTED at the site with the reason, never exempted.
+  - `bio-plane/test/d216-sharing.probe.mjs` — the instrument that MEASURED this gap; its
+    "no curated producer" arm is corrected to record that the gap is closed, because a probe
+    still asserting the old refusal is an instrument lying about its own subject.
+  - `bio-plane/test/curated-producer.probe.mjs` (NEW — the CLASS SWEEP, a probe and not a suite so
+    the battery's delta stays honest; it MEASURES the estate rather than pinning it)
+  - `bio-plane/test/nc-rec72.mjs` (this item's negative-control harness, INSIDE this worktree)
+  - `bio-plane/scripts/coverage.mjs` — **the `REGISTER_FLOOR` constant block ONLY**, moved to the
+    figures `--strict` PRINTED on a green run of this branch (471 -> 482 arms, 119 -> 121
+    classified, 120 -> 122 corpus), which is CPDF-9's precedent for moving a floor with the change
+    that raised it. Nothing else in that file is touched.
+  - ADDED MID-ITEM, and each because the change REQUIRED it rather than because it was convenient:
+    `bio-plane/test/affordances.test.mjs` and `bio-plane/test/repair-reachability.test.mjs` both call
+    the exported `deriveActs` with HAND-BUILT facts objects, and both had to learn the fact
+    `sever`/`reinstate` are now derived over. `repair-reachability` also gained an assertion that its
+    own `actsAt` oracle did not SWALLOW a throw — it had, and reported six offenders that do not
+    exist.
+interfaces consumed: I3 (the op contracts), I5 (read only — no schema change)
+interfaces owned: none
+expected: REC-72 — the project-to-inquiry `cites` edge gains a CURATED PRODUCER (`op=cite`) and a
+  curated WITHDRAWAL (`op=sever`), so the edge D-216 proved the sharing model rests on stops being
+  reachable only by hand-authoring `bundle.md`.
+accepts-when: as QUEUE.md REC-72, plus: **battery baseline MEASURED IN THIS WORKTREE BEFORE ANY
+  EDIT and trusted over the brief** (the worktree arrived with no `bio-plane/node_modules`; `npm ci`
+  run, exit read UNPIPED; baseline **124/124 green · 7,811 assertions**, against a brief that said
+  ~7,815). The edge driven by an ACT and read back through a DIFFERENT op; the withdrawal likewise
+  and asserted RECORDED rather than absent. Negative controls RUN, each arm ALONE with the others
+  held open, declared before arming, restores verified by sha256 AND by `cmp` against a pristine
+  per-arm copy. No push, no merge.
+concurrency: `store.mjs` is contended. This item's diff there is TWO predicate expressions and their
+  adjacent `detail` strings — a hunk conflict at worst and never a semantic one. `index.mjs` is NOT
+  claimed and NOT edited: no op is added, no dispatch entry moves. `civicos-ui/**` is NOT edited —
+  `cite-act.test.mjs` mocks the store's refusal words and a mock that now understates the plane is
+  DELEGATED below rather than reached into. QUEUE.md, DECISIONS.md and INTERFACES.md are not
+  written by this session.
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-72) -> WHOEVER TAKES THE BASIS ALTITUDE: **A QUESTION CAN JOIN WHAT IT RESTS ON AND CANNOT LEAVE IT — REC-72'S EXACT SHAPE, ONE ALTITUDE UP, AND STILL OPEN**
+
+REC-72's class sweep found it and **DROVE it** (`node bio-plane/test/curated-producer.probe.mjs`, finding 2). It is the sweep's headline and it is bigger than any of the four authored-only relations below.
+
+- **MEASURED, not read.** `op=cite`'s inquiry arm composes a `basis[]` leg. `op=sever` on that question answers **`{ok:false, reason:"NOT_A_PROJECT", got:"inquiry"}`**, and `op=reinstate` answers identically — so the gap is the whole edge-transition family and not one verb. `#spliceBasis` has **exactly one caller** in the plane, which is `cite`. **A leg has a producer and no withdrawal.**
+- **Why it matters exactly as much as REC-72 did:** *correction moves FORWARD* (DEC-19), and an unrecorded withdrawal is indistinguishable from never having rested on it. A question whose basis can only grow is a question whose record overclaims by construction.
+- **THE MODEL IS ALREADY THERE — this is a missing ACT, not a redesign, and that is the difference between an item and a rewrite.** `#restsOnLive` already reads the citing document's `references[]` and treats a **severed** reference as a leg that is not live (`entry.status === "severed"`, asserted by the probe). So the record already knows how to represent a withdrawn leg. Nothing can put one there.
+- **What the item has to decide, and it is a real judgement rather than a widening:** `#edgeTransition` promotes with `object_type: "project"` HARD-CODED in its `meta`, so admitting a question means the meta becomes arm-conditional the way `cite`'s write already is. And the doctrine question underneath it: does severing the REFERENCE withdraw the LEG, or does a leg need its own withdrawal with its own reason? `basis ⊆ references` says the first; `ord`-addressable legs (D4 — one document cited for two reasons) says a member may want to drop one leg and keep the other.
+- **Do NOT solve it by widening `#edgeTransition`'s citing-object check alone.** That would make severing one reference silently drop EVERY leg on that target, which is the set-narrowing this act family refuses everywhere else.
+
+### DELEGATION 2026-08-08 RECORD (REC-72) -> WHOEVER OWNS `affordances.mjs`: **`ACTS[].types` GATES NOTHING, AND A NEGATIVE CONTROL IS THE ONLY REASON ANYONE KNOWS**
+
+- **MEASURED:** `deriveActs` is `ACTS.filter((a) => a.applies(facts, ty))`. **`types` is never consulted.** REC-72's control arm (e) dropped `inquiry` from `sever`/`reinstate`'s `types` and the suite came back **35 pass, 0 fail** against a declared MUST-FAIL.
+- **It is NOT inert, which is what makes it dangerous.** `index.mjs:2750` publishes it as **`appliesTo`** in the no-target catalog — the shape a surface loads ONCE to know which objects an act can ever apply to. A surface told `appliesTo: [information, project]` never offers the withdrawal on a question, whatever the per-object answer says.
+- **So `types` and `applies` are two statements of one rule that can disagree in total silence.** REC-72 asserted the catalog in its own suite, which closes it for these three acts and for nothing else.
+- **What is owed:** a totality arm over the WHOLE catalogue — for every act, every type its `applies` can return true for is in its `types`, and nothing else is. It is the same class as the D-173 mock/plane seam and the same class as `NON_ACTS`' own totality check, which already exists one field over.
+
+### DELEGATION 2026-08-08 RECORD (REC-72) -> UI: **`civicos-ui/test/cite-act.test.mjs`'s MOCK NOW UNDERSTATES THE PLANE, AND THE UI HARNESS IS GREEN ANYWAY**
+
+- `cite-act.test.mjs` MOCKS the store (`return W(refuse(onto ? "NOT_CITABLE" : "NOT_INFORMATION", …))`) and its mock refuses **every** non-Information member on the case arm. **The plane no longer does:** since REC-72 a case may cite a QUESTION. `node civicos-ui/test/run.mjs` is **exit 0** and REC-72 did not edit `civicos-ui/**`.
+- **The refusal WORDS did not move** — `NOT_INFORMATION` keeps its name and its site — so nothing renders wrongly today. What has moved is the mock's admitted set, and a mock narrower than the plane is the D-173 seam this area has already paid for twice.
+- **What is owed:** the mock widened to `information | inquiry` on the case arm, and — the part that is actually worth the turn — the cite flow OFFERING a question as a citable member, because the act now exists and a surface that cannot reach it leaves REC-72 unreachable to a human. `op=affordances` (no target) publishes `appliesTo` for `cite`, `sever` and `reinstate` including `inquiry`; the plane-side refusal carries `citable: ["information","inquiry"]`, so the surface needs no copy of the vocabulary.
+
+### DELEGATION 2026-08-08 RECORD (REC-72) -> CONDUCT: **FOUR RELATIONS IN THE CLOSED VOCABULARY HAVE NO CURATED PRODUCER, AND THE QUESTION IS WHETHER THEY SHOULD**
+
+Printed by `node bio-plane/test/curated-producer.probe.mjs` over `REL_VOCAB` read out of `checks/bio-checks.mjs` (9 relations, 5 source files, 1,963,450 bytes walked, comments blanked before matching):
+
+- **WITH a producer:** `cites` (`op=cite`/`op=sever`/`op=reinstate`, and `op=inquirydivide` for a child's apportioned legs) · `derived_from` (fork) · `supersedes` (`op=inquirydivide`) · `responds_to` (`op=actioncorrespond`) · `links_to` (`op=linkproject`).
+- **WITHOUT one — authored-only today:** **`relates_to`, `elevated_into`, `initiates`, `corroborates`.** Each is in the closed vocabulary, each passes C-6.1, each is walked by `op=backlinks`, and **none can be created by any act.**
+- **This is a QUESTION and not a finding to act on blindly.** `elevated_into` looks legacy (C-6.3's old arm was REPLACED by REC-11). `corroborates` is the one that reads load-bearing for the evidence story. Whether an authored-only relation is a gap or a deliberate choice is doctrine, and REC-72 did not rule on it.
+- **`links_to` IS AN ANOMALY OF ITS OWN, reported rather than fixed:** it is the only relation written by an **`INSERT INTO refs`** and never through a document. Everything else in this family is a projection re-derived from `bundle.md` inside promote's transaction (D-21). A `refs` row with no bytes behind it is a claim the record cannot show you the authoring of.
+- **WHAT THE SWEEP'S MATCHER CANNOT SEE, stated in the probe's own header and repeated here:** it knows two write shapes (an object literal carrying `rel: "<x>"`, and the frontmatter line the store composes inside a template literal) plus the `INSERT INTO refs` form; a relation built by string concatenation across lines, or from a computed value, is invisible to it. It does not know whether a producer is REACHABLE by a member — only the driven half answers that, and it is driven for two relations, not nine. It does not rule on whether an edge SHOULD have a producer. Its comment-blanking is naive about a `//` inside a string literal, and that error runs toward reporting a gap that is not one rather than hiding one.
+
+### DECISION FOR BOB 2026-08-08 (REC-72) — **A CASE DRAWING ON A QUESTION IS THE SAME ACT AS CITING A DOCUMENT, SO `op=cite` WAS WIDENED RATHER THAN A NEW ACT ADDED**
+
+- **What is running NOW, provisionally:** `op=cite` accepts a QUESTION as a member on the case arm, and `op=sever`/`op=reinstate` accept it too. A case can take up a question and put it down, with a reason, through the acts it already has. The refusal codes did NOT move: a non-citable member is still `NOT_INFORMATION` on the case arm, with its sentence rewritten to say what is actually refused and carrying `citable: ["information","inquiry"]` so a surface never needs a copy of the vocabulary.
+- **Why it was genuinely ambiguous:** DEC-23 says CONTENT is a reference to a part of a document up to the whole document — **and a question is not a document.** So "a case cites a question" is either the same act at a different altitude, or a different relationship wearing the citation's name.
+- **The alternative, stated fairly:** a NEW act — `op=draw` or similar — with its own control, its own affordance and its own refusals, saying explicitly that a case's interest in a QUESTION is a different relationship from its reliance on MATERIAL. That reading is respectable: a case rests on documents as evidence, and stands beside a question as an inquiry it shares. Those are arguably not one thing.
+- **RECOMMENDATION: keep the widening.** Three measured reasons, not one aesthetic one. (i) **The record already admitted the shape.** `op=promote` has always accepted a case whose `references[]` cites a question — C-6.1 judges the relation vocabulary and the id grammar, C-6.2 only that the target resolves, and neither reads the target's type; `op=backlinks` has always walked it; D-216 drove that route end to end. The fence was on the ACT alone, so widening created no new shape in the record, and a new act would have created a second name for a row that already exists. (ii) **REC-37 set this precedent at this exact site**, when it widened the CITING side to a question rather than minting a second op, and its argument holds unchanged: it is one act in the record's own terms — *this is why I think that* — and WHERE the record keeps it differs while WHAT the member did does not. (iii) **A second act would need a second withdrawal**, and the asymmetry this item exists to prevent gets easier to reintroduce with every duplicated verb.
+- **What reversing it costs: LOW NOW, AND IT RISES ONCE MEMBERS USE IT.** Today: one predicate in `cite`, one in `#edgeTransition`, two affordance rows, and the suites that pin them. Once cases have drawn on questions, reversing means deciding what happens to the edges that exist — and because a severed edge is a recorded judgement rather than a deletion, they cannot simply be dropped. **The decision point is before members start using it, not before the next act is added.**
+- **The smaller judgement inside it, stated so it is not smuggled:** the wire string `NOT_INFORMATION` now names a predicate that admits inquiries, which is a code slightly wider than its own name. It was kept because renaming a reason code is a BREAK by this repository's own definition (I3 2.0.0 recorded exactly that for `NOT_PROBLEMS`), it was measured to buy nothing (no consumer matches the literal anywhere in `civicos-ui` — the occurrences are prose and a mock's table), and what a member reads is `detail`. **If you would rather one code for what is now one predicate, it is one string per arm plus the suites that pin them, and it is cheapest today.**

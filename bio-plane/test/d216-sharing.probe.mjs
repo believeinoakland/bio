@@ -223,7 +223,10 @@ await mustPromote(INQ2, inquiryMd(INQ2, {}), "inquiry");
 /* THREE projects. A and B will share the question; C never cites it and is the
    arm that keeps "a project may stand on a reading" from being unconditional. */
 const A = "PROJ-2026-3000-oversight", B = "PROJ-2026-3000-budget",
-      C = "PROJ-2026-3000-unrelated", D = "PROJ-2026-3000-third";
+      C = "PROJ-2026-3000-unrelated", D = "PROJ-2026-3000-third",
+      /* REC-72's arm only. It exists so the CURATED act can be driven onto a
+         question without joining any edge set this probe measures a delta over. */
+      E = "PROJ-2026-3000-actor";
 /* THE TWO BARS ARE CROSSED ON PURPOSE. A declares capture A / connection C; B
    declares capture C / connection B. `#requiredStrengthFor` takes the STRICTEST
    PER AXIS across every citing project, and BASIS_GRADES is strongest-first, so
@@ -236,6 +239,7 @@ await mustPromote(A, projectMd(A, { bar: { capture: "A", connection: "C" } }), "
 await mustPromote(B, projectMd(B, { bar: { capture: "C", connection: "B" } }), "project");
 await mustPromote(C, projectMd(C), "project");
 await mustPromote(D, projectMd(D), "project");
+await mustPromote(E, projectMd(E), "project");
 
 const selectIds = async (ids) => {
   const r = await POST(`op=select&token=${RUTH}`, { ids });
@@ -272,21 +276,63 @@ console.log("\n--- A. THE EDGE: is it real, what is it called, is it many-to-one
   + "DELTA and not a constant",
     [before?.ok, (before?.backlinks ?? []).length], [true, 0]);
 
-  /* THE FIRST THING DRIVING FINDS, AND THE BRIEF DID NOT PREDICT IT.
+  /* THE FIRST THING DRIVING FOUND, AND THE BRIEF DID NOT PREDICT IT.
      `op=cite` — the curated act whose whole job is writing this edge family —
-     REFUSES an inquiry on the PROJECT arm. `cite()`'s citability test is
+     REFUSED an inquiry on the PROJECT arm. `cite()`'s citability test read
      `ontoInquiry ? !(ty === "information" || ty === "inquiry") : ty !== "information"`,
-     so a QUESTION may cite another question and a PROJECT may cite Information
-     and NOTHING ELSE. Recorded as the fact it is rather than worked around
-     silently: the edge §7 rests on has no curated producer. */
-  const cA = await cite(A, [INQ]);
-  const cB = await cite(B, [INQ]);
+     so a QUESTION could cite another question and a PROJECT could cite
+     Information and NOTHING ELSE. The edge §7 rests on had no curated producer,
+     and `op=sever` refused it identically, so a project could not withdraw
+     either.
+
+     ============ CORRECTED 2026-08-08 BY REC-72, WHICH THIS ARM CAUSED =======
+     THIS ARM USED TO ASSERT THE REFUSAL: `[cA?.ok, cA?.reason, cB?.reason]` ->
+     `[false, "NOT_INFORMATION", "NOT_INFORMATION"]`, and it was routed as
+     REC-72 the same day. REC-72 widened the case arm by EXACTLY ONE TYPE and
+     moved `op=sever`'s mirror with it. **The arm is CORRECTED and not deleted,
+     and it is not exempted:** an instrument still asserting a refusal its own
+     finding removed is an instrument lying about its subject, and an instrument
+     that simply DROPPED the arm would leave nothing here to notice a
+     regression. What it now asserts is the state REC-72 put the plane in, over
+     the same two cases, through the same act, in the same isolate.
+
+     WHAT DID NOT CHANGE, and it is why the rest of this probe still stands:
+     the EDGE is the same `cites` row in `refs` either way. Everything below —
+     the many-to-one walk, the crossed bars, the divergent stances — measured
+     the edge and not its producer, so it is untouched by the producer arriving.
+     The route the arm below drives (author `references[]`, `op=promote`) also
+     still works and is still what makes the whole model substrate-honest; it is
+     simply no longer the ONLY route.
+
+     THE ARM IS DRIVEN ON `E` AND `INQ2`, NOT ON `A`/`B`/`INQ`, AND THAT IS
+     DELIBERATE: every arm below measures a DELTA on `INQ`'s edge set and on
+     `op=stats.refs`, so a curated write onto `INQ` here would silently become
+     part of somebody else's baseline — the exact defect the `refs0` comment
+     twenty lines down was already written to avoid. `E <- INQ2` is the same
+     shape (a case drawing on a question) measured where nothing else is
+     looking, so this probe's other findings are BYTE-FOR-BYTE what they were. */
+  const cA = await cite(E, [INQ2]);
   m("op=cite(project <- inquiry) — what the plane answered", { ok: cA?.ok, reason: cA?.reason ?? null,
-    detail: typeof cA?.detail === "string" ? cA.detail.slice(0, 200) : null });
-  t("THE CURATED ACT REFUSES IT: `op=cite` cites Information into a project and nothing else, so the "
-  + "project-to-inquiry edge has NO producer among the curated acts — a fact this probe found by "
-  + "DRIVING and no design document records",
-    [cA?.ok, cA?.reason, cB?.reason], [false, "NOT_INFORMATION", "NOT_INFORMATION"]);
+    cited: cA?.cited ?? null });
+  t("REC-72: THE CURATED ACT NOW PRODUCES IT. `op=cite` writes the project-to-question edge, so the "
+  + "edge §7 rests on is reachable by an ACT rather than only by hand-authoring a document — which "
+  + "is the gap this probe found by DRIVING and no design document recorded",
+    [cA?.ok, cA?.cited], [true, [INQ2]]);
+  const eBack = ((await backlinksOf(INQ2))?.backlinks ?? []).filter((r) => r.from === E);
+  t("READ BACK THROUGH op=backlinks — a DIFFERENT op from the one that wrote it, because an edge "
+  + "asserted only through its own writer is an equality that costs nothing",
+    eBack.map((r) => [r.rel, r.status]), [["cites", "confirmed"]]);
+  /* AND THE WITHDRAWAL, because a case that can join and not leave is a worse
+     shape than one that can do neither. RECORDED, not absent: the backlink is
+     still returned and says it was cut. */
+  const sE = await GET(`op=sever&token=${RUTH}&project=${encodeURIComponent(E)}`
+    + `&handle=${await selectIds([INQ2])}&reason=${encodeURIComponent("answered elsewhere")}`);
+  const eBack2 = ((await backlinksOf(INQ2))?.backlinks ?? []).filter((r) => r.from === E);
+  t("REC-72's MIRROR: `op=sever` withdraws it, and the withdrawal is RECORDED rather than absent — "
+  + "the edge is still returned, carrying `severed`, which is the whole difference between "
+  + "withdrawing and never having cited (DEC-19: correction moves FORWARD)",
+    [sE?.ok, sE?.severed ?? null, eBack2.map((r) => [r.rel, r.status])],
+    [true, [INQ2], [["cites", "severed"]]]);
   /* OVER-STRICTNESS, so the arm above is about the PROJECT arm and not about
      citing generally: the same selection cites into a QUESTION perfectly well.
      Without this the finding would read as "the plane refuses inquiry citations",

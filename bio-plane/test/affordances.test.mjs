@@ -882,8 +882,14 @@ t("across every response: rung is a sourced value or null, and cite is ALWAYS nu
   [everyAct.every((a) => [null, "reasoned", "terminal", "attested"].includes(a.rung)),
    everyAct.filter((a) => a.id === "cite").every((a) => a.rung === null)], [true, true]);
 t("the derivation module agrees with the wire (no second copy in the handler)",
+  /* REC-72 added `cited_by_case` — how many of the citers are CASES, which is
+     what `sever`/`reinstate` are derived over, because `op=sever` refuses a
+     citing object that is not a project. Stated here rather than left to the
+     rule's `?? 0` default, so this fixture exercises the SHAPE the store
+     actually returns and not the fallback. */
   deriveActs({ object_type: "information", current_state: "collected",
-               cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 } })
+               cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 },
+               cited_by_case: { confirmed: 0, severed: 0 } })
     .map((a) => a.id).sort(), ["cite", "release"]);
 
 /* probe class reaches it, confined to scratch as everywhere. */

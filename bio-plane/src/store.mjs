@@ -1452,6 +1452,31 @@ export class Store extends DurableObject {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     /* Edges INTO the target (who cites it), live and severed. */
     const citesIn = this.#citesInto(target);
+    /* HOW MANY OF THOSE CITERS ARE CASES — a FACT, and the rule over it lives
+     * in the act catalogue like every other rule.
+     *
+     * REC-72 needed it and FOUND A DEFECT WHILE BUILDING IT, which is recorded
+     * here rather than quietly repaired. `op=sever` and `op=reinstate` move an
+     * edge on a CASE's own document: `#edgeTransition` refuses a citing object
+     * that is not a project, by name (`NOT_A_PROJECT`). But `#citesInto` counts
+     * every citer whatever its type, and since REC-37 a QUESTION also writes
+     * `rel: cites` into its own `references[]` when it takes a basis leg. So an
+     * Information cited ONLY by a question published `sever` on a target where
+     * the op would refuse — a pre-flight offering a control the refusal it
+     * fronts would decline, which is DEC-8's headline failure. It has been
+     * latent since REC-37 and nothing was looking for it, because the suite's
+     * citer was always a project.
+     *
+     * Counts and not ids, `rested_on`'s precedent: op=affordances answers about
+     * the TARGET, and handing back WHICH cases cite it would be §7.9's
+     * reverse-edge walk arriving by a new door. `op=backlinks` is the gated read
+     * that answers that question, and it is viewer-filtered. */
+    const citedByCase = { confirmed: 0, severed: 0 };
+    for (const [key, ids] of [["confirmed", citesIn.confirmed], ["severed", citesIn.severed]])
+      for (const id of ids) {
+        const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+        if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
+      }
     /* A project's OWN citation edges by status, from its document — the same
        source cite/sever read (the projection carries no status). */
     const citesOut = { confirmed: 0, severed: 0 };
@@ -1528,7 +1553,7 @@ export class Store extends DurableObject {
                .map((v) => v.state.trim()),
              basis_versions: (Array.isArray(docFm.basis_versions) ? docFm.basis_versions : [])
                .filter((v) => v && typeof v === "object").length,
-             cites_in: citesIn, cites_out: citesOut };
+             cites_in: citesIn, cites_out: citesOut, cited_by_case: citedByCase };
   }
 
   /* ---- S-10 step 5: selections ----
@@ -2420,15 +2445,40 @@ export class Store extends DurableObject {
                      + "named ids that do not exist, or its members may have been purged or hidden since "
                      + "it was made." };
 
+    /* THE MIRROR OF `cite`'s CITABILITY TEST, AND IT MOVES WITH IT (REC-72).
+     *
+     * This test was never an independent rule. It was an INFERENCE from the
+     * citing side — *"not Information, so it carries no citation edge to
+     * move"* — and REC-72 made that inference false by giving `op=cite`'s case
+     * arm a question to cite. Left as it was, a project could JOIN a question
+     * and never LEAVE it, which is a worse shape than one that can do neither:
+     * there would be no recorded way to stop drawing on a question, and
+     * *correction moves FORWARD* (DEC-19), so an unrecorded withdrawal is
+     * indistinguishable from never having cited at all.
+     *
+     * ONE HELPER, SO BOTH DIRECTIONS MOVE AT ONCE. `op=sever` and
+     * `op=reinstate` are the same method with different `from`/`to`, which is
+     * why the mirror is a one-line change rather than two: severing a
+     * project-to-question edge and putting it back are the same act on the
+     * same block of the same document.
+     *
+     * Through `normalizeType`, which the old comparison did NOT do — a legacy
+     * `focus`/`problem`-spelled question would otherwise be refused here while
+     * `cite` (which has always gone through the map) had happily cited it. That
+     * is the MAP RULE, and this site was the fourth to be caught by not
+     * applying it. */
     const offenders = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-      if (!b || b.object_type !== "information") offenders.push(id);
+      const ty = b ? normalizeType(b.object_type) : null;
+      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
     }
     if (offenders.length)
       return { ok: false, reason: "NOT_INFORMATION", project, handle, offenders: offenders.sort(),
-               detail: "these members of the selection are not Information, so they carry no citation edge "
-                     + "to move. The whole call is refused rather than narrowed." };
+               citable: ["information", "inquiry"],
+               detail: "a case's citation edges point at material or at a question, and these members of the "
+                     + "selection are neither, so they carry no citation edge to move. The whole call is "
+                     + "refused rather than narrowed." };
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
@@ -5947,12 +5997,52 @@ export class Store extends DurableObject {
     }
     /* END DEC-49 REGION is-cite-role */
 
-    /* Every member of the selection must be CITABLE, and what that means
-       depends on what is doing the citing.
+    /* Every member of the selection must be CITABLE: Information, or a
+       QUESTION. One predicate, both arms.
 
-       ON A CASE: Information, unchanged. A case's citation edge points at
-       material, and this arm also catches a Project citing itself, which is a
-       cycle with nothing to mean.
+       ================= REC-72: THE CASE ARM ADMITS A QUESTION ==============
+       THE JUDGEMENT, recorded at the site because every later reader inherits
+       it. D-216's model check drove this against the real control plane and
+       found that `op=cite` refused an inquiry on the PROJECT arm
+       (`NOT_INFORMATION`) and `op=sever` refused it identically — so the edge
+       that model rests on had NO CURATED PRODUCER. A project drew on a question
+       only by hand-authoring `references[]` and calling `op=promote`. There was
+       no act, so there was no affordance, so no surface could offer one.
+
+       WHAT THE OLD REFUSAL WAS PROTECTING, established BEFORE it was lifted,
+       because a refusal is presumed to have a reason:
+
+         - NOT the record's shape. `op=promote` has ALWAYS accepted a project
+           whose `references[]` carries `rel: cites` at an inquiry: C-6.1 judges
+           the rel vocabulary, the status vocabulary and the id GRAMMAR, and
+           C-6.2 judges only that the target RESOLVES. Neither reads the
+           target's `object_type`, and neither does the `refs` projection
+           re-derived from those bytes, or `#citesInto`, or `op=backlinks`,
+           which walk `refs` by target and kind alone. D-216 DROVE that path and
+           it landed. So the fence sat on the ACT and not on the RECORD: it made
+           one shape authorable and not actable, which is the gate-with-no-door
+           this item exists to close.
+         - NOT the Information state machine. The other `NOT_INFORMATION` sites
+           in this file (`retire`, `release`) guard collected -> verified ->
+           retired, which only Information has. They are a different rule about
+           a different thing and REC-72 does not touch them.
+         - YES, the cycle with nothing to mean. `ty !== "information"` also
+           caught a Project citing ITSELF, and any other type. Widening to
+           `information | inquiry` keeps every one of those refused: EXACTLY ONE
+           TYPE WIDE, and the suite carries the over-strictness arm that proves
+           it (an action, a project, a project citing itself).
+
+       WIDENED AND NOT A NEW ACT, on REC-37's own precedent one paragraph up: it
+       is ONE act in the record's own terms — "this is why I think that" — and
+       WHERE the record keeps it differs while WHAT the member did does not. A
+       second op would publish a second control for one act.
+
+       ON A CASE: Information, or a QUESTION (REC-72). A case's citation edge
+       points at what the case draws on, and D-216 measured that a question is
+       one of those things: `op=backlinks` returns both citing projects, the
+       plane walks the edge many-to-one, and two projects stand on different
+       readings of one question simultaneously. This arm still catches a Project
+       citing itself, and every other type.
 
        ON A QUESTION (REC-37): Information OR another inquiry. Basis recursion
        is REC-11's design — "a leg points at CONTENT or at another inquiry"
@@ -5969,7 +6059,7 @@ export class Store extends DurableObject {
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
       const ty = b ? normalizeType(b.object_type) : null;
-      if (ontoInquiry ? !(ty === "information" || ty === "inquiry") : ty !== "information") offenders.push(id);
+      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
     }
     if (offenders.length)
       return ontoInquiry
@@ -5981,10 +6071,21 @@ export class Store extends DurableObject {
             detail: "a question rests on material or on another question, and nothing else in the record can be "
                   + "a leg of its basis. These members of the selection are neither, and the whole call is "
                   + "refused rather than narrowed to the ones that are." }
+        /* THE WIRE STRING DOES NOT MOVE, and that is REC-37's ruling at this
+           very site applied to its own consequence: renaming a reason code is a
+           BREAK by this repository's definition (I3 2.0.0 recorded exactly that
+           for NOT_PROBLEMS), and what a member actually reads is `detail` —
+           which is rewritten here to say precisely what is now refused, and
+           carries `citable` so a surface recovers the vocabulary from the
+           refusal rather than holding a copy of it (REC-18's repairs
+           discipline). The honest alternative — one code for what is now one
+           predicate — is recorded as a decision for Bob rather than taken
+           quietly, because it is a change to the contract and not to the rule. */
         : { ok: false, reason: "NOT_INFORMATION", project, handle,
-            offenders: offenders.sort(), drift: sel.drift,
-            detail: "citing Information means Information. These members of the selection are not, "
-                  + "and the whole call is refused rather than narrowed to the ones that are." };
+            offenders: offenders.sort(), drift: sel.drift, citable: ["information", "inquiry"],
+            detail: "a case rests on material, or on a question the group is asking. These members of the "
+                  + "selection are neither, and the whole call is refused rather than narrowed to the ones "
+                  + "that are." };
 
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")

@@ -437,9 +437,26 @@ t("a document cited onto a case still succeeds at report weight, with no role in
 t("it wrote ONE cites edge into the case's own references and NOTHING anywhere near a basis",
   [(await docRefs(CASE)).map((r) => [r.rel, r.target, r.status]), await docLegs(CASE)],
   [[["cites", DOC_CASE, "confirmed"]], null]);
+/* SUPERSEDED BY REC-72, CORRECTED AND NOT EXEMPTED, and why the old assertion
+   was wrong is the whole of the item that replaced it.
+   THIS ARM USED TO READ: "a case's members are still Information only, refused
+   NOT_INFORMATION under its own unchanged name" -> [false, "NOT_INFORMATION",
+   [SUB]]. It was true of the code and wrong about the record. D-216's model
+   check then DROVE the sharing model and found that the project-to-question
+   `cites` edge the whole investigative build rests on had NO CURATED PRODUCER:
+   `op=promote` had always accepted it (C-6.1/C-6.2 never read a target's type)
+   and `op=backlinks` had always walked it, so this refusal made one shape
+   authorable and not actable. REC-72 widened the case arm by exactly one type.
+   The rule that remains — and the one this arm was ACTUALLY protecting — is the
+   `selfCase` arm below. The full drive lives in `citeproject-inquiry.test.mjs`;
+   this arm is the REC-37 suite confirming its own case arm still agrees. */
 const inqMember = await cite(CASE, [SUB]);
-t("a case's members are still Information only, refused NOT_INFORMATION under its own unchanged name",
-  [inqMember.ok, inqMember.reason, inqMember.offenders], [false, "NOT_INFORMATION", [SUB]]);
+t("REC-72: a CASE may now cite a QUESTION, through the act, and the edge lands in its references",
+  [inqMember.ok, inqMember.weight, inqMember.cited], [true, "report", [SUB]]);
+t("and it landed as a plain cites edge with NO basis leg — a case keeps citations in references[], "
++ "which is the arm-conditional shape REC-37 built and REC-72 did not disturb",
+  [(await docRefs(CASE)).map((r) => [r.rel, r.target, r.status]).sort(), await docLegs(CASE)],
+  [[["cites", DOC_CASE, "confirmed"], ["cites", SUB, "confirmed"]].sort(), null]);
 const selfCase = await cite(CASE, [CASE]);
 t("a case citing ITSELF is still caught by that same arm — a cycle with nothing to mean",
   [selfCase.ok, selfCase.reason], [false, "NOT_INFORMATION"]);

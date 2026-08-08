@@ -159,7 +159,16 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       471,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+  /* MOVED 471 -> 482 / 119 -> 121 / 120 -> 122 by REC-72, 2026-08-08, FROM THE FIGURES
+     THIS INSTRUMENT PRINTED on a green `--strict` run of REC-72's branch (`GREW by 11
+     arm(s)`) and never by adding to the number already here. REC-72 landed two files under
+     `test/` that the register reads — a suite and a probe — each declaring its own control,
+     so the register grew for the ordinary reason. A floor only ever fails when the actual
+     falls BELOW it, and every concurrent worker can only add, so raising it here is safe
+     against the merged tree in a way a ceiling would not be. CONDUCT: re-read it at
+     integration anyway — this figure has now been true of one branch and false of the
+     merged tree five times in two days. */
+  arms:       482,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
                        and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
@@ -169,8 +178,8 @@ const REGISTER_FLOOR = {
                        THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
                        RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
                        accumulate any, which is exactly what D-233 and REC-71 were about. */
-  classified: 119,  // declarations the detector could count arms in
-  corpus:     120,  // suites the register reads
+  classified: 121,  // declarations the detector could count arms in
+  corpus:     122,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
