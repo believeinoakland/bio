@@ -4136,3 +4136,225 @@ the bundle skill, outside this repository. Nothing in this item's measurement de
 distinction (`data/deletions.json` has no producer in code OR in a document: §2.5 specifies
 the FILE, and the substrate that would have written it is the one the plane replaced), but the
 next member of the class may.
+
+## CLAIM 2026-08-08 UI (UI-38 — the running-session surface, third pass)
+session: ui38-running-session (worktree agent-ae139b3de556ab2ea)
+opened: 2026-08-08T00:00:00Z
+paths: **`civicos-ui/app.html` — named by SITE, not by file:** (1) one CSS rule ADDED under
+  `.ai-panel .ai-bound`, for a block nested inside a block; (2) inside the
+  `__AI_SESSION_START__`/`__AI_SESSION_END__` block ONLY — `aiSessionPairsHtml` (widened to print an
+  array's members without an index), `aiSessionBudgetHtml` / `aiSessionPrincipalHtml` /
+  `aiSessionConditionHtml` (DELETED, collapsed into ONE new `aiSessionBlockHtml`),
+  `aiSessionPanelHtml` (one call instead of four), and three comment regions (the DEC-61
+  paragraph, the missing-op paragraph, the observation-log decision). **NOT** `aiSessionRead`,
+  `aiSessionTranscript`, `aiSessionInContext`, `aiSessionIndicatorHtml`, the seen-roster, or
+  `aiSessionContextHtml` — the READ, the INDICATOR, the DEVICE ROSTER and the ONE DOOR are
+  untouched, and no call site outside the block moved.
+  `civicos-ui/test/ai-session-wire.test.mjs` (the `vm` export list; `wireFailures` INVERTED; ARM
+  W1's wording; ARM W1r/W1s/W1t ADDED; ARM W6's path spellings; ARM C2's renderer list; ARM O3/O3b
+  ADDED). `civicos-ui/test/surface-registry.test.mjs` (the `vm` export list; ARM Y7/Y8/Y8b/Y10/Y11/
+  Y15/Y16 re-made through the replacement; ARM Y8c/Y11b/Y11c ADDED).
+  **CROSS-AREA, FORCED, AND FILED:** `bio-plane/test/airun.test.mjs` — ARM U ONLY (the `vm` export
+  list, U3..U7 re-made through the composition, U9/U9b/U9c/U9d ADDED). See IC-41 and the DELEGATION
+  below. **NOT** any other arm of that file.
+  `docs/development/INTERFACE-CHANGES.md` (IC-41), `docs/development/CLAIMS.md` (this entry and its
+  delegations), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/src/**` (READ ONLY), **NOT** `bio-plane/checks/**`, **NOT**
+  `bio-plane/scripts/**`, **NOT** `civicos-ui/tokens.css`, **NOT** `docs/development/QUEUE.md`,
+  **NOT** `docs/development/IS-BUILD-PLAN.md`, **NOT** `newgroup/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3 (`op=airun`, read and rendered; nothing else asked of the plane).
+interfaces owned: none registered — **and IC-41 is filed because that is the defect**: the plane's
+  own battery lifts this block's internal function names and no interface says so.
+
+**THE BRIEF'S TWO LANDED INPUTS ARE NOT ON `main`, MEASURED RATHER THAN INFERRED, AND THIS IS THE
+FIRST THING CONDUCT SHOULD READ.** The brief said to take REC-69's context-listing op and REC-74's
+third published condition as inputs. Both are marked `· done` in `QUEUE.md`, and REC-69 is named in
+the line *"FIVE ITEMS INTEGRATED TOGETHER 2026-08-08 — REC-72, REC-66, REC-65, REC-63, REC-69 —
+verified at 129/129 GREEN."* **Neither is in the tree.** A grep for `airuns` over
+`bio-plane/src`, `bio-plane/test`, `bio-plane/checks` and `bio-plane/scripts`, excluding
+`airunspawn`, returns NOTHING; `index.mjs`'s op table has no such key; `aiRunRead` publishes `bias`
+and `principal.skill` and **no `standard`**. The work exists on unmerged worker branches —
+`2d9c57b` (REC-69) and `a3af6bb` (REC-74) — and neither is an ancestor of `origin/main`
+(`57b5067`). **UI-38 therefore built against what is actually there**, said so at the site, and did
+not pre-shape itself around a wire this harness cannot drive.
+
+**WHAT THE ITEM IS, AFTER THAT.** REC-74's delegation to UI was measured exactly right and it is the
+whole of this pass: **`aiSessionPairsHtml` skipped objects, so the panel rendered NEITHER the bias
+block NOR the standard block.** On `main` today the plane publishes TWO of §11's three conditions
+and a member sees ONE. The panel made up for the object-skipping with one dedicated renderer per
+nested field somebody had named — `principal`, `budget`, `condition` — **which is a LIST OF FIELD
+NAMES wearing a field-name-blind renderer's clothes.** PL-12/D-84 published a fourth (`bias`) and
+nothing carried its name, so not one field of the LENS the run was formed under reached a member;
+`context` was invisible for the same reason, so the panel never said which inquiry the run was in.
+**AND THE SAME LIST IS WHY NOBODY NOTICED:** `ai-session-wire.test.mjs`'s `wireFailures` enumerated
+the identical three nestings by name, so the surface and the instrument that grades it went blind
+together and ARM W1 answered `[]` over a panel missing a whole published condition.
+
+**THE FIX IS ONE RECURSIVE RENDERER AND THE PANEL NOW KNOWS NO FIELD NAMES AT ALL.** Three
+renderers become `aiSessionBlockHtml`, applied at every depth: the level's scalars, then a block per
+nested value, keys printed for objects and never for array indices (an index is the surface's
+arithmetic, not the record's word). `bias` renders today for that reason and no other, and
+**`standard` will render the day REC-74 lands WITHOUT A LINE CHANGING** — which is what "designed
+ONCE for all AI features" has to mean if it is to survive the next AI feature. It still derives
+nothing: every visible token is a value the record sent or a key it named, and ARM S5 and ARM D
+both hold over the new function.
+
+**THE INSTRUMENT WAS INVERTED IN THE SAME TURN**, because a defect and the reason it was invisible
+are one finding rather than two. `wireFailures` recurses over everything the record published at
+every depth; ARM W1r PRINTS the corpus (**24 scalars**) and floors it at 20; ARM W1s names any
+nested value the walk entered and read nothing from; ARM W1t asks the RECORD which top-level values
+are nested and requires the panel to NAME every one — so a fifth condition is graded without this
+file moving.
+
+**THE OTHER THREE THINGS THE BRIEF ASKED FOR, EACH DECIDED AND RECORDED AT THE SITE.**
+  - **The observation-log surface: RE-TAKEN, not inherited.** Of UI-49's four grounds, **ground 4
+    has EXPIRED** (`aiRunLog` now clamps to `AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` and publishes `limit`
+    and `truncated`, on the ABSENT answer too — REC-70, verified at the source) and **ground 3 has
+    WEAKENED** (four vocabularies travelling WITH the answer is the DEC-8 case a surface is
+    ALLOWED, not a doctrine of its own). Grounds 1 and 2 still decide it, and **one ground is
+    ADDED and it is structural**: `SURFACES["ai-session"].kind` exists so there is EXACTLY ONE
+    surface of this kind, and an audit reader of a finished run is a DIFFERENT KIND, not a second
+    of this one. **SEPARATE, and the click-through stays on the transcript.** It needs its own
+    registry entry, route and bound-rendering pins: an item, not a rider.
+  - **§14a's "SAYS SO WHEN UNAVAILABLE" — located, not authored.** REC-64 gave it
+    `AI_RUN_CAPABILITY_UNAVAILABLE` / `C-33.29` with a canned translation, refused by `aiRunOpen`.
+    **It is refused where a run is OPENED, which this application never does** — the fleet member
+    opens runs, not the browser — so there is no run object to render and nothing here to say.
+    Recorded at the site rather than papered over: a line rendered by a window that asked nothing
+    would be a claim about the record made by a surface that never asked, which is UI-39's and
+    UI-40's class.
+  - **NO "YOU MAY NOT SEE THIS" BRANCH, and none added.** The block already reads `session` and
+    never `found`; when the context-listing op lands, `runs: []` is byte-identical for an uninvited
+    member and a context that does not exist, so a branch telling them apart would leak what the
+    plane deliberately withholds. Stated at the site so the next reader does not add one.
+
+accepts-when: as the IS-BUILD-PLAN UI-38 row. `node civicos-ui/test/run.mjs` from the REPO ROOT,
+  exit read UNPIPED, **0**: indicator bound to run state (untouched, still green), transcript never
+  persisted server-side (ARM Y14/Y14d, untouched), budget and spend rendered from the run object
+  (ARM W5, ARM U3/U3b) — **and now every OTHER condition the run object carries as well.**
+numbers: **MEASURED IN THIS WORKTREE, and the brief's harness figure was WRONG IN BOTH DIRECTIONS
+  until `npm ci` was run.** First run: `node civicos-ui/test/run.mjs` **exit 1, 3 FAIL** — not 12 as
+  UI-51 recorded and not 8 as briefed, but `Cannot find module 'miniflare'` in the three suites that
+  drive the real plane (`ai-session-context`, `ai-session-wire`, `intent-write`). After `npm ci` in
+  `bio-plane/` and a fast-forward from `bb426ac` to `origin/main` `57b5067`: **exit 0, 40 suites
+  PASS, 0 FAIL** — a GREEN baseline, recorded because the practice is to trust the measurement
+  rather than the streak.
+  **PER-SUITE, by re-running the TRUE baseline (all changed files restored from `git show HEAD:`),
+  never by subtraction:** `ai-session-wire` **72 → 81** (+9; its own header claims "Clean tree: 70",
+  stale by 2), `surface-registry` **382 → 393** (+11), `ai-session-context` **77 → 77** (0, and it
+  was not edited), `bio-plane/test/airun.test.mjs` **103 → 107** (+4; its own header claims "Clean
+  tree: 101", stale by 2). Every restore verified by sha256 AND by `cmp` against uniquely-named
+  per-arm pristine copies, with byte counts printed and a 20,000-byte floor guarded.
+floors: **NONE MOVED, and none needed to.** No DEC-49 region, no `REGISTER_FLOOR` key, no
+  `regionLines`, no coverage floor: this item edits no `bio-plane/src/**`, no `checks/**` and no
+  `scripts/**`. **Two floors were ADDED rather than moved** — `ai-session-wire` ARM W1r's corpus
+  floor of 20 scalars (measured 24) and ARM U9's `biasShown.length >= 2` (measured 2). ARM S3's
+  existing `renderers.length >= 4` was checked deliberately: collapsing three renderers into one
+  takes the block from 6 driven renderers to **exactly 4**, so the floor still holds and was NOT
+  lowered. Had it fallen, the reason would have been an instrument counting fewer functions rather
+  than slack — it did not fall, so nothing had to be argued.
+concurrency: checked over the whole file. No live claim names `civicos-ui/app.html`'s AI-session
+  block, `ai-session-wire.test.mjs`, `surface-registry.test.mjs` or `airun.test.mjs`. **THREE LIVE
+  DELEGATIONS POINT AT `civicos-ui/app.html` at OTHER sites** (REC-63's route marker, REC-66's
+  connect receipt, REC-72's `cite-act.test.mjs` mock) — none of them inside the AI-session block,
+  and none touched here. **IF `airun.test.mjs` CONFLICTS AT INTEGRATION, TAKE THIS ITEM'S ARM U
+  WHOLE:** it is the only version that resolves against a block with no `aiSessionBudgetHtml` in it,
+  and a keep-both merge there is a `ReferenceError` that ends the module with the tally reading
+  `assertions unknown`.
+released:
+
+### DELEGATION 2026-08-08 UI (UI-38) -> CONDUCT, AND IT OUTRANKS EVERYTHING ELSE HERE: **TWO QUEUE ROWS SAY `done` FOR WORK THAT IS NOT ON `main`, AND ONE IS INSIDE A "VERIFIED AT 129/129 GREEN" INTEGRATION LINE**
+
+`QUEUE.md` carries `### REC-69 · done` and `### REC-74 · done`, and line ~601 reads *"FIVE ITEMS
+INTEGRATED TOGETHER 2026-08-08 — REC-72, REC-66, REC-65, REC-63, REC-69 — verified at 129/129 GREEN
+/ 8,116 assertions, `--strict` exit 0, UI harness exit 0, every floor sitting EXACTLY at measured."*
+
+**MEASURED ON `origin/main` AT `57b5067`, from a clean fast-forwarded worktree:**
+
+- A grep for `airuns` over `bio-plane/src`, `bio-plane/test`, `bio-plane/checks` and
+  `bio-plane/scripts`, excluding `airunspawn`, returns **no output.** The control plane's op table
+  carries `airun`, `airunlog`, `airunspawn`, `airunopen`, `airuntick` and `airunclose` — and no
+  context-listing op of any spelling.
+- `aiRunRead` (`store.mjs`) returns `{ id, label, mode, status, ticks, created, updated, expires,
+  context, principal, budget, condition, bias }`. **No `standard`.** `ai_runs.standard_pair` is
+  written by `aiRunOpen` and published only by `aiRunSpawnPayload` — REC-74's row describes the
+  state the tree is still in, exactly.
+- `git log --all -S` finds the work on branches: **`2d9c57b`** *"REC-69 / op=airuns — the question
+  no op could answer"*, and **`a3af6bb`** *"REC-74: the run's third condition is published"*.
+  `git branch -a --contains` lists **ONE** branch for each, and neither is `main`.
+
+**Why this is the delegation and not a footnote.** This project's whole product is trustworthiness
+of the record, and its own development record now claims a battery figure over code that is not in
+the commit it names. **A worker briefed to "take these as INPUTS rather than rediscovering them"
+would have built a consumer for an op the harness cannot call** — a surface with a declared read
+nothing performs, which is `surface-registry.test.mjs` ARM D4's own subject. UI-38 measured instead
+and spent roughly a fifth of its budget establishing it. CONDUCT is asked to establish **which of
+the five items in that line are actually on `main`** and to correct the rows, because the same brief
+text may have gone to other workers. Whether the merges were lost or never made is not something
+this item can see from here, and it is not guessed at.
+
+### DELEGATION 2026-08-08 UI (UI-38) -> PLANE-TEST (`bio-plane/test/**`): **ARM U OF `airun.test.mjs` WAS EDITED CROSS-AREA, FORCED, AND IT NEEDS YOUR REVIEW RATHER THAN YOUR REPAIR**
+
+IS-6's ARM U lifts `civicos-ui/app.html`'s renderers out by NAME. UI-38 deleted three of those names
+(they are why the bias block rendered nowhere — see IC-41 and the claim above), which turned
+`airun.test.mjs` into `ReferenceError: aiSessionBudgetHtml is not defined` and the battery into
+**131/133 with `assertions unknown`**. Landing that and filing a note would have pushed a red
+`main`, so the consumer was corrected in the same turn.
+
+**What changed, so you can check it rather than re-derive it:** the `vm` export list; U3/U3b/U4 now
+judge the PANEL rather than the budget block (strictly stronger — a value reaching its own block but
+not the panel used to pass, and that is exactly the shape the bias block failed in); U5/U5b/U5c
+judge the principal block **deliberately on its own**, because for a run over a PROJECT the word
+"project" also appears as `context.type` and asking the panel would pass for free; U6 folded into
+the panel. **ADDED: U9 (REACH), U9b, U9c, U9d** — the plane's own proof that §11's LENS now reaches
+a member, asking the RECORD which keys to look for rather than naming them. **103 → 107 assertions,
+green, measured against the true baseline.**
+
+**One arm came back wrong and the correction is recorded rather than smoothed:** U9's first draft
+asked for every KEY of the bias block and failed naming `now` and `moved`. Both are `null` on a run
+opened with no manifest, and the surface renders nothing for a null — **correctly**, because
+`#biasForRun`'s own header says `moved: null` means *unknown* and a key printed with a blank beside
+it would read as *no*. **The arm was wrong, not the surface**, and it is narrowed to the fields that
+have a value.
+
+### DELEGATION 2026-08-08 UI (UI-38) -> M0 / whoever owns `bio-plane/test/op-claims.test.mjs`: **THE WALK SWEEPS UNTRACKED SCRATCH FILES, AND `WORKER.md` REQUIRES EVERY WORKER TO PUT THEM THERE**
+
+Measured, not inferred. UI-38's negative-control harness lived in `<worktree>/.ui38-nc/` — which is
+what `WORKER.md` instructs, in those words: *"The shared scratchpad is NOT isolated between
+sessions … Keep every harness and scratch file INSIDE your own worktree."* It held per-arm pristine
+copies of `app.html`. `op-claims.test.mjs` then failed with **12 WRONG-LEVEL violations, every one
+of them a copy of a sentence that is REGISTERED in the ledger under `civicos-ui/app.html`** — the
+two DO-path mentions at app.html:5720/5721 — because **the ledger is keyed by `(file, name)` and a
+copy has a different file.**
+
+So the suite is correct about the sentences and wrong about the corpus: it grades bytes that are not
+in the commit and cannot reach anybody. **Two workers following two standing instructions produce a
+red battery**, and the failure mode is confusing rather than obvious — the violations name real
+registered exceptions, so it reads like the ledger drifted. Suggested shape, not prescribed:
+exclude paths `git check-ignore` claims, or paths not tracked at HEAD, and **assert the exclusion's
+REACH** so the walk cannot quietly stop reading the real corpus. UI-38 did not edit the suite: it is
+not UI's, and the arm is otherwise working exactly as designed.
+
+### DELEGATION 2026-08-08 UI (UI-38) -> WHOEVER LANDS REC-74 AND REC-69: **THE SURFACE IS ALREADY READY FOR BOTH, AND HERE IS WHAT THAT DOES AND DOES NOT MEAN**
+
+- **REC-74.** `aiSessionPanelHtml` renders whatever the run read publishes, at every depth, naming
+  no field. `standard` will render on arrival with **no UI change**, and
+  `surface-registry.test.mjs` ARM Y11c already drives that exact shape (`{in_force, stated, basis}`)
+  under a name the surface has never seen. **ONE THING TO KNOW BEFORE YOU CHOOSE THE SHAPE: a field
+  whose value is `null` renders NOTHING, key included, and that is deliberate** — `bias.moved: null`
+  means *unknown*, and printing `moved` with a blank beside it would read as *no*. So **"no bar was
+  in force" must arrive as a STATED STRING, exactly as `bias.stated` does, and never as
+  `standard: null`** — otherwise a member sees nothing at all and cannot tell it from a run whose
+  bar simply was not published, which is the distinction REC-74's own row exists to make.
+- **REC-69.** `aiSessionContextHtml` is still the ONE function that changes; the call sites, the
+  renderers and every pin over them stay. **Do not add a "you may not see this" branch** — the empty
+  list is byte-identical for an uninvited member and a context that does not exist, with no count of
+  the withheld, and a surface that told them apart would leak exactly what the plane withheld.
+
+### DECISIONS FOR BOB 2026-08-08 (UI-38): **NONE**
+
+Read against `kickoffs/README.md`'s three tests. The observation-log question was a tactical
+determination with the evidence in the repository, so it was decided and recorded at the site rather
+than returned. The two missing merges are an INTEGRATION fact for CONDUCT, not a ruling. The
+cross-area edit to `airun.test.mjs` is a coordination question and is filed as IC-41. **An empty
+list is a real answer.**

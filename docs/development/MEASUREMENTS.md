@@ -4308,3 +4308,56 @@ which is `reversible`, the answer UI-20 recorded as *"C-7 derives reversible"* w
 rendering the rung as ABSENT because FW-14 had not yet assigned it. Both halves are read
 out of `store.mjs` by the suite rather than pinned by hand. Note what it does not claim:
 severing is not erasure, and the edge stays in the record carrying the member's reason.
+
+## 2026-08-08 · UI-38 — the running-session panel published three conditions and rendered one; and two QUEUE rows are ahead of the tree
+
+Instrument: `grep` over `bio-plane/src`, `bio-plane/test`, `bio-plane/checks`, `bio-plane/scripts`
+and `civicos-ui/`; `git log --all -S` and `git branch -a --contains`; `node civicos-ui/test/run.mjs`;
+`cd bio-plane && npm run test:battery`; `node scripts/coverage.mjs --strict`. Tree: `origin/main` at
+`57b5067`, fast-forwarded, `npm ci` run in `bio-plane/`.
+
+### The two figures a brief carried that were wrong, both measured rather than argued
+
+| claim | measured | where it came from |
+| --- | --- | --- |
+| the UI harness is RED at 8 (briefed) / 12 (UI-51) failures | **exit 1 with 3 failures, all `Cannot find module 'miniflare'`; exit 0 with 40/40 after `npm ci`** | a worktree arriving without `bio-plane/node_modules` — WORKER.md's own first warning |
+| `op=airuns` (REC-69) and `op=airun`'s `standard` (REC-74) are landed inputs | **NEITHER IS ON `main`.** No `airuns` anywhere in `bio-plane/**` outside `airunspawn`; `aiRunRead` publishes no `standard`. Both on unmerged worker branches (`2d9c57b`, `a3af6bb`), neither an ancestor of `57b5067` | `QUEUE.md` marks both `· done`, and names REC-69 in a *"FIVE ITEMS INTEGRATED … verified at 129/129 GREEN"* line |
+
+### What the surface actually rendered, before this item
+
+`op=airun` publishes TWO of §11's three conditions today — the **bias manifest** (PL-12/D-84) and the
+**skill version** (SK-1, inside `principal`). A member could see **one**. `aiSessionPairsHtml` skipped
+every object, and the panel compensated with one renderer per nested field somebody had named:
+`principal`, `budget`, `condition`. `bias` carried no such name, so **not one of its fields reached a
+member**; `context` was invisible for the same reason, so the panel never said which inquiry the run
+was in.
+
+**The instrument had the identical defect and that is why it was never seen.**
+`ai-session-wire.test.mjs`'s `wireFailures` enumerated the same three nestings by name and skipped
+every other object, so ARM W1 answered `[]` — *nothing is missing* — over a panel missing a whole
+published condition. Two hand-kept lists of the same three names, one in the subject and one in the
+instrument, invalidating each other's evidence.
+
+Corpus after inverting the walk: **24 scalars** reached across the whole record at every depth
+(floor 20), over 4 nested blocks the record publishes (`context`, `principal`, `budget`, `bias`).
+Before: the walk reached 3 of those 4.
+
+### Instrument reach, stated plainly
+
+The consumer sweep for the three deleted renderer names is a **literal text match** over
+`bio-plane/`, `agent-worker/`, `civicos-ui/`, `docprofile/`, `pdf-worker/`, `tools/` and `newgroup/`.
+It sees every source and test file that spells a name out. **It cannot see a name built at runtime**
+(`"aiSession" + kind + "Html"`), and nothing in this repository does that today — but that is a
+statement about today, not a property of the matcher. Three consumers were found; the third
+(`bio-plane/test/airun.test.mjs`) is in another area and is filed as **IC-41**.
+
+### Figures
+
+- UI harness: **exit 0 (unpiped), 40/40.** `ai-session-wire` 72 → 81, `surface-registry` 382 → 393,
+  `ai-session-context` 77 → 77 — each measured by re-running the true baseline from
+  `git show HEAD:`, never by subtraction, with every restore verified by sha256 **and** `cmp`.
+- Plane battery: **133/133 green · 8,323 assertions · exit 0.** The only plane file this item
+  touches is `bio-plane/test/airun.test.mjs`, true baseline re-run at **103 → 107**.
+- `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` read UNPIPED: **exit 0.**
+- Two suite headers found stale by measuring them: `ai-session-wire` says "Clean tree: 70" against a
+  real 72; `airun.test.mjs` says "Clean tree: 101" against a real 103.

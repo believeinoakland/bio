@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. Clean tree: 101 pass, 0 fail.
+/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. ~~Clean tree: 101 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 103, not 101. Clean tree after UI-38's ARM U rewrite: 107 pass, 0 fail.**
+   ARM U's ARMS, 2026-08-08 (UI-38, cross-area — see IC-41). ARM U lifts `civicos-ui/app.html`'s renderers out BY NAME, so UI-38's collapse of three field-named renderers into one broke this file with `ReferenceError: aiSessionBudgetHtml is not defined` — a throw that ends the MODULE while the battery reads `assertions unknown`, which is the class WORKER.md warns about and is why the consumer was corrected here rather than delegated. The arm proving the new U9 family: in `civicos-ui/app.html`'s `aiSessionBlockHtml`, make the nested loop `continue` unconditionally -> U9b and U9d FAIL naming `bias` and its fields, with U3/U3b/U6/U7 beside them. **U9's own first run FAILED against CORRECT behaviour** — it asked for every KEY of the bias block and named `now` and `moved`, which are `null` on a run with no manifest and which the surface deliberately renders nothing for; the ARM was narrowed, not the surface.
    (1) THE ITEM'S OWN, AND IT IS FIRST — A RUN KILLED MID-FLIGHT. In src/store.mjs neuter the reaper's tick by making the `ai-run-reap` registry entry a no-op (`tick: (now) => ({ airunreap: { at: null, lapsed: 0, reaped: [] } })`), which is exactly what "the run writes its own log on the way out" amounts to for a run that was killed -> 11 FAIL, 90 pass, and every one NAMES the killed run or what a surface can no longer render: K2c (reaped [] against one named run), K3 (log has 3 entries, not 4 — the terminal one is simply absent), K4 (bound null against "lease"), K5 (state null), K5b (no sentence naming the bound), K6 (still "running" hours after it died), K7 (seqs [1,2,3]), K8 (op=airun publishes no condition), K9 (a late tick REOPENS a dead run), U6 and U7 (the running-session surface has nothing to render about a run that ended). Restored, 101 pass.
    (2) MAKE THE LOG WRITE ONLY ON SUCCESS. In #aiRunTerminate guard the #aiRunAppend call with `stoppedByBound ? null : …` -> 8 FAIL, 93 pass, across TWO runs and nothing else: K3/K4/K5/K5b/K7 name the killed run that left nothing, B3/B4/B5 name the budget-exhausted one. EVERY arm about a run that FINISHED stays GREEN — C1-C4 and F1-F2 do not move — which is the finding as a measurement rather than a sentence: a log that exists only when the run finished is a log about the runs that did not need one. (Noted precisely: the CANCELLED run stays green under this arm because `cancelled` is an ENDING and not a bound, so this mutation does not reach it. The first draft of this line claimed C3 failed; it does not, and the claim is corrected rather than left standing.)
    (3) PUT THE LOG IN bundle.md. Promote a second version of the fixture bundle whose bundle.md body carries a terminal entry's own detail sentence, THROUGH THE REAL op=promote WRITE PATH rather than by hand-writing a files row -> 1 FAIL, 100 pass: ARM L3 names the bundle and the leaked sentence, with the corpus size (1 document, 15 needles) printed beside it so a corpus that shrank to nothing could not read as a clean answer. ARM L4 is the same function's own control in the other direction and is IN the suite, so L3 is a measurement rather than a green light nobody has shown can go red.
@@ -691,8 +692,21 @@ console.log("\n--- ARM U · UI-38's rider: publish what the running-session surf
                   $: () => null, JSON, Object, Array, console };
     ctx.globalThis = ctx;
     vm.createContext(ctx);
+    /* CORRECTED 2026-08-08 (UI-38), NEVER EXEMPTED, AND THE CORRECTION IS THE
+       RIDER PAYING OFF RATHER THAN A BREAKAGE. This lifted three renderers each
+       named after ONE nested field — `aiSessionBudgetHtml`,
+       `aiSessionPrincipalHtml`, `aiSessionConditionHtml`. That list is exactly
+       why PL-12/D-84's BIAS BLOCK — published by `op=airun` right here in this
+       file's own subject — rendered NOWHERE on the member's panel: the plane
+       grew a fourth nested condition and no renderer carried its name. UI-38
+       collapsed the three into `aiSessionBlockHtml`, which knows no field names,
+       so ARM U now drives the composition rather than three named pieces of it.
+       Every claim U3..U7 made is re-made below, and ARM U9 is ADDED for the
+       block that was invisible. Cross-area edit, forced by the surface change
+       and made in the same turn so the battery does not go red — filed as an IC
+       row and delegated to PLANE-TEST for review (see `CLAIMS.md`). */
     vm.runInContext(block[1] + ";globalThis.__A={aiSessionInContext,aiSessionIndicatorHtml,"
-      + "aiSessionBudgetHtml,aiSessionPrincipalHtml,aiSessionConditionHtml,aiSessionPanelHtml};", ctx);
+      + "aiSessionBlockHtml,aiSessionPairsHtml,aiSessionPanelHtml};", ctx);
     const A = ctx.__A;
     const live = (await GET(`op=airun&token=${TOK}&run=${RESUMED}`)).session;
     const dead = (await GET(`op=airun&token=${TOK}&run=${KILLED}`)).session;
@@ -705,7 +719,12 @@ console.log("\n--- ARM U · UI-38's rider: publish what the running-session surf
     t("ARM U2: the INDICATOR renders, carrying the record's own label", ind.includes("sewer fund"), false);
     t("ARM U2b: the live run publishes no label, so the indicator carries the dot and the address "
       + "and no sentence at all", ind.includes('class="dot"') && ind.length > 0, true);
-    const budget = A.aiSessionBudgetHtml(live);
+    /* THE COMPOSITION a member actually sees, not a named piece of it. U3..U6
+       were each judged on their own renderer's output; they are now judged on
+       the panel, which is strictly stronger — a value that reaches its own
+       block but not the panel used to pass, and that is precisely the shape the
+       bias block failed in. */
+    const budget = A.aiSessionPanelHtml(live, null);
     t("ARM U3 (F11): the BUDGET renders from what the record published", budget.includes("allowed"), true);
     t("ARM U3b: and its LIVE CONSUMPTION beside it", budget.includes("consumed"), true);
     /* F11's pin is over RENDERED OUTPUT: a percentage introduced by ANY route
@@ -713,17 +732,63 @@ console.log("\n--- ARM U · UI-38's rider: publish what the running-session surf
        either, or the surface renders arithmetic without doing any. */
     t("ARM U4: nothing the record published renders as a percentage or a remainder",
       /%|remaining|nearly|left\b/i.test(budget), false);
-    const who = A.aiSessionPrincipalHtml(live);
+    /* THE PRINCIPAL BLOCK ON ITS OWN, deliberately, because `context.type` for a
+       run over a project is also the word "project" — asking the whole panel
+       would pass U5 for a reason that has nothing to do with who pays. Here the
+       run is over an INQUIRY, so the collision does not arise today; the block
+       is asked anyway, so the arm cannot start passing for free the day a
+       fixture moves. */
+    const who = A.aiSessionBlockHtml(live.principal, "principal");
     t("ARM U5 (§14a): WHICH LEVEL of the Claude-account cascade pays is rendered", who.includes("project"), true);
     t("ARM U5b: BESIDE the plane-credential principal — two principals, never one (DEC-27(b))",
       who.includes("class:member") || who.includes("member:"), true);
     t("ARM U5c: and NO TOKEN VALUE is anywhere in it",
       /mem-is6|adm-is6|prb-is6/.test(who + budget + ind), false);
-    const cond = A.aiSessionConditionHtml(dead);
-    t("ARM U6: the CONDITION when a bound stops the run renders, verbatim", cond.includes("lease"), true);
     const panel = A.aiSessionPanelHtml(dead, null);
+    t("ARM U6: the CONDITION when a bound stops the run renders, verbatim", panel.includes("lease"), true);
     t("ARM U7: the whole panel assembles from the record with no device transcript (DEC-61)",
       panel.includes("ai-panel") && panel.includes("lease"), true);
+
+    /* ARM U9 · THE CONDITION THE RIDER COULD NOT SEE UNTIL NOW, AND IT IS THE
+       REASON THIS ARM WAS TOUCHED AT ALL.
+
+       §11 records THREE conditions a run was formed under. This method publishes
+       the BIAS BLOCK (PL-12/D-84) and the SKILL VERSION (SK-1, inside
+       `principal`); `standard` is stored in `ai_runs.standard_pair` and is not
+       published by `aiRunRead` on `main` as this was written (REC-74). Of the
+       two that ARE published, the skill version reached the member and the bias
+       block did NOT — for as long as it has existed — because it is an object
+       and the surface had a renderer only for the three objects somebody had
+       named. **This arm is the plane's own proof that the lens now arrives**,
+       and it asks the RECORD which keys to look for rather than naming them, so
+       a fourth condition added tomorrow is graded without this file moving. */
+    /* CORRECTED ON ITS FIRST RUN AND THE CORRECTION IS RECORDED RATHER THAN
+       SMOOTHED: the first draft asked for every KEY of the bias block and came
+       back naming `now` and `moved`. Both are `null` on a run opened with no
+       manifest, and the surface renders nothing for a null — correctly, because
+       a key printed with no value beside it is a label a member cannot use and
+       is not something the record said. **The arm was wrong, not the surface**,
+       and it is narrowed to the fields that HAVE a value. That distinction is
+       the whole of `#biasForRun`'s three-answers header: `moved: null` means
+       *unknown*, and printing `moved` with a blank would read as *no*. */
+    const biasShown = Object.entries((live && live.bias) || {}).filter(([, v]) => v !== null && v !== undefined);
+    t("ARM U9 (REACH): the record published a bias block with fields carrying values to look for — an "
+      + "empty one would make U9b vacuous", biasShown.length >= 2, true);
+    t("ARM U9b (§11): every field of the LENS the run was formed under that HAS a value reaches the "
+      + "member's panel, key AND value — the condition the plane published and the surface rendered "
+      + "nowhere until UI-38",
+      biasShown.filter(([k, v]) => !budget.includes(k)
+                                   || (typeof v !== "object" && !budget.includes(String(v)))).map(([k]) => k), []);
+    t("ARM U9c: and the honest absence is STATED rather than blank — a run opened with no manifest "
+      + "carries §3's own sentence and it is on the panel",
+      live.bias.in_force === false ? budget.includes(live.bias.stated) : true, true);
+    /* AND THE SURFACE NAMES EVERY NESTED BLOCK THE RECORD PUBLISHED, asked of
+       the record rather than of a list — the structural form of the same claim,
+       and the one that survives REC-74 landing `standard`. */
+    t("ARM U9d: every nested block `op=airun` publishes is NAMED on the panel — a block the surface has "
+      + "no renderer named after is the defect UI-38 measured",
+      Object.entries(live).filter(([k, v]) => v !== null && typeof v === "object"
+                                              && !budget.includes(`<b>${k}</b>`)).map(([k]) => k), []);
     /* AND THE SUPPORTED ABSENCE. Publishing nothing is a state, not a gap. */
     t("ARM U8: where no run exists the plane publishes `session: null` and the surface renders NO "
       + "INDICATOR — not an invented \"nothing is running\"",

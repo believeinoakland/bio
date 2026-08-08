@@ -32,6 +32,19 @@
  * NEGATIVE CONTROL, RUN 2026-08-07, every file restored byte-identically with
  * sha256 compared before and after each arm:
  *
+ *  (0) ADDED 2026-08-08 (UI-38), and it is this file's ARM Y arms rather than a
+ *      registry arm. Clean tree measured at 382 before UI-38 and 393 after. In
+ *      `app.html`'s `aiSessionBlockHtml` make the nested loop `continue`
+ *      unconditionally — the panel stops descending, which is exactly the state
+ *      `main` was in and why `op=airun`'s BIAS BLOCK rendered nowhere ->
+ *      **25 FAIL / 368 pass**: Y7 x6, Y8c, Y11b x6, Y11c x4, Y15 x6, Y16, Y17,
+ *      with `ai-session-wire` failing 23 INDEPENDENTLY.
+ *      **THE ARMS THAT STAYED GREEN ARE THE FINDING AND ARE RECORDED RATHER
+ *      THAN SMOOTHED: Y8 and Y8b PASSED**, because they judge the principal
+ *      BLOCK on its own and the mutation broke only DESCENT. A block-level pin
+ *      cannot see a composition defect — which is the whole shape the bias block
+ *      failed in — so **ARM Y8c was added and Y8c is the one that failed.**
+ *
  *  (1) a recipe step naming an op the plane does not emit. Change any step's
  *      `op:` in app.html's RECIPES to `"notanop"` ->
  *        FAIL: RECIPES[does-the-record-hold-anything-on-this].steps[1] names op
@@ -1038,7 +1051,17 @@ await section("ARM Y · the renderers", async () => {
                 recR: async (op, params) => { ASKED.push({ op, params }); return ANSWER; } };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
-  vm.runInContext(src[1] + `;globalThis.__A={aiSessionRead,aiSessionTranscript,aiSessionInContext,aiSessionIndicatorHtml,aiSessionPairsHtml,aiSessionBudgetHtml,aiSessionPrincipalHtml,aiSessionConditionHtml,aiSessionPanelHtml,aiSessionRouteFromHash};`, ctx);
+  /* CORRECTED 2026-08-08 (UI-38), NEVER EXEMPTED — and the correction is the
+     item. `aiSessionBudgetHtml`, `aiSessionPrincipalHtml` and
+     `aiSessionConditionHtml` were three renderers each keyed to ONE nested
+     field name, and that list is why the run's BIAS BLOCK (PL-12/D-84, published
+     by `op=airun` on `main`) rendered NOWHERE: the plane published a fourth
+     nested condition and no renderer carried its name. They are collapsed into
+     `aiSessionBlockHtml`, which knows no field names. Every claim the arms below
+     made — the budget's two figures, both principals, the condition verbatim,
+     and the over-strictness shape — is RE-MADE through the replacement rather
+     than dropped, and one arm is ADDED for the shape that was invisible. */
+  vm.runInContext(src[1] + `;globalThis.__A={aiSessionRead,aiSessionTranscript,aiSessionInContext,aiSessionIndicatorHtml,aiSessionPairsHtml,aiSessionBlockHtml,aiSessionPanelHtml,aiSessionRouteFromHash};`, ctx);
   const A = ctx.__A;
 
   /* ARM Y1 IS CORRECTED 2026-08-07 (UI-47), NOT EXEMPTED. It read
@@ -1090,16 +1113,29 @@ await section("ARM Y · the renderers", async () => {
     budget: [ { bound: "fetches", limit: 200, consumed: 37 },
               { bound: "sub-sessions", limit: 4, consumed: 1 } ],
     principal: { claude_account: "project", plane_credential: "token:ai" } };
-  const bh = A.aiSessionBudgetHtml(withBudget);
+  /* JUDGED THROUGH THE ONE RENDERER since 2026-08-08 (UI-38). The claim is
+     unchanged — every figure the record published for every bound is on the
+     surface — and it is now made against the function a member's panel actually
+     composes with, rather than against a budget-shaped renderer that existed
+     only because `budget` had a name somebody wrote down. */
+  const bh = A.aiSessionBlockHtml(withBudget);
   for(const frag of ["fetches", "200", "37", "sub-sessions", "4", "1"])
     ok(bh.includes(frag), `ARM Y7: the budget line carries the published '${frag}'`);
-  ok(A.aiSessionPrincipalHtml(withBudget).includes("project"),
+  /* THE PRINCIPAL BLOCK ON ITS OWN, deliberately, and NOT the whole record.
+     `withBudget.context.type` is also the string "project", so asking the whole
+     panel whether it contains "project" would pass for a reason that has
+     nothing to do with who pays — an equality that costs nothing, in the arm
+     whose subject is that the cascade LEVEL reaches the member. */
+  const ph = A.aiSessionBlockHtml(withBudget.principal, "principal");
+  ok(ph.includes("project"),
      "ARM Y8: WHICH ACCOUNT PAYS is on the surface — §14a already requires the record to name the cascade level");
   /* Written positively. This arm was first spelled `!x.includes(...) === false`,
      which is correct and unreadable — and an assertion nobody can read at a
      glance is one that gets "fixed" into its own opposite later. */
-  ok(A.aiSessionPrincipalHtml(withBudget).includes("token:ai"),
+  ok(ph.includes("token:ai"),
      "ARM Y8b: the plane-credential principal is named BESIDE the Claude account — two different principals, and an act must say both (DEC-27(b), DEC-55.4)");
+  ok(A.aiSessionPanelHtml(withBudget, null).includes("token:ai"),
+     "ARM Y8c: and it survives composition — the panel a member actually sees carries it, so Y8's block-level pin is not the only path");
 
   /* Y9 · IT DERIVES NOTHING. A percentage, a remainder or a judgement would be
      this surface computing a fact the record did not state. The pin is over the
@@ -1115,10 +1151,34 @@ await section("ARM Y · the renderers", async () => {
   const stopped = { id: "AIS-3", context: { type: "project", id: "PRJ-9" },
     condition: { kind: "runtime-ceiling-reached",
                  detail: "a CPU or subrequest ceiling was reached (D-54, D-56)" } };
-  const ch = A.aiSessionConditionHtml(stopped);
+  const ch = A.aiSessionBlockHtml(stopped.condition, "condition");
   ok(ch.includes("runtime-ceiling-reached"), "ARM Y10: the condition kind is rendered");
   ok(ch.includes("a CPU or subrequest ceiling was reached (D-54, D-56)"),
      "ARM Y11: the plane's own explanation is rendered VERBATIM, not paraphrased");
+
+  /* ARM Y11b · THE DEFECT UI-38 MEASURED ON 2026-08-08, AS A REGRESSION
+     SENTINEL. §11 records THREE conditions a run was formed under. `op=airun`
+     publishes the bias block today (PL-12/D-84) and the panel rendered NOT ONE
+     FIELD of it, because the only generic renderer skipped objects and the three
+     dedicated ones were `principal`, `budget` and `condition`. The shape below
+     is the plane's own, taken from `store.mjs`'s `#biasForRun`, and every value
+     in it must reach the member. THE ARM IS DELIBERATELY NOT LIMITED TO `bias`:
+     `standard` — §11's third condition, stored in `ai_runs.standard_pair` and
+     NOT published by `aiRunRead` on `main` as this was written (REC-74) — is
+     driven here under a name the surface has never seen, so the day it is
+     published the panel already carries it. */
+  const conditioned = { id: "AIS-3b", status: "running",
+    context: { type: "inquiry", id: "INQ-4" },
+    bias: { in_force: true, stated: null,
+            manifest: { scope: "instance", scope_id: "", statements_sha: "sha-recorded", bundles: [] },
+            now: { in_force: true, statements_sha: "sha-current", bundles: [] },
+            moved: true },
+    standard: { in_force: false, stated: "no bar was in force", basis: "no-project" } };
+  const cond = A.aiSessionPanelHtml(conditioned, null);
+  for(const frag of ["in_force", "true", "sha-recorded", "sha-current", "moved", "instance"])
+    ok(cond.includes(frag), `ARM Y11b: the run's LENS reaches the member — '${frag}' is on the panel`);
+  for(const frag of ["standard", "no bar was in force", "basis", "no-project"])
+    ok(cond.includes(frag), `ARM Y11c: a condition the surface has NO renderer named after still renders — '${frag}'`);
 
   /* Y12 · THE TRANSCRIPT IS DEVICE-LOCAL (DEC-61) AND NEVER THE PLANE'S. */
   const store = { getItem: k => k === "ai-transcript:AIS-4" ? JSON.stringify(["read op=list", "formed a version"]) : null };
@@ -1171,10 +1231,10 @@ await section("ARM Y · the renderers", async () => {
     budget: [ { meter: "wall-clock-across-resumptions", ceiling: "18m", spent_so_far: "4m" },
               { meter: "tokens", ceiling: 400000, spent_so_far: 91234 } ],
     principal: { paid_by: "member", who: "MEM-3" } };
-  const ah = A.aiSessionBudgetHtml(alien);
+  const ah = A.aiSessionBlockHtml(alien);
   for(const frag of ["wall-clock-across-resumptions", "18m", "4m", "tokens", "400000", "91234"])
     ok(ah.includes(frag), `ARM Y15: a bound named nothing like the author's fixtures still renders its '${frag}'`);
-  ok(A.aiSessionPrincipalHtml(alien).includes("MEM-3"),
+  ok(ah.includes("MEM-3"),
      "ARM Y16: a principal shape the author never wrote still names who pays");
   ok(A.aiSessionPanelHtml(alien, null).includes("ceiling"),
      "ARM Y17: the whole panel composes over an unfamiliar shape");
