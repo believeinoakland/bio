@@ -3260,3 +3260,160 @@ The durable fix is the same everywhere: **do not carry the answer, carry the way
 
 What the size actually costs a reader is unchanged and stays stated: a stray byte makes plain
 `grep` treat the file as binary and silently match nothing, so `grep -a` is required.
+
+## 2026-08-08 · D-216 · does a shared inquiry have ONE stance, or a PER-PROJECT one? — the W0 model check that decides whether PL-13 is the right item
+
+**THE ANSWER: PER-PROJECT. `INVESTIGATIVE-SESSION.md` §7 IS CORRECT AND CLONING IS NOT THE
+HONEST ANSWER — driven, not read.** Two projects stood on two different readings of one shared
+inquiry simultaneously, the plane refused neither, and after the divergence each team still saw
+every version and every leg of the other's reading. **Nothing in the model requires one shared
+stance.** PL-13 is the right item and is UNBLOCKED, with one scope change stated below.
+
+### The instrument, and it is the deliverable
+
+| What | Where |
+| --- | --- |
+| The probe | `bio-plane/test/d216-sharing.probe.mjs` — `node bio-plane/test/d216-sharing.probe.mjs` |
+| Its negative controls | `bio-plane/test/d216-sharing.control.mjs` — edits `src/store.mjs`, restores verified by sha256 AND by content |
+| Result | **38 assertions, 38 pass, 0 fail**, 2026-08-08, node v26.5.0 |
+| Battery cost | **ZERO.** Neither file ends `.test.mjs`, and both `scripts/battery.mjs` and `scripts/coverage.mjs` discover on exactly that suffix |
+
+**NEITHER FILE IS A DESIGN DOCUMENT AND THAT IS THE POINT.** The design documents are what
+RAISED this question, so they were not allowed to answer it. Every row below is the real
+control plane (`src/index.mjs` under miniflare, not the store alone) answering an op a caller
+holds: `op=select` · `op=cite` · `op=promote` · `op=backlinks` · `op=stats` ·
+`op=strengthbarof` · `op=basisversions` · `op=versionaccept` · `op=versioncurrent` ·
+`op=versionhide` · `op=inquirystrength` · `op=image`.
+
+### What was established, and how
+
+| Question | Answer | How it was driven |
+| --- | --- | --- |
+| Is there a real edge by which two projects reference one inquiry? | **Yes** | Two project bundles carrying `references[] {rel: cites, target: INQ-…}`; `op=backlinks` on the inquiry returns both, `from_type: project` |
+| What is it called? | **`cites`**, a row in `refs` | `op=backlinks` reports `rel: "cites"`; §7's *"a `refs` edge"* names the right family and `cites` is the member of it |
+| Is the edge REAL or only frontmatter? | **Real** — `refs` grew by exactly **2** across the two project writes | `op=stats.refs` **3 → 5**, measured as a delta with the baseline taken after every unrelated write |
+| Does the plane WALK it many-to-one? | **Yes, and it composes over both at once** | Crossed bars: A declares capture `A`/connection `C`, B declares capture `C`/connection `B`. `op=strengthbarof` answers `source: project`, `projects: [A, B]`, **capture `A` (from A) and connection `B` (from B)** — an answer no single-project walk can produce |
+| Can two projects stand on DIFFERENT readings? | **Yes, simultaneously, with no refusal** | `op=versioncurrent` A → "opening account", B → "the audit alone"; `op=basisversions&project=` reads back both, and they differ |
+| Does one team's act move the other's? | **No** | A's pointer is byte-identical across B's act, and NON-NULL on both sides of it |
+| Is the investigation still shared after divergence? | **Yes** — the property cloning destroys | After divergence both projects still read the IDENTICAL version set, both readings, all legs |
+| Does the inquiry itself hold a stance? | **No** — §7's forbidden place is empty in the bytes | The inquiry's `bundle.md` carries no `current_versions` and no `current`; a read naming no project gets **no `current` field at all**, not a default |
+| Where does the per-project pointer hang? | **A `current_versions[]` row on the PROJECT's own `bundle.md`**, dated and attributed | `op=image` on each project; A's row says `version: "opening account", by: "ruth"`, B's says `"the audit alone"`; the Session Log carries `| Stands on | ruth` |
+| Is it a settings row? | **No, and no stance table exists at all** | One writer (`#setProjectCurrentVersion`) which PROMOTES the project; `op=stats` counts every table the store keeps and none is a stance counter |
+
+### DOES ANYTHING *REQUIRE* ONE SHARED STANCE? — the arm that would have killed PL-13
+
+**No.** Three facts, each driven:
+
+1. **The edge is LOAD-BEARING rather than decorative.** Marking B's citation `severed` in B's own
+   document — the row STAYS in `refs`, because a severed edge is a recorded judgement and never a
+   deletion, and `op=backlinks` reports its status as `severed` — makes `op=versioncurrent` refuse
+   B with `VERSION_CURRENT_UNRELATED`. A project that never cited the question is refused in the
+   same words. So a stance is not something any project may take about any question, and it is not
+   a property of the question either.
+2. **The mechanism is not two-only and divergence is not compulsory.** A third citing project also
+   stood on a reading, and two projects standing on the SAME reading is permitted.
+3. **The one place the model composes across projects is the BAR, not the STANCE** —
+   `#requiredStrengthFor`'s strictest-wins, and the site says so in its own words. The distinction
+   is right: a bar is a floor two teams must both clear, a stance is what one team reads the
+   evidence to say.
+
+### THE FINDING THIS CHECK DID NOT GO LOOKING FOR, AND IT OUTRANKS THE ANSWER
+
+**`op=cite` REFUSES TO CITE AN INQUIRY INTO A PROJECT, SO THE EDGE §7 RESTS ON HAS NO CURATED
+PRODUCER.** Measured: `op=cite` with a project as the citing object and an inquiry in the
+selection answers `NOT_INFORMATION` — *"citing Information means Information."* The rule is one
+line in `cite()`:
+
+    ontoInquiry ? !(ty === "information" || ty === "inquiry") : ty !== "information"
+
+REC-37 widened the act so a QUESTION may cite another question — **driven here and it lands** —
+and left the PROJECT arm exactly as it was. So today a project draws on a question only by
+authoring its own `bundle.md` and calling `op=promote`. That route works and is a real op a member
+holds; `refs` is re-derived from the document inside promote's transaction (D-21), so it writes
+the same table `op=cite` would have. But the curated act, the affordance, the four beats and the
+`ACT_FLOW` entry are all absent for the one relationship the whole IS build hangs on.
+
+**WHY NOBODY SAW IT.** `versionstate.test.mjs`'s fixture hand-authors the project's `references[]`
+and promotes — so PL-2's own suite drove the gate without ever asking whether a member can reach
+it. **A fixture that authors the precondition cannot discover that the precondition has no door.**
+
+**AND IT MAKES §7's AND D-216's CITED VERIFICATION WRONG.** Both say *"linking a bundle to a
+project creates an EDGE (`linkproject` sits with the other edge-creating acts in `index.mjs`)"*.
+`op=linkproject` is **link + project-as-a-VERB**: it takes a `capture=<sha256>` and projects that
+capture's resolved links into `links_to` edges (`projectLinks`, `src/store.mjs`). It has nothing
+to do with a project bundle, it cannot take one, and it never writes a `cites` edge. The
+conclusion §7 drew is right; the evidence it cited for it is a name collision.
+
+### WHAT PL-13 BECOMES
+
+**PL-13 IS THE RIGHT ITEM AND SURVIVES — but half of its stated scope has ALREADY LANDED, and it
+inherits one thing that has not.**
+
+- **Already built by PL-2 and CONFIRMED here:** the dated, project-authored `current_versions[]`
+  frontmatter row, its one writer, its one reader, the no-default-project refusal, the
+  current-implies-accepted refusal, and the `VERSION_CURRENT_UNRELATED` gate. **PL-2's pointer
+  SURVIVES this answer unchanged.** PL-13's row should be rewritten to say so rather than
+  re-specifying it.
+- **Genuinely outstanding:** the two FINDING-class notification slugs. Asserted ABSENT here —
+  `queuestate.mjs` contains neither `stance-changed` nor `new-version-arrived` — so nobody can
+  read this measurement as evidence the notification half exists.
+- **NEW, and it is the scope change:** a project must be able to draw on a question **through an
+  act**, not only by authoring a document. Either widen `op=cite`'s project arm to admit
+  `inquiry` (one predicate, the shape REC-37 already used on the other arm) or record deliberately
+  that a project's interest in a question is authored and never acted. Whichever is chosen,
+  `op=sever` needs the same treatment — it is refused identically, so a project cannot withdraw
+  from a question through an act either.
+
+### WHAT THIS INSTRUMENT CANNOT SEE — stated, because a measurement without its blind spot overclaims
+
+1. **ONE ISOLATE, ONE STORE.** Two projects here are two bundles in one Durable Object. This says
+   nothing about two INSTANCES, which is a different sharing question and is not what §7 asks.
+2. **TODAY'S CODE, NOT TOMORROW'S — and this is the sharpest limit.** `#strengthWalk` reads the
+   inquiry's own `inquiry_basis` and **never a version's legs** (asserted over real source). So
+   `op=inquirystrength` takes no project parameter, both teams read ONE derived pair, and **a
+   per-project stance is INERT for strength today.** §6 rule 5 says current *"is what the effective
+   strength pair is computed over"* — that half is NOT built. When PL-16 makes strength
+   version-relative, re-run this probe: that is the change that could make the answer differ.
+3. **AN ABSENCE OF REFUSAL IS NOT A PROOF OF PERMISSION.** "Nothing requires one shared stance" was
+   established by driving divergence over the ops that EXIST and finding no refusal. An op nobody
+   has written could still introduce one — which is exactly what `#requiredStrengthFor`'s
+   cross-project composition shows is possible.
+4. **IT DOES NOT MEASURE THE NOTIFICATION.** §7's two slugs do not exist; the probe asserts their
+   absence rather than pretending to test them.
+5. **THE PROBE DRIVES EVERY ACT AS ONE ADMINISTRATOR MEMBER.** Administrators see all projects
+   (7.3), which is what lets one credential act for both teams. That is a convenience of the
+   instrument and NOT a claim about the model; every stance is re-read through the plane rather
+   than through that credential's privileges.
+
+### The negative controls, RUN — and the third one is the reason to trust arm B
+
+`node bio-plane/test/d216-sharing.control.mjs` — **3 arms, all AS DECLARED**, each armed alone,
+every restore verified by sha256 AND by content, polarity re-checked green at the end.
+
+| Arm | What was broken | Measured |
+| --- | --- | --- |
+| 1 | the make-current gate's `draws` predicate → `true`, so any project may stand on any question | **36 pass, 2 FAIL** — exactly the two arms asserting the edge is load-bearing, and NOTHING else |
+| 2 | **D-216's literal alternative**: `#currentVersionOf` reads the FIRST citing project instead of the named one — *one stance every referencing project must share* | **33 pass, 5 FAIL** — the ANSWER arm, the they-genuinely-DIFFER arm, both vacuity guards and the third-project arm |
+| 3 | `op=basisversions` answers an EMPTY version list | **35 pass, 3 FAIL** — see below |
+
+**ARM 3 IS THE DEMONSTRATION THIS ITEM WAS WARNED ABOUT, and it behaved exactly as the warning
+said it would.** With NOTHING to see, the arm *"BOTH PROJECTS SEE THE IDENTICAL VERSION SET"*
+**STILL PASSED** — two empty lists agree at zero cost. Only the NON-EMPTY guards failed. So the
+equality was never the evidence; the guard is, and that is why it is there.
+
+**TWO CORRECTIONS THE CONTROLS FORCED, both recorded as findings rather than smoothed away:**
+
+- **ARM 2's declaration was WRONG and the control was right.** It predicted that *"the SAME field
+  on project B carries B's own different row"* would fail. It did not — that arm reads B's
+  `bundle.md` through `op=image` and never through `#currentVersionOf`, so breaking the READER
+  cannot touch it. **That is the property worth having:** the per-project fact lives in the
+  project's own bytes and survives a reader that stops honouring it, which is precisely why §7 puts
+  the pointer in authored frontmatter instead of in a settings row.
+- **THE HARNESS REFUSED TO ARM BLIND, correctly.** Arm 3's first anchor
+  (`versions, count: versions.length, total,`) occurs TWICE in `store.mjs`, and an unguarded
+  harness would have armed both. It was re-anchored on three lines rather than one.
+
+**AND THE PROBE'S OWN FIXTURE CARRIED THE VACUITY DEFECT ONCE.** Its first draft gave BOTH
+strictest axes to one project, so the many-to-one composition arm passed while proving nothing
+about composition. The bars were crossed and the arm now takes capture from A and connection from
+B. Recorded because it is this item's own warning arriving inside its own instrument.
