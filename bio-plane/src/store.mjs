@@ -103,6 +103,10 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
          MEANING_READ_CHECKS,
+         /* PL-10 / DEC-49: the C-number, the wire code and the canned
+            translation for the version chain's three refusals, as ONE row read
+            from the catalog rather than restated here. */
+         VERSION_CHAIN_CHECKS,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -15113,6 +15117,180 @@ export class Store extends DurableObject {
              observations: rows.reduce((n, r) => n + r.observations, 0) };
   }
 
+  /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
+     file publishes: the default a caller gets by saying nothing, and the
+     ceiling a caller cannot ask past. 200 because a weekly capture of one
+     calendar reaches roughly 50 versions a year and a member reading a chain is
+     reading a HISTORY, not paging a corpus; 1000 because past that the answer
+     stops being something a person reads and becomes something a run walks,
+     and a run has `offset`. Named rather than literal so REC-57's roster walk
+     can see this method carries a cap at all. */
+  static VERSION_CHAIN_LIMIT_DEFAULT = 200;
+  static VERSION_CHAIN_LIMIT_MAX = 1000;
+
+  /** PL-10 / D-220 — EVERY VERSION AT AN ADDRESS, IN DATE ORDER, WITH ITS
+   *  BUNDLE, AND NOT ONE NEW BYTE OF SCHEMA TO ANSWER IT.
+   *
+   *  Bob ruled (2026-08-06) that versions of one document must be linked and
+   *  indexed by the same url. **The index he described already existed.**
+   *  `captured_locators` is keyed `(address_norm, capture_sha, via)` with
+   *  `captured_locators_addr ON (address_norm, first_retrieved)`; `register`
+   *  maps `capture_sha` to `bundle_id` on its primary key. So the link is not a
+   *  thing to BUILD, it is a thing to ASK — one indexed seek and one join, and
+   *  this method is the asking.
+   *
+   *  **THEREFORE NO EDGE BETWEEN VERSIONS IS ADDED, AND THAT IS THE ITEM.** An
+   *  explicit `supersedes` relation would be a SECOND COPY of a fact the record
+   *  already holds, and a second copy of a fact drifts from the first — D-164's
+   *  solve-it-once, D-138's guard that guarded nothing. There is no new table,
+   *  no new column, no new index and no new write: `recordCapturedLocator` above
+   *  is untouched and remains the only writer. `test/versionchain.test.mjs`
+   *  asserts that STRUCTURALLY rather than trusting this comment, because a
+   *  comment promising an absence is exactly the kind of guard that has guarded
+   *  nothing here before.
+   *
+   *  ONE VERSION IS ONE `capture_sha`, WHICH IS WHY THIS GROUPS. The primary key
+   *  carries `via` (D-96): an archive sighting of the same bytes is a different
+   *  FACT from a direct one, and the write path keeps both rows deliberately. It
+   *  is not a different VERSION. Grouping on the sha is what stops a document
+   *  seen twice through two routes from reading as two versions — the same
+   *  false-coverage failure this op exists to remove, one axis over. The `via`
+   *  values survive into the answer, so the distinction the key preserves is
+   *  reported rather than flattened away.
+   *
+   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — and never
+   *  `last_retrieved`, which moves every time the target holds still and would
+   *  reorder a settled history as a side effect of re-checking it. `capture_sha`
+   *  is the tiebreak, so the order is TOTAL and `offset` paging cannot repeat or
+   *  skip a version. The record cannot say when the SOURCE published a version;
+   *  it can say when we first saw it, and that difference is why the field is
+   *  named in the answer rather than relabelled "published".
+   *
+   *  D-221's FIX LIVES HERE, and it is a consequence of the shape rather than a
+   *  patch on top of it. The defect was that `heldMatch` found prior versions
+   *  with `locator:"<url>"` — a FULL-TEXT query on a text-indexed field, which
+   *  compiles to a text atom, which creates a rank arm, which orders by
+   *  RELEVANCE; every capture at one address carries identical URL text, the
+   *  bm25 scores tie, and the tiebreak decided. The predecessor named was
+   *  therefore not the previous version at all. Here `at` is resolved by
+   *  ADDRESS EQUALITY and the predecessor is the row immediately before it in
+   *  date order. No text index is consulted, no relevance exists to be ordered
+   *  by, and there is nothing to get wrong.
+   *
+   *  A CHAIN OF ONE IS A CHAIN. A single capture at an address answers with one
+   *  version, `at_index` 0 and `predecessor: null` — that is the record saying
+   *  "these are the first bytes we held", not a degenerate failure, and the
+   *  suite pins it as its own arm.
+   *
+   *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
+   *  every other read in this file compiles, and `total` is counted through the
+   *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
+   *  from a total that something was withheld. Nothing publishes how many rows
+   *  the gate removed, because that count is the leak (REC-36). */
+  versionChain({ addressNorm = null, at = null, limit = null, offset = 0, viewer = null } = {}) {
+    const refuse = (key, detail) => {
+      const row = VERSION_CHAIN_CHECKS[key];
+      return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
+    };
+    const addr = addressNorm == null ? "" : String(addressNorm).trim();
+    if (!addr)
+      return refuse("VERSION_CHAIN_NO_ADDRESS",
+        "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it "
+        + "with the same normaliser the capture wrote it with, so the address you captured is the "
+        + "address that answers.");
+    const anchor = at == null ? "" : String(at).trim().toLowerCase();
+    if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
+      return refuse("VERSION_CHAIN_BAD_ANCHOR",
+        `at=${JSON.stringify(String(at).slice(0, 80))} is not a sha256. A version is anchored by the `
+        + "capture identity of its bytes, which is 64 hex characters.");
+
+    const cap = Math.max(1, Math.min(Store.VERSION_CHAIN_LIMIT_MAX,
+      Math.floor(Number(limit) || Store.VERSION_CHAIN_LIMIT_DEFAULT)));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    const seen = this.#bundleGate("r.bundle_id", viewer);
+
+    /* THE JOIN, WRITTEN ONCE. Every answer below — the page, the total, the
+       anchor, the predecessor — reads this same CTE, so they cannot disagree
+       about what a version is or about which ones this viewer may see. It is
+       `#conditionBundlesForHost`'s join generalised off a host prefix onto the
+       address the index is actually keyed on. */
+    const CHAIN = `WITH chain AS (
+        SELECT cl.capture_sha                   AS capture_sha,
+               MIN(cl.first_retrieved)          AS first_retrieved,
+               MAX(cl.last_retrieved)           AS last_retrieved,
+               SUM(cl.observations)             AS observations,
+               COUNT(*)                         AS sightings,
+               MIN(cl.address)                  AS address,
+               group_concat(DISTINCT cl.via)    AS via,
+               r.bundle_id                      AS bundle_id,
+               r.path                           AS path,
+               r.encoding                       AS encoding,
+               r.bytes                          AS bytes,
+               r.registered                     AS registered
+          FROM captured_locators cl
+          JOIN register r ON r.capture_sha = cl.capture_sha
+         WHERE cl.address_norm = ?
+           AND (${seen.sql})
+         GROUP BY cl.capture_sha)`;
+    const args = [addr, ...seen.args];
+
+    const total = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain`, ...args)?.n ?? 0;
+    const shape = (r) => r && ({
+      capture_sha: r.capture_sha, bundle_id: r.bundle_id,
+      first_retrieved: r.first_retrieved, last_retrieved: r.last_retrieved,
+      observations: r.observations, sightings: r.sightings,
+      via: String(r.via || "").split(",").filter(Boolean).sort(),
+      address: r.address, path: r.path, encoding: r.encoding,
+      bytes: r.bytes, registered: r.registered,
+    });
+    const versions = this.#rows(
+      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
+      ...args, cap, from).map(shape);
+
+    /* THE PREDECESSOR, when an anchor was given. Two seeks, both on the same
+       CTE: the anchor's own position in the order, then the one row before it.
+       `predecessor: null` at `at_index` 0 is the OLDEST version saying so — an
+       honest absence with the reason readable beside it, not a lookup that
+       failed. */
+    let anchorRow = null, predecessor = null, atIndex = null;
+    if (anchor) {
+      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
+      if (!anchorRow)
+        return refuse("VERSION_CHAIN_NO_SUCH_VERSION",
+          `no version with capture ${anchor.slice(0, 12)}… is held at ${addr}. A capture the record does `
+          + "not hold, one filed at a different address, and one inside a project you were not invited to "
+          + "answer identically here, deliberately.");
+      const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
+      const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
+      atIndex = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
+        ...args, ...beforeArgs)?.n ?? 0;
+      predecessor = shape(this.#one(
+        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
+        ...args, ...beforeArgs)) || null;
+    }
+
+    return {
+      ok: true,
+      address_norm: addr,
+      /* The count of DOCUMENTS is one, always, and saying so is the point of the
+         op: sixty rows here are sixty versions of ONE document, and a consumer
+         that read `count` as a document count would rebuild the exact false
+         coverage D-220 names. It is stated in the answer rather than left to be
+         inferred from a field name. */
+      documents: total > 0 ? 1 : 0,
+      versions, count: versions.length, total,
+      limit: cap, offset: from,
+      /* REC-57's discipline: the bound PUBLISHED is the one APPLIED, after
+         clamping, never the number asked for; and `truncated` settles
+         completeness so "this is all of it" cannot read like "the first N". */
+      truncated: from + versions.length < total,
+      /* Present only when asked for, and null-valued rather than absent when the
+         anchor IS the oldest, so a consumer can tell "there is no earlier
+         version" from "nobody asked". */
+      at: anchorRow, at_index: atIndex, predecessor,
+    };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -17244,6 +17422,20 @@ export class Store extends DurableObject {
         projectlinks: () => this.projectLinks({ sourceCapture: url.searchParams.get("capture"),
                                                 sourceBundle: url.searchParams.get("bundle") || null }),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
+        /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
+           — the control plane runs it through `normalizeAddress`, the same
+           function the capture wrote the row with, because `normalizeAddress`
+           lives in subresources.mjs and this file does not import it. That is
+           the seam op=links already uses for the same reason. `viewer` is
+           stamped by the control plane and an absent one compiles to the deny
+           predicate, so this fails closed like every other gated read. */
+        versionchain: () => this.versionChain({
+          addressNorm: url.searchParams.get("address"),
+          at: url.searchParams.get("at"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          viewer: url.searchParams.get("viewer"),
+        }),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are

@@ -244,8 +244,18 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    the other direction. The label no longer counts "wider than the pair", because
    a stale sentence beside a corrected number is the drift this suite exists to
    catch. */
-t("WALK: the roster is SIXTEEN ops — the sweep is the item, not the two the item named",
-  OPS.size, 16);
+/* CORRECTED 2026-08-07 (PL-10), not exempted, and 16 was the true measurement on
+   the day it was written. 16 -> 17 for ONE reason: `op=versionchain`, D-220's
+   document-version chain, is a NEW capped read — the third kind of arrival this
+   number has seen, after "an uncapped read gained a bound" (REC-60) and "the
+   walk grew a shape and could finally see an op it always missed" (PL-9). It
+   carries its cap in its own body as a named constant beside `LIMIT ?`, which is
+   the `named-cap` shape this walk has recognised since REC-57, so nothing about
+   the detector had to move to admit it. The label no longer counts against the
+   pair the item named, because a stale sentence beside a corrected number is the
+   drift this suite exists to catch. */
+t("WALK: the roster is SEVENTEEN ops — the sweep is the item, not the two the item named",
+  OPS.size, 17);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -378,6 +388,22 @@ for (const note of ["first", "second"]) {
 t("FIXTURE ARMS THE TRAP: the append-only export log carries two rows, so a cap of 1 cuts it",
   (await GET("op=exportlog&token=adm-r57&limit=200")).exports.length, 2);
 
+/* ------------------------------------------------------ PL-10 / D-220's FIXTURE.
+   The version chain joined this roster as a NEW capped read. It counts VERSIONS
+   AT ONE ADDRESS, so the three registered captures above are recorded as three
+   versions of one document — which is the whole subject of D-220 and also, here,
+   simply three of something against a cap of one. Written straight at the DO,
+   the way op=acquire writes it, because there is no control-plane route that
+   records a locator. */
+const VC_ADDR = "https://example.gov/agenda.pdf";
+for (let i = 0; i < CAPS.length; i++)
+  await DO("recordcapturedlocator", { address: VC_ADDR, addressNorm: VC_ADDR, captureSha: CAPS[i],
+                                      retrieved: `2026-0${i + 1}-15T00:00:00Z` });
+t("FIXTURE ARMS THE TRAP: three versions of ONE document sit at one address, so op=versionchain's cap of "
++ "1 has something to cut — and the chain is three long while the corpus is three documents, which is "
++ "D-220's whole point arriving as a fixture",
+  (await GET(`op=versionchain&token=mem-r57&address=${encodeURIComponent(VC_ADDR)}&limit=5000`)).total, 3);
+
 /* ------------------------------------------------- REC-60 / D-225's FIXTURE.
    The three meaning-layer reads joined this roster when they gained a bound, so
    they must have MORE THAN ONE of whatever they count or every `truncated:false`
@@ -483,6 +509,17 @@ const DRIVEN = [
     says: "`total` beside `limit` and `offset`",
     lost: "whether a basis was returned WHOLE or cut — and a basis returned in part reads as a basis, which "
         + "is a record claiming more than it can support" },
+  /* PL-10 / D-220, 2026-08-07: the document-version chain, a NEW capped read
+     rather than one this walk could not previously see. It answers completeness
+     in `op=readingname`'s vocabulary — `limit` beside `truncated` — because it
+     is the same kind of read: a KEYED lookup (an address, not a query) whose
+     answer is a list. No spelling is minted for it. */
+  { op: "versionchain", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=versionchain&token=mem-r57&address=${encodeURIComponent(VC_ADDR)}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are ALL the versions the record holds at this address or the first N of them — "
+        + "and a version history that is silently the first N is the false-coverage failure D-220 exists "
+        + "to remove, reappearing inside the op built to remove it" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");

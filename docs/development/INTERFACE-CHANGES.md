@@ -1658,3 +1658,138 @@ confirms the pin bites: making `op=meaningrows` answer a bare array fails
 
 **SETTLED. I3 10.0.0 → 10.1.0.** I5 NOT touched. Open against it: nothing. **Related and NOT closed by it: D-227** — these suites assert the statement carries its `LIMIT` and that the published cap is the applied cap, which is the HONESTY half; **an unbounded derivation feeding a bounded answer would still pass**, and that is D-227's subject, riding REC-66. PL-9 states that limit in its own suite rather than leaving it to be discovered.
 
+
+
+## IC-27 · I3: one NEW read op `op=versionchain` — every version at a document ADDRESS, in date order, with its bundle · PROPOSED 2026-08-07 (PL-10, D-220 + D-221), ADDITIVE
+
+- **Interface:** I3 (plane → UI), **10.1.0 STABLE** → proposed **10.2.0**
+- **Proposer and owner to land it:** `RECORD` (session is-wave-w4b-pl10), from
+  `IS-BUILD-PLAN.md` PL-10 — D-220's op, discharging D-221 at the same join.
+- **Consumers to answer:** `UI` (and UI is the one with work to do — see the DELEGATION
+  below), `DIST`, the content areas.
+- **Filed even though I3 says adding an op needs no protocol**, on **IC-3's settled
+  reasoning**, which IC-26 restated: recording a change as needing no record because it
+  happens to break nothing *"would teach this registry to lie."*
+- **Version bump and RESOLUTION are CONDUCT's.** This session files the entry and does
+  not touch `INTERFACES.md`.
+
+### The change
+
+One new read op. Nothing existing is renamed, reshaped, removed, re-fenced or reordered.
+
+    op=versionchain&address=<url>&at=<capture sha256>&limit=&offset=
+
+| | |
+| --- | --- |
+| classes | `admin`, `member`, `probe` — **op=links' and op=search's fence** |
+| mutating | `false` |
+| session reach | yes, through the ordinary read route |
+| `address` | **NORMALISED SERVER-SIDE** by `normalizeAddress`, the same function `recordCapturedLocator` wrote the row with |
+| `viewer` | **stamped server-side**, never taken from the caller; an absent stamp compiles to the deny predicate |
+| answer | `{ ok, address_norm, documents, versions[], count, total, limit, offset, truncated, at, at_index, predecessor }` |
+| refusals | `VERSION_CHAIN_NO_ADDRESS` (C-24.1), `VERSION_CHAIN_NO_SUCH_VERSION` (C-24.2), `VERSION_CHAIN_BAD_ANCHOR` (C-24.3) |
+
+**NO SCHEMA MOVES, AND THAT IS THE ITEM RATHER THAN A FOOTNOTE.** Bob ruled that
+versions of one document must be *"linked"* and *"indexed by the same url"* — and the
+index he described **already existed**: `captured_locators` is keyed
+`(address_norm, capture_sha, via)` with `captured_locators_addr ON (address_norm,
+first_retrieved)`, and `register` maps `capture_sha` to `bundle_id` on its primary key.
+So *"every version at this address, in date order, with its bundle"* is ONE INDEXED JOIN
+over two tables the record has always held. **The link Bob asked for is the join,
+EXPOSED.** An explicit `supersedes` relation would be a SECOND COPY of a fact the record
+already holds — D-164's solve-it-once, D-138's guard that guarded nothing — so there is
+no new table, no new column, no new index, and no new write. **I5 is NOT touched.**
+
+**What it publishes:**
+
+- `versions[]` — one row per VERSION, and **one version is one `capture_sha`**. The
+  primary key carries `via` because an archive sighting of the same bytes is a different
+  FACT from a direct one (D-96); it is not a different VERSION, so the rows are grouped
+  on the sha and the `via` values are reported (`via[]`, `sightings`) rather than
+  flattened away. Each row carries `bundle_id`, `first_retrieved`, `last_retrieved`,
+  `observations`, `address`, and the register's own `path`/`encoding`/`bytes`/
+  `registered`, so a consumer walking a history needs no second call per version.
+- `documents` — **1 when the chain is non-empty, 0 when it is empty.** Sixty rows here
+  are sixty versions of ONE document, and the answer says so in a field rather than
+  leaving a consumer to infer it from a count. Reading them as sixty documents is the
+  false-coverage failure `STORE-AS-CACHE.md` names, arriving at the document level.
+- `at` / `at_index` / `predecessor` — present only when `at=` is given. **`predecessor`
+  is the row immediately before the anchor in date order at the SAME address.** A null
+  predecessor at `at_index` 0 is the oldest version saying so: an honest absence, not a
+  lookup that failed.
+- `limit` (the cap **APPLIED**, after clamping, never the number asked for), `offset`,
+  `count`, `total` and `truncated` — REC-57/59/60's envelope in the plane's existing
+  spelling (`op=readingname`'s `limit` beside `truncated`, the closest sibling: a KEYED
+  read whose answer is a list). Default 200, ceiling 1000. It joins REC-59's roster, and
+  `bounds.test.mjs`'s roster pin moves **16 → 17** with a dated reason.
+
+**ORDER IS `first_retrieved`, never `last_retrieved`** — the latter moves every time the
+target holds still and would reorder a settled history as a side effect of re-checking
+it. `capture_sha` is the tiebreak, so the order is TOTAL and `offset` paging can neither
+repeat nor skip a version.
+
+**GATED at `register.bundle_id`** through the plane's one `#bundleGate`, and `total` is
+counted through the SAME join and the SAME predicate as the rows, so a total larger than
+the pages can reach — the way hidden stops being identical to absent — cannot arise. A
+withheld version is withheld WHOLE (REC-36), an anchor naming one refuses IDENTICALLY to
+an anchor naming a capture the record does not hold at all, and nothing publishes how
+many were withheld, because that count is the leak.
+
+### D-221 is discharged by the SHAPE, not by a patch
+
+`heldMatch` (`civicos-ui/app.html`) finds prior captures with `locator:"<url>"`.
+`locator` is FTS-indexed, a fielded query on an `fts` field compiles to a TEXT ATOM, a
+text atom creates a rank arm, and the default order is therefore RELEVANCE. Every
+capture at one address carries identical URL text, the bm25 scores tie, and the declared
+tiebreak `bundle_id ASC` decides — so the *"changed from"* sentence written permanently
+into a new bundle can name a snapshot twelve months old.
+
+**That is not a description here, it is a MEASUREMENT.** `versionchain.test.mjs` drives
+both routes over a sixty-version fixture and records what each returns: the FTS route
+puts **the OLDEST version first**, exactly as D-221 predicted; the join returns the
+fifty-ninth, which is the true predecessor computed in JavaScript from the fixture and
+never read back out of the op. Negative control (3) re-breaks the derivation to name the
+oldest again and the suite fails **naming the predecessor it should have picked**.
+
+### DELEGATION — RECORD → UI (the consumer this IC exists for)
+
+**`civicos-ui/app.html` is UI's path and was not opened.** What is owed there:
+`heldMatch` (~`app.html:13614`) should ask `op=versionchain&address=<url>&at=<this
+capture's sha>` and take `predecessor`, instead of running `locator:"<url>"` through the
+search compiler and returning on the first comparable row. The sentence written at
+~`app.html:13485` is **permanent in the bundle it is written into**, so every day this
+runs on the search is another bundle carrying a wrong predecessor. The join answers the
+exact question the search was approximating, so this is a replacement rather than a
+patch, and D-220's row calls it consumer (1) for that reason.
+
+### Measured, not asserted
+
+`node scripts/battery.mjs versionchain` green at 91; the full battery **110/110 at
+6,486** from a baseline of **109/109 at 6,387** measured in this worktree before any
+edit (and measured twice), with the **+99 attributed per suite** (versionchain +91 new,
+bounds +5, hygiene +3 — the three per-suite hygiene arms every new suite file earns) and
+**every other suite byte-identical**. `node scripts/coverage.mjs --strict` run directly
+with `$?` unpiped, **exit 0**: OPS 137 → **138, all reached through the control plane**;
+CHECKS 61 → **64, all named**.
+
+### What is NOT claimed
+
+- **The join's COST is not measured.** The suite asserts the seek column is the one the
+  existing index is built on and that the SQL is an equality rather than a scan; it runs
+  no timing, and a correct query that happened to be slow would pass. Said plainly.
+- **No consumer is wired.** D-220 names six; this item builds the surface and delegates
+  consumer (1) to UI. **Consumer (2), MONITORING PER ADDRESS, is the largest and is NOT
+  addressed here** — `#monitorCadencePlan`/`#monitorCadenceTick` still select PER BUNDLE,
+  so sixty versions of one calendar remain sixty independent monitor subjects fetching
+  one address on sixty schedules. That is a behaviour change with its own blast radius
+  and belongs in its own item.
+- **No `supersedes` edge, and no derived version table.** Asserted structurally, in both
+  directions: the readers are re-run over a source that DOES carry the forbidden thing
+  and must find it.
+- **I5 is NOT touched**: no table, column, index or `purge` change.
+
+### RESPONSES — awaited
+
+- **UI** — **AFFECTED, with a DELEGATION above.** Nothing existing moves and nothing
+  breaks; what is owed is the `heldMatch` replacement that closes D-221 at the site.
+- **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — expected NOT-AFFECTED; none reaches it.
