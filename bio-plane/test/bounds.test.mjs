@@ -263,7 +263,22 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    returns spelling success `ok: true` while `aiRunLog` answers `found: true`.
    TWO instruments, each blind to it for its own reason, and it was found by hand
    at another item's integration. Both are corrected; both now name it. */
-t("WALK: the roster is TWENTY-ONE ops — the sweep is the item, not the two the item named",
+/* CORRECTED 2026-08-08 (PL-3 / IS-4), not exempted, and 21 was the true
+   measurement on the day PL-12's rebase wrote it. 21 -> 22 for ONE reason:
+   `op=suggest`, the investigative session's write, carries TWO named caps
+   (`SUGGEST_LEGS_MAX`, `SUGGEST_ORIGIN_MAX`) beside `LIMIT ?`, which is the
+   `named-cap` shape this walk has recognised since REC-57 — so nothing about the
+   detector had to move to admit it.
+
+   AND IT IS A FOURTH KIND OF ARRIVAL ON THIS ROSTER, worth its own sentence
+   because the three before it were all READS. This one is a WRITE, and its
+   bounds do not TRUNCATE — they REFUSE. A read cut at its cap must say so or a
+   caller believes it saw everything; a write over its cap is turned away naming
+   the bound, so the caller knows exactly what did not happen. Both settle
+   REC-57's two questions and they settle them differently, which is why this op
+   is driven below the loop rather than inside it: the loop's descriptor asks for
+   a small bite and a completeness flag, and there is no bite to take. */
+t("WALK: the roster is TWENTY-TWO ops — the sweep is the item, not the two the item named",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
    inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,
@@ -304,7 +319,7 @@ t("WALK: the roster is TWENTY-ONE ops — the sweep is the item, not the two the
    Two items may not both be right about a shared number, and merging them is the integrator's.
    CORRECTED TO 21, 2026-08-08 at PL-12's rebase — MEASURED, not added up. See the block
    immediately above the assertion for why the arithmetic agreeing was not evidence. */
-  OPS.size, 21);
+  OPS.size, 22);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -843,7 +858,44 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
 /* Driven above the loop rather than inside it — `taskdrain` because its calls are
    also the task fixture, the two backfills because each must CLEAR a derived
    structure to arm itself and `reindexnames` has no control-plane entry at all. */
-const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject"]);
+/* PL-3 / IS-4 joins them, and for a reason of its own rather than the three
+   above: `op=suggest`'s caps REFUSE rather than truncate, so the loop's
+   descriptor — take a bite of one, then read the completeness flag — has nothing
+   to bite. It is driven immediately below with both arms, which is what keeps it
+   DRIVEN rather than exempt. */
+const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest"]);
+
+/* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
+   The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
+   REC-70's fixture run, both built above, so this adds no third corpus. */
+const SUGGEST_OVER = await POST("op=suggest&token=mem-r57", {
+  target: PL1_INQ, kind: "basis-version", run: R70_RUN, name: "over the bound",
+  description: "A reading composed only to carry more legs than one reading may carry.",
+  relationship: "and",
+  legs: Array.from({ length: 121 }, () => ({ target: "INFO-2026-0001-r57", role: "supports" })),
+});
+t("op=suggest: a submission OVER the cap is REFUSED and the refusal PUBLISHES the bound — a write does "
++ "not truncate silently, because the caller has to know what did not land",
+  [SUGGEST_OVER.ok, SUGGEST_OVER.code, SUGGEST_OVER.limit, SUGGEST_OVER.legs],
+  [false, "SUGGEST_TOO_MANY_LEGS", 120, 121]);
+/* THE SUCCESS ARM IS §9's EMPTY-LEVEL KIND, and that is a fact about this
+   suite rather than about the op: `mem-r57` is a token with no member behind
+   it, and a reading that RESTS on documents carries a structure only a named
+   member may sign (C-25.5 with C-25.15, refused here as C-27.13). The kind that
+   rests on nothing is exactly the one a machine credential may write, which is
+   also the point of it existing. The bound is published on this answer too —
+   REC-70's lesson that a not-found return was the one shape a bound sweep could
+   not see. The legged path is driven under a real member session in
+   test/suggest.test.mjs. */
+const SUGGEST_OK = await POST("op=suggest&token=mem-r57", {
+  target: PL1_INQ, kind: "level-empty", run: R70_RUN, name: "within the bound",
+  description: "We searched the open internet for a superseding agenda and found none in this window.",
+  relationship: "and", level: "internet", observed_at: `observation:r70-1`,
+});
+t("op=suggest: and one WITHIN the cap publishes the bound APPLIED beside an explicit completeness flag "
++ "— `truncated: false` said rather than implied by silence, REC-70's lesson on the empty answer",
+  [SUGGEST_OK.ok, SUGGEST_OK.limit, SUGGEST_OK.truncated, SUGGEST_OK.count],
+  [true, 120, false, 0]);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -868,6 +920,11 @@ const answersByOp = new Map([
      derived structure to arm themselves, so calling them again here would
      re-arm them and change what the arms above measured. */
   ["taskdrain", td2], ["reproject", rp2], ["reindexnames", rn2],
+  /* PL-3 / IS-4: driven above with both arms and REUSED here rather than
+     re-driven — a second successful submission would be refused as a duplicate
+     by C-27.10, which is the feature working and would make this line a
+     misleading answer. */
+  ["suggest", SUGGEST_OK],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

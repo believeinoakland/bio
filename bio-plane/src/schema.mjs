@@ -1835,6 +1835,13 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_versions (
   state_reason  TEXT,             -- REQUIRED entering considering or rejected (section 6 rule 4)
   derived_from  TEXT,             -- the version NAME this was derived from. NULL = composed fresh (section 6 rule 3a)
   hidden        INTEGER NOT NULL DEFAULT 0,  -- the PRUNE flag. Hiding is not deleting: the row stays and stays queryable
+  -- PL-3 / IS-4: WHICH OF SECTION 9'S FIVE KINDS this version is, when a run
+  -- proposed it. NULL on every version a member composed by hand, and NULL is
+  -- the honest answer there rather than a default -- a member's own reading is
+  -- not a suggestion of any kind. INSIDE the frozen composition and only when
+  -- present, so a version carrying no kind composes byte-identically to what
+  -- PL-1 froze and a kinded one cannot have its kind edited afterwards.
+  kind          TEXT,
   claim         TEXT,             -- D-217b: a reworded claim carried AS A VERSION rather than as a new inquiry
   run           TEXT,             -- the run that proposed it. NO foreign key -- see 14b.7 above
   author        TEXT,
@@ -1949,6 +1956,43 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
 );
 CREATE INDEX IF NOT EXISTS bias_adoptions_scope ON bias_adoptions(scope_type, scope_id);
 CREATE INDEX IF NOT EXISTS bias_adoptions_bundle ON bias_adoptions(bundle_id);
+
+-- PL-3 / IS-4 / F10 -- THE REFUSED SUBMISSION, KEPT SO A VERBATIM RESUBMIT IS A
+-- STRUCTURAL NO-OP. F10 rules that the design says how the plane REFUSES and
+-- never how a run must RESPOND, so a retry loop that resends the identical
+-- submission would otherwise be caught only by the budget -- and the budget is
+-- the backstop, not the mechanism. This table makes the second submission
+-- change nothing at all: no re-evaluation, no write, no tick.
+--
+-- THE KEY IS THE SUBMISSION ITSELF, BYTE FOR BYTE, AND NOT A HASH. That is
+-- PL-1's own reasoning transplanted: a hand-rolled synchronous hash would put a
+-- collision argument underneath a mechanism that decides whether a caller is
+-- told the truth about its own submission, and the composition is bounded
+-- already because the endpoint caps a version's legs.
+--
+-- base_sha IS PART OF THE IDENTITY, and it is what stops the key going stale
+-- into a false refusal. "Verbatim resubmit" means NOTHING HAS CHANGED --
+-- neither the submission nor the document it would be written into. The moment
+-- the inquiry moves, the same submission is a different question and is
+-- evaluated again.
+--
+-- SCRATCH-CLASS, in capture_sessions' and ai_runs' family and NOT record: it
+-- holds no member act, nothing derived from one, and nothing a case is built
+-- on. Its name deliberately carries no "version" substring -- PL-1 pinned the
+-- tables carrying versions of a basis at exactly two, and this carries
+-- refusals.
+CREATE TABLE IF NOT EXISTS suggest_refusals (
+  target      TEXT NOT NULL,      -- the inquiry the submission was aimed at
+  submission  TEXT NOT NULL,      -- the canonical submission, compared BYTE FOR BYTE
+  base_sha    TEXT NOT NULL,      -- the inquiry's bundle_sha when the refusal was made
+  code        TEXT NOT NULL,      -- the DEC-49 wire code that was returned
+  payload     TEXT NOT NULL,      -- the refusal, verbatim, so the resubmit answers identically
+  first_at    TEXT NOT NULL,
+  last_at     TEXT NOT NULL,
+  repeats     INTEGER NOT NULL DEFAULT 0,  -- how many verbatim resubmits this refusal has absorbed
+  PRIMARY KEY (target, base_sha, submission)
+);
+CREATE INDEX IF NOT EXISTS suggest_refusals_target ON suggest_refusals(target);
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and

@@ -863,6 +863,15 @@ const OPS = {
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* PL-3 / IS-4 — THE SUGGEST ENDPOINT, the ONE write the investigative
+     session holds (§4 group 2: it REQUESTS acquisition, it SUGGESTS, and it
+     ACCEPTS nothing). It rides the SAME classes as the run ops above and for
+     the same recorded reason: PL-11 mints the `ai` class and NARROWS these, and
+     widening later is the safe direction while shipping a class nothing
+     measures is not. Its own fence is not the class list — it is that the sole
+     state it can write is `suggested`, written as a literal with no parameter
+     behind it, and that the six pre-write checks run PLANE-SIDE. */
+  suggest:            { classes: ["admin", "member", "probe"],      mutating: true  },
   /* PL-12 / §14: THE FENCE, and it is an op so that it can be POINTED AT. The
      spawn contract for a search sub-session omits the bias manifest BY
      CONSTRUCTION; before this it existed only as a sentence in a design
@@ -1087,7 +1096,7 @@ const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
    the record). Naming them together would be the first step toward one control
    over two different doctrines — the same reason QUEUE_ACTIONS was kept apart
    from TASK_ACTIONS. */
-const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -1488,6 +1497,12 @@ const NEEDS = {
   airunopen:        "contribute",
   airuntick:        "contribute",
   airunclose:       "contribute",
+  /* PL-3 / IS-4. A suggestion is `contribute` and deliberately NOT `publish`:
+     §1's three verbs are kept apart, and proposing a reading of the evidence is
+     suggesting. Nothing this op writes is the group putting its name on
+     anything — the version is born `suggested`, and every act that would make
+     it the record's stance is a member act this credential cannot reach. */
+  suggest:          "contribute",
   /* PL-12 / D-84. Adopting a bias set is `contribute` and deliberately NOT
      `publish`: it is the group declaring the lens it works under, which is
      ordinary record work that every contributing member's own project managers
@@ -4861,6 +4876,12 @@ export default {
            exactly as an absent one does, so the store gates both through the same
            predicate and fails closed on an absent stamp, like every op here. */
         || VERSION_ACTIONS.includes(op)
+        /* PL-3 / IS-4: the suggest endpoint names an inquiry AND resolves every
+           leg against the corpus, so it takes the same fail-closed viewer stamp
+           for BOTH — a question the caller was never invited to must refuse
+           exactly as an absent one does, and a leg the caller cannot see must
+           be unreachable rather than silently accepted. */
+        || op === "suggest"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -4972,6 +4993,14 @@ export default {
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op)
         || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)
         || VERSION_ACTIONS.includes(op)
+        /* PL-3 / IS-4: and the suggest endpoint, for the reason one paragraph
+           up. `author` here is the name that goes against a STRUCTURAL claim —
+           "this part of the argument would carry the answer on its own" — which
+           C-25.15 says only a named member may make. A caller-supplied `author`
+           is OVERWRITTEN rather than honoured, which is what lets the store
+           refuse a machine BY SHAPE through REC-46's one predicate instead of
+           trusting what the caller wrote. */
+        || op === "suggest"
         || op === "provenancechain")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after

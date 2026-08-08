@@ -6181,6 +6181,13 @@ export function basisVersionFindings(fm, findings) {
     const row = BASIS_VERSION_CHECKS[key];
     findings.push(f(row.check, 'error', message, repairs, key));
   };
+  /* PL-3 / IS-4 — the same shape reading the SUGGEST family's registry. A second
+     REGISTRY, deliberately not a second membership test: the kind vocabulary is
+     `SUGGEST_KINDS` and this arm calls it rather than re-typing the five. */
+  const pushSuggest = (key, message, repairs) => {
+    const row = SUGGEST_CHECKS[key];
+    findings.push(f(row.check, 'error', message, repairs, key));
+  };
 
   if (rows === undefined || rows === null) {
     /* NO VERSION BLOCK IS LEGAL and always will be: every inquiry in the record
@@ -6224,6 +6231,17 @@ export function basisVersionFindings(fm, findings) {
     }
     if (!VERSION_STATES.includes(v.state)) {
       push('VERSION_STATE_UNKNOWN', `basis_versions[${i}] ('${name}') is in state '${String(v.state).slice(0, 40)}': a version is one of ${VERSION_STATES.join(', ')}`);
+    }
+    /* PL-3 / IS-4 — THE SUGGESTION KIND, checked at the DOCUMENT gate as well as
+       at the endpoint. ABSENT IS LEGAL and always will be: every version a
+       member composes by hand carries no kind, and IS-4 adds a machine writer
+       rather than replacing the authored path. A kind that is PRESENT and
+       outside section 9's five is refused, because what a suggestion claims to
+       be decides how it is read. */
+    if (v.kind !== undefined && v.kind !== null && v.kind !== ''
+        && !Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, String(v.kind).trim())) {
+      pushSuggest('VERSION_KIND_UNKNOWN', `basis_versions[${i}] ('${name}').kind is '${String(v.kind).slice(0, 40)}': a suggestion is one of ${Object.keys(SUGGEST_KINDS).join(', ')} (section 9), and the set is closed so that a run reporting an empty search is distinguishable from a run that reported nothing`,
+        ['name one of the five kinds', 'or leave kind out entirely — a version a member composed is not a suggestion of any kind']);
     }
     if (v.hidden !== undefined && v.hidden !== null && typeof v.hidden !== 'boolean') {
       push('VERSION_HIDDEN_NOT_BOOLEAN', `basis_versions[${i}] ('${name}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
@@ -6399,6 +6417,287 @@ export function basisVersionFindings(fm, findings) {
     }
   }
 }
+
+/* =========================================================================
+ * PL-3 / IS-4 — THE SUGGEST ENDPOINT'S VOCABULARY AND ITS REFUSALS.
+ *
+ * THE FAMILY IS C-27. C-25 is PL-1's and PL-2's (basis versions and the sixth
+ * state machine, C-25.1 to C-25.31) and C-26 is PL-12's (the bias object,
+ * C-26.1 to C-26.11). Both were verified taken on this base before the number
+ * was allocated, which is the check PL-12 recorded having skipped and paid for
+ * with 102 moved references.
+ *
+ * WHAT THIS FAMILY IS FOR, and it is the whole acceptance of the item.
+ * INVESTIGATIVE-SESSION.md section 14b.5 rules that the run VERIFIES ITS OWN
+ * WORK BEFORE PROPOSING and that *"the checks run PLANE-SIDE"* (SWEEP C11): if
+ * the fleet member computed them it would hold a copy of the plane's rules,
+ * which is the drift class DEC-8 closed. So the six checks live in code beside
+ * the endpoint, the fleet member receives their VERDICTS, and each one is a
+ * C-number with a DEC-49 wire code and a canned translation.
+ * ========================================================================= */
+
+/* Section 9's five kinds. A suggestion is one of these and nothing else, and
+   the table is here rather than in the store because two things read it: the
+   endpoint, which refuses an unknown kind, and `basisVersionFindings`, which
+   refuses a DOCUMENT carrying one. One table, no second spelling.
+
+   EVERY KIND WRITES THE SAME OBJECT — a version in state `suggested` carrying
+   its run — and that is section 10's ruling rather than a simplification here:
+   *"Export means the AI adds a new version to the inquiry being investigated"*,
+   so both modes use ONE write path and the fence needs no second design. What
+   differs between the kinds is what the version SAYS, which is why the kind is
+   a field on the version and not a second endpoint. */
+export const SUGGEST_KINDS = {
+  'basis-version': 'a new version of the inquiry\'s basis — the main output: a complete alternative '
+    + 'composition with its legs, its branches and its description (section 6)',
+  'sharpen-question': 'the inquiry asks two questions that need different evidence; here they are '
+    + 'separated (section 8). The separation is carried as the version\'s claim',
+  'new-inquiry': 'a proposition answering the question, with the first version of its basis '
+    + '(section 8, under section 3\'s basis ruling)',
+  'level-empty': 'we looked at this level — meaning, content, documents, or the open internet — and it '
+    + 'is empty, with the observation-log address of the search that establishes it. Without this kind '
+    + 'a run that honestly found nothing supportable is indistinguishable from a run that emitted '
+    + 'nothing (SWEEP section 6), and section 15\'s empty-run instrument has no object to count',
+  'new-edition': 'evidence bearing on a PUBLISHED finding. A published case cannot be changed, so the '
+    + 'only act available is a new edition, and it is the member\'s',
+};
+
+/* The four levels `level-empty` may report on. CLAUDE.md's "NEVER ASSUME THE
+   LOWER LEVELS ARE COMPLETE" names exactly these four, and saying WHICH absence
+   is a first-class obligation there. */
+export const SUGGEST_LEVELS = ['meaning', 'content', 'documents', 'internet'];
+
+/* THE BOILERPLATE ROSTER, AND WHAT IT IS NOT.
+ *
+ * Section 14b.5: *"nothing in it is boilerplate — a version whose description or
+ * reason field is placeholder text is not proposed. The placeholder defect is
+ * already measured at human speed (`counterparty: to be named` satisfying a
+ * non-empty check, PROCESS-INVENTORY); an AI filling required fields to clear a
+ * gate is the same defect at machine scale."*
+ *
+ * THIS IS A BOUNDARY, NOT A PROSE JUDGE, and that limit is stated here for the
+ * same reason D-130's counterparty check states its own: a machine that writes
+ * "the relevant department" gets past every rule below, and a check that
+ * pretended otherwise would be claiming a competence it does not have. What it
+ * DOES catch is the machine-scale shape — a required field filled with a token
+ * whose only job is to be non-empty.
+ *
+ * MATCHED AGAINST THE WHOLE FIELD, case-folded and trimmed, NEVER as a
+ * substring. A substring rule would refuse a real sentence that quotes a
+ * placeholder — *"the contract names the counterparty as 'to be named', which is
+ * the defect"* is a perfectly good description of a finding, and refusing it
+ * would be the over-strictness arm this item's suite runs. */
+export const BOILERPLATE_FORMS = [
+  'to be named', 'tbd', 'to be determined', 'n/a', 'na', 'none', 'null', 'undefined',
+  'placeholder', 'todo', 'to do', 'tba', 'xxx', 'text', 'description', 'description here',
+  'lorem ipsum', 'sample text', 'no description', 'see above', 'as above', 'same', 'ditto',
+];
+/* ONE PREDICATE, never a second copy of the membership test — IS-6's C-22.4
+   control left its suite green at 98 of 98 because a rule had two
+   implementations and either one absorbed the control. The endpoint imports
+   this; nothing re-types the roster. */
+export function isBoilerplate(s) {
+  if (typeof s !== 'string') return true;
+  const v = s.trim().toLowerCase().replace(/[.!?]+$/, '').trim();
+  if (v === '') return true;
+  /* Only punctuation, ellipsis, or an unfilled angle-bracket slot. */
+  if (/^[\s.\-_*#'"`~<>[\]()]+$/.test(v)) return true;
+  if (/^<[^>]*>$/.test(v)) return true;
+  return BOILERPLATE_FORMS.includes(v);
+}
+
+/* PL-3 / IS-4 — THE SUGGEST ENDPOINT'S REFUSALS. Every row carries its
+ * C-number, its DEC-49 wire code and the canned translation a surface renders;
+ * a surface may RENDER a refusal it received and may never compute one (DEC-8).
+ *
+ * EVERY `where` NAMES A REGION AND NOT THE WHOLE FUNCTION (REC-71). A `where`
+ * names THE SMALLEST SPAN IN WHICH THE ROW'S REFUSAL IS ENFORCED; a
+ * whole-function `where` conscripts every refusal that arrives in that function
+ * AFTER the row is written, which is how PL-1's two rows turned 32 unrelated
+ * refusals into DEC-49's business and put `main`'s UI harness at exit 1.
+ *
+ * NO MEMBER-FACING STRING BELOW SAYS "ground", "partition", "AND" or "OR" as a
+ * member-facing word — DEC-32's elicitation clause 1 and D-226, the same bound
+ * VERSION_ACT_CHECKS and BASIS_VERSION_CHECKS respect, and the suite asserts it
+ * of every translation rather than trusting this paragraph. */
+export const SUGGEST_CHECKS = {
+  /* ---- the shape of the request. Refused before anything is composed. ---- */
+  SUGGEST_NO_TARGET: {
+    check: 'C-27.1',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'That request did not say which question the suggestion is about. '
+      + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
+  },
+  SUGGEST_NOT_AN_INQUIRY: {
+    check: 'C-27.2',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'Only a question carries readings of its evidence, and the thing named here is not a '
+      + 'question. There is nothing under it for a suggestion to be a reading of.',
+  },
+  SUGGEST_UNKNOWN_KIND: {
+    check: 'C-27.3',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'A suggestion is one of five kinds and this one names none of them. The kinds are a '
+      + 'closed set so that a run reporting an empty search is told apart from a run that reported '
+      + 'nothing at all, which no other field can distinguish.',
+  },
+  SUGGEST_NO_RUN: {
+    check: 'C-27.4',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'Every suggestion names the piece of work that produced it, and this one named none '
+      + 'that can be read here. What was searched, under which declared conditions, and where it '
+      + 'stopped is what lets anyone else check a reading rather than take it on trust.',
+  },
+  SUGGEST_NAME_TAKEN: {
+    check: 'C-27.5',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'This question already holds a reading by that name. Names are unique within one '
+      + 'question so a member can ask for a reading by name, and a second one wearing the same name '
+      + 'would make every later reference ambiguous.',
+  },
+  SUGGEST_EMPTY_LEVEL_UNSTATED: {
+    check: 'C-27.6',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'Reporting that a level of the search is empty means saying WHICH level was searched '
+      + 'and where the log of that search can be read. Absence at one level is not absence at the '
+      + 'next, and an unattributed empty answer is the one shape nobody can check.',
+  },
+  /* SEPARATE FROM SUGGEST_UNWRITABLE_DOCUMENT, and the DEC-49 GUARD IS WHAT
+     FORCED THE DISTINCTION rather than a design instinct. One code was written
+     for both, and arm C failed the harness naming the file, the line, the region
+     and the code: a `where` names ONE span, and a code minted in two regions
+     cannot have one. Reading the row again with that in hand, they ARE two
+     conditions — this one is "there is no file here to read", which is a fact
+     about the question and is knowable before anything is composed; the other is
+     "the file is in a shape this restricted grammar cannot be extended in
+     place", which is a fact about the bytes and is only knowable at the write. */
+  SUGGEST_NO_DOCUMENT: {
+    check: 'C-27.17',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'This question has no readable file behind it, so there is nothing for a reading of its '
+      + 'evidence to be added to. That is a fact about the question rather than about the reading, and '
+      + 'nothing was composed.',
+  },
+  SUGGEST_TOO_MANY_LEGS: {
+    check: 'C-27.7',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'This suggestion rests on more pieces of evidence than one reading may carry. The '
+      + 'limit is published in the refusal so a caller can split the reading rather than guess at '
+      + 'what would have fitted.',
+  },
+
+  /* ---- THE SIX PRE-WRITE CHECKS (section 14b.5). Each is its own C-number and
+     each is removable ON ITS OWN, which is the owed control this item carries
+     (VF-1 control 6): a control that removes them all together proves only that
+     the block exists. ---- */
+
+  /* CHECK 1. D-168 is the whole reason this is not a type check: `op=cite` is
+     TYPE-ONLY today, so a naive reachability check would PASS RETIRED
+     INFORMATION — a leg resting on a document the record has itself retired,
+     reading to every later reader as live support. */
+  SUGGEST_LEG_UNREACHABLE: {
+    check: 'C-27.8',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'One of the pieces of evidence this reading rests on cannot be reached where it says '
+      + 'it is: it is not in the record, it cannot be read from here, or the record has retired it. '
+      + 'A reading resting on something retired reads to a later member as live support for the answer.',
+  },
+  /* CHECK 2. The pair, PER AXIS, over the version's own declared structure —
+     DEC-21/DEC-44 refuse a single composed number four ways, so what has to
+     compute is two answers and never one. */
+  SUGGEST_PAIR_DOES_NOT_COMPUTE: {
+    check: 'C-27.9',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'The strength of this reading does not work out over the structure it declares, on '
+      + 'one or both of the two things strength is measured on. A reading whose arithmetic cannot be '
+      + 'run is a reading nobody can check, and it is not put forward.',
+  },
+  /* CHECK 3. Section 6 rule 8, Bob's own words: a background run adds its output
+     as a new version ONLY IF IT DIFFERS IN SUBSTANCE from every existing one.
+     Compared over PL-1's CANONICAL COMPOSITION, byte for byte, which is the same
+     bytes the freeze compares — so "the same reading" means one thing here. */
+  SUGGEST_NOT_DIFFERENT: {
+    check: 'C-27.10',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'This reading of the evidence is the same in substance as one this question already '
+      + 'holds, so it is not put forward a second time. The reading it matches is named, and adding a '
+      + 'duplicate would grow the review pile without adding anything to review.',
+  },
+  /* CHECK 4. D-195, and *"the Judith Miller error with arithmetic behind it"* is
+     what the sweep called an AI composing alternatives at volume. The arithmetic
+     takes a MAXIMUM across independently sufficient branches, so two branches
+     that trace to one upstream origin make a finding look stronger for a reason
+     that is not there. Content-addressed provenance lets the plane DERIVE it. */
+  SUGGEST_BRANCHES_NOT_INDEPENDENT: {
+    check: 'C-27.11',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'Two parts of this reading are offered as separate routes to the same answer, and the '
+      + 'record can show they trace back to the same original material. Treating them as separate '
+      + 'makes the answer look better supported than it is, so a machine may not put it forward that '
+      + 'way; a member may still say they are genuinely separate, and that is their call to sign for.',
+  },
+  /* CHECK 5. The placeholder defect at machine scale. */
+  SUGGEST_BOILERPLATE: {
+    check: 'C-27.12',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'A field this reading has to fill in carries filler text rather than an account of '
+      + 'anything. A required field filled to get past a check is worse than an empty one, because it '
+      + 'reads to the next member as something somebody wrote.',
+  },
+  /* CHECK 6. Section 4: THE AI HOLDS NO OP THAT ACCEPTS. The sole possible
+     output of this endpoint is a version in state `suggested`, so anything the
+     caller says about state, about hiding, about who decided and why, or about
+     what a project stands on is refused rather than ignored. */
+  SUGGEST_UNWRITABLE_STATE: {
+    check: 'C-27.13',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'This suggestion tries to arrive already decided — settled, set aside, hidden, or '
+      + 'signed by somebody. A suggestion may only ever arrive as something put forward; deciding '
+      + 'what to do with it is a named member\'s act and no automated caller can reach it.',
+  },
+
+  /* THE CHECK THAT DID NOT FINISH, and it is its own condition rather than a
+     verdict borrowed from one of the two checks that can hit it. `heldMatch`
+     learned this the hard way and D-129 wrote it down: NOT FOUND and DID NOT
+     FINISH LOOKING are different facts, and only one of them licenses a
+     conclusion. Both check 3 and check 4 read row sources whose size is a
+     property of the record rather than of the submission, so both publish a
+     bound and both FAIL CLOSED when they reach it — a duplicate the comparison
+     never got to, or a shared origin the trace never reached, would otherwise be
+     a silent pass on the safe-looking side. */
+  SUGGEST_COMPARISON_INCOMPLETE: {
+    check: 'C-27.16',
+    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    translation: 'The record holds more material behind this question than could be checked in one '
+      + 'pass, so whether this reading is genuinely new, or genuinely made of separate parts, was not '
+      + 'settled either way. Not finishing the check is a different fact from passing it, and this '
+      + 'record does not let the two read the same.',
+  },
+
+  /* ---- the write itself. Separate from check 6 on purpose: that one is about
+     the STATE the caller asked for, this one is about the DOCUMENT. ---- */
+  SUGGEST_UNWRITABLE_DOCUMENT: {
+    check: 'C-27.14',
+    where: 'src/store.mjs suggestVersion > is-suggest-write',
+    translation: 'This question\'s own file could not be extended in place, so nothing was written. '
+      + 'Adding a reading edits the record the reading lives in, and a half-written record is worse '
+      + 'than an unchanged one.',
+  },
+
+  /* ---- the catalog's own row, fired from `basisVersionFindings` above at both
+     gates. A DOCUMENT can carry a kind without ever passing through the
+     endpoint — a hand-authored file, a replayed revision, a future writer — and
+     none of those go through the op, which is the same two-layer reasoning
+     C-25.19 records one family up. ---- */
+  VERSION_KIND_UNKNOWN: {
+    check: 'C-27.15',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'This reading says it is a kind of suggestion nobody recognises. The kinds are a '
+      + 'closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside '
+      + 'the set is a claim with nothing behind it.',
+  },
+};
+
 /* =========================================================================
  * PL-12 / D-84 — THE BIAS OBJECT'S REFUSALS, and DEC-54's four scopes given
  * C-NUMBERS so that each is a MECHANISM rather than a paragraph.
