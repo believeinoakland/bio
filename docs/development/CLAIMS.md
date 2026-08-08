@@ -3101,3 +3101,36 @@ PL-4 already delegated that the D-113 check derives its covered set from `DELETE
 - **The alternative:** an `inquiry_leads` table keyed (observation, document, inquiry), which would carry many leads per document, allow a lead over a document nobody just fetched, and carry its own authorship. It is a derived table, so it would owe both purge arms and a `TABLES` row.
 - **Recommendation: keep the column.** It is the smallest thing that closes D-213, it inherits PL-4's attribution and conduct whole, and the shapes it cannot express are ones nothing can produce yet — the investigative session's only door to a document is the capture request. Building the table now would be structure bought before the producer that needs it exists, which is the mistake `PARALLELISM.md` warns about in its own last section.
 - **What reversing it costs: LOW NOW, RISING.** Today it is one migration adding the table, one producer rewritten to read it instead, and the column left inert or dropped — nothing member-facing changes, because the notification's shape is derived and its `id` is keyed on the request either way. It gets expensive once leads have been dispositioned: `proposal_dispositions` keys on the item's identity, so moving the identity would strand every recorded adopt/defer/dismiss. **The decision point is therefore before the first surface ships (UI-45), not before the first lead is captured.**
+
+## CLAIM 2026-08-08 UI
+session: ui48-unstated-bound
+opened: 2026-08-08T00:00:00Z
+paths: `civicos-ui/app.html` (the five sites and the shared bound function only), `civicos-ui/test/bound-sweep.test.mjs` (ARM G, the unstated-bound walk, plus ARM H's five runtime pins), `docs/development/CLAIMS.md` (this entry and its DELEGATIONs).
+**NOT OPENED:** nothing under `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/test/`, `newgroup/` or `release/`. The plane is READ ONLY here — `store.mjs` and `query.mjs` are read TEXTUALLY by the walk, exactly as `bound-sweep` already reads them, and no plane file is written. `civicos-ui/test/*.test.mjs` other than `bound-sweep.test.mjs` are READ ONLY; the negative controls mutate `app.html` on disk one arm at a time and restore it against a pristine pre-arm copy kept in `.ui48-harness/` inside this worktree, verified by `cmp` AND by sha256 after every arm.
+interfaces consumed: I3. interfaces owned: none. No op added, no check minted, no schema touched, no member-facing sentence authored beyond the ONE shared cut clause named below.
+expected: **UI-48** — five surfaces read a capped op and state NO bound (`op=connections` on the subject view and on the document page; `op=resolutions` on the document page; `op=concerns` in the finder and in the progressions view). Each states the record's PUBLISHED `limit` and `truncated`, over the CORRECT SET at that site, through the shared function `concernsBoundHtml` was already half of — lifted rather than five new sentences. Plus a class SWEEP that finds out whether five is the number.
+concurrency: no live claim names `civicos-ui/app.html` for WRITING (UI-52's claim names it READ ONLY and is `released:`-blank but merged), and no live claim names `civicos-ui/test/bound-sweep.test.mjs`.
+released:
+
+### DELEGATION 2026-08-08 UI (UI-48) -> CONDUCT / WHOEVER OWNS `VERIFICATION.md`: **THE NEGATIVE-CONTROL ROW IS STALE AGAIN, MEASURED RATHER THAN READ, AND IT IS NOT THIS ITEM THAT MOVED IT**
+
+`VERIFICATION.md`'s floor table carries **117 of 117 suites · 380 arms**, moved there by REC-73 on 2026-08-08. `node bio-plane/scripts/coverage.mjs --strict` **printed `120 of 120 suites declare one (100.0%) · 395 arms stated · fullest 21 (hygiene.test.mjs)`** on a green run in this worktree today, exit 0 read unpiped.
+
+- **It is not UI-48's to attribute to itself.** `coverage.mjs` scans `bio-plane/test/` only — `VERIFICATION.md` says in its own words that it does not measure the UI — so the three new suites and fifteen new arms came from plane items landing after REC-73, and this item's own new arms (`civicos-ui/test/bound-sweep.test.mjs`, 134 -> 202 assertions) are invisible to that instrument by design.
+- **It is raised here rather than edited** because the row belongs to whoever landed the suites that moved it, and a UI worker rewriting a shared floor mid-wave is a merge conflict CONDUCT would have to resolve for no gain. **This is now the fifth consecutive item to find that row stale by measuring it**, which is an argument for the row printing the command instead of the answer — the same correction `CLAUDE.md` already made for `store.mjs`'s line count.
+- **Reversal cost: none.** Nothing reads the number.
+
+### DELEGATION 2026-08-08 UI (UI-48) -> RECORD / REC-70's FAMILY: **`op=airunlog` IS ON THE CAPPED ROSTER NOW, AND UI-49's REASON FOR NOT BUILDING ITS SURFACE HAS EXPIRED**
+
+UI-48's WALK 1 run (the plane's own roster, read off `store.mjs` and printed every run) reads **UNCONDITIONAL (15)**: `readingname resolutions concerns connections queue versionchain basisversions biasinhale capturerequests aicredentials tasks airunlog projection searchindexcheck exportlog` — against the **9** UI-46 measured on 2026-08-07.
+
+- **`airunlog` is in that list.** UI-49 decided AGAINST building a log surface partly because *"it publishes an UNBOUNDED collection, so a consumer today would be a surface with a bound it cannot state"*, and REC-70 was routed on the finding that `op=airunlog`'s read carried no `LIMIT`. **That is no longer true of this plane**, so the stated reason for the decision no longer holds and the decision should be re-taken on its remaining grounds (the transcript-versus-log distinction) rather than inherited.
+- **Six of the fifteen have no UI consumer at all** — `versionchain`, `basisversions`, `biasinhale`, `capturerequests`, `aicredentials`, `searchindexcheck`, plus `exportlog` and `airunlog` — so UI-48's class does not extend to them today. **That is a fact about the surface being absent, not about the bound being stated**, and the first surface to read any of them inherits this item's obligation. ARM G will catch it: the roster is the plane's, so a new consumer joins the walk with nobody editing the suite.
+
+### DELEGATION 2026-08-08 UI (UI-48) -> WHOEVER OWNS `civicos-ui/test/surface-registry.test.mjs`: **THE `progressions` SURFACE DOES NOT DECLARE THE OP IT READS**
+
+`SURFACES.progressions.reads` is `["progression", "progressiondefine", "captureprogressions"]`. `progPaintInstance` reads **`op=concerns`** and threads its documents through every stage — it is the read that fills the pick list a member acts from. The registry's own header says `reads` is *"the surface's PRINCIPAL READS, NOT AN EXHAUSTIVE LIST"*, so this is **not a rule violation**; it is a declared read missing from a surface whose whole subject is that op's answer, and the omission is why a walk over the registry would not have found this item's fifth site.
+
+- `SURFACES.subjects` and `SURFACES.finder` both name `concerns`; `progressions` is the odd one out.
+- **UI-48 did not add it**, because `surface-registry.test.mjs` is not in this item's claim and its ARM A drives the declaration in both directions — adding a row without running that arm's sourcing control is how a registry becomes a hand-typed list again.
+- **Reversal cost: none.** One array entry.

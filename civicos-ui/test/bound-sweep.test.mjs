@@ -151,6 +151,63 @@
  *       the block comment that RECORDS this defect (11270) rather than on the
  *       code (11927), sending a reader to the explanation instead of the site.
  *       Now searched forward from the function's own declaration.
+ *
+ * NEGATIVE CONTROL (UI-48, run 2026-08-08 by ui48-unstated-bound): eighteen arms,
+ * each RUN, each armed ALONE with the other seventeen held open, each declared
+ * BEFORE arming, every restore verified BY CONTENT (`cmp`) AND BY sha256 against
+ * a PRISTINE PRE-ARM COPY kept inside the worktree. Baseline 202 assertions green.
+ *   (1) THE HAND-TYPED NUMBER, AT EVERY ONE OF THE FIVE SITES SEPARATELY — the
+ *       primary control, because the ask (`MEANING_ASK_LIMIT` 500) is ALSO the
+ *       plane's `#MEANING_LIMIT_DEFAULT`, so a hand copy agrees with the wire FOR
+ *       FREE on the real plane. A literal planted where the wire value belongs:
+ *       (a) subject view -> 7 fail, ARM H1's bound/hand-typed/moves/no-fallback;
+ *       (b) document page resolutions -> 7 fail, ARM H2's;
+ *       (c) document page connections -> 6 fail, ARM H3's;
+ *       (d) the finder's collector -> 8 fail, ARM H4's;
+ *       (e) the progression -> 8 fail, ARM H5's.
+ *       In every one, the OTHER four sites' arms stayed GREEN, which is what
+ *       makes these five arms and not one.
+ *   (2) THE BOUND DROPPED, one site at a time -> 6 to 9 fail each, headed by ARM
+ *       G's class arm printing file, LINE, surface and op; (2d) alone produces
+ *       TWO findings, because the finder asks op=concerns from two arms.
+ *   (3) THE ASK MOVED AND THE RECORD DID NOT (`MEANING_ASK_LIMIT` 500 -> 137)
+ *       -> 4 fail, and every one is an INSTRUMENT arm saying the ask is no longer
+ *       the plane's default. NOT ONE member-facing sentence moved, which is the
+ *       arm's whole point: what a member reads is the record's number.
+ *   (4) THE REPLACEMENT OVERCLAIM — the bound over the WRONG SET.
+ *       (a) connections reported over `documents` -> 6 fail (ARM H1 and H3);
+ *       (b) resolutions reported over `subjects` -> 4 fail (ARM H2);
+ *       (c) the finder reporting ONE bound over the MERGED list instead of one
+ *           per subject -> 5 fail. That is the site where the correct set needed
+ *           judgement rather than plumbing, and it is controlled for on its own.
+ *   (5) NEUTER THE SWEEP.
+ *       (a) `unconditional()` neutered -> 25 fail with the roster PRINTED as
+ *           UNCONDITIONAL (2) and BOTH ARM G deltas reading 0 -> 0. Note the 2:
+ *           `false && A || B || C` neuters only A, which is exactly UI-42's NC
+ *           (4b) finding met again, and it is recorded rather than tidied.
+ *       (b) `G_STATES` always true -> 7 fail including both deltas and the
+ *           over-strictness INSTRUMENT arms.
+ *       (c) `carriedOutWhole` always true -> 5 fail; the escape hatch swallows
+ *           every finding and the six-sites arm says so.
+ *   (6) OVER-STRICTNESS, LIVE: the progression rewritten to state the envelope
+ *       INLINE in a spelling this file never uses -> ARM G's CLASS ARM STAYS
+ *       GREEN, which is the property. What fails is ARM H5's wording pins, which
+ *       pin the SHARED sentence on purpose, and ARM H6's composer arm.
+ *
+ *   TWO INSTRUMENT FINDINGS, BOTH FOUND BY THE CONTROLS AND NEITHER BY READING:
+ *     - `gName(grBad.find(…))` THREW A TypeError under (1e) and (6), because the
+ *       `find` returns undefined once that site is mutated. A TypeError does not
+ *       go through `ok` at all: it ENDED THE MODULE, and the whole of ARM H never
+ *       ran, while the driver's failure count read a tidy 3 and looked like a
+ *       clean result. D-93's class inside an assertion. The arm now fails on a
+ *       missing finding, `verdictOf` does the same for the four over-strictness
+ *       arms under (5a), and THE DRIVER NOW CHECKS THE SUITE REACHED ITS OWN FOOT
+ *       before believing any count — which is how both were found.
+ *     - ARM G's SIX-SITE regression anchors ARE the five bound statements, so any
+ *       control mutating a site makes the anchor guard fire. It fails LOUDLY and
+ *       names the anchor rather than becoming a silent no-op (UI-42's fault in
+ *       this same file), and REACH is therefore ALSO measured by a SYNTHETIC
+ *       injection that is independent of all six sites.
  */
 import fs from "fs";
 import vm from "vm";
@@ -491,7 +548,11 @@ vm.runInContext(appScript() + `;globalThis.__U={heldMatch,addGo,PLANE,HELD_PAGE,
   heldBounded:()=>HELD_BOUNDED, loadResolveCandidates,INTENT_SUBJ,RESOLVE_CAND_LIMIT,
   queueRun,queuePaint,queueBoundHtml,QUEUE_LIMIT,lookupSubject,registryNameBoundHtml,
   finderSubjectsPanelHtml,PROJ_CACHE,
-  concernsBoundHtml,subjConcernsHtml,MEANING_ASK_LIMIT};`, ctx);
+  concernsBoundHtml,subjConcernsHtml,MEANING_ASK_LIMIT,
+  /* UI-48 */
+  meaningBoundHtml,connectionsBoundHtml,resolutionsBoundHtml,
+  showEntity,subjConnectionsHtml,docKnowsPanel,docResolutionsHtml,docConnectionsHtml,
+  finderSubjectsRoute,finderSubjectsCollect,progPaintInstance,PROG};`, ctx);
 const U = ctx.__U;
 U.PLANE.base = "https://plane.test";
 U.PLANE.token = "t";
@@ -1406,6 +1467,610 @@ const claimRe = () => new RegExp(COMPLETENESS_CLAIM.source, "i");
 ok("ARM F · POLARITY: the claim detector is RED on the sentence that shipped and GREEN on the honest form, never the reverse",
    claimRe().test("added separately and are not capped")
    && !claimRe().test("the record answered this at a bound of 271 resolutions read"));
+
+/* ==========================================================================
+ * ARM G — THE UNSTATED-BOUND WALK (UI-48, 2026-08-08).
+ *
+ * WHAT THE THREE WALKS ABOVE CANNOT SEE, AND IT IS THE OTHER HALF OF UI-42's
+ * CLASS. WALK 2 asks whether a call site STATES ITS ASK on the wire; all twelve
+ * do. ARM E asks whether a bound a member READS came off the wire. ARM F asks
+ * whether a surface CLAIMS non-limitation in words. None of them asks the
+ * question this item is about: **does the record's published bound reach the
+ * member at all?** A surface that renders the rows and drops the envelope makes
+ * no false claim and states no invented number — it says NOTHING, and UI-26
+ * measured that an unstated bound reads as COMPLETENESS while using no
+ * completeness word. So every screen above stayed green over five surfaces that
+ * had re-created the defect REC-59 and REC-60 spent two items closing.
+ *
+ * THE PROPERTY THIS WALK ASKS, and it is about the ENVELOPE rather than about
+ * wording: a capped op's answer must not be DROPPED by the function that reads
+ * it. Every `recR("<unconditionally-capped op>")` call site in civicos-ui is
+ * found through WALK 1's roster — the plane's own fact, so an op capped
+ * tomorrow joins this walk with nobody editing this file — and classified:
+ *
+ *   DROPPED-AT-THE-CALL  the call result is sub-scripted on the spot, e.g.
+ *                        `(await recR("concerns", …)).documents`. The envelope
+ *                        is gone before any name holds it, so NO renderer
+ *                        downstream COULD have stated the bound. A FINDING.
+ *   STATED-HERE          the reading function calls a `*BoundHtml` composer, or
+ *                        reads `.limit` AND `.truncated` off the answer itself.
+ *   STATED-BY-CALLEE     it hands the answer to a function that does.
+ *   CARRIED-BY-CALLEE    it hands the answer to a function that keeps `limit`
+ *                        and `truncated` rather than stating them — the finder,
+ *                        whose collector merges several subjects' answers.
+ *   CARRIED-OUT-WHOLE    the envelope leaves the function INTACT, returned bare
+ *                        or in a returned object literal or stored whole into
+ *                        module state. The walk cannot follow module state and
+ *                        SAYS SO instead of guessing; this bucket is therefore
+ *                        ENUMERATED below, one named reason per site, so a new
+ *                        site cannot land in it silently.
+ *   FINDING              none of the above.
+ *
+ * WHAT THIS WALK CAN AND CANNOT SEE, stated plainly because REC-67 exists for a
+ * matcher that was trusted past its reach:
+ *   IT CAN see a site whose answer is stated in the reading function or one hop
+ *     away, and it can see the envelope being sub-scripted at the call.
+ *   IT CANNOT follow an answer through MODULE STATE — `queueLoadFeed` returns
+ *     into `QUEUE.feeds` and `queueBoundHtml` reads it back through
+ *     `queueFeedState`, which no argument-flow walk can join up. Those sites are
+ *     classified CARRIED-OUT-WHOLE and their bound is pinned at RUNTIME by ARM C
+ *     instead, which is the honest division of labour rather than a blind spot.
+ *   IT CANNOT follow more than ONE hop from the reading function.
+ *   IT CANNOT tell a bound stated over the RIGHT set from one stated over the
+ *     wrong set — that is ARM H's job, at runtime, and it is the half that needed
+ *     judgement rather than plumbing.
+ *   IT ONLY sees `recR(` — a surface reaching a capped op through another
+ *     transport is invisible to it. `check-refusal-codes`' arm A already asserts
+ *     that `rec`/`recPost`/`api` are reached from nine named declarations and
+ *     nowhere else, so that hole is closed elsewhere rather than here.
+ *   IT DOES NOT anchor on `get(` or any other prefix that is a method name as
+ *     often as a fetch verb — REC-67's whole subject — because the op name is
+ *     required to sit inside `recR("…")` and nothing else matches.
+ *
+ * NEGATIVE CONTROL (UI-48): recorded at the foot of the file with the others.
+ * ========================================================================== */
+const CAPPED = [...OPS.keys()];
+
+const balancedFrom = (b, i) => {          /* i is AT the opening brace */
+  let depth = 0;
+  for(let j = i; j < b.length; j++){
+    if(b[j] === "{") depth++;
+    else if(b[j] === "}"){ depth--; if(depth === 0) return b.slice(i + 1, j); }
+  }
+  return "";
+};
+const callEnd = (body, from) => {
+  let i = from, depth = 0;
+  for(; i < body.length; i++){
+    const c = body[i];
+    if(c === "(") depth++;
+    else if(c === ")"){ if(depth === 0) return i; depth--; }
+  }
+  return body.length;
+};
+/* Every name whose ASSIGNMENT right-hand side contains the call. This is what
+   makes `const answers = await Promise.all(ids.map(… recR("concerns") …))` yield
+   `answers` — the finder's shape, where the answer is never bound to a name of
+   its own at all. Brace/paren-balanced rather than `[^;]*`, per this file's own
+   rule about lazy character classes reading nesting wrong. */
+const assignedNames = (body, at) => {
+  const names = new Set();
+  const re = /\b([A-Za-z_$][\w$]*)\s*=(?!=|>)\s*/g;
+  let m; while((m = re.exec(body))){
+    const from = re.lastIndex;
+    if(from > at) break;
+    let i = from, depth = 0;
+    for(; i < body.length; i++){
+      const c = body[i];
+      if(c === "(" || c === "[" || c === "{") depth++;
+      else if(c === ")" || c === "]" || c === "}"){ if(depth === 0) break; depth--; }
+      else if(c === ";" && depth === 0) break;
+    }
+    if(at >= from && at < i) names.add(m[1]);
+  }
+  return names;
+};
+/* CARRIED OUT WHOLE — DELIBERATELY NARROW, AND THE NARROWING IS A MEASUREMENT.
+   The first draft of this rule accepted the name appearing ANYWHERE inside a
+   `return`, and THREE of this item's own five surfaces escaped through it: the
+   walk read 2 findings where the tree had 6, because `return
+   finderSubjectsCollect(answers, …)` and `return \`…${docResolutionsHtml(res,…)}…\``
+   both put the name in a return statement while handing the envelope to
+   something that drops it. Passing an answer to a call is the OPPOSITE of
+   carrying it out; only a bare return, a returned object literal's plain value,
+   or a store into module state preserves the envelope for a later reader. */
+const carriedOutWhole = (b, nm) => {
+  if(new RegExp(`return\\s+${nm}\\s*(?:;|\\)|$)`, "m").test(b)) return true;
+  if(new RegExp(`(?:^|[^.\\w$])[A-Za-z_$][\\w$]*\\.[A-Za-z_$][\\w$]*\\s*=\\s*${nm}\\s*[;,]`).test(b)) return true;
+  if(new RegExp(`\\.set\\(\\s*[^(){}]*,\\s*${nm}\\s*\\)`).test(b)) return true;
+  const re = /return\s*\{/g;
+  let m; while((m = re.exec(b))){
+    const inner = balancedFrom(b, m.index + m[0].length - 1).trim();
+    if(new RegExp(`(?:^|[,{]\\s*)${nm}\\s*(?:,|$)`).test(inner)) return true;
+    if(new RegExp(`:\\s*${nm}\\s*(?:,|$)`).test(inner)) return true;
+  }
+  return false;
+};
+const G_STATES  = (b) => /[A-Za-z]*BoundHtml\s*\(/.test(b);
+const G_CARRIES = (b) => /\.limit\b/.test(b) && /\btruncated\b/.test(b);
+
+const envelopeWalk = (files, cappedOps) => {
+  const fns = new Map();
+  for(const { text } of files)
+    for(const f of functionsOf(stripComments(text))) if(!fns.has(f.name)) fns.set(f.name, f.body);
+  const rows = [];
+  for(const { file, text } of files){
+    const code = stripComments(text);
+    for(const f of functionsOf(code)){
+      for(const op of cappedOps){
+        const re = new RegExp(`recR\\("${op}"`, "g");
+        let m; while((m = re.exec(f.body))){
+          const end = callEnd(f.body, m.index + m[0].length);
+          const rest = f.body.slice(end + 1).replace(/^[)\s]*/, "");
+          const names = [...assignedNames(f.body, m.index)];
+          const thenParam = (/^\.then\(\s*\(?\s*([A-Za-z_$][\w$]*)/.exec(rest) || [])[1];
+          if(thenParam) names.push(thenParam);
+          /* THE LINE IN THE FILE AS IT SITS ON DISK, searched FORWARD from the
+             function's own declaration — never from position zero, which UI-42
+             measured landing on the comment that RECORDS a defect rather than on
+             the code that has it. */
+          const head = text.search(new RegExp(`^(?:async\\s+)?function\\s+${f.name}\\b`, "m"));
+          const at = text.indexOf(`recR("${op}"`, head < 0 ? 0 : head);
+          const line = at < 0 ? null : text.slice(0, at).split("\n").length;
+          const row = { file, fn: f.name, op, line, names };
+          if(/^\.(?!then\b|catch\b)/.test(rest)){
+            rows.push({ ...row, verdict:"DROPPED-AT-THE-CALL", why: rest.slice(0, 24).replace(/\s+/g, " ") });
+            continue;
+          }
+          const statesHere = G_STATES(f.body)
+            || names.some(nm => new RegExp(`\\b${nm}\\.limit\\b`).test(f.body)
+                             && new RegExp(`\\b${nm}\\.truncated\\b`).test(f.body));
+          if(statesHere){ rows.push({ ...row, verdict:"STATED-HERE", why:`${f.name}()` }); continue; }
+          const callees = [];
+          const cre = /\b([A-Za-z_$][\w$]*)\s*\(/g;
+          let c; while((c = cre.exec(f.body))){
+            if(!fns.has(c[1])) continue;
+            const args = f.body.slice(cre.lastIndex, callEnd(f.body, cre.lastIndex));
+            if(names.some(nm => new RegExp(`\\b${nm}\\b`).test(args))) callees.push(c[1]);
+          }
+          const stater = callees.find(nm => G_STATES(fns.get(nm)));
+          if(stater){ rows.push({ ...row, verdict:"STATED-BY-CALLEE", why:`${stater}()` }); continue; }
+          const carrier = callees.find(nm => G_CARRIES(fns.get(nm)));
+          if(carrier){ rows.push({ ...row, verdict:"CARRIED-BY-CALLEE", why:`${carrier}()` }); continue; }
+          if(names.some(nm => carriedOutWhole(f.body, nm))){
+            rows.push({ ...row, verdict:"CARRIED-OUT-WHOLE", why: names.join(",") }); continue;
+          }
+          rows.push({ ...row, verdict:"FINDING", why:`names=[${names.join(",")}] callees=[${callees.join(",")}]` });
+        }
+      }
+    }
+  }
+  return { rows, functions: fns.size };
+};
+
+const G = envelopeWalk(UI_FILES, CAPPED);
+const gBad = G.rows.filter(r => r.verdict === "FINDING" || r.verdict === "DROPPED-AT-THE-CALL");
+const gName = (r) => `civicos-ui/${r.file}:${r.line ?? "?"} — ${r.fn}() reads op=${r.op} and no surface states the bound the record published (${r.verdict}: ${r.why})`;
+const tally = {};
+for(const r of G.rows) tally[r.verdict] = (tally[r.verdict] || 0) + 1;
+console.log(`  ARM G CORPUS: ${UI_FILES.length} files in civicos-ui/ · ${G.functions} named functions · ` +
+  `${CAPPED.length} unconditionally-capped ops on the plane's roster · ${G.rows.length} call sites reaching one`);
+console.log(`     ARM G BUCKETS: ` + Object.entries(tally).map(([k,v])=>`${k} ${v}`).join(" · "));
+for(const r of G.rows) console.log(`       ${r.verdict.padEnd(20)} ${r.file}:${r.line ?? "?"} ${r.fn}() op=${r.op} -> ${r.why}`);
+
+ok("ARM G GUARD: the walk reaches a real corpus — files, named functions, and call sites that actually read a capped op",
+   UI_FILES.length >= 3 && G.functions >= 200 && G.rows.length >= 8);
+ok("ARM G GUARD: and the roster it walks is WALK 1's, the plane's own fact, not a list written here",
+   CAPPED.length === OPS.size && CAPPED.includes("concerns")
+   && CAPPED.includes("connections") && CAPPED.includes("resolutions"));
+if(gBad.length) for(const r of gBad) console.error(`         ${gName(r)}`);
+ok("ARM G · THE CLASS IS CLEAR: no surface reads an unconditionally-capped op and drops the bound the record published",
+   gBad.length === 0);
+
+/* THE `CARRIED-OUT-WHOLE` BUCKET IS ENUMERATED, NOT LEFT OPEN. It is the one
+   verdict this walk hands out without seeing a bound stated anywhere, so an
+   open bucket would be an escape hatch a future site could fall into silently.
+   Each member is named WITH THE REASON it is licensed, and a new one turns this
+   red — which an allowlist keyed on the op would not, because the reason is
+   about the SITE and not about the op. */
+const CARRIED_OUT = G.rows.filter(r => r.verdict === "CARRIED-OUT-WHOLE")
+  .map(r => `${r.fn}/${r.op}`).sort();
+ok("ARM G · THE CARRIED-OUT BUCKET IS EXACTLY THE THREE SITES THIS WALK CANNOT FOLLOW, each licensed by a fact asserted elsewhere: `queueLoadFeed` returns both feeds into `QUEUE.feeds` and ARM C pins their bounds at runtime; `getProjection` caches the single-bundle arm WALK 2 classifies against store.mjs",
+   CARRIED_OUT.join(" ") === "getProjection/projection queueLoadFeed/queue queueLoadFeed/tasks");
+
+/* REACH AS A DELTA, MEASURED TWICE AND ON PURPOSE — because MEASURING REACH AND
+   CATCHING THE DEFECT ARE TWO DIFFERENT JOBS, which is UI-42's own finding in
+   this file after its ARM F injection was anchored on the very line the defect
+   removes and silently became a no-op.
+   (i) A SYNTHETIC SITE, injected into a copy, which is INDEPENDENT of all six
+       real sites: it measures whether the walk can see the shape at all, and it
+       keeps measuring that under a control that mutates any of the six.
+   (ii) THE SIX REAL SITES put back one mutation each, below, which measures
+       whether the walk sees THIS ITEM's defect. Its anchors are the five bound
+       statements themselves, so a control that mutates a site makes the ANCHOR
+       GUARD fire — LOUDLY, naming the anchor. That is the guard working rather
+       than a fault: this file's rule is that a regression injection which has
+       become a no-op must say so, and here it does. */
+const G_SYNTH = UI_FILES.map(x => x.file !== "app.html" ? x : ({ file: x.file,
+  text: x.text + `\nasync function ui48SyntheticSite(){ const z = await recR("connections", { id, limit:"7" }); return (z.connections||[]).length; }\n` }));
+{
+  const GS = envelopeWalk(G_SYNTH, CAPPED);
+  const gsBad = GS.rows.filter(r => r.verdict === "FINDING" || r.verdict === "DROPPED-AT-THE-CALL");
+  ok("ARM G · INSTRUMENT: the synthetic copy really was modified",
+     G_SYNTH.find(x=>x.file==="app.html").text !== SRC);
+  ok("ARM G REACH IS A DELTA (SYNTHETIC, INDEPENDENT OF ALL SIX SITES): one function appended that reads a capped op and states nothing makes the walk find MORE",
+     gsBad.length === gBad.length + 1
+     && gsBad.some(r => r.fn === "ui48SyntheticSite" && r.op === "connections"));
+  console.log(`     ARM G REACH DELTA (synthetic): one unbound site appended -> findings ${gBad.length} -> ${gsBad.length}`);
+}
+
+/* (ii) THE SIX REAL SITES PUT BACK ONE MUTATION EACH. `git show HEAD:` was the first draft of this and is WRONG
+   HERE FOR A REASON WORTH RECORDING: HEAD moves the moment this item commits, so
+   the arm would compare the fixed tree against itself and go green over nothing
+   the day after it was written — a delta whose baseline follows it is not a
+   delta. The mutations below undo exactly what each site gained, each anchored
+   on a string this file asserts appears EXACTLY ONCE, so an anchor that stops
+   matching fails loudly rather than silently becoming a no-op (UI-42 measured a
+   silent no-op injection in this very file). */
+const G_UNDO = [
+  ['${c && c._err ? "" : connectionsBoundHtml(c, "this list")}', "subjConnectionsHtml"],
+  ['${!c || c._err ? "" : connectionsBoundHtml(c, "this list")}', "docConnectionsHtml"],
+  ['${!res || res._err ? "" : resolutionsBoundHtml(res, "this list")}', "docResolutionsHtml"],
+  ["limit: r.limit, truncated: r.truncated,", "finderSubjectsCollect"],
+  ['${concernsBoundHtml(concernsAns, "the documents resolved to this subject")}', "progThreadHtml"],
+];
+for(const [anchor, where] of G_UNDO)
+  ok(`ARM G · INSTRUMENT: the regression anchor for ${where} appears EXACTLY ONCE in app.html, so undoing it cannot silently become a no-op`,
+     SRC.split(anchor).length - 1 === 1);
+let REG_SRC = SRC;
+for(const [anchor] of G_UNDO) REG_SRC = REG_SRC.split(anchor).join("");
+ok("ARM G · INSTRUMENT: the regression copy really was modified, and by every one of the five mutations, so the delta below compares two different things",
+   REG_SRC !== SRC && SRC.length - REG_SRC.length === G_UNDO.reduce((a,[x])=>a+x.length, 0));
+{
+  const GR = envelopeWalk(UI_FILES.map(x => x.file === "app.html" ? { file:x.file, text:REG_SRC } : x), CAPPED);
+  const grBad = GR.rows.filter(r => r.verdict === "FINDING" || r.verdict === "DROPPED-AT-THE-CALL");
+  console.log(`     ARM G REACH DELTA: the five bound statements removed -> findings ${gBad.length} -> ${grBad.length}` +
+    (grBad.length ? ` · ${grBad.map(r=>`${r.fn}/${r.op}`).join(" · ")}` : ""));
+  ok("ARM G REACH IS A DELTA: taking the bound statements back out finds STRICTLY MORE than the file as it stands",
+     grBad.length > gBad.length);
+  /* THE NUMBER IS THE ITEM'S OWN ANSWER AND IT IS NOT THE ONE THE QUEUE CARRIED.
+     UI-46 named FIVE surfaces. The walk finds SIX CALL SITES, because the finder
+     asks `op=concerns` TWICE — once by id when the member addressed a subject
+     with `concerns:ENT-…`, once per registry hit when they typed a name — and
+     the two arms are different code reached by different queries. Five surfaces
+     is right; six sites is what a walk over the code finds, and the difference
+     is recorded rather than rounded to the number that was expected. */
+  ok("ARM G · SIX SITES ACROSS FIVE SURFACES, and the walk names every one of them rather than counting to a number the queue supplied",
+     grBad.length === 6
+     && ["showEntity/connections","docKnowsPanel/resolutions","docKnowsPanel/connections",
+         "progPaintInstance/concerns","finderSubjectsRoute/concerns"]
+        .every(k => grBad.some(r => `${r.fn}/${r.op}` === k))
+     && grBad.filter(r => r.fn === "finderSubjectsRoute").length === 2);
+  /* THE `?? null` AND THE GUARD BEFORE IT ARE NOT DEFENSIVENESS — A CONTROL PUT
+     THEM THERE. This arm first read `gName(grBad.find(…))` directly, and under a
+     control that mutates the progression site the `find` returns `undefined`, so
+     `gName` threw a TypeError. A TypeError does not go through `ok` at all: it
+     ended the module, and EVERY ARM AFTER ARM G — the whole of ARM H — never ran,
+     while the driver's failure count read a tidy 3. That is D-93's class inside
+     an assertion, the sixth sighting on this project, and it is why the driver
+     now also checks that the suite reached its own foot. A missing finding must
+     FAIL here, not stop the file. */
+  const progFinding = grBad.find(r => r.fn === "progPaintInstance") || null;
+  ok("ARM G · AND IT NAMES THE FILE, THE LINE, THE SURFACE AND THE OP, rather than merely counting",
+     !!progFinding
+     && grBad.every(r => Number.isFinite(r.line) && r.line > 0)
+     && /^civicos-ui\/app\.html:\d+ — progPaintInstance\(\) reads op=concerns/.test(gName(progFinding)));
+}
+
+/* A NEUTERED ROSTER FINDS NOTHING — permanent, so a green ARM G over a roster
+   that silently emptied can never be mistaken for a clean result. */
+ok("ARM G · A NEUTERED ROSTER FINDS NOTHING, which is why the delta and not the absolute is the evidence",
+   envelopeWalk(UI_FILES, []).rows.length === 0);
+
+/* OVER-STRICTNESS. Correct surfaces phrased unlike anything in this codebase
+   must PASS, or the walk is testing its author's habits rather than the
+   property. Four shapes, each legitimate or defective on purpose.
+   `verdictOf` EXISTS BECAUSE A CONTROL NEEDED IT: reading `.rows[0].verdict`
+   directly threw a TypeError under NC (5a), where the roster is neutered to
+   empty and the walk correctly returns no rows — and a TypeError ends the module
+   rather than failing an arm, so every arm behind it silently never ran. It
+   returns a NAMED absence instead, which fails the arm and keeps the file
+   going. */
+const verdictOf = (files) => {
+  const r = envelopeWalk(files, CAPPED).rows;
+  return r.length ? r[0].verdict : "(the walk found no call site at all)";
+};
+const G_ALT_INLINE = [{ file:"alt.mjs", text:
+  `async function altA(){ const answer = await recR("connections", { id, limit:"7" });\n`
++ `  return renderRows(answer.connections) + \`capped at \${answer.limit}, cut: \${answer.truncated}\`; }` }];
+ok("ARM G · OVER-STRICTNESS: a surface that reads the envelope itself, in field-reading style this file never uses, PASSES",
+   verdictOf(G_ALT_INLINE) === "STATED-HERE");
+const G_ALT_HOP = [{ file:"alt.mjs", text:
+  `async function altB(){ const z = await recR("resolutions", { sha256, limit:"7" });\n`
++ `  return altPaint(z); }\n`
++ `function altPaint(z){ return \`\${z.limit} rows, truncated \${z.truncated}\`; }` }];
+ok("ARM G · OVER-STRICTNESS: and one that hands the whole answer to a renderer which reads it PASSES too",
+   verdictOf(G_ALT_HOP) === "CARRIED-BY-CALLEE");
+const G_ALT_DROP = [{ file:"alt.mjs", text:
+  `async function altC(){ const rows = (await recR("connections", { id, limit:"7" })).connections;\n`
++ `  return renderRows(rows); }` }];
+ok("ARM G · INSTRUMENT: and the same surface sub-scripting the call IS caught, so the two arms above are not passing because the walk is blind",
+   verdictOf(G_ALT_DROP) === "DROPPED-AT-THE-CALL");
+const G_ALT_SILENT = [{ file:"alt.mjs", text:
+  `async function altD(){ const z = await recR("concerns", { id, limit:"7" });\n`
++ `  return altList(z); }\n`
++ `function altList(z){ return (z.documents||[]).map(d=>d.bundle_id).join(""); }` }];
+ok("ARM G · INSTRUMENT: a surface that hands the whole answer to a renderer which IGNORES the envelope is a FINDING — this is the exact shape of four of this item's six sites",
+   verdictOf(G_ALT_SILENT) === "FINDING");
+
+/* ==========================================================================
+ * ARM H — THE FIVE SURFACES, DRIVEN, AND THE BOUND STATED OVER THE RIGHT SET.
+ *
+ * ARM G proves the envelope is not dropped. It CANNOT prove the number a member
+ * reads is the record's, and it cannot prove the bound is stated over the set
+ * the record actually bounded — which is the half that needed judgement. So each
+ * of the five surfaces is DRIVEN through its real reading function against a
+ * wire mock, and every arm is driven at a bound that is NEITHER the ask NOR the
+ * plane's default NOR its ceiling, so a hand-typed number cannot agree for free.
+ * That hazard is not hypothetical here: `MEANING_ASK_LIMIT` and the plane's
+ * `#MEANING_LIMIT_DEFAULT` are BOTH 500, measured by ARM B2 above.
+ *
+ * THE SETS, and getting one wrong is a second overclaim replacing the first:
+ *   op=concerns     bounds RESOLUTION ROWS and then collapses them to captures.
+ *   op=resolutions  bounds the resolution rows it returns; they are the answer.
+ *   op=connections  bounds the connection rows it returns.
+ * Every fixture below drives `limit` and the row count DELIBERATELY APART, so a
+ * sentence reporting the wrong figure cannot pass by coincidence.
+ * ========================================================================== */
+const H_ASK = U.MEANING_ASK_LIMIT;
+ok("ARM H · INSTRUMENT: the ask is read out of app.html rather than typed here, and it is the plane's default too, so every arm below must be driven off it",
+   H_ASK === CONCERNS_ASK && H_ASK === MEANING_DEFAULT);
+const offAsk = (b) => b !== H_ASK && b !== MEANING_DEFAULT && b !== MEANING_MAX;
+
+/* --- H1: the SUBJECT VIEW's connections (op=connections by entity) --------- */
+const H1_BOUND = 313, H1_ROWS = 2;
+ok("ARM H1 · INSTRUMENT: the fixture's bound is unlike the ask, the plane's default and its ceiling, and unlike the row count, so nothing can agree with it for free",
+   offAsk(H1_BOUND) && H1_BOUND !== H1_ROWS);
+const conRow = (i) => ({ a_capture_sha:`a${i}`.padStart(64,"1"), b_capture_sha:`b${i}`.padStart(64,"2"),
+  a_bundle_id:`INFO-A${i}`, b_bundle_id:`INFO-B${i}`, a_grade:"B", b_grade:"C",
+  grade:"C", established:false, needs_confirmation:true });
+const subjectView = async (connWire, connRows) => {
+  els.clear();
+  ROUTER = async (op) => {
+    if(op === "entity") return { ok:true, found:true, entity:{ entity_id:"ENT-1", kind:"organisation", label:"Oakland Police Department", aliases:[], relations:[] } };
+    if(op === "concerns") return { ok:true, entity_id:"ENT-1", found:true, documents:[], count:0, limit:C_BOUND, truncated:false };
+    if(op === "connections") return { ok:true, entity_id:"ENT-1",
+      connections: Array.from({length:connRows}, (_,i)=>conRow(i)), count:connRows, ...(connWire||{}) };
+    return {};
+  };
+  await U.showEntity("ENT-1", null, true);
+  return html("#subj-res");
+};
+const h1 = await subjectView({ limit:H1_BOUND, truncated:false }, H1_ROWS);
+ok("ARM H1 · THE BOUND IS THE RECORD'S: the subject view's connections panel states the cap op=connections published, read off the wire",
+   new RegExp(`bound of ${H1_BOUND} connections read`).test(h1));
+ok("ARM H1 · A HAND-TYPED NUMBER FAILS THIS: what this screen ASKED op=connections for appears nowhere in what a member reads",
+   !new RegExp(`bound of ${H_ASK}\\b`).test(h1));
+ok("ARM H1 · NOT OVER THE WRONG SET: op=connections bounds CONNECTION rows, so the figure is never presented as a number of documents or of resolutions",
+   !new RegExp(`bound of ${H1_BOUND} documents`).test(h1)
+   && !new RegExp(`bound of ${H1_BOUND} resolutions`).test(h1));
+ok("ARM H1 · NOR IS THE ROW COUNT PRESENTED AS THE BOUND",
+   !new RegExp(`bound of ${H1_ROWS}\\b`).test(h1));
+ok("ARM H1 · and the concerns panel beside it still states ITS OWN op's bound, over RESOLUTIONS, so the two sentences on one screen do not blur into each other",
+   new RegExp(`bound of ${C_BOUND} resolutions read`).test(h1));
+ok("ARM H1 · an answer the record did not cut does not claim to have been cut",
+   !/connections read.{0,400}was CUT/s.test(h1));
+ok("ARM H1 · IT MOVES WITH THE RECORD: a plane publishing a different bound moves the sentence with it",
+   new RegExp(`bound of ${H1_BOUND*2} connections read`).test(
+     await subjectView({ limit:H1_BOUND*2, truncated:false }, H1_ROWS)));
+const h1cut = await subjectView({ limit:H1_BOUND, truncated:true }, H1_ROWS);
+ok("ARM H1 · THE RECORD'S OWN `truncated` IS READ AND SAID, not `count >= limit`: two rows came back against a bound of 313 and the record still says it held rows back",
+   /The record says that answer was CUT/.test(h1cut) && H1_ROWS < H1_BOUND);
+const h1silent = await subjectView(null, H1_ROWS);
+ok("ARM H1 · NO FALLBACK: where the record published no bound the screen SAYS it does not know, rather than substituting the number it asked for",
+   /did not say what bound it applied to this list/.test(h1silent)
+   && !new RegExp(`\\b${H_ASK}\\b`).test(h1silent));
+const h1err = await (async () => {
+  els.clear();
+  ROUTER = async (op) => {
+    if(op === "entity") return { ok:true, found:true, entity:{ entity_id:"ENT-1", kind:"organisation", label:"OPD", aliases:[], relations:[] } };
+    if(op === "concerns") return { ok:true, entity_id:"ENT-1", found:true, documents:[], count:0, limit:C_BOUND, truncated:false };
+    if(op === "connections") throw { reason:"NO_ANSWER", detail:"the record could not answer" };
+    return {};
+  };
+  await U.showEntity("ENT-1", null, true);
+  return html("#subj-res");
+})();
+/* UI-48 CORRECTED THIS PANEL'S FAILURE BRANCH IN THE SAME TURN, and it is a
+   change the item did not ask for: a FAILED connections read rendered "No
+   connections among these documents have been derived yet." — a claim about the
+   record made over an answer nobody gave. The sister panel on the document page
+   has told the two apart since UI-9, so this is a divergence rather than a new
+   rule, and leaving it would have been an overclaim sitting inside an item whose
+   whole subject is overclaim. */
+ok("ARM H1 · A READ THAT FAILED SAYS SO, and does not report an absence of connections it never learned",
+   !/No connections among these documents have been derived yet/.test(h1err)
+   && /could not read this subject&rsquo;s connections|could not read this subject's connections/.test(h1err));
+ok("ARM H1 · and a failed read states NO bound, rather than inventing one over an answer nobody gave",
+   !/bound of/.test(h1err.slice(h1err.indexOf("Connections among these documents"))));
+
+/* --- H2 + H3: the DOCUMENT PAGE (op=resolutions and op=connections by capture) */
+const H2_BOUND = 419, H2_ROWS = 3;         /* resolutions */
+const H3_BOUND = 523, H3_ROWS = 2;         /* connections */
+ok("ARM H2/H3 · INSTRUMENT: the two fixtures' bounds differ from the ask, from the plane's figures, from their own row counts AND FROM EACH OTHER, so one panel cannot pass by reading the other's answer",
+   offAsk(H2_BOUND) && offAsk(H3_BOUND) && H2_BOUND !== H3_BOUND
+   && H2_BOUND !== H2_ROWS && H3_BOUND !== H3_ROWS);
+const DOC_SHA2 = "d".repeat(64);
+const docPage = async (resWire, connWire) => {
+  els.clear();
+  ROUTER = async (op) => {
+    if(op === "resolutions") return { ok:true, capture_sha:DOC_SHA2, count:H2_ROWS,
+      resolutions: Array.from({length:H2_ROWS},(_,i)=>({ capture_sha:DOC_SHA2, bundle_id:`INFO-${i}`,
+        ref:`R${i}`, entity_id:`ENT-${i}`, grade:"B", method:"identifier", established:true, needs_confirmation:false })),
+      ...(resWire||{}) };
+    if(op === "connections") return { ok:true, capture_sha:DOC_SHA2, count:H3_ROWS,
+      connections: Array.from({length:H3_ROWS},(_,i)=>({ ...conRow(i), a_capture_sha:DOC_SHA2 })),
+      ...(connWire||{}) };
+    if(op === "entity") return { ok:true, found:true, entity:{ entity_id:"ENT-0", kind:"organisation", label:"A subject" } };
+    if(op === "captureprogressions") return { ok:true, instances:[] };
+    return {};
+  };
+  return await U.docKnowsPanel(DOC_SHA2);
+};
+const h23 = await docPage({ limit:H2_BOUND, truncated:false }, { limit:H3_BOUND, truncated:false });
+ok("ARM H2 · THE BOUND IS THE RECORD'S: the document page states op=resolutions' own published cap, read off the wire",
+   new RegExp(`bound of ${H2_BOUND} resolutions read`).test(h23));
+ok("ARM H3 · and op=connections' own, separately, off ITS answer's wire and not inherited from the panel above it",
+   new RegExp(`bound of ${H3_BOUND} connections read`).test(h23));
+ok("ARM H2 · NOT OVER THE WRONG SET: op=resolutions bounds RESOLUTION rows, and the panel never states it over the SUBJECTS those rows name — those are read one hop away by id and are not what the record bounded",
+   !new RegExp(`bound of ${H2_BOUND} subjects`).test(h23)
+   && !new RegExp(`bound of ${H2_BOUND} documents`).test(h23));
+ok("ARM H3 · NOT OVER THE WRONG SET: op=connections' figure is never presented as a number of documents",
+   !new RegExp(`bound of ${H3_BOUND} documents`).test(h23));
+ok("ARM H2/H3 · A HAND-TYPED NUMBER FAILS BOTH: what this screen asked for appears nowhere in what a member reads",
+   !new RegExp(`bound of ${H_ASK}\\b`).test(h23));
+ok("ARM H2/H3 · THE TWO PANELS DO NOT SHARE A NUMBER: each states its own op's bound and neither borrows the other's",
+   !new RegExp(`bound of ${H2_BOUND} connections`).test(h23)
+   && !new RegExp(`bound of ${H3_BOUND} resolutions`).test(h23));
+ok("ARM H2/H3 · THEY MOVE WITH THE RECORD, INDEPENDENTLY",
+   new RegExp(`bound of ${H2_BOUND*2} resolutions read`).test(
+     await docPage({ limit:H2_BOUND*2, truncated:false }, { limit:H3_BOUND, truncated:false })));
+const h23cut = await docPage({ limit:H2_BOUND, truncated:true }, { limit:H3_BOUND, truncated:false });
+ok("ARM H2 · the record's own `truncated` is read and said, on an answer whose row count is nowhere near its bound",
+   /The record says that answer was CUT/.test(h23cut) && H2_ROWS < H2_BOUND);
+ok("ARM H3 · and the panel the record did NOT cut stays silent about being cut, so the flag is per-answer and not per-screen",
+   (h23cut.match(/The record says that answer was CUT/g) || []).length === 1);
+const h23silent = await docPage(null, null);
+ok("ARM H2/H3 · NO FALLBACK on either panel: where the record published no bound both say they do not know",
+   (h23silent.match(/did not say what bound it applied to this list/g) || []).length === 2
+   && !new RegExp(`\\b${H_ASK}\\b`).test(h23silent));
+
+/* --- H4: the FINDER (op=concerns, ONCE PER SUBJECT, merged) ---------------- */
+const H4_A = 617, H4_B = 719;
+ok("ARM H4 · INSTRUMENT: two subjects are driven at DIFFERENT bounds, which is the only way to see whether one number is being reported over a merged list",
+   offAsk(H4_A) && offAsk(H4_B) && H4_A !== H4_B);
+const finderPanelFor = async (wireA, wireB) => {
+  els.clear();
+  ROUTER = async (op, p) => {
+    if(op !== "concerns") return {};
+    const which = p.id === "ENT-A" ? wireA : wireB;
+    const label = p.id === "ENT-A" ? "Oakland Police Department" : "Oakland Fire Department";
+    return { ok:true, entity_id:p.id, found:true, entity:{ entity_id:p.id, kind:"organisation", label },
+             count:1, documents:[{ capture_sha:`${p.id}`.padStart(64,"7"), bundle_id:`INFO-${p.id}`,
+               ref:"R1", grade:"B", established:true, needs_confirmation:false }],
+             ...(which||{}) };
+  };
+  const s = await U.finderSubjectsRoute({ subjects:[{subject:"ENT-A"},{subject:"ENT-B"}], words:[], text:[], unpublished:[] });
+  return U.finderSubjectsPanelHtml(s, new Set());
+};
+const h4 = await finderPanelFor({ limit:H4_A, truncated:false }, { limit:H4_B, truncated:false });
+ok("ARM H4 · EVERY SUBJECT'S OWN BOUND REACHES THE MEMBER: this route asks op=concerns once per subject, so both published bounds are stated and neither is dropped",
+   new RegExp(`bound of ${H4_A} resolutions read`).test(h4)
+   && new RegExp(`bound of ${H4_B} resolutions read`).test(h4));
+ok("ARM H4 · NOT OVER THE WRONG SET, AND THIS IS THE SET THE FINDER GETS WRONG BY DEFAULT: the merged list has no bound of its own, so each sentence NAMES THE SUBJECT it belongs to rather than being stated over the list a member is looking at",
+   new RegExp(`the documents resolved to Oakland Police Department at a bound of ${H4_A}`).test(h4)
+   && new RegExp(`the documents resolved to Oakland Fire Department at a bound of ${H4_B}`).test(h4));
+ok("ARM H4 · A HAND-TYPED NUMBER FAILS THIS: what this route asked for appears nowhere in what a member reads",
+   !new RegExp(`bound of ${H_ASK}\\b`).test(h4));
+ok("ARM H4 · IT MOVES WITH THE RECORD, PER SUBJECT: moving one subject's bound moves that subject's sentence and leaves the other's alone",
+   new RegExp(`Oakland Police Department at a bound of ${H4_A*2}`).test(
+     await finderPanelFor({ limit:H4_A*2, truncated:false }, { limit:H4_B, truncated:false })));
+const h4cut = await finderPanelFor({ limit:H4_A, truncated:true }, { limit:H4_B, truncated:false });
+ok("ARM H4 · the record's own `truncated` is read per subject: one subject cut and one not produces exactly one cut sentence",
+   (h4cut.match(/The record says that answer was CUT/g) || []).length === 1);
+const h4silent = await finderPanelFor(null, { limit:H4_B, truncated:false });
+ok("ARM H4 · NO FALLBACK, AND NO BORROWING FROM THE SUBJECT BESIDE IT: a subject whose answer carried no bound says the record did not say, and does not inherit the other subject's figure",
+   /did not say what bound it applied to the documents resolved to Oakland Police Department/.test(h4silent)
+   && !new RegExp(`Oakland Police Department at a bound of ${H4_B}`).test(h4silent));
+ok("ARM H4 · and the route still carries an explicit ask onto the wire for every subject, so the record has something to clamp",
+   CALLS.filter(c => c.op === "concerns").every(c => Number(c.params.limit) === H_ASK));
+
+/* --- H5: the PROGRESSION (op=concerns, feeding the thread pick list) ------- */
+const H5_BOUND = 823, H5_DOCS = 2;
+ok("ARM H5 · INSTRUMENT: the fixture's bound is unlike the ask, the plane's figures and the document count",
+   offAsk(H5_BOUND) && H5_BOUND !== H5_DOCS);
+U.PLANE.me = { member:"dana", handle:"dana", session:true, can:{}, capabilities:["contribute"] };
+const progView = async (wire) => {
+  els.clear();
+  U.PROG.def = { progression_key:"meeting", label:"Meeting", stages:[
+    { stage_key:"agenda", label:"Agenda", required:"always" },
+    { stage_key:"minutes", label:"Minutes", required:"always" }] };
+  U.PROG.entity = { entity_id:"ENT-1", kind:"organisation", label:"Oakland Police Department" };
+  ROUTER = async (op) => {
+    if(op === "instance") return { ok:true, found:false, stages:[] };
+    if(op === "concerns") return { ok:true, entity_id:"ENT-1", found:true, count:H5_DOCS,
+      documents: Array.from({length:H5_DOCS},(_,i)=>({ capture_sha:`p${i}`.padStart(64,"5"),
+        bundle_id:`INFO-P${i}`, ref:`R${i}`, grade:"B", established:true, needs_confirmation:false })),
+      ...(wire||{}) };
+    return {};
+  };
+  await U.progPaintInstance();
+  return html("#pg-inst");
+};
+const h5 = await progView({ limit:H5_BOUND, truncated:false });
+ok("ARM H5 · INSTRUMENT: the pick list really rendered, so this arm reads a surface and not an absence — without it the bound assertions below would pass over an empty string",
+   /Thread the documents through it/.test(h5) && /INFO-P0/.test(h5));
+ok("ARM H5 · THE BOUND IS THE RECORD'S: the progression states the cap op=concerns published, where the list it bounds is actually used",
+   new RegExp(`bound of ${H5_BOUND} resolutions read`).test(h5));
+ok("ARM H5 · NOT OVER THE WRONG SET: op=concerns bounds the RESOLUTION rows its join reads, never the documents in the pick list they collapse to",
+   !new RegExp(`bound of ${H5_BOUND} documents`).test(h5)
+   && !new RegExp(`bound of ${H5_DOCS}\\b`).test(h5)
+   && /over the resolutions the record reads, not over the documents they collapse to/.test(h5));
+ok("ARM H5 · A HAND-TYPED NUMBER FAILS THIS",
+   !new RegExp(`bound of ${H_ASK}\\b`).test(h5));
+ok("ARM H5 · IT MOVES WITH THE RECORD",
+   new RegExp(`bound of ${H5_BOUND*3} resolutions read`).test(await progView({ limit:H5_BOUND*3, truncated:false })));
+ok("ARM H5 · the record's own `truncated` is read and said, on an answer whose document count is nowhere near its bound — an inference from that count could never report it",
+   /The record says that answer was CUT/.test(await progView({ limit:H5_BOUND, truncated:true })));
+ok("ARM H5 · NO FALLBACK: where the record published no bound the screen says it does not know",
+   /did not say what bound it applied to the documents resolved to this subject/.test(await progView(null)));
+
+/* --- H6: THE SHARED FUNCTION, AND WHAT IT DID NOT CHANGE ------------------ */
+/* ONE COMPOSER, SEVEN CALLERS, ASSERTED AS A RELATION AND NOT AS A WORDING —
+   ARM D's pattern and DEC-49's reason. What is pinned is that no site composes a
+   bound sentence of its own, so a ruling on the wording moves every screen by
+   editing one place. */
+ok("ARM H6 · ONE COMPOSER: `meaningBoundHtml` is declared once and every bound sentence on the meaning layer goes through it",
+   (SRC.match(/^function meaningBoundHtml\(/gm)||[]).length === 1
+   && (SRC.match(/^function concernsBoundHtml\(/gm)||[]).length === 1
+   && (SRC.match(/^function connectionsBoundHtml\(/gm)||[]).length === 1
+   && (SRC.match(/^function resolutionsBoundHtml\(/gm)||[]).length === 1);
+ok("ARM H6 · and the three unit wrappers are the ONLY callers of it, so a fourth unit cannot be introduced without declaring what set it bounds",
+   (SRC.match(/meaningBoundHtml\(/g)||[]).length === 4);
+ok("ARM H6 · THE UNITS ARE THE RECORD'S THREE DIFFERENT ANSWERS, not one noun reused: concerns bounds resolutions and says so, connections bounds connections, resolutions bounds resolutions",
+   U.meaningBoundHtml({limit:11,truncated:false}, "X", "connections").includes("11 connections read")
+   && U.connectionsBoundHtml({limit:11,truncated:false}, "X").includes("11 connections read")
+   && U.resolutionsBoundHtml({limit:11,truncated:false}, "X").includes("11 resolutions read")
+   && U.concernsBoundHtml({limit:11,truncated:false}, "X").includes("11 resolutions read"));
+/* THE REFACTOR CHANGED NO MEMBER-FACING BYTE FOR THE OP IT INHERITED. Asserted
+   against the sentence UI-42 shipped, written out here in full, because "the
+   output is unchanged" is exactly the kind of claim that costs nothing unless
+   something checks it. */
+ok("ARM H6 · UI-42's SENTENCE IS BYTE-IDENTICAL AFTER THE LIFT: the op=concerns wording did not move when the noun became a parameter",
+   U.concernsBoundHtml({ limit:271, truncated:true }, "this list") ===
+     ` The record answered this list at a bound of 271 resolutions read` +
+     ` &mdash; that bound is over the resolutions the record reads, not over the documents they collapse to,` +
+     ` because it cannot know how many documents they make until it has read them.` +
+     ` <b>The record says that answer was CUT</b> &mdash; more resolutions carry this subject than it read,` +
+     ` so a document already resolved to this subject can be missing from this list.`);
+ok("ARM H6 · and the ABSENT branch is shared too, so a screen that cannot state a bound says the same thing everywhere",
+   U.connectionsBoundHtml({}, "this list") === U.concernsBoundHtml({}, "this list"));
+/* NO FIXED SITE COMPOSES A BOUND SENTENCE OF ITS OWN. Measured over the five
+   surfaces by NAME rather than as a count over the whole file: two OTHER screens
+   legitimately compose their own — `loadResolveCandidates`'s op=readingname
+   sentence and `queueBoundHtml`'s — and this item did not touch either, so a
+   file-wide count would be asserting something about them instead. */
+{
+  const fixed = ["subjConnectionsHtml","docResolutionsHtml","docConnectionsHtml",
+                 "finderSubjectsPanelHtml","progThreadHtml"];
+  const bodies = new Map(functionsOf(SRC_CODE).map(f => [f.name, f.body]));
+  ok("ARM H6 · INSTRUMENT: all five fixed surfaces are found in the file, so the arm below reads real bodies and not five absences",
+     fixed.every(nm => (bodies.get(nm)||"").length > 100));
+  ok("ARM H6 · NO SITE COMPOSES ITS OWN: none of the five surfaces this item fixed writes the phrase `at a bound of` itself — each calls a wrapper, so a DEC-49 ruling moves all five by editing one place",
+     fixed.every(nm => !/at a bound of/.test(bodies.get(nm)||"")));
+  ok("ARM H6 · and every one of them DOES reach the shared composer, so the arm above is not passing because they state nothing",
+     fixed.every(nm => /BoundHtml\(/.test(bodies.get(nm)||"")));
+}
 
 console.log(`bound-sweep: ${n} assertions${bad?`, ${bad} FAILED`:", all green"} — THREE WALKS whose reach is asserted AS A DELTA (the plane's own capped-op roster read off store.mjs/query.mjs, then every app.html call site anchored on the wire name) · ARM A drives the REAL addGo over a match planted at row ${HELD_AT} of ${ROWS_N} and asserts op=promote NEVER REACHES THE WIRE, with the trap proved armed (the match is absent from the page the unpaged read saw) · a bounded walk reports its bound instead of answering null, and that bound lands IN THE BUNDLE · ARM B states op=readingname's bound as the RECORD's own limit/truncated, driven at a bound the screen never asked for so a hand-typed figure FAILS, and with no fallback when the record publishes none · ARM C does the same for op=tasks, retiring the counts arithmetic UI-39 had to infer from, with an arm RED for that inference (a cut answer whose counts agree) · ARM E sweeps the CLASS: no bound constant this file declares reaches a sentence a member reads, proved as a DELTA against UI-39's restored wording and with an over-strictness arm · ARM D deletes an affirmative falsehood and holds DEC-49 OPEN as a RELATION, asserting no wording · ARM B2 states op=concerns's bound as the RECORD's own limit/truncated after REC-60 capped it, driven at a bound that is neither the ask nor the plane's default nor its ceiling and with the row bound DIFFERENT from the document count, so both a hand-typed figure AND a bound reported over the wrong set FAIL · ARM F sweeps the CLASS THE NUMBER WALKS CANNOT SEE: no member-facing surface asserts something is uncapped, unlimited or unbounded while reading an op the plane bounds, proved as a DELTA against the sentence that actually shipped and with three over-strictness arms · and WALK 1 is REBUILT, because UI-39's \`limit = <digits>\` matcher was blind to five capped methods and was itself the reason this defect did not announce itself`);
 if(bad) process.exit(1);

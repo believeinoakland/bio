@@ -8948,8 +8948,19 @@ function finderSubjectsCollect(answers, byId){
   for(const a of answers){
     if(a.err){ errors.push({ id:a.id, refusal:a.err }); continue; }
     const r = a.r || {};
+    /* UI-48: THE ENVELOPE TRAVELS WITH THE SUBJECT IT BELONGS TO, and that is
+       the judgement this site needed rather than the plumbing. This route asks
+       `op=concerns` ONCE PER SUBJECT and merges the answers into one list, so
+       there is NO SINGLE BOUND over the merged list — each subject's answer
+       carries its own cap and its own truncation flag, and the record never
+       stated anything about the union. Reporting one number over the merged
+       list would be a bound over a set the record did not bound, which REC-60
+       names as the second overclaim that replaces the first. So `limit` and
+       `truncated` are kept PER ENTITY, unread and underived here, and the panel
+       states one sentence per subject naming that subject. */
     entities.push({ entity_id: r.entity_id || a.id, entity: r.entity || a.entity || null,
                     found: r.found !== false,
+                    limit: r.limit, truncated: r.truncated,
                     count: (typeof r.count === "number") ? r.count : (r.documents||[]).length });
     for(const d of (r.documents || [])){
       const key = d.bundle_id || ("capture:" + d.capture_sha);
@@ -9126,10 +9137,19 @@ function finderSubjectsPanelHtml(s, overlapIds){
     ? `<div class="card" style="margin:8px 0">${(s.errors||[]).map(e=>`<div class="kv"><span class="k">${esc(e.id)}</span><span class="v plain">${esc((e.refusal&&(e.refusal.detail||e.refusal.error||e.refusal.reason))||"")}</span></div>`).join("")}</div>`
     : "";
   const rows = s.documents || [];
+  /* UI-48: THE BOUND `op=concerns` PUBLISHED, ONE SENTENCE PER SUBJECT.
+     This route asked once per subject and merged the answers, so a single figure
+     over the merged list would be a bound over a set the record never bounded.
+     Each subject's own `limit` and `truncated` came back on its own answer and
+     are rendered against that subject's name, through the shared function — no
+     number is composed here, and where a subject's answer carried no bound the
+     shared function says the record did not say rather than filling it in. */
+  const perSubject = (s.entities || []).map(e =>
+    `<p class="subj-note">${concernsBoundHtml(e, `the documents resolved to ${esc((e.entity && e.entity.label) || e.entity_id)}`)}</p>`).join("");
   return head
     + `<p class="count-line" id="f-subj-count"><b>${esc(String(s.count))}</b> ${s.count===1?"document":"documents"} on this route</p>`
     + `<p class="subj-note">Every document the record has RESOLVED to the subject, ordered by how strongly each resolution was established &mdash; the record&rsquo;s own grade, strongest first. A different question, a different table and a different order from the route above, which is why the two counts are reported apart.</p>`
-    + entLine + bound + errs
+    + entLine + perSubject + bound + errs
     + (rows.length
         ? `<div class="card" style="padding:4px 18px">${rows.map(d=>{
             const target = d.bundle_id;
@@ -11312,7 +11332,12 @@ async function showEntity(entityId, known, skipActs){
     /* The reverse index, and the connections among what it returns. */
     let concerns = { documents:[] }, connections = { connections:[] };
     try{ concerns = await recR("concerns", { id:entityId, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ concerns = { documents:[], _err:true }; }
-    try{ connections = await recR("connections", { id:entityId, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ connections = { connections:[] }; }
+    /* UI-48: `_err` is SET on the catch, which it was not before, and it is a
+       correction rather than a tidy-up. Without it a read that FAILED rendered
+       "No connections among these documents have been derived yet." — a claim
+       about the record made over an answer nobody gave, and the sister panel on
+       the document page has told the two apart since UI-9. */
+    try{ connections = await recR("connections", { id:entityId, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ connections = { connections:[], _err:true }; }
     if(res) res.innerHTML =
         subjEntityHtml(entity)
       + subjRelationsHtml(entity)
@@ -11413,16 +11438,60 @@ const MEANING_ASK_LIMIT = 500;
    by editing here, and the two can never drift apart into saying different things
    about one op's bound. `what` names the set being bounded on the calling screen
    and is the only authored part. */
-function concernsBoundHtml(ans, what){
+/* UI-48, 2026-08-08 — THE SAME SENTENCE FOR EVERY MEANING-LAYER READ, AND THE
+   UNIT IS THE PARAMETER.
+   ==========================================================================
+   UI-42 put `op=concerns`'s bound in ONE place for the two screens that stated
+   it. FIVE MORE SURFACES read a capped op and stated NO bound at all —
+   `op=connections` on the subject view and on the document page, `op=resolutions`
+   on the document page, `op=concerns` in the finder and in the progressions
+   view — and UI-26 measured that an unstated bound reads as COMPLETENESS while
+   using no completeness word, so ARM F's claim sweep is structurally incapable
+   of seeing it. That is the same overclaim REC-59 and REC-60 spent two items
+   closing, re-created on the surface.
+
+   SO THE WORDING IS LIFTED, NOT WRITTEN FIVE MORE TIMES. Who owns member-facing
+   wording is DEC-49's open subject, and authoring five sentences would preempt
+   it five times over. This function is UI-42's sentence with the NOUN made a
+   parameter, and `concernsBoundHtml` below is now a call to it that renders
+   BYTE-IDENTICAL output to what it rendered before — asserted, not assumed.
+   Exactly ONE clause is new: the generic cut rider, used where a surface has no
+   distinction of its own to draw.
+
+   `unit` IS THE SET THE RECORD SAYS IT BOUNDED, AND GETTING IT WRONG IS A
+   SECOND OVERCLAIM REPLACING THE FIRST (REC-60's distinction, carried). The
+   plane's three meaning-layer reads do NOT bound the same thing:
+     op=concerns     bounds the RESOLUTION ROWS its join reads, and then
+                     COLLAPSES them to distinct captures — so `limit` is over
+                     resolutions and `count` is documents, and they differ.
+     op=resolutions  bounds the resolution rows it returns; those rows ARE the
+                     answer, so the unit is resolutions and nothing collapses.
+     op=connections  bounds the connection rows it returns — one row per PAIR,
+                     which is why REC-60 raised the bound for this read at all.
+   A bound stated over a set the record did not bound is SPECIFIC AND WRONG,
+   which is worse than none. */
+function meaningBoundHtml(ans, what, unit, distinction, cutRider){
   const bound = Number(ans && ans.limit);
   const boundKnown = Number.isFinite(bound) && bound > 0;
   if(!boundKnown)
     return ` The record did not say what bound it applied to ${what}, so this screen cannot tell you whether all of them are here &mdash; and it will not put a number of its own there.`;
   const cut = !!ans && ans.truncated === true;
-  return ` The record answered ${what} at a bound of ${bound} resolutions read &mdash; that bound is over the resolutions the record reads, not over the documents they collapse to, because it cannot know how many documents they make until it has read them.`
+  return ` The record answered ${what} at a bound of ${bound} ${unit} read${distinction || `.`}`
     + (cut
-       ? ` <b>The record says that answer was CUT</b> &mdash; more resolutions carry this subject than it read, so a document already resolved to this subject can be missing from this list.`
+       ? ` <b>The record says that answer was CUT</b> &mdash; ${cutRider || `the record holds more ${unit} than it read for this, so something it holds can be missing from this list.`}`
        : ``);
+}
+/* op=connections bounds the CONNECTION rows it returns, and `count` is the
+   length of that same page — no collapse, so no second set to get wrong. */
+function connectionsBoundHtml(ans, what){ return meaningBoundHtml(ans, what, "connections"); }
+/* op=resolutions bounds the RESOLUTION rows it returns, and those rows are what
+   the panel lists. The SUBJECTS beside them are read one hop away by id and are
+   not what the record bounded, so the bound is never stated over subjects. */
+function resolutionsBoundHtml(ans, what){ return meaningBoundHtml(ans, what, "resolutions"); }
+function concernsBoundHtml(ans, what){
+  return meaningBoundHtml(ans, what, "resolutions",
+    ` &mdash; that bound is over the resolutions the record reads, not over the documents they collapse to, because it cannot know how many documents they make until it has read them.`,
+    `more resolutions carry this subject than it read, so a document already resolved to this subject can be missing from this list.`);
 }
 
 /* (2) Every document that concerns the subject (op=concerns), each with its
@@ -11457,11 +11526,21 @@ function subjConcernsHtml(c){
    (op=connections). A connection's grade is the WEAKER of its two ends; the badge
    shows HOW, never credibility. Connections are derived by a separate step
    (op=connect); when none are recorded yet, that is stated honestly rather than
-   shown as "no connections". */
+   shown as "no connections".
+
+   UI-48: AND THE BOUND THE RECORD APPLIED. REC-60 capped `op=connections`, and
+   this is the read the bound was raised FOR: the entity arm is one row per PAIR
+   of captures concerning the subject, so the answer grows QUADRATICALLY and the
+   subject that matters most is the one that produces the largest one. This
+   panel read the rows and dropped the envelope, and its heading — "Connections
+   among these documents" — reads as all of them. The figure comes off the wire
+   through the shared function above, stated over CONNECTIONS because that is
+   what the record says it bounded. */
 function subjConnectionsHtml(c){
   const conns = c.connections || [];
   const head = `<section class="tsec"><h2>Connections among these documents</h2>`
-    + `<p class="subj-note">Two documents that concern this subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.</p>`;
+    + `<p class="subj-note">Two documents that concern this subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${c && c._err ? "" : connectionsBoundHtml(c, "this list")}</p>`;
+  if(c && c._err) return head + `<div class="empty">The record could not read this subject's connections.</div></section>`;
   if(!conns.length) return head + `<div class="empty">No connections among these documents have been derived yet.</div></section>`;
   const rows = conns.map(x=>{
     const a = x.a_bundle_id || (String(x.a_capture_sha).slice(0,12)+"…");
@@ -12323,7 +12402,13 @@ async function progPaintInstance(){
   const out = $("#pg-inst"); if(!out) return;
   let inst = null, docs = [];
   try{ inst = await recR("instance", { key: PROG.def.progression_key, id: PROG.entity.entity_id }); }catch(_){ inst = null; }
-  try{ docs = (await recR("concerns", { id: PROG.entity.entity_id, limit:String(MEANING_ASK_LIMIT) })).documents || []; }catch(_){ docs = []; }
+  /* UI-48: THE ENVELOPE WAS DROPPED AT THE CALL — `(await recR(...)).documents`
+     discards `limit` and `truncated` before anything downstream could read them,
+     so no renderer on this screen COULD have stated the bound. The whole answer
+     is kept and handed to the one place its list is used. */
+  let concernsAns = null;
+  try{ concernsAns = await recR("concerns", { id: PROG.entity.entity_id, limit:String(MEANING_ASK_LIMIT) }); }catch(_){ concernsAns = { _err:true }; }
+  docs = (concernsAns && concernsAns.documents) || [];
   PROG.instance = inst; PROG.docs = docs;
   const stages = (inst && inst.found && inst.stages && inst.stages.length) ? inst.stages : (PROG.def.stages||[]).map(s=>({
     stage_key:s.stage_key, label:s.label, required:s.required, present:false, documents:[], discharged:false, exceptions:[] }));
@@ -12342,7 +12427,7 @@ async function progPaintInstance(){
       }).join("")
     + ((inst && inst.findings || []).map(f=>
         `<div class="subj-doc"><div class="top"><span>${esc(f.detail || f.finding || "a stage the record expected is missing")}</span></div></div>`).join(""))
-    + (canIntentWrite() ? progThreadHtml(stages, docs) : "");
+    + (canIntentWrite() ? progThreadHtml(stages, docs, concernsAns) : "");
   if(canIntentWrite()){
     for(const s of stages){
       const sel = $("#pg-th-"+s.stage_key); if(sel) sel.onchange = () => progThreadPreflight();
@@ -12357,8 +12442,15 @@ function progDocOptions(docs){
   return `<option value="">Nothing at this stage</option>`
     + docs.map(d=>`<option value="${esc(d.capture_sha)}">${esc(d.bundle_id || ("a capture "+String(d.capture_sha).slice(0,12)+"…"))}</option>`).join("");
 }
-function progThreadHtml(stages, docs){
+/* UI-48: THE BOUND IS STATED HERE AND NOWHERE ELSE ON THIS SCREEN, because this
+   is the only place `op=concerns`'s document list is used — it fills the pick
+   list a member threads a stage from, so a document past the record's bound is
+   one they cannot choose and would have no way of knowing about. Stated over
+   RESOLUTIONS through the shared function: `op=concerns` bounds the rows its
+   join reads, not the documents in this list. */
+function progThreadHtml(stages, docs, concernsAns){
   return `<details class="intent-box" open><summary>Thread the documents through it</summary><div class="intent-body">
+      ${concernsAns && concernsAns._err ? "" : `<p class="subj-note">${concernsBoundHtml(concernsAns, "the documents resolved to this subject")}</p>`}
       ${docs.length ? "" : `<div class="empty">The record has resolved no document to this subject yet, so there is nothing to thread. Resolve one on the Subjects screen first.</div>`}
       ${stages.map(s=>`<label class="intent-lab">${esc(s.label||s.stage_key)}</label>
         <select id="pg-th-${esc(s.stage_key)}" class="intent-sel">${progDocOptions(docs)}</select>`).join("")}
@@ -12506,10 +12598,17 @@ async function docKnowsPanel(captureSha){
 
 /* (1) The SUBJECTS this document resolves to (op=resolutions by capture). The
    established / needs_confirmation flags are the op's, read straight through
-   subjGradeBadge — a Grade C reads "unconfirmed", never as established. */
+   subjGradeBadge — a Grade C reads "unconfirmed", never as established.
+
+   UI-48: AND THE BOUND THE RECORD APPLIED, which this panel never stated. The
+   bound is over the RESOLUTION ROWS, which for this op are the rows listed —
+   `count` is `page.length`, so nothing collapses and there is no second set to
+   report it over. It is NOT stated over the subjects: those are read one hop
+   away by id through `docEntityLabel`, and the record bounded the resolutions,
+   not the registry lookups they trigger. */
 function docResolutionsHtml(res, labels){
   const head = `<section class="tsec"><h2>Subjects this document names</h2>`
-    + `<p class="subj-note">The record matched a reference in this document to a registered subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.</p>`;
+    + `<p class="subj-note">The record matched a reference in this document to a registered subject. The grade states HOW that was established — a shared identifier, or only a corresponding name — and nothing about how much to trust the document itself.${!res || res._err ? "" : resolutionsBoundHtml(res, "this list")}</p>`;
   if(!res || res._err) return head + `<div class="empty">The record could not read which subjects this document names.</div></section>`;
   const rows = res.resolutions || [];
   if(!rows.length) return head + `<div class="empty">No reference in this document has been matched to a subject yet.</div></section>`;
@@ -12528,10 +12627,15 @@ function docResolutionsHtml(res, labels){
 
 /* (2) What this document CONNECTS to (op=connections by capture). A connection's
    grade is the WEAKER of its two ends; the badge shows HOW, never credibility.
-   Each row shows the OTHER end (this document is one of the two). */
+   Each row shows the OTHER end (this document is one of the two).
+
+   UI-48: AND THE BOUND THE RECORD APPLIED. The capture arm takes the SAME bound
+   as the entity arm — the plane says so at the site, because an answer whose
+   shape depended on which key you held would be a second thing to know — so the
+   figure is read off this answer's own wire and stated over CONNECTIONS. */
 function docConnectionsHtml(c, captureSha){
   const head = `<section class="tsec"><h2>Documents this one connects to</h2>`
-    + `<p class="subj-note">Two documents that concern the same subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.</p>`;
+    + `<p class="subj-note">Two documents that concern the same subject are connected. A connection's grade is the weaker of its two ends — a chain is only as strong as its weakest link — and states how the link was established, not how much to trust it.${!c || c._err ? "" : connectionsBoundHtml(c, "this list")}</p>`;
   if(!c || c._err) return head + `<div class="empty">The record could not read this document's connections.</div></section>`;
   const conns = c.connections || [];
   if(!conns.length) return head + `<div class="empty">No connection from this document to another has been derived yet.</div></section>`;
