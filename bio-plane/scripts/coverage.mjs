@@ -171,44 +171,29 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* ONE KEY SET, DELIBERATELY. Twelve items have moved these figures in parallel, and
-     keep-both merges left duplicate `arms:` keys in this one object literal FIVE separate
-     times. That is valid JavaScript: the LAST key silently wins, and on the first occasion
-     the last was the LOWEST — so the merge would have quietly INSTALLED SLACK in a ratchet
-     whose entire purpose is to have none. No error, no warning, and **a duplicate object
-     key cannot be seen by reading the value you expect to find.**
+  /* ONE KEY SET. Thirteen items have moved these figures in parallel and keep-both merges
+     have left duplicate `arms:` keys here SIX separate times — valid JavaScript where the
+     LAST key silently wins, and once the last was the LOWEST, which would have installed
+     slack in a ratchet whose whole purpose is to have none. **A duplicate object key
+     cannot be seen by reading the value you expect to find**, and on 2026-08-08 one finally
+     bit: `coverage-provenance` went red with 19 failures and `--strict` exited 1. That was
+     the first time the hazard was caught by an INSTRUMENT rather than by a human re-reading
+     this block, and it is the argument for the provenance check existing at all.
 
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542 · FW-13 550 · M0-17 553 · FW-14 552.
+     REC-77 530 · M0-16 542 · FW-13 550 · FW-14 552 · M0-17 553 · FW-15 557.
 
-     THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the counted one (M0-16) — a
+     THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the counted one (M0-16): a
      phantom suite inflates the corpus, and a floor moved while one is present would be
      permanently too high, which is how a ratchet gets switched off. Move these only
      UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
-     at the site: one that falls because an instrument stopped double-counting is not
+     at the site — one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
-  arms:       563,  // arms stated across the classified declarations
+  arms:       570,  // arms stated across the classified declarations
   classified: 129,  // declarations the detector could count arms in
   corpus:     130,  // suites the register reads
-
-     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
-     counted one — a phantom suite inflates the corpus, and a floor moved while one is
-     present would be permanently too high, which is how a ratchet gets switched off.
-     Move these only UPWARD, and only to a figure a green run PRINTED. */
-  /* 546 -> 557 (FW-15, 2026-08-08). A RISE, and the only direction this key may
-     move. Eleven of them, not seven: FW-15's own arms on the C-7.1 retirement
-     are seven, and the other FOUR were FW-13's, which grew this declaration on
-     2026-08-08 and did not collect the floor — this worktree's BASELINE run,
-     before a single edit, already printed `arms 550/546 · GREW by 4`. So the
-     figure below absorbs an uncollected rise as well as this item's own, which
-     is worth saying because a floor that trails by an unrecorded amount is
-     indistinguishable from one that trails for a reason. 557 is the figure a
-     green `--strict` run PRINTED on this branch. */
-  arms:       557,  // arms stated across the classified declarations
-  classified: 127,  // declarations the detector could count arms in
-  corpus:     128,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
