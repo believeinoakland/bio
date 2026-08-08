@@ -29,7 +29,13 @@
  *     no token classes; the plane's op layer is the authorisation boundary.
  *
  * It versions and deploys SEPARATELY (fleet rule 4): a verification must
- * establish which build ANSWERED for the member as well as the plane.
+ * establish which build ANSWERED for the member as well as the plane — so
+ * `GET /version` exists, added by CPDF-9 (IC-33). Until then that rule was
+ * UNVERIFIABLE here: nothing on this member's wire named its build, while
+ * `wrangler.jsonc` had carried `vars.VERSION` since the member was written and
+ * no handler ever read it. D-108 is what that costs — a byte-identical
+ * verification of 0.52.0 followed seconds later by `/version` answering 0.51.0,
+ * one component out and with no endpoint to ask.
  */
 
 // pdf.js (unpdf) calls Math.sumPrecise, a TC39 Stage-4 proposal present on the
@@ -46,10 +52,17 @@ import { getDocumentProxy, extractText } from "unpdf";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
 
 /* The member's surface, declared for the fleet-coverage instrument to read the
- * same way it reads the plane's OPS table (scripts/coverage.mjs, D-117). One
- * operation: hand it a capture, get back the I2 structure+text shape. */
+ * same way it reads the plane's OPS table (scripts/coverage.mjs, D-117). Hand it
+ * a capture, get back the I2 structure+text shape — and ask it which build is
+ * answering.
+ *
+ * `mutating` is a property of THIS WORKER and must be `false` on every row: fleet
+ * rule 2, a member ASSERTS nothing. That is a `--strict` gate rather than a
+ * convention (coverage.mjs, VF-3's gate 4), and `version` is a GET that reads one
+ * env var, so it could not be anything else. */
 export const SURFACE = {
   structure: { method: "POST", mutating: false },
+  version:   { method: "GET",  mutating: false },
 };
 
 /* The Tier-2 envelope. pdf.js pulls the WHOLE document into memory and expands
@@ -144,13 +157,27 @@ async function handleStructure(req, env) {
   return json(structure);
 }
 
+/* Fleet rule 4: each member versions and rolls out on its own, so "a deploy
+   verified is not a build serving" (D-108) has a second face — the plane can be
+   current while the sibling it calls is still serving the previous build, and
+   that window is invisible to both. This is how this member answers the question
+   about ITSELF, and it is deliberately the same three lines and the same shape
+   `agent-worker` answers with (I8): two members answering one question two ways
+   is how a rollout gate learns to special-case its fleet.
+   The value comes from `env.VERSION` (wrangler.jsonc `vars`), so what it reports
+   is the build that is RUNNING and never a constant compiled in beside it. */
+function handleVersion(env) {
+  return json({ ok: true, name: "pdf-worker", version: env.VERSION || "0.0.0" });
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/+/, "");
+    if (req.method === "GET" && path === "version") return handleVersion(env);
     if (req.method === "POST" && (path === "structure" || path === "")) {
       return handleStructure(req, env);
     }
-    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure only" }, 404);
+    return json({ ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" }, 404);
   },
 };

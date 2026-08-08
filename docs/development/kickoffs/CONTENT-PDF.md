@@ -208,6 +208,48 @@ the trigger to promote op-contract ownership out of CAPTURE (the I3 move
   `kickoffs/README.md` defines. Read its three tests first. An empty list is a
   real answer.
 
+## What CPDF-9 landed, and the one decision running provisionally (2026-08-08)
+
+**D-232's open half is closed: `pdf-worker/test/pdf-worker.test.mjs` RUNS on a fresh
+checkout.** It resolves `miniflare` from its own install if there is one and otherwise
+through `createRequire(bio-plane/package.json)` — `agent-worker`'s mechanism COPIED
+rather than a second one invented, because two mechanisms for one job is how the next
+member goes dark differently. It also imports `bio-plane/test/sandbox.mjs` (D-186): the
+battery now RUNS this suite, and it mints four miniflare sandboxes per run.
+
+Two riders from the same sweep landed with it: the line-comment stripper is anchored on
+a non-`:` and is asserted in BOTH directions over a fixture that carries a URL (the naive
+idiom deletes `"http://…"` and the rest of its line), with the corpus size PRINTED and a
+floor asserted so a walk over a truncated corpus FAILS instead of reporting clean; and
+the member gained **`GET /version`** (IC-33, PROPOSED — the I6 version bump is CONDUCT's),
+because fleet rule 4 was unverifiable for it.
+
+### DECISION — running provisionally: **A FLEET MEMBER WHOSE SUITE CANNOT RESOLVE ITS DEPENDENCIES IS SKIPPED AND NAMED, NOT FAILED**
+
+- **What runs provisionally.** `scripts/battery.mjs`'s `fleetDepSkip` converts exactly
+  one cause — `Cannot find package '<x>'` from a fleet suite — into a NAMED skip. The
+  battery then exits 0 while the `fleet:` line prints `DARK: <member>`. It is FL-2/VF-3's
+  decision; CPDF-9 confirms it rather than re-taking it, and **the path is now UNREACHABLE
+  for every member that exists**, since both members resolve through the plane's install.
+  It is kept, and `battery.mjs`'s header now says what it was for and why it no longer
+  fires, rather than the path being deleted silently.
+- **Why it is ambiguous.** A named skip still leaves the battery GREEN while a component
+  is dark. Only the `fleet:` line says so, and `coverage.mjs --strict` cannot see it at
+  all — reach there is read from the suite's SOURCE, not from whether it was EXECUTED.
+  That is the generous direction, which this project treats as the worse one, and it is
+  the exact shape D-232 was raised about.
+- **The alternative.** FAIL the battery on a fleet suite that cannot resolve its imports.
+  That reds `main` on every fresh checkout the moment a new member arrives before it has
+  adopted the plane-resolution idiom — over a dependency the plane does not own.
+- **Recommendation: keep the skip, and let the next member's own item close the gap.**
+  The idiom now exists and is proven on both members; the landing pad is what tells the
+  author of member three what to do. **The residual is named rather than hidden:**
+  whoever owns the fleet may want a dark member to FAIL rather than to be printed, and
+  that is a FLEET call, not `pdf-worker`'s.
+- **What reversing it costs: LOW, and it stays low.** One line in `battery.mjs`
+  (`fleetDepSkip` returns `null`), plus a `npm ci` in the new member's directory or the
+  four-line resolver in its suite. Nothing is built on top of the skip.
+
 ## Not this area's, however reachable
 
 The fetch/governor/subresource/archive path and the HTML link graph (CAPTURE,
