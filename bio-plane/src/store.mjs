@@ -175,6 +175,10 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    repository has measured five times. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
+/* SK-1: the doctrine pack's own refusal, imported for the reason every check in
+   this file is — the rule has ONE implementation and this file holds no copy of
+   it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
+import { checkSkillVersion } from "./skillpack.mjs";
 /* PL-12 / D-84: the bias object's refusals and — this is the part that is not
    housekeeping — the MALFORMEDNESS and BAR predicates themselves. DEC-54's
    constraint 2 is that "the malformedness rule binds the machine exactly as it
@@ -18297,7 +18301,15 @@ export class Store extends DurableObject {
    *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
    *  DEC-27(b), DEC-55.4). `principalClaude` is WHICH LEVEL of the cascade paid
    *  — member, then project, then instance — and the plane refuses to open a
-   *  run that cannot say. */
+   *  run that cannot say.
+   *
+   *  AND SINCE SK-1, SO IS THE SKILL VERSION. The paragraph above still holds
+   *  for the bias manifest and the standard pair — absent is stored as absent
+   *  and never defaulted — but the skill version is now REQUIRED rather than
+   *  merely stored, because "every run records the skill version it ran under"
+   *  is a requirement and a condition that may be omitted is not recorded. It
+   *  is still never derived: the plane refuses, it does not fill in. The
+   *  refusal is C-22.7, built in `skillpack.mjs checkSkillVersion`. */
   aiRunOpen({ run, contextType, contextId, label = null, mode = null,
               principalPlane = null, principalClaude = null, principalClaudeRef = null,
               skillVersion = null, biasManifest = null, standardPair = null,
@@ -18323,6 +18335,18 @@ export class Store extends DurableObject {
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
                    + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
+    /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
+       §11 records what a run was FORMED under, and the skill version is one of
+       the three. The decision and the two failure shapes are on
+       `skillpack.mjs checkSkillVersion`, which is where the C-22.7 refusal is
+       built and the only implementation of the rule. This site adds nothing to
+       it: it hands the value over and returns what comes back, in the same
+       `started: false` shape the two guards above use, carrying the DEC-49 code
+       and its canned translation so a surface renders a sentence it RECEIVED. */
+    const badSkill = checkSkillVersion(skillVersion);
+    if (badSkill)
+      return { run, started: false, code: badSkill.code, check: badSkill.check,
+               translation: badSkill.translation, note: badSkill.detail };
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return { run, started: false, note: "a run with this id already exists" };
 
@@ -18334,7 +18358,12 @@ export class Store extends DurableObject {
            bias_manifest, standard_pair, created, updated, expires, ticks, state)
          VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         run, label, mode, String(contextType), String(contextId),
-        String(principalPlane), String(principalClaude), principalClaudeRef, skillVersion,
+        /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
+           a value that survives a falsiness guard while naming nothing reads as
+           present and travels. `checkSkillVersion` judged the trimmed value, so
+           storing the untrimmed one would store something the guard never saw. */
+        String(principalPlane), String(principalClaude), principalClaudeRef,
+        String(skillVersion).trim(),
         biasManifest, standardPair, now, now, Store.#aiIso(nowMs + lease),
         JSON.stringify(state == null ? {} : state));
       for (const b of Array.isArray(bounds) ? bounds : []) {

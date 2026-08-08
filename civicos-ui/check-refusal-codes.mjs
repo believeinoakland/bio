@@ -166,14 +166,23 @@ const FLOOR = {
      `where` pointing at `src/index.mjs acquire`, a name that does not exist
      because the op lives inside the fetch handler, so nothing would have been
      checking that site at all. The arm is now its own named function. */
-  families:      8,    // + CAPTURE_REQUEST_CHECKS (was 7 at PL-3, 6 pre-PL-3 while the floor said 5)
-  rows:         81,    // + C-28.1..13 minus two UNALLOCATED (see the family) (was 70 at PL-3)
-  census:      383,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  /* REMEASURED 2026-08-08 AT SK-1's LANDING, in worktree agent-a1f06561dfc61e51c,
+     BY THIS FILE — every figure below is the number it PRINTED on a green run and
+     not one this item added up. SK-1 adds ONE row (C-22.7,
+     `AI_RUN_SKILL_VERSION_UNNAMED`) to the EXISTING `AI_RUN_CHECKS` family and
+     one governed site (`src/skillpack.mjs checkSkillVersion`, a whole function —
+     small, single-purpose, and every refusal in it is an AI_RUN row, which is
+     the case this file's own convention blesses). No new family: a family is a
+     floor here, and a code that buys slack for everybody else's walk is the
+     defect REC-71 measured. */
+  families:      8,    // unchanged — SK-1 minted no family (was 7 at PL-3, 6 pre-PL-3 while the floor said 5)
+  rows:         82,    // + C-22.7 into AI_RUN_CHECKS (was 81 at PL-4, 70 at PL-3)
+  census:      384,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       168,    // codes a surface can receive (R1 + R2 + R3) (was 157, 127, 116, 98)
-  governedSites: 20,   // spans named by a row's `where` — a function, or a region inside one
-                       // (was 17, 13, 9, 5; 11 whole functions + 9 regions, three of them PL-4's)
+                       // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+  reach:       169,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
+  governedSites: 21,   // spans named by a row's `where` — a function, or a region inside one
+                       // (was 20, 17, 13, 9, 5; 12 whole functions + 9 regions, three of them PL-4's)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
                        // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -203,7 +212,10 @@ const FLOOR = {
                        // not fail the guard while a COLLAPSE still does. The per-region
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
-  codesChecked: 46,  // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
+  codesChecked: 48,  // was 46 at PL-4, 11 before PL-3. SK-1's two are both `checkSkillVersion`'s:
+                       // one helper named `refusal`, a STRING LITERAL at each site, which is the
+                       // shape that makes arm C able to COMPARE a code rather than read past it.
+                       // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
                        // `refuse(key, …)` passes the code as a VARIABLE and arm C compares NOTHING,
                        // which is why seven of thirteen governed sites read 776 lines and checked zero.
                        // PL-3's three regions name their helper `refusal` and pass a string LITERAL at
@@ -216,7 +228,13 @@ const FLOOR = {
                        // of them. See arm C's NOTE and REC-71's delegation to REC-64:
                        // arm C's teeth reach 5 of 13 sites, and that is a measurement.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 40, // terms across them
+  vocabularyTerms: 50, // terms across them. MOVED 40 -> 50 by SK-1, 2026-08-08, and NOT because
+                       // this item grew the corpus — it grew none of it. The floor was printing 50
+                       // against a floor of 40, and TEN of slack is the floor not being a ratchet:
+                       // a walk that lost a whole vocabulary would still have cleared 40. Found the
+                       // only way slack is ever found, by reading what the instrument printed
+                       // rather than by adding to the number in the file (PL-3's finding, and
+                       // REC-71's before it, arriving on a different row of the same block).
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a

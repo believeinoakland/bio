@@ -172,14 +172,30 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
 {
   const codes = Object.keys(AI_RUN_CHECKS);
   console.log(`  corpus: ${codes.length} refusable conditions in the C-22 family`);
-  t("ARM D1: this item allocates SIX C-numbers and they are the C-22 family",
+  /* CORRECTED 2026-08-08 BY SK-1, AND STATED RATHER THAN QUIETLY REWORDED. This
+     arm read SIX and named the six IS-6 minted. The family now holds SEVEN:
+     SK-1 added C-22.7 (`AI_RUN_SKILL_VERSION_UNNAMED`), the run's THIRD
+     condition, refused at the open beside the two principals. It belongs in
+     THIS family — it is a fact about the run object — and a new `*_CHECKS`
+     family would have been a floor in `civicos-ui/check-refusal-codes.mjs`
+     bought for one row. The count is corrected rather than exempted: an arm
+     that stopped counting the family it exists to count would be a pin nobody
+     is holding. */
+  t("ARM D1: the C-22 family is SEVEN C-numbers — IS-6's six and SK-1's skill-version condition",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6"]);
+    ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);
-  t("ARM D3: every allocation NAMES ITS ENFORCEMENT SITE, so the catalogue can be walked to the code",
-    codes.filter((c) => !/^src\/airun\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
+  /* CORRECTED 2026-08-08 BY SK-1 for D1's reason, and the WIDENING IS NAMED
+     RATHER THAN OPEN: the enforcement site must still be a PURE check module in
+     `src/`, and the two that exist are named. This is not `where`-anything — a
+     row pointing at a site the DEC-49 guard cannot resolve is the defect PL-4
+     measured (a `where` naming a function that does not exist), and that guard
+     opens both of these files and reads them. */
+  t("ARM D3: every allocation NAMES ITS ENFORCEMENT SITE in a pure check module, so the catalogue "
+    + "can be walked to the code",
+    codes.filter((c) => !/^src\/(airun|skillpack)\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
   /* THE MAP IS READ FROM ONE PLACE. airun.mjs must not spell a translation of
      its own — a hand copy agrees at zero cost, measured five times. */
   t("ARM D4: airun.mjs holds NO second copy of any translation",
@@ -364,9 +380,17 @@ const KILLED = "RUN-2026-0807-killed";
 console.log("\n--- ARM B · a bound reached: the run ends and the log names WHICH ---");
 const SPENT = "RUN-2026-0807-spent";
 {
+  /* CORRECTED 2026-08-08 BY SK-1, AND EVERY FIXTURE BELOW WITH IT. `skillVersion`
+     was OPTIONAL when this suite was written: the column existed and a run that
+     named nothing opened anyway. SK-1 makes it the run's THIRD CONDITION
+     alongside the two principals (§11, C-22.7), so a fixture that names none is
+     now a refused run rather than a run under unknown instructions. The
+     assertion is corrected rather than exempted — a run object none of these
+     arms could interpret is exactly what the requirement exists to stop. */
   await POST(`op=airunopen&token=${TOK}`, {
     run: SPENT, contextType: "inquiry", contextId: BUNDLE, mode: "check",
     principalClaude: "member", principalClaudeRef: "ruth@believe-in-oakland",
+    skillVersion: "investigative-session@1",
     bounds: [{ bound: "fetches", allowed: 3, unit: "requests" }],
     state: {}, leaseMs: 3600000, at: T0,
   });
@@ -405,7 +429,8 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   const CANCELLED = "RUN-2026-0807-cancelled";
   await POST(`op=airunopen&token=${TOK}`, {
     run: CANCELLED, contextType: "project", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [{ bound: "wallclock", allowed: 600000, unit: "ms" }],
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "wallclock", allowed: 600000, unit: "ms" }],
     state: {}, at: T0 });
   const c = await POST(`op=airunclose&token=${TOK}`, { run: CANCELLED, bound: "cancelled", at: at(T0, 9000) });
   t("ARM C1: a member stopping a run is an ENDING and is accepted", [c.terminated, c.bound], [true, "cancelled"]);
@@ -418,7 +443,8 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   const DONE = "RUN-2026-0807-done";
   await POST(`op=airunopen&token=${TOK}`, {
     run: DONE, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
   await POST(`op=airuntick&token=${TOK}`, { run: DONE, at: at(T0, 1000), consume: { fetches: 2 },
     log: [{ level: "content", subject: "observation:budget-2024-table", state: "partial",
             condition: "text-undetermined",
@@ -437,7 +463,8 @@ const REFUSED = "RUN-2026-0807-refusals";
 {
   await POST(`op=airunopen&token=${TOK}`, {
     run: REFUSED, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [], state: {}, at: T0 });
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [], state: {}, at: T0 });
   /* NULL-TOLERANT ON PURPOSE. Under a negative control the run this ticks may
      already have ended, and `refused` is then absent — a bare `r.refused[0]`
      throws on undefined and takes every arm behind it with it, which is how a
@@ -481,7 +508,8 @@ const REFUSED = "RUN-2026-0807-refusals";
   const R4RUN = "RUN-2026-0807-condition";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R4RUN, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [], state: {}, at: T0 });
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [], state: {}, at: T0 });
   const r4 = await POST(`op=airunclose&token=${TOK}`,
     { run: R4RUN, bound: "completed", condition: "the-portal-was-being-difficult", at: at(T0, 2000) });
   t("ARM R4 (C-22.4, door one — a RUN's ending): a condition outside the record's vocabulary is refused",
@@ -499,7 +527,8 @@ const REFUSED = "RUN-2026-0807-refusals";
   const R5RUN = "RUN-2026-0807-unnamed";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R5RUN, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [], state: {}, at: T0 });
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [], state: {}, at: T0 });
   const r5 = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN, bound: "", at: at(T0, 2000) });
   t("ARM R5 (C-22.5): a run may not leave `running` without saying what stopped it — THE ITEM'S "
     + "own refusal", [r5.check, r5.code, r5.terminated], ["C-22.5", "AI_RUN_BOUND_UNNAMED", false]);
@@ -511,7 +540,8 @@ const REFUSED = "RUN-2026-0807-refusals";
   const R5RUN2 = "RUN-2026-0807-silent";
   await POST(`op=airunopen&token=${TOK}`, {
     run: R5RUN2, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "instance", bounds: [], state: {}, at: T0 });
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [], state: {}, at: T0 });
   const r5c = await POST(`op=airunclose&token=${TOK}`, { run: R5RUN2, at: at(T0, 2000) });
   t("ARM R5c: a close that names NOTHING is refused identically — silence is not `completed`",
     [r5c.check, r5c.terminated], ["C-22.5", false]);
@@ -586,7 +616,8 @@ const RESUMED = "RUN-2026-0807-resumed";
 {
   await POST(`op=airunopen&token=${TOK}`, {
     run: RESUMED, contextType: "inquiry", contextId: BUNDLE,
-    principalClaude: "project", bounds: [{ bound: "fetches", allowed: 50 }],
+    principalClaude: "project", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 50 }],
     state: { queue: ["a", "b", "c"], done: [] }, leaseMs: 60000, at: T0 });
   await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(T0, 1000), leaseMs: 60000,
     state: { queue: ["b", "c"], done: ["a"] }, consume: { fetches: 1 },
