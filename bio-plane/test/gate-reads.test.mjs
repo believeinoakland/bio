@@ -791,6 +791,16 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
       + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "
       + "the whole corpus regardless); the NAMES are withheld and the withholding is stated without a count.",
+    /* PL-10 / D-220, 2026-08-07: the document-version chain. Classified here by
+       the item that adds it, on op=meaningrows' precedent. */
+    versionchain: "PL-10: EVERY VERSION AT AN ADDRESS NAMES A BUNDLE, so a capture filed inside a project "
+      + "the viewer was never invited to must be absent from their chain exactly as it is absent from "
+      + "op=list — REC-25/REC-30's leak arriving at the document's own history. Gated at `register.bundle_id` "
+      + "through #bundleGate, the same predicate every read here compiles, and `total` is counted through the "
+      + "SAME join and the SAME predicate as the rows, so a total larger than the pages cannot arise. A "
+      + "withheld version is withheld WHOLE, never returned with its bundle nulled; an anchor naming one "
+      + "refuses IDENTICALLY to an anchor naming a capture the record does not hold at all; and nothing "
+      + "publishes how many were withheld, because that count is the leak.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */

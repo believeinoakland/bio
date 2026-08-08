@@ -527,6 +527,17 @@ const OPS = {
      falls in depends on what the record holds today, not on what it held when
      the document was captured. */
   links:      { classes: ["admin", "member", "probe"],           mutating: false },
+  /* PL-10 / D-220: the DOCUMENT-VERSION CHAIN — every version at one address,
+     in date order, with its bundle. A pure read, and it adds no state of its
+     own: the answer is a JOIN over `captured_locators` and `register`, both of
+     which the record has always held, asked through the index that has always
+     existed. It sits beside op=links because it is the same kind of question
+     asked of the same address key — op=links asks what pointed AT an address,
+     this asks what we have HELD at one.
+     `viewer` is stamped below from the authenticated identity: the answer names
+     a bundle per version, so a member must not be able to learn from a version
+     chain what op=list would not tell them. */
+  versionchain: { classes: ["admin", "member", "probe"],         mutating: false },
   /* CONTENT-PDF's structure extractor (D-91), exposed as a READ over already-
      captured bytes. It reads the exact R2 object op=capture serves and parses
      it; it writes nothing and holds no PUT arm, so unlike op=capture it is
@@ -4703,6 +4714,14 @@ export default {
            nonexistent run does — REC-25/REC-30's leak, one object over. The
            store fails closed on an absent stamp, like every op in this list. */
         || op === "airun" || op === "airunlog"
+        /* PL-10 / D-220: a version chain names a BUNDLE per version, so a
+           document captured inside a project the caller was never invited to
+           must be absent from the chain exactly as it is absent from op=list.
+           The store gates at `register.bundle_id` through the same
+           `#bundleGate` every read here compiles and counts `total` through the
+           same predicate, so hidden and absent are one answer; and it fails
+           closed on an absent stamp, like every op in this list. */
+        || op === "versionchain"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -4730,6 +4749,19 @@ export default {
 
        The store fails closed on an absent or unrecognised stamp (handles, no
        cover), so deleting this line loses the pairing rather than leaking it. */
+    /* PL-10 / D-220. THE ADDRESS IS NORMALISED BY THE SAME FUNCTION THAT WROTE
+       THE ROW, and that is not a convenience — it is the whole reason the chain
+       can be trusted. `recordCapturedLocator` stores `address_norm` as
+       `normalizeAddress` produced it at capture time; a chain that normalised
+       differently, or not at all, would answer "no versions" for a document the
+       record plainly holds, and `subresources.mjs` says exactly why that is the
+       failure hardest to notice: *a normalisation MISS looks exactly like "not
+       captured"*. The store cannot do this itself — the normaliser lives in
+       subresources.mjs and store.mjs does not import it — so it happens here,
+       at the same seam op=links has used since REC-52. The caller's raw
+       `address` was copied in the loop above and is overwritten. */
+    if (op === "versionchain")
+      inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");

@@ -5221,3 +5221,61 @@ export const MEANING_READ_CHECKS = {
       + 'it says so and names the kinds it does hold.',
   },
 };
+
+/* =========================================================================
+ * PL-10 / D-220 — THE DOCUMENT-VERSION CHAIN'S REFUSALS.
+ *
+ * The chain is a JOIN over two tables the record already holds, keyed on an
+ * ADDRESS. Both ways of asking it wrong are ways of being told something about
+ * a document other than the one asked about, which on this surface is the whole
+ * hazard: sixty versions of one calendar reading as sixty documents is the
+ * false-coverage failure D-220 exists to remove, and answering the wrong
+ * address is the same failure arriving by the front door.
+ *
+ * D-221's mechanism is why the FIRST of these is a refusal rather than a
+ * fallback. `heldMatch` reached for prior versions with a full-text query on a
+ * text-indexed field, so a near-miss on the address still ANSWERED — with the
+ * wrong document, ranked by relevance. An address that cannot be resolved must
+ * therefore stop, not soften into a search.
+ *
+ * DEC-49's shape, on MEANING_READ_CHECKS' precedent above: the C-number, the
+ * wire code and the CANNED TRANSLATION are ONE ROW, read from one place rather
+ * than copied.
+ * ========================================================================= */
+export const VERSION_CHAIN_CHECKS = {
+  /* No address at all. There is no default document and there must not be one:
+     the chain's entire subject is "at THIS address", and a chain answered for
+     an unnamed address is a list of unrelated bundles wearing the word
+     "versions". */
+  VERSION_CHAIN_NO_ADDRESS: {
+    check: 'C-24.1',
+    where: 'src/store.mjs versionChain, reached from op=versionchain',
+    translation: 'That request did not say which document address to read the versions of. '
+      + 'Versions are versions OF something, so it asks rather than answering '
+      + 'for a document you did not name.',
+  },
+  /* An anchor was given and it is not a version at this address. Refused rather
+     than matched approximately — that approximation IS D-221 — and refused
+     IDENTICALLY whether the capture is absent, filed at a different address, or
+     in a project this viewer was never invited to. Hidden and absent are one
+     answer here, as they are on every gated read in this plane. */
+  VERSION_CHAIN_NO_SUCH_VERSION: {
+    check: 'C-24.2',
+    where: 'src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>',
+    translation: 'The record holds no version of that document with those bytes. '
+      + 'Rather than pick the closest-looking one and call it the version before this, '
+      + 'it says so — naming the wrong predecessor is the defect this read was built to end.',
+  },
+  /* The anchor is not the shape a capture identity has. A separate refusal from
+     the one above because it is a different fact about the world: "you typed
+     something that is not a capture" is the caller's, and "no such version" is
+     the record's. Collapsing them would make a typo indistinguishable from an
+     absence, which is the distinction CLAUDE.md requires be stated. */
+  VERSION_CHAIN_BAD_ANCHOR: {
+    check: 'C-24.3',
+    where: 'src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>',
+    translation: 'That is not the shape a capture identity has, so nothing was looked up. '
+      + 'A capture is named by the sha256 of its bytes; this says the request was malformed '
+      + 'rather than letting it read as a document the record does not hold.',
+  },
+};
