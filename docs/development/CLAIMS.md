@@ -3101,3 +3101,31 @@ PL-4 already delegated that the D-113 check derives its covered set from `DELETE
 - **The alternative:** an `inquiry_leads` table keyed (observation, document, inquiry), which would carry many leads per document, allow a lead over a document nobody just fetched, and carry its own authorship. It is a derived table, so it would owe both purge arms and a `TABLES` row.
 - **Recommendation: keep the column.** It is the smallest thing that closes D-213, it inherits PL-4's attribution and conduct whole, and the shapes it cannot express are ones nothing can produce yet — the investigative session's only door to a document is the capture request. Building the table now would be structure bought before the producer that needs it exists, which is the mistake `PARALLELISM.md` warns about in its own last section.
 - **What reversing it costs: LOW NOW, RISING.** Today it is one migration adding the table, one producer rewritten to read it instead, and the column left inert or dropped — nothing member-facing changes, because the notification's shape is derived and its `id` is keyed on the request either way. It gets expensive once leads have been dispositioned: `proposal_dispositions` keys on the item's identity, so moving the identity would strand every recorded adopt/defer/dismiss. **The decision point is therefore before the first surface ships (UI-45), not before the first lead is captured.**
+
+---
+
+## CLAIM 2026-08-08 M0 (VERIFICATION)
+session: m0-14-agent
+opened: 2026-08-08T00:00:00Z
+paths: bio-plane/scripts/control-register.mjs (the detector — the arm matcher, the marker, and the declaration's extent); bio-plane/scripts/coverage.mjs (the register report — the UNCLASSIFIED line, and the REGISTER_FLOOR block); bio-plane/test/hygiene.test.mjs (the detector's own arms, at the foot of the file, plus this item's six-arm declaration in its own control block); bio-plane/test/register.control.mjs (NEW — the harness that RUNS those six arms; deliberately not a `.test.mjs` because it edits real sources, `suggest.control.mjs`'s precedent); docs/development/VERIFICATION.md (the control-register row and section, moved from what the instrument PRINTED); docs/development/DEBT.md (D-233's disposition); docs/development/MEASUREMENTS.md (the register figures with their date and instrument). QUEUE.md NOT touched (CONDUCT's sole-writer file). NO `bio-plane/src/**`, no plane behaviour, no `newgroup/**`, no `pdf-worker/**`.
+interfaces consumed: none
+interfaces owned: none
+expected: QUEUE.md M0-14 — D-233. The register's arms tally is blind to whole declaration styles and reports the blindness as ZERO. Fix inverts the matcher rather than lengthening a list of spellings, and NAMES what it cannot classify.
+released: 2026-08-08 — handed to CONDUCT. NO suite's declaration was rewritten to suit the matcher: the 395 -> 462 move is the INSTRUMENT, measured by running the old detector and the new one over the same untouched sources. `case-opened.test.mjs` was NOT edited — it is reported as UNCLASSIFIED and NAMED, which is the outcome the item asks for when a declaration cannot be counted.
+
+### DELEGATION 2026-08-08 RECORD (M0-14) -> CONDUCT / WHOEVER OWNS THE REGISTER NEXT: **TWO SUITES STATE THEIR ARMS IN A COMMENT THE REGISTER CANNOT SEE, AND IT IS M0-9's OWN RECEIPT REPEATING**
+
+M0-9 recorded that REC-48 *"got past it by moving its arms into a SECOND comment the register never saw"*, and removed that workaround from two suites. **A sweep of all 120 suites for the same shape — a comment block that states arms, enumerates them and carries transition arrows, but has NO `NEGATIVE CONTROL` marker — finds it still present in exactly two:**
+
+- **`earnedbasis.test.mjs`** — the register records its one-line entry at **1 arm**, while the block immediately below it says *"THE THREE ARMS (run 2026-08-04, rec18-agent…)"* and states (a), (b), (c) plus a fourth arm from REC-48. **The suite's own prose and the register disagree by at least three, and only the suite's prose is right.**
+- **`citeinquiry.test.mjs`** — the same shape, *"THE TWO ARMS, RUN 2026-08-04 (rec37-agent)"*, in an unmarked block.
+
+**NOT FIXED HERE, deliberately, and the reasoning matters more than the two edits:** this is a defect in two suites' DECLARATIONS, not in the instrument, and M0-14's subject is the instrument. Marking those blocks would raise the tally, which means moving `REGISTER_FLOOR` — **a gated figure should be moved by the item that measured the change, not by one that swept past it.** There is no urgency and no risk in leaving it: the floor fails on a FALL, and this can only make the number rise.
+
+**The fix is one marker phrase per block** (the detector now accepts a colon OR a dash after it), then `REGISTER_FLOOR.arms` moved to what a green `node scripts/coverage.mjs --strict` PRINTS. The sweep that found them is reproducible: for every block comment in `bio-plane/test/*.test.mjs`, flag those that mention "arm", contain a parenthesised ordinal and a spaced arrow, and do NOT contain the marker phrase.
+
+### DELEGATION 2026-08-08 RECORD (M0-14) -> EVERY SESSION THAT READS THE REGISTER: **THE TALLY IS A FLOOR ON ARMS STATED, AND THE INSTRUMENT NOW SAYS SO ON EVERY RUN**
+
+- **It counts MARKED items**, and marks are transitions (` -> `, ` → `) or parenthesised ordinals opening a segment. **An arm carrying a LABEL rather than an ordinal is not counted** — `suggest.test.mjs` reads 8 against a real 10 because two of its arms are labelled `(D-231a)` and `(D-231b)`. Widening the ordinal to any bracketed token would count every `(D-113)` and `(DEC-46)` this prose is full of, which is the over-strictness failure in the other direction and is driven by a control arm.
+- **A declaration the detector cannot count is `null`, never `0`, and is NAMED.** `case-opened.test.mjs` is the one on this tree. **A NEW one FAILS `--strict`** — that is D-233 arriving again — so add the marks or add the suite to `REGISTER_UNCLASSIFIED` with the reason.
+- **The tally, the classified count and the CORPUS all carry a floor.** Move them only upward and only to a figure a green run PRINTED. The corpus figure is there because a matcher narrowed to nothing reports a beautiful 100% over an empty corpus.

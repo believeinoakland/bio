@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN.
    (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
+   (run 2026-08-08, M0-14/D-233) SIX ARMS ON THE ARM MATCHER, DECLARED HERE AND RUN BY `test/register.control.mjs` — deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`suggest.control.mjs`'s precedent). Re-run in one step: `node test/register.control.mjs` from bio-plane/. Each arm is armed ALONE with the others held open, each DECLARES BEFORE IT RUNS what must fail AND what must not, and every restore is verified against a PRISTINE pre-arm copy by sha256 AND by content. Baseline at the moment they ran: `--strict` exit 0, 470 arms, 119 classified, corpus 120, 1 unclassified; this suite 503 pass. (1) THREE REAL ARMS DELETED — strip the ordinals from suggest.test.mjs's arms (6), (7) and (8) -> `--strict` EXITS 1, the REGISTER FLOOR fires at "467 arms stated, floor is 470", and suggest still declares a control with classified and corpus unmoved. (2) THE ARM THIS ITEM EXISTS FOR — rewrite capture.test.mjs's single transition in a marking the matcher was never taught (` ==> `) -> `--strict` EXITS 1 and NAMES capture.test.mjs as UNCLASSIFIED, unclassified 1 -> 2, and it is NOT scored zero and NOT reported as declaring no control. (2b) THE POSITIVE HALF, because naming alone would be a walk that never counts anything new — add two arms to capture.test.mjs as an ordinal list with NO arrow anywhere -> `--strict` STAYS exit 0 and the tally RISES 470 -> 472. (3) NEUTER THE WALK — make the ordinal matcher unmatchable in scripts/control-register.mjs -> this suite 499 pass, 4 FAIL naming the arrowless-corpus arm, the arrowless fixture, its delta and the max-not-sum arm; `--strict` EXITS 1 on the floor (416 arms, 117 classified) AND on newly-unclassified suites (strengthpair, suggest) — while the register still READS 120 suites, because a matcher narrowed to nothing must not report a triumphant figure over an empty corpus. (4) OVER-STRICTNESS — put prose into capture.test.mjs's declaration that MENTIONS an arm ("see (b) of the block...") without declaring one -> nothing fails and the tally does NOT move, 470 before and 470 after. (5) THE FLOOR HAS NO SLACK — remove EXACTLY ONE arm from strengthpair.test.mjs -> `--strict` EXITS 1 at 469 against a floor of 470. SIX ARMS RUN, ZERO behaved other than declared; all four touched files restored sha256 EQUAL and content IDENTICAL. THE SAME PROPERTY M0-9 RECORDED APPLIES HERE AND IS WHY THESE ARE DELTAS: writing this record into a declaration moves the total upward, so never compare an absolute total across two edits of the register's own text.
    SHAPE RESTORED BY M0-9 (2026-08-04), and it is the point rather than tidying. REC-48 wrote the arms as a continuation of this block, `coverage.mjs` then reported BOTH this suite and acquire.test.mjs as declaring NO CONTROL — its detector could not read past the marker's own line — and the arms were moved into a second comment the register never saw, so the register quoted a summary while the evidence sat outside it. The detector now reads the whole block (scripts/control-register.mjs) and is itself asserted at the foot of this suite; the arms are back where they belong. A declaration ends at its comment's close or at a blank line, so keep this paragraph unbroken and it stays one declaration.
    REC-48's THREE ARMS, in full:
    (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
@@ -68,7 +69,8 @@ import { viewerPredicate } from "../src/query.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
-import { readControl, CONTROL_MARKER } from "../scripts/control-register.mjs";
+import { readControl, CONTROL_MARKER, MARKER_PHRASE, MARKER_SEPARATORS,
+         countArms, countEnumerations, countTransitions } from "../scripts/control-register.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -1205,12 +1207,171 @@ console.log("\n--- the negative-control register's own detector (M0-9) ---");
   /* The corpus exercises the two capabilities this detector was fixed to have.
      If either of these ever goes to zero, the fix is still in the code but nothing
      in the tree proves it works — which is how the workaround got in. */
-  const arms = read.reduce((n, r) => n + r.c.arms, 0);
+  /* CORRECTED BY M0-14: this summed `r.c.arms` straight, and an UNCLASSIFIED
+     declaration now reports `null`. `n + null` is `n` in JavaScript, so the old
+     expression would have folded an unreadable declaration in as a silent zero —
+     which is the exact defect this item closes, reproduced inside the arm that
+     measures it. Classified rows only, and the unclassified are counted apart. */
+  const classified = read.filter((r) => typeof r.c.arms === "number");
+  const arms = classified.reduce((n, r) => n + r.c.arms, 0);
   const multiLine = read.filter((r) => r.c.lines > 1).map((r) => r.f);
-  t(`the register reads more arms than suites (${arms} arms across ${read.length} registered suites), so it is not stopping at one per suite`,
+  t(`the register reads more arms than suites (${arms} arms across ${classified.length} classified of ${read.length} registered suites), so it is not stopping at one per suite`,
     arms > read.length, true);
   t(`the tree itself declares at least one MULTI-LINE control, so the block read is exercised by the corpus and not only by fixtures (${JSON.stringify(multiLine)})`,
     multiLine.length > 0, true);
+}
+
+/* ===========================================================================
+   M0-14 / D-233 — THE ARM MATCHER, AND THE ONE THING IT MUST NEVER DO SILENTLY.
+
+   The register's tally was blind to whole declaration styles and reported the
+   blindness as ZERO. Four suites declaring 48 arms between them scored 0, a
+   fifth scored 1 against a real 10, and NOTHING WAS RED — M0-13 found it only
+   because it predicted a move of 388 -> 390 and the figure did not move at all.
+
+   The arms below are in two families, and the second is the important one:
+   the matcher must COUNT more styles, and — the half that lasts — it must NEVER
+   report "I could not read this" as "there is nothing here". A count and the
+   absence of a count are different claims (D-93's lesson; REC-70's receipt about
+   a missing tally read as 0 recording "stayed GREEN").
+
+   Every arm is a DELTA against the same source with one thing changed, or a read
+   of the REAL corpus with its size printed. An absolute count would be satisfied
+   by a matcher that had stopped reading — which is REC-48's reach assertion being
+   wrong when first written, and it is not repeated here.
+   =========================================================================== */
+console.log("\n--- the register's arm matcher: what it counts, and what it says it cannot (M0-14) ---");
+{
+  const decl = (rest) => `${CONTROL_MARKER} ${rest}`;
+  /* Built from the instrument's own constants, never as a literal — the same
+     reason the M0-9 fixtures do it: a literal marker in this file would plant a
+     real declaration in the corpus the register reads. */
+  const dashDecl = (rest) => `${MARKER_PHRASE} ${MARKER_SEPARATORS[1]} ${rest}`;
+  const item = (k, what) => `   (${k}) ${what}`;
+
+  /* ---- (A) THE STYLE THE OLD MATCHER COULD NOT SEE: an enumerated list with no
+     arrow anywhere in it. `strengthpair.test.mjs` declares seventeen arms this
+     way and scored ZERO. Asserted as a DELTA, never against an absolute. */
+  const nine = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  const enumerated = (ks) => "/* " + decl("the arms, each RUN") + "\n"
+    + ks.map((k) => item(k, `neuter check ${k} and its own assertion is the one that fails`)).join("\n") + " */\n";
+  t("an ARROWLESS enumerated declaration is counted — the style that scored zero (D-233)",
+    readControl(enumerated(nine)).arms, 9);
+  t("...and dropping three of those items drops the count by exactly three (a delta, not an absolute)",
+    readControl(enumerated(nine)).arms - readControl(enumerated(nine.slice(0, 6))).arms, 3);
+
+  /* ---- (B) MAX, NEVER THE SUM. An arm usually carries both marks, and summing
+     would credit it twice — `readControl`'s own "never the sum" rule one level
+     down. Driven with three arms marked BOTH ways. */
+  const both = "/* " + decl("three arms, marked both ways") + "\n"
+    + ["a", "b", "c"].map((k) => item(k, `break ${k} -> ${k} fails`)).join("\n") + " */\n";
+  t("an arm marked as BOTH an ordinal and a transition counts once, never twice",
+    [countTransitions(readControl(both).text), countEnumerations(readControl(both).text), readControl(both).arms],
+    [3, 3, 3]);
+
+  /* ---- (C) THE INVERSION, AND IT IS THE ITEM. A declaration carrying no mark of
+     either kind is UNCLASSIFIED — `null`, never `0`. This is the arm the item
+     exists for: a style nobody has written yet must be NAMED, not scored zero. */
+  const unmarked = "/* " + decl("the arms are stated and run in a sibling harness, and every restore is verified by content as well as by hash.") + " */\n";
+  const unmarkedRead = readControl(unmarked);
+  t("a declaration the matcher cannot read is FOUND, so the suite still counts as controlled",
+    unmarkedRead != null, true);
+  t("...and its arms read as UNCLASSIFIED (null), NOT as zero — the whole of D-233",
+    [unmarkedRead.arms, unmarkedRead.arms === 0], [null, false]);
+
+  /* A style genuinely not anticipated: arms marked with a leading bullet and a
+     colon, no arrow and no ordinal anywhere. The matcher does not know it. The
+     REQUIREMENT is not that it counts — it is that it does not lie about it. */
+  const unanticipated = "/* " + decl("three arms, in a marking this instrument was never taught:") + "\n"
+    + ["ARM ONE", "ARM TWO", "ARM THREE"].map((k) => `   * ${k}: break it, its own assertion fails`).join("\n") + " */\n";
+  t("an arm style the matcher was never taught is UNCLASSIFIED rather than silently zero",
+    [readControl(unanticipated) != null, readControl(unanticipated).arms], [true, null]);
+
+  /* ---- (D) OVER-STRICTNESS. Prose that MENTIONS an arm, or reaches for a single
+     bracketed letter mid-sentence, must NOT be counted as a list. A tally that
+     over-counts is as useless as one that under-counts, and this one now carries
+     a floor. */
+  const mention = "/* " + decl("the arms are recorded in the block below; see (b) of that block for the one that matters, and note it fails at its own layer.") + " */\n";
+  t("prose MENTIONING an arm is not a declaration of one — a lone bracketed letter is not a list",
+    countEnumerations(readControl(mention).text), 0);
+  const codey = "/* " + decl("replace the guard with `if (a) { return null; }` and the suite fails") + " */\n";
+  t("...and a single parenthesised token quoted from CODE is not an enumeration either",
+    countEnumerations(readControl(codey).text), 0);
+  /* Stated rather than smoothed over: two bracketed single letters that ARE quoted
+     code would be counted. The matcher is syntactic and says only what it means. */
+
+  /* ---- (E) THE MARKER ITSELF. One character of punctuation hid the whole foot
+     block of `case-opened.test.mjs`. A dash is not a different kind of
+     declaration from a colon. Asserted as a delta against the same text with the
+     phrase itself removed. */
+  const dashed = "/* " + dashDecl("two arms") + "\n"
+    + ["a", "b"].map((k) => item(k, `break ${k} -> ${k} fails`)).join("\n") + " */\n";
+  t("a declaration whose marker is separated by a DASH is found, with its arms",
+    [readControl(dashed) != null, readControl(dashed).arms], [true, 2]);
+  t("...and the same text with the marker PHRASE removed reads as no control (the delta)",
+    readControl(dashed.replaceAll(MARKER_PHRASE, "NEGATIVE-CTL(hidden)")), null);
+
+  /* ---- (F) THE EXTENT. `bias.test.mjs` states thirteen arms in ARROW grammar,
+     in enumerated paragraphs after the marker's own paragraph — every arrow
+     legible, every one cut off by the paragraph rule. The list a marker opens
+     belongs to it; unrelated prose still does not. BOTH directions, because one
+     without the other is half an answer. */
+  const acrossParagraphs = "/* Header.\n *\n * " + decl("the arms follow.")
+    + "\n *\n * (1) break one -> one fails\n * (2) break two -> two fails\n *\n"
+    + " * UNRELATED PARAGRAPH, not part of the control and not an arm of it.\n */\n";
+  const across = readControl(acrossParagraphs);
+  t("a declaration reaches the ENUMERATED paragraph that follows it (the bias.test.mjs shape)",
+    [across.arms, across.text.includes("break two")], [2, true]);
+  t("...and still stops before unrelated prose, which is not marked as a list item",
+    across.text.includes("UNRELATED PARAGRAPH"), false);
+
+  /* ---- (G) REACH, ON THE REAL CORPUS, AS A DELTA WITH THE CORPUS SIZE PRINTED.
+     Narrowing or widening a matcher must not silently change what it can see.
+     The control: strip every mark of both kinds from the real sources and the
+     tally must COLLAPSE — a matcher that scores the same over marked and
+     unmarked text is reading neither. */
+  const corpus = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs"))
+    .map((f) => ({ f, src: readFileSync(join(DIR, f), "utf8") }));
+  const tally = (rows) => rows.reduce((acc, r) => {
+    const c = readControl(r.src);
+    if (!c) return acc;
+    if (typeof c.arms === "number") { acc.arms += c.arms; acc.classified.push(r.f); }
+    else acc.unclassified.push(r.f);
+    return acc;
+  }, { arms: 0, classified: [], unclassified: [] });
+
+  const real = tally(corpus);
+  const stripMarks = (s) => s.replace(/\s(?:->|→)\s/g, " then ")
+                             .replace(/(^|\s)\((\d{1,2}[a-z]{0,2}|[a-z]{1,2}|[ivx]{1,4})\)(?=\s)/g, "$1item");
+  const blinded = tally(corpus.map((r) => ({ f: r.f, src: stripMarks(r.src) })));
+
+  t(`the register REACHES the whole battery — ${corpus.length} suite(s) read, ${real.classified.length} classified, ${real.unclassified.length} unclassified`,
+    corpus.length >= 90 && real.classified.length >= 90, true);
+  t(`stripping every arm mark from those ${corpus.length} sources collapses the tally (${real.arms} -> ${blinded.arms} arms, ${real.classified.length} -> ${blinded.classified.length} classified), so the count is a MEASUREMENT of the corpus`,
+    [real.arms - blinded.arms > 0, blinded.classified.length < real.classified.length], [true, true]);
+  t(`...and the declarations that lost their marks read as UNCLASSIFIED rather than as ZERO ARMS (${real.unclassified.length} -> ${blinded.unclassified.length}), which is the direction D-233 was wrong in — and the SAME declarations are still found either way (${real.classified.length + real.unclassified.length} both times)`,
+    [blinded.unclassified.length > real.unclassified.length,
+     blinded.classified.length + blinded.unclassified.length === real.classified.length + real.unclassified.length],
+    [true, true]);
+
+  /* The corpus must actually EXERCISE the arrowless style, or the fix is in the
+     code and nothing in the tree proves it works — how the M0-9 workaround got in. */
+  const arrowless = corpus.filter((r) => {
+    const c = readControl(r.src);
+    return c && typeof c.arms === "number" && countTransitions(c.text) === 0 && countEnumerations(c.text) > 0;
+  }).map((r) => r.f);
+  t(`the tree itself declares at least one ARROWLESS enumerated control, so the new marking is exercised by the corpus and not only by fixtures (${JSON.stringify(arrowless)})`,
+    arrowless.length > 0, true);
+
+  /* And the corpus must exercise the UNCLASSIFIED path too, for the same reason:
+     an instrument whose "I cannot read this" branch never runs on real data has
+     not been shown to have one. */
+  t(`the register NAMES what it could not classify on the real corpus (${JSON.stringify(real.unclassified)}) rather than folding it in as zero`,
+    real.unclassified.length > 0 && real.unclassified.every((f) => readControl(corpus.find((r) => r.f === f).src).arms === null), true);
+
+  /* countArms is the exported leaf, and it must never answer 0. */
+  t("countArms answers null for unmarked text and a number for marked text — never 0",
+    [countArms("nothing marked here at all"), countArms("break x -> y fails")], [null, 1]);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
