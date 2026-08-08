@@ -2651,3 +2651,99 @@ I3, and **the bump is CONDUCT's**. Every key is ADDITIVE and no key was removed 
 RECORD's/FRAMEWORK's view is MINOR — but the `rung` VALUES moved on six acts a surface can already
 read, which is a semantic change inside an existing field, and CONDUCT should weigh that rather
 than take "additive keys" as the whole answer.
+
+## IC-40 · I3: `op=suggest`'s success answer publishes THE RECORD'S bytes for every fact about the version, and NAMES THE SOURCE OF EVERY FIELD; `op=basisversions` stops publishing a blank part label · PROPOSED 2026-08-08 (D-235a, REC-75's residual) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-38, one id already held and
+stepped over), so this one is not a read-the-file-and-add-one allocation.
+
+### PROPOSED
+
+**WHAT MOVES.** `op=suggest`'s success answer, and one field of `op=basisversions`:
+
+| change | shape | kind |
+| --- | --- | --- |
+| the answer gains `fields_of` | `{ <every field name>: "record" \| "derived" \| "call" \| "label" }`, always present | ADDITIVE key |
+| the answer gains `read_back` | boolean; `true` on every reachable path | ADDITIVE key |
+| **`version` publishes the name the RECORD holds** | was the submitted `name`; differs only when `#fmSafe` folded it | **BEHAVIOURAL** |
+| **`grounds` publishes the part labels the RECORD holds** | was the raw declared set; differs only when `#fmSafe` folded a label | **BEHAVIOURAL** |
+| **`legs` are the projection's own rows** | each leg gains `ord`; the candidate's legs never carried one | **BEHAVIOURAL** |
+| `kind`, `run`, `state`, `author`, `at`, `count`, `ground_count`, `composition`, `target` re-sourced to the same read-back | same values on every measured path | re-sourced, no measured value change |
+| `truncated` is derived from the read rather than written as `false` | same value: the write cap is 120 and the read cap 500 | re-sourced |
+| `composition_of` may read `"unread"` | only if the projection read comes back empty — unreachable through the op today | ADDITIVE value |
+| **`op=basisversions`' `grounds` no longer contains `""`** | a leg naming no part contributed an empty-string "declared part" | **BEHAVIOURAL** |
+
+**WHY.** REC-75 settled that `composition` publishes the record's bytes and labelled it
+`composition_of: "record"` — and raised D-235 at its own landing because everything else on that
+answer was still caller- or candidate-derived and unlabelled. **One answer with two sources and
+only one of them named is REC-74's shape — two readers of one row — arriving inside a single
+answer instead of across two ops.** A consumer could not tell which bytes were the record's.
+
+**TWO OF THE THREE BEHAVIOURAL CHANGES CLOSE A LIVE DIVERGENCE, MEASURED BY DRIVING THE PLANE
+BEFORE THE FIX AND NOT READ OFF THE SOURCE.** `#fmSafe` folds `[\r\n]+` to a SPACE, and a space is
+the one character it produces that `VERSION_NAME_RE` and `GROUND_LABEL_RE` both admit:
+
+- a reading submitted as `the folded<newline>reading name` is stored as `the folded reading
+  name`, and the answer said the former. **That field is the record's own ADDRESS** — `derived_from`
+  reads by name — so a caller feeding it straight back named a reading that does not exist;
+- a part declared as `paper<newline>trail` is stored as `paper trail`, and the answer said the
+  former. `op=suggest`'s CHECK 2 cannot see this and that is not a hole in CHECK 2: it compares the
+  DECLARED set against the USED set and both sides are raw, so the two agree with each other and
+  neither agrees with the document.
+
+**THE THIRD IS A SHAPE DISAGREEMENT BETWEEN TWO READERS OF ONE ROW.** `op=suggest` published the
+candidate's legs, which carry no `ord`; `op=basisversions` published the projection's, which do. A
+consumer joining the two had to know which op it had asked.
+
+**AND `op=basisversions`' BLANK LABEL, DRIVEN END TO END.** `basisVersionsOf` writes `ground: ""`
+for a leg that names no part, and the read op published that empty string in `grounds` — a list of
+*the parts this reading declares* containing a part nobody declared. **`op=suggest` cannot produce
+one** (C-25.5 refuses it at `promote`, measured: `BASIS_VERSION_REFUSED`) **— but the shape arm is
+`!pkg.replay`**, so a replayed document may carry one, which is the path that exists precisely so
+the record can hold its own past. The filter drops the LABEL and never the LEG.
+
+### MEASURED CONSUMER IMPACT
+
+**Inside this repository: ZERO behavioural change for any consumer, measured rather than asserted.**
+
+- `civicos-ui/**` — **no consumer of either answer's changed fields**: `grep -rn` for `op=suggest`,
+  `composition_of`, `ground_count`, `shared_origins`, `origins_complete` over `civicos-ui/`,
+  `agent-worker/`, `newgroup/`, `docprofile/` and `pdf-worker/` returns **0 hits** outside
+  `civicos-ui/check-refusal-codes.mjs`, which reads REFUSAL codes and never a success answer.
+- `agent-worker/src/index.mjs` is the one real consumer of both ops and reads **`answer.wrote`,
+  `answer.repeated`, `answer.repeats`, `answer.code`, `answer.reason`** off `op=suggest` and
+  **`versions[].name`** off `op=basisversions`. **Not one of those moves.** It never reads
+  `version`, `legs`, `grounds`, `count` or `composition`.
+- Two suites pinned values that pass unchanged and were re-run: `bounds.test.mjs`
+  (`SUGGEST_OK.count === 0`, `truncated === false`) and `aicredential.test.mjs`
+  (`sug.author === "token:ai"`).
+
+**Outside this repository**, a caller comparing `version` or `grounds` against its own submission
+now sees the record's spelling. **That is the point**, and it is the same reasoning REC-75 recorded
+for `composition`: echoing the caller publishes a value nothing else in the plane will ever produce
+again, and makes two ops disagree about one row.
+
+### WHAT A CONSUMER MUST NOT CONCLUDE
+
+**`fields_of` is not a schema.** It says where the bytes on THIS answer came from, not what type
+they are. A field labelled `record` may still be `null` — that is `read_back: false`, and it means
+the projection read came back empty, which is UNDETERMINED STATED rather than a value.
+
+**`derived` does not mean untrustworthy.** The strength pair and the independence trace are
+published on the passing path deliberately (DERIVED INFORMS), so the member at §12's accept
+ceremony affirms independence against what the record can see. The label says the RECORD DOES NOT
+HOLD THEM, which is a different claim from doubting them.
+
+**A field's absence from `fields_of` is impossible, not permitted.** The map is COMPUTED from the
+groups the answer is assembled out of and `suggest.test.mjs` asserts it is total over the answer's
+own keys, so a consumer may treat a missing entry as a plane defect rather than as a default.
+
+### VERSION
+
+I3, and **the bump is CONDUCT's**. Two additive keys, but three fields a consumer can already read
+now carry different bytes on the folded and legged paths, so this is **not** a pure MINOR by the
+`composition_of` precedent — REC-75 filed no IC for exactly this shape and flagged it for CONDUCT
+to disagree cheaply; this item files one instead, because three fields moved rather than one and
+one of them is an ADDRESS. Reversing it is: drop `fields_of`/`read_back`, and put `version`,
+`grounds`, `legs` and `count` back on `name`, `declaredLabels`, `candidate.legs` and
+`legsIn.length` — the shape `suggest.control.mjs`'s (D-235a) and (D-235b) arms hold open.

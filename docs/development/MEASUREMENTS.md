@@ -4308,3 +4308,66 @@ which is `reversible`, the answer UI-20 recorded as *"C-7 derives reversible"* w
 rendering the rung as ABSENT because FW-14 had not yet assigned it. Both halves are read
 out of `store.mjs` by the suite rather than pinned by hand. Note what it does not claim:
 severing is not erasure, and the edge stays in the record carrying the member's reason.
+
+## 2026-08-08 · D-235a — how far `op=suggest`'s answer diverged from the record, driven
+
+**Instrument:** `bio-plane/test/suggest.test.mjs` block 8, driven through the control plane
+against miniflare; every figure below is the suite's own output on the tree BEFORE the fix
+and then after it. Nothing here is read off the source.
+
+### The divergence, measured before the fix
+
+`op=suggest`'s success answer was asserted field by field against what `op=basisversions`
+publishes for the same version, over a submission carrying characters the restricted
+frontmatter grammar cannot hold. **Pre-fix: 9 of the block's 11 assertions FAILED.** The two
+that passed were the over-strictness arm and a walk guard, which is what those are for.
+
+| field | submitted | the record holds | the answer said | verdict |
+| --- | --- | --- | --- | --- |
+| `version` | `the folded\nreading name` | `the folded reading name` | the submission | **DIVERGED** |
+| `grounds` | `["paper\ntrail"]` | `["paper trail"]` | the submission | **DIVERGED** |
+| `legs` | — | rows carrying `ord` | candidate legs, no `ord` | **DIVERGED (shape)** |
+| `composition` | — | the record's | the record's | agreed (REC-75) |
+| `run`, `state`, `author`, `at`, `count` | — | — | — | agreed |
+
+**`#fmSafe`'s `[\r\n]+` -> SPACE is the whole of the reachable gap**, because a space is the
+one character it produces that `VERSION_NAME_RE` (`^[a-z0-9][a-z0-9 ._-]{0,63}$/i`) and
+`GROUND_LABEL_RE` (`^[a-z0-9][a-z0-9 _-]{0,47}$/i`) both admit. Every other transform it
+performs is excluded by those grammars on the written side.
+
+### Reachability of the blank part label, measured rather than assumed
+
+`basisVersionsOf` writes `ground: ""` for a leg that names no part. Driven:
+
+- **through `op=suggest`: UNREACHABLE.** A version whose leg names no part is refused at
+  `promote` — `ok=false code=BASIS_VERSION_REFUSED` — by C-25.5's totality rule.
+- **through a REPLAYED promotion: REACHABLE, and driven end to end.** The shape arm is
+  `!pkg.replay` (*the record's own history must be holdable verbatim*), so a replayed
+  document carrying such a leg projects it, and `op=basisversions` published
+  `grounds: [""]` — a part nobody declared, inside a list of the parts a reading declares.
+
+### Consumer blast radius, measured over the estate
+
+`grep -rn` for `op=suggest`, `composition_of`, `ground_count`, `shared_origins`,
+`origins_complete` over `civicos-ui/`, `agent-worker/`, `newgroup/`, `docprofile/`,
+`pdf-worker/`: **0 hits** outside `civicos-ui/check-refusal-codes.mjs`, which reads refusal
+codes and never a success answer. `agent-worker/src/index.mjs` is the only consumer of
+either op and reads `wrote`, `repeated`, `repeats`, `code`, `reason` and
+`versions[].name` — **none of which moves.** Measured blast radius inside the repository:
+**zero**.
+
+### The battery
+
+**True baseline measured in this worktree before any edit: 133/133 suites green · 8,319
+assertions · exit 0**, HEAD `bb426ac`, `git status --short` empty. **After: 133/133 · 8,333 ·
+exit 0.** Delta **+14**, attributed by DIFFING the two full runs rather than by subtraction:
+`suggest.test.mjs` 80 -> 93, `versions.test.mjs` 77 -> 78, **nothing else moved**.
+
+### A sixth confirmation of D-233, unasked for
+
+Six negative-control arms were added to `suggest.test.mjs`'s declaration block and
+`node scripts/coverage.mjs --strict` printed **`570 arms stated`** both before and after —
+the register's floor met EXACTLY, with the six new arms scoring zero. They are LABELLED
+(`(D-235a)`) rather than numbered, and the register says in its own output that a labelled
+arm is not counted. **This is the same blindness REC-75 measured on the same file and the
+same day, reproduced by an item that did not set out to measure it.**
