@@ -222,7 +222,18 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 953,    /* MOVED 919 -> 953 AT INTEGRATION 2026-08-08 by CONDUCT, and it is the block's
+  regionLines: 996,    /* MOVED 953 -> 996 BY REC-75 (D-234), 2026-08-08, from the figure the guard
+                          PRINTED on a green run of this tree — and MEASURED against HEAD's own copy of
+                          `store.mjs` first, which printed exactly 953, so the 43 is this item's and the
+                          previous figure carried no slack. REC-75's fix lands inside TWO governed
+                          regions of `suggestVersion` — `is-suggest-shape` (the name comparison now made
+                          over the name AS WRITTEN) and `is-suggest-write` (the rows composed from the
+                          one normaliser) — and both carry the reasoning at the site, which is where
+                          most of the 43 lines are. The floor is set EQUAL to the measured figure for
+                          the reason the note below gives: slack in a floor is the floor not being a
+                          ratchet.
+                          PRIOR ENTRY, kept because it is the receipt for how this figure moves:
+                          MOVED 919 -> 953 AT INTEGRATION 2026-08-08 by CONDUCT, and it is the block's
                           own subject arriving from a direction no worker could have covered. PL-15
                           set 919 — correct, and measured on a green run of ITS tree. M0-13 landed in
                           the same integration and its one-expression fix to `suggestVersion`'s

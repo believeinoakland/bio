@@ -260,6 +260,119 @@ arm("(D-231b) OVER-BLANKED BY ONE FIELD — widen D-231's exclusion so the groun
   ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
    "CHECK 3: a reading identical in substance", "CHECK 1: a leg naming a document"]);
 
+/* ============================== D-234 — THE LOSSY TRANSFORMS ============= */
+
+/* REC-75's FOUR ARMS. D-231 above and D-234 here are the SAME GATE failing for
+   two independent reasons, and the pair of arm sets is what says so: the two
+   D-231 arms are re-run unchanged below this item's change and behave exactly as
+   they did before it, while the four here move only the D-234 arms. If the two
+   halves were one thing measured twice, an arm from either set would move the
+   other's assertions. Neither does. */
+
+arm("(D-234a) THE `#fmSafe` HALF REVERTED — make the one normaliser's value transform the IDENTITY, "
+  + "which is precisely 'compose the candidate from raw args' and is the state of the world before "
+  + "REC-75. `#fmSafe` rewrites `\"` and `\\` to `'`, folds newlines to spaces and TRIMS on the way into "
+  + "the document, so a candidate built from what was SUBMITTED can never equal a reading built from "
+  + "what was WRITTEN. EVERY PUNCTUATED DUPLICATE MUST LAND AGAIN — this is the arm proving the "
+  + "normalisation is what refuses. THE D-231 BOUNDARY ARM MUST STAY GREEN, which is what says the "
+  + "clock half and the punctuation half are two defects and not one.",
+  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
+             `    const fs = (s) => String(s ?? "");`]],
+  /* AND `STRUCTURALLY NOTHING MOVED` FALLS WITH THEM, which is the same second
+     receipt (D-231a) carries and for the same reason: a duplicate that is not
+     refused LANDS, so block 3's absolute version count is one too high. Declared
+     rather than discovered — it was missing from this list on the first run. */
+  ["D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
+   "D-234 (4) THE TRAILING AND LEADING SPACE", "D-234 (5) AND IT IS NOT ONLY THE VERSION ROW",
+   "STRUCTURALLY NOTHING MOVED"],
+  ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "CHECK 3: a reading identical in substance",
+   "REC-75 OVER-STRICTNESS", "REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
+   "CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
+
+arm("(D-234b) OVER-NORMALISED, AND IT MUST FAIL THE OTHER WAY — the control this item exists for as "
+  + "much as for D-234a. Push the ONE normaliser past what the document does: collapse internal "
+  + "whitespace and drop the punctuation `#fmSafe` PRESERVES. BOTH sides are then normalised the same "
+  + "way, so the duplicate arms stay green and prove nothing — while two readings that genuinely differ "
+  + "only in the punctuation of a QUOTED SOURCE collapse into one and the second is refused. That is "
+  + "the opposite defect and the worse one: a gate refusing correct work. THE OVER-STRICTNESS ARM MUST "
+  + "FAIL and the duplicate arms MUST NOT.",
+  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
+             `    const fs = (s) => Store.#fmSafe(s).replace(/\\s+/g, " ").replace(/[;,'\\u201c\\u201d]/g, "");`]],
+  /* AND THE PUBLICATION ARM FAILS WITH THEM, DECLARED RATHER THAN DISCOVERED —
+     it was NOT in this list on the first run and the harness printed it as an
+     undeclared failure, which is the harness working. The reason is right: an
+     over-normaliser that strips `'` strips it from what the WRITE persists too,
+     so the record no longer holds `'to be named'` and the arm asserting the
+     published bytes carry it fails. Declared here rather than smoothed away,
+     because an arm whose predicted failures do not match its measured ones is an
+     arm nobody can read. */
+  ["REC-75 OVER-STRICTNESS", "AND THE CURLY-QUOTE ARM IS THE ONE IN A SPELLING NOBODY ANTICIPATED",
+   "REC-75 — `composition` PUBLISHES THE RECORD'S BYTES"],
+  ["D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
+   "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "CHECK 3: a reading identical in substance"]);
+
+arm("(D-234c) THE PUBLICATION REVERTED, AND IT IS COMPOUND ON PURPOSE. REC-75 decided that "
+  + "`composition` publishes THE RECORD'S BYTES rather than the caller's, and after the fix the two are "
+  + "equal — so reverting the publication ALONE changes nothing observable, and an arm that edited only "
+  + "it would come back green while proving nothing. This arm therefore reverts BOTH halves: the "
+  + "candidate goes back to raw args AND the answer goes back to publishing the candidate. That is "
+  + "exactly the pre-REC-75 plane, and it is the state in which a caller was handed bytes the record "
+  + "does not hold with nothing on the answer to say so.",
+  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
+             `    const fs = (s) => String(s ?? "");`],
+   ["store", `      composition: storedComposition,`,
+             `      composition: candidate ? candidate.composition : null,`]],
+  ["REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
+   "AND IT IS THE SAME STRING `op=basisversions` PUBLISHES FOR THAT VERSION",
+   "D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
+   "D-234 (4) THE TRAILING AND LEADING SPACE", "D-234 (5) AND IT IS NOT ONLY THE VERSION ROW",
+   "STRUCTURALLY NOTHING MOVED"],
+  ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "REC-75 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
+
+arm("(D-234d) THE NAME COMPARISON REVERTED — the same defect one field over, found by REC-75's class "
+  + "sweep. `SUGGEST_NAME_TAKEN` compares a CALLER-DERIVED name against STORED names. `VERSION_NAME_RE` "
+  + "admits none of the characters `#fmSafe` rewrites, so almost all of the divergence is unreachable — "
+  + "but a NEWLINE folds to a SPACE, and the grammar allows spaces. Compare the raw name again and a "
+  + "reading named `the ledger<newline>account` walks past this endpoint's own check and is refused by "
+  + "`promote` in ANOTHER family's words, over a document this endpoint had already composed.",
+  [["store", `    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))`,
+             `    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === name))`]],
+  ["D-234 / THE CLASS SWEEP: a name that FOLDS"],
+  ["D-234 (1) THE QUOTATION MARK", "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "REC-75 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
+
+/* THE ARM THAT TAUGHT THIS ITEM SOMETHING, AND THE DECLARATION IS THE FINDING.
+   It was written expecting the behavioural D-234 arms to fail with the
+   structural one. THEY DO NOT, and the reason is worth more than the arm: `q()`
+   applies `#fmSafe` itself, and `#fmSafe` is IDEMPOTENT, so `q(args.description)`
+   and `q(pv.description)` emit the SAME BYTES. Putting the WRITE back on raw args
+   is therefore INVISIBLE to every behavioural arm in the suite.
+   That is exactly why the structural pin has to exist. The defect D-234 named
+   was never in the write — it was in the CANDIDATE, and the write's source is
+   unobservable from outside. A field added to this endpoint tomorrow, composed
+   into the document from `args` and into the candidate from `persisted`, would
+   diverge the moment the two disagree about a CONDITION rather than a
+   character — and nothing behavioural would say so until a member hit it. */
+arm("(D-234e) THE STRUCTURAL RATCHET — put ONE field of the write back on raw args, which is the shape "
+  + "D-234 arose in and the shape a field added tomorrow would arrive in. THE STRUCTURAL ARM MUST FAIL "
+  + "AND EVERY BEHAVIOURAL ARM MUST STAY GREEN, which is not a weakness in the arm but its whole "
+  + "justification: `q()` applies `#fmSafe` and `#fmSafe` is idempotent, so this edit emits identical "
+  + "bytes and NO behavioural arm can see it. A source the behaviour cannot distinguish is a source only "
+  + "a structural pin can hold.",
+  [["store", `                  \`    description: \${q(pv.description)}\`,`,
+             `                  \`    description: \${q(args.description)}\`,`]],
+  ["REC-75: EVERY VALUE THE WRITE QUOTES COMES FROM THE ONE NORMALISER"],
+  ["WALK GUARD for that arm",
+   "D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
+   "D-234 (4) THE TRAILING AND LEADING SPACE", "D-234 (5) AND IT IS NOT ONLY THE VERSION ROW",
+   "REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
+   "REC-75 OVER-STRICTNESS",
+   "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "CHECK 1: a leg naming a document"]);
+
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);
 console.log(`every arm restored; every file verified by sha256 AND by content`);

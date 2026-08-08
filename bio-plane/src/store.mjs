@@ -17631,7 +17631,19 @@ export class Store extends DurableObject {
     const existing = Array.isArray(fm0.basis_versions) ? fm0.basis_versions : [];
 
     const name = String(args.name ?? "").trim();
-    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === name))
+    /* REC-75 / D-234, THE SAME DEFECT ONE FIELD OVER AND FOUND BY ITS CLASS
+       SWEEP: this compares CALLER-DERIVED bytes against STORED bytes, and the
+       stored side went through `#fmSafe` at the write while the caller's side
+       did not. Most of the divergence is unreachable here because
+       `VERSION_NAME_RE` (C-25.2) admits none of the characters `#fmSafe`
+       rewrites — but it folds `\r\n` to a SPACE, which the grammar DOES admit,
+       so a reading named `a<newline>b` did not match a held `a b`, was let past
+       this check, and was then refused by `promote` as VERSION_NAME_NOT_UNIQUE:
+       a refusal in another family's words about a document this endpoint had
+       already built, which is the shape CHECK 2's own comment forbids.
+       COMPARED AS WRITTEN, so like is compared with like. */
+    const nameWritten = Store.#fmSafe(name);
+    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))
       return refusal("SUGGEST_NAME_TAKEN",
         `'${name.slice(0, 60)}' already names a reading of ${target}. §6 rule 2: a version name is `
         + `unique WITHIN its inquiry, and derived_from reads by name.`,
@@ -17972,11 +17984,29 @@ export class Store extends DurableObject {
        comparison that kept them would pass every duplicate, because the endpoint
        refuses a repeated name one screen up — the check would be green and
        asserting nothing. */
-    const candidateFm = Store.#suggestionFrontmatter({
-      id: target, kind, name, description: args.description, claim: args.claim,
+    /* REC-75 / D-234 — THE CANDIDATE IS COMPOSED FROM THE VALUES THAT WILL BE
+       PERSISTED, NOT FROM THE RAW ARGS.
+       MEASURED BY DRIVING THE PLANE, not by reading it: `#fmSafe` rewrites `"`
+       and `\` to `'`, folds newlines to spaces and trims, and the write puts
+       every authored field through it. A candidate built from raw args therefore
+       could NEVER equal a held reading whenever a description, a ground
+       statement or a leg note carried one of those — so a duplicate carrying a
+       quotation mark simply LANDED, deterministically, with nothing going red to
+       say so. This is D-231's gate failing for a second and independent reason,
+       and D-231's own fix (the clock, blanked out of the comparison below) is
+       untouched: the two halves are orthogonal and `suggest.control.mjs` arms
+       each with the other held open.
+       ONE DERIVATION, TWO CONSUMERS: `persisted` is what the write composes its
+       rows from, one screen down. There is deliberately no second computation to
+       drift — a candidate taught the write's transforms would agree with it only
+       until somebody changed one of them. */
+    const persisted = Store.#suggestionPersisted({
+      kind, name, description: args.description, claim: args.claim,
       relationship: args.relationship, derived_from: args.derived_from,
-      run, author: who || null, at: nowIso, grounds: groundsIn, legs: legsIn,
+      run, author: who || null, at: nowIso, level, observed_at: observedAt,
+      grounds: groundsIn, legs: legsIn,
     });
+    const candidateFm = Store.#suggestionFrontmatter(target, persisted);
     const candidate = Store.basisVersionsOf(candidateFm)[0] ?? null;
     /* AND THE CLOCK COMES OUT TOO — D-231, and it is the third exclusion rather
        than a tweak to the two above, because WHEN a reading was recorded is not
@@ -18044,40 +18074,53 @@ export class Store extends DurableObject {
      * stays the authority (D-21) and the projection is re-derived by the ONE
      * write site PL-1 pinned. This endpoint holds no INSERT into either version
      * table and there is not going to be one. */
+    /* REC-75 / D-234 — THE ROWS ARE COMPOSED FROM `persisted`, WHICH IS THE SAME
+       OBJECT CHECK 3's CANDIDATE WAS COMPOSED FROM ONE SCREEN UP. Before this
+       the write derived its values from `args` and the candidate derived its own
+       from `args` independently, and the two disagreed on every field `#fmSafe`
+       touches — so the gate above compared bytes nothing would ever store. There
+       is now ONE derivation and both sides read it.
+       `q()` STILL APPLIES `#fmSafe`, and that is deliberate rather than
+       redundant: it is idempotent over an already-normalised value, and it is
+       what keeps a field the normaliser might not yet model from reaching the
+       restricted grammar unescaped. The document's safety does not depend on the
+       normaliser being complete; only the comparison does, and the suite drives
+       that end to end. */
     const q = (s) => `"${Store.#fmSafe(String(s ?? ""))}"`;
-    const vRow = [`  - name: ${q(name)}`,
-                  `    kind: ${q(kind)}`,
-                  `    description: ${q(args.description)}`,
-                  ...(str(args.claim) ? [`    claim: ${q(args.claim)}`] : []),
-                  `    relationship: ${q(String(args.relationship ?? "and").trim().toLowerCase())}`,
+    const pv = persisted.version;
+    const vRow = [`  - name: ${q(pv.name)}`,
+                  `    kind: ${q(pv.kind)}`,
+                  `    description: ${q(pv.description)}`,
+                  ...(pv.claim === null ? [] : [`    claim: ${q(pv.claim)}`]),
+                  `    relationship: ${q(pv.relationship)}`,
                   /* THE SOLE POSSIBLE OUTPUT, written as a literal and not from a
                      parameter: there is no path through this function that writes
                      any other state, which is §4's fence expressed as the absence
                      of a variable rather than as a check on one. */
                   `    state: "suggested"`,
                   `    hidden: false`,
-                  `    derived_from: ${str(args.derived_from) ? q(args.derived_from) : "null"}`,
-                  `    run: ${q(run)}`,
-                  ...(who ? [`    author: ${q(who)}`] : []),
-                  `    at: ${q(nowIso)}`,
+                  `    derived_from: ${pv.derived_from === null ? "null" : q(pv.derived_from)}`,
+                  `    run: ${q(pv.run)}`,
+                  ...(pv.author === null ? [] : [`    author: ${q(pv.author)}`]),
+                  `    at: ${q(pv.at)}`,
                   ...(kind === "level-empty"
-                      ? [`    level: ${q(level)}`, `    observed_at: ${q(observedAt)}`] : [])];
-    const gRows = groundsIn.filter((g) => str(g?.ground)).map((g) =>
-      [`  - version: ${q(name)}`, `    ground: ${q(g.ground)}`,
+                      ? [`    level: ${q(pv.level)}`, `    observed_at: ${q(pv.observed_at)}`] : [])];
+    const gRows = persisted.grounds.map((g) =>
+      [`  - version: ${q(pv.name)}`, `    ground: ${q(g.ground)}`,
        /* STAMPED FROM THE SESSION, never the caller's word — the same rule
           `author` and `viewer` take at the control plane, and for the same
           reason: this field says WHO signed for a structural claim. */
-       `    asserted_by: ${q(who)}`, `    at: ${q(nowIso)}`,
-       ...(str(g?.statement) ? [`    statement: ${q(g.statement)}`] : [])].join("\n"));
-    const lRows = legsIn.map((l) =>
-      [`  - version: ${q(name)}`, `    target: ${q(l?.target)}`,
-       `    role: ${q(String(l?.role ?? "supports"))}`,
-       ...(str(l?.ground) ? [`    ground: ${q(l.ground)}`] : []),
-       ...(str(l?.grade) ? [`    grade: ${q(l.grade)}`] : []),
-       ...(str(l?.grade_axis) ? [`    grade_axis: ${q(l.grade_axis)}`] : []),
-       ...(str(l?.grade_source) ? [`    grade_source: ${q(l.grade_source)}`] : []),
-       ...(str(l?.note) ? [`    note: ${q(l.note)}`] : []),
-       ...(str(l?.date) ? [`    date: ${q(l.date)}`] : [])].join("\n"));
+       `    asserted_by: ${q(g.asserted_by)}`, `    at: ${q(g.at)}`,
+       ...(g.statement === null ? [] : [`    statement: ${q(g.statement)}`])].join("\n"));
+    const lRows = persisted.legs.map((l) =>
+      [`  - version: ${q(pv.name)}`, `    target: ${q(l.target)}`,
+       `    role: ${q(l.role)}`,
+       ...(l.ground === null ? [] : [`    ground: ${q(l.ground)}`]),
+       ...(l.grade === null ? [] : [`    grade: ${q(l.grade)}`]),
+       ...(l.grade_axis === null ? [] : [`    grade_axis: ${q(l.grade_axis)}`]),
+       ...(l.grade_source === null ? [] : [`    grade_source: ${q(l.grade_source)}`]),
+       ...(l.note === null ? [] : [`    note: ${q(l.note)}`]),
+       ...(l.date === null ? [] : [`    date: ${q(l.date)}`])].join("\n"));
 
     let text = Store.#appendFmRows(text0, "basis_versions", [vRow.join("\n")]);
     if (text !== null && gRows.length) text = Store.#appendFmRows(text, "basis_version_grounds", gRows);
@@ -18122,6 +18165,36 @@ export class Store extends DurableObject {
     if (!promoted.ok) return remember({ ...promoted, code: promoted.reason, target, name });
     /* END DEC-49 REGION is-suggest-write */
 
+    /* REC-75 / D-234 — WHAT `composition` PUBLISHES, DECIDED HERE AND SAID HERE.
+     *
+     * IT PUBLISHES THE RECORD'S BYTES, read back out of the projection the
+     * promotion above just wrote, and `composition_of: "record"` says so on the
+     * answer so a consumer does not have to read this comment to know which
+     * bytes it is holding.
+     *
+     * THIS SETTLES M0-13's RIDER RATHER THAN INTRODUCING THE DIVERGENCE IT
+     * WARNED OF. Before REC-75 this field published the CANDIDATE's composition,
+     * built from raw args — so on every submission carrying a quote, a
+     * backslash, a newline or trailing space the caller was already handed bytes
+     * the record does not hold. That divergence existed and was invisible; it is
+     * now closed by construction rather than by two computations agreeing.
+     *
+     * WHY THE RECORD'S SIDE AND NOT THE CALLER'S. D-21: the document is the
+     * authority and `inquiry_basis_versions` is its projection, written by the
+     * ONE write site PL-1 pinned. Echoing the caller's bytes would publish a
+     * value nothing else in the plane will ever produce again — `op=basisversion`
+     * publishes this same stored `composition`, so the two answers would
+     * disagree about one version, which is the two-readers-of-one-row defect
+     * REC-74 exists for. Reading it back also makes the equality OBSERVABLE:
+     * a consumer can compare this against `op=basisversion` and get the same
+     * string, and the suite drives exactly that.
+     *
+     * WHAT IT COSTS IF IT IS WRONG: one read, and one field. Reversing it is
+     * substituting `candidate.composition` back and dropping `composition_of`. */
+    const storedComposition = this.#one(
+      `SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+      target, pv.name)?.composition ?? null;
+
     return {
       ok: true, target, version: name, kind, run, state: "suggested",
       author: who || null, at: nowIso, weight: "single",
@@ -18143,9 +18216,81 @@ export class Store extends DurableObject {
       /* The pair, per axis, as it was computed BEFORE the write — DEC-21/DEC-44,
          never composed into one value. */
       pair: { capture: pair.capture, connection: pair.connection },
-      composition: candidate ? candidate.composition : null,
+      composition: storedComposition,
+      /* WHICH BYTES THESE ARE, published rather than left to be inferred. */
+      composition_of: "record",
       bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
       evaluated: true, repeated: false, wrote: true,
+    };
+  }
+
+  /* REC-75 / D-234 — THE VALUES THE RECORD WILL ACTUALLY HOLD, DERIVED ONCE.
+   *
+   * THE DEFECT THIS EXISTS TO END, and it was DRIVEN rather than read: the write
+   * puts every authored field through `#fmSafe` — which rewrites `"` and `\` to
+   * `'`, folds newlines to spaces and TRIMS — and emits several fields only when
+   * they are non-blank. CHECK 3's candidate was composed from RAW ARGS. **So the
+   * composition derived from what was WRITTEN could never equal the composition
+   * derived from what was SUBMITTED whenever a description, a ground statement
+   * or a leg note carried a quote, a backslash, a newline or trailing space** —
+   * and §6 rule 8's write gate simply did not fire. No clock, no flakiness, no
+   * intermittency to make anybody look: a member who typed a quotation mark did
+   * not get the duplicate check, always. It is D-231's gate failing for a
+   * SECOND, INDEPENDENT reason, and D-231's fix is untouched by this one.
+   *
+   * SO THERE IS ONE NORMALISER AND BOTH SIDES CONSUME IT. This function is the
+   * only place that says what a submitted value becomes in the document, and
+   * `suggestVersion`'s write and `#suggestionFrontmatter`'s candidate both take
+   * their values from HERE. Two computations of one shape agree at zero cost —
+   * the instrument failure this repository has measured repeatedly — so the
+   * remedy is not to teach the candidate the write's transforms but to remove
+   * the second computation.
+   *
+   * WHAT IT MODELS, and every clause is a transform the write performs:
+   *   - `#fmSafe` on every value, because that is what `q()` writes and
+   *     therefore what the frontmatter parser reads back. It is IDEMPOTENT, so
+   *     the write applying `q()` to an already-normalised value changes nothing.
+   *   - the CONDITIONAL fields (`claim`, `derived_from`, `author`, a ground's
+   *     `statement`, and every optional leg field) are `null` when the write
+   *     would emit no line at all, because an omitted line and a blank one are
+   *     different documents.
+   *   - the grounds the write DROPS (`str(g.ground)` blank) are dropped here.
+   *
+   * WHAT IT DELIBERATELY DOES NOT DO, and this is the other half of the fix:
+   * it normalises no further than the document does. It does not collapse
+   * internal whitespace, strip punctuation or fold case — two readings whose
+   * stored bytes DIFFER are two readings, and a comparison that collapsed them
+   * would refuse correct work, which is the opposite defect and the worse one.
+   * `suggest.control.mjs` arms exactly that over-normalisation and requires the
+   * over-strictness arms to fail. */
+  static #suggestionPersisted({ kind, name, description, claim, relationship, derived_from,
+                               run, author, at, level, observed_at, grounds, legs }) {
+    /* THE ONE TOKEN THE CONTROL FLIPS. `suggest.control.mjs`'s D-234a arm
+       replaces this line with the identity, which is precisely "compose the
+       candidate from raw args" — the state of the world before REC-75 — and
+       every punctuated duplicate lands again. */
+    const fs = (s) => Store.#fmSafe(s);
+    const blank = (x) => !(typeof x === "string" && x.trim() !== "");
+    const opt = (x) => (blank(x) ? null : fs(x));
+    return {
+      version: {
+        name: fs(name), kind: fs(kind), description: fs(description), claim: opt(claim),
+        relationship: fs(String(relationship ?? "and").trim().toLowerCase()),
+        derived_from: opt(derived_from), run: fs(run),
+        author: blank(author) ? null : fs(author), at: fs(at),
+        level: opt(level), observed_at: opt(observed_at),
+      },
+      /* `asserted_by` is STAMPED from the session and written unconditionally,
+         so it is normalised unconditionally too — including the empty string a
+         machine-credential submission would carry, which the checks above refuse
+         before this is ever reached. */
+      grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
+        ground: fs(g.ground), asserted_by: fs(author ?? ""), at: fs(at),
+        statement: opt(g?.statement) })),
+      legs: (legs || []).map((l) => ({
+        target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
+        ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
+        grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date) })),
     };
   }
 
@@ -18154,22 +18299,24 @@ export class Store extends DurableObject {
      the shape it will read after the write. Building a composition by hand here
      would be a second composer, and two assemblies of one shape agree at zero
      cost, which is the instrument failure this repository has measured
-     repeatedly. */
-  static #suggestionFrontmatter({ id, kind, name, description, claim, relationship, derived_from,
-                                  run, author, at, grounds, legs }) {
+     repeatedly.
+     REC-75: and it is fed by `#suggestionPersisted`, so the shape it composes is
+     the shape the DOCUMENT will hold rather than the shape the caller sent. */
+  static #suggestionFrontmatter(id, p) {
+    const name = p.version.name;
     return {
       id,
-      basis_versions: [{ name, kind, description, claim: claim ?? null,
-                         relationship: String(relationship ?? "and").trim().toLowerCase(),
-                         state: "suggested", hidden: false, derived_from: derived_from ?? null,
-                         run, author, at }],
-      basis_version_grounds: (grounds || []).filter((g) => g && g.ground)
-        .map((g) => ({ version: name, ground: g.ground, asserted_by: author, at,
-                       statement: g.statement ?? null })),
-      basis_version_legs: (legs || []).map((l) => ({
-        version: name, target: l?.target, role: l?.role ?? "supports", ground: l?.ground ?? null,
-        grade: l?.grade ?? null, grade_axis: l?.grade_axis ?? null,
-        grade_source: l?.grade_source ?? null, note: l?.note ?? null, date: l?.date ?? null })),
+      basis_versions: [{ name, kind: p.version.kind, description: p.version.description,
+                         claim: p.version.claim, relationship: p.version.relationship,
+                         state: "suggested", hidden: false, derived_from: p.version.derived_from,
+                         run: p.version.run, author: p.version.author, at: p.version.at }],
+      basis_version_grounds: p.grounds.map((g) => ({ version: name, ground: g.ground,
+                                                     asserted_by: g.asserted_by, at: g.at,
+                                                     statement: g.statement })),
+      basis_version_legs: p.legs.map((l) => ({
+        version: name, target: l.target, role: l.role, ground: l.ground,
+        grade: l.grade, grade_axis: l.grade_axis,
+        grade_source: l.grade_source, note: l.note, date: l.date })),
     };
   }
 
