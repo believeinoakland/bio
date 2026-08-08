@@ -15395,6 +15395,34 @@ export class Store extends DurableObject {
      that stops heartbeating is dead within the lease and is reaped. */
   static AI_RUN_LEASE_MS = 3600000;
 
+  /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
+     is deliberately not copied whole from either sibling, because this log has
+     TWO READERS WITH OPPOSITE NEEDS and no single existing pair serves both.
+
+     200 is `op=exportlog`'s default (`EXPORT_LOG_LIMIT_DEFAULT`, REC-57), and
+     it is the plane's ONLY other append-only, `seq`-ordered log read. The
+     default belongs to the reader who is CHECKING a run — §11's "the log is
+     what lets anyone else CHECK" — and a checker wants a page, not a replay.
+
+     5000 is the plane's shared READ CEILING: `op=list`'s, which `op=projection`
+     reused at REC-59 and the meaning layer reused at REC-60 rather than minting
+     a second. The ceiling belongs to the OTHER reader — §14b.7's RESUMED run,
+     which reads its own log to continue rather than restart, and for which a
+     cut answer is a run that redoes work it already did. `op=exportlog`'s 1000
+     was sized for an administrator scrolling exports; it is the wrong ceiling
+     for a machine replaying its own history, and the meaning layer's 500
+     default is sized for a member exploring a subject graph that grows on
+     D-224's quadratic curve, which a run log does not.
+
+     WHAT THIS DOES NOT GIVE, said plainly rather than left to be discovered
+     (REC-60's own sentence, and it applies unchanged): a caller cut at the
+     CEILING has no way past it. A run that emits more than 5000 observations
+     cannot replay its log whole through this op. No cursor is minted here —
+     REC-55's declined-second-copy rule — and the honest bound is published
+     instead of the complete answer being promised. */
+  static AI_RUN_LOG_LIMIT_DEFAULT = 200;
+  static AI_RUN_LOG_LIMIT_MAX = 5000;
+
   static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
 
   /** Append ONE observation. The single write site for `ai_run_log`, which is
@@ -15769,17 +15797,81 @@ export class Store extends DurableObject {
    *  (§14b.7), which is why the entries come back in `seq` order with their
    *  levels and states intact rather than summarised.
    *
-   *  Gated on the same column for the same reason as the read above. */
-  aiRunLog({ run, viewer = null } = {}) {
+   *  Gated on the same column for the same reason as the read above.
+   *
+   *  ==================================================================
+   *  REC-70 — BOUNDED, AND WHY THE RATCHET BUILT TO CATCH THIS DID NOT.
+   *  ==================================================================
+   *
+   *  THE DEFECT: this read was `... FROM ai_run_log WHERE run = ? ORDER BY seq`
+   *  with no `LIMIT`, no `limit` and no `truncated` — D-225's class exactly,
+   *  arriving in an op IS-6 added AFTER REC-60 measured its roster. A run's log
+   *  grows one row per tick and NOTHING caps the tick count: `RUN_BOUNDS` bounds
+   *  fetches, sub-sessions and wall time, never observations.
+   *
+   *  THE PART THAT MATTERS MORE, AND IT IS RECORDED HERE BECAUSE THE NEXT
+   *  UNBOUNDED READ WILL LAND BESIDE THIS ONE: `test/meaning-bounds.test.mjs`
+   *  exists to fail the build when a new read publishes a collection off an
+   *  unbounded row source, and it did not fail — `op=airunlog` appeared in NONE
+   *  of its three buckets, so the walk never reached this method at all.
+   *
+   *  THE CAUSE, NAMED: **the walk graded only return objects containing the
+   *  literal `ok: true`, and this method's success answer says `found: true`.**
+   *  One success spelling was hard-coded as if it were the only one, four lines
+   *  after that same file wrote its bound and completeness keys as SETS
+   *  precisely because "the plane answers the second in five spellings on
+   *  purpose". The instrument avoided the one-vocabulary mistake in its leaves
+   *  and committed it at its root — and it was not one op: **the gate hid 27 of
+   *  the 156 dispatched ops**, `op=signerlist`, `op=publishedlist`,
+   *  `op=inboxlist`, `op=memberlist` and `op=verify` among them, every one of
+   *  them a real unbounded collection read. Measured 2026-08-07, REC-70.
+   *
+   *  SO THE FIX IS NOT `ok: true` HERE. Adding the marker this method does not
+   *  use would buy a green walk and leave the blindness in place for the next
+   *  op that spells success a third way. The WALK was corrected instead — it now
+   *  grades every return that does not DECLARE itself a refusal — and this
+   *  method keeps `found: true`, which is what makes the corrected walk's
+   *  verdict on it evidence rather than a coincidence.
+   *
+   *  D-227 IS OPEN AND APPLIES HERE. That walk grades what a method PUBLISHES,
+   *  so an envelope left honest over a scan whose `LIMIT` was removed still
+   *  reads as bounded. This op's SQL bound is therefore pinned DIRECTLY, off
+   *  this segment's own source, in `meaning-bounds.test.mjs` — not inferred
+   *  from the envelope. */
+  aiRunLog({ run, viewer = null, limit = null } = {}) {
+    /* REC-70, IN THE BODY AND NOT ONLY IN THE HEADER ABOVE, because the
+       instrument that reads this file SEGMENTS FROM THE SIGNATURE DOWN — a
+       reasoning block written above the method is invisible to the same walk
+       this note is about, which is a small instance of the identical mistake.
+       THE CAUSE, in one line: this method answers success as `found: true`, and
+       `meaning-bounds.test.mjs` graded only returns containing `ok: true`, so
+       the ratchet built to catch an unbounded collection never reached it — one
+       of 27 dispatched ops hidden by that single literal. The walk was inverted
+       to grade everything that is not a declared refusal; this method keeps
+       `found: true` so the fix is proved rather than sidestepped. */
     const seen = this.#bundleGate("r.context_id", viewer);
     const row = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
-    if (!row) return { run: run || null, found: false, entries: [], stopped: null };
-    const entries = this.#rows(
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.AI_RUN_LOG_LIMIT_DEFAULT),
+                                     Store.AI_RUN_LOG_LIMIT_MAX));
+    /* The bound the caller GETS, published on the absent answer too: a reader
+       that cannot see the run must not have to guess which bound it would have
+       been answered at, and REC-30's rule is that the unknown run and the
+       unviewable one read identically. */
+    if (!row) return { run: run || null, found: false, entries: [], stopped: null,
+                       limit: cap, truncated: false };
+    /* `cap + 1` asked for, `cap` delivered — `op=exportlog`'s own mechanism, and
+       the extra row is the whole difference between "the run made 200
+       observations" and "here are its first 200". ASCENDING order is KEPT: this
+       is not `op=exportlog`, whose administrator wants the newest export. §14b.7
+       replays this log FROM THE START, so the cut must fall at the END. */
+    const page = this.#rows(
       `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
-       FROM ai_run_log WHERE run = ? ORDER BY seq`, run)
+       FROM ai_run_log WHERE run = ? ORDER BY seq LIMIT ?`, run, cap + 1);
+    const entries = page.slice(0, cap)
       .map((e) => ({ ...e, governed: e.governed === 1, terminal: e.terminal === 1 }));
     return { run, found: true, status: row.status, entries,
+             limit: cap, truncated: page.length > cap,
              stopped: row.stopped_bound
                ? { bound: row.stopped_bound, condition: row.stopped_condition, at: row.stopped_at }
                : null,
@@ -17281,7 +17373,8 @@ export class Store extends DurableObject {
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
-                                        viewer: url.searchParams.get("viewer") }),
+                                        viewer: url.searchParams.get("viewer"),
+                                        limit: url.searchParams.get("limit") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

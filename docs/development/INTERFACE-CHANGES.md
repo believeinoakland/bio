@@ -1658,3 +1658,66 @@ confirms the pin bites: making `op=meaningrows` answer a bare array fails
 
 **SETTLED. I3 10.0.0 → 10.1.0.** I5 NOT touched. Open against it: nothing. **Related and NOT closed by it: D-227** — these suites assert the statement carries its `LIMIT` and that the published cap is the applied cap, which is the HONESTY half; **an unbounded derivation feeding a bounded answer would still pass**, and that is D-227's subject, riding REC-66. PL-9 states that limit in its own suite rather than leaving it to be discovered.
 
+
+---
+
+## IC-27 · I3: `op=airunlog` applies a bound where it applied none, and publishes it · PROPOSED 2026-08-07 (REC-70) — the RESOLUTION and the version bump are CONDUCT's
+
+### 1 · PROPOSED
+
+**Interface:** I3 (the op contracts), owned by RECORD, currently 10.1.0. **I5 is NOT touched** — no table, column, index or `purge` change.
+
+**The change, on one read op.** `op=airunlog` previously returned **every row of a run's append-only observation log**, with no bound, no paging and no truncation marker. It now:
+
+- applies a bound — **default 200, ceiling 5000** — and accepts an OPTIONAL `limit` parameter it previously ignored;
+- publishes `limit`, the cap **AFTER clamping** (never the number the caller asked for), and `truncated`, whether it bit;
+- publishes both keys **on the not-found answer as well**, because REC-30's rule is that an unknown run and an unviewable one must read identically, and an envelope present on one and absent from the other is a difference a caller can measure.
+
+**Nothing else moves.** `run`, `found`, `status`, `entries` and their fields, `stopped`, and the four `vocabulary` sets are byte-unchanged; the `ORDER BY seq` ASCENDING ordering is unchanged; the `#bundleGate` on `context_id` is unchanged; the bound is asserted **viewer-independent**; the vocabularies are **not** truncated with the entries, because they describe the rows rather than being rows.
+
+**NEITHER FIGURE IS NEW, and the PAIR is deliberately not copied whole from either sibling** — this log has two readers with opposite needs and no existing pair serves both:
+
+- **200** is `op=exportlog`'s default (`EXPORT_LOG_LIMIT_DEFAULT`, REC-57), the plane's **only other append-only, `seq`-ordered log read**. The default belongs to the reader who is CHECKING a run (§11: *"the log is what lets anyone else CHECK"*), and a checker wants a page.
+- **5000** is `op=list`'s ceiling, which `op=projection` reused at REC-59 and the meaning layer reused at REC-60 rather than minting a second. The ceiling belongs to the OTHER reader — **§14b.7's RESUMED run**, which reads its own log to continue rather than restart, and for which a cut it cannot see is work silently redone. `op=exportlog`'s 1000 was sized for an administrator scrolling exports; the meaning layer's 500 default is sized for a member exploring a graph that grows on D-224's quadratic curve. A run log is neither.
+
+**ONE ORDERING DECISION IS STATED RATHER THAN INHERITED.** `op=exportlog` orders `seq DESC` — an administrator wants the newest export. This op keeps ASCENDING order, so **the cut falls at the END**. Reusing the sibling's ordering along with its default would have handed §14b.7's resumed run the END of its own history and called it the beginning.
+
+### 2 · WHY, AND WHY IT IS A BREAK RATHER THAN ADDITIVE
+
+The keys are additive. **The bound is not**: a caller that received every observation today receives the first 200 tomorrow. Filed as a break for IC-3's settled reason, applied at IC-20, IC-22, IC-24 and IC-25 — *recording a break as additive because nobody happened to be reading it would teach this registry to lie.*
+
+The defect is **BOUNDEDNESS, not honesty** (REC-60's distinction). The op applied no bound, so it published none and told no lie; what it did was **grow without limit**. A run's log grows **one row per tick and nothing caps the tick count** — `RUN_BOUNDS` bounds fetches, sub-sessions and wall time, never observations.
+
+### 3 · WHAT THIS IC IS ACTUALLY ABOUT, AND IT IS NOT THE OP
+
+**REC-70's subject is that the ratchet built to catch exactly this class did not see it.** `test/meaning-bounds.test.mjs` exists to fail the build when a new read publishes a collection off an unbounded row source. `op=airunlog` appeared in **none of its three buckets**, so nothing went red; it was found by hand, by CONDUCT, at UI-49's integration.
+
+**THE CAUSE, NAMED:** that walk graded only return objects containing the literal **`ok: true`**, and this method's success answer says **`found: true`**. One success spelling was hard-coded as if it were the only one — four lines after the same file wrote its bound and completeness keys as SETS *"because the plane answers the second in five spellings on purpose"*. The instrument avoided the one-vocabulary mistake in its leaves and committed it at its root.
+
+**MEASURED 2026-08-07, and it was never one op.** `store.mjs` dispatches **156** ops; the walk graded **55**. **27 dispatched ops answer success without `ok: true`** — `found: true` (`op=airunlog`, `op=airun`, `op=airuntick`) or **no marker at all** (`op=signerlist` → `{ signers }`, `op=publishedlist` → `{ bundles, cases }`, `op=inboxlist` → `{ inbox }`, `op=memberlist`, `op=verify`, `op=index`, `op=thread`, …). **Fourteen of them were BARE all along.** The walk now grades every return that does not DECLARE ITSELF A REFUSAL (`ok: false`), reaching **82 of 156**, and its bare-roster ratchet is corrected **27 → 40** with a dated reason. **The old 27 was never a smaller problem; it was a smaller measurement.**
+
+**AND THE FIX IS NOT `ok: true` ON THIS METHOD.** Adding the marker would have bought a green walk and left the blindness for the next op that spells success a third way. `aiRunLog` keeps `found: true` deliberately, which is what makes the corrected walk's verdict on it evidence rather than a coincidence.
+
+### 4 · CONSUMER IMPACT, MEASURED IN THIS TREE AND NOT INHERITED
+
+Walked over the repository (`grep -a`, excluding `node_modules`, `dist/`, `.git`):
+
+- **NO CALLER ANYWHERE REACHES `op=airunlog`.** `civicos-ui` mentions it only in prose and **pins that it does NOT call it** — `surface-registry.test.mjs` ARM X5 and ARM Y14 both assert the `__AI_SESSION__` block asks `op=airun` *"and nothing else"*. UI-49 decided the observation log is a separate surface and did not build it.
+- **`newgroup`, `docprofile`, `pdf-worker`, `tools` — NOT AFFECTED**, no call site.
+- **The battery:** `airun.test.mjs` drives `op=airunlog` at 6 sites, none asking for more than 200 rows, and **none broke**.
+
+**ONE STALE REASON CREATED BY THIS CHANGE, and it is a UI path this session does not edit.** `civicos-ui/app.html` (UI-49's `__AI_SESSION__` block) gives four numbered reasons for keeping the log a separate surface, and **reason 4 is *"AND IT PUBLISHES AN UNBOUNDED COLLECTION… a surface with a bound it cannot state"***. That reason is now false. **Reasons 1–3 are untouched and the decision stands** — this does not reopen it, it removes one of its supports. Delegated to UI in `CLAIMS.md` 2026-08-07. No suite fails; nothing announces it, which is why it is written here.
+
+### 5 · WHAT IS NOT CLAIMED
+
+**No cursor is minted** (REC-55's declined-second-copy rule), so **a caller cut at the 5000 ceiling has no way past it** — a run emitting more than 5000 observations cannot replay its log whole through this op. Stated here rather than discovered later. **This closes no oracle and fixes no disclosure**; the ground is unbounded growth and nothing else.
+
+**And D-227 is open and applies here.** The corrected walk grades what a method PUBLISHES, so an envelope left honest over a scan whose `LIMIT ?` was removed still reads as bounded — CONDUCT measured that at REC-60's integration, and REC-70's negative control **(1b) reproduces it on this op**. This op's SQL bound is therefore pinned **directly, off its own comment-stripped segment**, rather than inferred from its answer. That closes the gap for `op=airunlog`; **it does not close D-227**, which still holds for the three ops (`op=readingname`, `op=queue`, `op=audit`) the walk grades BOUNDED while they carry an unbounded scan beside the bounded one.
+
+### 6 · CONSUMER RESPONSES
+
+Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale comment, delegated with its exact site.
+
+### 7 · STATUS
+
+**PROPOSED, with the code landed on REC-70's branch.** **The I3 version bump and the RESOLUTION are NOT taken by this session** — the registry entry is CONDUCT's to move at integration, per IC-25's precedent. RECORD's position: the bound is right. Before this change the truth was available to nobody; after it the truth is on the wire and there is no consumer to break.

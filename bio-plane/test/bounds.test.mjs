@@ -243,9 +243,20 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    correction REC-60 made when three uncapped reads gained a bound, arriving from
    the other direction. The label no longer counts "wider than the pair", because
    a stale sentence beside a corrected number is the drift this suite exists to
-   catch. */
-t("WALK: the roster is SIXTEEN ops — the sweep is the item, not the two the item named",
-  OPS.size, 16);
+   catch.
+
+   CORRECTED AGAIN 2026-08-07 (REC-70), not exempted, and 16 was the true
+   measurement on the day PL-9 wrote it. 16 -> 17: `op=airunlog` gained a cap.
+   It is a plain JOIN — a read that carried no bound now carries one — and the
+   arrival is worth a sentence because of HOW it was found. It was NOT found by
+   this walk, which enumerates methods that carry a cap and therefore cannot see
+   a method that carries none; and it was NOT found by the sibling walk built for
+   exactly that blind spot either, because `meaning-bounds.test.mjs` graded only
+   returns spelling success `ok: true` while `aiRunLog` answers `found: true`.
+   TWO instruments, each blind to it for its own reason, and it was found by hand
+   at another item's integration. Both are corrected; both now name it. */
+t("WALK: the roster is SEVENTEEN ops — the sweep is the item, not the two the item named",
+  OPS.size, 17);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -410,6 +421,27 @@ t("FIXTURE ARMS THE TRAP: one capture carries TWO resolutions, so op=resolutions
    ONE DESCRIPTOR PER ROSTER OP: how to drive it, and how IT says "there is
    more". The `more` reader is each op's OWN vocabulary — see the header on why
    a fifth spelling is not minted. */
+/* REC-70, 2026-08-07: the observation log needs a RUN with more than one entry
+   before its bound can be shown to bite. Driven here rather than borrowed,
+   because a descriptor on this roster that could not actually be called is the
+   coverage-on-paper shape both these files exist to catch. */
+const R70_RUN = "RUN-2026-0807-bounds70";
+{
+  const opened = await POST(`op=airunopen&token=mem-r57`, {
+    run: R70_RUN, contextType: "inquiry", contextId: "INFO-2026-0001-r57",
+    label: "REC-70 fixture — the observation log, bounded", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`REC-70 fixture airunopen: ${JSON.stringify(opened)}`);
+  const ticked = await POST(`op=airuntick&token=mem-r57`, { run: R70_RUN, leaseMs: 600000,
+    log: [1, 2, 3].map((i) => ({ level: "document", subject: `observation:r70-${i}`,
+      state: "PRESENT", detail: `REC-70 fixture observation ${i}` })) });
+  if (ticked?.ticked !== true) throw new Error(`REC-70 fixture airuntick: ${JSON.stringify(ticked)}`);
+}
+t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=airunlog's cap of 1 cuts it",
+  (await GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=5000`)).entries?.length, 3);
+
 const DRIVEN = [
   { op: "readingname", bite: 1, whole: 500,
     drive: (n) => GET(`op=readingname&token=mem-r57&entity=${ENT}&limit=${n}`),
@@ -483,6 +515,22 @@ const DRIVEN = [
     says: "`total` beside `limit` and `offset`",
     lost: "whether a basis was returned WHOLE or cut — and a basis returned in part reads as a basis, which "
         + "is a record claiming more than it can support" },
+  /* REC-70, 2026-08-07: the OBSERVATION LOG, and it reached this roster the same
+     way REC-60's three did — it carried no cap, so a roster built from methods
+     that carry one could not enumerate it. It answers in `op=exportlog`'s
+     vocabulary (`limit` beside `truncated`) because op=exportlog is the plane's
+     only other append-only, `seq`-ordered log and this is its sibling by KIND,
+     not a twelfth spelling.
+     WHY IT IS HERE AND NOT MERELY IN meaning-bounds.test.mjs: that walk found it
+     only after REC-70 corrected its success-marker gate — it had been grading
+     just `ok: true` returns while this method answers `found: true`, hiding 27
+     dispatched ops. Two instruments now name this op independently, which is the
+     point: neither one's blind spot is the other's. */
+  { op: "airunlog", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are the run's observations or its first N — and §14b.7's RESUMED run reads its own "
+        + "log to continue rather than restart, so a cut it cannot see is work silently redone" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");
