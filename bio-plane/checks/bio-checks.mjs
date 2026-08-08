@@ -7561,3 +7561,421 @@ export const QUEUE_MINT_CHECKS = {
       + 'list refuses until it is right. Nothing has been lost.',
   },
 };
+
+/* =========================================================================
+ * REC-64 / DEC-49 — THE MACHINE/MEMBER BOUNDARY, IN WORDS.
+ *
+ * **THIS FAMILY EXISTS BECAUSE THREE ITEMS CONVERGED ON ONE SET OF TWELVE FROM
+ * THREE DIRECTIONS.** SK-1 measured that the DOCTRINE PACK — the artifact whose
+ * entire job is telling an agent what it may not do — could render ONE machine
+ * fence of twelve, because eleven of the twelve fence codes carried no canned
+ * translation. D-229 measured the SAME twelve from the opposite side: eleven
+ * were not doing the work at all, an unrelated payload guard was. REC-73 then
+ * drove all twelve under COMPLETE payloads and found that neutering one
+ * predicate lets TEN of them go all the way through — a machine released a
+ * document to verified, published a case, divided a question, and set the
+ * group's required evidentiary strength.
+ *
+ * So these eleven are REC-64's first eleven translations, and the ORDER is the
+ * point: a fence that cannot be explained in words is a fence a member meets as
+ * machine vocabulary at the moment they are told no.
+ *
+ * WHY A FAMILY RATHER THAN ROWS SPREAD ACROSS THE EXISTING ONES. SK-1's rule is
+ * that a family is a FLOOR and minting one for two rows buys slack for
+ * everybody else's walk — and it was right about two rows. Eleven is a different
+ * question, and these eleven are ONE doctrine (DEC-55.5, D-199.5, REC-46's
+ * single predicate) rather than eleven unrelated conditions. Spreading them over
+ * VERSION_ACT_CHECKS, SUGGEST_CHECKS and seven others would put one rule in nine
+ * places, which is the drift every other line here defends against.
+ *
+ * THE TWELFTH IS DELIBERATELY NOT HERE. The move-version fence already carries a
+ * row in VERSION_ACT_CHECKS and moving it would give one condition two homes for
+ * the duration of a rename. It is the one fence the pack could already render,
+ * and `skillpack.mjs`'s `machineFences` harvests ACROSS families by code prefix,
+ * so the pack renders all twelve without this family owning the twelfth.
+ *
+ * BUILD-TIME OR RUNTIME LOOKUP — DEC-49 left the choice open and this is it,
+ * stated at the site as the ruling requires. **RUNTIME, from this module.** The
+ * refusal sites keep their string literal so `check-refusal-codes.mjs` arm C can
+ * COMPARE it against the row (a code passed as a variable is a code arm C reads
+ * past and checks nothing — measured: seven of thirteen governed sites once read
+ * 776 lines and compared zero), and every CONSUMER — the doctrine pack, the
+ * surfaces, `op=audit` — reads the translation from THIS object at the moment it
+ * renders. Nothing is baked, so an instance running an older surface against a
+ * newer plane gets the plane's current wording rather than a copy frozen at
+ * build. A build-time bake would have been the faster render and would have
+ * re-created the exact drift REC-43 closed on the co-attestation fence.
+ *
+ * EVERY `where` BELOW IS A REGION, NOT A FUNCTION, AND THAT IS NOT STYLE. These
+ * eleven fences sit at the TOP of eleven of the plane's largest member-facing
+ * methods, each of which mints a dozen further refusals that are not this
+ * family's business. A whole-function `where` would conscript every one of them
+ * into DEC-49's scope the way PL-1's two rows conscripted 32 refusals inside
+ * `promote` and turned main's UI harness red (REC-71). A governed SITE and a
+ * governed FUNCTION are different claims, and this family makes the first.
+ * ========================================================================= */
+export const MACHINE_FENCE_CHECKS = {
+  MACHINE_CANNOT_RELEASE: {
+    check: 'C-32.1',
+    where: 'src/store.mjs release > is-machine-release',
+    translation: 'Moving documents from collected to verified is a decision a named person makes '
+      + 'and signs. The credential that asked here is an automated one, so it can gather the batch '
+      + 'and lay out the review, and cannot be the one who says the batch is good. Sign in and '
+      + 'release it yourself.',
+  },
+  MACHINE_CANNOT_CONCLUDE: {
+    check: 'C-32.2',
+    where: 'src/store.mjs conclude > is-machine-conclude',
+    translation: 'A conclusion is a person saying what they think the record shows, and it carries '
+      + 'their name for as long as the record lasts. The credential that asked here is an automated '
+      + 'one: it may raise the question, gather what bears on it and draft the answer, and it may '
+      + 'never be the one who answers. Sign in to conclude.',
+  },
+  MACHINE_CANNOT_MOVE_ACTION: {
+    check: 'C-32.3',
+    where: 'src/store.mjs actionMove > is-machine-move-action',
+    translation: 'Advancing an action is a decision to reach outside this system, or to declare '
+      + 'that reaching out is finished, and either way somebody is answerable for it. The '
+      + 'credential that asked here is an automated one, so it can prepare the action and cannot '
+      + 'move it. Sign in to move it yourself.',
+  },
+  MACHINE_CANNOT_CORRESPOND: {
+    check: 'C-32.4',
+    where: 'src/store.mjs actionCorrespond > is-machine-correspond',
+    translation: 'Recording that an exchange happened is testimony: on this path the entry itself '
+      + 'is the evidence, so somebody has to be standing behind it. The credential that asked here '
+      + 'is an automated one — it can capture bytes, and it cannot swear that a conversation took '
+      + 'place. Sign in to record it.',
+  },
+  MACHINE_CANNOT_REOPEN: {
+    check: 'C-32.5',
+    where: 'src/store.mjs reopen > is-machine-reopen',
+    translation: 'Reopening overturns something the group decided to set down, and that judgement '
+      + 'belongs to a person who will be named beside it. The credential that asked here is an '
+      + 'automated one: it may raise a question and work one, and may not undo the group\'s own '
+      + 'disposition. Sign in to reopen it.',
+  },
+  MACHINE_CANNOT_PUBLISH: {
+    check: 'C-32.6',
+    where: 'src/store.mjs publishCase > is-machine-publish',
+    translation: 'Publishing puts the group\'s name on a case, together with an assertion that it '
+      + 'is complete and a stated position on putting it to the people it concerns. Both of those '
+      + 'are declared judgements, and the credential that asked here is an automated one. It can '
+      + 'assemble the case; sign in to publish it.',
+  },
+  MACHINE_CANNOT_DIVIDE: {
+    check: 'C-32.7',
+    where: 'src/store.mjs divide > is-machine-divide',
+    translation: 'Dividing a question says the group asked one thing when it was really asking '
+      + 'two, and that is a judgement about the group\'s own work. The credential that asked here '
+      + 'is an automated one: it may raise questions and gather what they rest on, and may not '
+      + 'restructure them. Sign in to divide it.',
+  },
+  MACHINE_CANNOT_GROUND: {
+    check: 'C-32.8',
+    where: 'src/store.mjs groundInquiry > is-machine-ground',
+    translation: 'Grounding says some of the reasons behind an answer are strong enough to carry '
+      + 'it on their own, and it is the one act here that makes a finding stronger rather than '
+      + 'weaker. That decision needs a person behind it, and the credential that asked is an '
+      + 'automated one. Sign in to ground it.',
+  },
+  MACHINE_CANNOT_DECLARE: {
+    check: 'C-32.9',
+    where: 'src/store.mjs strengthBarSet > is-machine-strength-bar',
+    translation: 'How much evidence this group requires of itself is the group\'s own declaration '
+      + 'about the standard it works to, and everything filed afterwards is measured against it. '
+      + 'An automated credential cannot set that bar for the people it works for. Sign in to '
+      + 'change it.',
+  },
+  MACHINE_CANNOT_FORWARD: {
+    check: 'C-32.10',
+    where: 'src/store.mjs taskForward > is-machine-forward',
+    translation: 'Forwarding hands an obligation to a named person, and deciding who is better '
+      + 'placed to answer it is a judgement about people rather than about records. The credential '
+      + 'that asked here is an automated one: it can surface the work and route it as it arrives, '
+      + 'and cannot re-address it. Sign in to forward it.',
+  },
+  MACHINE_CANNOT_RESOLVE: {
+    check: 'C-32.11',
+    where: 'src/store.mjs taskResolve > is-machine-resolve',
+    translation: 'Closing an obligation says the thing the record asked for has been answered, and '
+      + 'somebody has to be willing to say that. The credential that asked here is an automated '
+      + 'one — it may surface the work and prepare what it needs, and closing work that is '
+      + 'nobody\'s is still closing it. Sign in to resolve it.',
+  },
+};
+
+/* =========================================================================
+ * REC-64 / DEC-49 — THE SINGLE-HOMED TAIL OF THE REACH GAP.
+ *
+ * **WHY THESE AND NOT THE OTHERS, AND THE ANSWER IS A MEASUREMENT RATHER THAN A
+ * PREFERENCE.** `check-refusal-codes.mjs` names the reach gap code by code on
+ * every run. Walking that list against the plane's source shows it splits in
+ * two, and the split is what sizes the rest of this item:
+ *
+ *   - a code minted at exactly ONE site can be given a row here, because a
+ *     `where` names THE SMALLEST SPAN IN WHICH THE ROW'S REFUSAL IS ENFORCED
+ *     and there is exactly one such span. Those are the rows below.
+ *   - a code minted at SEVERAL sites cannot, and this is the finding. A row
+ *     holds ONE `where`, and one code may not hold two rows — arm A refuses a
+ *     duplicated check number and a duplicated translation, and two rows for one
+ *     code is two wordings for one condition, the drift the guard exists to
+ *     stop. So a `where` naming one of nine sites would claim a span the code is
+ *     not confined to, which is REC-71's overstatement wearing the other face.
+ *     `NO_SUCH_BUNDLE` is minted at 15 sites, `NO_REASON` at 12, `NO_ENTITY` at
+ *     10, `NO_SUCH_PROJECT` at 9, `NOT_A_PROJECT` at 8, `NOT_AN_INQUIRY` at 7.
+ *     Those are left, deliberately, with the count stated.
+ *
+ * **THE HONEST SHAPE FOR THE MULTI-SITE HALF IS NOT A ROW, AND SAYING SO IS THIS
+ * FAMILY'S REAL OUTPUT.** It is either a `where` that can name a SET of spans,
+ * or the refusals consolidated behind one helper so there IS one site. Both are
+ * changes to the guard or to the plane's shape rather than translations, and
+ * both are bigger than the rows below. Routed rather than attempted.
+ *
+ * Every `where` below is a REGION for the reason C-32's header gives: these
+ * conditions sit inside methods that mint a dozen refusals which are not this
+ * family's business, and a whole-function `where` conscripts every one of them.
+ * ========================================================================= */
+export const ACT_SHAPE_CHECKS = {
+  NO_CONCLUSION: {
+    check: 'C-33.1',
+    where: 'src/store.mjs conclude > is-conclude-answer',
+    translation: 'Concluding records what was concluded, and this one says nothing. If the honest '
+      + 'answer is that the group could not settle it, write that down — an answer of undetermined '
+      + 'is a real answer here and is stated rather than left blank.',
+  },
+  NO_FALSIFIER: {
+    check: 'C-33.2',
+    where: 'src/store.mjs conclude > is-conclude-answer',
+    translation: 'A conclusion has to say what would overturn it. Without that nobody can check the '
+      + 'finding, including the person who wrote it, and a finding that cannot be checked claims '
+      + 'more than the evidence behind it can carry.',
+  },
+  NO_RESOLUTION: {
+    check: 'C-33.3',
+    where: 'src/store.mjs actionMove > is-move-resolution',
+    translation: 'An action that has ended says how it ended, and this move does not. The record '
+      + 'keeps a closed set of endings so that a reader later can tell what actually happened '
+      + 'rather than only that something stopped.',
+  },
+  RESOLUTION_WITHOUT_RESOLVING: {
+    check: 'C-33.4',
+    where: 'src/store.mjs actionMove > is-move-resolution',
+    translation: 'This move says how the action ended while moving it somewhere that is not an '
+      + 'ending. Recording an outcome the action has not reached would put a result in the record '
+      + 'before there is one.',
+  },
+  BAD_DIRECTION: {
+    check: 'C-33.5',
+    where: 'src/store.mjs actionCorrespond > is-correspond-entry',
+    translation: 'Every entry in this ledger says which way the exchange went, and this one names '
+      + 'something the record does not use. A reply that never came is recorded as a non-response '
+      + 'with the date it was due, rather than left out.',
+  },
+  BAD_DATE: {
+    check: 'C-33.6',
+    where: 'src/store.mjs actionCorrespond > is-correspond-entry',
+    translation: 'Every entry here carries a calendar date written as four digits, two digits and '
+      + 'two digits. A non-response is dated too — by when the reply was due — because an undated '
+      + 'exchange cannot be placed against anything else in the record.',
+  },
+  CAPTURE_AND_TESTIMONY: {
+    check: 'C-33.7',
+    where: 'src/store.mjs actionCorrespond > is-correspond-entry',
+    translation: 'An entry holds either the captured material or a named person who can speak to '
+      + 'the exchange, and never both. A summary sitting beside the real thing is what a reader '
+      + 'would quote instead of the thing the group can actually defend.',
+  },
+  NEITHER_CAPTURE_NOR_TESTIMONY: {
+    check: 'C-33.8',
+    where: 'src/store.mjs actionCorrespond > is-correspond-entry',
+    translation: 'This entry offers neither captured material nor a named person behind it, so '
+      + 'there is no way for anyone to check that the exchange happened. An assertion with nothing '
+      + 'to check it against is the one thing this ledger will not hold.',
+  },
+  UNREGISTERED_ARTIFACT: {
+    check: 'C-33.9',
+    where: 'src/store.mjs actionCorrespond > is-correspond-artifact',
+    translation: 'The material named here is not held in this store, so the entry would point at '
+      + 'something nobody can open. Capture it first, or record a named person who can speak to '
+      + 'the exchange instead — those are the two honest ways to hold one.',
+  },
+  NO_ACKNOWLEDGMENT: {
+    check: 'C-33.10',
+    where: 'src/store.mjs release > is-release-account',
+    translation: 'Releasing a batch at once records your explicit acknowledgment that the batch is '
+      + 'of a piece and that you weighed the risk of doing them together. Without it the record '
+      + 'shows only that a button was pressed.',
+  },
+  NO_MITIGATION: {
+    check: 'C-33.11',
+    where: 'src/store.mjs release > is-release-account',
+    translation: 'Releasing a batch at once records what you actually did to check it — what was '
+      + 'sampled and what was verified. A concrete note can be audited by somebody later; silence '
+      + 'cannot be audited at all.',
+  },
+  ENTRY_REQUIREMENTS: {
+    check: 'C-33.12',
+    where: 'src/store.mjs release > is-release-entry',
+    translation: 'Some of these documents are missing something the verified state requires, and '
+      + 'releasing them as they stand would produce records the catalog rejects the moment they '
+      + 'exist. The offending documents are named so they can be fixed rather than guessed at.',
+  },
+  NOT_INQUIRIES: {
+    check: 'C-33.13',
+    where: 'src/store.mjs dispose > is-dispose-inquiries',
+    translation: 'This act moves a question along, and the selection carries things that are not '
+      + 'questions. The whole set is refused rather than quietly narrowed to the part that fits, '
+      + 'because a set that acted on less than you selected is a set you were not shown.',
+  },
+  NO_STATEMENT: {
+    check: 'C-33.14',
+    where: 'src/store.mjs publishCase > is-publish-statement',
+    translation: 'A published case has to say what it does NOT cover. A case that is silent about '
+      + 'its own limits is claiming to cover everything, and that is the overclaim this record '
+      + 'exists to refuse.',
+  },
+  BAD_NOTE: {
+    check: 'C-33.15',
+    where: 'src/store.mjs cite > is-cite-note',
+    translation: 'A note here is at most two hundred characters and cannot contain a quotation '
+      + 'mark, a backslash or a line break. Those characters would silently reshape the document '
+      + 'rather than appear in it, so the note is declined instead of mangled.',
+  },
+  NO_ROLE: {
+    check: 'C-33.16',
+    where: 'src/store.mjs cite > is-cite-role',
+    translation: 'A leg of a question\'s basis has to say what the material DOES for the answer, '
+      + 'and this one does not say. It is never assumed: material that cuts against the case is '
+      + 'first-class here, and guessing would put a claim about your reasoning in the record that '
+      + 'you did not make.',
+  },
+  BAD_ROLE: {
+    check: 'C-33.17',
+    where: 'src/store.mjs cite > is-cite-role',
+    translation: 'That is not one of the parts a piece of basis can play. The set is closed and is '
+      + 'published beside the act itself, so the choices can be read rather than remembered.',
+  },
+  ROLE_NOT_APPLICABLE: {
+    check: 'C-33.18',
+    where: 'src/store.mjs cite > is-cite-role',
+    translation: 'What material does for an answer is a property of a question\'s basis, and the '
+      + 'thing citing here is a case. A case\'s citation carries no such part, so this one would '
+      + 'be dropped rather than recorded — and a field stated in one place and honoured nowhere is '
+      + 'how a record and the pages built from it drift apart.',
+  },
+  SEVERED_EDGE: {
+    check: 'C-33.19',
+    where: 'src/store.mjs cite > is-cite-severed',
+    translation: 'Somebody already recorded a decision to cut this dependency, which is different '
+      + 'from there never having been one. Citing it again would neither reverse that decision nor '
+      + 'step around it, so putting the link back is a separate act that records its own reason.',
+  },
+  NO_SUCH_SELECTION: {
+    check: 'C-33.20',
+    where: 'src/store.mjs selectionResolve > is-selection-known',
+    translation: 'That set of things is not one this store can find: either it never existed here, '
+      + 'it was let go, or it timed out. Selections are deliberately short-lived so that an act '
+      + 'never runs against a list somebody assembled a long time ago.',
+  },
+  CAS_STALE: {
+    check: 'C-33.21',
+    where: 'src/store.mjs promote > is-promote-cas',
+    translation: 'Somebody else changed this document since you last read it, so writing now would '
+      + 'quietly discard their work. Read it again, fold your change into what is there, and write '
+      + 'once more.',
+  },
+  SELF_BASIS: {
+    check: 'C-33.22',
+    where: 'src/store.mjs promote > is-basis-acyclic',
+    translation: 'A question cannot be the evidence for its own answer. This write would have it '
+      + 'rest on itself, which reads as support and adds nothing anybody outside could check.',
+  },
+  BASIS_CYCLE: {
+    check: 'C-33.23',
+    where: 'src/store.mjs promote > is-basis-acyclic',
+    translation: 'This write would close a loop: the chain it would join already rests, somewhere '
+      + 'further along, on the thing being written. The path is named so the loop can be seen '
+      + 'rather than re-derived, and support that circles back is support that rests on nothing.',
+  },
+  FILES_DROPPED: {
+    check: 'C-33.24',
+    where: 'src/store.mjs promote > is-promote-files',
+    translation: 'This write would remove files the previous revision had, and it does not say it '
+      + 'means to. Carry them forward, or name them for deletion on purpose — losing part of a '
+      + 'document by omission is not something the record will do quietly.',
+  },
+  NO_ALIAS: {
+    check: 'C-33.25',
+    where: 'src/store.mjs addEntityAlias > is-alias-named',
+    translation: 'Another name for something needs to actually be a name. This one is empty once '
+      + 'the spacing and punctuation are taken off, so there would be nothing for anybody to '
+      + 'search on later.',
+  },
+  UNKNOWN_AFTER: {
+    check: 'C-33.26',
+    where: 'src/store.mjs defineProgression > is-progression-order',
+    translation: 'One step here says it comes after a step this sequence does not contain, so the '
+      + 'order cannot be worked out. Name a step that exists, or leave the ordering off and let it '
+      + 'stand on its own.',
+  },
+  KIND_NOT_PERSONAL: {
+    check: 'C-33.27',
+    where: 'src/store.mjs queueMute > is-mute-class',
+    translation: 'Setting this aside would be a change everybody sees rather than a private choice '
+      + 'of yours, and that is a decision the group takes together rather than one this control '
+      + 'makes. The kinds you can quiet for yourself are listed beside the refusal.',
+  },
+  LAST_OWNER: {
+    check: 'C-33.28',
+    where: 'src/store.mjs projectOwnerRemove > is-owner-floor',
+    translation: 'A project always has at least one owner, so the last one cannot be removed — the '
+      + 'result would be work nobody is answerable for. Add another owner first, or stand the '
+      + 'project down.',
+  },
+  /* ---------------------------------------------------------------------------
+     UI-38's §14a RIDER, AND IT IS IN THIS FAMILY BECAUSE ANOTHER FAMILY'S SUITE
+     REFUSED IT — WHICH IS THE CORRECT OUTCOME AND IS RECORDED RATHER THAN
+     WORKED AROUND.
+
+     REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
+     open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
+     allocation must name its enforcement site in a PURE CHECK MODULE**
+     (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
+     pure function. This condition is enforced in `store.mjs` at the run-open
+     door, so it does not satisfy that invariant and does not belong in C-22. The
+     ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
+     invariant, and this one is load-bearing — it is what lets `op=audit` reach
+     every C-22 condition without opening the store.
+
+     WHAT IT IS. §14a promises the running-session surface SAYS SO when the
+     capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
+     guards: *"when no token resolves the capability is UNAVAILABLE and says so —
+     never a silent no-op"*. UI-38 correctly LEFT that sentence rather than
+     authoring it at the surface, because member-facing refusal wording is
+     DEC-49's. The site already refused this condition — with NO CODE, so a
+     surface could only render the operator's sentence verbatim or blank, the
+     exact state DEC-49 ended.
+
+     THE TRANSLATION SAYS "NOTHING RAN" IN SO MANY WORDS, on purpose: an
+     unavailable capability must not be indistinguishable from a run that looked
+     and found nothing. The second is a claim about the world; the first is a fact
+     about us. That is `CLAUDE.md`'s "our governor refusing is not the source
+     failing", arriving at the run door.
+
+     ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
+     REC-64's work — and the reason is a defect in the guard rather than a
+     judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
+     C's matcher is `ok: false`, so a REGION here would judge zero refusals and
+     FAIL as a drifted marker. The whole-function form is honest at this site
+     (every refusal `aiRunOpen` makes is a condition of opening a run) and the
+     blindness is measured and delegated at the guard's own `codesChecked` floor.
+     --------------------------------------------------------------------------- */
+  AI_RUN_CAPABILITY_UNAVAILABLE: {
+    check: 'C-33.29',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because this instance could not find an account to run it under. '
+      + 'That is a fact about our setup and not an answer about your question: no searching '
+      + 'happened, so nothing here should be read as having looked and found nothing.',
+  },
+};

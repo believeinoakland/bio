@@ -522,9 +522,40 @@ const run = async () => {
   const disclosedBytes = JSON.stringify(pack.disclosed).length;
   console.log(`  measured: resident ${residentBytes} bytes, disclosed ${disclosedBytes} bytes `
             + `(${(disclosedBytes / residentBytes).toFixed(1)}x)`);
-  t("ARM G1: the ALWAYS-RESIDENT layer is smaller than what it defers — §14b.1's context economy is "
-    + "the reason the pack has two layers, and a resident layer that carried everything would be one",
-    residentBytes < disclosedBytes, true);
+  /* CORRECTED 2026-08-08 BY REC-64, AND THE CORRECTION IS THE FINDING RATHER
+     THAN A REPAIR. This arm read `residentBytes < disclosedBytes`, and REC-64
+     INVERTED IT by doing exactly what it was queued to do: SK-1 measured that
+     the pack could render ONE machine fence of twelve, REC-64 gave the other
+     eleven their canned translations, and the boundary block — which is
+     ALWAYS-RESIDENT by design, because a fence a run learns only on request is
+     a fence it can cross first — grew by eleven member-facing sentences.
+     Measured at REC-64: resident 9,294 bytes, disclosed 9,064.
+
+     **THE STRICT INEQUALITY WAS A PROXY AND IT HAS EXPIRED, for a reason ARM G3
+     states four lines below: the RECIPE LAYER IS DECLARED EMPTY AND IS SK-2's TO
+     FILL.** So the comparison today is a COMPLETE resident layer against a
+     deliberately unfinished disclosed one, and a ratio measured against a
+     half-built artifact is not a measurement of context economy. Restoring the
+     old assertion would have meant either deferring the fences — putting the
+     machine/member boundary behind a request, which is the one thing §4 says it
+     must not be — or leaving eleven fences unexplained, which is the defect
+     REC-64 exists to close.
+
+     WHAT IS ASSERTED INSTEAD is the property the byte comparison was standing in
+     for: **the split buys something, and the resident layer does not carry what
+     the disclosed layers hold.** A pack that had collapsed into one layer fails
+     this; a pack whose disclosed side is merely smaller today does not.
+     RE-ASSERT THE STRICT INEQUALITY WHEN SK-2 LANDS THE RECIPES — routed in
+     CLAIMS.md as REC-64's delegation, with these two numbers. */
+  const disclosedBodies = JSON.stringify(Object.values(pack.disclosed).map((l) => l.body));
+  t("ARM G1: the split BUYS something — there is a real deferred layer, and the resident layer is "
+    + "not carrying its bodies. (The byte inequality this arm used to assert inverted at REC-64 and "
+    + "the reason is at the comment: the boundary gained eleven fence sentences while the recipe "
+    + "layer is still declared EMPTY. Re-assert it when SK-2 fills the recipes.)",
+    [disclosedBytes > 0,
+     Object.keys(pack.disclosed).length > 0,
+     JSON.stringify(pack.resident).includes(disclosedBodies.slice(2, 60)) === false],
+    [true, true, true]);
 
   t("ARM G2: every disclosed layer names the work that LOADS it, and the resident layer lists them "
     + "all — a run that does not know a layer exists cannot ask for it",
@@ -558,9 +589,18 @@ const run = async () => {
   console.log(`  corpus: ${mintedInSource.size} ${prefix}* code(s) minted in the plane's source; `
             + `${rendered.size} carry a canned translation and are rendered into the pack; `
             + `${uncanned.length} do not and are NOT paraphrased: ${uncanned.slice(0, 6).join(", ") || "(none)"}`);
-  t("ARM H1: the pack renders only fences whose words the record already published, and the plane "
-    + "mints more than that — stated rather than discovered, because an unstated limit reads as "
-    + "completeness",
+  /* THE TITLE CORRECTED 2026-08-08 BY REC-64, because the fact under it changed
+     and a title that no longer describes what passes is a stale comment wearing
+     an assertion's clothes. It read "and the plane mints more than that". When
+     SK-1 wrote it the gap was ELEVEN; REC-64 closed it and the gap is now ZERO —
+     printed on the corpus line above, so the number is read rather than assumed.
+     The assertion itself is unchanged and is still `>=`, deliberately: the pack
+     may never render a fence the plane does not mint, and the day the plane adds
+     a thirteenth the gap reopens. What must NOT happen is this becoming a strict
+     `>`, which would make closing the gap a failure. */
+  t("ARM H1: the pack renders only fences whose words the record already published, and never more "
+    + "than the plane mints — the gap is PRINTED above rather than assumed, because an unstated "
+    + "limit reads as completeness and a closed one reads as a rule that was never there",
     [rendered.size > 0, mintedInSource.size >= rendered.size,
      [...rendered].every((c) => typeof c === "string")],
     [true, true, true]);

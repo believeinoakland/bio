@@ -3342,3 +3342,78 @@ UI-48's WALK 1 run (the plane's own roster, read off `store.mjs` and printed eve
 - `SURFACES.subjects` and `SURFACES.finder` both name `concerns`; `progressions` is the odd one out.
 - **UI-48 did not add it**, because `surface-registry.test.mjs` is not in this item's claim and its ARM A drives the declaration in both directions — adding a row without running that arm's sourcing control is how a registry becomes a hand-typed list again.
 - **Reversal cost: none.** One array entry.
+
+## CLAIM 2026-08-08 RECORD (REC-64 — DEC-49's enactment, the sweep)
+session: worker REC-64, worktree agent-a0fc522fabe53b533
+opened: 2026-08-08
+paths:
+  - `bio-plane/checks/bio-checks.mjs` (new rows and one new family; the DEC-49 catalogue is this item's subject)
+  - `bio-plane/src/store.mjs` — **REGION MARKERS ONLY**, plus one refusal at `aiRunOpen` gaining a
+    RECEIVED code (UI-38's §14a rider). No behaviour is changed at any marked site: a `DEC-49 REGION`
+    pair is a block comment, and the marked spans are existing refusals that already carried their
+    codes. **PL-14's claim block above is `released:`-empty but MERGED at `fee6e9a`**, and PL-15's
+    concurrency note records the same handoff; this item takes `store.mjs` after them.
+  - `civicos-ui/check-refusal-codes.mjs` — **THE `FLOOR`/`CEILING` CONSTANT BLOCK ONLY.** `civicos-ui/**`
+    is otherwise NOT this item's, and no other line of that file, no line of `app.html` and no
+    `civicos-ui/test/**` suite is opened. The ratchet block is claimed because the guard's own header
+    delegates it: *"Move them WITH the corpus, in the same turn, or they stop meaning anything"* —
+    five consecutive items have found a floor already stale by measuring it, and one of them had
+    already flipped a control from RED to GREEN.
+  - `bio-plane/test/machinefences-dec49.test.mjs` (new suite) and `bio-plane/test/nc-rec64.mjs` (this
+    item's negative-control harness, INSIDE this worktree and never in a shared scratchpad)
+interfaces consumed: I3 (the op contracts — a refusal gains `code`/`check`/`translation`, additive)
+interfaces owned: none
+expected: REC-64 — every refusable condition carries an error code with a canned translation, and an
+  untranslated code fails the harness. First eleven are the `MACHINE_CANNOT_*` fences SK-1 and D-229
+  converged on from opposite directions; then the single-homed tail of the `reachGap`.
+accepts-when: as QUEUE.md REC-64, plus: **battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT**
+  and trusted over the brief (the worktree arrived with no `bio-plane/node_modules`; `npm ci` run and
+  its exit read UNPIPED). `node civicos-ui/test/run.mjs` exit read UNPIPED with **the `reachGap`
+  CEILING LOWERED and every floor moved to the figures the guard PRINTED on a green run**, never by
+  adding to the number in the file. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped.
+  Negative controls RUN, each arm ALONE with the others held open, declared before arming, restores
+  verified by sha256 AND by `cmp` against a pristine pre-arm copy. No push, no merge.
+concurrency: three other workers are running and at least one is in `store.mjs`. This item's
+  `store.mjs` diff is deliberately marker-comments plus one refusal object, so a merge against a
+  concurrent edit is a hunk conflict at worst and never a semantic one. `index.mjs` is NOT claimed
+  and NOT edited — four `reachGap` codes live there (`BAD_LOCATOR`, `GATE_REFUSED`, `NO_ATTESTATION`,
+  `NO_SUCH_CAPTURE`) and are left to the next item rather than reaching into an unclaimed file.
+  QUEUE.md, DECISIONS.md, INTERFACES.md and IS-BUILD-PLAN.md are not written by this session.
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-64) -> WHOEVER NEXT OWNS THE DEC-49 GUARD: **ARM C IS BLIND TO EIGHT REFUSAL OBJECTS, AND REC-64'S OWN NEW SITE IS WHAT EXPOSED IT (raised as D-235)**
+
+`check-refusal-codes.mjs` arm C collects refusals with `/\bok\s*:\s*false\b/`. **MEASURED over `bio-plane/src`: 704 `ok: false`, 5 `started: false`, 3 computed `ok: !<expr>`.** A codeless refusal in any of those eight passes the guard silently — which is precisely what arm C exists to fail on.
+
+- **It was found by consequence, not by reading.** REC-64 gave `store.mjs aiRunOpen` a whole-function `where` and the guard reported it `92L (0 judged, 0 code(s) checked)`: read in full, asserting nothing, green. `aiRunOpen` refuses with `started: false`.
+- **It has already cost a translation.** `selectionResolve`'s `SET_MOVED` refuses through `ok: !stopped`. A region `where` around it would judge zero refusals and FAIL as a drifted marker, so REC-64 could not govern it and the code is still in the reach gap. It is the one gap code REC-64 left for an instrument reason rather than a scoping one.
+- **Not fixed here on purpose:** REC-64 claimed only that file's `FLOOR`/`CEILING` constant block. Widening the matcher is a change to VF-2's instrument.
+- **What is owed:** the matcher widened to the measured set and driven in BOTH directions — a codeless `started: false` planted at a governed site must go RED, and the widening must not begin matching non-refusals. Then the newly-visible sites judged, since none has ever been.
+- **Reversal cost:** none. The regex is one line and the control is the arm that proves it.
+
+### DELEGATION 2026-08-08 RECORD (REC-64) -> SK-2 / FL-3 (the recipe layer): **REC-64 INVERTED `skillpack.test.mjs` ARM G1, AND THE ARM MUST BE PUT BACK WHEN YOU FILL THE RECIPES**
+
+ARM G1 asserted `residentBytes < disclosedBytes` — §14b.1's context economy, the reason the pack has two layers. **REC-64 inverted it by doing what it was queued to do:** the eleven machine fences gained canned translations, and the boundary block is ALWAYS-RESIDENT by design. **Measured at REC-64: resident 9,294 bytes, disclosed 9,064.**
+
+- **The inequality was a proxy and it expired for a reason ARM G3 already states: the RECIPE LAYER IS DECLARED EMPTY AND IS SK-2's.** The comparison today is a complete resident layer against a deliberately unfinished disclosed one.
+- **The alternatives were both worse and are named so nobody re-litigates them:** deferring the fences would put the machine/member boundary behind a request, which §4 says it must not be; leaving eleven fences unexplained is the defect REC-64 exists to close.
+- **What ARM G1 asserts now:** that the split BUYS something — a real deferred layer exists and the resident layer is not carrying its bodies. The reasoning and both byte figures are at the site.
+- **What is owed: re-assert the strict inequality once recipes land**, and record the new ratio. If the recipe layer lands and the inequality still does not hold, that is a real finding about the pack's shape rather than about this arm.
+
+### DELEGATION 2026-08-08 RECORD (REC-64) -> WHOEVER TAKES THE REST OF THE REACH GAP: **THE REMAINING 42 ARE NOT MORE OF THE SAME WORK, AND THE CONSTRAINT IS STRUCTURAL**
+
+REC-64 took the `reachGap` ceiling from **73 to 42**. The 42 that remain do NOT yield to more translations, and this is the item's most useful output:
+
+- **THE MULTI-SITE HALF.** A row holds ONE `where`; a `where` names THE SMALLEST SPAN in which the refusal is enforced; and one code may not hold two rows — arm A refuses a duplicated check number and a duplicated translation, and two rows for one code is two wordings for one condition, the drift the guard exists to stop. **So a code minted at many sites cannot honestly name one of them.** MEASURED: `NO_SUCH_BUNDLE` 15 sites, `NO_REASON` 12, `NO_ENTITY` 10, `NO_SUCH_PROJECT` 9, `NO_TARGET` 9, `NOT_A_PROJECT` 8, `ILLEGAL_TRANSITION` 8, `NOT_AN_INQUIRY` 7, `NO_SUCH_ENTITY` 7, `NO_SHA` 5, `NOT_THE_OWNER` 5, `EMPTY_SELECTION` 5.
+- **The honest fixes are both bigger than a translation, and both are real options:** a `where` that can name a SET of spans, or those refusals consolidated behind one helper so there IS one site. The second is the better record — it is D-164's "solve it once" — and it is a change to the plane's shape.
+- **THE `index.mjs` HALF, four codes:** `BAD_LOCATOR`, `GATE_REFUSED`, `NO_ATTESTATION`, `NO_SUCH_CAPTURE`, all inside the control plane's `fetch`. REC-64 did not claim `index.mjs` and did not reach into an unclaimed file for four codes. These are cheap for whoever holds it.
+- **ONE code is blocked on the instrument, not on scope:** `SET_MOVED` — see the D-235 delegation above.
+- **The reason is written at the ceiling itself**, not only here, because that is where the next reader meets the number.
+
+### DECISION FOR BOB 2026-08-08 (REC-64) — **DEC-49's TRANSLATIONS ARE LOOKED UP AT RUNTIME, NOT BAKED AT BUILD**
+
+- **What runs provisionally:** every refusal site keeps its code as a STRING LITERAL, and every consumer — the doctrine pack, the surfaces, `op=audit` — reads the canned translation out of `checks/bio-checks.mjs` at the moment it renders. Nothing is baked into a surface or a release artifact.
+- **Why it was ambiguous:** you left it open explicitly — *"whether at development time or at runtime"* — and both work. A build-time bake renders faster and lets a surface hold the sentence with no plane round-trip.
+- **The alternative:** emit the code-to-translation map into the surface bundle at build, the way the docprofile copy is embedded in `app.html` today.
+- **Recommendation: runtime, as shipped, for two reasons that are not performance.** (i) A baked map is a COPY, and this project has measured five times that a copy agrees with its author at zero cost — including a complete hand copy of 131 op names that passed its own guard. (ii) A sovereign instance running an older surface against a newer plane would render the sentence frozen at ITS build, so two instances would tell a member different things about the same refusal. Runtime lookup makes the plane the single author of what it refuses, which is what DEC-8 protects and DEC-49 only narrowed.
+- **What reversing it costs: LOW NOW, RISING WITH THE NUMBER OF SURFACES.** Today it is a build step plus one accessor, and the guard's arm D already proves a surface table TOTAL against its producer, so the machinery to keep a baked map honest exists. It gets expensive once more than one surface holds a copy, because then reversing means proving every copy total, and the drift REC-43 closed on the co-attestation fence is exactly what a second copy re-opens. **The decision point is before the second surface table, not before the next translation.** The reasoning is written at `MACHINE_FENCE_CHECKS`' header, where the next allocator reads it.
