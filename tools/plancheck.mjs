@@ -40,6 +40,48 @@ const warn = (m) => warns.push(m);
 const read = (p) => { try { return readFileSync(join(ROOT, p), "utf8"); } catch { return null; } };
 const sh = (c) => { try { return execSync(c, { cwd: ROOT, encoding: "utf8" }).trim(); } catch { return null; } };
 
+/* ------------------------------------------ 0. UNRESOLVED MERGE MARKERS
+
+   ADDED 2026-08-08, AND THE RECEIPT IS CONDUCT'S OWN: integrating seven items in
+   one batch, CONDUCT ran `git add -A` and `git commit` without re-reading the tree,
+   and pushed a conflict marker in `scripts/coverage.mjs` to `origin/main`.
+
+   THE BATTERY WAS GREEN AND PROVED NOTHING, because the battery does not run that
+   file. `coverage.mjs --strict` does — and it was skipped to save time in a batch.
+   A shortcut for throughput that skipped the one instrument able to see the thing
+   it broke.
+
+   This check is FIRST because it is the cheapest total one in the file, and it
+   costs nothing on a clean tree. It is not a substitute for running the battery,
+   `--strict` and the UI harness; it is the backstop for the case where a session
+   is moving fast enough to skip one of them. **A marker is never intentional**, so
+   unlike every other check here there is no legitimate exception and none is
+   offered. Scanned at line starts only, which is what git writes and what a code
+   fence or a prose mention of the sequence will not produce. */
+
+{
+  const tracked = sh("git ls-files -- ':!*.png' ':!*.jpg' ':!*.pdf' ':!*.gz' ':!*.zip'");
+  const marked = [];
+  for (const f of (tracked || "").split("\n").filter(Boolean)) {
+    const body = read(f);
+    if (body === null) continue;
+    /* Built rather than written: the literal sequences would make THIS FILE fail
+       its own check, which is the sweep-arm-citing-itself shape this project has
+       met three times in two days. */
+    const open = "<".repeat(7), mid = "=".repeat(7), close = ">".repeat(7);
+    for (const [i, line] of body.split("\n").entries()) {
+      if (line.startsWith(open + " ") || line === mid || line.startsWith(close + " "))
+        marked.push(`${f}:${i + 1}`);
+    }
+  }
+  if (marked.length)
+    fail(`UNRESOLVED MERGE MARKERS in ${marked.length} place(s) — a conflict was committed\n`
+       + `        rather than resolved, and nothing else in this repository will\n`
+       + `        necessarily notice: the battery does not read every file. CONDUCT\n`
+       + `        pushed exactly this to origin/main on 2026-08-08 behind a green\n`
+       + `        battery. First five: ${marked.slice(0, 5).join(", ")}`);
+}
+
 /* ------------------------------------------------------- 1. PUBLICATION */
 
 if (!LOCAL_ONLY) {
