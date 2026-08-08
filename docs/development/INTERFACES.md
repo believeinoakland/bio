@@ -956,11 +956,16 @@ for "pdf" BY NAME — the op names its format — and an absent entry is a 501
 
 - **ID:** I8
 - **Owner:** `FLEET` (the code); `DIST` releases it
-- **Version:** 0.1.0 — **PROVISIONAL.** Registered 2026-08-08 by FL-2, **before the
-  first commit of the worker's code**, which is `PARALLELISM.md`'s rule and I6's
-  precedent rather than a formality. It becomes 1.0.0 and STABLE when the shape is
-  RE-READ from the code that exists — and the re-read is scheduled below rather than
-  promised, because I6 sat PROVISIONAL for a week after its worker shipped.
+- **Version:** 0.1.0 — **PROVISIONAL, and it STAYS PROVISIONAL.** Registered 2026-08-08
+  by FL-2, **before the first commit of the worker's code**, which is `PARALLELISM.md`'s
+  rule and I6's precedent rather than a formality. It becomes 1.0.0 and STABLE when the
+  shape is RE-READ from the code that exists — and the re-read is scheduled below rather
+  than promised, because I6 sat PROVISIONAL for a week after its worker shipped.
+  **THE RE-READ WAS PERFORMED BY FL-3 ON 2026-08-08 AND ITS VERDICT IS "NOT YET" —
+  see "The FL-3 re-read" below.** The `/run` shape CHANGED at FL-3 (IC-33), which is
+  itself the argument: an entry whose subject moved in the same week is not a settled
+  contract, and two of the three "open before it can go STABLE" conditions below are
+  still open. **CONDUCT takes the version bump if and when it disagrees.**
 - **Consumers:** the plane (`RECORD` owns the calling side); `DIST` (DS-1 installs the
   fleet, DS-4 deploys it); `FLEET` itself (FL-3 fills the `run` endpoint, FL-6 resolves
   the model-account cascade behind it)
@@ -997,13 +1002,44 @@ no `https://` plane URL and no bare global `fetch(` — the binding or nothing.
       credential: <the `ai`-class token, shape aik-<64 lowercase hex> (PL-11)>,
       turns:      <optional, the segment size the caller wants> }
 
-**Out:** the run object, in the RECORD's terms (fleet rule 1):
+    { run_id:     <opaque, the PLANE's run identity — the member mints none>,
+      store:      <namespace token>,
+      credential: <the `ai`-class token, shape aik-<64 lowercase hex> (PL-11)>,
+      turns:      <optional, the segment size the caller wants>,
+      judgements: <optional, ordered; FL-3. One entry per JUDGED row of the
+                   control-flow table, consumed in order. The model account that
+                   would produce these is FL-6's cascade and is unresolved, so
+                   until it lands they arrive from the caller and the answer SAYS
+                   SO (`judgement_source`). A judgement naming a control-flow
+                   field — pass, maxPasses, step, budget, mode, bound, run,
+                   store — is REFUSED `JUDGEMENT_OVERREACH` and the field named>,
+      max_steps:  <optional, ≤ 400. A ceiling on TABLE ROWS walked in one
+                   invocation, so a table defect cannot spin an isolate. It is
+                   deliberately NOT a budget and never appears as the bound a run
+                   stopped on: a driver ceiling reported as a run's bound would be
+                   this member's own fault read as a fact about the record> }
+
+**Out:** the run object, in the RECORD's terms (fleet rule 1). **CHANGED AT FL-3
+(IC-33) — the FL-2 shape is the first four lines and everything after `segment` is
+new.** Nothing was removed: `stage` and `turns_run` are the two fields FL-2's own
+DELEGATION told FL-3 not to delete but to give true values, and `stage` moved from
+`"round-trip"` to `"harness"` because `"round-trip"` became a false statement about
+what ran.
 
     { ok: true, run_id, store,
       segment:   { turns_requested, turns_bound, bound_source },
       principal: <the viewer the PLANE stated for this credential — never the member's own guess>,
       plane:     { version, op },     // WHICH BUILD ANSWERED (fleet rule 4 / D-108)
-      worker:    { name, version } }
+      worker:    { name, version },
+      stage:     "harness",           // WHICH HALF RAN
+      turns_run: 0,                   // and it is still ZERO — FL-6 owns the model half
+      judgement_source: "supplied",   // named rather than implied
+      mode:      <the run's mode, READ FROM THE RECORD and never from the request>,
+      trace:     [ { step, to, why, note? } ],   // every row the table walked
+      passes, resumed_from, logged, submitted, adjusted, refusals[],
+      verbatim_resubmits,             // MUST be 0 — see F10 below
+      budget:    [ { bound, allowed, consumed } ],
+      ended:     { bound, condition?, by } }     // "the table" or "the plane's own exit"
 
 **Also `GET /version`** — `{ ok, name, version }`. **This closes a real gap in I6.**
 Fleet rule 4 says *"a verification must establish which build ANSWERED, for the member
@@ -1088,12 +1124,54 @@ as **STRING LITERALS** at the site, so arm C would have teeth the day it is poin
 a local helper taking the code in a variable is invisible to that walk, which is how
 seven of thirteen governed sites once read 776 lines and compared zero codes.
 
+### The FL-3 re-read, 2026-08-08 — and the verdict is STAY PROVISIONAL
+
+This entry scheduled its own re-read on FL-3 rather than promising one, because I6 sat
+PROVISIONAL for a week after its worker shipped. FL-3 performed it against the code that
+exists. **Verdict: 0.1.0 PROVISIONAL, not 1.0.0 STABLE.** Three measured reasons, and
+none of them is "it needs more polish":
+
+1. **THE SHAPE MOVED IN THIS ITEM, AND A FENCE MOVED WITH IT.** `/run`'s response gained
+   nine fields and `stage` changed value; more importantly the sentence *"it calls no
+   mutating op"* was **corrected**, because FL-3's acceptance is unreachable without
+   `op=airuntick`, `op=suggest`, `op=capturerequest` and `op=airunclose`. The FLEET plan
+   row's own words are *"writes nothing DIRECTLY"*, and PL-11's `ai` credential class is
+   specified as *"writes ONLY PL-3's endpoint and PL-4's table"* — **a scope with no
+   consumer if the member holding the credential may never name those ops.** The fence is
+   now an EXACT PINNED SET (`harness.mjs PLANE_OPS`, floor and ceiling both) in which
+   every mutating member must be one PL-11's `AI_RUN_ACTIONS` declares, asserted against
+   the plane's own source. That is a stronger fence than the one it replaces — and an
+   entry whose central prohibition was rewritten this week is not a settled contract.
+   Filed as **IC-33**.
+2. **TWO OF THE THREE "OPEN BEFORE STABLE" CONDITIONS BELOW ARE STILL OPEN.** FL-6's
+   model-account cascade is unresolved, so `/run` still runs ZERO model turns and says so
+   on the wire (`turns_run: 0`, `judgement_source: "supplied"`); and DS-1/DS-4 have not
+   deployed the member or the plane's `AGENT_WORKER` binding, so the path is dark on
+   every live instance. **A contract that has never carried a live call is a contract
+   nobody has tested against reality**, which is D-108's whole lesson one layer up.
+3. **THE PLANE'S CALLING SIDE DOES NOT EXIST YET, AND IT IS NOT FLEET'S TO BUILD.** This
+   entry names `RECORD` as owner of the calling side; nothing in `bio-plane/src/` reads
+   `env.AGENT_WORKER`. **An interface with one implemented end is a shape, not an
+   agreement** — and I8's own reason for existing is that this member is the first
+   component that is both called by the plane and a caller of it, which is precisely the
+   half that has never been exercised.
+
+**What WOULD close it**, so the next re-read is a checklist and not a judgement call:
+FL-6 lands the cascade and `turns_run` stops being zero; DS-4 deploys and `GET /version`
+answers from a real isolate; and the plane grows its first `AGENT_WORKER` caller. **CONDUCT
+takes the version bump.** If CONDUCT disagrees and wants 1.0.0 now, the shape above is
+written from the code as it stands and needs no further reading — the disagreement would
+be about what STABLE means, not about what the code does.
+
 ### Open before it can go STABLE (→ 1.0.0)
 
-- **FL-3 fills `/run`** with the IS-9 harness (the deterministic control-flow table).
-  Until then `/run` performs the round trip and reports what the plane said about the
-  credential it was handed — it runs no model turns, and it says so on the wire rather
-  than returning an empty success. Nothing here is a stub that pretends.
+- ~~**FL-3 fills `/run`** with the IS-9 harness (the deterministic control-flow table).~~
+  **DONE 2026-08-08.** `/run` now drives `agent-worker/src/harness.mjs`'s control-flow
+  table: the SK-4 mode gate, resumption from the run's own log, the four-level fan-out,
+  dedup-before-write, log-always through `op=airuntick`, F10's denied-means-adjust row,
+  versions written as formed, and the budget. **It still runs no model turns and still
+  says so on the wire** — `turns_run: 0` plus `judgement_source: "supplied"`, because the
+  judgement inside a step is FL-6's cascade. Nothing here is a stub that pretends.
 - **FL-6 resolves the model-account cascade** behind it; today no model token is
   resolved and no model is called at all.
 - **A DIST deploy** of the member and the plane's `AGENT_WORKER` binding (DS-4), and
