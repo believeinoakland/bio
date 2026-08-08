@@ -2348,3 +2348,45 @@ released:
 **Reasons 1–3 are untouched and the decision STANDS.** This does not reopen it — it removes one of its supports, and a support that has become false is worse than a missing one, because the next reader takes it as current. **Nothing fails**: it is a comment, no suite pins it, and this is exactly the kind of change that reaches nobody unless it is written down.
 
 **What UI would change:** that one numbered reason, corrected to say the log IS bounded now and that the remaining three reasons carry the decision. RECORD does not edit `civicos-ui/**`.
+
+---
+
+## CLAIM 2026-08-07 VERIFY
+
+session: vf2-agent (worktree agent-a12a5d578497244e9)
+opened: 2026-08-07T00:00:00Z
+paths: **`civicos-ui/check-refusal-codes.mjs` (NEW)** — the DEC-49 harness guard, on `check-mock-envelope.mjs`'s precedent (a `civicos-ui/check-*.mjs` that reads `bio-plane/` sources read-only and runs inside `test/run.mjs`). **`civicos-ui/test/refusal-codes.test.mjs` (NEW)** — the guard's own suite: its fixture trees, its over-strictness arms, and its `NEGATIVE CONTROL:` header. **`civicos-ui/test/refusal-codes.control.mjs` (NEW — AMENDED INTO THIS CLAIM 2026-08-07, same session, before any handoff)** — the seven negative-control arms RUN against the REAL tree, each armed, restored, and the restore verified BY HASH, BY CONTENT and by RE-RUNNING. Deliberately not a `.test.mjs`: it is destructive while it runs, so the battery must not run it. **`civicos-ui/test/run.mjs` — TWO LINES**: the guard's invocation, and the `check-semantics.mjs` call wrapped in the same try/catch its two siblings already have (D-93's class: an uncaught `execFileSync` there aborts the run and hides the two guards behind it). `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `docs/development/MEASUREMENTS.md` (one appended entry). **NOT OPENED: no file under `bio-plane/` and no line of `civicos-ui/app.html`** — the guard is READ-ONLY over both, and every gap it finds in either is a DELEGATION below, not an edit. The control script edits `bio-checks.mjs`, `airun.mjs` and `app.html` **transiently while it runs and restores every one**, which is `check-mock-envelope.mjs`'s own precedent for a control over another area's file.
+interfaces consumed: I3 (read-only — the guard reads the plane's refusal vocabulary and asserts about it; it changes no shape).
+interfaces owned: none.
+expected: IS-BUILD-PLAN VF-2 — **DEC-49's harness guard (E7)**, the instrument REC-64's sweep must pass. Every code a surface can receive has a canned translation, and an untranslated code FAILS THE HARNESS rather than reaching a member. W0, slot-free.
+accepts-when: `node civicos-ui/test/run.mjs` green with the guard ON; a codeless refusal in a fixture makes the harness FAIL naming it; removing the guard makes that fixture PASS. Battery baseline measured in this worktree before any edit — **110/110 at 6,521, CONFIRMED rather than inherited from the brief**. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped.
+concurrency: no live claim names any path above. Every live `UI` claim is on `civicos-ui/app.html` by SITE; every live `RECORD` claim is on `bio-plane/**`. This claim opens neither.
+released:
+
+### DELEGATION 2026-08-07 VERIFY -> whoever runs REC-64: THE SWEEP'S SIZE IS NOW MEASURED, AND ITS CEILING IS ARMED
+
+**REC-64 no longer has to guess how big it is.** `node civicos-ui/check-refusal-codes.mjs` prints, every run:
+
+- **311 distinct refusal codes the plane can mint** (`bio-plane/src/**`, union of six matchers). A plain `reason: "CODE"` grep answers **294** — the other 17 arrive by a ternary (`reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED"`), by a comparison site, or through a family lookup where the code is a VARIABLE and no source-text matcher can see it at all.
+- **98 of those are IN REACH of a surface** — 11 are DEC-49 family rows, 50 are named by `app.html`, 65 are sent by a harness mock (overlapping).
+- **74 of the 98 have no canned translation today, and the guard NAMES ALL 74 on every run.** That is REC-64's remaining work inside the ruling's own scope, and it is a **CEILING**: it may only ever FALL. A new receivable code with no translation fails the harness.
+- **287 of the 311 have no translation and are not in reach today.** Reported, never gated — see the guard's header for why gating the whole plane would fail on internal refusals no member can meet.
+
+**The two homes DEC-49 licenses are both wired and a code may use ONE:** a row in a `*_CHECKS` family in `bio-plane/checks/bio-checks.mjs` (11 rows over 3 families today), or an entry in a surface table the guard proves TOTAL against its producer (`PART_REASON` over `src/subresources.mjs`, 13/13). A code translated in both FAILS.
+
+**Families are HARVESTED by export name matching `/_CHECKS$/`, never listed.** A fourth family minted by PL-1 or PL-12 is guarded the turn it lands. Lower `CEILING.reachGap` in the same turn you translate anything.
+
+### DELEGATION 2026-08-07 VERIFY -> UI: `PART_REASON` IN `app.html` IS NOW A GUARDED SURFACE TABLE
+
+`app.html`'s `PART_REASON` is the one surface-authored code-to-wording table in the tree, and DEC-49 licenses it. **It is now proved TOTAL over `bio-plane/src/subresources.mjs` on every harness run**, in both directions: a code the producer mints with no wording FAILS naming it, and wording for a code the producer no longer mints is reported (not a failure — an older instance can still send it).
+
+**Two consequences UI should know before touching it.** (1) The render site's `PART_REASON[s.reason] || String(s.reason)` fallback is safe ONLY because the table is proved total; the guard is what makes that line honest, so do not treat the fallback as the safety net. (2) The pairing lives in `TABLE_PRODUCERS` in `civicos-ui/check-refusal-codes.mjs` (VF-2's file), on `check-mock-envelope.mjs`'s FLAT_OPS precedent. **A SECOND code-to-wording table added to `app.html` will FAIL the harness until it is paired with a producer there** — found by SHAPE, so it cannot arrive unnoticed. VERIFY owns that one line; append a delegation rather than editing it.
+
+### DELEGATION 2026-08-07 VERIFY -> RECORD / whoever adds a member-facing refusal
+
+**Every new refusable condition now owes a code and a canned translation, and the harness enforces it rather than a convention doing so.** Two shapes fail `node civicos-ui/test/run.mjs`:
+
+- **A CODELESS refusal at a governed site** — an `ok:false` with no `code` and no `reason` inside a function named by a family row's `where` field. Fails naming the file, the line, the function and the offending object literal. **The `where` field is therefore LOAD-BEARING**: the guard opens it and reads that function. A `where` that stops resolving fails too.
+- **A code minted at a governed site with no row in its family**, which would go out with nothing behind it.
+
+The cheapest correct move is a row in the family that already covers the site: `{ check: 'C-nn.n', where: 'src/<file>.mjs <fn>', translation: '<the sentence a member reads>' }`. The guard also refuses a translation that restates the machine code, two codes sharing a C-number, and two codes sharing a translation.
