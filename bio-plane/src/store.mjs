@@ -107,6 +107,14 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
          VERSION_CHAIN_CHECKS,
+         /* PL-1 / IS-1: the BASIS-VERSION grammar, imported rather than
+            reimplemented, so the version rules run at BOTH gates through ONE
+            function — a version that cannot land cannot audit clean either,
+            which is REC-11's precedent for `checkInquiryBasis` itself.
+            BASIS_VERSION_CHECKS supplies DEC-49's row for the ONE refusal a
+            pure document check cannot reach: the FREEZE, which needs to see
+            what the record already holds under that name. */
+         basisVersionFindings, BASIS_VERSION_CHECKS,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -6955,6 +6963,119 @@ export class Store extends DurableObject {
       yield [r.bundle_id, this.readImage(r.bundle_id)];
   }
 
+  /* ===================================================================
+   * PL-1 / IS-1 — THE BASIS-VERSION COMPOSITION, ASSEMBLED ONCE.
+   *
+   * THE VALIDATION ARM AND THE PROJECTION READ THE SAME FUNCTION, and that is
+   * not tidiness. A freeze that compares one assembly of the document against a
+   * DIFFERENT assembly written by the projection would refuse or admit on a
+   * difference neither the author nor the reader can see; and this repository
+   * has measured the general version of that defect — a control comparing a
+   * render against the wire read through the same op the surface reads is a
+   * closed loop, and two hand-written assemblies of one shape agree at zero
+   * cost. So there is one assembler, it is STATIC and PURE, and the suite drives
+   * it directly as well as through the op.
+   *
+   * THE CANONICAL FORM is line-oriented with a fixed field order and a fixed
+   * separator, and every value is escaped so the encoding is INJECTIVE: two
+   * different compositions cannot canonicalise to the same string, which is the
+   * whole property a freeze rests on. Backslash first, then tab and newline, in
+   * that order — reversing it is the classic way to make an escape function
+   * ambiguous.
+   *
+   * THE GROUND ROWS ARE SORTED and the legs are NOT. A ground is a set member —
+   * two documents declaring the same grounds in a different order declare the
+   * same partition — while a leg carries an ORDINAL that makes it addressable
+   * (D4's reasoning, one level up), so reordering legs IS a change to the
+   * composition and the freeze must see it.
+   * =================================================================== */
+  static #canon(v) {
+    return String(v ?? "").replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n");
+  }
+
+  /** The document's version block, normalised into the rows the two tables take.
+   *  Pure, static, and the ONLY place the shape is derived. */
+  static basisVersionsOf(fm) {
+    const rows = Array.isArray(fm?.basis_versions) ? fm.basis_versions : [];
+    const legRows = Array.isArray(fm?.basis_version_legs) ? fm.basis_version_legs : [];
+    const groundRows = Array.isArray(fm?.basis_version_grounds) ? fm.basis_version_grounds : [];
+    const str = (x) => (typeof x === "string" && x.trim() !== "" ? x.trim() : null);
+    const out = [];
+    for (let i = 0; i < rows.length; i++) {
+      const v = rows[i];
+      if (!v || typeof v !== "object" || Array.isArray(v)) continue;
+      const name = str(v.name);
+      if (name === null) continue;
+      const legs = [];
+      for (const l of legRows) {
+        if (!l || typeof l !== "object" || str(l.version) !== name) continue;
+        legs.push({
+          target_id: typeof l.target === "string" ? l.target : "",
+          /* denormalised from the id prefix through the catalog's own map, so
+             the walk never re-derives it — inquiry_basis' own discipline */
+          target_type: normalizeType(OBJECT_TYPES[String(l.target || "").split("-")[0]]) ?? "",
+          role: typeof l.role === "string" ? l.role : "",
+          grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
+          note: typeof l.note === "string" ? l.note : null,
+          /* the DOCUMENT's own authored date and never the server's clock:
+             delete-then-insert re-projects every promotion, so a server stamp
+             here would silently re-date every leg of every version */
+          at: l.date != null ? String(l.date) : null,
+          ground: str(l.ground) ?? "",
+        });
+      }
+      const grounds = groundRows
+        .filter((g) => g && typeof g === "object" && str(g.version) === name && str(g.ground) !== null)
+        .map((g) => ({ ground: str(g.ground), asserted_by: str(g.asserted_by),
+                       at: str(g.at), statement: typeof g.statement === "string" ? g.statement : null }))
+        .sort((a, b) => (a.ground < b.ground ? -1 : a.ground > b.ground ? 1 : 0));
+      const c = Store.#canon;
+      const composition = [
+        `name\t${c(name)}`,
+        `description\t${c(v.description)}`,
+        `claim\t${c(v.claim)}`,
+        `relationship\t${c(typeof v.relationship === "string" ? v.relationship.trim().toLowerCase() : "")}`,
+        `derived_from\t${c(str(v.derived_from) === "null" ? null : str(v.derived_from))}`,
+        ...grounds.map((g) => `ground\t${c(g.ground)}\t${c(g.asserted_by)}\t${c(g.at)}\t${c(g.statement)}`),
+        ...legs.map((l, k) => `leg\t${k}\t${c(l.target_id)}\t${c(l.target_type)}\t${c(l.role)}\t${c(l.grade)}\t`
+                            + `${c(l.grade_axis)}\t${c(l.grade_source)}\t${c(l.note)}\t${c(l.at)}\t${c(l.ground)}`),
+      ].join("\n");
+      out.push({
+        name, ord: i,
+        description: typeof v.description === "string" ? v.description : "",
+        relationship: typeof v.relationship === "string" ? v.relationship.trim().toLowerCase() : "",
+        state: typeof v.state === "string" ? v.state : "",
+        derived_from: str(v.derived_from) === "null" ? null : str(v.derived_from),
+        hidden: v.hidden === true ? 1 : 0,
+        claim: typeof v.claim === "string" ? v.claim : null,
+        /* §14b.7: named, NEVER resolved. Nothing here or at the write joins on
+           the run being alive, so a version outlives the run that proposed it. */
+        run: str(v.run),
+        author: str(v.author), at: str(v.at),
+        regroup_by: str(v.regroup_by), regroup_at: str(v.regroup_at),
+        regroup_note: typeof v.regroup_note === "string" ? v.regroup_note : null,
+        composition, legs, grounds,
+      });
+    }
+    return out;
+  }
+
+  /** Which FIELD moved, for the freeze's refusal. A digest could only say that
+   *  something did, and a member told "this changed" without being told what
+   *  is left to re-derive the diff the store has already computed. */
+  static #compositionDiff(before, after) {
+    const a = String(before).split("\n"), b = String(after).split("\n");
+    const n = Math.max(a.length, b.length);
+    for (let i = 0; i < n; i++) {
+      if (a[i] === b[i]) continue;
+      const field = String(a[i] ?? b[i]).split("\t")[0];
+      if (a[i] === undefined) return `a ${field} was added`;
+      if (b[i] === undefined) return `a ${field} was removed`;
+      return `${field} changed`;
+    }
+    return "nothing changed";
+  }
+
   /* ---- writes: promotion is the sole writer of live state ---- */
 
   /**
@@ -7363,6 +7484,81 @@ export class Store extends DurableObject {
                        ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") };
         }
       }
+      /* PL-1 / IS-1: THE BASIS-VERSION ARM, and it is the inquiry basis arm
+       * above line for line — the catalog's own function runs at the WRITE, so
+       * the store's view and the checker's view are ONE rule and a malformed
+       * version block neither lands nor audits clean. Replay is exempt from the
+       * shape arm for exactly the reason every shape arm here is: the record's
+       * own history must be holdable verbatim.
+       *
+       * THREE REFUSALS AND NOT ONE, because they are three different failures
+       * and a member needs to be told which one they hit: the GRAMMAR
+       * (BASIS_VERSION_REFUSED — the catalog's fifteen C-25 findings), the
+       * RESOLUTION (VERSION_LEG_UNRESOLVED — a leg pointing at a bundle this
+       * store does not hold, which only the store can see), and the FREEZE
+       * (VERSION_FROZEN — §6 rule 3, which needs to see what the record already
+       * holds under that name and is therefore not a fact about one document).
+       *
+       * THE FREEZE IS EXEMPT ON REPLAY TOO, and that is a different reason from
+       * the shape arms': history is APPEND-ONLY and a replayed promotion is the
+       * record re-stating what it already said. A freeze that refused a replay
+       * would make the record unable to hold its own past.
+       */
+      if (isInquiry && docFmW && !pkg.replay) {
+        const vf = [];
+        basisVersionFindings(docFmW, vf);
+        const verrs = vf.filter((x) => x.severity === "error");
+        if (verrs.length)
+          return { ok: false, reason: "BASIS_VERSION_REFUSED",
+                   findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
+                                                 translation: BASIS_VERSION_CHECKS[x.code]?.translation,
+                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        /* THE HALF THE CATALOG DELIBERATELY CANNOT DO, and the reason version
+           legs are NOT required in `references[]` (see basisVersionFindings'
+           header): a suggestion must not silently expand the inquiry's own edge
+           set, so the existence guarantee a reader needs comes from here
+           instead. `bundles` is the corpus; a leg naming a row it does not hold
+           points at nothing while claiming to be evidence. */
+        const offered = Store.basisVersionsOf(docFmW);
+        for (const v of offered) {
+          for (const leg of v.legs) {
+            if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target_id))
+              return { ok: false, reason: "VERSION_LEG_UNRESOLVED", version: v.name, target: leg.target_id,
+                       findings: [{ check: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.check,
+                                    code: "VERSION_LEG_UNRESOLVED",
+                                    translation: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.translation,
+                                    detail: `basis version '${v.name}' rests on '${leg.target_id}', which does not `
+                                          + `resolve in this store: an account of the evidence names material the `
+                                          + `record holds, or it points a reader at nothing while claiming support`,
+                                    repairs: ["capture or promote the target first, then compose the version on it",
+                                              "or drop the leg — a version may honestly rest on less"] }] };
+          }
+        }
+        /* §6 rule 3 — THE FREEZE. Read BEFORE the delete-then-insert
+           re-projection below, in the same call, exactly as `supersededBefore`
+           is read before its own DELETE. The comparison is BYTE FOR BYTE over
+           the canonical composition the store itself computed at the earlier
+           write, so a caller cannot supply the value it is checked against, and
+           the refusal NAMES the first field that moved rather than reporting
+           that something did. */
+        for (const v of offered) {
+          const prior = this.#one(
+            `SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
+          if (!prior || prior.composition === v.composition) continue;
+          return { ok: false, reason: "VERSION_FROZEN", version: v.name,
+                   changed: Store.#compositionDiff(prior.composition, v.composition),
+                   findings: [{ check: BASIS_VERSION_CHECKS.VERSION_FROZEN.check,
+                                code: "VERSION_FROZEN",
+                                translation: BASIS_VERSION_CHECKS.VERSION_FROZEN.translation,
+                                detail: `basis version '${v.name}' of ${bundleId} is frozen and this promotion changes `
+                                      + `it in place (${Store.#compositionDiff(prior.composition, v.composition)}): a `
+                                      + `version is frozen once written, because two members exploring one version `
+                                      + `collide otherwise and comparison stops meaning anything when the thing being `
+                                      + `compared shifts underneath them`,
+                                repairs: [`add a NEW version with its own name and derived_from: '${v.name}'`,
+                                          `or restore '${v.name}' to the composition the record holds`] }] };
+        }
+      }
       if (basisLegs.length) {
         /* R3: the basis graph is a DAG, enforced HERE, at the write that would
          * close the cycle — before REC-11 the record's only acyclicity
@@ -7549,6 +7745,51 @@ export class Store extends DurableObject {
                this write and in the catalog, so a label that reaches here was
                asserted by a named member. */
             typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null);
+        }
+      }
+      /* PL-1 / IS-1: THE BASIS VERSIONS, projected WHOLE from basis_versions[],
+         basis_version_grounds[] and basis_version_legs[] in this SAME
+         transaction as inquiry_basis above and by the same delete-then-insert
+         discipline — projections of the document, NEVER a second place to state
+         it (D-21). This is the ONLY INSERT into either table anywhere in the
+         plane, and that is the item's whole constraint rather than a
+         convenience: a version table an op could append to directly would be a
+         second authority for a fact `bundle.md` already holds, and the two would
+         drift the moment a revision was replayed. `test/versions.test.mjs` pins
+         the write-site count at one over this real source rather than trusting
+         this comment.
+
+         THE COMPOSITION IS RE-COMPUTED HERE FROM THE SAME ASSEMBLER the freeze
+         arm above used, so the value stored is the value that was compared —
+         two assemblies of one shape agree at zero cost, and this repository has
+         measured that class of instrument failure repeatedly.
+
+         REPLAY REACHES THIS with the shape arms skipped, exactly as
+         inquiry_basis does: a version block written before these rules existed
+         must still project, so the loop tolerates a malformed leg by skipping it
+         rather than throwing inside the transaction. */
+      this.sql.exec(`DELETE FROM inquiry_basis_version_legs WHERE bundle_id=?`, bundleId);
+      this.sql.exec(`DELETE FROM inquiry_basis_versions WHERE bundle_id=?`, bundleId);
+      if (isInquiry && docFmW) {
+        for (const v of Store.basisVersionsOf(docFmW)) {
+          this.sql.exec(
+            `INSERT INTO inquiry_basis_versions
+               (bundle_id,name,ord,description,relationship,state,derived_from,hidden,claim,run,author,at,
+                regroup_by,regroup_at,regroup_note,composition,leg_count)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            bundleId, v.name, v.ord, v.description, v.relationship, v.state, v.derived_from,
+            v.hidden, v.claim, v.run, v.author, v.at,
+            v.regroup_by, v.regroup_at, v.regroup_note, v.composition, v.legs.length);
+          for (let k = 0; k < v.legs.length; k++) {
+            const l = v.legs[k];
+            if (!l.target_id) continue;   // replay of a malformed shape: unprojectable
+            this.sql.exec(
+              `INSERT INTO inquiry_basis_version_legs
+                 (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+              bundleId, v.name, k, l.target_id, l.target_type, l.role,
+              l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground);
+          }
         }
       }
       /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
@@ -11206,6 +11447,12 @@ export class Store extends DurableObject {
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
       aiRuns: n("ai_runs"), aiRunBounds: n("ai_run_bounds"), aiRunLog: n("ai_run_log"),
+      /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
+         their legs, reported so a purge can PROVE it took them (D-113). A COUNT
+         AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
+         readings of the evidence exist is an operator fact, and what they say is
+         not an operator surface. */
+      basisVersions: n("inquiry_basis_versions"), basisVersionLegs: n("inquiry_basis_version_legs"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -12215,9 +12462,18 @@ export class Store extends DurableObject {
        is D-113's silent leftover in its most misleading form: the record would
        name a document it no longer holds. hygiene.test.mjs holds this list
        against schema.mjs. */
+    /* PL-1 / D-113: `inquiry_basis_versions` and `inquiry_basis_version_legs`
+       are projections of the inquiry's own bundle.md in exactly the sense
+       inquiry_basis is, and both carry bundle_id, so they clear in BOTH arms via
+       this list. Leaving either out would let a whole-store purge report scope
+       ALL while an inquiry's ALTERNATIVE ACCOUNTS of the evidence survived — the
+       D-113 silent leftover in a form that matters more than most, because a
+       version is a composition somebody may still accept. hygiene.test.mjs holds
+       this list against schema.mjs. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "reading_ref_terms", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
+                    "inquiry_basis_versions", "inquiry_basis_version_legs",
                     "action_basis", "correspondence"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -15291,6 +15547,162 @@ export class Store extends DurableObject {
     };
   }
 
+  /* PL-1's own bound. 200/1000 is `op=versionchain`'s pair reused rather than a
+     thirteenth spelling invented, and the KIND is the same: a KEYED lookup (one
+     inquiry, not a query) whose answer is a list. 200 is generous against the
+     real population — an inquiry with two hundred alternative accounts of its
+     evidence is one nobody could review — and the ceiling exists for the same
+     reason `op=airunlog`'s does, a machine reading the whole set back. */
+  static BASIS_VERSIONS_LIMIT_DEFAULT = 200;
+  static BASIS_VERSIONS_LIMIT_MAX = 1000;
+  /* THE SECOND BOUND, and it exists because D-227 is open. D-227 is CONDUCT's
+     finding that the bound suites pin the PUBLISHED ENVELOPE and not the SQL
+     BOUND, so an unbounded derivation feeding a bounded answer passes both — and
+     a legs read with no LIMIT under a bounded versions read is exactly that
+     shape. `limit` above bounds VERSIONS; this bounds the LEGS of each version
+     returned, so the row source cannot grow without end behind an answer that
+     looks settled. 500 is generous past the point of review: a composition with
+     five hundred legs is not one anybody reads.
+     AND WHEN IT BITES THE ANSWER SAYS SO PER VERSION, which matters more here
+     than at the envelope: PL-9's finding is that a basis returned in part READS
+     AS A BASIS, so `leg_count` (the record's own count, stored at the write) is
+     published beside `legs` and `legs_complete` settles the question outright
+     rather than leaving a consumer to compare two numbers and hope. */
+  static BASIS_VERSION_LEGS_MAX = 500;
+
+  /** op=basisversions — THE VERSION SET OF ONE INQUIRY'S BASIS (PL-1 / IS-1).
+   *
+   *  Every version of this inquiry's basis, with its description, its state, its
+   *  ground partition, the AND/OR relationship it states, the derivation edge it
+   *  was derived along, and the run that proposed it.
+   *
+   *  THE LEGS TRAVEL WITH THEIR VERSION AND THE BOUND IS OVER VERSIONS. A basis
+   *  returned in part reads as a basis (PL-9's finding, and it applies harder
+   *  here because a version IS the composition), so cutting a version's legs to
+   *  fit a row budget would publish a composition that is not the one the record
+   *  holds. The cap therefore counts VERSIONS and a version is whole or absent.
+   *
+   *  `composition` IS PUBLISHED, and it is the canonical frozen composition the
+   *  freeze compares byte for byte at the write. It discloses nothing the same
+   *  answer does not already carry — it is those fields in a fixed order — and
+   *  publishing it is what lets a CONSUMER check freezing for itself rather than
+   *  taking the plane's word for it. That is the difference between a property
+   *  the record asserts and one a reader can test.
+   *
+   *  HIDDEN VERSIONS ARE RETURNED, FLAGGED, AND THERE IS NO FILTER TO REMOVE
+   *  THEM. DEC-29(b) and D-214: prune HIDES and never deletes, hidden versions
+   *  stay in the record and stay queryable, and "delete" at the UI altitude means
+   *  the DISPLAY shrinks while the acts remain. A `hidden` flag on the row is
+   *  exactly that — the surface shrinks its display and the query still answers.
+   *  An op that filtered them out here would make hiding into deleting one layer
+   *  down, which is the collision SWEEP C1 found and D-214 settled.
+   *
+   *  GATED at `bundle_id` through `#bundleGate`, the same predicate every read in
+   *  this file compiles (D-15, one compilation point). An inquiry the viewer may
+   *  not see answers BYTE-IDENTICALLY to one with no versions and to one that
+   *  does not exist — op=backlinks' and op=inquirystrength's settled posture, and
+   *  nothing publishes how many rows the gate removed, because that count is the
+   *  leak. `inquiry_present` is published only when the gate ADMITS the bundle,
+   *  so a viewer who can already see the inquiry can tell "no versions yet" from
+   *  "no such question", and a viewer who cannot learns nothing either way.
+   *
+   *  AND IT NEVER JOINS ON THE RUN (§14b.7). `run` is reported as the string the
+   *  version carries; no join, no resolution, no filter. A version whose
+   *  proposing run has been reaped out of `ai_runs` reads here exactly as it did
+   *  the moment it was written, which is the acceptance clause "a version
+   *  SURVIVES the death of the run that proposed it — identity is not the run's",
+   *  enforced by the ABSENCE of a join rather than by a promise about one. */
+  basisVersions({ id = null, limit = null, offset = 0, viewer = null } = {}) {
+    const refuse = (key, detail) => {
+      const row = BASIS_VERSION_CHECKS[key];
+      return { ok: false, reason: key, check: row.check, code: key, translation: row.translation, detail };
+    };
+    const inq = id == null ? "" : String(id).trim();
+    if (!inq)
+      return refuse("BASIS_VERSIONS_NO_INQUIRY",
+        "op=basisversions answers for ONE inquiry: pass id=<INQ-…>. Versions are versions of a "
+        + "question's basis, and there is no default question.");
+    if (normalizeType(OBJECT_TYPES[inq.split("-")[0]]) !== "inquiry")
+      return refuse("BASIS_VERSIONS_NOT_AN_INQUIRY",
+        `${inq.slice(0, 60)} is not an inquiry. Only an inquiry has a basis, so only an inquiry has `
+        + "versions of one; an empty list here would say this thing has none when it could not have any.");
+
+    const cap = Math.max(1, Math.min(Store.BASIS_VERSIONS_LIMIT_MAX,
+      Math.floor(Number(limit) || Store.BASIS_VERSIONS_LIMIT_DEFAULT)));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    /* QUALIFIED, because `#bundleGate` throws on a bare name — an unqualified
+       column binds to `bundles` inside the gate's own subquery and passes
+       everything, which is the guard that caught this call site the first time
+       it was written. */
+    const seen = this.#bundleGate("bx.bundle_id", viewer);
+
+    /* The gate is applied to the INQUIRY, once, and the version rows follow it.
+       Counting the versions through a second predicate is how a total ends up
+       larger than the pages it describes.
+
+       AND THE HONEST BOUND ON WHAT THIS GATE BUYS, stated rather than implied by
+       its presence: `viewerPredicate` filters PROJECT bundles and nothing else
+       (D-15 / Membership 7.9 — the evidence corpus stays shared), and an inquiry
+       is not a project, so for an identified member the participation arm cannot
+       bite here. What the gate DOES buy is the arm that matters most: an absent
+       or unrecognised viewer stamp compiles to DENY and this read answers
+       empty — fail-closed, through the same one compilation point every read in
+       this file uses, so if inquiries are ever compartmented this op inherits it
+       with no edit. Claiming more than that would be the record overclaiming
+       about its own machinery. */
+    const present = !!this.#one(
+      `SELECT bx.bundle_id FROM bundles bx WHERE bx.bundle_id=? AND (${seen.sql})`, inq, ...seen.args);
+    const total = present
+      ? (this.#one(`SELECT COUNT(*) AS n FROM inquiry_basis_versions WHERE bundle_id=?`, inq)?.n ?? 0)
+      : 0;
+    const rows = present ? this.#rows(
+      `SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord, name LIMIT ? OFFSET ?`,
+      inq, cap, from) : [];
+    const legCap = Store.BASIS_VERSION_LEGS_MAX;
+    const versions = rows.map((r) => {
+      const legs = this.#rows(
+        `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
+           FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+        inq, r.name, legCap);
+      return {
+        name: r.name, description: r.description,
+        /* The two the item is judged on, on EVERY version: the relationship the
+           version states and the partition it states it over. */
+        relationship: r.relationship,
+        grounds: [...new Set(this.#rows(
+          `SELECT DISTINCT ground FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ground LIMIT ?`,
+          inq, r.name, legCap).map((g) => g.ground))],
+        state: r.state,
+        derived_from: r.derived_from,
+        hidden: r.hidden === 1,
+        claim: r.claim,
+        run: r.run,
+        author: r.author, at: r.at,
+        regroup: r.regroup_by ? { by: r.regroup_by, at: r.regroup_at, note: r.regroup_note } : null,
+        composition: r.composition,
+        /* The RECORD's own count, stored at the write, beside the legs actually
+           carried — and the question settled outright rather than left to a
+           consumer comparing them. A basis returned in part reads as a basis. */
+        leg_count: r.leg_count,
+        legs_complete: legs.length === r.leg_count,
+        legs,
+      };
+    });
+    return {
+      ok: true,
+      inquiry: inq,
+      ...(present ? { inquiry_present: true } : {}),
+      versions, count: versions.length, total,
+      /* REC-57's discipline: the bound PUBLISHED is the one APPLIED, after
+         clamping, never the number asked for; `truncated` settles completeness
+         so "this is all of them" cannot read like "the first N". Published on
+         the EMPTY answer too — REC-70's lesson, where a not-found return was the
+         one shape a bound sweep could not see. */
+      limit: cap, offset: from,
+      truncated: from + versions.length < total,
+    };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -17524,6 +17936,18 @@ export class Store extends DurableObject {
         versionchain: () => this.versionChain({
           addressNorm: url.searchParams.get("address"),
           at: url.searchParams.get("at"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        /* PL-1 / IS-1: the version set of one inquiry's basis. A READ ONLY —
+           there is no write op here and there is not going to be one, because
+           versions are written through op=promote's projection and nowhere else
+           (D-21). `viewer` is stamped by the control plane and an absent one
+           compiles to the deny predicate, so this fails closed like every other
+           gated read. */
+        basisversions: () => this.basisVersions({
+          id: url.searchParams.get("id"),
           limit: url.searchParams.get("limit"),
           offset: url.searchParams.get("offset"),
           viewer: url.searchParams.get("viewer"),

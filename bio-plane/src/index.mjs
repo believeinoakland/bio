@@ -538,6 +538,17 @@ const OPS = {
      a bundle per version, so a member must not be able to learn from a version
      chain what op=list would not tell them. */
   versionchain: { classes: ["admin", "member", "probe"],         mutating: false },
+  /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
+     of the evidence for a question, with its ground partition, the AND/OR
+     relationship it states, the derivation edge it came along, and the run that
+     proposed it. A pure read, and there is deliberately NO write op beside it:
+     versions are authored in `bundle.md` and land through op=promote's own
+     projection, so a version table an op could append to directly would be a
+     second place to state a fact `bundle.md` already holds (D-21).
+     `viewer` is stamped below from the authenticated identity: the answer names
+     an inquiry and the bundles its versions rest on, so a member must not learn
+     from a version set what op=list would not tell them. */
+  basisversions: { classes: ["admin", "member", "probe"],        mutating: false },
   /* CONTENT-PDF's structure extractor (D-91), exposed as a READ over already-
      captured bytes. It reads the exact R2 object op=capture serves and parses
      it; it writes nothing and holds no PUT arm, so unlike op=capture it is
@@ -4722,6 +4733,13 @@ export default {
            same predicate, so hidden and absent are one answer; and it fails
            closed on an absent stamp, like every op in this list. */
         || op === "versionchain"
+        /* PL-1 / IS-1: a version set names its INQUIRY and every bundle its legs
+           rest on, so an inquiry the caller was never invited to must answer
+           exactly as one with no versions and as one that does not exist. The
+           store applies `#bundleGate` to the inquiry ONCE and counts `total`
+           behind the same gate, so hidden and absent are one answer; and it
+           fails closed on an absent stamp, like every op in this list. */
+        || op === "basisversions"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }

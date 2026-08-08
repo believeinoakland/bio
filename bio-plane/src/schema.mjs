@@ -1726,6 +1726,140 @@ CREATE TABLE IF NOT EXISTS ai_run_log (
 );
 CREATE INDEX IF NOT EXISTS ai_run_log_terminal ON ai_run_log(run, terminal);
 
+-- =========================================================================
+-- PL-1 / IS-1 -- BASIS VERSIONS (INVESTIGATIVE-SESSION.md section 6).
+--
+-- An inquiry's basis supports many VERSIONS, each a complete alternative
+-- account of the support for the inquiry's claim rather than a patch to
+-- another one. Section 5: the composition is the unit of meaning, so the composition
+-- is the unit of change.
+--
+-- THESE TWO TABLES ARE PROJECTIONS AND NOT A SECOND PLACE TO STATE A FACT
+-- (D-21), and that distinction is the whole of the item's trap. The AUTHORITY
+-- is bundle.md's own basis_versions[] block, exactly as basis[] is the
+-- authority inquiry_basis projects. Both tables are written delete-then-insert
+-- inside op=promote's ONE transaction, beside the inquiry_basis projection they
+-- sit next to, and NOTHING ELSE IN THE PLANE INSERTS INTO EITHER OF THEM. A
+-- directly-written version table -- one an op could append to without a
+-- promotion -- is the second-place-to-state-a-fact D-21 forbids by name, and
+-- test/versions.test.mjs pins the write-site count at one over the real source
+-- rather than trusting this comment.
+--
+-- WHY TWO TABLES AND NOT ONE. A version has ONE description, ONE relationship,
+-- ONE state; it has MANY legs. That is the same shape as bundles/inquiry_basis
+-- one level down, and collapsing it would either repeat the description on
+-- every leg row (D-21 again, retail) or hide the legs in a JSON blob that no
+-- index can reach and no query can ask a question of.
+--
+-- composition IS SERVER-COMPUTED AND THE DOCUMENT NEVER CARRIES IT. It is the
+-- version's frozen composition CANONICALISED -- name, description, claim,
+-- relationship, derived_from, the grounds rows and every leg field, in a fixed
+-- order with a fixed separator -- and it is what section 6 rule 3's FREEZE
+-- compares on: a promotion re-offering an existing name with a different
+-- composition is REFUSED (C-25.11), so editing produces a NEW version derived
+-- from the old one rather than moving the old one underneath whoever is reading
+-- it. It is computed here and not accepted from the caller for CLAUDE.md's
+-- standing reason: a value a caller can hand us is a value a caller can invent,
+-- and a freeze checked against a caller-supplied digest freezes nothing.
+--
+-- IT IS THE COMPOSITION ITSELF AND NOT A DIGEST OF IT, which is a deliberate
+-- choice with two reasons and one cost. (1) op=promote is SYNCHRONOUS and this
+-- plane's sha256 is crypto.subtle's, which is not; reaching for a hand-rolled
+-- synchronous hash to fill that gap would put a collision argument underneath a
+-- rule whose entire job is that two members comparing a version are comparing
+-- the same thing. (2) A byte comparison of the composition can NAME WHAT
+-- CHANGED, and the refusal does -- a digest comparison can only say that
+-- something did, which is the shape of gate that leaves a member to re-derive
+-- what the store already knows. The cost is storage, and it is small: a
+-- composition is the version's own fields, which the record is holding in
+-- bundle.md anyway.
+--
+-- WHAT IS DELIBERATELY *NOT* IN THE COMPOSITION: state, hidden, at, author and
+-- run. A version's STATE moves -- suggested/considering/accepted/rejected are
+-- IS-2's six member acts -- and the PRUNE flag moves, because prune HIDES and
+-- never deletes (D-214, DEC-29(b)). Freezing those would freeze the state
+-- machine shut. The composition is what a member compares when they compare two
+-- versions; the rest is what happened TO it.
+--
+-- run HAS NO FOREIGN KEY AND THAT IS SECTION 14b.7, not an omission. "A version
+-- SURVIVES the death of the run that proposed it -- identity is not the run's."
+-- ai_runs is SCRATCH with an expiry (section 11, modelled on capture_sessions); the
+-- version is RECORD. So the column names the run and nothing joins on it being
+-- alive, promote does not resolve it, and a version whose run has been reaped
+-- reads whole with the run still named. That is a STATED departure from the
+-- resolve-or-refuse posture every other id-bearing field here takes
+-- (subject_entity, action_basis targets, supersedes) -- taken because the
+-- alternative makes version identity a child of a scratch row's lifetime, which
+-- is precisely what section 14b.7 refuses.
+--
+-- ground IS NOT NULL ON A VERSION LEG, deliberately unlike inquiry_basis.ground
+-- one level down. There, NULL is the implicit single ground -- the right
+-- default for every leg written before REC-42 existed. A version has no such
+-- history: section 3 requires the version to CARRY the ground partition and the AND/OR
+-- relationship, because "a version that is a flat leg set cannot express
+-- plurality" and "a version with no relationship field would re-ship the flat-AND
+-- basis REC-42 corrected" (SWEEP C5). The partition is therefore TOTAL on every
+-- version and the column says so in SQL.
+--
+-- NO extent COLUMN, and it is stated rather than left to be noticed. D-164 is
+-- UNLANDED: legs address WHOLE BUNDLES today. A nullable extent column nothing
+-- writes would be the record advertising a precision it does not have -- a
+-- reader would take its absence for "the whole document was meant" rather than
+-- "this record cannot say". When D-164 lands, the column arrives with a writer.
+--
+-- BOTH TABLES CARRY bundle_id AND BOTH ARE IN op=purge's TABLES LIST (D-113).
+-- A whole-store purge reporting scope ALL while an inquiry's alternative
+-- accounts survived is the silent leftover that list exists to prevent, and
+-- hygiene.test.mjs holds the list against this file.
+CREATE TABLE IF NOT EXISTS inquiry_basis_versions (
+  bundle_id     TEXT NOT NULL,    -- the inquiry whose basis this is a version of
+  name          TEXT NOT NULL,    -- UNIQUE PER INQUIRY (section 6 rule 2) -- the primary key says so
+  ord           INTEGER NOT NULL, -- position in basis_versions[], so the order authored is readable
+  description   TEXT NOT NULL,    -- REQUIRED (section 6 rule 1): held to a commit message's standard
+  relationship  TEXT NOT NULL,    -- 'and' | 'or': the composition this version ASSERTS, checked against the partition
+  state         TEXT NOT NULL,    -- suggested | considering | accepted | rejected (section 6 rule 4 -- IS-2 owns the transitions)
+  derived_from  TEXT,             -- the version NAME this was derived from. NULL = composed fresh (section 6 rule 3a)
+  hidden        INTEGER NOT NULL DEFAULT 0,  -- the PRUNE flag. Hiding is not deleting: the row stays and stays queryable
+  claim         TEXT,             -- D-217b: a reworded claim carried AS A VERSION rather than as a new inquiry
+  run           TEXT,             -- the run that proposed it. NO foreign key -- see 14b.7 above
+  author        TEXT,
+  at            TEXT,
+  regroup_by    TEXT,             -- DEC-50 / section 6.7: a derivation that REGROUPS the partition is an attributed act
+  regroup_at    TEXT,
+  regroup_note  TEXT,
+  composition   TEXT NOT NULL,    -- server-computed canonical composition. The freeze compares it BYTE FOR BYTE
+  leg_count     INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (bundle_id, name)
+);
+-- "which versions did this run propose" is 14b.7's own question asked from the
+-- other side, and it is the one query that reads across inquiries.
+CREATE INDEX IF NOT EXISTS inquiry_basis_versions_run ON inquiry_basis_versions(run);
+-- The derivation TREE (section 6 rule 3a). Children of a version are read by (inquiry,
+-- parent name), which is the walk the prune offer and the diff surface both make.
+CREATE INDEX IF NOT EXISTS inquiry_basis_versions_derived ON inquiry_basis_versions(bundle_id, derived_from);
+
+CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
+  bundle_id    TEXT NOT NULL,
+  name         TEXT NOT NULL,    -- the version this leg belongs to
+  ord          INTEGER NOT NULL, -- position in the version's legs[], so a leg is ADDRESSABLE (D4's reasoning)
+  target_id    TEXT NOT NULL,
+  target_type  TEXT NOT NULL,    -- 'information' | 'inquiry' and NOTHING ELSE (D-184 / C-2.8)
+  role         TEXT NOT NULL,    -- 'supports' | 'cuts_against'
+  grade        TEXT,             -- A|B|C|D, NULL = undetermined and STATED as such
+  grade_axis   TEXT,             -- 'capture' | 'connection'
+  grade_source TEXT,             -- 'resolution' | 'capture' | 'testimony' | 'hunch' | 'inherited'
+  note         TEXT,
+  at           TEXT,
+  ground       TEXT NOT NULL,    -- the branch of the argument. NOT NULL: the partition is TOTAL on a version
+  PRIMARY KEY (bundle_id, name, ord)
+);
+-- The reverse index inquiry_basis_target is for, one level up: "which VERSIONS
+-- rest on this document" is what a re-evaluation has to ask once an inquiry
+-- carries alternatives, and the answer must not be a scan of every leg of every
+-- version of every inquiry.
+CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

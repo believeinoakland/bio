@@ -263,7 +263,14 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    returns spelling success `ok: true` while `aiRunLog` answers `found: true`.
    TWO instruments, each blind to it for its own reason, and it was found by hand
    at another item's integration. Both are corrected; both now name it. */
-t("WALK: the roster is SEVENTEEN ops — the sweep is the item, not the two the item named",
+t("WALK: the roster is NINETEEN ops — the sweep is the item, not the two the item named",
+/* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
+   CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
+   inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,
+   a method carrying its cap as a named constant beside `LIMIT ?`, so nothing about the
+   detector had to move to admit it. Recorded as its own paragraph rather than folded into
+   the one below, because the one below is a record of two items colliding on this number
+   and that record is worth keeping intact. */
 /* CORRECTED TO 18 AT INTEGRATION, 2026-08-07 by CONDUCT — and the correction is the point.
    PL-10 and REC-70 landed in the same integration and EACH corrected this pin 16 -> 17,
    for DIFFERENT ops: `op=versionchain` (a new capped read) and `op=airunlog` (a read that
@@ -271,7 +278,7 @@ t("WALK: the roster is SEVENTEEN ops — the sweep is the item, not the two the 
    Taking either worker's number would have left this pin asserting 17 over a roster of 18 —
    a hand-carried count going stale in the very suite whose subject is that counts go stale.
    Two items may not both be right about a shared number, and merging them is the integrator's. */
-  OPS.size, 18);
+  OPS.size, 19);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -472,6 +479,49 @@ const R70_RUN = "RUN-2026-0807-bounds70";
 t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=airunlog's cap of 1 cuts it",
   (await GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=5000`)).entries?.length, 3);
 
+/* ------------------------------------------------------- PL-1 / IS-1's FIXTURE.
+   The basis-version read joined this roster as a NEW capped read. An inquiry
+   carrying THREE alternative accounts of its evidence is what a cap of 1 has to
+   cut; two would do, and three is used so an `offset` page in the middle is a
+   real page. Written through op=promote because THERE IS NO OTHER WAY IN — the
+   versions are a projection of bundle.md and the item's whole constraint is that
+   no op appends to the tables directly. */
+const PL1_INQ = "INQ-2026-0807-bounds-pl1";
+{
+  const v = (name, ground) => [`  - name: "${name}"`,
+    `    description: "Reading ${name}, composed for the bound fixture and no other purpose."`,
+    "    relationship: \"and\"", "    state: \"suggested\"", "    derived_from: null",
+    "    hidden: false"].join("\n");
+  const g = (name, ground) => [`  - version: "${name}"`, `    ground: "${ground}"`,
+    "    asserted_by: \"r57\"", `    at: "${NOW}"`].join("\n");
+  const l = (name, ground, target) => [`  - version: "${name}"`, `    target: "${target}"`,
+    "    role: \"supports\"", `    ground: "${ground}"`].join("\n");
+  const names = ["first reading", "second reading", "third reading"];
+  const md = ["---", `id: ${PL1_INQ}`, "object_type: inquiry", "schema: inquiry@1",
+    `title: "Which reading of the agenda holds?"`, "current_state: open", "prior_state: null",
+    `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:", "  mode: assisted",
+    "  capability_tier: session", "group: believe-in-oakland", "references: []",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
+    "  since: null", "  source: null", "visuals: []", "surfaced_by: agent",
+    'disposition_reason: ""', "recheck_triggers:", "  - text: Revisit next cycle",
+    "    description: The next agenda may restate it.",
+    "basis_versions:", ...names.map((n) => v(n)),
+    "basis_version_grounds:", ...names.map((n, i) => g(n, `route ${i + 1}`)),
+    "basis_version_legs:", ...names.map((n, i) => l(n, `route ${i + 1}`, `INFO-2026-000${i + 1}-r57`)),
+    "---", "", "## Question", "", "Which reading of the agenda holds?", "",
+    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: PL1_INQ, base: null, snapKey: `${PL1_INQ}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: PL1_INQ,
+            current_state: "open", created: NOW, last_updated: NOW } });
+  if (r?.ok === false) throw new Error(`PL-1 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
+}
+t("FIXTURE ARMS THE TRAP: one inquiry carries THREE alternative accounts of its evidence, so "
++ "op=basisversions' cap of 1 has something to cut",
+  (await GET(`op=basisversions&token=mem-r57&id=${PL1_INQ}&limit=5000`)).total, 3);
+
 const DRIVEN = [
   { op: "readingname", bite: 1, whole: 500,
     drive: (n) => GET(`op=readingname&token=mem-r57&entity=${ENT}&limit=${n}`),
@@ -572,6 +622,17 @@ const DRIVEN = [
     more: (a) => a.truncated, says: "`truncated`",
     lost: "whether these are the run's observations or its first N — and §14b.7's RESUMED run reads its own "
         + "log to continue rather than restart, so a cut it cannot see is work silently redone" },
+  /* PL-1 / IS-1, 2026-08-07: the basis versions of one inquiry, a NEW capped
+     read. It answers in `op=versionchain`'s vocabulary — `limit` beside
+     `truncated`, with `offset` — because it is the same KIND of read: a KEYED
+     lookup (one inquiry, not a query) whose answer is a list. No spelling is
+     minted for it, and its 200/1000 pair is op=versionchain's reused. */
+  { op: "basisversions", bite: 1, whole: 1000,
+    drive: (n) => GET(`op=basisversions&token=mem-r57&id=${PL1_INQ}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are ALL the readings of the evidence this question carries or the first N — and a "
+        + "member choosing between accounts of the evidence while an account they were never shown sits "
+        + "behind a cut is the record deciding an argument by omission" },
 ];
 
 console.log("\n--- LIVE: every roster op, driven twice — the bound biting, and not ---");

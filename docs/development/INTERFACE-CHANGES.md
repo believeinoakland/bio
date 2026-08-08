@@ -1873,3 +1873,41 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 
 **SETTLED. I3 10.1.0 → 10.2.0 (IC-27) → 10.3.0 (IC-28).** I5 NOT touched by either. **Open against IC-28: D-227 is reproduced and closed FOR THIS OP by a direct SQL pin, and still holds for `op=readingname`, `op=queue` and `op=audit`** — which the walk grades BOUNDED while an unbounded scan sits beside the bounded one. Riding REC-66.
 
+
+---
+
+## IC-29 · I3: `op=basisversions`, the version set of an inquiry's basis · I5: two new projection tables · PROPOSED 2026-08-07 (PL-1 / IS-1) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**Interfaces:** **I3** (the op contracts), owned by RECORD, currently 10.3.0 — **ADDITIVE**. **I5** (the store schema), **TOUCHED**: two new tables, two new index pairs, two new `purge` entries, two new `op=stats` counts.
+
+**The change, in one sentence:** an inquiry's basis now carries **named, frozen, alternative VERSIONS** — each a complete account of the support for the question, with its ground partition, the AND/OR relationship it states, the `derived_from` edge it came along, the run that proposed it and a hide-only prune flag — authored in `bundle.md` and read back through one new op, `op=basisversions`.
+
+**ADDITIVE FOR EVERY EXISTING CALLER, and the shape of that claim matters more than usual here.** No op is renamed. No refusal reason, class, gate or ordering moves. No existing key is removed, renamed or reshaped. `inquiry_basis` is **untouched** — not a column, not an index, not the projection that writes it — so `op=inquirystrength`, `op=earnedbasis`, `op=meaningrows` and every strength derivation answer byte-identically for every input. An inquiry with no version block behaves exactly as it did, and **every inquiry in the record today has none**.
+
+**THE ONE NEW REFUSAL SURFACE ON AN EXISTING OP.** `op=promote` gains three refusal reasons — `BASIS_VERSION_REFUSED`, `VERSION_LEG_UNRESOLVED`, `VERSION_FROZEN` — reachable **only** by a document that carries a `basis_versions[]` block. A caller that promotes today is not refused tomorrow. Each carries a C-number (C-25.1 … C-25.18), a DEC-49 wire `code` and a **canned translation**, read from ONE row in `checks/bio-checks.mjs` (`BASIS_VERSION_CHECKS`), with **no second copy anywhere** — asserted, and the C-numbers counted over comment-stripped source so a second literal fails.
+
+**THE NEW OP.** `op=basisversions&id=<INQ-…>` · classes `admin`/`member`/`probe` · `mutating: false`. Answers `{ ok, inquiry, inquiry_present?, versions[], count, total, limit, offset, truncated }`, enveloped in **`op=versionchain`'s own vocabulary** (`limit` after clamping beside `truncated`, with `offset`) — reused rather than a thirteenth spelling minted, because it is the same KIND of read: a keyed lookup whose answer is a list. Its 200/1000 pair is `op=versionchain`'s. Each version carries `name`, `description`, `relationship`, `grounds[]`, `state`, `derived_from`, `hidden`, `claim`, `run`, `author`, `at`, `regroup`, `composition`, `leg_count`, `legs_complete` and `legs[]`.
+
+**THERE IS DELIBERATELY NO WRITE OP, and that is the item rather than an omission.** Versions are a **projection of `bundle.md`**, written delete-then-insert inside `op=promote`'s single transaction beside `inquiry_basis`. A version table an op could append to directly would be a second authority for a fact the document already holds — **the second-place-to-state-a-fact D-21 forbids**. It is PINNED rather than promised: the suite counts write sites over comment-stripped real source (exactly one per table, both inside `promote`'s own body), counts the tables in `schema.mjs` (exactly two), and **re-runs both walks over a source that DOES carry a second write site and a third table and requires them to find it**.
+
+**I5's TWO TABLES,** `inquiry_basis_versions` and `inquiry_basis_version_legs`, placed **before the `host_governor` block** and added to **`purge`'s `TABLES` list (D-113)** and to `op=stats`, with the D-113 consequence proved through the op rather than asserted.
+
+**THREE SHAPE DECISIONS worth a reader's attention:**
+
+- **`relationship` is a FIELD and not derived from the partition.** The partition alone implies the arithmetic, so a field that could only ever agree would be a checkbox and a second statement of one fact. It is here because it **can disagree**, and the disagreement is REFUSED (C-25.4): DEC-32's keystone is that the structure is authored before the strength is shown, an AI-composed version arrives structure-and-strength together, and the stated relationship is what a member affirms at the accept ceremony. Its **absence** is refused outright (C-25.3) rather than defaulted to `and` — §3: *a version with no relationship field would re-ship the flat-AND basis REC-42 corrected*.
+- **`composition` is the canonical composition ITSELF, not a digest of it.** `op=promote` is synchronous and this plane's sha256 is `crypto.subtle`'s, which is not; a hand-rolled synchronous hash would put a collision argument underneath the freeze. A byte comparison also **names which field moved**, and the refusal does.
+- **`run` has no foreign key and `op=promote` does not resolve it** — a **stated departure** from the resolve-or-refuse posture `subject_entity`, `action_basis` and `supersedes` all take. §14b.7: *a version survives the death of the run that proposed it — identity is not the run's.* Requiring resolution would make version identity a child of a scratch row's lifetime, and §14b.7's resumed run is exactly that case.
+
+**MEASURED CONSUMER IMPACT: NIL, and re-measured rather than inherited.** `civicos-ui`, `newgroup`, `docprofile`, `pdf-worker` and `tools` reach neither the new op nor the new frontmatter keys — the op did not exist before this commit. UI-42 and UI-45 are the intended consumers and are UI's to schedule; they DEPEND on this item and were not built against an earlier shape.
+
+**NOT CLAIMED.** No oracle is closed and no disclosure fixed. The D-15 gate on the new read is applied through the one compilation point every read uses, and **what it actually buys is the fail-closed arm**: `viewerPredicate` filters PROJECT bundles and nothing else, and an inquiry is not a project, so the participation arm cannot bite on this subject today. That is stated at the site, in `gate-reads.test.mjs`'s classification, and here — a classification that overstates what a gate buys is worse for the next reader than none.
+
+### 2 · RESPONSES
+
+*(Awaiting. RECORD is the owner. UI is the only listed consumer of I3 that this reaches, and it has nothing to migrate: the op is new and unconsumed.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
