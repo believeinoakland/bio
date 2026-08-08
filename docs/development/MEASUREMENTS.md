@@ -3466,3 +3466,83 @@ quoted codes and on its first run it read ITS OWN FILE, whose expected set is a 
 exactly those codes — so all eight counted as pinned and the arm reported an empty set, which would
 have read as an estate with no gap in it. REC-73's subject arriving inside REC-73's sweep, found
 the only way it could be: by running it. The walk now excludes itself and says why.
+
+## 2026-08-08 · M0-13 / D-231 — the intermittently red suite, and it was a live plane defect
+
+**Instrument:** `bio-plane/.nc/probe-substance.mjs` (a driven probe against a real Miniflare plane,
+written in this worktree and not landed), `bio-plane/test/suggest.control.mjs`, and
+`bio-plane/scripts/control-register.mjs`'s own `readControl` over all 119 suites.
+
+**Baseline measured in this worktree before anything changed: 119/119 suites green, 7,285
+assertions, 101.1s.** The brief's figure was right for once — and it was still measured rather
+than believed, because the worktree arrived with NO `node_modules` and the first battery run
+reported `14/119 green` with 105 suites dying on `Cannot find package 'miniflare'`. **A battery
+that cannot import its harness reports a shape indistinguishable from a catastrophic regression,**
+and the only thing that separated the two was running `npm ci` and measuring again.
+
+**THE CAUSE OF D-231 IS A WALL CLOCK INSIDE A COMPARISON THAT HAD TO BE TIME-FREE.**
+`suggestVersion`'s local `substanceOf` excluded `name` and `derived_from` from PL-1's canonical
+composition and nothing else. A composition's ground rows are
+`ground<TAB>ground<TAB>asserted_by<TAB>at<TAB>statement`, and `#suggestionFrontmatter` stamps that
+`at` with the server's clock at second resolution. The candidate is stamped NOW, every held reading
+was stamped when written, so §6 rule 8's duplicate gate fired **only inside a one-second bucket.**
+
+Driven, four scenarios, one inquiry each so none could contaminate another:
+
+| gap between the two identical submissions | result |
+| --- | --- |
+| 0 ms | refused `SUGGEST_NOT_DIFFERENT`, `same_as` named |
+| 100 ms | refused `SUGGEST_NOT_DIFFERENT` |
+| 1,200 ms | **LANDED as a second version — the write gate did not fire** |
+| 2,500 ms | **LANDED** |
+
+**THE FLAKE WAS THE CHEAP HALF.** `suggest.test.mjs` runs in 510 ms and usually stayed inside one
+second standalone; under a loaded battery it crossed. A duplicate that lands makes the version
+count 7 where block 3 asserts 6, so CHECK 3 and `STRUCTURALLY NOTHING MOVED` go red together —
+**exactly the 59 pass / 2 fail CONDUCT measured** — while a boundary crossed only by the later
+renamed submission gives **the 60/1 PL-14 measured.** Both historical observations fall out of one
+mechanism. Re-arming the cause reproduces the 2-failure signature ON DEMAND, which is what makes
+this a diagnosis rather than a story.
+
+**THE BRIEF'S SUSPECT WAS WRONG, and it is recorded because it is the obvious answer.** F10's
+verbatim-resubmit key is CLEAN: `submission` is built from caller-derived fields twenty-one lines
+BEFORE `nowIso` exists, and `nowIso` reaches only `first_at`/`last_at`. **There was no concurrency
+in it at all** — `scripts/battery.mjs` runs its suites SEQUENTIALLY (`for (const file of suites) {
+await run(file) }`), so no suite of ours was ever running beside another. Concurrency was never more
+than the machine load that made the suite slow enough to cross a second, and that load comes from
+other worktrees' batteries rather than from this one.
+
+**THE CLASS SWEPT, and the class is one.** A read of every equality comparison over composed or
+digested bytes in `src/**` found exactly ONE instance of *a server clock inside bytes compared
+against stored bytes*: this one. The freeze (`prior.composition === v.composition`) is
+document-derived-vs-stored and safe; the publish, manifest, bias-drift, selection-drift and CAS
+comparisons carry no clock. Two sites are the class **recognised and closed on purpose** and are
+worth naming as the house style: `container.mjs` pins ZIP entries to the DOS epoch *"never
+`new Date()`… a serving clock in the bytes would change the container's hash on every request"*,
+and `monitor_fired` REMEMBERS its tick epoch in `monitor_tick_epoch` because *"`now` cannot be the
+epoch — a retry arrives with a new `Date.now()`."* `link_verdicts`/`reuse_verdicts` carry a clock
+in a PRIMARY KEY by intent (append-only, `INSERT OR IGNORE`), which is the mirror image and is
+documented as accepted.
+
+**WHAT THE SWEEP COULD NOT SEE, stated rather than implied.** It was a source read over `src/**`
+plus `checks/bio-checks.mjs`; it did not drive anything but the one endpoint. It cannot tell whether
+any `bundle.md` in the wild carries `basis_version_grounds[].at` written by something other than
+`suggestVersion` — a hand-authored document's stamp is document-derived and the gate behaves
+correctly for it, so the defect was always suggest-vs-suggest. And **`sandbox.mjs`'s `$TMPDIR`
+ownership (D-186) was never in play**: it is per-process and the battery is sequential, so nothing
+here tests it either way. What this run CAN say about it is only what the battery printed —
+`this run left 0 directories holding 0 miniflare sandboxes (was 0/0 before the suites ran)`, with
+**44 host orphans present before and after, unchanged, belonging to other worktrees**. That the
+count is unchanged is evidence the sweep spares a foreign owner as designed; it is NOT evidence
+that per-process isolation holds under genuine concurrency, and no instrument here measured that.
+
+**TWO RESIDUALS RAISED RATHER THAN FIXED.** D-232: the same gate is ALSO defeated by a quotation
+mark, deterministically and with no clock — the candidate is composed from raw args while the bytes
+it is compared against went through `#fmSafe`, which rewrites `"` and `\`, folds newlines and trims.
+Driven, all within one second: a duplicate carrying a quote LANDED, one carrying a backslash LANDED,
+one with trailing spaces LANDED. D-233: **the negative-control register's "arms stated" tally cannot
+see a declaration written in the numbered style.** `countArms` counts ` -> ` arrows;
+`suggest.test.mjs` declares TWELVE arms in `(1) … (2) …` prose and the register scores it **ZERO**.
+Four of 119 suites score zero. Nothing is red because the arms count is reported and never gated —
+which is precisely why the figure (388 on this tree, unmoved by adding two more arms) means less
+than it appears to.
