@@ -1,0 +1,53 @@
+
+BIO plane coverage — 130 battery suites
+
+OPS  159 declared · 159 reached through the control plane (100.0%) · 0 at the Durable Object only · 0 unreached
+
+CHECKS  208 in the catalog · 208 named by an assertion (100.0%) · 0 never named
+  Every check EXECUTES: the conformance suite runs the whole catalog and asserts
+  zero findings. Never NAMED means no assertion proves the check FIRES on a
+  violation, so it is exercised only in the direction that passes. That is the
+  C-20.1 defect class exactly: the audit was clean because it was not looking.
+
+NEGATIVE CONTROLS  130 of 130 suites declare one (100.0%) · 576 arms stated across 129 classified declaration(s) · fullest 40 (hygiene.test.mjs) · 1 UNCLASSIFIED
+  An arm is one MARKED item of the list a declaration states — a "break this -> that
+  must then fail" transition, or a parenthesised ordinal opening a segment. The count
+  is a FLOOR on arms stated, not an exact count: an arm given a LABEL rather than an
+  ordinal ("(D-231a)") is not counted, because widening the ordinal to any bracketed
+  token would count every "(D-113)" and "(DEC-46)" this prose is full of. It is here
+  so a declaration that got SHORTER is visible — a register that reads green while
+  quoting a fraction of what was checked is the generous direction (M0-9).
+
+  UNCLASSIFIED — a declaration this register could NOT count arms in. NAMED here
+  rather than scored zero, which is the whole of D-233: a suite silently scored 0
+  reads as "declares no arms" when the truth is "this instrument cannot read this
+  suite's arms", and four suites declaring 48 arms between them read that way for
+  four consecutive re-measurements of this row.
+    case-opened.test.mjs
+
+  REGISTER FLOOR  arms 576/570 · classified 129/129 · corpus (suites read) 130/130 · GREW by 6 arm(s)
+  The tally rises on its own and can only FALL by an edit — so a ceiling would never
+  have fired. The floor is what makes this figure worth reading (M0-14).
+
+FLEET  2 members beside the plane · 4/4 surface ops reached · 2/2 declaring a negative control · floor 2 member(s) / 4 op(s)
+  A second Worker's surface was uncounted (D-117); each member is held to the
+  plane's own two behavioural surfaces — every surface op reached by one of the
+  member's suites, and a declared control. Discovered from fleet-member.json.
+  VF-3: discovery alone was not enough. A member that stops DECLARING itself used
+  to stop existing, and the figure held still while a component went dark — D-117's
+  own sentence. So every Worker directory is now accounted for, the count carries a
+  FLOOR, an unreadable or empty SURFACE table FAILS instead of reporting 0/0, and
+  fleet rule 2 (a member ASSERTS nothing) is a gate rather than a convention.
+
+    agent-worker (agent-worker/)  2/2 ops reached · 2 suites · control declared
+      reached   run
+      reached   version
+
+    pdf-worker (pdf-worker/)  2/2 ops reached · 2 suites · control declared
+      reached   structure
+      reached   version
+
+    Workers accounted for but NOT fleet members: bio-plane (the plane itself — its OPS table, checks and controls are measured in full above) · newgroup (the INSTALLER)
+
+provenance: 140 of 140 discovered item(s) are in the commit at HEAD (a777538) · 130 plane suite(s) · 2 fleet manifest(s) · 4 fleet suite(s) · 4 wrangler.jsonc
+

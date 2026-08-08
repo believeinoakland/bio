@@ -4567,7 +4567,13 @@ instrument wrong three times and the subject none.**
   `check-firing.test.mjs`'s estate walk covers `tools/`, read this file as a producer for
   a retired shape, and went RED. It failed in the SAFE direction. The lesson generalises
   past id-shaped examples: **a prose mention inside a file an estate walk covers is
-  indistinguishable from the real thing.** Separately, `hygiene.test.mjs`'s walk-class
+  indistinguishable from the real thing.** **AND THE SAME CLASS LANDED A FOURTH TIME, IN
+  THIS ITEM'S OWN RELEASE NOTE:** the `released:` line quoted the id its legacy control arm
+  printed, in `CLAIMS.md`, which is `D`'s own corpus — and the prose-driven-floor arm went
+  RED on the next battery. The number is gone; the sentence saying why is in its place.
+  **Four instruments, four authors, four days: the rule is not "do not write a next-free-
+  number example", it is "an id-shaped token in a file that is a corpus is an allocation
+  as far as any matcher can tell".** Separately, `hygiene.test.mjs`'s walk-class
   ratchet named this item's new sandbox walk on the first full battery, before anyone read
   the diff — the ratchet working for the third recorded time.
 
