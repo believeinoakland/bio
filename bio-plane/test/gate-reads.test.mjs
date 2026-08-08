@@ -928,6 +928,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "caller already names and enumerates nothing, so there is no list whose total could betray a "
       + "hidden row. Gating it on the request's inquiry would put a member predicate in front of a "
       + "question only the daemon asks, which protects nothing and would make the fence harder to read.",
+    /* PL-11 / IS-5 / D-199, 2026-08-08. Classified by the item that adds it. */
+    aicredentials: "HOLDS NO CORPUS MATERIAL: the roster of agent credentials this group has minted "
+      + "— an identity, a principal, a declared task scope, and who authored it. No bundle id appears "
+      + "in the table, so there is nothing for the D-15 viewer predicate to filter and a gate here "
+      + "would be a gate over nothing, the `biasinhale` entry's reasoning arriving from the other "
+      + "direction. It is CLASS-FENCED to admin and member and is deliberately wider than the acts "
+      + "beside it: what agents are running here, under whose name, and what they may touch is "
+      + "exactly the sort of thing a member should not have to ask an administrator for, and D-199 (2) "
+      + "put the scope on the record so it could be READ. It publishes no value and no hash.",
     /* the pre-auth surface */
     bootstrap: "PRE-AUTH: answers whether this instance has been claimed. Never reaches the store's "
       + "gated reads.",

@@ -303,6 +303,18 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
+    /* PL-11 / IS-5 / D-199 (2). The `ai` credential's DECLARED TASK SCOPE, and
+       the exemption is the same judgement `credentials`, `members` and `signers`
+       above already carry rather than a new one: it is IDENTITY and a standing
+       authored grant, not something derived from a captured document. No bundle
+       id appears in it. A whole-store purge that cleared it would REVOKE every
+       agent this group runs as a side effect of resetting the corpus — the
+       instance would then look correct and every automated worker would 401
+       forever, which is DIST-1's armed-alarm trap arriving through the reaper.
+       And the grant is precisely the thing D-199 (2) moved out of a settings row
+       so it could only be amended as an authored, dated act; deleting it as a
+       side effect of a different operation is that rule failing quietly. */
+    ai_credentials:       "the ai class's declared task scopes (D-199): a standing, authored, dated grant naming who minted it and for whom, in credentials' and members' family; a purge that cleared it would withdraw every agent's authority with nobody having decided to",
     /* REC-14 / DEC-17. The GROUP's declared default required strength: a
        standing declaration about the standard the group holds its own work to,
        authored before the work and dated, exactly like the roster and the

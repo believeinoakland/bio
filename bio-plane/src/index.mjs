@@ -28,6 +28,11 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             arm's DEC-49 row. Both live in the catalog so the Durable Object's
             drain and this control plane cannot disagree about what was sent. */
          civicosUserAgent, CAPTURE_REQUEST_CHECKS,
+         /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The four this
+            file enforces are the REACH ones, and they are here rather than in
+            the store because the OPS table below is the only thing that knows
+            what an op is or which classes may call it. */
+         AI_CREDENTIAL_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
@@ -925,6 +930,34 @@ const OPS = {
   capturerequestdrain: { classes: ["admin", "probe", "daemon"],           mutating: true  },
   capturerequestdraining: { classes: ["admin", "probe"],                  mutating: false },
   capturerequests:     { classes: ["admin", "member", "probe"],           mutating: false },
+  /* PL-11 / IS-5 / D-199 — MINTING AN AI CREDENTIAL, AND THE CLASS LIST IS THE
+     ENFORCEMENT RATHER THAN A NOTE ON IT.
+
+     NO `ai` CLASS APPEARS IN ANY ROW OF THIS TABLE, INCLUDING THESE. That is
+     not an omission and it is asserted structurally in
+     test/aicredential.test.mjs: the `ai` class is admitted by a SHAPE over this
+     table (`aiTaskScope` below), never by being named in it, so adding "ai" to
+     a row would grant nothing and removing one would take nothing away. PL-4
+     delegated exactly this constraint — op=capturerequestdrain must never gain
+     the class — and this is how it is made structurally true rather than
+     remembered.
+
+     `probe` IS ABSENT FROM ALL THREE, unlike almost everything around them, and
+     the reason is D-199 (3). A probe credential is a MACHINE, and minting is a
+     member act; admitting probe here so the surface were exercisable would be
+     the `index.mjs:668` hole DEC-52 measured — *"probe is admitted so the
+     surface is exercisable"* — arriving at the one act that decides what
+     machines may do. The store refuses a machine stamp anyway (C-29.1), so this
+     is the second of two fences and neither is load-bearing alone; what it buys
+     is that the refusal a probe gets says the true thing.
+
+     THE READ IS WIDER THAN THE WRITES ON PURPOSE. What agents this group has
+     running, under whose name, and what they may touch is exactly the sort of
+     thing a member should not have to ask an administrator for. It carries no
+     value and no hash. */
+  aicredentialmint:    { classes: ["admin", "member"],                    mutating: true  },
+  aicredentialrevoke:  { classes: ["admin", "member"],                    mutating: true  },
+  aicredentials:       { classes: ["admin", "member"],                    mutating: false },
   /* PL-12 / §14: THE FENCE, and it is an op so that it can be POINTED AT. The
      spawn contract for a search sub-session omits the bias manifest BY
      CONSTRUCTION; before this it existed only as a sentence in a design
@@ -1218,7 +1251,15 @@ const SESSION_OPS = {
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
-                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS]),
+                   ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
+                   /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
+                      and a MEMBER is a signed-in person — not the MEMBER_TOKEN
+                      machine credential, which stamps `token:member` and is a
+                      machine by REC-46's predicate exactly as REC-45 measured. So
+                      these are session ops before they are anything else: the only
+                      route that produces a name the store will accept is a session,
+                      and the store refuses everything else BY SHAPE (C-29.1). */
+                   "aicredentialmint", "aicredentialrevoke"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
@@ -1226,7 +1267,8 @@ const SESSION_OPS = {
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS, "memberadd", "memberset",
-                   "signeradd", "signerset", "governorstate", "governorconfig"]),
+                   "signeradd", "signerset", "governorstate", "governorconfig",
+                   "aicredentialmint", "aicredentialrevoke"]),
 };
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -1468,6 +1510,17 @@ const NEEDS = {
   memberset:        null,
   signeradd:        null,
   signerset:        null,
+  /* PL-11 / IS-5 / D-199: NO WORKING CAPABILITY, and NO FIFTH CAPABILITY TOKEN
+     IS MINTED — CAPABILITIES.md §4's rule, which every act since REC-13 has
+     followed. Creating or withdrawing an agent credential is instance-level
+     governance in `memberadd`/`signeradd`'s family, bounded by the class ACL
+     and by SESSION_OPS, not by section 5's four working rights. It would be
+     tempting to hang it on `contribute` because the credential can go on to
+     write; that would be the wrong mechanism for the reason `release` records
+     one line of reasoning over — a capability is a property of the SESSION, and
+     what bounds this act is who a session IS. */
+  aicredentialmint:   null,
+  aicredentialrevoke: null,
   /* D-103: setting a host's appetite is an operator act bounded by
      SESSION_OPS.admin, the same as the roster ops above, not a section-5
      working capability. governorstate is a read and needs no entry at all. */
@@ -1705,6 +1758,176 @@ function scopeFor(cls, url) {
   const asked = url.searchParams.get("store");
   if (cls === "probe") return asked && asked !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked)}` } : { name: SCRATCH };
   return { name: asked === SCRATCH ? SCRATCH : "bio" };
+}
+
+/* =====================================================================
+ * PL-11 / IS-5 / D-199 — THE FIFTH CLASS, AND THE FIRST ONE THAT IS NOT A
+ * BINDING.
+ *
+ * WHY `classify()` ABOVE SAYS NOTHING ABOUT IT. The four classes it resolves
+ * are ENV BINDINGS: an operator sets a value in the hosting dashboard and the
+ * plane compares. D-199 (2) rules that out for this class, transplanting
+ * DEC-17's reasoning verbatim — a settings row *"would be a way to change the
+ * standard with nothing to read afterwards"*, and what an AI credential may
+ * reach is exactly the thing that must be amendable only as an authored, dated,
+ * on-the-record act. So an `ai` credential resolves against a ROW that names
+ * the member who minted it and the day they did, and the resolution happens in
+ * the fetch handler below, one step after `classify()` returns nothing, in the
+ * same place and for the same reason a signed-in session resolves there.
+ *
+ * A DELIBERATE CONSEQUENCE, STATED SO NOBODY LATER READS IT AS AN OVERSIGHT:
+ * this class costs a Durable Object round trip on every call, which the four
+ * binding classes do not. A cached copy in the Worker would buy the round trip
+ * back and would also be a second answer to "what may this credential do",
+ * ageing separately from the row a member just amended. REC-46 is an entire
+ * item spent removing three unsynchronised answers to a smaller question.
+ *
+ * D-199 (1) — ONE CLASS CARRYING A DECLARED TASK SCOPE, NOT A CLASS PER TASK.
+ * The plane already had the two-dimensional answer and DEC-55 names it: class
+ * plus scope, with the scope enforced at the gate BY REFUSING, which is what
+ * `scopeFor` does to the probe class one function up. `aiTaskScope` is that
+ * shape reused — same return shape, same enforcement point, same refusal
+ * posture — and it gives per-function confinement at the cost of one class.
+ *
+ * THE SCOPE NAME IS FREE TEXT AND THE WRITES ARE THE ENFORCEABLE HALF. A closed
+ * vocabulary of scope NAMES was considered and refused: it would grow one entry
+ * per task and become D-199 (1)'s class-per-task arriving through a different
+ * door, while buying nothing — what confines a credential is the op set, and a
+ * name nobody enforces is a label. So `task_scope` records what the authoring
+ * member called this piece of work, and `scope_writes` is what the gate reads.
+ * ===================================================================== */
+
+/* The presented shape. Deliberately NOT the 64-hex a session token uses: the
+   handler must be able to tell "this is an agent credential that did not
+   resolve" from "this is a session token that did not resolve", because those
+   are different answers and only one of them is worth a member's attention. */
+const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
+
+/* THE FLOOR, AND IT IS THE WHOLE FENCE: an `ai` credential may be admitted only
+ * where a MEMBER class is admitted. ONE property of the OPS table, read live.
+ *
+ * THIS IS PL-4'S DELEGATED CONSTRAINT DISCHARGED — *the fence is a SHAPE, not a
+ * class list.* op=capturerequestdrain carries no member class BY CONSTRUCTION,
+ * because PL-4 ruled that a member reaching for the daemon's verb by hand would
+ * be a person doing the daemon's job with the daemon's conduct rules applied to
+ * them. It therefore falls outside every scope anybody can author, today and
+ * after the next unattended op lands, and NOBODY HAD TO REMEMBER IT.
+ *
+ * IT HOLDS FROM THE OTHER SIDE TOO. No row of the OPS table names `ai` — that
+ * is asserted structurally in test/aicredential.test.mjs — so adding the class
+ * to a row would admit nothing, and this function is the only door. Two
+ * independent proofs, both driven, because a fence with one proof is a fence
+ * with one place to go wrong.
+ *
+ * `classes: null` ops (the unauthenticated surface) answer FALSE here rather
+ * than throwing, and that is the fail-closed direction: they enforce their own
+ * gates and an agent credential has no business inside a bootstrap claim. */
+function aiReachesAsMember(spec) {
+  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
+}
+
+/* THE DECLARATION, judged once when a member AUTHORS it. Separate from the gate
+ * below on purpose: this asks whether a sentence may be written into the record
+ * at all, and the gate asks whether a call is within a sentence already there.
+ * PL-4 measured what happens when one predicate sits at two points — one of the
+ * two codes becomes unreachable and can never be driven — so these are
+ * different questions with different codes and both are driven.
+ *
+ * IT IS ITS OWN NAMED FUNCTION rather than an inline block in the handler, and
+ * that is REC-71's rule paid at allocation time: a DEC-49 `where` resolves a
+ * span BY FUNCTION NAME, and PL-4 shipped one pointing at `acquire`, a name that
+ * does not exist because the op lives inside the fetch handler — so nothing was
+ * checking that site at all. */
+function aiScopeDeclaration(writes) {
+  const refusal = (code, detail, extra) => {
+    const row = AI_CREDENTIAL_CHECKS[code];
+    return { error: { reason: code, code, check: row.check, translation: row.translation,
+                      detail, ...(extra || {}) } };
+  };
+  const asked = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
+
+  /* DEC-49 REGION is-ai-scope-declaration
+   *
+   * THE SPAN `AI_SCOPE_UNKNOWN_OP` and `AI_SCOPE_BEYOND_MEMBER_REACH` name
+   * (REC-71). A REGION and not the whole function, so the normalisation either
+   * side of it is not conscripted into this family. Helper `refusal`, and every
+   * code a STRING LITERAL at its site so arm C of the DEC-49 guard can COMPARE
+   * it rather than read past a variable. */
+  for (const op of asked) {
+    if (!Object.prototype.hasOwnProperty.call(OPS, op))
+      return refusal("AI_SCOPE_UNKNOWN_OP",
+        `'${op.slice(0, 60)}' is not an operation this instance performs. A scope naming something `
+        + `nothing recognises would sit in the record looking like a permission and meaning nothing, `
+        + `which is exactly what declaring the scope on the record rather than in a settings row is `
+        + `for (D-199 (2)).`, { op });
+    if (!aiReachesAsMember(OPS[op]))
+      return refusal("AI_SCOPE_BEYOND_MEMBER_REACH",
+        `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to `
+        + `an agent. This is a property of the operation and not a list of forbidden ones: the `
+        + `unattended worker's own verbs carry no member class by construction, so they are outside `
+        + `every scope anybody can author.`,
+        { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null });
+  }
+  /* END DEC-49 REGION is-ai-scope-declaration */
+
+  return { writes: [...new Set(asked)].sort() };
+}
+
+/* THE GATE. `scopeFor`'s shape, one class over: `{ error }` or the admission.
+ *
+ * READS ARE THE FLOOR AND WRITES ARE THE DECLARATION. An `ai` credential reaches
+ * every NON-MUTATING op a member reaches — that is IS-5's "reads across the
+ * project", and what bounds WHAT it sees is not this function but the STATED
+ * VIEWER stamped from the record's principal, so a member-scoped credential
+ * sees exactly what that member sees and an organisation-scoped one sees what
+ * any instance-level credential sees. A MUTATING op additionally has to be named
+ * in the writes the record declares.
+ *
+ * THE FLOOR IS RE-EVALUATED HERE ON EVERY CALL even though the mint already
+ * applied it, and that is not the duplicated-predicate mistake PL-4 measured: it
+ * answers with the GATE's code, not the mint's, because a row can outlive the
+ * rule that admitted it. An op that loses its member class tomorrow leaves every
+ * credential naming it refused today, with nobody having to find the rows.
+ *
+ * THERE IS NO OP NAME IN THIS FUNCTION. Not one literal, and the suite asserts
+ * it over this function's own source — the fence is a shape, and a shape with an
+ * exception list in it is a list. */
+function aiTaskScope(cred, op, spec) {
+  const refusal = (code, detail, extra) => {
+    const row = AI_CREDENTIAL_CHECKS[code];
+    return { error: { reason: code, code, check: row.check, translation: row.translation,
+                      detail, ...(extra || {}) } };
+  };
+
+  /* DEC-49 REGION is-ai-task-scope
+   *
+   * THE SPAN `AI_BEYOND_TASK_SCOPE` and `AI_CREDENTIAL_REVOKED` name (REC-71):
+   * a REGION, so the admission returned below is not read as a refusal site.
+   * Helper `refusal`, codes as STRING LITERALS. */
+  if (cred.revoked)
+    return refusal("AI_CREDENTIAL_REVOKED",
+      `credential '${String(cred.tokenId).slice(0, 60)}' was withdrawn on ${cred.revokedAt} by `
+      + `${cred.revokedBy}. The entry and the date are kept rather than deleted, so what it did while `
+      + `it was live stays readable.`,
+      { tokenId: cred.tokenId, revokedAt: cred.revokedAt });
+
+  if (!aiReachesAsMember(spec))
+    return refusal("AI_BEYOND_TASK_SCOPE",
+      `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
+      + `either. An agent is confined to what a member could do themselves, which is a property of the `
+      + `operation rather than a list kept anywhere.`,
+      { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes });
+
+  if (spec.mutating && !cred.writes.includes(op))
+    return refusal("AI_BEYOND_TASK_SCOPE",
+      `credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope '${cred.taskScope}', `
+      + `whose writes are ${cred.writes.length ? cred.writes.join(", ") : "(none)"}. Widening it is an `
+      + `authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding `
+      + `it can ask for.`,
+      { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes });
+  /* END DEC-49 REGION is-ai-task-scope */
+
+  return { ok: true, viewer: cred.principal };
 }
 
 const json = (o, status = 200) =>
@@ -2320,6 +2543,33 @@ export default {
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
     let sessMember = null, sessRights = null, sessCaps = null;
+    let aiCred = null;
+    /* PL-11 / IS-5 / D-199 (2) — THE `ai` CLASS RESOLVES AGAINST THE RECORD,
+       AND THAT IS THE DETERMINATION RATHER THAN AN IMPLEMENTATION DETAIL.
+       `classify()` above compared four env bindings and found nothing; this
+       block asks the store. A settings row "would be a way to change the
+       standard with nothing to read afterwards" (DEC-17, transplanted by
+       D-199 (2)), so what an agent may reach is a row a member wrote, with
+       their name and the date on it.
+
+       THE SHAPE IS CHECKED FIRST so a session token never reaches this lookup
+       and an agent credential never falls through into the session one. Two
+       different failures deserve two different answers.
+
+       REC-52: a store silence is NOT "this credential is unknown". Answering
+       401 on a store we could not consult would be the plane converting its own
+       failure into a statement about who somebody is — the exact class REC-52
+       closed, and the session block below already refuses to make it. */
+    if (!cls) {
+      const t = url.searchParams.get("token");
+      if (t && AI_TOKEN_SHAPE.test(t)) {
+        const st = env.STORE.get(env.STORE.idFromName("bio"));
+        const sha = await sha256Hex(t);
+        const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${sha}`));
+        if (!aOut.answered) return storeSilent("aicredentiallook");
+        if (aOut.result?.found) { cls = "ai"; aiCred = aOut.result.credential; }
+      }
+    }
     /* A browser signed in with a password holds a session token, not a
        machine credential. The write arc opens INTAKE to sessions: promote,
        lease, allocid, capture, ratify, and inbox review run through the
@@ -2370,7 +2620,20 @@ export default {
       }
     }
     if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
-    if (!spec.classes.includes(cls)) return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+    /* PL-11 / D-199 (1): CLASS PLUS SCOPE, and for THIS class the scope is the
+       whole of it. The `ai` class is admitted by `aiTaskScope` and never by
+       appearing in a row of the OPS table — no row names it, which is asserted
+       structurally — so this branch is not an exemption from the class ACL. It
+       is the class ACL, in the shape `scopeFor` already uses one function over,
+       reading a declaration a member authored instead of a literal in a table.
+       Refusals here carry their C-number and canned translation like every other
+       refusal a member can receive (DEC-49). */
+    if (cls === "ai") {
+      const scoped = aiTaskScope(aiCred, op, spec);
+      if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
+    } else if (!spec.classes.includes(cls)) {
+      return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+    }
 
     /* Section 8.1: the ROOT OF TRUST, and not in-app administrator status.
      *
@@ -5051,7 +5314,26 @@ export default {
            never made. */
         || op === "capturerequests"
         || REC30_VIEWER_READS.includes(op)) {
-      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
+         ANSWER RATHER THAN THE CLASS'S.
+         An `ai` credential does NOT stamp `class:ai`. It stamps the PRINCIPAL
+         the minting member wrote down, which is `member:<id>` for a
+         member-scoped key and `class:ai` for an organisation-scoped one. That
+         makes D-199 (4)'s distinction operational instead of decorative: a
+         member-scoped credential compiles under `viewerPredicate`'s
+         PARTICIPATION FILTER and sees exactly what that member sees, so an
+         agent cannot read a project its principal was never invited to — while
+         an organisation key acts for the group and is unfiltered like every
+         other instance-level credential. The two are measurably different reads
+         and both arms are driven.
+         IS-5's "member-scoped default" lives at the MINT, where a principal must
+         be stated (C-29.2) and the member-scoped form is the documented one; it
+         is not defaulted here, because a viewer this function guessed would be a
+         viewer the record cannot account for. */
+      inner.searchParams.set("viewer",
+        viaSession ? `member:${sessMember}`
+        : cls === "ai" ? aiCred.principal
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
     /* D-157: WHETHER THIS CALLER ADMINISTERS, decided by the SERVER from the
        credential that authenticated, and set AFTER the caller's parameters were
@@ -5192,9 +5474,24 @@ export default {
        told. So the store REFUSES to open a run that does not carry it, which is
        the fail-closed direction: a run with no payer named is a run nobody can
        be billed for and nobody can audit. Never a token value, on either half. */
+    /* PL-11 / D-199 (4): AN `ai` CREDENTIAL NAMES BOTH — THE PRINCIPAL BEHIND
+       IT AND THE TOKEN IDENTITY — IN ONE STRING, and the composite is why a
+       requested capture stays attributable. PL-4 copies `principal_plane` off
+       the run into every `capture_requests` row and the drain composes the
+       capture's attribution from it, so an identity dropped here would be an
+       identity missing from the provenance of a document. NEVER THE TOKEN'S
+       VALUE — the identity is a public name a member chose, which is exactly
+       what D-199 (4) distinguishes it from.
+       IT IS DELIBERATELY NOT THE VIEWER STRING. The viewer is the bare
+       principal, because `viewerPredicate` decides what a caller may SEE and
+       that is a question about the person or the group, not about which of
+       their credentials asked. Two fields, two questions, and collapsing them
+       would silently widen or narrow one of the two. */
     if (op === "airunopen")
       inner.searchParams.set("principal",
-        viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+        viaSession ? `member:${sessMember}`
+        : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
      *
@@ -5410,6 +5707,59 @@ export default {
         passBody = JSON.stringify(b);
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
+    /* PL-11 / IS-5 / D-199 (3): WHO WITHDREW AN AGENT CREDENTIAL is the whole
+       content of `revoked_by`, so it is stamped from the session and the
+       caller's own copy is overwritten rather than honoured — the same rule
+       every identity field in this file follows. A machine credential arrives
+       honestly named `token:<class>` and the store refuses it BY SHAPE
+       (C-29.4), which is only possible because the stamp is the server's. */
+    if (op === "aicredentialrevoke")
+      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+
+    /* PL-11 / IS-5 / D-199 — THE MINT, AND IT IS NOT A PLAIN FORWARD FOR ONE
+     * REASON: THE VALUE IS GENERATED HERE AND IS RETURNED EXACTLY ONCE.
+     *
+     * The Durable Object receives the SHA and never the value, so no method in
+     * `store.mjs` can print a credential because none has ever held one — a
+     * stronger statement than a rule about not logging it, and asserted over
+     * that file's source in test/aicredential.test.mjs. What is stored is an
+     * identity a member chose and a hash that verifies a presentation, and
+     * D-199 (4) is explicit that the record names the identity and the
+     * principal, NEVER the token's value.
+     *
+     * THE DECLARATION IS JUDGED BEFORE ANYTHING IS WRITTEN, because a scope the
+     * gate would refuse is a sentence that must not enter the record at all
+     * (C-29.8 / C-29.9). `who` and `secretSha` are SET rather than merged: a
+     * caller who could name either could mint themselves a credential in
+     * somebody else's name, or bind a secret they chose. */
+    if (op === "aicredentialmint") {
+      let asked = {};
+      try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
+      const declared = aiScopeDeclaration(asked.writes);
+      if (declared.error) return json({ ok: false, ...declared.error, op, cls }, 403);
+      const raw = new Uint8Array(32);
+      crypto.getRandomValues(raw);
+      const secret = "aik-" + [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
+      inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+      inner.searchParams.set("secretSha", await sha256Hex(secret));
+      const minted = await doAnswer(stub.fetch(new Request(inner,
+        { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes }) })));
+      if (!minted.answered) return storeSilent("aicredentialmint");
+      if (!minted.result || minted.result.ok !== true)
+        return json({ ok: false, ...(minted.result || {}), op, store: storeName, tokenClass: cls }, 403);
+      return json({ ok: true, result: {
+        ...minted.result,
+        /* THE ONE TIME THIS VALUE EXISTS ANYWHERE A CALLER CAN READ IT. It is
+           not recoverable afterwards from this instance by any route, because
+           nothing here kept it — losing it means minting another and revoking
+           this one, which leaves both acts on the record where they belong. */
+        token: secret,
+        tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored "
+          + "and cannot be recovered — the record holds the credential's NAME and who created it, "
+          + "never the value. If it is lost, withdraw this credential and create another.",
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
     const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
     const body = await res.json();
     return json({ ...body, store: storeName, tokenClass: cls }, res.status);

@@ -138,7 +138,12 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             can only agree by coincidence. */
          CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
          civicosUserAgent,
-         MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
+         /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
+            three and the REVOKE's two live here; the gate's four live in
+            index.mjs, because what a scope may REACH is a question only the OPS
+            table can answer and this file must not keep a copy of it. */
+         AI_CREDENTIAL_CHECKS,
+         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
    is ONE array — the REC-19 landing left a literal copy in dispose() with the
@@ -17841,6 +17846,214 @@ export class Store extends DurableObject {
       attribution: this.#captureRequestAttribution(r) })) };
   }
 
+  /* =====================================================================
+   * PL-11 / IS-5 / D-199 — THE `ai` CREDENTIAL, AND WHY ITS SCOPE IS A ROW.
+   *
+   * D-199 (2) is the determination that decides the shape of everything below,
+   * and it is DEC-17's reasoning transplanted word for word: a settings row
+   * *"would be a way to change the standard with nothing to read afterwards"*,
+   * and what an AI credential may reach is exactly the thing that must be
+   * amendable only as an authored, dated, on-the-record act.
+   *
+   * SO THIS CLASS IS THE FIRST ONE THAT IS NOT A BINDING. `classify()` resolves
+   * admin, member, probe and daemon by comparing against `env.<X>_TOKEN` — an
+   * operator changes one in the hosting dashboard and nothing anywhere records
+   * that they did. An `ai` credential resolves HERE instead, against a row that
+   * names the member who minted it and the date they did. Widening it is
+   * another row with another name against it.
+   *
+   * THE VALUE NEVER ARRIVES IN THIS FILE. index.mjs generates the secret,
+   * hashes it, hands this method the HASH, and returns the value to the minting
+   * member exactly once. Nothing here can print a credential because nothing
+   * here has ever held one, which is a stronger statement than a rule about not
+   * logging it, and the suite asserts it over this file's own source.
+   * ===================================================================== */
+
+  /** op=aicredentialmint. A MEMBER act (D-199 (3)), and the record says who,
+   *  when, for whom and what for (D-199 (4)).
+   *
+   *  `writes` ARRIVES ALREADY JUDGED, by `aiScopeDeclaration` in index.mjs, and
+   *  that is deliberate rather than trusting: the reach question is "which
+   *  classes may call this op", the OPS table is the only thing that knows, and
+   *  a copy of it here would be the third unsynchronised answer REC-46 spent an
+   *  item removing. What this method judges is what the RECORD must say, which
+   *  is its own business and nobody else's. */
+  aiCredentialMint({ who = null, tokenId = null, secretSha = null, principalKind = null,
+                     principalMember = null, taskScope = null, writes = [], note = null,
+                     at = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = AI_CREDENTIAL_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const id = String(tokenId ?? "").trim();
+    const kind = String(principalKind ?? "").trim().toLowerCase();
+
+    /* DEC-49 REGION is-ai-credential-mint
+     *
+     * THE SPAN the mint's three rows name (REC-71). A REGION and not the whole
+     * function, so the ordinary shape guards below it are not conscripted into
+     * this family by a `where` that claims too much. The local helper is
+     * `refusal` and every code is a STRING LITERAL at its site, which is what
+     * lets arm C of the DEC-49 guard COMPARE them rather than read past a
+     * variable (PL-3's measured fix, applied at allocation time).
+     *
+     * D-199 (3) FIRST, BEFORE ANY SHAPE QUESTION, and the order is the point: a
+     * caller who may not mint at all is told that, rather than being walked
+     * through the shape of a credential they were never going to get. */
+    if (!who || isMachineIdentity(who))
+      return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",
+        who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a `
+              + `MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the `
+              + `scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without `
+              + `knowing that class exists.`
+            : "no member is named on this act. An authority granted by nobody is an authority nobody "
+              + "can be asked about afterwards.",
+        { who: who || null });
+
+    /* D-199 (4). BOTH KINDS ARE LEGITIMATE AND THEY ARE NOT INTERCHANGEABLE,
+       which is why neither is defaulted from the other: an organisation key
+       acts for the group with nobody individual behind it, a member key is
+       attributable, and an act must SAY WHICH. The principal composed here is
+       also the VIEWER the gate stamps, so an unstated principal is a credential
+       with no answer to "what may it see" either. */
+    const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai`
+                    : kind === "member" ? `member:${String(principalMember ?? who).trim()}`
+                    : null;
+    if (!principal || principal === "member:")
+      return refusal("AI_CREDENTIAL_PRINCIPAL_UNSTATED",
+        `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for `
+        + `the group, nobody individual behind it) or 'member' (attributable to that member). They `
+        + `carry different accountability and the record states which, never the token's value.`,
+        { principalKind: kind || null });
+
+    if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
+      return refusal("AI_CREDENTIAL_IDENTITY_TAKEN",
+        id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the `
+             + `IDENTITY, so rebinding it would re-attribute work already done.`
+           : "pass an identity for this credential: it is the name acts will cite, and a credential "
+             + "nothing can name is one nothing can revoke either.",
+        { tokenId: id || null });
+    /* END DEC-49 REGION is-ai-credential-mint */
+
+    const declared = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
+    this.sql.exec(
+      `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
+         scope_writes, scope_note, minted_by, minted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, String(secretSha ?? ""), kind, principal, String(taskScope ?? "investigative"),
+      JSON.stringify(declared), String(note ?? ""), String(who), now);
+    return { ok: true, minted: true, credential: this.#aiCredentialPublic(
+      this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
+  }
+
+  /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
+   *  rather than the risk — see C-29.4's note in the catalog. */
+  aiCredentialRevoke({ who = null, tokenId = null, at = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = AI_CREDENTIAL_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    const id = String(tokenId ?? "").trim();
+
+    /* DEC-49 REGION is-ai-credential-revoke
+     *
+     * The revoke's two rows, in their own region for the same reason the mint's
+     * three are in theirs: a `where` naming this whole function would govern the
+     * idempotence answer below, which is not a refusal and owes no translation.
+     * Helper `refusal`, codes as STRING LITERALS. */
+    if (!who || isMachineIdentity(who))
+      return refusal("AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
+        who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a `
+              + `machine name there would record the group withdrawing an authority nobody in the `
+              + `group decided to withdraw.`
+            : "no member is named on this act, and a withdrawal nobody authored is not one.",
+        { who: who || null });
+
+    const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
+    if (!row)
+      return refusal("AI_CREDENTIAL_UNKNOWN",
+        `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was `
+        + `withdrawn, and being told so is the point: believing an authority is gone when it is not `
+        + `is the worse of the two outcomes.`,
+        { tokenId: id || null });
+    /* END DEC-49 REGION is-ai-credential-revoke */
+
+    if (row.revoked_at)
+      return { ok: true, revoked: true, already: true,
+               credential: this.#aiCredentialPublic(row) };
+    this.sql.exec(`UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`,
+                  now, String(who), id);
+    return { ok: true, revoked: true, already: false,
+             credential: this.#aiCredentialPublic(
+               this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
+  }
+
+  /** Resolve a PRESENTED credential to its record row. Takes the SHA of the
+   *  value and never the value, so the thing that would be worth stealing from
+   *  a log is not in one.
+   *
+   *  A REVOKED ROW IS RETURNED RATHER THAN HIDDEN, and that is the fail-closed
+   *  direction here rather than the loose one: the gate must be able to tell a
+   *  withdrawn credential from an unknown string, because those are different
+   *  answers and only one of them is worth a member's attention. */
+  aiCredentialLook({ secretSha = null } = {}) {
+    const sha = String(secretSha ?? "").trim().toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
+    const row = this.#one(`SELECT * FROM ai_credentials WHERE secret_sha=?`, sha);
+    if (!row) return { found: false, credential: null };
+    return { found: true, credential: {
+      ...this.#aiCredentialPublic(row),
+      /* The gate needs these two as VALUES rather than as display strings: the
+         viewer it stamps, and the ops the record declared. Neither is a secret
+         and both are already on the public projection above. */
+      principal: row.principal, writes: this.#aiCredentialWrites(row) } };
+  }
+
+  /** op=aicredentials. What the group can see about its own agents. NEVER a
+   *  value and never a hash — the hash is a verifier, and publishing it would
+   *  turn every read of this list into an offline guessing target.
+   *
+   *  BOUNDED, AND IT SAYS SO (REC-57 / REC-60 / D-225). It would have been easy
+   *  to argue this roster is small by nature and leave it bare; that is the
+   *  argument every bare roster on `meaning-bounds`' list was once made with,
+   *  and the instrument caught this one on its first whole-battery run. `limit`
+   *  is the bound APPLIED after clamping, never the number asked for, and
+   *  `truncated` answers the second of REC-57's two questions — a read cut at
+   *  its cap that does not SAY so leaves a caller believing they saw every
+   *  agent this instance runs, which is the worst thing for this list in
+   *  particular to be wrong about. */
+  aiCredentials({ limit = null } = {}) {
+    const asked = Number(limit);
+    const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
+    /* CAP + 1 so the answer can say it was cut, captureRequests' spelling. */
+    const found = this.#rows(
+      `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`, cap + 1);
+    const rows = found.slice(0, cap);
+    return { count: rows.length, limit: cap, truncated: found.length > cap,
+             credentials: rows.map((r) => this.#aiCredentialPublic(r)) };
+  }
+
+  #aiCredentialWrites(row) {
+    try { const w = JSON.parse(row.scope_writes || "[]"); return Array.isArray(w) ? w.map(String) : []; }
+    catch { return []; }
+  }
+
+  /** ONE projection, used by the mint, the revoke, the list and the gate's
+   *  lookup, so no surface can be shown a shape the others do not agree with —
+   *  and so there is ONE place that decides `secret_sha` is not in it. */
+  #aiCredentialPublic(row) {
+    if (!row) return null;
+    return { tokenId: row.token_id, principalKind: row.principal_kind, principal: row.principal,
+             taskScope: row.task_scope, writes: this.#aiCredentialWrites(row),
+             note: row.scope_note || null, mintedBy: row.minted_by, mintedAt: row.minted_at,
+             revokedAt: row.revoked_at || null, revokedBy: row.revoked_by || null,
+             revoked: !!row.revoked_at };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -20848,6 +21061,26 @@ export class Store extends DurableObject {
           run: url.searchParams.get("run"), target: url.searchParams.get("target"),
           state: url.searchParams.get("state"), limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer") }),
+        /* PL-11 / IS-5 / D-199. `who` is the SERVER'S stamp and is read from the
+           query rather than the body for exactly the reason every other identity
+           field in this map is: the control plane deletes the caller's own copy
+           and sets it, so a caller who names themselves is overwritten rather
+           than honoured. `secretSha` likewise never comes from a caller — the
+           control plane generates the value, hashes it, and this object never
+           sees the value at all. */
+        aicredentialmint: () => this.aiCredentialMint({
+          ...(body || {}),
+          who: url.searchParams.get("who"),
+          secretSha: url.searchParams.get("secretSha") }),
+        aicredentialrevoke: () => this.aiCredentialRevoke({
+          tokenId: url.searchParams.get("tokenId"),
+          who: url.searchParams.get("who") }),
+        aicredentials: () => this.aiCredentials({ limit: url.searchParams.get("limit") }),
+        /* INTERNAL ONLY and deliberately NOT an op — the gate's own lookup, the
+           `session` entry's precedent one line of reasoning over. No caller
+           reaches it, and it takes the HASH because the value never crosses
+           this boundary. */
+        aicredentiallook: () => this.aiCredentialLook({ secretSha: url.searchParams.get("sha") }),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are

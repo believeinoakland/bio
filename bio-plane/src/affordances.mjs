@@ -1031,6 +1031,18 @@ export const NON_ACTS = {
      mutes through the queue's own surface. So nothing here is owed a new
      surface, and the register does not grow. */
   capturerequest: "the investigative session's request for a capture (§4 group 1), keyed by run and address: writes a row and fetches nothing — the daemon captures, and DEC-47's conduct is applied at that drain. Not object-directed; the completion reaches a member as a queue CONDITION, not as an act",
+  /* PL-11 / IS-5 / D-199 — GOVERNANCE, NOT AN ACT ON AN OBJECT, and the line is
+     the same one `memberadd` and `signeradd` already sit on. Minting an agent
+     credential decides what an automated worker may reach across the whole
+     instance; it is keyed by nothing in the corpus and changes nothing about
+     any bundle a member is looking at. Offering it beside an inquiry would be
+     an affordance on the wrong noun entirely.
+     IT IS STILL A MEMBER ACT AND STILL AUTHORED (D-199 (3)) — a non-act row is
+     a statement about what a SURFACE offers next to an object, never about
+     whether the record holds a name and a date for what happened. It holds
+     both, in `ai_credentials`. */
+  aicredentialmint: "creating an agent credential with a declared task scope (D-199): instance-level governance, authored and dated by a member, keyed by nothing in the corpus. Not object-directed — it is the roster ops' territory, not a bundle's",
+  aicredentialrevoke: "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));

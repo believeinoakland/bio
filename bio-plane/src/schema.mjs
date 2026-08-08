@@ -2057,6 +2057,70 @@ CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, req
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
 CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
 
+-- PL-11 / IS-5 / D-199: THE ai CREDENTIAL'S DECLARED TASK SCOPE, AND THE
+-- WHOLE REASON IT IS A TABLE RATHER THAN A BINDING.
+--
+-- The four existing token classes -- admin, member, probe, daemon -- are ENV
+-- BINDINGS. An operator sets a value in the hosting dashboard and the plane
+-- compares against it. That is a settings row by another name, and D-199 (2)
+-- rules it out for this one class, transplanting DEC-17's reasoning verbatim: a
+-- settings row "would be a way to change the standard with nothing to read
+-- afterwards", and what an AI credential may reach is exactly the thing that
+-- must be amendable only as an authored, dated, on-the-record act.
+--
+-- So this class does not appear in classify()'s binding cascade at all. A
+-- presented ai token resolves HERE, against a row a member wrote, and the row
+-- says who minted it, when, for whom, and what it may do. Amending the reach
+-- means writing another row with a name against it. There is nowhere to change
+-- it quietly.
+--
+-- THE VALUE IS NEVER STORED. 'token_id' is the IDENTITY -- a short public name
+-- the record can print, the act can cite and a member can revoke -- and
+-- 'secret_sha' is the SHA-256 of the presented value, which is what a lookup
+-- compares. Neither is the credential, and tokens.mjs's publication denylist is
+-- therefore not the only thing standing between this table and a leak.
+--
+-- BOTH PRINCIPAL KINDS ARE LEGITIMATE AND THEY CARRY DIFFERENT ACCOUNTABILITY,
+-- WHICH IS WHY 'principal_kind' IS NOT NULLABLE (D-199 (4), DEC-55 det 4). An
+-- ORGANISATION-scoped key acts for the group with nobody individual behind it;
+-- a MEMBER-scoped key is attributable to that member. An act must say which,
+-- and the difference is not decorative: 'principal' IS THE VIEWER the plane
+-- stamps on this credential's reads, so a member-scoped key sees exactly what
+-- that member sees (viewerPredicate's participation filter applies to it) and
+-- an organisation-scoped one sees what any instance-level credential sees. The
+-- record's answer to "who is behind this" and the record's answer to "what may
+-- it read" are the same string, so they cannot drift apart.
+--
+-- 'scope_writes' IS A JSON ARRAY OF OP NAMES AND IT IS NOT THE FENCE. The fence
+-- is a SHAPE, checked at the gate on every call: an ai credential is admitted
+-- only to an op a MEMBER can reach, which is a predicate over index.mjs's OPS
+-- table rather than a list anybody maintains. op=capturerequestdrain carries no
+-- member class by construction (PL-4: "a member reaching for it by hand would
+-- be a person doing the daemon's job"), so it can never be authored into any
+-- scope, and adding "ai" to its class list would not admit it either. The
+-- declared writes NARROW that floor; they cannot widen it.
+--
+-- NOT PURGED. This is identity, in credentials' and members' family, and a
+-- whole-store purge that cleared it would revoke every agent's authority as a
+-- side effect of resetting the corpus -- the DIST-1 armed-alarm trap arriving
+-- through the reaper. The exemption is stated in hygiene.test.mjs with that
+-- reason, not merely allowed.
+CREATE TABLE IF NOT EXISTS ai_credentials (
+  token_id        TEXT PRIMARY KEY, -- the public IDENTITY of the credential. NEVER its value
+  secret_sha      TEXT NOT NULL,    -- SHA-256 of the presented value. NEVER its value
+  principal_kind  TEXT NOT NULL,    -- organisation | member. D-199 (4): an act says which
+  principal       TEXT NOT NULL,    -- the stamped viewer: class:ai for an org key, member:<id> for a member key
+  task_scope      TEXT NOT NULL,    -- the declared scope name, e.g. investigative
+  scope_writes    TEXT NOT NULL,    -- JSON array of op names this scope may MUTATE. reads are the floor
+  scope_note      TEXT NOT NULL,    -- what the authoring member said this credential is for
+  minted_by       TEXT NOT NULL,    -- the MEMBER who minted it. D-199 (3): never a machine
+  minted_at       TEXT NOT NULL,
+  revoked_at      TEXT,
+  revoked_by      TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
+CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

@@ -2756,3 +2756,12 @@ PL-4's attribution composer TRIMS before judging, so the drain refuses to captur
 
 **Two producers now mint that kind** and they answer different questions: `#conditionsCaptureUnattended` (a PERSON's document finished by a daemon — requires an earlier human manifest author, so a requested capture never matches it) and `#conditionsCaptureRequested` (a capture the SESSION is waiting on). A surface that assumes one producer per kind will read the second as a duplicate.
 
+
+## CLAIM 2026-08-08 RECORD
+session: pl11-ai-credential
+opened: 2026-08-08T15:10:35Z
+paths: the `ai_credentials` table in bio-plane/src/schema.mjs, `classify`/`scopeFor`/`aiTaskScope`/the ai-credential ops in bio-plane/src/index.mjs, `aiCredentialMint`/`aiCredentialLook`/`aiCredentialRevoke`/`aiCredentials` and the `ai_credentials` exemption in bio-plane/src/store.mjs, `viewerPredicate`'s class alternation in bio-plane/src/query.mjs, the `AI_CREDENTIAL_CHECKS` family in bio-plane/checks/bio-checks.mjs, bio-plane/test/aicredential.test.mjs, bio-plane/test/aicredential.control.mjs, the D-113 exemption block in bio-plane/test/hygiene.test.mjs, the FLOOR block in civicos-ui/check-refusal-codes.mjs
+interfaces consumed: I3
+interfaces owned: none
+expected: PL-11 / IS-5 — D-199's five determinations whole. ONE `ai` class carrying a DECLARED TASK SCOPE read FROM THE RECORD (never a settings row, never an env binding); minting is a MEMBER act; the record names token IDENTITY and PRINCIPAL; `token:ai` caught by every `MACHINE_CANNOT_*` through REC-46's one predicate. Carries DEC-55.5 WHOLE as owed control 1, including the second half — remove the predicate and every named refusal stops firing — which has never been run in this project.
+released:
