@@ -8,6 +8,58 @@
    (6) CHECK 6, NO UNWRITABLE STATE (C-27.13). Replace `if (forbidden.length)` with `if (false)`. The already-decided arm must fail by C-number. NOTE the second half of this refusal — the structural-assertion arm — is a SEPARATE condition and stays live, which is why the two are asserted separately below.
    (7) F10, THE IDEMPOTENCE KEY. In src/store.mjs suggestVersion replace `if (prior) {` with `if (false) {`. The RESUBMIT arm must fail: the second submission is EVALUATED again, `repeats` never moves, and the answer no longer says `evaluated: false`. This is the arm the plan names.
    (8) OVER-STRICTNESS, and these must PASS rather than fail: a description in Spanish lands; a description that QUOTES a placeholder while saying something real lands; a version name carrying a full stop lands; and a reading whose two parts rest on documents with no shared origin lands. A fence that refuses correct work is a defect in the fence.
+   (D-231a) THE CLOCK, RE-ARMED — the arm that turns this item's hypothesis into a diagnosis. In src/store.mjs suggestVersion, put the assertion stamp back into the substance comparison: drop the `.map(...)` that blanks field 3 of the `ground` rows, leaving `substanceOf` filtering `name` and `derived_from` only. THE BOUNDARY ARM IN BLOCK 2 MUST FAIL and the two CHECK 3 arms above it MUST STAY GREEN — that split IS the defect's shape, the gate working inside one second and not outside it. Arm (3) is the paired control: it disarms the check outright, so the two together say the boundary arm is deterministic AND still load-bearing.
+   (D-231b) OVER-BLANKING, and it must fail the OTHER way. Widen the exclusion by one field (`i === 3` becomes `i >= 3`) so the ground's STATEMENT is swallowed with the stamp. THE OVER-STRICTNESS ARM IN BLOCK 6 MUST FAIL — a reading differing only in what it says its evidence shows would be refused as a duplicate — while the boundary arm STAYS GREEN. A fix that is one field too wide refuses correct work, and this is the arm that would say so.
+   NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the two D-231 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
+ * =========================================================================
+ *
+ * WHY THIS SUITE WAS INTERMITTENTLY RED, NAMED HERE RATHER THAN IN A COMMIT
+ * MESSAGE NOBODY RE-READS — D-231, diagnosed 2026-08-08 by M0-13.
+ *
+ * THE CAUSE WAS A WALL CLOCK INSIDE A COMPARISON THAT HAD TO BE TIME-FREE, and
+ * it was a live plane defect rather than anything wrong with this file.
+ * `suggestVersion`'s local `substanceOf` stripped `name` and `derived_from`
+ * from PL-1's canonical composition before comparing a candidate against every
+ * held reading — but the composition's ground rows are
+ * `ground\t<ground>\t<asserted_by>\t<at>\t<statement>`, and that `at` is stamped
+ * from the SERVER'S clock at second resolution. The candidate was stamped NOW;
+ * every held reading was stamped when it was written. **So CHECK 3's duplicate
+ * gate fired only when the two submissions landed inside the SAME ONE-SECOND
+ * BUCKET.** Driven, not inferred: identical readings 0ms apart were refused, the
+ * same pair 1,200ms apart LANDED as a second version.
+ *
+ * THE FLAKE WAS THE CHEAP HALF. This suite runs in ~510ms, so standalone it
+ * usually stayed inside one second and was green; under a loaded battery it
+ * stretched past the boundary and CHECK 3 went red, taking block 3's structural
+ * arm with it (a duplicate that lands makes the version count 7 where the arm
+ * expects 6 — which is exactly the 59/2 CONDUCT measured, and a boundary crossed
+ * only by the later `renamed` submission is the 60/1 PL-14 measured).
+ *
+ * THE EXPENSIVE HALF IS THAT §6 RULE 8 WAS UNENFORCED IN THE PLANE. *A run adds
+ * its output as a new version ONLY IF it differs in substance from every
+ * existing one* — and any retry loop that paused for a second between attempts
+ * wrote an unbounded number of identical readings into a member's inquiry. The
+ * fix is one expression in `substanceOf`: the stamp is blanked out of the ground
+ * rows for the COMPARISON only. The composition itself is untouched, because the
+ * freeze compares document-derived bytes against stored bytes and both sides
+ * carry the same authored stamp there.
+ *
+ * THE BRIEF'S SUSPECT WAS F10's VERBATIM-RESUBMIT KEY, AND IT WAS WRONG — worth
+ * recording, because it is the obvious answer and the next reader will reach for
+ * it too. That key is CLEAN: `submission` is built out of caller-derived fields
+ * twenty-one lines BEFORE `nowIso` exists, and `nowIso` reaches only the
+ * `first_at`/`last_at` columns. Nothing a concurrent suite could move was
+ * involved at all — the battery runs its suites SEQUENTIALLY, and the mechanism
+ * is entirely inside one process. Concurrency was never more than the load that
+ * made the suite slow enough to cross a second.
+ *
+ * WHAT IS STILL BROKEN HERE AND IS DELIBERATELY NOT FIXED BY THAT ITEM: the same
+ * comparison builds its candidate from RAW args while the bytes it is compared
+ * against went through `#fmSafe`, which rewrites `"` and `\` and folds
+ * whitespace. A duplicate whose description carries a quote is therefore STILL
+ * not refused, with no clock involved and no flakiness — measured the same way,
+ * raised as its own debt row rather than folded in here, because fixing it
+ * changes what the endpoint PUBLISHES and that is not a test-lane change.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-3 / IS-4 — THE SUGGEST ENDPOINT.
  *
@@ -373,6 +425,46 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
   + "and a different name did not save it, which is what makes this check more than the name check "
   + "one screen up",
     dup.same_as !== "a second name for one reading", true);
+
+  /* ---------------------------------------------------------------- D-231
+     THE ARM THIS SUITE WAS RED FOR, AND IT IS THE CAUSE RATHER THAN THE SYMPTOM.
+     Both arms above submitted their duplicate MILLISECONDS after the reading it
+     duplicates, and until 2026-08-08 that was the only reason they passed:
+     `substanceOf` excluded `name` and `derived_from` from the canonical
+     composition but NOT the `at` riding on every `ground` row, which the plane
+     stamps from the SERVER'S CLOCK at second resolution. So "identical in
+     substance" was true only inside a one-second bucket. This suite runs in
+     ~510ms and usually stayed inside one; under a loaded battery it did not, and
+     the arms above went red intermittently for two sessions who could each only
+     see a green re-run (D-231).
+     SO THE BOUNDARY IS CROSSED ON PURPOSE HERE. The arm is deliberately the
+     SLOW one in this file — a second of wall clock buys the one thing the two
+     arms above cannot give, which is a duplicate check proved over the interval
+     a real retry loop actually uses. THE CROSSING IS ASSERTED, NOT ASSUMED: an
+     edit that drops the wait would leave an arm that still passes while proving
+     nothing, which is this repository's most-repeated instrument failure. */
+  /* THE STAMP IS SHAPE-CHECKED BEFORE IT IS WAITED ON, and that is not
+     belt-and-braces. If `at` ever stopped being published this would be
+     `undefined`, the wait loop would not run, `undefined !== secondOf()` would
+     still be true, and the arm would go GREEN having crossed nothing — an
+     assertion that passes while proving nothing, which is the failure this
+     repository has now measured in four separate instruments. So the shape is
+     asserted as part of the arm rather than trusted. */
+  const stamped = LANDED["basis-version"].at;
+  const secondOf = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  const stampWellFormed = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(stamped));
+  if (stampWellFormed) {
+    while (secondOf() === stamped) await new Promise((r) => setTimeout(r, 60));
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  const late = drive(await suggest({ kind: "basis-version", ...KIND_ARGS["basis-version"],
+    name: "the same reading a whole second later" }));
+  t("D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER: the same reading submitted after the wall "
+  + "clock has moved past the second the original was stamped in is the SAME reading, and the write gate "
+  + "says so. §6 rule 8 is about what a reading SAYS, and when it was recorded is not part of that — a "
+  + "gate that fired only inside one second was unenforced against every retry loop that paused",
+    [stampWellFormed, stamped !== secondOf(), late.ok, late.code, late.check, late.same_as],
+    [true, true, false, "SUGGEST_NOT_DIFFERENT", "C-27.10", "the ledger account"]);
 }
 
 /* CHECK 4 (C-27.11) — D-195, independence over the separately sufficient parts. */
@@ -740,6 +832,32 @@ console.log("\n--- 6. over-strictness: correct work is not refused ---");
   t("AND TWO PARTS WITH NO SHARED ORIGIN LAND — D-195 refuses a derived overlap, not the practice of "
   + "offering alternatives, and this is the arm that says so",
     [independent.ok, independent.shared_origins?.length], [true, 0]);
+  /* D-231's OVER-STRICTNESS ARM, and it is the half that keeps the fix honest.
+     D-231 was fixed by blanking the assertion STAMP out of the composition's
+     ground rows before the substance comparison. A row is
+     `ground\t<ground>\t<asserted_by>\t<at>\t<statement>`, so blanking one field
+     too many would swallow the STATEMENT — and two readings that rest on the
+     same evidence for DIFFERENT STATED REASONS are two readings. This arm is
+     what says the exclusion is exactly one field wide: it differs from 'the
+     ledger account' in NOTHING but the statement on its ground, and it must
+     LAND. A gate that refuses it is refusing correct work. */
+  /* THE NAME CARRIES NO COMMA, AND THAT IS A MEASUREMENT RATHER THAN A STYLE
+     CHOICE. This arm was first written as 'the ledger account, read the other
+     way' and FAILED — C-25.2's grammar is letters, digits, spaces, '-', '_' and
+     '.', so the comma made it an invalid name and the refusal that came back was
+     VERSION_NAME_NOT_UNIQUE from `promote`, nothing to do with this arm's
+     subject. An over-strictness arm that fails for a reason it did not intend is
+     an arm asserting something else, so the finding is recorded here rather than
+     quietly corrected. */
+  const restated = await suggest({ kind: "basis-version", ...KIND_ARGS["basis-version"],
+    name: "the ledger account read the other way",
+    grounds: [{ ground: "paper trail",
+      statement: "The minutes are read against the ledger, and it is the minutes that fall short." }] });
+  t("AND A READING DIFFERING ONLY IN WHAT IT SAYS ITS EVIDENCE SHOWS LANDS — same kind, same "
+  + "description, same legs, same declared part, a DIFFERENT statement on that part. The stamp comes out "
+  + "of the substance comparison (D-231) and the statement does not, because when a reading was recorded "
+  + "is not something it says and why the evidence bears is",
+    [restated.ok, restated.state], [true, "suggested"]);
 }
 
 /* ====================================================================== 7

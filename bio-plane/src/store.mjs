@@ -17637,8 +17637,42 @@ export class Store extends DurableObject {
       run, author: who || null, at: nowIso, grounds: groundsIn, legs: legsIn,
     });
     const candidate = Store.basisVersionsOf(candidateFm)[0] ?? null;
+    /* AND THE CLOCK COMES OUT TOO — D-231, and it is the third exclusion rather
+       than a tweak to the two above, because WHEN a reading was recorded is not
+       a thing the reading SAYS any more than its name is.
+       MEASURED, and the measurement is the whole of D-231. The composition's
+       ground rows are `ground\t<ground>\t<asserted_by>\t<at>\t<statement>`, and
+       `#suggestionFrontmatter` stamps that `at` with `nowIso` — the SERVER's
+       clock, at second resolution. `mine` is therefore stamped NOW while every
+       `held` row was stamped whenever it was written, so before this line the
+       gate found a twin ONLY when the two submissions landed inside the same
+       one-second bucket. Driven end to end: identical readings 0ms apart were
+       refused, the same pair 1,200ms apart LANDED. §6 rule 8 — *a run adds its
+       output as a new version ONLY IF it differs in substance from every
+       existing one* — was therefore unenforced against any retry loop that
+       paused for a second, which is every real one.
+       IT SHOWED UP AS A FLAKY SUITE, and that is the cheaper half of the story:
+       `suggest.test.mjs` runs in ~510ms and usually stays inside one second, so
+       it was green standalone and red under a loaded battery. An intermittently
+       red suite is one whose GREEN carries no information, so the arm is made
+       deterministic by fixing what it was catching rather than by relaxing it.
+       BLANKED, NOT DROPPED: the ground label, who asserted it and the statement
+       are all substance and stay in the comparison. Only field 3 goes.
+       AND THE COMPOSITION ITSELF IS NOT TOUCHED. `at` stays inside the canonical
+       composition the FREEZE compares — that comparison is stored-against-
+       document-derived and both sides carry the same authored stamp, so removing
+       it there would change the composition of every version already frozen
+       (PL-1's trap, one screen up) and buy nothing. The clock is excluded HERE,
+       where one side is freshly stamped and the other is not. */
     const substanceOf = (c) => String(c).split("\n")
-      .filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).join("\n");
+      .filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln))
+      .map((ln) => (ln.startsWith("ground\t")
+        /* Split on a REAL tab is safe: `#canon` escapes any tab inside a field
+           value to `\t` (two characters), so a composed row's field count is
+           fixed and field 3 is always the assertion stamp. */
+        ? ln.split("\t").map((f, i) => (i === 3 ? "" : f)).join("\t")
+        : ln))
+      .join("\n");
     const mine = candidate ? substanceOf(candidate.composition) : "";
     const held = this.#rows(
       `SELECT name, composition FROM inquiry_basis_versions WHERE bundle_id=? LIMIT ?`,

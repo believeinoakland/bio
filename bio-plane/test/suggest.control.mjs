@@ -208,6 +208,58 @@ arm("(10) THE BOILERPLATE PREDICATE'S ROSTER. A matcher over an EMPTY roster rep
   ["CHECK 5: a required field filled", "and the roster is NON-TRIVIAL"],
   ["a description in Spanish"]);
 
+/* ============================== D-231 — THE CLOCK ======================== */
+
+/* THE TWO ARMS THIS ITEM EXISTS FOR, AND THEY PULL IN OPPOSITE DIRECTIONS.
+   (D-231a) puts the defect back and requires the boundary arm to reproduce the
+   flake DETERMINISTICALLY — a hypothesis becomes a diagnosis only when re-arming
+   the named cause brings the symptom back. (D-231b) widens the fix by one field
+   and requires the OVER-STRICTNESS arm to fail instead. Between them the
+   exclusion is pinned as EXACTLY the assertion stamp: not less, not more. */
+
+arm("(D-231a) THE CLOCK, RE-ARMED — restore `substanceOf` to what it was before D-231, so the ground "
+  + "rows' assertion stamp is back inside the substance comparison. This is the arm that turns the "
+  + "diagnosis into a diagnosis: with the server's second-resolution stamp compared, a candidate stamped "
+  + "NOW can never equal a reading stamped earlier, so §6 rule 8's duplicate gate fires ONLY inside a "
+  + "one-second bucket. THE SPLIT IS THE POINT — the two CHECK 3 arms submit their duplicate "
+  + "milliseconds later and MUST STAY GREEN, because they were green all along; only the arm that "
+  + "deliberately crosses a second boundary may fail. That split is exactly what made this suite green "
+  + "standalone at ~510ms and red under a loaded battery, and it is why two sessions each saw a green "
+  + "re-run and could not name it.",
+  [["store", `    const substanceOf = (c) => String(c).split("\\n")
+      .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
+      .map((ln) => (ln.startsWith("ground\\t")`,
+             `    const substanceOf = (c) => String(c).split("\\n")
+      .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
+      .map((ln) => (false && ln.startsWith("ground\\t")`]],
+  /* BOTH ARMS, AND THE SECOND ONE IS THE RECEIPT. Re-arming the clock does not
+     just redden the boundary arm — the duplicate it fails to refuse LANDS, so
+     the inquiry holds 7 readings where block 3 asserts 6, and `STRUCTURALLY
+     NOTHING MOVED` goes red behind it. **That pair is the exact signature
+     CONDUCT measured in the wild (59 pass / 2 fail), reproduced on demand.**
+     Declaring it here is what makes this a diagnosis rather than a plausible
+     story: the named cause, re-armed, reproduces the observed symptom in both
+     of the arms it was observed in. */
+  ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "STRUCTURALLY NOTHING MOVED"],
+  ["CHECK 3: a reading identical in substance",
+   "AND THE COMPARISON IS OVER SUBSTANCE, NOT OVER THE NAME",
+   "AND A READING DIFFERING ONLY IN WHAT IT SAYS ITS EVIDENCE SHOWS LANDS",
+   "CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
+
+arm("(D-231b) OVER-BLANKED BY ONE FIELD — widen D-231's exclusion so the ground's STATEMENT is "
+  + "swallowed along with its stamp. A composed ground row is "
+  + "`ground<TAB>label<TAB>asserted_by<TAB>at<TAB>statement`, and WHY the evidence bears is substance "
+  + "while WHEN it was recorded is not. With this armed, two readings resting on the same evidence for "
+  + "different stated reasons collapse into one and the second is refused as a duplicate — so the "
+  + "OVER-STRICTNESS arm must fail while the boundary arm stays GREEN. A fence that refuses correct work "
+  + "is a defect in the fence, and a fix one field too wide is exactly that.",
+  [["store", `        ? ln.split("\\t").map((f, i) => (i === 3 ? "" : f)).join("\\t")`,
+             `        ? ln.split("\\t").map((f, i) => (i >= 3 ? "" : f)).join("\\t")`]],
+  ["AND A READING DIFFERING ONLY IN WHAT IT SAYS ITS EVIDENCE SHOWS LANDS"],
+  ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "CHECK 3: a reading identical in substance", "CHECK 1: a leg naming a document"]);
+
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);
 console.log(`every arm restored; every file verified by sha256 AND by content`);
