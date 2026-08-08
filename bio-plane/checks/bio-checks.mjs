@@ -3275,6 +3275,102 @@ export const CHECK_RETIREMENTS = {
     superseded_by: 'inquiry_basis / inquiry_basis_versions — the claim layer, as rows',
     gated_path: 'data/citations.json',
   },
+
+  /* WHAT IT WAS FOR. `data/deletions.json` is the append-only GATED-DELETION
+   * LEDGER specified in `BIO_State_Rules_Consistency_v1_5.md` §2.5: the store is
+   * accretive, "material is added, not removed", and a deletion is exceptional
+   * and requires all of a stated REASON, PRESERVATION of the material into
+   * `_history/`, and a CASCADE flagging every object that referenced it. The
+   * ledger was the reason-and-preservation half, shaped
+   * {records:[{timestamp, reason, items[], preserved_to}]}, and C-7.1 validated
+   * exactly that shape.
+   *
+   * WHY THE OLD RULE WAS WRONG, which is the half a deletion would have lost.
+   * It was not wrong when it was written; it was superseded, and it was
+   * superseded by a mechanism rather than by a ruling — which is why nobody
+   * noticed. §2.5 was written for the DRIVE substrate, where a session with
+   * create-only access physically moved files and the only way to know a removal
+   * had happened was for somebody to write it down. The plane meets all three of
+   * §2.5's requirements STRUCTURALLY instead, at the one write that can remove
+   * anything:
+   *
+   *   REASON / never silent — `promote` refuses a revision that drops a path the
+   *     previous revision had unless the caller NAMES it in `drop[]`. That is the
+   *     FILES_DROPPED refusal (C-33.24, DEC-49 region `is-promote-files` in
+   *     store.mjs), it carries a member-facing translation, and it lists the paths
+   *     rather than making the member re-derive them. The removal then stands in
+   *     `_history/manifest.json`: the dropping promotion's entry omits the path
+   *     from `files[]` while carrying it in `snapshotted[]`.
+   *   PRESERVATION — the whole outgoing image is copied into `history` BEFORE the
+   *     `DELETE FROM files`, so the removed bytes survive verbatim at
+   *     `_history/<path>_<snapKey>.<ext>`, hashed, and C-12.2 draws a finding if a
+   *     snapshot the manifest records is missing.
+   *   CASCADE — every projection is rebuilt in the same transaction, so an edge
+   *     into removed material reads as an unresolvable C-6.2 finding rather than
+   *     vanishing; C-5.1 refuses any append-only surface that shrank against the
+   *     latest snapshot.
+   *
+   * So the ledger was a SECOND ACCOUNT OF ONE FACT — what the record no longer
+   * holds — sitting beside a machine-kept account of the same fact, with no rule
+   * saying which is authoritative. That is D-69's diffusion, the same defect that
+   * retired C-8.1, arriving through a different door: not two claim structures,
+   * but two accounts of an absence.
+   *
+   * AND IT IS WORSE THAN C-8.1's, WHICH IS THE PART THAT DECIDED THIS. C-7.1
+   * validated the SHAPE of a deletion claim and NOTHING about its truth
+   * (measured; see below). A ledger could name a file as deleted while that file
+   * sat in the bundle, point `preserved_to` at a path the bundle did not hold,
+   * and carry its records out of chronological order in a ledger the spec calls
+   * append-only — and the catalogue passed all three. An absence is precisely the
+   * claim a reader cannot check from the bundle, so a hand-authored
+   * "this was removed, and it is kept over there" is the record claiming more
+   * than it can support. CLAUDE.md ranks that above a missing feature.
+   *
+   * AND WHOSE ACT WOULD IT HAVE RECORDED? None that exists. A MEMBER has no
+   * delete: correction moves FORWARD (DEC-19) — a new edition, a withdrawal as a
+   * further attested act, a claim removed from a finding rescinding it to an
+   * inquiry — and every one of those is an ADDITION already carried by
+   * `state_history`, the `_history/` chain and `inquiry_basis_versions`. An
+   * OPERATOR's `op=purge` is eviction, not gated deletion: it is admin-only, it
+   * takes the `history` and `manifest` tables with the bundle so it can never
+   * write a `preserved_to`, and it destroys the very bundle a per-bundle ledger
+   * would live in. A PURGE is that same act. Published bytes are exempt from all
+   * of it by doctrine — a hash once published answers forever.
+   *
+   * MEASURED BEFORE DECIDING (FW-15, 2026-08-08). Nothing in bio-plane/src,
+   * civicos-ui, docprofile, tools, agent-worker, pdf-worker or newgroup/src
+   * writes or reads `data/deletions.json` — 0 producers in a 118-file corpus,
+   * against `data/provenance.json` 9, `_history/manifest.json` 4,
+   * `data/inbox.json` and `data/dataset.json` 2 each. The only occurrence outside
+   * this catalogue and its suite is `newgroup/src/release.mjs`, one
+   * `RELEASE_SOURCE` string holding a copy of this file, excluded by name in the
+   * estate walk. Driven through `checkBundle` on sixteen planted inputs: C-7.1
+   * FIRED on six distinct malformed ledgers, drew NOTHING on a well-formed one,
+   * and fired ALONE — the identical tamper under `data/deletionz.json`,
+   * `data/removals.json`, `data/deleted.json` and `deletions.json` drew nothing at
+   * all, so no other check was doing its work. WHICH OF THE THREE FINDINGS THIS
+   * IS: not redundant and not unreachable — a check with NO PRODUCER, which had
+   * therefore never fired on anything real.
+   *   And the SHAPE-NOT-TRUTH gap above is measured, not inferred: a ledger
+   *   naming `bundle.md` as deleted while `bundle.md` was present in the same
+   *   bundle drew nothing; a `preserved_to` pointing at a path the bundle did not
+   *   hold drew nothing; two records in descending time order in an append-only
+   *   ledger drew nothing. Every one of those is well-formed by C-7.1's rule and
+   *   false about the record.
+   *
+   * WHAT REPLACES IT: `drop[]` / FILES_DROPPED (C-33.24) for the reason,
+   * the `_history/` snapshot chain (C-12.1, C-12.2) for the preservation, and
+   * C-5.1 for the append-only surfaces — all three with real producers, real
+   * consumers, and checks that fire. `data/deletions.json` in a bundle is now an
+   * ordinary data file: C-14.2 still judges its name and C-14.3 still judges that
+   * it parses, exactly as they do for any other. */
+  'C-7.1': {
+    what: 'the per-bundle gated-deletion ledger data/deletions.json',
+    retired: '2026-08-08',
+    item: 'FW-15',
+    superseded_by: 'promote drop[] / FILES_DROPPED (C-33.24) + the _history/ snapshot chain (C-12.1, C-12.2) + C-5.1',
+    gated_path: 'data/deletions.json',
+  },
 };
 
 /** C-2.10's counterparty arm (D-130 / REC-23). See COUNTERPARTY_STATES above for
@@ -3853,23 +3949,9 @@ export function checkBiasExtension(ctx, findings) {
   }
 }
 
-/** C-7: deletion records, when present. */
-function checkDeletionRecords(ctx, findings) {
-  const raw = ctx.files.get('data/deletions.json');
-  if (!raw) return;
-  let del;
-  try { del = JSON.parse(asText(raw)); } catch { return; /* C-14.3 reports */ }
-  const recs = Array.isArray(del?.records) ? del.records : null;
-  if (!recs) { findings.push(f('C-7.1', 'error', 'data/deletions.json must be {"records": [...]}')); return; }
-  for (let i = 0; i < recs.length; i++) {
-    const r = recs[i];
-    if (!r || !ISO_TS_RE.test(r.timestamp || '') || typeof r.reason !== 'string' || r.reason.trim() === ''
-        || !Array.isArray(r.items) || r.items.length === 0 || !r.preserved_to) {
-      findings.push(f('C-7.1', 'error', `deletions records[${i}] lacks timestamp/reason/items[]/preserved_to`,
-        ['restore removed material', 'convert to a gated deletion retroactively: reason, preservation, cascade']));
-    }
-  }
-}
+/* `checkDeletionRecords` (C-7: the per-bundle deletion ledger) stood here until
+   FW-15 retired it (2026-08-08). See CHECK_RETIREMENTS above for what it gated,
+   why the old rule was wrong, and the mechanism that already does its job. */
 
 // ---------------------------------------------------------------------------
 // C-18.3/4/5: intake register integrity and the gathering-request grammar
@@ -5442,9 +5524,12 @@ export async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: the bias bundle's own arm, beside its four siblings. It
        returns immediately for every other type, exactly as they do. */
     checkBiasExtension(ctx, findings);
-    /* checkCitationRegister ran here until FW-13 retired it (2026-08-08). See
-       CHECK_RETIREMENTS above for what it gated and why keeping it was wrong. */
-    checkDeletionRecords(ctx, findings);
+    /* checkCitationRegister ran here until FW-13 retired it (2026-08-08), and
+       checkDeletionRecords beside it until FW-15 retired that too the same day.
+       See CHECK_RETIREMENTS above for what each gated and why keeping it was
+       wrong. The line below is not a replacement for the second: `checkAppendOnly`
+       was ALREADY the enforcement, which is exactly why the ledger was a second
+       account of one fact. */
     checkAppendOnly(ctx, findings);
     checkHistoryCoherence(ctx, findings);
   }

@@ -29,13 +29,27 @@
  * it did. It became wrong the moment the claim layer landed as rows: C-8.1 gated
  * a per-bundle citation register that NOTHING in the estate has ever written,
  * and keeping it left the record carrying a second claim structure overlapping
- * `inquiry_basis`. So 32 of the 33 are still proven to FIRE; the 33rd is now
- * proven NOT to, and proven to have no producer. Retiring a check without an
- * assertion behind the retirement would be a deletion nobody is enforcing, which
- * is the same defect one altitude down.
+ * `inquiry_basis`. Retiring a check without an assertion behind the retirement
+ * would be a deletion nobody is enforcing, which is the same defect one altitude
+ * down.
  *
- * NEGATIVE CONTROL: remove any tamper (bundle == the conformant base) -> that check's `fires` assertion fails. Spot-checked 2026-07-31 on C-2.1, C-13.1, C-16.4: deleting the tamper drops the finding and flips fires true->false; the paired `absent on clean base` assertion encodes this for all 32 that still fire.
+ * SUPERSEDED AGAIN THE SAME DAY (FW-15), for C-7.1, and corrected the same way.
+ * Its old assertion proved the check fired on a tampered `data/deletions.json`,
+ * which it did. It became wrong because the plane already meets all three of
+ * State Rules §2.5's gated-deletion requirements at the only write that can
+ * remove anything — `promote`'s `drop[]` with the FILES_DROPPED refusal
+ * (C-33.24) for the reason, the pre-write snapshot into `_history/` for the
+ * preservation (C-12.1, C-12.2), and C-5.1 for the append-only surfaces — so the
+ * ledger was a SECOND ACCOUNT OF AN ABSENCE beside a machine-kept one, and it
+ * was the hand-authorable one. Worse than C-8.1's, because C-7.1 checked the
+ * SHAPE of a deletion claim and nothing about its truth: it passed a ledger
+ * naming a file that was still present, and a `preserved_to` pointing nowhere.
+ * So 31 of the 33 are still proven to FIRE; two are now proven NOT to, and
+ * proven to have no producer.
+ *
+ * NEGATIVE CONTROL: remove any tamper (bundle == the conformant base) -> that check's `fires` assertion fails. Spot-checked 2026-07-31 on C-2.1, C-13.1, C-16.4: deleting the tamper drops the finding and flips fires true->false; the paired `absent on clean base` assertion encodes this for all 31 that still fire.
  * (run 2026-08-08, FW-13) FOUR ARMS ON THE RETIREMENT ITSELF, each armed ALONE with the other three held open, each DECLARING BEFORE IT RAN what must fail and what must not, and every touched file restored from a UNIQUELY NAMED per-arm pristine copy verified by sha256 AND by a byte compare. Re-run in one step: `node test/retirement.control.mjs all` from bio-plane/. Baseline at the moment they ran: this suite 83 pass, 0 fail. ZERO arms behaved other than declared. (i) PUT THE RETIRED CHECK BACK — a MINIMAL restoration of `checkCitationRegister` (ONE of its four refusing branches) plus its call site in checks/bio-checks.mjs -> 81 pass, 2 FAIL: the behavioural arm for that branch ("no finding when the register is not {claims:[...]}") and the SOURCE arm, which names the file and the LINE ("C-8.1 at line 3235"). Exactly one behavioural arm bites BECAUSE the plant is minimal, and that is the arm's point: the source arm catches ANY branch of any reintroduction, which is why the retirement does not depend on guessing which branch somebody puts back. MUST NOT move, and did not: the 32 surviving `fires` arms, and the estate arm — restoring a CHECK grows no PRODUCER. (ii) GROW A PRODUCER — append `data/citations.json` to a real module under src/ -> 82 pass, 1 FAIL, the ESTATE arm naming `bio-plane/src/cdx.mjs`, while every behavioural arm stays GREEN, because a second claim structure appearing in the estate is invisible to any bundle-level assertion. (iii) NEUTER THE ESTATE WALK so its matcher can never match -> 82 pass, 1 FAIL, and it is the REACH arm alone ("the estate walk CATCHES a planted producer"), WHILE the corpus floor and the clean-estate arm BOTH STILL PASS — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (iv) OVER-STRICTNESS — nothing planted, a LEGITIMATE bundle carrying a well-formed citation register -> 83 pass, 0 fail, NOTHING drawn, because retirement means the shape is ordinary data and not forbidden data.
+ * (run 2026-08-08, FW-15) THE SAME HARNESS WIDENED, NOT A SECOND ONE: arms (i) and (ii) are now keyed by RETIRED ID and run once per id, each plant ALONE and each restored before the next, so the two per-check arms cover C-7.1 exactly as they cover C-8.1. Arm (i)'s call-site anchor moved to the surviving `checkAppendOnly` line because both retirement notes now share one comment block and a statement spliced into a block comment is a syntax error, not a plant; the arm's MEANING is unchanged and it was re-run. Baseline at the moment they ran: this suite 93 pass, 0 fail. SIX ARM-RUNS, ZERO behaved other than declared ON THE RECORDED RUN — but see arm (v), which came back WRONG the first time and is recorded here rather than smoothed. (i) RESTORE C-8.1 -> 91 pass, 2 FAIL (its behavioural arm + the source arm, "C-8.1 at line 3235"); RESTORE C-7.1 -> 91 pass, 2 FAIL (its behavioural arm + the source arm, "C-7.1 at line 3235"), and in each case the OTHER id's arms did not move. (ii) GROW A PRODUCER for data/citations.json -> 92 pass, 1 FAIL, the estate arm naming `bio-plane/src/cdx.mjs` BY FILE; for data/deletions.json -> 92 pass, 1 FAIL, the estate arm naming the same file BY FILE, the other id's estate arm green in both. (iii) NEUTER -> 92 pass, 1 FAIL, the REACH arm alone. (iv) OVER-STRICTNESS -> 93 pass, 0 fail. (v) NEW — UNCOVERED: rename one id's entry in RETIRED_SHAPES so a row in CHECK_RETIREMENTS has no behavioural arms -> 84 pass, 1 FAIL, the COMPLETENESS arm naming C-7.1, and the pass count falls by the arms that no longer run. **ARM (v) FIRST CAME BACK AS "THE SUITE NEVER REACHED ITS FOOT": the different-filename loop indexed RETIRED_SHAPES[id][1] unguarded and threw a TypeError, ending the module through no assertion at all — the exact failure this project recorded twice this week, found only because this harness READS THE FOOT LINE rather than trusting a tally. The guard and its receipt are at the site; the arm then behaved as declared.**
  */
 import { createHash, webcrypto } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -183,14 +197,14 @@ await proves("C-6.3", "a basis leg's target is absent from references[]", "focus
   new Map([["bundle.md", fmInsert(baseMd("focus"),
     "basis:", "  - target: INFO-2026-0001-somedoc", "    role: supports")]]));
 
-/* ---- deletion register (C-7.1) ----
-   C-8.1's citation-register proof stood here until FW-13 retired the check
-   (2026-08-08). It is not deleted and it is not exempted: it MOVED, to the
-   RETIREMENT block at the foot of this file, where the same tamper is now
-   required to draw NOTHING. */
-console.log("\n--- deletion register ---");
-await proves("C-7.1", "a deletions record lacks its required fields", "information",
-  new Map([["bundle.md", baseMd("information")], ["data/deletions.json", JSON.stringify({ records: [{}] })]]));
+/* ---- deletion and citation registers (C-7.1, C-8.1) ----
+   BOTH proofs stood here and BOTH have MOVED, to the RETIREMENT block at the
+   foot of this file, where the same tampers are now required to draw NOTHING.
+   C-8.1's went when FW-13 retired it (2026-08-08); C-7.1's went the same day
+   when FW-15 retired that one too. Neither is deleted and neither is exempted.
+   The section is left standing as the pointer, because a heading that simply
+   disappeared would leave the next reader unable to tell a retirement from a
+   suite that never covered these checks at all. */
 
 /* ---- project readiness ladder (C-9.1) ---- */
 console.log("\n--- project readiness ladder ---");
@@ -303,13 +317,16 @@ await proves("C-18.8", "a release at/after the migration instant carries no chec
   new Map([["bundle.md", verifiedInfoMd("information@1", "2026-07-01T00:00:00Z")]]),
   { releaseRegistry: { migrationInstant: "2026-01-01T00:00:00Z" } });
 
-/* ================= RETIRED CHECKS (FW-13) =================================
+/* ================= RETIRED CHECKS (FW-13, widened by FW-15) ================
  *
  * The other half of this suite's job. Above, a check is judged in the direction
  * that FAILS. Here a RETIRED check is judged in the only direction left: it must
- * not fire, nothing must push a finding under its id, and — the assertion the
- * retirement actually rests on — the shape it gated must still have no producer,
- * so a second claim structure cannot creep back in while everything stays green.
+ * not fire, nothing must push a finding under its id, the same tamper under
+ * another filename must draw nothing (so the retirement is a no-producer
+ * deletion and not a redundancy), and — the assertion the retirement actually
+ * rests on — the shape it gated must still have no producer, so a second
+ * structure claiming what the record already holds cannot creep back in while
+ * everything stays green.
  *
  * WHY A RETIREMENT NEEDS AN ASSERTION AT ALL: an item that vanishes is
  * indistinguishable from one nobody did. A check deleted with nothing behind it
@@ -325,37 +342,100 @@ const RETIRED_CHECK_IDS = Object.keys(CHECK_RETIREMENTS);
 t("the retired-check table is non-empty (a walk over nothing passes everything)",
   RETIRED_CHECK_IDS.length > 0, true);
 
-/* (1) BEHAVIOURAL. Every shape C-8.1 used to refuse, replayed. Each must now
-   draw NO finding under the retired id. The last one is the OVER-STRICTNESS
-   arm and it is the point of the retirement rather than a formality: a
-   legitimate register is ORDINARY DATA now, not forbidden data. */
-const citeReg = (o) => new Map([["bundle.md", baseMd("information")],
-  ["data/citations.json", typeof o === "string" ? o : JSON.stringify(o)]]);
-const RETIRED_SHAPES = [
-  ["the register is not {claims:[...]}", citeReg({ nope: 1 })],
-  ["a claim lacks claim_id/claim/cites[]/snapshot/as_of", citeReg({ claims: [{}] })],
-  ["a claim's hash is not sha256:<64 hex>", citeReg({ claims: [{ claim_id: "C-014", claim: "x",
-    cites: [idFor("information")], snapshot: "s.json", as_of: "2026-07-01", hash: "nonsense" }] })],
-  ["a claim cites an id that does not resolve in the store", citeReg({ claims: [{ claim_id: "C-014",
-    claim: "x", cites: ["INFO-2026-0002-not-in-this-store"], snapshot: "s.json",
-    as_of: "2026-07-01", hash: "sha256:" + H64 }] })],
-  ["a WELL-FORMED register is carried (the over-strictness arm)", citeReg({ claims: [{ claim_id: "C-014",
-    claim: "Transfers continued under cost-allocation labels.", cites: [idFor("information")],
-    snapshot: "INFO-2026-0002/snapshots/opengov-fy24.json", as_of: "2026-07-01",
-    hash: "sha256:" + H64 }] })],
-];
-for (const [label, files] of RETIRED_SHAPES) {
-  const fs = await findingsFor("information", files);
-  t(`C-8.1 is RETIRED: no finding when ${label}`, has(fs, "C-8.1"), false);
+/* (1) BEHAVIOURAL. Every shape the retired check used to refuse, replayed. Each
+   must now draw NO finding under the retired id. The last arm of each set is the
+   OVER-STRICTNESS arm and it is the point of the retirement rather than a
+   formality: a legitimate register is ORDINARY DATA now, not forbidden data.
+
+   KEYED BY RETIRED ID (FW-15), where FW-13 wrote one flat list for the one row
+   the table then held. This is the same mechanism widened, not a second one:
+   the ids still come from the catalogue, and the COMPLETENESS assertion below
+   is what makes the widening load-bearing — a row added to CHECK_RETIREMENTS
+   with no behavioural arms here now FAILS, where under the flat list it would
+   have been silently covered by another check's arms. */
+const regFor = (path) => (o) => new Map([["bundle.md", baseMd("information")],
+  [path, typeof o === "string" ? o : JSON.stringify(o)]]);
+const citeReg = regFor("data/citations.json");
+const delReg = regFor("data/deletions.json");
+const RETIRED_SHAPES = {
+  "C-8.1": [
+    ["the register is not {claims:[...]}", citeReg({ nope: 1 })],
+    ["a claim lacks claim_id/claim/cites[]/snapshot/as_of", citeReg({ claims: [{}] })],
+    ["a claim's hash is not sha256:<64 hex>", citeReg({ claims: [{ claim_id: "C-014", claim: "x",
+      cites: [idFor("information")], snapshot: "s.json", as_of: "2026-07-01", hash: "nonsense" }] })],
+    ["a claim cites an id that does not resolve in the store", citeReg({ claims: [{ claim_id: "C-014",
+      claim: "x", cites: ["INFO-2026-0002-not-in-this-store"], snapshot: "s.json",
+      as_of: "2026-07-01", hash: "sha256:" + H64 }] })],
+    ["a WELL-FORMED register is carried (the over-strictness arm)", citeReg({ claims: [{ claim_id: "C-014",
+      claim: "Transfers continued under cost-allocation labels.", cites: [idFor("information")],
+      snapshot: "INFO-2026-0002/snapshots/opengov-fy24.json", as_of: "2026-07-01",
+      hash: "sha256:" + H64 }] })],
+  ],
+  /* FW-15. Every branch C-7.1 refused, and the well-formed ledger it passed. */
+  "C-7.1": [
+    ["the ledger is not {records:[...]}", delReg({ nope: 1 })],
+    ["a record lacks timestamp/reason/items[]/preserved_to", delReg({ records: [{}] })],
+    ["a record states no reason", delReg({ records: [{ timestamp: NOW, items: ["captures/9f2a.pdf"],
+      preserved_to: "_history/data/deleted_2026-07-01.json" }] })],
+    ["a record names no preservation", delReg({ records: [{ timestamp: NOW, reason: "misfiled",
+      items: ["captures/9f2a.pdf"] }] })],
+    ["a record's timestamp is not ISO-8601 UTC", delReg({ records: [{ timestamp: "2026-07-01",
+      reason: "misfiled", items: ["captures/9f2a.pdf"], preserved_to: "_history/x.json" }] })],
+    ["a record removes nothing (empty items[])", delReg({ records: [{ timestamp: NOW,
+      reason: "misfiled", items: [], preserved_to: "_history/x.json" }] })],
+    ["a WELL-FORMED ledger is carried (the over-strictness arm)", delReg({ records: [{ timestamp: NOW,
+      reason: "A member uploaded a scan of a neighbour's personal correspondence by mistake.",
+      items: ["captures/9f2a.pdf"], preserved_to: "_history/data/deleted_2026-07-01.json" }] })],
+  ],
+};
+/* COMPLETENESS, and it is the arm that keeps this block honest as the table
+   grows: a retirement recorded in the catalogue with no behavioural proof here
+   is a retirement nothing checks — the exempted test one altitude up, which is
+   the whole reason this block exists. */
+t("every row in CHECK_RETIREMENTS has behavioural arms declared here",
+  RETIRED_CHECK_IDS.filter((id) => !Array.isArray(RETIRED_SHAPES[id]) || RETIRED_SHAPES[id].length === 0), []);
+for (const id of RETIRED_CHECK_IDS) {
+  for (const [label, files] of RETIRED_SHAPES[id] || []) {
+    const fs = await findingsFor("information", files);
+    t(`${id} is RETIRED: no finding when ${label}`, has(fs, id), false);
+  }
 }
-/* And the retirement removed the CLAIM rule and nothing else: the generic file
-   hygiene every other data file gets still applies to this one. Without this
-   arm, deleting the whole format-hygiene family would leave the arms above
+/* And the retirement removed the register rule and nothing else: the generic
+   file hygiene every other data file gets still applies to these paths. Without
+   this arm, deleting the whole format-hygiene family would leave the arms above
    green — they would be passing over a catalogue that judges nothing. */
-{
-  const fs = await findingsFor("information", citeReg("{oops"));
-  t("a retired path is still ORDINARY data: an unparsable data/citations.json draws C-14.3",
-    [has(fs, "C-14.3"), has(fs, "C-8.1")], [true, false]);
+for (const id of RETIRED_CHECK_IDS) {
+  const path = CHECK_RETIREMENTS[id].gated_path;
+  const fs = await findingsFor("information", regFor(path)("{oops"));
+  t(`a retired path is still ORDINARY data: an unparsable ${path} draws C-14.3`,
+    [has(fs, "C-14.3"), has(fs, id)], [true, false]);
+}
+/* THE CHECK WAS DOING THE WORK ITSELF, and this is the arm that says so rather
+   than assuming it. FW-13 established the finding by driving the identical
+   tamper under a DIFFERENT FILENAME: if something else had been drawing on the
+   malformed content, the retirement would have been redundant rather than a
+   no-producer deletion, and this block would be proving nothing. Kept as a
+   standing assertion, not a one-time measurement, because it is also what would
+   catch a future check quietly widening to cover a retired shape by content. */
+for (const id of RETIRED_CHECK_IDS) {
+  const shapes = RETIRED_SHAPES[id];
+  /* GUARDED, AND THE GUARD IS A RECEIPT. Written unguarded, this line read
+     `RETIRED_SHAPES[id][1]` and threw a TypeError for an id with no shapes —
+     which ends the MODULE through no assertion at all, so the suite dies instead
+     of reporting, and the one arm that should have spoken (COMPLETENESS, above)
+     never runs. Control arm (v) armed exactly that case and came back
+     UNREACHED-FOOT rather than the declared single failure, which is how it was
+     found. The gap is reported ONCE, by COMPLETENESS, and every arm that would
+     otherwise crash on it steps aside. */
+  if (!Array.isArray(shapes) || shapes.length < 2) continue;
+  const gated = CHECK_RETIREMENTS[id].gated_path;
+  const other = gated.replace(/\/([^/]*)\.json$/, "/$1-under-another-name.json");
+  const [tamperLabel, tamperFiles] = shapes[1];
+  const content = [...tamperFiles.entries()].find(([k]) => k === gated)[1];
+  const fs = await findingsFor("information",
+    new Map([["bundle.md", baseMd("information")], [other, content]]));
+  t(`${id}: the same tamper (${tamperLabel}) under ${other} draws no error at all`,
+    fs.filter((x) => x.severity === "error").map((x) => x.check), []);
 }
 
 /* (2) SOURCE. Nothing in the catalogue pushes a finding under a retired id.
