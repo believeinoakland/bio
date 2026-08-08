@@ -1876,7 +1876,7 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 
 ---
 
-## IC-29 · I3: `op=basisversions`, the version set of an inquiry's basis · I5: two new projection tables · PROPOSED 2026-08-07 (PL-1 / IS-1) — the version bump and the RESOLUTION are CONDUCT's
+## IC-29 · I3: `op=basisversions`, the version set of an inquiry's basis · I5: two new projection tables · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (PL-1 / IS-1) — the version bump and the RESOLUTION are CONDUCT's
 
 ### 1 · PROPOSED
 
@@ -1911,3 +1911,20 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+
+
+### RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-08
+
+**RESPONSES.** CONDUCT answered for the consuming areas (the IC-1 precedent). **RECORD** — AGREE, producer. **UI** — NOT BLOCKED and it gains something: `op=basisversions` is live, and **hidden versions are RETURNED AND FLAGGED, never filtered — the display shrinks, the query still answers**, which is the right side of that line for UI-42/UI-45 to build against. **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — NOT AFFECTED.
+
+**RESOLUTION — ACCEPTED. I3 ADDITIVE; I5 IS TOUCHED and that is the part worth stating.** I3 gains one read op and three refusal reasons **reachable only by a document that carries a version block**, so nothing existing is renamed, reshaped or newly refused. **I5 gains two projection tables, two index pairs, two `purge` entries and two `op=stats` counts** — declared here rather than left to be discovered, because I5 is the store schema and a table that exists without a `purge` entry makes a whole-store purge report scope ALL and silently leave rows (D-113). Both are in `purge` and the control proves it: **remove one and hygiene names the table.**
+
+**What settles it as sound rather than merely additive**, each measured rather than asserted:
+- **There is no second version table**, pinned over comment-stripped real source and **re-run over a source that DOES carry one and required to find it.**
+- **Freezing is a byte-compared canonical composition rather than a digest** — chosen because `promote` is synchronous and this plane's sha256 is not, and **a hand-rolled synchronous hash would put a collision argument underneath the one rule that says two members comparing a version are comparing the same thing.** The refusal names WHICH field moved.
+- **A version survives the death of the run that proposed it**, demonstrated by deleting the run's rows and reading the version back byte-identically — **enforced by the ABSENCE of a join**, which is the honest way to enforce an independence.
+
+**THE STATED LIMIT, recorded rather than glossed:** the D-15 gate on this read buys only its **fail-closed** arm, because `viewerPredicate` filters PROJECT bundles and an inquiry is not a project. **A classification that overstates what a gate buys is worse for the next reader than none** — so it is written at the site, in the gate classification, and here.
+
+**SETTLED. I3 10.3.0 → 10.4.0; I5 gains its tables.** Open against it: **PL-2 owns wiring the transitive basis-cycle check at the accept path** — self-reference is refused here, but a leg naming an inquiry that transitively rests on this one is refused only when a version's legs BECOME the basis, and **that path is IS-2's and is not built.** Recorded rather than half-built, because a second cycle walk would drift from the first.
+

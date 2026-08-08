@@ -261,6 +261,12 @@ measured state. The short version:
   `hygiene.test.mjs` asserts the literal ends on a `);`.
 - **No backticks inside the schema or setup template literals.** A balanced
   stray pair still parses, so `node --check` will not save you.
+- **NO SEMICOLON INSIDE AN INLINE `--` COMMENT IN `schema.mjs`.** `#migrate`
+  splits the schema on `;` before executing it (`for (const s of bare.split(";"))`),
+  so a semicolon inside a column comment TRUNCATES the statement and every
+  `promote` then fails with `SQLITE_ERROR: incomplete input`. Same class as the
+  backtick trap above and found the same way — by paying for it (PL-1, 2026-08-08,
+  ~15 minutes and three comments). `node --check` will not save you here either.
 - **A derived table must be added to `purge`** or a whole-store purge reports
   scope ALL and silently leaves rows (D-113).
 - **`store.mjs` is ~16,300 lines (MEASURED 2026-08-04 at 16,287; it was described as ~4,900 here and in `kickoffs/RECORD.md` for weeks, which is more than three times out — a number nobody re-measured because it read as a rough order of magnitude), and a stray byte makes plain `grep` treat it as BINARY and silently match nothing — use `grep -a` on it.** Grep before assuming a helper does not exist.
