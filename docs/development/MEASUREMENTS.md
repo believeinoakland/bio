@@ -2938,3 +2938,66 @@ the most likely thing to be wrong:**
   accurate, member-readable sentence. The rule is a WORD floor now (three words for a
   vocabulary term, six for a DEC-49 translation, alongside this repository's existing
   40-character bar). A guard that only accepts the wording its author wrote gets switched off.
+
+---
+
+## REC-71 · WHAT A `where` GOVERNS — measured 2026-08-08, worktree agent-ab9e84c9e27f4eff7
+
+Instrument: `civicos-ui/check-refusal-codes.mjs` (VF-2's DEC-49 guard) and a throwaway
+sweep probe over every `where` in every `*_CHECKS` family. Tree: `a24f2b0` (PL-1 only).
+
+**THE DEFECT WAS SCOPE, AND IT IS A NUMBER.** PL-1's two store-side rows carried
+`where: 'src/store.mjs promote (the basis-version freeze arm)'`. The parenthesis said
+"a region" to a human and nothing at all to the guard, whose `where` parser reads a FILE
+and a FUNCTION. So the governed site became `promote` — **870 lines, the largest function
+in the plane** — and **32 long-standing refusals that pre-dated the rows instantly owed
+canned translations.** `node civicos-ui/test/run.mjs` exited 1 with exactly those 32.
+
+**THE SWEEP OVER ALL EIGHT GOVERNED SITES, and it found more than the item predicted:**
+
+| site | body | rows | refusals JUDGED | codes actually COMPARED to a row |
+| --- | --- | --- | --- | --- |
+| `src/airun.mjs checkObservation` | 47L | 4 | 4 | 4 |
+| `src/airun.mjs checkCondition` | 7L | 1 | 1 | 1 |
+| `src/airun.mjs checkBound` | 8L | 1 | 1 | 1 |
+| `checks/bio-checks.mjs basisVersionFindings` | 213L | 14 | **0** | **0** |
+| `src/store.mjs promote` | **870L** | 2 | 34 | 34 — **32 of them not the family's** |
+| `src/store.mjs basisVersions` | 90L | 2 | 1 | **0** |
+| `src/store.mjs meaningRows` | 43L | 2 | 1 | **0** |
+| `src/store.mjs versionChain` | 103L | 3 | 1 | **0** |
+
+**ONE `where` of the eight OVERSTATES — `promote`, and only `promote`.** No other family
+holds a row whose function refuses something the family does not govern. The seven others
+are exact *today*; UI-51's general point still stands about all of them, and `promote` is
+where it bit because it is the widest function any row names.
+
+**BUT FOUR OF THE EIGHT ARE UNFALSIFIABLE RATHER THAN EXACT, and that was not predicted.**
+Arm C reads 449 lines across `basisVersionFindings`, `basisVersions`, `meaningRows` and
+`versionChain` and **compares ZERO codes against a row** in any of them. Two causes, both
+outside REC-71's fix:
+
+- `basisVersionFindings` **PUSHES FINDINGS** and never returns an `ok:false` object, so
+  arm C's matcher sees no refusal at all in 213 lines.
+- The other three refuse through a local `refuse(key, detail)` helper — `return { ok:false,
+  reason: key, … }` — where **the code is a VARIABLE**, so arm C records the refusal as
+  "coded" and checks nothing. Any key at all passes. (It is not unsafe today: the helper
+  reads `MEANING_READ_CHECKS[key].check` and an unknown key throws. It is unproven, not
+  broken.)
+
+**LINES READ IS NOT THE MEASURE, and the guard now prints both.** 546 lines of governed
+span, 11 refusals judged, **10 codes actually compared**. `codesChecked` is a new floor.
+
+**THE FLOORS WERE STALE IN THE GENEROUS DIRECTION, and it cost a control.** PL-1 grew the
+census 311 -> 330 and the reach 98 -> 116 while VF-2's floors stayed at 311/98. That left
+**19 codes of slack** — enough that neutering the widest matcher (M2) dropped the census to
+325, still above the floor, and **negative control (e) went from RED to GREEN**: the guard
+passed a reader that had lost an entire spelling. A floor with slack is not a ratchet. All
+corpus floors are now the MEASURED figure. `bodyLines` is deliberately NOT ratcheted and
+says why at the site: it FALLS whenever a `where` is correctly narrowed, which is the work
+REC-71 licensed, and a gate that fires on correct work gets switched off.
+
+**AFTER THE NARROWING**: 9 governed sites (7 whole functions, 2 regions of 19L and 16L),
+`node civicos-ui/test/run.mjs` exit **0** read unpiped, battery **111/111 at 6,607 with
+ZERO delta** (the `store.mjs` edit is comments only, proved by stripping comments from both
+revisions and comparing byte for byte), `node scripts/coverage.mjs --strict` exit **0** run
+directly, OPS 139/139, CHECKS 82/82.

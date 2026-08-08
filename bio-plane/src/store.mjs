@@ -7522,13 +7522,30 @@ export class Store extends DurableObject {
                    findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
                                                  translation: BASIS_VERSION_CHECKS[x.code]?.translation,
                                                  ...(x.repairs ? { repairs: x.repairs } : {}) })) };
-        /* THE HALF THE CATALOG DELIBERATELY CANNOT DO, and the reason version
-           legs are NOT required in `references[]` (see basisVersionFindings'
-           header): a suggestion must not silently expand the inquiry's own edge
-           set, so the existence guarantee a reader needs comes from here
-           instead. `bundles` is the corpus; a leg naming a row it does not hold
-           points at nothing while claiming to be evidence. */
         const offered = Store.basisVersionsOf(docFmW);
+        /* DEC-49 REGION basis-version-resolve
+         *
+         * THE SPAN `BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED`'s `where` NAMES,
+         * declared here rather than inferred from a signature (REC-71). Everything
+         * between this marker and its `END` is a DEC-49 GOVERNED SITE: every
+         * refusal inside it owes a code with a canned translation, and
+         * `civicos-ui/check-refusal-codes.mjs` arm C fails the harness on one that
+         * does not. THE REST OF `promote` IS NOT THIS ROW'S SITE — its ~32 other
+         * refusals answer to REC-64's sweep, on its own schedule, and a `where`
+         * that named the whole function conscripted every one of them.
+         *
+         * SO: MOVING THIS MARKER MOVES WHAT IS GOVERNED. Widen it and refusals
+         * that have no row yet start failing the harness; narrow it and a real
+         * codeless refusal stops being seen. It is not decoration — the guard
+         * fails if it is missing, unclosed, duplicated, trivially short, or names
+         * a region no `where` claims.
+         *
+         * THE HALF THE CATALOG DELIBERATELY CANNOT DO, and the reason version
+         * legs are NOT required in `references[]` (see basisVersionFindings'
+         * header): a suggestion must not silently expand the inquiry's own edge
+         * set, so the existence guarantee a reader needs comes from here
+         * instead. `bundles` is the corpus; a leg naming a row it does not hold
+         * points at nothing while claiming to be evidence. */
         for (const v of offered) {
           for (const leg of v.legs) {
             if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target_id))
@@ -7543,13 +7560,20 @@ export class Store extends DurableObject {
                                               "or drop the leg — a version may honestly rest on less"] }] };
           }
         }
-        /* §6 rule 3 — THE FREEZE. Read BEFORE the delete-then-insert
-           re-projection below, in the same call, exactly as `supersededBefore`
-           is read before its own DELETE. The comparison is BYTE FOR BYTE over
-           the canonical composition the store itself computed at the earlier
-           write, so a caller cannot supply the value it is checked against, and
-           the refusal NAMES the first field that moved rather than reporting
-           that something did. */
+        /* END DEC-49 REGION basis-version-resolve */
+        /* DEC-49 REGION basis-version-freeze
+         *
+         * THE SPAN `BASIS_VERSION_CHECKS.VERSION_FROZEN`'s `where` NAMES (REC-71),
+         * on the same terms as the resolve region above: a governed SITE, not a
+         * governed FUNCTION. Read the resolve marker's note before moving this one.
+         *
+         * §6 rule 3 — THE FREEZE. Read BEFORE the delete-then-insert
+         * re-projection below, in the same call, exactly as `supersededBefore`
+         * is read before its own DELETE. The comparison is BYTE FOR BYTE over
+         * the canonical composition the store itself computed at the earlier
+         * write, so a caller cannot supply the value it is checked against, and
+         * the refusal NAMES the first field that moved rather than reporting
+         * that something did. */
         for (const v of offered) {
           const prior = this.#one(
             `SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
@@ -7567,6 +7591,7 @@ export class Store extends DurableObject {
                                 repairs: [`add a NEW version with its own name and derived_from: '${v.name}'`,
                                           `or restore '${v.name}' to the composition the record holds`] }] };
         }
+        /* END DEC-49 REGION basis-version-freeze */
       }
       if (basisLegs.length) {
         /* R3: the basis graph is a DAG, enforced HERE, at the write that would
