@@ -842,6 +842,19 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "op=list. An unseen project and an absent one answer BYTE-IDENTICALLY — `in_force: false` with "
       + "the same stated absence a scope with no adoption gets — and nothing publishes how many bundles "
       + "the gate removed, because that count is the leak.",
+    /* PL-4 / IS-4, 2026-08-08: the capture-request queue. Classified here by the
+       item that adds it, on op=basisversions' precedent and with the same honest
+       bound stated. */
+    capturerequests: "PL-4: EVERY ROW NAMES THE QUESTION IT WAS ASKED UNDER, so the queue is gated at "
+      + "`target` through #bundleGate — the same predicate every read here compiles (D-15's one "
+      + "compilation point) — and `count` is counted BEHIND the gate rather than beside it, so a total "
+      + "larger than the rows cannot arise. What the answer would otherwise disclose is sharper than a "
+      + "title: an ADDRESS this group is about to go and fetch, which is the group's line of inquiry "
+      + "stated as a URL before anything has been captured. As with op=basisversions the participation "
+      + "arm cannot bite on an inquiry today (viewerPredicate filters PROJECT bundles, Membership 7.9), "
+      + "so what the gate buys HERE is the fail-closed arm: an absent or unrecognised stamp compiles to "
+      + "DENY and the read answers empty. Nothing publishes how many rows the gate removed, because that "
+      + "count is the leak, and if inquiries are ever compartmented this op inherits it with no edit.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -907,6 +920,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     /* class-fenced or scratch-confined: there is no member session to filter */
     registeraudit: "CLASS-FENCED to admin and probe (no member class), so no member session reaches "
       + "it; probe is confined by scopeFor to the scratch namespace, a different Durable Object.",
+    /* PL-4 / IS-4, 2026-08-08. Classified by the item that adds it. */
+    capturerequestdraining: "CLASS-FENCED to admin, probe and daemon (NO MEMBER CLASS), so no member "
+      + "session reaches it, and probe is confined by scopeFor to the scratch namespace. It exists for "
+      + "ONE caller — op=acquire's capture-request arm, asking whether a named request is being drained "
+      + "right now so it can admit the drain and refuse everybody else. It answers about ONE request the "
+      + "caller already names and enumerates nothing, so there is no list whose total could betray a "
+      + "hidden row. Gating it on the request's inquiry would put a member predicate in front of a "
+      + "question only the daemon asks, which protects nothing and would make the fence harder to read.",
     /* the pre-auth surface */
     bootstrap: "PRE-AUTH: answers whether this instance has been claimed. Never reaches the store's "
       + "gated reads.",

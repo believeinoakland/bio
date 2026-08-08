@@ -1020,6 +1020,17 @@ export const NON_ACTS = {
      WHAT A MEMBER DOES SEE is the suggestion itself, through `op=basisversions`,
      and the six acts on it. That is where the four beats live. */
   suggest: "the investigative session's ONE write (§4 group 2), keyed by inquiry and run: proposes a reading of the evidence in state suggested. Not object-directed — no member takes it; the six acts ON the proposal are the member-facing ones and they are ACTS rows",
+  /* PL-4 / IS-4 — §4 GROUP 1, AND IT IS A NON-ACT FOR EXACTLY op=suggest's
+     REASON one line up. The AI REQUESTS acquisition and does not perform it; a
+     request is keyed by run and address and changes nothing about any object a
+     member is looking at. Offering it beside an inquiry would tell a member they
+     may queue an unattended fetch by hand, and would put an act on UI-52's
+     ACT REGISTER that no item owes a surface for.
+     WHAT A MEMBER DOES SEE is the COMPLETION, and it is not an act either: it is
+     a queue CONDITION on D-61's catalogued kind, which a member acknowledges or
+     mutes through the queue's own surface. So nothing here is owed a new
+     surface, and the register does not grow. */
+  capturerequest: "the investigative session's request for a capture (§4 group 1), keyed by run and address: writes a row and fetches nothing — the daemon captures, and DEC-47's conduct is applied at that drain. Not object-directed; the completion reaches a member as a queue CONDITION, not as an act",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));

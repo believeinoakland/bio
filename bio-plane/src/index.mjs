@@ -24,6 +24,10 @@ import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
    are character-identical while the prefixes are `token:` and `class:`. */
 import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          completenessFields, biasAcknowledgementOf, sectionText, EARNED_CAPTURE_CEILING,
+         /* PL-4: the ONE composer for the honest agent, and the capture-request
+            arm's DEC-49 row. Both live in the catalog so the Durable Object's
+            drain and this control plane cannot disagree about what was sent. */
+         civicosUserAgent, CAPTURE_REQUEST_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
@@ -86,9 +90,14 @@ import { identify, doctypeFor, profileRecord, digests, CONFIDENCE, readText } fr
    * succeeds has both a reputable network and a legible agent while we have
    * neither. This makes the variable we control testable. It does not settle
    * anything by itself, and a failure after this lands is a real result. */
-export function userAgent(env, purpose = "acquire") {
+export function userAgent(env, purpose = "acquire", delegated = null) {
   const version = (env && env.VERSION) || "0.0.0";
   const instance = (env && env.INSTANCE_NAME) || "unnamed";
+  /* PL-4 / BOB-3: a DELEGATED member-browser agent is returned verbatim. It
+   * reaches here only from op=acquire's capture-request arm, which reads it from
+   * a row the drain's conduct check already judged legible — a caller cannot put
+   * one on a request body, and there is no other call site that passes one. */
+  if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
   /* The contact URL must RESOLVE. believeinoakland.org/civicos does not exist
    * yet (the registrar transfer is pending), and SOURCE-ACCESS.md records that
    * a contact address that 404s is worse than none. The repo URL resolves
@@ -96,7 +105,14 @@ export function userAgent(env, purpose = "acquire") {
    * exact string, 8/8 200 on the ACFR path and 4/4 on a second path, same
    * instrument as the SOURCE-ACCESS table. Revert to the domain URL when the
    * zone moves and the path exists. */
-  return `CivicOS/${version} (+https://github.com/believeinoakland/bio; instance ${instance}; ${purpose})`;
+  /* PL-4: the STRING is now composed in `checks/bio-checks.mjs` and this
+   * function delegates. The name, the signature and every call site here are
+   * unchanged — what moved is the one place the bytes are decided, so the
+   * Durable Object's capture-request drain can CHECK the agent it is about to
+   * cause to be sent instead of checking a copy of it. A conduct check reading a
+   * second copy is the "two bare tokens that did not agree with each other"
+   * defect SOURCE-ACCESS.md records, rebuilt one layer down. */
+  return civicosUserAgent(version, instance, purpose);
 }
 
 /* D-95: every governed outbound fetch asks the Durable Object for admission
@@ -165,7 +181,16 @@ async function archiveSelect(env, st, address) {
            usable_count: sel.usable_count, replay, hop: archiveHop(sel.chosen, replay) };
 }
 
-async function governedFetch(env, stub, target, purpose) {
+/* PL-4: `delegated` is the MEMBER'S OWN BROWSER AGENT and the only caller that
+ * may supply one is the capture-request arm, which reads it from a request row
+ * the drain has already judged — never from a request body. BOB-3 (DEC-47's
+ * access-parity amendment) permits it for publicly available documents because
+ * delegating an agent a member actually uses is a member speaking as themselves
+ * through a tool they run; SOURCE-ACCESS.md's line is AUTHORSHIP, and a
+ * fabricated string invents a client that does not exist. Every other call site
+ * passes nothing and gets the honest CivicOS string, which stays the default for
+ * all other traffic. */
+async function governedFetch(env, stub, target, purpose, delegated = null) {
   let host = null;
   try { host = new URL(target).host; } catch { /* isPublicHttpsLocator refuses these shapes upstream */ }
   let waitMs = 0;
@@ -183,7 +208,7 @@ async function governedFetch(env, stub, target, purpose) {
     } catch { /* ungoverned is better than unfetched; see above */ }
   }
   if (waitMs) await new Promise((s) => setTimeout(s, waitMs));
-  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose) } });
+  const res = await fetch(target, { redirect: "follow", headers: { "user-agent": userAgent(env, purpose, delegated) } });
   if (host && stub) {
     const ra = res.headers.get("retry-after");
     let raMs = null;
@@ -872,6 +897,34 @@ const OPS = {
      state it can write is `suggested`, written as a literal with no parameter
      behind it, and that the six pre-write checks run PLANE-SIDE. */
   suggest:            { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR, and the split between
+     these four rows IS the item.
+
+     `capturerequest` is §4 group 1: *"It REQUESTS acquisition — it does not
+     perform it."* It writes a row and holds no fetch, so it rides the same
+     classes as the run ops and PL-11 narrows them.
+
+     `capturerequestdrain` is the DAEMON'S verb and carries NO MEMBER CLASS. It
+     is the one thing in this plane that turns a request into a fetch, and a
+     member reaching for it by hand would be a person doing the daemon's job with
+     the daemon's conduct rules applied to them — the same line op=taskdrain
+     draws between a producer and a consumer, one door over. `daemon` is here
+     BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening
+     the class *"by decision, not by drift"*, and test/daemon-token.test.mjs's
+     totality assertion is corrected in the same turn rather than exempted.
+
+     `capturerequestdraining` and `capturerequests` are READS, and NEITHER
+     ADMITS THE DAEMON CLASS. That is deliberate and it is the narrower half of
+     the widening: op=acquire's capture-request arm asks the DURABLE OBJECT
+     directly, not through this table, so the daemon needs no read here — and a
+     credential that sits unattended in a config file has no business
+     enumerating the queue of addresses this group is about to fetch. The class
+     therefore reaches exactly THREE ops, one more than DEC-37 scoped it to and
+     that one by decision. */
+  capturerequest:      { classes: ["admin", "member", "probe"],           mutating: true  },
+  capturerequestdrain: { classes: ["admin", "probe", "daemon"],           mutating: true  },
+  capturerequestdraining: { classes: ["admin", "probe"],                  mutating: false },
+  capturerequests:     { classes: ["admin", "member", "probe"],           mutating: false },
   /* PL-12 / §14: THE FENCE, and it is an op so that it can be POINTED AT. The
      spawn contract for a search sub-session omits the bias manifest BY
      CONSTRUCTION; before this it existed only as a sentence in a design
@@ -1096,7 +1149,14 @@ const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
    the record). Naming them together would be the first step toward one control
    over two different doctrines — the same reason QUEUE_ACTIONS was kept apart
    from TASK_ACTIONS. */
-const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest"];
+/* PL-4 joins `capturerequest` and NOT `capturerequestdrain`, and the split is
+   the item: the door is a SESSION's act (the run asks, under a member's session
+   or a machine credential's class), and the drain is the DAEMON'S — a member
+   reaching for it by hand would be a person doing the daemon's job with the
+   daemon's conduct rules applied to them. `taskenqueue`/`taskdrain` draw the
+   same line one door over, and `taskenqueue` is not in OPS at all for the same
+   reason `capturerequestdrain` is not in this list. */
+const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capturerequest"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -1503,6 +1563,15 @@ const NEEDS = {
      anything — the version is born `suggested`, and every act that would make
      it the record's stance is a member act this credential cannot reach. */
   suggest:          "contribute",
+  /* PL-4 / IS-4. Requesting a capture is `contribute` and deliberately NOT
+     `publish`: it adds a document to the STORE and adds nothing to any case.
+     Bob, 2026-08-05 — *"the capture is an entry of a document to the cache
+     (store), but not an entry of the document into the leg of a claim"* — so a
+     run that captures four hundred documents has changed the store and changed
+     no conclusion. It is not NULL either, the way a personal mute is: this act
+     sends traffic to somebody else's server with the group's name on it, which
+     is corpus-shaping work and not a preference about one's own attention. */
+  capturerequest:   "contribute",
   /* PL-12 / D-84. Adopting a bias set is `contribute` and deliberately NOT
      `publish`: it is the group declaring the lens it works under, which is
      ordinary record work that every contributing member's own project managers
@@ -1709,6 +1778,65 @@ async function doAnswer(res) {
   return (out && out.ok === true)
     ? { answered: true, result: out.result }
     : { answered: false, result: undefined };
+}
+
+/* PL-4 / IS-4 — THE CAPTURE-REQUEST ARM OF op=acquire, AND THE ITEM'S SPINE.
+ * THE AI DOES NOT CAPTURE. IT REQUESTS, AND THE DAEMON CAPTURES.
+ *
+ * IT IS ITS OWN NAMED FUNCTION rather than an inline block inside the handler,
+ * and that is a REC-71 consequence rather than a style choice: a DEC-49 `where`
+ * names a span, arm C resolves that span by FUNCTION NAME, and there is no
+ * function called `acquire` — the op lives inside the fetch handler. A region
+ * marker inside an unnamed span is a `where` the guard cannot resolve, which
+ * means nothing would be checking this site for a codeless refusal. Measured by
+ * the guard on this item's first run, and fixed here rather than by widening the
+ * `where` to something the guard could find.
+ *
+ * WHAT IT RETURNS: the address, purpose and agent read FROM THE ROW, or a
+ * refusal, or the silence flag. A silence is distinguished from a refusal
+ * (REC-52) — both fail closed, but only one of them is the fence holding. */
+async function captureRequestArm(env, storeName, body, cls) {
+  const stCr = env.STORE.get(env.STORE.idFromName(storeName));
+  const dAns = await doAnswer(stCr.fetch(
+    `http://x/capturerequestdraining?request=${encodeURIComponent(String(body?.request || ""))}`));
+  /* REC-52, AND IT SITS OUTSIDE THE GOVERNED REGION DELIBERATELY — the DEC-49
+     guard put it there. A silence is NOT a refusal: it is the plane failing to
+     ask, and it owes an operator's diagnosis rather than a member's canned
+     translation. Read raw it would answer `undefined`, fail the test below and
+     refuse, which READS as the fence holding when in fact nothing was checked.
+     Failing closed is still right and is what happens; what this adds is that
+     the silence is DISTINGUISHABLE from a real refusal. The guard failed this
+     item once for returning it inside the region as a codeless refusal, which is
+     the guard drawing exactly the line it exists to draw. */
+  if (!dAns.answered) return { ok: false, silent: true };
+  const d = dAns.result;
+  /* DEC-49 REGION is-capture-request-arm
+   *
+   * THE SPAN `CAPTURE_NOT_DRAINING`'s `where` names (REC-71). A region and not
+   * the whole function, so a refusal that arrives here later is not conscripted
+   * into this family. The code is a STRING LITERAL at its site so arm C can
+   * COMPARE it rather than read past a variable.
+   *
+   * THE GATE IS A SHAPE, NOT A CLASS LIST. `draining` is set by the drain inside
+   * the tick that then fetches, so the window in which this plane will fetch for
+   * a request is exactly the window in which the drain is doing it. A member, a
+   * probe, an operator, the daemon's own credential outside a tick, or a future
+   * `ai` credential holding a real request id are all refused identically — and
+   * PL-11 need not edit this line for it to hold on the day `token:ai` exists. */
+  if (!d || d.draining !== true) {
+    const row = CAPTURE_REQUEST_CHECKS.CAPTURE_NOT_DRAINING;
+    return { ok: false, silent: false, refusal: {
+      ok: false, reason: "CAPTURE_NOT_DRAINING", code: "CAPTURE_NOT_DRAINING",
+      check: row.check, translation: row.translation, cls,
+      request: body?.request ?? null, state: d ? d.state : null,
+      detail: "this instance fetches a requested document only from inside its own drain, and no "
+            + "such request is being drained right now. The AI does not capture: it REQUESTS, and "
+            + "the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). "
+            + "Write a request and let the drain make it." } };
+  }
+  /* END DEC-49 REGION is-capture-request-arm */
+  return { ok: true, silent: false, locator: d.address, purpose: d.purpose,
+           agent: d.ua_mode === "member-browser" ? d.agent : null };
 }
 
 /* 502 rather than 500: the control plane is intact and reachable — what failed
@@ -2894,11 +3022,20 @@ export default {
          wrong credential into an intake script learns which credential is
          wrong. Widen this by DECISION — the totality of the class's reach is
          asserted in test/daemon-token.test.mjs. */
-      if (cls === "daemon" && body?.via !== "archive.org")
+      /* WIDENED 2026-08-08 BY PL-4, BY DECISION AND NOT BY DRIFT — which is the
+         condition DEC-37 attached to widening this class. The decision is SWEEP
+         §4b item 1, taken 2026-08-07 on Bob's own ruling that *"capturing a
+         document (with provenance preserved) is something the daemon does
+         (sometimes at the suggestion of an AI)"*: the capture-request drain IS
+         the daemon doing that, and it is a THIRD verb. The arm below is
+         narrower than the class list, exactly as the archive arm is: it admits
+         only a request row the drain has already put in `draining`. */
+      if (cls === "daemon" && body?.via !== "archive.org" && body?.via !== "capture-request")
         return json({ ok: false, reason: "NOT_PERMITTED", op, cls,
-          detail: "the daemon class reaches op=acquire only through the archive fallback "
-                + "(via: \"archive.org\"). Direct acquisition is a member's or an operator's act, and the "
-                + "unattended credential is scoped to the two verbs the monitoring path needs." }, 403);
+          detail: "the daemon class reaches op=acquire through the archive fallback "
+                + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
+                + "Direct acquisition is a member's or an operator's act, and the "
+                + "unattended credential is scoped to the verbs the unattended paths need." }, 403);
       /* D-112. An archive-sourced capture names the DOCUMENT and lets the plane
          find the replay address, rather than being handed one. The lookup runs
          HERE, inside the same call that will file the bytes, for two reasons:
@@ -2937,6 +3074,21 @@ export default {
            archiveAddress and read from there, so `documentAddress` never exists
            on a request body at all and cannot be smuggled in on one. */
         body.locator = sel.replay;
+      }
+      /* PL-4 / IS-4 — THE CAPTURE-REQUEST ARM, AND IT IS THE ITEM'S SPINE.
+         THE AI DOES NOT CAPTURE. IT REQUESTS, AND THE DAEMON CAPTURES. */
+      let crPurpose = null, crAgent = null;
+      if (body?.via === "capture-request") {
+        const arm = await captureRequestArm(env, storeName, body, cls);
+        if (arm.silent) return storeSilent(op);
+        if (!arm.ok) return json({ ...arm.refusal, op }, 403);
+        /* EVERYTHING THAT DECIDES WHAT LEAVES THIS INSTANCE COMES FROM THE ROW,
+           never from the body: the address the request named, the purpose token
+           the conduct check admitted, and the agent it judged legible. The drain
+           sends `via` and `request` and nothing else. */
+        body.locator = arm.locator;
+        crPurpose = arm.purpose;
+        crAgent = arm.agent;
       }
       const locator = body?.locator;
       if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
@@ -2996,7 +3148,13 @@ export default {
       };
       let res;
       try {
-        const g = await governedFetch(env, stGov, locator, "acquire");
+        /* PL-4: the PURPOSE and the DELEGATED AGENT both come from the request
+           row (above) on the capture-request arm, and are the ordinary
+           `"acquire"` and no delegation on every other arm. The purpose is what
+           lets a source tell an investigation fetch from a routine re-check —
+           DEC-47's second conduct rule, applied to the bytes that actually go
+           out rather than only to the row. */
+        const g = await governedFetch(env, stGov, locator, crPurpose || "acquire", crAgent);
         if (g.refusedByGovernor) {
           /* Counted in its own column, excluded from the threshold. Visible so
              an operator can tell a source nobody could reach from a source
@@ -4882,6 +5040,16 @@ export default {
            exactly as an absent one does, and a leg the caller cannot see must
            be unreachable rather than silently accepted. */
         || op === "suggest"
+        /* PL-4 / IS-4: the capture-request door names the inquiry the request is
+           accountable to, so a question the caller was never invited to must
+           refuse exactly as an absent one does — otherwise the door would be a
+           way to learn that a question exists by asking to fetch under it. */
+        || op === "capturerequest"
+        /* PL-4: and the queue READ, for the same reason one line up — a request
+           names the question it was asked under, so the queue under an inquiry
+           the caller was never invited to must be absent exactly as one that was
+           never made. */
+        || op === "capturerequests"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }

@@ -278,7 +278,22 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    REC-57's two questions and they settle them differently, which is why this op
    is driven below the loop rather than inside it: the loop's descriptor asks for
    a small bite and a completeness flag, and there is no bite to take. */
-t("WALK: the roster is TWENTY-TWO ops — the sweep is the item, not the two the item named",
+/* CORRECTED 2026-08-08 (PL-4 / IS-4), not exempted, and 22 was the true
+   measurement on the day PL-3 wrote it, hours before this. 22 -> 24, and BOTH
+   arrivals are the capture-request door: `op=capturerequests` is a capped READ
+   (`LIMIT ?` against a clamped `cap`, the ordinary shape) and
+   `op=capturerequestdrain` is a capped WRITE-ish consumer whose bound is
+   `CAPTURE_REQUEST_TICK_BATCH` — how many requests one drain tick will act on.
+
+   THE DRAIN IS A FIFTH KIND OF ARRIVAL and it earns its own sentence. Its bound
+   neither truncates an answer nor refuses a submission: it PACES an outward act.
+   What a caller loses if it goes unpublished is not "did I see everything" but
+   "is there more work queued at somebody else's server", so the honest signal is
+   `remaining` — a count of what is still waiting — and that is what it
+   publishes. Both are driven below the loop rather than inside it, on
+   `op=suggest`'s precedent, because the loop's descriptor asks for a small bite
+   and a completeness flag and a tick has no bite to take. */
+t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two the item named",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
    inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,
@@ -319,7 +334,11 @@ t("WALK: the roster is TWENTY-TWO ops — the sweep is the item, not the two the
    Two items may not both be right about a shared number, and merging them is the integrator's.
    CORRECTED TO 21, 2026-08-08 at PL-12's rebase — MEASURED, not added up. See the block
    immediately above the assertion for why the arithmetic agreeing was not evidence. */
-  OPS.size, 22);
+/* CORRECTED TO 24, 2026-08-08 by PL-4 — MEASURED by running the walk in this
+   worktree and taking what it printed, never by adding two to PL-3's figure. See
+   the block above for the two arrivals and for why the drain is a shape this
+   roster had not carried. */
+  OPS.size, 24);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -863,7 +882,15 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    descriptor — take a bite of one, then read the completeness flag — has nothing
    to bite. It is driven immediately below with both arms, which is what keeps it
    DRIVEN rather than exempt. */
-const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest"]);
+/* PL-4 / IS-4 joins them with TWO ops and one reason each. `capturerequests` is
+   an ordinary capped read and COULD sit in the loop, but it is driven here with
+   its sibling so the door's two bounds are read together rather than a page
+   apart. `capturerequestdrain` cannot sit in the loop at all: its bound paces an
+   OUTWARD ACT rather than cutting an answer, so there is no bite to take and the
+   honest completeness signal is `remaining` — how much work is still queued at
+   somebody else's server. */
+const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
+                                  "capturerequests", "capturerequestdrain"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -896,6 +923,41 @@ t("op=suggest: and one WITHIN the cap publishes the bound APPLIED beside an expl
 + "— `truncated: false` said rather than implied by silence, REC-70's lesson on the empty answer",
   [SUGGEST_OK.ok, SUGGEST_OK.limit, SUGGEST_OK.truncated, SUGGEST_OK.count],
   [true, 120, false, 0]);
+
+/* ----------------------------------------------- PL-4 / IS-4's THREE ARMS.
+   The capture-request door's two bounds, driven against the SAME fixture inquiry
+   and run every arm above uses, so this adds no third corpus. Two requests are
+   written so a `limit=1` read is genuinely cut and a `limit=200` read genuinely
+   is not — the DELTA this file exists to hold, applied to a new op. */
+for (const n of [1, 2]) {
+  const r = await POST("op=capturerequest&token=mem-r57", {
+    target: PL1_INQ, run: R70_RUN, purpose: "investigate",
+    address: `https://records.example.gov/bounds-${n}.pdf` });
+  if (!r.ok) throw new Error(`bounds fixture capturerequest ${n}: ${JSON.stringify(r).slice(0, 400)}`);
+}
+const CR_BITE = await GET("op=capturerequests&token=mem-r57&limit=1");
+const CR_WHOLE = await GET("op=capturerequests&token=mem-r57&limit=200");
+t("op=capturerequests: publishes the bound it APPLIED, and a cut answer SAYS SO — a queue of "
++ "addresses this instance is about to fetch is exactly the read where 'is that all of them' matters",
+  [CR_BITE.limit, CR_BITE.count, CR_BITE.truncated], [1, 1, true]);
+t("op=capturerequests: DELTA — 'this is all of it' and 'this is the first one' do NOT read alike",
+  [CR_WHOLE.truncated, CR_WHOLE.count >= 2], [false, true]);
+const CR_OVER = await GET("op=capturerequests&token=mem-r57&limit=99999");
+t("op=capturerequests: an over-ask is answered at the ceiling and the CEILING is what is published",
+  CR_OVER.limit, 1000);
+/* THE DRAIN. Its bound is not a read cut and not a refusal: it PACES an outward
+   act, so what a caller would lose if it went unpublished is not "did I see
+   everything" but "is there more work queued at somebody else's server". The
+   instance here is not configured for draining (no SELF binding), which is the
+   honest state to assert it in — the answer still says so rather than reporting
+   an empty tick, and `remaining` is still the signal. */
+const DRAIN1 = await POST("op=capturerequestdrain&token=adm-r57", { limit: 1 });
+t("op=capturerequestdrain: an unconfigured instance SAYS it drains nothing rather than reporting an "
++ "empty tick — a stated absence, never a silent no-op",
+  [DRAIN1.configured, DRAIN1.drained, typeof DRAIN1.detail === "string"], [false, 0, true]);
+t("op=capturerequestdrain: and the bound it would apply is a CONSTANT this walk can see, so a tick "
++ "that grows its appetite fails the roster pin until somebody drives it",
+  /CAPTURE_REQUEST_TICK_BATCH = \d+/.test(SRC_STORE), true);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -925,6 +987,11 @@ const answersByOp = new Map([
      by C-27.10, which is the feature working and would make this line a
      misleading answer. */
   ["suggest", SUGGEST_OK],
+  /* PL-4 / IS-4: both driven above and REUSED here rather than re-driven. The
+     READ is idempotent and could be re-driven safely, but the DRAIN is not — a
+     second tick would report a different account of the same queue — so the two
+     are carried the same way, which keeps the pair readable as a pair. */
+  ["capturerequests", CR_WHOLE], ["capturerequestdrain", DRAIN1],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

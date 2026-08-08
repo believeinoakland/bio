@@ -206,13 +206,26 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
   })();
   const names = [...regBody.matchAll(/\{ name: "([a-z-]+)"/g)].map((m) => m[1]);
   console.log(`  corpus: ${names.length} consumers on the one alarm — ${names.join(", ")}`);
-  t("ARM S1 (REACH, as a delta): the registry parse reaches 8 consumers, was 7 before this item",
-    [names.length, names.length - 1], [8, 7]);
+  /* CORRECTED 2026-08-08 BY PL-4, NOT EXEMPTED. The delta was 8-was-7 when IS-6
+     landed the reaper; PL-4 appended `capture-request-drain` as the NINTH, so
+     the corpus is 9. THE SHAPE OF THE ARM IS UNCHANGED and that is the point: it
+     is still a DELTA with the corpus printed, so a parse that matched nothing
+     still cannot report an empty registry as a clean answer, and this item's own
+     entry still has to be the LAST one with every predecessor untouched. */
+  t("ARM S1 (REACH, as a delta): the registry parse reaches 9 consumers, was 8 before PL-4 "
+    + "appended the capture-request drain",
+    [names.length, names.length - 1], [9, 8]);
   t("ARM S2: the investigative run joined as ONE appended entry",
     names.filter((n) => n === "ai-run-reap").length, 1);
+  t("ARM S2b (PL-4): and the capture-request drain joined as ONE appended entry too — no second "
+    + "alarm and no cron, which ARM S4 and ARM S5 hold over the whole plane",
+    names.filter((n) => n === "capture-request-drain").length, 1);
   t("ARM S3: and every consumer that came before it is untouched",
     names.slice(0, 7), ["selection-sweep", "task-drain", "archive-monitor", "connection-derive",
                         "overdue-scan", "queue-renotify", "monitor-cadence"]);
+  t("ARM S3b (PL-4): the reaper is still the EIGHTH, so the new entry was APPENDED rather than "
+    + "inserted — an insertion would renumber every consumer a later delta names",
+    names[7], "ai-run-reap");
   /* NO SECOND ALARM. SCHEDULER.md: "Do NOT add a second alarm or a cron; that is
      the decision this file records." The pin is over the WHOLE plane's source
      and it is a count, so a second arming site anywhere fails it by name. */
