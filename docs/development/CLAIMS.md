@@ -3839,3 +3839,46 @@ expected: QUEUE.md M0-16 / D-238. Seven walks discover over an uncontrolled dire
 accepts-when: as the M0-16 row. **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief: 130/130 green · 8,142 assertions · exit 0**, which AGREES with the brief (~130/130 · ~8,142) — and it is the ELEVENTH-item streak of stale briefs BROKEN rather than continued, which is worth saying because a run of stale figures is not evidence the next one is stale. **The baseline's OWN honesty was established two ways, because this item's whole subject is that a baseline can lie:** (i) the runner's own M0-15 line reported `132 of 132 discovered item(s) are in the commit at HEAD (ec67a68)`, and (ii) independently, a full filesystem walk of the worktree diffed against `git ls-tree -r --name-only HEAD` returned exactly two entries not in the commit — `.env` (gitignored, carried by `.worktreeinclude`) and `.git` (the worktree pointer file) — and NO `.test.mjs`, no manifest, nothing under `src/`. `git status` was NOT used for this, because an ignored file is invisible to it and `.claude/worktrees/` is ignored, which is precisely how the original phantom stayed invisible. The worktree arrived with no `bio-plane/node_modules`; `npm ci` was run there first, exit 0.
 concurrency: checked over the whole file. Every claim naming `scripts/coverage.mjs`, `scripts/battery.mjs` or `test/hygiene.test.mjs` is a LANDED item whose work is merged (M0-15 at `4e92bdb`/`b6b7a8f`, M0-10, M0-14, CPDF-9, UI-48, REC-73); none is live. `scripts/control-register.mjs` is M0-14's and is NOT touched — it is IMPORTED by the new suite for its `CONTROL_MARKER` constant and by hygiene as before. `REGISTER_FLOOR` is the one known collision point: it has ONE key set on purpose and a keep-both merge has twice left duplicate `arms:` keys where the LAST silently wins. If this conflicts, COLLAPSE TO ONE SET and re-read the printed figures.
 released:
+
+### DELEGATION 2026-08-08 M0-16 -> UI / WHOEVER OWNS `civicos-ui/test/run.mjs`: **THE UI BATTERY'S RUNNER DISCOVERS OVER A DIRECTORY IT DOES NOT CONTROL, AND THE TOTAL IT PRINTS IS A BASELINE SESSIONS QUOTE**
+
+M0-16 swept the class D-238 named — *what else walks a directory it does not control
+and reports a number from it* — and `hygiene.test.mjs` now counts it: **21 files in
+the estate walk with `readdirSync`, 3 are GUARDED, 18 are NAMED.** Seventeen of the
+eighteen report findings about SOURCE (which module spells a grade letter, which
+suite pins a refusal code, which op a comment names). A wrong number there is
+noticed by the assertion beside it.
+
+**One is different, and it is this one.** `civicos-ui/test/run.mjs` is
+`fs.readdirSync(...).filter(f=>f.endsWith(".test.mjs")).sort()` — the UI battery's
+whole discovery mechanism, and the total it prints is what a session quotes as its
+UI baseline and what an item's `+N attributed` is computed against. **That is
+`bio-plane/scripts/battery.mjs` exactly as it stood before M0-15, one estate over.**
+A `git stash pop` deposits an untracked `.test.mjs` into `civicos-ui/test/` by the
+same repository-wide mechanism, and nothing there would say so.
+
+- **The fix is an import, not a design.** `bio-plane/scripts/provenance.mjs` exports
+  `readGitProvenance`, `classifyDiscovered`, `stateOf`, `repoPath` and
+  `reportProvenance`; `battery.mjs` is the worked example, about fifteen lines at the
+  call site. **Do not write a second mechanism** — that is what this item exists to
+  have avoided, and two mechanisms for one job is how the next component goes dark
+  differently.
+- **It must REPORT, not FAIL** (M0-15's provisional, and its reasoning holds: a
+  worker writes a suite before committing it dozens of times an hour), must ask
+  `ls-tree HEAD` and never `git status`, must tell UNTRACKED from staged-not-
+  committed, must print the reproducible total beside the contaminated one, and must
+  say UNVERIFIED rather than clean when git cannot answer.
+- **Why M0-16 did not do it:** `civicos-ui/**` is not this item's to open. The
+  census entry for it is a ratchet, not a fix — it will keep saying so until somebody
+  changes it.
+- **Reversal cost: none.** The module is additive and nothing depends on the UI
+  runner staying silent.
+
+### DELEGATION 2026-08-08 M0-16 -> WHOEVER NEXT TOUCHES `tools/plancheck.mjs`: **A DEAD `readdirSync` IMPORT**
+
+`tools/plancheck.mjs:28` imports `readdirSync` and never calls it. Noticed while
+sweeping the class, not fixed: `tools/` is outside this item's paths and a passing
+edit to the handoff gate is not worth the risk. It is harmless — one unused binding —
+and it is recorded so the next reader of that file does not have to wonder whether a
+walk was removed and its report lost with it, which is the question the census exists
+to make cheap.

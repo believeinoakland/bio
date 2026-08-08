@@ -188,9 +188,19 @@ const REGISTER_FLOOR = {
      MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. A floor with slack
      is not a ratchet: this project measured one sitting 19 codes low that had ALREADY
      flipped a control from RED to GREEN. */
-  arms:       526,  // arms stated across the classified declarations
-  classified: 126,  // declarations the detector could count arms in
-  corpus:     127,  // suites the register reads
+  arms:       542,  // arms stated across the classified declarations
+  classified: 127,  // declarations the detector could count arms in
+  corpus:     128,  // suites the register reads
+
+  /* MOVED 2026-08-08 by M0-16 from 526/126/127, and the WAY it was moved is now
+     ENFORCED rather than remembered: these are the REPRODUCIBLE figures — computed
+     over suites that are in the commit at HEAD — and the comparison above reads the
+     same figures, so a floor can no longer be set from a run that counted a
+     phantom. That was not theoretical while this item was being built: with its new
+     suite written and not yet committed, this instrument printed `arms 534` beside
+     a reproducible 526, refused to compare against 534, and said in as many words
+     which of the two a floor may be quoted from. No slack: 542/127/128 is exactly
+     what a green run PRINTED once every file was in a commit. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
