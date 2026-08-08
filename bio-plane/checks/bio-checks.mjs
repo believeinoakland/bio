@@ -2577,6 +2577,15 @@ export const GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
  * an ordinal and refs could not carry it. */
 export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
+  /* PL-1 / IS-1: the VERSION block is checked FIRST and unconditionally, on
+     checkGrounds' own precedent below — an inquiry may carry versions with no
+     `basis[]` at all (a run proposing alternatives before any has been accepted
+     is exactly that case, and it is the normal one), so hanging the version
+     grammar off the no-basis early return would leave the whole block
+     unenforced in the state it will most often be in. This one call is what
+     makes the version rules run at BOTH gates: `checkBundle` reaches it through
+     the catalog, and `store.mjs`'s op=promote path calls the same export. */
+  basisVersionFindings(fm, findings);
   /* REC-42: the grounds block is checked EVEN WITH NO BASIS. No basis is a
      legal open inquiry (DEC-22's standing objective), but a grounds[] block
      over no legs asserts independent sufficiency for nothing, and leaving it
@@ -5279,3 +5288,518 @@ export const VERSION_CHAIN_CHECKS = {
       + 'rather than letting it read as a document the record does not hold.',
   },
 };
+
+/* =========================================================================
+ * PL-1 / IS-1 — BASIS VERSIONS. THE REFUSALS.
+ *
+ * An inquiry's basis supports many VERSIONS (INVESTIGATIVE-SESSION.md §6), each
+ * a complete alternative account of the support for the inquiry's claim. The
+ * version block is authored in `bundle.md` and projected inside op=promote's one
+ * transaction, so these checks run at BOTH gates through one function —
+ * `checkInquiryBasis` calls `basisVersionFindings`, and the store's write path
+ * calls the same export. A version that cannot land cannot audit clean either.
+ *
+ * DEC-49's SHAPE, on VERSION_CHAIN_CHECKS' precedent above: the C-number, the
+ * wire code and the CANNED TRANSLATION are ONE ROW, read from one place rather
+ * than copied. `basisVersionFindings` reads the C-number OUT of this map at every
+ * push site and passes the key as the finding's `code`, so there is no second
+ * list of C-numbers anywhere and a row added here is enforced the moment it is
+ * used. LOOKUP IS AT RUNTIME for AI_RUN_CHECKS' stated reason: the `message`
+ * names the offending version and value, so a build-time table would carry
+ * either a template language or a sentence with the facts taken out of it.
+ *
+ * WHY THE RELATIONSHIP IS A FIELD AND NOT DERIVED FROM THE PARTITION, which is
+ * the one design choice here a reader will challenge. The partition alone
+ * *implies* the arithmetic — legs sharing a ground are AND, grounds are OR
+ * (DEC-32) — so a `relationship` that could only ever agree with it would be a
+ * checkbox and D-21's second-place-to-state-a-fact. It is here because it CAN
+ * disagree, and because of DEC-32's anti-gaming keystone: the structure is
+ * authored BEFORE the strength is shown, and an AI-composed version arrives
+ * structure-and-strength together (§12(b)). So the version states, in one word a
+ * member affirms at the accept ceremony, what it claims its composition is — and
+ * the record checks that word against the structure and REFUSES the disagreement
+ * (C-25.4). A version whose partition says OR while its author wrote AND is a
+ * version whose accepter would be signing for a claim they did not read. This is
+ * the NO_SIBLING_DISCLOSURE posture applied inside one document: a disclosure
+ * nobody can check is not a disclosure.
+ *
+ * AND THE ABSENCE IS REFUSED OUTRIGHT (C-25.3) rather than defaulted to `and`.
+ * `inquiry_basis` defaults an unlabelled leg to the implicit single ground on
+ * purpose — every leg written before REC-42 reads NULL and derives the
+ * weakest-leg answer it always derived. A VERSION has no such history and gets
+ * no such default: §3 is explicit that "a version with no relationship field
+ * would re-ship the flat-AND basis REC-42 corrected".
+ * ========================================================================= */
+export const BASIS_VERSION_CHECKS = {
+  /* §6 rule 1. The description is load-bearing rather than a courtesy: §10 makes
+     it what survives a conversation that is deliberately not kept, and under §5
+     it carries the naming of every ungraded leg. A version with none is an
+     alternative account of the evidence with no account of itself. */
+  VERSION_NO_DESCRIPTION: {
+    check: 'C-25.1',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version does not say what it is or why it differs. '
+      + 'A version is a whole alternative reading of the evidence, and the description is '
+      + 'what a member has left to compare it by once the conversation that produced it is gone.',
+  },
+  /* §6 rule 2. Unique PER INQUIRY, never globally — "global uniqueness would
+     make naming absurd". Two versions of one inquiry sharing a name makes every
+     later reference to that name ambiguous, including `derived_from`, which is
+     how the derivation tree is read. */
+  VERSION_NAME_NOT_UNIQUE: {
+    check: 'C-25.2',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'Two versions of this inquiry have the same name. '
+      + 'Names are how versions are compared and how one records what it was derived from, '
+      + 'so within one inquiry a name means exactly one version.',
+  },
+  /* §3 / SWEEP C5. See the block comment above for why this is a field. */
+  VERSION_NO_RELATIONSHIP: {
+    check: 'C-25.3',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version does not say how its evidence fits together — whether every part is needed, '
+      + 'or whether any one of its parts would carry the answer on its own. '
+      + 'Those two readings give different answers about how strong the finding is, '
+      + 'so the version says which one it is rather than letting the record assume.',
+  },
+  /* The field is only a claim because it can be wrong. */
+  VERSION_RELATIONSHIP_DISAGREES: {
+    check: 'C-25.4',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version says its evidence fits together one way and is grouped the other way. '
+      + 'The two cannot both be true, and a member accepting it would be signing for a reading '
+      + 'that is not the one written down.',
+  },
+  /* §3: "A version that is a flat leg set cannot express plurality — the version
+     IS the composition, and the partition is part of the composition." The
+     partition is TOTAL on a version: checkGrounds' whole-or-not-at-all rule with
+     the not-at-all arm removed, because the version must carry it. */
+  VERSION_PARTITION_INCOMPLETE: {
+    check: 'C-25.5',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'Some of that version\'s evidence has not been placed in the argument. '
+      + 'A part nobody placed sitting beside parts somebody did is a relationship the record '
+      + 'would have to guess at, and it would have to guess in the direction that makes the finding stronger.',
+  },
+  /* REC-45 / DEC-32's attributed act, at the version's own grain. "These legs
+     are enough on their own" is the one thing that makes a finding STRONGER, so
+     it carries a named member and a date and a machine credential cannot assert
+     it — `isMachineIdentity` is the one predicate, never a word list (REC-46). */
+  VERSION_GROUND_UNASSERTED: {
+    check: 'C-25.6',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version claims one part of its argument would carry the answer on its own, '
+      + 'and no member has said so. That claim is the one thing that makes a finding stronger, '
+      + 'so it carries the name of the person making it and the date they made it — never a machine\'s.',
+  },
+  /* §6 rule 3a: "Each version records what it was derived from, null where a run
+     composed it fresh." An edge naming a version that is not here points the
+     derivation tree at nothing. */
+  VERSION_DERIVED_FROM_UNKNOWN: {
+    check: 'C-25.7',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version says it came from a version this inquiry does not have. '
+      + 'Where a version came from is how the alternatives are read as a tree rather than a pile, '
+      + 'so it names one that exists or it names none.',
+  },
+  /* A derivation tree is a TREE. A cycle makes "what was this derived from"
+     unanswerable and the prune walk non-terminating. */
+  VERSION_DERIVATION_CYCLE: {
+    check: 'C-25.8',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'These versions say they were derived from each other in a loop, '
+      + 'so there is no answer to which came first. Versions form a tree, and a tree has a root.',
+  },
+  /* DEC-50 / §6.7 — the clause the sweep added and the reason this is not merely
+     a data check. "An edit that regroups the ground partition is the attributed
+     regroup act REC-45 built — ungroup with a reason, cite, regroup — surfacing
+     through the derived version's record of who and why. §6.7 licenses no
+     unattributed structural edit." So a version whose partition DIFFERS from its
+     parent's carries the act: a named member, a date, a reason. */
+  VERSION_REGROUP_UNATTRIBUTED: {
+    check: 'C-25.9',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version rearranges the argument it was derived from, and nobody has said who did it or why. '
+      + 'Rearranging which evidence is grouped with which changes how strong the finding reads, '
+      + 'so it is an act with a name on it rather than an edit.',
+  },
+  /* D-184 / C-2.8, restated at the version's grain because a version's legs do
+     not pass through checkInquiryBasis's own loop: a leg rests on information or
+     on another inquiry and NOTHING ELSE. Stated as a standing bound of this item
+     rather than discovered later. */
+  VERSION_LEG_NOT_CITABLE: {
+    check: 'C-25.10',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'One part of that version rests on something that cannot be evidence for a question — '
+      + 'the record admits a document or another question, and nothing else.',
+  },
+  /* §6 rule 3, AND IT IS THE ONE REFUSAL THIS FILE CANNOT REACH ON ITS OWN. A
+     pure check over one document cannot see what the record already holds under
+     that name, so the comparison is the store's — `store.mjs`'s promote path
+     computes the composition digest of every offered version and compares it to
+     the stored one BEFORE anything lands. The row lives here so the C-number,
+     the code and the translation stay in one place with its siblings; the
+     enforcement site says where it actually fires, which is not this file. */
+  VERSION_FROZEN: {
+    check: 'C-25.11',
+    where: 'src/store.mjs promote (the basis-version freeze arm), NOT reachable from a pure document check',
+    translation: 'That version already exists and has been changed in place. '
+      + 'A version is frozen once written, because two people comparing it must be comparing the same thing — '
+      + 'so an edit becomes a NEW version derived from this one, and the original stays exactly as it was.',
+  },
+  /* §6 rule 4's vocabulary. This is the SIXTH state machine and IS-2 owns its
+     transitions; PL-1 owns only that the word written is one of the four. An
+     unknown state is refused rather than tolerated for DEC-8's reason: a surface
+     rendering a state it has no translation for is the drift DEC-49 closed. */
+  VERSION_STATE_UNKNOWN: {
+    check: 'C-25.12',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version is in a state the record has no name for. '
+      + 'A version is suggested, being considered, accepted, or rejected — and nothing else.',
+  },
+  /* §6 rule 3a, DEC-29(b), D-214. PRUNE HIDES AND NEVER DELETES. The flag is a
+     boolean and the refusal exists so that no caller can smuggle a third value
+     ("archived", "deleted") into a field whose entire meaning is that the row
+     stays in the record and stays queryable. */
+  VERSION_HIDDEN_NOT_BOOLEAN: {
+    check: 'C-25.13',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'The setting that hides a version from the display is not a yes-or-no answer here. '
+      + 'Hiding a version removes it from view and nothing else — it stays in the record and stays '
+      + 'answerable — so there is no third thing for this to say.',
+  },
+  /* A leg naming its own inquiry. checkInquiryBasis refuses the same thing on
+     `basis[]` as SELF_BASIS at the store; a version is an account OF the
+     question and cannot rest on it. The transitive cycle check is NOT done here
+     and that bound is stated in `basisVersionFindings`' own comment. */
+  VERSION_LEG_SELF: {
+    check: 'C-25.14',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'That version rests on the question it is an answer to. '
+      + 'A question is not evidence for its own answer.',
+  },
+  /* A leg or a ground row that belongs to no version in the block — the mirror
+     of DERIVED_FROM_UNKNOWN, one grain down. Three sibling arrays joined by name
+     is the shape `basis[]`/`grounds[]` already uses; an orphan in either of the
+     two joined arrays is material the record would hold and never read. */
+  VERSION_ORPHAN_ROW: {
+    check: 'C-25.15',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'Part of the version block names a version that is not there. '
+      + 'It would be material the record holds and never shows anybody, which is worse than not holding it.',
+  },
+  /* THE SECOND REFUSAL A PURE CHECK CANNOT REACH. C-25.10 asks whether the leg
+     COULD be evidence — a fact about the id's shape, which one document answers.
+     This asks whether the thing is HERE, which only the store can see, and it is
+     the same half `action_basis` and `supersedes` already split off from their
+     shape arms. Kept separate from C-25.10 for the reason every split refusal in
+     this file is kept separate: "you cited something that cannot be evidence"
+     and "you cited something we do not hold" are different facts and a member
+     told the wrong one is worse off than one told nothing. */
+  VERSION_LEG_UNRESOLVED: {
+    check: 'C-25.16',
+    where: 'src/store.mjs promote (the basis-version resolve arm), NOT reachable from a pure document check',
+    translation: 'One part of that version rests on something this record does not hold. '
+      + 'A reading of the evidence that points at a document nobody can open is a reading nobody can check.',
+  },
+  /* THE READ'S TWO REFUSALS. Versions are versions OF an inquiry, so there is no
+     default subject and there must not be one — VERSION_CHAIN_NO_ADDRESS'
+     reasoning one construct over: an answer for an unnamed subject is a list of
+     unrelated compositions wearing the word "versions". */
+  BASIS_VERSIONS_NO_INQUIRY: {
+    check: 'C-25.17',
+    where: 'src/store.mjs basisVersions, reached from op=basisversions',
+    translation: 'That request did not say which question to read the versions of. '
+      + 'A version is one reading of the evidence for one question, so it asks '
+      + 'rather than answering for a question you did not name.',
+  },
+  /* And an id of the wrong CLASS is refused rather than answered with an empty
+     list. "This project has no versions of its basis" is a confidently wrong
+     sentence about a thing that has no basis at all, and an empty answer is the
+     most misleading form a wrong answer takes. */
+  BASIS_VERSIONS_NOT_AN_INQUIRY: {
+    check: 'C-25.18',
+    where: 'src/store.mjs basisVersions, reached from op=basisversions',
+    translation: 'Only a question carries versions of its evidence, and that is not a question. '
+      + 'Answering with an empty list would say this thing has no readings of its evidence, '
+      + 'when the truth is that it could not have any.',
+  },
+};
+
+/* §6 rule 4's four states. Exported so IS-2's six member ops read the vocabulary
+   from here rather than holding a second copy of it — the drift DEC-8 closed. */
+export const VERSION_STATES = ['suggested', 'considering', 'accepted', 'rejected'];
+/* The two ways a composition can compose, and DEC-32's own words for them. NOT a
+   surface vocabulary: DEC-32's elicitation clause 1 bans "ground partition" and
+   the AND/OR words from every member-facing screen (D-226), which is why every
+   translation in BASIS_VERSION_CHECKS above says "every part is needed" and
+   "would carry the answer on its own" instead. */
+export const VERSION_RELATIONSHIPS = ['and', 'or'];
+/* Wider than GROUND_LABEL_RE by design: a member names a version and will use a
+   full stop. Still bounded, still a single line, still no leading space. */
+export const VERSION_NAME_RE = /^[a-z0-9][a-z0-9 ._-]{0,63}$/i;
+
+/** PL-1 / IS-1 — the version block's grammar, at BOTH gates through one function.
+ *
+ *  THE AUTHORED SHAPE IS THREE SIBLING ARRAYS joined by the version's NAME:
+ *
+ *      basis_versions[]        one row per version  (name, description,
+ *                              relationship, state, derived_from, hidden,
+ *                              claim, run, author, at, regroup_*)
+ *      basis_version_grounds[] one row per (version, ground) with its
+ *                              attribution — REC-45's act at the version's grain
+ *      basis_version_legs[]    one row per leg, carrying `version` and `ground`
+ *
+ *  and that is `basis[]`/`grounds[]`'s own idiom one level up rather than a new
+ *  one. It is also what the restricted frontmatter grammar can actually express:
+ *  the parser reads arrays of objects with SCALAR properties, so a version
+ *  carrying its legs as a nested array would not parse at all — measured against
+ *  `parseFrontmatter` before the shape was chosen, not assumed.
+ *
+ *  TWO BOUNDS STATED RATHER THAN SILENTLY VIOLATED, both standing decisions of
+ *  the record this item does not get to move:
+ *
+ *  1. **D-164 IS UNLANDED, so a version's legs address WHOLE BUNDLES.** There is
+ *     no extent, no offset and no extraction method on a version leg, because the
+ *     record cannot express one yet. A version therefore composes DOCUMENT-GRAIN
+ *     legs and this comment is where it says so; when D-164 lands, the field
+ *     arrives here with a writer rather than as a nullable column that reads like
+ *     a precision the record never had.
+ *  2. **D-184 / C-2.8 bound the leg vocabulary to information or inquiry.** Not
+ *     projects, not actions, not entities — C-25.10 refuses everything else by
+ *     name, at the version's own grain, because a version's legs do not pass
+ *     through `checkInquiryBasis`'s loop over `basis[]`.
+ *
+ *  AND A THIRD BOUND, on what is NOT checked here: the transitive basis DAG. A
+ *  version leg naming this inquiry is refused (C-25.14) because that is a fact
+ *  about one document, but a leg naming an inquiry that transitively rests on
+ *  this one is a cycle only the STORE can see, and it is refused at `basis[]` by
+ *  `#basisCyclePath` at the moment a version's legs become the basis. That is
+ *  IS-2's accept path and it is not built; PL-1 records the edge rather than
+ *  half-building a second cycle walk that would drift from the first.
+ *
+ *  VERSION LEGS ARE DELIBERATELY *NOT* REQUIRED IN `references[]`, which is the
+ *  one place this diverges from `basis[]`'s rules (C-6.3). `references[]` is what
+ *  the INQUIRY points at; `refs` is its projection and the re-evaluation walk
+ *  reads it. A SUGGESTED alternative account is not the inquiry's stance, and
+ *  requiring its legs in `references[]` would let any machine suggestion silently
+ *  expand the inquiry's own edge set — and with it the reverse index, the
+ *  re-evaluation obligation and the cycle surface — before a member had accepted
+ *  anything. The protection a reader actually needs is that the target EXISTS,
+ *  and the store supplies it: promote resolves every version leg against
+ *  `bundles` and refuses one that points at nothing, which is the resolve-or-refuse
+ *  posture `action_basis` and `supersedes` already take.
+ */
+export function basisVersionFindings(fm, findings) {
+  const rows = fm?.basis_versions;
+  const legRows = Array.isArray(fm?.basis_version_legs) ? fm.basis_version_legs : [];
+  const groundRows = Array.isArray(fm?.basis_version_grounds) ? fm.basis_version_grounds : [];
+  const push = (key, message, repairs) => {
+    const row = BASIS_VERSION_CHECKS[key];
+    findings.push(f(row.check, 'error', message, repairs, key));
+  };
+
+  if (rows === undefined || rows === null) {
+    /* NO VERSION BLOCK IS LEGAL and always will be: every inquiry in the record
+       today has none, and IS-1 adds an alternative to `basis[]` rather than
+       replacing it. But an ORPHANED joined row is not "no block" — it is a
+       version's legs with no version, which is the checkGrounds precedent for
+       checking the attached arrays even when the anchor is absent. */
+    for (let i = 0; i < legRows.length; i++)
+      push('VERSION_ORPHAN_ROW', `basis_version_legs[${i}] names version '${String(legRows[i]?.version).slice(0, 48)}' and there is no basis_versions[] block`);
+    for (let i = 0; i < groundRows.length; i++)
+      push('VERSION_ORPHAN_ROW', `basis_version_grounds[${i}] names version '${String(groundRows[i]?.version).slice(0, 48)}' and there is no basis_versions[] block`);
+    return;
+  }
+  if (!Array.isArray(rows)) {
+    push('VERSION_ORPHAN_ROW', 'basis_versions is not an array');
+    return;
+  }
+
+  const byName = new Map();               // name -> index in basis_versions[]
+  for (let i = 0; i < rows.length; i++) {
+    const v = rows[i];
+    if (!v || typeof v !== 'object' || Array.isArray(v)) {
+      push('VERSION_ORPHAN_ROW', `basis_versions[${i}] is not an object`);
+      continue;
+    }
+    const name = typeof v.name === 'string' ? v.name.trim() : '';
+    if (!name || !VERSION_NAME_RE.test(name)) {
+      push('VERSION_NAME_NOT_UNIQUE', `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
+      continue;
+    }
+    if (byName.has(name)) {
+      push('VERSION_NAME_NOT_UNIQUE', `basis_versions[${i}] names '${name}', which basis_versions[${byName.get(name)}] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name`,
+        ['rename this version', 'or, if this is an edit of the other, derive it: give it its own name and derived_from the original']);
+      continue;
+    }
+    byName.set(name, i);
+
+    if (typeof v.description !== 'string' || v.description.trim().length < 12) {
+      push('VERSION_NO_DESCRIPTION', `basis_versions[${i}] ('${name}') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept`,
+        ['describe what this reading of the evidence is and why it differs from the others']);
+    }
+    if (!VERSION_STATES.includes(v.state)) {
+      push('VERSION_STATE_UNKNOWN', `basis_versions[${i}] ('${name}') is in state '${String(v.state).slice(0, 40)}': a version is one of ${VERSION_STATES.join(', ')}`);
+    }
+    if (v.hidden !== undefined && v.hidden !== null && typeof v.hidden !== 'boolean') {
+      push('VERSION_HIDDEN_NOT_BOOLEAN', `basis_versions[${i}] ('${name}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
+    }
+  }
+
+  /* THE DERIVATION EDGE, and the tree it has to be. */
+  for (const [name, i] of byName) {
+    const df = rows[i].derived_from;
+    if (df === undefined || df === null || df === '' || df === 'null') continue;
+    if (typeof df !== 'string' || !byName.has(df.trim())) {
+      push('VERSION_DERIVED_FROM_UNKNOWN', `basis_versions[${i}] ('${name}') is derived_from '${String(df).slice(0, 60)}', which is not a version of this inquiry: the derivation edge is how alternatives read as a tree rather than a pile`,
+        ['name a version that exists in basis_versions[]', 'or set derived_from: null — a version a run composed fresh has no parent']);
+    }
+  }
+  for (const [name, i] of byName) {
+    const seen = new Set([name]);
+    let cur = rows[i].derived_from;
+    while (typeof cur === 'string' && byName.has(cur.trim())) {
+      const p = cur.trim();
+      if (seen.has(p)) {
+        push('VERSION_DERIVATION_CYCLE', `basis_versions[${i}] ('${name}') sits in a derived_from cycle through '${p}': versions form a TREE, and a tree has a root — a cycle leaves no answer to which of these came first`);
+        break;
+      }
+      seen.add(p);
+      cur = rows[byName.get(p)].derived_from;
+    }
+  }
+
+  /* THE JOINED ARRAYS. Orphans first, so a typo in `version` is named as a typo
+     rather than surfacing three checks later as a version with no legs. */
+  const legsOf = new Map();               // version name -> [ [index, leg] ]
+  for (let i = 0; i < legRows.length; i++) {
+    const l = legRows[i];
+    const vn = l && typeof l.version === 'string' ? l.version.trim() : '';
+    if (!byName.has(vn)) {
+      push('VERSION_ORPHAN_ROW', `basis_version_legs[${i}] names version '${String(l?.version).slice(0, 60)}', which is not in basis_versions[]`);
+      continue;
+    }
+    if (!legsOf.has(vn)) legsOf.set(vn, []);
+    legsOf.get(vn).push([i, l]);
+  }
+  const groundsOf = new Map();            // version name -> Map(label -> row index)
+  for (let i = 0; i < groundRows.length; i++) {
+    const g = groundRows[i];
+    const vn = g && typeof g.version === 'string' ? g.version.trim() : '';
+    if (!byName.has(vn)) {
+      push('VERSION_ORPHAN_ROW', `basis_version_grounds[${i}] names version '${String(g?.version).slice(0, 60)}', which is not in basis_versions[]`);
+      continue;
+    }
+    const label = typeof g.ground === 'string' ? g.ground.trim() : '';
+    if (!label || !GROUND_LABEL_RE.test(label)) {
+      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}].ground '${String(g.ground).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`);
+      continue;
+    }
+    if (!groundsOf.has(vn)) groundsOf.set(vn, new Map());
+    if (groundsOf.get(vn).has(label)) {
+      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] declares '${label}' a second time for version '${vn}': one ground, one assertion, one member answering for it`);
+      continue;
+    }
+    groundsOf.get(vn).set(label, i);
+    /* REC-46's one predicate, never a word list: `token:member` and `class:member`
+       reached the record here when this was asked as a word list. */
+    if (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by)) {
+      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}].asserted_by '${String(g.asserted_by).slice(0, 40)}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's, and a machine-composed version PROPOSES the structure rather than asserting it`,
+        ['name the member asserting that this ground is independently sufficient']);
+    }
+    if (!ISO_TS_RE.test(String(g.at || ''))) {
+      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] requires 'at' as an ISO timestamp (got '${String(g.at).slice(0, 40)}'): a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`);
+    }
+  }
+
+  /* PER VERSION: the legs, the partition, and the relationship it claims. */
+  for (const [name, i] of byName) {
+    const legs = legsOf.get(name) || [];
+    const declared = groundsOf.get(name) || new Map();
+    const labels = new Set();
+    let unlabelled = 0;
+
+    for (const [li, leg] of legs) {
+      const t = leg.target;
+      if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
+      } else if (typeof fm?.id === 'string' && t === fm.id) {
+        push('VERSION_LEG_SELF', `basis_version_legs[${li}] (version '${name}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
+      } else {
+        const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
+        if (tt !== 'information' && tt !== 'inquiry')
+          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else (D-184)`);
+      }
+      if (!BASIS_ROLES.includes(leg.role))
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').role '${String(leg.role).slice(0, 40)}' is not one of: ${BASIS_ROLES.join(', ')}`);
+      if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is STATED as such)`);
+      if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(', ')}`);
+      if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
+        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(', ')}`);
+
+      const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
+      if (!g) { unlabelled++; continue; }
+      if (!GROUND_LABEL_RE.test(g)) {
+        push('VERSION_GROUND_UNASSERTED', `basis_version_legs[${li}] (version '${name}').ground '${g.slice(0, 60)}' is not a ground label`);
+        continue;
+      }
+      labels.add(g);
+      if (!declared.has(g))
+        push('VERSION_GROUND_UNASSERTED', `basis_version_legs[${li}] (version '${name}') names ground '${g}', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
+          [`add a basis_version_grounds[] row for version '${name}', ground '${g}', with asserted_by and at`]);
+    }
+    for (const [label, gi] of declared) {
+      if (!labels.has(label))
+        push('VERSION_ORPHAN_ROW', `basis_version_grounds[${gi}] declares '${label}' for version '${name}', which no leg of that version belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`);
+    }
+    /* THE PARTITION IS TOTAL. Not checkGrounds' whole-or-not-at-all — a version
+       does not get the not-at-all arm, because §3 requires it to CARRY the
+       partition. An empty version (no legs at all) is legal and is NOT this
+       finding: §9 lists "this level is empty" among the kinds a run may report,
+       and a version saying the evidence is not there is a real answer. */
+    if (legs.length && unlabelled)
+      push('VERSION_PARTITION_INCOMPLETE', `version '${name}' has ${unlabelled} leg${unlabelled === 1 ? '' : 's'} with no ground while ${labels.size} ground${labels.size === 1 ? ' is' : 's are'} named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make`,
+        ['give every leg of this version a ground — a leg needed whatever else holds belongs in every ground',
+         'or put every leg in one ground and say relationship: and']);
+
+    /* THE RELATIONSHIP: required, and checked AGAINST the partition. */
+    const rel = typeof rows[i].relationship === 'string' ? rows[i].relationship.trim().toLowerCase() : '';
+    if (!VERSION_RELATIONSHIPS.includes(rel)) {
+      push('VERSION_NO_RELATIONSHIP', `basis_versions[${i}] ('${name}').relationship is '${String(rows[i].relationship).slice(0, 40)}': every version states how its legs compose — ${VERSION_RELATIONSHIPS.join(' or ')} — because a version with no relationship field re-ships the flat implicit-AND basis REC-42 corrected, and the two readings give different strengths`,
+        ['relationship: and — every ground is necessary and the finding is no stronger than its weakest leg',
+         'relationship: or — the grounds are alternatives, each claimed sufficient on its own by a named member']);
+    } else if (labels.size) {
+      const implied = labels.size > 1 ? 'or' : 'and';
+      if (implied !== rel)
+        push('VERSION_RELATIONSHIP_DISAGREES', `basis_versions[${i}] ('${name}') states relationship '${rel}' and is grouped into ${labels.size} ground${labels.size === 1 ? '' : 's'}, which composes as '${implied}': the stated relationship is what a member affirms at the accept ceremony, so it must be the one the structure actually has — otherwise an accepter signs for a reading that is not written down`,
+          [`state relationship: ${implied}`,
+           rel === 'or' ? 'or split the legs into the grounds you meant to be alternatives'
+                        : 'or merge the grounds into one — legs in one ground are all necessary']);
+    }
+
+    /* DEC-50 / §6.7: THE ATTRIBUTED REGROUP. */
+    const parent = typeof rows[i].derived_from === 'string' ? rows[i].derived_from.trim() : '';
+    if (parent && byName.has(parent)) {
+      const parentLabels = new Set();
+      for (const [, l] of (legsOf.get(parent) || []))
+        if (typeof l.ground === 'string' && l.ground.trim()) parentLabels.add(l.ground.trim());
+      const sameShape = parentLabels.size === labels.size
+        && [...labels].every((x) => parentLabels.has(x));
+      const parentRel = typeof rows[byName.get(parent)].relationship === 'string'
+        ? rows[byName.get(parent)].relationship.trim().toLowerCase() : '';
+      if ((!sameShape || parentRel !== rel) && (labels.size || parentLabels.size)) {
+        const by = rows[i].regroup_by;
+        const note = rows[i].regroup_note;
+        if (typeof by !== 'string' || by.trim() === '' || isMachineIdentity(by)
+            || !ISO_TS_RE.test(String(rows[i].regroup_at || ''))
+            || typeof note !== 'string' || note.trim().length < 8)
+          push('VERSION_REGROUP_UNATTRIBUTED', `basis_versions[${i}] ('${name}') regroups the partition it inherited from '${parent}' and carries no attributed regroup act: DEC-50 licenses no unattributed structural edit, so the version records regroup_by (a named member, never a machine), regroup_at (an ISO timestamp) and regroup_note (the reason)`,
+            ['record regroup_by, regroup_at and regroup_note on this version',
+             'or leave the partition as it was inherited — an edit that only changes the evidence is not a regroup']);
+      }
+    }
+  }
+}

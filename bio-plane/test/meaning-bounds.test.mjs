@@ -210,6 +210,21 @@ const returnBare = (body) => {
   while ((m = re.exec(body))) out.push(m[1].trim());
   return out;
 };
+/* PL-1, 2026-08-07 — CORRECTED, NOT EXEMPTED, and the defect was MEASURED rather
+   than argued. A bare `return refuse("CODE", `…${id.slice(0, 60)}…`);` was being
+   counted as a BARE ARRAY return, because ARRAY_EXPR matches `.slice(` and every
+   refusal in this plane trims the offending value with exactly that call before
+   putting it in a sentence. The classifier already excludes RETURN OBJECTS that
+   declare themselves refusals (REFUSAL_RETURN, above); a bare return of the
+   plane's own `refuse()` helper is the same class arriving in the other shape,
+   and `op=versionchain`, `op=meaningrows` and `op=basisversions` all write it.
+   THE MIS-READ IS A FALSE POSITIVE, so it inflates the bare roster rather than
+   hiding a defect — which is the safe direction and also the one that makes the
+   RATCHET meaningless, since a ceiling that counts non-defects cannot be held.
+   Narrow on purpose: it excludes a CALL to the refusal helper and nothing else,
+   and the arm below drives it in BOTH directions so the correction cannot
+   quietly become an exemption. */
+const REFUSAL_CALL = /^refuse\s*\(/;
 
 /* Top-level `key: value` pairs of an object literal, depth-aware so a nested object's keys
    are not read as the answer's own. */
@@ -300,7 +315,8 @@ const collectionReads = (code) => {
       bound = [...new Set([...bound, ...pairs.map(([k]) => k).filter((k) => BOUND_KEY.test(k))])];
       more = [...new Set([...more, ...pairs.map(([k]) => k).filter((k) => MORE_KEY.test(k))])];
     }
-    for (const expr of returnBare(body)) if (ARRAY_EXPR.test(expr)) bareReturn = true;
+    for (const expr of returnBare(body))
+      if (ARRAY_EXPR.test(expr) && !REFUSAL_CALL.test(expr)) bareReturn = true;
     if (!keys.length && !bareReturn) continue;
     /* THREE VERDICTS, and the third is where this walk stops rather than where the plane is
        clean — a distinction the first draft of this file collapsed, and collapsing it would
@@ -427,6 +443,25 @@ t("WALK GUARD: the classifier can still SEE a bare collection read — the roste
 t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a return-object-only "
 + "reader would have missed, which is REC-57's blind spot in a new costume",
   [...READS].some(([, r]) => r.bareReturn), true);
+/* PL-1's correction, DRIVEN IN BOTH DIRECTIONS over synthetic bodies, because a
+   narrowing that is only argued for is an exemption with a comment attached.
+   The first must be seen (a real bare array); the second must NOT (a refusal
+   whose detail sentence trims a value with `.slice(`, which is what the plane
+   actually writes at every refusal site). */
+{
+  const realBare = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n    return rows.slice(0, 5);\n  }";
+  const refusalOnly = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n"
+    + "    if (!a) return refuse(\"NO_A\", `a=${String(a).slice(0, 60)} is not an id`);\n"
+    + "    return { ok: true, rows, limit: 1, truncated: false };\n  }";
+  const bareOf = (src) => {
+    const b = [...segments(src).values()][0] || "";
+    return returnBare(b).some((e) => ARRAY_EXPR.test(e) && !REFUSAL_CALL.test(e));
+  };
+  t("WALK GUARD (PL-1, 2026-08-07): the bare-array reader still SEES a real bare array, and no longer "
+  + "counts a refusal that trims a value with `.slice(` — measured in both directions, so the "
+  + "narrowing is a correction and not an exemption",
+    [bareOf(realBare), bareOf(refusalOnly)], [true, false]);
+}
 
 /* ------------------------------------------------------- THE ITEM'S OWN (a).
    The three reads D-225 named are OFF the bare roster, and they are off it because

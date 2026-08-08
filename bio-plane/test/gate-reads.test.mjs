@@ -801,6 +801,23 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "withheld version is withheld WHOLE, never returned with its bundle nulled; an anchor naming one "
       + "refuses IDENTICALLY to an anchor naming a capture the record does not hold at all; and nothing "
       + "publishes how many were withheld, because that count is the leak.",
+    /* PL-1 / IS-1, 2026-08-07: the basis versions of one inquiry. Classified
+       here by the item that adds it, on op=versionchain's precedent — AND WITH
+       THE HONEST BOUND STATED RATHER THAN IMPLIED BY MEMBERSHIP OF THIS LIST,
+       because a classification that overstates what a gate buys is worse for the
+       next reader than none. */
+    basisversions: "PL-1: the answer names an INQUIRY and every bundle its versions rest on, so it is "
+      + "gated at the inquiry through #bundleGate — the same predicate every read here compiles (D-15's "
+      + "one compilation point) — and `total` is counted BEHIND that gate rather than beside it, so a "
+      + "total larger than the pages cannot arise. WHAT THE GATE ACTUALLY BUYS HERE IS THE FAIL-CLOSED "
+      + "ARM, and saying so is the point: `viewerPredicate` filters PROJECT bundles and nothing else "
+      + "(Membership 7.9 — the evidence corpus stays deliberately shared), and an inquiry is not a "
+      + "project, so the participation arm cannot bite on this subject today. An absent or unrecognised "
+      + "viewer stamp compiles to DENY and the read answers empty, which is the arm that can and does. "
+      + "`inquiry_present` is published ONLY when the gate admits the bundle, so a viewer who can already "
+      + "see the inquiry can tell 'no readings yet' from 'no such question' and a viewer who cannot "
+      + "learns nothing either way; nothing states how many rows the gate removed, because that count is "
+      + "the leak. If inquiries are ever compartmented, this op inherits it with no edit.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
