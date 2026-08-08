@@ -159,7 +159,16 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       471,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+  arms:       480,  /* MOVED 471 -> 480 BY REC-63, 2026-08-08, from the figure this instrument
+                       PRINTED (`GREW by 9`) on a green run of that worktree. The 9 are
+                       `provenance-marker.test.mjs`'s own five-arm declaration plus the arms
+                       the detector counts inside it; the corpus and classified counts moved
+                       with it for the one new suite. **NOTE FOR THE INTEGRATOR: this figure
+                       has been true of a branch and false of the merged tree five times in
+                       two days**, so re-read it from a green run of the merged tree rather
+                       than trusting this number if any other item landed a suite or an arm.
+                       PRIOR ENTRY, kept as the receipt for how this figure moves:
+                       arms stated across the classified declarations. MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
                        and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
@@ -169,8 +178,8 @@ const REGISTER_FLOOR = {
                        THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
                        RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
                        accumulate any, which is exactly what D-233 and REC-71 were about. */
-  classified: 119,  // declarations the detector could count arms in
-  corpus:     120,  // suites the register reads
+  classified: 121,  // declarations the detector could count arms in (+1 REC-63; was 119)
+  corpus:     122,  // suites the register reads (+1 REC-63's new suite; was 120)
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

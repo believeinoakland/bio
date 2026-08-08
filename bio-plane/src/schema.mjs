@@ -2141,6 +2141,53 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
+-- REC-63 / DEC-56 / D-204: THE STANDING MARKER. When a document's provenance
+-- ROUTE cannot be shown, the record carries that fact BESIDE the state rather
+-- than un-saying the verification. Bob ruled the principle across DEC-56/57/58
+-- on 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.
+--
+-- WHY A ROW HERE AND NOT A FIELD IN THE BUNDLE'S OWN BYTES, which is the first
+-- question a reader will ask. Writing the marker into data/provenance.json
+-- would change the bundle_sha of a VERIFIED document, so the doubt about the
+-- bytes would alter the bytes -- and it would be a second claim nobody made,
+-- which is the same reasoning provenanceChainRebuild already gives for leaving
+-- bundle.md alone. The marker is a statement by THIS INSTANCE about its own
+-- evidence, so it lives where the instance's other statements live.
+--
+-- APPEND-ONLY, AND THAT IS DEC-19. Correction moves FORWARD: a route later
+-- shown is a NEW row saying so, never a delete of the row that said it could
+-- not be. The current finding is the row with the highest 'seq' for a bundle,
+-- and the ones before it stay readable.
+--
+-- 'finding' IS D-129's VOCABULARY, taken from airun.mjs's OBSERVATION_STATES
+-- rather than invented here, because this record already has words for which
+-- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
+-- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
+-- PRESENT is an assessment that found the route showable. LOOKED_ABSENT is
+-- deliberately unreachable here: it would assert the bytes have no route, and
+-- every captured byte came from somewhere -- what we cannot show is OUR
+-- EVIDENCE of it, which is a statement about us.
+--
+-- 'state_at' RECORDS THE STATE THE DOCUMENT SAT IN WHEN THE MARKER WAS MADE,
+-- because the marker's whole point is that the state STANDS while the doubt is
+-- carried: a reader of the history has to be able to see that the two disagreed
+-- ON PURPOSE and that nothing moved the document.
+CREATE TABLE IF NOT EXISTS provenance_route_marks (
+  bundle_id      TEXT    NOT NULL,
+  seq            INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the current finding
+  at             TEXT    NOT NULL,
+  by             TEXT    NOT NULL, -- the MEMBER who made the assessment. Never a machine
+  finding        TEXT    NOT NULL, -- LOOKED_INDETERMINATE (the marker) | PRESENT
+  state_at       TEXT    NOT NULL, -- current_state at the moment of marking
+  register_state TEXT    NOT NULL, -- readable | absent | unparsable | no_documents | empty
+  undetermined   INTEGER NOT NULL, -- documents whose route could not be shown
+  documents_n    INTEGER NOT NULL, -- documents the register named at all
+  documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
+  PRIMARY KEY (bundle_id, seq)
+);
+CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
+  ON provenance_route_marks(finding, bundle_id);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

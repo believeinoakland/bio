@@ -3585,3 +3585,68 @@ Two of those are checkable against the suites' own prose and both land exactly:
 stated. `suggest.test.mjs` reads 8 against a real 10 because two of its arms carry LABELS
 (`(D-231a)`) rather than ordinals, and widening the ordinal to any bracketed token would
 count every `(D-113)` and `(DEC-46)` this prose is full of.
+
+---
+
+## REC-63 · DEC-56's route marker — the numbers, 2026-08-08
+
+Worktree `agent-ac23d92b0d07c1ab5`. Every figure below was PRINTED by the instrument named
+beside it on a green run of that tree, never arrived at by adding to the number that was in
+the file.
+
+**THE BRIEF'S BATTERY FIGURE WAS 4 HIGH, found by measuring it before any edit** — the tenth
+consecutive item to find a hand-carried figure in its brief stale. Measured baseline on this
+tree at HEAD (`722c37b`), after `npm ci` (the worktree arrived with no `bio-plane/node_modules`;
+`npm ci` exit read UNPIPED, 0):
+
+| | brief said | measured | instrument |
+| --- | --- | --- | --- |
+| battery | ~7,815 assertions | **124/124 green · 7,811 assertions · 106.4s** | `npm run test:battery` |
+
+**AFTER THE ITEM** (`npm run test:battery`, whole battery, clean run with nothing else touching the tree):
+
+| | before | after | delta |
+| --- | --- | --- | --- |
+| suites | 124 | **125** | +1 · `provenance-marker.test.mjs` |
+| assertions | 7,811 | **7,927** | +116, fully attributed below |
+| ops declared / reached | 158 / 158 | **159 / 159** | `op=provenanceroute`, reached through the control plane |
+| checks in catalog / named | 201 / 201 | **205 / 205** | C-34.1..4, every one named by an assertion |
+
+Per-suite delta, and **every other suite is byte-identical**:
+
+    provenance-marker.test.mjs   +113   (new)
+    hygiene.test.mjs             +3     (one row each in three per-suite loops, for the new suite)
+
+**THE DEC-49 GUARD** (`node civicos-ui/check-refusal-codes.mjs` from the repo root, exit 0
+unpiped). Every floor was found sitting EXACTLY at the value REC-64 left — **no pre-existing
+slack, the third item running for which that is true** — and every one was moved to the
+figure this run printed:
+
+| floor | before | after |
+| --- | --- | --- |
+| families | 13 | **14** (`ROUTE_MARK_CHECKS`) |
+| rows | 145 | **149** |
+| census | 406 | **410** |
+| reach | 200 | **204** |
+| governedSites | 59 | **60** |
+| regions | 46 | **47** (`is-route-mark`) |
+| regionLines | 1,263 | **1,289** (+26, the region's own span) |
+| codesChecked | 115 | **119** (all four codes COMPARED, not merely read) |
+| vocabularies / terms | 8 / 51 | **8 / 51** — unchanged, and deliberately |
+| CEILING `reachGap` | 42 | **42** — unchanged, and deliberately |
+
+**Two of those non-moves are decisions rather than accidents.** (i) The item reuses D-129's
+`OBSERVATION_STATES` from `src/airun.mjs` instead of minting a private absence vocabulary,
+so arm E's floors do not move and there is no second spelling of "which absence" to drift.
+(ii) All four new codes arrive TRANSLATED, so `reachGap` neither falls nor rises — a ceiling
+nudged for bookkeeping stops measuring the gap it was set to measure.
+
+**THE REGISTER** (`node scripts/coverage.mjs --strict`, run directly, `$?` unpiped, exit 0):
+arms 471 → **480**, classified 119 → **121**, corpus 120 → **122**.
+
+**THE CLASS SWEEP'S OWN FIGURE**, measured by `provenance-marker.test.mjs` section I over
+comment-stripped `src/store.mjs`: **23 swallowed reads** (a `catch` that turns something the
+plane could not establish into a normal-looking answer), of which one is this item's own and
+publishes what it met (`register_state`). **A hand count of `catch {` answers 18 and is FIVE
+SHORT** — it cannot see `catch (e) {`, which is REC-70's one-vocabulary trap arriving in a
+sweep whose whole subject is unstated absence.

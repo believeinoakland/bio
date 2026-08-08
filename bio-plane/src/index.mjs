@@ -672,6 +672,15 @@ const OPS = {
      same line op=release and op=reopen already draw, and the whole risk this op
      carries is a chain nobody witnessed being written by something unattended. */
   provenancechain: { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-63 / DEC-56 / D-204. ASSESS a document's provenance route and record
+     what was found — the standing MARKER Bob's ruling licenses, at the state the
+     document already sits in. Mutating because it writes a marker row, and it is
+     the ONLY thing it writes: no state moves, no file changes, no sha changes.
+     NOT open to `daemon`, on op=provenancechain's own line: deciding that the
+     evidence does not support a route is a named member's judgement about the
+     record, and a standing statement in the record with nobody's name on it is
+     not a statement. */
+  provenanceroute: { classes: ["admin", "member", "probe"],      mutating: true  },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -5274,6 +5283,13 @@ export default {
            NO_SUCH_BUNDLE identically to an absent one. The store fails closed on
            an absent stamp, like every op in this list. */
         || op === "provenancechain"
+        /* REC-63: its subject is a bundle and its answer names it, so it is
+           stamped with every other retrieval read — and the store's own refusal
+           makes an invisible document answer EXACTLY as an absent one
+           (ROUTE_MARK_NO_SUCH_BUNDLE), which is the whole reason the stamp
+           matters here: a marker on a document the caller may not see must not
+           be establishable by asking to make one. */
+        || op === "provenanceroute"
         || QUEUE_ACTIONS.includes(op)
         /* IS-6: a run names an inquiry or a project bundle, so a run over a
            project the caller was never invited to must answer exactly as a
@@ -5468,7 +5484,12 @@ export default {
            refuse a machine BY SHAPE through REC-46's one predicate instead of
            trusting what the caller wrote. */
         || op === "suggest"
-        || op === "provenancechain")
+        || op === "provenancechain"
+        /* REC-63: `author` here is the name that goes against a STANDING
+           STATEMENT that a document's route cannot be shown, which C-34.1 says
+           only a named member may make. Overwritten rather than honoured, for
+           the reason one paragraph up: a principal a caller can name is not one. */
+        || op === "provenanceroute")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
