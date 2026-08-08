@@ -201,6 +201,10 @@ const REGISTER_FLOOR = {
      a reproducible 526, refused to compare against 534, and said in as many words
      which of the two a floor may be quoted from. No slack: 542/127/128 is exactly
      what a green run PRINTED once every file was in a commit. */
+
+  arms:       530,  // arms stated across the classified declarations (REC-77, 2026-08-08: 526 -> 530, the figure `--strict` PRINTED on a green run of this tree after readingname.test.mjs's declaration gained REC-77's four arms)
+  classified: 126,  // declarations the detector could count arms in
+  corpus:     127,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
