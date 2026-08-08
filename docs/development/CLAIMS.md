@@ -3933,3 +3933,57 @@ hand-verified rather than reported as the answer.
 widening the first MOVES REC-70's bare roster. That is a measurement whose owner must make it, not
 an edit a passing item should land. The recipe is D-236's: invert, and NAME what cannot be
 classified. Raised as **D-240**.
+
+## CLAIM 2026-08-08 VERIFY
+session: m0-16-uncontrolled-walks (worktree agent-a4e27ecb4d9654c5e)
+opened: 2026-08-08T21:40:00Z
+paths: **`bio-plane/scripts/provenance.mjs`** (NEW — M0-15's provenance check MOVED here unchanged in behaviour so the walks share ONE mechanism; the module states the four rules once and states what the check CANNOT see), **`bio-plane/scripts/battery.mjs`** (the inline provenance block replaced by a call to that module — no change to discovery, to the temp sweep, to the exit code, or to a single printed word that `battery-provenance.test.mjs` asserts; that suite is 23 pass before and after), **`bio-plane/scripts/coverage.mjs`** (the three walks GUARDED; the fleet walk gains the battery's `!startsWith(".")` filter it never had; the `REGISTER_FLOOR` comparison now reads the REPRODUCIBLE figure and the numerals move from what a green run PRINTED), **`bio-plane/test/hygiene.test.mjs`** (a NEW provenance block over its own corpus walks, a class census, and its `NEGATIVE CONTROL:` declaration gaining M0-16's marked arms), **`bio-plane/test/coverage-provenance.test.mjs`** (NEW suite, entirely this item's), **`bio-plane/test/coverage-provenance.control.sh`** (NEW harness, five arms), **`bio-plane/test/battery-provenance.test.mjs`** (it copies the REAL runner into a scratch repository and must now copy the module the runner imports — two lines; no assertion changed), **`docs/development/DEBT.md`** (D-238's disposition cell), **`docs/development/QUEUE.md`** (the M0-16 row's disposition ONLY), **`docs/development/VERIFICATION.md`** (the register row's figures and the provenance section), **`docs/development/CLAIMS.md`** (this entry and its DELEGATION). **NOT** `bio-plane/src/**`, **NOT** `checks/bio-checks.mjs`, **NOT** `scripts/control-register.mjs`, **NOT** any other `.test.mjs`, **NOT** `civicos-ui/**`, **NOT** `pdf-worker/**`, **NOT** `agent-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: none — test estate and instruments, no plane behaviour.
+interfaces owned: none.
+expected: QUEUE.md M0-16 / D-238. Seven walks discover over an uncontrolled directory and only two were guarded; guard the rest with M0-15's shape rather than a second mechanism, and SWEEP FOR THE CLASS.
+accepts-when: as the M0-16 row. **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief: 130/130 green · 8,142 assertions · exit 0**, which AGREES with the brief (~130/130 · ~8,142) — and it is the ELEVENTH-item streak of stale briefs BROKEN rather than continued, which is worth saying because a run of stale figures is not evidence the next one is stale. **The baseline's OWN honesty was established two ways, because this item's whole subject is that a baseline can lie:** (i) the runner's own M0-15 line reported `132 of 132 discovered item(s) are in the commit at HEAD (ec67a68)`, and (ii) independently, a full filesystem walk of the worktree diffed against `git ls-tree -r --name-only HEAD` returned exactly two entries not in the commit — `.env` (gitignored, carried by `.worktreeinclude`) and `.git` (the worktree pointer file) — and NO `.test.mjs`, no manifest, nothing under `src/`. `git status` was NOT used for this, because an ignored file is invisible to it and `.claude/worktrees/` is ignored, which is precisely how the original phantom stayed invisible. The worktree arrived with no `bio-plane/node_modules`; `npm ci` was run there first, exit 0.
+concurrency: checked over the whole file. Every claim naming `scripts/coverage.mjs`, `scripts/battery.mjs` or `test/hygiene.test.mjs` is a LANDED item whose work is merged (M0-15 at `4e92bdb`/`b6b7a8f`, M0-10, M0-14, CPDF-9, UI-48, REC-73); none is live. `scripts/control-register.mjs` is M0-14's and is NOT touched — it is IMPORTED by the new suite for its `CONTROL_MARKER` constant and by hygiene as before. `REGISTER_FLOOR` is the one known collision point: it has ONE key set on purpose and a keep-both merge has twice left duplicate `arms:` keys where the LAST silently wins. If this conflicts, COLLAPSE TO ONE SET and re-read the printed figures.
+released: 2026-08-08 — committed on `worktree-agent-a4e27ecb4d9654c5e` (4 commits, head `690768f`), **NOT pushed and NOT merged**; CONDUCT integrates. Battery **131/131 green · 8,181 assertions · exit 0**, provenance `133 of 133 discovered item(s) are in the commit at HEAD`; true baseline measured here before any edit **130/130 · 8,142**; **delta +39, attributed by DIFFING the two runs rather than by subtraction** — `coverage-provenance.test.mjs` +28 (new) and `hygiene` 522 -> 533 are the ONLY rows that moved. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0**, naming NOTHING it counted that is not in a commit (`137 of 137`). `node civicos-ui/test/run.mjs` from the repo root, exit unpiped, **0**. `node tools/plancheck.mjs` **clean but for UNPUSHED**. `REGISTER_FLOOR` moved `526/126/127` -> **`542/127/128`** from the PRINTED figures — and, the change that matters more than the numerals, the comparison now reads the REPRODUCIBLE figure, which fired during the build by printing `arms 534` beside a reproducible `526` and refusing the higher one. **FIVE CONTROL ARMS RUN, EACH ALONE; TWO CAME BACK OTHER THAN DECLARED AND BOTH FOUND THE INSTRUMENT WRONG RATHER THAN THE SUBJECT:** arm (3) NEVER ARMED — a worktree's gitdir has no `info/`, the exclude write ENOENTed, `git status` was not empty and the arm silently re-measured arm (1), caught only because the printed pristine digest read `e3b0c442…`, the sha256 of the EMPTY STRING, which is the identical failure M0-15's own harness had; and arm (4) left `hygiene` at a SURPRISING GREEN because every arm read the check's RETURN and none read a printed WORD, so the naming branch could have gone dark there in silence. Both closed and both recorded in the declaration rather than smoothed. **A THIRD INSTRUMENT DEFECT WAS CAUGHT BY THE ESTATE ITSELF:** `op-claims.test.mjs` red'd the first full battery over a scratch fixture naming an op the dispatch table does not route — the fixture was corrected, not the check, and then corrected a SECOND time because the comment EXPLAINING the correction used the same spelling and that sweep reads comments. **AND MY OWN GUARD-DETECTOR WAS WRONG FIRST TIME:** the census graded a file GUARDED by any mention of `scripts/provenance.mjs`, which read `battery.mjs` as guarded because its HEADER says so in prose and `coverage.mjs` as unguarded because its import spells the path relatively — a classifier grading a file by a word in its comments, REC-70's and REC-64's shape exactly; corrected to match the import statement. Final tree verified by a full filesystem walk diffed against `git ls-tree -r HEAD`: nothing off-commit but `.env`, the `.git` pointer file and three gitignored `.wrangler/cache/cf.json` written by the battery runs; nothing in HEAD missing from disk. **`git stash` was NOT used at any point in this item**, which is D-238's own instruction and the reason the baseline above can be trusted.
+
+### DELEGATION 2026-08-08 M0-16 -> UI / WHOEVER OWNS `civicos-ui/test/run.mjs`: **THE UI BATTERY'S RUNNER DISCOVERS OVER A DIRECTORY IT DOES NOT CONTROL, AND THE TOTAL IT PRINTS IS A BASELINE SESSIONS QUOTE**
+
+M0-16 swept the class D-238 named — *what else walks a directory it does not control
+and reports a number from it* — and `hygiene.test.mjs` now counts it: **21 files in
+the estate walk with `readdirSync`, 3 are GUARDED, 18 are NAMED.** Seventeen of the
+eighteen report findings about SOURCE (which module spells a grade letter, which
+suite pins a refusal code, which op a comment names). A wrong number there is
+noticed by the assertion beside it.
+
+**One is different, and it is this one.** `civicos-ui/test/run.mjs` is
+`fs.readdirSync(...).filter(f=>f.endsWith(".test.mjs")).sort()` — the UI battery's
+whole discovery mechanism, and the total it prints is what a session quotes as its
+UI baseline and what an item's `+N attributed` is computed against. **That is
+`bio-plane/scripts/battery.mjs` exactly as it stood before M0-15, one estate over.**
+A `git stash pop` deposits an untracked `.test.mjs` into `civicos-ui/test/` by the
+same repository-wide mechanism, and nothing there would say so.
+
+- **The fix is an import, not a design.** `bio-plane/scripts/provenance.mjs` exports
+  `readGitProvenance`, `classifyDiscovered`, `stateOf`, `repoPath` and
+  `reportProvenance`; `battery.mjs` is the worked example, about fifteen lines at the
+  call site. **Do not write a second mechanism** — that is what this item exists to
+  have avoided, and two mechanisms for one job is how the next component goes dark
+  differently.
+- **It must REPORT, not FAIL** (M0-15's provisional, and its reasoning holds: a
+  worker writes a suite before committing it dozens of times an hour), must ask
+  `ls-tree HEAD` and never `git status`, must tell UNTRACKED from staged-not-
+  committed, must print the reproducible total beside the contaminated one, and must
+  say UNVERIFIED rather than clean when git cannot answer.
+- **Why M0-16 did not do it:** `civicos-ui/**` is not this item's to open. The
+  census entry for it is a ratchet, not a fix — it will keep saying so until somebody
+  changes it.
+- **Reversal cost: none.** The module is additive and nothing depends on the UI
+  runner staying silent.
+
+### DELEGATION 2026-08-08 M0-16 -> WHOEVER NEXT TOUCHES `tools/plancheck.mjs`: **A DEAD `readdirSync` IMPORT**
+
+`tools/plancheck.mjs:28` imports `readdirSync` and never calls it. Noticed while
+sweeping the class, not fixed: `tools/` is outside this item's paths and a passing
+edit to the handoff gate is not worth the risk. It is harmless — one unused binding —
+and it is recorded so the next reader of that file does not have to wonder whether a
+walk was removed and its report lost with it, which is the question the census exists
+to make cheap.

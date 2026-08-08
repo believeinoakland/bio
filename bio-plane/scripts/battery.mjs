@@ -97,6 +97,12 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
+/* M0-16: the provenance check MOVED OUT of this file and into `provenance.mjs`,
+   unchanged in behaviour, because six other walks in this repository needed the
+   same rule and four copies of one rule is how the next one goes stale in
+   silence. Read that module's header for the mechanism, the four rules, and —
+   the part a reader of a number needs — what the check cannot see. */
+import { readGitProvenance, reportProvenance } from "./provenance.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const filters = process.argv.slice(2).filter((a) => !a.startsWith("-"));
@@ -489,26 +495,17 @@ if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")
  * reverse of this provisional and is a decision about how workers work, not
  * about the runner.
  *
- * `git status` IS THE WRONG INSTRUMENT and is deliberately not used: an IGNORED
- * file does not appear in it, and `.claude/worktrees/` is ignored in this
- * repository. The question is "is this file in the commit", so the answer comes
- * from `ls-tree HEAD`. A file present in the INDEX but not in HEAD is a
- * different claim again and is named as such.
- *
- * AND WHEN GIT CANNOT ANSWER, THE RUN SAYS UNVERIFIED RATHER THAN CLEAN. An
- * instrument that reports "all good" when it could not look is the exact failure
- * D-233 was worth an item for. */
+ * ---- M0-16, 2026-08-08: THE RULE ITSELF NOW LIVES IN `scripts/provenance.mjs`
+ * AND THIS IS ONE OF ITS CALLERS. Nothing about what this run reports changed.
+ * What changed is that the SIX other walks M0-15 named — `coverage.mjs`'s two
+ * and `hygiene.test.mjs`'s three, plus this file's two — ask the SAME code
+ * rather than carrying six copies of one paragraph. `git status` being the wrong
+ * instrument, UNTRACKED being a different claim from staged-not-committed, the
+ * reproducible total printed beside the contaminated one, and UNVERIFIED never
+ * reading as clean are all stated there, once, with what the check CANNOT see
+ * stated beside them. */
 {
-  const git = (args) => {
-    const r = spawnSync("git", args, { cwd: REPO, encoding: "utf8", timeout: 30_000,
-      maxBuffer: 128 * 1024 * 1024 });
-    return (r.error || r.status !== 0 || typeof r.stdout !== "string") ? null : r.stdout;
-  };
-  const setOf = (out) => out === null ? null : new Set(out.split("\0").filter(Boolean));
-  const inHead = setOf(git(["ls-tree", "-r", "--name-only", "-z", "HEAD"]));
-  const inIndex = setOf(git(["ls-files", "-z"]));
-  const headSha = (git(["rev-parse", "--short", "HEAD"]) || "").trim();
-
+  const prov = readGitProvenance(REPO);
   /* Everything discovery admitted: the suites that RAN, and the manifests that
      enrolled them. Both paths, because both are discovery. */
   const admitted = [
@@ -518,34 +515,15 @@ if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")
     ...fleetManifests.map((m) => ({ path: m.path, what: `${m.member}'s fleet manifest`,
       counted: "enrols a whole directory" })),
   ];
-
-  if (inHead === null) {
-    console.log(`provenance: UNVERIFIED over all ${admitted.length} discovered item(s) — git could not`
-      + ` answer \`ls-tree HEAD\` in ${REPO}.`);
-    console.log(`  Nothing above was checked against a commit, so the totals may include suites no other`);
-    console.log(`  checkout of this repository has. That is not the same claim as "all in a commit" (M0-15).`);
-  } else {
-    const off = admitted.filter((a) => !inHead.has(a.path));
-    const reproducible = results
-      .filter((r) => inHead.has(r.repoRel))
-      .reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0);
-    console.log(`provenance: ${admitted.length - off.length} of ${admitted.length} discovered item(s)`
-      + ` are in the commit at HEAD (${headSha})`
-      + ` · ${results.length} suite(s) run · ${fleetManifests.length} fleet manifest(s)`);
-    if (off.length) {
-      console.log(`  NOT IN ANY COMMIT — this run COUNTED work no other checkout can see (M0-15):`);
-      for (const a of off) {
-        const state = inIndex === null ? "index unreadable"
-          : inIndex.has(a.path) ? "staged, not yet committed" : "UNTRACKED";
-        console.log(`    ${a.path}  (${state}) — ${a.what}: ${a.counted}`);
-      }
-      console.log(`  ${assertions} assertions were counted above; ${reproducible} of them come from suites`);
-      console.log(`  that are in the commit. ${reproducible} is the figure another checkout at ${headSha} reproduces,`);
-      console.log(`  and it is the one a baseline may be quoted from. An UNTRACKED suite here did not have to`);
-      console.log(`  be written in this tree: \`git stash\` is REPOSITORY-WIDE across every worktree, so a`);
-      console.log(`  \`pop\` can deposit another worker's untracked files here. See this file's header.`);
-    }
-  }
+  const reproducible = prov.inHead === null ? null : results
+    .filter((r) => prov.inHead.has(r.repoRel))
+    .reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0);
+  reportProvenance({
+    prov, items: admitted, instrument: "this run",
+    corpus: `${results.length} suite(s) run · ${fleetManifests.length} fleet manifest(s)`,
+    totals: reproducible === null ? []
+      : [{ label: "assertions", contaminated: assertions, reproducible, source: "suites" }],
+  });
 }
 
 /* D-186's assertion. The comparison IS the control: this run has just built and

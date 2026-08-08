@@ -61,6 +61,11 @@ import { dirname, join } from "node:path";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REAL_RUNNER = join(DIR, "..", "scripts", "battery.mjs");
+/* M0-16: the provenance rule moved into its own module and the runner imports it,
+   so the scratch repository needs BOTH files or the runner cannot start. Copied
+   from the real tree for the same reason the runner is: a fixture copy of the
+   check would agree with itself and prove nothing about what actually runs. */
+const REAL_MODULES = ["provenance.mjs"];
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -92,6 +97,8 @@ const drive = ({ commit = {}, stage = {}, leave = {}, dropGit = false }) => {
   mkdirSync(join(repo, "bio-plane", "scripts"), { recursive: true });
   mkdirSync(join(repo, "bio-plane", "test"), { recursive: true });
   copyFileSync(REAL_RUNNER, join(repo, "bio-plane", "scripts", "battery.mjs"));
+  for (const m of REAL_MODULES)
+    copyFileSync(join(DIR, "..", "scripts", m), join(repo, "bio-plane", "scripts", m));
   for (const [rel, body] of Object.entries(commit)) put(rel, body);
   g("init", "-q", "-b", "main");
   g("add", "-A");
