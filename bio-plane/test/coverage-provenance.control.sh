@@ -90,34 +90,37 @@ arm2)
 
 arm3)
   # (3) THE ARM THAT PROVES `ls-tree` AND NOT `git status`, and the one that would
-  # have caught the ORIGINAL defect: the same phantom, merely IGNORED. It is added
-  # to `.git/info/exclude` rather than to a tracked `.gitignore`, so no tracked
-  # file is touched at all. `.claude/worktrees/` is ignored in this repository,
-  # which is exactly how the first phantom stayed invisible.
+  # have caught the ORIGINAL defect: the same phantom, merely IGNORED.
+  #
+  # THE IGNORING IS DONE WITH AN UNTRACKED `.gitignore` THAT LISTS ITSELF, and the
+  # first version of this arm did it with `.git/info/exclude` instead — which is a
+  # CONTROL FINDING and not a typo. In a worktree `.git` is a FILE pointing at
+  # `<common>/worktrees/<id>`, which has no `info/` directory, so the append failed
+  # with ENOENT, the exclude was NEVER WRITTEN, `git status` was NOT empty, and the
+  # arm measured arm (1) over again while looking like it had fired. It was caught
+  # by the printed digest of the pristine copy: `e3b0c442...`, the sha256 of the
+  # EMPTY STRING — the identical instrument failure M0-15's own harness had, in the
+  # same place, for a different reason. The rule that caught both is the same one:
+  # PRINT the thing you are about to trust. (Using the COMMON dir's exclude would
+  # also have been wrong on this item's own terms: it is shared by all sixty
+  # worktrees, which is the hazard D-238 is about.)
   # DECLARED must-fire: `git status --porcelain` is EMPTY, and both instruments
   #   STILL name the file as UNTRACKED.
   LIST=$(mktemp); BEFORE=$(mktemp); AFTER=$(mktemp)
   snapshot "$LIST" "$BEFORE" || exit 2
-  EX="$WORK/.git/info/exclude"
-  # a worktree's .git is a FILE pointing at the common dir; resolve it.
-  if [ -f "$WORK/.git" ]; then
-    COMMON=$(sed -n 's/^gitdir: //p' "$WORK/.git")
-    EX="$COMMON/info/exclude"
-  fi
-  EXSNAP=$(mktemp "${TMPDIR:-/tmp}/arm3.exclude.pristine.XXXXXX")
-  cp "$EX" "$EXSNAP" 2>/dev/null || : > "$EXSNAP"
-  echo "exclude pristine: $(shasum -a 256 "$EXSNAP" | cut -d' ' -f1)"
   PH="$PLANE/test/m016-arm3-phantom.test.mjs"
+  GI="$PLANE/test/.gitignore"
+  [ -e "$GI" ] && { echo "test/.gitignore ALREADY EXISTS — this arm would clobber it. Aborting."; exit 2; }
   printf 'console.log("m016-arm3: 57 pass, 0 fail");\n' > "$PH"
-  printf 'm016-arm3-phantom.test.mjs\n' >> "$EX"
-  echo "git status --porcelain (must be EMPTY):"
+  printf 'm016-arm3-phantom.test.mjs\n.gitignore\n' > "$GI"
+  echo "armed: phantom $(shasum -a 256 "$PH" | cut -d' ' -f1)"
+  echo "armed: ignore  $(shasum -a 256 "$GI" | cut -d' ' -f1)"
+  echo "git status --porcelain (must be EMPTY — if anything prints, THE ARM DID NOT ARM):"
   ( cd "$WORK" && git status --porcelain ) | sed 's/^/  |/'
   echo "  (end of git status)"
   report
-  rm -f "$PH"
-  cp "$EXSNAP" "$EX"
-  cmp "$EX" "$EXSNAP" && echo "restore: .git/info/exclude byte-identical (cmp); sha256 $(shasum -a 256 "$EX" | cut -d' ' -f1)"
-  rm -f "$EXSNAP"
+  rm -f "$PH" "$GI"
+  echo "disarmed: phantom gone $([ -e "$PH" ] && echo NO || echo yes) · ignore gone $([ -e "$GI" ] && echo NO || echo yes)"
   while IFS= read -r f; do shasum -a 256 "$WORK/$f"; done < "$LIST" | sort > "$AFTER"
   echo "restore: manifest lines before=$(wc -l < "$BEFORE" | tr -d ' ') after=$(wc -l < "$AFTER" | tr -d ' ')"
   cmp "$BEFORE" "$AFTER" && echo "restore: tracked estate byte-identical (cmp, not only sha256)"
