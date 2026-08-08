@@ -55,6 +55,32 @@ left CONDUCT idle for most of every wave**, waiting on workers rather than being
 bottleneck it was sized to be. Spend the raised budget on items whose PATHS ARE DISJOINT:
 the UI, the fleet, the test estate, the docs, the measurement lanes.
 
+**NEVER BRIEF A WORKER TO `git stash`. THE RECIPE CONDUCT HAS BEEN WRITING INTO EVERY
+BRIEF IS ITSELF A DELIVERY MECHANISM FOR THE DEFECT IT DEFENDS AGAINST.**
+
+Named by M0-15, 2026-08-08, and confirmed three ways: **`git stash` is REPOSITORY-WIDE,
+not per-worktree.** `refs/stash` is not among git's per-worktree refs, so **all sixty
+checkouts of this repository share ONE stash stack.** `stash@{0}` does not mean *what I
+pushed* — it means *what any of the sixty pushed last*. And `push -u` carries UNTRACKED
+files, so a `pop` in worktree B materialises worker A's untracked `.test.mjs` into B's
+`test/`, where discovery finds it, runs it, and **counts it into B's baseline** — then it
+vanishes the moment B stashes again. That is the whole of the phantom-suite defect, and it
+is one mechanism rather than two: the appearance of *another session in my worktree* falls
+out of a single interleaved push.
+
+**The bitter part, and the reason this paragraph exists rather than a note in a debt row:
+the practice this project relies on to defeat stale figures — MEASURE YOUR OWN BASELINE,
+which has caught a stale brief on ten consecutive items — is delivered by telling workers
+to park their changes, and parking is the vector.** M0-15's own words: *change the brief,
+not the workers.* At least four workers used the stash recipe on 2026-08-08 because
+CONDUCT told them to.
+
+**So the brief says, in this order:** (1) **do not park at all** — the battery now prints a
+provenance line, so a dirty-tree baseline is readable; (2) if a clean tree is genuinely
+needed, **`git worktree add` a scratch checkout**; (3) if you stash anyway,
+`git stash push -u -m <agent-id>`, **capture the stash SHA immediately**, and `git stash
+apply <SHA>` — **never `pop`, never `stash@{0}`.**
+
 **THE ORDERING IS REVERSED AS OF 2026-08-08, AND THE FIRST VERSION OF THIS PARAGRAPH IS
 THE MISTAKE IT NOW WARNS ABOUT. SPAWN FIRST. THEN INTEGRATE.**
 

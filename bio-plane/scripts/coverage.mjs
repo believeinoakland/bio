@@ -159,40 +159,26 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* COLLAPSED TO ONE KEY SET AT INTEGRATION 2026-08-08 by CONDUCT, and the reason is a
-     near-miss worth more than the figures. Six items moved this block in parallel and
-     each was right on its own tree; a keep-both merge left FOUR `arms:` keys in one
-     object literal. **That is valid JavaScript and the LAST one silently wins** — and
-     the last one was 480, BELOW two of the others, so the merge would have quietly
-     INSTALLED SLACK in a ratchet whose entire purpose is to have none. No error, no
-     warning, nothing red. The same shape as `regionLines` and the census floor, except
-     that a duplicate object key cannot even be seen by reading the value you expect to
-     find. Every worker's figure is preserved in the note below; the figures here are the
-     ones the instrument PRINTED on a green run of the merged tree.
-     Worker figures, each true of its own branch: M0-11 476 · M0-12 478 · REC-63 480 ·
-     REC-66 482 · REC-65 483. None is true here. */
+  /* ONE KEY SET, DELIBERATELY — AND THE REASON IS A NEAR-MISS THIS BLOCK ALMOST DIDN'T
+     SURVIVE. Seven items moved these figures in parallel on 2026-08-08, each correct on
+     its own tree, and a keep-both merge left FOUR `arms:` keys in this one object
+     literal. That is valid JavaScript: the LAST key silently wins. The last one was the
+     LOWEST, so the merge would have quietly INSTALLED SLACK in a ratchet whose entire
+     purpose is to have none — no error, no warning, nothing red, and **a duplicate
+     object key cannot be seen by reading the value you expect to find.** It happened a
+     second time on the very next merge of this file. If you are resolving a conflict
+     here: COLLAPSE TO ONE SET and re-read the printed figures. Do not keep both.
 
-  arms:       518,  // arms stated across the classified declarations
-  classified: 125,  // declarations the detector could count arms in
-  corpus:     126,  // suites the register reads
+     Every worker's figure, each true of its own branch and none true here:
+     M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486.
+     The figures below are the ones `--strict` PRINTED on a green run of the merged tree.
 
-  arms:       486,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
-                       INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
-                       PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
-                       and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
-                       BRANCH AND FALSE OF THE MERGED TREE — the fifth time in two days, and
-                       the same shape as `regionLines`, a C-number family, a debt row and an
-                       IC number. A worker cannot see it and should not be asked to.
-                       THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
-                       RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
-                       accumulate any, which is exactly what D-233 and REC-71 were about.
-                       MOVED 478 -> 486 BY M0-15, 2026-08-08, from the figure a green run
-                       PRINTED (`GREW by 8 arm(s)`): `test/battery-provenance.test.mjs` is
-                       new and states eight marked arms. All three numerals below move in
-                       the SAME TURN as the suite that invalidated them, which is the rule
-                       this block exists to enforce. */
-  classified: 121,  // declarations the detector could count arms in  (120 -> 121, M0-15)
-  corpus:     122,  // suites the register reads                      (121 -> 122, M0-15)
+     MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. A floor with slack
+     is not a ratchet: this project measured one sitting 19 codes low that had ALREADY
+     flipped a control from RED to GREEN. */
+  arms:       526,  // arms stated across the classified declarations
+  classified: 126,  // declarations the detector could count arms in
+  corpus:     127,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
