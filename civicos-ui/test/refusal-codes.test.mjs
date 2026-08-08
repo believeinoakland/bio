@@ -143,6 +143,38 @@
  *   to arm on the real tree — a DUPLICATED marker, a COLLAPSED span, a region
  *   that judges NOTHING, an ORPHAN region no `where` claims, and a region that
  *   has DRIFTED OUT of the function its `where` names.
+ *
+ *   REC-76's SIX, ADDED AND RUN 2026-08-08 in worktree agent-a7c06631e829a208f,
+ *   against the REAL tree by `test/refusal-codes.control.mjs` — because D-236 was
+ *   found by a real governed site coming back `0 judged, 0 checked`, and a
+ *   fixture alone cannot show that the site the guard reported clean was one it
+ *   could not see:
+ *
+ *   (n1) A REFUSAL IN A SHAPE THE MATCHER WAS NEVER TAUGHT — a codeless
+ *        `{ started: false, … }` planted in the real `checkBound`. DECLARED MUST
+ *        FAIL. RUN: the guard exits 1 naming checkBound AND the verdict field it
+ *        read. **THE ARM THIS ITEM EXISTS FOR.**
+ *   (n2) THE SAME PLANTED REFUSAL UNDER THE OLD ONE-VOCABULARY CLASSIFIER.
+ *        DECLARED MUST PASS. RUN: exit 0 — the codeless refusal sits at a
+ *        governed site and is not seen. **Neither (n1) nor (n2) is evidence
+ *        alone**; a widening that fires is only interesting if what it replaced
+ *        did not.
+ *   (n3) OVER-STRICTNESS — a SUCCESS in an unanticipated spelling
+ *        (`{ found: true, … }`, REC-70's own example) at a real governed site.
+ *        DECLARED MUST PASS. This is the direction that would flood the guard
+ *        with false sites and get it switched off.
+ *   (n4) THE TEETH INSIDE THE NEW REGION — SET_MOVED's code taken off the real
+ *        refusal inside `is-selection-moved`. DECLARED MUST FAIL. Each newly
+ *        narrowed region owes its OWN teeth arm (REC-71's (r5) rule).
+ *   (n5) THE NEW REGION'S MARKER REMOVED. DECLARED MUST FAIL — a `where` whose
+ *        region has vanished must fail rather than judge an empty span.
+ *   (n6) THE OUTCOME WALK NEUTERED. DECLARED MUST FAIL on the CORPUS floor with
+ *        the corpus PRINTED at 0. A headline that passes over an EMPTY CORPUS is
+ *        this repository's most recent instrument defect.
+ *
+ *   (n1),(n3) and (n6) are ALSO re-run mechanically by ARM 10 below over fixture
+ *   trees, every run of the battery, together with the computed-verdict shape in
+ *   both directions and the unclassified-outcome bucket.
  * ============================================================================
  */
 import fs from "fs";
@@ -273,8 +305,15 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        region, so `regions`/`regionLines` are 0 and the arms that need a floor
        set one explicitly. */
     regions: 0, regionLines: 0, codesChecked: 3,
+    /* REC-76's three, STATED for the fixture for the same reason as REC-71's
+       three above: an absent floor compares `n < undefined` -> false and never
+       fails, so an omitted key is a floor that silently does not exist. The
+       default tree's two governed functions hand back THREE outcomes, all three
+       refusals, none of them unclassifiable. */
+    outcomeReturns: 3, refusalsJudged: 3,
   }, over.floor || {}))};`);
-  guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(over.ceiling || { reachGap: 0 })};`);
+  guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
+    { reachGap: 0, unclassifiedOutcomes: 0 }, over.ceiling || {}))};`);
   guard = guard.replace(/PART_REASON: "src\/subresources\.mjs"/, `PART_REASON: "src/parts.mjs"`);
   guard = guard.replace(/const VOCABULARY_MODULES = new Map\(Object\.entries\(\{[\s\S]*?\n\}\)\);/,
     `const VOCABULARY_MODULES = new Map(Object.entries({ "src/vocab.mjs": "the fixture's vocabularies" }));`);
@@ -877,6 +916,110 @@ withTree(regionTree({ floor: {
     /compared only \d+ refusal code\(s\) against a family row, floor is 99/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 10 — REC-76 / D-236: THE CLASSIFIER ASKS WHAT A REFUSAL IS IN
+   PRINCIPLE, AND SAYS WHAT IT COULD NOT CLASSIFY.
+
+   Arm C graded a refusal by ONE literal, `ok: false`. Measured over
+   `bio-plane/src`: 704 `ok: false`, 5 `started: false`, 3 computed `ok: !x` —
+   eight refusal objects invisible to the arm whose whole job is to fail on a
+   codeless one. These six arms drive the inversion in BOTH directions, because
+   a widening that over-fires floods the guard with false sites and gets it
+   switched off, which is the failure that would cost more than the blindness.
+   ============================================================ */
+
+/* The default fixture with one extra return spliced into `checkFixture`. */
+const withExtra = (extra) => `
+export function checkFixture(input = {}) {
+  if (!input.address) return { ok: false, code: "FIXTURE_NO_ADDRESS", detail: "no address" };
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || ""))) {
+    return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: String(input.at) };
+  }
+${extra}
+  return null;
+}
+export function checkSecond(rows = {}) {
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  return null;
+}
+`;
+
+console.log("\n--- ARM 10a · a refusal in a spelling the matcher was NEVER TAUGHT is COUNTED, not skipped ---");
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { started: false, note: "a run needs somewhere to be" };`) }, tree => {
+  const r = runGuard(tree);
+  /* `started: false` is a field name this walk has never been told about. It is
+     graded because it is a BOOLEAN VERDICT that is not `true`, which is a
+     property of the shape rather than of the vocabulary. */
+  t("ARM 10a: exits 1 — the unfamiliar refusal was JUDGED and found codeless", r.exit, 1);
+  t("ARM 10a: naming the verdict field it read, so the reader can see WHY it was graded a refusal",
+    /returns a CODELESS REFUSAL — an outcome whose verdict `started` is `false`/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10b · a COMPUTED verdict (`ok: !x`) is a refusal on at least one path — SET_MOVED's own shape ---");
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { ok: !input.fine, handle: "h", n: 0 };`) }, tree => {
+  const r = runGuard(tree);
+  /* THIS IS THE SHAPE THAT COST A TRANSLATION. `selectionResolve` refuses
+     through `ok: !stopped`, so a region `where` around it judged ZERO and would
+     have failed as a drifted marker — which is why `SET_MOVED` went untranslated
+     for as long as it did. */
+  t("ARM 10b: exits 1 — a computed verdict is not a declared success", r.exit, 1);
+  t("ARM 10b: saying it refuses on at least one path rather than pretending it always refuses",
+    /verdict `ok` is computed, so it refuses on at least one path/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10c · the SAME computed verdict, CODED, is accepted (the inversion must not over-fire) ---");
+withTree({ fixtureSrc: withExtra(
+  `  if (input.late) return { ok: !input.fine, handle: "h", ...(input.fine ? {} : { reason: "FIXTURE_NO_ADDRESS" }) };`) }, tree => {
+  const r = runGuard(tree);
+  t("ARM 10c: exits 0 — a computed verdict carrying a coded refusal is exactly what DEC-49 asks for", r.exit, 0);
+});
+
+console.log("\n--- ARM 10d · a SUCCESS in an unanticipated spelling is NOT graded a refusal (over-strictness) ---");
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { found: true, rows: [], more: false };`) }, tree => {
+  const r = runGuard(tree);
+  /* `found: true` is REC-70's own example — the success spelling that hid 27
+     ops one instrument over. A guard that graded it a refusal would demand a
+     code for an answer, flood itself with false sites and be switched off. */
+  t("ARM 10d: exits 0 — a return that declares itself a success is not a refusal", r.exit, 0);
+  t("ARM 10d: and the walk SAYS it saw a declared success rather than silently dropping it",
+    /graded \d+ REFUSAL\(s\) \/ [1-9]\d* declared SUCCESS\(es\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10e · an outcome the walk CANNOT classify is NAMED, never silently scored zero ---");
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { note: "no verdict of any kind lives in here", detail: "x" };`) }, tree => {
+  const r = runGuard(tree);
+  /* THE HALF THAT LASTS (M0-14's precedent for the control register, CPDF-9's
+     for the dark fleet member): a shape scored zero is indistinguishable from a
+     site with nothing to judge, which is the whole of D-236. */
+  t("ARM 10e: exits 1 — a new unclassifiable outcome is a new place a codeless refusal can hide", r.exit, 1);
+  t("ARM 10e: NAMING it with file, line and the text itself",
+    /carry NO verdict this walk can read[\s\S]*src\/fixture\.mjs:\d+ \(checkFixture\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10f · a declared SUCCESS carrying a refusal CODE is a contradiction and FAILS ---");
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { ok: true, code: "FIXTURE_BAD_ANCHOR", detail: "x" };`) }, tree => {
+  const r = runGuard(tree);
+  /* The cross-check for the one thing the verdict rule cannot see on its own: a
+     NEGATIVE-POLARITY verdict (`failed: true`) would read as a success. Gated at
+     zero rather than ratcheted, because there is no honest instance of it. */
+  t("ARM 10f: exits 1", r.exit, 1);
+  t("ARM 10f: saying the two claims are in one object and the refusal would go unjudged",
+    /DECLARES SUCCESS \(`true`\) while carrying refusal code\(s\) FIXTURE_BAD_ANCHOR/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10g · the OUTCOME CORPUS floor fires when the return reader goes blind ---");
+withTree({ mutateGuard: g => g.replace("function outcomeReturns(text) {", "function outcomeReturns(text) { return [];") }, tree => {
+  const r = runGuard(tree);
+  /* A CEILING IS NOT A RATCHET, and this is that lesson on the corpus rather
+     than on the census: a walk that reads nothing asserts nothing, and without
+     this floor it would report green over an empty corpus — the exact defect
+     (an empty manifest, `cmp` comparing two empty files, the sha256 of the
+     empty string) this repository measured hours before this arm was written. */
+  t("ARM 10g: exits 1", r.exit, 1);
+  t("ARM 10g: on the CORPUS floor, saying every verdict below it is a verdict over nothing",
+    /THE CORPUS COLLAPSED/.test(r.out), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -899,5 +1042,11 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `PLANE'S OWN VOCABULARY TEXTS are covered too (DEC-49's UI-47 input) — an untexted term fails (7b), a `
   + `NUMERIC-valued map is excluded BY SHAPE rather than by an exception (7c), a 19-character but complete `
   + `sentence PASSES and a one-word placeholder does not (7d/7e, the over-strictness this guard measured `
-  + `on itself against the real RUN_ENDINGS.cancelled)`);
+  + `on itself against the real RUN_ENDINGS.cancelled). AND REC-76's ARM 10 drives the INVERTED refusal `
+  + `classifier in BOTH directions: a refusal in a spelling the matcher was never taught is COUNTED (10a), `
+  + `a COMPUTED verdict is judged and its coded form accepted (10b/10c — SET_MOVED's own shape, the one `
+  + `whose invisibility cost a translation), a SUCCESS in an unanticipated spelling is NOT graded a refusal `
+  + `(10d), an outcome the walk cannot classify is NAMED rather than scored zero (10e), a declared success `
+  + `carrying a refusal code FAILS as a contradiction (10f), and a neutered return reader fires the CORPUS `
+  + `floor rather than reporting green over nothing (10g)`);
 if (bad) process.exit(1);

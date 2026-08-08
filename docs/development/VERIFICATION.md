@@ -416,6 +416,42 @@ It is an M0 item, and it should land in the same turn as the first fleet member 
 than after it: an instrument that lags the thing it measures reports a floor that no
 longer describes anything.
 
+## THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE — 2026-08-08, REC-76 (D-236)
+
+`civicos-ui/check-refusal-codes.mjs` is run by `civicos-ui/test/run.mjs`, from the
+REPO ROOT, and it is the instrument that makes DEC-49 safe: *every code a surface
+can receive has a translation, and an untranslated code FAILS THE HARNESS rather
+than reaching a member.* Its arm C — the teeth — used to grade a refusal by ONE
+literal, `ok: false`, and this section is here because **that is the most-repeated
+instrument defect in this repository and it now has a stated remedy rather than a
+fourth instance.**
+
+**HOW IT DECIDES NOW.** Arm C takes every object literal in RETURN POSITION inside
+a governed span and reads its VERDICT — the FIRST BOOLEAN-SHAPED top-level
+property. A verdict of literal `true` means the outcome DECLARES ITSELF A SUCCESS
+and is not judged; the literal `false` or a COMPUTED boolean (`!x`, a comparison,
+`Boolean(x)`) is a refusal and owes a code with a canned translation; **no
+boolean-shaped property at all is UNCLASSIFIED, printed BY NAME on every run and
+held under a ceiling that may only fall.** The field names (`ok`, `started`,
+`found`, `proposed`, `preview`) are what go stale; the set of boolean-producing
+OPERATORS is fixed by JavaScript's grammar, not by the next commit.
+
+**WHY IT MATTERS BEYOND ONE GUARD, and the rule to carry:** a classifier that
+grades by one literal reads as a complete sweep while it is partly blind, and it
+fails in the GENEROUS direction. **The fix is always to INVERT — grade everything
+that does not declare itself the other thing — and to NAME what cannot be
+classified.** REC-70 (27 hidden ops), M0-14 (four suites scoring zero for four
+different reasons), CPDF-9, and now REC-76 are the same defect four times.
+
+**WHAT THE GUARD CANNOT SEE, stated because a limit nobody wrote down gets
+rediscovered by paying for it:** a refusal built into a VARIABLE and returned later
+(measured: 0 of 61 governed sites, though `subresources.mjs` writes refusals that
+way outside them); a NEGATIVE-POLARITY verdict (`failed: true`), for which the
+cross-check is that a declared success carrying a refusal CODE fails, gated at
+zero; and a refusal a helper builds out of sight, which is arm A's and arm B's
+ground rather than arm C's. **Two other instruments still grade a return by one
+literal and are ledgered as D-240** with their measured cost.
+
 ## What this deliberately does not claim
 
 - **It does not measure branch or line execution inside the plane.** It cannot, for

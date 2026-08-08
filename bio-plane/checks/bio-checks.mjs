@@ -7964,12 +7964,20 @@ export const ACT_SHAPE_CHECKS = {
      failing", arriving at the run door.
 
      ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-     REC-64's work — and the reason is a defect in the guard rather than a
+     REC-64's work — and the reason WAS a defect in the guard rather than a
      judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
-     C's matcher is `ok: false`, so a REGION here would judge zero refusals and
-     FAIL as a drifted marker. The whole-function form is honest at this site
+     C's matcher was `ok: false`, so a REGION here would have judged zero refusals
+     and FAILED as a drifted marker. The whole-function form is honest at this site
      (every refusal `aiRunOpen` makes is a condition of opening a run) and the
-     blindness is measured and delegated at the guard's own `codesChecked` floor.
+     blindness was measured and delegated at the guard's own `codesChecked` floor.
+
+     **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
+     WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+     A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
+     0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
+     at a governed site, for as long as the row has existed. They are the two rows
+     immediately below. Nothing about the span changed; the instrument started
+     seeing it.
      --------------------------------------------------------------------------- */
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: 'C-33.29',
@@ -7977,6 +7985,61 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'Nothing was run, because this instance could not find an account to run it under. '
       + 'That is a fact about our setup and not an answer about your question: no searching '
       + 'happened, so nothing here should be read as having looked and found nothing.',
+  },
+
+  /* ---------------------------------------------------------------------------
+     REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
+
+     Both have been at this governed site since before the row above was written,
+     and neither was ever judged, because arm C could not see a refusal spelled
+     `started: false`. They are not new conditions and they are not new refusals:
+     they are two sentences a surface could only render verbatim or blank, which
+     is the state DEC-49 ended. **The item that fixes an instrument owes the
+     sites the instrument newly sees, and these are them.**
+     --------------------------------------------------------------------------- */
+  AI_RUN_NO_CONTEXT: {
+    check: 'C-33.30',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because the request did not say what the run is for or what it '
+      + 'belongs to. A run has to sit inside a question or a project so that the people working on '
+      + 'that question can see it happened; one belonging to nothing would be invisible to everybody.',
+  },
+  AI_RUN_ALREADY_OPEN: {
+    check: 'C-33.31',
+    where: 'src/store.mjs aiRunOpen, reached from op=airunopen',
+    translation: 'Nothing was run, because a run with this name is already on record here. The record '
+      + 'keeps what each run did under its own name, so starting a second one under a name already in '
+      + 'use would write two different histories into one place. Give this one a name of its own.',
+  },
+
+  /* ---------------------------------------------------------------------------
+     REC-76 / D-236 — `SET_MOVED`, AND IT IS THE CONCRETE DEBT THIS ITEM CLOSES.
+
+     The refuse gate on a selection is an ACT-SHAPE condition — it is the answer
+     to *"may this state-changing act run against this set"* — so it belongs
+     here rather than in a family of its own (SK-1's rule: a family is a floor,
+     and a new one buys slack for everybody else's walk).
+
+     **THIS CODE WAS UNTRANSLATED BECAUSE AN INSTRUMENT COULD NOT SEE ITS
+     REFUSAL, WHICH IS A MORE EXPENSIVE THING THAN A MISSING SENTENCE.**
+     `selectionResolve` answers one outcome whose verdict is COMPUTED,
+     `ok: !stopped`, spreading the code in only on the refusing path. Arm C
+     graded refusals by the literal `ok: false`, so a region `where` around it
+     would have judged zero and failed as a drifted marker — and REC-64 therefore
+     could not give this code a region, and so could not give it a row, and so
+     could not give it a translation. The surface has keyed on `SET_MOVED` in
+     `app.html` since long before that.
+
+     THE TRANSLATION SAYS WHAT THE MEMBER MUST DO, because this refusal is one of
+     the few in the plane with a remedy the member can actually take: look again
+     and re-select. `detail` at the site keeps the operator's sentence.
+     --------------------------------------------------------------------------- */
+  SET_MOVED: {
+    check: 'C-33.32',
+    where: 'src/store.mjs selectionResolve > is-selection-moved, reached from every act that takes a selection',
+    translation: 'This would have changed things, and the list of items it would have changed is not '
+      + 'the list you were looking at — it has moved since you chose it. Nothing was done. Look at the '
+      + 'selection again and choose it again, so that what you approve is what actually happens.',
   },
 };
 
