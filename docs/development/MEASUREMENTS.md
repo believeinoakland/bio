@@ -3058,3 +3058,183 @@ civicos-ui/test/run.mjs` exit **0** read unpiped at **40 suites**, battery **112
 6,746 with ZERO delta**, `--strict` exit **0** run directly, OPS 143/143, CHECKS 93/93.
 The `store.mjs` edit is comments only, proved by stripping comments from both revisions and
 comparing byte for byte.
+## 2026-08-08, FLEET FL-1: can a fleet-member Worker hold a WHOLE investigative run inside the paid CPU ceiling? (D-218) — and the DO storage-ceiling posture that rides the same measurement (D-190)
+
+**D-218's reasoning, which the row itself said must not be trusted until measured:** an
+agent loop spends most of its time WAITING on API responses, and Workers bill CPU rather
+than wall time, so a run of many minutes may sit well inside the paid ceiling. **Measured
+today, and it is CORRECT — but it is not the finding that matters.** The ceiling that
+decides FL-3's shape is not CPU at all. See "what actually binds" below.
+
+### Instrument, and the rule that shaped the whole probe
+
+**`bio-plane/test/fl1-cpu-probe.mjs`** — a DEPLOYED probe. Throwaway `fl1-*` Worker scripts
+uploaded over the Cloudflare REST API to account `20b533579290b9b93168345edd3b7f72`,
+invoked through the account's own `*.workers.dev` egress, then DELETED and confirmed gone by
+re-listing (`["biosmoke7","civicos","newgroup"]` before and after, every pass). The plane and
+the installer were NOT deployed and not touched. Precedent: `free-tier-fleet-probe.mjs`
+(2026-07-31) and `scratchpad/plan-probe.mjs` (2026-08-04).
+
+**THE NUMBER COMES FROM THE PLATFORM, NEVER FROM THE WORKER.** `src/cpu.mjs` records the
+fabrication: Cloudflare freezes `Date.now()` during synchronous execution as a timing-attack
+defence, so a Worker cannot time its own compute (D-56). The instrument is therefore the
+**Cloudflare GraphQL Analytics API**, `viewer.accounts.workersInvocationsAdaptive`,
+`sum { cpuTimeUs requests subrequests errors wallTime }` and
+`quantiles { cpuTimeP50 cpuTimeP99 wallTimeP50 memoryUsageBytesP50 memoryUsageBytesP99 }` —
+the platform's own observation of what it billed, taken from outside the isolate.
+
+**THE PLAN, re-confirmed today by provocation rather than inherited from 2026-08-04:** a
+throwaway uploaded with `limits.cpu_ms: 50000` was **ACCEPTED, HTTP 200, `{"cpu_ms":50000}`
+echoed back**. Workers **PAID**. Every arm below was then deployed with `limits.cpu_ms:
+300000` — also accepted — so the arms ran under the 5-minute maximum, not the 30 s default.
+
+**The payloads are REAL.** `bio-plane/test/fl1-real-payload-sweep.mjs` sweeps the LIVE plane's
+non-mutating ops and THROWS if fewer than 8 answer or the median body is under 200 B. Corpus
+on the day: **23 real op responses, 159,350 B, median 470 B, max 77,839 B** (`projection`
+77,839 · `search` 36,795 · `list` 10,238 · `index` 10,223 · `affordances` 6,482 · down to
+`dangling` 90). No body was embedded without first proving it contained no credential.
+
+### The five subjects, five-plus invocations each — MEASURED
+
+Every figure is `sum.cpuTimeUs / sum.requests` from the surface above. Nothing here is a
+vendor number and nothing here is self-timed.
+
+| Arm | What it does | Wall (platform) | **Billed CPU / invocation** | Memory P50 |
+| --- | --- | --- | --- | --- |
+| `fl1-idle` | returns immediately — the empty case | 0 ms | **0.30 ms** | 0.75 MB |
+| `fl1-wait` | 25 subrequests each held open 2 s | **50,038 ms** | **4.29 ms** | 1.28 MB |
+| `fl1-agent` | 25-turn loop, real payloads, growing transcript | 5,095 ms | **24.29 ms** | 9.8 MB |
+| `fl1-agentx4` | the same loop at 100 turns | 10,643 ms | **189.28 ms** | 51.2 MB |
+| `fl1-burn` | 40,000,000 reference iterations | 1,078 ms | **1,071.01 ms** | 1.75 MB |
+
+**D-218's claim is CONFIRMED, and the arm that could have falsified it is `fl1-wait`:
+50.0 SECONDS of wall time cost 4.29 ms of billed CPU.** Net of the 0.30 ms floor that is
+**~0.16 ms per awaited subrequest, independent of how long the wait lasts**. Waiting is
+effectively free, exactly as the row reasoned — now measured rather than argued.
+
+**Calibration into this file's existing currency.** The 2026-07-29 row records *40,000,000
+reference iterations fit* on Free, found by `op=cpuprobe` walking into the kill. **Those same
+40,000,000 iterations are 1,071 ms of billed CPU here.** The two rows are now in the same
+units: what Free killed at ~1.07 s of compute, Paid bills as 3.6% of the 30 s default.
+
+### The curve — and WHAT ACTUALLY BINDS
+
+Run separately with `--curve`, same instrument, same corpus:
+
+| Turns | **Billed CPU / invocation** | Memory P50 | Memory P99 | Bytes serialised & sent |
+| --- | --- | --- | --- | --- |
+| 25 | 24.29 ms | 9.8 MB | — | 2.6 MB |
+| 50 | **56.26 ms** | 15.7 MB | 20.3 MB | 9.6 MB |
+| 100 | 189.28 ms | 51.2 MB | — | 36.7 MB |
+| 200 | **757.65 ms** | 81.0 MB | **120.4 MB** | 144.1 MB |
+| 400 | **4,488.9 ms** | 58.1 MB | — | 568.8 MB |
+
+**CPU grows as roughly n^1.9 in turns** — 16× the turns cost 184.8× the CPU, and the 25-turn
+and 400-turn points independently imply the same exponent. That is the transcript being
+re-serialised every turn, which is O(n²) by construction and is what a real agent loop pays.
+
+**Extrapolated on the measured exponent: ~1,100 model turns fit the 30 s default ceiling and
+~3,700 fit the 5-minute maximum.** Labelled as an extrapolation from measured points, not a
+measurement.
+
+**BUT CPU IS NOT WHAT BINDS, AND THIS IS THE FINDING FL-3 SHOULD BE BUILT ON.** At 200 turns
+the platform reports **memoryUsageBytesP99 = 120.4 MB against the 128 MB isolate**, while CPU
+is still 757 ms — **2.5% of the 30 s ceiling**. Memory reaches the wall roughly an order of
+magnitude sooner than CPU does. All seven 400-turn invocations nevertheless COMPLETED, so
+this is pressure rather than a kill: the runtime collects hard instead of dying. The honest
+statement is that **a single invocation is bounded near 200–400 turns by MEMORY, with CPU
+headroom to spare** — and the naive reading, that CPU is the thing to design against, is
+wrong on this evidence.
+
+### Two other ceilings, measured in passing
+
+- **EXTERNAL subrequests per invocation: at least 160, with NO refusal** (`fl1-subreq`, 160
+  sequential fetches to an off-account origin, `MAX_REACHED_WITHOUT_REFUSAL`, 24.88 ms CPU).
+  On Free this file records **51**, found by being refused. The walk stopped at its own cap,
+  so 160 is a FLOOR on the ceiling, not the ceiling. Cloudflare's docs claim 1,000 on Paid —
+  **theirs, not ours.**
+- **A WORKER CANNOT FETCH ANOTHER WORKER ON THIS ACCOUNT'S OWN `*.workers.dev` NAME.**
+  Measured 2026-08-08 (`fl1-attribution-diag.mjs`): **404, body `error code: 1042`, in 7 ms**,
+  every time. The SERVICE BINDING to the same script answered **200 in 1,885 ms with a
+  1,500 ms delay honoured**. This cost two probe passes: the arms looked like a CPU story and
+  were a routing story. **A fleet member reaches the plane by service binding (I6's pattern)
+  or not at all.**
+
+### NEGATIVE CONTROL — RUN, and the fabrication demonstrated rather than asserted
+
+FL-1's row names the control: *the probe timing itself in-Worker is REFUSED as the fabrication
+`cpu.mjs` records.* It is STRUCTURAL, not a promise. Every cpu figure enters the findings
+through one function, `recordCpuMs()`, which throws `FabricatedMeasurement` unless the
+reading's provenance is the platform's observed surface.
+
+- **`fl1-selftimed` is a deployed arm whose only job is to be refused.** It times a
+  20,000,000-iteration burn with `Date.now()` and declares its own provenance. The gate threw,
+  every pass.
+- **And it would have LIED.** The Worker's own clock reported **0 ms**. The platform billed the
+  same script **498.57 ms** for the same work. The frozen clock is not a caveat inherited from
+  2026-07-29; it is re-demonstrated here on Paid, at 5 invocations.
+- **The gate's own empty case is guarded**, because a control that refuses everything asserts
+  nothing: seven bad shapes — `undefined`, `null`, `{}`, a reading with no source, one sourced
+  to `vendor-docs`, one with no `cpu_ms` — are ALL refused, while a real platform reading is
+  still accepted. Both halves are asserted on every run.
+
+### D-190 — the DO storage-ceiling posture, recorded in this row because it rides the same measurement
+
+D-190 records the **vendor claim** (10 GB per object on Paid, 1 GB on Free) and says the growth
+curve per captured document has never been measured by us. It is measured now, and by a
+per-object instrument rather than a vendor page.
+
+**Instrument:** the plane's own `op=stats` → `dbBytes`, which is workerd's
+`ctx.storage.sql.databaseSize` (`src/store.mjs:11209`) — the runtime reporting the object's
+size, which is not the refused class. Read live, read-only, on both namespaces:
+
+| Namespace | `dbBytes` | bundles | files | register | history | connections / entities / resolutions |
+| --- | --- | --- | --- | --- | --- | --- |
+| `scratch` (empty) | **925,696** | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| `bio` | **6,402,048** | 31 | 142 | 88 | 244 | **0 / 0 / 0** |
+
+- **Empty-schema baseline: 925,696 B.** That is what an instance costs before it holds anything.
+- **Marginal cost: 176,657 B per bundle** with its files, register rows and history.
+- **Against the vendor's 10 GB claim that is ~60,800 bundles; against 1 GB, ~6,073.** The
+  denominator is theirs; the numerator is ours.
+
+**WHAT THIS INSTRUMENT CANNOT SEE, and it matters more than the number:**
+
+- **The platform's own storage surface cannot answer D-190 at all.**
+  `durableObjectsStorageGroups` carries **no per-object dimension** (only dates) and on this
+  account returned **zero rows**. `durableObjectsPeriodicGroups` IS per-object (`objectId`,
+  `name`) and reports `cpuTime`, `rowsRead`, `rowsWritten` and — usefully —
+  `exceededCpuErrors` / `exceededMemoryErrors`, **but no stored bytes**. So the ceiling D-190
+  is about has no platform reading; `dbBytes` off the object itself is the only handle.
+- **Two points are a line, not a curve.** It cannot show super-linear growth.
+- **AND THE LOADED POINT HAS AN EMPTY MEANING LAYER — `connections`, `entities` and
+  `resolutions` are all ZERO.** D-190's row says three IS mechanisms and D-224's quadratic
+  `connections` table grow the SAME object, and **not one of them is in this number.** So
+  176,657 B/bundle is a **FLOOR on the cost and an OVERSTATEMENT of capacity**, and D-224's
+  measurement is the one that would move it. Recorded so nobody reads 60,800 as headroom.
+
+### What the instrument cannot see (the CPU half), stated because every measurement here states its own limits
+
+- **The billing surface cannot NAME a fresh script.** For a script created minutes ago BOTH
+  `scriptName` AND `scriptTag` come back as the literal `"__unknown__"`, and an exact
+  `scriptName` filter therefore matches nothing. Attribution here is by **disjoint time window
+  plus a declared per-arm signature** (subrequests and wall ms per invocation); an arm whose
+  row cannot be identified unambiguously reports **NO NUMBER**, and several did across the
+  passes rather than being guessed at.
+- **The dataset SAMPLES** — it is `workersInvocationsAdaptive` for a reason. Six invocations of
+  `fl1-wait` were reported as four on one pass while every other arm came back 1:1. Per-
+  invocation means survive that; exact counts do not, which is why counts are reported
+  (sent vs seen) rather than used as the handle.
+- **Ingestion lags, and ORDER is part of the instrument.** An arm run last had its window come
+  back empty inside a 10-minute polling budget. The negative control and the ceiling walk are
+  now run FIRST for that reason.
+- **`cpuTimeUs` is Cloudflare's own statement of what it billed.** We cannot verify it
+  independently; it is the surface the bill is computed from, which is what D-218 asks about.
+- **The waited-on "API" is our own responder Worker, not Anthropic.** It reproduces a turn's
+  SHAPE — a real network wait, a real response of a real size, really parsed — not Anthropic's
+  latency or payload distribution.
+- **The corpus is ONE development instance's real op responses.** A loaded instance's
+  `projection` and `search` bodies would be larger, so every agent arm is a FLOOR on the work.
+- **Five-plus invocations per subject, five subjects, and the key arms reproduced across four
+  independent passes** (`fl1-agent` 19.73 / 20.84 / 20.36 / 24.29 ms; `fl1-burn` 1,185.59 /
+  1,000.03 / 969.31 / 1,071.01 ms). Enough to expose an outlier, not enough for a tail.
