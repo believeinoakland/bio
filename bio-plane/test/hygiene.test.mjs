@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN.
    (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
    (run 2026-08-08, M0-14/D-233) SIX ARMS ON THE ARM MATCHER, DECLARED HERE AND RUN BY `test/register.control.mjs` — deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`suggest.control.mjs`'s precedent). Re-run in one step: `node test/register.control.mjs` from bio-plane/. Each arm is armed ALONE with the others held open, each DECLARES BEFORE IT RUNS what must fail AND what must not, and every restore is verified against a PRISTINE pre-arm copy by sha256 AND by content. Baseline at the moment they ran: `--strict` exit 0, 470 arms, 119 classified, corpus 120, 1 unclassified; this suite 503 pass. (1) THREE REAL ARMS DELETED — strip the ordinals from suggest.test.mjs's arms (6), (7) and (8) -> `--strict` EXITS 1, the REGISTER FLOOR fires at "467 arms stated, floor is 470", and suggest still declares a control with classified and corpus unmoved. (2) THE ARM THIS ITEM EXISTS FOR — rewrite capture.test.mjs's single transition in a marking the matcher was never taught (` ==> `) -> `--strict` EXITS 1 and NAMES capture.test.mjs as UNCLASSIFIED, unclassified 1 -> 2, and it is NOT scored zero and NOT reported as declaring no control. (2b) THE POSITIVE HALF, because naming alone would be a walk that never counts anything new — add two arms to capture.test.mjs as an ordinal list with NO arrow anywhere -> `--strict` STAYS exit 0 and the tally RISES 470 -> 472. (3) NEUTER THE WALK — make the ordinal matcher unmatchable in scripts/control-register.mjs -> this suite 499 pass, 4 FAIL naming the arrowless-corpus arm, the arrowless fixture, its delta and the max-not-sum arm; `--strict` EXITS 1 on the floor (416 arms, 117 classified) AND on newly-unclassified suites (strengthpair, suggest) — while the register still READS 120 suites, because a matcher narrowed to nothing must not report a triumphant figure over an empty corpus. (4) OVER-STRICTNESS — put prose into capture.test.mjs's declaration that MENTIONS an arm ("see (b) of the block...") without declaring one -> nothing fails and the tally does NOT move, 470 before and 470 after. (5) THE FLOOR HAS NO SLACK — remove EXACTLY ONE arm from strengthpair.test.mjs -> `--strict` EXITS 1 at 469 against a floor of 470. SIX ARMS RUN, ZERO behaved other than declared; all four touched files restored sha256 EQUAL and content IDENTICAL. THE SAME PROPERTY M0-9 RECORDED APPLIES HERE AND IS WHY THESE ARE DELTAS: writing this record into a declaration moves the total upward, so never compare an absolute total across two edits of the register's own text.
+   (run 2026-08-08, REC-68) THE SCHEMA-COMMENT / VOCABULARY CORRESPONDENCE ARM, the rider D-228 came in with. It exists because CORRECTING the stale comment once is worth almost nothing: nothing stopped `inquiry_basis.grade_source` naming three sources while GRADE_SOURCES carried five, so nothing would stop the sixth. Armed ALONE, restored against a pristine pre-arm copy verified by sha256 AND `cmp`. (1) DROP A SOURCE FROM THE COMMENT — delete `| 'capture'` from schema.mjs's grade_source line -> this suite FAILS 2 naming it ("the comment names every grade source the catalogue carries" reports ["capture"], and the REACH delta reports 4 against 5); restored. (2) INVENT ONE — add `| 'guess'` -> FAILS 2 in the other direction, the invention arm reporting ["guess"], because a comment that can omit a value can also make one up. (3) NEUTER THE ARM — make the column matcher unmatchable -> the REACH delta FAILS at 0 against 5 rather than passing triumphantly over an empty list, which is the whole reason it is a delta. (4) THE `#migrate` TRAP, and it CAUGHT THE AUTHOR IN THE SAME TURN: put a semicolon back inside the comment -> FAILS naming it. This is not hypothetical — REC-68's own first draft of the comment contained `(REC-68);` and this arm is what found it, before `node --check` or the backtick scan could have.
    SHAPE RESTORED BY M0-9 (2026-08-04), and it is the point rather than tidying. REC-48 wrote the arms as a continuation of this block, `coverage.mjs` then reported BOTH this suite and acquire.test.mjs as declaring NO CONTROL — its detector could not read past the marker's own line — and the arms were moved into a second comment the register never saw, so the register quoted a summary while the evidence sat outside it. The detector now reads the whole block (scripts/control-register.mjs) and is itself asserted at the foot of this suite; the arms are back where they belong. A declaration ends at its comment's close or at a blank line, so keep this paragraph unbroken and it stays one declaration.
    REC-48's THREE ARMS, in full:
    (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
@@ -59,7 +60,7 @@ import { join } from "node:path";
    PURPOSE and are the "every existing machine refusal unchanged" half of that
    item. The two SOURCE detectors below are deliberately blind to every one of
    these values — see the block comment at the sweep. */
-import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, GRADE_SOURCES,
          isMachineIdentity, isMachineStamp, NON_MEMBER_AUTHORS, ACTOR_CLASSES,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
          MACHINE_STAMP_PREFIXES } from "../checks/bio-checks.mjs";
@@ -190,6 +191,46 @@ console.log("\n--- the schema template is intact ---");
   }
   t("the module loads", typeof loaded, "string");
   t("and the literal ends where the file says it does", typeof loaded === "string" && loaded.trimEnd().endsWith(");"), true);
+
+  /* REC-68's rider, and it is the same finding as the item it rode in on: a
+     HAND-TYPED LIST IN A COMMENT GOES STALE SILENTLY. `inquiry_basis.grade_source`
+     named THREE sources — 'resolution' | 'testimony' | 'hunch' — while
+     GRADE_SOURCES has carried FIVE since REC-31/DEC-21 added 'inherited' and
+     'capture'. PL-8 found it and left it (another item's blast radius); REC-68
+     corrected it. Correcting it once is worth almost nothing, because nothing
+     stopped it drifting the first time. This arm is what makes it not drift
+     again: the comment is DRIVEN against the exported vocabulary rather than
+     read, so adding a sixth source without touching the comment fails here.
+
+     Written as a CONTAINMENT test in both directions rather than a string
+     equality, so the comment may keep its prose and its DEC reference while
+     still being unable to omit a member or invent one. */
+  {
+    const lines = src.split("\n");
+    const at = lines.findIndex((l) => /^\s*grade_source\s+TEXT/.test(l));
+    t("the grade_source column is still where this arm looks for it", at > -1, true);
+    /* The block is the column's own line plus the CONTINUATION comment lines
+       under it — lines that are nothing but an SQL comment. It stops at the
+       next column, which is what keeps a neighbour's vocabulary out of it. */
+    const block = [lines[at]];
+    for (let n = at + 1; n < lines.length && /^\s*--/.test(lines[n]); n++) block.push(lines[n]);
+    const text = block.join("\n");
+    const named = [...text.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    t(`the comment names every grade source the catalogue carries (${JSON.stringify(GRADE_SOURCES)})`,
+      GRADE_SOURCES.filter((s) => !named.includes(s)), []);
+    t("and names no source the catalogue does not — a comment cannot invent a value either",
+      named.filter((s) => !GRADE_SOURCES.includes(s)), []);
+    /* REACH, as a delta: a matcher that found nothing would pass both arms
+       above triumphantly over an empty list. */
+    t("and the arm actually read a list rather than passing over nothing",
+      named.length, GRADE_SOURCES.length);
+    /* CLAUDE.md's `#migrate` trap: a semicolon inside an inline `--` comment
+       TRUNCATES the statement, and neither `node --check` nor a balanced-tick
+       scan catches it. This comment grew by five lines in REC-68, so the trap
+       is asserted at the site rather than remembered. */
+    t("and no semicolon hides in it, which would truncate the CREATE TABLE",
+      text.includes(";"), false);
+  }
 }
 
 /* D-106. The installer embedded 0.35.0 while the plane ran 0.48.0 for thirteen

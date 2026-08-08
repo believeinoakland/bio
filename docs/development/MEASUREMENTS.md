@@ -3585,3 +3585,63 @@ Two of those are checkable against the suites' own prose and both land exactly:
 stated. `suggest.test.mjs` reads 8 against a real 10 because two of its arms carry LABELS
 (`(D-231a)`) rather than ordinals, and widening the ordinal to any bracketed token would
 count every `(D-113)` and `(DEC-46)` this prose is full of.
+
+
+## 2026-08-08 · REC-68 · BRANCH REACHABILITY OF THE SELECTOR LANGUAGE, measured rather than read
+
+Instrument: `NODE_V8_COVERAGE` over a driver that exercises `compile()` from its own
+entry point, plus a reporter that names every range V8 says was NEVER ENTERED and prints
+its source text. **This is the one module in the plane where line coverage is a real
+measurement rather than a fabrication:** `VERIFICATION.md` declines to report line
+coverage because the plane runs inside workerd, and `query.mjs`'s own header says it is
+deliberately pure and holds no database handle — so it runs in node and the instrument
+measures the SUBJECT rather than the harness.
+
+Corpus driven: **644 query strings × 12 viewers × 2 implicit operators × 5 row arms =
+77,280 `compile()` calls**, each statement in the returned shape invoked, plus `textOf`,
+`viewerPredicate`, `ambiguousBareWords` and `meaningVocabulary`.
+
+| pass | never-entered ranges | what closed them |
+| --- | --- | --- |
+| 1 | 43 | — |
+| 2 | 30 | **the viewer is a STRING**; the driver passed the object shape the fixtures use elsewhere, so all 43,400 compilations ran against the DENY gate and the whole participant branch was unreachable BY THE HARNESS |
+| 3 | 22 | statements take a MODE; a call with no argument only ever drives the default. Facet lists that filter to empty. Chains of exactly 5 and 9 arms, which is the only way into `chain()`'s non-compound regroup tail |
+| 4 | 15 | `textOf` file shapes: the `content` fallback, a malformed frontmatter, an array in frontmatter, a nested scalar/array/null |
+| 5 | 14 | **THE FIX** — the D-228 branch left the list and has not returned |
+| 6 | 11 | `sort:` with an empty value; `compile({q: null})` |
+
+**SIX BRANCHES ARE GENUINELY UNREACHABLE IN THE COMPILER, AND ONLY ONE OF THEM MATTERED.**
+That distinction is the finding, and inflating it to "six defects" would be the wrong
+report:
+
+1. `tokenize`'s `field:"value"` branch — **D-228.** A defence that was supposed to do
+   work, documented by its own comment, that had never run. Its unreachability WAS the
+   defect. **Fixed.**
+2. `primary()`'s trailing `eat(); return null;` — the tokenizer emits exactly seven token
+   kinds and all seven are handled above it.
+3. `ftsExpr`'s `if (!node) return null` — no call site passes null.
+4. `chain`'s `if (!parts.length)` — no call site passes an empty array.
+5. `setSql`'s `if (node.op === "text")` — **shadowed by the pure-text short circuit two
+   lines above it, which returns byte-identical SQL.** Dead, and harmlessly so.
+6. `setSql`'s final `return { sql: ALL }` — all six node ops are handled above it.
+
+2 through 6 are belt-and-braces returns at points where the input cannot arrive; none of
+them changes an answer and none is a documented promise to a reader. **The class D-229 and
+REC-73 found — a mechanism believed on the strength of its existence — has exactly one
+member here, and it is the one this item was sent for.**
+
+**WHAT THIS MATCHER CANNOT SEE, stated rather than left to be discovered:**
+
+- It measures `query.mjs` and nothing else. `store.mjs` and `index.mjs` run inside workerd
+  and are as unmeasurable as they were; this technique does not extend to them and should
+  not be quoted as if it did.
+- V8 range coverage is per-BLOCK, not per-CONDITION: `a && b` reports as entered when the
+  block runs, so a conjunct that is never independently decisive does not show up. **The
+  D-228 guard was found by READING, not by this instrument** — the instrument confirmed
+  it. A second unsatisfiable conjunction inside an otherwise-entered block would not
+  appear in this table.
+- A range this driver did not happen to reach is indistinguishable from an unreachable one
+  WITHOUT reading it. Six passes were spent narrowing 43 to 11 for exactly that reason,
+  and the residue was classified by hand, which is why the source text is printed.
+- The eleven remaining include five trivia in `textOf`/`bareIndex` (`?? ""`, `|| []`) that
+  are reachable in principle and not worth a fixture.

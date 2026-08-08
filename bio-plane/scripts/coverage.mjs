@@ -159,7 +159,21 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       471,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+  arms:       482,  /* MOVED 471 -> 482 on 2026-08-08 by REC-68, from the figure this
+                       instrument PRINTED on a green run (`arms 482/478 · GREW by 4`, after an
+                       earlier `478/471 · GREW by 7`), never
+                       by adding to the number in the file. The 11 are REC-68's own: four
+                       arms declared in `hygiene.test.mjs` for the schema-comment /
+                       vocabulary correspondence guard, and seven in `query.test.mjs`,
+                       `search.test.mjs` and `meaningquery.test.mjs` for D-228's controls.
+                       IT WAS MOVED TWICE, because writing a control's RESULTS into its own
+                       declaration raises the tally a second time — a property M0-9 and
+                       M0-14 both recorded, and the reason this is read off the instrument
+                       after the LAST edit rather than after the first. A floor a worker leaves for CONDUCT to move is a
+                       floor that is true of one branch and false of the merged tree, which
+                       the note below records happening five times in two days — so it is
+                       moved here, in the turn that invalidated it.
+                       PREVIOUSLY: MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
                        and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
