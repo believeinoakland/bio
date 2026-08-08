@@ -3417,3 +3417,52 @@ equality was never the evidence; the guard is, and that is why it is there.
 strictest axes to one project, so the many-to-one composition arm passed while proving nothing
 about composition. The bars were crossed and the arm now takes capture from A and connection from
 B. Recorded because it is this item's own warning arriving inside its own instrument.
+
+## 2026-08-08 · REC-73 / D-229 — THE TWELVE `MACHINE_CANNOT_*` FENCES, UNDER COMPLETE PAYLOADS
+
+**Instrument:** `bio-plane/test/machine-fences.test.mjs` (45 assertions, new) and its harness
+`bio-plane/test/machine-fences.control.mjs` (5 arms, all RUN, all as declared). Driven through the
+control plane against Miniflare, under an `ai` credential a member authored with a scope naming the
+twelve acts — the credential layer deliberately held OPEN, so what answers is the identity fence.
+The credential is MEMBER-SCOPED, so its viewer stamp is `member:ruth` and it sees exactly what she
+sees; that is what makes "complete payload" mean what it says.
+
+**THE MEASUREMENT, AND IT IS LARGER THAN THE ITEM PREDICTED. Neutering REC-46's ONE predicate under
+COMPLETE payloads lets TEN of the twelve acts GO ALL THE WAY THROUGH.** PL-11 ran the same edit and
+saw ONE success and eleven payload complaints, because its payloads were incomplete and each act
+fell through to the complaint sitting behind the fence. With payloads that would otherwise succeed,
+a machine credential: released a collected document to `verified`; concluded a question; reopened
+one; published a case at edition 1; moved an action; wrote a correspondence entry at ord 0; divided
+a question into two children; grouped a basis; set the group's required evidentiary strength (the
+row reads back `author: token:ai`); and accepted a reading of the evidence. Every one of those is
+recorded in the harness's own output.
+
+**THE TWO THAT DID NOT, AND NOBODY KNEW THIS: `taskforward` and `taskresolve` answered `NOT_YOURS`.**
+REC-4's assignee fence caught what the machine fence let past, so those two verbs are the only pair
+in the family carrying a SECOND independent fence behind the first. It could not have been seen
+before, because a payload that never reached the task could never reach the second fence either.
+
+**What the fences themselves needed: nothing.** All twelve fire today and always did; REC-46's
+predicate is untouched. The defect was in the CONTROLS — a refusal driven under a payload the plane
+would have refused anyway has been shown to refuse, and has not been shown to be the thing that
+refuses.
+
+**THE SWEEP, and what it cannot see.** A walk over `store.mjs` computes, for every refusal, how many
+distinct refusals sit BEHIND it in the same method — its SHADOW — and whether any suite pins it.
+Measured: **380 methods, 111 identity-flavoured refusals, 66 of them shadowing something outside the
+twelve.** The deepest are `NOT_THE_OWNER` (in `promote`, shadows 18), `CAS_STALE` (17),
+`NO_SUCH_BUNDLE` (in `divide`, 14; in `groundInquiry`, 12). **Eight identity refusals shadow
+something and are pinned by NO suite at all** — `BAD_HANDLE`, `EDITION_NOT_INCREMENTED`,
+`LEASE_HELD`, `NOT_ACTIVE`, `NOT_AN_OWNER`, `NO_AUTHOR`, `NO_CASE`, `NO_OWNERS` — which is worse
+than believed on half its evidence; it is not measured at all. The set is pinned as a SET rather
+than a ceiling, so it cannot drift in either direction without somebody moving it deliberately.
+The walk CANNOT tell a complete payload from an incomplete one — that judgement was made by hand
+for twelve acts and no source walk can make it — it attributes a nested helper's refusal to the
+enclosing method, and it reads "pinned" as a quoted literal in `test/`, so a code asserted through
+a variable reads as unpinned. Every one of those errs towards reporting MORE work than exists.
+
+**AND THE INSTRUMENT FAILED FIRST, INSIDE ITS OWN SWEEP.** The unpinned-set arm reads `test/` for
+quoted codes and on its first run it read ITS OWN FILE, whose expected set is a literal array of
+exactly those codes — so all eight counted as pinned and the arm reported an empty set, which would
+have read as an estate with no gap in it. REC-73's subject arriving inside REC-73's sweep, found
+the only way it could be: by running it. The walk now excludes itself and says why.

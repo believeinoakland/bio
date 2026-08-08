@@ -499,6 +499,16 @@ console.log("\n--- 7. withdrawing a credential, and what it is then told ---");
 /* ====================================================================== 8
  * DEC-55.5, FIRST HALF — OWED CONTROL 1. EVERY `MACHINE_CANNOT_*` FIRES BY
  * NAME ON `token:ai`, AND THE SWEEP SAYS WHAT IT DID NOT REACH.
+ *
+ * READ THIS WITH `test/machine-fences.test.mjs` (REC-73 / D-229, 2026-08-08).
+ * NOTHING HERE IS WRONG AND NOTHING HERE IS SUPERSEDED — every assertion below
+ * is true and the completeness arm is the reason the family can be trusted to
+ * be twelve. What this block does NOT establish, and what its own control (arm
+ * 1) is what discovered, is that the FENCE is what refuses: the payloads here
+ * are incomplete, so removing the predicate leaves each act answering an
+ * ordinary payload complaint sitting behind the fence. REC-73 drives the same
+ * twelve under payloads that would otherwise SUCCEED. Both blocks are kept:
+ * this one is the reach and the roster, that one is the load-bearing arm.
  * ====================================================================== */
 console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNOT_* fires on token:ai ---");
 {
