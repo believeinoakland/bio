@@ -7092,3 +7092,165 @@ export const CAPTURE_REQUEST_CHECKS = {
       + 'that asked for the document in the first place.',
   },
 };
+
+/* =========================================================================
+ * C-29 — THE `ai` CREDENTIAL CLASS AND ITS DECLARED TASK SCOPE (PL-11 / IS-5,
+ * D-199's five determinations). NINE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE,
+ * and every one of them is DRIVEN in test/aicredential.test.mjs — PL-4's rule,
+ * paid at allocation rather than discovered later: an undrivable code is a
+ * refusal nobody can prove fires.
+ *
+ * THE FAMILY SPANS TWO FILES, AND THE SPLIT IS THE ITEM'S SHAPE RATHER THAN AN
+ * ACCIDENT OF WHERE THE CODE FELL.
+ *
+ *   src/store.mjs   — WHO MAY MINT, and WHAT THE RECORD MUST SAY. Minting is a
+ *                     MEMBER act (D-199 (3)) and the record names the token
+ *                     IDENTITY and the PRINCIPAL behind it (D-199 (4)). Both
+ *                     are facts about the record, so they are judged where the
+ *                     record is written.
+ *   src/index.mjs   — WHAT A SCOPE MAY REACH. The reach question is the CONTROL
+ *                     PLANE's, because the OPS table is the only thing that
+ *                     knows what an op is and which classes may call it. The
+ *                     store cannot see it and must not keep a copy.
+ *
+ * THE FENCE IS A SHAPE, NOT A CLASS LIST, AND THAT IS PL-4'S DELEGATED
+ * CONSTRAINT DISCHARGED. `AI_SCOPE_BEYOND_MEMBER_REACH` compares the op against
+ * ONE property of the OPS table — does a MEMBER class reach it — and nothing
+ * else. op=capturerequestdrain carries no member class BY CONSTRUCTION (PL-4:
+ * "a member reaching for it by hand would be a person doing the daemon's job"),
+ * so no authored scope can ever name it, and adding "ai" to its class list
+ * would admit nothing either, because no op's class list is consulted for this
+ * class at all. Two independent proofs, both driven.
+ *
+ * WHY THE GATE REFUSES WITH ONE CODE AND THE MINT WITH TWO. The mint judges the
+ * DECLARATION -- may this sentence be written into the record at all -- and the
+ * gate judges the CALL against a declaration already judged. PL-4 measured what
+ * happens when the same predicate sits at two points: one of them becomes
+ * unreachable and its code cannot be driven. So the floor is re-evaluated at the
+ * gate on every call (a row can outlive the rule that admitted it) but it
+ * answers with the gate's own code, and the mint's two codes are about the act
+ * of authoring rather than about the act of calling.
+ *
+ * WHAT IS NOT HERE. There is no `AI_CREDENTIAL_SCOPE_NOT_ON_THE_RECORD`. A scope
+ * that is not on the record is not a narrower scope; it is NO CREDENTIAL, and
+ * the caller is unauthenticated by the ordinary route. Minting a code for a
+ * state the code cannot produce is the empty gate this repository refuses
+ * everywhere else — C-28.12's reasoning, one item on.
+ * ========================================================================= */
+export const AI_CREDENTIAL_CHECKS = {
+  /* ---- THE MINT. A MEMBER ACT, AND WHAT THE RECORD MUST SAY. ---- */
+
+  /* D-199 (3), and it is the determination with the sharpest consequence: *"If
+     an agent can request a broader token, the scoping is theatre."* This rides
+     REC-46's ONE machine-identity predicate, which means it fires for
+     `token:ai` without this site knowing that class exists — the same
+     generalisation D-199 (5) claims for the MACHINE_CANNOT_* family, arriving
+     at the one act that could undo all of them.
+
+     IT IS DRIVEN FROM BOTH SIDES, and the second side is the one that matters:
+     a member may legitimately author a scope naming op=aicredentialmint (a
+     member CAN reach it, so the floor admits it), and the agent holding that
+     credential is STILL refused here. The credential layer and the identity
+     layer are independent, and neither absorbs the other. */
+  AI_CREDENTIAL_MINT_NOT_A_MEMBER: {
+    check: 'C-29.1',
+    where: 'src/store.mjs aiCredentialMint > is-ai-credential-mint',
+    translation: 'Only a named person signed in to this instance can create an agent credential. '
+      + 'Deciding what an automated worker is allowed to reach is a judgement somebody has to be '
+      + 'accountable for, so an automated worker cannot make it — not even about itself.',
+  },
+  /* D-199 (4) / DEC-55 det 4. An organisation-scoped key acts for the group with
+     nobody individual behind it; a member-scoped key is attributable to that
+     member. Both are legitimate and they carry DIFFERENT accountability, so an
+     act must say which. The principal is not a label: it is the VIEWER this
+     credential's reads compile under, so an unstated principal is also a
+     credential nobody can decide what to show. */
+  AI_CREDENTIAL_PRINCIPAL_UNSTATED: {
+    check: 'C-29.2',
+    where: 'src/store.mjs aiCredentialMint > is-ai-credential-mint',
+    translation: 'An agent credential has to say who stands behind it: the organisation as a whole, '
+      + 'or one named member. The two carry different accountability and they see different things, '
+      + 'so the record will not hold one that says neither.',
+  },
+  /* THE IDENTITY IS WHAT ACTS CITE, so rebinding it would rewrite history from
+     the side nobody watches: every act already attributed to that name would
+     silently belong to whatever secret was bound most recently. Refused rather
+     than upserted. */
+  AI_CREDENTIAL_IDENTITY_TAKEN: {
+    check: 'C-29.3',
+    where: 'src/store.mjs aiCredentialMint > is-ai-credential-mint',
+    translation: 'That name already belongs to an agent credential on this instance. Acts in the '
+      + 'record cite the name, so binding it to something new would quietly change who did work that '
+      + 'has already been done. Retire the old one or choose another name.',
+  },
+
+  /* ---- REVOKING. ALSO A MEMBER ACT, FOR A DIFFERENT REASON. ---- */
+
+  /* Narrowing rather than widening, so D-199 (3)'s own argument does not reach
+     it — an agent revoking itself is not an agent requesting more. It is a
+     member act anyway, and the reason is the record rather than the risk: the
+     row carries `revoked_by`, and a machine name there would say the group
+     withdrew an authority when nobody in the group decided anything. */
+  AI_CREDENTIAL_REVOKE_NOT_A_MEMBER: {
+    check: 'C-29.4',
+    where: 'src/store.mjs aiCredentialRevoke > is-ai-credential-revoke',
+    translation: 'Withdrawing an agent credential is recorded against the person who withdrew it, so '
+      + 'a named member has to be the one doing it. An automated caller has no name to put there and '
+      + 'the record would then show a decision nobody made.',
+  },
+  /* A member who believes they revoked something and did not is worse off than
+     one who was told plainly. */
+  AI_CREDENTIAL_UNKNOWN: {
+    check: 'C-29.5',
+    where: 'src/store.mjs aiCredentialRevoke > is-ai-credential-revoke',
+    translation: 'There is no agent credential by that name on this instance, so nothing was '
+      + 'withdrawn. Being told that plainly matters more than it looks: believing you have taken an '
+      + 'authority away when you have not is the worse of the two outcomes.',
+  },
+
+  /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
+
+  /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
+     gate BY REFUSING. It is one code because it answers one question — is this
+     op within what the record declared for this credential — and the two ways
+     of failing it (outside the member-reach floor, or not among the declared
+     writes) are the same answer to the caller. */
+  AI_BEYOND_TASK_SCOPE: {
+    check: 'C-29.6',
+    where: 'src/index.mjs aiTaskScope > is-ai-task-scope',
+    translation: 'This credential was created for a particular piece of work and that is not part of '
+      + 'it. What an agent may do here is written down on the record by the member who set it up, so '
+      + 'widening it means somebody amending that entry, not the agent asking again.',
+  },
+  AI_CREDENTIAL_REVOKED: {
+    check: 'C-29.7',
+    where: 'src/index.mjs aiTaskScope > is-ai-task-scope',
+    translation: 'This agent credential has been withdrawn by a member of the group, so it no longer '
+      + 'reaches anything here. The record keeps the entry and the date rather than deleting it, so '
+      + 'what it did while it was live remains readable.',
+  },
+
+  /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
+
+  /* A scope naming something that is not an op is not a narrower scope: it is a
+     sentence in the record that nothing enforces, which is precisely what
+     D-199 (2) moved the scope out of a settings row to avoid. */
+  AI_SCOPE_UNKNOWN_OP: {
+    check: 'C-29.8',
+    where: 'src/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
+    translation: 'The list of things this credential may change names something this instance does '
+      + 'not do. An entry nothing recognises would sit in the record looking like a permission while '
+      + 'meaning nothing, so it is refused rather than stored.',
+  },
+  /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
+     forbidden ops — a property of the op: can a MEMBER reach it. The unattended
+     verbs carry no member class by construction, so they are outside every
+     scope anybody can write, today and after the next op lands. */
+  AI_SCOPE_BEYOND_MEMBER_REACH: {
+    check: 'C-29.9',
+    where: 'src/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
+    translation: 'An agent may only be given things a member of this group could do themselves, and '
+      + 'this is not one of them. The background worker\'s own jobs are outside what anybody can hand '
+      + 'to an agent, so this cannot be written into a credential at all.',
+  },
+};

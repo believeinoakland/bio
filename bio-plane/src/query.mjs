@@ -422,10 +422,29 @@ export const GATE_MARK = "/*viewer-gate*/";
    What IS shared is the SPELLING, imported above, because index.mjs mints it
    and a parser reading a different literal would fail closed on every machine
    read at once. */
+/* PL-11 / IS-5 / D-199 (4): `class:ai` IS RECOGNISED, AND IT IS THE
+   ORGANISATION-SCOPED PRINCIPAL AND ONLY THAT.
+   The `ai` class does not stamp its class here the way the four binding classes
+   do. It stamps THE PRINCIPAL THE RECORD DECLARES, so a MEMBER-scoped
+   credential arrives as `member:<id>` and falls into the participation filter
+   below — it sees exactly what that member sees, and cannot read a project its
+   principal was never invited to. Only an ORGANISATION-scoped credential
+   reaches this alternation, and it belongs here for the reason `class:member`
+   does: it acts for the group, there is no individual behind it whose
+   participation could be checked, and anybody holding one already has
+   instance-level access. Both arms are DRIVEN in test/aicredential.test.mjs and
+   they answer differently, which is what makes D-199 (4)'s distinction a
+   measurement rather than a label.
+   LEAVING IT OUT WAS CONSIDERED AND IS THE WRONG KIND OF NARROW — REC-33's arm
+   (b) exactly. This function fails closed on anything it does not recognise, so
+   an organisation-scoped credential would authenticate, pass its task scope,
+   and then read ABSENT for every bundle in the store: a class that can do
+   nothing while reporting that the record is empty, which is worse than a
+   refusal because it looks like an answer. */
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
+  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
 
   /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.

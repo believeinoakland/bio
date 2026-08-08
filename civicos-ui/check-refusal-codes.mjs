@@ -166,14 +166,26 @@ const FLOOR = {
      `where` pointing at `src/index.mjs acquire`, a name that does not exist
      because the op lives inside the fetch handler, so nothing would have been
      checking that site at all. The arm is now its own named function. */
-  families:      8,    // + CAPTURE_REQUEST_CHECKS (was 7 at PL-3, 6 pre-PL-3 while the floor said 5)
-  rows:         81,    // + C-28.1..13 minus two UNALLOCATED (see the family) (was 70 at PL-3)
-  census:      383,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  /* REMEASURED 2026-08-08 AT PL-11's LANDING, in worktree agent-a6feaaff20bdaf423,
+     BY THIS FILE — every figure below is the number it PRINTED on a green run of
+     `node civicos-ui/test/run.mjs`, not one this item added up. Moved IN THE SAME
+     TURN that grew the plane, which is now the fourth consecutive item to have to
+     say so.
+
+     AND `vocabularyTerms` WAS ALREADY STALE WHEN THIS ITEM ARRIVED — it read 40
+     over a tree carrying 50, TEN of slack, and PL-11 added no vocabulary at all.
+     Found the only way slack is ever found: by measuring rather than by adding to
+     the number in the file. That is the same finding PL-3 recorded on `families`
+     and PL-4 on the census, three items running, which is why the instruction in
+     the block above is now the COMMAND rather than the answer. */
+  families:      9,    // + AI_CREDENTIAL_CHECKS (was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5)
+  rows:         90,    // + C-29.1..9, all nine DRIVEN (was 81 at PL-4, 70 at PL-3)
+  census:      392,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       168,    // codes a surface can receive (R1 + R2 + R3) (was 157, 127, 116, 98)
-  governedSites: 20,   // spans named by a row's `where` — a function, or a region inside one
-                       // (was 17, 13, 9, 5; 11 whole functions + 9 regions, three of them PL-4's)
+                       // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+  reach:       177,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
+  governedSites: 24,   // spans named by a row's `where` — a function, or a region inside one
+                       // (was 20, 17, 13, 9, 5; 11 whole functions + 13 regions, four of them PL-11's)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
                        // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -193,17 +205,20 @@ const FLOOR = {
      46, and 16 of the 16 are this item's — every refusal it mints names its code
      as a STRING LITERAL through a helper called `refusal`, which is REC-71's
      delegated fix applied at allocation time rather than paid for later. */
-  regions:       9,    // region `where`s resolved — basis-version-freeze, basis-version-resolve,
+  regions:      13,    // was 9 — PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
+                       // is-ai-task-scope, is-ai-scope-declaration) all resolved, all non-trivial,
+                       // and every one of them COMPARES every code it judges (3/3, 2/2, 3/3, 2/2).
+                       // region `where`s resolved — basis-version-freeze, basis-version-resolve,
                        // bias-set-refusal, and PL-3's three (is-suggest-shape, is-suggest-checks,
                        // is-suggest-write). Was 3; PL-3 gave EVERY row it minted a region rather
                        // than a whole function, which is REC-71's rule applied at allocation time
                        // instead of paid for at integration.
-  regionLines:  632,  // was 45 — PL-3's three regions are 425 lines of the 483    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
+  regionLines:  724,  // was 632, was 45 — PL-3's three regions are 425 lines of the 483    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
                        // figure on purpose, so an ordinary edit inside a governed arm does
                        // not fail the guard while a COLLAPSE still does. The per-region
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
-  codesChecked: 46,  // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
+  codesChecked: 56,  // was 46, was 11. PL-3 nearly TRIPLED it, and deliberately: a local
                        // `refuse(key, …)` passes the code as a VARIABLE and arm C compares NOTHING,
                        // which is why seven of thirteen governed sites read 776 lines and checked zero.
                        // PL-3's three regions name their helper `refusal` and pass a string LITERAL at
@@ -216,7 +231,9 @@ const FLOOR = {
                        // of them. See arm C's NOTE and REC-71's delegation to REC-64:
                        // arm C's teeth reach 5 of 13 sites, and that is a measurement.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 40, // terms across them
+  vocabularyTerms: 50, // terms across them. WAS 40 OVER A TREE CARRYING 50 when PL-11
+                       // arrived, and PL-11 added no vocabulary: ten of pre-existing slack,
+                       // found by measuring rather than by adding one to the number here.
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a
