@@ -5524,11 +5524,208 @@ export const BASIS_VERSION_CHECKS = {
       + 'Answering with an empty list would say this thing has no readings of its evidence, '
       + 'when the truth is that it could not have any.',
   },
+  /* PL-2 / IS-2 — THE SECOND ENFORCEMENT LAYER of §6 rule 4's reason rule, and
+     it is here rather than only at the write op because VERIFICATION rule 3a
+     requires an assertion at EACH place a rule is enforced, and because the two
+     layers answer different questions. The write op refuses an ACT that carries
+     no reason. This refuses a DOCUMENT that arrives already claiming a
+     reason-bearing state with nothing behind it — which is the shape a hand-
+     authored `bundle.md`, a replayed history, or a future writer would take, and
+     none of those go through the op.
+
+     BOTH LAYERS CALL `versionNeedsReason` AND NEITHER RE-TYPES THE SET. Two
+     enforcement layers are what the rule requires; two IMPLEMENTATIONS of the
+     membership test are what IS-6's C-22.4 control was absorbed by, so there is
+     one predicate and the suite pins the count. */
+  VERSION_DISPOSITION_UNATTRIBUTED: {
+    check: 'C-25.19',
+    where: 'checks/bio-checks.mjs basisVersionFindings, called from checkInquiryBasis and from store.mjs promote',
+    translation: 'This reading of the evidence was set aside or turned down with no reason recorded, '
+      + 'or with a machine\'s name against it. What a member decided about a reading, and why, is '
+      + 'the record itself — a decision nobody signed and nobody explained leaves nothing to answer to.',
+  },
 };
 
 /* §6 rule 4's four states. Exported so IS-2's six member ops read the vocabulary
    from here rather than holding a second copy of it — the drift DEC-8 closed. */
 export const VERSION_STATES = ['suggested', 'considering', 'accepted', 'rejected'];
+
+/* ===================================================================
+ * PL-2 / IS-2 — **THIS IS THE SIXTH STATE MACHINE IN THIS PLANE**, and
+ * INVESTIGATIVE-SESSION.md §6 rule 4 says so in those words: *"This is a SIXTH
+ * state machine and the design says so."* The five that already exist are the
+ * five keys of `STATES` above (information, inquiry and its two legacy
+ * spellings, action, project); task states and proposal dispositions are
+ * DIFFERENT vocabularies belonging to different objects, and nothing existing is
+ * this machine (SWEEP §1.4). It is stated here, in the file that defines the
+ * other five, so a reader counting state machines counts six.
+ *
+ * IT IS DELIBERATELY NOT A SIXTH KEY OF `STATES`. `STATES` is keyed by
+ * OBJECT_TYPE and consulted through `vocabFor` over a document's DECLARED type;
+ * a basis version is not an object type, has no bundle id, and is never the
+ * subject of `checkStateLegality`. Adding it there would make `vocabFor` answer
+ * this machine for a document whose type happened to collide, and would put a
+ * version's states into every sweep that enumerates the object machines. One
+ * table, its own name, imported by everything that needs it.
+ *
+ * THE EDGES, and each one is a member act (§6 rule 4, second bullet):
+ *
+ *   suggested   -> considering | accepted | rejected
+ *   considering -> suggested   | accepted | rejected
+ *   accepted    -> considering | rejected
+ *   rejected    -> suggested   | considering | accepted
+ *
+ * WHY `accepted -> suggested` IS ABSENT while every other reversal is present.
+ * §6 rule 4 is explicit that *"`considering` and `rejected` are reversible, the
+ * states are not a one-way ladder"*, and rule 5 is equally explicit that
+ * *"accepted is a HISTORICAL FACT — this version was accepted, on this date, by
+ * this member"* and that *"a version accepted in error is REJECTED, which is a
+ * different and rarer act than being superseded"*. Returning an accepted version
+ * to `suggested` would say nobody had ever acted on it, which is the one thing
+ * the record knows to be false. So the way back from `accepted` is through an
+ * act that is itself recorded — rejecting it, or putting it back under
+ * consideration — and never through an erasure.
+ *
+ * A version that stops being CURRENT does not move in this machine at all: it
+ * stays accepted, because it honestly was (§6 rule 5). Current is a property of
+ * the PROJECT's relationship to the inquiry (§7) and is not a state here.
+ */
+export const VERSION_MACHINE = {
+  legal: VERSION_STATES,
+  edges: {
+    suggested:   ['considering', 'accepted', 'rejected'],
+    considering: ['suggested', 'accepted', 'rejected'],
+    accepted:    ['considering', 'rejected'],
+    rejected:    ['suggested', 'considering', 'accepted'],
+  },
+};
+
+/* §6 rule 4, first bullet: a machine-written version is a PROPOSAL and inherits
+   the interaction-construct's proposal rules — *"it is adopted, deferred WITH a
+   recorded reason, or dismissed WITH a recorded reason"*. The three constructs
+   map onto three of the six ops and the mapping is stated rather than implied:
+   ADOPT is `accept`, DEFER is `consider` (the member has not decided and is
+   saying so on the record), DISMISS is `reject`. So the two reason-bearing
+   target states are `considering` and `rejected`, and this array is the ONE
+   place that says which they are.
+
+   Rule 4's second bullet raises `rejected` above the construct's floor —
+   *"rejection at minimum carries an authored reason — the rejection record is
+   the anti-omission instrument, and it is worthless without one"* — which is why
+   the requirement is enforced at two layers (the write op and the catalog) and
+   why VERIFICATION rule 3a then owes an assertion at EACH of them.
+
+   ONE PREDICATE AND ONE ARRAY, never a second copy of the membership test: IS-6's
+   C-22.4 control left its suite green at 98/98 because a rule had two
+   implementations and removing either left the other absorbing the control. The
+   store imports `versionNeedsReason`; the catalog below calls it; there is no
+   third spelling and `test/versionstate.test.mjs` pins the count. */
+export const VERSION_REASON_REQUIRED = ['considering', 'rejected'];
+export const versionNeedsReason = (to) => VERSION_REASON_REQUIRED.includes(to);
+
+/* PL-2 / IS-2 — THE SIX MEMBER OPS' REFUSALS, each with its C-number, its
+ * DEC-49 wire code and the canned translation a surface renders. A surface may
+ * RENDER a refusal it received and may never compute one (DEC-8), so every
+ * refusal the six ops can return is a row here and the store returns the row's
+ * own translation rather than composing a second sentence.
+ *
+ * NO MEMBER-FACING STRING BELOW SAYS "ground", "partition", "AND" or "OR" as a
+ * member-facing word — DEC-32's elicitation clause 1 and D-226, the same bound
+ * BASIS_VERSION_CHECKS respects one item down, and the suite asserts it of every
+ * translation rather than trusting this paragraph. */
+export const VERSION_ACT_CHECKS = {
+  VERSION_ACT_NO_INQUIRY: {
+    check: 'C-25.20',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'That request did not say which question the reading belongs to. '
+      + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
+  },
+  VERSION_ACT_NOT_AN_INQUIRY: {
+    check: 'C-25.21',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Only a question carries readings of its evidence, and that is not a question. '
+      + 'There is nothing here to accept, set aside or turn down.',
+  },
+  VERSION_ACT_NO_VERSION: {
+    check: 'C-25.22',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'That request did not name which reading to act on. '
+      + 'A question can hold several readings of its evidence, and acting on the wrong one is '
+      + 'worse than being asked which you meant.',
+  },
+  VERSION_ACT_NO_SUCH_VERSION: {
+    check: 'C-25.23',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'This question holds no reading by that name. '
+      + 'Readings are named so a member can ask for one by name, and a name nobody wrote is '
+      + 'refused rather than matched to whatever is nearest.',
+  },
+  /* REC-46's ONE predicate, at the ONE transition site. §4: THE AI HOLDS NO OP
+     THAT ACCEPTS. A machine may compose an account of the evidence and propose
+     it; deciding what the record stands on is a named member's act, and this is
+     the refusal that says so for all six. */
+  MACHINE_CANNOT_MOVE_VERSION: {
+    check: 'C-25.24',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Deciding what to do with a reading of the evidence is a named member\'s call, '
+      + 'and this request came from an automated credential. A machine may put a reading forward '
+      + 'and may never settle it. Sign in as a member.',
+  },
+  VERSION_ILLEGAL_TRANSITION: {
+    check: 'C-25.25',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'That is not a move this reading can make from where it stands. '
+      + 'A reading a member has already accepted is corrected by turning it down or by putting it '
+      + 'back under consideration, never by returning it to something nobody had acted on.',
+  },
+  VERSION_NO_REASON: {
+    check: 'C-25.26',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Setting a reading aside or turning it down carries the reason in the member\'s own '
+      + 'words. The record of what was turned down is the instrument that makes a pattern of '
+      + 'turning things down visible at all, and it is worth nothing without the reason.',
+  },
+  /* THE CHECK PL-1 RECORDED RATHER THAN HALF-BUILT. A version leg naming THIS
+     inquiry is a fact about one document and C-25.14 refuses it there. A leg
+     naming an inquiry that TRANSITIVELY rests on this one is a fact about the
+     stored graph, and it becomes a defect at exactly one moment: when a member
+     accepts the version and its legs become what the answer rests on. Wired to
+     `#basisCyclePath`, the walk `promote` already runs — never a second one. */
+  VERSION_BASIS_CYCLE: {
+    check: 'C-25.27',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Accepting this reading would make the question rest, through a chain of other '
+      + 'questions, on itself. The answer would then be its own support, which is a circle rather '
+      + 'than a case, and the chain that closes it is named above.',
+  },
+  VERSION_NOT_ACCEPTED: {
+    check: 'C-25.28',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'A project can only stand on a reading its members have accepted, and this one has '
+      + 'not been accepted. Exploring an unsettled reading is done by calculating over it, which '
+      + 'moves nobody\'s stance.',
+  },
+  VERSION_CURRENT_NO_PROJECT: {
+    check: 'C-25.29',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Standing on a reading is something a PROJECT does, so this request has to name '
+      + 'which project. A question can be shared by several teams, and one team\'s decision must '
+      + 'never quietly move another team\'s.',
+  },
+  VERSION_CURRENT_UNRELATED: {
+    check: 'C-25.30',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'That project does not draw on this question, so it has no stance here to move. '
+      + 'Add the question to the project first, and then choose what the project stands on.',
+  },
+  VERSION_ACT_UNWRITABLE: {
+    check: 'C-25.31',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'This question\'s own file could not be rewritten in place, so nothing was changed. '
+      + 'Acting on a reading edits the record the reading lives in, and a half-written record is '
+      + 'worse than an unchanged one.',
+  },
+};
 /* The two ways a composition can compose, and DEC-32's own words for them. NOT a
    surface vocabulary: DEC-32's elicitation clause 1 bans "ground partition" and
    the AND/OR words from every member-facing screen (D-226), which is why every
@@ -5644,6 +5841,19 @@ export function basisVersionFindings(fm, findings) {
     }
     if (v.hidden !== undefined && v.hidden !== null && typeof v.hidden !== 'boolean') {
       push('VERSION_HIDDEN_NOT_BOOLEAN', `basis_versions[${i}] ('${name}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
+    }
+    /* PL-2 / IS-2, layer 2 of the reason rule. `versionNeedsReason` is the ONE
+       predicate — imported by store.mjs's transition and called here — so the
+       two layers cannot come to disagree about which states carry a reason. */
+    if (versionNeedsReason(v.state)) {
+      const why = typeof v.state_reason === 'string' ? v.state_reason.trim() : '';
+      const by = typeof v.state_by === 'string' ? v.state_by.trim() : '';
+      if (why.length < 8 || !by || isMachineIdentity(by))
+        push('VERSION_DISPOSITION_UNATTRIBUTED', `basis_versions[${i}] ('${name}') is in state '${v.state}' and carries state_by '${String(v.state_by).slice(0, 40)}' with state_reason '${why.slice(0, 40)}': ${VERSION_REASON_REQUIRED.join(' and ')} are the two states a member enters WITH a recorded reason (§6 rule 4), and the reason carries the name of the member who authored it — never a machine's, because a machine may propose an account of the evidence and may never settle one`,
+          ['record state_by (a named member), state_at (an ISO timestamp) and state_reason on this version',
+           'or leave the version suggested — a state nobody has moved it into needs no reason']);
+      if (!ISO_TS_RE.test(String(v.state_at || '')))
+        push('VERSION_DISPOSITION_UNATTRIBUTED', `basis_versions[${i}] ('${name}') is in state '${v.state}' and requires 'state_at' as an ISO timestamp (got '${String(v.state_at).slice(0, 40)}'): a decision made before a strength was seen is a different act from one made after it, and only a date lets a reader tell`);
     }
   }
 

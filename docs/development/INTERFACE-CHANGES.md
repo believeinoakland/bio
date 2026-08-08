@@ -1928,3 +1928,32 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 
 **SETTLED. I3 10.3.0 → 10.4.0; I5 gains its tables.** Open against it: **PL-2 owns wiring the transitive basis-cycle check at the accept path** — self-reference is refused here, but a leg naming an inquiry that transitively rests on this one is refused only when a version's legs BECOME the basis, and **that path is IS-2's and is not built.** Recorded rather than half-built, because a second cycle walk would drift from the first.
 
+
+
+## IC-30 · I3: SIX new act ops — the sixth state machine over an inquiry's basis versions · I5: three additive nullable columns · PROPOSED 2026-08-08 (PL-2 / IS-2) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, and it is additive in both interfaces.**
+
+**I3 gains SIX mutating ops** — `op=versionaccept`, `op=versionreject`, `op=versionconsider`, `op=versionrevert`, `op=versioncurrent`, `op=versionhide`. They are the member acts of **the SIXTH state machine in this plane**, and INVESTIGATIVE-SESSION.md §6 rule 4 says so in those words. Each takes `target=<INQ-…>` and `version=<name>`; `reason` may arrive in the POST body because it is prose; `versioncurrent` additionally takes `project=<PROJ-…>`; `preview=1` runs every guard and writes nothing. All six are `contribute`-gated, `author` and `viewer` are server-stamped, and a machine credential REACHES all six and is refused `MACHINE_CANNOT_MOVE_VERSION` by the store rather than being absent from the table — conclude's fail-closed posture.
+
+**I3's existing `op=basisversions` gains two additive fields and one optional argument.** Each version now carries `moved: { by, at, reason } | null` — who moved this reading, when and why, null on one nobody has moved. And an optional `project=<PROJ-…>` argument adds a top-level `current: { project, version, at, by } | null`; **absent the argument the field is absent entirely**, because §7 makes current a property of the PROJECT's relationship to the inquiry and a default project would be one team's stance read as everybody's.
+
+**I3 gains TWELVE refusal codes** (`C-25.20`–`C-25.31`), every one with a DEC-49 canned translation, all reachable only by a caller of the six new ops. **The catalog gains one** (`C-25.19`, `VERSION_DISPOSITION_UNATTRIBUTED`) reachable only by a document that carries a version block already claiming a state §6 rule 4 requires a reason for.
+
+**I5 is TOUCHED: three additive NULLABLE columns** on PL-1's `inquiry_basis_versions` — `state_by`, `state_at`, `state_reason`. **No new table** (PL-1 pinned the count at exactly two and it stands), no index change, no `purge` change, no `op=stats` change. A version projected before this item reads NULL on all three, which is exactly true of it: nobody had moved it, so there is nobody to name and nothing to explain. A non-null default would have invented an act.
+
+**WHAT IS PUBLISHED, and §6 rule 4 requires it.** `op=affordances` now carries the machine itself — `version_states`, `version_edges`, `version_reason_required` — and the six acts, derived over the question's REAL version states. *"The machine publishes the new machine through op=affordances, or every surface showing version states holds a second copy of the rule — the drift class DEC-8 closed."* The tables are IMPORTED from the catalog that defines them and the store that enforces them; there is no copy.
+
+**WHAT IS NOT CLAIMED.** No oracle is closed. The six acts are published only where the question's own readings make the move legal, so a question holding none publishes none — but that is DEC-8 hygiene rather than a disclosure property. `versioncurrent` writes §7's dated pointer onto the PROJECT's own `bundle.md` and mints **no settings row, no notification slug and no projection table**: the slugs, the shared-inquiry semantics and D-216's model check remain PL-13's, and this item does not pre-empt them.
+
+**MEASURED CONSUMER IMPACT: ONE, and it is real.** `civicos-ui/test/surface-registry.test.mjs` ARM A4 requires every act the plane publishes to be hosted by a described surface, and **the six have no surface yet** — UI-42 (version review), UI-43 (the accept ceremony) and UI-45 (notifications) are the items that build them and all three list PL-2 as a dependency. The arm is correctly red and says something true. `newgroup`, `docprofile`, `pdf-worker` and `tools` reach none of this.
+
+### 2 · RESPONSES
+
+*(Awaiting. RECORD is the owner. UI is the affected consumer — see the DELEGATION in `CLAIMS.md`.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*

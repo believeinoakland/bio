@@ -377,10 +377,17 @@ const cat = await affordances(null);
    count is corrected and not loosened, for the reason every note above gives:
    this assertion exists so a published act cannot appear or vanish without a
    turn saying so, and a `>=` would have made it stop doing that. */
-t("no target -> the whole catalogue: thirteen acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-08-08 (PL-2 / IS-2): NINETEEN, with the six member ops of the
+   SIXTH state machine — accept, reject, consider, revert, current and hide over
+   an inquiry's basis versions. The count is CORRECTED and not loosened, for the
+   reason every note above gives: this assertion exists so a published act cannot
+   appear or vanish without a turn saying so, and a `>=` would have made it stop
+   doing that. It moved by exactly the number of object-directed ops PL-2 added,
+   which is the totality check's companion working. */
+t("no target -> the whole catalogue: nineteen acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 13, true]);
+  [true, 19, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control

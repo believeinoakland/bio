@@ -1818,6 +1818,21 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_versions (
   description   TEXT NOT NULL,    -- REQUIRED (section 6 rule 1): held to a commit message's standard
   relationship  TEXT NOT NULL,    -- 'and' | 'or': the composition this version ASSERTS, checked against the partition
   state         TEXT NOT NULL,    -- suggested | considering | accepted | rejected (section 6 rule 4 -- IS-2 owns the transitions)
+  -- PL-2 / IS-2: WHO moved this reading, WHEN, and WHY. Three additive nullable
+  -- columns and NO fourth table, deliberately. D-214 requires that the acts
+  -- PERSIST -- a member who turns down every suggestion running against their
+  -- thesis is visible only if the acts do -- and these three make that visible
+  -- at the grain the rule is about, because a version is never deleted and
+  -- hiding one is not deleting it either. A separate act LEDGER would be a third
+  -- table carrying versions of a basis, which PL-1 pinned at exactly two, and
+  -- the intermediate moves it would hold are already in the append-only history
+  -- of bundle.md.
+  -- OUTSIDE THE FROZEN COMPOSITION, exactly as state and hidden are, and for the
+  -- same reason -- see the composition note above. Freezing what happened TO a
+  -- version would freeze the state machine shut before it existed.
+  state_by      TEXT,             -- the NAMED MEMBER who moved it. Never a machine identity
+  state_at      TEXT,
+  state_reason  TEXT,             -- REQUIRED entering considering or rejected (section 6 rule 4)
   derived_from  TEXT,             -- the version NAME this was derived from. NULL = composed fresh (section 6 rule 3a)
   hidden        INTEGER NOT NULL DEFAULT 0,  -- the PRUNE flag. Hiding is not deleting: the row stays and stays queryable
   claim         TEXT,             -- D-217b: a reworded claim carried AS A VERSION rather than as a new inquiry

@@ -59,6 +59,12 @@ import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KIND
             computed, so the sentence a member reads and the grade the gate will
             accept cannot drift. See ATTEST_FENCE below. */
          EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
+         /* PL-2 / IS-2. THE SIXTH STATE MACHINE, imported from where it is
+            defined — the `op=dispose` hazard, not repeated. §6 rule 4 requires
+            it: *"the machine publishes the new machine through op=affordances,
+            or every surface showing version states holds a second copy of the
+            rule — the drift class DEC-8 closed."* */
+         VERSION_MACHINE, VERSION_REASON_REQUIRED,
          normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
@@ -410,6 +416,22 @@ export const VOCABULARIES = {
      same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
      `correspondence_directions` above already take. One array, three readers. */
   resolutions: RESOLUTIONS,
+  /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
+     consequence is not a nicety: without this, every surface that shows a
+     version's state holds its own copy of which states exist and which moves
+     are legal, and a copy is the DEC-8 drift class this whole file exists to
+     close. Published as the machine ITSELF — the state list AND the edge table —
+     because a surface that knows only the states must still guess which control
+     to offer, and guessing is what produces a control the plane then refuses.
+     `version_reason_required` travels with it for the same reason: a surface
+     that must ask for a reason before it sends the act cannot know WHEN to ask
+     unless the plane says so, and the alternative is a member typing a reason
+     into a form that discards it, or worse, an act refused after the fact.
+     IMPORTED, never restated: one table, three readers (the catalog defines it,
+     the store enforces it, this publishes it). */
+  version_states: VERSION_MACHINE.legal,
+  version_edges: VERSION_MACHINE.edges,
+  version_reason_required: VERSION_REASON_REQUIRED,
 };
 
 /* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
@@ -529,6 +551,20 @@ export const CAPTURE_ACTS = [
  * `object_type` (normalized) still answers the membership questions below. */
 const edgesFrom = (f) =>
   (vocabFor(STATES, f.declared_type ?? f.object_type)?.edges?.[f.current_state]) || [];
+
+/* PL-2 / IS-2. `edgesFrom` one construct down: does ANY reading this question
+ * holds have a legal move to `to`, according to the SIXTH state machine's own
+ * edge table? The table is `VERSION_MACHINE`'s and there is no copy here.
+ *
+ * WHY *ANY* AND NOT *ALL*, which is the honest reading and not a weakening: a
+ * question holds several readings at once and they are in different states, so
+ * the answer to "may this act be taken here" is "yes, on at least one of them" —
+ * exactly as op=dispose is published when the machine offers a disposition edge
+ * without promising that this caller's parameters will pass. WHICH reading is
+ * the act's own parameter, and the store refuses one that cannot make the move
+ * by name (C-25.25), naming the legal set it could have made. */
+const anyVersionEdgeTo = (f, to) =>
+  (f.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 
 /* The facts shape is store.mjs affordanceFacts(): object_type (NORMALIZED, for
  * membership), declared_type (the document's own spelling, for vocabulary —
@@ -751,6 +787,68 @@ export const ACTS = [
      for actionmove's reason. */
   { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
+  /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
+   *
+   * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
+   * paragraph the IS-6 lander wrote above about `airunopen` predicted exactly
+   * this: *"what a run eventually proposes IS an act on an object, and it is
+   * IS-1's and IS-2's; that act will be an ACTS row, and this one is not it."*
+   * The subject of these six is an inquiry's own basis — the question moves in
+   * the member's hands when one is taken — which is what an object-directed act
+   * is. The three run verbs are not acts because a run *changes NOTHING about*
+   * the object it names; these change what the record stands on.
+   *
+   * THE DERIVATION IS OVER REAL FACTS AND NOT OVER THE TYPE. A question holding
+   * no readings publishes none of the six, because the op would refuse
+   * NO_SUCH_VERSION and a pre-flight offering a control the refusal it fronts
+   * would decline is DEC-8's headline failure — the same reason `inquirydivide`
+   * counts basis legs and `retire` counts live cites. The fact is
+   * `basis_version_states`, which store.mjs reads from the document; the RULE
+   * over it is here, where every other act's rule lives, and `edgesFor` below is
+   * the machine's OWN table so this file holds no state list of its own. Grep
+   * it: no version-state word appears in any of the six entries.
+   *
+   * WEIGHT `single` on all six, conclude's precedent: one reading is settled at
+   * a time and there is no set to apply. A bulk version would be the checkbox
+   * these constructs exist to refuse, and the more so here, because this is the
+   * family of acts that decides what a case rests on.
+   *
+   * NO RUNG on any of them. It is tempting to write `reasoned` on reject and
+   * consider because both REQUIRE a reason, and that is exactly the guess RUNGS
+   * refuses two blocks up — a rung is a promise to a member about reversibility
+   * and no document assigns these six one. FW-14 owns the assignment.
+   *
+   * THE ENTRY REQUIREMENTS ARE ACT-TIME REFUSALS the store words itself: which
+   * version, the authored reason, the legal edge, the transitive cycle at accept,
+   * acceptance before make-current, a project that draws on the question. The
+   * release precedent — publishing the act says the machine permits the move,
+   * not that this caller's parameters will pass. */
+  { id: "versionaccept", label: "Accept a reading of the evidence", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "accepted") },
+  { id: "versionreject", label: "Turn down a reading (with a reason)", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "rejected") },
+  { id: "versionconsider", label: "Set a reading aside for now (with a reason)", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "considering") },
+  { id: "versionrevert", label: "Put a reading back to where nobody had acted on it", weight: "single",
+    types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "suggested") },
+  /* MAKE-CURRENT is offered when the question holds a reading a member has
+     ACCEPTED, which is the store's own entry requirement (current implies
+     accepted, §6 rule 5). Which PROJECT stands on it is the act's parameter and
+     the store refuses an unnamed one — the dispose precedent, where the target
+     state is a parameter rather than a second act. */
+  { id: "versioncurrent", label: "Stand this project on a reading", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && (f.basis_version_states ?? []).includes("accepted") },
+  /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
+     breadth is deliberate rather than an omission: the prune offer's whole point
+     (D-217a) is that accepting one reading offers to hide its ancestors, and a
+     rejected reading is exactly the kind a member may want to keep visible or
+     may want out of the way. The store gates on nothing but the version
+     existing, so narrowing here would be this file inventing a rule the plane
+     does not enforce — the cite precedent. */
+  { id: "versionhide", label: "Hide a reading from the display (it stays in the record)", weight: "single",
+    types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && (f.basis_versions ?? 0) >= 1 },
   { id: "cite", label: "Cite material into a case or a question", weight: "report",
     types: ["information", "project", "inquiry"],
     applies: (f, ty) => ty === "information" || ty === "project" || ty === "inquiry" },

@@ -115,6 +115,12 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             pure document check cannot reach: the FREEZE, which needs to see
             what the record already holds under that name. */
          basisVersionFindings, BASIS_VERSION_CHECKS,
+         /* PL-2 / IS-2: the SIXTH state machine, its refusals and the ONE
+            predicate that says which states carry an authored reason — all
+            three IMPORTED. A hand-typed vocabulary in this repository was two
+            members short of its catalogue for months after a ruling changed it,
+            which is why nothing below re-types a state name. */
+         VERSION_MACHINE, VERSION_ACT_CHECKS, versionNeedsReason,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -428,6 +434,15 @@ export class Store extends DurableObject {
       ["bundles", "action_resolution", "TEXT"],
       ["bundles", "action_clock_next", "TEXT"],
       ["bundles", "action_clock_overdue", "INTEGER"],
+      /* PL-2 / IS-2: the three attribution columns on PL-1's version projection.
+         Additive and nullable exactly like every column above, and here that is
+         also the correctness requirement: a version projected before this item
+         existed reads NULL on all three, which is exactly true of it — nobody
+         had moved it, so there is nobody to name and nothing to explain. A
+         non-null default would have invented an act. */
+      ["inquiry_basis_versions", "state_by", "TEXT"],
+      ["inquiry_basis_versions", "state_at", "TEXT"],
+      ["inquiry_basis_versions", "state_reason", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -1426,6 +1441,20 @@ export class Store extends DurableObject {
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
                           severed: rested.severed.length },
+             /* PL-2 / IS-2: WHICH STATES THIS QUESTION'S READINGS ARE IN, read
+                from the DOCUMENT like every other fact in this method — a FACT
+                and never a rule, exactly as `basis_legs` is. The rule that
+                consumes it is the act catalogue's, which is why the six version
+                acts are derived there over this and not decided here.
+                It is what stops the six acts being published on a question that
+                holds no reading at all: an act offered where the op would refuse
+                NO_SUCH_VERSION is a pre-flight disagreeing with the refusal it
+                fronts, which is DEC-8's headline failure. */
+             basis_version_states: (Array.isArray(docFm.basis_versions) ? docFm.basis_versions : [])
+               .filter((v) => v && typeof v === "object" && typeof v.state === "string")
+               .map((v) => v.state.trim()),
+             basis_versions: (Array.isArray(docFm.basis_versions) ? docFm.basis_versions : [])
+               .filter((v) => v && typeof v === "object").length,
              cites_in: citesIn, cites_out: citesOut };
   }
 
@@ -6160,6 +6189,98 @@ export class Store extends DurableObject {
     return [...lines.slice(0, end), `${key}: ${value}`, ...lines.slice(end)].join("\n");
   }
 
+  /* PL-2 / IS-2 — SET ONE FIELD ON ONE ROW OF AN ARRAY-OF-OBJECTS BLOCK.
+   *
+   * `#setScalar` reaches top-level keys and `#spliceReferences` appends whole
+   * rows; neither can move `state` on the version named 'opening account' while
+   * leaving every other version and every other field byte-identical, which is
+   * exactly what a transition is. This is that operation and nothing wider.
+   *
+   * IT REFUSES RATHER THAN GUESSES, returning null when the block is inline,
+   * absent, or when no row carries the name — the `#spliceReferences` posture,
+   * and for its reason: the restricted grammar has no escapes, so a wrong guess
+   * corrupts a document silently and the store would then promote the corruption.
+   *
+   * A ROW IS `  - ` AND ITS CONTINUATION LINES, which is the only shape the
+   * restricted parser reads and the only shape any writer in this tree emits. */
+  static #setVersionField(text, rowName, key, value) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^basis_versions:\s*$/.test(lines[i])) { at = i; break; }
+    if (at === -1) return null;
+    const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
+    const lit = typeof value === "boolean" ? String(value) : `"${Store.#fmSafe(String(value ?? ""))}"`;
+    let i = at + 1, rowStart = -1, rowEnd = -1;
+    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+      if (/^\s{2}- /.test(lines[i])) {
+        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
+        const m = /^\s{2}- name:\s*(.+)$/.exec(lines[i]);
+        if (m && unquote(m[1]) === rowName) rowStart = i;
+      }
+      i++;
+    }
+    if (rowStart === -1) return null;
+    if (rowEnd === -1) rowEnd = i;
+    for (let j = rowStart; j < rowEnd; j++) {
+      const m = new RegExp(`^(\\s{2}- |\\s{4})${key}:`).exec(lines[j]);
+      if (m) { lines[j] = `${m[1]}${key}: ${lit}`; return lines.join("\n"); }
+    }
+    return [...lines.slice(0, rowEnd), `    ${key}: ${lit}`, ...lines.slice(rowEnd)].join("\n");
+  }
+
+  /* PL-2 / IS-2 / §7 — THE PROJECT'S DATED POINTER AT WHAT IT STANDS ON, written
+   * into the project's OWN frontmatter beside `required_strength` and never into
+   * a settings row, because a settings row *"would be a way to change the
+   * standard with nothing to read afterwards"* (DEC-17's reasoning, transplanted
+   * by D-199's second determination). One row per inquiry: a project may draw on
+   * several questions and each carries its own stance, its own date and the name
+   * of the member who moved it.
+   *
+   * Three shapes are reachable and all three are handled, `#spliceReferences`'
+   * own set: no key at all, an inline `current_versions: []`, and a populated
+   * block. Any OTHER inline scalar returns null rather than being reinterpreted. */
+  static #setCurrentVersionRow(text, inquiryId, vname, who, when) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const q = (s) => `"${Store.#fmSafe(String(s ?? ""))}"`;
+    const block = [`  - inquiry: ${q(inquiryId)}`, `    version: ${q(vname)}`,
+                   `    at: ${q(when)}`, `    by: ${q(who)}`];
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^current_versions:/.test(lines[i])) { at = i; break; }
+    if (at === -1)
+      return [...lines.slice(0, end), "current_versions:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[at].slice("current_versions:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, at), "current_versions:", ...block, ...lines.slice(at + 1)].join("\n");
+    if (rest !== "") return null;
+    const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
+    let i = at + 1, rowStart = -1, rowEnd = -1;
+    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+      if (/^\s{2}- /.test(lines[i])) {
+        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
+        const m = /^\s{2}- inquiry:\s*(.+)$/.exec(lines[i]);
+        if (m && unquote(m[1]) === inquiryId) rowStart = i;
+      }
+      i++;
+    }
+    if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join("\n");
+    if (rowEnd === -1) rowEnd = i;
+    return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
+  }
+
+  /* PL-2's two write sites both append their Session Log entry through REC-24's
+     EXISTING `#appendSessionLog` above (C-13.2 requires the entry whenever
+     `last_updated` moves, and BEAT 4 requires the receipt to land IN THE RECORD
+     rather than only in the HTTP response). A second five-line splice was
+     written here and DELETED: REC-24's own comment says the helper exists so its
+     writers cannot disagree about where an entry goes, and the duplication it
+     already names as real debt is not worth adding a fourth instance to. */
+
   /* Splice new entries into the `references` block, touching nothing else.
    *
    * Three shapes are reachable in the corpus and all three are handled: an
@@ -7052,6 +7173,11 @@ export class Store extends DurableObject {
            the run being alive, so a version outlives the run that proposed it. */
         run: str(v.run),
         author: str(v.author), at: str(v.at),
+        /* PL-2 / IS-2. NOT in the composition above and deliberately so: what
+           happened TO a version is not what a member compares when they compare
+           two versions, and freezing it would freeze the state machine shut. */
+        state_by: str(v.state_by), state_at: str(v.state_at),
+        state_reason: typeof v.state_reason === "string" ? v.state_reason : null,
         regroup_by: str(v.regroup_by), regroup_at: str(v.regroup_at),
         regroup_note: typeof v.regroup_note === "string" ? v.regroup_note : null,
         composition, legs, grounds,
@@ -7775,11 +7901,15 @@ export class Store extends DurableObject {
           this.sql.exec(
             `INSERT INTO inquiry_basis_versions
                (bundle_id,name,ord,description,relationship,state,derived_from,hidden,claim,run,author,at,
-                regroup_by,regroup_at,regroup_note,composition,leg_count)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                regroup_by,regroup_at,regroup_note,composition,leg_count,state_by,state_at,state_reason)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId, v.name, v.ord, v.description, v.relationship, v.state, v.derived_from,
             v.hidden, v.claim, v.run, v.author, v.at,
-            v.regroup_by, v.regroup_at, v.regroup_note, v.composition, v.legs.length);
+            v.regroup_by, v.regroup_at, v.regroup_note, v.composition, v.legs.length,
+            /* PL-2 / IS-2: who moved this reading, when, and why — projected in
+               the SAME statement, so an act cannot land in one table and its
+               attribution in another. */
+            v.state_by, v.state_at, v.state_reason);
           for (let k = 0; k < v.legs.length; k++) {
             const l = v.legs[k];
             if (!l.target_id) continue;   // replay of a malformed shape: unprojectable
@@ -15612,7 +15742,7 @@ export class Store extends DurableObject {
    *  the moment it was written, which is the acceptance clause "a version
    *  SURVIVES the death of the run that proposed it — identity is not the run's",
    *  enforced by the ABSENCE of a join rather than by a promise about one. */
-  basisVersions({ id = null, limit = null, offset = 0, viewer = null } = {}) {
+  basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
     const refuse = (key, detail) => {
       const row = BASIS_VERSION_CHECKS[key];
       return { ok: false, reason: key, check: row.check, code: key, translation: row.translation, detail };
@@ -15678,6 +15808,11 @@ export class Store extends DurableObject {
         claim: r.claim,
         run: r.run,
         author: r.author, at: r.at,
+        /* PL-2 / IS-2: WHO moved this reading, when, and why — published beside
+           the state, because a state with no act behind it is the shape D-214
+           refuses. Null on a version nobody has moved, which is the truth about
+           it rather than a default. */
+        moved: r.state_by ? { by: r.state_by, at: r.state_at, reason: r.state_reason } : null,
         regroup: r.regroup_by ? { by: r.regroup_by, at: r.regroup_at, note: r.regroup_note } : null,
         composition: r.composition,
         /* The RECORD's own count, stored at the write, beside the legs actually
@@ -15700,7 +15835,435 @@ export class Store extends DurableObject {
          one shape a bound sweep could not see. */
       limit: cap, offset: from,
       truncated: from + versions.length < total,
+      /* PL-2 / IS-2: WHAT THIS PROJECT STANDS ON, present only when a project
+         was named. §7: current is a property of the PROJECT's relationship to
+         the inquiry, never of the inquiry — an inquiry can sit beneath several
+         projects and one team's stance must not read as everybody's. So there is
+         no default project here and there must not be one: an unnamed project
+         gets no `current` field at all rather than a guess.
+
+         READ FROM THE PROJECT'S OWN DOCUMENT through the ONE reader
+         `#currentVersionOf`, which is also what the make-current act writes
+         through — one implementation, so the answer and the act cannot disagree.
+         Gated: a project the viewer may not see answers `null`, exactly as one
+         that never named a version does. */
+      ...(project ? { current: this.#currentVersionOf(project, inq, viewer) } : {}),
     };
+  }
+
+  /* PL-2 / IS-2 — WHAT A PROJECT STANDS ON, read from the project's own
+   * `bundle.md`. THE ONE READER, called by `op=basisversions` and by the
+   * make-current act's own pre-write check, so a published answer and the
+   * refusal that fronts it cannot come apart (DEC-8).
+   *
+   * §7: the pointer is *"a project-authored, DATED frontmatter field beside
+   * `required_strength` — never a settings row"*, because a settings row *"would
+   * be a way to change the standard with nothing to read afterwards"*. It is an
+   * ARRAY because a project may draw on several questions and each needs its own
+   * pointer, and an array of objects with SCALAR properties is what the
+   * restricted frontmatter grammar can express (PL-1 measured that).
+   *
+   * Returns null for: a project the gate hides, a project with no document, a
+   * project that has named no version for this inquiry. Those are one answer
+   * deliberately — a caller learns nothing about a project it cannot see. */
+  #currentVersionOf(projectId, inquiryId, viewer) {
+    const pid = String(projectId ?? "").trim();
+    if (!pid) return null;
+    const gate = this.#bundleGate("bx.bundle_id", viewer);
+    const seen = this.#one(
+      `SELECT bx.bundle_id FROM bundles bx WHERE bx.bundle_id=? AND (${gate.sql})`, pid, ...gate.args);
+    if (!seen) return null;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null) return null;
+    const fm = parseFrontmatter(md.content).data || {};
+    const rows = Array.isArray(fm.current_versions) ? fm.current_versions : [];
+    for (const r of rows) {
+      if (!r || typeof r !== "object") continue;
+      if (String(r.inquiry ?? "").trim() !== String(inquiryId ?? "").trim()) continue;
+      const name = String(r.version ?? "").trim();
+      if (!name) continue;
+      return { project: pid, version: name,
+               at: typeof r.at === "string" ? r.at : null,
+               by: typeof r.by === "string" ? r.by : null };
+    }
+    return null;
+  }
+
+  /* =====================================================================
+   * PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS.
+   *
+   * `VERSION_MACHINE` in the catalog is the machine and says, where it is
+   * defined, that it is the SIXTH in this plane. This is the only place it is
+   * WRITTEN, and everything below is one implementation with six entry points
+   * rather than six implementations that agree today.
+   *
+   * WHY ONE IMPLEMENTATION IS THE ITEM'S OWN SAFETY PROPERTY, stated here
+   * because it is the shape a control can be absorbed by: IS-6's C-22.4 control
+   * left its suite GREEN at 98 of 98 because the rule it broke had TWO
+   * implementations, one inlined in a second function, so removing either left
+   * the other absorbing the control. Every guard below — the machine-identity
+   * refusal, the reason requirement, the edge check, the cycle walk — is written
+   * ONCE, and `test/versionstate.test.mjs` pins the count of implementations over
+   * comment-stripped real source. A second one would fail that pin before it
+   * could quietly disarm a control.
+   *
+   * THE FOUR BEATS (§6 rule 4, second bullet: *"the member-side transitions are
+   * ACTS and owe the four beats — choose · see what will be refused BEFORE it
+   * runs · author the reason · receipt"*), and each is a mechanism rather than a
+   * label:
+   *
+   *   1. CHOOSE — the act names its inquiry AND its version explicitly. There is
+   *      no default version and no "the latest one": acting on the wrong reading
+   *      is worse than being asked which was meant, so an unnamed version is
+   *      refused (C-25.22) rather than resolved.
+   *   2. SEE WHAT WILL BE REFUSED BEFORE IT RUNS — `preview` runs EVERY guard
+   *      below and returns what would happen, writing nothing. It is the same
+   *      code path up to the write and not a second copy of the rules, which is
+   *      what makes it impossible for the pre-flight to disagree with the act it
+   *      fronts (DEC-8's headline failure, and REC-15 deferred op=publishpreflight
+   *      precisely because a SEPARATE pre-flight is the thing that can drift).
+   *   3. AUTHOR THE REASON — required entering the two states `versionNeedsReason`
+   *      names, refused by C-25.26 when absent, and never prefilled or derived: a
+   *      reason the plane wrote is not a reason a member gave.
+   *   4. RECEIPT — the return names the act, the version, the state it moved FROM
+   *      and TO, the member and the instant; and a Session Log entry carrying the
+   *      same facts lands in the document, so the act is in the record and not
+   *      only in an HTTP response.
+   *
+   * MACHINE IDENTITY IS REFUSED ON EVERY TRANSITION, through REC-46's ONE
+   * predicate and never a word list. §4 is the ruling: THE AI HOLDS NO OP THAT
+   * ACCEPTS. It applies to all six and not only to accept, because make-current,
+   * hiding and turning a reading down are each a decision about what the record
+   * stands on or shows.
+   *
+   * THE WRITE IS A PROMOTION AND THERE IS NO SECOND WRITE PATH. The act rewrites
+   * the version's own row in `bundle.md` and re-promotes, so the document stays
+   * the authority (D-21) and the projection is re-derived by the ONE write site
+   * PL-1 pinned. `state`, `hidden` and the three attribution fields sit OUTSIDE
+   * the frozen composition, which is exactly why PL-1 left them there — the
+   * freeze therefore does not fire on a transition, and it still fires on an
+   * edit, which `test/versions.test.mjs` continues to prove.
+   * ================================================================== */
+
+  /** ACCEPT — adopt this reading of the evidence (§6 rule 4's ADOPT). */
+  versionAccept(a)   { return this.#moveVersionState("accept", a); }
+  /** REJECT — the construct's DISMISS. Carries an authored reason, always. */
+  versionReject(a)   { return this.#moveVersionState("reject", a); }
+  /** CONSIDER — the construct's DEFER: not decided, and saying so on the record.
+   *  Carries an authored reason for the same reason dismissal does. */
+  versionConsider(a) { return this.#moveVersionState("consider", a); }
+  /** REVERT — put a reading back where nobody had acted on it. Legal from
+   *  `considering` and `rejected` and NOT from `accepted`, because acceptance is
+   *  a historical fact and un-saying it would erase an act (§6 rule 5). */
+  versionRevert(a)   { return this.#moveVersionState("revert", a); }
+  /** CURRENT — what THIS PROJECT stands on (§7). Not a state in the machine. */
+  versionCurrent(a)  { return this.#moveVersionState("current", a); }
+  /** HIDE — the prune flag. PRUNE HIDES AND NEVER DELETES (D-214, DEC-29(b)):
+   *  the display shrinks and the version stays in the record and stays
+   *  queryable, which is what `op=basisversions` returning it proves. */
+  versionHide(a)     { return this.#moveVersionState("hide", a); }
+
+  /* ONE argument reader for all six acts, so the six dispatch entries cannot
+     come to differ in which parameter they honour. The reason and the hidden
+     flag may arrive in the POST body (a reason is prose and a query string is a
+     poor place for it); everything else is a short identifier. */
+  static #versionArgs(url, body) {
+    const b = body || {};
+    const q = (k) => (b[k] !== undefined ? b[k] : url.searchParams.get(k));
+    return { target: q("target"), version: q("version"), reason: q("reason"),
+             project: q("project"), hidden: q("hidden"), preview: q("preview"),
+             /* server-stamped, never the caller's */
+             author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer") };
+  }
+
+  /* The six acts' target states, in ONE table read from the catalog's own
+     vocabulary. `current` and `hide` move no state and say so with null. */
+  static VERSION_ACT_TO = {
+    accept: "accepted", reject: "rejected", consider: "considering",
+    revert: "suggested", current: null, hide: null,
+  };
+
+  #moveVersionState(act, args) {
+    const a = args || {};
+    const to = Store.VERSION_ACT_TO[act] ?? null;
+    const preview = a.preview === true || a.preview === "1" || a.preview === "true";
+    const refuse = (key, detail, extra) => {
+      const row = VERSION_ACT_CHECKS[key];
+      return { ok: false, reason: key, check: row.check, code: key,
+               translation: row.translation, act, detail, ...(extra || {}) };
+    };
+
+    /* BEAT 1 — CHOOSE. The subject is named, never defaulted. */
+    const target = String(a.target ?? "").trim();
+    if (!target)
+      return refuse("VERSION_ACT_NO_INQUIRY",
+        "a reading belongs to one question: pass target=<INQ-…>. There is no default question and "
+        + "there must not be one.");
+    if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "inquiry")
+      return refuse("VERSION_ACT_NOT_AN_INQUIRY",
+        `${target.slice(0, 60)} is not an inquiry, so it holds no readings of its evidence to act on.`,
+        { target });
+    const vname = String(a.version ?? "").trim();
+    if (!vname)
+      return refuse("VERSION_ACT_NO_VERSION",
+        "a question can hold several readings of its evidence: pass version=<name>. Acting on the "
+        + "wrong one is worse than being asked which was meant.", { target });
+
+    /* THE ONE MACHINE-IDENTITY REFUSAL, on every one of the six acts. REC-46's
+       predicate and never a word list — `token:member` and `class:member` both
+       reached the record when this was last asked as a word list. §4: the AI
+       holds no op that accepts. */
+    const who = String(a.author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_MOVE_VERSION",
+        `op=version${act} moves what the record stands on or shows, and the credential that called it `
+        + `is ${who ? "a machine" : "unnamed"}. A machine credential may COMPOSE an account of the `
+        + `evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or `
+        + `make it what a project stands on. Sign in as a member.`, { target, version: vname });
+
+    /* The same fail-closed viewer gate every read here takes (D-15): a question
+       the caller may not see answers exactly as an absent one does. */
+    const gate = viewerPredicate(a.viewer ?? null);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b)
+      return refuse("VERSION_ACT_NO_SUCH_VERSION",
+        "no question by that id is readable here, so it holds no reading by that name either.",
+        { target, version: vname });
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return refuse("VERSION_ACT_UNWRITABLE",
+        "this question has no readable file, so nothing about its readings can be moved.",
+        { target, version: vname });
+    let text = liveMd.content;
+    const fm = parseFrontmatter(text).data || {};
+    const rows = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
+    const idx = rows.findIndex((r) => r && typeof r === "object"
+                                   && String(r.name ?? "").trim() === vname);
+    if (idx < 0)
+      return refuse("VERSION_ACT_NO_SUCH_VERSION",
+        `this question holds no reading named '${vname.slice(0, 60)}'. Readings are named so a member `
+        + `can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.`,
+        { target, version: vname,
+          known: rows.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
+    const row = rows[idx];
+    const from = typeof row.state === "string" ? row.state.trim() : "";
+
+    /* BEAT 3's GUARD — the authored reason, through the ONE predicate the
+       catalog also calls. Checked before the edge so a member who supplies
+       neither is told about the reason they can fix rather than only about the
+       move. */
+    const why = String(a.reason ?? "").trim();
+    if (versionNeedsReason(to) && !why)
+      return refuse("VERSION_NO_REASON",
+        `op=version${act} records WHY. ${to === "rejected"
+          ? "The record of what was turned down is the anti-omission instrument (§6 rule 4) and it is "
+            + "worthless without the reason"
+          : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement "
+            + "from an oversight"}.`,
+        { target, version: vname, from, to });
+    if (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
+      return refuse("VERSION_NO_REASON",
+        `a reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a `
+        + `backslash, or a newline: the restricted frontmatter grammar has no escapes.`,
+        { target, version: vname });
+
+    /* THE EDGE, from the catalog's own table and with no state list here. Only
+       the four acts that MOVE a state consult it — `current` and `hide` change
+       nothing in the machine and asking it would be inventing an edge. */
+    if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
+      return refuse("VERSION_ILLEGAL_TRANSITION",
+        `'${vname}' is ${from || "in no recorded state"} and op=version${act} would make it ${to}. `
+        + `The states are not a one-way ladder and being considered or turned down is reversible, but `
+        + `a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by `
+        + `putting it back under consideration, never by returning it to something nobody acted on.`,
+        { target, version: vname, from, to, legal: VERSION_MACHINE.edges[from] || [] });
+
+    /* THE TRANSITIVE BASIS CYCLE, AT THE ACCEPT PATH — the check PL-1 recorded
+       rather than half-built, wired to `#basisCyclePath`, the EXISTING walk that
+       `promote` runs over `basis[]`. There is deliberately no second walk: a
+       second one would answer the same question and drift from the first.
+       WHY IT FIRES HERE AND NOWHERE ELSE. A version leg naming THIS inquiry is a
+       fact about one document and the catalog refuses it at the write (C-25.14).
+       A leg naming an inquiry that TRANSITIVELY rests on this one is a fact about
+       the stored graph and is harmless while the version is a proposal — this is
+       the moment a member makes it what the answer rests on, so this is the
+       moment it becomes a circle. */
+    let cycle = null;
+    if (to === "accepted") {
+      const legRows = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
+      const inqTargets = [...new Set(legRows
+        .filter((l) => l && typeof l === "object" && String(l.version ?? "").trim() === vname
+                    && typeof l.target === "string"
+                    && normalizeType(OBJECT_TYPES[l.target.split("-")[0]]) === "inquiry")
+        .map((l) => l.target))];
+      cycle = inqTargets.length ? this.#basisCyclePath(target, inqTargets) : null;
+      if (cycle)
+        return refuse("VERSION_BASIS_CYCLE",
+          `accepting '${vname}' would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a `
+          + `DAG, and the chain above already rests on ${target}.`,
+          { target, version: vname, path: cycle });
+    }
+
+    /* MAKE-CURRENT's own pre-write checks. §7: current is a property of the
+       PROJECT's relationship to the inquiry, so the project is NAMED — an
+       inquiry can sit beneath several projects and one team's decision must
+       never silently move another team's stance. */
+    let projectId = null, projectRow = null;
+    if (act === "current") {
+      if (from !== "accepted")
+        return refuse("VERSION_NOT_ACCEPTED",
+          `'${vname}' is ${from || "in no recorded state"}. Current implies accepted (§6 rule 5), and `
+          + `exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it `
+          + `what everyone stands on — once a stance is shared, designating one temporarily would move `
+          + `a whole team's ground so one member could examine a possibility.`,
+          { target, version: vname, from });
+      projectId = String(a.project ?? "").trim();
+      if (!projectId)
+        return refuse("VERSION_CURRENT_NO_PROJECT",
+          "pass project=<PROJ-…>: what a project stands on is the project's own dated declaration, "
+          + "and there is no default project.", { target, version: vname });
+      const pgate = viewerPredicate(a.viewer ?? null);
+      projectRow = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
+         WHERE b.bundle_id=? AND (${pgate.sql})`, projectId, ...pgate.args);
+      if (!projectRow || normalizeType(projectRow.object_type) !== "project")
+        return refuse("VERSION_CURRENT_UNRELATED",
+          `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
+          { target, version: vname, project: projectId });
+      const pmd = this.#one(
+        `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, projectId);
+      const pfm = pmd && pmd.content !== null ? (parseFrontmatter(pmd.content).data || {}) : {};
+      const refs = Array.isArray(pfm.references) ? pfm.references : [];
+      const draws = refs.some((r) => r && typeof r === "object" && r.rel === "cites"
+                                  && r.status !== "severed" && String(r.target ?? "").trim() === target);
+      if (!draws)
+        return refuse("VERSION_CURRENT_UNRELATED",
+          `${projectId} does not draw on ${target}, so it has no stance on this question to move. `
+          + `Cite the question into the project first.`,
+          { target, version: vname, project: projectId });
+    }
+
+    const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const hidden = act === "hide"
+      ? !(a.hidden === false || a.hidden === "false" || a.hidden === "0")
+      : (row.hidden === true);
+
+    /* BEAT 2 — SEE WHAT WILL BE REFUSED BEFORE IT RUNS. Everything above has
+       run; nothing below has. A preview that stopped short of any guard would be
+       a pre-flight that could disagree with the act, which is the whole failure
+       DEC-8 names, so the ONLY difference between a preview and an act is that
+       the write does not happen. */
+    const receipt = {
+      ok: true, act, target, version: vname, from,
+      to: to ?? from, moves_state: to !== null,
+      hidden, reason: why || null, author: who, at: when, weight: "single",
+      ...(act === "current" ? { project: projectId } : {}),
+    };
+    if (preview) return { ...receipt, preview: true, would: act, wrote: false };
+
+    text = Store.#setVersionField(text, vname, "state", to === null ? from : to);
+    if (to !== null) {
+      /* The three attribution fields move TOGETHER with the state, always: a
+         state with no act behind it is the shape D-214 refuses. A move into a
+         state that needs no reason clears the previous one rather than carrying
+         it forward, because a reason authored about a different decision is a
+         false attribution. */
+      text = Store.#setVersionField(text, vname, "state_by", who);
+      text = Store.#setVersionField(text, vname, "state_at", when);
+      text = Store.#setVersionField(text, vname, "state_reason", why);
+    }
+    if (act === "hide") text = Store.#setVersionField(text, vname, "hidden", hidden);
+    if (text === null)
+      return refuse("VERSION_ACT_UNWRITABLE",
+        "this question's version block could not be rewritten in place, so nothing was changed.",
+        { target, version: vname });
+
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    /* C-13.2: last_updated moving requires a Session Log entry, and this is also
+       BEAT 4 landing IN THE RECORD rather than only in the response. */
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Version ${act} | ${who}\n`
+      + `Trigger: op=version${act} on ${target}\n`
+      + `Changes: reading '${vname}' ${to === null
+          ? (act === "hide" ? `${hidden ? "hidden from" : "returned to"} the display`
+                            : `is what ${projectId} stands on`)
+          : `${from} to ${to}`}.\n`
+      + (why ? `Reason: ${why}\n` : ""));
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
+              created: fm.created, last_updated: when,
+              criticality: fm.criticality ?? null },
+    });
+    if (!promoted.ok) return { ...promoted, act, target, version: vname };
+
+    /* MAKE-CURRENT's second write, and it lands on the PROJECT because that is
+       whose stance it is. A second promotion rather than a field on the inquiry:
+       §7 is explicit that the pointer is project-authored and dated, and putting
+       it on the shared question would be the one thing the section forbids. */
+    if (act === "current") {
+      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when);
+      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+    }
+    return receipt;
+  }
+
+  /* The make-current pointer's ONE writer, paired with `#currentVersionOf`, its
+     ONE reader. §7's field: project-authored, DATED, never a settings row. */
+  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when) {
+    const pid = projectRow.bundle_id;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null) {
+      const row = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
+      return { ok: false, reason: "VERSION_ACT_UNWRITABLE", check: row.check,
+               code: "VERSION_ACT_UNWRITABLE", translation: row.translation,
+               detail: `${pid} has no readable file, so its stance cannot be recorded` };
+    }
+    const pfm = parseFrontmatter(md.content).data || {};
+    let text = Store.#setCurrentVersionRow(md.content, inquiryId, vname, who, when);
+    if (text === null) {
+      const row = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
+      return { ok: false, reason: "VERSION_ACT_UNWRITABLE", check: row.check,
+               code: "VERSION_ACT_UNWRITABLE", translation: row.translation,
+               detail: `${pid}'s current_versions block could not be rewritten in place` };
+    }
+    text = Store.#setScalar(text, "last_updated", `"${when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${when} | Stands on | ${who}\n`
+      + `Trigger: op=versioncurrent on ${inquiryId}\n`
+      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\n`);
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, pid))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    return this.promote({
+      bundleId: pid, base: projectRow.bundle_sha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: pfm.object_type ?? "project", group: pfm.group || "believe-in-oakland",
+              title: pfm.title, current_state: pfm.current_state ?? "forming",
+              prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: when,
+              criticality: pfm.criticality ?? null },
+    });
   }
 
   /** File the links a captured document made. Replaces this capture's rows
@@ -17951,7 +18514,24 @@ export class Store extends DurableObject {
           limit: url.searchParams.get("limit"),
           offset: url.searchParams.get("offset"),
           viewer: url.searchParams.get("viewer"),
+          /* PL-2 / IS-2: name a project and the answer says what THAT project
+             stands on. Absent, no `current` field at all — §7's rule that one
+             team's stance is never everybody's, expressed as the absence of a
+             default rather than as a note about one. */
+          project: url.searchParams.get("project"),
         }),
+        /* PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS. `author` and
+           `viewer` are stamped by the control plane and never taken from the
+           caller: a machine credential arrives honestly named `token:<class>`,
+           which is precisely what lets `#moveVersionState` refuse it BY SHAPE
+           through REC-46's one predicate. `preview` is BEAT 2 — every guard runs
+           and nothing is written. */
+        versionaccept:   () => this.versionAccept(Store.#versionArgs(url, body)),
+        versionreject:   () => this.versionReject(Store.#versionArgs(url, body)),
+        versionconsider: () => this.versionConsider(Store.#versionArgs(url, body)),
+        versionrevert:   () => this.versionRevert(Store.#versionArgs(url, body)),
+        versioncurrent:  () => this.versionCurrent(Store.#versionArgs(url, body)),
+        versionhide:     () => this.versionHide(Store.#versionArgs(url, body)),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are

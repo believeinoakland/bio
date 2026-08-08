@@ -88,6 +88,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, parseFrontmatter, BASIS_VERSION_CHECKS,
+         /* CORRECTED 2026-08-08 (PL-2 / IS-2): the catalog now holds a SECOND
+            C-25 family — the six member ops' refusals — and block 13's
+            "no C-25 number outside its own row" pin counts literals across the
+            whole file, so it must know about both families or it fails on a
+            correct addition. Imported rather than the count loosened. */
+         VERSION_ACT_CHECKS,
          VERSION_STATES, VERSION_RELATIONSHIPS } from "../checks/bio-checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
@@ -209,7 +215,14 @@ const versionLines = (versions) => {
     ...scalar("at", v.at === undefined ? NOW : v.at),
     ...scalar("regroup_by", v.regroup_by),
     ...scalar("regroup_at", v.regroup_at),
-    ...scalar("regroup_note", v.regroup_note)].join("\n"));
+    ...scalar("regroup_note", v.regroup_note),
+    /* ADDED 2026-08-08 (PL-2 / IS-2): who moved this reading, when and why. §6
+       rule 4 requires an authored reason on the two states a member enters WITH
+       one, so a fixture that names such a state and nothing else is no longer a
+       well-formed document. */
+    ...scalar("state_by", v.state_by),
+    ...scalar("state_at", v.state_at),
+    ...scalar("state_reason", v.state_reason)].join("\n"));
   const grounds = versions.flatMap((v) => (v.grounds ?? []).map((g) =>
     ["  - version: \"" + v.name + "\"", ...scalar("ground", g.ground),
      ...scalar("asserted_by", g.asserted_by === undefined ? "ruth" : g.asserted_by),
@@ -786,7 +799,13 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
   const stripped = CHECKS_SRC.replace(/\/\*[\s\S]*?\*\//g, " ");
   t("and no C-25 number is written anywhere in the catalog except in its own row — a second literal is a "
   + "second place for the number to drift",
-    (stripped.match(/C-25\.\d+/g) || []).length, keys.length);
+    /* CORRECTED 2026-08-08 (PL-2 / IS-2), and CORRECTED rather than loosened:
+       the C-25 range is now shared by TWO registries — this one, and the six
+       member ops' VERSION_ACT_CHECKS — so the literal count is the sum of both.
+       A `>=` here would have made the pin stop detecting a stray second literal,
+       which is the only thing it exists to detect. */
+    (stripped.match(/C-25\.\d+/g) || []).length,
+    keys.length + Object.keys(VERSION_ACT_CHECKS).length);
   t("DEC-32's elicitation clause 1 / D-226: no translation uses the analyst's vocabulary — a member-facing "
   + "sentence never says ground, partition, disjunction, AND or OR",
     keys.filter((k) => /\b(ground|partition|disjunct|conjunct|AND-related|OR-related)\b/
@@ -845,6 +864,12 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
       { ...V1, description: "The first reading, reworded in place, which is the thing that is refused." }, V2,
     ] }), "inquiry", cur));
   }
+  /* ADDED 2026-08-08 (PL-2 / IS-2): the registry's newest row, DRIVEN like every
+     other one. A version arriving already in a state §6 rule 4 requires a reason
+     for, with nobody's name against it and nothing recorded, is refused at the
+     write — the shape no op ever produces and therefore the shape only this
+     layer can refuse. */
+  collect(await bad("INQ-2026-1001-unattributed", [{ ...V1, state: "rejected" }]));
   collect(await GET(`op=basisversions&token=${RUTH}`));
   collect(await GET(`op=basisversions&token=${RUTH}&id=${PROJ}`));
 
@@ -865,6 +890,14 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
     Object.fromEntries([...wire].sort()),
     { BASIS_VERSIONS_NOT_AN_INQUIRY: "C-25.18", BASIS_VERSIONS_NO_INQUIRY: "C-25.17",
       VERSION_DERIVATION_CYCLE: "C-25.8", VERSION_DERIVED_FROM_UNKNOWN: "C-25.7",
+      /* CORRECTED 2026-08-08 (PL-2 / IS-2), and THE PIN CAUGHT THE NEW CODE ON
+         ITS OWN before the worker touched this file — which is the instrument
+         doing exactly what PL-1 built it for. `VERSION_DISPOSITION_UNATTRIBUTED`
+         is the catalog half of §6 rule 4's reason rule: a version arriving
+         already in a state a member enters WITH a recorded reason, carrying
+         none, or carrying one with a machine's name against it. The number is
+         added rather than the pin loosened. */
+      VERSION_DISPOSITION_UNATTRIBUTED: "C-25.19",
       VERSION_FROZEN: "C-25.11", VERSION_GROUND_UNASSERTED: "C-25.6",
       VERSION_HIDDEN_NOT_BOOLEAN: "C-25.13", VERSION_LEG_NOT_CITABLE: "C-25.10",
       VERSION_LEG_SELF: "C-25.14", VERSION_LEG_UNRESOLVED: "C-25.16",
@@ -930,6 +963,15 @@ console.log("\n--- 15. over-strictness: a correct version written unlike any fix
     description: "Three routes, any one of which answers it, composed after the audit landed.",
     relationship: "or", state: "considering", hidden: false,
     author: "dave", at: "2026-07-03T11:22:33Z", run: null,
+    /* CORRECTED 2026-08-08 (PL-2 / IS-2), and the correction MAKES this arm
+       stronger rather than accommodating a new rule: `considering` is one of the
+       two states a member enters WITH a recorded reason (§6 rule 4), so a
+       reading sitting in it with nobody's name against it is no longer a
+       well-formed document. The over-strictness arm now carries a real,
+       attributed disposition phrased unlike anything PL-2 wrote — which is
+       exactly what an over-strictness arm is for. */
+    state_by: "dave", state_at: "2026-07-03T11:22:33Z",
+    state_reason: "holding this one until the third route's papers are captured",
     claim: "At least one quarter's transfers were made without the required authorisation.",
     grounds: [{ ground: "route-1_papers", asserted_by: "dave", at: "2026-07-03T11:22:33Z",
                 statement: "The papers alone answer it." },
