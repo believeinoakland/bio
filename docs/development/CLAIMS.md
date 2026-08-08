@@ -3101,3 +3101,49 @@ PL-4 already delegated that the D-113 check derives its covered set from `DELETE
 - **The alternative:** an `inquiry_leads` table keyed (observation, document, inquiry), which would carry many leads per document, allow a lead over a document nobody just fetched, and carry its own authorship. It is a derived table, so it would owe both purge arms and a `TABLES` row.
 - **Recommendation: keep the column.** It is the smallest thing that closes D-213, it inherits PL-4's attribution and conduct whole, and the shapes it cannot express are ones nothing can produce yet — the investigative session's only door to a document is the capture request. Building the table now would be structure bought before the producer that needs it exists, which is the mistake `PARALLELISM.md` warns about in its own last section.
 - **What reversing it costs: LOW NOW, RISING.** Today it is one migration adding the table, one producer rewritten to read it instead, and the column left inert or dropped — nothing member-facing changes, because the notification's shape is derived and its `id` is keyed on the request either way. It gets expensive once leads have been dispositioned: `proposal_dispositions` keys on the item's identity, so moving the identity would strand every recorded adopt/defer/dismiss. **The decision point is therefore before the first surface ships (UI-45), not before the first lead is captured.**
+
+## CLAIM 2026-08-08 RECORD (REC-75)
+session: worker-rec-75
+opened: 2026-08-08T17:25:28Z
+paths: the `suggestVersion` / `#suggestionFrontmatter` span in bio-plane/src/store.mjs, bio-plane/test/suggest.test.mjs, bio-plane/test/suggest.control.mjs, docs/development/DEBT.md (D-234 disposition), docs/development/CLAIMS.md, docs/development/QUEUE.md (REC-75 landed line)
+interfaces consumed: I3
+interfaces owned: none
+expected: REC-75 / D-234 — the substance gate defeated by a quotation mark. `suggestVersion` composes its CHECK 3 candidate from RAW args while the bytes it compares against went through `#fmSafe`, so a duplicate carrying a quote, a backslash, a newline or trailing space is never refused. Fix: ONE normaliser feeding both the candidate composition and the write, plus the settled question of what `composition` publishes. Class sweep over caller-derived-vs-stored comparisons.
+released: 2026-08-08 — committed on `worktree-agent-a5f4a7acbcecf3057`, NOT pushed and NOT merged; CONDUCT integrates. Battery 121/122 green + 1 named skip, 7,473 assertions (true baseline re-run 7,456; delta +17 entirely in `suggest.test.mjs`). coverage --strict exit 0 unpiped; `civicos-ui/test/run.mjs` exit 0 unpiped. DEC-49 `regionLines` floor moved 953 -> 996 from the printed figure. 17 control arms run, 0 behaved other than declared.
+
+
+### DELEGATION 2026-08-08 RECORD (REC-75) -> CONDUCT: **`op=suggest` GAINED ONE FIELD AND CHANGED WHAT AN EXISTING ONE CARRIES (I3) — THE SECOND HALF IS THE ONE TO LOOK AT**
+
+- **ADDITIVE: `composition_of: "record"`.** Every existing reader keeps the shape it reads. This session judged an added optional field on an existing answer to be inside I3's stable contract rather than a change to it — PL-15's precedent, flagged here so CONDUCT can disagree cheaply. It exists so a consumer can tell WHICH BYTES it is holding without reading a comment.
+- **NOT ADDITIVE, AND STATED PLAINLY: `composition` NOW CARRIES DIFFERENT BYTES for a submission whose description, ground statement or leg note contained `"`, `\`, a newline or padding.** It used to echo the candidate built from raw args; it now publishes what the record holds. **THIS IS NOT A NEW DIVERGENCE — IT IS AN EXISTING ONE CLOSED.** Before REC-75 that published value could already differ from the record's (M0-13's rider), and nothing said so. No consumer in `civicos-ui/` reads `composition` off this answer (the surface reads it from `op=basisversions`, which is the same string), so the blast radius measured is zero — but a consumer outside this repo comparing the published composition to its own submission will now see the record's spelling, which is the point.
+- **NO IC IS FILED** for either. Say so if you disagree; the reversal is one line each.
+
+### DELEGATION 2026-08-08 RECORD (REC-75) -> M0-14 (D-233, the register's arms tally): **A FIFTH CONFIRMATION, MEASURED ON A TREE THAT ADDED FIVE ARMS**
+
+REC-75 added **5 negative-control arms** to `suggest.test.mjs`'s numbered declaration block and ran `node scripts/coverage.mjs --strict` before and after. **The register printed `395 arms stated` BOTH TIMES.** That is D-233 exactly — the tally is blind to the numbered form, `suggest.test.mjs` scores ZERO, and the direction is the generous one. **What this adds to the row: the blindness is not merely historical, it swallowed arms that landed today**, so the figure under-reports a growing estate in real time rather than only failing to notice a shrinking one.
+
+**AND `VERIFICATION.md`'s control-register row is stale by hand again, MEASURED rather than inferred:** it reads *"117 of 117 · 380 arms"*; the instrument on this tree prints **`120 of 120 suites declare one (100.0%) · 395 arms stated · fullest 21 (hygiene.test.mjs)`**. REC-75 did NOT edit that row — it is M0-14's own subject and two items moving it in parallel is how it went wrong before — but the figure is recorded here so M0-14 does not have to re-derive it. That is the **fifth** consecutive item to find this row stale by measuring it.
+
+### DELEGATION 2026-08-08 RECORD (REC-75) -> WHOEVER NEXT OWNS `suggestVersion` / THE PL-3 FAMILY (and REC-74, which is the same question): **THE ANSWER NOW HAS TWO SOURCES AND LABELS ONE**
+
+Raised as **D-235** and repeated here because a debt row is not a channel a builder reads.
+
+- `composition` is read back from `inquiry_basis_versions` and says so. **`legs`, `count`, `grounds`, `ground_count` and `pair` on the SAME answer are still candidate-derived**, computed before the write. They agree today only because the candidate is now composed from the persisted values, and **nothing pins that agreement.**
+- **This is REC-74's shape arriving inside ONE answer** rather than across two ops: one row, two readers, and only one of them says which facts it is reporting. If REC-74 lands first it should take this with it.
+- **The cheap fix is an ARM, not a rewrite:** assert that a candidate-derived collection equals what the record holds for the same version, so a future field composed from raw args on one side fails visibly.
+
+### DELEGATION 2026-08-08 RECORD (REC-75) -> WHOEVER OWNS THE NEGATIVE-CONTROL HARNESSES: **A RELATIVE COUNT CAN DISARM ANOTHER ITEM'S CONTROL, AND IT DID**
+
+Recorded because it cost this item a re-run and would have cost the next one silently.
+
+- `suggest.test.mjs`'s F10 block asserted `(await read()).total === 6` — the fixture's ABSOLUTE version count. REC-75's fixture legitimately added two readings, so the literal had to move. **Replacing it with a delta captured just before the three resubmissions is better engineering and QUIETLY DISARMED `suggest.control.mjs`'s (D-231a) arm**: that arm re-arms the clock, a duplicate two blocks EARLIER lands, and the absolute count going 6 -> 7 is the second half of the exact 59/2 signature CONDUCT measured in the wild. A relative count taken after the landing is blind to it.
+- **The harness caught it** — it printed `** WRONG: expected an assertion naming "STRUCTURALLY NOTHING MOVED" to FAIL and none did` — which is the harness working, and is why every arm must declare what must NOT fail as well as what must.
+- **The rule this yields:** a count another item's control depends on is LOAD-BEARING and must be RE-MEASURED, never made relative. The literal is now 8 with that reason at the assertion.
+
+### DECISION FOR BOB 2026-08-08 (REC-75) — **WHEN A RUN PROPOSES A READING, THE ANSWER SHOWS IT THE RECORD'S WORDS, NOT ITS OWN**
+
+- **What runs provisionally:** the record refuses characters it cannot carry — a member who types a double quote gets a single one, a backslash becomes a quote, a line break becomes a space, padding is dropped. When a run proposes a reading, the plane's answer now hands back **the reading as the record actually holds it**, and labels it as the record's. Until today the answer handed back the run's own words, and the record quietly held something else.
+- **Why it was genuinely ambiguous:** an answer that echoes what you sent is easier to reconcile against what you meant to send; an answer that shows what was kept is the only one that tells you what a later reader will see. Both are defensible, and the record has been doing the first while claiming nothing.
+- **The alternative:** keep echoing the submission, and publish the record's version as a second, separate field. Nobody's submission ever appears to be silently altered, at the cost of two spellings of one reading travelling together and every consumer choosing between them.
+- **Recommendation: keep the record's words.** The whole product is trustworthiness of the record, and an answer that shows a run its own sentence while the record holds a different one is the record claiming more than it can support — the defect `CLAUDE.md` ranks above a missing feature. It is also what closes the real hole underneath this item: two readings identical in the record but punctuated differently were both being accepted as different readings, which made "these two versions differ" false for anybody reading the case afterwards.
+- **What reversing it costs: LOW, AND IT DOES NOT RISE.** One line in the plane and one field dropped from the answer. Nothing is stored differently — the record already held these bytes and always did; only what the answer SHOWS changed. No data accumulates under the choice, so the cost tomorrow is the cost today. The one thing that would make it expensive is a consumer outside this repository written to compare the answer against its own submission, and none exists here.

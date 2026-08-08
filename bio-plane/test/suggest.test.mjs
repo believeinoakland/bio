@@ -10,7 +10,12 @@
    (8) OVER-STRICTNESS, and these must PASS rather than fail: a description in Spanish lands; a description that QUOTES a placeholder while saying something real lands; a version name carrying a full stop lands; and a reading whose two parts rest on documents with no shared origin lands. A fence that refuses correct work is a defect in the fence.
    (D-231a) THE CLOCK, RE-ARMED — the arm that turns this item's hypothesis into a diagnosis. In src/store.mjs suggestVersion, put the assertion stamp back into the substance comparison: drop the `.map(...)` that blanks field 3 of the `ground` rows, leaving `substanceOf` filtering `name` and `derived_from` only. THE BOUNDARY ARM IN BLOCK 2 MUST FAIL and the two CHECK 3 arms above it MUST STAY GREEN — that split IS the defect's shape, the gate working inside one second and not outside it. Arm (3) is the paired control: it disarms the check outright, so the two together say the boundary arm is deterministic AND still load-bearing.
    (D-231b) OVER-BLANKING, and it must fail the OTHER way. Widen the exclusion by one field (`i === 3` becomes `i >= 3`) so the ground's STATEMENT is swallowed with the stamp. THE OVER-STRICTNESS ARM IN BLOCK 6 MUST FAIL — a reading differing only in what it says its evidence shows would be refused as a duplicate — while the boundary arm STAYS GREEN. A fix that is one field too wide refuses correct work, and this is the arm that would say so.
-   NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the two D-231 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
+   (D-234a) THE `#fmSafe` HALF REVERTED — REC-75's arm, and the one that proves the normalisation is what refuses. In src/store.mjs `#suggestionPersisted` replace `const fs = (s) => Store.#fmSafe(s);` with the identity `const fs = (s) => String(s ?? "");`, which is exactly "compose the candidate from raw args" and is the plane as it stood before REC-75. THE FIVE D-234 DUPLICATE ARMS IN BLOCK 2 MUST ALL FAIL — every punctuated duplicate lands again — while THE D-231 BOUNDARY ARM AND THE OVER-STRICTNESS ARMS STAY GREEN, which is what says the clock half and the punctuation half are two independent defects rather than one measured twice.
+   (D-234b) OVER-NORMALISED, and it must fail the OTHER way. Push the same `fs` PAST what the document does — `Store.#fmSafe(s).replace(/\s+/g, " ").replace(/[;,'“”]/g, "")` — so both sides are collapsed further than the record collapses them. THE REC-75 OVER-STRICTNESS ARMS IN BLOCK 6 MUST FAIL (two readings differing only in the punctuation of a QUOTED SOURCE are not one reading) AND THE PUBLICATION ARM WITH THEM, while every duplicate arm stays green. Collapsing correct work is the opposite defect and the worse one.
+   (D-234c) THE PUBLICATION REVERTED, COMPOUND ON PURPOSE: `fs` to the identity AND `composition: storedComposition` back to `composition: candidate ? candidate.composition : null`. Reverting the publication alone changes nothing observable, because after REC-75 the two are equal — so an arm that edited only it would be green while proving nothing. THE PUBLICATION ARM AND THE CROSS-OP AGREEMENT ARM MUST FAIL, which is the pre-REC-75 state: a caller handed bytes the record does not hold, with nothing on the answer to say so.
+   (D-234d) THE NAME COMPARISON REVERTED: compare `name` instead of `nameWritten` at the SUGGEST_NAME_TAKEN check. THE FOLDED-NAME ARM MUST FAIL — a reading named `the ledger<newline>account` walks past this endpoint and is refused by `promote` as VERSION_NAME_NOT_UNIQUE instead, in another family's words over a document this endpoint had already composed.
+   (D-234e) THE STRUCTURAL RATCHET. Replace `q(pv.description)` in the write with `q(args.description)`. ONLY the block 7 structural arm may fail; EVERY behavioural arm must stay GREEN — and that is the arm's justification rather than a weakness in it. `q()` applies `#fmSafe` and `#fmSafe` is IDEMPOTENT, so the two spellings emit identical bytes and no driven arm can tell them apart. The defect D-234 named was never in the write but in the CANDIDATE, so the write's source is unobservable from outside and only a structural pin can hold it.
+   NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the D-231 and D-234 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
  * =========================================================================
  *
  * WHY THIS SUITE WAS INTERMITTENTLY RED, NAMED HERE RATHER THAN IN A COMMIT
@@ -53,13 +58,31 @@
  * is entirely inside one process. Concurrency was never more than the load that
  * made the suite slow enough to cross a second.
  *
- * WHAT IS STILL BROKEN HERE AND IS DELIBERATELY NOT FIXED BY THAT ITEM: the same
- * comparison builds its candidate from RAW args while the bytes it is compared
- * against went through `#fmSafe`, which rewrites `"` and `\` and folds
- * whitespace. A duplicate whose description carries a quote is therefore STILL
- * not refused, with no clock involved and no flakiness — measured the same way,
- * raised as its own debt row rather than folded in here, because fixing it
- * changes what the endpoint PUBLISHES and that is not a test-lane change.
+ * AND THE SAME GATE WAS DEFEATED A SECOND TIME, BY A QUOTATION MARK — D-234,
+ * fixed 2026-08-08 by REC-75 and recorded here beside D-231 because the two are
+ * one gate failing for two independent reasons and a reader who knows only one
+ * of them will draw the wrong conclusion from the other.
+ *
+ * `#fmSafe` rewrites `"` and `\` to `'`, folds newlines to spaces and TRIMS
+ * every authored field on its way into the document, and several fields are
+ * written only when non-blank. CHECK 3's candidate was composed from RAW ARGS.
+ * **So the composition derived from what was WRITTEN could never equal the
+ * composition derived from what was SUBMITTED whenever a description, a ground
+ * statement or a leg note carried any of those.** A member who typed a
+ * quotation mark did not get the duplicate check — deterministically, always,
+ * and with nothing going red to say so, which is why it is worse than D-231's
+ * flake: there was no intermittency to make anybody look.
+ *
+ * THE FIX IS ONE NORMALISER AND NOT A LIST OF TRANSFORMS. `#suggestionPersisted`
+ * says once what a submitted value becomes in the document, and BOTH the write
+ * and the candidate read it. A candidate taught the write's transforms would
+ * have agreed with it only until somebody changed one of them.
+ *
+ * AND WHAT `composition` PUBLISHES IS NOW DECIDED AND SAID: THE RECORD'S BYTES,
+ * read back from the projection, with `composition_of: "record"` on the answer.
+ * That divergence ALREADY EXISTED — before REC-75 the endpoint published the
+ * candidate's bytes, so every submission carrying a quote handed the caller
+ * something the record does not hold. It is closed rather than introduced.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-3 / IS-4 — THE SUGGEST ENDPOINT.
  *
@@ -467,6 +490,206 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     [true, true, false, "SUGGEST_NOT_DIFFERENT", "C-27.10", "the ledger account"]);
 }
 
+/* ------------------------------------------------------------------ D-234
+   CHECK 3's SECOND, INDEPENDENT DEFEAT — AND THERE IS NO CLOCK IN IT.
+   `#fmSafe` rewrites `"` and `\` to `'`, folds newlines to spaces and TRIMS
+   every authored field on its way into the document. Until REC-75 the candidate
+   this check compares was composed from RAW ARGS, so the composition derived
+   from what was WRITTEN could never equal the composition derived from what was
+   SUBMITTED whenever any of those characters appeared. A member who typed a
+   quotation mark did not get the duplicate check — always, and with nothing
+   going red to say so, which is what makes this worse than D-231's flake.
+   EVERY ARM BELOW SUBMITS ITS DUPLICATE MILLISECONDS AFTER THE BASE, so the
+   clock cannot be what refuses them; the D-231 boundary arm above is what proves
+   the clock half independently, and `suggest.control.mjs` arms each half with
+   the other held open. */
+{
+  /* THE BASE CARRIES THE DOUBLE QUOTES, and it is that way round on purpose:
+     the record can only hold `'`, so this reading is the one whose PUBLISHED
+     bytes differ from the bytes that were sent. That difference is the subject
+     of the publication arms below as well as the input to the duplicate arms. */
+  const QUOTED = (over = {}) => ({
+    kind: "basis-version", relationship: "and",
+    description: `The contract names the counterparty as "to be named", and the unfilled blank is what this reading rests on.`,
+    grounds: [{ ground: "the audit",
+                statement: `The form's own words are "to be named".` }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit",
+             note: `The blank sits on page 4 of the "award form".` }],
+    ...over,
+  });
+  const base = drive(await suggest(QUOTED({ name: "the unfilled counterparty" })));
+  t("D-234 FIXTURE: a reading whose description, ground statement and leg note all carry DOUBLE QUOTES "
+  + "lands — the restricted frontmatter grammar has no escapes, so the plane sanitises rather than "
+  + "refuses, and that sanitising is the whole mechanism this block is about",
+    [base.ok, base.state], [true, "suggested"]);
+
+  /* -------- WHAT `composition` PUBLISHES, REC-75's decision, ASSERTED ------
+     It publishes THE RECORD'S BYTES and says so in `composition_of`. Before
+     REC-75 it published the CANDIDATE's, built from raw args — so this very
+     submission handed the caller bytes the record does not hold and nothing
+     said so. The arm is written as an INEQUALITY as well as an equality: the
+     published value must NOT be what was sent. */
+  t("REC-75 — `composition` PUBLISHES THE RECORD'S BYTES, NOT THE CALLER'S, and the answer SAYS WHICH: "
+  + "the submission carried `\"to be named\"` and the published composition carries `'to be named'`, "
+  + "because that is what the document holds. M0-13's rider settled — the divergence existed already "
+  + "and was invisible; publishing the record's side closes it by construction",
+    [base.composition_of,
+     typeof base.composition === "string" && base.composition.includes(`'to be named'`),
+     typeof base.composition === "string" && base.composition.includes(`"to be named"`)],
+    ["record", true, false]);
+  {
+    const answer = await read();
+    const stored = (answer.versions ?? []).find((v) => v.name === "the unfilled counterparty");
+    t("AND IT IS THE SAME STRING `op=basisversions` PUBLISHES FOR THAT VERSION — two readers of one row "
+    + "agreeing about it, driven across two ops rather than asserted at the helper. A consumer can "
+    + "compare them and get one answer, which is the property that makes `composition_of` checkable",
+      [typeof stored?.composition === "string", stored?.composition === base.composition],
+      [true, true]);
+  }
+
+  /* -------- THE LOSSY TRANSFORMS, ONE ARM EACH, ALL DRIVEN ---------------- */
+  const dupOf = async (label, over) =>
+    drive(await suggest(QUOTED({ name: label, ...over })));
+
+  /* THE ARM THE ITEM EXISTS FOR, AND THE DIRECTION MATTERS — MEASURED, because
+     the first spelling of this arm had NO TEETH. This duplicate is the base
+     VERBATIM under a new name: same double quotes, same everything. Before
+     REC-75 the candidate carried `"` while the held reading carried the `'` the
+     write had already made of it, so the two could never match and this LANDED.
+     A member typing a quotation mark did not get the duplicate check at all. */
+  const q1 = await dupOf("the same quoted reading under a new name", {});
+  t("D-234 (1) THE QUOTATION MARK: a VERBATIM duplicate of a reading whose fields carry `\"` is REFUSED "
+  + "by C-number — before REC-75 it landed, because the gate compared what was WRITTEN against what was "
+  + "SUBMITTED and `#fmSafe` sits between them. §6 rule 8 was unenforced for every member who typed a "
+  + "quotation mark, deterministically and with nothing going red",
+    [q1.ok, q1.code, q1.check, q1.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "C-27.10", "the unfilled counterparty"]);
+
+  /* THE CROSS-SPELLING ARM, AND IT IS KEPT WITH ITS FINDING ATTACHED. Written
+     first as the item's headline arm, it came back GREEN OVER THE BROKEN PLANE:
+     a caller that sends `'` sends the value the record ALREADY holds, so the raw
+     candidate and the stored bytes coincided by accident and the duplicate was
+     refused even before REC-75. It is a true statement about the plane and a
+     USELESS control, so it is labelled as such rather than left looking like
+     evidence — a surprising green is a finding about the arm. */
+  const q1b = await dupOf("the same reading in single quotes", {
+    description: `The contract names the counterparty as 'to be named', and the unfilled blank is what this reading rests on.`,
+    grounds: [{ ground: "the audit", statement: `The form's own words are 'to be named'.` }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit",
+             note: `The blank sits on page 4 of the 'award form'.` }] });
+  t("AND THE SAME READING SPELLED WITH `'` IS REFUSED TOO — the record cannot tell the two spellings "
+  + "apart, so they are one reading. NOTE: this arm was ALREADY green before REC-75, because a caller "
+  + "sending `'` sends what the record already holds; it proves the rule, not the fix, and is labelled "
+  + "so nobody reads it as the fix's evidence",
+    [q1b.ok, q1b.code, q1b.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "the unfilled counterparty"]);
+
+  const q2 = await dupOf("the same reading with a backslash", {
+    grounds: [{ ground: "the audit", statement: `The form's own words are \\to be named\\.` }] });
+  t("D-234 (2) THE BACKSLASH: `#fmSafe` maps `\\` to `'` exactly as it maps `\"`, so a ground statement "
+  + "differing only in that character is the same statement once stored, and is REFUSED",
+    [q2.ok, q2.code, q2.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "the unfilled counterparty"]);
+
+  const q3 = await dupOf("the same reading across two lines", {
+    description: `The contract names the counterparty as "to be named",\nand the unfilled blank is what this reading rests on.` });
+  t("D-234 (3) THE NEWLINE: the grammar is single-line, so `#fmSafe` folds a newline to a space and the "
+  + "two descriptions are one description in the document. REFUSED",
+    [q3.ok, q3.code, q3.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "the unfilled counterparty"]);
+
+  const q4 = await dupOf("the same reading with padding", {
+    description: `   The contract names the counterparty as "to be named", and the unfilled blank is what this reading rests on.  ` });
+  t("D-234 (4) THE TRAILING AND LEADING SPACE: `#fmSafe` trims, so padding is not part of what the "
+  + "record holds and cannot be what makes a reading new. REFUSED",
+    [q4.ok, q4.code, q4.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "the unfilled counterparty"]);
+
+  const q5 = await dupOf("the same reading with a requoted note", {
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit",
+             note: `The blank sits on page 4 of the 'award form'.` }] });
+  t("D-234 (5) AND IT IS NOT ONLY THE VERSION ROW — a LEG's note takes the same transform, so a "
+  + "duplicate differing only in the punctuation of a note is REFUSED too. The fix is one normaliser "
+  + "over every persisted field, not a patch on the description",
+    [q5.ok, q5.code, q5.same_as],
+    [false, "SUGGEST_NOT_DIFFERENT", "the unfilled counterparty"]);
+
+  /* -------- D-234's NARROWER HALF: THE STATEMENT THAT IS NOT WRITTEN ------
+     `gRows` emits `statement:` only when the value is non-blank while the
+     candidate passed `g.statement ?? null` unconditionally. A BLANK-BUT-PRESENT
+     statement therefore composed two ways. It needs its own base, because the
+     base above carries a real statement. */
+  const noStatement = drive(await suggest({ kind: "basis-version", name: "a part with nothing said about it",
+    description: "The audit bears on the transfers, and this reading declines to say more about how.",
+    relationship: "and", grounds: [{ ground: "the audit" }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit" }] }));
+  const blankDate = drive(await suggest({ kind: "basis-version",
+    name: "a part with a blank date on its leg",
+    description: "The audit bears on the transfers, and this reading declines to say more about how.",
+    relationship: "and", grounds: [{ ground: "the audit" }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit", date: "   " }] }));
+  t("D-234 (6) A FIELD THE WRITE OMITS IS NOT A FIELD: a leg carrying a whitespace-only `date` composes "
+  + "with NO date, because that is what the document will hold — so it is the same reading and is "
+  + "REFUSED. This is the half of D-234 that is about a line NOT BEING WRITTEN rather than about a "
+  + "character being rewritten, and before REC-75 the candidate carried the blank and it LANDED",
+    [noStatement.ok, blankDate.ok, blankDate.code, blankDate.same_as],
+    [true, false, "SUGGEST_NOT_DIFFERENT", "a part with nothing said about it"]);
+  /* A FINDING FROM RUNNING THE ARM RATHER THAN FROM WRITING IT, recorded rather
+     than smoothed. D-234's narrower half was first driven through a
+     whitespace-only STATEMENT, which is the field the debt row names — and that
+     input never reaches CHECK 3 at all: `isBoilerplate("   ")` is true, so
+     CHECK 5 refuses it several screens earlier. The blank-field divergence is
+     real, but the statement is not the field that exposes it; a leg's `date` is,
+     because no check upstream looks at one. An arm that had asserted
+     SUGGEST_NOT_DIFFERENT over the statement would have been asserting something
+     the plane never had a chance to do. */
+  const blankStatement = drive(await suggest({ kind: "basis-version",
+    name: "a part with a blank said about it",
+    description: "The audit bears on the transfers, and this reading declines to say more about how.",
+    relationship: "and", grounds: [{ ground: "the audit", statement: "   " }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit" }] }));
+  t("AND THE STATEMENT ROUTE IS CLOSED EARLIER, WHICH IS WHY THIS ARM ASSERTS THE OTHER CODE: a "
+  + "whitespace-only statement is filler, and CHECK 5 refuses it before the substance comparison is "
+  + "reached. Measured, not assumed — the debt row named this field and the plane answers on a "
+  + "different one",
+    [blankStatement.ok, blankStatement.code], [false, "SUGGEST_BOILERPLATE"]);
+  /* MEASURED, AND IT CORRECTS THE DEBT ROW RATHER THAN REPEATING IT. D-234 says
+     "an EMPTY-STRING statement composes two ways as well". IT DOES NOT, and the
+     arm is kept as the receipt: `#canon` maps both `null` and `""` to the empty
+     string, so an empty-string statement and an omitted one ALREADY composed
+     identically. Only a BLANK-BUT-NON-EMPTY statement diverged. The row's claim
+     was one case too wide, and an arm asserting the wider claim would have been
+     asserting something that was never true. */
+  const emptyStatement = drive(await suggest({ kind: "basis-version",
+    name: "a part with an empty string said about it",
+    description: "The audit bears on the transfers, and this reading declines to say more about how.",
+    relationship: "and", grounds: [{ ground: "the audit", statement: "" }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit" }] }));
+  t("AND THE EMPTY-STRING CASE WAS NEVER BROKEN — measured, not assumed, because D-234's own row claims "
+  + "it was. `#canon` maps null and \"\" to the same empty field, so this was already refused before "
+  + "REC-75. The arm stays as the receipt that the row was one case too wide",
+    [emptyStatement.ok, emptyStatement.code], [false, "SUGGEST_NOT_DIFFERENT"]);
+
+  /* -------- THE NAME COMPARISON, THE SAME CLASS ONE FIELD OVER ------------
+     `SUGGEST_NAME_TAKEN` compares a CALLER-DERIVED name against STORED names.
+     `VERSION_NAME_RE` excludes every character `#fmSafe` rewrites, so most of
+     the divergence is unreachable — but a NEWLINE folds to a SPACE, and spaces
+     the grammar allows. Before REC-75 this got past the endpoint and was refused
+     by `promote` in another family's words, over a document the endpoint had
+     already built. */
+  const foldedName = drive(await suggest({ kind: "basis-version",
+    name: "the ledger\naccount",
+    description: "A different reading entirely, submitted under a name that folds onto one already held.",
+    relationship: "and", grounds: [{ ground: "paper trail" }],
+    legs: [{ target: MINUTES, role: "cuts_against", ground: "paper trail" }] }));
+  t("D-234 / THE CLASS SWEEP: a name that FOLDS onto one already held — `the ledger<newline>account` "
+  + "becomes `the ledger account` in the document — is refused by THIS endpoint's own name check, by "
+  + "name, rather than by `promote` as VERSION_NAME_NOT_UNIQUE over a document that had already been "
+  + "composed. Same defect as D-234, one field over: caller bytes compared against stored bytes",
+    [foldedName.ok, foldedName.code, foldedName.check],
+    [false, "SUGGEST_NAME_TAKEN", SUGGEST_CHECKS.SUGGEST_NAME_TAKEN.check]);
+}
+
 /* CHECK 4 (C-27.11) — D-195, independence over the separately sufficient parts. */
 {
   const notIndependent = drive(await suggest({ kind: "basis-version", name: "two routes one source",
@@ -588,9 +811,20 @@ console.log("\n--- 3. F10: a verbatim resubmit is a structural no-op, not someth
   const statsAfter = await GET(`op=stats&token=adm-pl3`);
   t("STRUCTURALLY NOTHING MOVED: the inquiry's bytes are unchanged, its version count is unchanged, and "
   + "ONE refusal row exists for three submissions",
+  /* THE LITERAL COUNT IS LOAD-BEARING AND MUST BE RE-MEASURED, NEVER MADE
+     RELATIVE — a finding from running the control rather than from writing it.
+     REC-75 first replaced this `6` with a delta captured immediately above,
+     which is better engineering and QUIETLY DISARMED ANOTHER ITEM'S CONTROL:
+     `suggest.control.mjs`'s (D-231a) re-arms the clock, the duplicate two blocks
+     up LANDS, and this ABSOLUTE count going 6 -> 7 is the second half of the
+     exact 59/2 signature CONDUCT measured in the wild. A relative count is blind
+     to a landing that happened before it was taken, so the harness reported the
+     arm behaving other than declared — which is the harness working. The number
+     moved 6 -> 8 because REC-75's own D-234 fixture lands two readings above;
+     re-measure it when you add one, and do not make it relative. */
     [await shaOf(INQ) === shaBefore, (await read()).total,
      statsAfter.suggestRefusals - statsBefore.suggestRefusals],
-    [true, 6, 1]);
+    [true, 8, 1]);
   /* AND THE KEY DOES NOT GO STALE INTO A FALSE REFUSAL. */
   const landed = await suggest({ kind: "level-empty", name: "the document moves under the key",
     description: "A reading recorded so the inquiry's bytes change beneath the stored refusal.",
@@ -858,6 +1092,42 @@ console.log("\n--- 6. over-strictness: correct work is not refused ---");
   + "of the substance comparison (D-231) and the statement does not, because when a reading was recorded "
   + "is not something it says and why the evidence bears is",
     [restated.ok, restated.state], [true, "suggested"]);
+
+  /* REC-75 / D-234's OVER-STRICTNESS ARMS, AND THEY ARE THE HALF THAT KEEPS
+     THIS FIX FROM BECOMING THE WORSE DEFECT.
+     The remedy for D-234 is to compare the values the record WILL HOLD. The
+     tempting over-reach is to keep going — collapse internal whitespace, strip
+     punctuation, fold case — and every one of those would refuse readings that
+     the record itself would show as different. `#fmSafe` folds `[\r\n]+` to a
+     space and rewrites `"` and `\`; it does NOT touch an internal double space,
+     a semicolon, or a curly quote. So the three arms below differ from the base
+     in EXACTLY those, and every one of them must LAND. `suggest.control.mjs`'s
+     D-234b arm normalises both sides one notch too far and requires these to
+     fail — which is what makes them a control rather than decoration. */
+  const QBASE = `The contract names the counterparty as "to be named", and the unfilled blank is what this reading rests on.`;
+  const overStrict = async (name, description) => await suggest({
+    kind: "basis-version", name, description, relationship: "and",
+    grounds: [{ ground: "the audit", statement: `The form's own words are "to be named".` }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit",
+             note: `The blank sits on page 4 of the "award form".` }] });
+  const semi = await overStrict("the unfilled counterparty semicoloned",
+    QBASE.replace(`",`, `";`));
+  const spaced = await overStrict("the unfilled counterparty double spaced",
+    QBASE.replace("blank is", "blank  is"));
+  const curly = await overStrict("the unfilled counterparty in curly quotes",
+    QBASE.replace(`"to be named"`, `“to be named”`));
+  t("REC-75 OVER-STRICTNESS: three readings differing from a held one ONLY in punctuation the document "
+  + "PRESERVES — a semicolon for a comma, an internal double space, and CURLY quotes where the base had "
+  + "straight ones — all LAND. The comparison normalises exactly as far as the write does and no "
+  + "further: two readings whose stored bytes differ ARE two readings, and collapsing them would be the "
+  + "opposite defect and the worse one",
+    [semi.ok, spaced.ok, curly.ok, semi.code ?? null, spaced.code ?? null, curly.code ?? null],
+    [true, true, true, null, null, null]);
+  t("AND THE CURLY-QUOTE ARM IS THE ONE IN A SPELLING NOBODY ANTICIPATED — `#fmSafe` rewrites the two "
+  + "ASCII characters the grammar cannot carry and leaves every other quotation mark a member might "
+  + "paste alone, so a reading that quotes its source with typographic quotes is genuinely different "
+  + "from one that quotes it with straight ones, and is not refused as a duplicate",
+    [curly.ok, curly.version], [true, "the unfilled counterparty in curly quotes"]);
 }
 
 /* ====================================================================== 7
@@ -888,6 +1158,40 @@ console.log("\n--- 7. instrument guards: the source walk is non-trivial and the 
     [[2, 1], [2, 1], [2, 1]]);
   /* ONE WRITE PATH, PINNED. PL-1 pinned the version tables at one write site
      each inside `promote`; this item must not have added a second. */
+  /* REC-75 / D-234's STRUCTURAL RATCHET, and it is the arm that survives this
+     item. D-234 happened because the write derived its values from `args` while
+     the comparison derived its own from `args` INDEPENDENTLY. The behavioural
+     arms in block 2 catch that for the fields that exist today; this catches it
+     for the field somebody adds tomorrow, which is the only kind of coverage
+     that lasts. Every value the write quotes must come from `persisted` — `pv`,
+     or the `g`/`l` bound over its grounds and legs — and `args` must not appear
+     inside the write region at all. */
+  {
+    const from = STORE_SRC.indexOf("DEC-49 REGION is-suggest-write");
+    const to = STORE_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
+    const region = decomment(STORE_SRC.slice(from, to));
+    const quoted = [...region.matchAll(/\bq\(([A-Za-z_$][\w$]*)\./g)].map((m) => m[1]);
+    t("REC-75: EVERY VALUE THE WRITE QUOTES COMES FROM THE ONE NORMALISER — `args` does not appear in "
+    + "the write region at all, so a field added to this endpoint tomorrow cannot be composed from raw "
+    + "args on one side of the duplicate gate and from persisted values on the other, which is exactly "
+    + "how D-234 arose. The corpus is PRINTED so a narrowing that read nothing cannot pass",
+      [from > 0 && to > from, region.length > 1500, quoted.length >= 15,
+       [...new Set(quoted)].sort(), (region.match(/\bargs\./g) || []).length],
+      [true, true, true, ["g", "l", "pv"], 0]);
+    /* THE GUARD RUNS OVER A SYNTHETIC CORPUS AND NEVER OVER THE LIVE REGION, and
+       that is a correction made by RUNNING THE CONTROL rather than by writing
+       it. Written first as "the live region plus one planted reference", it went
+       RED under `suggest.control.mjs`'s (D-234e) arm — which plants exactly such
+       a reference — so the guard was measuring the subject instead of the
+       reader. A guard coupled to the thing it guards is not a guard. */
+    const SYNTH = `const vRow = [\`  - name: \${q(pv.name)}\`, \`  - d: \${q(args.description)}\`];`;
+    t("WALK GUARD for that arm: the same reader over a FIXED synthetic span that MUST trip it does trip "
+    + "— a walk that took an empty span would report zero offending references and congratulate itself, "
+    + "which is the shape three instruments in this repository took in one week",
+      [(SYNTH.match(/\bargs\./g) || []).length,
+       [...new Set([...SYNTH.matchAll(/\bq\(([A-Za-z_$][\w$]*)\./g)].map((m) => m[1]))].sort()],
+      [1, ["args", "pv"]]);
+  }
   const writes = (STORE_SRC.match(/(INSERT|REPLACE|UPDATE)\s+(OR\s+\w+\s+)?(INTO\s+)?inquiry_basis_versions?\b/g) || []).length;
   t("ONE WRITE SITE STILL: the suggest endpoint appends to `bundle.md` and re-promotes, and holds no "
   + "INSERT into either version table — PL-1's pin, re-asserted from the other side",
