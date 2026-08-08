@@ -3546,3 +3546,42 @@ see a declaration written in the numbered style.** `countArms` counts ` -> ` arr
 Four of 119 suites score zero. Nothing is red because the arms count is reported and never gated —
 which is precisely why the figure (388 on this tree, unmoved by adding two more arms) means less
 than it appears to.
+
+---
+
+## 2026-08-08 — THE NEGATIVE-CONTROL REGISTER'S ARMS TALLY, REMEASURED AFTER D-233 (M0-14)
+
+Instrument: `node bio-plane/scripts/coverage.mjs --strict`, run directly with `$?` read
+unpiped, and `bio-plane/scripts/control-register.mjs`'s `readControl` over the corpus.
+Tree: worktree `agent-ade8942ff3bb6367b`, at `e424af1` plus this item.
+
+| figure | before this item | after | note |
+| --- | --- | --- | --- |
+| suites the register reads (corpus) | 120 | 120 | unchanged — the matcher's REACH did not narrow |
+| suites declaring a control | 120 | 120 | unchanged |
+| arms stated | **395** | **462** | **no suite's declaration was touched: the +67 is INSTRUMENT, not estate** |
+| arms stated, final | — | **470** | the further +8 is this item writing its own six-arm control into `hygiene.test.mjs`'s declaration |
+| declarations scored ZERO | 4 | 0 | zero is now a measurement; the absence of one is `null` |
+| declarations UNCLASSIFIED and NAMED | 0 (the defect) | 1 (`case-opened.test.mjs`) | |
+
+**The figure in this file's D-233 entry above — 388 — was itself stale by the time it was
+acted on; the tree measured 395.** That is the sixth consecutive hand-carried figure in this
+family to be wrong when re-measured, and it is why the instruction is now the command.
+
+Per-suite, the 17 declarations whose count moved (measured by running the OLD detector and
+the NEW one over the same sources, never by subtraction):
+
+    bias 0 → 13 · strengthpair 0 → 17 · suggest 0 → 8 · case-opened 0 → null (UNCLASSIFIED)
+    versionstate 1 → 10 · meaningread 5 → 9 · meaning-bounds 9 → 12 · bounds 7 → 9
+    versionchain 5 → 7 · versions 5 → 7 · plane-envelope 11 → 12 · ratify-envelope 11 → 12
+    capturerequests 9 → 10 · skillpack 8 → 9 · leadslug 7 → 8 · aicredential 5 → 6
+    refuse-gate 3 → 4
+
+Two of those are checkable against the suites' own prose and both land exactly:
+`strengthpair.test.mjs` says *"THE SEVENTEEN ARMS"* and reads 17; `bias.test.mjs` says
+*"THIRTEEN arms"* and reads 13.
+
+**Stated as a limit rather than left to be discovered:** the tally is a FLOOR on arms
+stated. `suggest.test.mjs` reads 8 against a real 10 because two of its arms carry LABELS
+(`(D-231a)`) rather than ordinals, and widening the ordinal to any bracketed token would
+count every `(D-113)` and `(DEC-46)` this prose is full of.

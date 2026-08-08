@@ -135,12 +135,45 @@ const checkRows = CHECKS.map((c) => ({
 }));
 
 /* M0-9: the whole file, the whole block, every arm — see control-register.mjs.
-   `arms` is REPORTED and never gated; the floor is still "declares one". */
+   M0-14 / D-233: `arms` is now `null` for a declaration the detector could not
+   classify, and NEVER 0. A missing tally reported as zero is indistinguishable
+   from a real zero, which is exactly how four suites declaring 48 arms between
+   them read as declaring none for four consecutive re-measurements of this row.
+   Zero is a measurement; null is the absence of one, and they are named apart. */
 const controlRows = battery.map(({ file, src }) => {
   const c = readControl(src);
-  return { suite: file, control: c ? c.text : null, arms: c ? c.arms : 0,
+  return { suite: file, control: c ? c.text : null, arms: c ? c.arms : null,
            declaredAtLine: c ? c.line : null, declarationLines: c ? c.lines : 0 };
 });
+
+/* THE REGISTER'S FLOOR (M0-14). A ceiling is not a ratchet: the arms tally could
+   only ever have risen, so a whole declaration style going dark — or a matcher
+   narrowed by a later edit — moved it DOWNWARD in silence and nothing failed.
+   These three are what this instrument PRINTED on a green run of this tree on
+   2026-08-08, never incremented by hand and never given slack, because a floor
+   with slack is not a ratchet either (REC-71's census floor sat 19 codes low and
+   had already flipped a control from RED to GREEN).
+
+   `corpus` is the REACH: how many suites the register reads at all. A matcher
+   narrowed to nothing reports a beautiful 100% over an empty corpus.
+
+   MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
+const REGISTER_FLOOR = {
+  arms:       470,  // arms stated across the classified declarations
+  classified: 119,  // declarations the detector could count arms in
+  corpus:     120,  // suites the register reads
+};
+
+/* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
+   declaration the detector cannot count arms in is not a failure — the register
+   states plainly what it cannot see — but a NEW one is, because that is the
+   D-233 defect arriving again. Each name carries why it cannot be counted.
+
+   `case-opened.test.mjs` — its head declaration is a pointer, and the fuller
+   block at the foot of the file separates its marker from its arms with a
+   paragraph of prose, which the extent rule (a declaration is a paragraph, plus
+   the list it introduces) deliberately does not cross. */
+const REGISTER_UNCLASSIFIED = ["case-opened.test.mjs"];
 
 /* ------------------------------------------------------------------ fleet */
 /* D-117: the topology decision (I6) puts Workers BESIDE the plane. `coverage.mjs`
@@ -267,6 +300,24 @@ const doOnly = opRows.filter((r) => r.level === "durable-object-only");
 const unnamed = checkRows.filter((r) => !r.named);
 const uncontrolled = controlRows.filter((r) => !r.control);
 
+/* The register, split into what was MEASURED and what could not be (M0-14). A
+   declaration with no countable arms is UNCLASSIFIED, and it is never summed in
+   as a zero. */
+const classified = controlRows.filter((r) => typeof r.arms === "number");
+const unclassified = controlRows.filter((r) => r.control && r.arms == null);
+const registerArms = classified.reduce((n, r) => n + r.arms, 0);
+const fullest = classified.reduce((a, b) => (b.arms > a.arms ? b : a), classified[0] || { arms: 0, suite: "(none)" });
+
+const registerBelowFloor = [];
+if (registerArms < REGISTER_FLOOR.arms)
+  registerBelowFloor.push(`${registerArms} arms stated, floor is ${REGISTER_FLOOR.arms}`);
+if (classified.length < REGISTER_FLOOR.classified)
+  registerBelowFloor.push(`${classified.length} classified declaration(s), floor is ${REGISTER_FLOOR.classified}`);
+if (controlRows.length < REGISTER_FLOOR.corpus)
+  registerBelowFloor.push(`the register READ ${controlRows.length} suite(s), floor is ${REGISTER_FLOOR.corpus}`);
+/* A NEW unclassified declaration is the D-233 defect arriving again. */
+const newlyUnclassified = unclassified.filter((r) => !REGISTER_UNCLASSIFIED.includes(r.suite));
+
 const pct = (n, d) => d === 0 ? "100.0" : ((n / d) * 100).toFixed(1);
 
 if (JSON_OUT) {
@@ -296,15 +347,31 @@ if (JSON_OUT) {
   console.log(`  C-20.1 defect class exactly: the audit was clean because it was not looking.`);
   if (unnamed.length) console.log(`\n    ${unnamed.map((r) => r.check).join(" ")}`);
 
-  const arms = controlRows.reduce((n, r) => n + r.arms, 0);
-  const fullest = controlRows.reduce((a, b) => (b.arms > a.arms ? b : a), controlRows[0] || { arms: 0 });
   console.log(`\nNEGATIVE CONTROLS  ${controlRows.length - uncontrolled.length} of ${controlRows.length} suites declare one `
     + `(${pct(controlRows.length - uncontrolled.length, controlRows.length)}%) · `
-    + `${arms} arms stated across the register · fullest ${fullest.arms} (${fullest.suite})`);
-  console.log(`  An arm is one stated "break this -> that must then fail" transition. The count is`);
-  console.log(`  REPORTED, never gated: the floor is still that a suite declares a control at all.`);
-  console.log(`  It is here so a declaration that got SHORTER is visible — a register that reads`);
-  console.log(`  green while quoting a fraction of what was checked is the generous direction (M0-9).`);
+    + `${registerArms} arms stated across ${classified.length} classified declaration(s) · `
+    + `fullest ${fullest.arms} (${fullest.suite}) · ${unclassified.length} UNCLASSIFIED`);
+  console.log(`  An arm is one MARKED item of the list a declaration states — a "break this -> that`);
+  console.log(`  must then fail" transition, or a parenthesised ordinal opening a segment. The count`);
+  console.log(`  is a FLOOR on arms stated, not an exact count: an arm given a LABEL rather than an`);
+  console.log(`  ordinal ("(D-231a)") is not counted, because widening the ordinal to any bracketed`);
+  console.log(`  token would count every "(D-113)" and "(DEC-46)" this prose is full of. It is here`);
+  console.log(`  so a declaration that got SHORTER is visible — a register that reads green while`);
+  console.log(`  quoting a fraction of what was checked is the generous direction (M0-9).`);
+  if (unclassified.length) {
+    console.log(`\n  UNCLASSIFIED — a declaration this register could NOT count arms in. NAMED here`);
+    console.log(`  rather than scored zero, which is the whole of D-233: a suite silently scored 0`);
+    console.log(`  reads as "declares no arms" when the truth is "this instrument cannot read this`);
+    console.log(`  suite's arms", and four suites declaring 48 arms between them read that way for`);
+    console.log(`  four consecutive re-measurements of this row.`);
+    for (const r of unclassified) console.log(`    ${r.suite}`);
+  }
+  console.log(`\n  REGISTER FLOOR  arms ${registerArms}/${REGISTER_FLOOR.arms} · `
+    + `classified ${classified.length}/${REGISTER_FLOOR.classified} · `
+    + `corpus (suites read) ${controlRows.length}/${REGISTER_FLOOR.corpus}`
+    + `${registerArms > REGISTER_FLOOR.arms ? ` · GREW by ${registerArms - REGISTER_FLOOR.arms} arm(s)` : ""}`);
+  console.log(`  The tally rises on its own and can only FALL by an edit — so a ceiling would never`);
+  console.log(`  have fired. The floor is what makes this figure worth reading (M0-14).`);
   if (uncontrolled.length) {
     console.log(`\n  No declared control — add one, in a comment anywhere in the file, over as many`);
     console.log(`  lines and arms as it needs:`);
@@ -367,7 +434,23 @@ if (fleetMutating.length)
     + `\n  returns derived output and the plane decides what it means, because a hop a component can hand us is a`
     + `\n  hop a component can invent (D-112).`);
 
+if (registerBelowFloor.length)
+  console.error(`\nREGISTER FLOOR: ${registerBelowFloor.join("; ")}. THE ESTATE'S DECLARED CONTROLS SHRANK, or the`
+    + `\n  detector stopped seeing them. This figure rises on its own and can only fall by an edit, so a`
+    + `\n  ceiling could never have fired on it — which is how a whole declaration style went dark and the`
+    + `\n  published number moved not at all (D-233). Establish WHICH declaration got shorter, or which`
+    + `\n  suites the walk stopped reading, before moving the floor — and move it only to a figure this`
+    + `\n  instrument PRINTED on a green run.`);
+if (newlyUnclassified.length)
+  console.error(`\nREGISTER: ${newlyUnclassified.map((r) => r.suite).join(", ")} declare${newlyUnclassified.length === 1 ? "s" : ""} a`
+    + `\n  negative control this register cannot count the arms of, and ${newlyUnclassified.length === 1 ? "it is" : "they are"} not on the named list in`
+    + `\n  this script. That is D-233 arriving again: a declaration the instrument cannot read used to be`
+    + `\n  scored ZERO and folded silently into the tally. Either state the arms as a marked list — an`
+    + `\n  arrow per arm, or a parenthesised ordinal per arm, in the paragraph the marker opens — or add`
+    + `\n  the suite to REGISTER_UNCLASSIFIED with the reason it cannot be counted.`);
+
 if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
+    || registerBelowFloor.length || newlyUnclassified.length
     || fleetUnreached.length || fleetUncontrolled.length
     || unaccountedWorkers.length || fleetBelowFloor.length || fleetSurfaceless.length || fleetMutating.length)) {
   console.error("STRICT: coverage floor not met.");

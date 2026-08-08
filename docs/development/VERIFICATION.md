@@ -51,7 +51,7 @@ cd bio-plane && node scripts/coverage.mjs --strict
 | ops unreached by any suite | 3 · `archivelookup`, `linkproject`, `signerlist` | one is mutating |
 | checks in the catalog | 51 | |
 | checks named by an assertion | 18 (35.3%) | 33 are exercised only in the direction that passes |
-| suites declaring a negative control | **117 of 117 — REMEASURED 2026-08-08 by REC-73**, which landed `machine-fences.test.mjs` and moved this row in the same turn: `node scripts/coverage.mjs --strict` printed `117 of 117 suites declare one (100.0%) · 380 arms stated`. **The ARMS half of this row was already stale when REC-73 arrived — it read 370 over a tree the instrument measured at 375** — which is the fourth consecutive item to find a hand-carried figure here wrong by measuring it. (It read **116 of 116 · 370 arms** remeasured 2026-08-08 by PL-11, with the instrument rather than by hand: `node scripts/coverage.mjs --strict` prints it, and it printed `116 of 116 suites declare one (100.0%) · 370 arms stated`. (It read **105 of 105** remeasured 2026-08-07, and 105 was itself a correction of `0 of 42` — this row is the one figure in this table anybody re-derives, so it goes stale the moment a suite lands and is moved BY THE ITEM THAT LANDS ONE.) | the backfill in item 2 below is DONE and the register is complete |
+| suites declaring a negative control | **120 of 120 — REMEASURED 2026-08-08 by M0-14**, and **THE ARMS HALF OF THIS ROW WAS NOT MERELY STALE, IT WAS MEASURED BY AN INSTRUMENT THAT COULD NOT SEE WHOLE DECLARATION STYLES (D-233).** `node scripts/coverage.mjs --strict` now prints `120 of 120 suites declare one (100.0%) · 470 arms stated across 119 classified declaration(s) · fullest 29 (hygiene.test.mjs) · 1 UNCLASSIFIED`. **The same tree read 395 before this item and 462 after, with the suites' declarations UNTOUCHED — the +67 is instrument, not estate**; the further +8 is this item writing its own control into a declaration, which is a property the register has always had and now says so. **Four suites scored ZERO while declaring 48 arms between them, and a fifth scored 1 against a real 10** — the four had FOUR DIFFERENT causes, none of them the numbered style the debt row named. See the section below. The tally now carries a FLOOR (`REGISTER_FLOOR` in `scripts/coverage.mjs`) so it FAILS when it falls, and a declaration the detector cannot read is reported as UNCLASSIFIED and NAMED rather than scored zero. (It read **117 of 117 · 380 arms** remeasured 2026-08-08 by REC-73, which landed `machine-fences.test.mjs` and moved this row in the same turn. The ARMS half of that was ALREADY STALE when REC-73 arrived — it read 370 over a tree the instrument measured at 375 — which was the fourth consecutive item to find a hand-carried figure here wrong by measuring it, and D-233 is the FIFTH, found in the mechanised half instead. It read **116 of 116 · 370 arms** remeasured 2026-08-08 by PL-11; **105 of 105** remeasured 2026-08-07, itself a correction of `0 of 42`.) | the backfill in item 2 below is DONE, the register is complete, and as of M0-14 it is FALSIFIABLE |
 
 **The control-plane figure is honestly an upper bound and the instrument says so.**
 A suite that drives both the worker and the store directly is credited to the worker
@@ -165,6 +165,73 @@ arms stated**, so a declaration that got shorter is visible; that count is repor
 with no declaration at all. The detector's own reach is asserted at the foot of
 `hygiene.test.mjs`, on fixtures *and* on the real corpus, every arm a delta rather than
 an absolute count: a detector that finds nothing passes everything.
+
+**M0-14 CORRECTED THE TALLY ITSELF, AND THE WAY IT WAS FOUND IS THE POINT.** M0-13
+predicted the register would move **388 → 390** for two arms it had just added, and
+**it did not move at all.** Four of 120 suites scored ZERO while declaring 48 arms
+between them, a fifth scored **1 against a real 10**, and nothing was red — because
+the count was reported and never gated, so no figure here could be falsified. That is
+the same argument D-231 was worth an item for: *an instrument that reports a number
+nobody can falsify trains every session to trust it.*
+
+**The four zeros had FOUR DIFFERENT CAUSES, and none of them was the numbered style
+the debt row named.** Read them together, because the class is what matters:
+
+1. `bias.test.mjs` stated thirteen arms **in the arrow grammar the detector already
+   understood**, in enumerated paragraphs after the marker's own paragraph. Every
+   arrow was legible; the EXTENT rule cut them all off. The style was not exotic —
+   the instrument stopped reading.
+2. `case-opened.test.mjs` heads its fuller block `NEGATIVE CONTROL —` with a DASH.
+   **One character of punctuation made a whole declaration invisible.**
+3. and 4. `suggest.test.mjs` and `strengthpair.test.mjs` DELEGATE their arms to a
+   sibling `*.control.mjs`. Their own declarations state the arms as ordinal lists
+   with **no arrow anywhere** — `strengthpair` says *"THE SEVENTEEN ARMS"* and the
+   corrected matcher now counts exactly seventeen.
+
+And the finding nobody was looking for: `versionstate.test.mjs` scored **1**, and that
+one was a FALSE POSITIVE — an `->` inside a quoted CODE EDIT, not an arm. **A count
+that is merely WRONG is harder to notice than a count that is zero.**
+
+**THE FIX INVERTS THE TEST RATHER THAN LENGTHENING A LIST OF SPELLINGS** (REC-70's
+lesson, and its queue row is the precedent). An arm is **one MARKED item of the list a
+declaration states**, and a list marks its items in exactly two ways: a TRANSITION (the
+`break -> consequence` arrow) or an ENUMERATION (a parenthesised ordinal opening a
+segment). The count is **max(transitions, enumerations), never the sum** — an arm
+usually carries both, and summing credits it twice, which is `readControl`'s own
+never-the-sum rule one level down.
+
+**The half that makes it safe, and it is the whole of D-233: a declaration carrying no
+marking of either kind is NOT a declaration of zero arms.** It is one the instrument
+**could not classify**, it reports `null` rather than `0`, and the register **NAMES it**.
+A missing tally reported as zero is how "stayed GREEN" gets recorded for a suite that
+never ran.
+
+**WHAT THE MATCHER STILL CANNOT SEE, stated here rather than discovered later:**
+
+- It does not follow a DELEGATION. A declaration whose arms live in another file is
+  counted only for the marks in its own text.
+- It does not count an arm given a **LABEL** rather than an ordinal — `(D-231a)` — so
+  `suggest.test.mjs` reads 8 against a real 10. Widening the ordinal to any bracketed
+  token would count every `(D-113)` and `(DEC-46)` this prose is full of, which is the
+  over-strictness failure in the other direction. **The tally is therefore an explicit
+  FLOOR on arms stated, not an exact count, and the instrument prints that.**
+- It cannot tell a list item from quoted code that happens to be a parenthesised
+  single letter. The `>= 2 distinct tokens including a first ordinal` guard is what
+  stops a lone `(b)` in a sentence from counting.
+- `case-opened.test.mjs` remains **UNCLASSIFIED and NAMED**: its foot block separates
+  its marker from its arms with a paragraph of prose, and the extent rule deliberately
+  does not cross unmarked prose.
+
+**AND THE FIGURE IS NOW FALSIFIABLE, WHICH IS THE OTHER HALF.** `REGISTER_FLOOR` in
+`scripts/coverage.mjs` gates `--strict` on the arms tally, on the number of classified
+declarations, and on the **corpus** — how many suites the register reads at all, because
+a matcher narrowed to nothing reports a beautiful 100% over an empty corpus. A ceiling
+could never have caught D-233: this tally only ever rises on its own, so it can only
+fall by an edit. **A new UNCLASSIFIED declaration also fails `--strict`**, pinned by
+name in `REGISTER_UNCLASSIFIED`, because that is D-233 arriving again.
+
+The six arms are declared in `hygiene.test.mjs`'s own control block and RUN by
+`bio-plane/test/register.control.mjs` (`node test/register.control.mjs`).
 
 ## What a queue item must satisfy before it is done
 
