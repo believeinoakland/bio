@@ -308,7 +308,14 @@ function parseDict(buf, s, pos) {
  * Document model: objects, streams, pages
  * ------------------------------------------------------------------ */
 
-class PdfDoc {
+/* EXPORTED for CPDF-12 (2026-08-08). `pdf-worker/src/pagepixels.mjs` needs the
+ * SAME object/stream reader this module already has — xref-free top-level scan,
+ * /ObjStm folding, page ordering, raw and Flate-decoded stream bytes. Writing a
+ * second one in the fleet member is the D-164 lesson repeated (two mechanisms
+ * for one job is how the next one goes stale in silence), so the class is
+ * exported rather than copied. This is ADDITIVE and changes no behaviour: not
+ * one line of logic here moved, and `extractPdfStructure` is untouched. */
+export class PdfDoc {
   constructor(bytes) {
     this.bytes = bytes;
     this.s = LATIN1.decode(bytes);

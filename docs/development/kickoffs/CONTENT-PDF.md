@@ -250,6 +250,61 @@ because fleet rule 4 was unverifiable for it.
   (`fleetDepSkip` returns `null`), plus a `npm ci` in the new member's directory or the
   four-line resolver in its suite. Nothing is built on top of the skip.
 
+## What CPDF-12 landed (2026-08-08): a page of pixels, and the rasteriser nobody had to build
+
+**`pdf-worker/src/pagepixels.mjs` renders a PDF page to pixels inside workerd, with no
+canvas and no dependency — and it is NOT a rasteriser.** DEC-42 carried one observation
+to be verified rather than assumed: for the image-only class a page is typically ONE
+embedded image, so image EXTRACTION may serve where rasterising was assumed.
+**It was verified first, over 59 real Oakland PDFs and 622 pages, and it held at 24 of
+24 image-only pages.** Numbers, instrument and controls are in `MEASUREMENTS.md`
+2026-08-08; do not quote them from here.
+
+Four things worth knowing before touching it:
+
+- **It REFUSES more than it renders, by design.** A page with a text layer, a page of
+  vector marks, a page composed of several images, a filter with no decoder (`JBIG2Decode`,
+  `JPXDecode` — zero of either in the measured corpus), data short of its declared
+  height: each is a NAMED refusal carrying its evidence. There is no code path that
+  allocates a frame and returns it without having decoded real samples into it, because
+  a blank page and a page with no text on it are indistinguishable downstream.
+- **`upright` is a first-class field, and it cost a measurement to learn why.** The page's
+  own `/Rotate` is applied exactly on the bilevel routes. Un-rotated, the ground-truthed
+  exhibit scored 8.67% characters and 355 MINTED digits through an OCR engine that
+  announced nothing. **A page is not its image.** The pass-through JPEG route cannot
+  rotate without destroying what it is for, and says so — D-244.
+- **Nothing can reach it.** `pdf-worker/src/index.mjs`'s `SURFACE` is untouched; wiring a
+  `render` op is an I6 change and belongs with CPDF-10, the consumer. "It runs in workerd"
+  and "it is wired" are the two halves D-108 exists to keep apart.
+- **`bio-plane/src/pdfstructure.mjs` gained ONE WORD** — `export class PdfDoc` — so the
+  member reuses this area's object/stream reader instead of growing a second one. That is
+  the D-164 lesson applied, and it is the only line of the plane this item touched.
+
+### DECISION — running provisionally, and it is Bob's: **WHICH HASH DOES A PUBLISHED RENDERING CARRY?**
+
+- **What is running provisionally.** The renderer emits BOTH a file it produced and a
+  `pixels_sha256` taken over the normalised samples before any container is built.
+  Nothing consumes either yet.
+- **Why it is ambiguous, and it is a measurement rather than a preference.** The same code
+  over the same page produced a 129,366 B PNG on workerd and a 132,691 B PNG on node —
+  both valid, both holding IDENTICAL pixels. `CompressionStream("deflate")` is a platform
+  service and the two runtimes emit different legal deflate streams. **DEC-41 rules that
+  each published rendering's hash joins `published_shas` so any copy is checkable against
+  the instance.** A FILE hash is checkable byte-for-byte against a served copy but is not
+  reproducible by a verifier on another runtime, or by the same instance after a workerd
+  upgrade. A PIXEL hash is reproducible anywhere but needs a decoder to check.
+- **The alternative.** Carry the file hash alone and accept that re-rendering will not
+  reproduce it — which turns "checkable against the instance" into "checkable against the
+  copy the instance happened to serve", a weaker claim than DEC-41's words.
+- **Recommendation: carry BOTH, each LABELLED.** The file hash answers *is this the copy
+  the instance published*; the pixel hash answers *is this the same picture*. They are
+  different questions and collapsing them is the single-label failure CPDF-10's chain rule
+  already forbids one level up.
+- **Reversal cost: LOW while nothing is built on it, and it rises the day a case is
+  published.** A manifest field is additive; a manifest field that was WRONG about what it
+  hashes is a published claim, and published claims are what this project treats as
+  expensive. This is why it is raised now rather than when DEC-41 is enacted. D-246.
+
 ## Not this area's, however reachable
 
 The fetch/governor/subresource/archive path and the HTML link graph (CAPTURE,
