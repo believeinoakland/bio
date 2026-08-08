@@ -2886,3 +2886,55 @@ envelope honest left `meaning-bounds` at 80/1 and `bounds` at **112/0, fully gre
 only the direct SQL-bound pin firing. And `airun.test.mjs`, the op's OWN suite, stayed
 **GREEN under the full restore**: it drives `op=airunlog` at six sites and none asks for
 more than 200 rows, so it could never have caught this.
+
+---
+
+## 2026-08-07, VF-2: THE PLANE'S REFUSAL-CODE CORPUS, AND HOW MUCH OF IT A MEMBER CAN MEET UNTRANSLATED
+
+**Instrument:** `civicos-ui/check-refusal-codes.mjs` (DEC-49's harness guard, built by VF-2), run
+from `node civicos-ui/test/run.mjs`. It prints every figure below on every run, so none of
+this is a snapshot somebody has to remember to re-take.
+
+| | measured | how |
+| --- | --- | --- |
+| distinct refusal codes the plane can mint | **311** | union of six matchers over `bio-plane/src/**` (24 files) |
+| — a plain `reason: "CODE"` grep alone | 294 | **the narrow answer, and it is 17 short** |
+| codes IN REACH of a surface | **98** | 11 DEC-49 family rows + 50 named by `app.html` + 65 sent by a harness mock, R2/R3 intersected with the census |
+| — of those, with NO canned translation | **74** | named individually on every run; a CEILING that may only fall |
+| — of those, translated | 24 | 11 plane rows + 13 in `PART_REASON`, no overlap |
+| codes NOT in reach and untranslated | 287 | REC-64's remaining sweep. Reported, never gated |
+| DEC-49 families / rows | 3 / 11 | `AI_RUN_CHECKS` (C-22.x), `MEANING_READ_CHECKS` (C-23.x), `VERSION_CHAIN_CHECKS` (C-24.x) |
+| governed (file, function) sites | 5 | derived from the rows' own `where` fields; 208 lines of body read, 8 refusals judged |
+| the plane's own vocabulary texts | 8 vocabularies / 50 terms | `src/airun.mjs` + `src/queuestate.mjs` — DEC-49's UI-47 input |
+
+**THE 17 THE NARROW MATCHER CANNOT SEE ARE THE POINT, and this is a receipt for writing a
+vocabulary matcher as a SET.** They arrive three ways, and the guard prints each matcher's own
+yield so a matcher that goes blind is visible rather than merely absent from a union:
+
+1. **A TERNARY.** `subresources.mjs` mints `reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED"`.
+   Both codes are ones `PART_REASON` translates and a member reads; neither is visible to
+   `reason: "CODE"`. The first draft of this walk missed them.
+2. **A COMPARISON SITE** (21 codes), where the plane or the surface branches on a code.
+3. **A FAMILY LOOKUP where the code is a VARIABLE** — `MEANING_READ_CHECKS[key]` in
+   `store.mjs`. **No source-text matcher can ever see these**, and all five `C-23`/`C-24`
+   codes were missing from a confident-looking 306 until the family tables were made a
+   matcher in their own right. The sixth matcher reads the DECLARATION rather than the call.
+
+This is REC-70's failure one file over — a classifier admitting one spelling — and it was
+found by the guard on itself rather than by a later reader.
+
+**TWO FIGURES THE GUARD MEASURED ON ITS OWN INSTRUMENT, recorded because an instrument is
+the most likely thing to be wrong:**
+
+- **Arm C read a PARAMETER LIST as a function body and reported green.** Walking to the
+  first `{` after a name lands on the default value in `meaningRows(input = {})` and on the
+  destructuring pattern in `versionChain({ addressNorm = null, … })`. `meaningRows` failed
+  loudly; **`versionChain` did NOT** — its pattern is long enough to look like a body, so
+  the arm judged 0 refusals in it and passed. Fixed by balancing the parens first; the
+  per-site body line count (`checkObservation 47L, checkCondition 7L, checkBound 8L,
+  meaningRows 43L, versionChain 103L`) is now **printed every run** with a floor beneath it.
+- **A CHARACTER FLOOR ON A TRANSLATION IS OVER-STRICT.** 20 characters failed the real
+  `RUN_ENDINGS.cancelled` — *"a member stopped it"*, 19 characters, and a complete,
+  accurate, member-readable sentence. The rule is a WORD floor now (three words for a
+  vocabulary term, six for a DEC-49 translation, alongside this repository's existing
+  40-character bar). A guard that only accepts the wording its author wrote gets switched off.
