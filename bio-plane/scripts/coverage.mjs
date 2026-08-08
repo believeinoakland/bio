@@ -192,6 +192,23 @@ const REGISTER_FLOOR = {
   arms:       563,  // arms stated across the classified declarations
   classified: 129,  // declarations the detector could count arms in
   corpus:     130,  // suites the register reads
+
+     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
+     counted one — a phantom suite inflates the corpus, and a floor moved while one is
+     present would be permanently too high, which is how a ratchet gets switched off.
+     Move these only UPWARD, and only to a figure a green run PRINTED. */
+  /* 546 -> 557 (FW-15, 2026-08-08). A RISE, and the only direction this key may
+     move. Eleven of them, not seven: FW-15's own arms on the C-7.1 retirement
+     are seven, and the other FOUR were FW-13's, which grew this declaration on
+     2026-08-08 and did not collect the floor — this worktree's BASELINE run,
+     before a single edit, already printed `arms 550/546 · GREW by 4`. So the
+     figure below absorbs an uncollected rise as well as this item's own, which
+     is worth saying because a floor that trails by an unrecorded amount is
+     indistinguishable from one that trails for a reason. 557 is the figure a
+     green `--strict` run PRINTED on this branch. */
+  arms:       557,  // arms stated across the classified declarations
+  classified: 127,  // declarations the detector could count arms in
+  corpus:     128,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
