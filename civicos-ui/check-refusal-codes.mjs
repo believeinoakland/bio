@@ -178,13 +178,23 @@ const FLOOR = {
      the number in the file. That is the same finding PL-3 recorded on `families`
      and PL-4 on the census, three items running, which is why the instruction in
      the block above is now the COMMAND rather than the answer. */
+  /* MOVED AT INTEGRATION 2026-08-08 by CONDUCT, and the reason is the block's own subject.
+     PL-11 and SK-1 ran in parallel and EACH remeasured this block from its own tree — PL-11
+     from a tree without SK-1, SK-1 from a tree without PL-11 — so both were correct where
+     they stood and BOTH WERE WRONG ON THE MERGED TREE. Taking either side's numbers would
+     have left one of slack in four floors, and one is enough: REC-71 measured a floor
+     sitting 19 codes low that had ALREADY flipped a control from RED to GREEN, and PL-11
+     and SK-1 each found ten of slack in `vocabularyTerms` by measuring rather than adding.
+     So these are the figures the guard PRINTED on a green run of the MERGED tree, taken by
+     the integrator because only the integrator can see both items at once. Both worker
+     comment blocks are kept below verbatim — each is true of the tree it was written on. */
   families:      9,    // + AI_CREDENTIAL_CHECKS (was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5)
-  rows:         90,    // + C-29.1..9, all nine DRIVEN (was 81 at PL-4, 70 at PL-3)
-  census:      392,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  rows:         91,    // + C-29.1..9, all nine DRIVEN (was 81 at PL-4, 70 at PL-3)
+  census:      393,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
                        // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       177,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
-  governedSites: 24,   // spans named by a row's `where` — a function, or a region inside one
+  reach:       178,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
+  governedSites: 25,   // spans named by a row's `where` — a function, or a region inside one
                        // (was 20, 17, 13, 9, 5; 11 whole functions + 13 regions, four of them PL-11's)
   /* REMEASURED 2026-08-08 AT SK-1's LANDING, in worktree agent-a1f06561dfc61e51c,
      BY THIS FILE — every figure below is the number it PRINTED on a green run and
@@ -230,7 +240,7 @@ const FLOOR = {
                        // not fail the guard while a COLLAPSE still does. The per-region
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
-  codesChecked: 56,  // was 46, was 11. PL-3 nearly TRIPLED it, and deliberately: a local
+  codesChecked: 58,  // was 46, was 11. PL-3 nearly TRIPLED it, and deliberately: a local
                        // one helper named `refusal`, a STRING LITERAL at each site, which is the
                        // shape that makes arm C able to COMPARE a code rather than read past it.
                        // was 11. PL-3 nearly TRIPLED it, and deliberately: a local

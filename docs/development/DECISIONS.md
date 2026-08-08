@@ -4346,6 +4346,28 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full
   consequences).
 enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
+### DEC-66 · open
+for: bob
+raised: 2026-08-08 · CONDUCT (from SK-1, which shipped the strict shape, refused the loose one by name, and left the widening reversible)
+subject: A run's skill version must NAME ITS PACK (`<pack>@<edition>`), not merely be non-empty — is a bare edition a version, or a number nobody can resolve later?
+
+**SK-1 made "every run records the skill version it ran under" a REQUIREMENT rather than a stored-if-given field: `aiRunOpen` refuses a run that cannot say (C-22.7), refused at the open where the two principals already are, because refusing later means a run has already searched under instructions nobody can name.** That much follows from §11 and is not the question.
+
+**The question is what counts as saying it.** SK-1 refuses TWO shapes under ONE code. Absent is the ordinary one and nobody disputes it. **The second is `3` — present, well-formed, and naming no pack.** It is refused today.
+
+why it is ambiguous rather than obvious:
+  Today this repository renders exactly one pack, so `3` is unambiguous **for as long as that stays true**, and requiring a pack name looks like ceremony. **It stops being true the moment a group runs a pack we did not write** — which is the distribution model, not a hypothetical: `newgroup` puts a sovereign instance in a group's own account, and nothing stops that group authoring its own doctrine pack. At that point every stored `3` in every record is a number nobody can resolve, **and it cannot be repaired retroactively** because the run that would say which pack is over.
+
+the two shapes:
+  (a) **AS SHIPPED — a version is `<pack>@<edition>`, and a bare edition is refused by name.** This is PL-4's blank-principal shape one field over: a value that LOOKS like it names something while naming nothing is worse than an absent one, because absence is legible and `3` reads as an answer.
+  (b) **ACCEPT ANY NON-EMPTY STRING**, and let the pack name be conventional rather than enforced.
+
+provisional: **(a) is shipped and running**, and it has already refused something real — both UI-49 fixtures drew `skill-<tag>`, a version naming no pack, and the UI harness went red until they named one. Nothing is blocked; the plane refuses at the open and never fills a value in.
+
+recommendation: **KEEP (a).** The whole point of recording the condition is that a run under vN and a rerun under vN+1 are distinguishable LATER, by someone who was not there — and an edition with no pack is only distinguishable while exactly one pack has ever existed. **Note what SK-1 deliberately did NOT check, because it is the same argument pointing the other way:** whether the version is one this instance CURRENTLY renders. Pinning the open to the current pack would make a rerun under vN+1 indistinguishable from the run under vN **by making the older one impossible** — the property being bought, destroyed by its own guard. Any pack's well-formed version is accepted, **including a pack this repository never wrote.**
+
+cost of reversal: **LOW IN ONE DIRECTION AND HIGH IN THE OTHER, which is why the strict shape ships first.** Widening (a) to (b) later costs one predicate and strands nothing — every stored version already names a pack. Narrowing (b) to (a) later cannot repair the records written meanwhile: the runs that would say which pack are finished, so those rows stay unresolvable permanently.
+
 ### DEC-65 · open
 for: bob
 raised: 2026-08-08 · CONDUCT (from PL-3, which met the gap, refused by name rather than engineering around it, and recommended where the fix belongs)

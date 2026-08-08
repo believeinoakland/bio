@@ -619,10 +619,22 @@ console.log("\n--- 9. over-strictness: a fence that refuses correct work is a de
      identity — which is what carries into every capture requested under it. */
   const opener = await mint({ tokenId: "session-opener", taskScope: "runs and requests",
     writes: ["airunopen", "capturerequest"] });
+  /* `skillVersion` ADDED AT INTEGRATION, 2026-08-08 by CONDUCT, and it is a
+     merge fact rather than a correction to either item. PL-11 and SK-1 ran in
+     parallel: on PL-11's tree the skill version was STORED-IF-GIVEN, so this
+     third open omitting it was well-formed, and PL-11 named it in its other two
+     opens because they are the ones the section is about. SK-1 then made it the
+     run's THIRD required condition (C-22.7) on a tree that had never seen this
+     file. Neither worker could see the pair, and the battery caught it at the
+     merge — which is the whole reason the battery runs WHOLE here rather than
+     per-suite. Named, never defaulted: the open refuses, so a run under an
+     agent's own credential must say what it ran under exactly as a member's
+     must, and this arm is the one proving the agent path is not exempt. */
   const ownRun = await POST(`op=airunopen&token=${opener.token}`, {
     run: "RUN-2026-0808-pl11-own", contextType: "inquiry", contextId: INQ,
     label: "a run the agent opened itself", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1",
     bounds: [], leaseMs: 900000 });
   t("an agent whose record declares op=airunopen opens its own run", ownRun?.started, true);
   const ownReq = await POST(`op=capturerequest&token=${opener.token}`, {
