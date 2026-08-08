@@ -4228,3 +4228,172 @@ Driven both ways: over a scratch corpus holding `| D-100 |` and the sentence `D-
 · strict floor 100 · prose-driven **true**; over the same corpus with the sentence removed,
 100 · 100 · **false**; over this repository's live corpus, `D` 243/243 and `C` 34/34, **neither
 prose-driven**. Control arm (7): drop the allocation pattern and three arms fail.
+
+## 2026-08-08, session CONTENT-PDF (cpdf12-pagepixels): A PDF PAGE TURNED INTO PIXELS INSIDE WORKERD — and the rasteriser nobody needed to build (CPDF-12, DEC-42)
+
+**The question.** Moondream and tesseract both consume IMAGES, so the in-account OCR
+route needs a PDF page rendered to pixels, and CPDF-9 measured that nothing in Workers
+renders one: pdf.js's renderer wants a `canvas` workerd does not have. DEC-42 re-scoped
+the item with ONE observation to be **verified, not assumed** — *for the image-only
+class a page is typically ONE embedded image, so image EXTRACTION may serve where
+rasterising was assumed; check it across the corpus BEFORE building a renderer.*
+
+**It was checked first, and it held.**
+
+**Instrument.** `pdf-worker/test/pagepixels-corpus.probe.mjs` (committed, re-runnable,
+NOT in the battery — a `.probe.mjs` is discovered by neither `battery.mjs` nor
+`coverage.mjs`). Subject: `pdf-worker/src/pagepixels.mjs`. Corpus: **59 real Oakland
+PDFs, 27.3 MB, 622 pages** — the attachments of the 40 most recently modified Legistar
+matters (`webapi.legistar.com/v1/oakland/matters`), plus the two documents CPDF-5 named
+by hand, fetched 2026-08-08 and cached with their sha256.
+
+### 1. The census — is a page-of-pixels an EXTRACTION problem or a RASTERISATION problem?
+
+| | pages |
+| --- | --- |
+| carrying a TEXT layer (Tier 1 / the pdf-worker already read these) | 590 |
+| no text and no image (vector marks, or empty) | 8 |
+| **IMAGE ONLY — the class OCR is FOR** | **24** |
+| … of those, composed of exactly **ONE** image | **24 (100.0%)** |
+| … of those, composed of several images | **0** |
+
+Filter chains on the image-only pages, crossed with the page's own `/Rotate`:
+
+| | pages |
+| --- | --- |
+| `DCTDecode` @ `/Rotate 0` | 14 |
+| `DCTDecode` @ `/Rotate 270` | 3 |
+| `CCITTFaxDecode` @ `/Rotate 270` | 7 |
+| `JBIG2Decode`, `JPXDecode` | **0** |
+
+**DEC-42's observation is VERIFIED on this corpus: 24 of 24. A page-to-pixels renderer
+for the image-only class is an image EXTRACTOR plus two decoders, and the canvas
+rasteriser CPDF-9's finding implied is not needed for this class at all.** Stated as
+what it is: a measurement of ONE corpus, not a property of PDF. The renderer therefore
+REFUSES the cases it did not measure (`MULTIPLE_IMAGES_ON_PAGE`, `NOT_IMAGE_ONLY`) by
+name rather than guessing at them, so the day the corpus produces one it is visible.
+
+### 2. Fidelity — and the gate that would have caught the instrument lying
+
+A decoder is the one subject whose failure looks exactly like success: right
+dimensions, right byte count, ink roughly where ink belongs, "all 2550 rows decoded".
+Every summary statistic is satisfied by a picture that is subtly and permanently wrong.
+So **no fidelity figure in this measurement was produced by the subject.**
+`recordFidelity()` THROWS unless the reading's provenance is an INDEPENDENT decoder —
+one sharing no line of source with `pagepixels.mjs`. The independent decoder is
+**Pillow 11.3.0** (libtiff's CCITT G4) reached through **pypdf 6.14.2**, and its version
+string is printed beside every figure. Absent it, the probe reports NO NUMBER; it does
+not fall back to checking its own output against itself.
+
+| | pages |
+| --- | --- |
+| rendered and INDEPENDENTLY checked | **23** |
+| `passthrough-dct` — our bytes vs the raw stream read by pypdf: **BYTE-IDENTICAL** | 16 |
+| `decoded-ccitt-g4` — our pixels vs Pillow's: **PIXEL-EXACT** | 7 |
+| disagreeing with the independent decoder | **0** |
+| refused by the renderer, with a stated reason | 1 (`ENCRYPTED`) |
+
+**CONTROL, RUN: the refused-provenance arm.** Offering the gate a fidelity reading whose
+provenance is `pagepixels.mjs` comparing its own output to itself — declared MUST THROW,
+and it threw. **CONTROL, RUN: the blank-page arm.** A uniform page and a page with ink
+produce different bytes, so a decoder that silently emitted white would be visible rather
+than reported as a clean decode.
+
+**AND THE GATE EARNED ITSELF ON A DIFFERENCE NO VISIBLE FIGURE COULD SEE:** the packed
+1-bit rows disagreed with Pillow's by exactly **10,200 bits — 4 per row x 2550 rows, the
+WASTED PADDING BITS at the end of each scanline**, which a PNG reader must ignore and
+which no dimension, byte count or ink fraction can reach. They are now zeroed so the two
+representations are identical.
+
+### 3. Placement — it runs in workerd, and the DECODE is runtime-independent
+
+The renderer was bundled and driven **inside workerd** (miniflare), which is the runtime
+the placement question is actually about — CPDF-5 paid for that distinction when pdf.js
+threw `Math.sumPrecise is not a function` on node and ran clean on workerd.
+
+| | |
+| --- | --- |
+| bundled, raw | **45,324 B** (against the 10 MB Paid script limit — **Cloudflare's figure**, DEC-42) |
+| dependencies | **zero** (PNG written by hand: CRC32 + `CompressionStream("deflate")`, which is zlib-wrapped and therefore exactly what an IDAT holds) |
+| the scanned page, in workerd | rendered: 2550x3300, upright, `pixels_sha256 ac4eb57f…` |
+| the same bytes, in node | **the same `pixels_sha256`** — and the same value the INDEPENDENT decoder produces |
+
+**A FINDING FROM THE CROSS-RUNTIME ARM, AND IT REACHES DEC-41 RATHER THAN THIS ITEM:
+THE FILE DIGEST IS RUNTIME-DEPENDENT.** The same code over the same input produced
+**129,366 B on workerd and 132,691 B on node** — both valid PNGs of identical pixels.
+`CompressionStream("deflate")` is a platform service and the two runtimes emit different
+deflate streams. **DEC-41 requires each published rendering's hash to join
+`published_shas` so any copy is checkable against the instance; a hash of the FILE is a
+value no verifier on a different runtime can reproduce.** The renderer therefore also
+emits `pixels_sha256`, taken over the normalised samples before any container is built,
+and that value is stable across node, workerd and an independent decoder. Which of the
+two a manifest should carry is stated as a decision in `kickoffs/CONTENT-PDF.md`.
+
+**WHAT THIS DOES NOT MEASURE, and it is the figure the queue row asked for:** there is
+**no Worker CPU number and no isolate memory number here.** Every millisecond in the
+probe is harness WALL time and is labelled as such — a Worker cannot time itself (D-56),
+and the only honest instrument is the platform's own billing surface on a DEPLOYED
+script (FL-1's method). What CAN be said is arithmetic rather than a measurement, and is
+offered as arithmetic: the bilevel path never allocates an RGBA frame. A 3300x2550 page
+costs **1,053,150 B packed** plus the PNG, against the **33.6 MB** an RGBA frame of the
+same page would cost — and memory binds before CPU in a Worker by an order of magnitude
+(MEASUREMENTS: 120.4 MB of a 128 MB isolate while CPU sat at 2.5% of its ceiling). The
+`passthrough-dct` route allocates nothing at all beyond the stream. **D-245.**
+
+### 4. END TO END: the pixels into an OCR engine, scored against CPDF-9's ground truth
+
+The whole point of the item. PDF bytes -> `pagepixels` -> a real OCR engine -> scored
+against the **committed** ground truth of CPDF-9's page 2. Comparability is ENFORCED,
+not claimed: the probe READS `GT_PAGE2` out of `bio-plane/test/ocr-measure-probe.mjs`
+and reports NO NUMBER if that constant has moved, because two copies of a transcription
+drift and two accuracy figures from drifted ground truths are not comparable however
+alike they look.
+
+| | characters | digits | minted digits |
+| --- | --- | --- | --- |
+| **pagepixels -> tesseract.js 7.0.0 (default `eng`)** | **99.93%** | **90/90** | **1** |
+| the floor: CPDF-9, python+Pillow rasterisation -> tesseract `tessdata_fast` | 99.96% | 90/90 | 0 |
+
+**Read the comparison honestly: these are DIFFERENT MODELS.** CPDF-9's floor is
+`tessdata_fast`; this arm ran tesseract.js's default `best_int`, which CPDF-9 itself
+measured minting a digit ($ -> 5). The claim this arm supports is **"the pixels this
+renderer produces are as legible to an OCR engine as a conventional rasterisation of the
+same page"**, and no more.
+
+**AND THE ARM'S FIRST RUN IS THE MOST USEFUL NUMBER IN THIS ENTRY. It scored 8.67%
+characters with 355 MINTED DIGITS, and the engine announced nothing.** The cause was
+`/Rotate 270`: the embedded image is 3300x2550 landscape and the page a reader sees is
+portrait, so the engine was handed a sideways page and returned fluent, confident,
+wholly invented prose. **A page is not its image.** That is CPDF-10's
+output-looks-better-than-its-input hazard arriving one layer BELOW where the chain rule
+was looking for it — before any OCR step exists to record. `upright` is now a
+first-class field of every result, the bilevel routes apply the rotation exactly (a
+quarter turn lands a bit on a bit), and a route that CANNOT rotate says so.
+
+**Which leaves a measured, named gap rather than a hidden one: 3 of the 24 image-only
+pages are `DCTDecode` at `/Rotate 270`.** Rotating a JPEG means decoding and re-encoding
+it, which destroys the one property the pass-through route has — that the bytes in the
+record are the publisher's own. Those pages come back `upright: false` with `rotate_deg`
+stated. **D-244.**
+
+### 5. Negative controls on the battery-resident half
+
+`node pdf-worker/test/pagepixels.control.mjs` — **7 arms, each run ALONE**, every restore
+verified by sha256 AND by byte comparison against a per-arm pristine copy whose byte
+count is printed and floored. Baseline 63 pass / 0 fail. Final run: **7 of 7 behaved as
+declared.** Two of them are worth carrying:
+
+- **Arm (e) came back a SURPRISING GREEN the first time (63 pass, 0 fail) and that was a
+  finding about the SUITE, not the subject.** Dropping the string/inline-image masking
+  should make a naive `Tj` scan read the scanned page as carrying text — but the real
+  scanned page's content stream is `q … cm /Im0 Do Q` and contains no strings at all, so
+  the masking pass changed nothing and the arm tested nothing. Recorded rather than
+  smoothed; a fixture carrying a marked-content string with the letters `Tj` un-absorbs
+  it, and the arm then read 61 pass, 2 fail.
+- **Arm (b) is the one that proves the digests are doing the work**: inverting the padding
+  mask moves the independent-provenance digests and NOTHING ELSE — every dimension, byte
+  count and row count still agrees (59 pass, 4 fail).
+
+**And the FOOT SENTINEL fired during the controls**, printing `53 pass, 2 fail — SUITE
+ENDED BEFORE ITS OWN FOOT` where a TypeError inside an assertion would otherwise have
+ended the module through no assertion at all.

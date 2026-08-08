@@ -4071,3 +4071,45 @@ not owed yet, and the reason is a measurement: the ledger holds 2 ids today. Unt
 from: m0-17-mintid (worktree agent-a6a99245c369a9fd4), M0-17
 what: **`tools/mintid.mjs` holds a register of SIXTEEN namespaces and each one names the corpus its floor is read from. A new prefix that is not in that register is not protected** — the tool will refuse it by name (`REFUSED: unknown namespace`), which is the fail-closed direction, but nothing prompts you to add it. `bio-plane/test/mintid.test.mjs` asserts that every REGISTERED namespace still reads a live corpus and a non-zero floor, so a corpus file RENAMED out from under the register fails by name; it cannot assert the existence of a namespace nobody has told it about.
 why it is not fixed here: enumerating "every prefix-number token in the repository" as a candidate list was measured and is not usable — the wide census returns FW, INFO, IS, INQ, SHA, UTF, RFC, FY2023 and thirty more, most of which are data vocabularies rather than allocated ids, and a detector that cannot tell those apart would produce a list nobody reads. **The judgement of what is an ALLOCATED namespace is a human one, and the register is where it is recorded.**
+
+## CLAIM 2026-08-08 CONTENT-PDF (CPDF-12 — the page-to-pixels renderer)
+session: cpdf12-pagepixels (worktree agent-a3bae0147bbd1869e)
+opened: 2026-08-08 (RECORDED LATE, and said so rather than back-dated: the claim was
+  written after the module and its suite were already green in this worktree. Nothing
+  else touched these paths in the interval — `pdf-worker/**` has no other live claim and
+  `pdfstructure.mjs`'s only live claim is CONTENT-PDF's own from 2026-07-31 — but the
+  rule is claim-before-edit and this entry did not obey it.)
+paths: **`pdf-worker/src/pagepixels.mjs` (NEW)** — the renderer. **`pdf-worker/src/pagepixels-worker.mjs` (NEW)** — a probe-only workerd entry point; NOT the member's surface and NOT wired into `pdf-worker/src/index.mjs`. **`pdf-worker/test/pagepixels.test.mjs` (NEW)** — the battery-resident suite. **`pdf-worker/test/pagepixels.control.mjs` (NEW)** — its seven negative-control arms, re-runnable in one step. **`pdf-worker/test/pagepixels-corpus.probe.mjs` (NEW)** — the measurement instrument (a `.probe.mjs`: NOT discovered by `battery.mjs` or `coverage.mjs`). **`pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf` (NEW)** — the hermetic fixture. **`bio-plane/src/pdfstructure.mjs` — ONE WORD**: `class PdfDoc` becomes `export class PdfDoc`, with a comment saying why. `docs/development/MEASUREMENTS.md` (APPEND). `docs/development/DEBT.md` (APPEND — D-244/245/246, all minted with `tools/mintid.mjs`). `docs/development/kickoffs/CONTENT-PDF.md` (this area's own file — the landing section and the decision running provisionally). `docs/development/QUEUE.md` (**the CPDF-12 row's `landed:` line ONLY**). `docs/development/CLAIMS.md` (this entry and its delegations). **NOT** `bio-plane/src/index.mjs`, **NOT** `store.mjs`/`schema.mjs`/`query.mjs`, **NOT** `bio-plane/checks/**`, **NOT** any other test suite, **NOT** `bio-plane/scripts/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `docprofile/**`, **NOT** `tools/**`.
+interfaces consumed: none reshaped. The renderer reads PDF bytes and emits an image; it touches no op, no envelope and no stored shape.
+interfaces owned: none yet — **I6 IS DELIBERATELY NOT EXTENDED.** The member's `SURFACE` table is unchanged and no route reaches this module in a deployed Worker. Adding a surface op is a change to I6 and belongs with the item that CONSUMES the pixels (CPDF-10), not with the measurement that establishes they can be produced.
+expected: QUEUE.md CPDF-12 / DEC-42's re-scope. **The one instruction that shaped everything: "for the image-only class a page is typically ONE embedded image, so image EXTRACTION may serve where rasterising was assumed — VERIFY ACROSS THE CORPUS BEFORE BUILDING A RENDERER."** It was verified first and it held at 24 of 24.
+accepts-when: as the CPDF-12 row. **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 132/132 suites green · 8,256 assertions · 112.5 s · exit 0**, provenance `134 of 134 discovered item(s) are in the commit at HEAD (054fb4f)`; `node bio-plane/scripts/coverage.mjs --strict` exit 0 (`arms 557/557 · classified 128/128 · corpus 129/129`); `node civicos-ui/test/run.mjs` from the repo root exit 0. **THE BRIEF'S FIGURES WERE EXACTLY RIGHT (~132/132, ~8,256) and that is recorded rather than assumed** — the practice is to trust the measurement, not the streak.
+concurrency: `bio-plane/scripts/coverage.mjs` **is not edited** — see the delegation below about `REGISTER_FLOOR`. The one shared file touched is `bio-plane/src/pdfstructure.mjs`, for a single `export` keyword on an existing declaration; if that conflicts at merge, KEEP THE EXPORT (removing it breaks `pdf-worker/src/pagepixels.mjs`'s import and reds the battery).
+released: 2026-08-08 — committed on `worktree-agent-a3bae0147bbd1869e`, NOT pushed and NOT merged; CONDUCT integrates.
+
+## DELEGATION 2026-08-08 CONTENT-PDF → CONDUCT: the register floor moved and I did not move it
+from: cpdf12-pagepixels (worktree agent-a3bae0147bbd1869e), CPDF-12
+what: this item adds ONE suite (`pdf-worker/test/pagepixels.test.mjs`) with a
+  multi-arm `NEGATIVE CONTROL:` declaration, so `REGISTER_FLOOR` in
+  `bio-plane/scripts/coverage.mjs` GREW rather than fell. **The floor is
+  deliberately NOT edited here.** Eleven items moved that one key set in parallel
+  on 2026-08-08 and keep-both merges left duplicate `arms:` keys four separate
+  times — valid JavaScript where the last silently wins, and the last was the
+  lowest. The figures this worktree's `--strict` printed after the change are in
+  the released line above; **re-read them from a green run of the MERGED tree
+  rather than trusting these**, which is REC-63's own instruction and the reason
+  five consecutive items raised this rather than editing it.
+why it is CONDUCT's: one writer, one merge, one re-read.
+
+## DELEGATION 2026-08-08 CONTENT-PDF → WHOEVER OWNS THE FLEET (and CPDF-10 first)
+from: cpdf12-pagepixels (worktree agent-a3bae0147bbd1869e), CPDF-12
+what: **the renderer exists, is verified, and is NOT REACHABLE BY ANYTHING.**
+  `pdf-worker/src/index.mjs`'s `SURFACE` is untouched, so no deployed Worker can
+  ask for a page of pixels. Wiring `render` into that table is an I6 change (a
+  new surface op, a `mutating: false` row, a control-plane assertion in the same
+  turn per VERIFICATION.md item 4) and it belongs to the item that consumes the
+  pixels. **Do not read "it runs in workerd" as "it is wired": those are the two
+  halves D-108 exists to keep apart.**
+why it is not done here: CPDF-12 is the measurement plus the module. An op nobody
+  calls is an op nobody tests, and this item would have shipped the surface
+  without the caller.
