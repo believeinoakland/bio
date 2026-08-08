@@ -6326,13 +6326,24 @@ export const BIAS_CHECKS = {
      translations sat one level down in a list the surface had no reason to
      open. So the container gets a translation of its own, and it says the one
      thing the per-finding translations cannot: that NOTHING LANDED.
-     ITS `where` NAMES `promote` RATHER THAN THE CATALOGUE, unlike its ten
-     siblings, because that is where it FIRES — and naming it is what puts this
-     code inside the guard's governed-site set for `promote`. The ten above fire
-     in `checkBiasExtension` and say so. */
+     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, unlike its ten
+     siblings, because that is where it FIRES — and naming the site is what puts
+     this code inside the guard's governed set. The ten above fire in
+     `checkBiasExtension` and say so.
+     NARROWED TO A REGION 2026-08-08 BY REC-71, AND PL-12'S REASONING ABOVE IS
+     PRESERVED RATHER THAN OVERTURNED — only the GRAIN was wrong. This read
+     `src/store.mjs promote`, and at whole-function granularity that claimed all
+     ~960 other lines of `promote` for BIAS_CHECKS: **34 long-standing refusals
+     were conscripted and the UI harness went red a second time within hours of
+     the first, in the family next door.** BEING AN ENVELOPE IS A FACT ABOUT THE
+     REFUSAL'S SHAPE — it wraps per-finding codes — AND SAYS NOTHING ABOUT ITS
+     SPAN. This one fires at a single statement inside a single `if`. The reasoning
+     in full, including what WOULD justify the wider spelling, is at the marker in
+     `store.mjs`; see also the "WHAT A `where` MEANS" block at the head of this
+     file. */
   BIAS_REFUSED: {
     check: 'C-26.11',
-    where: 'src/store.mjs promote, reached from op=promote',
+    where: 'src/store.mjs promote > bias-set-refusal, reached from op=promote',
     translation: 'That bias set was not written. One or more of its statements is not something the '
       + 'record can honour, and each one is named below with what is wrong with it. '
       + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',

@@ -2507,3 +2507,37 @@ Two distinct causes, both worth fixing on their own item:
 ### DELEGATION 2026-08-08 VERIFY -> CONDUCT: `REC-71` HAS NO ROW IN `QUEUE.md`, AND THE QUEUE TOPS OUT AT `REC-70`
 
 The brief for this item says *"the `REC-71` row in `QUEUE.md` (it governs)"*. **There is no such row in this worktree at `a24f2b0`** — `grep -n "REC-71"` over the whole tree returns nothing and the highest RECORD id present is `REC-70`. The work was done against the brief and against what PL-2, PL-12 and UI-51 measured, which agree; **but the row that is supposed to govern does not exist, so nothing in the repository records what this item's `accepts-when` was.** This claim block carries it in the meantime. CONDUCT owns `QUEUE.md` and is its only writer, so REC-71 does not write the row — it says so rather than letting it pass, because "the repository is the channel" and an item nobody can find in the queue reached nobody.
+
+### CLAIM AMENDMENT 2026-08-08 VERIFY · rec71-agent — THE SAME TREATMENT, THE SECOND FAMILY
+
+Amended into the REC-71 claim above, same session, before any handoff, at CONDUCT's direction at re-integration. **Two paths added, both by SITE:**
+
+- **`bio-plane/checks/bio-checks.mjs`** — the `where` field of **`BIAS_CHECKS.BIAS_REFUSED`** (C-26.11) and its row comment. **No translation, no C-number, no code and no other BIAS row is touched.**
+- **`bio-plane/src/store.mjs`** — one further `DEC-49 REGION bias-set-refusal` marker pair around `promote`'s bias-set write-path refusal. **COMMENTS ONLY**, proved by stripping every comment from both revisions and comparing byte for byte, with the stripper itself checked against a fixture that must trip it.
+
+**WHY: `main` went red a SECOND time within hours, in the family next door.** PL-12's `BIAS_REFUSED` carried `where: 'src/store.mjs promote'` at whole-function granularity and conscripted **36** refusals — PL-1's defect exactly, arriving before the convention that fixes it existed. PL-12 was rebased onto PL-1, but neither could see the region mechanism. **36 and not 34**: a whole-function `where` also conscripts the refusals the OTHER family's regions correctly govern.
+
+**THE JUDGEMENT, since CONDUCT asked for it rather than the pattern: `BIAS_REFUSED` GETS A REGION.** PL-12's reasoning for naming `store.mjs` rather than the catalogue was RIGHT and is preserved — the code fires there, and naming the site is what puts it inside the guard's governed set. **Only the GRAIN was wrong. Being an ENVELOPE is a fact about the refusal's SHAPE and says nothing about its SPAN.** It fires at one statement inside one `if`; it is not enforced across the other ~960 lines. **What WOULD justify the wider spelling is written at the marker rather than left as a closed door**: a `where` may name a whole function when every refusal that function makes is the family's business — true of `airun.mjs`'s three check functions, and unlikely ever to be true of a function that both validates and writes.
+
+**Each newly narrowed region owes its OWN teeth arm** — control (r5) plants a codeless refusal inside `bias-set-refusal` and the harness fails naming file, line, function and region. Inheriting another region's arm is not proof.
+
+released:
+
+### DELEGATION 2026-08-08 VERIFY -> REC-64: THE UNFALSIFIABLE COUNT IS NOW **7 OF 13**, AND EVERY NEW FAMILY ADDS MORE
+
+**Re-measured on the merged tree, and this is the number that should drive REC-64's shape.** Arm C reads **776 lines across seven governed sites and compares ZERO refusal codes against a row in any of them.** PL-12 added three: `checkBiasExtension` (158L, 7 rows), `biasInhale` (111L), `biasAdopt` (58L) — joining `basisVersionFindings` (213L, 14 rows), `basisVersions`, `meaningRows`, `versionChain`.
+
+**Arm C's teeth reach 5 of 13 sites**: `airun.mjs`'s three check functions and REC-71's three regions. Everywhere else the `where` is neither passing nor failing on merit.
+
+The two causes are unchanged and both are one item's work, not thirteen:
+
+- **A check function that PUSHES FINDINGS** never returns an `ok:false` object, so arm C's matcher sees no refusal in it at all. That is `basisVersionFindings` and `checkBiasExtension` — **21 rows between them**, pointing at spans the guard cannot judge.
+- **A local `refuse(key, detail)` helper** binds the code to a VARIABLE, so arm C records the refusal as coded and checks nothing. `meaningRows`, `versionChain`, `basisVersions`, and the bias read paths.
+
+**This is REC-70's class — a matcher admitting one spelling of a thing the plane spells several ways — and REC-71 deliberately did not widen into it**, because widening one item's scope to reach a neighbouring defect is precisely the mistake REC-71 exists to correct. But **the trend is the point**: every family added since VF-2 has added unfalsifiable sites, and the ratio is getting worse, not better. A green guard does not mean every governed site is proved clean, and the per-site line is what makes that legible rather than assumed.
+
+### DELEGATION 2026-08-08 VERIFY -> CONDUCT / whoever lands the NEXT DEC-49 FAMILY: MOVE THE FLOORS IN THE SAME TURN
+
+**The corpus floors went stale twice in one day, and each time it cost something measurable.** PL-1 grew the census 311 -> 330 while the floor stayed at 311, and negative control (e) silently went RED -> GREEN: the guard passed a walk that had lost an entire spelling. PL-12 then grew it 330 -> 341 within hours, restoring 11 codes of slack.
+
+**A family added without moving `FLOOR.families`, `FLOOR.rows`, `FLOOR.census` and `FLOOR.reach` is a family whose codes buy slack for everybody else's walk.** The guard prints all four figures and its floor on every run, so the remeasure is one line each. `FLOOR.bodyLines` is the deliberate exception and says so at the site: it FALLS whenever a `where` is correctly narrowed, which is the work REC-71 licensed, so it stays a collapse detector while `codesChecked` carries the ratchet.

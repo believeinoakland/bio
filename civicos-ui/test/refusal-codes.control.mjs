@@ -281,11 +281,21 @@ arm("(r2)", [
     from: `    where: 'src/store.mjs promote > basis-version-resolve, NOT reachable from a pure document check',`,
     to: `    where: 'src/store.mjs promote (the basis-version resolve arm), NOT reachable from a pure document check',` },
 ], guard, r => {
-  const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row/g) || []).length;
+  /* PIN CORRECTED 2026-08-08, NOT EXEMPTED, and the correction is itself the
+     evidence the arm is live. It read 32 — the number `main`'s red harness
+     reported on the PL-1-only tree — and measured 33 once PL-12 landed, because
+     PL-12 added `BIAS_REFUSED` to `promote` and a whole-function `where`
+     conscripts every refusal in the function INCLUDING ones that arrived after
+     the row was written. **That drift is the defect in miniature: the set a
+     whole-function `where` claims is not fixed at the time it is written, it
+     grows with the function.** The count is now family-specific so this arm and
+     (r6) cannot borrow each other's failures. */
+  const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BASIS_VERSION_CHECKS/g) || []).length;
   return {
-    ok: r.exit === 1 && n === 32,
-    what: `the guard exits 1 with EXACTLY 32 conscripted refusals again (measured ${n}) — the number `
-        + `main's red harness reported, so the narrowing is shown to be what removed them`,
+    ok: r.exit === 1 && n === 33,
+    what: `the guard exits 1 with EXACTLY 33 refusals conscripted into BASIS_VERSION_CHECKS again `
+        + `(measured ${n}) — 32 on the PL-1-only tree plus PL-12's BIAS_REFUSED, so the narrowing is `
+        + `shown to be what removed them`,
   };
 });
 
@@ -314,6 +324,42 @@ arm("(r4)", [{
   ok: r.exit === 1 && /found 0 `DEC-49 REGION basis-version-freeze` opening marker\(s\)/.test(r.out),
   what: "the guard exits 1 naming the region the `where` claims and the source no longer declares",
 }));
+
+/* ---------------------------------------------------------------- (r5)
+   THE SAME TREATMENT, THE SECOND FAMILY. PL-12's `BIAS_CHECKS.BIAS_REFUSED`
+   carried `where: 'src/store.mjs promote'` at whole-function granularity and
+   conscripted 34 refusals in exactly the way PL-1's two rows had days earlier —
+   **the convention arriving in the family next door before it existed.** The
+   teeth are re-proved INSIDE the newly narrowed region rather than assumed to
+   work because they worked in the other one: a narrowing is only as good as the
+   arm that shows it did not blind the guard, and each region owes its own. */
+console.log("\n(r5) THE TEETH INSIDE THE **BIAS** REGION — each newly narrowed region owes its own arm");
+arm("(r5)", [{
+  file: F.store,
+  from: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {`,
+  to: `      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+        if (pkg.__rec71_bias_control__) return { ok: false, detail: "a refusal nobody gave a code" };`,
+}], guard, r => ({
+  ok: r.exit === 1
+      && /src\/store\.mjs:\d+ \(in promote > bias-set-refusal\) returns a CODELESS REFUSAL/.test(r.out),
+  what: "the guard exits 1 naming src/store.mjs, the LINE, promote AND the bias-set-refusal region",
+}));
+
+console.log("\n(r6) THE FIX IS THE FIX, SECOND FAMILY — restore BIAS_REFUSED's whole-function `where`");
+arm("(r6)", [{
+  file: F.catalog,
+  from: `    where: 'src/store.mjs promote > bias-set-refusal, reached from op=promote',`,
+  to: `    where: 'src/store.mjs promote, reached from op=promote',`,
+}], guard, r => {
+  const n = (r.out.match(/refuses with code [A-Z_]+, which is NOT a row in BIAS_CHECKS/g) || []).length;
+  return {
+    ok: r.exit === 1 && n === 36,
+    what: `the guard exits 1 with EXACTLY 36 refusals conscripted into BIAS_CHECKS again (measured `
+        + `${n}) — the number CONDUCT measured on the merged tree, so the narrowing is shown to be `
+        + `what removed them. Note 36 and not 34: a whole-function \`where\` also conscripts the two `
+        + `refusals the OTHER family's regions correctly govern`,
+  };
+});
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");
