@@ -159,6 +159,7 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
+<<<<<<< HEAD
   arms:       478,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
@@ -169,6 +170,15 @@ const REGISTER_FLOOR = {
                        THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
                        RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
                        accumulate any, which is exactly what D-233 and REC-71 were about. */
+=======
+  /* MOVED 2026-08-08 by M0-12, from 470/119/120, to the figures a green run PRINTED
+     after `test/op-claims.test.mjs` joined the battery with an 8-arm declaration.
+     M0-14's own rule and the reason it exists: move these only UPWARD and only to a
+     printed figure — a floor left with slack is not a ratchet, and this project has
+     measured a floor sitting 19 codes low that had already flipped a control from
+     RED to GREEN. */
+  arms:       478,  // arms stated across the classified declarations
+>>>>>>> worktree-agent-a5b4da09d5c190b09
   classified: 120,  // declarations the detector could count arms in
   corpus:     121,  // suites the register reads
 };

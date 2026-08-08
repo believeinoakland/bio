@@ -128,7 +128,8 @@ const actIds = (r) => (r?.acts ?? []).map((a) => a.id).sort();
 const imageOf = async (id) => (await GET(`op=image&token=mem-rec17&id=${encodeURIComponent(id)}`)).result?.["bundle.md"];
 /* The legs read from the DOCUMENT, which is the authority for a basis (D-21:
    inquiry_basis is a projection of it, never a second place to state it).
-   `op=basis` is DO-internal — REC-11 left its control-plane surface to the
+   the DO path `basis` is DO-internal — no op reaches it, M0-12, so it is named
+   here as a path rather than as an op; REC-11 left its control-plane surface to the
    items that need one — so a caller reads the bytes, exactly as this does. */
 const legsOf = async (id) => ((parseFrontmatter(await imageOf(id)).data || {}).basis || []);
 const listRow = async (id) => ((await GET("op=list&token=mem-rec17")).result || []).find((b) => b.bundle_id === id);

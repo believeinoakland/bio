@@ -233,6 +233,68 @@ name in `REGISTER_UNCLASSIFIED`, because that is D-233 arriving again.
 The six arms are declared in `hygiene.test.mjs`'s own control block and RUN by
 `bio-plane/test/register.control.mjs` (`node test/register.control.mjs`).
 
+## Prose naming an op is a CLAIM about the dispatch table (M0-12)
+
+**REC-58 was a whole queue item spent establishing that a sentence was false**, and the
+sentence had already been COPIED into the item's own scope before anybody drove the op.
+`bio-plane/scripts/op-claims.mjs` + `bio-plane/test/op-claims.test.mjs` are the
+mechanical defence. Run in the battery; the controls are
+`node test/op-claims.control.mjs`.
+
+**READ WHAT IT ESTABLISHES BEFORE QUOTING IT AS A DEFENCE. IT IS HALF A DEFENCE AND
+THE HALF IT IS NOT IS THE ONE THE ORIGINAL SENTENCE WAS ALSO WRONG ABOUT.**
+
+| it | what |
+| --- | --- |
+| **DOES** | assert that every `op=<name>` token in the corpus names a key of the `OPS` whitelist, or is registered with a human's reason |
+| **DOES** | separate the two LEVELS. `OPS` in `index.mjs` is a strict whitelist; the store's `map` is DO paths resolved from `pathname`, where **no `op=` reaches at all**. `DO_PATH` aliases `op=publish` onto the DO path `publishcase`, so the op whose NAME matches the method is routed AWAY from it |
+| **DOES** | check a stated ROUTING — prose saying an op dispatches to a named method must agree with the table |
+| **DOES NOT** | **check what an op RETURNS. Not one assertion reads a response shape.** A field arriving through a SPREAD declares no key, so no source-level instrument can see it (REC-58 measured exactly this) |
+| **DOES NOT** | verify that a stated NON-existence is TRUE, except for the `NEVER` ledger entries a human registered |
+
+**WOULD IT HAVE CAUGHT IC-22? YES — AND NOT FOR THE REASON THE QUEUE ROW HOPED.** The
+sentence prefixed `publishcase` as an op and said it returns `opened`, and it was wrong
+TWICE. The check catches the op half: **there is no such op**, `publishcase` is the DO
+path. It does not
+and cannot catch `returns opened`. Had the sentence named `op=publish` — the same
+falsehood about the field, under the correct op name — **every check here would pass
+it.** Stated this way because describing it generously is the exact failure M0-12 exists
+to prevent.
+
+**THE LANGUAGE-READING VERSION WAS BUILT, MEASURED AND REMOVED, and that measurement is
+the reusable part.** Two drafts classified a mention from the prose around it, so a
+sentence saying an op does NOT exist would invert the check rather than switch it off.
+Draft 1 (a 220-char window, vocabulary including "absent from") called **141** mentions
+of ops that DO exist claims that they do not. Draft 2, tightened to +110/-40 with
+phrases read off real sites, still produced **48, every one inspected being noise** —
+`op=list … a hash that never existed` (the HASH), `absent from op=list` (the RECORD),
+`op=ratify … a caller gets unknown op` (a DIFFERENT op in the same clause).
+**The vocabulary of non-existence is the vocabulary this repository uses for absence of
+every kind**, and no window separates them because the ambiguity is semantic, not
+positional. A check that cries wolf gets switched off — this file's own reason for not
+making `--strict` the gate yet — so it was removed rather than tuned.
+
+**WHAT REPLACED IT IS A LEDGER**, `LEDGER` in `op-claims.mjs`: every `(file, name)`
+where prose names a non-op, with a reason and an EXACT count. Exact, not a ceiling,
+on `REGISTER_FLOOR`'s reasoning. Each kind carries its own expiry — a `DO-PATH` entry
+fails if the name stops being a route, a `NEVER` entry fails if it becomes one, and
+**either fails the day the name appears in `OPS`**. `PLANNED_OPS` registers designed-but-
+unbuilt ops BY NAME and fails when one is built.
+
+**WHAT IT FOUND ON ITS FIRST RUN, over 401 files / 16,940,634 chars / 7,063 mentions
+across 199 distinct names:** 135 sites naming something that is not an op. **The
+sharpest was in the correction REC-58 itself wrote**: `store.mjs`, `case-opened.test.mjs`
+and `multifinding.test.mjs` all prefixed `publishcase` as an op while recording that
+REC-41 had been *right about the field and wrong about the op*. **Fourth time.** 23 sites corrected
+in `bio-plane/**`, which now reads ZERO; the rest are ledgered and delegated, the largest
+single instance being `research/DATA-MODEL.md`'s route table (27 registrations) and two
+genuinely rotten names there (`session`, `wake`, both prefixed as ops) that are in
+neither table. **This paragraph is written in bare path names on purpose: this file is
+inside the corpus the check sweeps, and prefixing them to quote the defect would BE the
+defect.** The instrument and its suite are both written around their own rule for the
+same reason — the first drafts of each FAILED THEMSELVES, which is the "sweep arm that
+failed by citing itself" shape this project has already paid for.
+
 ## What a queue item must satisfy before it is done
 
 The one thing `PLAN.md` had that `QUEUE.md` did not: *every acceptance test is

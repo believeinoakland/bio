@@ -8547,7 +8547,8 @@ export class Store extends DurableObject {
          above publishes `remaining` and this one published only `examined`, the
          count of what it TOOK, which equals the cap on exactly the run where more
          is left. So `op=reproject` could tell an operator to run it again and
-         `op=reindexnames` could not, and the two backfills answered the same
+         the DO path `reindexnames` could not (M0-12: that one is DO-internal and
+         no op reaches it), and the two backfills answered the same
          question in two shapes. `remaining` is its sibling's word, deliberately,
          rather than a third spelling. */
       limit,
@@ -15814,17 +15815,30 @@ export class Store extends DurableObject {
 
                 CORRECTED 2026-08-05 (REC-58), AND THE CORRECTION IS THE WHOLE
                 OF THAT ITEM. This block used to finish: "`#caseEditionState`
-                still carries `opened` and STILL SHOULD — `op=publishcase`
+                still carries `opened` and STILL SHOULD — [the publish-case op]
                 returns it to the member who just published, which is a
                 different op, a different class and a different question". The
-                CONCLUSION was right and the REASON WAS FALSE. `op=publishcase`
-                dispatches to `publishCase()`, which computes no `opened`, reads
-                none and returns none — the only occurrence of the letters in
-                its whole body is the word "reopened" inside a refusal sentence.
+                CONCLUSION was right and the REASON WAS FALSE. `publishCase()`
+                computes no `opened`, reads none and returns none — the only
+                occurrence of the letters in its whole body is the word
+                "reopened" inside a refusal sentence.
                 No sibling op was being spared, because no sibling op publishes
                 it. REC-58 was queued off this sentence to sweep a site that
                 does not exist, which is why the sentence is corrected here
                 rather than quietly dropped: an item was spent on it.
+
+                CORRECTED AGAIN 2026-08-08 (M0-12), AND THE SECOND CORRECTION IS
+                WHY THAT ITEM EXISTS. Both sentences above named the op as
+                `publishcase`. THERE IS NO SUCH OP. `publishcase` is the STORE'S
+                DO PATH; `DO_PATH` in index.mjs aliases `op=publish` onto it, so
+                the op whose name matches the method is routed AWAY from it and
+                a caller sending the path name as `op=` gets `unknown op`. The
+                routing chain, in full: **`op=publish` -> DO path `publishcase`
+                -> `Store.publishCase()`**. REC-58 was right about the field and
+                wrong about the op — REC-41's lesson for the FOURTH time, inside
+                the very correction written to close the third. The mechanical
+                check is `scripts/op-claims.mjs`, driven by
+                `test/op-claims.test.mjs`, and it found this line.
 
                 WHERE IT ACTUALLY GOES, measured: `#caseEditionState` has TWO
                 callers. `publish()` — the ratification committer — returns the
@@ -18268,12 +18282,21 @@ export class Store extends DurableObject {
      * WHY THE RECORD'S SIDE AND NOT THE CALLER'S. D-21: the document is the
      * authority and `inquiry_basis_versions` is its projection, written by the
      * ONE write site PL-1 pinned. Echoing the caller's bytes would publish a
-     * value nothing else in the plane will ever produce again — `op=basisversion`
+     * value nothing else in the plane will ever produce again — `op=basisversions`
      * publishes this same stored `composition`, so the two answers would
      * disagree about one version, which is the two-readers-of-one-row defect
      * REC-74 exists for. Reading it back also makes the equality OBSERVABLE:
-     * a consumer can compare this against `op=basisversion` and get the same
+     * a consumer can compare this against `op=basisversions` and get the same
      * string, and the suite drives exactly that.
+     *
+     * (Both op names above read `basisversion`, singular, until 2026-08-08.
+     * There is no such op. CORRECTED AT INTEGRATION by CONDUCT, and the way it
+     * was found is the point: M0-12's new check caught it on the MERGED tree,
+     * hours after M0-12 measured its own corpus clean. REC-75 wrote these two
+     * lines in parallel and neither worker could see the other. That is the
+     * class M0-12 exists for — a comment naming an op is a CLAIM about the
+     * dispatch table, and prose about the table rots silently — arriving as its
+     * own first catch, in a comment that is otherwise entirely correct.)
      *
      * WHAT IT COSTS IF IT IS WRONG: one read, and one field. Reversing it is
      * substituting `candidate.composition` back and dropping `composition_of`. */
@@ -20160,7 +20183,8 @@ export class Store extends DurableObject {
    *  purpose". The instrument avoided the one-vocabulary mistake in its leaves
    *  and committed it at its root — and it was not one op: **the gate hid 27 of
    *  the 156 dispatched ops**, `op=signerlist`, `op=publishedlist`,
-   *  `op=inboxlist`, `op=memberlist` and `op=verify` among them, every one of
+   *  `op=inbox` (M0-12: `inboxlist` is the DO PATH it is aliased to, not an op
+   *  name a caller may send), `op=memberlist` and `op=verify` among them, every one of
    *  them a real unbounded collection read. Measured 2026-08-07, REC-70.
    *
    *  SO THE FIX IS NOT `ok: true` HERE. Adding the marker this method does not

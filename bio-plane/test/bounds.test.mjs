@@ -855,8 +855,9 @@ t("op=tasks answers the completeness question in op=queue's OWN shape — not a 
   [["limit", "truncated"].every((k) => k in tk1), ["limit", "truncated"].every((k) => k in q1)], [true, true]);
 
 /* ---------------------------------------------------- the two backfills, LAST,
-   because both CLEAR a derived structure to arm themselves. `op=reindexnames`
-   is not on the control plane at all (there is no OPS entry), so it and the two
+   because both CLEAR a derived structure to arm themselves. `reindexnames`
+   is not on the control plane at all (there is no OPS entry — M0-12: it is a DO
+   PATH and naming it `op=` would be the wrong level), so it and the two
    clear paths are driven at the Durable Object — projection.test.mjs's
    precedent. */
 console.log("\n--- LIVE: the two bounded BACKFILLS, which say 'run me again' rather than 'truncated' ---");
@@ -870,17 +871,17 @@ t("op=reproject: DELTA — a pass that finished reads differently from one that 
 
 await DO("readingtermsclear", {});
 const rn1 = await DO("reindexnames", { limit: 1 });
-t("op=reindexnames: publishes the bound this pass applied", rn1.limit, 1);
+t("DO reindexnames: publishes the bound this pass applied", rn1.limit, 1);
 /* THIS ONE WAS NOT IN THE ITEM'S BRIEF. It published `examined` — the count of
    what it TOOK, which EQUALS the cap on exactly the run where more is left —
    and no remainder, while its own sibling `#backfillProjection` published one.
    The op=tasks/op=queue defect, between two backfills, one layer down. */
-t("op=reindexnames: `remaining` now says work is left, in its SIBLING's word rather than a third spelling",
+t("DO reindexnames: `remaining` now says work is left, in its SIBLING's word rather than a third spelling",
   rn1.remaining > 0, true);
-t("op=reindexnames: and `examined` alone could NOT have said it — it equals the cap on exactly that run",
+t("DO reindexnames: and `examined` alone could NOT have said it — it equals the cap on exactly that run",
   rn1.examined, rn1.limit);
 const rn2 = await DO("reindexnames", { limit: 500 });
-t("op=reindexnames: DELTA — a finished pass reads differently from a cut one",
+t("DO reindexnames: DELTA — a finished pass reads differently from a cut one",
   [rn2.remaining > 0, rn1.remaining > 0], [false, true]);
 
 /* ------------------------------------------- the orphan list inside op=searchindexcheck.

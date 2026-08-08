@@ -2978,7 +2978,9 @@ export default {
        record changes, so the answer is computed at read time and never frozen
        into the capture. */
     /* What runs here have COST, measured. A read, and the honest counterpart to
-       op=capturelimit: that one reports a ceiling found by being refused, this
+       the store's `capturelimit` read — a DO PATH and not an op, M0-12; nothing
+       on the control plane reaches it — : that one reports a ceiling found by
+       being refused, this
        one reports consumption found by measuring, because CPU has no catchable
        refusal to find a ceiling with. */
     if (op === "runtime") {

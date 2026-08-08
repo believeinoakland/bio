@@ -3428,3 +3428,58 @@ expected: QUEUE.md M0-10. Name the CAUSE of `migrate.test.mjs`'s concurrency sen
 accepts-when: as the M0-10 row. Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief: **123 suites (120 plane + 3 fleet) · 122 green + 1 named skip (`pdf-worker`, D-232 — not this item's) · 7,659 assertions**, which AGREES with the brief. Battery run repeatedly AND concurrently with `node scripts/coverage.mjs --strict`, every run's count reported; `$?` unpiped on both; `node civicos-ui/test/run.mjs` from the repo root, exit unpiped; `node tools/plancheck.mjs` clean but for UNPUSHED. Negative controls RUN, each arm ALONE, restores verified by sha256 AND by `cmp` with uniquely-named copies, the harness written INSIDE this worktree (`m0-10-harness/`, untracked). No push, no merge, no deploy.
 concurrency: checked over the whole file. No live claim names `migrate.test.mjs` or `bootstrap.test.mjs`. `hygiene.test.mjs` appears in two entries, both LANDED (M0-8's D-186 block at the top of this file, and PL-11's `aicredential` D-113 exemption block — merged on main); my edit is a NEW assertion inside M0-8's own sandbox block and touches neither the D-113 table walk nor any exemption row. `scripts/control-register.mjs` is M0-14's and is NOT touched; `scripts/battery.mjs` is deliberately NOT touched, because serialising or re-instrumenting the runner is the workaround this item exists to refuse.
 released:
+
+---
+
+## CLAIM 2026-08-08 M0 (VERIFICATION / TEST ESTATE)
+session: m0-12-agent
+opened: 2026-08-08T00:00:00Z
+paths: `bio-plane/scripts/op-claims.mjs` (NEW — the dispatch-table reader and the corpus walk); `bio-plane/test/op-claims.test.mjs` (NEW — the assertions, the reach delta and the corpus print); `bio-plane/test/op-claims.control.mjs` (NEW — the harness that RUNS the control arms; deliberately not a `.test.mjs` because it edits real files, `register.control.mjs`'s precedent); `bio-plane/scripts/coverage.mjs` **NOT touched**; comment-only corrections to `bio-plane/src/store.mjs`, `bio-plane/test/case-opened.test.mjs`, `bio-plane/test/meaning-bounds.test.mjs` where a comment names an op at the wrong level (hygiene, no behaviour — the files are byte-identical to HEAD after comment stripping); `docs/development/VERIFICATION.md` (what the new instrument can and cannot establish); `docs/development/MEASUREMENTS.md` (the corpus figures with date and instrument); `docs/development/DEBT.md` (the row for what is delegated). QUEUE.md NOT touched (CONDUCT's sole-writer file). NO plane behaviour, no `newgroup/**`, no `pdf-worker/**`, no `civicos-ui/**`, no `docs/development/research/**`.
+interfaces consumed: none
+interfaces owned: none
+expected: QUEUE.md M0-12 — a comment naming `op=<name>` is a CLAIM about the dispatch table and nothing checked it. REC-58 burned a full item on one such sentence.
+
+### DELEGATION 2026-08-08 M0 (M0-12) -> CONDUCT: **IC-22's CORRECTION IS ITSELF AT THE WRONG LEVEL, AND SO IS M0-12's OWN QUEUE ROW**
+
+M0-12 built the mechanical check the row asked for and pointed it at the tree. **It fired on the correction REC-58 wrote, and on the row that queued M0-12.** (Every name below is written as a bare DO path on purpose: this file is inside the corpus the check sweeps, and prefixing them to quote the defect would BE the defect.)
+
+- **`docs/development/INTERFACE-CHANGES.md`**, 3 sites. IC-22's struck sentence AND CONDUCT's appended CORRECTION both prefix `publishcase` as an op. **There is no such op.** `publishcase` is the STORE'S DO PATH; `DO_PATH` in `index.mjs` aliases `op=publish` onto it, so a caller sending the path name as `op=` gets `unknown op`. The true chain is **`op=publish` -> DO path `publishcase` -> `Store.publishCase()`**. The correction was right that the method computes no `opened`; it named the op one level down while doing so.
+- **`docs/development/QUEUE.md`**, 7 sites — including **M0-12's own scope paragraph** and REC-58's landed row.
+- **`INTERFACES.md`** 2, **`MEASUREMENTS.md`** 3, **`CLAIMS.md`** 10 (this file, append-only history).
+
+**NOT CORRECTED BY M0-12, deliberately, and the reasoning is the same one REC-58 used when it routed this here rather than reaching for the IC:** amending a SETTLED IC is a protocol act with an owner, `QUEUE.md` is CONDUCT's sole-writer file, and `MEASUREMENTS.md` is a dated record of what was measured rather than a document that gets rewritten. **What M0-12 did instead is make it BOUNDED:** every site is registered in `LEDGER` in `bio-plane/scripts/op-claims.mjs` with an EXACT count, so it can only shrink, and a NEW one anywhere in the repository fails the battery naming the file, the line, the op and the op that actually routes there. Debt row **D-235**.
+
+**The fix per site is one phrase** — write the DO path as a path, or name the op that reaches it (`op=publish`) — then drop the ledger entry; `node test/op-claims.test.mjs` prints the number to write.
+
+### DELEGATION 2026-08-08 M0 (M0-12) -> RECORD / whoever owns `docs/development/research/`: **`DATA-MODEL.md` DOCUMENTS THE STORE'S ROUTE MAP WITH AN `op=` PREFIX THAT REACHES NONE OF IT — AND TWO OF ITS NAMES ARE IN NEITHER TABLE**
+
+The largest single instance of the class in the tree: **27 registrations** in `research/DATA-MODEL.md`, plus 5 in `research/SB-EVIDENCE.md`. The "written by" / "read by" columns give the DO paths `recordlinks`, `siteassets`, `taskenqueue`, `governoradmit` and twenty more an `op=` prefix. Every one of those names is a DO PATH. `index.mjs`'s `OPS` is a strict whitelist and none of them is in it, so **none of those names is reachable as `op=` by any caller** — a reader taking the table at its word and probing the control plane gets `unknown op` for the whole column.
+
+*(Written here as bare path names on purpose. This delegation is inside the corpus the check sweeps, and prefixing them to quote the defect would BE the defect — the same reason the instrument and its suite are both written around their own rule.)*
+
+**And two are worse than mislevelled — they name neither an op nor a DO path**, which is the class that cost REC-58 an item rather than a rename:
+
+- **`session` (`DATA-MODEL.md:128`)** — given as the reader of the `sessions` table, prefixed as an op. No such op and no such route. The session read is `op=whoami`.
+- **`wake` (`DATA-MODEL.md:196`)** — given as a reader of `connection_dirty`, prefixed as an op. No such op and no such route.
+
+**Neither was corrected here** — `docs/development/research/**` is not this item's path, and a research document's route inventory is its owner's to re-measure rather than mine to guess at. Both are ledgered as `NEVER` with an exact count, so they cannot spread, and **a `NEVER` entry FAILS the day its name appears in `OPS`** — the entry carries its own expiry.
+
+### DELEGATION 2026-08-08 M0 (M0-12) -> UI: **`civicos-ui/app.html` STATES THE OPS/ROUTE-MAP GAP CORRECTLY AND WRITES IT IN THE WRONG GRAMMAR**
+
+Two sites, one sentence (`app.html:5715-5717`), which prefixes `strength` and `basis` as ops and then says they exist in the store's route map but are absent from `index.mjs`'s OPS table, *"which is a strict whitelist"*. **The substance is right and it is a good sentence** — UI-35 measured a real gap and said so. The grammar is the M0-12 class: `strength` and `basis` are DO PATHS, so writing them as `op=` is the very conflation the sentence is warning about. Suggested: *"the store's route map carries `strength` and `basis`, and neither is in `index.mjs`'s OPS table, so no `op=` prefix reaches them."* Ledgered as `DO-PATH` x1 each; drop the two entries when the sentence changes.
+
+### DELEGATION 2026-08-08 M0 (M0-12) -> CAPTURE: **`kickoffs/CAPTURE.md:132` NAMES A DO PATH AS AN OP**
+
+`recordsourceoutcome`, prefixed as an op — it is a DO path (`recordSourceOutcome()`), reachable by no `op=`. One site, ledgered. Same one-phrase fix. The matching `QUEUE.md` row is delegated to CONDUCT above.
+
+### DELEGATION 2026-08-08 M0 (M0-12) -> EVERY SESSION THAT WRITES ABOUT AN OP: **WHAT THE NEW CHECK DOES AND DOES NOT ESTABLISH**
+
+`bio-plane/test/op-claims.test.mjs` runs in the battery on every `npm run test:battery`.
+
+- **It asserts that every `op=<name>` token in the repository names a key of the `OPS` whitelist**, or is registered in `LEDGER` with a reason. `bio-plane/**` is gated at ZERO registrations of the mislevelled kind, so anything new there is a hard failure.
+- **It separates the two levels**, which is the half that catches IC-22 — `DO_PATH` means an op's name and its DO path do not correspond, so a name-existence check alone would have passed the sentence that cost REC-58 an item.
+- **IT DOES NOT CHECK WHAT AN OP RETURNS. Not one assertion reads a response shape.** IC-22's sentence was wrong twice and only the op half is mechanical: had it named `op=publish` — same falsehood about the field, correct op name — **every check here would pass it.** A field arriving through a SPREAD declares no key and no source-level instrument can see it.
+- **It does not verify that a stated NON-existence is true**, except for `NEVER` ledger entries. The language-reading version was built, measured at 141 then 48 false positives on this corpus, and removed; `VERIFICATION.md` carries the four worked examples.
+- **If you write a sentence about an op, write the op.** If you mean the Durable Object route, say *the DO path `x`*. The check now enforces the distinction and the estate has been made consistent with it.
+
+released: 2026-08-08 — handed to CONDUCT. `bio-plane/**` corrected to zero mislevelled claims; everything outside it ledgered EXACTLY and delegated above. Six control arms run, each alone, **0 behaved other than declared**; every restore verified by sha256 AND by content compare, snapshots keyed by ARM as well as by path.
