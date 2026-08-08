@@ -171,40 +171,26 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* ONE KEY SET, DELIBERATELY — AND THE REASON IS A NEAR-MISS THIS BLOCK ALMOST DIDN'T
-     SURVIVE. Seven items moved these figures in parallel on 2026-08-08, each correct on
-     its own tree, and a keep-both merge left FOUR `arms:` keys in this one object
-     literal. That is valid JavaScript: the LAST key silently wins. The last one was the
-     LOWEST, so the merge would have quietly INSTALLED SLACK in a ratchet whose entire
-     purpose is to have none — no error, no warning, nothing red, and **a duplicate
-     object key cannot be seen by reading the value you expect to find.** It happened a
-     second time on the very next merge of this file. If you are resolving a conflict
-     here: COLLAPSE TO ONE SET and re-read the printed figures. Do not keep both.
+  /* ONE KEY SET, DELIBERATELY. Nine items moved these figures in parallel on 2026-08-08,
+     each correct on its own tree, and keep-both merges left duplicate `arms:` keys in
+     this one object literal THREE separate times. That is valid JavaScript: the LAST key
+     silently wins, and on the first occasion the last was the LOWEST — so the merge would
+     have quietly INSTALLED SLACK in a ratchet whose entire purpose is to have none. No
+     error, no warning, nothing red, and **a duplicate object key cannot be seen by
+     reading the value you expect to find.**
 
-     Every worker's figure, each true of its own branch and none true here:
-     M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486.
-     The figures below are the ones `--strict` PRINTED on a green run of the merged tree.
+     IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
+     figures. Do not keep both. Worker figures, each true of its own branch and none true
+     here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
+     REC-77 530 · M0-16 542.
 
-     MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. A floor with slack
-     is not a ratchet: this project measured one sitting 19 codes low that had ALREADY
-     flipped a control from RED to GREEN. */
-  arms:       542,  // arms stated across the classified declarations
+     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
+     counted one — a phantom suite inflates the corpus, and a floor moved while one is
+     present would be permanently too high, which is how a ratchet gets switched off.
+     Move these only UPWARD, and only to a figure a green run PRINTED. */
+  arms:       546,  // arms stated across the classified declarations
   classified: 127,  // declarations the detector could count arms in
   corpus:     128,  // suites the register reads
-
-  /* MOVED 2026-08-08 by M0-16 from 526/126/127, and the WAY it was moved is now
-     ENFORCED rather than remembered: these are the REPRODUCIBLE figures — computed
-     over suites that are in the commit at HEAD — and the comparison above reads the
-     same figures, so a floor can no longer be set from a run that counted a
-     phantom. That was not theoretical while this item was being built: with its new
-     suite written and not yet committed, this instrument printed `arms 534` beside
-     a reproducible 526, refused to compare against 534, and said in as many words
-     which of the two a floor may be quoted from. No slack: 542/127/128 is exactly
-     what a green run PRINTED once every file was in a commit. */
-
-  arms:       530,  // arms stated across the classified declarations (REC-77, 2026-08-08: 526 -> 530, the figure `--strict` PRINTED on a green run of this tree after readingname.test.mjs's declaration gained REC-77's four arms)
-  classified: 126,  // declarations the detector could count arms in
-  corpus:     127,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

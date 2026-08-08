@@ -1678,6 +1678,18 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, reports a suite census
     "civicos-ui/check-refusal-codes.mjs",         // plane src/ AND civicos-ui/test/, reports two censuses
     "civicos-ui/test/add-surface.test.mjs",       // civicos-ui/, reports a surface census
+    /* ADDED AT INTEGRATION 2026-08-08 by CONDUCT, AND THE RATCHET CAUGHT IT ON THE DAY IT
+       LANDED — which is the whole reason M0-16 made this a census rather than a fix.
+       M-4's measurement probe arrived in the SAME integration as M0-16's census, so
+       neither worker could see the other: M0-16 enumerated 21 walks correctly on its own
+       tree and M-4 added a 22nd. A NEW WALK IS A DECISION, NOT A SILENCE, and this is what
+       that rule buys — the walk is named here rather than discovered later by someone
+       wondering why a number moved.
+       WHY IT IS NAMED AND NOT GUARDED: it walks `test/fixtures/` for ONE named PDF and
+       reports no repository census. Nothing it prints is a figure a session quotes, so a
+       phantom deposited beside it cannot inflate a baseline — which is the exposure the
+       guarded walks carry and this one does not. */
+    "bio-plane/test/ref-variance-probe.mjs",      // bio-plane/test/fixtures/, one named PDF, no census
     "civicos-ui/test/auth-surface.test.mjs",      // civicos-ui/, reports a surface census
     "civicos-ui/test/bound-sweep.test.mjs",       // civicos-ui/, reports a bound census
     "civicos-ui/test/preauth-vocabulary.test.mjs",// civicos-ui/test/, reports a suite census
