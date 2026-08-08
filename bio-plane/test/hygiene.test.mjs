@@ -71,6 +71,12 @@ import { viewerPredicate } from "../src/query.mjs";
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
 import { readControl, CONTROL_MARKER, MARKER_PHRASE, MARKER_SEPARATORS,
          countArms, countEnumerations, countTransitions } from "../scripts/control-register.mjs";
+/* M0-16 / D-238: the ONE provenance check, imported from the instrument for the
+   same reason `readControl` is — a second copy of the rule would agree with the
+   first at zero cost and prove nothing about what `battery.mjs` and
+   `coverage.mjs` actually ask. This file's three corpus walks discover over
+   `test/`, a directory it does not control; see the block at the foot. */
+import { readGitProvenance, reportProvenance, stateOf, repoPath } from "../scripts/provenance.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -1445,6 +1451,222 @@ console.log("\n--- the register's arm matcher: what it counts, and what it says 
   /* countArms is the exported leaf, and it must never answer 0. */
   t("countArms answers null for unmarked text and a number for marked text — never 0",
     [countArms("nothing marked here at all"), countArms("break x -> y fails")], [null, 1]);
+}
+
+/* ===========================================================================
+   M0-16 / D-238 — THIS FILE'S OWN WALKS DISCOVER OVER A DIRECTORY IT DOES NOT
+   CONTROL, AND UNTIL NOW REPORTED NUMBERS FROM IT IN SILENCE.
+
+   THREE WALKS, all of them `readdirSync(DIR)` over `bio-plane/test/`: the suite
+   scan at the head of this file (which decides who is held to the dispose, exit,
+   sandbox and containment rules), the M0-9 register scan, and the M0-14 arm
+   matcher's REAL-CORPUS scan. Every one of them prints a count that a reader
+   quotes — `${N} suites`, `${N} arms across ${N} classified` — and two of them
+   carry assertions with a hard floor (`>= 90`).
+
+   WHY THAT MATTERS HERE SPECIFICALLY. `git stash` is REPOSITORY-WIDE across all
+   sixty worktrees of this repository and `push -u` carries UNTRACKED files, so a
+   `pop` deposits another worker's `.test.mjs` into this directory. It has
+   HAPPENED: `machinefences-dec49.test.mjs`, 57 assertions, counted into a
+   worker's baseline, in no commit, gone by the next run (D-238). A phantom in
+   this directory inflates all three of these walks at once, and the inflated
+   register figure is the one somebody moves `REGISTER_FLOOR` to — permanently
+   too high, failing every honest run afterwards, until the gate is switched off.
+
+   WHAT THIS BLOCK DOES, AND WHAT IT DELIBERATELY DOES NOT. It NAMES anything the
+   walks counted that is in no commit, and prints the reproducible corpus beside
+   the contaminated one. It does NOT fail on one: a worker writes a suite and runs
+   the battery before committing it dozens of times an hour, and redding the whole
+   estate for that would be worse than the condition it reports (M0-15's
+   provisional, kept). THE RESIDUAL IS THEREFORE REAL AND IS STATED: a run holding
+   a phantom is still green, and only this report says so.
+
+   THE ASSERTIONS ARE ABOUT REACH, NOT ABOUT CLEANLINESS, and that is the whole
+   design. A provenance check narrowed to nothing reports a spotless corpus of
+   zero and passes — the failure this project keeps meeting, most recently in
+   M0-15's OWN control harness, whose restore check used a BSD-absent `xargs`
+   flag, compared two EMPTY files and reported them byte-identical (the sha256 of
+   the empty string). So the corpus is PRINTED, guarded by a minimum count, and
+   asserted to be exactly what the three walks read.
+   =========================================================================== */
+console.log("\n--- what these walks counted, and whether any of it is in no commit (M0-16) ---");
+{
+  const REPO = join(DIR, "..", "..");
+  const prov = readGitProvenance(REPO);
+
+  /* The UNION of the three walks, each re-read the way that walk reads it, so
+     this block cannot drift from the walks it reports on. Walk 1 excludes this
+     file; walks 2 and 3 include it. The union is what the file as a whole
+     counted. */
+  const walk1 = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs") && f !== "hygiene.test.mjs");
+  const walk2 = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs"));
+  const walk3 = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs"));
+  const union = [...new Set([...walk1, ...walk2, ...walk3])].sort();
+
+  /* AND THE OTHER TWO DIRECTORIES THIS FILE DISCOVERS OVER. The three walks above
+     are the ones D-238 named, but this suite also walks `src/` and `checks/` —
+     five more times, for the REC-46 predicate sweep, the REC-48/REC-51 grade-letter
+     sweep and the flat-directory reach arms — and reports counts and findings from
+     both. A `stash pop` deposits an untracked `src/*.mjs` exactly as readily as an
+     untracked suite, and a planted module would be swept, counted, and reported as
+     though it were the plane's. Same class, same directory-it-does-not-control,
+     same report. */
+  const srcRoots = ["src", "checks"];
+  const srcFiles = srcRoots.flatMap((r) => readdirSync(join(DIR, "..", r))
+    .filter((n) => n.endsWith(".mjs")).sort().map((n) => `${r}/${n}`));
+
+  const items = [
+    ...union.map((f) => ({
+      path: repoPath(REPO, join(DIR, f)),
+      what: f,
+      counted: [walk1.includes(f) && "the suite-rule scan", walk2.includes(f) && "the register scan",
+        walk3.includes(f) && "the arm matcher's corpus"].filter(Boolean).join(" + "),
+    })),
+    ...srcFiles.map((f) => ({
+      path: repoPath(REPO, join(DIR, "..", f)),
+      what: f,
+      counted: "swept by the machine-identity and grade-letter source sweeps",
+    })),
+  ];
+
+  const c = reportProvenance({
+    prov, items, instrument: "this suite's corpus walks",
+    corpus: `test/: walk 1 read ${walk1.length}, walk 2 read ${walk2.length}, walk 3 read ${walk3.length}`
+      + ` — ${union.length} distinct suite(s) · src/ + checks/: ${srcFiles.length} module(s)`,
+    totals: prov.inHead === null ? [] : [{ label: "files read by these walks",
+      contaminated: items.length,
+      reproducible: items.filter((i) => prov.inHead.has(i.path)).length, source: "files" }],
+  });
+
+  /* (1) THE REACH ARM. The corpus is printed above and pinned here. A provenance
+     walk that stopped reading would report a clean tree over nothing at all and
+     pass every other assertion in this block, so this is the one that has to bite
+     first. `>= 90` is the same floor the two walks it reports on already carry. */
+  t(`the provenance check accounted for every file these walks read (${c.accounted} of ${items.length}: ${union.length} suite(s) floor 90, ${srcFiles.length} module(s) floor 24)`,
+    [c.accounted === items.length, union.length >= 90, srcFiles.length >= 24], [true, true, true]);
+
+  /* (2) IT ANSWERED, OR IT SAID IT COULD NOT. Never a third, silent state. A
+     check that reports "all good" when it could not look is D-233 exactly, and
+     `verified` is a boolean here precisely so the two are told apart. */
+  t("the walks state their provenance as VERIFIED or UNVERIFIED, never as a bare number",
+    typeof c.verified === "boolean", true);
+
+  /* (3) `ls-tree HEAD`, NOT `git status` — asserted through the instrument rather
+     than read off its source, because an IGNORED file is invisible to
+     `git status` and `.claude/worktrees/` is ignored in this repository, which is
+     exactly how the original phantom stayed invisible. A path this tree does not
+     have must come back UNTRACKED and must NOT come back "in the commit". */
+  const invented = repoPath(REPO, join(DIR, "no-such-suite-m016.test.mjs"));
+  t("a file that is in no commit is named UNTRACKED, from the COMMIT and not from `git status`",
+    prov.inHead === null ? "UNVERIFIED" : stateOf(prov, invented),
+    prov.inHead === null ? "UNVERIFIED" : "UNTRACKED");
+
+  /* (4) OVER-STRICTNESS. On a clean tree the report must say nothing at all
+     beyond its one summary line. An instrument that cries phantom on honest work
+     gets ignored, which is the same end as one that never fires. */
+  if (prov.inHead !== null)
+    t(`every file these walks counted is in the commit at HEAD, or is NAMED above (${c.off.length} named)`,
+      c.off.every((r) => r.state !== "in the commit"), true);
+
+  /* ---- THE CLASS CENSUS, AND IT IS A RATCHET RATHER THAN A VERDICT ----------
+   *
+   * D-238's brief asked what ELSE in this repository walks a directory it does
+   * not control and reports a number from it. The answer is: a great deal more
+   * than the seven walks the item named, and guarding each one individually
+   * would put twenty copies of one rule in the tree — the failure this item's
+   * own fix exists to avoid. So the class is made VISIBLE and RATCHETED instead:
+   * every `readdirSync` site in the estate is counted, the GUARDED ones are the
+   * files that ask `provenance.mjs`, and every remaining one is on a NAMED list
+   * with what it walks and what it reports. A NEW unguarded walk fails here by
+   * name, which is the outcome worth having — the same shape M0-14 landed for
+   * the register's unclassified declarations and CPDF-9 for the dark member.
+   *
+   * WHAT THIS MATCHER CAN SEE: a literal `readdirSync(` in the source of a
+   * tracked `.mjs` under `bio-plane/` or `civicos-ui/`.
+   * WHAT IT CANNOT, stated because a matcher that hides its blind spots is read
+   * as though it had none: `fs.promises.readdir`, `opendirSync`, a glob library,
+   * a walk in a shell script or in another language, a walk reached through an
+   * aliased or destructured binding this regex does not spell, and anything
+   * outside those two directories (`newgroup/`, `tools/`, `agent-worker/`,
+   * `pdf-worker/`). It also cannot tell a walk of a TEMP directory from a walk
+   * of a repository directory — so the named list carries that judgement, made
+   * by reading each site, and the list is what goes stale if somebody is wrong.
+   */
+  const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "src", "checks", "migrate"]],
+                        ["civicos-ui", [".", "test"]]];
+  const census = [];
+  for (const [top, subs] of CENSUS_ROOTS) {
+    for (const sub of subs) {
+      const d = join(REPO, top, sub);
+      let names = [];
+      try { names = readdirSync(d).filter((n) => n.endsWith(".mjs")); } catch { continue; }
+      for (const n of names) {
+        const rel = repoPath(REPO, join(d, n));
+        let src = "";
+        try { src = readFileSync(join(d, n), "utf8"); } catch { continue; }
+        const walks = (src.match(/readdirSync\s*\(/g) || []).length;
+        if (!walks) continue;
+        /* GUARDED means it IMPORTS the check, and the import is what is matched.
+           Written first as a bare mention of `scripts/provenance.mjs` anywhere in
+           the file, which read `battery.mjs` as guarded because its HEADER names
+           the module in prose and read `coverage.mjs` as unguarded because its
+           import spells the path relatively — a detector grading a file by a word
+           in its comments, which is the exact shape REC-70 and REC-64 have each
+           been an item about. Corrected to the import statement, and the arms
+           below are what caught it. */
+        census.push({ file: rel, walks,
+          guarded: /^\s*import\s[^\n]*["'][^"'\n]*provenance\.mjs["']/m.test(src) });
+      }
+    }
+  }
+  const guarded = census.filter((r) => r.guarded);
+  const unguarded = census.filter((r) => !r.guarded).map((r) => r.file).sort();
+
+  /* Each of these walks a directory another worker can deposit into and reports
+     a number, a list or a floor from it. NAMED, not fixed: the number each one
+     reports is a finding about the plane's own source or docs rather than a
+     baseline anybody quotes into a floor, so the D-238 payload — a permanently
+     too-high ratchet — does not reach them. A new entry here is a decision
+     somebody has to make, which is the point. */
+  const CLASS_NAMED_UNGUARDED = [
+    "bio-plane/migrate/migrate.mjs",              // an OPERATOR-supplied fixture tree, not a repository directory
+    "bio-plane/scripts/op-claims.mjs",            // corpus(): the whole repo, reports a claim census
+    "bio-plane/test/bounds.test.mjs",             // the whole repo, reports a bound census
+    "bio-plane/test/case-opened.test.mjs",        // the whole repo, reports a consumer census
+    "bio-plane/test/identity-claims.test.mjs",    // src/ + checks/, reports a wide-claim ledger
+    "bio-plane/test/machine-fences.test.mjs",     // test/ — reports which refusal codes a SUITE pins
+    "bio-plane/test/machinefences-dec49.test.mjs",// src/, reports minted fence codes
+    "bio-plane/test/planning-hygiene.test.mjs",   // docs/, reports a planning-surface census
+    "bio-plane/test/publishedcase.test.mjs",      // src/, reports emitted rendering modules
+    "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, reports a suite census
+    "civicos-ui/check-refusal-codes.mjs",         // plane src/ AND civicos-ui/test/, reports two censuses
+    "civicos-ui/test/add-surface.test.mjs",       // civicos-ui/, reports a surface census
+    "civicos-ui/test/auth-surface.test.mjs",      // civicos-ui/, reports a surface census
+    "civicos-ui/test/bound-sweep.test.mjs",       // civicos-ui/, reports a bound census
+    "civicos-ui/test/preauth-vocabulary.test.mjs",// civicos-ui/test/, reports a suite census
+    "civicos-ui/test/publishedcase.test.mjs",     // civicos-ui/, reports a file census
+    "civicos-ui/test/refusal-codes.test.mjs",     // civicos-ui/test/, asserts NO fixture residue
+    /* THE ONE WORTH AN ITEM, and it is named in the report rather than left in a
+       list: `civicos-ui/test/run.mjs` is the UI battery's RUNNER. It discovers
+       `.test.mjs` in a directory it does not control and prints the total a
+       session quotes as its UI baseline — the same shape as `battery.mjs`
+       before M0-15, one estate over, and the only member of this class whose
+       number IS a baseline. It is not fixed here because `civicos-ui/**` is not
+       this item's to open; it is DELEGATED in CLAIMS.md. */
+    "civicos-ui/test/run.mjs",
+  ];
+  const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
+  const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
+
+  console.log(`  class census: ${census.length} file(s) in the estate walk a directory with readdirSync ·`
+    + ` ${guarded.length} GUARDED by scripts/provenance.mjs (${guarded.map((r) => r.file).join(", ")})`
+    + ` · ${unguarded.length} named and not guarded`);
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 15)`,
+    census.length >= 15, true);
+  t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
+    newlyUnguarded, []);
+  t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
+    goneFromList, []);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);

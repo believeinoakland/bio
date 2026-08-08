@@ -46,6 +46,18 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { readControl } from "./control-register.mjs";
+/* M0-16 / D-238: THIS INSTRUMENT DISCOVERS OVER THREE DIRECTORIES IT DOES NOT
+   CONTROL, AND UNTIL NOW REPORTED NUMBERS FROM ALL THREE WITHOUT SAYING SO.
+   `test/` (the suites and therefore the whole negative-control register),
+   the repository root twice (fleet manifests, and Worker directories). The
+   consequence is not hypothetical and is the reason this was an item: the
+   REGISTER_FLOOR below is MOVED BY HAND to a figure a green run PRINTED, so a
+   floor moved while a phantom suite was present is PERMANENTLY TOO HIGH — it
+   fails every honest run afterwards, and a gate that fails honest runs gets
+   switched off, which is VERIFICATION.md's own stated reason for not making
+   `--strict` the gate yet. See `provenance.mjs` for the mechanism and, more
+   usefully, for what the check cannot see. */
+import { readGitProvenance, reportProvenance, repoPath } from "./provenance.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = join(ROOT, ".."); // the fleet lives BESIDE the plane, not inside it.
@@ -259,7 +271,16 @@ const FLEET_FLOOR = {
 
 function discoverFleet() {
   const members = [];
-  for (const name of readdirSync(REPO)) {
+  /* M0-16: `!name.startsWith(".")`, ADDED HERE, and it is a correction rather
+     than a tidy-up. `scripts/battery.mjs`'s fleet walk has always carried this
+     filter and this one did not, so this instrument could ENROL A MEMBER THE
+     RUNNER IT REPORTS ON WOULD NEVER RUN — a manifest under any dot-directory,
+     and `.claude/worktrees/` (sixty checkouts of this same repository) is a
+     dot-directory that is also GITIGNORED. Coverage credited from a source read
+     while the battery never executed a line of it is D-117's failure exactly,
+     one directory out, and in the generous direction. The two walks now agree;
+     measured before and after on this tree, the fleet is 2 members either way. */
+  for (const name of readdirSync(REPO).filter((d) => !d.startsWith("."))) {
     const meta = readJSON(join(REPO, name, "fleet-member.json"));
     if (!meta) continue;
     const dir = join(REPO, name);
@@ -283,7 +304,12 @@ function discoverFleet() {
       reached: surfaceCalled(op, allSuiteText),
       mutating: decl == null ? null : /mutating:\s*true/.test(decl),
     }));
-    members.push({ name: meta.name || name, dir: name, ops, control, suites: suites.length, hasSurface: surfBody != null });
+    members.push({ name: meta.name || name, dir: name, ops, control, suites: suites.length, hasSurface: surfBody != null,
+      /* M0-16: the paths this walk was ADMITTED BY and the paths it READ, kept so
+         their provenance can be asked. The manifest is the larger hole of the two
+         because it enrols a whole DIRECTORY rather than one file. */
+      manifestPath: join(REPO, name, "fleet-member.json"),
+      suitePaths: suites.map((f) => join(dir, meta.testDir || "test", f)) });
   }
   return members;
 }
@@ -310,6 +336,30 @@ if (fleet.length < FLEET_FLOOR.members)
 if (fleetSurfaceOps < FLEET_FLOOR.surfaceOps)
   fleetBelowFloor.push(`${fleetSurfaceOps} fleet surface op(s) enumerated, floor is ${FLEET_FLOOR.surfaceOps}`);
 
+/* ---- M0-16 / D-238: WHAT DID THESE THREE WALKS COUNT, AND IS IT IN A COMMIT?
+ *
+ * Every path this instrument was ADMITTED BY or READ FROM, gathered here at the
+ * moment it was counted rather than re-derived from the directory afterwards —
+ * the suites (which are the whole register corpus), the fleet manifests (the
+ * larger hole, because a manifest enrols a DIRECTORY), the fleet members' own
+ * suites, and the `wrangler.jsonc` files by which a directory is judged to be a
+ * Worker at all. Three walks, one report. */
+const PROV = readGitProvenance(REPO);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));
+const discovered = [
+  ...suites.map((f) => ({ path: repoPath(REPO, join(ROOT, "test", f)), what: f,
+    counted: "a battery suite, and one row of the negative-control register" })),
+  ...fleet.flatMap((m) => [
+    { path: repoPath(REPO, m.manifestPath), what: `${m.name}'s fleet manifest`,
+      counted: `enrols a whole directory — ${m.ops.length} surface op(s), ${m.suites} suite(s)` },
+    ...m.suitePaths.map((p) => ({ path: repoPath(REPO, p), what: `${m.name}'s suite`,
+      counted: "reach for that member's surface ops" })),
+  ]),
+  ...readdirSync(REPO).filter((n) => !n.startsWith(".") && readText(join(REPO, n, "wrangler.jsonc")) !== "")
+    .map((n) => ({ path: repoPath(REPO, join(REPO, n, "wrangler.jsonc")), what: `${n}'s wrangler.jsonc`,
+      counted: "is what makes this directory a Worker that must be accounted for" })),
+];
+
 /* ----------------------------------------------------------------- report */
 
 const unreached = opRows.filter((r) => r.level === "unreached");
@@ -325,20 +375,33 @@ const unclassified = controlRows.filter((r) => r.control && r.arms == null);
 const registerArms = classified.reduce((n, r) => n + r.arms, 0);
 const fullest = classified.reduce((a, b) => (b.arms > a.arms ? b : a), classified[0] || { arms: 0, suite: "(none)" });
 
+/* THE SAME THREE FIGURES OVER THE COMMITTED CORPUS ALONE — the numbers another
+   checkout at this HEAD reproduces. These are the figures the floor is compared
+   against and the figures a reader must move the floor to, and the reason is the
+   whole of D-238: a floor moved to a CONTAMINATED figure is permanently too high
+   and fails every honest run afterwards. When git cannot answer, `inCommit` says
+   true for everything and these collapse onto the contaminated figures — which
+   is stated as UNVERIFIED below and never as clean. */
+const repro = controlRows.filter((r) => inCommit(join(ROOT, "test", r.suite)));
+const reproClassified = repro.filter((r) => typeof r.arms === "number");
+const reproArms = reproClassified.reduce((n, r) => n + r.arms, 0);
+const contaminated = PROV.inHead !== null && repro.length !== controlRows.length;
+
 const registerBelowFloor = [];
-if (registerArms < REGISTER_FLOOR.arms)
-  registerBelowFloor.push(`${registerArms} arms stated, floor is ${REGISTER_FLOOR.arms}`);
-if (classified.length < REGISTER_FLOOR.classified)
-  registerBelowFloor.push(`${classified.length} classified declaration(s), floor is ${REGISTER_FLOOR.classified}`);
-if (controlRows.length < REGISTER_FLOOR.corpus)
-  registerBelowFloor.push(`the register READ ${controlRows.length} suite(s), floor is ${REGISTER_FLOOR.corpus}`);
+if (reproArms < REGISTER_FLOOR.arms)
+  registerBelowFloor.push(`${reproArms} arms stated, floor is ${REGISTER_FLOOR.arms}`);
+if (reproClassified.length < REGISTER_FLOOR.classified)
+  registerBelowFloor.push(`${reproClassified.length} classified declaration(s), floor is ${REGISTER_FLOOR.classified}`);
+if (repro.length < REGISTER_FLOOR.corpus)
+  registerBelowFloor.push(`the register READ ${repro.length} suite(s) that are in a commit, floor is ${REGISTER_FLOOR.corpus}`);
 /* A NEW unclassified declaration is the D-233 defect arriving again. */
 const newlyUnclassified = unclassified.filter((r) => !REGISTER_UNCLASSIFIED.includes(r.suite));
 
 const pct = (n, d) => d === 0 ? "100.0" : ((n / d) * 100).toFixed(1);
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ opRows, checkRows, controlRows, fleet }, null, 2));
+  console.log(JSON.stringify({ opRows, checkRows, controlRows, fleet,
+    provenance: { headSha: PROV.headSha, verified: PROV.inHead !== null, discovered } }, null, 2));
 } else {
   console.log(`\nBIO plane coverage — ${suites.length} battery suites\n`);
 
@@ -383,12 +446,28 @@ if (JSON_OUT) {
     console.log(`  four consecutive re-measurements of this row.`);
     for (const r of unclassified) console.log(`    ${r.suite}`);
   }
-  console.log(`\n  REGISTER FLOOR  arms ${registerArms}/${REGISTER_FLOOR.arms} · `
-    + `classified ${classified.length}/${REGISTER_FLOOR.classified} · `
-    + `corpus (suites read) ${controlRows.length}/${REGISTER_FLOOR.corpus}`
-    + `${registerArms > REGISTER_FLOOR.arms ? ` · GREW by ${registerArms - REGISTER_FLOOR.arms} arm(s)` : ""}`);
+  console.log(`\n  REGISTER FLOOR  arms ${reproArms}/${REGISTER_FLOOR.arms} · `
+    + `classified ${reproClassified.length}/${REGISTER_FLOOR.classified} · `
+    + `corpus (suites read) ${repro.length}/${REGISTER_FLOOR.corpus}`
+    + `${reproArms > REGISTER_FLOOR.arms ? ` · GREW by ${reproArms - REGISTER_FLOOR.arms} arm(s)` : ""}`);
   console.log(`  The tally rises on its own and can only FALL by an edit — so a ceiling would never`);
   console.log(`  have fired. The floor is what makes this figure worth reading (M0-14).`);
+  /* M0-16: the floor is compared against — and must be moved to — the REPRODUCIBLE
+     figure. When they differ, both are printed and the difference is named, because
+     a reader about to move a floor by hand is exactly the reader this defect hurts. */
+  if (contaminated) {
+    console.log(`\n  THE THREE FIGURES ABOVE ARE THE REPRODUCIBLE ONES. This tree also holds work that is`);
+    console.log(`  in no commit, so the CONTAMINATED figures — what this run actually read — are higher:`);
+    console.log(`    arms ${registerArms} · classified ${classified.length} · corpus ${controlRows.length}`
+      + `   (contaminated: ${controlRows.length - repro.length} suite(s) no other checkout has)`);
+    console.log(`  MOVE THE FLOOR TO THE REPRODUCIBLE FIGURES AND NEVER TO THESE (D-238). A floor moved`);
+    console.log(`  while a phantom was present is permanently too high: it fails every honest run`);
+    console.log(`  afterwards, and a gate that fails honest runs gets switched off. The suites are`);
+    console.log(`  named by the provenance line at the foot of this report.`);
+  } else if (PROV.inHead === null) {
+    console.log(`  UNVERIFIED: git could not answer, so the figures above are what this tree holds and`);
+    console.log(`  NOT a claim that another checkout reproduces them. Do not move a floor from them.`);
+  }
   if (uncontrolled.length) {
     console.log(`\n  No declared control — add one, in a comment anywhere in the file, over as many`);
     console.log(`  lines and arms as it needs:`);
@@ -427,6 +506,23 @@ if (JSON_OUT) {
   if (unaccountedWorkers.length)
     console.log(`    UNACCOUNTED Worker director${unaccountedWorkers.length === 1 ? "y" : "ies"} `
       + `(a wrangler.jsonc with no fleet-member.json): ${unaccountedWorkers.join(", ")}`);
+
+  /* M0-16 / D-238. The corpus size is PRINTED beside the verdict on purpose: a
+     walk narrowed to nothing reports a beautiful clean provenance over an empty
+     corpus, and this project has already caught a headline assertion passing that
+     way (M0-15's own restore check compared two EMPTY files and called them
+     byte-identical). `discovered` is what these three walks actually counted. */
+  console.log("");
+  reportProvenance({
+    prov: PROV, items: discovered, instrument: "this instrument",
+    corpus: `${suites.length} plane suite(s) · ${fleet.length} fleet manifest(s) · `
+      + `${fleet.reduce((n, m) => n + m.suitePaths.length, 0)} fleet suite(s) · `
+      + `${discovered.length - suites.length - fleet.length - fleet.reduce((n, m) => n + m.suitePaths.length, 0)} wrangler.jsonc`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "register arms", contaminated: registerArms, reproducible: reproArms, source: "suites" },
+      { label: "suites read by the register", contaminated: controlRows.length, reproducible: repro.length, source: "suites" },
+    ],
+  });
   console.log("");
 }
 
