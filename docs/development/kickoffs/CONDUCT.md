@@ -44,18 +44,48 @@ substitute for filling one — run them BESIDE the two, not instead of them.**
 **THE BUDGET WAS RAISED 2026-08-08 AND THE RULE CHANGED SHAPE WITH IT — READ
 `ORCHESTRATION.md`'s "Concurrency" SECTION RATHER THAN THE NUMBER YOU REMEMBER.** Bob:
 *"I have the sense that you're spawning sessions much more slowly than you could."* He was
-right. **EIGHT concurrent workers, of which AT MOST THREE may touch `store.mjs`,
-`bio-checks.mjs` or `index.mjs`** (raised 2 → 5 → 8 in one conversation; the first
-correction was still too timid and Bob said so) — the file contention is the real limit and the count
+right. **EIGHT concurrent workers, of which AT MOST FIVE may touch `store.mjs`,
+`bio-checks.mjs` or `index.mjs`** (the worker count was raised 2 → 5 → 8 in one
+conversation, the first correction still too timid and Bob said so; **the contended-file cap
+was then raised 3 → 5 ON MEASURED EVIDENCE** — across thirteen integrations the `store.mjs`
+conflicts were ONE trivial import list, while every other conflict was append-only prose in
+`CLAIMS.md`/`DEBT.md`. **The cap of 3 was a guess and the guess was costing slots**) — the file contention is the real limit and the count
 never was. **A worker runs 30–55 minutes and an integration costs 10–20, so a budget of two
 left CONDUCT idle for most of every wave**, waiting on workers rather than being the
 bottleneck it was sized to be. Spend the raised budget on items whose PATHS ARE DISJOINT:
 the UI, the fleet, the test estate, the docs, the measurement lanes.
 
-**AND THE ORDERING THAT PROTECTS THE TREE: INTEGRATE BEFORE SPAWNING.** A finished worker
-waiting is worse than a slot empty for a minute, because every other worker is branched
-from a tree that does not yet carry it, and a branch gets harder to merge the longer it
-sits. **The refill now also runs on a one-minute timer** (Bob's instruction, same
+**THE ORDERING IS REVERSED AS OF 2026-08-08, AND THE FIRST VERSION OF THIS PARAGRAPH IS
+THE MISTAKE IT NOW WARNS ABOUT. SPAWN FIRST. THEN INTEGRATE.**
+
+CONDUCT wrote *integrate before spawning* earlier the same day, reasoning that a worker
+branched from a tree missing a landed item creates merge work. **That reasoning was correct
+and the conclusion was still wrong, because it priced only one side.** Measured on
+2026-08-08, over thirteen integrations:
+
+- **An integration costs CONDUCT 10–20 minutes of wall clock** — battery ~110 s, coverage,
+  the UI harness, conflict resolution, the ledger entry, the push. **Every one of those
+  minutes is a minute the freed slot sits empty**, and with eight slots and items landing
+  in clusters that is the largest single source of idle capacity in the loop.
+- **The merge cost it was avoiding is near zero. ALL THIRTEEN merges conflicted anyway**,
+  and the conflicts were overwhelmingly in `CLAIMS.md` and `DEBT.md` — append-only prose,
+  resolved mechanically, content never lost. **A worker branched one integration behind
+  produces the same conflict as one branched level**, because the conflicting files are the
+  ones every worker appends to regardless.
+
+**So the rule is: the moment a worker reports, SPAWN ITS REPLACEMENT BEFORE YOU MERGE
+ANYTHING.** Spawning is one tool call and costs seconds; integration costs twenty minutes.
+Doing the cheap thing first is free, and doing it second has now cost this project two
+stretches of idle slots that Bob had to notice himself.
+
+**And do not wait for the timer to catch it.** A one-minute cron was added at Bob's
+instruction and **it has never fired, because cron jobs only fire while the REPL is IDLE and
+CONDUCT is never idle while integrating** — the exact condition under which slots go empty
+is the exact condition under which the timer cannot run. **That is not a reason to remove
+it** (it catches the genuinely idle case, which is the other half) **but it is the reason
+this paragraph, and not the timer, is the mechanism.** A mechanism that is not in the loop
+the reader actually runs is not a mechanism — and a timer that cannot fire during the work
+is not in the loop. **The refill now also runs on a one-minute timer** (Bob's instruction, same
 conversation) — **but the timer is SESSION-ONLY and expires in seven days, so this rule is
 the durable half and the timer is the convenience.** A mechanism that dies with the session
 is not a mechanism; do not let its existence excuse not filling a slot yourself.

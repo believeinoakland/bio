@@ -7,14 +7,31 @@
  * Negative-control detail: disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { discoverBundles, loadBundle, reconstruct, frontmatter, checkProvenance, planeClient, migrateBundle, verifyBundle, buildPackages } from "../migrate/migrate.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const ROOT = "/tmp/civicos-fixture";
+/* M0-10/D-235: this ROOT was the literal "/tmp/civicos-fixture" — ONE directory
+   shared by every process on the machine — and that was the whole cause of this
+   suite's "fails under concurrency, passes alone". It is not a race in the
+   subject: two copies of THIS SUITE (a second worktree's battery, a coverage
+   run, a negative-control run) built and WIPED the same tree. Measured, two
+   concurrent runs, both modes reproducible on the first attempt: the opening
+   rmSync raced the other process's writes and died `ENOTEMPTY`, and
+   discoverBundles ran after the other process's wipe, found 2 of 3 bundles and
+   dereferenced undefined. Both modes KILL the suite rather than failing an
+   assertion, so the battery reports no tally at all — D-93's shape.
+
+   The import above already points $TMPDIR at a directory this PROCESS owns and
+   removes on exit, so mkdtemp here lands inside it: private per process, swept
+   for free, and never shared. `tmpdir()` reads $TMPDIR on every call, and
+   sandbox.mjs is the first import, so the redirect is in place before this line
+   runs. hygiene.test.mjs now enforces this containment for every suite. */
+const ROOT = mkdtempSync(join(tmpdir(), "civicos-fixture-"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -34,7 +51,12 @@ const md = (id, state, updated, n) =>
 const promo = (rel, target, base, files, created, author = "bob") =>
   put(rel, JSON.stringify({ target, base, files, created, author, skill_version: "0.12.10" }));
 
-rmSync(ROOT, { recursive: true, force: true });
+/* The opening `rmSync(ROOT, …)` that stood here is GONE, and its absence is the
+   fix rather than a tidy-up. It existed to clear a STALE shared fixture from a
+   previous run — which is only a thing a shared path can have. `mkdtempSync`
+   returns a directory that is new and empty by construction, so there is nothing
+   to clear; and wiping a path another process was mid-way through writing is
+   precisely how this suite killed its concurrent twin (D-235). */
 
 /* ---- bundle A: three promotions, a file changed mid-history, a file created late ---- */
 const A = "INFO-2026-9001-fixture";

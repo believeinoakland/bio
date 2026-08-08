@@ -5,16 +5,30 @@
    Negative-control detail: disable the bootstrap-credential match in the claim op (guard `body.bootstrapToken !== env.ADMIN_TOKEN` with `false`, accepting any token) -> 2 assertions fail (the wrong-secret refusal path); restored, 18 pass. */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* M0-10/D-235: this was the literal "/tmp/mfp" — one persist root shared by every
+   process on the machine, outside the $TMPDIR the import above owns. It had been
+   accumulating real Durable Object and R2 SQLite there since 2026-07-31 (12 MB
+   when M0-10 found it), and three concurrent runs of this suite were measured
+   with two of them killed outright: they open the same SQLite files.
+
+   The PERSISTENCE IS KEPT and is not incidental — it is this suite's subject. A
+   Worker cannot rotate its own secret, so the claim must survive an instance
+   restart under a DIFFERENT ADMIN_TOKEN, which is exactly what the second `mk()`
+   below tests. What changes is only WHOSE ground it persists to: one directory
+   per process, inside the sandbox, swept on exit. */
+const PERSIST = mkdtempSync(join(tmpdir(), "bootstrap-persist-"));
 const mk = (admin) => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { VERSION: "test", ADMIN_TOKEN: admin, PROBE_TOKEN: "prb" },
-  defaultPersistRoot: "/tmp/mfp",
+  defaultPersistRoot: PERSIST,
 });
 let pass = 0, fail = 0;
 const t = (l, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w);

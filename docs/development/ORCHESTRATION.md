@@ -184,7 +184,12 @@ which is this project's most-repeated finding arriving in its own orchestration.
   were operating as it should have been."* **That is the cost of the old number,
   stated as a measurement rather than a worry, and it is the number that matters
   here — not the throughput gained but the hours already lost.**
-- **Of those eight, AT MOST THREE may touch the contended plane files** —
+- **Of those eight, AT MOST FIVE may touch the contended plane files** (raised 3 → 5 on
+  2026-08-08 **on measured evidence rather than nerve**: across thirteen integrations the
+  conflicts inside `store.mjs` were ONE trivial import list, and every other conflict was
+  append-only prose. **The cap of 3 was a guess, and an unmeasured guess in a budget is the
+  same defect as an unmeasured number in a document** — this project's most-repeated
+  finding, arriving in its own orchestration for the second time in one day) —
   `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs`,
   `bio-plane/src/index.mjs`. **This constraint, not the count, is the real
   limit**, and it is measured rather than assumed: every merge on 2026-08-08
@@ -203,9 +208,12 @@ which is this project's most-repeated finding arriving in its own orchestration.
 **WHAT THE BUDGET RATIONS IS CONDUCT'S VERIFICATION ATTENTION, NOT AGENT COUNT.**
 The failure mode of too many workers is not cost — it is unintegrated work piling
 up behind a serial integrator, and merges getting harder the longer a branch sits.
-**So the rule that actually protects the tree is: INTEGRATE BEFORE SPAWNING.** A
-finished worker waiting is worse than a slot sitting empty for a minute, because
-every other worker is branched from a tree that does not yet carry it.
+**So the rule is: SPAWN FIRST, THEN INTEGRATE — reversed 2026-08-08 after CONDUCT
+priced only one side of it.** An integration costs 10–20 minutes during which the
+freed slot is empty; the merge cost it was protecting against is near zero, because
+ALL THIRTEEN merges that day conflicted anyway and the conflicts were append-only
+prose in `CLAIMS.md`/`DEBT.md` that a worker branched level would have produced too.
+**Spawning is one tool call. Do the cheap thing first.**
 
 **THE REFILL IS NOW ON A TIMER, because relying on CONDUCT to notice failed
 twice.** A one-minute cron checks whether the slots are as full as the budget
