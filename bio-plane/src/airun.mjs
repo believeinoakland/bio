@@ -153,6 +153,56 @@ export const RUN_ENDINGS = {
 
 export const RUN_STATUS = { running: 1, finished: 1, stopped: 1 };
 
+/* REC-74 — HOW THE RUN'S BAR IS KNOWN, AND THE ABSENT CASE IS A MEMBER OF THIS
+   VOCABULARY RATHER THAN A NULL.
+ *
+ * §11 names three conditions a run is formed under: the bias manifest in force,
+ * the launching project's declared STANDARD PAIR, and the skill version.
+ * `ai_runs.standard_pair` was WRITTEN by `aiRunOpen` and published by
+ * `aiRunSpawnPayload` — and `aiRunRead` published it nowhere, so a member
+ * reading the run object saw the skill version and the bias block and could not
+ * see the bar the run was working to. PL-12 found the identical shape one field
+ * over. A condition recorded and never published is not recorded for anybody
+ * who was not there.
+ *
+ * WHY THE ANSWER IS A VOCABULARY AND NOT A BOOLEAN. Under DEC-17 the bar is a
+ * property of a PROJECT, and *"an inquiry outside any project has no bar"* —
+ * so the absent case is a first-class answer about the pair's semantics, not a
+ * null, and `undetermined is first-class and must be STATED` (CLAUDE.md)
+ * applies to this field exactly as it does to a grade. There is more than one
+ * way for a run to have no bar and they are DIFFERENT FACTS:
+ *
+ *   - `context-has-no-project` — the run works on a question outside any
+ *     project. DEC-17: nothing could have declared a bar, so no bar is not a
+ *     shortfall and inheriting one from anywhere would INVENT it.
+ *   - `none-recorded` — the run does run in a project and the launch recorded
+ *     no bar. THE PLANE DOES NOT GO AND LOOK ONE UP: `aiRunOpen` stores what it
+ *     was handed and derives nothing, so the honest sentence is about the
+ *     RECORD OF THE FORMATION and never about the project's current state.
+ *   - `names-no-axis` — something was recorded and it names neither axis. PL-4
+ *     measured this class one field over: a value that survives a falsiness
+ *     guard while naming nothing reads as PRESENT and travels. It is not a bar.
+ *   - `unreadable` — a bar was recorded and cannot be parsed back. Stated,
+ *     because "we stored something we can no longer read" and "there was
+ *     nothing" are different facts and only one of them is a defect.
+ *
+ * Each value is the sentence a surface renders INSTEAD of the machine word, so
+ * this vocabulary is DEC-49's shape and is guarded as one by arm E of
+ * `civicos-ui/check-refusal-codes.mjs` — the same guard RUN_BOUNDS and
+ * RUN_ENDINGS above already answer to. */
+export const STANDARD_BASIS = {
+  recorded:
+    "this run was formed under a bar the launching project declared",
+  "none-recorded":
+    "no bar was recorded when this run was formed, and the plane does not fill one in afterwards",
+  "context-has-no-project":
+    "this run works on a question outside any project, and only a project declares a bar",
+  "names-no-axis":
+    "something was recorded as the bar for this run and it names neither axis, so there is no bar here",
+  unreadable:
+    "a bar was recorded for this run and cannot be read back",
+};
+
 /* ------------------------------------------------------------------ refusals
 
    Each returns null when the subject is acceptable, or a REFUSAL object built
