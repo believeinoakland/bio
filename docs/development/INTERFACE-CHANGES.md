@@ -1660,7 +1660,7 @@ confirms the pin bites: making `op=meaningrows` answer a bare array fails
 
 
 
-## IC-27 · I3: one NEW read op `op=versionchain` — every version at a document ADDRESS, in date order, with its bundle · PROPOSED 2026-08-07 (PL-10, D-220 + D-221), ADDITIVE
+## IC-27 · I3: one NEW read op `op=versionchain` — every version at a document ADDRESS, in date order, with its bundle · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (PL-10, D-220 + D-221), ADDITIVE
 
 - **Interface:** I3 (plane → UI), **10.1.0 STABLE** → proposed **10.2.0**
 - **Proposer and owner to land it:** `RECORD` (session is-wave-w4b-pl10), from
@@ -1795,7 +1795,7 @@ CHECKS 61 → **64, all named**.
 - **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — expected NOT-AFFECTED; none reaches it.
 ---
 
-## IC-28 · I3: `op=airunlog` applies a bound where it applied none, and publishes it · PROPOSED 2026-08-07 (REC-70) — the RESOLUTION and the version bump are CONDUCT's
+## IC-28 · I3: `op=airunlog` applies a bound where it applied none, and publishes it · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-70) — the RESOLUTION and the version bump are CONDUCT's
 
 > **RENUMBERED IC-27 → IC-28 at integration, 2026-08-07 by CONDUCT.** PL-10 and REC-70 ran in parallel slots and **each filed an IC-27**, neither able to see the other — PL-10's is `op=versionchain` and merged first, so under the established collision protocol its number stands and the later allocation moves. Nothing in this entry's substance changes. Recorded rather than silently swapped, because the worker's report, its claim and its suite header all name IC-27.
 
@@ -1857,3 +1857,19 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 ### 7 · STATUS
 
 **PROPOSED, with the code landed on REC-70's branch.** **The I3 version bump and the RESOLUTION are NOT taken by this session** — the registry entry is CONDUCT's to move at integration, per IC-25's precedent. RECORD's position: the bound is right. Before this change the truth was available to nobody; after it the truth is on the wire and there is no consumer to break.
+
+
+### RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-07 for IC-27 AND IC-28 together
+
+**They are settled in one act because they landed in one integration and collided twice** — see the note at IC-28's head — but they are **two separate changes and are versioned as two.**
+
+**RESPONSES.** CONDUCT answered for the consuming areas (the IC-1 precedent). **RECORD** — AGREE, producer of both. **UI — AFFECTED BY IC-27 AND IT IS THE REASON THAT ONE MATTERS**: `heldMatch` composes a *"changed from"* sentence off an FTS lookup that PL-10 measured returns **the oldest version at the address**, and that sentence is **written permanently into the bundle** — routed as **UI-50**. UI is NOT affected by IC-28: **no caller anywhere reaches `op=airunlog`, and the UI positively pins that it does not.** **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — NOT AFFECTED by either.
+
+**RESOLUTION — BOTH ACCEPTED as ADDITIVE.** IC-27 adds one new read op and removes nothing. IC-28 gives an existing op a bound it never had, publishing the applied cap and truncation state — **and unlike IC-25 the impact is nil and MEASURED so**, because the op has no consumer at all.
+
+**What settles IC-27 as SOUND rather than merely additive, and it is the trap it was built around:** *the link Bob asked for is the JOIN, EXPOSED* — the index already existed, and **no edge was added, proved rather than promised**. `schema.mjs` is unmodified, the diff carries zero deletions, and the suite asserts over comment-stripped real sources that no supersedes/predecessor/version-edge name exists, that both tables carry exactly their original columns and indexes, and that `captured_locators` has exactly one writer — **with every reader run a second time over a source that DOES carry the forbidden thing and required to find it.** Its assumption sweep **THROWS** if the pre-existing indexes are absent from both real sources, **because PL-8's probe — which reported a 97% saving from an index that already existed — is why that is a throw and not an assertion.**
+
+**What settles IC-28, and it is a finding about our instruments rather than about the op:** the bound is right, but the op reached this roster only because REC-70 corrected a walk that **graded 55 of 156 dispatched ops while reading as a complete sweep.** The ratchet moves 27 → 40, **and a FLOOR is added — because a ceiling passes trivially over nothing, so REC-60's ratchet could only ever have failed from a reader that GAINED sight, never from one that LOST it.**
+
+**SETTLED. I3 10.1.0 → 10.2.0 (IC-27) → 10.3.0 (IC-28).** I5 NOT touched by either. **Open against IC-28: D-227 is reproduced and closed FOR THIS OP by a direct SQL pin, and still holds for `op=readingname`, `op=queue` and `op=audit`** — which the walk grades BOUNDED while an unbounded scan sits beside the bounded one. Riding REC-66.
+

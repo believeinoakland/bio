@@ -141,6 +141,7 @@ diligence at the time:
 | a coordination question reached Bob's ear instead of the record | `DECISIONS.md` had one destination, so there was nowhere to put something that was not his |
 | a debt row named its milestone in PROSE | the token is the sortable part; a check that only says "wrong" makes the reader guess |
 | a memory holding a standing instruction never loaded | it existed, correctly written, with no line in the index that loads it |
+| **a worker's negative-control harness was OVERWRITTEN MID-TURN by another worker running in parallel** (PL-10, 2026-08-07) | **the scratchpad directory is SHARED between concurrent worker sessions.** Two workers wrote a harness to the same path; the second replaced the first while it was between arming a control and restoring the file. PL-10's controls had already run and its tree was verified, so nothing was lost — **but a harness silently replaced between ARM and RESTORE could report a restore it never performed**, and this project has already met an NC harness that reported a byte-identical restore over a file that had not been restored (UI-38). **THE RULE, and it is now in every brief CONDUCT writes: a worker writes its control harness INSIDE ITS OWN WORKTREE, never to a shared scratchpad — and verifies every restore by CONTENT as well as by hash.** A worktree is the one place a worker owns alone; that is what it is for |
 
 ### Before you end a turn
 
