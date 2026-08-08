@@ -4113,3 +4113,21 @@ what: **the renderer exists, is verified, and is NOT REACHABLE BY ANYTHING.**
 why it is not done here: CPDF-12 is the measurement plus the module. An op nobody
   calls is an op nobody tests, and this item would have shipped the surface
   without the caller.
+
+## DELEGATION 2026-08-08 CONTENT-PDF → WHOEVER NEXT OWNS `bio-plane/scripts/control-register.mjs`
+from: cpdf12-pagepixels (worktree agent-a3bae0147bbd1869e), CPDF-12
+what: **D-247 — the negative-control register's corpus is PLANE SUITES ONLY, so a
+  fleet suite's declaration is invisible and a fleet suite with NO declaration
+  changes nothing.** Measured, not inferred: this item added a seven-arm
+  declaration and `REGISTER_FLOOR` did not move (`arms 557/557 · classified
+  128/128 · corpus 129/129`, identical before and after); stripping the whole
+  block from the new suite left `--strict` at **exit 0** and the register still
+  printing `129 of 129 suites declare one (100.0%)`. The restore was verified by
+  sha256 (20,492 B, `9868c684…`) and by `git status`. The FLEET section's
+  `2/2 declaring a negative control` is a per-MEMBER check: a member passes if
+  ANY ONE of its suites declares one.
+why it is not fixed here: `bio-plane/scripts/**` is not this item's paths, and
+  widening the corpus MOVES all three `REGISTER_FLOOR` numerals — which eleven
+  items moved in parallel on 2026-08-08 with keep-both merges leaving duplicate
+  `arms:` keys four times. That number must be re-read from a PRINTED green run
+  of the MERGED tree, which is the integrator's position, not a branch's.
