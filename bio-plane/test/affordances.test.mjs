@@ -189,10 +189,28 @@ t("the store ENFORCES the published arrays: store.mjs imports all three from aff
    /static\s+#RELATION_KINDS\s*=\s*new Set\(\[/.test(storeSrc),
    /static\s+#REQUIREDNESS\s*=\s*new Set\(\[/.test(storeSrc)],
   [true, true, true, false, false, false]);
-t("RUNGS carries EXACTLY the seven documented assignments — nothing invented (FW-14 assigns the rest)",
-  Object.entries(RUNGS).sort(),
+/* CORRECTED 2026-08-08 BY FW-14, never exempted. This assertion read "RUNGS
+   carries EXACTLY the seven documented assignments — nothing invented (FW-14
+   assigns the rest)" and pinned the seven by value. It was RIGHT FOR REC-19,
+   whose rule was that a rung comes from a DOCUMENT and whose refusal to invent
+   fifty more is what routed the question to FW-14. FW-14's rule is that a rung
+   comes from what the code ENFORCES, so the seven are no longer the whole set.
+   WHAT THIS PIN NOW HOLDS is the half that did not change: the seven sourced
+   assignments are still exactly what their documents say, so a later item cannot
+   quietly re-grade one of them while adding others. TOTALITY over the whole
+   mutating set — and the absence half — is `rung-ladder.test.mjs`, which owns it
+   and is where the classification is asserted in both directions. */
+t("the seven DOCUMENT-SOURCED rungs still read exactly as their sources assign them",
   [["attest", "attested"], ["dispose", "reasoned"], ["ratify", "attested"], ["reinstate", "reasoned"],
-   ["release", "reasoned"], ["retire", "terminal"], ["sever", "reasoned"]].sort());
+   ["release", "reasoned"], ["retire", "terminal"], ["sever", "reasoned"]]
+    .map(([op]) => [op, RUNGS[op] ?? null]),
+  [["attest", "attested"], ["dispose", "reasoned"], ["ratify", "attested"], ["reinstate", "reasoned"],
+   ["release", "reasoned"], ["retire", "terminal"], ["sever", "reasoned"]]);
+t("and FW-14 has assigned beyond them, so `rung` is no longer null wherever no "
++ "document speaks — the top rung exists and exactly one op carries it (DEC-19)",
+  [Object.keys(RUNGS).length > 7,
+   Object.entries(RUNGS).filter(([, r]) => r === "irreversible").map(([o]) => o)],
+  [true, ["publish"]]);
 
 /* REC-38 — UI-19's TWO MEASURED-ABSENT VOCABULARIES, the REC-35 pin applied to
    the action loop's pair. IDENTITY and not equality, for REC-35's reason
@@ -491,9 +509,23 @@ t("the LABEL a surface renders is the plane's own — UI-22's residue, and the l
 t("RUNGS.attest is REACHABLE at last: attest publishes its sourced `attested` rung, the capability NEEDS names, and session mode",
   cat.result.capture_acts.find((a) => a.id === "attest"),
   { id: "attest", label: CAPTURE_ACTS.find((a) => a.id === "attest").label,
-    weight: null, needs: "contribute", mode: "session", rung: RUNGS.attest, prompt: ATTEST_FENCE });
-t("monitor publishes rung null — no document assigns it one, and a capture act guesses no more than a bundle act does",
-  [cat.result.capture_acts.find((a) => a.id === "monitor").rung, "monitor" in RUNGS], [null, false]);
+    weight: null, needs: "contribute", mode: "session", rung: RUNGS.attest,
+    /* FW-14 adds `rung_absence` to every decorated act. It is null here because
+       attest CARRIES a rung; the pin stays exact rather than being loosened to a
+       subset match, because an exact object is what catches a key arriving. */
+    rung_absence: null, prompt: ATTEST_FENCE });
+/* CORRECTED BY FW-14. This read "monitor publishes rung null — no document
+   assigns it one, and a capture act guesses no more than a bundle act does".
+   The rung is still null and monitor is still absent from RUNGS, so the
+   MEASUREMENT is unchanged; what changed is that a null rung is no longer the
+   absence of a classification. Monitor is named in RUNG_ABSENT on the ground
+   `observational`, and the assertion now requires that ground to reach the
+   caller — because "null because nobody looked" and "null because the act
+   records an observation" are different answers and used to look identical. */
+t("monitor publishes rung null WITH ITS STATED GROUND — a capture act's absence is stated, not blank",
+  [cat.result.capture_acts.find((a) => a.id === "monitor").rung,
+   cat.result.capture_acts.find((a) => a.id === "monitor").rung_absence,
+   "monitor" in RUNGS], [null, "observational", false]);
 
 /* REC-43 / DEC-39 — THE CO-ATTESTATION HONESTY FENCE, published with the act.
  *
@@ -584,8 +616,20 @@ t("a capture act publishes weight null — no selection, no set-application weig
    assertion FAILS if a later item makes ratify reachable and does not say so,
    and fails if a sourced rung quietly stops being published. */
 const publishedRungIds = new Set([...ACT_IDS, ...CAPTURE_ACTS.map((a) => a.id)]);
-t("every sourced rung now reaches a member EXCEPT ratify, whose pre-flight is REC-15's deferred op",
-  Object.keys(RUNGS).filter((k) => !publishedRungIds.has(k)), ["ratify"]);
+/* CORRECTED BY FW-14, never exempted, and the correction makes the assertion
+   say what it always meant. It read "every sourced rung now reaches a member
+   EXCEPT ratify" and computed `Object.keys(RUNGS)` — which was the SEVEN
+   sourced ones and is now the twenty-four assigned ones, most of which are
+   deliberately not object-directed acts (op=adminremove is a roster act; there
+   is no strip beside a bundle for it to appear on). Testing all of them here
+   would assert that op=affordances publishes NON_ACTS, which is the opposite of
+   what this file exists for. The clause that mattered is kept exactly: the
+   SOURCED seven all reach a member except ratify, whose pre-flight is REC-15's
+   deferred op — so this still fails if a later item makes ratify reachable and
+   does not say so, and if a sourced rung quietly stops being published. */
+const SOURCED_RUNG_IDS = ["attest", "dispose", "ratify", "reinstate", "release", "retire", "sever"];
+t("every sourced rung still reaches a member EXCEPT ratify, whose pre-flight is REC-15's deferred op",
+  SOURCED_RUNG_IDS.filter((k) => !publishedRungIds.has(k)), ["ratify"]);
 t("the two action-loop vocabularies reach a caller OVER THE WIRE, exactly as published",
   [cat.result.vocabularies.action_basis_kinds, cat.result.vocabularies.correspondence_directions],
   [ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS]);
@@ -603,9 +647,22 @@ t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue h
 t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
   cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : "contribute", "session"]));
-t("rung is DECLARED: cite is null (no document assigns one — FW-14's, not ours), retire is terminal",
+/* CORRECTED BY FW-14, never exempted, and this is the pin the item MOVED rather
+   than merely reworded. It read "rung is DECLARED: cite is null (no document
+   assigns one — FW-14's, not ours), retire is terminal" and pinned cite's rung
+   at null. UI-20 recorded WHY at the time: "cite publishes rung null — C-7
+   derives reversible but FW-14 assigns". FW-14 has assigned it, and the
+   derivation agrees with C-7 — `cite` writes `status: "confirmed"` and
+   `sever`'s from-set accepts exactly that, so the plane publishes an act that
+   takes a citation back. The old value was not wrong when written; it was the
+   honest refusal to guess, and it is superseded by the assignment it was
+   waiting for. `retire` is unchanged. */
+t("rung is DECLARED: cite is `reversible` (C-7's answer, assigned by FW-14), retire is terminal",
   [cat.result.catalog.find((a) => a.id === "cite").rung,
-   cat.result.catalog.find((a) => a.id === "retire").rung], [null, "terminal"]);
+   cat.result.catalog.find((a) => a.id === "retire").rung], ["reversible", "terminal"]);
+t("and neither carries a stated absence, because both carry a rung",
+  [cat.result.catalog.find((a) => a.id === "cite").rung_absence,
+   cat.result.catalog.find((a) => a.id === "retire").rung_absence], [null, null]);
 const unauth = await (await mf.dispatchFetch("http://x/api/?op=affordances")).json();
 t("unauthenticated is refused: the act surface reads the working corpus", unauth.ok, false);
 const missing = await affordances("INFO-2026-9999-ghost");
@@ -626,9 +683,13 @@ t("collected information publishes EXACTLY the acts the plane would permit: cite
   actIds(affA0), ["cite", "release"]);
 t("each act carries its needs (the capability the gate will actually ask for)",
   affA0.result.acts.map((a) => a.needs), ["contribute", "contribute"]);
-t("release's rung is its sourced `reasoned`; cite's is null — published distinctly from weight (C-6)",
+/* CORRECTED BY FW-14: cite's rung moved from null to `reversible`. The property
+   this assertion is FOR — that rung and weight are published DISTINCTLY (C-6) —
+   is unchanged and is now asserted against two non-null values, which is a
+   stronger form of it than a null ever was. */
+t("release's rung is its sourced `reasoned` and cite's is `reversible` — published distinctly from weight (C-6)",
   affA0.result.acts.map((a) => [a.id, a.rung, a.weight]).sort(),
-  [["cite", null, "report"], ["release", "reasoned", "refuse"]].sort());
+  [["cite", "reversible", "report"], ["release", "reasoned", "refuse"]].sort());
 /* REC-38. The capture block is DELIBERATELY NOT narrowed by the target, and
    this is the honest half of the shape decision rather than a convenience.
    Whether a capture can be attested turns on the BYTES BEING IN THE STORE
@@ -876,11 +937,22 @@ t("C-2.10 REFUSES against exactly the published resolutions, in the catalogue's 
   [BADRES, "C-2.10", cat.result.vocabularies.resolutions]);
 
 /* ----------------------------------------- rung honesty across everything */
-console.log("\n--- rung honesty: null wherever no document assigns one ---");
+/* CORRECTED BY FW-14. The heading read "rung honesty: null wherever no document
+   assigns one" and the assertion allowed only [null, reasoned, terminal,
+   attested] while requiring cite to be ALWAYS null. Both halves are superseded
+   by the assignment: the ladder now has five rungs with `irreversible` at the
+   top (DEC-19 as amended) and cite carries `reversible`. THE HONESTY PROPERTY
+   THIS BLOCK EXISTS FOR IS STRENGTHENED RATHER THAN DROPPED — instead of
+   allowing null anywhere, it now requires that a null rung ALWAYS arrive with a
+   stated ground, which is the shape "honest absence" actually has. */
+console.log("\n--- rung honesty: a rung from the published ladder, or a STATED absence ---");
 const everyAct = [affA0, affA1, affB0, affB1, affB2, affP0, affP1].flatMap((r) => r.result.acts);
-t("across every response: rung is a sourced value or null, and cite is ALWAYS null",
-  [everyAct.every((a) => [null, "reasoned", "terminal", "attested"].includes(a.rung)),
-   everyAct.filter((a) => a.id === "cite").every((a) => a.rung === null)], [true, true]);
+t("across every response: rung is a member of the published ladder or null, and cite is ALWAYS `reversible`",
+  [everyAct.every((a) => a.rung === null || cat.result.vocabularies.rung_ladder.includes(a.rung)),
+   everyAct.filter((a) => a.id === "cite").every((a) => a.rung === "reversible")], [true, true]);
+t("and a null rung NEVER arrives bare: every act without one names the ground it "
++ "has none on, so 'nobody classified this' is no longer a reachable answer",
+  everyAct.filter((a) => a.rung === null && a.rung_absence === null).map((a) => a.id), []);
 t("the derivation module agrees with the wire (no second copy in the handler)",
   /* REC-72 added `cited_by_case` — how many of the citers are CASES, which is
      what `sever`/`reinstate` are derived over, because `op=sever` refuses a

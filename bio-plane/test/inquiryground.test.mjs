@@ -438,8 +438,11 @@ console.log("\n--- 5. every REC-42 refusal fires through the ACT and through op=
 console.log("\n--- 6. op=affordances publishes the act, its prompt, and no analyst vocabulary ---");
 {
   const a = (await affordances(INQ_A, CAROL)).acts.find((x) => x.id === "inquiryground");
+  /* CORRECTED 2026-08-08 (FW-14): the rung was `null` and is now `reasoned`.
+     `groundInquiry` refuses NO_REASON, so the authored account is REQUIRED and
+     the rung states that enforcement. */
   t("the act is published with the metadata every act carries",
-    [a.weight, a.needs, a.mode, a.rung], ["single", "contribute", "session", null]);
+    [a.weight, a.needs, a.mode, a.rung], ["single", "contribute", "session", "reasoned"]);
   t("THE PROMPT RIDES THE ACT (DEC-29(b)): a surface that has the control necessarily has the wording",
     typeof a.prompt === "string" && a.prompt.length > 100, true);
   /* Clause by clause, the REC-16 discipline: each sentence is a fact about what

@@ -24,13 +24,28 @@
  *     (store.mjs selectionResolve doctrine): declared here and CROSS-CHECKED by
  *     the suite against the weight the acting op itself reports.
  *
- * WHAT IS DECLARED, NOT DERIVED. `rung` is the interaction-constructs weight
- * ladder (reversible / reasoned / terminal / attested). CAPABILITIES.md
- * measures 7 of 57 mutating ops with a rung assigned by any document; RUNGS
- * below carries exactly those seven with their sources, and EVERY other op
- * publishes rung: null — stated honestly rather than guessed, because
- * inventing the other 50 here would be the forbidden surface-side map moved
- * one layer down. FW-14 assigns them.
+ * `rung` IS THE INTERACTION-CONSTRUCTS WEIGHT LADDER, AND FW-14 HAS ASSIGNED IT.
+ * The ladder is `RUNG_LADDER` below — reversible / reasoned / terminal /
+ * attested / IRREVERSIBLE, top rung per DEC-19 as amended, with the correction
+ * path published beside it. Every op the DISPATCH TABLE declares mutating either
+ * carries a rung in `RUNGS` or is named in `RUNG_ABSENT` with the ground on which
+ * it has none, and `test/rung-ladder.test.mjs` asserts that TOTAL IN BOTH
+ * DIRECTIONS over an op set derived from `OPS` in index.mjs.
+ *
+ * CORRECTED 2026-08-08 BY FW-14, and stated rather than quietly reworded. This
+ * paragraph used to read *"CAPABILITIES.md measures 7 of 57 mutating ops with a
+ * rung assigned by any document … inventing the other 50 here would be the
+ * forbidden surface-side map moved one layer down"*. It was RIGHT FOR REC-19 —
+ * REC-19 had no licence to assign rungs and refusing to guess was the correct
+ * refusal, and it is what routed the question here. Two things about it are now
+ * wrong. The FIGURE was never re-measured (the dispatch table declares 84
+ * mutating ops, not 57, which is why no count appears in this comment any more —
+ * the suite prints it). And the PRINCIPLE has moved on: FW-14's instruction is
+ * to derive rungs from what the code already enforces, so a rung read off a
+ * refusal the store RAISES is not an invention, it is the enforcement stated.
+ * What has NOT changed is the thing that paragraph was protecting: a rung with
+ * no backing is still forbidden, and every rung below is asserted against the
+ * enforcement or the document that gives it.
  *
  * TOTALITY, AND THE DRIFT GUARD. Every op in index.mjs's NEEDS table is either
  * an ACT here or named in NON_ACTS with the reason it is not object-directed.
@@ -348,6 +363,134 @@ export const acquireGradeNote = (ceiling, unreachable) => {
 
 export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
+/* ===========================================================================
+ * FW-14 — THE WEIGHT LADDER, ASSIGNED TO EVERY MUTATING OP OR STATED ABSENT.
+ *
+ * WHAT THIS BLOCK IS FOR, and it is not the ladder. The value here is that
+ * EVERY mutating op is ACCOUNTED FOR and a NEW one cannot arrive unclassified.
+ * `test/rung-ladder.test.mjs` derives the op set from the DISPATCH TABLE — the
+ * `mutating: true` rows of `OPS` in index.mjs, read through the same
+ * `readDispatch()` M0-12 reads — and asserts the classification TOTAL IN BOTH
+ * DIRECTIONS: no mutating op missing from RUNGS ∪ RUNG_ABSENT, and no key of
+ * either naming something the dispatch table does not carry as mutating.
+ *
+ * THE ABSENCE HALF IS HALF THE DELIVERABLE, not a get-out. An op with no rung
+ * and no statement is indistinguishable from an op nobody classified; CLAUDE.md
+ * requires that undetermined be STATED. So `RUNG_ABSENT` is a required, checked
+ * table, not a fallback — an op reaches `rung: null` only by being named there
+ * with a ground.
+ *
+ * WHAT REPLACED WHAT, stated rather than quietly reworded. The header of this
+ * file used to say *"CAPABILITIES.md measures 7 of 57 mutating ops with a rung
+ * assigned by any document"* and this block used to say *"do not add a rung
+ * without a document that assigns it"*. Both were RIGHT FOR REC-19 and both are
+ * now superseded, on FW-14's own instruction to "derive rungs from what the code
+ * already enforces": a rung read off a refusal the store RAISES is not a guess,
+ * it is the enforcement stated. The figure 57 was also never re-measured — the
+ * dispatch table declares 84 mutating ops as of this item, and it is now
+ * COUNTED by the suite rather than carried in prose, which is why no number
+ * appears in this comment.
+ * =========================================================================== */
+
+/* THE LADDER, low to high, and it is PUBLISHED (vocabularies.rung_ladder) so a
+ * surface reads the order rather than holding its own copy — DISPOSITIONS'
+ * reasoning exactly.
+ *
+ * DEC-19 AS AMENDED 2026-08-03 IS THE AUTHORITY FOR THE TOP RUNG. Bob:
+ * *"Publishing IS an irreversible act! It's (one of?) the only irreversible
+ * acts."* Correction is always possible and always moves FORWARD — a new
+ * edition (a separate document; all published editions stand), a withdrawal by
+ * another attested act (both stand), a finding rescinded to an inquiry by
+ * removing its claim. That path is stated BESIDE the rung, never instead of it.
+ *
+ * `terminal` IS RETAINED, AND THAT IS A JUDGEMENT MADE ON MEASUREMENT — read
+ * this before removing it. DEC-19's 2026-08-02 half wrote that `terminal`
+ * ("cannot be walked back") "no longer describes anything in the system",
+ * reasoning from DEC-12: a published case may be revised as a new edition and a
+ * closed finding may be reopened. That reasoning is about the rungs that were
+ * then the ladder's TOP TWO. It was never checked against the state machine, and
+ * the state machine disagrees: `STATES.information.edges.retired` is `[]`, so
+ * `op=retire` moves a bundle to a state with NO outgoing edge and there is no
+ * act in this catalogue that walks it back. With `irreversible` restored above
+ * it, `terminal` is no longer claiming to be the top of anything — it is the
+ * mid-ladder name for exactly what Constructs:161 called it, "internal, cannot
+ * be walked back", which is what the code enforces. The rung is asserted against
+ * that imported table in `rung-ladder.test.mjs`, so if an edge out of `retired`
+ * is ever added this rung fails rather than lying.
+ *
+ * WHAT SEPARATES THE TOP TWO IS NOT ABSENCE OF CORRECTION but its weight and
+ * visibility: an `attested` act cannot be undone SILENTLY (every correction is
+ * itself an act with a name and a date on it), and an `irreversible` act's
+ * output never stops answering at all. */
+export const RUNG_LADDER = ["reversible", "reasoned", "terminal", "attested", "irreversible"];
+
+/* The correction path DEC-19 requires to be stated beside the top rung rather
+ * than instead of it. Published with the ladder so a surface that renders
+ * "irreversible" cannot render it without the sentence that makes it honest. */
+export const IRREVERSIBLE_CORRECTION_PATH =
+  "Publishing cannot be undone: what it published never stops answering. Correction always moves "
+  + "FORWARD — a further edition (a separate document; every published edition stands), or a "
+  + "withdrawal recorded as another attested act, with both standing in the record. Nothing is "
+  + "erased, and nothing is un-said.";
+
+/* THE REFUSAL FAMILY THAT BACKS THE `reasoned` RUNG. Constructs:161 defines the
+ * rung as "a justification is required and never prefilled", and these are the
+ * codes by which the store REQUIRES one. Read as a CLASS and not as one
+ * spelling — REC-76's finding, and this table is where it bites: grading
+ * `reasoned` by `NO_REASON` alone would have missed `op=release` (which demands
+ * an acknowledgment AND a mitigation) and `op=conclude` (a conclusion AND a
+ * falsifier), both of which are the same requirement wearing the word the act
+ * uses for it.
+ *
+ * DELIBERATELY NOT IN THIS FAMILY: `NO_TARGET`, `NO_SUCH_*`, `NO_ID`, `NO_KIND`,
+ * `NO_LABEL`, `NO_CITATION`, `NO_BODY`, `NO_TITLE`, `NO_BUNDLE_MD`,
+ * `NO_SIBLING_DISCLOSURE`. Those demand an OBJECT, an IDENTIFIER, EVIDENCE or a
+ * well-formed document — none of them is the member saying why. A family that
+ * swept them in would have graded nearly every op `reasoned` and the rung would
+ * have meant nothing. */
+export const JUSTIFICATION_REFUSALS = [
+  "NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION",
+  "NO_CONCLUSION", "NO_FALSIFIER", "NO_JUSTIFICATION",
+];
+
+/* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
+ * at by every op in RUNG_ABSENT, because sixty hand-written near-duplicate
+ * sentences are sixty sentences that will drift apart.
+ *
+ * FOUR OF THESE FIVE ARE ABSENCES OF APPLICABILITY and one is a real
+ * undetermined — and the distinction is the most useful thing this item
+ * measured. The rung ladder is a property of AN ACT ON THE RECORD: it tells a
+ * member what performing it costs to undo. Most mutating ops are not acts on the
+ * record at all — they are the machinery, the credential layer, the caller's own
+ * scratch state, or an observation — and for those the honest answer is not "no
+ * rung yet" but "the ladder does not reach here". `undetermined` is the bucket
+ * that DOES mean "no rung yet", and keeping it apart from the other four is what
+ * stops a real gap from hiding inside a category error. */
+export const RUNG_ABSENCE_GROUNDS = {
+  substrate:
+    "the machinery a decided act rides on, not a decision. A member never chooses op=promote; they "
+    + "choose to conclude, or to retire, and the write path is how that lands. A rung is a promise "
+    + "about undoing something a member CHOSE, so there is nothing here to promise.",
+  credential:
+    "the subject is WHO MAY ACT, not what the record says. Adding a member, minting a machine "
+    + "credential or moving a project's roster changes who can write; it writes nothing the record "
+    + "asserts. The ladder grades acts on the record, and these are one layer beneath it.",
+  "caller-owned":
+    "the subject is the caller's own server-side or personal state — a selection is a lease the "
+    + "credential that made it owns, a mute is one member's preference about their own feed. None of "
+    + "it is in the record, so undoing it costs the record nothing and claims nothing to anybody.",
+  observational:
+    "the act records WHAT WAS OBSERVED, not what anybody decided. There is nothing to reverse: an "
+    + "observation is corrected by observing again, and the earlier observation stays true of the "
+    + "moment it was made.",
+  undetermined:
+    "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal in "
+    + "the plane establishes one, so the honest answer is that it is UNDETERMINED — stated, never "
+    + "guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as "
+    + "'light'. Several of these are weighty, and the reason they are undetermined is that the "
+    + "ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed.",
+};
+
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. action_kind is the check
  * catalogue's own C-2.10 suite, imported from the module that enforces it. */
@@ -432,21 +575,187 @@ export const VOCABULARIES = {
   version_states: VERSION_MACHINE.legal,
   version_edges: VERSION_MACHINE.edges,
   version_reason_required: VERSION_REASON_REQUIRED,
+  /* FW-14 — THE RUNG LADDER ITSELF, low to high, and the correction path that
+     DEC-19 requires to travel with its top rung. Published for the reason every
+     vocabulary above is: a surface that renders `rung: "irreversible"` needs to
+     know where that sits, and the alternative is every surface holding its own
+     copy of the order — the DEC-8 drift class this file exists to close. The
+     correction path rides with it because "irreversible" alone is the half of
+     DEC-19 that overclaims: a member told an act cannot be undone, and not told
+     that correction moves forward, has been misled by the surface.
+     Defined once in `RUNG_LADDER` / `IRREVERSIBLE_CORRECTION_PATH` below, which
+     `decorateAct` also reads — one array, two readers. */
+  rung_ladder: RUNG_LADDER,
+  rung_correction_path: IRREVERSIBLE_CORRECTION_PATH,
+  rung_absence_grounds: RUNG_ABSENCE_GROUNDS,
 };
 
-/* The seven sourced rungs — BIO_Interaction_Constructs_v0_1.md via
- * CAPABILITIES.md's op inventory (Constructs:241-244, 275). Everything absent
- * here publishes rung: null. Do not add a rung without a document that assigns
- * it: a rung is a promise to a member about reversibility, and FW-14 owns the
- * assignment (deriving it from what the store already enforces). */
+
+/* THE ASSIGNMENT. Every entry carries the source or the enforcement that BACKS
+ * it, and every backing is asserted in `rung-ladder.test.mjs` — a rung with no
+ * backing is a promise to a member that nothing keeps. */
 export const RUNGS = {
-  dispose:   "reasoned",   // Constructs:242
-  retire:    "terminal",   // Constructs:244 — terminal in STATES, refuses CITED
-  release:   "reasoned",   // Constructs:241
-  sever:     "reasoned",   // Constructs:243
-  reinstate: "reasoned",   // Constructs:243
-  attest:    "attested",   // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
-  ratify:    "attested",   // Constructs:275 (publication pre-flight is REC-15's)
+  /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
+     Derived, not spelled: the suite finds it as the op whose DO route is the
+     publishing path, so renaming either half fails rather than drifts. */
+  publish:            "irreversible",
+
+  /* ---- attested: signed or countersigned, and correctable only by a further
+     act that is itself signed. Constructs:275. Both require an authority the
+     group does not hold alone — a registered signer's key, a timestamp
+     authority's token — which is what `attested` means and what makes these two
+     unlike everything below. */
+  attest:             "attested",   // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
+  ratify:             "attested",   // Constructs:275 (publication pre-flight is REC-15's)
+
+  /* ---- terminal: the target state has no outgoing edge. See the ladder note.
+     `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
+     declared at the higher rung because the state it writes cannot be left. */
+  retire:             "terminal",   // Constructs:244 · STATES.information.edges.retired === []
+
+  /* ---- reasoned: the store refuses the act for want of an authored account.
+     The four with a Constructs line keep it; the rest are DERIVED FROM THE
+     REFUSAL, which is FW-14's instruction ("derive rungs from what the code
+     already enforces") and not an invention — the refusal IS the requirement
+     Constructs:161 names. */
+  dispose:            "reasoned",   // Constructs:242 · NO_REASON
+  release:            "reasoned",   // Constructs:241 · NO_ACKNOWLEDGMENT + NO_MITIGATION
+  sever:              "reasoned",   // Constructs:243 · NO_REASON (#edgeTransition)
+  reinstate:          "reasoned",   // Constructs:243 · NO_REASON (#edgeTransition)
+  conclude:           "reasoned",   // NO_CONCLUSION + NO_FALSIFIER
+  reopen:             "reasoned",   // NO_REASON
+  inquirydivide:      "reasoned",   // NO_REASON (one authored reason per division, DEC-29)
+  inquiryground:      "reasoned",   // NO_REASON
+  actionmove:         "reasoned",   // NO_REASON
+  discharge:          "reasoned",   // NO_REASON (a lawful skip says why it was lawful)
+  proposedispose:     "reasoned",   // NO_REASON (D-79: a finding AGES with a recorded reason)
+  relationdeclare:    "reasoned",   // NO_JUSTIFICATION (D-83: relations carry one, NOT NULL)
+  projectownerremove: "reasoned",   // NO_REASON
+  projectownerrescue: "reasoned",   // NO_REASON
+  adminremove:        "reasoned",   // NO_REASON
+  /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
+     OTHER FOUR version acts route through the SAME `#moveVersionState` and the
+     SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
+     `versionNeedsReason(to)` gates it, and `Store.VERSION_ACT_TO` maps accept →
+     accepted, revert → suggested, current → null, hide → null, none of which is
+     in the array. A classifier that graded these six by finding the code in the
+     shared helper would have promoted four ops to a rung the store does not
+     enforce; the suite therefore reads the exported predicate, not the text. */
+  versionreject:      "reasoned",   // VERSION_REASON_REQUIRED includes 'rejected'
+  versionconsider:    "reasoned",   // VERSION_REASON_REQUIRED includes 'considering'
+
+  /* ---- reversible: the plane PUBLISHES AN ACT THAT TAKES THE RESULT BACK.
+     This is the only evidence accepted for this rung, and the reason is
+     CLAUDE.md's: an outcome that costs nothing to produce is not evidence, and
+     "I found no obstacle" is exactly that. `reversible` is a promise to a
+     member, so it is assigned only where another act discharges it.
+
+     `cite` IS C-7's ANSWER AND THE ROW'S CLAIM ABOUT IT HOLDS. The FW-14 row
+     says this derivation method already yields C-7's answer; it was CHECKED
+     rather than assumed. `cite` writes `{ rel: "cites", status: "confirmed" }`
+     and `sever`'s `from` set is `["confirmed", "proposed"]` — so the act that
+     takes a citation back accepts exactly what citing wrote. UI-20 recorded
+     "C-7 derives reversible" and rendered the rung as ABSENT because FW-14 had
+     not assigned it; it is assigned here, and the derivation agrees.
+     Note what `reversible` does NOT claim: severing is not erasure — the edge
+     stays in the record carrying `status: "severed"` and the member's reason.
+     The act is undone; the fact that it happened is not. */
+  cite:               "reversible",  // sever accepts the status cite writes
+  versionrevert:      "reversible",  // VERSION_MACHINE.edges.suggested reaches every state revert runs from
+  versionhide:        "reversible",  // its own inverse: `hidden=false` un-hides (D-214: prune HIDES, never deletes)
+};
+
+
+/* EVERY MUTATING OP THAT CARRIES NO RUNG, WITH THE GROUND. Checked against the
+ * dispatch table in both directions by `rung-ladder.test.mjs`: an op that is
+ * neither here nor in RUNGS fails the suite BY NAME, and a name here that the
+ * dispatch table does not carry as mutating fails it too. Adding an op to
+ * index.mjs's OPS with `mutating: true` and neither classifying nor stating it
+ * is what this table exists to make impossible.
+ *
+ * The one-liners say what this op is; the WHY is on the ground above. */
+export const RUNG_ABSENT = {
+  /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
+  promote:              { ground: "substrate", is: "the one write path every act rides" },
+  allocid:              { ground: "substrate", is: "id allocation" },
+  lease:                { ground: "substrate", is: "the courtesy lock around promote" },
+  capture:              { ground: "substrate", is: "byte movement, content-addressed" },
+  acquire:              { ground: "substrate", is: "the fetch layer (M2')" },
+  linkproject:          { ground: "substrate", is: "admits an observed link as an edge, keyed by capture" },
+  cpuprobe:             { ground: "substrate", is: "the CPU probe — a Worker cannot time itself" },
+  export:               { ground: "substrate", is: "writes an export manifest of what is already there" },
+  taskdrain:            { ground: "substrate", is: "the task scheduler's own tick" },
+  capturerequest:       { ground: "substrate", is: "queues a capture; the capture is the act, this is the request" },
+  capturerequestdrain:  { ground: "substrate", is: "the capture-request queue's own tick" },
+  reproject:            { ground: "substrate", is: "rebuilds the projection from bundles already written" },
+  livefire:             { ground: "substrate", is: "the self-test write, scratch-confined" },
+  purge:                { ground: "substrate", is: "operator maintenance of the store, not an act on the record" },
+  connect:              { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
+  provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
+  provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },
+  airuntick:            { ground: "substrate", is: "an AI run's own progress tick" },
+
+  /* ---- credential: who may act, not what the record says. */
+  memberadd:            { ground: "credential", is: "roster governance" },
+  memberset:            { ground: "credential", is: "roster governance" },
+  membercaps:           { ground: "credential", is: "which capabilities a member holds" },
+  adminendorse:         { ground: "credential", is: "administrator endorsement of a member" },
+  signeradd:            { ground: "credential", is: "signer governance — the KEY, not what is signed with it" },
+  signerset:            { ground: "credential", is: "signer governance" },
+  governorconfig:       { ground: "credential", is: "operator tuning of the per-host governor" },
+  expertisedeclare:     { ground: "credential", is: "a member's own declaration about themselves" },
+  expertiseconfirm:     { ground: "credential", is: "administrator act on a declaration" },
+  enroll:               { ground: "credential", is: "an invitee becoming a member" },
+  knock:                { ground: "credential", is: "an unauthenticated request to be let in" },
+  claim:                { ground: "credential", is: "claims an instance at bootstrap" },
+  aicredentialmint:     { ground: "credential", is: "mints a machine credential" },
+  aicredentialrevoke:   { ground: "credential", is: "revokes a machine credential" },
+  projectinvite:        { ground: "credential", is: "roster act on a project, position-enforced by the store" },
+  projectjoin:          { ground: "credential", is: "roster act on a project" },
+  projectleave:         { ground: "credential", is: "roster act on a project" },
+  projectremove:        { ground: "credential", is: "roster act on a project" },
+  projectowneradd:      { ground: "credential", is: "roster act on a project" },
+
+  /* ---- caller-owned: the caller's own state, never the record's. */
+  select:               { ground: "caller-owned", is: "a server-side selection snapshot, owned by the credential that made it" },
+  selectionrelease:     { ground: "caller-owned", is: "releases that selection" },
+  queuemute:            { ground: "caller-owned", is: "one member's preference about their own feed (REC-21, D-125)" },
+  queuesnooze:          { ground: "caller-owned", is: "one member's preference about their own feed" },
+
+  /* ---- observational. */
+  monitor:              { ground: "observational", is: "one tick: what the source serves NOW against what was captured" },
+
+  /* ---- undetermined: REAL RECORD ACTS WITH NO RUNG. This is the list FW-14
+     exists to surface, and it is the list a later item should work from.
+     THE SHAPE THEY SHARE, and it is worth stating because it is a gap in the
+     LADDER rather than in this table: most of them are acts a member performs
+     ONCE, which the record keeps attributed and dated, and which are corrected
+     by a further act moving FORWARD rather than by anything moving back — and
+     they are not signed, so `attested` does not describe them either. DEC-19
+     named that property ("cannot be undone SILENTLY") and attached it to the
+     rung that requires a key. These acts have the property without the key.
+     Assigning them `attested` would claim a signature that does not exist;
+     assigning them `reversible` would promise a way back that does not exist;
+     so they are stated undetermined and the ladder's gap is named rather than
+     papered over. Raised as a provisional at the close of this item. */
+  versionaccept:        { ground: "undetermined", is: "adopts a reading of the evidence; the store's own words are that acceptance is a historical fact, corrected by turning it down or reconsidering, never by returning it to something nobody acted on" },
+  versioncurrent:       { ground: "undetermined", is: "what THIS PROJECT stands on — the project's own dated declaration (§7); it can be declared again, and each declaration stands" },
+  inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id" },
+  taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
+  taskresolve:          { ground: "undetermined", is: "records how a task ended" },
+  actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
+  projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
+  biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
+  strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
+  entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
+  entityalias:          { ground: "undetermined", is: "a registry write adding an alias to an entity" },
+  resolve:              { ground: "undetermined", is: "a recogniser write: this reference means this entity, at this grade" },
+  resolvetestify:       { ground: "undetermined", is: "recogniser TESTIMONY about a resolution" },
+  progressiondefine:    { ground: "undetermined", is: "a member's claim about how an institution ought to behave (framework §8.1)" },
+  thread:               { ground: "undetermined", is: "threads real documents into a progression instance" },
+  airunopen:            { ground: "undetermined", is: "opens an AI run against the record" },
+  airunclose:           { ground: "undetermined", is: "closes an AI run" },
+  suggest:              { ground: "undetermined", is: "a machine PROPOSES a reading; §6 rule 4 makes it a proposal and never a settlement" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -527,8 +836,12 @@ export const CAPTURE_ACTS = [
      serves NOW against the bytes the provenance register says were captured
      from it. The label names the comparison rather than promising a watch — a
      tick is a check, and `unchanged` / `modified` / `removed` are its answers.
-     No rung: no document assigns one, and RUNGS carries only the sourced seven
-     (FW-14's job, not a guess made here). */
+     NO RUNG, AND THE ABSENCE IS NOW STATED RATHER THAN LEFT BLANK (FW-14):
+     `RUNG_ABSENT.monitor` carries the ground `observational` — the act records
+     what was OBSERVED and not what anybody decided, so there is nothing to
+     reverse; an observation is corrected by observing again. The sentence this
+     replaces said "no document assigns one, and RUNGS carries only the sourced
+     seven", which was true and is no longer the reason. */
   { id: "monitor", label: "Check this source against what was captured" },
 ];
 
@@ -608,10 +921,15 @@ export const ACTS = [
      published that is NOT selection-backed: one conclusion answers one
      question, so there is no set to apply and no set-application weight to
      report (store.mjs conclude() carries the reasoning; the suite cross-checks
-     the word against what the op itself returns). NO RUNG: no document assigns
-     one, and RUNGS carries only the seven that are sourced — inventing
-     "reasoned" here because it feels reasoned is exactly the guessing this
-     file refuses. The entry requirements (a conclusion, a falsifier, at least
+     the word against what the op itself returns). RUNG `reasoned` (FW-14) —
+     AND THE SENTENCE THIS REPLACES WAS RIGHT WHEN IT WAS WRITTEN, so it is
+     corrected rather than deleted. It read: "NO RUNG: no document assigns one …
+     inventing 'reasoned' here because it feels reasoned is exactly the guessing
+     this file refuses." That refusal was correct — REC-19 had no licence to
+     assign — and the rung is NOT assigned now because it feels reasoned. It is
+     assigned because the store REFUSES the act NO_CONCLUSION and NO_FALSIFIER
+     without an authored account, which is Constructs:161's definition of the
+     rung enforced in code. The suite asserts that backing. The entry requirements (a conclusion, a falsifier, at least
      one basis leg) and the named-member rule are ACT-TIME refusals the store
      words itself, the release precedent: publishing the act says the state
      machine permits the move, not that this caller's parameters will pass. */
@@ -632,10 +950,12 @@ export const ACTS = [
      put a control on the strip that reverts a published finding with no
      edition recorded, which is the DEC-8 disagreement in the worse direction
      — a publication the store then has to refuse. The store refuses it by
-     name (NOT_SET_DOWN) and this list does not offer it. Weight `single` and
-     rung null for conclude's reasons: one question is picked back up at a
-     time, and no document assigns this act a rung (FW-14's job, not a guess
-     made here).
+     name (NOT_SET_DOWN) and this list does not offer it. Weight `single`: one
+     question is picked back up at a time. RUNG `reasoned` (FW-14) — the line
+     this replaces said "rung null for conclude's reasons … no document assigns
+     this act a rung", which was true of REC-19 and is superseded by the same
+     derivation conclude's is: the store refuses NO_REASON, so an authored
+     account is REQUIRED and the rung is that requirement stated.
      EXTENDED AT THE REC-14 MERGE, and the exclusion above is UNCHANGED: the
      FROM set is REOPENABLE_FROM, which adds `published` and still refuses
      `concluded`. A published case's editions are signed and immutable and
@@ -651,12 +971,24 @@ export const ACTS = [
      over a question with no conclusion. Weight `single`, conclude's precedent:
      one case is published at a time and there is no set to apply.
 
-     NO RUNG, and this one is worth stating rather than passing over: publishing
-     feels like the most `attested` act in the system, and `ratify` IS assigned
-     that rung by Constructs:275. But this act is not the attestation — it
-     AUTHORS the bytes that are then attested, and no document assigns it a
-     rung. Inventing "attested" here because it sits next to ratify is exactly
-     the guessing this file refuses; FW-14 owns the assignment.
+     RUNG `irreversible` — THE LADDER'S TOP RUNG, AND THIS IS THE ONE OP THAT
+     CARRIES IT (DEC-19 as amended, Bob 2026-08-03: *"Publishing IS an
+     irreversible act! It's (one of?) the only irreversible acts."*). The
+     correction path travels with it and is published as
+     `vocabularies.rung_correction_path`, never instead of the rung: a further
+     edition is a separate document and every published edition stands, a
+     withdrawal is another attested act and both stand, and a finding can be
+     rescinded to an inquiry by removing its claim. Nothing is erased.
+
+     THE PARAGRAPH THIS REPLACES WAS RIGHT WHEN IT WAS WRITTEN AND IS KEPT IN
+     SUBSTANCE, because its distinction is the one that makes this rung correct
+     rather than lucky. It read: "publishing feels like the most `attested` act
+     in the system, and `ratify` IS assigned that rung by Constructs:275. But
+     this act is not the attestation — it AUTHORS the bytes that are then
+     attested … Inventing 'attested' here because it sits next to ratify is
+     exactly the guessing this file refuses." That is still true, and it is why
+     `publish` is NOT `attested`: it is a rung ABOVE, on a ruling that names it,
+     not a rung borrowed from its neighbour.
 
      The entry requirements (the completeness statement, the exclusion FIELD,
      the declared and justified subject position) and C-21.1's freshness check
@@ -677,12 +1009,16 @@ export const ACTS = [
      refusal it fronts would then decline. ONE leg IS enough, and deliberately:
      two different questions may rest on the same document, and R4 permits a leg
      to land on one child or on BOTH.
-     NO RUNG: no document assigns division one, and RUNGS carries only the seven
-     that are sourced. It is tempting to write `terminal` here because the
-     parent never moves again — but the parent is corrected FORWARD into its
-     children rather than ended, which is not what the ladder's `terminal` says,
-     and guessing at the difference is exactly what this file refuses. FW-14
-     owns the assignment.
+     RUNG `reasoned` (FW-14): the store refuses NO_REASON, one authored reason
+     per division (DEC-29), so the requirement Constructs:161 names is enforced
+     here and the rung states it. THE OBSERVATION THIS REPLACES IS KEPT BECAUSE
+     IT IS STILL THE RIGHT ANALYSIS AND IT DECIDED THE RUNG: "it is tempting to
+     write `terminal` here because the parent never moves again — but the parent
+     is corrected FORWARD into its children rather than ended, which is not what
+     the ladder's `terminal` says." `terminal` is reserved for a state with no
+     outgoing edge (op=retire alone); forward correction is not terminality, and
+     that distinction is exactly why this act sits at `reasoned` and not above
+     it.
      THE PROMPT rides the act (DEC-29(b)): every surface that can offer division
      receives the wording that must accompany it, because a surface renders what
      it received and never composes a prompt of its own. */
@@ -724,9 +1060,11 @@ export const ACTS = [
      supersede it (REC-16), and re-deriving a terminal parent's strength after
      the fact would move a number its children's disclosure already pointed at.
 
-     NO RUNG. No document assigns grouping one, and RUNGS carries only the seven
-     that are sourced. It is tempting to write `reasoned` here; that is the
-     guessing this file refuses, and FW-14 owns the assignment.
+     RUNG `reasoned` (FW-14). The line this replaces said "it is tempting to
+     write `reasoned` here; that is the guessing this file refuses" — and the
+     temptation is no longer what decides it: `groundInquiry` refuses NO_REASON,
+     so an authored account is REQUIRED by the store and the rung is that
+     enforcement stated rather than a feeling about the act's weight.
 
      WEIGHT `single`, conclude's precedent: one question's structure is authored
      at a time, and a bulk version would be the checkbox these constructs exist
@@ -780,9 +1118,16 @@ export const ACTS = [
      precedent carried through conclude and reopen — publishing the act says the
      state machine permits a move, not that this caller's parameters will pass.
      Weight `single`: one action moves at a time and there is no set to apply.
-     NO RUNG. It is tempting to write `reasoned` because a reason is required,
-     and that is exactly the guess RUNGS refuses: no document assigns this act a
-     rung, and FW-14 owns the assignment. */
+     RUNG `reasoned` (FW-14), AND THE SUPERSEDED LINE IS THE CLEAREST EXAMPLE IN
+     THIS FILE OF WHAT CHANGED. It read: "It is tempting to write `reasoned`
+     because a reason is required, and that is exactly the guess RUNGS refuses."
+     Under REC-19's rule — a rung comes from a DOCUMENT — that was correct.
+     FW-14's rule is that a rung comes from what the code ENFORCES, and under it
+     "a reason is required" is not a temptation, it is the evidence: the store
+     refuses NO_REASON, and Constructs:161 defines `reasoned` as exactly that
+     requirement. The same sentence, read against the two rules, gives opposite
+     answers — which is why the rule change is written down rather than the
+     conclusion alone. */
   { id: "actionmove", label: "Move this action", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && edgesFrom(f).length > 0 },
   /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
@@ -822,10 +1167,25 @@ export const ACTS = [
    * these constructs exist to refuse, and the more so here, because this is the
    * family of acts that decides what a case rests on.
    *
-   * NO RUNG on any of them. It is tempting to write `reasoned` on reject and
-   * consider because both REQUIRE a reason, and that is exactly the guess RUNGS
-   * refuses two blocks up — a rung is a promise to a member about reversibility
-   * and no document assigns these six one. FW-14 owns the assignment.
+   * RUNGS ON THESE SIX ARE NOT ALL THE SAME, AND THAT IS THE POINT (FW-14). The
+   * line this replaces said "NO RUNG on any of them. It is tempting to write
+   * `reasoned` on reject and consider because both REQUIRE a reason, and that is
+   * exactly the guess RUNGS refuses." The observation was exactly right and is
+   * now the derivation: `versionreject` and `versionconsider` ARE `reasoned`,
+   * because `VERSION_REASON_REQUIRED` is `['considering', 'rejected']` and the
+   * store enforces it through the ONE predicate `versionNeedsReason`.
+   * THE OTHER FOUR ARE NOT, AND A TEXTUAL CLASSIFIER WOULD HAVE GOT THIS WRONG:
+   * all six route through the same `#moveVersionState` and the same
+   * `VERSION_NO_REASON` refusal, so anything grading these ops by finding that
+   * code in the shared helper would have promoted four of them to a rung the
+   * store does not enforce. `rung-ladder.test.mjs` therefore reads the exported
+   * predicate and `Store.VERSION_ACT_TO`, never the helper's text.
+   * `versionrevert` and `versionhide` are `reversible` (revert's target state
+   * reaches every state it runs from; hide is its own inverse — `hidden=false`).
+   * `versionaccept` and `versioncurrent` carry a STATED ABSENCE, ground
+   * `undetermined`: acceptance is a historical fact corrected FORWARD and it is
+   * not signed, so neither `reversible` nor `attested` describes it, and the
+   * ladder has no rung that does. Named rather than guessed.
    *
    * THE ENTRY REQUIREMENTS ARE ACT-TIME REFUSALS the store words itself: which
    * version, the authored reason, the legal edge, the transitive cycle at accept,
