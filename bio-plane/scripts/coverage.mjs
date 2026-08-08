@@ -171,17 +171,17 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* ONE KEY SET, DELIBERATELY. Eleven items have moved these figures in parallel, and
-     keep-both merges left duplicate `arms:` keys in this one object literal FOUR separate
+  /* ONE KEY SET, DELIBERATELY. Twelve items have moved these figures in parallel, and
+     keep-both merges left duplicate `arms:` keys in this one object literal FIVE separate
      times. That is valid JavaScript: the LAST key silently wins, and on the first occasion
      the last was the LOWEST — so the merge would have quietly INSTALLED SLACK in a ratchet
-     whose entire purpose is to have none. No error, no warning, nothing red, and **a
-     duplicate object key cannot be seen by reading the value you expect to find.**
+     whose entire purpose is to have none. No error, no warning, and **a duplicate object
+     key cannot be seen by reading the value you expect to find.**
 
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542 · FW-13 550 · M0-17 553.
+     REC-77 530 · M0-16 542 · FW-13 550 · M0-17 553 · FW-14 552.
 
      THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the counted one (M0-16) — a
      phantom suite inflates the corpus, and a floor moved while one is present would be
@@ -189,19 +189,9 @@ const REGISTER_FLOOR = {
      UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
      at the site: one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
-  arms:       557,  // arms stated across the classified declarations
-
-     REC-77 530 · M0-16 542 · FW-14 552 (this one, and it is the CURRENT value: FW-14
-     moved the set to its own printed REPRODUCIBLE figures AFTER committing its new
-     suite, so `rung-ladder.test.mjs` was in a commit when the figures were read).
-
-     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
-     counted one — a phantom suite inflates the corpus, and a floor moved while one is
-     present would be permanently too high, which is how a ratchet gets switched off.
-     Move these only UPWARD, and only to a figure a green run PRINTED. */
-  arms:       552,  // arms stated across the classified declarations
-  classified: 128,  // declarations the detector could count arms in
-  corpus:     129,  // suites the register reads
+  arms:       563,  // arms stated across the classified declarations
+  classified: 129,  // declarations the detector could count arms in
+  corpus:     130,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
