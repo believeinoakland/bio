@@ -108,6 +108,42 @@ rather than as zero, because an unreadable number and no assertions are differen
 claims — the `sshsig` 16-versus-18 case in D-93 is what happens when they are
 collapsed.
 
+### What the battery says about TEMP, and about the half it does not own (D-237)
+
+The runner hands every suite a `$TMPDIR` of its own and fails the run on anything left
+inside it (D-186). **That figure is about the FENCE, and for eight days it was read as a
+figure about the estate.** The line now says so in its own words —
+`this run left 0 directories holding 0 miniflare sandboxes INSIDE $TMPDIR` — and a second
+report answers the other half:
+
+```
+outside the fence: 3 shared temp root(s) walked to depth 4 · 893 top-level entries
+                 · 0 HELD by this run · 1 moved while it ran · 2 standing workerd ground(s)
+  roots: /private/tmp, /private/var/folders/…/T, /private/var/tmp
+  HELD arm: 153 lsof sample(s) covering 125 of 134 suite(s) — 9 suite(s) finished before a
+  sample could be taken and were NOT covered by the pid-chain arm
+  NAMED — the fenced figure above is a statement about $TMPDIR ONLY …
+    /private/tmp/mfp  10.9 MB · 18 file(s) · written 2026-07-31 17:36 .. 2026-08-08 19:13
+      PRE-EXISTING, untouched by this run · unfenced · workerd persistence
+```
+
+**It never fails a run, and it never says "this run" without a pid chain.** The space it
+looks at belongs to everybody — 861 top-level entries and 236 MB of other tools' work on
+the development machine, with a second worktree's battery running throughout — so a bare
+arrival diff would blame this run for other people's files, which is the same defect
+pointing the other way. Three strengths of evidence, never collapsed: **HELD** (a pid
+chain from the battery to a process holding the path — the only state allowed to say *this
+run*), **APPEARED/CHANGED** (a candidate, with the suite named because suites run
+sequentially, and any concurrent checkout produces the identical observation),
+**PRE-EXISTING** (not this run's, named anyway because accumulation is the finding).
+
+The structural guard that DOES fail is `hygiene.test.mjs`'s containment check (M0-10): no
+suite may root a filesystem ground at an absolute-path literal. This report exists for what
+a source read cannot see — a literal built by concatenation, a path in a variable, a path
+from an environment variable, a path a dependency chooses — and for residue that is already
+there. `scripts/residue.mjs` states its blind spots at the site; D-250 carries the two that
+matter, and D-249 carries the one no filesystem instrument can reach at all (a fixed PORT).
+
 The second half of D-93 is closed too: a suite that depends on stock `ssh-keygen`
 (`ratify`, `reuse-ratify`, `signpage`) now detects its absence and **skips loudly with
 a named reason** — `name: SKIPPED — ssh-keygen not on PATH; …` — rather than dying with
