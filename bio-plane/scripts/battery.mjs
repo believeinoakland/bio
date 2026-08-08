@@ -22,7 +22,7 @@
  *   node scripts/battery.mjs search cite only suites whose name contains these
  */
 
-import { mkdtempSync, readdirSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -198,27 +198,75 @@ const residue = () => {
 };
 const residueBefore = residue();
 
-const suites = readdirSync(join(ROOT, "test"))
+const planeSuites = readdirSync(join(ROOT, "test"))
   .filter((f) => f.endsWith(".test.mjs"))
   .filter((f) => filters.length === 0 || filters.some((x) => f.includes(x)))
-  .sort();
+  .sort()
+  .map((f) => ({ label: f, cwd: ROOT, rel: join("test", f), fleet: null }));
+
+/* ---- VF-3, 2026-08-08 (FL-2's turn): THE FLEET'S SUITES RUN TOO ------------
+ *
+ * THE DEFECT, MEASURED RATHER THAN SUSPECTED. Suites are discovered from
+ * `bio-plane/test/` — which is the fix for D-93's second defect, a hand-kept list
+ * of 38 files against a directory of 41 — and the fleet lives BESIDE the plane,
+ * so `pdf-worker/test/pdf-worker.test.mjs` has been in the repository since
+ * 2026-07-31 and **is run by nothing**. Its own `npm test` script exists and no
+ * gate invokes it. Meanwhile `scripts/coverage.mjs` credited that member's
+ * surface as REACHED, because reach there is read out of the suite's SOURCE.
+ *
+ * So the first fleet member's coverage figure was standing on a suite nobody
+ * executed. That is `bundle.test.mjs`'s defect exactly (a suite in the directory
+ * and in nothing's chain, so it had stopped being run and nothing said so), one
+ * directory out — and it is D-117's own failure mode, a component going dark
+ * while the figure holds still. VF-3 closes the instrument half; this closes the
+ * half where the instrument's INPUT was never produced.
+ *
+ * Members are DISCOVERED by `fleet-member.json`, never listed here, for the same
+ * reason the plane's suites are discovered from the directory.
+ *
+ * A MEMBER WHOSE SUITE CANNOT RESOLVE ITS IMPORTS IS SKIPPED LOUDLY AND BY NAME,
+ * not failed — D-93's second half, the same treatment `ratify.test.mjs` gets when
+ * `ssh-keygen` is absent. A fleet member keeps its own `node_modules` and a fresh
+ * checkout has none, so failing would red the battery on every machine over a
+ * dependency the plane does not own. The skip names the package AND the fix, and
+ * it is counted in its own line of the summary rather than folded into the green
+ * figure. `agent-worker`'s suite resolves miniflare from the plane's install and
+ * therefore always runs; `pdf-worker`'s imports it bare and does not — that is a
+ * DELEGATION to CONTENT-PDF, and until it lands the battery SAYS so on every run
+ * instead of the member being invisible. */
+const REPO = join(ROOT, "..");
+const fleetSuites = [];
+for (const dir of readdirSync(REPO).filter((d) => !d.startsWith("."))) {
+  let meta;
+  try { meta = JSON.parse(readFileSync(join(REPO, dir, "fleet-member.json"), "utf8")); } catch { continue; }
+  const testDir = join(REPO, dir, meta.testDir || "test");
+  let files = [];
+  try { files = readdirSync(testDir).filter((f) => f.endsWith(".test.mjs")).sort(); } catch { /* none */ }
+  for (const f of files) {
+    const label = `${dir}/${f}`;
+    if (filters.length && !filters.some((x) => label.includes(x))) continue;
+    fleetSuites.push({ label, cwd: join(REPO, dir), rel: join(meta.testDir || "test", f), fleet: meta.name || dir });
+  }
+}
+
+const suites = [...planeSuites, ...fleetSuites];
 
 if (suites.length === 0) { console.error("no suites matched"); process.exit(1); }
 
-const run = (file) => new Promise((resolve) => {
+const run = ({ cwd, rel }) => new Promise((resolve) => {
   const started = Date.now();
-  const child = spawn(process.execPath, [join("test", file)], {
-    cwd: ROOT,
+  const child = spawn(process.execPath, [rel], {
+    cwd,
     /* D-186: the suite's temp files land in THIS RUN's directory, whatever the
        suite believes about where temp goes. os.tmpdir() reads $TMPDIR on every
-       call, so this is the one place the choice can be made for all 95 of them. */
+       call, so this is the one place the choice can be made for all of them. */
     env: { ...process.env, TMPDIR: RUN_TMP },
   });
   let out = "";
   child.stdout.on("data", (d) => { out += d; });
   child.stderr.on("data", (d) => { out += d; });
-  child.on("error", (e) => resolve({ file, code: -1, out: String(e), ms: Date.now() - started }));
-  child.on("close", (code) => resolve({ file, code, out, ms: Date.now() - started }));
+  child.on("error", (e) => resolve({ code: -1, out: String(e), ms: Date.now() - started }));
+  child.on("close", (code) => resolve({ code, out, ms: Date.now() - started }));
 });
 
 /* Assertion counts come from each suite's own tail line ("name: N pass, M fail"),
@@ -245,25 +293,41 @@ const skipReason = (out) => {
   return m ? m[1].trim() : null;
 };
 
-console.log(`\nbattery: ${suites.length} suites\n`);
+/* A FLEET member's suite that cannot resolve a package IN ITS OWN DIRECTORY is
+   not evidence about the subject — it is evidence that nobody ran `npm ci` there.
+   Converted to a NAMED skip for fleet suites only, and only for this one cause;
+   every other non-zero exit is a failure exactly as before. The package is named
+   so the reader knows what to install rather than being told something is wrong
+   somewhere. */
+const fleetDepSkip = (entry, out) => {
+  if (!entry.fleet) return null;
+  const m = out.match(/Cannot find (?:package|module) '([^']+)'/);
+  if (!m) return null;
+  return `${entry.fleet}'s suite cannot resolve '${m[1]}' — run \`npm ci\` in ${entry.cwd.split("/").pop()}/, `
+       + `or have the suite resolve it from the plane's install as agent-worker's does. `
+       + `THE MEMBER'S SUITE DID NOT RUN.`;
+};
+
+console.log(`\nbattery: ${suites.length} suites (${planeSuites.length} plane · ${fleetSuites.length} fleet)\n`);
 const results = [];
-for (const file of suites) {
-  const r = await run(file);
+for (const entry of suites) {
+  const file = entry.label;
+  const r = await run(entry);
   const t = tally(r.out);
-  const skip = r.code === 0 ? skipReason(r.out) : null;
-  results.push({ ...r, tally: t, skip });
-  const failedRun = r.code !== 0;
+  const skip = (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
+  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip });
+  const failedRun = r.code !== 0 && !skip;
   const status = failedRun ? "FAIL" : skip ? "skip" : "ok  ";
   const counts = skip
     ? `SKIPPED — ${skip}`
     : t
       ? `${t.pass} pass${t.fail ? `, ${t.fail} FAIL` : ""}${t.skip ? `, ${t.skip} skipped` : ""}`
       : "assertions unknown";
-  console.log(`  ${status}  ${file.padEnd(28)} ${String(r.ms).padStart(6)}ms  ${counts}`);
+  console.log(`  ${status}  ${file.padEnd(34)} ${String(r.ms).padStart(6)}ms  ${counts}`);
   if (failedRun && !QUIET) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
 }
 
-const failed = results.filter((r) => r.code !== 0);
+const failed = results.filter((r) => r.code !== 0 && !r.skip);
 const skips = results.filter((r) => r.skip);
 const partial = results.filter((r) => r.tally && r.tally.skip > 0);
 const unknown = results.filter((r) => r.tally === null && !r.skip);
@@ -278,6 +342,24 @@ if (skips.length) console.log(`  SKIPPED (named): ${skips.map((r) => `${r.file} 
 if (partial.length) console.log(`  ran short (named): ${partial.map((r) => `${r.file} skipped ${r.tally.skip} — ${r.tally.skipWhat}`).join("\n                     ")}`);
 if (unknown.length) console.log(`  ${unknown.length} suite(s) reported no assertion count: ${unknown.map((r) => r.file).join(", ")}`);
 if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")}`);
+
+/* VF-3: the fleet's own line, printed even when every member ran, so the figure
+   cannot hold still while a member goes dark. `coverage.mjs --strict` reads each
+   member's surface out of its suite's SOURCE; this says whether that source was
+   ever EXECUTED. Both halves are needed and neither implies the other. */
+{
+  const fleetRes = results.filter((r) => r.fleet);
+  const byMember = [...new Set(fleetRes.map((r) => r.fleet))];
+  const ranMembers = [...new Set(fleetRes.filter((r) => !r.skip && r.code === 0).map((r) => r.fleet))];
+  console.log(`fleet: ${byMember.length} member${byMember.length === 1 ? "" : "s"} beside the plane · `
+    + `${fleetRes.length} suite(s) discovered · ${ranMembers.length} member(s) actually RAN`
+    + `${byMember.length !== ranMembers.length
+        ? ` · DARK: ${byMember.filter((m) => !ranMembers.includes(m)).join(", ")}`
+        : ""}`);
+  if (byMember.length !== ranMembers.length)
+    console.log(`  a member whose suite did not run is a component coverage credits from a source read`
+      + ` alone (D-117) — that is the generous direction, and it is named here rather than left green.`);
+}
 
 /* D-186's assertion. The comparison IS the control: this run has just built and
    torn down one workerd sandbox per miniflare instance, so anything still

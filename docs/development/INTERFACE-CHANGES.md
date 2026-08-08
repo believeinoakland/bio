@@ -2041,3 +2041,67 @@ The field is therefore new rather than changed, and **the run now distinguishes 
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+
+
+## IC-32 · NEW INTERFACE I8 — `plane ↔ agent-worker`, the second fleet service binding · PROPOSED 2026-08-08 (FL-2 / VF-3) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**WHY THIS IS AN IC AT ALL, since a NEW interface changes nothing that exists.** It is
+filed because `PARALLELISM.md` requires the registry entry to exist BEFORE anything is
+built against it, and because one interface's ground genuinely moves: **I6's fleet
+pattern gains a second instance and a second DIRECTION.** A change proposal is the
+channel this project uses to tell a consumer that something it builds against has moved,
+and DIST builds against the fleet's shape.
+
+**WHAT IS ADDED.** `docs/development/INTERFACES.md` gains **I8**, PROVISIONAL, owner
+`FLEET`, registered before the first commit of the worker's code (I6's precedent). Its
+shape is in the registry and is not restated here.
+
+**WHAT IS *NOT* CHANGED, and this is the load-bearing half.**
+
+- **`I3` IS NOT BUMPED.** FL-2 adds **no op**, no `OPS` row, no table, no column and no
+  check family. The member is a CONSUMER of I3's existing read surface under PL-11's
+  credential; a consumer arriving is not an interface change, and bumping I3 for it
+  would make the version number mean something it does not.
+- **`I6` IS NOT CHANGED.** `pdf-worker`'s shape, bindings and behaviour are untouched;
+  `pdf-worker/**` is not edited by this item at all. I8 COPIES I6's pattern rather than
+  generalising it, deliberately: a shared abstraction over two members, the first of
+  which is a pure function and the second of which calls back, would be an abstraction
+  invented at n=2 over two things that are not the same shape.
+- **`I1` and `I5` are untouched.** The member holds no R2 binding and no store binding,
+  so it consumes neither.
+
+**THE ONE THING I6's CONSUMERS SHOULD READ.** I8 gives its member a **`GET /version`**
+endpoint, and I6's does not. Fleet rule 4 — *"a verification must establish which build
+ANSWERED, for the member as well as the plane"* — is unverifiable for `pdf-worker`
+today, because nothing on the wire names its build. That is a gap in I6 rather than a
+gain in I8, it is filed as a DELEGATION to `CONTENT-PDF` in `CLAIMS.md`, and it is named
+here so DIST's DS-4 rollout gate does not discover it at deploy time.
+
+**MEASURED CONSUMER IMPACT.** `civicos-ui` reaches none of this (UI harness exit 0, no
+new act, no floor moved in the DEC-49 guard — MEASURED, not predicted). `newgroup` and
+`docprofile` reach none of it. `bio-plane/src/**` is not edited. The single plane-side
+change is ONE `services` entry in `bio-plane/wrangler.jsonc` (`AGENT_WORKER`), which is
+inert until DIST deploys the member — the same posture `PDF_WORKER` shipped in.
+
+**VF-3 RIDES THIS PROPOSAL AND IS WHY THE FLEET FIGURE MOVES.** `coverage.mjs --strict`
+enumerates the new member's SURFACE table in the same turn, and the instrument gains
+four gates it did not have: a fleet FLOOR (members and surface ops), an
+accounted-for-Workers cross-check (a directory carrying a `wrangler.jsonc` must either
+be the plane, be explicitly named as not-a-member, or declare a `fleet-member.json` —
+so HIDING a manifest now FAILS `--strict` instead of quietly shrinking the fleet), a
+gate on a member whose SURFACE table cannot be found or is empty, and a gate on fleet
+rule 2 (a member declaring a `mutating: true` surface op has left the fleet contract).
+
+### 2 · RESPONSES
+
+*(Awaiting. FLEET is the owner of the new entry. `DIST` is the affected consumer — DS-1
+installs the fleet and DS-4 deploys it; the DELEGATIONS are in `CLAIMS.md`.
+`CONTENT-PDF` is affected only by the `/version` gap named above, which is a DELEGATION
+and not a required migration: nothing it has built stops working.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent. I8 stays PROVISIONAL
+until FL-3 re-reads it from the code, which the registry entry schedules.)*

@@ -69,9 +69,28 @@
   // instance (the instance name IS the worker name, D-102) so it must be
   // templated from the installer's `slug` — that half is a DIST delegation in
   // CLAIMS.md, not something this file can carry.
+  // AGENT_WORKER (I8, FL-2). The SECOND fleet member, and the first that CALLS
+  // BACK: it consumes the plane's op surface while it works, under PL-11's `ai`
+  // credential class, which the plane hands it PER CALL. It holds no store
+  // binding, no R2 binding and no credential of its own, so this binding is the
+  // whole of the relationship in one direction and `agent-worker`'s own PLANE
+  // binding is the whole of it in the other.
+  //
+  // A SERVICE BINDING BECAUSE A URL DOES NOT WORK, measured rather than
+  // preferred: FL-1 (MEASUREMENTS.md, 2026-08-08) found a Worker CANNOT fetch
+  // another Worker on this account's own *.workers.dev name — 404, `error code:
+  // 1042`, 7 ms, every time — while the service binding to the same script
+  // answered 200. Two probe passes were lost to that.
+  //
+  // INERT UNTIL DIST DEPLOYS THE MEMBER, exactly as PDF_WORKER shipped: nothing
+  // in `src/` reads this binding yet (FL-3 is the first caller), so an instance
+  // that has not installed the fleet is unaffected. Deploying the member and
+  // teaching the installer to install a THREE-member fleet is DIST's (DS-1/DS-4,
+  // D-115/D-116) — a slot-less area cannot deploy a Worker.
   "services": [
-    { "binding": "PDF_WORKER", "service": "pdf-worker" },
-    { "binding": "SELF",       "service": "bio-plane" }
+    { "binding": "PDF_WORKER",   "service": "pdf-worker" },
+    { "binding": "AGENT_WORKER", "service": "agent-worker" },
+    { "binding": "SELF",         "service": "bio-plane" }
   ],
 
   "observability": { "enabled": true }
