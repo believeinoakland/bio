@@ -1,11 +1,13 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/aicredential.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's and PL-4's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad. Every arm is armed ALONE against a whole tree, every restore is verified BY sha256 AND BY CONTENT, and every arm names what MUST fail AND what MUST NOT.
    OWED CONTROL 1 IS DEC-55.5 AND IT HAS TWO HALVES. The first half is in THIS suite, block 8, and needs no source edit: a member authors a BROAD scope on the record, the gate admits it, and every MACHINE_CANNOT_* fires BY NAME on `token:ai`. The second half is arm (1) below and IT HAS NEVER BEEN RUN IN THIS PROJECT.
-   (1) DEC-55.5'S SECOND HALF — REMOVE THE PREDICATE AND THEY ALL STOP FIRING. In checks/bio-checks.mjs make `isMachineStamp` return false. `isMachineIdentity` is `isMachineStamp` OR a bare class word OR a NON_MEMBER_AUTHORS name, and `token:ai` is none of the latter two, so ONE edit disarms all twelve — which is D-199 (5)'s claim about REC-46 stated as a measurement rather than as prose.
-   (2) THE SCOPE IS READ FROM THE RECORD. In src/index.mjs make `aiTaskScope`'s declared-writes test read a literal array instead of `cred.writes`.
-   (3) THE SHAPE FENCE. In src/index.mjs make `aiReachesAsMember` return true.
-   (4) THE MINT IS A MEMBER ACT (D-199 (3)). In src/store.mjs guard `aiCredentialMint`'s identity refusal with `false &&`.
-   (5) THE STATED VIEWER. In src/index.mjs stamp `class:ai` for every ai credential instead of the record's principal.
-   (6) OVER-STRICTNESS, and these PASS rather than fail — see block 9.
+   ALL SIX ARMS RUN 2026-08-08 IN WORKTREE agent-a6feaaff20bdaf423, every one behaving as declared, baseline 90/0 and hygiene 472/0 before each. Figures below are MEASURED.
+   (1) DEC-55.5'S SECOND HALF — REMOVE THE PREDICATE AND THEY ALL STOP FIRING. In checks/bio-checks.mjs make `isMachineStamp` return false -> 75 pass, 15 FAIL. `isMachineIdentity` is `isMachineStamp` OR a bare class word OR a NON_MEMBER_AUTHORS name, and `token:ai` is neither of the latter two, so ONE edit disarms all twelve — D-199 (5)'s claim about REC-46 measured rather than restated. WHAT THE TWELVE ANSWERED INSTEAD, recorded because "they all pass" is the generous reading: RELEASE->NO_ACKNOWLEDGMENT, CONCLUDE->NO_CONCLUSION, REOPEN->NO_REASON, PUBLISH->NO_SUBJECT_POSITION, MOVE_ACTION->NO_REASON, CORRESPOND->NO_TARGET, DIVIDE->NO_REASON, GROUND->NO_PARTITION, DECLARE->**nothing at all, the machine SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH**, MOVE_VERSION->VERSION_ACT_NO_SUCH_VERSION, FORWARD->NO_SUCH_TASK, RESOLVE->NO_SUCH_TASK. Not one is refused as a machine any more; each falls through to the ordinary payload complaint behind the fence, and the one act whose payload was complete WENT THROUGH. AND THE CREDENTIAL LAYER STAYS GREEN throughout — the task-scope refusals do not depend on this predicate, which is what makes the two layers independent rather than one thing measured twice.
+   (2) THE SCOPE IS READ FROM THE RECORD. In src/index.mjs make `aiTaskScope`'s declared-writes test read the literal `["suggest","capturerequest"]` instead of `cred.writes` -> 82 pass, 8 FAIL. NOTE WHAT STAYS GREEN AND WHY THE ARM IS NECESSARY: every assertion driving the INVESTIGATIVE credential still passes, because that literal IS its scope. Only a credential whose RECORD says something different can tell a row from a constant, and a suite without that arm would have been green over a settings row — which is the whole of D-199 (2).
+   (3) THE SHAPE FENCE (PL-4's delegated constraint). In src/index.mjs make `aiReachesAsMember` return true -> 87 pass, 3 FAIL, and all 26 ops outside the member floor become authorable into an agent's scope: capturerequestdrain, purge, export, memberadd, signerset and the rest, every one MINTED.
+   (4) THE MINT IS A MEMBER ACT (D-199 (3)). In src/store.mjs guard `aiCredentialMint`'s identity refusal with `false &&` -> 83 pass, 7 FAIL, and every machine credential mints — including an `ai` one whose authored scope names the mint, which is the self-extension the determination exists to prevent. NOTE WHAT DOES NOT SAVE IT: the class ACL keeps probe out and admin and member tokens sail through, so the ACL was never the fence here.
+   (5) THE STATED VIEWER. In src/index.mjs stamp `class:ai` for every ai credential instead of the record's principal -> 89 pass, 1 FAIL, and Anna's agent reads Ruth's project while the record still SAYS the credential is attributable to Anna.
+   (6) OVER-STRICTNESS, re-measured on the WHOLE tree and these PASS rather than fail: a real `suggested` version, a real capture-request row, reads across the project, and an organisation key that is not inert. 90/0.
+   THE INSTRUMENT FAILED FIRST AND ARM (3) IS HOW IT WAS FOUND. This suite's C-29.9 assertion read `drainRefusal.translation.length`, which THREW under arm (3) — where the mint succeeds and there is no translation — killing the suite mid-run so the control read the whole file as "stayed GREEN". The file's own null-tolerance rule, broken in the file itself, caught by RUNNING the control rather than by reading it.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-11 / IS-5 — THE `ai` CREDENTIAL CLASS, D-199's FIVE
  * DETERMINATIONS WHOLE.
@@ -399,9 +401,16 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
   t(`every one of the ${beyond.length} ops no member reaches is refused at the mint, by name`,
     [refusedBeyond.length === beyond.length, leaked], [true, []]);
   const drainRefusal = await mint({ tokenId: "drain-grab", writes: ["capturerequestdrain"] });
+  /* NULL-TOLERANT, AND THIS EXACT LINE IS WHY. Written as
+     `drainRefusal.translation.length > 40` it THREW under control arm (3) —
+     where the mint SUCCEEDS and there is no translation — which killed the
+     suite mid-run and hid every arm behind it, so the control read the whole
+     file as "stayed GREEN". That is the file's own header rule broken in the
+     file itself, caught by running the control rather than by reading it. */
   t("and PL-4's own verb carries C-29.9 off the wire, with its canned translation — pinned against "
   + "what the plane SENT rather than against the registry the number was read from",
-    [drainRefusal.check, drainRefusal.translation.length > 40, drainRefusal.classes],
+    [drainRefusal?.check ?? null, typeof drainRefusal?.translation === "string" && drainRefusal.translation.length > 40,
+     drainRefusal?.classes ?? null],
     ["C-29.9", true, ["admin", "probe", "daemon"]]);
 
   /* AND THE FLOOR ADMITS THE WHOLE OF ITS OWN SIDE — the over-strictness half

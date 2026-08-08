@@ -2765,3 +2765,21 @@ interfaces consumed: I3
 interfaces owned: none
 expected: PL-11 / IS-5 — D-199's five determinations whole. ONE `ai` class carrying a DECLARED TASK SCOPE read FROM THE RECORD (never a settings row, never an env binding); minting is a MEMBER act; the record names token IDENTITY and PRINCIPAL; `token:ai` caught by every `MACHINE_CANNOT_*` through REC-46's one predicate. Carries DEC-55.5 WHOLE as owed control 1, including the second half — remove the predicate and every named refusal stops firing — which has never been run in this project.
 released:
+
+### DELEGATION 2026-08-08 RECORD (PL-11) -> PL-4 / FL-6 (the capture-request row and the account cascade): **A REQUESTED CAPTURE IS ATTRIBUTED TO THE MEMBER, NOT TO THE CREDENTIAL THAT ASKED — UNDER THE INVESTIGATIVE SCOPE, MEASURED**
+
+**DRIVEN, not argued** (`test/aicredential.test.mjs` block 9, both arms). `capture_requests` copies `principal_plane` **off the run**, and under the investigative task scope the agent **cannot open a run** — `op=airunopen` mutates and is not among its declared writes — so the member opens it and the capture's attribution reads `member:ruth`. Correct as far as it goes: a named person did authorise the session. **Incomplete against D-199 (4):** the act the AGENT performed is attributed to its principal without saying WHICH OF THAT PRINCIPAL'S CREDENTIALS performed it, so two agents minted by the same member are indistinguishable in the provenance of everything they request.
+
+The composite stamp itself works and is driven: a credential whose record declares `op=airunopen` opens its own run, and that run — and every capture requested under it — carries `member:ruth/session-opener`, the principal AND the identity, never the value. So the mechanism is present and the INVESTIGATIVE scope is the shape that does not reach it.
+
+- **Provisional:** as shipped, and PL-11's suite asserts the state as it IS rather than as its brief expected, so the gap is visible rather than latent.
+- **Two ways to close it, and they are not equivalent.** (a) Give the investigative scope `airunopen` — one word in the shipped scope, and it makes the agent the opener of its own session, which is a **doctrine change** (DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, and a launch nobody human performed is a different authorisation). (b) Carry the requesting credential's identity on the `capture_requests` row beside the run's principals — a column, and no doctrine moves. **Recommend (b).**
+- **Reversal cost:** low now, rising with every requested capture: a row written before the column exists cannot be re-attributed afterwards, which is DEC-52's own reason for ruling early.
+
+### DELEGATION 2026-08-08 RECORD (PL-11) -> WHOEVER OWNS `check-refusal-codes.mjs`'s FLOOR BLOCK: **`vocabularyTerms` WAS ALREADY STALE BY TEN WHEN THIS ITEM ARRIVED, AND PL-11 ADDED NO VOCABULARY**
+
+It read **40** over a tree carrying **50**. PL-11 moved it because the rule is to move what you measure, but **this item did not cause it** — the slack accumulated across PL-12/UI-51/PL-1/PL-3/PL-4 without any of them touching arm E. That is the **third consecutive item** to find a stale floor in this block by measuring (PL-3 found `families` reading 5 over 6, PL-4 found the census 19 low and had turned a control from RED to GREEN).
+
+- **The pattern is now evidence rather than anecdote:** the floors an item does not touch are the ones that rot, because the rule as written is *move the floors YOU invalidated*, and nobody re-measures the rest.
+- **The fix is small and general:** have the guard FAIL when a floor sits more than N below the measured figure, so slack is a red run rather than a thing the next worker happens to notice. It is a change to a landed instrument owned by another family, which is why it is delegated rather than made here (REC-71's rule).
+- **Reversal cost:** none. The cost of not doing it is measured: one control that read GREEN over a reader that had gone partially blind.
