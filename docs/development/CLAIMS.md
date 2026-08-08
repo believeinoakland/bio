@@ -3828,3 +3828,12 @@ expected: QUEUE.md M0-15. NAME the mechanism by which an untracked `.test.mjs` e
 accepts-when: as the M0-15 row. Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief: **124/124 green · 7,815 assertions · 121 plane + 3 fleet · exit 0**, which AGREES with the brief — and the baseline's OWN honesty was checked, which is this item's subject: `git status --short` empty, and all 121 plane suites plus both fleet manifests present in the commit at HEAD, verified by `git ls-tree -r HEAD` rather than by `git status` (an ignored file is invisible to `git status` and `.claude/worktrees/` is ignored, so `git status` is the wrong instrument for this question).
 concurrency: checked over the whole file. No live claim names `scripts/battery.mjs` — M0-10's entry explicitly does NOT touch it, and M0-14's holds `scripts/control-register.mjs`, which this does not touch. `scripts/coverage.mjs` is touched for the `REGISTER_FLOOR` NUMERALS only; the same three-numeral block has been moved by M0-14 and by CONDUCT at integration, and the resolution is mechanical (take the higher figure, which the instrument prints).
 released:
+
+## CLAIM 2026-08-08 MEASUREMENT (M-4)
+session: m4-agent
+opened: 2026-08-08T00:00:00Z
+paths: bio-plane/test/ref-variance-probe.mjs and bio-plane/test/ref-variance.control.mjs (both new), the M-4 section appended to docs/development/MEASUREMENTS.md
+interfaces consumed: none
+interfaces owned: none
+expected: M-4 — the partial-reference tier ships UNMEASURED. Re-run REC-36's variance measurement over REFERENCE STRINGS (`reading_refs.ref` and `ref_key`) rather than over labels, record n / instrument / population / date, and state what it does and does not license. MEASUREMENT ONLY: no op, field, shape, surface or behaviour changes, and the instrument is a `.probe.mjs` so `scripts/battery.mjs` (which discovers `*.test.mjs`) does not run it. Holds no area slot.
+released: 2026-08-08 — done and committed on branch `worktree-agent-ad6cca371e6828415`, NOT pushed (CONDUCT integrates). No plane, surface or schema path was edited; the battery moved by ZERO (125/125 · 7,872 before and after). The measurement VINDICATES the tier's no-grade posture and CONTRADICTS the ORDER of the two partial correspondences in `Store.#CORRESPONDENCE_RANK` — routed to CONDUCT for a queue row rather than fixed here, because `QUEUE.md` has one writer and this item may change no behaviour.
