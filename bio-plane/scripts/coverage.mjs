@@ -159,26 +159,32 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-<<<<<<< HEAD
-  arms:       478,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
-                       INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
-                       PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
-                       and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
-                       BRANCH AND FALSE OF THE MERGED TREE — the fifth time in two days, and
-                       the same shape as `regionLines`, a C-number family, a debt row and an
-                       IC number. A worker cannot see it and should not be asked to.
-                       THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
-                       RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
-                       accumulate any, which is exactly what D-233 and REC-71 were about. */
-=======
   /* MOVED 2026-08-08 by M0-12, from 470/119/120, to the figures a green run PRINTED
      after `test/op-claims.test.mjs` joined the battery with an 8-arm declaration.
      M0-14's own rule and the reason it exists: move these only UPWARD and only to a
      printed figure — a floor left with slack is not a ratchet, and this project has
      measured a floor sitting 19 codes low that had already flipped a control from
-     RED to GREEN. */
+     RED to GREEN.
+
+     PRIOR MOVE, kept because it is the receipt: 470 -> 471 AT INTEGRATION by CONDUCT,
+     from the figure this instrument printed as `GREW by 1`. M0-14 set 470 and REC-75
+     added an arm afterwards, so that figure was TRUE OF ONE BRANCH AND FALSE OF THE
+     MERGED TREE — the same shape as `regionLines`, a C-number family, a debt row and
+     an IC number. A worker cannot see it and should not be asked to. THE INSTRUMENT
+     PRINTING `GREW by 1` IS WHY THAT WAS A ONE-LINE MOVE RATHER THAN A DISCOVERY: a
+     floor that reports its own slack cannot accumulate any.
+
+     AND THIS BLOCK CARRIED A CONFLICT MARKER ONTO `origin/main` FOR ONE COMMIT, which
+     is CONDUCT's error and is recorded here rather than quietly repaired. Integrating
+     seven items at once, CONDUCT ran `git add -A && git commit` WITHOUT re-reading the
+     tree for markers, and pushed. The battery was green and proved nothing, because
+     THE BATTERY DOES NOT RUN THIS FILE — `--strict` does, and CONDUCT skipped it to
+     save time in a batch. That is this project's own most-repeated failure, committed
+     by the session that has been recording it all day: a shortcut for throughput that
+     skipped the one instrument that could see the thing it broke. The rule it violated
+     is already written in VERIFICATION.md and needed no discovery. M0-11's figure (476,
+     correctly printed on its own tree) is superseded by the merged-tree figure below. */
   arms:       478,  // arms stated across the classified declarations
->>>>>>> worktree-agent-a5b4da09d5c190b09
   classified: 120,  // declarations the detector could count arms in
   corpus:     121,  // suites the register reads
 };
