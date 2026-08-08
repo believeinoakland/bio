@@ -209,16 +209,31 @@ const FLOOR = {
      new code at the run-open door (UI-38's §14a rider). The CEILING fell 73 ->
      42, which is the item's whole point and the first time it has moved by more
      than one. */
-  families:     13,    // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
-                       // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
-                       // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        145,    // + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
+  families:     14,    // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
+                       // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14);
+                       // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-34 — the context-keyed run list).
+                       // Was 13 at REC-64, 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the
+                       // floor said 5.
+                       /* REC-69, 2026-08-08 — MOVED FROM THE PRINTED FIGURE ON A GREEN RUN OF THIS
+                          TREE, never by adding one. C-22's own header states the tax this line
+                          charges: *"a new `*_CHECKS` family is a floor in
+                          `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's
+                          walk unless it is moved in the same turn"*. It is moved in the same turn,
+                          and the family was still the right shape rather than three more C-22 rows —
+                          C-22's rows are facts about the RUN OBJECT refused where it is WRITTEN, and
+                          these three are facts about the QUESTION A CALLER ASKED, refused at a READ
+                          that may match no run at all. MEANING_READ_CHECKS is the precedent. */
+  rows:        148,    // + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
-                       // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
-                       // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      406,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+                       // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14)
+                       // + C-34.1..3 (REC-69, all three DRIVEN through the op).
+                       // Was 145 at REC-64, 105 at PL-15, 81 at PL-4, 70 at PL-3.
+  census:      409,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // (was 406, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // REC-69: +3 (C-34.1..3), MOVED FROM THE PRINTED FIGURE and set EQUAL to it,
+                       // for the reason the paragraph below gives in a number: SIX of slack blinds the
+                       // widest matcher in this file completely, so three is already half of that.
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
                           answer is SIX. Arm 3 of `bio-plane/test/nc-rec64.mjs` neuters M2 — the widest
                           matcher, the one that earned the matcher set — and the union falls 406 -> 401.
@@ -228,9 +243,11 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       200,    // codes a surface can receive (R1 + R2 + R3) (was 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 59,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 28, 27, 25, 20, 17, 13, 9, 5)
+  reach:       203,    // codes a surface can receive (R1 + R2 + R3) (was 200, 191, 187, 178, 168, 157, 127, 116, 98)
+                       // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
+                       // move, which is the property a new family owes rather than the number itself.
+  governedSites: 60,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 59, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -241,7 +258,8 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      46,    // + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
+  regions:      47,    // + REC-69's `is-airuns-context` (one region, three codes, every one COMPARED).
+                       // + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
                        // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
                        // is-correspond-artifact, is-release-account, is-release-entry,
                        // is-dispose-inquiries, is-publish-statement, is-cite-note, is-cite-role,
@@ -253,7 +271,18 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1263,   /* MOVED 1220 -> 1263 AT INTEGRATION 2026-08-08 by CONDUCT — AND REC-64
+  regionLines: 1281,   /* MOVED 1263 -> 1281 by REC-69, 2026-08-08, from the figure this guard PRINTED
+                          on a green run of THIS worktree — never by adding 18 to CONDUCT's number.
+                          The 18 are `is-airuns-context`, the one region REC-69 adds, and its span is
+                          the three malformed-question refusals and nothing else.
+                          **AND THE STANDING WARNING APPLIES TO THIS ITEM TOO, so it is repeated here
+                          rather than assumed read: `regionLines` IS A PROPERTY OF THE MERGED SOURCE.**
+                          Several workers run concurrently in `store.mjs`; if any of them lands a line
+                          inside one of the other 46 spans, this figure must be re-read from a green
+                          run of the MERGED tree, not taken from this branch. REC-69's report says so
+                          explicitly so CONDUCT re-reads it at integration.
+                          PRIOR ENTRY, kept because it is the receipt for how this figure moves:
+                          MOVED 1220 -> 1263 AT INTEGRATION 2026-08-08 by CONDUCT — AND REC-64
                           ASKED FOR EXACTLY THIS CHECK, WHICH IS WHY IT IS A ONE-LINE MOVE.
                           Its note (kept below) says: `re-read this from a green run of the
                           merged tree rather than trusting this number`. Read, and it was 43
@@ -300,7 +329,10 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 115,   // refusal codes actually COMPARED against a family row — NOT the same as
+  codesChecked: 118,   // + REC-69's THREE (C-34.1..3), all COMPARED: the region's `refusal` helper sits
+                       // ABOVE the marker and every call inside names its code as a STRING LITERAL,
+                       // which is the convention the note below says is what makes arm C bite.
+                       // refusal codes actually COMPARED against a family row — NOT the same as
                        // refusals JUDGED, and not the same as lines read. Was 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
                           BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed
@@ -328,8 +360,14 @@ const FLOOR = {
                        // thirteen governed sites once read 776 lines and checked zero — arm C's
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
-  vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 51, // + PL-15's `out-of-inquiry-lead` FINDING slug. Terms across them. Read 40 over a tree carrying 50 for long enough that
+  vocabularies:  9,    // the plane's own code->text maps a surface renders verbatim (arm E).
+                       // + REC-69's `RUN_CONTEXTS` in src/airun.mjs — the two kinds of thing a run can
+                       // be in the context of, named as a TEXT vocabulary rather than typed at the one
+                       // site that judges them, so `op=airuns`' refusal names them in words a member
+                       // reads. It landed inside this arm the moment it was written, because the arm
+                       // harvests BY SHAPE and not by name — which is the property that was worth
+                       // building and is proved here by an item that did not have to register it.
+  vocabularyTerms: 53, // + REC-69's two RUN_CONTEXTS terms. + PL-15's `out-of-inquiry-lead` FINDING slug. Terms across them. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
                        // still have cleared 40.
