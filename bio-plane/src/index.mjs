@@ -591,6 +591,17 @@ const OPS = {
      an inquiry and the bundles its versions rest on, so a member must not learn
      from a version set what op=list would not tell them. */
   basisversions: { classes: ["admin", "member", "probe"],        mutating: false },
+  /* PL-14 / IS-7: THE STRENGTH PAIR over ONE reading of a question's evidence
+     (§12) — per axis, over two populations, never composed into one number. A
+     pure read: it writes nothing, adopts nothing and makes nothing current,
+     which is §6 rule 6 as a mechanism rather than a promise (exploring an
+     unaccepted reading is CALCULATING OVER IT, never designating it). The
+     state-set argument defaults to `accepted` inside the store, so a caller who
+     says nothing gets the record's own answer rather than a permissive one.
+     `viewer` is stamped below from the authenticated identity: the answer names
+     a question and every document its legs rest on, so a member must not learn
+     from a strength what op=list would not tell them. */
+  versionstrength: { classes: ["admin", "member", "probe"],      mutating: false },
 
   /* PL-12 / D-84: the bias object's three ops.
      `biasmanifest` is a READ and is gated on the viewer below, like every read
@@ -5021,6 +5032,12 @@ export default {
            behind the same gate, so hidden and absent are one answer; and it
            fails closed on an absent stamp, like every op in this list. */
         || op === "basisversions"
+        /* PL-14 / IS-7: a strength names the QUESTION and every document its
+           reading rests on, so a question the caller was never invited to must
+           answer exactly as one that does not exist. The store applies
+           `#bundleGate` to the inquiry ONCE, before any leg is read, and fails
+           closed on an absent stamp, like every op in this list. */
+        || op === "versionstrength"
 
         /* PL-12 / D-84: a project-scoped manifest names a PROJECT bundle, and
            the adopted bias bundles are bundles too, so a caller who may not see

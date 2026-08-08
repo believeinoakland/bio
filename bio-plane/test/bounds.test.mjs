@@ -338,7 +338,30 @@ t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two th
    worktree and taking what it printed, never by adding two to PL-3's figure. See
    the block above for the two arrivals and for why the drain is a shape this
    roster had not carried. */
-  OPS.size, 24);
+/* CORRECTED TO 25, 2026-08-08 by PL-14 / IS-7 — MEASURED by running the walk in
+   this worktree and taking what it PRINTED (it reported 25 against a pin of 24),
+   never by adding one to PL-4's figure. The arrival is `op=versionstrength`, the
+   strength pair over one reading of a question's evidence, and it is a SIXTH
+   kind on this roster:
+
+   ITS BOUND IS NOT THE CALLER'S. Every other capped read here takes a `limit`
+   and publishes the one it applied; this op takes none, because a caller has no
+   business asking for HALF a reading. The cap is `BASIS_VERSION_LEGS_MAX` — the
+   same named constant `op=basisversions` reads legs with — and what it protects
+   is not the answer's size but the answer's HONESTY: a strength is a fact about
+   a WHOLE composition, so a pair computed over a reading that was read short
+   would be a wrong number rather than a short list. The completeness signal is
+   therefore `legs_complete` (with `legs_read` beside it), in `op=basisversions`'
+   own idiom rather than `truncated`, because what a caller must learn is not
+   "was this cut" but "is this the whole reading the letters were derived from".
+
+   AND WHAT IS DELIBERATELY NOT SHIPPED, stated so the next reader does not think
+   it was missed: the op does NOT refuse when `legs_complete` is false. It would
+   be the stricter posture and arguably the right one, but no path in this plane
+   can produce a version over 500 legs — the WRITE cap is 120 — so the refusal
+   would be a code nobody could drive, which PL-4 recorded as the reason to
+   delete rather than ship one. The honest fact is published instead. */
+  OPS.size, 25);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -889,8 +912,13 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    OUTWARD ACT rather than cutting an answer, so there is no bite to take and the
    honest completeness signal is `remaining` — how much work is still queued at
    somebody else's server. */
+/* PL-14 / IS-7 joins them, and for the reason its comment at the roster pin
+   gives: `op=versionstrength` takes NO `limit` from the caller, so the loop's
+   descriptor — ask for a bite of one, then read the completeness flag — has
+   nothing to ask for. Its bound guards the honesty of a derived pair rather than
+   the size of a list, and its completeness signal is `legs_complete`. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
-                                  "capturerequests", "capturerequestdrain"]);
+                                  "capturerequests", "capturerequestdrain", "versionstrength"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -958,6 +986,21 @@ t("op=capturerequestdrain: an unconfigured instance SAYS it drains nothing rathe
 t("op=capturerequestdrain: and the bound it would apply is a CONSTANT this walk can see, so a tick "
 + "that grows its appetite fails the roster pin until somebody drives it",
   /CAPTURE_REQUEST_TICK_BATCH = \d+/.test(SRC_STORE), true);
+
+/* ----------------------------------------------- PL-14 / IS-7's TWO ARMS.
+   Driven against the SAME PL-1 fixture inquiry every version arm above uses, so
+   this adds no corpus. Its three readings are `suggested`, so the state set is
+   widened — which is §6 rule 6's exploration and is the only way to compute over
+   an unadopted reading at all. */
+const VS = await GET(`op=versionstrength&token=mem-r57&id=${PL1_INQ}`
+  + `&version=${encodeURIComponent("first reading")}&states=suggested`);
+t("op=versionstrength: publishes how many legs the pair was derived from AND whether that is the WHOLE "
++ "reading — a strength over a reading read short is a wrong number, not a short list",
+  [VS.ok, VS.legs_read, VS.legs_complete], [true, 1, true]);
+t("op=versionstrength: and the bound it applies is a CONSTANT this walk can see, shared with "
++ "op=basisversions rather than a second figure that could drift from it",
+  [/BASIS_VERSION_LEGS_MAX = \d+/.test(SRC_STORE),
+   (SRC_STORE.match(/Store\.BASIS_VERSION_LEGS_MAX/g) || []).length >= 2], [true, true]);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -992,6 +1035,10 @@ const answersByOp = new Map([
      second tick would report a different account of the same queue — so the two
      are carried the same way, which keeps the pair readable as a pair. */
   ["capturerequests", CR_WHOLE], ["capturerequestdrain", DRAIN1],
+  /* PL-14 / IS-7: driven above and REUSED here. It is a pure read and could be
+     re-driven safely; it is carried the same way as its neighbours so the
+     roster reads as one list rather than as two conventions. */
+  ["versionstrength", VS],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

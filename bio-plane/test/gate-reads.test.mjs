@@ -855,6 +855,24 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "so what the gate buys HERE is the fail-closed arm: an absent or unrecognised stamp compiles to "
       + "DENY and the read answers empty. Nothing publishes how many rows the gate removed, because that "
       + "count is the leak, and if inquiries are ever compartmented this op inherits it with no edit.",
+    /* PL-14 / IS-7, 2026-08-08: the strength pair over one reading. Classified
+       here by the item that adds it, on op=basisversions' precedent and with the
+       same honest bound stated rather than implied by membership of this list. */
+    versionstrength: "PL-14: A STRENGTH NAMES THE QUESTION AND EVERY DOCUMENT ITS READING RESTS ON, so it "
+      + "is gated at the inquiry through #bundleGate — the same predicate every read here compiles "
+      + "(D-15's one compilation point) — and the gate is applied ONCE, BEFORE any leg is read, so an "
+      + "invisible question's legs are never fetched rather than fetched and then withheld. What this "
+      + "answer would otherwise disclose is not only that a question exists but WHAT IT RESTS ON and HOW "
+      + "WELL, which is the group's line of inquiry with its weak points marked. A question the caller "
+      + "may not see refuses IDENTICALLY to one that does not exist (both C-29.2, same sentence), so "
+      + "hidden and absent are one answer. As with op=basisversions the participation arm cannot bite on "
+      + "an inquiry today (viewerPredicate filters PROJECT bundles, Membership 7.9), so what the gate "
+      + "buys HERE is the fail-closed arm: an absent or unrecognised stamp compiles to DENY and the read "
+      + "refuses. THE PROJECT POINTER IS GATED SEPARATELY and by the same predicate — #currentVersionOf "
+      + "returns null for a project the gate hides, exactly as it does for one that named no reading — so "
+      + "naming somebody else's project cannot be used to learn what they stand on. Nothing publishes how "
+      + "many rows any gate removed, because that count is the leak, and if inquiries are ever "
+      + "compartmented this op inherits it with no edit.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
