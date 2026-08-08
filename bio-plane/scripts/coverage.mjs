@@ -188,7 +188,7 @@ const REGISTER_FLOOR = {
      counted one — a phantom suite inflates the corpus, and a floor moved while one is
      present would be permanently too high, which is how a ratchet gets switched off.
      Move these only UPWARD, and only to a figure a green run PRINTED. */
-  arms:       546,  // arms stated across the classified declarations
+  arms:       550,  // arms stated across the classified declarations
   classified: 127,  // declarations the detector could count arms in
   corpus:     128,  // suites the register reads
 };
