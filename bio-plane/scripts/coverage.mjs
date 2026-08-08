@@ -182,15 +182,15 @@ const REGISTER_FLOOR = {
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542.
+     REC-77 530 · M0-16 542 · M0-17 552.
 
      AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
      counted one — a phantom suite inflates the corpus, and a floor moved while one is
      present would be permanently too high, which is how a ratchet gets switched off.
      Move these only UPWARD, and only to a figure a green run PRINTED. */
-  arms:       546,  // arms stated across the classified declarations
-  classified: 127,  // declarations the detector could count arms in
-  corpus:     128,  // suites the register reads
+  arms:       552,  // arms stated across the classified declarations
+  classified: 128,  // declarations the detector could count arms in
+  corpus:     129,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
