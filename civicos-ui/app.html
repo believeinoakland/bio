@@ -1553,8 +1553,26 @@ const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
    under. This is the catalog's own `vocabFor`, same shape, same reason. */
 const vocabFor = (table, t) => table[t] !== undefined ? table[t] : table[normalizeType(t)];
 
-const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
-const FIRST_STATE = { information:"collected", inquiry:"open", focus:"surfaced", problem:"surfaced", project:"forming", action:"planned" };
+/* UI-51 / PL-12 / D-84: `bias` is the catalogue's FIFTH canonical type, and
+   every value of it in the six tables below is the catalogue's own —
+   `OBJECT_TYPES.BIAS`, `STATES.bias.legal[0]`, `HEADINGS.bias`, the `bias@1`
+   stamp in `checkBundle`'s knownSchemas, and `STATES.bias.edges`. None of them
+   was decided here and none may be edited here: `check-semantics.mjs` imports
+   the catalogue as a module and fails naming the table and the key, in BOTH
+   directions, and `test/bias-vocabulary.test.mjs` re-derives all five from the
+   plane through one reader so a hand-typed value fails even when it is a
+   plausible one. The two entries UI does author are `TYPE_LABEL.bias` and
+   `SEMANTICS.types.bias`; the reasoning for each is at its own site.
+
+   ADDING `bias` HERE DOES NOT MAKE IT MINTABLE. `PREFIX` is read at the two
+   allocid sites, and the kind reaching them comes from `ADD_TYPES` (the add
+   surface) or a proposal's own kind — never from `PREFIX`'s key set. A bias set
+   is a governance object written by instance admins and project managers
+   (`BIO_Declared_Bias_v0_1.md`, "Bias bundles and adoption"), not something a
+   member mints from the add surface, and its absence from `ADD_TYPES` is pinned
+   rather than left to be true by accident. */
+const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN", bias:"BIAS" };
+const FIRST_STATE = { information:"collected", inquiry:"open", focus:"surfaced", problem:"surfaced", project:"forming", action:"planned", bias:"draft" };
 const HEADINGS = {
   information:["## Summary","## Provenance Notes","## Session Log","## Review Notes"],
   inquiry:["## Question","## What It Rests On","## Conclusion","## What Would Falsify This","## Session Log","## Review Notes"],
@@ -1562,13 +1580,14 @@ const HEADINGS = {
   problem:["## Statement","## Why It Matters","## Open Questions","## Session Log","## Review Notes"],
   project:["## Thesis Summary","## Open Questions","## Ruled Out","## Session Log","## Review Notes"],
   action:["## Plan","## Status","## Correspondence","## Session Log","## Review Notes"],
+  bias:["## Statements","## Adoption","## What This Does Not Enforce","## Session Log","## Review Notes"],
 };
 /* information@1 for a member writing down what they know, @2 the moment a
    document IS captured, because the @2 contract makes the provenance register
    mandatory (C-18.1) and a register describes captured documents: locator,
    authority, method, grade, hash. Typed intake has no document, so @2 would
    demand a register with nothing honest to put in it. */
-const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1", bias:"bias@1" };
 /* The legal moves, mirrored from the catalog's STATES[type].edges rather than
    restated. The disposition pre-flight reads this so it refuses exactly what
    the store would refuse; a no-op move is ABSENT on purpose, because it usually
@@ -1589,6 +1608,14 @@ const STATE_EDGES = {
   project:{ forming:["investigating","closed"], investigating:["matured","closed"], matured:["closed"], closed:["investigating"] },
   action:{ planned:["active","abandoned"], active:["awaiting_response","resolved","abandoned"],
            awaiting_response:["active","resolved","abandoned"], resolved:[], abandoned:[] },
+  /* The bias machine, mirrored from `STATES.bias.edges` like every row above it.
+     Two closures carry the doctrine and neither is this file's to relax: there
+     is NO `draft -> adopted` edge, so a set can only reach `adopted` through
+     `proposed` — which is what makes `proposed` the step where the citations
+     and the residue become answerable rather than a ceremony — and `adopted`
+     leaves only to `retired`, because an adoption PINS the revision and a case
+     names the version of the set it was held to. */
+  bias:{ draft:["proposed","retired"], proposed:["draft","adopted","retired"], adopted:["retired"], retired:[] },
 };
 STATE_EDGES.problem = STATE_EDGES.focus;
 /* THE MEMBER-FACING NAME, DERIVED AND NEVER STORED TWICE (R1). One type,
@@ -1603,7 +1630,22 @@ const PHASE = { open:"inquiry", surfaced:"inquiry", elevated:"inquiry", deferred
 const PHASE_LABEL = { inquiry:"Inquiry", finding:"Finding", case:"Case" };
 /* The Type column's word. `annotation` and `source` are not bundle types and
    have no catalog row; they are kinds a search hit can carry. */
+/* UI-51 · AUTHORED, and one of only two entries for `bias` that is. The word is
+   "Bias set" and NOT "Bias", and the difference is the judgement: every other
+   label here names an object, while a bare "Bias" reads as a PROPERTY of some
+   other record — which is exactly the misreading D-189 exists to end, since the
+   UI's only prior notion of declared bias was hunch legs hanging off an inquiry.
+   A bias set is a governance object in its own right, adopted at instance or
+   project scope, and the Type column has to say so in the one word it gets.
+
+   THE WORD IS LIFTED, NOT COINED. "A bias set is written in draft, offered as
+   proposed, and only then adopted" is the plane's own sentence at
+   `store.mjs biasAdopt`, and `bias set` is the noun BIAS_CHECKS uses throughout
+   (C-26.7's translation: "This bias set is adopted and does not say what it
+   does NOT check"). DEC-49 decides refusal wording; this is the record's
+   existing noun for the object, taken rather than invented. */
 const TYPE_LABEL = { information:"Info", inquiry:"Inquiry", project:"Project", action:"Action",
+                     bias:"Bias set",
                      annotation:"Annotation", source:"Source" };
 const NON_BUNDLE_KINDS = ["annotation", "source"];
 /* REC-11 / REC-12's BASIS AND STRENGTH VOCABULARY, mirrored here for the reason
@@ -1756,6 +1798,37 @@ const SEMANTICS = {
         enables:["read what came of it"], forbids:[], next:[] },
       abandoned:         { chip:"abandoned", mark:"Ø", quiet:true, meaning:"Stopped with a reason. Kept, never deleted, so the decision itself stays accountable.",
         enables:["read the reason"], forbids:[], next:[] },
+    }},
+    /* UI-51 · THE SECOND AUTHORED ENTRY, and the judgement it carries is that a
+       bias set is a GOVERNANCE OBJECT: what changes between these four states is
+       not how far along a document is, but whether a lens is over anybody's work.
+       Every row below therefore says what is IN FORCE, because that is what a
+       member is actually doing when they move one — and D-189 ("no surface can
+       say that a project carries its own bias") is the item that will render
+       these words, so the judgement is made once, here, rather than a second
+       time when that surface is built.
+       The sentences are LIFTED from what the record already publishes — the
+       BIAS_CHECKS translations (C-26.4, C-26.7), `biasAdopt`'s own refusal and
+       `note`, and `biasManifest`'s in-force rule — not authored fresh; DEC-49
+       decides refusal wording, and none of this is a refusal.
+       `in force` NEVER derives from one fact: `biasManifest` requires BOTH the
+       adoption row AND the bundle standing at `adopted`, and it fails closed.
+       These rows say the same thing in the same direction, so a member reading
+       the seal and a consumer reading the manifest cannot come away with
+       different answers. */
+    bias: { noun:"bias set", states: {
+      draft:    { chip:"draft", mark:"D", meaning:"Being written, and in force over nothing. A pattern statement can be written here without the evidence it rests on — and cannot leave here without it.",
+        enables:["write and revise its statements","offer it as proposed"],
+        forbids:[["adopting it","a set is offered as proposed before anybody adopts it"]], next:["proposed","retired"] },
+      proposed: { chip:"proposed", mark:"P", meaning:"Offered for adoption, and still in force over nothing. This is the step where its pattern statements carry their citations and it says what it does not enforce.",
+        enables:["read the statements and what they rest on","adopt it for this instance or for a project","send it back to draft"],
+        forbids:[["being in force","a proposed set governs nothing: adopting is an authored act, and the set must stand at adopted as well"]], next:["draft","adopted","retired"] },
+      adopted:  { chip:"adopted", mark:"A", good:true, meaning:"In force for the scope that adopted it, at the revision pinned when it was adopted. It says what it does not check, because the countable half of a standard is rarely the half that protects.",
+        enables:["read the effective set in force, its hash and its residue","retire it"],
+        forbids:[["editing it back into draft","work already names the revision it was held to; a correction is a new set, adopted afresh"]], next:["retired"] },
+      retired:  { chip:"retired", mark:"R", quiet:true, meaning:"Withdrawn from force by a member. Kept forever, and the work adopted under it still names the revision it was held to.",
+        enables:["read it and the adoptions that pinned it"],
+        forbids:[["new adoptions","a retired set is no longer offered"]], next:[] },
     }},
   },
   criticality: {
