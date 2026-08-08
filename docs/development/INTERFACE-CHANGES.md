@@ -2435,3 +2435,64 @@ consumer — one call site, no key it reads is moved; the receipt wording is del
 ### 3 · RESOLUTION
 
 *(CONDUCT's.)*
+
+---
+
+## IC-35 · I3: `op=list` and `op=audit` gain an additive `route` block, and ONE new op (`op=provenanceroute`) · I5: one new table · PROPOSED 2026-08-08 (REC-63 / DEC-56) — the version bump and the RESOLUTION are CONDUCT's
+
+**NUMBER MEASURED, NOT ASSUMED.** IC-34 was the highest in this file when REC-63 looked.
+Four parallel items collided on an id in one day (IC-33/IC-34, the C-29/C-30 family, a
+debt row), so a renumber at integration is expected and is the integrator's call rather
+than an error here.
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, AND ALL OF IT IS ADDITIVE.**
+
+- **`op=provenanceroute`** (new, mutating, classes `admin`/`member`/`probe`, NOT `daemon`
+  — `op=provenancechain`'s own line). Takes `bundleId`; the viewer and author are stamped
+  by the control plane. It assesses whether a document's provenance ROUTE can be shown and
+  records what it found. It writes NOTHING into the bundle: no state moves, no file
+  changes, no `bundle_sha` changes, and the suite asserts all three across a marking.
+- **`op=list`** — every row gains `route`. Both arms, the bare and the paged.
+- **`op=audit`** — the answer gains `route: { tally, marked[], markedTotal, markedShown,
+  means, note }`. `ok`, `clean`, `withErrors`, `tally`, `tallyDetail`, `limit`, `cursor`
+  and `total` do NOT move, and the suite pins that they do not.
+- **`op=provenancechain`** — both its report arm and its `EVIDENCE_INSUFFICIENT` refusal
+  gain `route`, and the refusal's `detail` now names the honest route (D-204).
+- **`op=stats`** gains `routeMarks`, a count and nothing else.
+- **I5**: one new table, `provenance_route_marks`, before the `host_governor` block, in
+  `purge`'s `TABLES` list so BOTH arms clear it.
+
+**THE SHAPE OF `route`, and it is the interface's whole point.** It is NEVER ABSENT and
+never null on these reads. `finding` is D-129's vocabulary taken LIVE from
+`src/airun.mjs`'s `OBSERVATION_STATES` rather than a fifth private spelling of absence:
+
+| `finding` | what a consumer may conclude |
+| --- | --- |
+| `NEVER_LOOKED` | **nobody looked.** No assessment has run. NOT a finding about the route |
+| `LOOKED_INDETERMINATE` | **the marker.** We looked and the route cannot be shown |
+| `PRESENT` | we looked and every document in the register can show its route |
+| `applies: false` | not a captured document, so no route to show or to doubt |
+
+`LOOKED_ABSENT` is deliberately unreachable: it would assert the bytes have NO route, and
+every captured byte came from somewhere. What is absent is OUR EVIDENCE.
+
+**WHY THE INTERFACE MOVES AT ALL, rather than a new read being added beside it.** DEC-56's
+acceptance is that the doubt is CARRIED IN THE OPEN. A marker only reachable by asking a
+dedicated op is REC-74's defect one field over — a condition written by one op and
+published by none — so it travels on the reads a member already uses. `op=list` is the
+most-called bundle read in `app.html` (14 call sites).
+
+**WHAT IT COSTS A CONSUMER: NOTHING TODAY.** No existing key changes type, moves or
+disappears. A consumer that ignores `route` is byte-identical in behaviour. `civicos-ui`
+reaches none of it yet (UI harness exit 0), which is the DELEGATION filed in `CLAIMS.md`:
+the surface half is not this item's to write.
+
+**MEASURED INSTRUMENT IMPACT, every figure read off a GREEN RUN and never added to the
+number that was there.** `check-refusal-codes.mjs`: families 13 -> 14, rows 145 -> 149,
+census 406 -> 410, reach 200 -> 204, governedSites 59 -> 60, regions 46 -> 47, regionLines
+1263 -> 1289, codesChecked 115 -> 119. **`reachGap` DOES NOT MOVE (42)** — all four new
+codes arrive translated, so this item neither closes nor widens REC-64's named gap.
+`scripts/coverage.mjs`: `REGISTER_FLOOR` arms 471 -> 480, classified 119 -> 121, corpus
+120 -> 122. OPS 158 -> 159, all reached. CHECKS 201 -> 205, all named.

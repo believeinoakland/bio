@@ -219,6 +219,10 @@ import { checkSkillVersion } from "./skillpack.mjs";
    and this repository has measured that five times. */
 import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER,
          BIAS_BAR_PHRASING, checkBiasExtension } from "../checks/bio-checks.mjs";
+/* REC-63 / DEC-56: the route marker's four door refusals, imported for the same
+   reason every other DEC-49 family is — the C-number, the wire code and the
+   canned translation are ONE ROW there and this file holds no second copy. */
+import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -6745,7 +6749,12 @@ export class Store extends DurableObject {
        being withheld, which is half the leak. */
     const gate = viewerPredicate(viewer);
     const page = this.#rows(
-      `SELECT b.bundle_id FROM bundles b WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+      /* REC-63: `object_type` and `current_state` are read with the page because
+         the route block below has to publish the STATE BESIDE THE FINDING — the
+         disagreement is the thing that must be legible, so it cannot be composed
+         from a second read that might disagree with this one. */
+      `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+        WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
       after, ...gate.args, cap);
     const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
     const te = new TextEncoder();
@@ -6807,8 +6816,66 @@ export class Store extends DurableObject {
                          errors: errs.slice(0, 5).map((e) => ({ check: e.check, detail: e.message })) });
     }
     const last = page.length ? page[page.length - 1].bundle_id : after;
+
+    /* ============ REC-63 / DEC-56 — THE MARKER, ON THE SWEEP =============== *
+     * DEC-56's acceptance is that a document sits at `verified` while the audit
+     * REPORTS it, and that the disagreement is LEGIBLE rather than reading as a
+     * bug. Three decisions make that true and each is here rather than in a doc:
+     *
+     *  1. `ok`, `clean`, `withErrors` and `tally` DO NOT MOVE. A marker is a
+     *     STATED DOUBT, not a conformance error. If it were an error, a store
+     *     that honestly recorded one could never be "audit clean" again — and
+     *     `CLAUDE.md`'s own ladder ends with `op=audit` clean before anything is
+     *     called done, so the honest act would have broken the gate that rewards
+     *     honesty. (A missing chain at `verified` is STILL a C-18.9 error and
+     *     still tallies; the marker explains that finding, it does not cancel it.)
+     *  2. THE TALLY IS OVER THE WHOLE PAGE AND IS ALWAYS PRESENT, including its
+     *     `NEVER_LOOKED` count. That count is the answer to "nobody looked", and
+     *     an operator who cannot see it cannot tell a clean corpus from an
+     *     unexamined one — which is this item's whole subject, in aggregate.
+     *  3. THE NAMED LIST IS BOUNDED at 20, like `offenders` beside it, and
+     *     `markedTotal` publishes how many there were. A bound applied and not
+     *     published is REC-57's defect and it is not being re-created here.
+     *
+     * The marks are read over the PAGE'S OWN ID RANGE and then filtered to the
+     * gated page, so an invisible bundle's marker cannot ride out on this answer
+     * and the read cannot become an unbounded scan of the marks table. */
+    const pageIds = new Set(page.map((r) => r.bundle_id));
+    const marks = new Map();
+    if (page.length)
+      for (const m of this.#rows(
+        `SELECT m.* FROM provenance_route_marks m
+          WHERE m.bundle_id > ? AND m.bundle_id <= ?
+            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
+        after, last))
+        if (pageIds.has(m.bundle_id)) marks.set(m.bundle_id, m);
+    const routeTally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
+    const routeMarked = [];
+    let markedTotal = 0;
+    for (const row of page) {
+      const found = Store.routeFinding(row.object_type, marks.get(row.bundle_id) || null);
+      if (!found.applies) { routeTally.notApplicable++; continue; }
+      routeTally[found.finding] = (routeTally[found.finding] || 0) + 1;
+      if (!found.marked) continue;
+      markedTotal++;
+      if (routeMarked.length < 20)
+        routeMarked.push({ bundleId: row.bundle_id, state: row.current_state, ...found });
+    }
+
     return {
       ok: true, checked: page.length, clean, withErrors, tally,
+      /* ALWAYS PRESENT, unlike `tallyDetail` beside it, and the difference is the
+         item: an absent tally would say nothing, and "nothing to report" and
+         "this build does not report it" would read alike — which is the exact
+         conflation the marker exists to end, arriving one level up. */
+      route: {
+        tally: routeTally, marked: routeMarked, markedTotal, markedShown: routeMarked.length,
+        means: OBSERVATION_STATES,
+        note: "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
+            + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
+            + "the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
+            + "assessment has run, not that anything is wrong.",
+      },
       ...(Object.keys(tallyDetail).length ? { tallyDetail } : {}),
       offenders,
       /* REC-57: `cursor` and `total` were already here and are UNTOUCHED — between
@@ -6998,12 +7065,25 @@ export class Store extends DurableObject {
 
     if (refused.length)
       return { ok: false, reason: "EVIDENCE_INSUFFICIENT", bundleId, documents: report,
+               /* REC-63 / D-204: the honest route, named in the refusal that
+                  needs it. Until now a bundle whose chain could not be
+                  reconstructed had nowhere to go but `retire`, which asserts
+                  something quite different — that the document is withdrawn.
+                  It has somewhere to go now: the doubt is RECORDED at the state
+                  the document already sits in, which is what DEC-56 settles. */
+               route: Store.routeFinding("information", this.#latestRouteMark(bundleId)),
                detail: "the capture record does not hold a route for every document in this register, and a "
                      + "chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was "
                      + "written. Stating the route these bytes took would be an invention, which is the one "
-                     + "thing this path exists to refuse." };
+                     + "thing this path exists to refuse. What CAN be done is to say so in the record: "
+                     + "op=provenanceroute records a standing marker on this document that its route cannot "
+                     + "be shown, leaving the document where it is (DEC-56, DEC-19)." };
     if (!apply || !changed)
       return { ok: true, bundleId, applied: false, changed, documents: report,
+               /* REC-63: the marker travels with the report too, so an operator
+                  deciding whether to rebuild sees whether this document already
+                  carries a standing statement that its route cannot be shown. */
+               route: Store.routeFinding("information", this.#latestRouteMark(bundleId)),
                detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain" };
 
     /* Through promote, the plane's own write path, carrying every other file
@@ -7037,6 +7117,249 @@ export class Store extends DurableObject {
     });
     if (!promoted.ok) return { ...promoted, bundleId, documents: report };
     return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.sha ?? null };
+  }
+
+  /* ==================================================================== *
+   * REC-63 / DEC-56 / D-204 — THE STANDING MARKER, AND ITS PUBLICATION.
+   *
+   * Bob ruled the principle across DEC-56/57/58 together, 2026-08-06: ACT, AND
+   * SAY WHAT YOU COULD NOT ESTABLISH. Applied to a provenance chain that cannot
+   * be reconstructed it settles a shape rather than a mechanism: NOT a
+   * `verified -> collected` retraction edge, and NOT silence — a standing MARKER
+   * at `verified` stating that the route cannot be shown.
+   *
+   * WHY NOT THE RETRACTION EDGE, so nobody re-opens it here. Retracting a
+   * verification RESTATES A GROUP'S OWN PAST ACT, and this project's posture is
+   * that correction moves FORWARD (DEC-19): a record adds, and every correction
+   * is itself a dated, attributed act. A marker is also what is actually TRUE —
+   * the bytes may be exactly what was captured, and what cannot be shown is the
+   * ROUTE, which is a statement about OUR EVIDENCE rather than about the
+   * document. `STATES.information.edges` is untouched by this item and the suite
+   * pins that it stays untouched.
+   *
+   * ------------------------------------------------------------------------
+   * THE PART THAT IS ACTUALLY HARD, AND IT IS A PUBLICATION QUESTION:
+   * A MARKER NOBODY CAN SEE IS NOT A MARKER.
+   *
+   * REC-74 is running on exactly this failure one field over — a run condition
+   * WRITTEN by one op and PUBLISHED by none, so a condition recorded and never
+   * published is not recorded for anybody who was not there. So the finding is
+   * driven out through the reads a member actually uses:
+   *
+   *   op=list             every row carries `route`. 14 call sites in app.html —
+   *                       the most-used bundle read there is.
+   *   op=audit            a `route` block: the tally over the page, the marked
+   *                       bundles named with their STATE beside the finding, and
+   *                       the standing sentence that says the two disagree ON
+   *                       PURPOSE. `ok`, `clean` and `tally` do not move — a
+   *                       marker is a stated doubt, NOT a conformance error, or
+   *                       a store carrying one could never be "audit clean"
+   *                       again and CLAUDE.md's own ladder would break.
+   *   op=provenanceroute  the act's own answer.
+   *   op=provenancechain  both arms, so the op that MEETS the underivable chain
+   *                       also shows whether the doubt was ever recorded.
+   *
+   * AND THE THING A CONSUMER MUST BE ABLE TO DO: TELL THE TWO ABSENCES APART.
+   * "The route cannot be shown" and "nobody looked" are different facts and they
+   * read alike if the field is simply absent when there is no marker. So `route`
+   * is NEVER ABSENT and never null on these reads, and its `finding` is D-129's
+   * vocabulary taken LIVE from `airun.mjs` rather than a fifth private spelling
+   * of absence:
+   *
+   *   NEVER_LOOKED          no assessment has ever run. NOBODY LOOKED.
+   *   LOOKED_INDETERMINATE  THE MARKER. We looked and the route cannot be shown.
+   *   PRESENT               we looked and every document's route can be shown.
+   *
+   * LOOKED_ABSENT is deliberately unreachable and the reason is doctrinal: it
+   * would assert the bytes have NO route, and every captured byte came from
+   * somewhere. What is absent is our EVIDENCE, which is the LOOKED_INDETERMINATE
+   * case exactly. `partial` is unreachable for the same reason one level up: a
+   * register where three of five documents can be shown is one whose route
+   * CANNOT be shown, and the per-document array says which three.
+   * ==================================================================== */
+
+  /** The standing sentence that makes the disagreement LEGIBLE rather than
+   *  readable as a bug. Composed once, published by every read that carries a
+   *  marker, because the whole risk of this shape is a member meeting a
+   *  `verified` document with a doubt on it and concluding the record is broken. */
+  static ROUTE_MARK_NOTE =
+    "this document stays where the group put it: a verification was an attested act by people, and "
+    + "this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that "
+    + "its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the "
+    + "bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
+
+  /** The current finding for one bundle, or null when no assessment ever ran.
+   *  Append-only: the highest `seq` is the current one and the ones before it
+   *  stay readable, which is how correction moves forward here. */
+  #latestRouteMark(bundleId) {
+    return this.#one(
+      `SELECT * FROM provenance_route_marks WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, bundleId) || null;
+  }
+
+  /** THE ONE COMPOSITION POINT for what a read publishes, so `op=list`,
+   *  `op=audit` and both provenance ops cannot answer this question in three
+   *  slightly different shapes. A hand copy agrees with its author at zero cost
+   *  and this repository has measured that five times.
+   *
+   *  `applies` is the FOURTH state and it is not a fudge: a route is a fact
+   *  about a CAPTURED document, and a question or a project was written into the
+   *  record rather than fetched from anywhere. Publishing `NEVER_LOOKED` for an
+   *  inquiry would be true and useless — it would say nobody looked for a thing
+   *  there was never anything to look for. Publishing NOTHING would re-create
+   *  the conflation this whole item exists to remove, so it is stated. */
+  static routeFinding(objectType, mark) {
+    if (objectType !== "information")
+      return { applies: false, assessed: false, marked: false, finding: null, means: null,
+               note: "a route is a fact about a captured document, and this bundle is not one" };
+    if (!mark)
+      return { applies: true, assessed: false, marked: false,
+               finding: "NEVER_LOOKED", means: OBSERVATION_STATES.NEVER_LOOKED,
+               note: "no assessment of this document's route has ever been recorded. This is NOT a finding "
+                   + "that the route cannot be shown; it is the absence of the question having been asked." };
+    const marked = mark.finding === "LOOKED_INDETERMINATE";
+    return {
+      applies: true, assessed: true, marked,
+      finding: mark.finding, means: OBSERVATION_STATES[mark.finding] ?? null,
+      at: mark.at, by: mark.by, stateAt: mark.state_at, seq: mark.seq,
+      register: mark.register_state, undetermined: mark.undetermined, documents: mark.documents_n,
+      note: marked ? Store.ROUTE_MARK_NOTE
+                   : "this document's route was assessed and every document in its register can be shown",
+    };
+  }
+
+  /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
+   *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
+   *
+   *  IT RUNS THE SAME DERIVATION `op=provenancechain` RUNS, through the same
+   *  `Store.chainFromEvidence`, and that is the point rather than a convenience:
+   *  the marker must say the route cannot be shown for exactly the registers the
+   *  reconstruction path refuses to invent a chain for, or the two would disagree
+   *  about one fact and a member would have to know which to believe.
+   *
+   *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
+   *  changes — the whole shape of DEC-56(b) is that the document stays where the
+   *  group put it. The suite asserts the bundle_sha and current_state are
+   *  byte-identical across a marking.
+   *
+   *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
+   *  something changed; a second identical row would be the record repeating
+   *  itself rather than saying anything, and it would let a caller grow the log
+   *  without limit. */
+  provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
+    /* The helper sits ABOVE the region marker so its own variable-coded return is
+       not inside the governed span — PL-15's and PL-14's convention, and the
+       reason arm C can COMPARE every code below rather than read past it. */
+    const refusal = (code, detail, extra) => {
+      const row = ROUTE_MARK_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+    const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-route-mark
+     *
+     * THE SPAN `ROUTE_MARK_CHECKS`' four rows name (REC-71): the DOOR, and only
+     * the door — is there a named member, and is there a captured document to
+     * assess. Everything below this region is the assessment itself, which
+     * REFUSES NOTHING BY DESIGN: an unreadable register is the marker's own
+     * subject and not a complaint, so conscripting the rest of this method into
+     * the family with a whole-function `where` would claim a span whose set
+     * grows with the method and whose refusals are not this family's. */
+    if (!who)
+      return refusal("ROUTE_MARK_NO_AUTHOR",
+        "recording that a route cannot be shown is a named act: the record must show who assessed the "
+        + "evidence and found it did not support a route. A standing statement with nobody's name on it "
+        + "is not a statement. This refuses an act with NO principal, and deliberately not a machine one "
+        + "— op=provenancechain draws the same line and no other, and a stricter fence here would be "
+        + "this op ruling on DEC-52's ground as a side effect.");
+    if (!bundleId)
+      return refusal("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+    const gate = viewerPredicate(viewer);
+    const seen = this.#one(
+      `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      bundleId, ...gate.args);
+    if (!seen)
+      return refusal("ROUTE_MARK_NO_SUCH_BUNDLE",
+        "no document of that name is in the record, or none this viewer may see — the two answer "
+        + "identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
+        { bundleId });
+    if (seen.object_type !== "information")
+      return refusal("ROUTE_MARK_NOT_A_DOCUMENT",
+        `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document `
+        + "travelled a route to get into the record. Marking one would put a doubt on every question in "
+        + "the store, which says nothing about any of them.",
+        { bundleId, objectType: seen.object_type });
+    /* END DEC-49 REGION is-route-mark */
+
+    /* THE REGISTER IS READ, AND EVERY WAY IT CAN FAIL TO READ IS A FINDING
+       RATHER THAN A REFUSAL. This is the ruling applied literally: a register we
+       cannot read is precisely a route we cannot show, so the honest act is to
+       record that, not to decline to answer. `op=provenancechain` refuses these
+       same three conditions and is right to — it is being asked to WRITE a
+       chain. The two ops meet one fact and carry opposite obligations. */
+    const img = this.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    let registerState = "readable", docs = [];
+    if (typeof raw !== "string") registerState = "absent";
+    else {
+      let reg = null;
+      try { reg = JSON.parse(raw); } catch { reg = undefined; }
+      if (reg === undefined) registerState = "unparsable";
+      else if (!reg || !Array.isArray(reg.documents)) registerState = "no_documents";
+      else if (!reg.documents.length) registerState = "empty";
+      else docs = reg.documents;
+    }
+
+    const documents = [];
+    let undetermined = 0;
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      const existing = d && typeof d === "object" ? d.provenance_chain : undefined;
+      if (Array.isArray(existing) && existing.length) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "recorded", hops: existing.length });
+        continue;
+      }
+      const built = Store.chainFromEvidence(d, { instanceName: "unassessed", at: "1970-01-01T00:00:00Z" });
+      if (built.ok) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "derivable" });
+        continue;
+      }
+      undetermined++;
+      documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+    }
+
+    /* THE BUNDLE-LEVEL FINDING. Any document whose route cannot be shown makes
+       the BUNDLE's route unshowable — the same whole-register posture
+       `provenanceChainRebuild` takes, and for the same reason: a register half
+       established is one where the reader cannot tell which half. */
+    const finding = (registerState !== "readable" || undetermined > 0)
+      ? "LOOKED_INDETERMINATE" : "PRESENT";
+    const at = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const docsJson = JSON.stringify(documents);
+
+    const prev = this.#latestRouteMark(bundleId);
+    const same = prev && prev.finding === finding && prev.register_state === registerState
+      && prev.undetermined === undetermined && prev.documents_n === docs.length
+      && prev.documents === docsJson;
+    if (!same) {
+      const seq = (this.#one(
+        `SELECT COALESCE(MAX(seq), 0) AS m FROM provenance_route_marks WHERE bundle_id=?`, bundleId).m || 0) + 1;
+      this.sql.exec(
+        `INSERT INTO provenance_route_marks
+           (bundle_id, seq, at, by, finding, state_at, register_state, undetermined, documents_n, documents)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        bundleId, seq, at, who, finding, seen.current_state, registerState, undetermined, docs.length, docsJson);
+    }
+    return {
+      ok: true, bundleId, appended: !same,
+      route: Store.routeFinding("information", this.#latestRouteMark(bundleId)),
+      documents,
+      detail: same ? "this assessment found exactly what the last one found, so nothing was appended: the "
+                   + "record adds when something changed rather than repeating itself"
+                   : finding === "LOOKED_INDETERMINATE"
+                     ? "recorded: this document's route cannot be shown from the evidence held. Its state has "
+                     + "NOT moved and no byte of it was touched"
+                     : "recorded: every document in this register can show its route",
+    };
   }
 
   /** The byte-complete image the gate consumes. One bundle, one call, no
@@ -7116,13 +7439,43 @@ export class Store extends DurableObject {
    * So paging is OPT-IN and shaped like the audit's: a cursor that is the last
    * identifier seen, which makes it resumable and independent of any snapshot of
    * the store. A caller that passes no limit gets what it always got. */
+  /** REC-63: the joined `route_*` columns folded into ONE published field and
+   *  removed from the row, so a consumer meets the composed finding rather than
+   *  five loose columns it would have to interpret — and interpreting them is
+   *  exactly where the two absences get conflated again. */
+  static #withRoute(r) {
+    const mark = r.route_finding === null || r.route_finding === undefined ? null : {
+      seq: r.route_seq, at: r.route_at, by: r.route_by, finding: r.route_finding,
+      state_at: r.route_state_at, register_state: r.route_register,
+      undetermined: r.route_undetermined, documents_n: r.route_documents_n,
+    };
+    const out = { ...r, route: Store.routeFinding(r.object_type, mark) };
+    for (const k of ["route_seq", "route_at", "route_by", "route_finding", "route_state_at",
+                     "route_register", "route_undetermined", "route_documents_n"]) delete out[k];
+    return out;
+  }
+
   listBundles(filter = {}) {
     /* REC-25 / F-8: the D-15 viewer gate, from query.mjs's ONE compilation
        point. Fail closed — an absent viewer compiles to the deny predicate, so
        the failure mode of a missing control-plane stamp is an empty list rather
        than an unfiltered one, exactly as the search path already behaves. */
     const gate = viewerPredicate(filter.viewer);
-    let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha FROM bundles b`;
+    /* REC-63 / DEC-56: THE MARKER IS PUBLISHED HERE, ON THE ROSTER READ A MEMBER
+       ACTUALLY USES — `op=list` is the most-called bundle read in `app.html`. A
+       marker only the store can see is REC-74's defect one field over, so it
+       travels on the read rather than waiting to be asked for.
+       ONE LEFT JOIN against the highest `seq`, not a per-row lookup: this arm can
+       be unbounded by contract (the licence is pinned in the block below), and a
+       correlated read per row would turn a complete answer into a scan per row. */
+    let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha,
+                    m.seq AS route_seq, m.at AS route_at, m.by AS route_by, m.finding AS route_finding,
+                    m.state_at AS route_state_at, m.register_state AS route_register,
+                    m.undetermined AS route_undetermined, m.documents_n AS route_documents_n
+               FROM bundles b
+               LEFT JOIN provenance_route_marks m
+                 ON m.bundle_id = b.bundle_id
+                AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = b.bundle_id)`;
     const w = [`(${gate.sql})`], a = [...gate.args];
     /* The projection stores canonical types only (boot normaliser + promote),
        so a legacy `focus`/`problem` filter value is honoured through the
@@ -7175,9 +7528,9 @@ export class Store extends DurableObject {
      * is honest only while it is whole. The day this arm quietly caps, that pin fails and the
      * exception it rests on is gone with it. */
     const limit = Number(filter.limit);
-    if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a);
+    if (!Number.isFinite(limit) || limit <= 0) return this.#rows(q, ...a).map(Store.#withRoute);
     const cap = Math.min(5000, Math.floor(limit));
-    const rows = this.#rows(q + ` LIMIT ?`, ...a, cap);
+    const rows = this.#rows(q + ` LIMIT ?`, ...a, cap).map(Store.#withRoute);
     /* The shape changes only when paging was asked for, so no existing caller
        has to learn a new answer. The total counts what the VIEWER may see:
        a count that included invisible rows would say "something is hidden",
@@ -12516,6 +12869,10 @@ export class Store extends DurableObject {
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
       biasStatements: n("bias_statements"), biasAdoptions: n("bias_adoptions"),
+      /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
+         purge can PROVE it took them (D-113) and so an operator can see that the
+         record is carrying doubts at all without having to sweep for them. */
+      routeMarks: n("provenance_route_marks"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -13565,7 +13922,13 @@ export class Store extends DurableObject {
                     "readings", "reading_refs", "reading_ref_terms", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "inquiry_basis_versions", "inquiry_basis_version_legs",
-                    "action_basis", "correspondence", "bias_statements", "bias_adoptions"];
+                    "action_basis", "correspondence", "bias_statements", "bias_adoptions",
+                    /* REC-63 / D-113: the route markers are keyed on `bundle_id`, so they
+                       ride this list and are cleared in BOTH arms — a marker outliving the
+                       document it doubts would attach itself to whatever bundle was next
+                       allocated that id, which is the silent-leftover class in its most
+                       damaging form: a doubt about somebody else's document. */
+                    "provenance_route_marks"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -22785,6 +23148,15 @@ export class Store extends DurableObject {
         provenancechain: () => this.provenanceChainRebuild({
           bundleId: url.searchParams.get("bundleId"),
           apply: url.searchParams.get("apply") === "1",
+          viewer: url.searchParams.get("viewer"),
+          author: url.searchParams.get("author") }),
+        /* REC-63 / DEC-56 / D-204. The other half of the op above: where that
+           one REFUSES to invent a chain, this one RECORDS that the route cannot
+           be shown. One bundle, the viewer/author stamps the control plane sets,
+           and NO `apply` flag — there is nothing to opt into, because the act
+           moves no state and touches no byte of the document. */
+        provenanceroute: () => this.provenanceRouteAssess({
+          bundleId: url.searchParams.get("bundleId"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         dispose: () => this.dispose({ handle: url.searchParams.get("handle"),

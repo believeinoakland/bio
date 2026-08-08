@@ -208,17 +208,32 @@ const FLOOR = {
      (MACHINE_FENCE_CHECKS, ACT_SHAPE_CHECKS), 40 rows, 30 new REGIONS, and one
      new code at the run-open door (UI-38's §14a rider). The CEILING fell 73 ->
      42, which is the item's whole point and the first time it has moved by more
-     than one. */
-  families:     13,    // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
+     than one.
+
+     REC-63 (agent-ac23d92b0d07c1ab5), 2026-08-08 — DEC-56's enactment, the
+     standing route marker. Every figure below RE-MEASURED from what this file
+     PRINTED on a green run of this worktree, never by adding to the number that
+     was here. **REC-63 FOUND NO PRE-EXISTING SLACK: every floor sat exactly at
+     the value REC-64 left**, which is the third item running for which that has
+     been true and is what "move the ratchet in the turn that grows the plane"
+     looks like from the next item's seat. What moved is what REC-63 grew: one
+     new family (ROUTE_MARK_CHECKS), four rows (C-34.1..4), one new REGION
+     (is-route-mark, 26 lines, judging 4 refusals and COMPARING all four), and
+     four codes into the census and the reach. **`reachGap` DOES NOT MOVE and is
+     deliberately left at 42**: all four new codes arrive translated, so this
+     item neither closes nor widens REC-64's named gap, and a ceiling nudged for
+     bookkeeping reasons stops being a measurement of that gap. */
+  families:     14,    // + ROUTE_MARK_CHECKS (REC-63);
+                       // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
                        // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        145,    // + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
+  rows:        149,    // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      406,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      410,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // (was 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
                           answer is SIX. Arm 3 of `bio-plane/test/nc-rec64.mjs` neuters M2 — the widest
                           matcher, the one that earned the matcher set — and the union falls 406 -> 401.
@@ -228,9 +243,9 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       200,    // codes a surface can receive (R1 + R2 + R3) (was 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 59,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 28, 27, 25, 20, 17, 13, 9, 5)
+  reach:       204,    // codes a surface can receive (R1 + R2 + R3) (was 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 60,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -241,7 +256,7 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      46,    // + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
+  regions:      47,    // + REC-63's ONE (is-route-mark, judging 4 and comparing 4). + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
                        // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
                        // is-correspond-artifact, is-release-account, is-release-entry,
                        // is-dispose-inquiries, is-publish-statement, is-cite-note, is-cite-role,
@@ -253,7 +268,16 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1263,   /* MOVED 1220 -> 1263 AT INTEGRATION 2026-08-08 by CONDUCT — AND REC-64
+  regionLines: 1289,   /* MOVED 1263 -> 1289 BY REC-63, 2026-08-08, from what this file PRINTED on a
+                          green run of that worktree. The 26 are `is-route-mark`'s own span and
+                          nothing else — REC-63 opened no line inside another item's region. **NOTE
+                          FOR THE INTEGRATOR, because this figure has moved at integration three
+                          times out of four and A REGION'S LINE COUNT IS A PROPERTY OF THE MERGED
+                          SOURCE:** several workers were running against `store.mjs` beside REC-63.
+                          If any of them landed a line inside one of the 47 spans, RE-READ this from
+                          a green run of the merged tree rather than trusting this number.
+                          PRIOR ENTRY, kept as the receipt for how this figure moves:
+                          MOVED 1220 -> 1263 AT INTEGRATION 2026-08-08 by CONDUCT — AND REC-64
                           ASKED FOR EXACTLY THIS CHECK, WHICH IS WHY IT IS A ONE-LINE MOVE.
                           Its note (kept below) says: `re-read this from a green run of the
                           merged tree rather than trusting this number`. Read, and it was 43
@@ -300,7 +324,7 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 115,   // refusal codes actually COMPARED against a family row — NOT the same as
+  codesChecked: 119,   // refusal codes actually COMPARED against a family row — NOT the same as
                        // refusals JUDGED, and not the same as lines read. Was 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
                           BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed

@@ -3727,3 +3727,93 @@ DEC-52's 2026-08-06 mechanism established the running-session sidebar with **"ca
 The judged corpus is **21 stamp sites**; the WIDE ledger is **103 member-actor comment lines across 26 source files** (`store.mjs` 48, `checks/bio-checks.mjs` 15, `index.mjs` 16, `schema.mjs` 12, the rest in ones and threes). **The wide ledger is REPORTED and never judged, on purpose:** the sweep cannot tell which act a free-standing sentence governs, and guessing would be the over-strict direction — the error that looks like diligence. Four further limits are stated in the instrument's own header and repeated here because they are what a widening has to attack: enforcement is read from the store method the DISPATCH TABLE names plus ONE level of private helper, so a fence two helpers deep reads as absent; an op the dispatch table does not name (`op=promote`) is reported UNDETERMINED rather than collapsed into either answer; **the sweep measures the PRESENCE of a machine refusal, never that it FIRES for every payload** — that is REC-73's half and it is not re-done here; and a comment QUOTING an old claim in order to correct it would be flagged.
 
 **Reversal cost: none.** The instrument is one file with no callers but its own suite.
+
+## CLAIM 2026-08-08 RECORD
+session: rec63-route-marker (worktree agent-ac23d92b0d07c1ab5)
+opened: 2026-08-08T00:00:00Z
+paths:
+  - `bio-plane/src/schema.mjs` — ONE new table (`provenance_route_marks`), placed before the
+    `host_governor` block per CLAUDE.md's trap list.
+  - `bio-plane/src/store.mjs` — the `provenanceRouteAssess` method, one read helper, the
+    `route` field on `listBundles`, the `route` block on `auditPass`, the `route` line on
+    `provenanceChainRebuild`'s report, one `stats()` counter and the purge `TABLES` entry.
+  - `bio-plane/src/index.mjs` — ONE new OPS row (`provenanceroute`) and its two stamp lists.
+  - `bio-plane/checks/bio-checks.mjs` — ONE new DEC-49 family, `ROUTE_MARK_CHECKS` (C-34.1..4).
+  - `bio-plane/test/provenance-marker.test.mjs` (new suite) and
+    `bio-plane/test/nc-rec63.mjs` (this item's negative-control harness, INSIDE this worktree
+    and never in a shared scratchpad).
+  - the `FLOOR`/`CEILING` constant block of `civicos-ui/check-refusal-codes.mjs` ONLY — every
+    figure re-measured from what the guard PRINTS on a green run, on REC-64's precedent. No
+    other line of `civicos-ui/**` is opened; the surface is DELEGATED below.
+  - `docs/development/INTERFACE-CHANGES.md` (IC-35), `docs/development/VERIFICATION.md`'s
+    register row if the printed figure moves, `docs/development/MEASUREMENTS.md`.
+interfaces consumed: I3 (the op contracts — `op=list` rows and `op=audit` gain an additive
+  `route` block; one new op)
+interfaces owned: none
+expected: REC-63 — DEC-56's enactment. A standing MARKER at `verified` stating that a
+  document's route cannot be shown, carried in the record beside the state rather than
+  un-saying the verification (DEC-19: correction moves forward). The item's hard half is
+  PUBLICATION, not storage: the marker is driven out through the reads a member uses, and a
+  consumer can tell "the route cannot be shown" from "nobody looked".
+accepts-when: as QUEUE.md REC-63, plus: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY
+  EDIT and trusted over the brief (it arrived with no `bio-plane/node_modules`; `npm ci` run,
+  exit read UNPIPED, 0 — measured **124/124 green · 7,811 assertions**, so the brief's ~7,815
+  was 4 high). `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped.
+  `node civicos-ui/test/run.mjs` from the repo root, exit unpiped. Negative controls RUN, each
+  arm ALONE with the others held open, declared before arming, restores verified by sha256 AND
+  by `cmp` against a pristine per-arm copy. No push, no merge.
+concurrency: several workers run in `store.mjs`/`index.mjs`. This item's `index.mjs` diff is
+  one OPS row and two one-line additions to existing lists; its `store.mjs` diff is one new
+  method plus additive fields on three existing returns. `QUEUE.md` and `DECISIONS.md` are NOT
+  written by this session — the REC-63 row and DEC-56's `enacted:` line are CONDUCT's.
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-63) -> UI / whoever next owns `civicos-ui/app.html`: **THE ROUTE MARKER HAS NO SURFACE, AND A MARKER NOBODY CAN SEE IS NOT A MARKER**
+
+REC-63 drove DEC-56's marker out through the PLANE reads a member uses — `op=list` (every
+row, both arms), `op=audit`, `op=provenancechain` (both arms) and the act's own answer. **The
+surface half is not written**, and `civicos-ui/**` is not this item's to open.
+
+- **The shape is already on the wire and needs no plane change to render.** Every row of
+  `op=list` carries `route: { applies, assessed, marked, finding, means, at, by, stateAt,
+  register, undetermined, documents, note }`. `finding` is one of `NEVER_LOOKED` /
+  `LOOKED_INDETERMINATE` / `PRESENT`, or `applies:false`.
+- **The one thing the surface MUST get right, and it is the whole item:** *the route cannot
+  be shown* and *nobody looked* are DIFFERENT FACTS and must not render alike. A surface that
+  shows a badge for `LOOKED_INDETERMINATE` and nothing at all for `NEVER_LOOKED` has
+  re-created the conflation one layer up, because "no badge" then means both "fine" and
+  "unexamined".
+- **`means` and `note` are AUTHORED BY THE PLANE and travel with the answer** (DEC-8 as
+  amended by DEC-49: a surface may render a translation keyed on something the plane SENT,
+  and may never compute one). `note` is the standing sentence that makes the state/finding
+  disagreement legible — a `verified` document carrying a doubt must not read as a defect.
+- **Reversal cost: none.** Nothing on the plane depends on a surface existing.
+
+### DELEGATION 2026-08-08 RECORD (REC-63) -> WHOEVER TAKES THE ACT-AND-SAY CLASS NEXT: **23 SWALLOWED READS IN `store.mjs`, MEASURED, AND THE SWEEP IS A RATCHET RATHER THAN A VERDICT**
+
+Bob's principle across DEC-56/57/58 is general — ACT, AND SAY WHAT YOU COULD NOT ESTABLISH —
+so REC-63 swept for the class. **The mechanical shape of the failure in this plane is a
+SWALLOWED READ: a `catch` that turns something the plane could not establish into a
+normal-looking answer.** `provenance-marker.test.mjs` section I pins the roster at **23**
+(comment-stripped, reach proved as a DELTA against a planted swallow) and the number may fall
+freely but may not rise without somebody looking at the new one.
+
+- **What REC-63 did NOT do, stated rather than left to be assumed: it did not judge which of
+  the 23 are honest.** That is a reading, not a measurement, and 22 of them belong to other
+  areas' methods. The ratchet is what a worker can honestly leave behind.
+- **Two are worth a look first, from reading them in passing:** `#backfillProjection` SKIPS a
+  row with no readable `bundle.md` (`if (!md || md.text === null) continue;`) and
+  `op=reproject` then reports `reprojected`, `limit` and `remaining` with **no count of what
+  it could not project** — so a row that can never be projected sits in `remaining` forever
+  with no statement of why. And `queueFeed`'s and `readImage`'s callers each tolerate an
+  absent image with `|| {}`. Neither was changed here: both are outside this item's claim and
+  a shared read is the wrong place for a passing fix.
+- **ONE PLACE THE SWEEP REACHED DEC-57/DEC-58's GROUND AND STOPPED, as instructed.** Any
+  swallow that is *a bound the plane never published* is DEC-58, and *a walk that could not
+  reach its end* is DEC-57. Both are ENACTED already (REC-57 + UI-41 for the first, UI-39 for
+  the second), so nothing there is owed a new item — but a NEW instance of either belongs on
+  those entries rather than on a widened REC-63.
+- **What this item contributes to the class beyond the count:** the remedy demonstrated once.
+  `provenanceRouteAssess` swallows its own register read and PUBLISHES what it met —
+  `register_state` is `readable | absent | unparsable | no_documents | empty` — so the answer
+  says which failure it hit rather than that it hit one.
