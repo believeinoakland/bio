@@ -171,28 +171,25 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* ONE KEY SET, DELIBERATELY. Nine items moved these figures in parallel on 2026-08-08,
-     each correct on its own tree, and keep-both merges left duplicate `arms:` keys in
-     this one object literal THREE separate times. That is valid JavaScript: the LAST key
-     silently wins, and on the first occasion the last was the LOWEST — so the merge would
-     have quietly INSTALLED SLACK in a ratchet whose entire purpose is to have none. No
-     error, no warning, nothing red, and **a duplicate object key cannot be seen by
-     reading the value you expect to find.**
+  /* ONE KEY SET, DELIBERATELY. Eleven items have moved these figures in parallel, and
+     keep-both merges left duplicate `arms:` keys in this one object literal FOUR separate
+     times. That is valid JavaScript: the LAST key silently wins, and on the first occasion
+     the last was the LOWEST — so the merge would have quietly INSTALLED SLACK in a ratchet
+     whose entire purpose is to have none. No error, no warning, nothing red, and **a
+     duplicate object key cannot be seen by reading the value you expect to find.**
 
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542 · M0-17 553.
+     REC-77 530 · M0-16 542 · FW-13 550 · M0-17 553.
 
-     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
-     counted one — a phantom suite inflates the corpus, and a floor moved while one is
-     present would be permanently too high, which is how a ratchet gets switched off.
-     Move these only UPWARD, and only to a figure a green run PRINTED. */
-  arms:       550,  // arms stated across the classified declarations
-  classified: 127,  // declarations the detector could count arms in
-  corpus:     128,  // suites the register reads
-
-  arms:       553,  // arms stated across the classified declarations
+     THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the counted one (M0-16) — a
+     phantom suite inflates the corpus, and a floor moved while one is present would be
+     permanently too high, which is how a ratchet gets switched off. Move these only
+     UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
+     at the site: one that falls because an instrument stopped double-counting is not
+     slack; one that falls for any other reason is. */
+  arms:       557,  // arms stated across the classified declarations
   classified: 128,  // declarations the detector could count arms in
   corpus:     129,  // suites the register reads
 };
