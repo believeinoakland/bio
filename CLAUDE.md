@@ -269,7 +269,16 @@ measured state. The short version:
   ~15 minutes and three comments). `node --check` will not save you here either.
 - **A derived table must be added to `purge`** or a whole-store purge reports
   scope ALL and silently leaves rows (D-113).
-- **`store.mjs` is ~16,300 lines (MEASURED 2026-08-04 at 16,287; it was described as ~4,900 here and in `kickoffs/RECORD.md` for weeks, which is more than three times out — a number nobody re-measured because it read as a rough order of magnitude), and a stray byte makes plain `grep` treat it as BINARY and silently match nothing — use `grep -a` on it.** Grep before assuming a helper does not exist.
+- **`store.mjs` IS LARGE AND GROWING, AND THIS LINE NO LONGER CARRIES A NUMBER — MEASURE IT:**
+  `wc -l < bio-plane/src/store.mjs`. **The figure has been wrong here four times.** It read
+  ~4,900 for weeks against a real 16,287 (more than three times out, unmeasured because it
+  read as a rough order of magnitude); it was corrected in two files on 2026-08-04 and a
+  THIRD site was found still stale a day later; and on 2026-08-08 it read ~16,300 against a
+  real 21,248. **A hand-carried number in a document nobody re-measures goes stale silently,
+  which is this project's most-repeated finding — so the instruction is now the command
+  rather than the answer.** What actually matters about the size has not changed: **a stray
+  byte makes plain `grep` treat the file as BINARY and silently match nothing, so use
+  `grep -a` on it**, and grep before assuming a helper does not exist.
 
 ## Which Cloudflare account you are talking to
 

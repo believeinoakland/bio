@@ -3238,3 +3238,25 @@ size, which is not the refused class. Read live, read-only, on both namespaces:
 - **Five-plus invocations per subject, five subjects, and the key arms reproduced across four
   independent passes** (`fl1-agent` 19.73 / 20.84 / 20.36 / 24.29 ms; `fl1-burn` 1,185.59 /
   1,000.03 / 969.31 / 1,071.01 ms). Enough to expose an outlier, not enough for a tail.
+
+## 2026-08-08, CONDUCT: `store.mjs`'s line count, and why the figure moved out of CLAUDE.md
+
+Instrument: `wc -l < bio-plane/src/store.mjs`, on `main` at PL-4's integration.
+
+**21,248 lines.** `CLAUDE.md` said ~16,300, itself a correction of ~4,900.
+
+**The number has been wrong in that file FOUR times**, which is the finding rather than the figure:
+it read ~4,900 for weeks against a real 16,287 — more than three times out, and unmeasured
+precisely because it read as a rough order of magnitude; REC-52 corrected two files on
+2026-08-04 and a THIRD site was found still stale the next day; and it has now drifted again
+by ~5,000 lines in four days as the investigative-session build lands.
+
+**So the line in `CLAUDE.md` no longer carries a number — it carries the command.** A
+hand-carried figure in a document nobody re-measures goes stale silently, and this session
+has met that class repeatedly in instruments: a roster pin corrected to a number two items
+already disagreed about, a census floor sitting 19 codes low that had ALREADY flipped a
+control from RED to GREEN, and three separate floors going stale within hours of each other.
+The durable fix is the same everywhere: **do not carry the answer, carry the way to get it.**
+
+What the size actually costs a reader is unchanged and stays stated: a stray byte makes plain
+`grep` treat the file as binary and silently match nothing, so `grep -a` is required.
