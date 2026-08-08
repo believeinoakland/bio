@@ -43,10 +43,26 @@
  * AND ONE HONEST GAP, STATED RATHER THAN PAPERED OVER. The viewer gate filters
  * PROJECT rows and nothing else (the evidence corpus stays shared, Membership
  * 7.9). Meaning rows attach to inquiries and to captures, and a project bundle
- * can carry neither — `promote` writes `inquiry_basis` only when the document
- * is an inquiry. So "a member sees N and an outsider sees zero" cannot be
- * staged through a meaning arm today, because the two sets do not intersect by
- * construction. What IS staged, live, is the fail-closed half, which is the
+ * carries no LEG — `promote` writes `inquiry_basis` only when the document is
+ * an inquiry, which is the arm asserted below. So "a member sees N and an
+ * outsider sees zero" cannot be staged through THE `leg` ARM today, because
+ * those two sets do not intersect by construction.
+ *
+ * CORRECTED 2026-08-07 by PL-9, and the correction is kept here because the
+ * sentence it replaces was WRONG rather than merely narrow. This paragraph used
+ * to read *"a project bundle can carry neither"*, generalising the leg rule to
+ * captures. It does not hold: `#writeReadings` is called for EVERY promote with
+ * no object_type test at all, so a PROJECT bundle carrying
+ * `data/provenance.json` gets a reading, reference rows, and — after
+ * `op=resolve` — `resolutions` rows keyed on the project.
+ * `gate-reads.test.mjs` has been promoting exactly such a project since REC-30.
+ * MEASURED by driving it: a grade-A resolution lands with `bundle_id` = the
+ * project. So the participant half of the gate IS stageable through the
+ * `resolves`/`concerns` arms, and `test/meaningread.test.mjs` stages it live.
+ * The ASSERTIONS in this file were right and are unchanged; only this prose
+ * over-reached, which is why it is corrected rather than exempted.
+ *
+ * What IS staged here, live, is the fail-closed half, which is the
  * stronger setting of the same gate: an unrecognised viewer gets `0=1` and must
  * see zero on EVERY statement — hits, total, select-all and facets together,
  * because a `total` larger than the pages is exactly how hidden stops being
@@ -686,7 +702,12 @@ console.log("\n--- 11. hidden and absent answer identically ---");
   t("a participant viewer's predicate reaches every meaning-arm statement",
     compile({ q: "leg:hunch", viewer: "member:M-0007" }).statements.facets()
       .every((s) => s.sql.includes("project_participants")), true);
-  t("promote writes legs only for inquiries, which is WHY the project half cannot be staged",
+  /* LABEL CORRECTED 2026-08-07 (PL-9): the assertion is unchanged and was always
+     true; its LABEL over-claimed. `promote` writing legs only for inquiries is
+     why the project half cannot be staged THROUGH THE `leg` ARM — it says
+     nothing about captures, and a project bundle does carry resolutions. See the
+     header's correction and `test/meaningread.test.mjs`, which stages it. */
+  t("promote writes legs only for inquiries, which is WHY the project half cannot be staged THROUGH `leg:`",
     /const isInquiry = normalizeType\(meta\.object_type\) === "inquiry"/.test(STORE_SRC), true);
 }
 

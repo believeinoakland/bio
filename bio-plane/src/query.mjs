@@ -184,6 +184,60 @@ const RESOLUTION_SUB = {
   entity: { col: "entity_id", vocab: [] },
 };
 
+/* ---------------------------------------------------------------------------
+ * PL-9 / D-222 OPTION C: THE ROW DESCRIPTOR, which is what turns an arm that
+ * SELECTS BUNDLES into a shape that RETURNS THE MEANING ROWS THEMSELVES.
+ *
+ * PL-8's arms and this are two halves of §14c's option D and they must COMPOSE
+ * rather than duplicate: the arm chooses the SET (`leg:hunch` -> which
+ * inquiries), the statement shape returns the GRAIN (the legs of those
+ * inquiries, each with its role, its ground and its grade_source). There is no
+ * second selector vocabulary here and no second gate; `q` is the arm language
+ * verbatim, and the rows are projected out of the bundles it already selected.
+ *
+ *   row       the columns projected at meaning grain, in the order a reader
+ *             wants them. Named rather than `SELECT *` so a column added to the
+ *             table is a DECISION to publish rather than an accident.
+ *   identity  WHAT MAKES TWO ROWS DISTINCT, and it is the table's own PRIMARY
+ *             KEY. This is the grain, written down: one row of `inquiry_basis`
+ *             is one LEG, addressed by (bundle_id, ord); one row of
+ *             `resolutions` is one RESOLUTION, addressed by
+ *             (capture_sha, ref, entity_id). It is also the ORDER BY tail, so
+ *             paging over the answer is total rather than merely tidy — the
+ *             same property the bundle page's id tiebreak buys.
+ *   refs      columns that NAME ANOTHER BUNDLE. Each one takes REC-36's
+ *             stricter rule below.
+ *   rowGrain  the grain in words, published, because a surface that presented
+ *             these rows as bundles would recreate exactly the false sense of
+ *             coverage `STORE-AS-CACHE.md` describes.
+ *
+ * THE GRAIN INVERTS PL-8'S, DELIBERATELY. An arm is an `IN` subquery precisely
+ * so that an inquiry with four hunch legs appears ONCE. This shape is a JOIN and
+ * that same inquiry appears FOUR TIMES — once per leg — because the legs are the
+ * answer. Both are correct at their own grain and neither is a spelling of the
+ * other, which is why the two are separate statements on one compiler rather
+ * than one statement with a flag.
+ *
+ * AND THE WHOLE MEANING SET OF EACH BUNDLE IN SCOPE IS RETURNED, not the subset
+ * the arm matched. `leg:hunch` + `rows=leg` answers "every leg of every inquiry
+ * carrying hunch debt", not "every hunch leg", and the difference is doctrine
+ * rather than convenience: A BASIS RETURNED IN PART READS AS A BASIS. Filtering
+ * the rows down to the arm's own predicate would hand a caller two supporting
+ * legs out of five and let it conclude things about a basis it has not seen —
+ * the record claiming more than it can support, which CLAUDE.md ranks worse than
+ * a missing feature. Every row carries the columns the arm filters on, so a
+ * caller that genuinely wants only the hunch legs can take them and still knows
+ * what it did not take.
+ * ------------------------------------------------------------------------- */
+const RESOLUTION_ROW = {
+  row: ["capture_sha", "ref", "entity_id", "grade", "method", "basis",
+        "established", "raised_from", "resolved_by", "at"],
+  identity: ["capture_sha", "ref", "entity_id"],
+  refs: [],
+  rowGrain: "one RESOLUTION of one reference in one capture to one registered subject, "
+          + "addressed by (capture_sha, ref, entity_id)",
+};
+
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -209,13 +263,23 @@ export const MEANING = {
       ground: { col: "ground",  vocab: [] },
       target: { col: "target_id", vocab: [] },
     },
+    /* PL-9: the grain. `note` is a member's own prose about the leg and is
+       published because this op is gated exactly as the bundle page is — the
+       whole point of staying on this compiler. `target_id` is the one column
+       that names another bundle. */
+    row: ["ord", "target_id", "target_type", "role", "grade", "grade_axis",
+          "grade_source", "ground", "note", "at"],
+    identity: ["bundle_id", "ord"],
+    refs: ["target_id"],
+    rowGrain: "one LEG of one inquiry's basis, addressed by (bundle_id, ord) — "
+            + "an inquiry resting on four legs answers with four rows",
   },
   resolves: { table: "resolutions", key: "bundle_id", bare: "grade",
               grain: "the bundle carrying a capture whose reference resolved so",
-              sub: RESOLUTION_SUB },
+              sub: RESOLUTION_SUB, ...RESOLUTION_ROW },
   concerns: { table: "resolutions", key: "bundle_id", bare: "entity",
               grain: "the bundle carrying a capture that concerns the subject",
-              sub: RESOLUTION_SUB },
+              sub: RESOLUTION_SUB, ...RESOLUTION_ROW },
 };
 
 /* The bare-word index, PRODUCED BY DRIVING the registry above rather than
@@ -261,6 +325,11 @@ export function meaningVocabulary() {
     fields: Object.fromEntries(Object.entries(m.sub).map(([n, s]) => [n, { column: s.col, values: s.vocab || [] }])),
     words: Object.fromEntries([...bareIndex(arm)].filter(([, subs]) => subs.length === 1).map(([w, subs]) => [w, subs[0]])),
     ambiguous: ambiguousBareWords()[arm],
+    /* PL-9: the MEANING-GRAIN half of the same arm, published beside the
+       bundle-grain half so a caller can see that one selector name answers at
+       two grains and which is which. `grain` above is what `leg:hunch` selects;
+       `rows.grain` is what `op=meaningrows&rows=leg` returns. */
+    rows: { grain: m.rowGrain, identity: m.identity, columns: m.row, refs: m.refs },
   }]));
 }
 
@@ -931,9 +1000,20 @@ export const PROVENANCE_COLS = [
 
 export const LIMIT_DEFAULT = 50, LIMIT_MAX = 500, IDS_MAX = 50000;
 
+/* PL-9: the meaning-grain shape's OWN bound, and it is a different number from
+   the page's because it answers at a different grain. A page is one row per
+   BUNDLE; this is one row per LEG or per RESOLUTION, so the same corpus produces
+   several times the rows and a caller reading a whole project's bases would page
+   the bundle ceiling many times over. 1000 keeps a project-sized basis reachable
+   in a handful of requests while staying well inside the Durable Object's
+   response budget. Named constants rather than literals so `bounds.test.mjs`'s
+   roster walk finds this op the way it finds the others. */
+export const MEANING_LIMIT_DEFAULT = 200, MEANING_LIMIT_MAX = 1000;
+
 export function compile({ q = "", viewer = null, sort = null, dir = null,
                           limit = LIMIT_DEFAULT, offset = 0, ids = null,
-                          facets = null, implicitOp = "and", snippetChars = 12 } = {}) {
+                          facets = null, implicitOp = "and", snippetChars = 12,
+                          rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0 } = {}) {
   const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [] };
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
@@ -952,6 +1032,14 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
+  /* The meaning shape's OWN bound, from its OWN input against its own ceiling —
+     deliberately not the page's `limit` clamped a second way, because one number
+     clamped against two ceilings is one number a caller cannot reason about. The
+     cap PUBLISHED by the op is this one, after clamping and never the number
+     asked for (REC-57). */
+  const rowArm = typeof rows === "string" && rows.toLowerCase() in MEANING ? rows.toLowerCase() : null;
+  const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT)));
+  const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
 
   /* One CTE prefix, shared by every statement. `scope` is the query intersected
      with what the viewer may see, so the gate bounds the page, the count, the
@@ -1062,6 +1150,99 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     return out;
   };
 
+  /* -------------------------------------------------------------------------
+   * THE SEVENTH STATEMENT SHAPE — D-222 option C, PL-9.
+   *
+   * Six shapes above answer at BUNDLE grain: `page`, `count`, `ids`, `snapshot`,
+   * `facets`, `facetScan`. This one answers at MEANING grain, off the SAME
+   * `scope` CTE, with the SAME gate, executed by the SAME guarded executor. It
+   * is one shape with two projections — rows and their count — exactly as the
+   * bundle grain is `page` and `count`, so `mode` selects the projection rather
+   * than a second shape being registered beside this one.
+   *
+   * WHY THIS IS NOT A SECOND QUERY PATH, and it was not a free choice. The
+   * comment at the `ids` arm above says a selection resolved by another route
+   * "would be the second query path this design exists to prevent", and D-15
+   * gives visibility exactly ONE compilation point enforced by the throw in
+   * `Store#runQuery`. So option B was closed by a standing ruling. Everything
+   * that makes this safe is inherited rather than rebuilt: `scope` is the same
+   * set the page would have shown, `gate.sql` is the same predicate from the
+   * same call to `viewerPredicate`, and NOTHING HERE MINTS A GATE — the count of
+   * gate-marker mint sites in this module is pinned at three, all three inside
+   * `viewerPredicate`, and this shape does not add a fourth. It INTERPOLATES the
+   * compiled predicate, twice, which is a use and not a mint.
+   *
+   * AND THE PIN IS TEXT-ANCHORED, WHICH THIS COMMENT FOUND THE HARD WAY. Writing
+   * the marker's template literal in prose here took the count to FOUR and made
+   * both suites red against an explanatory comment — D-160's shape, met inside
+   * the thing it guards. The prose says "gate-marker" instead; `meaningread`'s
+   * own pin additionally counts over COMMENT-STRIPPED source, so the next reader
+   * who writes it in a sentence gets a passing suite rather than a puzzle.
+   *
+   * REC-36'S STRICTER RULE, WHICH IS THE ONE THING THIS SHAPE ADDS.
+   * §14c: a meaning-layer answer is a CANDIDATE LIST, and most reads redact a
+   * back-reference while a candidate list WITHHOLDS THE WHOLE ROW — because even
+   * a nameless candidate discloses that something bearing on the subject sits in
+   * a project the viewer was not invited to. Two clauses carry it:
+   *
+   *   1. THE OWNING BUNDLE. The row reaches the answer only through `scope`
+   *      JOINed to a `bundles` row that passes the gate. A row whose bundle the
+   *      viewer may not see is ABSENT, never present with its `bundle_id`
+   *      nulled. And `total` is counted through the same joins and the same
+   *      predicate, so a total larger than the rows cannot arise: hidden and
+   *      absent answer identically, and NO count of what was withheld is
+   *      published, because that count is the leak.
+   *
+   *   2. A COLUMN NAMING ANOTHER BUNDLE (`inquiry_basis.target_id`). If that
+   *      bundle EXISTS and the viewer may not see it, the whole row is withheld.
+   *      A REDACTED target would say "this basis rests on something you may not
+   *      know about", which is the disclosure the rule refuses.
+   *
+   * AND THE DELIBERATE DEPARTURE FROM `#bundleGate`, stated because it is a
+   * departure rather than an oversight. That helper is fail-closed on a DANGLING
+   * reference: a row naming a bundle that is GONE is withheld. Here a leg whose
+   * target does not exist is RETURNED, with `target_present` saying so. On a
+   * candidate list a dangling pointer is nothing to act on, so withholding costs
+   * nothing; on a BASIS a leg pointing at a document the record no longer holds
+   * IS THE DEBT, and hiding it would make the answer under-report — the silently
+   * narrowed answer this whole item exists to remove. Visibility and existence
+   * are different questions and only the first is a disclosure.
+   * ---------------------------------------------------------------------- */
+  const meaning = ({ mode = "rows" } = {}) => {
+    if (!rowArm) return null;
+    const m = MEANING[rowArm];
+    const c = cte(false);
+    const args = [...c.args, ...gate.args];
+    /* Clause 2, one per column that names another bundle. `bundles b` inside the
+       subquery is not a slip: `viewerPredicate` compiles over the alias `b`, and
+       shadowing the outer alias is what binds the predicate to the REFERENCED
+       bundle — the same construction `Store#bundleGate` uses and for the same
+       reason. */
+    let refSql = "";
+    for (const col of m.refs) {
+      refSql += `\n   AND (NOT EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col})`
+              + `\n        OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col} AND (${gate.sql})))`;
+      args.push(...gate.args);
+    }
+    const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid`
+               + `\n JOIN ${m.table} m ON m.${m.key} = b.bundle_id`
+               + `\nWHERE ${gate.sql}${refSql}`;
+    if (mode === "count") return { sql: `${c.sql}\nSELECT count(*) AS n ${from}`, args };
+    /* Existence is REPORTED, never inferred from a null: `target_present` is the
+       fact the departure above turns on, so it is a column and not a silence. */
+    const present = m.refs.map((col) =>
+      `, EXISTS (SELECT 1 FROM bundles tb WHERE tb.bundle_id = m.${col}) AS ${col}_present`).join("");
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, `
+              + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + present;
+    /* The ORDER BY is the GRAIN's own identity, which is what makes paging over
+       meaning rows total rather than merely tidy — without it a leg can appear on
+       two pages or on none, exactly as the bundle page's id tiebreak prevents. */
+    const order = ["b.bundle_id ASC",
+                   ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)].join(", ");
+    return { sql: `${c.sql}\nSELECT ${sel} ${from}\nORDER BY ${order} LIMIT ? OFFSET ?`,
+             args: [...args, mLim, mOff] };
+  };
+
   /* D-32, the remaining option named in the debt register: count the facets from
      ONE scan in JS instead of a GROUP BY per field. One statement, no aggregation
      and no sort in SQLite, returning the facet columns of every row in scope; the
@@ -1085,9 +1266,18 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     match: rank, terms: ctx.textAtoms.map((a) => a.value), widenable,
     /* D-222 option A: which meaning arms this query compiled, in order. */
     meaningArms: ctx.meaningArms,
+    /* D-222 option C: the meaning-GRAIN shape's own plan, null when the caller
+       asked for no rows. `limit` here is the cap this shape APPLIED after
+       clamping, which is what the op publishes — never the number asked for. */
+    meaning: rowArm ? {
+      arm: rowArm, table: MEANING[rowArm].table,
+      grain: MEANING[rowArm].rowGrain, identity: MEANING[rowArm].identity,
+      columns: MEANING[rowArm].row, refs: MEANING[rowArm].refs,
+      limit: mLim, offset: mOff,
+    } : null,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),
     restricted: Array.isArray(ids) && ids.length > 0,
-    statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan },
+    statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan, meaning },
   };
 }

@@ -1489,3 +1489,158 @@ The three joined REC-57's roster in `bounds.test.mjs`, whose `OPS.size` pin **fa
 
 **I3 8.1.0 → 9.0.0 → 10.0.0.** I5 NOT touched: no table, column, index or `purge` change. Recorded by CONDUCT 2026-08-07. **Open against it: UI-42** (the live sentence), and **D-227** — CONDUCT measured at integration that these suites pin the PUBLISHED ENVELOPE and not the SQL BOUND, so a regression removing `LIMIT ?` while leaving the slice and the envelope passes both green.
 
+
+---
+
+## IC-26 · I3: one NEW read op `op=meaningrows` — the meaning layer answered at MEANING GRAIN · PROPOSED 2026-08-07 (PL-9, D-222 option C), ADDITIVE
+
+- **Interface:** I3 (plane → UI), **10.0.0 STABLE** → proposed **10.1.0**
+- **Proposer and owner to land it:** `RECORD` (session is-wave-w3a-pl9), from
+  `IS-BUILD-PLAN.md` PL-9 — D-222 option C, the second half of §14c's recommendation D.
+- **Consumers to answer:** `UI`, `DIST`, the content areas.
+- **Filed even though I3 says adding an op needs no protocol**, on **IC-3's settled
+  reasoning**: recording a change as needing no record because it happens to break
+  nothing *"would teach this registry to lie."* §14c asks for the entry by name.
+- **Version bump and RESOLUTION are CONDUCT's.** This session files the entry and does
+  not touch `INTERFACES.md`.
+
+### The change
+
+One new read op. Nothing existing is renamed, reshaped, removed, re-fenced or reordered.
+
+    op=meaningrows&rows=<leg|resolves|concerns>&q=<query>&limit=&offset=
+
+| | |
+| --- | --- |
+| classes | `admin`, `member`, `probe` — **op=search's fence exactly** |
+| mutating | `false` |
+| session reach | yes, via `RETRIEVAL_READS` (op=search's own list, not a new one) |
+| `viewer` | **stamped server-side** beside op=search's, never taken from the caller |
+| answer | `{ ok, arm, table, grain, identity, query, gate, rows[], count, limit, offset, total }` |
+| refusals | `MEANING_ROWS_NO_ARM` (C-23.1), `MEANING_ROWS_UNKNOWN_ARM` (C-23.2) |
+
+**`q` IS PL-8'S LANGUAGE VERBATIM.** There is no second selector vocabulary and no
+second query path: the op adds exactly ONE argument, `rows`, which names WHICH meaning
+table to answer at grain from. Every operator, negation, parenthesis, `has:` test and
+meaning arm the compiler already had selects the bundles this returns rows for.
+
+**What it publishes, and the grain is the point:**
+
+- `rows[]` — one row per MEANING-TABLE ROW. For `rows=leg`: one LEG of one inquiry's
+  basis, carrying `bundle_id`, `bundle_type`, `ord`, `target_id`, `target_type`,
+  `role`, `grade`, `grade_axis`, `grade_source`, `ground`, `note`, `at`, and
+  `target_id_present`. For `rows=resolves|concerns`: one RESOLUTION, carrying
+  `capture_sha`, `ref`, `entity_id`, `grade`, `method`, `basis`, `established`,
+  `raised_from`, `resolved_by`, `at`.
+- `grain` and `identity` — **the grain in words and as columns**, so a consumer
+  cannot read a leg as a bundle. `identity` is the meaning table's own PRIMARY KEY
+  (`(bundle_id, ord)`; `(capture_sha, ref, entity_id)`), asserted in the suite
+  against `schema.mjs`'s `CREATE TABLE` rather than typed.
+- `limit`, `offset`, `total` — **op=search's own envelope**, because this IS a
+  statement of op=search's compiler. `limit` is the cap APPLIED after clamping
+  (default 200, ceiling 1000), never the number asked for; `total` is the
+  viewer-gated count of matching rows; `offset + count < total` is how a caller tells
+  *this is all of it* from *this is the first N*. **No twelfth spelling is minted**
+  (REC-55's declined-second-copy rule).
+- `op=searchfields` gains, per arm, a `rows: { grain, identity, columns, refs }`
+  block — **additive**, derived from the compiler's own registry, so a surface builds
+  its controls from the plane rather than from a copy that drifts.
+
+**THE GRAIN INVERTS PL-8'S, DELIBERATELY, AND THE TWO COMPOSE.** PL-8's arms compile to
+an `IN` subquery so an inquiry with four hunch legs appears ONCE; this shape is a JOIN
+and that inquiry appears FOUR TIMES, because the legs are the answer. `leg:hunch` +
+`rows=leg` is §14c's option D in one request: *which inquiries carry hunch debt* and
+*what those bases actually rest on*. Both grains are correct and neither is a spelling
+of the other; the suite asserts the relationship over one corpus rather than either
+side alone.
+
+**A BASIS IS RETURNED WHOLE, not filtered to the arm's own predicate.** `leg:hunch` +
+`rows=leg` answers with EVERY leg of every inquiry carrying a hunch leg, not only the
+hunch legs. This is doctrine rather than convenience: a basis returned in part reads as
+a basis, and handing a consumer two legs out of five lets it conclude things about a
+basis it has not seen — a record claiming more than it can support, which `CLAUDE.md`
+ranks worse than a missing feature. Every row carries the columns the arm filters on,
+so a caller that wants only the hunch legs can take them and still knows what it did
+not take.
+
+### Additive for every existing caller
+
+No key removed, renamed or reshaped anywhere. `op=search`, `op=resolutions`,
+`op=concerns`, `op=connections` and every other op answer byte-identically for every
+input. `compile()`'s six existing statement builders are untouched and the seventh is
+INERT unless `rows` is named, so every existing caller of the compiler gets exactly
+what it got before. `viewerPredicate` is unchanged, and **the count of gate-mint sites
+in `query.mjs` is still THREE** — PL-8's pin, kept alive and asserted here.
+
+### Why it is not a second query path (D-15), and why that was not a free choice
+
+`query.mjs`'s own note at the `ids` arm says a set resolved by another route *"would be
+the second query path this design exists to prevent"*, and D-15 gives visibility exactly
+ONE compilation point, enforced by a THROW in `Store#runQuery` rather than by a
+convention. So D-222 option B was closed by a standing ruling. This is option C: a
+SEVENTH STATEMENT SHAPE registered in `compile()` beside `page`/`count`/`ids`/
+`snapshot`/`facets`/`facetScan`, off the same `scope` CTE, with the same predicate from
+the same call to `viewerPredicate`, executed by the same guarded executor.
+`Store#meaningRows` assembles NO SQL — asserted structurally, because writing the
+statement somewhere else is the other way to build a second path.
+
+### REC-36's stricter rule, and one stated departure
+
+§14c: a meaning-layer answer is a CANDIDATE LIST, so *"most reads redact a
+back-reference; a candidate list withholds the whole row, because even a nameless
+candidate discloses that something mentioning the subject sits in a project the viewer
+was not invited to."* Two clauses carry it, and a third is the honest limit:
+
+1. **The owning bundle.** A row whose bundle the viewer may not see is ABSENT, never
+   present with `bundle_id` nulled. `total` is counted through the same joins and the
+   same predicate, so a total larger than the reachable rows cannot arise, and **no
+   count of what was withheld is published** — that count is the leak.
+2. **A column naming another bundle** (`inquiry_basis.target_id`). If that bundle
+   EXISTS and the viewer may not see it, the whole row is withheld.
+3. **A DEPARTURE from `Store#bundleGate`, stated rather than discovered.** That helper
+   is fail-closed on a DANGLING reference: a row naming a bundle that is GONE is
+   withheld. Here a leg whose target the record no longer holds is **RETURNED**, with
+   `target_id_present` saying so. On a candidate list a dangling pointer is nothing to
+   act on; on a BASIS a leg pointing at a withdrawn document IS THE DEBT, and hiding it
+   under-reports — the silently narrowed answer this whole surface exists to remove.
+   Visibility and existence are different questions and only the first is a disclosure.
+   `Store#purge`'s own comment is the authority: *"legs elsewhere that TARGET it stay,
+   honestly unresolvable."*
+
+### Measured, not asserted
+
+`node scripts/battery.mjs meaningread` green at 106; the full battery **109/109 at
+6,387** from a baseline of **108/108 at 6,270** measured in this worktree before any
+edit, with the +117 attributed per suite (meaningread +106 new, bounds +8, hygiene +3)
+and **every other suite byte-identical**. `node scripts/coverage.mjs --strict` run
+directly with `$?` unpiped, **exit 0**: OPS 136 → **137, all reached through the control
+plane**; CHECKS 59 → **61, all named**.
+
+**The op joined REC-59's bare-array roster, and closing that gap found another one.**
+`bounds.test.mjs`'s walk enumerates methods that carry a cap IN THEIR OWN BODY; this
+op's cap lives in `query.mjs`, so it would have been invisible — and so, it turns out,
+was **`op=search`**, the op REC-57's header calls *"the model the rest were brought
+to"*. A fifth cap shape (`compiler-cap`: a method that publishes a bound taken off a
+compiled plan) was added to the walk; the roster pin was corrected **14 → 16** with a
+dated reason, never exempted, and both ops are now DRIVEN there. Negative control (4)
+confirms the pin bites: making `op=meaningrows` answer a bare array fails
+*"PIN: ZERO capped ops answer with a bare array"* with `got ["meaningrows"]`.
+
+### What is NOT claimed
+
+- **The SCAN's bound is not measured** — D-227's subject. The suite asserts the
+  statement carries `LIMIT ?` and that the cap published is the cap applied, which is
+  the honesty half. An unbounded derivation feeding a bounded answer would pass, and
+  the suite says so at the site.
+- **No cursor is minted**, on IC-25's reasoning: `offset` over a total ORDER BY on the
+  grain's own identity is what pages this shape, and the suite drives the whole set
+  page by page and asserts each row appears exactly once.
+- **No oracle is closed and no disclosure is fixed.** The ground is a meaning layer
+  that was visible as a number and unreachable as a structure, and nothing else.
+- **I5 is NOT touched**: no table, column, index or `purge` change.
+
+### RESPONSES — awaited
+
+- **UI** — nothing to migrate: no existing shape moves. The new op is available and
+  unconsumed.
+- **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — expected NOT-AFFECTED; none reaches it.
