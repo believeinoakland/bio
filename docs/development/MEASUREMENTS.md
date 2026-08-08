@@ -3467,6 +3467,78 @@ exactly those codes — so all eight counted as pinned and the arm reported an e
 have read as an estate with no gap in it. REC-73's subject arriving inside REC-73's sweep, found
 the only way it could be: by running it. The walk now excludes itself and says why.
 
+## 2026-08-08 · REC-78 / D-230 — THE EIGHT SHADOWED REFUSALS NO SUITE PINNED, DRIVEN
+
+**Instrument:** `bio-plane/test/shadowed-refusals.test.mjs` (44 assertions, new) and its harness
+`bio-plane/test/shadowed-refusals.control.mjs` (11 arms, all RUN). Driven through the control plane
+against Miniflare, except `NO_AUTHOR` — see (a) below. `bio-plane/src/**` was NOT changed.
+
+**THE SHAPE, and it is a GENERALISATION of REC-73's rather than a copy.** REC-73 varied the CALLER
+because the twelve `MACHINE_CANNOT_*` fences guard WHO is acting; only some of these eight do. So
+the rule one layer out is: drive the refusal under a payload complete in every respect EXCEPT the
+one condition it names, then flip ONLY that condition and show the act complete. The success arm is
+what makes the payload provably complete — measured rather than asserted.
+
+**THE MEASUREMENT, AND IT IS LARGER THAN THE ROW PREDICTED, exactly as D-229's was. With its own
+guard removed under a complete payload, FIVE OF THE EIGHT ACTS WENT ALL THE WAY THROUGH.** A member
+ENROLLED under the handle `Hilda Krause`; a second member WROTE INTO a correspondence ledger another
+member was holding, taking `ord` 0 so the lock-holder's own entry landed at 1 — two accounts of one
+exchange interleaved, the precise harm `LEASE_HELD`'s detail names; a REVOKED member BECAME A
+PROJECT OWNER; an administrator's 7.13 rescue CARRIED on a project that never had an owner; and a
+published case was RE-RATIFIED at edition 2 while edition 3 already stood. **The other three fell to
+the complaint sitting directly BEHIND the fence — `NO_CASE`→`NO_SUCH_CASE`,
+`NOT_AN_OWNER`→`LAST_OWNER`, `NO_AUTHOR`→`NO_REGISTER`.** That is D-230's own thesis demonstrated
+rather than argued: an instrument driving those three with an incomplete payload would have read the
+refusal behind them and reported the fence proved.
+
+**THE SWEEP'S FIGURES MOVED, AND THE PART THE ROW RESTS ON DID NOT.** D-230 quotes REC-73's sweep as
+380 methods / 111 identity refusals / 66 shadowing. Re-measured on 2026-08-08 at `bb426ac`: **394
+methods, 114 identity-flavoured refusals, 68 shadowing outside the twelve** — unrelated growth in
+`store.mjs`. **The eight unpinned codes are unchanged.** REC-78's own walk prints **394 methods and
+497 refusal sites** and floors both, as BLINDNESS floors rather than ratchets: a ratchet over the
+plane's refusal count would fail whenever unrelated work retires a refusal, while a blind walk does
+not drop by ten but to nearly nothing.
+
+**THREE FINDINGS THE ROW DID NOT PREDICT, all about the SWEEP rather than the plane.**
+
+**(a) `NO_AUTHOR` IS UNREACHABLE THROUGH ITS OP.** `op=provenancechain` is not in `SESSION_OPS`, so
+a signed-in session is refused it outright (`"this operation requires a machine credential, not a
+signed-in session"`), and every machine class that CAN reach it is stamped `token:<class>` by the
+control plane, which is never blank. Measured at all four caller classes: session → refused the op;
+admin class → `NO_REGISTER`; member class → `NO_REGISTER`; probe class → `NO_SUCH_BUNDLE`. **Not one
+reaches `NO_AUTHOR`.** It is pinned at the Durable Object route where it IS reachable, and the
+op-level unreachability is pinned beside it, structurally and behaviourally. **The consequence,
+raised to CONDUCT rather than acted on: the act REC-54's own comment calls "a named member's
+judgement" is one NO MEMBER CAN PERFORM.** REC-65 left this verb's identity claim OPEN and routed it
+to CONDUCT; this is that question with a measurement attached.
+
+**(b) FOUR OF THE EIGHT ARE NOT IDENTITY GUARDS AT ALL.** The sweep's classifier reads the 300
+characters in front of a refusal for `author`/`owner`/`viewer`/`who`. In `enroll` the word `author`
+occurs inside the DETAIL STRING of `NO_HANDLE`, the refusal directly in front of `BAD_HANDLE`; in
+`#queueCaseFor` the word `viewer` is the method's own PARAMETER; `NOT_ACTIVE` and
+`EDITION_NOT_INCREMENTED` are state and bytes checks that sat near ownership vocabulary. It errs in
+the direction REC-73 declared — reporting MORE work than exists. **The pins are worth having anyway:
+three of those four went ALL THE WAY THROUGH when neutered.**
+
+**(c) `EDITION_NOT_INCREMENTED` CANNOT BE REACHED THROUGH THE PUBLICATION CEREMONY AT ALL.**
+`publishCase` mints `MAX(published_cases.edition)+1` and a non-case ratification auto-increments, so
+the number never regresses and never leaves a hole below itself. The ONLY route is an edition
+AUTHORED INTO THE RATIFIED BYTES lower than the highest published — which is exactly what DEC-12
+makes possible (the edition comes from the bytes the signature covers) and exactly what the refusal
+guards. Two costs recorded at the site: **C-21.1 refuses a completeness claim carried forward**, so a
+new edition's four sentences must be authored or the GATE answers and the refusal is never reached;
+and **C-12.2 reads the snapshot key out of the history FILENAME** and demands
+`<YYYYMMDD>T<HHMMSS>Z_<8 hex>`, so a free-form `snapKey` promotes fine and then fails the gate.
+
+**AND THE INSTRUMENT FAILED FIRST, INSIDE ITS OWN CONTROL.** Arm (10) — blind the walk — came back
+not as three clean failures but as `THE SUITE NEVER REACHED ITS FOOT`: with no refusal sites found,
+the shadow table's print loop dereferenced a null and a `TypeError` ended the MODULE through no
+assertion at all, taking all eight pins with it. Caught only because the harness READS THE FOOT LINE
+instead of trusting the tally and reports a missing one as `-1`. Corrected at the site; the arm then
+behaved exactly as declared. **REC-73's own five arms were re-run unedited and all five still behave
+as declared; its arm (3) moved from 42/3 to 43/2 because REC-78 pinned the set that arm's third
+failure came from, and the figure in its header was corrected in the same turn.**
+
 ## 2026-08-08 · M0-13 / D-231 — the intermittently red suite, and it was a live plane defect
 
 **Instrument:** `bio-plane/.nc/probe-substance.mjs` (a driven probe against a real Miniflare plane,

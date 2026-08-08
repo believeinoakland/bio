@@ -2,7 +2,7 @@
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
    (2) THE SENTINEL, ISOLATED — short-circuit `isMachineIdentity` for `token:` instead -> 17 pass, 28 FAIL, and `MACHINE_CANNOT_DECLARE` falls with it. It is the one act PL-11 measured going ALL THE WAY THROUGH, so it is the regression sentinel; the arm takes down BOTH its pin and the read-back that finds the bar declared, because a machine getting past a refusal and a machine changing what the group requires of its own evidence are two different facts.
-   (3) THE SWEEP MUST BE ABLE TO GO BLIND AND SAY SO — make the identity predicate match nothing -> 42 pass, 3 FAIL, caught by the corpus FLOOR rather than reported as a clean estate (REC-70's lesson on the floor side).
+   (3) THE SWEEP MUST BE ABLE TO GO BLIND AND SAY SO — make the identity predicate match nothing -> **43 pass, 2 FAIL, RE-MEASURED 2026-08-08 BY REC-78 IN WORKTREE agent-ae602f80abcaf9e01, all five arms re-run and every one still behaving as declared.** It read 42/3 when this suite expected a set of EIGHT unpinned codes: a blind walk found none of them, so the set arm failed too and was counted as a third failure. REC-78 pinned all eight and the expectation is now the EMPTY set, which a blind walk satisfies by accident — so that arm no longer fails here and the corpus FLOOR is the whole of what catches blindness. **THE ARM IS UNCHANGED AND STILL BEHAVES AS DECLARED; the figure moved because the SUBJECT moved, and it is recorded rather than smoothed.**
    (4) A THIRTEENTH FENCE MUST NOT ARRIVE UNMEASURED — drop `MACHINE_CANNOT_GROUND` out of the driven set -> 43 pass, 2 FAIL, naming the code and the count.
    (5) OVER-STRICTNESS, and it is not a separate arm because it is BUILT INTO EVERY PIN: each of the twelve payloads is driven a SECOND time by a signed-in MEMBER and must SUCCEED -> 45/0, all twelve member arms green. That is what makes a payload complete rather than merely valid.
    POLARITY: every pin asserts a specific code and its member twin asserts ok:true, so an arm cannot pass by asserting nothing; the harvest is asserted NON-EMPTY before it is compared; the sweep's corpus is floored on size before any membership claim is made over it.
@@ -690,12 +690,30 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
      EXACT SET rather than a ceiling, so it must be moved deliberately in BOTH
      directions — a ceiling with slack is not a ratchet (PL-4 measured one 19
      codes low that had already flipped a control from RED to GREEN). To move
-     it: name the code, say whether it was pinned or removed, and date it. */
+     it: name the code, say whether it was pinned or removed, and date it.
+
+     MOVED 2026-08-08 BY REC-78, FROM EIGHT TO NONE, and every member of the set
+     moved for the SAME reason — PINNED, none removed. All eight are now driven
+     in `test/shadowed-refusals.test.mjs`, each under a payload complete but for
+     the one condition it guards, each followed by the same act driven to
+     success: BAD_HANDLE (enroll), EDITION_NOT_INCREMENTED (ratify), LEASE_HELD
+     (actioncorrespond), NOT_ACTIVE (projectowneradd), NOT_AN_OWNER
+     (projectownerremove), NO_AUTHOR (provenancechain, at the Durable Object
+     route — REC-78 measured that NO caller class can reach it through the op,
+     and pins the unreachability beside it), NO_CASE (queuemute), NO_OWNERS
+     (projectownerrescue).
+
+     THE EMPTY SET IS STILL A SET AND STILL FAILS IN BOTH DIRECTIONS. A ninth
+     unpinned identity refusal appearing fails this arm; deleting REC-78's suite
+     puts all eight back and fails it too, because `pinned()` reads `test/` and
+     nothing else. The corpus this is claimed over is floored above, so an empty
+     answer produced by a walk that went blind is caught before it gets here —
+     which is the one way an emptiness assertion could otherwise read as good
+     news. */
   t("the identity refusals that shadow something and that NO suite pins at all — MEASURED "
-  + "2026-08-08 by REC-73, and this is a set rather than a count so it cannot drift either way",
-    unpinned,
-    ["BAD_HANDLE", "EDITION_NOT_INCREMENTED", "LEASE_HELD", "NOT_ACTIVE", "NOT_AN_OWNER",
-     "NO_AUTHOR", "NO_CASE", "NO_OWNERS"]);
+  + "2026-08-08 by REC-73, moved to EMPTY 2026-08-08 by REC-78 which pinned all eight, and this is "
+  + "a set rather than a count so it cannot drift either way",
+    unpinned, []);
 }
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);

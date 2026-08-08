@@ -4136,3 +4136,64 @@ the bundle skill, outside this repository. Nothing in this item's measurement de
 distinction (`data/deletions.json` has no producer in code OR in a document: §2.5 specifies
 the FILE, and the substrate that would have written it is the one the plane replaced), but the
 next member of the class may.
+
+## CLAIM 2026-08-08 PLANE-TEST (REC-78 / D-230)
+session: rec78-shadowed-refusals (worktree agent-ae602f80abcaf9e01)
+opened: 2026-08-08T00:00:00Z
+paths: `bio-plane/test/shadowed-refusals.test.mjs` (NEW — this item's suite), `bio-plane/test/shadowed-refusals.control.mjs` (NEW — its negative-control harness, deliberately not a `.test.mjs`). `bio-plane/test/machine-fences.test.mjs` — named by SITE, not by file: (1) the ONE expected-set literal in block 4's unpinned-refusals assertion, moved from eight codes to the empty set with the reason and the date at the site; (2) the header's `NEGATIVE CONTROL:` arm-(3) figure, re-measured because REC-78 moved that arm's subject. **NOT** REC-73's block 1, 2 or 3, **NOT** its walk, **NOT** `machine-fences.control.mjs` (RE-RUN unedited, all five arms). `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` ONLY — one key set). `docs/development/DEBT.md` (the D-230 row's disposition ONLY), `docs/development/MEASUREMENTS.md`, `docs/development/CLAIMS.md` (this entry). **NOT** `bio-plane/src/**` — nothing in the plane was changed. **NOT** `bio-plane/checks/**`, **NOT** any other `.test.mjs`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `agent-worker/**`, **NOT** `pdf-worker/**`.
+interfaces consumed: none
+interfaces owned: none — no op shape moved, no refusal was added, renamed or widened, and no DEC-49 region was touched. The defect D-230 names is in the CONTROLS and it is the controls that moved.
+expected: DEBT.md D-230 — eight identity refusals shadow a payload complaint and no suite pins any of them. **DONE: all eight pinned, in REC-73's shape one layer out.**
+what the shape is, stated precisely because it is a GENERALISATION of REC-73's rather than a copy: REC-73 varied the CALLER (machine, then member) because the twelve `MACHINE_CANNOT_*` fences guard WHO is acting. Only some of these eight do. So the rule one layer out is **flip ONLY the condition the refusal itself names, and show the act complete**. Where the condition IS the caller (`LEASE_HELD`, `NOT_AN_OWNER`, `NO_AUTHOR`) that is literally REC-73's arm; where it is a property of the target or of the bytes (`NOT_ACTIVE`, `NO_OWNERS`, `EDITION_NOT_INCREMENTED`, `BAD_HANDLE`, `NO_CASE`) the caller is held fixed and the named condition is the only thing that moves. Either way the success arm is what makes the payload PROVABLY complete.
+measured — **FIVE OF THE EIGHT ACTS GO ALL THE WAY THROUGH ONCE THEIR OWN GUARD IS REMOVED UNDER A COMPLETE PAYLOAD**, which is REC-73's finding arriving one layer out and is larger than the row predicted. A member ENROLLED under the handle `Hilda Krause`; a second member WROTE INTO a correspondence ledger another member was holding (ruth's entry landed at `ord` 1, so gus's had taken 0 — two accounts of one exchange interleaved, the precise harm `LEASE_HELD`'s own detail names); a REVOKED member BECAME A PROJECT OWNER; an administrator's 7.13 rescue CARRIED on a project that never had an owner; and a published case was RE-RATIFIED at edition 2 while edition 3 already stood. **The other three fell to the complaint sitting directly BEHIND the fence — `NO_CASE`→`NO_SUCH_CASE`, `NOT_AN_OWNER`→`LAST_OWNER`, `NO_AUTHOR`→`NO_REGISTER` — which is the shadow D-230 named, demonstrated rather than argued: an instrument driving those three with an incomplete payload would have read the refusal behind them and reported the fence proved.**
+three findings the row did not predict, and all three are about the SWEEP rather than the plane:
+  **(a) `NO_AUTHOR` IS UNREACHABLE THROUGH ITS OP, and the suite pins the unreachability rather than pretending to a pin.** `op=provenancechain` is not in `SESSION_OPS`, so a signed-in member is refused it outright ("requires a machine credential"); every machine class that CAN reach it is stamped `token:<class>` by the control plane before the store sees it, and that is never blank. MEASURED at all four caller classes: session → refused the op; admin class → `NO_REGISTER`; member class → `NO_REGISTER`; probe class → `NO_SUCH_BUNDLE`. **Not one reaches `NO_AUTHOR`.** It is driven at the Durable Object route where it IS reachable, and the op-level fact is asserted beside it both structurally and behaviourally. **A consequence worth CONDUCT's eye and deliberately not acted on here: the act REC-54's own comment calls "a named member's judgement" is one NO MEMBER CAN PERFORM — only a machine class can reach the op at all.** That is a doctrine question (REC-65 left the identity claim on this verb OPEN and routed it to CONDUCT), not a worker's, and widening it would be the mistake REC-71 exists to correct.
+  **(b) THE SWEEP'S IDENTITY CLASSIFIER IS GENEROUS BY DESIGN AND FOUR OF THE EIGHT ARE NOT IDENTITY GUARDS AT ALL.** It reads the 300 characters in front of a refusal for `author`/`owner`/`viewer`/`who`. In `enroll` the word `author` occurs inside the DETAIL STRING of `NO_HANDLE`, the refusal directly in front of `BAD_HANDLE`; in `#queueCaseFor` the word `viewer` is the method's own PARAMETER. `NOT_ACTIVE` and `EDITION_NOT_INCREMENTED` are likewise state/bytes checks that sat near ownership vocabulary. **This is exactly what D-230 predicted would turn up ("expect at least one to be fenced by something other than the refusal you are pinning") — and it errs in the direction REC-73 declared, reporting MORE work than exists rather than less. The pins are worth having anyway: three of those four went ALL THE WAY THROUGH when neutered.**
+  **(c) `EDITION_NOT_INCREMENTED` CANNOT BE REACHED THROUGH THE PUBLICATION CEREMONY AT ALL.** `publishCase` mints `MAX(published_cases.edition)+1` and a non-case ratification auto-increments, so the number never regresses and never leaves a hole below itself. The ONLY route is an edition AUTHORED INTO THE RATIFIED BYTES that is lower than the highest published — which is precisely what the refusal guards, since DEC-12 takes the edition from the bytes the signature covers. The arm therefore publishes a real case through `op=publish`, ratifies it, and then revises it with real signatures and a rewritten edition scalar. **Two things that cost measurements and are recorded at the site: C-21.1 refuses a completeness claim carried forward, so a fresh edition's four sentences must be authored or the GATE is what answers and the edition refusal is never reached; and C-12.2 reads the snapshot key out of the history FILENAME and demands the `<YYYYMMDD>T<HHMMSS>Z_<8 hex>` shape, so a free-form `snapKey` promotes fine and then fails the ratification gate.**
+accepts-when: all eight driven under a payload complete but for the condition each guards, each answering BY NAME, each followed by the same act driven to SUCCESS; the set pinned in BOTH files so it cannot drift either way; every control arm run.
+numbers: **baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT, on a quiet tree: 133/133 suites green · 8,319 assertions · 114.6s · exit 0**, provenance `135 of 135 discovered item(s) are in the commit at HEAD (bb426ac)`, `git status --short` empty. The worktree arrived at `bb426ac`, level with `origin/main`, and WITHOUT `bio-plane/node_modules`; `npm ci` was run. **The brief quoted REC-73's sweep as 380 methods / 111 identity refusals / 66 shadowing; this worktree MEASURES 394 / 114 / 68 — the figures moved with unrelated growth in `store.mjs`, and the EIGHT UNPINNED CODES are unchanged, which is the part the row rests on.** REC-78's own suite: 44 assertions. Its walk prints 394 methods and 497 refusal sites.
+floors: `REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` moved UPWARD to the figures a green `--strict` run PRINTED as REPRODUCIBLE (never counted, never incremented by hand). **ONE KEY SET — if this conflicts at integration, COLLAPSE TO ONE and re-read the printed figures.** The suite's own two walk floors are BLINDNESS floors rather than ratchets and say so at the site: a ratchet over the plane's refusal count would fail every time unrelated work retires a refusal, which is not this item's subject, while a blind walk does not drop by ten but to nearly nothing. No DEC-49 floor is touched — no refusal was added or moved.
+what came back WRONG, recorded rather than smoothed: **CONTROL ARM (10) — the blindness arm — did not fail as declared on its first run. It came back `THE SUITE NEVER REACHED ITS FOOT`.** With the walk blinded there were no refusal sites, the shadow table's print loop dereferenced a null, and a `TypeError` ended the MODULE through no assertion at all — taking all eight pins with it while the three arms that SHOULD have spoken were the only ones that had. Caught only because the harness READS THE FOOT LINE instead of trusting the tally and reports a missing one as `-1`. Corrected at the site with the receipt in the comment; the arm then behaved exactly as declared (41 pass, 3 FAIL, all eight pins green). **Every other arm behaved as declared on every run, including all five of REC-73's when re-run.**
+concurrency: checked over the whole file. No live claim names `shadowed-refusals*`, `machine-fences.test.mjs`, or any of the eight codes. `coverage.mjs` IS opened by other live claims for `REGISTER_FLOOR` and nothing else — same key set, same instruction.
+released:
+
+### DELEGATION 2026-08-08 PLANE-TEST (REC-78) -> WHOEVER TAKES THE NEXT LAYER: **THE TWO DEEPEST SHADOWS ARE STILL UNMEASURED, AND THEY WERE EXCLUDED ON PURPOSE**
+
+`NOT_THE_OWNER` in `promote` shadows **18** refusals and `CAS_STALE` shadows **17** — the two
+deepest in the whole file and both outside the twelve. Both are PINNED by existing suites that
+they FIRE; neither has been shown to be WHAT fires. REC-73 excluded them deliberately and
+REC-78 did too, because widening an item to reach them is the mistake REC-71 exists to correct.
+
+**What makes them harder than the eight, so the next item can size it.** The eight each had one
+condition that could be flipped in isolation. `promote`'s `NOT_THE_OWNER` sits in front of
+eighteen distinct payload refusals in the plane's single largest write path, so "a payload that
+would otherwise succeed" means a promotion that passes every one of them — which is the whole
+of `promote`'s contract, driven once per arm. `CAS_STALE` is worse in a different way: the
+condition it guards is a RACE, and flipping only that condition means arranging a live
+concurrent write rather than a fixture.
+
+**And a smaller one, same class, cheaper:** REC-78 measured that four of its eight were swept in
+by the classifier's 300-character window reading a refusal's own DETAIL STRING or a method
+PARAMETER as identity vocabulary. The window is generous on purpose and errs safely, but a
+sweep that distinguished "identity vocabulary in CODE" from "identity vocabulary in a STRING"
+would report a materially smaller and more honest estate. That is an instrument change, not a
+plane change.
+
+### DELEGATION 2026-08-08 PLANE-TEST (REC-78) -> CONDUCT: **THE ACT REC-54 CALLS "A NAMED MEMBER'S JUDGEMENT" IS ONE NO MEMBER CAN PERFORM**
+
+MEASURED, not read off a comment: `op=provenancechain` answers a signed-in session
+`"this operation requires a machine credential, not a signed-in session"`. It is not in
+`SESSION_OPS`. So reconstructing a provenance chain — the act D-200 exists to keep honest, and
+whose store-level guard `NO_AUTHOR` says "the record must show who decided that the evidence
+supported this route" — is reachable ONLY by a machine class, every one of which arrives stamped
+`token:<class>`. The name against every such act is therefore a machine's, always.
+
+REC-65 left the identity claim on this verb **OPEN** and routed it to CONDUCT
+(`identity-claims.test.mjs` pins it as a known-open finding). This is the same question with a
+measurement attached, and it sharpens it: the open question was *should a machine be refused
+this act*, and the measured answer is that a machine is the only caller who can take it.
+**REC-78 neither fenced it nor widened `SESSION_OPS` — both would be deciding doctrine nobody
+asked for.** `NO_AUTHOR` is pinned at the Durable Object route where it IS reachable, and the
+op-level unreachability is pinned beside it, so whichever way this is ruled the suite fails
+rather than drifting.
+
