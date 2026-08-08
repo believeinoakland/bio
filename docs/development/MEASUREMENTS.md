@@ -3610,3 +3610,163 @@ three separate walks this week reported a clean verdict over an empty corpus.
 the argument): a 220-character negation window called **141** mentions of real ops claims
 that they do not exist; tightened to +110/-40 it still called **48**, and every one
 inspected was noise. See `VERIFICATION.md`'s section for the four worked examples.
+
+## 2026-08-08 · M-4 — do REFERENCE STRINGS vary the way LABELS do? The number REC-40's third tier shipped without
+
+**Why measured.** REC-40 widened the name index from the label alone to all three
+strings a reading reference carries, and gave the two PARTIAL correspondences —
+a registered name sitting INSIDE a longer string, `name_in_reference` and
+`name_in_label` — their own ranks below every whole match, with no grade. **The
+posture was honest and the number behind it did not exist.** REC-36's n=41
+variance probe (2026-08-04, above) was run over **labels**; its findings were
+then quoted for the reference tiers, and nobody had established that reference
+strings vary the same way. A number taken over one population and quoted about
+another is not a measurement of the second. That is M-4, and it is `CLAUDE.md`'s
+*measure, do not assume* applied to this project's own record.
+
+**Instrument.** `bio-plane/test/ref-variance-probe.mjs`, re-runnable
+(`node test/ref-variance-probe.mjs`, exit 0 = every gate held). NOT in the
+battery — `scripts/battery.mjs` and `scripts/coverage.mjs` both discover
+`*.test.mjs` and this is a `.probe.mjs`, so it joins nothing and no skip marker
+exists to rot. Its controls are `bio-plane/test/ref-variance.control.mjs`
+(`node test/ref-variance.control.mjs`), four arms, RUN — see below.
+
+**It measures BOTH populations in ONE run, deliberately.** REC-36's label
+findings are RE-MEASURED here rather than cited, so the comparison is between two
+measurements taken by one matcher on one day and not between a measurement and a
+figure carried in a document. **REC-36's headline numbers still hold exactly:
+0 whole-label matches, 15 substring, 15 all-terms, over 33 names x 41 labels.**
+
+**Population, stated because the item exists for a population error.** The same
+ONE real captured document REC-36 used — `test/fixtures/legistar-agenda-1425405.pdf`,
+oakland.legistar.com `View.ashx?M=A&ID=1425405`, the *Rules & Legislation
+Committee supplemental agenda for 2026-07-16, fetched 2026-08-03, 276,421 bytes,
+33 pages — read through the plane's own Tier-1 extraction (`src/pdfstructure.mjs`)
+and the REAL reader (`docprofile`'s `meeting_agenda` doctype, detected `certain`).
+**n = 41 reading references**, each contributing up to three strings: `ref` (41),
+`ref_key` (41), `label` (41). These are the exact strings `#writeReadings`
+persists, including the `ref` it COMPOSES. The 33 probe names are REC-36's own
+construction, taken FROM the document (its body name, its `From:` offices, the
+counterparties and places its item titles name); the alias strings used to probe
+the reference population are taken from the reference population itself. Nothing
+is a fixture written to agree.
+
+### The numbers
+
+| # | finding | measured |
+| --- | --- | --- |
+| 1 | **A subject name taken from the document is never anywhere in a reference string** — not whole, not as a substring, not as a term subset. Over labels the same 33 names hit 15. | ref **0 / 0 / 0**, key **0 / 0 / 0**, label **0 / 15 / 15** (whole / substring / all-terms), over 33 names x 41 strings |
+| 2 | **A term of a reference reaches most of the corpus; a term of a label reaches a twelfth of it.** Row-weighted mean document frequency — draw a term at random from a string of the population and ask how much of the corpus it reaches. | ref **67.5%** (27.67 of 41), key **51.2%** (21.00 of 41), label **8.3%** (3.40 of 41). **An 8.1x difference in selectivity between the two populations.** |
+| 3 | **Two of the reference population's 43 distinct terms reach EVERY string, and they carry two thirds of the index.** No label term reaches every label. | ref: **2/43** terms corpus-wide (`legislation`, `26`), carrying **82 of 123 rows (66.7%)**; key: **1/42** (`26`), **41 of 82 (50.0%)**; label: **0/194**, **0 of 305** |
+| 4 | **The worst single-term alias reaches the WHOLE corpus at the partial-reference tier, and NOTHING at the label tier.** | `"legislation"` → **41/41 (100%)** references at `name_in_reference`; the same string → **0/41** labels. `"26"` → 41/41. The label population's worst term, `"and"`, reaches **15/41 (36.6%)** |
+| 5 | **The partial-reference class is BIMODAL, and that is the finding the ranking turns on.** A firing alias is either the source's own identifier respelled — the strongest correspondence in the corpus in substance — or a vocabulary token that corresponds to nothing at all. Nothing sits between them. | `"legislation 26-0844"` (the reference with a space for its colon) → **1/41**; `"0844"` → 1/41; `"legislation"`, `"26"` → 41/41 |
+| 6 | **Every variance class REC-36 measured over labels is ABSENT from the reference populations.** They are not noisy strings; they are not natural language. | comma, apostrophe, ALLCAPS token, non-ASCII, whitespace, line-wrap truncation: **0/41 on both ref and key**; on labels 7, 0, 17, 1, 41, 3 of 41 respectively |
+| 7 | Terms per string, and what REC-40's widening cost this document's index | ref **3/3/3**, key **2/2/2**, label **2/8/12** (min/median/max). **510 index rows where REC-36's label-only index wrote 305 — +205, +67.2%**, for this one document |
+| 8 | **STRUCTURAL, and a different kind of evidence: it reads the tree, not the corpus.** `docprofile`'s `entity(key, kind, label, facts)` helper emits no `ref` of its own, and `#writeReadings` composes `kind:key`. Two of five doctype files emit entities at all, with one kind value each. | `entity()` emits a ref: **false**; composition confirmed **true**; kinds in the whole tree: `legislation`, `meeting` |
+
+### What it means, and it is loud
+
+**REC-36's n=41 DOES NOT TRANSFER, and the reason is structural rather than
+statistical.** A label is prose the reader transcribed out of the document; a
+reference string in this tree is **machine-composed from a closed kind vocabulary
+plus a source-assigned key**, and it is not sampled from the same kind of thing at
+all. Findings 1 and 6 are not sampling artefacts — no amount of extra corpus puts
+a person's name inside `legislation:26-0844`.
+
+**THE TIER'S POSTURE IS VINDICATED, and by more than REC-40 claimed for it.** A
+partial match inside a reference string is not a weak name correspondence; on this
+corpus it is not a name correspondence at all. Carrying no grade is correct, and
+finding 1 says so from the other direction: the 33 names a member could plausibly
+register against this document reach the reference populations zero times by any
+method.
+
+**THE RANKING BETWEEN THE TWO PARTIAL TIERS IS CONTRADICTED BY THE ONLY NUMBER WE
+HAVE.** `Store.#CORRESPONDENCE_RANK` places `name_in_reference` ABOVE
+`name_in_label`, so a partial-reference candidate is offered to a member first.
+Measured, a term of a reference is **8.1x less selective** than a term of a label
+(finding 2), two reference terms reach the entire corpus where no label term does
+(finding 3), and the single worst alias reaches **41/41 references and 0/41
+labels** (finding 4). **On this corpus the partial-reference tier is the weakest
+evidence available, not the second-weakest, and it is ranked as the second
+strongest of the three name tiers.**
+
+**But swapping the two ranks is NOT what this measurement recommends**, because
+finding 5 says one rank cannot represent the class: the same tier holds
+`legislation 26-0844` (one reference, the source's own identifier respelled around
+a punctuation mark `#normAlias` does not fold) and `legislation` (all 41,
+corresponding to nothing). **What separates them is SELECTIVITY, which is
+measurable at read time and is not a property of the tier.** The exposure is the
+record OVER-OFFERING rather than over-claiming — no grade is minted, nothing is
+established — but a member offered 41 candidates for a subject whose only
+correspondence is the reader's own kind word is being invited to confirm a
+correspondence no string ever made, which is the direction `src`-in-the-key
+already refuses one level down.
+
+**ROUTED TO CONDUCT for a queue row** (`QUEUE.md` has one writer): rank or gate the
+partial tiers by measured selectivity rather than by a fixed order, with this
+measurement as the evidence and finding 5 as the reason a rank swap alone is the
+wrong fix. **No code was changed by this item and none should be** — M-4 is
+measurement work, it commits no behaviour, and the battery moved by zero.
+
+### The gates, and the control that makes them evidence
+
+**This probe's most likely lie is a triumphant row of zeroes**, so the gates run
+before any number is printed and the controls break each gate's subject:
+
+- **G1 the corpus is real and non-empty**, and `ratio()` **REFUSES** a denominator
+  of zero rather than printing `0/0`. That guard is RUN on every run (gate (f)),
+  not asserted — one control in this project once passed while asserting nothing
+  because its loop body was never entered.
+- **G2 the fold measured is the fold the plane performs — and it is the plane's own
+  source text, EXECUTED.** The probe reads `Store.#normAlias` and
+  `Store.#labelTerms` out of `src/store.mjs`, refuses to run unless they are the
+  text it was written against, and then runs THAT text; the five correspondence
+  names and their order are read from `Store.#CORRESPONDENCE` /
+  `#CORRESPONDENCE_RANK` rather than restated. REC-36's probe copied the normaliser
+  and relied on a suite elsewhere to hold the pair equal; for an item whose whole
+  subject is a figure carried between populations, one copy was one too many.
+- **G3 a five-arm positive control**, because a broken matcher and a real absence
+  print the same line: the corpus's own first reference must match WHOLE, its key
+  must match at the key tier, **the same reference respelled must reach the
+  partial-reference tier** (the arm this item turns on), a string the corpus cannot
+  contain must reach nothing, and a name that normalises to no terms must reach
+  nothing rather than everything.
+
+**Controls RUN 2026-08-08, `node test/ref-variance.control.mjs` → 4 pass, 0 fail**,
+every edited file restored and the restore ASSERTED by sha256 rather than
+eyeballed:
+
+| arm | broken | the probe's answer |
+| --- | --- | --- |
+| (a) | `.toLowerCase()` dropped from `Store.#normAlias` in `src/store.mjs` | REFUSES — *Store.#normAlias has changed* |
+| (b) | pointed at a fixture that does not exist | REFUSES — *the corpus could not be read* |
+| (c) | `candidates()` returns nothing | REFUSES at positive control (a) — **the arm that turns finding 1's zeroes from a printout into a measurement** |
+| (d) | the every-term subset test dropped, so any alias matches any string | REFUSES at positive control (d) — without it a matcher that matched EVERYTHING would pass (a)–(c) and inflate finding 4 to 41/41 for every term, manufacturing this entry's headline |
+
+### WHAT THIS DOES NOT SETTLE
+
+- **It does not decide the ranking.** It makes the cost of the current one
+  knowable; the design — rank swap, selectivity floor, or dropping the kind token
+  from the `ref` term source — is a decision the queue row must make, and each has
+  a different casualty. (Dropping the kind token would remove the `legislation`
+  row and also stop an alias registered as the whole reference from being offered
+  at all, which is the tier REC-40 exists to restore.)
+- **One corpus, one doctype, one institution, one reader, ONE kind value.** Every
+  selectivity figure is corpus-relative and will move with the corpus. That is
+  itself an argument for measuring selectivity at read time rather than freezing a
+  rank against this document.
+- **No entity registry was sampled, because there is no real one to sample.**
+  Finding 4 is what WOULD happen to a member who registers `Legislation` as an
+  alias of the *Rules & Legislation Committee* — plausible, and not observed.
+  Nothing here says any registry contains such an alias.
+- **It does not say whether a SOURCE spells its own identifiers consistently.**
+  Each of the 41 keys occurs exactly once in this document (1.0 occurrences per
+  string), so the zero on that arm is arithmetic, not evidence — **the instrument
+  prints `UNINFORMATIVE` on that row itself** rather than letting the zero be read
+  as a finding. Answering it needs a second capture of the same body.
+- **It measures nothing about the A/B/C WHOLE tiers' precision**, which are
+  unaffected: `#recogniseTier` reads `reading_refs` directly and never the term
+  index, so what is offered and what would be graded are different questions.
+- **Finding 8 expires the day a reader supplies its own `ref`.** `#writeReadings`
+  honours `e.ref` when a reading carries one; no reader in this tree does, and the
+  probe FAILS rather than reprinting the conclusion if that changes.

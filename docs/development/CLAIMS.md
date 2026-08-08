@@ -3538,3 +3538,12 @@ M0-11's over-strictness arm (i) **reordered two published keys** in `publishedCa
 - **Five of the five new arms are M0-11's own** (block 8's (e)..(i) in `publishedcase.test.mjs`), so unlike the last five reports of this row, this one IS attributable — but the row belongs to whoever integrates, because several workers are running and two items moving one shared figure in parallel is a merge CONDUCT has to resolve for no gain.
 - **`REGISTER_FLOOR.arms` in `scripts/coverage.mjs` HAS been moved 471 -> 476 in this claim**, from the printed figure, because that one is the GATE and leaving it low is slack in a ratchet. The document row is the copy, not the gate.
 - **This is the sixth consecutive item to find that row stale by measuring it.** The row's own subject, answered in practice.
+
+## CLAIM 2026-08-08 MEASUREMENT (M-4)
+session: m4-agent
+opened: 2026-08-08T00:00:00Z
+paths: bio-plane/test/ref-variance-probe.mjs and bio-plane/test/ref-variance.control.mjs (both new), the M-4 section appended to docs/development/MEASUREMENTS.md
+interfaces consumed: none
+interfaces owned: none
+expected: M-4 — the partial-reference tier ships UNMEASURED. Re-run REC-36's variance measurement over REFERENCE STRINGS (`reading_refs.ref` and `ref_key`) rather than over labels, record n / instrument / population / date, and state what it does and does not license. MEASUREMENT ONLY: no op, field, shape, surface or behaviour changes, and the instrument is a `.probe.mjs` so `scripts/battery.mjs` (which discovers `*.test.mjs`) does not run it. Holds no area slot.
+released: 2026-08-08 — done and committed on branch `worktree-agent-ad6cca371e6828415`, NOT pushed (CONDUCT integrates). No plane, surface or schema path was edited; the battery moved by ZERO (125/125 · 7,872 before and after). The measurement VINDICATES the tier's no-grade posture and CONTRADICTS the ORDER of the two partial correspondences in `Store.#CORRESPONDENCE_RANK` — routed to CONDUCT for a queue row rather than fixed here, because `QUEUE.md` has one writer and this item may change no behaviour.
