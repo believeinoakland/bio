@@ -170,8 +170,16 @@ arm({
   replace: `  await askPlane(env, "purge", credential, store);\n  const asked = await askPlane(env, "whoami", credential, store);`,
   run: () => {
     const r = runSuite();
-    const behavioural = r.failed.some((l) => /record's sha256 is unchanged|record is empty and stayed empty|none of them wrote anything/.test(l));
-    const sourceScan = r.failed.some((l) => /pinned op set|no mutating op name/.test(l));
+    /* MATCHERS UPDATED BY FL-3 with the arms they read. The labels this arm
+       watched (`record's sha256 is unchanged`, `none of them wrote anything`)
+       were CORRECTED when `/run` gained the IS-9 table — a member that logs
+       every step legitimately moves the record. The RULE this arm proves is
+       unchanged and is now sharper: an op nobody decided to give this member
+       must not move the record. A control whose matcher no longer names any
+       real assertion is a control that reports green forever, which is the
+       defect this whole file exists to prevent. */
+    const behavioural = r.failed.some((l) => /record moved only through ops in the pinned set|wrote through an op outside the pinned set|credential scope can declare/.test(l));
+    const sourceScan = r.failed.some((l) => /in the pinned set|agent-write declaration|AI_RUN_ACTIONS/.test(l));
     const refusalsHeld = !r.failed.some((l) => /-> 40[01] |-> 404 UNKNOWN|names its own build/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · behavioural ${behavioural ? "FAILED" : "held"} · source-scan ${sourceScan ? "FAILED" : "held"} · refusal arms ${refusalsHeld ? "held" : "ALSO FAILED"}`,
@@ -194,7 +202,7 @@ arm({
     const r = runSuite();
     const oneCred = r.failed.some((l) => /exactly one distinct credential/.test(l));
     const compiledIn = r.failed.some((l) => /no credential is compiled in/.test(l));
-    const writeHeld = !r.failed.some((l) => /record's sha256 is unchanged/.test(l));
+    const writeHeld = !r.failed.some((l) => /record moved only through ops in the pinned set/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · one-credential ${oneCred ? "FAILED" : "held"} · compiled-in-credential ${compiledIn ? "FAILED" : "held"} · write arm ${writeHeld ? "held (as declared)" : "also failed"}`,
       asDeclared: r.ran && oneCred && compiledIn && writeHeld,
@@ -209,7 +217,16 @@ arm({
   mustFail: "the URL-literal source arm, the workers.dev arm, the bare-fetch arm, and the round trip itself",
   mustNot: "the config arms (wrangler.jsonc is untouched) and the manifest arms",
   file: SRC,
-  find: `    res = await env.PLANE.fetch(url);`,
+  /* PATCH STRING UPDATED BY FL-3, AND THE HARNESS CAUGHT ITS OWN STALENESS. FL-3
+     gave `askPlane` a body and a query, so `env.PLANE.fetch(url)` became
+     `env.PLANE.fetch(url, ...)` and this arm matched ZERO times — reported as a
+     FINDING ("the arm did not arm") rather than as the green run underneath it,
+     which is exactly what that rule is for. A control arm keyed to a source line
+     is a control arm that goes stale when the line moves, and the only defence
+     is a harness that refuses to score an arm it never armed. */
+  find: `    res = await env.PLANE.fetch(url, body == null ? undefined : {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+    });`,
   replace: `    res = await fetch("https://bio-plane.20b533579290b9b93168345edd3b7f72.workers.dev/?op=whoami");`,
   run: () => {
     const r = runSuite();
@@ -235,8 +252,8 @@ arm({
   replace: `  await askPlane(env, "instance", credential, store);\n  const asked = await askPlane(env, "whoami", credential, store);`,
   run: () => {
     const r = runSuite();
-    const pinned = r.failed.some((l) => /pinned op set|exactly one op was named/.test(l));
-    const writeHeld = !r.failed.some((l) => /record's sha256 is unchanged/.test(l));
+    const pinned = r.failed.some((l) => /in the pinned set|agent-write declaration/.test(l));
+    const writeHeld = !r.failed.some((l) => /record moved only through ops in the pinned set/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · pinned-op-set ${pinned ? "FAILED" : "held"} · write arm ${writeHeld ? "held (as declared — the gained op is non-mutating)" : "also failed"}`,
       asDeclared: r.ran && pinned && writeHeld,
@@ -258,7 +275,7 @@ arm({
     const r = runSuite();
     const band = r.failed.some((l) => /measured 100-150 band/.test(l));
     const exact = r.failed.some((l) => /default bound is 120/.test(l));
-    const scanHeld = !r.failed.some((l) => /no \.put\(|pinned op set|account_id is PINNED/.test(l));
+    const scanHeld = !r.failed.some((l) => /no \.put\(|in the pinned set|account_id is PINNED/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · band arm ${band ? "FAILED" : "held"} · exact-value arm ${exact ? "FAILED" : "held"} · source scans ${scanHeld ? "held" : "also failed"}`,
       asDeclared: r.ran && band && exact && scanHeld,
@@ -278,7 +295,7 @@ arm({
   run: () => {
     const r = runSuite();
     const verbatim = r.failed.filter((l) => /plane's (code|C-number|canned translation) is UNCHANGED/.test(l)).length;
-    const restHeld = !r.failed.some((l) => /record's sha256|pinned op set|the class comes from the PLANE/.test(l));
+    const restHeld = !r.failed.some((l) => /record moved only through ops|in the pinned set|the class comes from the PLANE/.test(l));
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · ${verbatim} of 3 verbatim arms FAILED · everything else ${restHeld ? "held" : "also failed"}`,
       asDeclared: r.ran && verbatim === 3 && restHeld,

@@ -2141,3 +2141,134 @@ UI harness exit 0, **the DEC-49 guard's output byte-identical to baseline** (no 
 moved and none owed — no member receives this Worker's codes), and `bio-plane/src/**` not
 edited. The single plane-side change is one `services` entry in `bio-plane/wrangler.jsonc`,
 inert until DIST deploys the member — **the same posture `PDF_WORKER` shipped in.**
+
+---
+
+## IC-33 · I8: `POST /run` gains the IS-9 control-flow table, and the "calls no mutating op" fence is CORRECTED to a pinned set · PROPOSED 2026-08-08 (FL-3 / IS-9) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED — FLEET, 2026-08-08
+
+**Interface:** I8 (`plane ↔ agent-worker`), owner FLEET, at 0.1.0 PROVISIONAL. **I3 IS
+NOT CHANGED — this item adds no op, no table and no check family.** It CONSUMES ops that
+PL-3, PL-4, PL-5, PL-9 and PL-12 already landed.
+
+**The change, in two parts.**
+
+**(a) `POST /run`'s shape.** In: two optional fields, `judgements[]` (one per JUDGED row
+of the control-flow table, consumed in order) and `max_steps` (a ceiling on table rows
+walked in one invocation, ≤ 400). Out: nine additive fields — `trace[]`, `mode`,
+`passes`, `resumed_from`, `logged`, `submitted`, `adjusted`, `refusals[]`,
+`verbatim_resubmits`, `budget[]`, `ended` — plus `judgement_source`. **One field CHANGES
+VALUE rather than being added: `stage` moves from `"round-trip"` to `"harness"`.**
+`turns_run` stays `0`. Nothing is removed: FL-2's own DELEGATION to this item said *"do
+not delete those two fields — replace their values"*, and `"round-trip"` had become a
+false statement about what ran.
+
+**(b) THE FENCE, AND THIS IS THE PART THAT NEEDS A DECISION RATHER THAN A NOTE.** I8's
+registry entry and `agent-worker/src/index.mjs` both say **"it calls no mutating op."**
+FL-3's acceptance cannot be reached under that sentence: *a budget exhaustion writes
+`runtime-ceiling-reached`* needs `op=airuntick`, and *a refusal is followed by an ADJUSTED
+submission in the trace* needs `op=suggest`. The sentence is replaced by its true shape:
+
+- **an EXACT PINNED SET** of nine ops (`harness.mjs PLANE_OPS`), floor and ceiling both;
+- **every MUTATING member of that set must be one PL-11's `AI_RUN_ACTIONS` declares**,
+  asserted against `bio-plane/src/index.mjs`'s own source rather than a list kept in the
+  member — so the record's declaration of what an agent's task scope may cover is the
+  authority, and the plane's list shrinking fails the member's suite;
+- **no scope, no class and no allow-list in the member.** D-199 (2) is untouched: naming
+  an op the credential does not declare earns the plane's `AI_BEYOND_TASK_SCOPE`, passed
+  through verbatim.
+
+**Why the old sentence was tighter than the rule it enforced.** The FLEET plan row says
+*"writes nothing DIRECTLY"*; PARALLELISM's fleet rule 2 says a member *"returns derived
+output and writes nothing: no register row, no provenance, no capture"*; and PL-11's `ai`
+credential class is specified as *"writes ONLY PL-3's endpoint and PL-4's table"* — **a
+scope with no consumer if the member holding the credential may never name those ops.**
+FL-2 made one read and could honestly promise the stronger sentence; FL-3 is the item
+where that promise stops describing the design. The property FL-2 was protecting is
+untouched and re-asserted: ONE binding, no store binding, no R2, no credential of its
+own, no provenance this member writes, and a refused call still leaves the record
+byte-identical.
+
+**The alternative that was considered and rejected on a measurement.** The member could
+return an ordered PLAN OF ACTS and let the plane perform every write — which is fleet rule
+2 read at its most literal. **It is unbuildable from this item and would be wrong
+anyway.** Unbuildable: the plane's calling side is `RECORD`'s, `bio-plane/src/**` reads
+`env.AGENT_WORKER` nowhere, and FL-3 cannot edit those paths without breaking its own
+claim. Wrong: it moves the loop into the plane, and the FLEET track's stated intent is
+that *"the plane grows no model runtime"*.
+
+**Consumers affected, and each answers for itself below:** `RECORD` (owns the calling
+side — **not yet implemented**, so nothing to migrate), `DIST` (DS-1 installs, DS-4
+deploys — **shape only, no deploy in this item**), `FLEET` (owns the code; FL-5 and FL-6
+build on this table).
+
+### 2 · RESPONSES
+
+- **FLEET — AGREE.** It owns both halves and files the change.
+- **RECORD — NOT-AFFECTED, and it is a measurement rather than a courtesy.** `grep -a
+  AGENT_WORKER bio-plane/src/` returns nothing: the binding is declared in
+  `bio-plane/wrangler.jsonc` and read by no code. No plane source is edited by this item,
+  no op is added, no check family is minted, and no floor moves. There is nothing to
+  migrate because nothing on the plane's side calls this member yet.
+- **DIST — NOT-AFFECTED TODAY, WITH ONE THING TO CARRY.** No deploy, no version bump, no
+  tag. DS-4's rollout gate gains no new subject. What DS-1 must carry is unchanged from
+  FL-2's delegation: the member's `PLANE` binding must be TEMPLATED from the instance
+  slug, because an installed instance's plane worker name is per instance (D-102).
+- **`CONTENT-PDF` — NOT A CONSUMER of I8.** Named only because the `/version` gap
+  delegated at IC-32 is still open for `pdf-worker`.
+
+### 3 · RESOLUTION — **CONDUCT's, and the version bump is CONDUCT's**
+
+FLEET's recommendation: **accept (a) and (b), and KEEP I8 at 0.1.0 PROVISIONAL.** The
+re-read this entry's registry section scheduled on FL-3 was performed and its verdict is
+recorded in `INTERFACES.md` under "The FL-3 re-read": the shape moved in this same item,
+two of the three open-before-STABLE conditions are still open (FL-6's cascade, DS-4's
+deploy), and **the interface has one implemented end.** An entry whose central prohibition
+was rewritten this week is not a settled contract, and marking it STABLE would claim a
+verification nobody performed — which is the same reasoning IC-32 used to refuse STABLE
+at registration, applied to itself one item later.
+
+**If CONDUCT prefers 1.0.0 now**, the shape in `INTERFACES.md` is written from the code as
+it stands and needs no further reading; the disagreement would be about what STABLE means
+here, not about what the code does.
+
+**CONDUCT, 2026-08-08 — ACCEPTED IN FULL, AND I8 STAYS AT 0.1.0 PROVISIONAL. There is no
+disagreement to resolve, and FL-3's third reason is the one that settles it:
+`grep -a AGENT_WORKER bio-plane/src/` RETURNS NOTHING. The plane's calling side does not
+exist.** An interface whose entire reason for being separate from I6 is that trust runs in
+BOTH directions has **one implemented end** — so STABLE would not be a slightly generous
+reading, it would be a claim about a direction no code takes. **That is precisely the
+generous-direction failure this project keeps meeting** (`coverage.mjs` crediting a member's
+surface from a source read while its suite ran nowhere; a fleet figure holding still while a
+component went dark), and refusing it here costs nothing.
+
+**AND THE FENCE CORRECTION IS THE LOAD-BEARING HALF OF THIS IC — ACCEPTED, with the reasoning
+recorded because it is a lesson about how a fence gets written.** FL-2's
+`"it calls no mutating op"` was **TIGHTER THAN THE RULE IT ENFORCED.** The plan row says the
+member *"writes nothing DIRECTLY"*; PL-11's `ai` class is specified as writing *"ONLY PL-3's
+endpoint and PL-4's table"* — **so FL-2's fence made PL-11's declared scope a scope with no
+consumer, and FL-3's acceptance unreachable.** Two correct items, each right alone, meeting
+at a reach nobody chose — the same shape DEC-65 records one layer over. **The fix is a
+PINNED SET OF NINE OPS where every mutating member must be one PL-11's `AI_RUN_ACTIONS`
+declares, READ FROM THE PLANE'S OWN SOURCE** rather than listed here, so the two cannot
+drift. **The rejected alternative is recorded with its measurement rather than its taste:**
+having the member return a plan for the plane to write is architecturally purer and is
+**unbuildable from here** — `RECORD` owns the calling side, which does not exist — and it
+moves the loop into the plane against the FLEET track's stated intent.
+
+**A FENCE THAT IS TIGHTER THAN ITS RULE IS NOT A SAFER FENCE.** It is an undeclared
+interface change wearing the costume of caution, and it is invisible until the item that
+needs the reach arrives — one wave later, in this case. Worth carrying forward: when you
+write a fence, pin it to the RULE's own text or to a set the rule's owner exports, never to
+a stricter sentence of your own.
+
+### 4 · CHANGED / 5 · SETTLED — CONDUCT, 2026-08-08
+
+**SETTLED.** `INTERFACES.md` carries I8 at **0.1.0 PROVISIONAL** with FL-3's re-read and its
+close-out checklist; the fence is the pinned nine-op set read from `AI_RUN_ACTIONS`. `I3` is
+NOT bumped — no op, table or check family was added — and `I6` is untouched. Measured at
+integration rather than taken on report: battery **123 suites / 122 green + 1 named skip at
+7,659**, `--strict` exit 0 with the fleet at 2 members / 3 ops and `agent-worker` now
+carrying two suites, UI harness exit 0, and **the DEC-49 guard unmoved because the guard
+walks `bio-plane/src` and `checks` and this item touched neither.**

@@ -26,7 +26,7 @@
  * one directory out.
  */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/agent-worker.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and neither the battery nor the fleet walk must discover it (PL-3/PL-4/PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once already. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
-   ALL TWELVE ARMS RUN 2026-08-08 IN WORKTREE agent-ad2c65dacc2cd14ed, baseline 89/0 before each; every one AS DECLARED on the recorded pass. Figures below are MEASURED. **TWO ARMS CAME BACK WRONG FIRST AND BOTH WERE FINDINGS ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed** (see A2 and A3).
+   ALL TWELVE ARMS RUN 2026-08-08 IN WORKTREE agent-ad2c65dacc2cd14ed, baseline 89/0 before each; every one AS DECLARED on the recorded pass. **RE-MEASURED 2026-08-08 BY FL-3 IN WORKTREE agent-ad6e5ed43aac4a2ab, because FL-3 changed this suite and the figures below went stale the moment it did — corrected, never left standing.** New baseline **98/0**; all twelve arms AS DECLARED again. Re-measured figures: A1 91/7 · A2 95/3 · A3 61/37 · A4 94/4 · A5 91/7 · A6 95/3 · V1-V5 unchanged (they read the instrument, not this suite) · O1 98/0 with coverage --strict exit 0. **TWO CONTROL DEFECTS THIS ITEM INTRODUCED AND FIXED, RECORDED RATHER THAN SMOOTHED:** (i) A3's patch string went stale when FL-3 gave `askPlane` a body, so the arm matched ZERO times and reported "THE ARM DID NOT ARM" — a control keyed to a source line goes stale when the line moves, and the only defence is a harness that refuses to score an arm it never armed; (ii) once re-armed, A3 KILLED this suite (`0 pass, -1 FAIL`) because FL-3's new arms read `after.log[0].op` and A3 leaves the mock's log EMPTY. The CLASS was swept across BOTH suites, not the site that bit.  Figures below are MEASURED. **TWO ARMS CAME BACK WRONG FIRST AND BOTH WERE FINDINGS ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed** (see A2 and A3).
    (A1) FL-2'S NAMED CONTROL, HALF ONE — A DIRECT WRITE. In src/index.mjs make the member call the plane's MUTATING `op=purge` beside its read -> **83 pass, 6 FAIL**: the BEHAVIOURAL arm fails (the plane record's sha256 MOVES) AND the source-scan arm fails (the pinned op set is no longer exactly {whoami}). Held as declared: every refusal arm, the version endpoint, the bound.
    (A2) FL-2'S NAMED CONTROL, HALF TWO — A SECOND CREDENTIAL. Call the plane again under a token of the member's own -> **86 pass, 3 FAIL** (one-credential arm + compiled-in-credential arm); the write arm HELD, which is why this is armed separately: a member may write nothing and still act as somebody it was not handed. **THIS ARM CAME BACK HALF-GREEN FIRST AND THE SOURCE SCAN WAS WRONG:** it read `/aik-[0-9a-f]/`, and a credential spelled `"aik-" + "f".repeat(64)` has no hex after the prefix anywhere in the source, so the scan reported the member clean while it was calling the plane under its own token. Tightened to match the START of any string literal.
    (A3) THE BINDING IS THE ONLY ROUTE. Replace `env.PLANE.fetch(url)` with a bare global fetch at this account's own workers.dev name -> **54 pass, 35 FAIL**: the URL-literal, workers.dev and bare-fetch source arms all fail, and so does the round trip. FL-1 MEASURED that route as a 404 every time, so this demonstrates the routing finding rather than restating it. **THIS ARM FIRST KILLED THE SUITE INSTEAD OF FAILING IT** — `out.plane_says.token_class` threw on a refusal body, there was no tail line, and the harness would have read the whole file as "stayed GREEN" had it not treated a missing tally as `-1` rather than `0`. That is the exact defect PL-11's own control met. Every nested read in this suite is now null-tolerant: the CLASS was swept, not the one site.
@@ -63,10 +63,19 @@ const { Miniflare } = await (async () => {
   return await import(pathToFileURL(resolved).href);
 })();
 
+/* FL-3: the pinned op set lives in `harness.mjs`, beside the table rows that
+   use it, rather than being retyped here where a copy would age separately —
+   the defect this file's own A2 note is about, one construct over. */
+import { PLANE_OPS } from "../src/harness.mjs";
+
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));
 const MANIFEST = fileURLToPath(new URL("../fleet-member.json", import.meta.url));
 const SRC = readFileSync(WORKER_SRC, "utf8");
+/* FL-3: read so `AI_RUN_ACTIONS` — the record's OWN declaration of what an
+   agent's task scope may write — is the authority for what this member may
+   name, rather than a list kept here. */
+const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url)), "utf8");
 /* Comments carry this project's reasoning and are long; a scan that reads them
    would match its own explanation of what must not appear.
  *
@@ -100,7 +109,8 @@ const AIK2 = "aik-" + "b".repeat(64);
  * mutable RECORD. `MUTATING` is the set of ops that change the record; the
  * member is expected never to name one, and the record's hash is the evidence. */
 const PLANE_MOCK = `
-const MUTATING = new Set(["purge", "promote", "suggest", "capturerequest", "ratify", "publish"]);
+const MUTATING = new Set(["purge", "promote", "suggest", "capturerequest", "ratify", "publish",
+                          "airunopen", "airuntick", "airunclose"]);
 let RECORD = { rows: [] };
 let LOG = [];
 export default {
@@ -112,17 +122,57 @@ export default {
     const token = url.searchParams.get("token") || "";
     const store = url.searchParams.get("store") || "";
     LOG.push({ op, token, store, method: req.method });
-    if (MUTATING.has(op)) {
-      RECORD = { rows: [...RECORD.rows, { op, at: LOG.length }] };
-      return Response.json({ ok: true, result: { wrote: true }, store });
-    }
+    /* A refused credential, worded exactly as the plane words one: the code, the
+       C-number and the DEC-49 canned translation. **MOVED TO THE TOP BY FL-3,
+       and the move is the correction rather than a tidy-up:** it used to sit
+       BELOW the mutating branch, which was harmless while \`/run\` made exactly
+       one non-mutating call and is wrong now — a revoked credential that reached
+       a write branch first would have been answered \`wrote: true\`, and the
+       pass-through-verbatim arm would have been measuring a mock that admitted a
+       withdrawn credential. A refusal is answered before anything else is
+       considered, which is what the plane's own gate does. */
     if (token === "aik-" + "c".repeat(64))
-      /* A refused credential, worded exactly as the plane words one: the code,
-         the C-number and the DEC-49 canned translation. */
       return Response.json({ ok: false, reason: "AI_CREDENTIAL_REVOKED", code: "AI_CREDENTIAL_REVOKED",
         check: "C-29.7",
         translation: "This agent credential has been withdrawn by a member of the group, so it no longer reaches anything here.",
         op, cls: "ai" }, { status: 403 });
+    /* FL-3: THE RUN OPS THIS MOCK GAINED, AND WHY IT HAD TO.
+       FL-2's \`/run\` did ONE read and this mock answered ONE op. FL-3 fills the
+       endpoint with the IS-9 control-flow table, so the envelope this suite
+       tests now sits on top of a loop that reads the run object, the run's own
+       log and the spawn payload. The answers are the SHALLOWEST that let the
+       envelope be exercised — the table itself is proved in harness.test.mjs,
+       exhaustively and through the op, and duplicating that here would be two
+       instruments measuring one thing and agreeing at zero cost. */
+    if (op === "airun")
+      return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
+        id: url.searchParams.get("run"), mode: "check", status: "running", max_passes: 1,
+        context: { type: "inquiry", id: "INQ-1" },
+        budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
+                 { bound: "subsessions", allowed: 50, consumed: 0 },
+                 { bound: "wallclock", allowed: 500000, consumed: 0 },
+                 { bound: "runtime", allowed: 5000, consumed: 0 }] } }, store });
+    if (op === "airunlog")
+      return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true,
+        entries: [], limit: 200, truncated: false } });
+    if (op === "airunspawn")
+      /* PL-12's fence, and this mock reproduces its SHAPE rather than a null:
+         the search half's payload has no \`bias\` key AT ALL. */
+      return Response.json({ ok: true, result: { found: true, half: "search",
+        payload: { run: url.searchParams.get("run"), mode: "check", skill: "pack-1.0.0",
+                   context: { type: "inquiry", id: "INQ-1" }, standard_pair: null, budget: [] } } });
+    if (op === "meaningrows")
+      return Response.json({ ok: true, result: { rows: [], limit: 50, truncated: false } });
+    if (op === "basisversions")
+      return Response.json({ ok: true, result: { versions: [], limit: 50, truncated: false } });
+    if (MUTATING.has(op)) {
+      RECORD = { rows: [...RECORD.rows, { op, at: LOG.length }] };
+      if (op === "airuntick")
+        return Response.json({ ok: true, result: { ticked: true, appended: 1, status: "running" } });
+      if (op === "airunclose")
+        return Response.json({ ok: true, result: { terminated: true, bound: "completed" } });
+      return Response.json({ ok: true, result: { wrote: true }, store });
+    }
     if (op === "whoami")
       return Response.json({ ok: true, result: {
         tokenClass: "ai", session: false, member: null, handle: null,
@@ -173,24 +223,76 @@ console.log("\n--- 1 · the round trip: the member asks the plane and reports wh
   t("it names its own build (fleet rule 4)", out.worker ?? null, { name: "agent-worker", version: "test" });
 
   console.log("\n  -- what was actually DONE is NAMED, so it cannot be read as a finished run --");
-  t("the stage says round-trip, not run", out.stage, "round-trip");
+  /* CORRECTED BY FL-3, NEVER EXEMPTED, AND THE OLD ASSERTION WAS RIGHT WHEN IT
+     WAS WRITTEN. FL-2 shipped `/run` as a ROUND TRIP and said so on the wire so
+     nobody could read it as a finished run. FL-3 fills the endpoint with the
+     IS-9 control-flow table, so `round-trip` became a false statement about what
+     ran — the assertion moves with the fact. The RULE it enforces is unchanged
+     and is now checked in three places rather than one: what ran is named
+     (`stage`), no model turns were run (`turns_run`), and where the judgement
+     came from is named rather than implied (`judgement_source`). That third one
+     is new here because FL-3 introduced the thing it guards: a table-driven walk
+     presented without it would be indistinguishable from a model run. */
+  t("the stage says the HARNESS ran", out.stage, "harness");
   t("zero model turns were run, stated", out.turns_run, 0);
+  t("and the judgement source is NAMED rather than implied", out.judgement_source, "supplied");
+  t("with FL-6's unresolved half stated in words", /FL-6/.test(out.judgement_note ?? ""), true);
 
   console.log("\n  -- the principal is UNDETERMINED and SAYS SO (never guessed, never dropped) --");
   t("principal is null", out.principal, null);
   t("and the reason is on the wire", /UNPUBLISHED/.test(out.principal_source), true);
 
-  console.log("\n  -- WRITES NOTHING: the plane's record is byte-for-byte unchanged after a run --");
+  console.log("\n  -- WRITES NOTHING ITSELF: every change to the record went through the PLANE --");
+  /* CORRECTED BY FL-3, NEVER EXEMPTED. FL-2's arm hashed the plane's record
+     before and after a run and required it to be BYTE-IDENTICAL, which was the
+     honest measurement of a member that made one read. It is the wrong
+     measurement now and it was always slightly the wrong RULE: fleet rule 2 is
+     that a member ASSERTS nothing and writes nothing DIRECTLY — no store
+     binding, no R2, no provenance of its own — and PL-11's `ai` credential class
+     is specified as *"writes ONLY PL-3's endpoint and PL-4's table"*, a scope
+     with no consumer if the member holding it may never name those ops. A run
+     that logged nothing and proposed nothing would satisfy the old arm perfectly
+     while being useless.
+     SO THE ARM SPLITS INTO THE TWO THINGS IT WAS CONFLATING, and both are
+     stronger than what they replace:
+       (1) the record moves ONLY through ops in the pinned set, and every
+           mutating one of those is a member PL-11's AI_RUN_ACTIONS declares —
+           so a write this member gains is a write somebody decided to give it;
+       (2) a REFUSED call still writes nothing at all, byte-identical, which is
+           the property FL-2's hash was really protecting and is kept verbatim
+           below in section 3. */
   const after = await mockState(mf);
-  t("the record's sha256 is unchanged", sha(JSON.stringify(after.record)), sha(JSON.stringify(before.record)));
-  t("the record is empty and stayed empty", after.record, { rows: [] });
+  const wrote = [...new Set(after.record.rows.map((r) => r.op))].sort();
+  t("the record moved only through ops in the pinned set",
+    wrote.filter((op) => !PLANE_OPS[op]), []);
+  t("and every op that moved it is one PL-11's credential scope can declare",
+    wrote.filter((op) => !new RegExp(`const AI_RUN_ACTIONS = \\[[^\\]]*"${op}"`).test(PLANE_INDEX)), []);
+  /* NULL-TOLERANT, AND THE CLASS WAS SWEPT ACROSS BOTH SUITES RATHER THAN THE
+     SITE THAT BIT. Measured: with control arm A3 armed (the binding replaced by
+     a bare global fetch) NO request reaches the mock, so `after.log` is EMPTY
+     and `after.log[0].op` THREW — the suite DIED rather than failing, and A3
+     came back `0 pass, -1 FAIL`. A3 had reported 54/35 before FL-3 added these
+     arms, so this was a regression THIS item introduced into a landed control.
+     An assertion that throws cannot name what it broke and takes every arm
+     behind it with it (FL-2's own A3 note, one file over). */
+  t("nothing was written before the run object was read (identity first, always)",
+    after.log[0]?.op === "whoami" && after.record.rows.length > 0
+      ? after.log.findIndex((l) => l.op === after.record.rows[0]?.op) > 0 : true, true);
+  t("the record was empty before the run", before.record, { rows: [] });
 
   console.log("\n  -- ONE credential, the one it was handed, and no other --");
   const tokens = [...new Set(after.log.map((l) => l.token))];
   t("exactly one distinct credential reached the plane", tokens.length, 1);
   t("and it is the one handed in", tokens[0], AIK);
   const ops = [...new Set(after.log.map((l) => l.op))].sort();
-  t("exactly one op was named, and it is non-mutating", ops, ["whoami"]);
+  /* CORRECTED BY FL-3, NEVER EXEMPTED. `["whoami"]` was FL-2's exact truth and
+     is now a floor that no longer describes the endpoint. The RULE — an exact
+     set, floor and ceiling both — is unchanged, and the set itself is declared
+     in `harness.mjs`'s `PLANE_OPS` where the rows that use it live, rather than
+     retyped here where it would age separately. */
+  t("every op named is in the pinned set, and no other op was reached",
+    ops.filter((op) => !PLANE_OPS[op]), []);
+  t("and the round trip's own op is still the FIRST thing asked", after.log[0]?.op ?? null, "whoami");
 
   console.log("\n  -- the credential is never echoed back --");
   t("the response body does not contain the credential", JSON.stringify(out).includes(AIK), false);
@@ -330,14 +432,37 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   t("no bare global fetch(", /(?<![.\w])(?<!async\s)fetch\s*\(/.test(CODE), false);
 
   console.log("\n  -- THE SCOPE IS THE PLANE'S, and the ops this member may name are PINNED --");
-  const named = [...new Set([...CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]))].sort();
+  const named = [...new Set([
+    ...[...CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]),
+    ...[...CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
+  ])].sort();
   /* FLOOR AND CEILING BOTH, by exact equality. A call this member gains is a call
      somebody decided to give it, and a call it loses is visible too. D-199 (2):
      what an agent may reach is a row a member authored and read at the plane's
-     gate — never a list compiled into a Worker. */
-  t("the pinned op set is exactly {whoami}", named, ["whoami"]);
-  t("no mutating op name appears in the source at all",
-    /\b(purge|promote|ratify|publish|suggest|capturerequest)\b/.test(CODE), false);
+     gate — never a list compiled into a Worker.
+     CORRECTED BY FL-3, NEVER EXEMPTED. The literal `["whoami"]` was FL-2's exact
+     truth; it is compared against `harness.mjs`'s declaration now so the set has
+     ONE home rather than a copy here that ages separately — which is the defect
+     this file's own header spends a paragraph on one arm over. It is still an
+     EXACT equality and still catches a gained call and a lost one. */
+  t("every op named in the source is in the pinned set", named.filter((op) => !PLANE_OPS[op]), []);
+  t("and the pinned set has no member the source never names",
+    Object.keys(PLANE_OPS).filter((op) => !named.includes(op)), []);
+  /* CORRECTED BY FL-3, NEVER EXEMPTED, AND THE OLD ARM WAS THE RIGHT ARM FOR A
+     MEMBER THAT MADE ONE READ. "No mutating op name appears in the source AT
+     ALL" cannot survive an endpoint that must write a version and spend a
+     budget, and FL-3's acceptance is unreachable without both. What replaces it
+     is not weaker: every mutating op this member names must be one PL-11's
+     `AI_RUN_ACTIONS` declares, READ FROM THE PLANE'S OWN SOURCE rather than from
+     a list here — so a mutating op that is not in the record's own declaration
+     of what an agent's task scope may cover fails this arm, and the plane's list
+     shrinking fails it too. */
+  const mutatingNamed = named.filter((op) => PLANE_OPS[op] && PLANE_OPS[op].mutating);
+  t("the member does name mutating ops now, so this arm has a subject", mutatingNamed.length > 0, true);
+  t("and every one of them is declared by PL-11's AI_RUN_ACTIONS in the plane's own source",
+    mutatingNamed.filter((op) => !new RegExp(`const AI_RUN_ACTIONS = \\[[^\\]]*"${op}"`).test(PLANE_INDEX)), []);
+  t("no op outside the record's own agent-write declaration is named",
+    named.filter((op) => !PLANE_OPS[op]), []);
   /* THE FIRST SPELLING OF THIS ARM WAS `/aik-[0-9a-f]/` AND CONTROL ARM A2
      WALKED STRAIGHT PAST IT. A credential written as `"aik-" + "f".repeat(64)`
      has no hex after the prefix anywhere in the source, so the scan found
@@ -388,7 +513,18 @@ console.log("\n--- 7 · OVER-STRICTNESS: correct work in a spelling the guard di
     t(`${label} -> accepted`, [res.status, out.ok], [200, true]);
   }
   const st = await mockState(mf);
-  t("and none of them wrote anything", st.record, { rows: [] });
+  /* CORRECTED BY FL-3, NEVER EXEMPTED — the same correction as section 1's, and
+     for the same reason. `{ rows: [] }` was FL-2's exact truth for an endpoint
+     that made one read; an endpoint that logs every step it takes legitimately
+     moves the record, and requiring stillness here would make the over-strictness
+     section fail on CORRECT work, which is precisely what an over-strictness
+     section exists to catch. What must still hold is that nothing outside the
+     pinned set moved it, and that no version was proposed by a run whose
+     judgement composed none. */
+  t("and none of them wrote through an op outside the pinned set",
+    [...new Set(st.record.rows.map((r) => r.op))].filter((op) => !PLANE_OPS[op]), []);
+  t("and none of them proposed a version, because none of them composed one",
+    st.record.rows.filter((r) => r.op === "suggest"), []);
   await mf.dispose();
 }
 
