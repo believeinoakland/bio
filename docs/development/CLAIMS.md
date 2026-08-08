@@ -3101,3 +3101,35 @@ PL-4 already delegated that the D-113 check derives its covered set from `DELETE
 - **The alternative:** an `inquiry_leads` table keyed (observation, document, inquiry), which would carry many leads per document, allow a lead over a document nobody just fetched, and carry its own authorship. It is a derived table, so it would owe both purge arms and a `TABLES` row.
 - **Recommendation: keep the column.** It is the smallest thing that closes D-213, it inherits PL-4's attribution and conduct whole, and the shapes it cannot express are ones nothing can produce yet — the investigative session's only door to a document is the capture request. Building the table now would be structure bought before the producer that needs it exists, which is the mistake `PARALLELISM.md` warns about in its own last section.
 - **What reversing it costs: LOW NOW, RISING.** Today it is one migration adding the table, one producer rewritten to read it instead, and the column left inert or dropped — nothing member-facing changes, because the notification's shape is derived and its `id` is keyed on the request either way. It gets expensive once leads have been dispositioned: `proposal_dispositions` keys on the item's identity, so moving the identity would strand every recorded adopt/defer/dismiss. **The decision point is therefore before the first surface ships (UI-45), not before the first lead is captured.**
+
+---
+
+## CLAIM 2026-08-08 RECORD (REC-67)
+session: rec67-agent
+opened: 2026-08-08T17:44:23Z
+paths: bio-plane/test/bounds.test.mjs, bio-plane/test/meaning-bounds.test.mjs, bio-plane/test/plane-envelope.test.mjs
+interfaces consumed: none
+interfaces owned: none — test estate only, no `src/**` and no `civicos-ui/**` (no plane source was touched, and the only `civicos-ui/` files that existed at any point were two transient negative-control plants, created and removed inside one turn and verified gone)
+expected: REC-67. The REC-59 consumer walk in `bounds.test.mjs` misclassifies a NON-call-site — an ordinary `Map.get("projection")` counted as a corpus-arm CALL SITE in `civicos-ui/` — plus the SWEEP for the class of walks that anchor on a call-shaped prefix and therefore admit a METHOD NAME that is not a call to the plane. The matcher is INVERTED (REC-70's lesson: a callee is resolved against the file's own request-forming helpers rather than matched against a list of spellings that goes stale silently), and every walk touched keeps its REACH asserted as a DELTA with its corpus size PRINTED.
+released: 2026-08-08 — work committed on the REC-67 branch; CONDUCT integrates.
+
+### DELEGATION 2026-08-08 RECORD (REC-67) -> UI: **UI-46's WORKAROUND IS NO LONGER NEEDED — THE PLANE'S MATCHER IS FIXED, AND REMOVING IT IS YOURS**
+
+`civicos-ui/test/bound-sweep.test.mjs` holds the op name in a constant (`const PROJECTION_METHOD = "projection"; const PROJECTION_BODY = CLASS.methods.get(PROJECTION_METHOD)`) with a long comment at the site explaining that writing it inline made `bio-plane/test/bounds.test.mjs` classify a Map read as a `corpus-bare` call site in `civicos-ui/`. **That was the right call and it is why REC-67 exists.** The cause is now gone.
+
+- **What changed:** `bounds.test.mjs`'s helper arm no longer matches a list of callee spellings (`recR|rec|call|DO|get|j|GET`). It requires the callee to be a BARE identifier that is DEFINED IN THE SAME FILE as a function which forms an HTTP request, directly or through another local helper. `CLASS.methods.get("projection")` is refused twice over — it has a receiver, and `get` is not a request-forming helper.
+- **PROVED, not asserted:** the exact regression was re-planted as a control (`civicos-ui/nc-rec67-arm2.mjs`, `CLASS.methods.get("projection")`, created and removed in one turn). `bounds.test.mjs` stayed **147/0 GREEN** with the file present, while the **PRE-FIX matcher read the same file and classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3`**, taking the site count 40 -> 41. The workaround is provably unnecessary.
+- **What is owed, and it is small:** write the method name inline again if UI prefers it, and REPLACE the comment rather than deleting it — the paragraph recording what happened is worth keeping, with a line saying the plane's matcher was corrected on 2026-08-08 by REC-67. **Not done here: `civicos-ui/**` is not RECORD's to edit**, and the constant is harmless where it stands.
+
+### DELEGATION 2026-08-08 RECORD (REC-67) -> UI: **THREE UI WALKS ARE IN THE SAME CLASS — MEASURED LATENT, NOT DEFECTIVE, AND THE MEASUREMENT IS THE POINT**
+
+REC-67 swept the estate for walks that anchor on a CALL-SHAPED PREFIX and can therefore admit a METHOD NAME that is not a call to the plane. Three live in `civicos-ui/test/`, and all three anchor with `\b`, which matches between a DOT and a letter — so `x.rec("op")` or `x.api("op")` reads as the seam:
+
+- `civicos-ui/test/surface-registry.test.mjs:888` — `new RegExp("\\b(?:" + seams.join("|") + "|apiR|apiQ|intentPreflight)\\(\\s*\"([a-z]+)\"")`, feeding ARM D1's floor of 50 and ARM D3;
+- `civicos-ui/test/surface-registry.test.mjs:1151` and `:1161` — the same alternation over a sliced block;
+- `civicos-ui/test/ai-session-wire.test.mjs:752` — the same alternation, feeding ARM C1's `eq(runOpsOutside, [])`, which is an EMPTY-SET assertion and therefore the one where a false positive would fail alarmingly.
+
+**MEASURED over `civicos-ui/app.html` on 2026-08-08: 133 seam-shaped call matches, of which 0 are preceded by a dot; 108 seam-then-quoted-op matches, of which 0 are preceded by a dot.** So **the exposure is structural and not live** — nothing is wrong today, and this is a delegation rather than a defect report. `bound-sweep.test.mjs`'s own `callSites` anchors on `recR\("op"`, a name distinctive enough that a method of the same name is not a realistic collision, and it is listed only for completeness.
+
+- **What is owed if UI agrees it is worth it:** replace `\b` with a negated class (`(?<![.\w$])`) in the four anchors above. That is the whole change; it is structural rather than a longer list, and `bio-plane/test/plane-envelope.test.mjs` carries the same one-token correction with a both-directions guard beside it that can be copied.
+- **The reason to do it even though nothing is red:** `rec` and `api` are exactly the kind of short generic name that becomes a method on somebody's helper object, and REC-67 exists because `get` did. A walk that invents a consumer will one day invent one that hides a real answer.

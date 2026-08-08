@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-05, rec57-agent) FOUR arms, each RUN. (1) DROP THE PUBLISHED BOUND — in src/store.mjs delete `limit: cap,` from any roster op's return block (e.g. taskList) -> the LIVE arm for that op fails naming it and what a consumer can no longer tell. (2) COUNT WHAT IT SENT — in documentsNamingEntity replace `truncated: merged.length > cap || aliasPageFilled` with `truncated: false` (the pre-REC-57 behaviour: `count` is the length of what was SENT and nothing says more exists) -> the DELTA arm fails, because a bitten call and a complete call read alike. (3) NEUTER THE ROSTER WALK — replace the body of `cappedMethods` with `return new Map()` -> the three REACH assertions fail AS DELTAS and the roster-vs-driven pin fails. (4) OVER-STRICTNESS — a correct answer phrased unlike anything this file wrote must not fail; asserted in the last block. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
+/* NEGATIVE CONTROL: (run 2026-08-08, rec67-agent, REC-67) FIVE arms, each armed ALONE with every other held open, every file restored from a PRISTINE pre-arm copy and verified by sha256 AND by `cmp`. Baseline 147/0. (1) PLANT A REAL CORPUS-ARM CALL SITE — a new file `civicos-ui/nc-rec67-arm1.mjs` calling `ask("projection", "jsonPath=…")` through an ordinary local helper -> 146/1, the ONE failure being `civicos-ui reaches op=projection ONLY through the &id= arm`, and the helper roster PRINTS the planted file and its callee. **This is the arm proving the narrowing did not blind the walk.** (2) PLANT UI-46's EXACT REGRESSION — `CLASS.methods.get("projection")` in `civicos-ui/nc-rec67-arm2.mjs` -> 147/0, GREEN, the planted file absent from the roster and the site count unmoved at 40. **A green arm proves nothing on its own, so the same planted file was read by the PRE-FIX matcher in the same turn: it classified it `helper corpus-bare civicos-ui/nc-rec67-arm2.mjs:3` and took the count to 41** — which is the 106/106 -> 105/106 failure reproduced and then shown fixed. (3) NEUTER THE RESOLUTION (`if (false && TRANSPORT.test(b))`) -> 142/5, the helper roster PRINTED as `0 site(s) … NONE`, the total dropping 40 -> 38, and the two REC-67 HELPER REACH arms among the failures with both synthetic guards. (4) OVER-STRICTNESS — a real call through `zzq` -> `hop` -> `fetch`, a spelling no list ever carried, two hops deep -> 146/1, FOUND and named `via zzq()`. The old list-based matcher could not have passed this arm. (5) is `meaning-bounds.test.mjs`'s and (6) `plane-envelope.test.mjs`'s — the two sibling walks in the same class, recorded in their own headers. THE HARNESS'S OWN FAULT, RECORDED RATHER THAN SMOOTHED: its first run reported `exit 1 · null pass, null fail` for EVERY arm INCLUDING THE BASELINE, because it joined the suite path onto the repo root while running with `cwd=bio-plane`. Only the baseline row made it visible; without one, six arms failing for a reason unrelated to their subject read exactly like six arms working. */
 /* REC-57 · EVERY CAPPED OP PUBLISHES THE BOUND IT APPLIED, AND WHETHER IT BIT.
  * ===================================================================== *
  * UI-39 measured this one layer up: a plane that caps and does not say so forces
@@ -1166,24 +1167,160 @@ const walkChars = consumerCorpus.reduce((a, x) => a + x.code.length, 0);
 console.log(`  REC-59 CORPUS: ${consumerCorpus.length} files, ${walkChars} chars scanned; `
           + `${consumerExcluded.length} generated artifact(s) excluded (${consumerExcluded.map((x) => `${x.f} ${x.chars}`).join("; ")})`);
 
+/* ============ REC-67 · THE HELPER FORM, AND THE TEST IS INVERTED =============
+ * WHAT WAS WRONG, MEASURED AND NOT ARGUED. The helper arm read:
+ *
+ *     L.body === "projection" && /(?:\brecR|\brec|\bcall|\bDO|\bget|\bj|\bGET)\(\s*$/
+ *
+ * — a LIST OF CALLEE SPELLINGS. `get(` is on that list, and `get` is a Map/Set
+ * METHOD NAME at least as often as it is a fetch verb, so
+ * `CLASS.methods.get("projection")` in `civicos-ui/test/bound-sweep.test.mjs` —
+ * a read of a METHOD BODY out of a Map, a request to nothing — was counted as a
+ * `corpus-bare` CALL SITE IN `civicos-ui/`. That falsified the `civicos-ui`
+ * assertion below and took the battery from 106/106 to 105/106 with
+ * `bio-plane/**` never opened. UI-46 worked around it on its own side and routed
+ * the matcher here rather than editing another area's suite, which is why this
+ * correction exists.
+ *
+ * IT FAILED ALARMING, WHICH IS THE SAFE DIRECTION, AND THAT IS THE ARGUMENT FOR
+ * FIXING IT RATHER THAN SHRUGGING: a walk that INVENTS a consumer will one day
+ * invent one that HIDES a real answer, and this file's own subject is claims
+ * that cost nothing to produce. A false positive in a consumer walk is that rule
+ * broken inside the instrument that enforces it. The second cost is the one that
+ * actually burned a session: it turned ANOTHER AREA's suite red, and a
+ * cross-area false alarm lands on a session with no way to know the defect is
+ * not theirs.
+ *
+ * THE FIX INVERTS THE TEST rather than lengthening the list — REC-70's lesson,
+ * where a classifier graded only returns spelling success `ok: true` while
+ * `aiRunLog` answers `found: true`, and the correction was to grade everything
+ * that does not declare itself a refusal rather than to add a fourth spelling.
+ * A LIST OF SPELLINGS GOES STALE SILENTLY THE MOMENT A FOURTH IS WRITTEN.
+ *
+ * So the question asked here is what makes something a call TO THE PLANE in
+ * principle, and the answer is a PROPERTY OF THE CALLEE, not of its name:
+ *
+ *   (1) the callee is a BARE identifier — `name(`, never `receiver.name(` —
+ *       because a method invoked on an object is a method on THAT object, and
+ *       `Map.prototype.get` is the whole reason this item exists; and
+ *   (2) that identifier is DEFINED IN THE SAME FILE as a function that FORMS AN
+ *       HTTP REQUEST — directly (`fetch(`, `dispatchFetch(`, `new Request(`) or
+ *       TRANSITIVELY, through another helper in the same file that does. The
+ *       transitive hop is not a nicety: `civicos-ui/app.html`'s `recR` contains
+ *       no transport at all, it calls `rec`, which is the one that fetches.
+ *
+ * A helper spelled in a way nobody anticipated is therefore found on the day it
+ * is written, and a Map read is refused twice over — receiver-qualified, and not
+ * a request-forming helper.
+ *
+ * WHAT THIS ARM CAN AND CANNOT SEE, stated plainly so a clean result can be told
+ * from a walk looking in the wrong place:
+ *   - IT CAN see a call through any file-local helper, however spelled, at any
+ *     depth of delegation within that file.
+ *   - IT CANNOT see a call through a helper IMPORTED from another module: the
+ *     resolution is per-file by construction, because a cross-file resolver
+ *     would have to model the module graph and would be a second instrument to
+ *     get wrong. Every such call is therefore MISSED, not invented — the walk
+ *     under-counts rather than over-counts, and the whole walk is a FLOOR and
+ *     not a census, which the header above already says of the literal reader.
+ *   - IT CANNOT see a definition whose brace opens on the NEXT line
+ *     (`function f(a)\n{`), because the extractor ends a definition at the first
+ *     newline reached at depth zero. Nothing in this repository is written that
+ *     way; if something is, this arm misses it rather than mis-reads it.
+ *   - IT CANNOT see an op name that never appears as a literal — built by
+ *     concatenation, or held in a variable. That limit is REC-59's and unchanged.
+ * ========================================================================== */
+/* A copy of the code with every string literal's BODY blanked (its quotes kept),
+   so a brace or a semicolon inside a literal cannot end a definition early when
+   the extractor scans depth. */
+const skeletonOf = (code) => {
+  const ch = code.split("");
+  for (const L of literals(code)) for (let k = L.at + 1; k < L.end; k++) if (ch[k] !== "\n") ch[k] = " ";
+  return ch.join("");
+};
+/* A definition's extent: from its head to the first `;` or newline reached at
+   depth zero after the first bracket opened. Bounded rather than brace-matched,
+   on the segmenter's own reasoning above — a boundary that cannot run past the
+   end of the statement cannot swallow the file. */
+const defBody = (sk, from) => {
+  let depth = 0, opened = false, i = from;
+  const stop = Math.min(sk.length, from + 4000);
+  for (; i < stop; i++) {
+    const c = sk[i];
+    if ("([{".includes(c)) { depth++; opened = true; continue; }
+    if (")]}".includes(c)) { depth--; continue; }
+    if (depth <= 0 && opened && (c === ";" || c === "\n")) { i++; break; }
+  }
+  return sk.slice(from, i);
+};
+const TRANSPORT = /\bfetch\s*\(|\bdispatchFetch\s*\(|\bXMLHttpRequest\b|\bnew\s+Request\s*\(/;
+const DEF = /(?:^|[^\w$.])(?:(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?=\(|function\b))/g;
+const requestFormingHelpers = (code) => {
+  const sk = skeletonOf(code);
+  const defs = new Map();
+  let m;
+  DEF.lastIndex = 0;
+  while ((m = DEF.exec(sk))) {
+    const name = m[1] || m[2];
+    /* A name defined twice contributes BOTH bodies: the generous direction, so a
+       second definition that fetches cannot be hidden by a first that does not. */
+    defs.set(name, (defs.get(name) || "") + "\n" + defBody(sk, m.index));
+  }
+  const out = new Set();
+  for (const [n, b] of defs) if (TRANSPORT.test(b)) out.add(n);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const [n, b] of defs) {
+      if (out.has(n)) continue;
+      for (const k of out) {
+        if (k === n) continue;
+        if (new RegExp(`(?:^|[^\\w$.])${k}\\s*\\(`).test(b)) { out.add(n); grew = true; break; }
+      }
+    }
+  }
+  return out;
+};
+/* Resolved once per file and only for a file that actually carries a bare
+   `"projection"` literal — the resolution is the expensive half and most files
+   never need it. */
+const helperCache = new Map();
+const helpersOf = (c, resolve) => {
+  /* Keyed by the RESOLVER as well as the file, so the neutered resolver used by
+     the reach delta below cannot be answered out of the real one's cache — a
+     cache that ignores which instrument asked is how a delta measures itself. */
+  let byFile = helperCache.get(resolve);
+  if (!byFile) helperCache.set(resolve, byFile = new Map());
+  if (!byFile.has(c)) byFile.set(c, resolve(c.code));
+  return byFile.get(c);
+};
+/* The callee immediately before a literal, as a BARE identifier. The negated
+   class is what refuses `x.get(`, `x?.get(` and `a.b.get(` — the receiver is
+   what makes it a method rather than a call. */
+const CALLEE = /(?:^|[^\w$.])([A-Za-z_$][\w$]*)\s*\(\s*$/;
+
 /* `op=projection` request shapes: the wire query, the Durable Object path, and
    the helper form. The wire form requires a query SEPARATOR after the op name,
    which is what tells a request from a sentence beginning with the same word. */
-const callSites = (files) => {
+const callSites = (files, resolve = requestFormingHelpers) => {
   const out = [];
   for (const c of files) {
     for (const L of literals(c.code)) {
-      let params = null;
+      let params = null, via = null;
       if (/^(?:\/api\/\?)?op=projection(?:&|$)/.test(L.body)) params = L.body.replace(/^(?:\/api\/\?)?op=projection&?/, "");
       else if (/^\/projection(?:\?|$)/.test(L.body)) params = L.body.replace(/^\/projection\??/, "");
-      else if (L.body === "projection" && /(?:\brecR|\brec|\bcall|\bDO|\bget|\bj|\bGET)\(\s*$/.test(c.code.slice(Math.max(0, L.at - 12), L.at)))
-        params = c.code.slice(L.end + 1, L.end + 160).split("\n")[0];
+      else if (L.body === "projection") {
+        const callee = CALLEE.exec(c.code.slice(Math.max(0, L.at - 48), L.at));
+        if (callee && helpersOf(c, resolve).has(callee[1])) {
+          via = callee[1];
+          params = c.code.slice(L.end + 1, L.end + 160).split("\n")[0];
+        }
+      }
       if (params === null) continue;
       /* An object KEY is not a request. `publishedcase.test.mjs` keys an
          expected-answer map by `"op=projection"`, derived from a request made on
          another line — counting it would be counting one call twice. */
       if (/^\s*:/.test(c.code.slice(L.end + 1))) continue;
-      out.push({ f: c.f, arm: /(?:^|[?&,{\s])id[=:}]|`id=/.test(params) ? "id"
+      out.push({ f: c.f, via, arm: /(?:^|[?&,{\s])id[=:}]|`id=/.test(params) ? "id"
                             : /jsonPath|jsonEquals/.test(params) ? "corpus-filter" : "corpus-bare" });
     }
   }
@@ -1193,6 +1330,17 @@ const SITES = callSites(consumerCorpus);
 const armCount = (a) => SITES.filter((s) => s.arm === a).length;
 console.log(`  REC-59 CALL SITES: ${SITES.length} total — id-arm ${armCount("id")}, `
           + `corpus-bare ${armCount("corpus-bare")}, corpus-filter ${armCount("corpus-filter")}`);
+
+/* ---------------- REC-67 · THE HELPER ARM'S OWN CORPUS AND REACH ------------
+   The wire and path arms are structural and always were; the HELPER arm is the
+   one that was guessing, and it is the one that was narrowed. So it is measured
+   SEPARATELY and PRINTED, because narrowing a matcher must not silently narrow
+   its reach to nothing — a narrowing that quietly finds zero consumers reports
+   a beautiful clean verdict over a corpus it stopped reading, which is the
+   failure mode this whole file exists to catch. */
+const helperSites = SITES.filter((s) => s.via !== null);
+console.log(`  REC-67 HELPER ARM: ${helperSites.length} site(s) resolved through a file-local `
+          + `request-forming helper — ${helperSites.map((s) => `${s.f} via ${s.via}()`).join("; ") || "NONE"}`);
 
 t("REC-59 RE-MEASURED: IC-24 said NINE call sites and that all of them used the `&id=` arm. The walk finds "
 + "MANY more than nine, so the count was not merely stale — it was a count of a different population",
@@ -1239,6 +1387,67 @@ t("REC-59 REACH (THE FAILURE MODE NAMED): over that same empty corpus, a `no cor
 + "IC-24's exact claim — STILL READS TRUE. That is how a walk covering nothing passes triumphantly, and it "
 + "is asserted here so the reason the DELTA arm above exists cannot be forgotten",
   callSites([]).filter((s) => s.arm !== "id").length === 0, true);
+
+/* ============ REC-67 · THE NARROWED ARM'S REACH, AND WHAT IT REFUSES ========
+   The half that makes narrowing safe. A matcher can always be made precise by
+   making it match nothing, so the helper arm owes the same delta the walk as a
+   whole owes: it must be shown to be FINDING something, and the finding must
+   disappear when the resolution is neutered. */
+const noHelpers = () => new Set();
+const withoutHelperArm = callSites(consumerCorpus, noHelpers);
+t("REC-67 HELPER REACH: the narrowed arm still FINDS real calls — it did not buy its precision by matching "
++ "nothing, which is the way a narrowing fails silently",
+  helperSites.length > 0, true);
+t("REC-67 HELPER REACH (DELTA): neutering the resolver — every file reporting NO request-forming helpers — "
++ "takes the helper arm to ZERO and the whole walk down by exactly the helper sites, so the arm's "
++ "contribution is measured rather than assumed",
+  [withoutHelperArm.filter((s) => s.via !== null).length, SITES.length - withoutHelperArm.length],
+  [0, helperSites.length]);
+t("REC-67 HELPER REACH: and it names the consumers it found, so a reader can check them by hand — the UI's "
++ "own seam and a plane suite's own helper, both of which reach the op through a bare local function",
+  [helperSites.some((s) => s.f === "civicos-ui/app.html" && s.via === "recR"),
+   helperSites.some((s) => s.f === "bio-plane/test/citeinquiry.test.mjs" && s.via === "get")], [true, true]);
+
+/* THE SYNTHETIC CORPUS — four files this repository does not contain, so the
+   arm is driven in BOTH directions permanently rather than by a control run
+   somebody has to remember. (1) and (2) are the regression UI-46 measured; (3)
+   and (4) are the over-strictness half, and (4) is the one the old list-based
+   matcher could never have passed. */
+const SYNTH = {
+  mapRead: { f: "synthetic/map-read.mjs", code: [
+    'const CLASS = { methods: new Map() };',
+    'const PROJECTION_BODY = CLASS.methods.get("projection") || "";',
+  ].join("\n") },
+  bareGet: { f: "synthetic/bare-get.mjs", code: [
+    'const cache = new Map();',
+    'const get = (k) => cache.get(k);',
+    'const body = get("projection");',
+  ].join("\n") },
+  unanticipated: { f: "synthetic/unanticipated.mjs", code: [
+    'const zap = async (op, qs) => (await fetch("/api/?op=" + op + "&" + qs)).json();',
+    'const answer = await zap("projection", "limit=5");',
+  ].join("\n") },
+  twoHops: { f: "synthetic/two-hops.mjs", code: [
+    'async function wire(op, params) { const r = await fetch("/api/?op=" + op); return r.json(); }',
+    'async function ask(op, params) { const j = await wire(op, params); return j.result; }',
+    'const answer = await ask("projection", { id: "INFO-1" });',
+  ].join("\n") },
+};
+t("REC-67 REFUSES A METHOD NAME: `CLASS.methods.get(\"projection\")` — a Map read of a METHOD BODY, a "
++ "request to nothing — is NOT a call site. This is the exact line that turned `civicos-ui`'s suite red "
++ "for a defect in `bio-plane`'s instrument, and it is pinned here so it cannot come back",
+  callSites([SYNTH.mapRead]).length, 0);
+t("REC-67 REFUSES A BARE HELPER THAT FORMS NO REQUEST: a file-local `get()` that reads a Map is not a call "
++ "to the plane either — the receiver is not what disqualifies it, the ABSENCE OF A TRANSPORT is",
+  callSites([SYNTH.bareGet]).length, 0);
+t("REC-67 FINDS A SPELLING NOBODY ANTICIPATED: `zap(\"projection\", …)` — a name no list would ever have "
++ "carried — is found because its definition fetches. THIS is what inverting the test buys, and a list of "
++ "spellings would have missed it silently",
+  [callSites([SYNTH.unanticipated]).length, callSites([SYNTH.unanticipated])[0]?.via], [1, "zap"]);
+t("REC-67 FOLLOWS THE DELEGATION: a helper that carries no transport itself and calls one that does is "
++ "still a call to the plane — which is not hypothetical, it is exactly how `civicos-ui`'s `recR` reaches "
++ "`rec`, so a one-level check would have lost the UI consumer entirely",
+  [callSites([SYNTH.twoHops]).length, callSites([SYNTH.twoHops])[0]?.arm], [1, "id"]);
 
 /* =================================================================== * OVER-STRICTNESS. A pin that only accepts the phrasing its author wrote is
  * measuring its author. These are answers that are GENUINELY HONEST and look
