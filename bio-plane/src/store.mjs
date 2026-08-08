@@ -152,6 +152,15 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    repository has measured five times. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
+/* PL-12 / D-84: the bias object's refusals and — this is the part that is not
+   housekeeping — the MALFORMEDNESS and BAR predicates themselves. DEC-54's
+   constraint 2 is that "the malformedness rule binds the machine exactly as it
+   binds a member", and the only way to make that a fact rather than a promise is
+   for `biasInhale`'s filter and `checkBiasExtension`'s refusal to be the SAME
+   regular expressions. Imported, never copied: a hand copy agrees at zero cost,
+   and this repository has measured that five times. */
+import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER,
+         BIAS_BAR_PHRASING, checkBiasExtension } from "../checks/bio-checks.mjs";
 
 /* BIO store, plane layer, step 1.
  *
@@ -7792,6 +7801,81 @@ export class Store extends DurableObject {
           }
         }
       }
+      /* PL-12 / D-84: A MALFORMED BIAS SET NEVER LANDS, and it is refused by the
+         CATALOGUE'S OWN function rather than by a second implementation here —
+         the checkGatheringGrammar and checkInquiryBasis precedent exactly, and
+         for the same reason: two implementations of one rule is the drift this
+         repository has measured five times, and the malformedness rule is the
+         last rule in this system that should have two readings.
+         REFUSED AT THE WRITE, not only at the gate. A bias set that landed and
+         was refused later would sit in append-only history forever as a
+         statement the record holds and will not honour — and, worse, could be
+         adopted in the window before anybody ran a gate. Every finding comes
+         back with its C-number AND its canned translation (DEC-49), taken from
+         the one place they live.
+         The replay exemption is the gathering check's, for the gathering check's
+         reason: the record's own history must be holdable verbatim. */
+      if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {
+        const bf = [];
+        checkBiasExtension({ fm: docFmW, files: new Map([["bundle.md", basisMd?.text ?? ""]]) }, bf);
+        const errs = bf.filter((x) => x.severity === "error");
+        if (errs.length) {
+          const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
+          return { ok: false, reason: "BIAS_REFUSED",
+                   /* DEC-49, and VF-2's guard is why this line exists: the code
+                      on the ENVELOPE carries its own canned translation, not
+                      only the per-finding ones below. A surface keys on what the
+                      plane sent FIRST, and before this it was sent a bare word. */
+                   check: BIAS_CHECKS.BIAS_REFUSED.check,
+                   translation: BIAS_CHECKS.BIAS_REFUSED.translation,
+                   findings: errs.map((x) => {
+                     const hit = byNumber.get(x.check);
+                     return { check: x.check, detail: x.message,
+                              code: hit ? hit.code : null,
+                              translation: hit ? hit.row.translation : null };
+                   }) };
+        }
+      }
+      /* PL-12 / D-84: bias_statements, projected WHOLE from the bias bundle's
+         own statements[] in this SAME transaction and by the same
+         delete-then-insert discipline as inquiry_basis above — a projection of
+         the document, never a second place to state it (D-21). The statements
+         were judged by the catalogue's checkBiasExtension before anything
+         landed, exactly as the legs were.
+
+         THE DELETE RUNS FOR EVERY TYPE and the insert only for `bias`, which is
+         the inquiry_basis line's own shape and is not symmetry for its own
+         sake: a document that CHANGES TYPE (a replay, a repair) must not leave
+         its old projection standing, and a delete guarded by the new type would
+         leave exactly that.
+
+         `ord` is the statement's position in statements[], which is what makes
+         a statement addressable the way a leg is — and an override names
+         `statement_id` rather than `ord`, because ord moves when a set is
+         re-ordered and an override that silently re-pointed would be safeguard
+         1 failing quietly. */
+      this.sql.exec(`DELETE FROM bias_statements WHERE bundle_id=?`, bundleId);
+      if (normalizeType(meta.object_type) === "bias") {
+        const stmts = docFmW && Array.isArray(docFmW.statements) ? docFmW.statements : [];
+        for (let i = 0; i < stmts.length; i++) {
+          const s = stmts[i];
+          if (!s || typeof s !== "object" || typeof s.id !== "string") continue; // replay of a malformed shape
+          this.sql.exec(
+            `INSERT INTO bias_statements
+               (bundle_id,ord,statement_id,kind,subject,text,justification,citations,locked,nullifies)
+             VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            bundleId, i, s.id,
+            /* '' rather than NULL on a replayed malformed shape, mirroring the
+               inquiry_basis target_type fallback: the columns are NOT NULL. */
+            typeof s.kind === "string" ? s.kind : "",
+            s.subject == null ? "" : String(s.subject),
+            typeof s.text === "string" ? s.text : "",
+            typeof s.justification === "string" ? s.justification : "",
+            Array.isArray(s.citations) ? JSON.stringify(s.citations) : null,
+            s.locked === true ? 1 : 0,
+            typeof s.nullifies === "string" && s.nullifies.trim() ? s.nullifies.trim() : null);
+        }
+      }
       /* REC-24 (a)/(b): action_basis and correspondence, projected WHOLE from
          the action's own action_basis[] and correspondence[] in this SAME
          transaction and by the same delete-then-insert discipline as
@@ -11453,6 +11537,14 @@ export class Store extends DurableObject {
          readings of the evidence exist is an operator fact, and what they say is
          not an operator surface. */
       basisVersions: n("inquiry_basis_versions"), basisVersionLegs: n("inquiry_basis_version_legs"),
+
+      /* PL-12 / D-84: the declared-bias statements and the adoptions that put
+         them in force, reported so a whole-store purge can PROVE it took them
+         (D-113) and so an operator can see that a lens IS in force without
+         opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
+         SAYS is the group's business and travels with their published work,
+         not an operator surface, the same line queueState and aiRuns draw. */
+      biasStatements: n("bias_statements"), biasAdoptions: n("bias_adoptions"),
       dbBytes: this.ctx.storage.sql.databaseSize,
     };
   }
@@ -12470,11 +12562,31 @@ export class Store extends DurableObject {
        D-113 silent leftover in a form that matters more than most, because a
        version is a composition somebody may still accept. hygiene.test.mjs holds
        this list against schema.mjs. */
+    /* PL-12 / D-84: `bias_statements` is DERIVED from the corpus in exactly the
+       sense inquiry_basis is — a projection of a bias bundle's own statements[]
+       — and carries bundle_id, so it clears in BOTH arms via this list.
+       `bias_adoptions` carries bundle_id too (the bias bundle adopted), so the
+       per-bundle arm takes the adoptions OF a purged bias set; the adoptions
+       held BY a purged project are keyed on scope_id and take an explicit
+       DELETE below, the project_participants precedent exactly. Leaving either
+       out would let a whole-store purge report scope ALL while a LENS was still
+       in force over an empty corpus — the D-113 silent-leftover in its most
+       dangerous form, because a manifest computed after that purge would name
+       statements over documents nobody holds. hygiene.test.mjs holds this list
+       against schema.mjs.
+       MERGED BY HAND AT THE REBASE, 2026-08-08, and it is the one conflict in
+       this item that could not be resolved mechanically: PL-1 and PL-12 each
+       rewrote this ONE array in the same integration window, so keeping both
+       sides would have declared `TABLES` twice and produced a SyntaxError.
+       Taking either side alone would have silently dropped two derived tables
+       from the purge — D-113's exact failure, arriving through a merge rather
+       than through forgetfulness. Both comment blocks are kept because both
+       reasons are true, and the array below carries all four names. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
                     "readings", "reading_refs", "reading_ref_terms", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "inquiry_basis_versions", "inquiry_basis_version_legs",
-                    "action_basis", "correspondence"];
+                    "action_basis", "correspondence", "bias_statements", "bias_adoptions"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -12501,6 +12613,15 @@ export class Store extends DurableObject {
            change nothing. hygiene.test.mjs holds this list against BOTH files now. */
         this.sql.exec(`DELETE FROM project_participants WHERE project_id=?`, bundleId);
         this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=?`, bundleId);
+        /* PL-12 / D-84 / D-113. An adoption is keyed (scope_type, scope_id,
+           bundle_id) and a project scope_id IS a bundle id, so purging a project
+           while leaving its adoptions behind would leave a LENS in force over a
+           project that no longer exists — and, worse, would hand a later bundle
+           allocated a colliding id somebody else's declared bias. The TABLES
+           list above already clears the adoptions OF a purged bias bundle; this
+           clears the adoptions HELD BY a purged project. For a non-project
+           bundleId this DELETE matches no rows. */
+        this.sql.exec(`DELETE FROM bias_adoptions WHERE scope_id=?`, bundleId);
         /* REC-21 / D-113. queue_state is keyed (member_id, case_id) and a case_id
            IS a bundle id, so it clears in the per-bundle arm too: purging an
            inquiry or a project while leaving members' mutes and snoozes against
@@ -16343,7 +16464,43 @@ export class Store extends DurableObject {
    *  project the viewer may not see would disclose that the project exists —
    *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
    *  through query.mjs's one compilation point (D-15). */
-  aiRunRead({ run, viewer = null } = {}) {
+  /*  PL-12 / D-84 — AND THIS IS WHERE THE RUN STOPS CARRYING AN ABSENCE.
+   *
+   *  §3, RULED: *"the run carries the bias manifest in force when it ran … an
+   *  assistant-surfaced focus must carry the bias manifest in force when it was
+   *  surfaced… unlike a member it will not remember. Without the manifest… bias
+   *  debt cannot be computed against it."* §3 also recorded the reason it could
+   *  not be done: *"UNBUILDABLE TODAY: object_type: bias is absent from the
+   *  check catalogue (D-84) … until D-84 lands, the manifest-carrying obligation
+   *  is dischargeable only as 'no manifest was in force,' stated."*
+   *
+   *  MEASURED BEFORE THIS CHANGE, AND IT WAS WORSE THAN THE DESIGN SAID: this
+   *  method published NO bias field of any kind. `ai_runs.bias_manifest` was
+   *  written by `aiRunOpen` and read by nothing, so the honest absence §3
+   *  settled for was not stated ANYWHERE a reader could see it — the run held a
+   *  column and the answer was silent. An unstated limit reads as completeness,
+   *  which is DEC-56/57/58's ruling exactly.
+   *
+   *  WHAT "IN FORCE" MEANS HERE, AND WHY IT IS NOT AN ECHO. The recorded
+   *  manifest is what the run was FORMED under and is never recomputed —
+   *  `aiRunOpen` stores it verbatim and derives nothing, deliberately. This read
+   *  puts the record's CURRENT effective set beside it and says whether the lens
+   *  has MOVED since. That comparison is the whole payoff: it is what makes bias
+   *  debt computable against a run's output, which is the sentence §3 quotes
+   *  from `Content_Framework` and the reason the obligation exists at all.
+   *  Three distinguishable answers, never two:
+   *    - `in_force: false` with `stated` — no manifest was in force. Honest
+   *      absence, still supported, still the answer for a run opened without one.
+   *    - `in_force: true, moved: false` — the lens the run carried is the lens
+   *      the record holds now.
+   *    - `in_force: true, moved: true` — the lens has changed since; the run's
+   *      output owes a re-run under the current set. Ordinary BIAS DEBT, which
+   *      is DISCLOSED and travels and blocks NOTHING (DEC-20, D-188) — it is
+   *      HUNCH debt that disqualifies, and no hunch is named here.
+   *
+   *  ASYNC now, because the effective set is HASHED and `crypto.subtle` is. The
+   *  dispatch already awaits every handler. */
+  async aiRunRead({ run, viewer = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
     const row = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
@@ -16357,6 +16514,14 @@ export class Store extends DurableObject {
             : `the run stopped on '${row.stopped_bound}'`,
           bound: row.stopped_bound, at: row.stopped_at }
       : null;
+
+    /* PL-12: THE MANIFEST BLOCK. Read the header above this method for what the
+       three answers mean and why the comparison rather than the echo is the
+       point. Computed in ONE function because `aiRunSpawnPayload`'s COMPOSING
+       half publishes the same block, and two computations of "what lens was
+       this run formed under" would be two answers to a question that has one. */
+    const bias = await this.#biasForRun(row, viewer);
+
     return { run, found: true, session: {
       id: row.run,
       label: row.label,
@@ -16375,7 +16540,157 @@ export class Store extends DurableObject {
       budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
                                    consumed: b.consumed, unit: b.unit })),
       condition: cond,
+      /* PL-12 / D-84: the conditions the run was formed under gain their third
+         member. It sits BESIDE `principal` and `budget` rather than inside
+         them, because it is neither an identity nor an allowance — it is the
+         LENS, and §11's whole reason for recording the conditions is that a
+         version is only interpretable against them. */
+      bias,
     } };
+  }
+
+  /** PL-12: the run's bias block, computed ONCE. Read `aiRunRead`'s header for
+   *  what the three answers mean. */
+  async #biasForRun(row, viewer) {
+    const recordedRaw = row.bias_manifest;
+    let recorded = null, unreadable = false;
+    if (recordedRaw != null && String(recordedRaw).trim() !== "") {
+      try { recorded = JSON.parse(String(recordedRaw)); }
+      catch { unreadable = true; }
+    }
+    /* The CURRENT set for the run's own context. A run over a project reads the
+       project scope — instance statements plus that project's — and a run over
+       an inquiry reads the instance scope, because an inquiry is shared across
+       projects and has no single lens of its own (§3's "a projectless inquiry
+       has no CURRENT and no bar", one construct over). The viewer is the run's
+       reader, so a lens naming bundles they cannot see is gated identically here
+       and in op=biasmanifest — one predicate, not two. */
+    const nowManifest = await this.biasManifest({
+      scope: row.context_type === "project" ? "project" : "instance",
+      scopeId: row.context_type === "project" ? row.context_id : "",
+      viewer,
+      /* The bound is irrelevant to the hash — `statements_sha` covers the whole
+         set before any bound is applied — so the smallest legal page is asked
+         for deliberately: this read needs the FACT, not the statements. */
+      limit: 1,
+    });
+    const recordedSha = recorded && typeof recorded.statements_sha === "string"
+      ? recorded.statements_sha : null;
+    return recorded === null && !unreadable
+      ? { in_force: false,
+          /* §3's exact sentence, kept verbatim so a surface that already renders
+             it does not have to learn a second wording. */
+          stated: "no manifest was in force",
+          manifest: null, now: null, moved: null }
+      : unreadable
+        ? { in_force: false,
+            stated: "a manifest was recorded for this run and cannot be read back",
+            manifest: null, now: null, moved: null }
+        : { in_force: true,
+            stated: null,
+            /* AS RECORDED — what the run was formed under, never recomputed. */
+            manifest: { scope: recorded.scope ?? null, scope_id: recorded.scope_id ?? null,
+                        statements_sha: recordedSha,
+                        bundles: Array.isArray(recorded.bundles) ? recorded.bundles : [] },
+            /* AS THE RECORD STANDS NOW. */
+            now: { in_force: nowManifest.in_force === true,
+                   statements_sha: nowManifest.statements_sha ?? null,
+                   bundles: nowManifest.bundles ?? [] },
+            /* THE COMPARISON, which is what makes bias debt computable. `null`
+               where one side has no hash to compare — an unknown is stated and
+               never rendered as `false`, which would assert the lens had held. */
+            moved: recordedSha == null || nowManifest.statements_sha == null
+              ? null : recordedSha !== nowManifest.statements_sha };
+  }
+
+  /** op=airunspawn — THE FENCE, AS CODE.
+   *
+   *  `INVESTIGATIVE-SESSION.md` §14, and the sweep's own correction of v2:
+   *  *"The lens rule is STRUCTURAL, and v2 demoting it to a skill requirement
+   *  was the defect §14b.4 itself names (SWEEP C7): a skill is instructions; a
+   *  fence is code."*
+   *
+   *    - *"The search half of the run never receives the bias. The spawn
+   *      contract for search sub-sessions and search passes omits the manifest
+   *      BY CONSTRUCTION — there is no field to read."*
+   *    - *"Bias never shapes what is captured or monitored, only how conclusions
+   *      are weighed"* (`Content_Framework:1283`) — the coupling is FORBIDDEN,
+   *      not discouraged.
+   *    - *"The composing half CARRIES the manifest (§3, ruled) for disclosure
+   *      and for the weighing it discloses — never as a search input."*
+   *
+   *  WHY THIS IS AN OP AND NOT A COMMENT. A fence nothing can be pointed at is
+   *  not a fence: before this, the search half's payload existed only as a
+   *  sentence in a design document, so there was nothing an assertion could read
+   *  and nothing a negative control could break. The payload is BUILT here, by
+   *  one function, and `test/bias.test.mjs` asserts over the object this method
+   *  returns — not over a promise about it.
+   *
+   *  AND THE ASSERTION IS ABSENCE, NEVER EMPTINESS. The search payload is
+   *  written as an explicit literal that never touches `row.bias_manifest`, so
+   *  there is no field to be filled in later by a default, a spread, or a
+   *  well-meaning caller. `bias: null` would have been the weaker fence: a null
+   *  field is a field, and a field acquires a value the first time somebody
+   *  thinks they are being helpful.
+   *
+   *  GATED on the run's context, exactly as `aiRunRead` and `aiRunLog` are. */
+  async aiRunSpawnPayload({ run, half = "search", viewer = null } = {}) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const row = this.#one(
+      `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+    if (!row) return { run: run || null, found: false, half: null, payload: null };
+    const composing = String(half) === "compose";
+    /* BOUNDED IN SQL AND PUBLISHED, and not because a walk asked. `ai_run_bounds`
+       carries at most one row per member of `RUN_BOUNDS`, so the bound is real
+       and known — but "bounded by a vocabulary" is a fact in a comment, and
+       `test/meaning-bounds.test.mjs` grades what a method PUBLISHES precisely
+       because a comment is not a bound. The cap is the vocabulary's OWN size,
+       read live rather than typed, so a bound added to `RUN_BOUNDS` tomorrow
+       widens this automatically instead of silently cutting the newest one. */
+    const budgetCap = Object.keys(RUN_BOUNDS).length;
+    const budgetRows = this.#rows(
+      `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound LIMIT ?`,
+      run, budgetCap + 1);
+    const bounds = budgetRows.slice(0, budgetCap);
+
+    /* THE PAYLOAD, and every key in it is named here. It is deliberately NOT
+       built by spreading the row and deleting fields: a delete-list is a list
+       that falls behind the thing it lists (D-113's lesson in another table),
+       and a column added to `ai_runs` tomorrow would ride a spread straight
+       through this fence. */
+    const payload = {
+      run: row.run,
+      context: { type: row.context_type, id: row.context_id },
+      mode: row.mode,
+      skill: row.skill_version,
+      /* The launching project's declared standard pair travels to BOTH halves.
+         It is a BAR and not a lens (DEC-54 a), and §3 reads it as one of the
+         run's conditions — a bar tells the search what strength the work must
+         reach, which is not the coupling §14 forbids. This is exactly why the
+         two constructs had to be split before this fence could be drawn. */
+      standard_pair: row.standard_pair,
+      budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
+                                   consumed: b.consumed, unit: b.unit })),
+    };
+
+    return {
+      run, found: true, half: composing ? "compose" : "search",
+      payload,
+      /* REC-57's two questions, settled on the one collection this answer
+         carries: the bound APPLIED, and whether it cut anything. */
+      limit: budgetCap, truncated: budgetRows.length > budgetCap,
+      /* THE ONLY DIFFERENCE BETWEEN THE TWO HALVES, and it is one key. The
+         composing half's block is the SAME block `op=airun` publishes, computed
+         by the same function, because "what lens was this run formed under" has
+         one answer. The search half gets no such key at all. */
+      ...(composing ? { bias: await this.#biasForRun(row, viewer) } : {}),
+      /* Stated, because a caller holding the search payload should be able to
+         read WHY it is thinner rather than conclude something failed. */
+      fence: composing
+        ? "the composing half carries the lens, for disclosure and for the weighing it discloses"
+        : "the search half never receives the lens: bias never shapes what is captured or searched, "
+          + "only how conclusions are weighed. There is no field here to read.",
+    };
   }
 
   /** op=airunlog — THE OBSERVATION LOG. A different read from the one above and
@@ -17670,6 +17985,485 @@ export class Store extends DurableObject {
     };
   }
 
+  /* =======================================================================
+   * PL-12 / D-84 — THE BIAS OBJECT'S THREE ACTS, and DEC-54's four scopes
+   * where they are ENFORCED rather than described.
+   *
+   *   op=biasadopt    the AUTHORED, ATTRIBUTED act that puts a set in force,
+   *                   and the PIN that keeps a published case checkable after
+   *                   the source moves (DEC-54 c and d).
+   *   op=biasmanifest the EFFECTIVE SET in force for a scope, its hash, and
+   *                   what it does NOT enforce (DEC-54 b).
+   *   op=biasinhale   reading an external policy: it SPLITS bars from bias
+   *                   (DEC-54 a), it PUBLISHES the residue as prominently as
+   *                   the extraction (DEC-54 b), and it PROPOSES and never
+   *                   installs (DEC-54 c).
+   *
+   * THE THIRD ONE IS THE ONE TO READ THE SOURCE OF RATHER THAN THE COMMENT
+   * ABOUT. `biasInhale` holds NO WRITE PATH AT ALL — no `sql.exec`, no
+   * `transactionSync`, no call to `promote` — and test/bias.test.mjs asserts
+   * that off this file's own bytes, because a comment promising an absence is
+   * the kind of guard that has guarded nothing here before. A method that
+   * cannot write cannot install, whatever a later caller passes it.
+   * ==================================================================== */
+
+  /* The manifest's bound. 200 is `op=exportlog`'s and `op=versionchain`'s
+     default, and it is the right one HERE for a reason of its own: a manifest
+     is carried by every run and stamped into every published case, so the
+     common read is "what lens is in force", which a group's whole declared bias
+     fits inside many times over. The ceiling is 2000 because the one caller who
+     legitimately needs everything is a REGRADE — two lenses re-run against each
+     other — and a lens silently cut in half would produce a diff that says two
+     groups agree about statements one of them never received. */
+  static BIAS_MANIFEST_LIMIT_DEFAULT = 200;
+  static BIAS_MANIFEST_LIMIT_MAX = 2000;
+  /* The inhale's two bounds. The SENTENCE bound is on the INPUT — how much of
+     the policy was read at all — and it is published separately from the output
+     bounds, because "we extracted 40 statements" over a document we only read
+     the first half of is a different claim from "we read it all and extracted
+     40", and collapsing them is the false-coverage failure this project names
+     everywhere else. */
+  static BIAS_INHALE_SENTENCES_MAX = 500;
+  static BIAS_INHALE_LIMIT_DEFAULT = 200;
+  static BIAS_INHALE_LIMIT_MAX = 1000;
+
+  #biasRefuse(key, detail) {
+    const row = BIAS_CHECKS[key];
+    return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
+  }
+
+  /** op=biasadopt — THE AUTHORED ACT, and the PIN taken at the same instant.
+   *
+   *  DEC-54 (c): *"INHALE MEANS PROPOSE FOR ADOPTION, NEVER INSTALL. Adoption is
+   *  an authored, attributed act (DEC-46, D-90, D-82). Otherwise adopting a
+   *  policy becomes a way to LAUNDER a standard."* So `author` is required and
+   *  is stamped by the control plane from the SESSION — a machine credential
+   *  carries none and is refused BY NAME (C-26.9), the same fence
+   *  `op=publishedcase` already draws for the bias acknowledgement.
+   *
+   *  DEC-54 (d): the row PINS `bundle_sha` — the revision adopted — plus the
+   *  external policy's source, retrieval date and content hash COPIED from the
+   *  bundle's frontmatter at this instant. Copied and not re-read: *"an external
+   *  policy MOVES; a case published under it must remain checkable after it
+   *  moves."* A pin that followed the bundle would not be a pin.
+   *
+   *  THE STATE MACHINE CARRIES THE OTHER HALF AND THIS METHOD DOES NOT DUPLICATE
+   *  IT. `STATES.bias` has no `draft -> adopted` edge, so a set can only reach
+   *  `adopted` through `proposed`, through `promote`, as a member-authored
+   *  transition. This refuses a set that is in neither state (C-26.10), and the
+   *  manifest below requires BOTH this row AND the bundle standing at `adopted`
+   *  before it reports a lens in force — which is the fail-closed direction: at
+   *  no point does one act alone put a lens over somebody's work. */
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null } = {}) {
+    const who = typeof author === "string" ? author.trim() : "";
+    if (!who || who.startsWith(Store.BIAS_MACHINE_PREFIX))
+      return this.#biasRefuse("BIAS_ADOPTION_NOT_AUTHORED",
+        "op=biasadopt is signed by the member adopting the set. The plane takes the name from the "
+        + "session and never from the request, so there is no name here to record.");
+    if (!bundleId)
+      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
+        "op=biasadopt names the bias bundle being adopted: pass bundleId=<BIAS-...>.");
+    const b = this.#one(
+      `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || normalizeType(b.object_type) !== "bias" || !["proposed", "adopted"].includes(b.current_state))
+      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
+        `${bundleId} is ${!b ? "not in the record" : `a ${normalizeType(b.object_type)} in state '${b.current_state}'`}. `
+        + "A bias set is written in draft, offered as proposed, and only then adopted.");
+
+    const st = String(scope) === "project" ? "project" : "instance";
+    const sid = st === "project" ? String(scopeId || "").trim() : "";
+    if (st === "project" && !sid)
+      return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
+        "a project-scoped adoption names the project it is scoped to: pass scopeId=<PROJ-...>.");
+
+    /* DEC-54 (d)'s pin, read from the DOCUMENT rather than from the request, so
+       a caller cannot claim a provenance the bundle does not carry. Absent is
+       NULL and is the honest value for a natively authored set: there is no
+       external source to pin, and inventing one would be this plane asserting a
+       provenance nobody has. */
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    const fm = md && typeof md.content === "string" ? (parseFrontmatter(md.content).data || {}) : {};
+    const now = at ? String(at) : new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT OR REPLACE INTO bias_adoptions
+         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      st, sid, bundleId, b.bundle_sha, who, now,
+      typeof fm.policy_source === "string" && fm.policy_source.trim() ? fm.policy_source.trim() : null,
+      typeof fm.policy_retrieved === "string" && fm.policy_retrieved.trim() ? fm.policy_retrieved.trim() : null,
+      typeof fm.policy_sha256 === "string" && fm.policy_sha256.trim() ? fm.policy_sha256.trim().toLowerCase() : null);
+
+    return { ok: true, adopted: true, bundleId,
+             scope: st, scope_id: sid, author: who, at: now,
+             /* THE PIN, echoed so the caller sees what was frozen rather than
+                what it asked for. */
+             pinned: { bundle_sha: b.bundle_sha,
+                       source_url: fm.policy_source ?? null,
+                       retrieved: fm.policy_retrieved ?? null,
+                       source_sha256: fm.policy_sha256 ?? null },
+             /* Stated rather than implied: the row exists and the lens is not
+                yet in force, because the bundle has still to stand at
+                `adopted`. An answer that said "adopted: true" and left the
+                second condition to be discovered would be the overclaim this
+                project's whole threat model is about. */
+             in_force: b.current_state === "adopted",
+             note: b.current_state === "adopted"
+               ? "this set is in force for that scope"
+               : "recorded and pinned; the set is in force once the bundle itself stands at 'adopted', "
+                 + "which is a member-authored transition through op=promote" };
+  }
+  /* NOT a literal. `MACHINE_AUTHOR_PREFIX` is the catalogue's, imported at the
+     top of this file and already reused by the queue's own machine-author test
+     — the same discipline, for the same reason: the string that identifies a
+     machine credential must not be spelled twice, or the day it changes one of
+     the two fences quietly stops fencing. */
+  static BIAS_MACHINE_PREFIX = MACHINE_AUTHOR_PREFIX;
+
+  /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue.
+   *
+   *  `BIO_Declared_Bias_v0_1.md`: *"Effective bias for a piece of work = the
+   *  adopted instance statements at pinned revisions, minus project
+   *  nullifications of unlocked statements, plus project replacements and
+   *  additions. Every work product cites its BIAS MANIFEST: the list of (bias
+   *  bundle id, revision) in force plus a hash of the computed effective
+   *  statement set."* This method IS that sentence.
+   *
+   *  THE HASH IS OVER THE WHOLE SET AND NEVER OVER THE PAGE. A manifest hash
+   *  that changed with `limit` would make two runs under one identical lens
+   *  cite two different manifests, which destroys the only thing the hash is
+   *  for. `statements_sha` is therefore computed before any bound is applied,
+   *  and the answer says so.
+   *
+   *  LOCKS ARE ENFORCED HERE AND NOT ONLY REPORTED. *"A project override naming
+   *  a locked instance statement is a conformance error, full stop."* So a
+   *  nullification of a locked statement is REFUSED ITS EFFECT — the statement
+   *  stays in the set — and the attempt is published as `lock_violations[]`.
+   *  Reporting it while honouring it would be the loosening the lock exists to
+   *  prevent, arriving through the diagnostic channel.
+   *
+   *  ABSENCE IS STATED, WHICH IS THE WHOLE POINT OF THE FIELD. Where no set is
+   *  adopted this answers `in_force: false` with `stated` carrying the sentence
+   *  `INVESTIGATIVE-SESSION.md` §3 requires — *"no manifest was in force"* — and
+   *  never an empty list that a consumer could read as a lens with nothing in
+   *  it. The two are different facts and CLAUDE.md requires the difference be
+   *  stated.
+   *
+   *  GATED. A project-scoped manifest names a project bundle, so a viewer who
+   *  cannot see the project is answered exactly as they are for a project that
+   *  does not exist; the bias bundles themselves go through `#bundleGate`, the
+   *  same predicate every read in this file compiles. Nothing publishes how many
+   *  rows the gate removed, because that count is the leak (REC-36). */
+  async biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
+    const st = String(scope) === "project" ? "project" : "instance";
+    const sid = st === "project" ? String(scopeId || "").trim() : "";
+    if (st === "project" && (!sid || !this.#viewerSees(sid, viewer)))
+      return { ok: true, scope: st, scope_id: sid, in_force: false,
+               bundles: [], statements: [], residue: [], lock_violations: [],
+               statements_sha: null,
+               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
+               /* A project this viewer may not see and a project that does not
+                  exist answer IDENTICALLY, by the same rule every gated read in
+                  this plane follows. */
+               stated: "no manifest was in force" };
+
+    const seen = this.#bundleGate("a.bundle_id", viewer);
+    /* IN FORCE = an adoption row AND the bundle standing at `adopted`. The join
+       to `bundles` is what makes the second condition structural rather than a
+       convention biasAdopt is trusted to have kept. */
+    const adoptionsFor = (type, id) => this.#rows(
+      `SELECT a.*, b.current_state AS state
+         FROM bias_adoptions a JOIN bundles b ON b.bundle_id = a.bundle_id
+        WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state = 'adopted' AND (${seen.sql})
+        ORDER BY a.bundle_id`, type, id, ...seen.args);
+
+    const instanceAdoptions = adoptionsFor("instance", "");
+    const projectAdoptions = st === "project" ? adoptionsFor("project", sid) : [];
+    const adoptions = [...instanceAdoptions, ...projectAdoptions];
+
+    if (adoptions.length === 0)
+      return { ok: true, scope: st, scope_id: sid, in_force: false,
+               bundles: [], statements: [], residue: [], lock_violations: [],
+               statements_sha: null,
+               count: 0, total: 0, limit: 0, offset: 0, truncated: false,
+               stated: "no manifest was in force" };
+
+    const stmtsOf = (bundleId) => this.#rows(
+      `SELECT * FROM bias_statements WHERE bundle_id=? ORDER BY ord`, bundleId);
+
+    /* THE INSTANCE LAYER FIRST, keyed by statement id so a project override can
+       find what it names. */
+    const effective = new Map();
+    const level = new Map();
+    for (const a of instanceAdoptions)
+      for (const s of stmtsOf(a.bundle_id)) {
+        effective.set(s.statement_id, s);
+        level.set(s.statement_id, { bundle_id: a.bundle_id, scope: "instance", locked: s.locked === 1 });
+      }
+
+    /* THEN THE PROJECT LAYER: nullifications of UNLOCKED statements, then
+       replacements and additions. A statement that both nullifies and carries
+       its own text is a REPLACEMENT — it removes the named statement and adds
+       itself — which is the doctrine's "project replacements" and is why the
+       two arms are one loop rather than two passes. */
+    const lockViolations = [];
+    for (const a of projectAdoptions)
+      for (const s of stmtsOf(a.bundle_id)) {
+        if (s.nullifies) {
+          const target = level.get(s.nullifies);
+          if (target && target.locked) {
+            /* *"Locks bind projects only… if the project managers don't like
+               it, they can build their project in another instance."* The
+               nullification is REFUSED ITS EFFECT and reported. */
+            lockViolations.push({ project_bundle: a.bundle_id, statement_id: s.statement_id,
+                                  nullifies: s.nullifies,
+                                  instance_bundle: target.bundle_id,
+                                  detail: "a project override naming a LOCKED instance statement is a "
+                                        + "conformance error; the instance statement stands" });
+          } else if (target) {
+            effective.delete(s.nullifies);
+            level.delete(s.nullifies);
+          }
+        }
+        if (s.text && s.text.trim()) {
+          effective.set(s.statement_id, s);
+          level.set(s.statement_id, { bundle_id: a.bundle_id, scope: "project", locked: false });
+        }
+      }
+
+    /* THE ORDER IS TOTAL AND DERIVED, never insertion order: a manifest hash
+       that depended on the order rows came back in would differ between two
+       computations of one identical lens. */
+    const all = [...effective.values()]
+      .map((s) => ({
+        statement_id: s.statement_id,
+        bundle_id: s.bundle_id,
+        scope: level.get(s.statement_id)?.scope ?? "instance",
+        kind: s.kind, subject: s.subject, text: s.text,
+        justification: s.justification,
+        citations: s.citations ? JSON.parse(s.citations) : [],
+        locked: s.locked === 1,
+        nullifies: s.nullifies ?? null,
+      }))
+      /* FIELD BY FIELD, and NOT by concatenating the two with a separator. A
+         separator has to be a character that cannot occur in either field, and
+         the first attempt at this line reached for a NUL — which
+         `hygiene.test.mjs` refused on sight, correctly: a stray control byte in
+         this file makes plain `grep` treat 18,000 lines as BINARY and silently
+         match nothing, which CLAUDE.md records as a trap that has already cost
+         time. Comparing in sequence needs no separator at all. */
+      .sort((x, y) => x.bundle_id.localeCompare(y.bundle_id)
+                      || x.statement_id.localeCompare(y.statement_id));
+
+    /* THE HASH, over the WHOLE set and over the fields that CHANGE MEANING. A
+       hash over the rendered answer would move when a bound moved; a hash over
+       the ids alone would not move when a statement's text was rewritten under
+       the same id, which is the one change a manifest must notice, because it
+       is what creates bias debt. */
+    const statementsSha = await Store.#sha256(JSON.stringify(
+      all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])));
+
+    /* DEC-54 (b): THE RESIDUE TRAVELS WITH THE MANIFEST. It is read from each
+       adopted bundle's own `## What This Does Not Enforce` section — the bytes
+       a stranger holding the bundle would read — rather than recomputed, so the
+       manifest and the document say one thing. */
+    const residue = [];
+    for (const a of adoptions) {
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, a.bundle_id);
+      const body = md && typeof md.content === "string" ? md.content : "";
+      const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + body);
+      residue.push({ bundle_id: a.bundle_id, scope: a.scope_type,
+                     text: m ? m[1].trim() : "",
+                     stated: !!(m && m[1].trim()) });
+    }
+
+    const cap = Math.max(1, Math.min(Store.BIAS_MANIFEST_LIMIT_MAX,
+      Math.floor(Number(limit) || Store.BIAS_MANIFEST_LIMIT_DEFAULT)));
+    const from = Math.max(0, Math.floor(Number(offset) || 0));
+    const page = all.slice(from, from + cap);
+
+    return {
+      ok: true,
+      scope: st, scope_id: sid,
+      in_force: true,
+      /* THE MANIFEST PROPER: (bias bundle id, revision) in force, plus the pin
+         each adoption froze. This is what a run carries and what a published
+         case names the version of. */
+      bundles: adoptions.map((a) => ({
+        bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type,
+        adopted_by: a.author, adopted_at: a.at,
+        source_url: a.source_url ?? null, retrieved: a.retrieved ?? null,
+        source_sha256: a.source_sha256 ?? null,
+      })),
+      statements_sha: statementsSha,
+      /* Stated in the answer rather than left to be inferred: the hash covers
+         the whole set even when the page does not. */
+      statements_sha_covers: "the whole effective set, before any bound was applied",
+      statements: page,
+      residue,
+      lock_violations: lockViolations,
+      count: page.length, total: all.length,
+      limit: cap, offset: from,
+      truncated: from + page.length < all.length,
+    };
+  }
+
+  /** op=biasinhale — READING AN EXTERNAL POLICY. It proposes; it never installs.
+   *
+   *  DEC-54's response, in Bob's words: *"having the ability to inhale an
+   *  organization's stated policy, thus turning it into a BIO enforced policy,
+   *  is a big part of the solution"* — and the three determinations that make it
+   *  safe are enforced here rather than described:
+   *
+   *  (a) THE SPLIT. *"A newsroom policy contains BOTH: bars (AP's 'more than one
+   *      source' -> required_strength) AND scrutiny statements (AP's 'the source
+   *      is reliable, and in a position to have direct knowledge') … One
+   *      document, two constructs, and conflating them is the error to design
+   *      against."* Bars come back in `bars[]`, addressed to `required_strength`,
+   *      and NEVER as statements.
+   *
+   *  (b) THE RESIDUE IS THE MOST VALUABLE PRODUCT, not a diagnostic. *"in four
+   *      of five documented verification failures the organisation's COUNTABLE
+   *      rules were formally SATISFIED while the uncountable properties failed …
+   *      an extractor pointed at AP's policy would reliably capture 'more than
+   *      one source' and drop 'in a position to have direct knowledge' — it
+   *      would systematically encode the part that does not protect and discard
+   *      the part that does. Which inverts what the capability should output:
+   *      its most valuable product is the list of what it COULD NOT
+   *      mechanise."* So `residue[]` is a first-class field with its own count
+   *      and its own bound, and `coverage` states the split in numbers.
+   *
+   *  (c) IT PROPOSES. There is NO WRITE IN THIS METHOD — no `sql.exec`, no
+   *      transaction, no promote — and `test/bias.test.mjs` asserts that against
+   *      this file's bytes. A caller asking it to adopt is refused by C-26.8
+   *      rather than silently ignored, because a silent ignore is how a caller
+   *      comes to believe it installed.
+   *
+   *  AND IT NEVER PROPOSES kind=pattern. DEC-54: *"A pattern statement must cite
+   *  evidence in the record and cannot leave draft without it, so an extractor
+   *  can propose scrutiny and inference statements far more safely than pattern
+   *  statements."* An extractor reading somebody else's policy holds no evidence
+   *  in THIS record, so every pattern-shaped sentence goes to the residue by
+   *  construction — the machine's reach is two of the three kinds, and the third
+   *  is out of it structurally rather than by policy.
+   *
+   *  THE MALFORMEDNESS RULE BINDS THE MACHINE EXACTLY AS IT BINDS A MEMBER
+   *  (DEC-54's constraint 2). A candidate that would be refused by C-26.5 from a
+   *  member is dropped to the residue with that C-number attached, rather than
+   *  proposed and refused later — proposing it would put a verdict in front of a
+   *  member with the machine's authority behind it. */
+  biasInhale({ policy = "", source = null, retrieved = null, adopt = false,
+               limit = null } = {}) {
+    if (adopt === true || adopt === "true" || adopt === 1 || adopt === "1")
+      return this.#biasRefuse("BIAS_INHALE_CANNOT_ADOPT",
+        "op=biasinhale reads a policy and returns a PROPOSAL. Adopting is op=biasadopt, signed by a "
+        + "member — and only after the proposed set has been written into a bias bundle and offered.");
+
+    const text = String(policy || "");
+    /* Sentences, bounded. The bound is on the INPUT and is reported separately
+       from the output bounds below: "40 statements from a policy we read half
+       of" and "40 statements from a policy we read all of" are different
+       claims. */
+    const allSentences = text
+      .split(/\n{2,}|(?<=[.;:])\s+/)
+      .map((s) => s.replace(/\s+/g, " ").trim())
+      .filter((s) => s.length > 12);
+    const readSentences = allSentences.slice(0, Store.BIAS_INHALE_SENTENCES_MAX);
+
+    /* The cues, and they are deliberately NARROW. A sentence that does not
+       clearly do one of the two mechanisable things goes to the residue, which
+       is the safe direction here and the opposite of the usual one: a
+       misclassified sentence proposed as a statement would put words in a
+       group's mouth, while one left in the residue is simply named as something
+       BIO does not check. */
+    const SCRUTINY = /\b(verify|verified|verification|corroborat\w+|cross-?check\w*|confirm\w*|reliab\w+|track record|motive|direct knowledge|first-?hand|vet\w*|scrutin\w+|authenticat\w+)\b/i;
+    const INFERENCE = /\b(does not (mean|indicate|imply|constitute)|is not (evidence|an indication|proof|confirmation)|should not be (taken|read|treated|inferred)|do not (assume|infer)|cannot be inferred|must not be (taken|read) as)\b/i;
+    const PATTERN_SHAPED = /\b(routinely|habitually|has a history of|repeatedly|consistently|typically|often)\b/i;
+
+    const bars = [], statements = [], residue = [];
+    let n = 0;
+    for (const s of readSentences) {
+      /* (a) THE SPLIT, FIRST. A bar is recognised before anything else, because
+         a sentence can look like a scrutiny statement AND set a threshold
+         ("stories require more than one source, and each source must be
+         reliable") — and DEC-54's error to design against is exactly the one
+         where such a sentence lands in the bias set and stops gating. */
+      if (BIAS_BAR_PHRASING.some((re) => re.test(s))) {
+        bars.push({ text: s, construct: "required_strength",
+                    detail: "a BAR — how strong support must be before you assert. It gates at "
+                          + "pre-flight (DEC-17); declared as bias it would refuse nothing." });
+        continue;
+      }
+      /* The malformedness rule, applied to the MACHINE's candidate before it is
+         ever offered. */
+      if (BIAS_VERDICT_WHOLESALE.test(s) || BIAS_VERDICT_SPEAKER.some((re) => re.test(s))) {
+        residue.push({ text: s, why: "this reads as a verdict on a source, and declared bias may never "
+                                   + "issue verdicts — refused for the machine exactly as for a member",
+                       check: BIAS_CHECKS.BIAS_STATEMENT_ISSUES_A_VERDICT.check });
+        continue;
+      }
+      if (INFERENCE.test(s)) {
+        statements.push({ id: `prop-${++n}`, kind: "inference", subject: null, text: s,
+                          justification: null, citations: [],
+                          proposed: true, authored: false });
+        continue;
+      }
+      if (SCRUTINY.test(s) && !PATTERN_SHAPED.test(s)) {
+        statements.push({ id: `prop-${++n}`, kind: "scrutiny", subject: null, text: s,
+                          justification: null, citations: [],
+                          proposed: true, authored: false });
+        continue;
+      }
+      residue.push({ text: s,
+                     why: PATTERN_SHAPED.test(s)
+                       ? "this is a claim about how an organisation behaves, which is a PATTERN statement "
+                       + "and must cite evidence in THIS record — evidence a reader of somebody else's "
+                       + "policy does not have. It is left for a member to make, or not."
+                       : "this states a property BIO cannot count — the uncountable half of a policy, and "
+                       + "the half that does the protecting. It is named here rather than dropped.",
+                     check: null });
+    }
+
+    const cap = Math.max(1, Math.min(Store.BIAS_INHALE_LIMIT_MAX,
+      Math.floor(Number(limit) || Store.BIAS_INHALE_LIMIT_DEFAULT)));
+
+    return {
+      ok: true,
+      /* (c) STATED FIRST AND IN THE ANSWER, not only in the documentation.
+         Three keys rather than one, because a consumer that read only
+         `installed` could still believe something changed. */
+      installed: false, adopted: false, writes: 0,
+      proposes: "a member writes these into a bias bundle, justifies each one, points each subject at "
+              + "the registry, offers the set as 'proposed', and adopts it with their name on it. "
+              + "Nothing here is in force and nothing here has been written.",
+      /* (a) THE SPLIT, as two named lists. */
+      bars: bars.slice(0, cap), bars_count: bars.length,
+      statements: statements.slice(0, cap), statements_count: statements.length,
+      /* (b) THE RESIDUE, published at the same rank as the extraction and with
+         its own count, because the ruling's finding is that this is where the
+         protection lives. */
+      residue: residue.slice(0, cap), residue_count: residue.length,
+      /* The split in numbers, so a surface cannot show the extraction and leave
+         the residue behind a fold. */
+      coverage: {
+        sentences_read: readSentences.length,
+        sentences_total: allSentences.length,
+        input_truncated: allSentences.length > readSentences.length,
+        input_limit: Store.BIAS_INHALE_SENTENCES_MAX,
+        mechanised: bars.length + statements.length,
+        not_mechanised: residue.length,
+        note: "the not-mechanised list is the more important half: the extractable rules are the "
+            + "countable ones, and in four of five documented verification failures the countable "
+            + "rules were satisfied while the uncountable properties failed (DEC-54).",
+      },
+      /* DEC-54 (d): what a member will need to PIN when they adopt. Echoed and
+         never stored, because nothing here is stored. */
+      pin: { source_url: source ? String(source) : null,
+             retrieved: retrieved ? String(retrieved) : null },
+      limit: cap,
+      truncated: bars.length > cap || statements.length > cap || residue.length > cap,
+    };
+  }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -17951,6 +18745,42 @@ export class Store extends DurableObject {
           limit: url.searchParams.get("limit"),
           offset: url.searchParams.get("offset"),
           viewer: url.searchParams.get("viewer"),
+        }),
+        /* PL-12 / D-84. Three ops. `author` on the adoption is stamped by the
+           control plane from the SESSION and any caller-supplied value is
+           deleted there first, exactly as `by`, `viewer` and `owner` are — it is
+           the field that decides whose name is on an authored act, so a caller
+           naming it would be a caller signing for somebody else. `viewer` on the
+           manifest read is stamped the same way. */
+        airunspawn: () => this.aiRunSpawnPayload({
+          run: url.searchParams.get("run"),
+          half: url.searchParams.get("half"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        biasmanifest: () => this.biasManifest({
+          scope: url.searchParams.get("scope"),
+          scopeId: url.searchParams.get("scopeId"),
+          limit: url.searchParams.get("limit"),
+          offset: url.searchParams.get("offset"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+
+        biasadopt: () => this.biasAdopt({
+          bundleId: url.searchParams.get("bundleId"),
+          scope: url.searchParams.get("scope"),
+          scopeId: url.searchParams.get("scopeId"),
+          author: url.searchParams.get("author"),
+        }),
+        /* The policy arrives in the BODY. A policy document in a query string
+           would be truncated by the first proxy with an opinion about URL
+           length, and a truncated policy silently produces a smaller residue —
+           the one field whose incompleteness is the failure DEC-54 (b) is about. */
+        biasinhale: () => this.biasInhale({
+          policy: (body && body.policy) || "",
+          source: (body && body.source) || null,
+          retrieved: (body && body.retrieved) || null,
+          adopt: body ? body.adopt : false,
+          limit: url.searchParams.get("limit"),
         }),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to

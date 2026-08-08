@@ -263,7 +263,7 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    returns spelling success `ok: true` while `aiRunLog` answers `found: true`.
    TWO instruments, each blind to it for its own reason, and it was found by hand
    at another item's integration. Both are corrected; both now name it. */
-t("WALK: the roster is NINETEEN ops — the sweep is the item, not the two the item named",
+t("WALK: the roster is TWENTY-ONE ops — the sweep is the item, not the two the item named",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
    inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,
@@ -271,14 +271,40 @@ t("WALK: the roster is NINETEEN ops — the sweep is the item, not the two the i
    detector had to move to admit it. Recorded as its own paragraph rather than folded into
    the one below, because the one below is a record of two items colliding on this number
    and that record is worth keeping intact. */
+/* CORRECTED 2026-08-08 (PL-12), not exempted, and PL-1's 19 was true on the day it
+   was written — three hours before this. **19 -> 21, and the number was MEASURED by
+   running the walk rather than derived by adding.** PL-1 took 18 -> 19 and PL-12 took
+   18 -> 20 from the same base, in different worktrees, neither able to see the other;
+   19 + 2 and 20 + 1 both happen to give 21 here, and that coincidence is exactly why
+   it must not be arrived at by arithmetic — CONDUCT's instruction at this rebase was
+   to run it and take what the walk reports, because THIS PIN'S OWN SUBJECT is that
+   hand-carried counts go stale, and it has now been corrected at integration twice for
+   that reason.
+   THE TWO PL-12 ARRIVALS, and the second is the one worth reading: THE ITEM EXPECTED
+   ONE AND THE WALK FOUND TWO. `op=biasmanifest` is a new capped read, PL-10's kind of
+   arrival — born with its bound. `op=biasinhale` also carries a named cap, and the
+   item's author had not counted it as a bounded read at all because it opens no table:
+   it is a pure function over a policy document the caller POSTed. It publishes three
+   collections regardless, and a RESIDUE silently cut at N is precisely the failure
+   DEC-54 (b) exists to prevent. The walk was right and the item was wrong, which is the
+   direction this pin is for.
+   AND ONE SHAPE THIS ROSTER HAD NOT CARRIED BEFORE: `biasManifest` applies its bound
+   with `Array.prototype.slice` over a set it composed in memory, NOT with `LIMIT ?` in
+   SQL. It must — the effective set is instance statements minus project nullifications
+   plus project additions, so a SQL limit on either input would cut the set BEFORE the
+   subtraction and change WHICH statements are in force rather than how many are shown.
+   The walk finds it anyway because the cap constants carry their own names, which is
+   the property REC-57 chose the detector for, proved here for a non-SQL bound. */
 /* CORRECTED TO 18 AT INTEGRATION, 2026-08-07 by CONDUCT — and the correction is the point.
    PL-10 and REC-70 landed in the same integration and EACH corrected this pin 16 -> 17,
    for DIFFERENT ops: `op=versionchain` (a new capped read) and `op=airunlog` (a read that
    carried no bound and gained one). Both comment blocks above are true and both are kept.
    Taking either worker's number would have left this pin asserting 17 over a roster of 18 —
    a hand-carried count going stale in the very suite whose subject is that counts go stale.
-   Two items may not both be right about a shared number, and merging them is the integrator's. */
-  OPS.size, 19);
+   Two items may not both be right about a shared number, and merging them is the integrator's.
+   CORRECTED TO 21, 2026-08-08 at PL-12's rebase — MEASURED, not added up. See the block
+   immediately above the assertion for why the arithmetic agreeing was not evidence. */
+  OPS.size, 21);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -425,6 +451,58 @@ t("FIXTURE ARMS THE TRAP: three versions of ONE document sit at one address, so 
 + "1 has something to cut — and the chain is three long while the corpus is three documents, which is "
 + "D-220's whole point arriving as a fixture",
   (await GET(`op=versionchain&token=mem-r57&address=${encodeURIComponent(VC_ADDR)}&limit=5000`)).total, 3);
+
+/* ------------------------------------------------------ PL-12 / D-84's FIXTURE.
+   The bias manifest joined this roster as a NEW capped read. It counts the
+   STATEMENTS IN THE EFFECTIVE SET, so the set needs more than one before a cap
+   of 1 can be shown to bite — three, matching everything else here.
+
+   THE ADOPTION IS WRITTEN AT THE DO, and the reason is worth stating because it
+   is a property of the feature rather than a convenience: `op=biasadopt` REFUSES
+   a machine credential by name (C-26.9), since adoption is an authored,
+   attributed act (DEC-46, D-90, D-82) and `mem-r57` is a token with no member
+   behind it. This suite holds no member session, so the row is written the way
+   `recordcapturedlocator` above is — straight at the Durable Object. That is a
+   fixture shortcut and NOT a hole: the refusal it steps around is driven through
+   the real control plane in test/bias.test.mjs. */
+const BIAS_ID = "BIAS-2026-0001-r57";
+const biasMd57 = (state) => [
+  "---", `id: ${BIAS_ID}`, "object_type: bias", "schema: bias@1",
+  `title: "${BIAS_ID}"`, `current_state: ${state}`, "prior_state: null",
+  `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:", "  mode: human",
+  "  capability_tier: member", "group: believe-in-oakland", "references: []",
+  "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
+  "  since: null", "  source: null", "visuals: []",
+  "statements:",
+  ...[1, 2, 3].flatMap((i) => [
+    `  - id: "s${i}"`, "    kind: \"scrutiny\"", `    subject: "ENT-2026-000${i}"`,
+    `    text: "Claims from source ${i} need a second, independent record before they bear load."`,
+    `    justification: "Source ${i} is a party to a matter this group is examining."`,
+    "    citations: []", "    locked: false"]),
+  "---", "", "## Statements", "", "Three of them.", "",
+  "## Adoption", "", "Adopted under the group's own process document.", "",
+  "## What This Does Not Enforce", "",
+  "It does not check source independence, direct knowledge, or chain of custody.", "",
+  "## Session Log", "", "## Review Notes", "",
+].join("\n");
+{
+  const mk = async (state, base) => {
+    const md = biasMd57(state);
+    const r = await POST("op=promote&token=mem-r57", {
+      bundleId: BIAS_ID, base, snapKey: `${BIAS_ID}-${base ? "rev" : "new"}`, author: "r57",
+      files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+      meta: { object_type: "bias", group: "believe-in-oakland", title: BIAS_ID,
+              current_state: state, created: NOW, last_updated: NOW } });
+    if (r?.ok === false) throw new Error(`promote ${BIAS_ID} ${state}: ${JSON.stringify(r)}`);
+    return r.bundleSha;
+  };
+  const proposedSha = await mk("proposed", null);
+  const ad = await DO(`biasadopt?bundleId=${BIAS_ID}&scope=instance&author=r57-member`);
+  if (ad?.ok === false) throw new Error(`biasadopt: ${JSON.stringify(ad)}`);
+  await mk("adopted", proposedSha);
+}
+t("FIXTURE ARMS THE TRAP: three statements are in force, so op=biasmanifest's cap of 1 has something to cut",
+  (await GET("op=biasmanifest&token=mem-r57&scope=instance&limit=5000")).total, 3);
 
 /* ------------------------------------------------- REC-60 / D-225's FIXTURE.
    The three meaning-layer reads joined this roster when they gained a bound, so
@@ -617,6 +695,43 @@ const DRIVEN = [
      just `ok: true` returns while this method answers `found: true`, hiding 27
      dispatched ops. Two instruments now name this op independently, which is the
      point: neither one's blind spot is the other's. */
+  /* PL-12 / D-84, 2026-08-07: the bias manifest, a NEW capped read. It answers
+     completeness in `op=search`'s vocabulary — `total` beside `limit` and
+     `offset` — because it is a read whose answer is a SET the caller may page
+     through, and op=search is the model REC-57's header says the rest were
+     brought to. No spelling is minted for it.
+     IT IS THE FIRST ROSTER OP WHOSE BOUND IS NOT `LIMIT ?` IN SQL, and that is
+     forced rather than chosen: the effective set is instance statements minus
+     project nullifications plus project additions, so a SQL limit on either
+     input would cut the set BEFORE the subtraction and change WHICH statements
+     are in force rather than how many are shown. */
+  { op: "biasmanifest", bite: 1, whole: 5000,
+    drive: (n) => GET(`op=biasmanifest&token=mem-r57&scope=instance&limit=${n}`),
+    more: (a) => a.offset + a.count < a.total,
+    says: "`total` beside `limit` and `offset`",
+    lost: "whether this is the WHOLE lens the work was produced under or the first N statements of it — "
+        + "and a manifest that is silently the first N would let a published case name a lens it was not "
+        + "held to, which is the one thing the manifest exists to make checkable" },
+  /* PL-12 / DEC-54 (b): the policy inhale. It reads NO table and is on this
+     roster anyway, which is the point — it publishes three collections (bars,
+     proposed statements, and the RESIDUE), and the residue is the one whose
+     silent truncation would be a defect rather than an inconvenience: the whole
+     ruling is that "its most valuable product is the list of what it COULD NOT
+     mechanise". It answers in `op=readingname`'s vocabulary, `limit` beside
+     `truncated`, because like that op it is a keyed request whose answer is a
+     list rather than a query the caller pages through. */
+  { op: "biasinhale", bite: 1, whole: 1000,
+    drive: (n) => POST(`op=biasinhale&token=mem-r57&limit=${n}`, {
+      policy: "A story may not run on more than one source unless each has been separately verified. "
+            + "Consider whether the source is reliable and in a position to have direct knowledge. "
+            + "Weigh the source's track record, position and motive before relying on what they say. "
+            + "A refusal to comment does not mean the allegation is true. "
+            + "Reporters must maintain a chain of custody for every document from a confidential source. "
+            + "The subject of an investigative story must be given a meaningful opportunity to respond." }),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether the list of what BIO CANNOT check is complete or the first N of it — and DEC-54 (b) "
+        + "makes that list the capability's most valuable output, because in four of five documented "
+        + "verification failures the countable rules were satisfied while the uncountable ones failed" },
   { op: "airunlog", bite: 1, whole: 5000,
     drive: (n) => GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",

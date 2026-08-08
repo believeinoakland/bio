@@ -177,8 +177,16 @@ console.log("\n--- the intake form writes conformant bundles ---");
   /* Superseded 2026-08-03 (REC-10): the catalog gained the inquiry machine
      (first state `open`) and KEEPS the legacy focus/problem vocabularies, so
      the derived table now carries all six keys, in the catalog's order. */
+  /* CORRECTED 2026-08-07 (PL-12 / D-84), not exempted: `bias` joins the
+     catalogue as a fifth canonical type with first state `draft`, so the derived
+     table carries SEVEN keys. The old expectation was true on the day it was
+     written and is now false — and this assertion's whole subject is that the
+     table is DERIVED rather than remembered, so a hand-kept literal beside it
+     must move whenever the catalogue does. That it failed here is the assertion
+     working, not a regression. */
   t("first states come from the catalog, not from memory, legacy spellings included", ui.FIRST_STATE,
-    { information: "collected", inquiry: "open", focus: "surfaced", project: "forming", action: "planned", problem: "surfaced" });
+    { information: "collected", inquiry: "open", focus: "surfaced", project: "forming", action: "planned",
+      bias: "draft", problem: "surfaced" });
 
   const now = "2026-07-24T12:00:00Z";
   for (const type of ["information", "inquiry", "focus", "problem", "project", "action"]) {

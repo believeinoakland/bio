@@ -818,6 +818,30 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "see the inquiry can tell 'no readings yet' from 'no such question' and a viewer who cannot "
       + "learns nothing either way; nothing states how many rows the gate removed, because that count is "
       + "the leak. If inquiries are ever compartmented, this op inherits it with no edit.",
+
+    /* PL-12 / §14, 2026-08-07: the run's spawn payload. Classified here by the
+       item that adds it; op=airun's and op=airunlog's posture, on the same
+       column and for the same reason. */
+    airunspawn: "PL-12: THE SAME GATE AS ITS TWO SIBLINGS, on the run's `context_id`. A spawn payload "
+      + "names the inquiry or project the run is working in, so a payload a viewer could read for a "
+      + "project they were not invited to would disclose the group's line of inquiry — REC-25/REC-30's "
+      + "leak, and the identical classification op=airunlog carries one line up. The row is withheld at "
+      + "the RUN, before any payload is assembled, so an invisible run's payload is never built. NOTE the "
+      + "second fence this op carries, which is NOT a viewer gate and must not be confused with one: the "
+      + "SEARCH half's payload omits the bias manifest by CONSTRUCTION (§14). That is a fence between two "
+      + "halves of one run and applies identically to every viewer, including the run's own member.",
+    /* PL-12 / D-84, 2026-08-07: the bias manifest read. Classified here by the
+       item that adds it, on op=versionchain's precedent. */
+    biasmanifest: "PL-12: A PROJECT-SCOPED MANIFEST NAMES A PROJECT BUNDLE, and the sets it reports are "
+      + "bundles too, so a caller who was never invited to the project must be answered exactly as they "
+      + "are for a project that does not exist — REC-25/REC-30's leak arriving at the LENS a group works "
+      + "under, which is a sharper case than most: a manifest discloses not only that a project exists "
+      + "but what its members believe about named institutions. Two predicates and both are the plane's "
+      + "own: `#viewerSees` on the project scope, and `#bundleGate` on each adopted bias bundle, so a set "
+      + "adopted inside an invisible project is absent from the answer exactly as it is absent from "
+      + "op=list. An unseen project and an absent one answer BYTE-IDENTICALLY — `in_force: false` with "
+      + "the same stated absence a scope with no adoption gets — and nothing publishes how many bundles "
+      + "the gate removed, because that count is the leak.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -888,6 +912,16 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "gated reads.",
     login: "PRE-AUTH: exchanges a password for a session.",
     invitelook: "PRE-AUTH: reads one invite by its own secret.",
+    /* PL-12 / D-84, 2026-08-07: the policy inhale, classified by the item that
+       adds it. This is the only entry in either table whose reason is that the
+       op TOUCHES NO RECORD AT ALL. */
+    biasinhale: "READS NO RECORD: op=biasinhale is a pure function over a policy document the CALLER "
+      + "posted. It opens no table, joins nothing, and holds no write path — DEC-54 (c) is that reading "
+      + "a policy PROPOSES and never installs, and test/bias.test.mjs asserts the absence of a write off "
+      + "store.mjs's own bytes rather than trusting this sentence. There is no record material here for "
+      + "a viewer predicate to filter, so gating it would be a gate over the caller's own input, which "
+      + "protects nothing and would make the ungated set harder to read by putting a gate where there "
+      + "is nothing behind it.",
   };
 
   const unclassified = reads.filter((op) => !(op in GATED) && !(op in UNGATED));

@@ -811,6 +811,22 @@ export const NON_ACTS = {
      project's bundle.md, which is what makes lowering a bar an on-the-record
      act rather than a settings change with nothing to read afterwards. */
   strengthbar: "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader",
+  /* PL-12 / D-84, and it belongs BESIDE `strengthbar` because the two are the
+     gate/disclose pair DEC-54 (a) exists to keep apart: the bar the group
+     declares, and the lens it declares. Both are keyed by a SCOPE — an instance
+     or a project — rather than by the object they are later applied to.
+     WHY IT IS NOT AN ACT even though it names a bias bundle. This registry is
+     what a surface renders as the CONTROLS BESIDE AN OBJECT, and the object
+     `op=biasadopt` names is a bias set whose own lifecycle moves through
+     `op=promote` like every other bundle's — draft, proposed, adopted are
+     ordinary member-authored transitions and appear as such. What `biasadopt`
+     writes is the ADOPTION: the authored, attributed, PINNED fact that a scope
+     works under that set (DEC-54 c and d). Its subject is the (scope, set) pair,
+     which is not a state of either. Publishing it here would put "adopt this
+     lens over your project" on the same control strip as dispose and retire —
+     the mistake REC-21 records for `queuemute`, one control for a governance
+     declaration and a record act. */
+  biasadopt: "governance: the authored, attributed adoption that puts a declared-bias set in force for a scope (DEC-54 c/d), keyed by (scope, bias bundle) and not by any object's state — the disclose half of the pair `strengthbar` is the gate half of",
   /* Selection lifecycle: a selection is the caller's own server-side snapshot. */
   select: "selection lifecycle, owned by the credential that made it",
   selectionrelease: "selection lifecycle, owned by the credential that made it",

@@ -549,6 +549,24 @@ const OPS = {
      an inquiry and the bundles its versions rest on, so a member must not learn
      from a version set what op=list would not tell them. */
   basisversions: { classes: ["admin", "member", "probe"],        mutating: false },
+
+  /* PL-12 / D-84: the bias object's three ops.
+     `biasmanifest` is a READ and is gated on the viewer below, like every read
+     in this table that names a bundle.
+     `biasadopt` is MUTATING and is deliberately reachable by `member` and not
+     only by `admin`: the doctrine puts instance bias in the admins' hands and
+     PROJECT bias in the project managers', and a project manager is a member.
+     What stops a member adopting on the instance's behalf is not this list — it
+     is that the act is ATTRIBUTED, published with the group's work, and refused
+     outright to a credential with no name (C-26.9).
+     `biasinhale` is MUTATING: FALSE, and that is not an accident of shape, it
+     is DEC-54 (c). Reading a policy proposes; it never installs. The method
+     holds no write path at all and `test/bias.test.mjs` asserts that off the
+     source — this row is the second, weaker statement of the same fence, and it
+     is here so that a caller reading the op table learns the fact too. */
+  biasmanifest: { classes: ["admin", "member", "probe"],         mutating: false },
+  biasadopt:    { classes: ["admin", "member", "probe"],         mutating: true  },
+  biasinhale:   { classes: ["admin", "member", "probe"],         mutating: false },
   /* CONTENT-PDF's structure extractor (D-91), exposed as a READ over already-
      captured bytes. It reads the exact R2 object op=capture serves and parses
      it; it writes nothing and holds no PUT arm, so unlike op=capture it is
@@ -828,6 +846,12 @@ const OPS = {
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* PL-12 / §14: THE FENCE, and it is an op so that it can be POINTED AT. The
+     spawn contract for a search sub-session omits the bias manifest BY
+     CONSTRUCTION; before this it existed only as a sentence in a design
+     document, where no assertion could read it and no negative control could
+     break it. A THIRD gated read on the run's context, like its two siblings. */
+  airunspawn:         { classes: ["admin", "member", "probe"],      mutating: false },
   /* D-103: the per-host governor's operator surface. governorstate is a read of
      which hosts are held and why (admin and member: a member watching a capture
      stall deserves to see the governor is the reason, not a broken source);
@@ -1020,6 +1044,20 @@ const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
    over two different doctrines — the same reason QUEUE_ACTIONS was kept apart
    from TASK_ACTIONS. */
 const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+/* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
+   `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
+   SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
+   non-mutating BY RULING rather than by shape (DEC-54 c: it proposes and never
+   installs), so its absence from this array is the third place that fact is
+   enforced and not a fourth place it is merely stated.
+   ONE-MEMBER ARRAY, ON PURPOSE, and kept apart from every existing set for the
+   reason QUEUE_ACTIONS was kept apart from TASK_ACTIONS: adoption is its own
+   doctrine — an authored, attributed act that puts a LENS over a group's work —
+   and folding it into a neighbouring array would be the first step toward one
+   control over two different things. It is in BOTH lists because an
+   administrator is a member too, and because the doctrine puts instance bias
+   with the admins and project bias with the project managers, who are members. */
+const BIAS_ACTIONS = ["biasadopt"];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -1066,12 +1104,14 @@ const SESSION_OPS = {
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
+                   ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
+                   ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig"]),
 };
@@ -1386,6 +1426,15 @@ const NEEDS = {
   airunopen:        "contribute",
   airuntick:        "contribute",
   airunclose:       "contribute",
+  /* PL-12 / D-84. Adopting a bias set is `contribute` and deliberately NOT
+     `publish`: it is the group declaring the lens it works under, which is
+     ordinary record work that every contributing member's own project managers
+     do — and DEC-20 settles that declaring a bias never gates anything, so
+     nothing downstream of this is a publication act. A view-only member does not
+     put a lens over other people's work; the capability is what says so.
+     `biasinhale` carries NONE, like every other read in this file, and it is a
+     read precisely because it writes nothing. */
+  biasadopt:        "contribute",
 };
 
 /* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
@@ -4724,7 +4773,7 @@ export default {
            project the caller was never invited to must answer exactly as a
            nonexistent run does — REC-25/REC-30's leak, one object over. The
            store fails closed on an absent stamp, like every op in this list. */
-        || op === "airun" || op === "airunlog"
+        || op === "airun" || op === "airunlog" || op === "airunspawn"
         /* PL-10 / D-220: a version chain names a BUNDLE per version, so a
            document captured inside a project the caller was never invited to
            must be absent from the chain exactly as it is absent from op=list.
@@ -4740,6 +4789,14 @@ export default {
            behind the same gate, so hidden and absent are one answer; and it
            fails closed on an absent stamp, like every op in this list. */
         || op === "basisversions"
+
+        /* PL-12 / D-84: a project-scoped manifest names a PROJECT bundle, and
+           the adopted bias bundles are bundles too, so a caller who may not see
+           the project must be answered exactly as they are for a project that
+           does not exist — REC-25/REC-30's leak arriving at the lens. The store
+           gates through the same `#bundleGate` every read here compiles and
+           fails closed on an absent stamp, like every op in this list. */
+        || op === "biasmanifest"
         || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -4780,6 +4837,18 @@ export default {
        `address` was copied in the loop above and is overwritten. */
     if (op === "versionchain")
       inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
+    /* PL-12 / D-84 / DEC-46: WHOSE NAME IS ON THE ADOPTION, decided by the
+       SERVER from the credential that authenticated and set after the caller's
+       parameters were copied, so a caller-supplied `author` is overwritten
+       rather than honoured. This is the strictest reading of DEC-54 (c): the
+       whole hazard the ruling names is a group appearing to follow an
+       organisation's standards "with nobody in the group having authored
+       anything", and an author a caller can name is an author nobody authored.
+       A machine credential stamps `token:<class>` and the store refuses it BY
+       NAME (C-26.9) rather than recording a machine as the adopter — the same
+       fence op=publishedcase already draws for the bias acknowledgement. */
+    if (op === "biasadopt")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
