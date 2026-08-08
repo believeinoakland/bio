@@ -29,7 +29,24 @@ making a change another session must know about.**
    `miniflare` BEFORE making any edit, and each spent time establishing it was
    not their change. It recurs per worktree, so it belongs in the brief rather
    than in anyone's memory.
-2. **When a worker reports:** VERIFY (full battery from the main checkout;
+**THE REFILL RULE, AND IT IS STEP 2's LAST ACT — NOT A SEPARATE HABIT.** A slot that has
+just been freed by an integration is filled BEFORE the turn ends, in the same turn, from
+the area's own column. **Reporting that a slot is free is not the same as filling it, and
+CONDUCT has confused the two twice** (2026-08-07 and 2026-08-08, both caught by Bob): the
+report named the next item correctly and then stopped. **An idle ephemeral worker costs
+nothing; an idle SLOT costs the whole session's throughput, and `ORCHESTRATION.md`'s target
+is integrated-correct THROUGHPUT rather than agent busyness.** So: integrate, push, and
+spawn — and if a slot cannot be filled, say WHICH blocker holds it and what would clear it,
+because "free" with no successor named is the shape of the mistake. **Slot-free lanes
+(measurement, test-estate, D-216-class checks) do NOT occupy a slot and are therefore not a
+substitute for filling one — run them BESIDE the two, not instead of them.**
+
+2. **When a worker reports:** VERIFY (full battery from the main checkout; **AND
+   `node civicos-ui/test/run.mjs`, exit read UNPIPED — on 2026-08-08 CONDUCT pushed
+   `origin/main` with that harness RED at 32 failures, having verified the battery and
+   coverage and not it, and the integration note claimed green. Three workers found it
+   independently before CONDUCT did**;
+
    re-run the negative control yourself for anything touching destructive or
    security-sensitive code; and run `node scripts/coverage.mjs --strict`
    DIRECTLY, reading `$?` with nothing piped after it — `cmd | tail` reports
