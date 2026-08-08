@@ -142,6 +142,31 @@ diligence at the time:
 | a debt row named its milestone in PROSE | the token is the sortable part; a check that only says "wrong" makes the reader guess |
 | a memory holding a standing instruction never loaded | it existed, correctly written, with no line in the index that loads it |
 | **a worker's negative-control harness was OVERWRITTEN MID-TURN by another worker running in parallel** (PL-10, 2026-08-07) | **the scratchpad directory is SHARED between concurrent worker sessions.** Two workers wrote a harness to the same path; the second replaced the first while it was between arming a control and restoring the file. PL-10's controls had already run and its tree was verified, so nothing was lost — **but a harness silently replaced between ARM and RESTORE could report a restore it never performed**, and this project has already met an NC harness that reported a byte-identical restore over a file that had not been restored (UI-38). **THE RULE, and it is now in every brief CONDUCT writes: a worker writes its control harness INSIDE ITS OWN WORKTREE, never to a shared scratchpad — and verifies every restore by CONTENT as well as by hash.** A worktree is the one place a worker owns alone; that is what it is for |
+| **AN UNTRACKED `.test.mjs` FROM ANOTHER WORKER RAN IN A WORKER'S BATTERY AND DEFEATED ITS BASELINE** (REC-68 found it, M0-15 named the cause, 2026-08-08) | **`git stash` IS REPOSITORY-WIDE, NOT PER-WORKTREE — and a worktree is NOT the one place a worker owns alone after all, which corrects the row above.** MEASURED: `refs/stash` is not among git's per-worktree refs, so a `git stash push` inside a worktree writes `refs/stash` into the COMMON git directory while the worktree's own `refs/` stays empty. **Sixty checkouts share ONE stack**, `stash@{0}` means *whatever any of the sixty pushed last*, and `push -u` carries UNTRACKED files — so a `pop` deposits another worker's files, and an untracked suite among them is then DISCOVERED and RUN by the battery, counted, and gone by the next run. The instance is in the object database: stash `8706832` on UI-50's branch contains a different worker's D-228 work. **THE PART THAT MAKES THIS AN ORCHESTRATION FAILURE RATHER THAN A GIT FACT: the recipe every worker is briefed to use for a TRUE BASELINE is `git stash`.** The practice that defends this project against stale figures was itself the delivery mechanism for a phantom, and a contaminated baseline is a WRONG NUMBER CARRYING FULL CONFIDENCE — strictly worse than the stale brief it was written to defeat, because a stale brief is corrected by measurement and this defeats measurement itself. The battery now NAMES any suite it ran that is not in a commit (M0-15, D-238); the recipe changes below |
+
+### RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15)
+
+**Do not use `git stash` to park work while you re-measure at HEAD.** The stack is
+shared by every worktree in this repository (the row above), so `git stash pop` is a
+race against seven other workers and the loser silently acquires the winner’s files.
+UI-50 lost that race today and recovered only because it looked at what it had popped.
+
+**Prefer, in order:**
+
+1. **Do not park at all.** `node scripts/battery.mjs` reports the provenance of every
+   suite it ran, so a baseline measured over a dirty tree can be READ honestly rather
+   than manufactured by hiding the dirt. This is why that line exists.
+2. **If you must have a clean tree, COPY, do not stash.** `git worktree add` a scratch
+   checkout of HEAD inside your own worktree, measure there, and remove it. Nothing
+   shared is mutated.
+3. **If you stash anyway** — `git stash push -u -m <your-agent-id>`, then
+   **`git rev-parse stash@{0}` IMMEDIATELY and keep the SHA**, and restore with
+   `git stash apply <that SHA>`. Never `pop`, never `stash@{0}`: an index is a
+   position on a stack other sessions are pushing to, and a SHA is not.
+
+**And whatever you do, read what came back.** A restore verified by hash against a
+snapshot you took yourself is the only check that survives another session touching
+the same stack.
 
 ### Before you end a turn
 

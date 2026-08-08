@@ -175,6 +175,24 @@ const REGISTER_FLOOR = {
   arms:       518,  // arms stated across the classified declarations
   classified: 125,  // declarations the detector could count arms in
   corpus:     126,  // suites the register reads
+
+  arms:       486,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+                       INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
+                       PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
+                       and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
+                       BRANCH AND FALSE OF THE MERGED TREE — the fifth time in two days, and
+                       the same shape as `regionLines`, a C-number family, a debt row and an
+                       IC number. A worker cannot see it and should not be asked to.
+                       THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
+                       RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
+                       accumulate any, which is exactly what D-233 and REC-71 were about.
+                       MOVED 478 -> 486 BY M0-15, 2026-08-08, from the figure a green run
+                       PRINTED (`GREW by 8 arm(s)`): `test/battery-provenance.test.mjs` is
+                       new and states eight marked arms. All three numerals below move in
+                       the SAME TURN as the suite that invalidated them, which is the rule
+                       this block exists to enforce. */
+  classified: 121,  // declarations the detector could count arms in  (120 -> 121, M0-15)
+  corpus:     122,  // suites the register reads                      (121 -> 122, M0-15)
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

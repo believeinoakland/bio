@@ -55,6 +55,8 @@ cd bio-plane && node scripts/coverage.mjs --strict
 
 | suites declaring a negative control | **120 of 120 — REMEASURED 2026-08-08 by M0-14**, and **THE ARMS HALF OF THIS ROW WAS NOT MERELY STALE, IT WAS MEASURED BY AN INSTRUMENT THAT COULD NOT SEE WHOLE DECLARATION STYLES (D-233).** `node scripts/coverage.mjs --strict` now prints `120 of 120 suites declare one (100.0%) · 470 arms stated across 119 classified declaration(s) · fullest 29 (hygiene.test.mjs) · 1 UNCLASSIFIED`. **The same tree read 395 before this item and 462 after, with the suites' declarations UNTOUCHED — the +67 is instrument, not estate**; the further +8 is this item writing its own control into a declaration, which is a property the register has always had and now says so. **Four suites scored ZERO while declaring 48 arms between them, and a fifth scored 1 against a real 10** — the four had FOUR DIFFERENT causes, none of them the numbered style the debt row named. See the section below. The tally now carries a FLOOR (`REGISTER_FLOOR` in `scripts/coverage.mjs`) so it FAILS when it falls, and a declaration the detector cannot read is reported as UNCLASSIFIED and NAMED rather than scored zero. (It read **117 of 117 · 380 arms** remeasured 2026-08-08 by REC-73, which landed `machine-fences.test.mjs` and moved this row in the same turn. The ARMS half of that was ALREADY STALE when REC-73 arrived — it read 370 over a tree the instrument measured at 375 — which was the fourth consecutive item to find a hand-carried figure here wrong by measuring it, and D-233 is the FIFTH, found in the mechanised half instead. It read **116 of 116 · 370 arms** remeasured 2026-08-08 by PL-11; **105 of 105** remeasured 2026-08-07, itself a correction of `0 of 42`.) | the backfill in item 2 below is DONE, the register is complete, and as of M0-14 it is FALSIFIABLE | **AND A FIFTH ITEM FOUND IT STALE INDEPENDENTLY IN THE SAME HOURS: REC-67 measured `117 of 117 · 380` against a real `120 of 120 · 395` and corrected it, from a tree that had not yet seen M0-14 — and UI-48 and CPDF-9 each RAISED it rather than editing it, deliberately, to avoid two items moving one shared floor in parallel. **Four items measuring one row wrong in one day, and only one of them touching it, is this row's own subject answered in practice: a hand-carried figure goes stale silently, and what fixes it is the instrument printing the number rather than the document carrying it.** THE CURRENT PRINTED FIGURE IS `122 of 122 suites · 480 arms across 121 classified declarations`, **re-measured 2026-08-08 by REC-63**, which added one suite (`provenance-marker.test.mjs`, a five-arm declaration) and moved all three halves of `REGISTER_FLOOR` in the same turn from what the instrument PRINTED — `GREW by 9 arm(s)` — rather than by adding to the number in the file. The previous figure was `471 arms`, moved at integration by CONDUCT because REC-75 added an arm after M0-14 measured — **the fifth time in two days a figure has been true of one branch and false of the merged tree, which is why REC-63's own note at the floor tells the integrator to re-read it from the merged tree rather than trust it.**
 
+| suites declaring a negative control | **120 of 120 — REMEASURED 2026-08-08 by M0-14**, and **THE ARMS HALF OF THIS ROW WAS NOT MERELY STALE, IT WAS MEASURED BY AN INSTRUMENT THAT COULD NOT SEE WHOLE DECLARATION STYLES (D-233).** `node scripts/coverage.mjs --strict` now prints `122 of 122 suites declare one (100.0%) · 486 arms stated across 121 classified declaration(s) · fullest 32 (hygiene.test.mjs) · 1 UNCLASSIFIED` — **REMEASURED 2026-08-08 by M0-15**, which added `battery-provenance.test.mjs` (eight marked arms) and moved all three `REGISTER_FLOOR` numerals in the same turn from the figures a green run PRINTED (`GREW by 8 arm(s)`). **The same tree read 395 before this item and 462 after, with the suites' declarations UNTOUCHED — the +67 is instrument, not estate**; the further +8 is this item writing its own control into a declaration, which is a property the register has always had and now says so. **Four suites scored ZERO while declaring 48 arms between them, and a fifth scored 1 against a real 10** — the four had FOUR DIFFERENT causes, none of them the numbered style the debt row named. See the section below. The tally now carries a FLOOR (`REGISTER_FLOOR` in `scripts/coverage.mjs`) so it FAILS when it falls, and a declaration the detector cannot read is reported as UNCLASSIFIED and NAMED rather than scored zero. (It read **117 of 117 · 380 arms** remeasured 2026-08-08 by REC-73, which landed `machine-fences.test.mjs` and moved this row in the same turn. The ARMS half of that was ALREADY STALE when REC-73 arrived — it read 370 over a tree the instrument measured at 375 — which was the fourth consecutive item to find a hand-carried figure here wrong by measuring it, and D-233 is the FIFTH, found in the mechanised half instead. It read **116 of 116 · 370 arms** remeasured 2026-08-08 by PL-11; **105 of 105** remeasured 2026-08-07, itself a correction of `0 of 42`.) | the backfill in item 2 below is DONE, the register is complete, and as of M0-14 it is FALSIFIABLE | **AND A FIFTH ITEM FOUND IT STALE INDEPENDENTLY IN THE SAME HOURS: REC-67 measured `117 of 117 · 380` against a real `120 of 120 · 395` and corrected it, from a tree that had not yet seen M0-14 — and UI-48 and CPDF-9 each RAISED it rather than editing it, deliberately, to avoid two items moving one shared floor in parallel. **Four items measuring one row wrong in one day, and only one of them touching it, is this row's own subject answered in practice: a hand-carried figure goes stale silently, and what fixes it is the instrument printing the number rather than the document carrying it.** THE FIGURE AFTER M0-15 IS `486 arms / 121 classified / 122 corpus`, printed by a green `--strict` run of that tree. The figure before it was `471 arms`, moved at integration by CONDUCT because REC-75 added an arm after M0-14 measured — **the fifth time in two days a figure has been true of one branch and false of the merged tree.**
+
 **The control-plane figure is honestly an upper bound and the instrument says so.**
 A suite that drives both the worker and the store directly is credited to the worker
 for every op it names. The two exact buckets are the ones to act on: unreached, and
@@ -296,6 +298,66 @@ inside the corpus the check sweeps, and prefixing them to quote the defect would
 defect.** The instrument and its suite are both written around their own rule for the
 same reason — the first drafts of each FAILED THEMSELVES, which is the "sweep arm that
 failed by citing itself" shape this project has already paid for.
+
+## THE BATTERY DISCOVERS, AND A DIRECTORY IS NOT A COMMIT (M0-15, D-238)
+
+Suites are DISCOVERED from the directory rather than from a hand-kept list, which
+is the fix for D-93 and is correct. **The cost nobody had priced is that discovery
+trusts the directory**, and on 2026-08-08 a worker's first baseline discovered 124
+suites including `machinefences-dec49.test.mjs` (57 pass) — another worker's file,
+in no commit, gone by the next run. It could not determine how the file arrived and
+said so, which is why this became an item.
+
+**The mechanism is named and measured: `git stash` is REPOSITORY-WIDE.**
+`refs/stash` is not one of git's per-worktree refs, so all 60 checkouts of this
+repository share ONE stash stack; `push -u` carries untracked files, and a `pop`
+in another worktree deposits them there. The measurement is in `MEASUREMENTS.md`,
+the instance is stash commit `8706832`, and the corrected worker recipe is in
+`ORCHESTRATION.md`.
+
+**Why it outranks its size, and it is the whole reason this file exists.** Every
+worker is instructed to MEASURE ITS OWN BASELINE AND TRUST IT OVER ITS BRIEF, and
+that instruction has caught a stale figure on nine consecutive items. A baseline
+that silently includes a phantom suite makes it produce a WRONG NUMBER WITH FULL
+CONFIDENCE — strictly worse than the stale briefs it defeats, because a stale brief
+is corrected by measurement and this defeats measurement itself. Every item's
+`+N attributed by re-running the true baseline` is computed against it.
+
+**What the battery now says, on every run** (this is a real run of the tree that
+introduced the check, and it is naming the check's OWN suite because that suite was
+not yet committed — the mechanism working on itself):
+
+```
+provenance: 126 of 127 discovered item(s) are in the commit at HEAD (eb95b5c) · 125 suite(s) run · 2 fleet manifest(s)
+  NOT IN ANY COMMIT — this run COUNTED work no other checkout can see (M0-15):
+    bio-plane/test/battery-provenance.test.mjs  (UNTRACKED) — battery-provenance.test.mjs: 23 pass
+  7841 assertions were counted above; 7818 of them come from suites that are in the commit.
+```
+
+It NAMES rather than skips — a runner that silently dropped an untracked suite would
+hide the next phantom exactly as the silence hid this one, which is M0-14's rule for
+the register (an unclassifiable declaration is NAMED, never scored zero) and CPDF-9's
+for the dark fleet member. It checks BOTH discovery paths, because a `fleet-member.json`
+enrols a whole directory and is therefore the larger hole. It uses `git ls-tree HEAD`
+and not `git status`, because an IGNORED file does not appear in `git status` and
+`.claude/worktrees/` is ignored here. And when git cannot answer it prints
+**UNVERIFIED**, never clean.
+
+**What it still cannot see, stated here rather than discovered later:**
+
+- **It reports and does not FAIL.** A worker writing a suite before committing it is
+  the normal case, and failing on that would be a false red on the battery. So a run
+  whose totals include a phantom is still GREEN and only this line says so. Closing
+  that is a decision about how workers work, not about the runner.
+- **It cannot stop the deposit**, only the silent count. Prevention is the recipe
+  change in `ORCHESTRATION.md`.
+- **Three other walks over the same uncontrolled directory are unguarded**:
+  `scripts/coverage.mjs` (suites, and fleet manifests — without battery's dotfile
+  filter) and `hygiene.test.mjs` (three corpus walks). A phantom inflates the
+  register corpus, so a `REGISTER_FLOOR` moved while one is present would be
+  permanently too high. Named in D-238.
+- **It says nothing about whether a commit is PUSHED.** "In a commit" is a weaker
+  claim than "reaches anybody", and `tools/plancheck.mjs` is what checks the latter.
 
 ## What a queue item must satisfy before it is done
 

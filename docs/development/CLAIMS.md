@@ -3817,3 +3817,14 @@ freely but may not rise without somebody looking at the new one.
   `provenanceRouteAssess` swallows its own register read and PUBLISHES what it met —
   `register_state` is `readable | absent | unparsable | no_documents | empty` — so the answer
   says which failure it hit rather than that it hit one.
+
+## CLAIM 2026-08-08 VERIFY
+session: m0-15-phantom-suite (worktree agent-a0e79024273135242)
+opened: 2026-08-08T19:05:00Z
+paths: **`bio-plane/scripts/battery.mjs`** (the provenance walk and its header — the runner is this item's subject; no change to discovery, to the temp sweep or to the exit code), **`bio-plane/test/battery-provenance.test.mjs`** (NEW suite, entirely this item's), **`bio-plane/scripts/coverage.mjs`** (the `REGISTER_FLOOR` numerals ONLY, moved from the figures the instrument PRINTED, because a new suite carrying a declaration invalidates all three), **`docs/development/DEBT.md`** (D-236 NEW row), **`docs/development/QUEUE.md`** (the M0-15 row's disposition ONLY), **`docs/development/VERIFICATION.md`** (the register row's figures and a new section naming the hazard), **`docs/development/ORCHESTRATION.md`** (the COMMUNICATING A CHANGE failure table gains the shared-stash row, and the worker recipe that produced it), **`docs/development/MEASUREMENTS.md`** (the stash-scope measurement), **`docs/development/CLAIMS.md`** (this entry). **NOT** `bio-plane/src/**`, **NOT** `checks/bio-checks.mjs`, **NOT** `scripts/control-register.mjs`, **NOT** any other `.test.mjs`, **NOT** `civicos-ui/**`, **NOT** `pdf-worker/**`, **NOT** `agent-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: none — test estate and the runner, no plane behaviour.
+interfaces owned: none.
+expected: QUEUE.md M0-15. NAME the mechanism by which an untracked `.test.mjs` entered a worker's worktree and was run by the battery; make a phantom VISIBLE rather than absent.
+accepts-when: as the M0-15 row. Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief: **124/124 green · 7,815 assertions · 121 plane + 3 fleet · exit 0**, which AGREES with the brief — and the baseline's OWN honesty was checked, which is this item's subject: `git status --short` empty, and all 121 plane suites plus both fleet manifests present in the commit at HEAD, verified by `git ls-tree -r HEAD` rather than by `git status` (an ignored file is invisible to `git status` and `.claude/worktrees/` is ignored, so `git status` is the wrong instrument for this question).
+concurrency: checked over the whole file. No live claim names `scripts/battery.mjs` — M0-10's entry explicitly does NOT touch it, and M0-14's holds `scripts/control-register.mjs`, which this does not touch. `scripts/coverage.mjs` is touched for the `REGISTER_FLOOR` NUMERALS only; the same three-numeral block has been moved by M0-14 and by CONDUCT at integration, and the resolution is mechanical (take the higher figure, which the instrument prints).
+released:

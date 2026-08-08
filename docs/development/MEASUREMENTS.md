@@ -3769,3 +3769,44 @@ plane could not establish into a normal-looking answer), of which one is this it
 publishes what it met (`register_state`). **A hand count of `catch {` answers 18 and is FIVE
 SHORT** — it cannot see `catch (e) {`, which is REC-70's one-vocabulary trap arriving in a
 sweep whose whole subject is unstated absence.
+
+## `git stash` IS REPOSITORY-WIDE, NOT PER-WORKTREE — 2026-08-08, M0-15
+
+**Instrument:** `git stash push -u` run inside the worktree
+`bio/.claude/worktrees/agent-a0e79024273135242`, then the filesystem inspected for
+where the ref landed. Re-armed independently in a throwaway repository with two
+worktrees (`.m015-harness/arm2-rearm-stash.sh`).
+
+| what | measured |
+| --- | --- |
+| checkouts of this repository sharing one object store | **60** (`git worktree list`: `bio`, `bio-worktrees/BOB`, 58 agent worktrees) |
+| where a worktree's `git stash push` writes the ref | **`bio/.git/refs/stash` and `bio/.git/logs/refs/stash` — the COMMON git directory** |
+| the same worktree's own `.git/worktrees/<id>/refs/` afterwards | **EMPTY** |
+| git's per-worktree refs (for contrast) | `HEAD`, `refs/bisect/*`, `refs/worktree/*`, `refs/rewritten/*` — `refs/stash` is not among them |
+| does `push -u` carry UNTRACKED files across | **yes** — A's untracked `bio-plane/test/m015-phantom.test.mjs` appeared in worktree B after B popped, sha256 `a10e94a7059b7b180b178cb6421b0f1925fe20ff635768ebc7ef51e1c07257f9` on both sides |
+| what `git status` in B then calls it | `?? bio-plane/` — **the DIRECTORY, not the file**, when the parent is wholly untracked. `git status` is the wrong instrument for "is this suite in a commit"; `git ls-tree HEAD` is the right one |
+| an instance in this repository's object database | stash commit `8706832`, headed `On worktree-agent-a773e28c7c7d0fb8b: RESTORED BY UI-50 SESSION: another session's D-228 work, accidentally popped from stash by ui50`, containing `src/query.mjs`, `test/search.test.mjs`, `test/meaningquery.test.mjs` |
+
+**Why it is a measurement rather than a git fact quoted from a manual:** the
+consequence is local. Every worker here is briefed to re-measure a true baseline,
+and the recipe most of them reach for is `git stash` — so the count of checkouts
+sharing the stack is the number that matters, and it is 60. See D-238 and
+`ORCHESTRATION.md`'s corrected recipe.
+
+## THE BATTERY'S DISCOVERY PATHS AND WHAT FEEDS THEM — 2026-08-08, M0-15
+
+**Instrument:** read out of `bio-plane/scripts/battery.mjs`,
+`bio-plane/scripts/coverage.mjs` and `bio-plane/test/hygiene.test.mjs`.
+
+| walk | discovers by | fed by | provenance checked? |
+| --- | --- | --- | --- |
+| `battery.mjs` plane suites | filename `*.test.mjs` in `bio-plane/test/` | anything that can write a file there without a commit | **YES (M0-15)** |
+| `battery.mjs` fleet members | `fleet-member.json` at a repo-root directory | an untracked manifest enrols a whole DIRECTORY of suites | **YES (M0-15)** |
+| `coverage.mjs` plane suites | same directory, independently | same | no — NAMED in D-238 |
+| `coverage.mjs` fleet members | same manifest, independently, and **without** battery's `!d.startsWith(".")` filter | same | no — NAMED in D-238 |
+| `hygiene.test.mjs` corpus (3 walks) | same directory | same | no — NAMED in D-238 |
+
+**Neither battery walk can reach a sibling worktree**, checked rather than assumed:
+the plane walk does not descend, and the fleet walk filters `!d.startsWith(".")`
+while worktrees live under `.claude/worktrees/`. The phantom did not arrive by a
+walk reaching out; it arrived by a write reaching in.
