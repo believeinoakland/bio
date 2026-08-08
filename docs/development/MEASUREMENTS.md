@@ -2791,3 +2791,45 @@ the recording session against the current worktree and answered identically.
   against the full 1..60 range. A reader counting headings and a reader reading
   "DEC-60" as a count of sixty will disagree by one; this row is which of them is
   right.
+
+
+## 2026-08-07 — the meaning-layer grade indexes (PL-8 / D-222 (ii), D-223)
+
+Instrument: `bio-plane/test/meaning-index-probe.mjs`, run as
+`node test/meaning-index-probe.mjs [bundles] [reps]`. It is a PROBE, not a suite.
+Engine `node:sqlite` (Node 26.5.0), NOT workerd — what is measured is the query
+PLANNER's use of an index, which is SQLite core; the compound-SELECT ceiling is the
+known workerd difference and is measured live in `meaningquery.test.mjs` instead.
+
+**The statements are DRIVEN out of `compile()` and the pre-existing indexes are
+DRIVEN out of `schema.mjs` AND `store.mjs`, neither typed into the probe.** That is
+not a stylistic note: the FIRST version hand-wrote the indexes on `bundles`, MISSED
+`bundles_fts_id` because it is created in `store.mjs`'s migration (`store.mjs:465`)
+rather than in the schema text, and therefore reported a full scan of the bundle
+table on every query and a **97% saving from an index the product has had for
+months**. The corrected probe throws if the sweep does not find `bundles_fts_id`.
+
+Corpus: synthetic, printed every run. At 20,000 bundles: 1,000 inquiries, 4,000
+legs of which 80 hunch, 100,000 resolutions of which 25,000 grade C.
+
+| query | no grade index | with | delta |
+| --- | --- | --- | --- |
+| `leg:hunch` @ 20,000 | 0.241 ms | 0.145 ms | −39.8% |
+| `leg:hunch` @ 100,000 | 0.969 ms | 0.440 ms | −54.6% |
+| `resolves:C` @ 20,000 | 14.35 ms | 8.45 ms | −41.1% |
+| `resolves:C` @ 100,000 | 83.74 ms | 48.65 ms | −41.9% |
+| `resolves:>=B` @ 20,000 | 20.67 ms | 16.35 ms | −20.9% |
+| `concerns:ENT-7` @ 20,000 | 0.254 ms | 0.262 ms | +3.0% (already indexed on `entity_id`) |
+| `leg:cuts_against` @ 20,000 | 0.752 ms | 0.684 ms | −9.1% (CANDIDATE index, DECLINED) |
+
+**Decided and shipped:** `inquiry_basis(grade_source, bundle_id)` and
+`resolutions(grade, bundle_id)`, both covering. The proportion on `leg:hunch` GROWS
+with the corpus (−39.8% → −54.6%), which is the property being bought: the seek is
+O(matching legs), the scan is O(all legs).
+
+**Decided and NOT shipped, with the number:** `inquiry_basis(role, bundle_id)` at
+−9.1% / −10.1% — a write cost on every leg of every promote for a read saving inside
+the noise, because `role` has two values and an index is worth least where the value
+is commonest. `connections(grade)` — no arm reads it; `concerns:` joins
+`resolutions`, which is the base relation a connection is derived from, and
+`meaningquery.test.mjs` DEMONSTRATES the superset rather than asserting it.

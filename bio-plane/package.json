@@ -68,6 +68,7 @@
     "test:cite": "node test/cite.test.mjs",
     "probe:cite": "node test/cite-scale.mjs 14000",
     "probe:limits": "node test/limits-probe.mjs",
+    "probe:meaningindex": "node test/meaning-index-probe.mjs 20000 25",
     "test:edges": "node test/edges.test.mjs",
     "test:membership": "node test/membership.test.mjs",
     "test:projects": "node test/projects.test.mjs",

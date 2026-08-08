@@ -898,6 +898,24 @@ CREATE TABLE IF NOT EXISTS resolutions (
   PRIMARY KEY (capture_sha, ref, entity_id)
 );
 CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
+-- D-222 (ii) / PL-8: GRADE BECOMES A FILTER. The C tier above is explicitly "FLAGGED
+-- for a member to confirm" and nothing in the record could enumerate the flagged set --
+-- a queue of work the system creates and cannot list. resolves:C is that question and
+-- resolves:>=B is its range form; bundle_id is in the index so both seeks are COVERING.
+-- MEASURED 2026-08-07 (test/meaning-index-probe.mjs):
+--   resolves:C     14.35 ms -> 8.45 ms at 20,000 bundles   (-41.1%)
+--                  83.74 ms -> 48.65 ms at 100,000 bundles (-41.9%)
+--   resolves:>=B   -20.9% / -20.4%
+-- This table is the largest of the three (one row per reference per entity, five per
+-- bundle in the probe's proportions), which is why the saving here is the one that
+-- still matters in absolute milliseconds at scale.
+-- NO INDEX ON connections(grade), stated rather than left: D-222 named it beside this
+-- one, and no arm in this compiler reads it -- concerns joins resolutions, which is the
+-- base relation a connection is DERIVED from (both ends of every connection have a
+-- resolution row for the shared entity, which meaningquery.test.mjs demonstrates rather
+-- than assumes). An index nothing queries is write cost on D-224's k(k-1)/2 curve for
+-- no read at all. It is earned when an arm reads it.
+CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions(grade, bundle_id);
 CREATE INDEX IF NOT EXISTS resolutions_capture ON resolutions(capture_sha);
 CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA, carrying a GRADE (D-67
@@ -1234,6 +1252,27 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
 CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
+-- D-223 / PL-8: the index the HUNCH DEBT question reads. leg:hunch compiles to
+-- SELECT bundle_id FROM inquiry_basis WHERE grade_source = ?, and bundle_id is in the
+-- index so the seek is COVERING -- it never touches the table. It is the RARE-VALUE
+-- case an index is for: a hunch is debt, so a corpus where hunches were common is a
+-- corpus nobody would publish from, and a scan pays the whole basis to find the few.
+-- MEASURED 2026-08-07 (test/meaning-index-probe.mjs, node:sqlite, the statements DRIVEN
+-- out of compile() and the OTHER indexes DRIVEN out of schema.mjs AND store.mjs rather
+-- than typed -- the first version of that probe hand-wrote them, missed bundles_fts_id
+-- because it is created in store.mjs's migration, and reported a 97% saving from an
+-- index the product has had for months):
+--   leg:hunch  0.241 ms -> 0.145 ms at 20,000 bundles  (-39.8%)
+--              0.969 ms -> 0.440 ms at 100,000 bundles (-54.6%)
+-- The proportion GROWS with the corpus, which is the property being bought: the seek is
+-- O(matching legs) and the scan is O(all legs).
+-- NO INDEX ON role, and that is the recorded answer rather than an omission: the same
+-- probe measured inquiry_basis(role, bundle_id) as a candidate at -9.1% / -10.1%, which
+-- is a write cost on every leg of every promote for a read saving inside the noise.
+-- role has two values, so the seek reads half the table and the scan reads all of it --
+-- an index is worth least exactly where the value is commonest. If a member's question
+-- ever makes cuts_against legs the hot path, the probe is here to re-run.
+CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_source, bundle_id);
 -- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
 -- purpose. The record half of an item's state lives on the EVENT (DEC-16: a
 -- task's status, a proposal's disposition), so one member's resolution clears

@@ -2216,3 +2216,14 @@ ARM V8.
 **RECORD has not edited `civicos-ui/**`** — a one-function change in another area's file is
 still that area's change, and the zero-delta UI harness is UI's evidence to produce.
 
+
+---
+
+## CLAIM 2026-08-07 RECORD
+session: is-wave-w2a-pl8
+opened: 2026-08-07T00:00:00Z
+paths: the meaning-arm registry and its compilation in bio-plane/src/query.mjs (MEANING, meaningSql, selector's meaning branch, searchFields' meaning vocabulary), the inquiry_basis / resolutions grade-column indexes in bio-plane/src/schema.mjs, the meaning vocabulary block in Store#searchFields in bio-plane/src/store.mjs, bio-plane/test/meaningquery.test.mjs
+interfaces consumed: none
+interfaces owned: I3 (op contracts — op=search and op=searchfields gain vocabulary, additive), I5 (store schema — two indexes, additive)
+expected: IS-BUILD-PLAN PL-8 — D-222 option A, the set-algebra ARM in the query compiler (`leg:`, `resolves:`, `concerns:`). Every arm keys on `fts_id`, inherits the one viewer-gate compilation point, and obeys MAX_COMPOUND. Discharges D-223: hunch debt enumerable at inquiry grain. Grade-column index decided by measurement. NOT option B (a second query path, closed by D-15) and NOT option C (the seventh statement shape — that is PL-9 and depends on this).
+released:

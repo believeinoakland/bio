@@ -126,7 +126,8 @@ import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
-import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate } from "./query.mjs";
+import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate,
+         meaningVocabulary } from "./query.mjs";
 /* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
    reason queuestate.mjs is: a rule reachable only through a Durable Object is a
    rule that gets exercised less. `finishedBound` is imported rather than
@@ -1138,6 +1139,16 @@ export class Store extends DurableObject {
       fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f]) =>
         [k, { type: f.type, freeText: !!f.fts, column: f.col }])),
       ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
+      /* D-222 option A: the MEANING ARMS, published beside the projected fields
+         and DERIVED from the compiler's own registry, never restated here. The
+         two halves are different in a way a caller must be able to see rather
+         than infer: `fields` filter columns on the bundle row, `meaning` filters
+         through a join into the meaning layer and answers at the grain of THE
+         BUNDLE — `leg:hunch` says which inquiries carry a hunch leg, never which
+         leg. `grain` says so per arm, in words, because a surface that presented
+         these as ordinary fields would recreate exactly the false sense of
+         coverage the scalar projections already created. */
+      meaning: meaningVocabulary(),
       syntax: [
         "bare words are AND, ranked by relevance",
         "\"quoted phrase\" is one unit",
@@ -1148,6 +1159,10 @@ export class Store extends DurableObject {
         "field:>value, field:<value, field:a..b compare and range",
         "has:field asks whether the field carries any value",
         "fm:path and fm:path=value reach frontmatter no column projects",
+        "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, "
+        + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at BUNDLE grain",
+        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B)",
+        "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result",
       ],
     };

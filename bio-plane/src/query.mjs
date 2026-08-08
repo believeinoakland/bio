@@ -98,6 +98,172 @@ export const FIELDS = {
   overdue:        { col: "action_clock_overdue",        type: "bool" },
 };
 
+/* ---------------------------------------------------------------------------
+ * THE MEANING ARM — D-222 option A, and it is the answer to a hole rather than
+ * a widening of the vocabulary.
+ *
+ * THE MEASUREMENT (STORE-AS-CACHE.md, re-verified by the 2026-08-06 research
+ * pass): BIO has two retrieval routes. Route 1 is this compiler, which projects
+ * 34 filterable fields onto the bundle row. Route 2 is the meaning layer —
+ * `inquiry_basis`, `resolutions`, `connections`, `readings`, `reading_refs` —
+ * and it was NOT REACHABLE FROM HERE AT ALL. Every one of the ~24 ops that read
+ * it is a fixed-shape lookup on exactly one key.
+ *
+ * WHY THE HOLE WAS INVISIBLE, WHICH IS WORSE THAN THE HOLE. Route 1 already
+ * carries SCALAR SUMMARIES of the meaning layer onto the bundle row —
+ * `capture:`, `connection:`, `legs:`, `resolution:` above — so a caller could
+ * filter by a finding's STRENGTH and never reach the legs that produced it.
+ * STORE-AS-CACHE.md's own words: *the projection creates a false sense of
+ * coverage — the meaning layer is visible as a number and unreachable as a
+ * structure.* `legs:>2` and `leg:hunch` are not two spellings of one question:
+ * the first asks how many legs a claim has, the second asks what they REST ON.
+ *
+ * D-223 IS THE ACCEPTANCE, and it is the sharpest instance there is.
+ * `schema.mjs` names a `hunch` leg as the one declared bias that DISQUALIFIES
+ * publication, and the rule was enforced ONE DOCUMENT AT A TIME at the two
+ * gates: a group could be refused at the moment it tried to publish and could
+ * not see its own exposure before it got there. `leg:hunch` is that question,
+ * asked once, over the whole corpus or over any subset the rest of the language
+ * can describe. Hunch debt becomes a QUANTITY, which is what D-188's vocabulary
+ * correction ("say HUNCH DEBT") presumed all along and the record could not
+ * supply.
+ *
+ * WHY AN ARM AND NOT A SECOND SURFACE, and this was not a free choice. The
+ * comment at the `ids` arm below states that a set resolved by another route
+ * "would be the second query path this design exists to prevent", and D-15
+ * gives visibility exactly ONE compilation point, enforced by a throw in
+ * `Store#runQuery` rather than by a convention. So option B was closed by a
+ * standing ruling. Being an ARM is what buys the rest for nothing: these
+ * selectors compose with every existing operator, with NOT, with parentheses,
+ * with the sort, the paging, the facets and the id restriction, and they pass
+ * the viewer gate because every statement below takes its WHERE from
+ * `viewerPredicate` and no arm carries a gate of its own.
+ *
+ * WHAT AN ARM CANNOT DO, said here rather than left to be discovered. It
+ * selects BUNDLES. `leg:hunch` answers WHICH INQUIRIES carry a hunch leg, never
+ * WHICH LEG — the grain collapses on the way out, because `scope` is
+ * bundle-shaped and that is precisely what keeps the gate correct. The
+ * meaning-GRAIN answer is a seventh statement shape on this same compiler
+ * (D-222 option C), and it is a separate item that depends on this one. An arm
+ * is also not a facet and not a sort key: both would have to count or order a
+ * one-to-many join, which double-counts a bundle carrying four hunch legs. So
+ * `SORTABLE` and `DEFAULT_FACETS` are built from `FIELDS` alone, deliberately.
+ *
+ *   table  the meaning table the arm reads
+ *   key    the column that names the BUNDLE. Every arm joins back through
+ *          `bundles.fts_id` on it, because a bundle that is not text-indexed is
+ *          invisible to every other arm and a new one that did not would fail
+ *          to compose with them.
+ *   bare   the sub-field an unqualified value falls to when it is not one of
+ *          the enumerated words below
+ *   sub    the filterable columns, each with the vocabulary that lets a bare
+ *          word find its own column. `case` normalises the ARGUMENT for the
+ *          same reason `lower`/`upper` do above: a NOCASE comparison cannot use
+ *          an index.
+ *
+ * A GRADE COMPARISON READS THE WAY `capture:` ALREADY READS, and that is a
+ * consistency decision, not an oversight. Grades are stored A..D and the
+ * letters sort the way the grades rank, so `resolves:>=B` is "B or WEAKER" and
+ * "B or better" is `resolves:<=B`. It reads oddly in prose and it is one
+ * indexed seek in SQLite; more to the point, `capture:<=B` has meant exactly
+ * this since REC-12, and a query language is where a reader would learn the
+ * wrong shape first.
+ * ------------------------------------------------------------------------- */
+
+/* `resolutions` carries BOTH questions a member asks of the reverse index, so
+   it is defined ONCE and spelled twice, differing only in what a bare value
+   means. `concerns:ENT-1` is op=concerns' own relation in op=concerns' own
+   words — a reference in the document resolved to that subject, joined on
+   entity_id only, never through a declared relation (D-83). `resolves:C` is the
+   grade question, and it is the one `schema.mjs` made urgent: the C tier is
+   "FLAGGED for a member to confirm" and nothing could enumerate the flagged
+   set. Two names over one table rather than two tables, because the reverse
+   index is one fact and D-21 forbids a second place to state it. */
+const RESOLUTION_SUB = {
+  grade:  { col: "grade",     case: "upper", vocab: [] },
+  entity: { col: "entity_id", vocab: [] },
+};
+
+export const MEANING = {
+  /* The basis of an inquiry, one row per LEG. D-223's table.
+     EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
+     first version of this registry typed the three grade sources the SCHEMA
+     COMMENT names, and the live vocabulary has FIVE — `inherited` and `capture`
+     were added by REC-31 and DEC-21 and that comment was never corrected. A hand
+     copy would have made two of a member's legitimate questions unanswerable
+     while every test passed, because the tests would have been written from the
+     same copy. The catalog IS the vocabulary; this is a view of it. */
+  leg: {
+    table: "inquiry_basis", key: "bundle_id", bare: "grade",
+    grain: "the inquiry whose basis carries such a leg",
+    sub: {
+      /* DEC-15's `hunch` is the one that disqualifies publication — D-223. */
+      source: { col: "grade_source", case: "lower", vocab: GRADE_SOURCES },
+      /* Invariant 7: a leg that argues the other way is a ROW, so it is askable. */
+      role:   { col: "role",         case: "lower", vocab: BASIS_ROLES },
+      /* R2: the axis is NOT derivable from target_type, so it is its own column. */
+      axis:   { col: "grade_axis",   case: "lower", vocab: GRADE_AXES },
+      grade:  { col: "grade",        case: "upper", vocab: [] },
+      /* REC-42's OR branch. `has:leg` plus `leg:ground=*` is "a multi-ground
+         basis", the second question D-223 named as equally unaskable. */
+      ground: { col: "ground",  vocab: [] },
+      target: { col: "target_id", vocab: [] },
+    },
+  },
+  resolves: { table: "resolutions", key: "bundle_id", bare: "grade",
+              grain: "the bundle carrying a capture whose reference resolved so",
+              sub: RESOLUTION_SUB },
+  concerns: { table: "resolutions", key: "bundle_id", bare: "entity",
+              grain: "the bundle carrying a capture that concerns the subject",
+              sub: RESOLUTION_SUB },
+};
+
+/* The bare-word index, PRODUCED BY DRIVING the registry above rather than
+   typed beside it. A hand-written copy is the failure this project has already
+   paid for twice: a sourcing arm went green over a complete hand copy of 131 op
+   names because it validated the copy rather than the set in use. Built once
+   per arm and memoised; `meaningVocabulary` below hands the same map to the
+   suite, so the assertion and the compiler cannot disagree about what a bare
+   word means.
+
+   A WORD MAY BE CLAIMED BY TWO SUB-FIELDS, and `capture` is — it is a
+   `grade_axis` and, since DEC-21, also a `grade_source`, so `leg:capture` has
+   two honest readings. That is REFUSED WITH A WARNING NAMING BOTH rather than
+   resolved by declaration order: picking one silently would answer a question
+   the member did not ask, and on this surface a confidently wrong answer is the
+   failure mode the whole item exists to remove. It is a warning and not a
+   load-time throw because the vocabularies come from the CATALOG, and a doctrine
+   change that introduces a collision must not brick the plane at import.
+   `ambiguousBareWords()` publishes the set instead, so a NEW collision fails a
+   suite rather than arriving as a surprise in front of a member. */
+const BARE_INDEX = new Map();
+function bareIndex(arm) {
+  let idx = BARE_INDEX.get(arm);
+  if (idx) return idx;
+  idx = new Map();
+  for (const [subName, sub] of Object.entries(MEANING[arm].sub))
+    for (const word of (sub.vocab || [])) {
+      const w = String(word).toLowerCase();
+      idx.set(w, [...(idx.get(w) || []), subName]);
+    }
+  BARE_INDEX.set(arm, idx);
+  return idx;
+}
+/* Every bare word claimed by more than one sub-field, per arm. */
+export function ambiguousBareWords() {
+  return Object.fromEntries(Object.keys(MEANING).map((arm) =>
+    [arm, [...bareIndex(arm)].filter(([, subs]) => subs.length > 1).map(([w]) => w).sort()]));
+}
+/* Every arm's vocabulary, derived, for the surface and for the suite. */
+export function meaningVocabulary() {
+  return Object.fromEntries(Object.entries(MEANING).map(([arm, m]) => [arm, {
+    table: m.table, key: m.key, grain: m.grain, bare: m.bare,
+    fields: Object.fromEntries(Object.entries(m.sub).map(([n, s]) => [n, { column: s.col, values: s.vocab || [] }])),
+    words: Object.fromEntries([...bareIndex(arm)].filter(([, subs]) => subs.length === 1).map(([w, subs]) => [w, subs[0]])),
+    ambiguous: ambiguousBareWords()[arm],
+  }]));
+}
+
 /* The text columns of the FTS5 table, in table order. `meta` carries the
    flattened frontmatter so a bare term finds a value no column projects, which
    is what makes the per-schema tail searchable without a schema per version. */
@@ -108,7 +274,8 @@ export const FIELDS = {
    `viewerPredicate` — but the SPELLING is the same spelling, and a viewer
    parser that stopped recognising what index.mjs mints would fail closed on
    every machine read at once. So the string moves in one place. */
-import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
+         BASIS_ROLES, GRADE_AXES, GRADE_SOURCES } from "../checks/bio-checks.mjs";
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
@@ -440,7 +607,13 @@ function selector(tok, ctx) {
   /* `has:field` asks whether a field carries any value at all, which is the
      question a member actually has about a sparse column. */
   if (name === "has") {
-    const f = FIELDS[String(tok.value).toLowerCase()];
+    const v = String(tok.value).toLowerCase();
+    /* `has:leg` asks whether the bundle carries ANY row in the meaning table —
+       "every inquiry that rests on anything", which is a different question
+       from `legs:>0` on the projected count and is the one that survives a
+       projection that has not been rewritten. */
+    if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
+    const f = FIELDS[v];
     if (!f) { ctx.warnings.push(`has: unknown field ${JSON.stringify(tok.value)}`); return null; }
     return { op: "meta", col: f.col, cmp: "present", value: null };
   }
@@ -464,6 +637,10 @@ function selector(tok, ctx) {
       ? { op: "meta", json: "$." + path, cmp: "present", value: null }
       : { op: "meta", json: "$." + path, cmp: "=", value: val };
   }
+  /* The meaning arms. Placed BEFORE the field registry lookup so an arm name can
+     never be shadowed by a projected column, and after the directives so `sort:`
+     and `text:` keep their meaning. */
+  if (name in MEANING) return meaningAtom(name, tok, ctx);
   const f = FIELDS[name];
   if (!f) {
     /* An unknown selector is treated as free text rather than refused. A member
@@ -498,6 +675,64 @@ function selector(tok, ctx) {
      enumeration is equality, which is what keeps it an indexed seek. */
   if (f.fts) return textAtom(f.fts, raw, tok.quoted, ctx);
   return { op: "meta", col: f.col, cmp: "=", value: coerce(f, raw) };
+}
+
+/* One meaning selector into one node. `field:value` where the value may be a
+   bare vocabulary word (`leg:hunch`), a qualified sub-field (`leg:role=cuts_against`),
+   a comparison (`resolves:>=B`), or a presence test (`leg:ground=*`).
+   THE COLUMN NEVER COMES FROM THE MEMBER'S STRING — it is read out of the
+   registry above by name, and the VALUE is bound as an argument, so the same
+   two properties the rest of this compiler has are the ones this arm has. */
+function meaningAtom(arm, tok, ctx) {
+  const m = MEANING[arm];
+  let raw = String(tok.value);
+  let subName = null;
+  const eq = raw.indexOf("=");
+  if (eq > 0) {
+    const lhs = raw.slice(0, eq).toLowerCase();
+    if (lhs in m.sub) { subName = lhs; raw = raw.slice(eq + 1); }
+    else if (/^[a-z_]{1,32}$/.test(lhs)) {
+      /* DROPPED with a warning rather than compiled to a predicate that matches
+         nothing, and the direction is chosen rather than inherited. A dropped
+         arm WIDENS the answer, which a member sees; an arm that matches nothing
+         NARROWS it, and on the question this surface exists for — outstanding
+         hunch debt — narrowing silently is the answer "you have none". The
+         failure that overclaims coverage is the one this item was raised to
+         close, so the arm fails in the visible direction. Same shape as `has:`
+         above, for the same reason. */
+      ctx.warnings.push(`${arm}: unknown sub-field ${JSON.stringify(lhs)}; known: ${Object.keys(m.sub).join(", ")}`);
+      return null;
+    }
+  }
+  /* A bare word finds its own column through the DRIVEN index; anything the
+     vocabulary does not claim falls to the arm's declared bare sub-field, which
+     is what makes `leg:hunch`, `leg:A` and `concerns:ENT-1` all read naturally
+     without a member learning three spellings. */
+  if (!subName) {
+    const claims = bareIndex(arm).get(raw.toLowerCase());
+    if (claims && claims.length > 1) {
+      /* Two honest readings, so the member is told rather than guessed at. Same
+         visible direction as the unknown sub-field above: the arm is dropped,
+         which widens, rather than compiled to one reading, which would answer
+         confidently and wrongly. */
+      ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} is both ${claims.join(" and ")}; `
+        + `say ${claims.map((c) => `${arm}:${c}=${raw}`).join(" or ")}`);
+      return null;
+    }
+    subName = (claims && claims[0]) || m.bare;
+  }
+  const sub = m.sub[subName];
+  /* RECORDED, so the caller and the suite can tell an arm that COMPILED from a
+     string that quietly degraded to free text. `unknown field "leg"` and a set
+     arm over inquiry_basis produce very different answers and looked identical
+     from outside until this list existed. */
+  ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+  const norm = (x) => sub.case === "upper" ? String(x).toUpperCase()
+                    : sub.case === "lower" ? String(x).toLowerCase() : String(x);
+  if (raw === "" || raw === "*") return { op: "meaning", arm, col: sub.col, cmp: "present", value: null };
+  for (const [lead, cmp] of CMP)
+    if (raw.startsWith(lead)) return { op: "meaning", arm, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
+  return { op: "meaning", arm, col: sub.col, cmp: "=", value: norm(raw) };
 }
 
 function coerce(f, v) {
@@ -621,6 +856,32 @@ function metaSql(node) {
            args: [...args, node.value] };
 }
 
+/* A meaning arm, compiled to the SAME SHAPE every other leaf has: a set of
+   `fts_id`. Three properties, and each one is load-bearing.
+   1. IT KEYS ON `fts_id` THROUGH `bundles`, exactly as `ALL` and `metaSql` do.
+      An arm that returned the meaning table's own key would not compose with
+      any other arm, and a bundle with no text-index row would leak into a set
+      that no other arm can produce.
+   2. IT IS AN `IN` SUBQUERY, NOT A JOIN. A join emits one row per LEG, so an
+      inquiry with four hunch legs would appear four times — harmless inside an
+      INTERSECT, which dedupes, and WRONG as the only arm, where `hits` becomes
+      `scope` and the page repeats the row. The set shape makes that
+      unrepresentable rather than remembered.
+   3. IT CARRIES NO GATE, deliberately. Every statement takes its WHERE from
+      `viewerPredicate` and there is exactly one of those (D-15); an arm that
+      filtered visibility itself would be the second compilation point the
+      throw in `Store#runQuery` exists to make impossible. */
+function meaningSql(node) {
+  const m = MEANING[node.arm];
+  const inner = node.cmp === "present"
+    ? (node.col
+        ? `SELECT ${m.key} FROM ${m.table} WHERE ${node.col} IS NOT NULL AND ${node.col} <> ''`
+        : `SELECT ${m.key} FROM ${m.table}`)
+    : `SELECT ${m.key} FROM ${m.table} WHERE ${node.col} ${node.cmp} ?`;
+  return { sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
+           args: node.cmp === "present" ? [] : [node.value], compound: false };
+}
+
 function setSql(node) {
   if (!node) return { sql: ALL, args: [], compound: false };
   /* Whole subtree expressible as text: one MATCH. */
@@ -628,6 +889,7 @@ function setSql(node) {
   if (fe !== null)
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
   if (node.op === "meta") return { ...metaSql(node), compound: false };
+  if (node.op === "meaning") return meaningSql(node);
   if (node.op === "text")
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
   if (node.op === "not") {
@@ -672,7 +934,7 @@ export const LIMIT_DEFAULT = 50, LIMIT_MAX = 500, IDS_MAX = 50000;
 export function compile({ q = "", viewer = null, sort = null, dir = null,
                           limit = LIMIT_DEFAULT, offset = 0, ids = null,
                           facets = null, implicitOp = "and", snippetChars = 12 } = {}) {
-  const ctx = { warnings: [], textAtoms: [], sort: null };
+  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [] };
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
@@ -821,6 +1083,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     ast, warnings: ctx.warnings, gate: gate.scope, viewer: gate.viewer,
     sort: { field: sortField, dir: sortDir }, limit: lim, offset: off,
     match: rank, terms: ctx.textAtoms.map((a) => a.value), widenable,
+    /* D-222 option A: which meaning arms this query compiled, in order. */
+    meaningArms: ctx.meaningArms,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),
     restricted: Array.isArray(ids) && ids.length > 0,
