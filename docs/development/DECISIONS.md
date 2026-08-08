@@ -4346,6 +4346,25 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full
   consequences).
 enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
+### DEC-65 · open
+for: bob
+raised: 2026-08-08 · CONDUCT (from PL-3, which met the gap, refused by name rather than engineering around it, and recommended where the fix belongs)
+subject: A BACKGROUND run cannot propose a reading that rests on documents — is that the intended reach, or an accident of two checks meeting?
+
+**Measured by PL-3 while building the suggest endpoint.** PL-1's `C-25.5` makes a version's ground partition TOTAL, and `C-25.15` requires **a named MEMBER to assert every declared part.** A background run holds a machine credential and can assert none. **So the only kind a background run can write today is `level-empty` — an honest "there is nothing at this level" — and nothing legged.** It is refused BY NAME (`C-27.13`), not silently.
+
+**Why it is ambiguous rather than simply a defect:** `INVESTIGATIVE-SESSION.md` §5 and §14b.5 both presuppose legged, machine-COMPOSED versions — that is what the pre-write checks exist to police. But **PL-1's own refusal message ANTICIPATES this gap** and leaves no shape for it. Two correct items, each right alone, meeting at a reach nobody chose.
+
+the two shapes:
+  (a) **AS SHIPPED** — the machine proposes only `level-empty` in background mode; interactive mode (a member present) proposes all five kinds.
+  (b) **EXEMPT THE SINGLE-PART CASE from `C-25.15`.** A version with **exactly one part asserts nothing beyond its legs** — there is no maximum to take, so the weakest-leg reading is DEC-32's conservative default and no member is being credited with a structural claim they did not make.
+
+provisional: **(a) is shipped and running.** Nothing is blocked; the interactive path is unaffected.
+
+recommendation: **take (b) — but build it in FL-3, not by amending PL-3.** The reasoning is sound and the exemption is narrow and principled. What makes it FL-3's is that **it edits a landed check (`C-25.15`) that PL-2 and PL-14 already build on**, and the run harness is where the consequence is actually exercised — changing a check from the item that merely bumped into it is how a correct edit lands somewhere nobody is testing it.
+
+cost of reversal: **LOW TODAY AND RISING.** Nothing has been written under the current rule, so no record carries a version that would change meaning. Once background runs have proposed under (a), widening to (b) changes what a stored version's partition claims about who asserted it.
+
 ### DEC-64 · open
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
