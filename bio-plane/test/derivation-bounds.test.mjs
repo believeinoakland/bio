@@ -371,7 +371,23 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    pinned is that it cannot GROW, and — separately — that it cannot SHRINK without somebody
    moving the figure, because a roster that shrank because the READER broke is the failure
    every walk in this estate has now met at least once. */
-const CLASS_MEASURED_2026_08_08 = 29;
+/* MOVED 29 -> 30 AT INTEGRATION 2026-08-08 by CONDUCT, and the ratchet EARNED ITSELF
+   ON ITS FIRST DAY. REC-66 landed this pin in the morning; by the evening REC-63 had
+   landed `op=provenanceroute`, whose marker walk derives over `auditPass`'s unbounded
+   scan — so `audit->auditPass` JOINED THE CLASS and the ceiling fired, naming it.
+   Neither worker could see the other: REC-66 measured 29 correctly on its own tree and
+   REC-63 added a method that qualifies, and a class membership count is a property of
+   the MERGED source exactly as `regionLines` and the register floor are.
+   BOTH HALVES MOVE TOGETHER AND THE BY-NAME ROSTER GAINS ITS MEMBER, because the pin's
+   own text says a bare count is satisfied by ANY ten — moving the number without naming
+   the arrival would leave the pin asserting a size over a set nobody checked, which is
+   the shape REC-66 wrote it to prevent. THIS IS NOT A REGRESSION AND IS NOT LICENSED AS
+   ONE: `auditPass` is bounded at 20 with `markedTotal` published, so the new op reads a
+   bounded page; it qualifies for the class because the DERIVATION walks the scan, which
+   is precisely the distinction REC-66 established when it proved that capping the answer
+   would leave the scan in place. Whether it needs its own bound is REC-66's question one
+   op later, and it is delegated rather than answered here. */
+const CLASS_MEASURED_2026_08_08 = 30;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -384,7 +400,7 @@ t("RATCHET: and a FLOOR beside it — the roster shrinking without this figure b
   CLASS.size >= CLASS_MEASURED_2026_08_08, true);
 t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a bare count of ten is "
 + "satisfied by ANY ten, and what a caller can reach is the half that matters",
-  CLASS_OPS, ["biasmanifest->biasManifest", "export->exportManifest", "proposals->proposalsFeed",
+  CLASS_OPS, ["audit->auditPass", "biasmanifest->biasManifest", "export->exportManifest", "proposals->proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);

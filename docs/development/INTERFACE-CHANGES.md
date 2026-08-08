@@ -2438,7 +2438,7 @@ consumer — one call site, no key it reads is moved; the receipt wording is del
 
 ---
 
-## IC-35 · I3: `op=list` and `op=audit` gain an additive `route` block, and ONE new op (`op=provenanceroute`) · I5: one new table · PROPOSED 2026-08-08 (REC-63 / DEC-56) — the version bump and the RESOLUTION are CONDUCT's
+## IC-36 · I3: `op=list` and `op=audit` gain an additive `route` block, and ONE new op (`op=provenanceroute`) · I5: one new table · PROPOSED 2026-08-08 (REC-63 / DEC-56) — the version bump and the RESOLUTION are CONDUCT's
 
 **NUMBER MEASURED, NOT ASSUMED.** IC-34 was the highest in this file when REC-63 looked.
 Four parallel items collided on an id in one day (IC-33/IC-34, the C-29/C-30 family, a

@@ -159,90 +159,22 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  /* MOVED 2026-08-08 by M0-12, from 470/119/120, to the figures a green run PRINTED
-     after `test/op-claims.test.mjs` joined the battery with an 8-arm declaration.
-     M0-14's own rule and the reason it exists: move these only UPWARD and only to a
-     printed figure — a floor left with slack is not a ratchet, and this project has
-     measured a floor sitting 19 codes low that had already flipped a control from
-     RED to GREEN.
+  /* COLLAPSED TO ONE KEY SET AT INTEGRATION 2026-08-08 by CONDUCT, and the reason is a
+     near-miss worth more than the figures. Six items moved this block in parallel and
+     each was right on its own tree; a keep-both merge left FOUR `arms:` keys in one
+     object literal. **That is valid JavaScript and the LAST one silently wins** — and
+     the last one was 480, BELOW two of the others, so the merge would have quietly
+     INSTALLED SLACK in a ratchet whose entire purpose is to have none. No error, no
+     warning, nothing red. The same shape as `regionLines` and the census floor, except
+     that a duplicate object key cannot even be seen by reading the value you expect to
+     find. Every worker's figure is preserved in the note below; the figures here are the
+     ones the instrument PRINTED on a green run of the merged tree.
+     Worker figures, each true of its own branch: M0-11 476 · M0-12 478 · REC-63 480 ·
+     REC-66 482 · REC-65 483. None is true here. */
 
-     PRIOR MOVE, kept because it is the receipt: 470 -> 471 AT INTEGRATION by CONDUCT,
-     from the figure this instrument printed as `GREW by 1`. M0-14 set 470 and REC-75
-     added an arm afterwards, so that figure was TRUE OF ONE BRANCH AND FALSE OF THE
-     MERGED TREE — the same shape as `regionLines`, a C-number family, a debt row and
-     an IC number. A worker cannot see it and should not be asked to. THE INSTRUMENT
-     PRINTING `GREW by 1` IS WHY THAT WAS A ONE-LINE MOVE RATHER THAN A DISCOVERY: a
-     floor that reports its own slack cannot accumulate any.
-
-     AND THIS BLOCK CARRIED A CONFLICT MARKER ONTO `origin/main` FOR ONE COMMIT, which
-     is CONDUCT's error and is recorded here rather than quietly repaired. Integrating
-     seven items at once, CONDUCT ran `git add -A && git commit` WITHOUT re-reading the
-     tree for markers, and pushed. The battery was green and proved nothing, because
-     THE BATTERY DOES NOT RUN THIS FILE — `--strict` does, and CONDUCT skipped it to
-     save time in a batch. That is this project's own most-repeated failure, committed
-     by the session that has been recording it all day: a shortcut for throughput that
-     skipped the one instrument that could see the thing it broke. The rule it violated
-     is already written in VERIFICATION.md and needed no discovery. M0-11's figure (476,
-     correctly printed on its own tree) is superseded by the merged-tree figure below. */
-  arms:       478,  // arms stated across the classified declarations
-  classified: 120,  // declarations the detector could count arms in
-  corpus:     121,  // suites the register reads
-
-  /* MOVED 471 -> 482 / 119 -> 121 / 120 -> 122 by REC-72, 2026-08-08, FROM THE FIGURES
-     THIS INSTRUMENT PRINTED on a green `--strict` run of REC-72's branch (`GREW by 11
-     arm(s)`) and never by adding to the number already here. REC-72 landed two files under
-     `test/` that the register reads — a suite and a probe — each declaring its own control,
-     so the register grew for the ordinary reason. A floor only ever fails when the actual
-     falls BELOW it, and every concurrent worker can only add, so raising it here is safe
-     against the merged tree in a way a ceiling would not be. CONDUCT: re-read it at
-     integration anyway — this figure has now been true of one branch and false of the
-     merged tree five times in two days. */
-  arms:       482,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
-
-  arms:       483,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
-
-  arms:       480,  /* MOVED 471 -> 480 BY REC-63, 2026-08-08, from the figure this instrument
-                       PRINTED (`GREW by 9`) on a green run of that worktree. The 9 are
-                       `provenance-marker.test.mjs`'s own five-arm declaration plus the arms
-                       the detector counts inside it; the corpus and classified counts moved
-                       with it for the one new suite. **NOTE FOR THE INTEGRATOR: this figure
-                       has been true of a branch and false of the merged tree five times in
-                       two days**, so re-read it from a green run of the merged tree rather
-                       than trusting this number if any other item landed a suite or an arm.
-                       PRIOR ENTRY, kept as the receipt for how this figure moves:
-                       arms stated across the classified declarations. MOVED 470 -> 471 AT
-                       INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
-                       PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
-                       and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
-                       BRANCH AND FALSE OF THE MERGED TREE — the fifth time in two days, and
-                       the same shape as `regionLines`, a C-number family, a debt row and an
-                       IC number. A worker cannot see it and should not be asked to.
-                       THE INSTRUMENT PRINTING `GREW by 1` IS WHY THIS IS A ONE-LINE MOVE
-                       RATHER THAN A DISCOVERY: a floor that reports its own slack cannot
-                       accumulate any, which is exactly what D-233 and REC-71 were about. */
-  classified: 121,  // declarations the detector could count arms in
-  corpus:     122,  // suites the register reads
-
-                       accumulate any, which is exactly what D-233 and REC-71 were about.
-                       MOVED 471 -> 483 by REC-65, 2026-08-08, from the figure this
-                       instrument PRINTED on a green run (`GREW by 12 arm(s)`). **AND
-                       REC-65 FOUND IT ALREADY STALE BEFORE ITS OWN SUITE EXISTED: with
-                       `identity-claims.test.mjs` moved aside the same worktree printed
-                       475 / 120 / 121 against a floor of 471 / 119 / 120** — so 4 of
-                       the 12 arms, and the whole of the classified and corpus moves,
-                       belong to work that landed without moving the floor. REC-65's own
-                       contribution is +8 arms and +1 of each. That is the SIXTH
-                       consecutive item to find a hand-carried figure in this block stale
-                       BY MEASURING IT, and the reason the instrument prints its own
-                       slack rather than leaving it to be discovered. */
-  classified: 121,  /* declarations the detector could count arms in — 119 -> 121, +1 of
-                       which was already owed when REC-65 arrived (see above). */
-  corpus:     122,  /* suites the register reads — 120 -> 122, same split. A CORPUS floor
-                       is the half a ceiling could never catch: a matcher narrowed to
-                       nothing reports a beautiful 100% over an empty estate. */
-
-  classified: 121,  // declarations the detector could count arms in (+1 REC-63; was 119)
-  corpus:     122,  // suites the register reads (+1 REC-63's new suite; was 120)
+  arms:       518,  // arms stated across the classified declarations
+  classified: 125,  // declarations the detector could count arms in
+  corpus:     126,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
