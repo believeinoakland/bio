@@ -1937,14 +1937,14 @@ The I3 version bump and the RESOLUTION are **NOT** taken by this session — the
 
 ### 1 · WHAT MOVES
 
-**A NEW CANONICAL OBJECT TYPE.** `bias` joins `OBJECT_TYPES` as a fifth canonical type with the `BIAS-` id prefix, the heading set `## Statements · ## Adoption · ## What This Does Not Enforce · ## Session Log · ## Review Notes`, the state machine `draft → proposed → adopted → retired`, and the schema stamp `bias@1`. Ten C-numbers are allocated (C-25.1 … C-25.10), each with a DEC-49 error code and a canned translation read from ONE place.
+**A NEW CANONICAL OBJECT TYPE.** `bias` joins `OBJECT_TYPES` as a fifth canonical type with the `BIAS-` id prefix, the heading set `## Statements · ## Adoption · ## What This Does Not Enforce · ## Session Log · ## Review Notes`, the state machine `draft → proposed → adopted → retired`, and the schema stamp `bias@1`. Ten C-numbers are allocated (**C-26.1 … C-26.10**), each with a DEC-49 error code and a canned translation read from ONE place. **RENUMBERED FROM C-25.x at integration, 2026-08-08**: PL-1 landed on `main` while this item was running and allocated C-25.1–C-25.18 for the basis-version family. Neither session could see the other; under the collision protocol PL-1 merged first, so its numbers stand and this later allocation moves. C-26 was verified free on `main` before the move — the only `C-26` strings in `store.mjs` name item REC-26, not a check.
 
 **FOUR NEW OPS, all additive; nothing is removed and no existing shape moves.**
 
 | op | mutating | what it answers |
 | --- | --- | --- |
 | `op=biasmanifest` | no | the EFFECTIVE SET in force for a scope, its `statements_sha`, the bundles-and-revisions in force with their pins, the RESIDUE, and any lock violations. Enveloped: `limit`/`offset`/`count`/`total`/`truncated`. Gated. |
-| `op=biasadopt` | yes | the AUTHORED, ATTRIBUTED adoption and its PIN (DEC-54 c, d). `author` is server-stamped from the session; a machine credential is refused C-25.9. |
+| `op=biasadopt` | yes | the AUTHORED, ATTRIBUTED adoption and its PIN (DEC-54 c, d). `author` is server-stamped from the session; a machine credential is refused C-26.9. |
 | `op=biasinhale` | **no** | reads an external policy and PROPOSES. Splits BARS from bias statements (DEC-54 a) and publishes the unenforceable RESIDUE at the same rank as the extraction (DEC-54 b). |
 | `op=airunspawn` | no | the run's spawn payload per half. §14's FENCE, as an object an assertion can read. |
 
@@ -1972,4 +1972,10 @@ The field is therefore new rather than changed, and **the run now distinguishes 
 
 ### 5 · STATUS
 
-**PROPOSED, with the code landed on this session's branch.** Battery 110/110 at 6,521 → **111/111 at 6,659**, the +138 fully attributed (bias +126 new, bounds +9, hygiene +3, no other suite moved). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**, OPS 138 → 142 all reached, CHECKS 64 → 74 all named. Twelve negative-control arms RUN.
+**PROPOSED, with the code landed on this session's branch and REBASED onto `a24f2b0` (PL-1) on 2026-08-08.**
+
+**Measured against `main` AFTER the rebase, which is the only baseline that means anything now:** battery **111/111 at 6,607 → 112/112 at 6,746**, the **+139 fully attributed** (bias +127 new, bounds +9, hygiene +3), **no other suite moved**. The baseline was measured in this worktree by checking `a24f2b0` out over `bio-plane/` and removing this item's two new files, then restoring and verifying by sha256 **and** by 23 content markers. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**, OPS 139 → 143 all reached, CHECKS 82 → 93 all named. **THIRTEEN negative-control arms RUN** after the rebase, every restore verified by content as well as by hash.
+
+**The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`, VF-2) exits 1 at 32 failures BOTH WITH AND WITHOUT this item** — the offending-code sets are byte-identical, diffed rather than eyeballed, so **PL-12 contributes zero**. The one code it found that WAS ours is fixed: `BIAS_REFUSED`, the ENVELOPE of the write-path refusal, whose `findings[]` each carried a translation while the envelope carried none — now **C-26.11**, with negative-control arm 7 over it. The remaining 32 are `promote`'s pre-existing refusals brought under the guard by PL-1's `where`, and are DELEGATED to CONDUCT rather than absorbed here.
+
+**Earlier figures, superseded and kept because the delta they describe is still this item's:** before the rebase, 110/110 at 6,521 → 111/111 at 6,659, +138 attributed the same three ways.

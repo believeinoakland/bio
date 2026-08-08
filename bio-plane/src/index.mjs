@@ -558,7 +558,7 @@ const OPS = {
      PROJECT bias in the project managers', and a project manager is a member.
      What stops a member adopting on the instance's behalf is not this list — it
      is that the act is ATTRIBUTED, published with the group's work, and refused
-     outright to a credential with no name (C-25.9).
+     outright to a credential with no name (C-26.9).
      `biasinhale` is MUTATING: FALSE, and that is not an accident of shape, it
      is DEC-54 (c). Reading a policy proposes; it never installs. The method
      holds no write path at all and `test/bias.test.mjs` asserts that off the
@@ -4845,7 +4845,7 @@ export default {
        organisation's standards "with nobody in the group having authored
        anything", and an author a caller can name is an author nobody authored.
        A machine credential stamps `token:<class>` and the store refuses it BY
-       NAME (C-25.9) rather than recording a machine as the adopter — the same
+       NAME (C-26.9) rather than recording a machine as the adopter — the same
        fence op=publishedcase already draws for the bias acknowledgement. */
     if (op === "biasadopt")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);

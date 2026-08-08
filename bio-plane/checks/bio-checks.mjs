@@ -123,7 +123,7 @@ export const HEADINGS = {
      only in an op's answer would be exactly the log line the ruling refuses —
      it would not travel with the bundle, and a stranger reading the bytes after
      this instance is gone would meet the enforcement without the caveat. It is
-     REQUIRED IN EVERY STATE rather than only in `adopted`, and C-25.7 refuses
+     REQUIRED IN EVERY STATE rather than only in `adopted`, and C-26.7 refuses
      it EMPTY on an adopted bundle, because a heading nobody filled is the
      checkbox C-21.1 exists to refuse arriving one layer down. */
   bias: ['## Statements', '## Adoption', '## What This Does Not Enforce', '## Session Log', '## Review Notes']
@@ -290,7 +290,7 @@ export const STATES = {
      structural rather than documented.
      `draft` is where a set is written. The doctrine already puts one rule on
      it — "a pattern statement without at least one citation cannot leave
-     draft" — and C-25.4 is that rule, which is why it fires on the way OUT of
+     draft" — and C-26.4 is that rule, which is why it fires on the way OUT of
      draft rather than on the way in.
      `proposed` is the ONLY state an INHALE could ever reach, and the reason it
      exists as a state of its own. DEC-54 (c): "INHALE MEANS PROPOSE FOR
@@ -391,7 +391,7 @@ export const RESOLUTIONS = ['complied', 'denied', 'escalated', 'withdrawn'];
  * OPPOSITE mechanics: bias is DISCLOSED and refuses nothing (DEC-20), a bar
  * GATES and refuses at pre-flight. So the fourth kind anybody will reach for is
  * the one that breaks the gate/disclose distinction the whole doctrine rests
- * on, and C-25.6 exists because it will be reached for in a statement's TEXT
+ * on, and C-26.6 exists because it will be reached for in a statement's TEXT
  * even when it is not reached for here. */
 export const BIAS_STATEMENT_KINDS = ['scrutiny', 'inference', 'pattern'];
 
@@ -3643,8 +3643,8 @@ export const BIAS_BAR_PHRASING = [
   /\brequired_strength\b/i,
 ];
 
-/** PL-12 / D-84: the bias bundle's own checks. C-25.1 to C-25.7 fire here;
- *  C-25.8 fires in the store, where the inhale is. */
+/** PL-12 / D-84: the bias bundle's own checks. C-26.1 to C-26.7 fire here;
+ *  C-26.8 fires in the store, where the inhale is. */
 export function checkBiasExtension(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'bias') return;
   const fm = ctx.fm;
@@ -3652,7 +3652,7 @@ export function checkBiasExtension(ctx, findings) {
   const statements = Array.isArray(fm.statements) ? fm.statements : null;
 
   if (statements === null) {
-    findings.push(f('C-25.1', 'error',
+    findings.push(f('C-26.1', 'error',
       'a bias bundle carries its statements in frontmatter as statements[], and this one has none',
       ['add statements[] to bundle.md frontmatter, each with id, kind, subject, text and justification']));
     return;
@@ -3663,7 +3663,7 @@ export function checkBiasExtension(ctx, findings) {
     const s = statements[i];
     const at = `statements[${i}]`;
     if (!s || typeof s !== 'object') {
-      findings.push(f('C-25.1', 'error', `${at} is not a statement object`));
+      findings.push(f('C-26.1', 'error', `${at} is not a statement object`));
       continue;
     }
     const id = typeof s.id === 'string' ? s.id.trim() : '';
@@ -3674,8 +3674,8 @@ export function checkBiasExtension(ctx, findings) {
        override "must name the instance statement id it nullifies" — so a
        missing or duplicated id makes safeguard 1 unenforceable rather than
        merely untidy. */
-    if (!id) findings.push(f('C-25.1', 'error', `${at} has no id, and an id is what an override names`));
-    else if (seen.has(id)) findings.push(f('C-25.1', 'error', `${at} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
+    if (!id) findings.push(f('C-26.1', 'error', `${at} has no id, and an id is what an override names`));
+    else if (seen.has(id)) findings.push(f('C-26.1', 'error', `${at} repeats the statement id '${id}'; ids are stable and unique within a bundle`));
     else seen.add(id);
 
     /* THE CLOSED SET OF THREE. "Declared bias is a CLOSED SET: scrutiny,
@@ -3683,7 +3683,7 @@ export function checkBiasExtension(ctx, findings) {
        (DEC-54). A fourth kind is not a weaker statement; it is an ungoverned
        one, and it would be the door a bar walks through. */
     if (!BIAS_STATEMENT_KINDS.includes(kind)) {
-      findings.push(f('C-25.1', 'error',
+      findings.push(f('C-26.1', 'error',
         `${at} kind '${kind || '(absent)'}' is not one of: ${BIAS_STATEMENT_KINDS.join(', ')}`,
         ['a standard of evidence is a BAR, not a bias kind — declare it as the project\'s required_strength (DEC-17, DEC-54 a)']));
     }
@@ -3697,7 +3697,7 @@ export function checkBiasExtension(ctx, findings) {
        KEY at all, because prose subjects are what make a collision undetectable. */
     const subject = s.subject === undefined || s.subject === null ? '' : String(s.subject).trim();
     if (!subject || !ENTITY_ID_RE.test(subject)) {
-      findings.push(f('C-25.2', 'error',
+      findings.push(f('C-26.2', 'error',
         `${at} subject '${subject.slice(0, 40) || '(absent)'}' is not a subject registry key (ENT-YYYY-NNNN)`,
         ['point subject at an entry in the subject registry (op=entitycreate / op=entitybyalias)']));
     }
@@ -3714,7 +3714,7 @@ export function checkBiasExtension(ctx, findings) {
        exactly the masking safeguard 3 requires be loud. */
     const nullifies = typeof s.nullifies === 'string' ? s.nullifies.trim() : '';
     if (!text && !nullifies)
-      findings.push(f('C-25.1', 'error', `${at} has no declarative text and nullifies nothing, so it says nothing at all`));
+      findings.push(f('C-26.1', 'error', `${at} has no declarative text and nullifies nothing, so it says nothing at all`));
 
     /* A REQUIRED JUSTIFICATION, on every kind. This is the disclosure's whole
        point — "the author must declare and JUSTIFY their bias for the system to
@@ -3722,7 +3722,7 @@ export function checkBiasExtension(ctx, findings) {
        form field around it. */
     const justification = typeof s.justification === 'string' ? s.justification.trim() : '';
     if (!justification) {
-      findings.push(f('C-25.3', 'error', `${at} has no justification`,
+      findings.push(f('C-26.3', 'error', `${at} has no justification`,
         ['say why this lens is held; a bias the system honours is one its author justified']));
     }
 
@@ -3733,7 +3733,7 @@ export function checkBiasExtension(ctx, findings) {
        anchored and cannot become binding without them. */
     const citations = Array.isArray(s.citations) ? s.citations.filter((c) => c != null && String(c).trim() !== '') : [];
     if (kind === 'pattern' && citations.length === 0 && state !== 'draft') {
-      findings.push(f('C-25.4', 'error',
+      findings.push(f('C-26.4', 'error',
         `${at} is a pattern statement with no citation, and a pattern statement cannot leave draft without one`,
         /* CORRECTED TWICE ON FIRST RUN, and `repair-reachability.test.mjs` is
            what corrected it, which is the instrument working. The first version
@@ -3758,7 +3758,7 @@ export function checkBiasExtension(ctx, findings) {
        runs over a MACHINE-PROPOSED statement (DEC-54's constraint 2: "the
        malformedness rule binds the machine exactly as it binds a member"). */
     if (text && (BIAS_VERDICT_WHOLESALE.test(text) || BIAS_VERDICT_SPEAKER.some((re) => re.test(text)))) {
-      findings.push(f('C-25.5', 'error',
+      findings.push(f('C-26.5', 'error',
         `${at} pre-assigns a truth value wholesale to its subject, which is MALFORMED whoever declares it`,
         ['raise scrutiny on the source instead — say what checking its claims need before they bear load',
          'or block a named inference instead of issuing a verdict']));
@@ -3774,7 +3774,7 @@ export function checkBiasExtension(ctx, findings) {
       || (s.bar !== undefined && s.bar !== null)
       || (text && BIAS_BAR_PHRASING.some((re) => re.test(text)));
     if (carriesBar) {
-      findings.push(f('C-25.6', 'error',
+      findings.push(f('C-26.6', 'error',
         `${at} states a BAR — how strong support must be before you assert — and a bar is not a lens`,
         ['declare it as the project\'s required_strength{capture, connection} (DEC-17)',
          'bias is DISCLOSED and refuses nothing; a bar GATES at pre-flight, and merging them breaks both']));
@@ -3796,7 +3796,7 @@ export function checkBiasExtension(ctx, findings) {
     const md = body === undefined ? '' : asText(body);
     const m = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec('\n' + md);
     if (!m || m[1].trim() === '') {
-      findings.push(f('C-25.7', 'error',
+      findings.push(f('C-26.7', 'error',
         'this bias set is adopted and says nothing under "## What This Does Not Enforce"',
         ['name what this lens does NOT check — the residue is a published output, not a log line (DEC-54 b)',
          'if every statement here is fully enforced, say that, and say it in the record']));
@@ -6130,6 +6130,24 @@ export function basisVersionFindings(fm, findings) {
  * PL-12 / D-84 — THE BIAS OBJECT'S REFUSALS, and DEC-54's four scopes given
  * C-NUMBERS so that each is a MECHANISM rather than a paragraph.
  *
+ * THE FAMILY IS C-26 AND NOT C-25, AND THE REASON IS RECORDED HERE RATHER THAN
+ * ONLY IN A COMMIT MESSAGE, because a renumbering that leaves no note reads to
+ * the next allocator as a family somebody skipped. This item allocated C-25.1
+ * to C-25.10; **PL-1 (basis versions) landed on `main` while it was running and
+ * allocated C-25.1 to C-25.18** for an entirely different family. Neither
+ * session could see the other — they ran in separate worktrees off one base —
+ * and CONDUCT found the collision at integration. Under the collision protocol
+ * the EARLIER MERGE keeps its numbers, so this allocation moved wholesale to
+ * C-26, verified free on `main` first (the only `C-26` strings anywhere in the
+ * plane name item REC-26, which is not a check). 102 references moved by regex
+ * on the NUMBER, so C-25.10 could not be mangled by a C-25.1 rule.
+ *
+ * WHAT THIS COSTS A READER OF OLD BYTES: nothing. No bias bundle has ever been
+ * written under a C-25 number — the family had not left this branch — so there
+ * is no history carrying the old spelling and no alias is owed. That is the one
+ * question worth asking before renumbering anything in this repository, and it
+ * is answered rather than assumed.
+ *
  * SEVEN OF THESE JUDGE A DOCUMENT and fire in `checkBiasExtension` above;
  * three fire in the plane, at the two write paths a document cannot reach —
  * the adoption and the inhale. The split follows AI_RUN_CHECKS' precedent
@@ -6155,7 +6173,7 @@ export const BIAS_CHECKS = {
   /* Statement anatomy, the shape half: an id that an override can name, a kind
      in the closed set of three, and a declarative to apply. */
   BIAS_STATEMENT_MALFORMED_SHAPE: {
-    check: 'C-25.1',
+    check: 'C-26.1',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'One of these bias statements is missing something the record needs to apply it: '
       + 'a stable name, one of the three kinds it can be, or the sentence itself. '
@@ -6164,7 +6182,7 @@ export const BIAS_CHECKS = {
   },
   /* Safeguard 4: subjects are registry entries, not free text. */
   BIAS_STATEMENT_SUBJECT_NOT_REGISTERED: {
-    check: 'C-25.2',
+    check: 'C-26.2',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'That statement names its subject in prose rather than pointing at the subject registry. '
       + 'Registry entries are what let the record notice when a project statement and an instance '
@@ -6173,7 +6191,7 @@ export const BIAS_CHECKS = {
   },
   /* The justification requirement, on every kind. */
   BIAS_STATEMENT_NO_JUSTIFICATION: {
-    check: 'C-25.3',
+    check: 'C-26.3',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'That statement does not say why the lens is held. '
       + 'A declared bias the system honours is one its author justified; without that it is an '
@@ -6181,7 +6199,7 @@ export const BIAS_CHECKS = {
   },
   /* kind=pattern IS analysis, so it cites or it stays in draft. */
   BIAS_PATTERN_UNCITED: {
-    check: 'C-25.4',
+    check: 'C-26.4',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'A pattern statement is a claim about how an institution actually behaves, so it is '
       + 'analysis and needs evidence in the record. It can be written in draft without one; '
@@ -6189,7 +6207,7 @@ export const BIAS_CHECKS = {
   },
   /* DEC-54 scope FOUR: the malformedness refusal. */
   BIAS_STATEMENT_ISSUES_A_VERDICT: {
-    check: 'C-25.5',
+    check: 'C-26.5',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'That statement assigns a truth value to a source wholesale, and declared bias may '
       + 'never issue verdicts. It may raise scrutiny, it may block an inference, and it may assert '
@@ -6198,7 +6216,7 @@ export const BIAS_CHECKS = {
   },
   /* DEC-54 scope ONE: split bars from bias. */
   BIAS_STATEMENT_IS_A_BAR: {
-    check: 'C-25.6',
+    check: 'C-26.6',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate; '
          + 'and src/store.mjs biasInhale, which routes the same sentences into bars[] instead',
     translation: 'That is a standard of evidence — how strong support must be before you assert it — '
@@ -6208,7 +6226,7 @@ export const BIAS_CHECKS = {
   },
   /* DEC-54 scope TWO: the unenforceable residue is a published output. */
   BIAS_RESIDUE_UNSTATED: {
-    check: 'C-25.7',
+    check: 'C-26.7',
     where: 'checks/bio-checks.mjs checkBiasExtension, run at op=promote and at the gate',
     translation: 'This bias set is adopted and does not say what it does NOT check. '
       + 'A case held to a standard has to say which parts of that standard this system verifies and '
@@ -6218,7 +6236,7 @@ export const BIAS_CHECKS = {
   },
   /* DEC-54 scope THREE: inhale proposes, never installs. */
   BIAS_INHALE_CANNOT_ADOPT: {
-    check: 'C-25.8',
+    check: 'C-26.8',
     where: 'src/store.mjs biasInhale, reached from op=biasinhale',
     translation: 'Reading a policy proposes a bias set; it never adopts one. '
       + 'Adopting is something a member does with their name on it, because otherwise a group could '
@@ -6229,13 +6247,35 @@ export const BIAS_CHECKS = {
      authored act (DEC-46, D-90, D-82), and an adoption of a set that was never
      proposed would reach `adopted` around the state machine. */
   BIAS_ADOPTION_NOT_AUTHORED: {
-    check: 'C-25.9',
+    check: 'C-26.9',
     where: 'src/store.mjs biasAdopt, reached from op=biasadopt',
     translation: 'Adopting a bias set is an authored, attributed act and an automated credential '
       + 'has no name to put on it. Sign in as a member.',
   },
+  /* THE WRITE PATH'S OWN REFUSAL, and it is here because VF-2's DEC-49 guard
+     found it missing — which is the guard working exactly as its ruling
+     intends. `promote` refuses a malformed bias set with `reason:
+     "BIAS_REFUSED"` and a `findings[]` array in which EVERY entry already
+     carries its own C-number, code and canned translation. That looked
+     complete and was not: a surface renders a translation keyed on the code the
+     plane SENT, and the code it sends FIRST — the one on the envelope — had no
+     row at all. A member meeting it would meet machine vocabulary while the
+     translations sat one level down in a list the surface had no reason to
+     open. So the container gets a translation of its own, and it says the one
+     thing the per-finding translations cannot: that NOTHING LANDED.
+     ITS `where` NAMES `promote` RATHER THAN THE CATALOGUE, unlike its ten
+     siblings, because that is where it FIRES — and naming it is what puts this
+     code inside the guard's governed-site set for `promote`. The ten above fire
+     in `checkBiasExtension` and say so. */
+  BIAS_REFUSED: {
+    check: 'C-26.11',
+    where: 'src/store.mjs promote, reached from op=promote',
+    translation: 'That bias set was not written. One or more of its statements is not something the '
+      + 'record can honour, and each one is named below with what is wrong with it. '
+      + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',
+  },
   BIAS_ADOPTION_NOT_PROPOSED: {
-    check: 'C-25.10',
+    check: 'C-26.10',
     where: 'src/store.mjs biasAdopt, reached from op=biasadopt',
     translation: 'That bias set has not been proposed for adoption, so there is nothing to adopt yet. '
       + 'A set is written, then proposed, then adopted — and the middle step is what stops a set '

@@ -1907,7 +1907,7 @@ CREATE INDEX IF NOT EXISTS bias_statements_id ON bias_statements(bundle_id, stat
 -- altitude — so a case published under this lens stays checkable after the
 -- bundle moves on. 'author' is a member id and is stamped by the control plane
 -- from the SESSION: a machine credential holds no name and cannot adopt
--- (C-25.9), because adoption without a name is how "we follow BBC standards"
+-- (C-26.9), because adoption without a name is how "we follow BBC standards"
 -- becomes true of a group in which nobody agreed to anything.
 --
 -- 'source_url', 'retrieved' and 'source_sha256' are DEC-54 (d)'s pin for an

@@ -7822,6 +7822,12 @@ export class Store extends DurableObject {
         if (errs.length) {
           const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
           return { ok: false, reason: "BIAS_REFUSED",
+                   /* DEC-49, and VF-2's guard is why this line exists: the code
+                      on the ENVELOPE carries its own canned translation, not
+                      only the per-finding ones below. A surface keys on what the
+                      plane sent FIRST, and before this it was sent a bare word. */
+                   check: BIAS_CHECKS.BIAS_REFUSED.check,
+                   translation: BIAS_CHECKS.BIAS_REFUSED.translation,
                    findings: errs.map((x) => {
                      const hit = byNumber.get(x.check);
                      return { check: x.check, detail: x.message,
@@ -18032,7 +18038,7 @@ export class Store extends DurableObject {
    *  an authored, attributed act (DEC-46, D-90, D-82). Otherwise adopting a
    *  policy becomes a way to LAUNDER a standard."* So `author` is required and
    *  is stamped by the control plane from the SESSION — a machine credential
-   *  carries none and is refused BY NAME (C-25.9), the same fence
+   *  carries none and is refused BY NAME (C-26.9), the same fence
    *  `op=publishedcase` already draws for the bias acknowledgement.
    *
    *  DEC-54 (d): the row PINS `bundle_sha` — the revision adopted — plus the
@@ -18044,7 +18050,7 @@ export class Store extends DurableObject {
    *  THE STATE MACHINE CARRIES THE OTHER HALF AND THIS METHOD DOES NOT DUPLICATE
    *  IT. `STATES.bias` has no `draft -> adopted` edge, so a set can only reach
    *  `adopted` through `proposed`, through `promote`, as a member-authored
-   *  transition. This refuses a set that is in neither state (C-25.10), and the
+   *  transition. This refuses a set that is in neither state (C-26.10), and the
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
@@ -18328,7 +18334,7 @@ export class Store extends DurableObject {
    *
    *  (c) IT PROPOSES. There is NO WRITE IN THIS METHOD — no `sql.exec`, no
    *      transaction, no promote — and `test/bias.test.mjs` asserts that against
-   *      this file's bytes. A caller asking it to adopt is refused by C-25.8
+   *      this file's bytes. A caller asking it to adopt is refused by C-26.8
    *      rather than silently ignored, because a silent ignore is how a caller
    *      comes to believe it installed.
    *
@@ -18341,7 +18347,7 @@ export class Store extends DurableObject {
    *  is out of it structurally rather than by policy.
    *
    *  THE MALFORMEDNESS RULE BINDS THE MACHINE EXACTLY AS IT BINDS A MEMBER
-   *  (DEC-54's constraint 2). A candidate that would be refused by C-25.5 from a
+   *  (DEC-54's constraint 2). A candidate that would be refused by C-26.5 from a
    *  member is dropped to the residue with that C-number attached, rather than
    *  proposed and refused later — proposing it would put a verdict in front of a
    *  member with the machine's authority behind it. */

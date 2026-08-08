@@ -44,7 +44,7 @@ const arm = ({ n, what, file, from, to, marker, all = false, suites, expect }) =
   const beforeSha = sha(before);
   const hits = before.split(from).length - 1;
   console.log(`\n=== ARM ${n}: ${what}`);
-  /* `all` is for a rule whose pushes are SEVERAL — C-25.1 has six, because the
+  /* `all` is for a rule whose pushes are SEVERAL — C-26.1 has six, because the
      shape half of statement anatomy refuses six different absences. Neutering
      one of six would leave the rule enforced and the arm would prove nothing, so
      that arm removes the RULE and every other C-number keeps firing, which is
@@ -93,7 +93,7 @@ const ARMS = [
     suites: ["bias"],
     expect: (r) => r.bias.fail > 0 && named(r.bias, /ARM F1|ARM F3/) },
 
-  ...["C-25.1", "C-25.2", "C-25.3", "C-25.4", "C-25.5", "C-25.6", "C-25.7"].map((c, i) => ({
+  ...["C-26.1", "C-26.2", "C-26.3", "C-26.4", "C-26.5", "C-26.6", "C-26.7"].map((c, i) => ({
     n: `2${String.fromCharCode(97 + i)}`,
     what: `A MALFORMED BIAS BUNDLE — ${c}'s arm removed from checkBiasExtension, alone`,
     file: "checks/bio-checks.mjs",
@@ -133,6 +133,17 @@ const ARMS = [
     marker: "bias_acknowledgement_disabled",
     suites: ["publish", "publishedcase", "bias"],
     expect: (r) => r.publish.fail > 0 || r.publishedcase.fail > 0 || r.bias.fail > 0 },
+
+  /* ADDED 2026-08-08 at the rebase. VF-2's DEC-49 guard found that the write
+     path's ENVELOPE code carried no canned translation while its findings all
+     did — so the fix gets a control, like everything else here. */
+  { n: 7, what: "THE ENVELOPE'S TRANSLATION REMOVED — DEC-49's failure in the shape VF-2 actually found",
+    file: "src/store.mjs",
+    from: "                   check: BIAS_CHECKS.BIAS_REFUSED.check,",
+    to: "                   check: undefined,",
+    marker: "check: undefined,",
+    suites: ["bias"],
+    expect: (r) => r.bias.fail > 0 && named(r.bias, /ENVELOPE carries a translation/) },
 
   { n: 6, what: "OVER-STRICTNESS — the malformedness predicate widened to catch strong language",
     file: "checks/bio-checks.mjs",

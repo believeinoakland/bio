@@ -1,7 +1,8 @@
 /* bias.test.mjs — PL-12 / D-84: THE BIAS OBJECT, and DEC-54's four scopes.
  *
- * NEGATIVE CONTROL: (run 2026-08-07, pl12-agent, PL-12/D-84) TWELVE arms, EVERY
- * ONE RUN, each against a mechanically broken copy of the subject, every file
+ * NEGATIVE CONTROL: (run 2026-08-07 and RE-RUN IN FULL 2026-08-08 after the
+ * rebase onto PL-1, pl12-agent, PL-12/D-84) THIRTEEN arms, EVERY ONE RUN, each
+ * against a mechanically broken copy of the subject, every file
  * restored and every restore verified by CONTENT as well as by sha256. Re-run in
  * one step: `node test/nc-pl12.mjs` from bio-plane/. The harness lives in the
  * WORKTREE and nowhere shared, because a worker's harness was overwritten
@@ -21,10 +22,10 @@
  * (2) A MALFORMED BIAS BUNDLE: each document C-number neutered ALONE in
  *     checks/bio-checks.mjs `checkBiasExtension`, one run per number, because a
  *     control that removes them together proves only that the block exists
- *     (airun.test.mjs's ARM R lesson). MEASURED: C-25.1 -> 3 FAIL; C-25.2 -> 1;
- *     C-25.3 -> 1; C-25.4 -> 1; C-25.5 -> 5 (the four malformed sentences AND
- *     the live ARM M refusal at the write path); C-25.6 -> 2 (textual and
- *     structural); C-25.7 -> 1. C-25.1 is removed as a RULE rather than one push
+ *     (airun.test.mjs's ARM R lesson). MEASURED: C-26.1 -> 3 FAIL; C-26.2 -> 1;
+ *     C-26.3 -> 1; C-26.4 -> 1; C-26.5 -> 5 (the four malformed sentences AND
+ *     the live ARM M refusal at the write path); C-26.6 -> 2 (textual and
+ *     structural); C-26.7 -> 1. C-26.1 is removed as a RULE rather than one push
  *     of six — neutering one of six would leave the rule enforced and the arm
  *     would prove nothing.
  * (3) INHALE INSTALLS RATHER THAN PROPOSES — the quietest of the four, and the
@@ -58,6 +59,16 @@
  *     eighth recorded time. Every runtime block now runs inside `block()`, so a
  *     throw is a RECORDED failure naming the block and the run continues; the 17
  *     above is what the same control reports once it can finish.
+ * (7) THE ENVELOPE'S TRANSLATION REMOVED (added 2026-08-08): drop `check:
+ *     BIAS_CHECKS.BIAS_REFUSED.check` from `promote`'s bias refusal -> **1 FAIL
+ *     (126/127)**, naming the envelope arm. It exists because VF-2's DEC-49
+ *     guard found the defect it controls, and the suite could not have: every
+ *     per-finding translation was present, and the code on the ENVELOPE — the
+ *     one a surface keys on FIRST — had no row at all.
+ *
+ * ALL FIGURES ABOVE RE-MEASURED 2026-08-08 against the C-26 numbering and the
+ * post-rebase corpus. Every arm still fires; every restore still verifies by
+ * CONTENT as well as by sha256.
  *
  * ---------------------------------------------------------------------------
  * WHAT THIS ITEM IS
@@ -164,7 +175,18 @@ const INDEX = decomment(INDEX_SRC);
  * what caught it, and they are kept for the next reader.
  *
  * So: skip the PARAMETER LIST by paren-matching first, then brace-match the
- * body that follows it. */
+ * body that follows it.
+ *
+ * AND IT IS THE SECOND SIGHTING OF THIS EXACT INSTRUMENT DEFECT THIS WEEK,
+ * recorded here because a defect seen twice is a class and not an accident: a
+ * source-reading walk anchored on a signature and took the WRONG SPAN, then
+ * reported a clean verdict over bytes that could not have carried the thing it
+ * was looking for. REC-70's was the same shape one level up — a classifier that
+ * admitted one spelling of success and read as a complete sweep over 55 of 156
+ * ops. Both passed loudly while asserting nothing. The defence in both cases is
+ * the same and is cheap: assert that the SPAN IS NON-TRIVIAL (ARM I0), and run
+ * the same reader over a subject that MUST trip it (the seek guard). Neither
+ * costs anything and either one alone would have caught both. */
 const bodyOf = (src, sig) => {
   const i = src.indexOf(sig);
   if (i < 0) return "";
@@ -309,43 +331,43 @@ const has = (list, code) => list.includes(code);
     clean.filter((c) => c.startsWith("C-25.")), []);
   console.log(`  baseline findings on the clean document: ${J(clean)}`);
 
-  /* C-25.1 — the shape half, three ways. */
-  t("C-25.1: no statements[] at all",
-    has(await findingsFor(FM({ statements: undefined })), "C-25.1"), true);
-  t("C-25.1: a kind outside the closed set of three",
-    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], kind: "standard" }] })), "C-25.1"), true);
-  t("C-25.1: two statements sharing one id — an override could not name either",
-    has(await findingsFor(FM({ statements: [FM().statements[0], { ...FM().statements[0] }] })), "C-25.1"), true);
+  /* C-26.1 — the shape half, three ways. */
+  t("C-26.1: no statements[] at all",
+    has(await findingsFor(FM({ statements: undefined })), "C-26.1"), true);
+  t("C-26.1: a kind outside the closed set of three",
+    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], kind: "standard" }] })), "C-26.1"), true);
+  t("C-26.1: two statements sharing one id — an override could not name either",
+    has(await findingsFor(FM({ statements: [FM().statements[0], { ...FM().statements[0] }] })), "C-26.1"), true);
 
-  /* C-25.2 — subjects are registry entries, not free text (safeguard 4). */
-  t("C-25.2: a subject named in PROSE rather than pointed at the registry",
-    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], subject: "the city attorney" }] })), "C-25.2"),
+  /* C-26.2 — subjects are registry entries, not free text (safeguard 4). */
+  t("C-26.2: a subject named in PROSE rather than pointed at the registry",
+    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], subject: "the city attorney" }] })), "C-26.2"),
     true);
-  t("C-25.2: and a well-formed registry key passes — the check is registry-versus-prose and NOT a kind "
+  t("C-26.2: and a well-formed registry key passes — the check is registry-versus-prose and NOT a kind "
   + "whitelist, because DEC-6 ruled every kind the registry carries a legal subject",
-    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], subject: "ENT-2026-0099" }] })), "C-25.2"),
+    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], subject: "ENT-2026-0099" }] })), "C-26.2"),
     false);
 
-  /* C-25.3 — the justification requirement, on every kind. */
-  t("C-25.3: a statement with no justification is an unstated prior with a form around it",
-    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], justification: "" }] })), "C-25.3"), true);
+  /* C-26.3 — the justification requirement, on every kind. */
+  t("C-26.3: a statement with no justification is an unstated prior with a form around it",
+    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], justification: "" }] })), "C-26.3"), true);
 
-  /* C-25.4 — a pattern cites, or it stays in draft. */
+  /* C-26.4 — a pattern cites, or it stays in draft. */
   const patternStmt = {
     id: "p1", kind: "pattern", subject: "ENT-2026-0007",
     text: "The auditor has used its discretion to narrow the remediation options it lists.",
     justification: "Three reports in the record show the pattern.", citations: [], locked: false,
   };
-  t("C-25.4: an UNCITED pattern statement cannot leave draft",
-    has(await findingsFor(FM({ statements: [patternStmt] })), "C-25.4"), true);
-  t("C-25.4: and CAN be written in draft, which is what the doctrine says in those words",
-    has(await findingsFor(FM({ current_state: "draft", statements: [patternStmt] })), "C-25.4"), false);
+  t("C-26.4: an UNCITED pattern statement cannot leave draft",
+    has(await findingsFor(FM({ statements: [patternStmt] })), "C-26.4"), true);
+  t("C-26.4: and CAN be written in draft, which is what the doctrine says in those words",
+    has(await findingsFor(FM({ current_state: "draft", statements: [patternStmt] })), "C-26.4"), false);
   /* A PARSER LIMIT THIS ITEM MET, PINNED BOTH WAYS so the next author does not
      meet it silently. `parseFrontmatter` cannot read a BLOCK sequence nested
      inside a sequence item — `citations:` followed by indented `- ` lines makes
      the key parse as "" AND hoists the items into the OUTER `statements` list,
      so the document acquires a statement that is a bare string. Nothing errors;
-     C-25.1 then refuses "statements[1] is not a statement object", which names
+     C-26.1 then refuses "statements[1] is not a statement object", which names
      a symptom two steps from the cause. FLOW STYLE parses correctly, so that is
      what a bias statement's `citations` must use — and this pin fails if either
      half of that ever changes. */
@@ -363,33 +385,33 @@ const has = (list, code) => list.includes(code);
     + "that way and why this suite writes them that way",
       parseFrontmatter(flow).data.statements[0].citations, ["INFO-2026-0001-audit"]);
   }
-  t("C-25.4: a CITED pattern statement leaves draft cleanly",
-    has(await findingsFor(FM({ statements: [{ ...patternStmt, citations: ["INFO-2026-0001-audit"] }] })), "C-25.4"),
+  t("C-26.4: a CITED pattern statement leaves draft cleanly",
+    has(await findingsFor(FM({ statements: [{ ...patternStmt, citations: ["INFO-2026-0001-audit"] }] })), "C-26.4"),
     false);
 
-  /* C-25.5 — DEC-54's fourth scope: the malformedness refusal. */
+  /* C-26.5 — DEC-54's fourth scope: the malformedness refusal. */
   for (const [why, text] of [
     ["everything from a source is false", "Everything the developer's consultant publishes is false."],
     ["a speaker declared a liar", "The council president is a liar and should be read accordingly."],
     ["always lies", "The press office always lies about the timeline."],
     ["never tells the truth", "That office never tells the truth."],
-  ]) t(`C-25.5: MALFORMED — ${why}`,
-    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], text }] })), "C-25.5"), true);
+  ]) t(`C-26.5: MALFORMED — ${why}`,
+    has(await findingsFor(FM({ statements: [{ ...FM().statements[0], text }] })), "C-26.5"), true);
 
-  /* C-25.6 — DEC-54's first scope: a bar is not a lens. */
-  t("C-25.6: AP's own sentence — a bar filed as a bias statement",
+  /* C-26.6 — DEC-54's first scope: a bar is not a lens. */
+  t("C-26.6: AP's own sentence — a bar filed as a bias statement",
     has(await findingsFor(FM({ statements: [{ ...FM().statements[0],
       text: "A story may not run on more than one source unless each has been separately verified." }] })),
-    "C-25.6"), true);
-  t("C-25.6: STRUCTURAL too — a statement carrying a required_strength field IS a bar whatever its text says",
+    "C-26.6"), true);
+  t("C-26.6: STRUCTURAL too — a statement carrying a required_strength field IS a bar whatever its text says",
     has(await findingsFor(FM({ statements: [{ ...FM().statements[0], required_strength: { capture: "B" } }] })),
-    "C-25.6"), true);
+    "C-26.6"), true);
 
-  /* C-25.7 — DEC-54's second scope, in the document. */
-  t("C-25.7: an ADOPTED set that says nothing under `## What This Does Not Enforce`",
-    has(await findingsFor(FM(), "   "), "C-25.7"), true);
-  t("C-25.7: and a DRAFT set is exempt — the residue is authored as part of proposing, not before it",
-    has(await findingsFor(FM({ current_state: "draft" }), "   "), "C-25.7"), false);
+  /* C-26.7 — DEC-54's second scope, in the document. */
+  t("C-26.7: an ADOPTED set that says nothing under `## What This Does Not Enforce`",
+    has(await findingsFor(FM(), "   "), "C-26.7"), true);
+  t("C-26.7: and a DRAFT set is exempt — the residue is authored as part of proposing, not before it",
+    has(await findingsFor(FM({ current_state: "draft" }), "   "), "C-26.7"), false);
 }
 
 /* ======================================================================= 3
@@ -438,9 +460,19 @@ console.log("\n--- 3. OVER-STRICTNESS: correct statements phrased unlike anythin
 console.log("\n--- 4. the refusals, each a C-number with a code and a canned translation from ONE place ---");
 {
   const rows = Object.entries(BIAS_CHECKS);
-  t("TEN refusals are allocated, and every one carries check + where + translation",
-    [rows.length, rows.every(([, r]) => /^C-25\.\d+$/.test(r.check) && r.where && r.translation.length > 60)],
-    [10, true]);
+  t("ELEVEN refusals are allocated, and every one carries check + where + translation",
+    /* C-26, not C-25 — the family moved at the rebase because PL-1 landed first
+       and took C-25 (see the note at BIAS_CHECKS). THIS LINE IS WHY THE ARM IS
+       WORTH HAVING: the wholesale renumber was a regex on `C-25.<digits>`, and
+       this occurrence is written `C-25\.\d+` inside a REGEX LITERAL — the
+       backslash sits where the renumber expected a dot, so it was the one
+       reference in 102 that did not move, and the suite caught it on the first
+       run after the rebase rather than a reader catching it later. */
+    [rows.length, rows.every(([, r]) => /^C-26\.\d+$/.test(r.check) && r.where && r.translation.length > 60)],
+    /* ELEVEN, not ten: C-26.11 (BIAS_REFUSED) was added 2026-08-08 when VF-2's
+       DEC-49 guard measured that the write path's ENVELOPE code carried no
+       translation. Corrected here rather than exempted. */
+    [11, true]);
   t("the C-numbers are unique — an allocation reused is an allocation nobody can act on",
     new Set(rows.map(([, r]) => r.check)).size, rows.length);
   t("DEC-54's four scopes each have a NUMBER, which is what makes each a mechanism rather than a paragraph",
@@ -448,7 +480,7 @@ console.log("\n--- 4. the refusals, each a C-number with a code and a canned tra
      BIAS_CHECKS.BIAS_RESIDUE_UNSTATED.check,         // (b) residue as published output
      BIAS_CHECKS.BIAS_INHALE_CANNOT_ADOPT.check,      // (c) propose, never install
      BIAS_CHECKS.BIAS_STATEMENT_ISSUES_A_VERDICT.check], // (d... the malformedness refusal
-    ["C-25.6", "C-25.7", "C-25.8", "C-25.5"]);
+    ["C-26.6", "C-26.7", "C-26.8", "C-26.5"]);
   t("the BAR refusal NAMES WHERE THE SENTENCE BELONGS rather than only refusing it — a member told only "
   + "`no` concludes BIO cannot express their standard, which ends in a standard claimed and not followed",
     /required strength/i.test(BIAS_CHECKS.BIAS_STATEMENT_IS_A_BAR.translation), true);
@@ -505,8 +537,13 @@ console.log("\n--- 6. the two new tables: placed, and in BOTH purge arms (D-113)
   /* THE SCHEMA TRAP THIS ITEM MET, pinned so the next table does not meet it.
      #migrate splits the schema on ";" AFTER dropping full-line comments, so a
      SEMICOLON inside an INLINE comment truncates the statement and the whole
-     migration dies with SQLITE_ERROR: incomplete input. It is not in CLAUDE.md's
-     trap list; it is here, in the file that met it. */
+     migration dies with SQLITE_ERROR: incomplete input.
+     IT IS NOW IN CLAUDE.md's TRAP LIST — PL-1 met it in the same window and
+     delegated it to CONDUCT, who added it on 2026-08-08. This pin is KEPT all
+     the same, and the distinction is the one CLAUDE.md itself draws: a trap in a
+     document is read by whoever reads the document, and a trap in an assertion
+     fails the build. Two sessions hit this within hours of each other, which is
+     the measurement that says the documented half was not going to be enough. */
   const inlineWithSemicolon = SCHEMA_SRC.split("\n")
     .filter((l) => !l.trim().startsWith("--"))
     .filter((l) => l.includes("--") && l.slice(l.indexOf("--")).includes(";"));
@@ -619,7 +656,17 @@ await block("7", async () => {
   t("ARM M: and the refusal carries the C-NUMBER, the DEC-49 code and the canned translation",
     [bad.findings?.[0]?.check, bad.findings?.[0]?.code,
      (bad.findings?.[0]?.translation || "").includes("may never issue verdicts")],
-    ["C-25.5", "BIAS_STATEMENT_ISSUES_A_VERDICT", true]);
+    ["C-26.5", "BIAS_STATEMENT_ISSUES_A_VERDICT", true]);
+  /* ADDED 2026-08-08, and VF-2's DEC-49 guard is what asked for it. The
+     per-finding translations above looked complete and were not: a surface
+     renders a translation keyed on the code the plane sent FIRST, and the
+     ENVELOPE's `reason` had no row — a member would have met the bare word
+     BIAS_REFUSED while the translations sat one level down in a list the
+     surface had no reason to open. The container now carries its own, and it
+     says the thing no per-finding sentence can: that NOTHING LANDED. */
+  t("ARM M: and the ENVELOPE carries a translation too, not only the findings — the code a surface keys "
+  + "on first is the one that must never be bare machine vocabulary (DEC-49)",
+    [bad.check, (bad.translation || "").includes("Nothing was saved")], ["C-26.11", true]);
   t("ARM M: nothing of the refused set reached the record",
     (await get("list", "type=bias&limit=100", MEMBER)).bundles.filter((b) => b.id === "BIAS-2026-0002-bad").length, 0);
 
@@ -637,22 +684,22 @@ await block("8", async () => {
     [before.in_force, before.stated], [false, "no manifest was in force"]);
 
   const tooEarly = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
-  t("C-25.10: a DRAFT set cannot be adopted — the middle step is what stops a set becoming binding "
+  t("C-26.10: a DRAFT set cannot be adopted — the middle step is what stops a set becoming binding "
   + "without anybody having offered it",
     [tooEarly.ok, tooEarly.reason, tooEarly.check],
-    [false, "BIAS_ADOPTION_NOT_PROPOSED", "C-25.10"]);
+    [false, "BIAS_ADOPTION_NOT_PROPOSED", "C-26.10"]);
 
   /* THE MEMBER-AUTHORED TRANSITION, through op=promote like every other. */
   const proposed = await write(INSTANCE_ID, biasMd(instanceFm("proposed")), "bias", "proposed", MEMBER);
   t("the set is OFFERED — a member-authored transition through the ordinary write path", [proposed.ok, proposed.reason ?? null, proposed.findings ?? null], [true, null, null]);
 
-  /* C-25.9 — a machine credential holds no name to put on an authored act. */
+  /* C-26.9 — a machine credential holds no name to put on an authored act. */
   const machine = rP(await (await mf.dispatchFetch(
     `http://x/api/?op=biasadopt&token=mem-pl12&bundleId=${INSTANCE_ID}`)).json());
-  t("C-25.9: a MACHINE credential cannot adopt — DEC-46/D-90/D-82, and the reason DEC-54 (c) gives: "
+  t("C-26.9: a MACHINE credential cannot adopt — DEC-46/D-90/D-82, and the reason DEC-54 (c) gives: "
   + "otherwise a group `follows BBC standards` with nobody in the group having authored anything",
     [machine.ok, machine.reason, machine.check],
-    [false, "BIAS_ADOPTION_NOT_AUTHORED", "C-25.9"]);
+    [false, "BIAS_ADOPTION_NOT_AUTHORED", "C-26.9"]);
 
   const adopted = await get("biasadopt", `bundleId=${INSTANCE_ID}`, MEMBER);
   t("a MEMBER adopts, and the record names them", [adopted.ok, adopted.author, adopted.reason ?? adopted.error ?? null], [true, "mo", null]);
@@ -953,10 +1000,10 @@ await block("14", async () => {
     [8, 8, false]);
 
   t("THE MACHINE IS BOUND BY THE MALFORMEDNESS RULE EXACTLY AS A MEMBER IS (DEC-54 constraint 2): the "
-  + "wholesale-falsity sentence was dropped to the RESIDUE with C-25.5 against it, never proposed",
+  + "wholesale-falsity sentence was dropped to the RESIDUE with C-26.5 against it, never proposed",
     [inh.statements.some((s) => /anonymous tip line/.test(s.text)),
      inh.residue.find((r) => /anonymous tip line/.test(r.text))?.check],
-    [false, "C-25.5"]);
+    [false, "C-26.5"]);
   t("AND IT NEVER PROPOSES kind=pattern — a reader of somebody else's policy holds no evidence in THIS "
   + "record, so the pattern-shaped sentence went to the residue naming that reason",
     [inh.statements.some((s) => s.kind === "pattern"),
@@ -964,9 +1011,9 @@ await block("14", async () => {
     [false, true]);
 
   const forced = await post("biasinhale", { policy: POLICY, adopt: true }, MEMBER);
-  t("C-25.8: a caller ASKING it to adopt is REFUSED BY NAME rather than silently ignored — a silent ignore "
+  t("C-26.8: a caller ASKING it to adopt is REFUSED BY NAME rather than silently ignored — a silent ignore "
   + "is how a caller comes to believe it installed",
-    [forced.ok, forced.reason, forced.check], [false, "BIAS_INHALE_CANNOT_ADOPT", "C-25.8"]);
+    [forced.ok, forced.reason, forced.check], [false, "BIAS_INHALE_CANNOT_ADOPT", "C-26.8"]);
 });
 
 /* ======================================================================= 15

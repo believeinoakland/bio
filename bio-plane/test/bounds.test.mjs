@@ -459,7 +459,7 @@ t("FIXTURE ARMS THE TRAP: three versions of ONE document sit at one address, so 
 
    THE ADOPTION IS WRITTEN AT THE DO, and the reason is worth stating because it
    is a property of the feature rather than a convenience: `op=biasadopt` REFUSES
-   a machine credential by name (C-25.9), since adoption is an authored,
+   a machine credential by name (C-26.9), since adoption is an authored,
    attributed act (DEC-46, D-90, D-82) and `mem-r57` is a token with no member
    behind it. This suite holds no member session, so the row is written the way
    `recordcapturedlocator` above is — straight at the Durable Object. That is a
