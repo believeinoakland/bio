@@ -2587,3 +2587,67 @@ capture he cannot see also carries that name. **A consumer must not compare one 
 I3. **The bump is CONDUCT's**, per the item's brief. The behavioural half (rows withheld,
 order changed) is not additive, so this is not a PATCH; RECORD's view is that it is a MINOR
 at most on the shape and CONDUCT should weigh the withheld rows.
+
+## IC-38 · I3: `op=affordances` publishes the RUNG LADDER, and every act's rung is now either a ladder value or a STATED absence · PROPOSED 2026-08-08 (FW-14 / DEC-19 as amended) — the version bump and the RESOLUTION are CONDUCT's
+
+### WHAT CHANGES, AND IT IS ADDITIVE IN SHAPE
+
+Three new keys under `vocabularies`, and one new key on every act object:
+
+- `vocabularies.rung_ladder` — the ladder itself, an ORDERED array low to high:
+  `["reversible", "reasoned", "terminal", "attested", "irreversible"]`. A surface that renders a
+  rung needs to know where it sits, and the alternative is every surface holding its own copy of
+  the order — the DEC-8 drift class `op=affordances` exists to close.
+- `vocabularies.rung_correction_path` — the sentence DEC-19 requires to travel with the top rung.
+  Published rather than left to a client because **"irreversible" alone is the half that
+  overclaims**: a member told an act cannot be undone, and not told that correction moves FORWARD
+  (a further edition, a withdrawal as another attested act, both standing), has been misled by the
+  surface. This is the accountability rule the A-construct already states, made mechanical.
+- `vocabularies.rung_absence_grounds` — `{ ground: why }` for the five grounds on which an act
+  carries no rung, so a surface can render *why* instead of composing the sentence itself.
+- **`rung_absence` on every act** (in `catalog[]`, in a target-shaped `acts[]`, in `capture_acts[]`,
+  and in `op=queue`'s `options[]`, because all of them go through the same `decorateAct`) — the
+  ground where the act has no rung, `null` where it has one.
+
+### THE BEHAVIOURAL CHANGE A CONSUMER MUST NOT MISS
+
+**`rung` VALUES MOVED.** Until this item most acts published `rung: null` because REC-19's rule was
+that a rung comes from a DOCUMENT and only seven had one. FW-14's rule is that a rung comes from
+what the plane ENFORCES. Of the acts a surface actually sees:
+
+- `cite` was `null` and is now **`reversible`** — C-7's answer, backed by `sever` accepting the
+  status `cite` writes. UI-20 rendered the rung as ABSENT and said so explicitly at the time
+  (*"cite publishes rung null — C-7 derives reversible but FW-14 assigns"*); that surface copy is
+  now stale in the safe direction (it renders nothing where a rung exists).
+- `conclude`, `reopen`, `inquirydivide`, `inquiryground`, `actionmove` were `null` and are now
+  **`reasoned`** — each is refused without an authored account by the store.
+- `publish` was `null` and is now **`irreversible`** — DEC-19 as amended names it, and it is the
+  one op that carries the top rung. **This is the UI-17a rider**: that surface's entry-point
+  section states irreversibility as its own copy, and can now read it off the act.
+- `retire` is unchanged at `terminal`; `release`, `sever`, `reinstate`, `dispose` unchanged at
+  `reasoned`; `attest`, `ratify` unchanged at `attested`.
+
+**`rung: null` NOW MEANS SOMETHING NARROWER.** It used to mean "nobody classified this". It now
+means "classified as having none, on a stated ground" — because the classification is asserted
+TOTAL over the dispatch table's mutating set in both directions, so an unclassified op cannot
+reach a caller. A consumer that treated null as "unknown" is not broken; it is now under-reading.
+
+### WHAT A CONSUMER MUST NOT CONCLUDE
+
+**`reversible` does not mean erasable.** `op=cite` is reversible because `op=sever` takes the
+citation back — and severing leaves the edge in the record carrying `status: "severed"` and the
+member's reason. A surface must never render `reversible` as "this can be undone with no trace".
+
+**A rung is not a permission.** `needs` gates the call; the rung says what performing it costs to
+undo. `op=adminremove` carries `reasoned` and is roster governance no member sees on an act strip.
+
+**The absence grounds are not a severity order.** Four of the five (`substrate`, `credential`,
+`caller-owned`, `observational`) mean the ladder does not reach that act at all; only
+`undetermined` means "a real act on the record with no rung yet". They must not be flattened.
+
+### VERSION
+
+I3, and **the bump is CONDUCT's**. Every key is ADDITIVE and no key was removed or renamed, so
+RECORD's/FRAMEWORK's view is MINOR — but the `rung` VALUES moved on six acts a surface can already
+read, which is a semantic change inside an existing field, and CONDUCT should weigh that rather
+than take "additive keys" as the whole answer.

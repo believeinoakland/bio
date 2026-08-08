@@ -104,8 +104,17 @@ export function readDispatch(planeDir = PLANE) {
 
   const opsBody = tableBody(indexSrc, "OPS");
   if (opsBody == null) throw new Error("OPS table not found in src/index.mjs");
-  const ops = new Set([...opsBody.matchAll(/^\s{2}([a-z][a-z0-9]*)\s*:\s*\{([^}]*)\}/gm)]
-    .map((m) => m[1]));
+  const opRows = [...opsBody.matchAll(/^\s{2}([a-z][a-z0-9]*)\s*:\s*\{([^}]*)\}/gm)];
+  const ops = new Set(opRows.map((m) => m[1]));
+
+  /* FW-14: THE `mutating` FLAG OFF THE SAME ROWS, added here rather than in a
+     second reader. The rung ladder's op set is "every op the dispatch table
+     declares mutating", and `scripts/coverage.mjs` already reads this flag with
+     this exact predicate — but coverage.mjs runs top-level and exits, so it
+     cannot be imported. Growing THIS reader by one field is CPDF-9's rule
+     applied: one mechanism for one job. Every existing field of the returned
+     table is untouched, because `test/op-claims.test.mjs` pins them. */
+  const mutating = new Set(opRows.filter((m) => /mutating:\s*true/.test(m[2])).map((m) => m[1]));
 
   /* The public-name -> DO-path alias map. THE ONE PLACE that difference lives, and
      the reason existence alone is not a sufficient check. */
@@ -124,7 +133,7 @@ export function readDispatch(planeDir = PLANE) {
   for (const m of mapBody.matchAll(/^\s{8}([a-z][a-z0-9]*)\s*:\s*\(\)\s*=>\s*(?:this\.)?(#?[A-Za-z0-9_]+)/gm))
     routes.set(m[1], m[2]);
 
-  return { ops, doPath, routes };
+  return { ops, mutating, doPath, routes };
 }
 
 /* Where an op actually goes: the alias first, then the store's own table. */

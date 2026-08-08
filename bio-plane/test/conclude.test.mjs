@@ -373,8 +373,16 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
   const pub = cat.result.catalog.find((a) => a.id === "conclude");
   t("the catalogue publishes conclude with its capability, its mode and its weight — composed, not hand-asserted",
     [pub.needs, pub.mode, pub.weight], ["contribute", "session", "single"]);
-  t("its rung is NULL: no document assigns conclude one, and RUNGS invents nothing (FW-14's job)",
-    pub.rung, null);
+  /* CORRECTED 2026-08-08 (FW-14), never exempted. This read "its rung is NULL:
+     no document assigns conclude one, and RUNGS invents nothing (FW-14's job)".
+     It was right under REC-19's rule that a rung comes from a DOCUMENT. FW-14's
+     rule is that a rung comes from what the code ENFORCES, and `conclude` is
+     refused NO_CONCLUSION and NO_FALSIFIER without an authored account — which
+     is exactly Constructs:161's definition of `reasoned`. The rung is not
+     invented; it is this suite's own subject stated one level up. */
+  t("its rung is `reasoned` (FW-14) — read off the very refusals this suite drives",
+    pub.rung, "reasoned");
+  t("and it carries no stated absence, because it carries a rung", pub.rung_absence, null);
 
   const openAff = await affordances(INQ_SECOND);
   /* CORRECTED 2026-08-04 (REC-16), never exempted: an open inquiry that RESTS

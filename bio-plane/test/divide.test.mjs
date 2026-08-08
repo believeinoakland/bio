@@ -571,8 +571,12 @@ console.log("\n--- 11. DEC-29(b): the divide surface's wording STATES the disclo
 {
   const cat = (await GET("op=affordances&token=mem-rec16")).result.catalog;
   const act = cat.find((a) => a.id === "inquirydivide");
-  t("the act is published with its capability, its mode and its weight — composed, not hand-asserted",
-    [act.needs, act.mode, act.weight, act.rung], ["contribute", "session", "single", null]);
+  /* CORRECTED 2026-08-08 (FW-14): the fourth value was `null` and is now
+     `reasoned`. `op=inquirydivide` refuses NO_REASON — DEC-29's one authored
+     reason per division, which this suite drives elsewhere — so the rung is that
+     requirement stated rather than a document's word for it. */
+  t("the act is published with its capability, its mode, its weight and its rung — composed, not hand-asserted",
+    [act.needs, act.mode, act.weight, act.rung], ["contribute", "session", "single", "reasoned"]);
   t("the plane PUBLISHES the prompt, so a surface renders what it received and composes none of its own (DEC-8)",
     act.prompt, DIVIDE_PROMPT);
   /* THE ACCEPTANCE CLAUSE, clause by clause and as strings. Each of these is

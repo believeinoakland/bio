@@ -79,8 +79,20 @@ uses `weight` for something orthogonal and older: `selectionResolve({ …, weigh
 `store.mjs:1192` is the SET-APPLICATION mode — `report` proceeds and says what moved, `refuse` stops and
 hands over nothing, and `per-item` is the third mode this study added. Two different ideas under one word
 in a codebase that has already paid for exactly that (D-8's vocabulary drift, the three copies of one state
-machine). So: the LADDER is **rungs** — reversible, reasoned, terminal, attested — and **weight** stays the
-plane's set-application mode. An act has a rung; applying it to a set has a weight.
+machine). So: the LADDER is **rungs** — reversible, reasoned, terminal, attested, **irreversible** — and
+**weight** stays the plane's set-application mode. An act has a rung; applying it to a set has a weight.
+
+> **CORRECTED 2026-08-08 by FW-14, and stated rather than silently reworded.** This line read
+> "reversible, reasoned, terminal, attested" and stopped there. **DEC-19 as amended 2026-08-03 puts
+> IRREVERSIBLE back on top** — Bob: *"Publishing IS an irreversible act! It's (one of?) the only
+> irreversible acts."* — with the correction path stated BESIDE it rather than instead of it, because
+> "irreversible" alone is the half that overclaims. **The ladder is no longer prose only: the plane
+> PUBLISHES it** (`op=affordances` → `vocabularies.rung_ladder`, with `rung_correction_path` and
+> `rung_absence_grounds`), every op the dispatch table declares mutating either carries a rung or is
+> named with the ground on which it has none, and `bio-plane/test/rung-ladder.test.mjs` asserts that
+> total in both directions. **`terminal` is RETAINED and the A-construct's staleness paragraph below is
+> narrowed rather than reversed** — see the note there; it was reasoning about the ladder's then-top-two
+> rungs, and the state machine turns out to enforce exactly one internal terminality (`op=retire`).
 
 **What may be PUT in the queue is catalogued in `docs/development/NOTIFICATIONS.md`** — about thirty
 generators today, sorted into three classes (FINDING, OBLIGATION, CONDITION) rather than a severity
@@ -158,7 +170,7 @@ shipped `out_of_view` behaviour (REC-20), confirmed — a later session must not
 tension as unresolved and "fix" it toward silence.
 
 | **ACT** | *doing something to a record or a set.* One motion: choose, see what it will refuse and why BEFORE it runs, author the reason, get a receipt. Ballots are acts whose status shows a tally; bulk is the same act scoped to a selection. |
-| **THE RUNG LADDER** (renamed from "weight" 2026-08-01 — see the collision note below) | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back) · **attested** (irreversible, public, requires a key). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
+| **THE RUNG LADDER** (renamed from "weight" 2026-08-01; top rung corrected 2026-08-03 by DEC-19; ASSIGNED and published 2026-08-08 by FW-14) | not a construct — a property of every act, visible and escalating, learned once and read everywhere: **reversible** (the plane publishes an act that takes the result back) · **reasoned** (a justification is required and never prefilled) · **terminal** (internal, cannot be walked back — the target state has no outgoing edge) · **attested** (public, requires a key; cannot be undone SILENTLY) · **IRREVERSIBLE** (publishing, and DEC-19 says it may be the only one — what it published never stops answering, and correction always moves FORWARD). **The plane assigns it rather than a document alone**: a rung is read off what the code ENFORCES, every mutating op either carries one or states the ground on which it has none, and both are published by `op=affordances` (`rung`, `rung_absence`, `vocabularies.rung_ladder`, `vocabularies.rung_correction_path`, `vocabularies.rung_absence_grounds`). Orthogonal to it, an act applied to a SET carries one of three application modes: `refuse` (all-or-nothing), `report` (proceeds, says what moved), or `per-item` (each succeeds independently or is RETAINED WITH A REASON). See `NOTIFICATIONS.md`. |
 | **UNDETERMINED** | a display primitive, identical in all six places it appears. |
 
 **Attestation stays distinguishable — as the top rung of the ladder, not a separate
@@ -399,6 +411,19 @@ noticing.** DEC-12 ruled that a published case may be revised as a new edition a
 closed finding may be REOPENED, so a rung defined as *"cannot be walked back"* no longer
 describes anything in the system. The ladder's top two rungs are distinguished by the WEIGHT
 and VISIBILITY of the correction they require, not by the absence of one.
+
+> **NARROWED 2026-08-08 by FW-14, on a measurement, and the paragraph above is kept because its
+> reasoning is what produced DEC-19.** Two things have happened since it was written. First, the
+> 2026-08-03 AMENDMENT put **IRREVERSIBLE** back on top for publishing, so `terminal` is no longer
+> one of "the ladder's top two rungs" and the sentence is not about it any more. Second — and this
+> is the part that was never checked — **the state machine does still enforce an internal
+> terminality.** `STATES.information.edges.retired` is `[]`: `op=retire` moves a bundle to a state
+> with no outgoing edge, and no act in the catalogue walks it back. So `terminal` describes exactly
+> one thing in the system rather than nothing, and it is RETAINED at that one op with the assertion
+> written against the imported table, so that if an edge out of `retired` is ever added the rung
+> fails rather than quietly becoming a lie. **What the paragraph above got exactly right stands and
+> is what decided every other assignment:** an act corrected FORWARD is not a terminal act, which is
+> why `op=inquirydivide` — whose parent never moves again — is `reasoned` and not `terminal`.
 
 **Separate from a justified transition because of that weight.** A published hash
 answers forever by design. That is why D-114 refused to loosen the publication fence on

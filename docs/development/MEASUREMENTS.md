@@ -4228,3 +4228,83 @@ Driven both ways: over a scratch corpus holding `| D-100 |` and the sentence `D-
 · strict floor 100 · prose-driven **true**; over the same corpus with the sentence removed,
 100 · 100 · **false**; over this repository's live corpus, `D` 243/243 and `C` 34/34, **neither
 prose-driven**. Control arm (7): drop the allocation pattern and three arms fail.
+
+## FW-14 · the weight ladder over the whole mutating op set — 2026-08-08
+
+**Instrument:** `bio-plane/test/rung-ladder.test.mjs`, which derives the op set from the
+`mutating: true` rows of the `OPS` dispatch table in `src/index.mjs` through
+`readDispatch()` in `scripts/op-claims.mjs` (the same reader M0-12 uses; grown by one
+returned field rather than copied). Re-run it rather than reasoning about the figures
+below — every one of them is PRINTED on each run.
+
+| What | Measured | Date |
+| --- | --- | --- |
+| ops in the dispatch table | **159** | 2026-08-08 |
+| of those, declared `mutating: true` | **84** | 2026-08-08 |
+| carry a rung | **24** | 2026-08-08 |
+| carry a STATED absence | **60** | 2026-08-08 |
+| unclassified | **0**, asserted in both directions | 2026-08-08 |
+
+**THE FIGURE THIS CORRECTS.** `src/affordances.mjs` carried *"CAPABILITIES.md measures 7 of
+57 mutating ops with a rung assigned by any document"* from REC-19 until this item. The
+denominator was never re-measured and the real one is **84** — a hand-carried number in a
+comment nobody re-ran, which is this project's most-repeated finding. Both figures now come
+out of the instrument and neither is written in prose.
+
+### The rungs, and what backs each one
+
+| rung | ops | what backs it |
+| --- | --- | --- |
+| `reversible` | 3 — `cite`, `versionrevert`, `versionhide` | the plane publishes an act that takes the result back |
+| `reasoned` | 17 | the store refuses the act for want of an authored account |
+| `terminal` | 1 — `retire` | `STATES.information.edges.retired` is `[]` — no outgoing edge |
+| `attested` | 2 — `attest`, `ratify` | Constructs:275; an authority outside the group (a key, a TSA) |
+| `irreversible` | 1 — `publish` | DEC-19 as amended; derived as the op routing to `publishcase` |
+
+**`reasoned` IS NOT COUNTED BY ONE SPELLING.** The refusal family is `NO_REASON`,
+`VERSION_NO_REASON`, `NO_ACKNOWLEDGMENT`, `NO_MITIGATION`, `NO_CONCLUSION`, `NO_FALSIFIER`,
+`NO_JUSTIFICATION`. Grading by `NO_REASON` alone would have missed `op=release` (which
+demands an acknowledgment and a mitigation) and `op=conclude` (a conclusion and a
+falsifier) — the same requirement wearing the word the act uses for it.
+
+**THE SIX VERSION ACTS ARE THE MEASUREMENT MOST EASILY GOT WRONG.** All six route through
+one `#moveVersionState` carrying one `VERSION_NO_REASON` refusal, and the branch fires only
+when `versionNeedsReason(to)`. A textual classifier reports **6** ops demanding a reason;
+the truth read off `Store.VERSION_ACT_TO` and `VERSION_REASON_REQUIRED` is **2**
+(`versionreject`, `versionconsider`). The suite reads the predicate, never the helper's
+text. Backing scan reach, printed each run: **69 store method bodies read · 18 ops refuse
+for want of an authored account.**
+
+### The 60 stated absences, by ground — and what they have in common
+
+| ground | ops | what the ground means |
+| --- | --- | --- |
+| `credential` | 19 | the subject is WHO MAY ACT, not what the record says |
+| `substrate` | 18 | machinery a decided act rides on; the member never chooses it |
+| `undetermined` | 18 | **a real act on the record with NO rung** — stated, never guessed |
+| `caller-owned` | 4 | the caller's own selection or feed preference; not in the record |
+| `observational` | 1 | records what was OBSERVED; corrected by observing again |
+
+**THE FINDING: 42 of the 60 are absences of APPLICABILITY, not gaps.** The ladder is a
+property of an act ON THE RECORD — it tells a member what performing it costs to undo — and
+most mutating ops are not that. Keeping those four grounds apart from `undetermined` is
+what stops a real gap from hiding inside a category error.
+
+**AND THE GAP THE REMAINING 18 NAME IS IN THE LADDER, NOT IN THE TABLE.** The shape they
+share: a member performs the act once, the record keeps it attributed and dated, and it is
+corrected by a further act moving FORWARD rather than by anything moving back — **and it is
+not signed.** DEC-19 named exactly that property (*"it cannot be undone SILENTLY"*) and
+attached it to `attested`, the rung that requires a key. These acts have the property
+without the key, so `attested` would claim a signature that does not exist and `reversible`
+would promise a way back that does not exist. `versionaccept`, `inboxresolve`, `taskresolve`
+and `actioncorrespond` are the clearest cases.
+
+### C-7, checked rather than assumed
+
+The FW-14 row claims its derivation method already yields C-7's answer. **It holds.**
+`op=cite` writes `{ rel: "cites", status: "confirmed" }` and `op=sever`'s `from` set is
+`["confirmed", "proposed"]`, so the plane publishes an act that takes a citation back —
+which is `reversible`, the answer UI-20 recorded as *"C-7 derives reversible"* while
+rendering the rung as ABSENT because FW-14 had not yet assigned it. Both halves are read
+out of `store.mjs` by the suite rather than pinned by hand. Note what it does not claim:
+severing is not erasure, and the edge stays in the record carrying the member's reason.

@@ -190,6 +190,16 @@ const REGISTER_FLOOR = {
      at the site: one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
   arms:       557,  // arms stated across the classified declarations
+
+     REC-77 530 · M0-16 542 · FW-14 552 (this one, and it is the CURRENT value: FW-14
+     moved the set to its own printed REPRODUCIBLE figures AFTER committing its new
+     suite, so `rung-ladder.test.mjs` was in a commit when the figures were read).
+
+     AND SINCE M0-16 THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the
+     counted one — a phantom suite inflates the corpus, and a floor moved while one is
+     present would be permanently too high, which is how a ratchet gets switched off.
+     Move these only UPWARD, and only to a figure a green run PRINTED. */
+  arms:       552,  // arms stated across the classified declarations
   classified: 128,  // declarations the detector could count arms in
   corpus:     129,  // suites the register reads
 };

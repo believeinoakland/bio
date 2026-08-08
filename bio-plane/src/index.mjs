@@ -48,7 +48,7 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
    them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
-import { ACTS, RUNGS, VOCABULARIES, CAPTURE_ACTS, deriveActs,
+import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, deriveActs,
          ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS,
          TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -1674,8 +1674,7 @@ const NEEDS = {
    and op=queue share ONE function rather than one function and a copy of it.
    The store derives WHICH acts exist (deriveActs over its own facts); this adds
    the metadata that lives only here — the capability NEEDS gates the call with,
-   how the op is reached, and the DECLARED ladder rung (null wherever no
-   document assigns one; FW-14 assigns the rest). A queue item's options[] and
+   how the op is reached, and the DECLARED ladder rung. A queue item's options[] and
    an op=affordances answer for the same subject are therefore identical by
    construction and not by agreement, which is the property the item's suite
    asserts byte-for-byte. */
@@ -1697,6 +1696,18 @@ const decorateAct = (a) => ({
   mode: SESSION_OPS.member.has(a.id) ? "session"
       : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
   rung: RUNGS[a.id] ?? null,
+  /* FW-14. `rung: null` NOW MEANS SOMETHING IT DID NOT MEAN BEFORE, and this key
+     is what makes the difference legible to a surface. Until this item a null
+     rung meant "nobody has classified this"; every mutating op is now either
+     rung-bearing or NAMED IN `RUNG_ABSENT` with the ground on which it has none,
+     asserted total in both directions. So a null rung beside a stated ground is
+     a CLASSIFIED ABSENCE — undetermined stated, which CLAUDE.md makes
+     first-class — and a null rung beside a null ground is the shape that can no
+     longer reach a caller, because the suite refuses to let such an op exist.
+     Published rather than left implicit for DEC-8's reason: a surface must be
+     able to render "this act has no rung, because <ground>" without computing
+     the sentence itself. */
+  rung_absence: RUNG_ABSENT[a.id]?.ground ?? null,
   prompt: a.prompt ?? null,
 });
 
@@ -2756,10 +2767,17 @@ export default {
        this file plus the catalogue's exported state table. Nothing is asked of
        the caller and nothing here mutates.
 
-       `rung` is DECLARED, never guessed: null wherever no document assigns one
-       (7 of 57 mutating ops have a source; FW-14 assigns the rest). An `action`
-       bundle returns an empty act list because nothing operates one until
-       REC-24, and an empty list is the honest answer. */
+       `rung` is DECLARED, never guessed, and since FW-14 it is also TOTAL: every
+       op the dispatch table declares mutating either carries a rung or is named
+       with the GROUND on which it has none, asserted in both directions by
+       `test/rung-ladder.test.mjs`. So `rung: null` is now always accompanied by
+       a non-null `rung_absence`, and the pair "no rung, no ground" is a shape
+       the suite refuses to let exist. The line this replaces carried the figure
+       "7 of 57 mutating ops have a source" — the 57 was never re-measured and
+       the table declares 84, which is why the count now lives in the suite's
+       printed corpus rather than in this comment.
+       An `action` bundle returns an empty act list because nothing operates one
+       until REC-24, and an empty list is the honest answer. */
     if (op === "affordances") {
       /* REC-20 hoisted this to module scope (decorateAct) so op=queue's
          options[] and this answer come from the SAME function. */
@@ -2774,7 +2792,10 @@ export default {
           vocabularies: VOCABULARIES,
           capture_acts: CAPTURE_ACTS.map(decorate),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
-                + "rung is null wherever no document assigns one (FW-14 assigns them); "
+                + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
+                + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
+                + "null only where the act carries a STATED absence — read rung_absence for the "
+                + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
                 + "capture_acts are keyed by a capture sha rather than by a bundle, so they are "
                 + "published with their metadata and never derived against an object's state",
         }, store: storeName, tokenClass: cls }, 200);

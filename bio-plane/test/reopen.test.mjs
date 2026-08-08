@@ -381,8 +381,13 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
   const pub = cat.result.catalog.find((a) => a.id === "reopen");
   t("the catalogue publishes reopen with its capability, its mode and its weight — composed, not hand-asserted",
     [pub.needs, pub.mode, pub.weight], ["contribute", "session", "single"]);
-  t("its rung is NULL: no document assigns reopen one, and RUNGS invents nothing (FW-14's job)",
-    pub.rung, null);
+  /* CORRECTED 2026-08-08 (FW-14), never exempted — conclude's correction
+     exactly. The old line ("no document assigns reopen one, and RUNGS invents
+     nothing") was REC-19's document rule; FW-14's rule is enforcement, and
+     `reopen` refuses NO_REASON, which is Constructs:161's `reasoned` in code. */
+  t("its rung is `reasoned` (FW-14) — the NO_REASON refusal this suite drives, stated as a rung",
+    pub.rung, "reasoned");
+  t("and it carries no stated absence, because it carries a rung", pub.rung_absence, null);
 
   /* CORRECTED 2026-08-04 (REC-37), never exempted: `cite` joins every inquiry's
      published act list, at every state. It was absent because `op=cite` could

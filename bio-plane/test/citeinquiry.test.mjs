@@ -269,8 +269,17 @@ const affQ = await get("affordances", `target=${MAIN}`);
 t("a QUESTION now publishes cite — the act by which a record becomes a case",
   actIds(affQ).includes("cite"), true);
 const citeAct = (affQ.acts || []).find((a) => a.id === "cite");
-t("published at the SAME weight, the SAME capability and the same unassigned rung — no new token for citing",
-  [citeAct.weight, citeAct.needs, citeAct.rung], ["report", "contribute", null]);
+/* CORRECTED 2026-08-08 (FW-14), never exempted. This read "the same UNASSIGNED
+   rung" and pinned `null`. Cite's rung is now `reversible` — C-7's answer,
+   assigned from the plane's own inverse act (sever accepts the status cite
+   writes). The property this assertion is actually for is untouched and is what
+   the new wording says: citing onto a QUESTION is published identically to
+   citing onto a case, so widening the act minted no new token and changed no
+   weight. Pinning the value rather than "whatever the catalogue says" is
+   deliberate — the point is that the two ends AGREE, and reading both from the
+   same place would agree with itself for free. */
+t("published at the SAME weight, the SAME capability and the SAME rung — no new token for citing",
+  [citeAct.weight, citeAct.needs, citeAct.rung], ["report", "contribute", "reversible"]);
 const cat = await get("affordances");
 t("the catalogue names all three ends of the ONE act, and the label no longer says 'in a project'",
   [cat.catalog.find((a) => a.id === "cite").appliesTo,
