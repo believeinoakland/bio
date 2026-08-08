@@ -4196,3 +4196,14 @@ why it is not fixed here: `bio-plane/scripts/**` is not this item's paths, and
   items moved in parallel on 2026-08-08 with keep-both merges leaving duplicate
   `arms:` keys four times. That number must be re-read from a PRINTED green run
   of the MERGED tree, which is the integrator's position, not a branch's.
+
+## CLAIM 2026-08-08 M0 (test-estate / tooling lane) — D-243 + D-242
+session: d243-detect-unminted (worktree agent-a14199b914b9086e2)
+opened: 2026-08-08T21:33:00Z
+paths: **`tools/mintid.mjs`** (the register, the allocation-site patterns, the new `--audit` mode, the exclusivity probe and the SCOPE line). **`bio-plane/test/mintid.test.mjs`** (its suite — new sections). **`tools/plancheck.mjs`** (ONE new block: the duplicate-allocation gate; it also removes the dead `readdirSync` import M0-16 delegated). `docs/development/kickoffs/CONDUCT.md` (**step 2 only** — the integration-side audit command; M0-17 edited step 1 and this edits step 2). `docs/development/DEBT.md` (**D-242 and D-243 rows amended; D-248 appended** — append-only otherwise). `docs/development/MEASUREMENTS.md` (append). `docs/development/CLAIMS.md` (append).
+interfaces consumed: none
+interfaces owned: none — tooling only. No plane behaviour, no op, no field, no shape.
+expected: **D-243** — nothing detects an id taken WITHOUT `tools/mintid.mjs`; **D-242** — the ledger is one clone on one machine and the real cost is the CONFIDENCE rather than the collision.
+accepts-when: **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 133/133 suites green · 8,319 assertions · 116.2 s · exit 0**, provenance 135/135 discovered items in the commit at HEAD (`bb426ac`). Battery green at the end, `node scripts/coverage.mjs --strict` exit 0 read UNPIPED, `node civicos-ui/test/run.mjs` from the repo root exit 0, `node tools/plancheck.mjs` clean but for UNPUSHED.
+concurrency: `tools/mintid.mjs` and `bio-plane/test/mintid.test.mjs` are named by no other live claim (M0-17's claim is `released:`). `tools/plancheck.mjs` is opened in ONE new block plus the dead-import removal M0-16 delegated; no live claim names it. `docs/development/kickoffs/CONDUCT.md` step 2 only — M0-17 took step 1 and is released. **`docs/development/DEBT.md` D-242 and D-243 are AMENDED IN PLACE**, which is the one non-append edit here: both rows are M0-17's own residuals and this item is the one that answers them.
+released:
