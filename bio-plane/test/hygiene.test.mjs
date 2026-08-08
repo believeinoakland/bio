@@ -1715,6 +1715,20 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        number IS a baseline. It is not fixed here because `civicos-ui/**` is not
        this item's to open; it is DELEGATED in CLAIMS.md. */
     "civicos-ui/test/run.mjs",
+    /* ADDED 2026-08-08 by D-237, AND THE RATCHET WORKED AGAIN — this walk was
+       named by the census on its first full battery, before anyone read the diff.
+       WHY IT IS NAMED AND NOT GUARDED, and this one is a CATEGORY difference
+       rather than a judgement about exposure: `scripts/residue.mjs` walks the
+       machine's SHARED TEMP ROOTS, which are not a repository directory and are
+       in no commit BY CONSTRUCTION. `git ls-tree HEAD` would answer UNTRACKED
+       for every single entry it finds, correctly and uselessly, and a report in
+       which every row is flagged is a report with no signal in it. The exposure
+       provenance defends against — a phantom inflating a number a session quotes
+       into a floor — does not exist here: nothing this module prints is a
+       baseline, and it is REPORT-ONLY by design (it cannot fail a run). Its own
+       attribution discipline is stated in its header and driven by
+       `test/battery-residue.test.mjs`. */
+    "bio-plane/scripts/residue.mjs",              // the machine's shared TEMP roots, which are in no commit by construction
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));

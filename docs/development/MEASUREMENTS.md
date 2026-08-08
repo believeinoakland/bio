@@ -4308,3 +4308,57 @@ which is `reversible`, the answer UI-20 recorded as *"C-7 derives reversible"* w
 rendering the rung as ABSENT because FW-14 had not yet assigned it. Both halves are read
 out of `store.mjs` by the suite rather than pinned by hand. Note what it does not claim:
 severing is not erasure, and the edge stays in the record carrying the member's reason.
+
+## 2026-08-08 — D-237: the shared temp space this battery does NOT own
+
+Instrument: `bio-plane/scripts/residue.mjs` and three purpose-written probes, run on the
+development machine (darwin 25.5.0) while other worktrees were active. Every figure below
+decided a design choice in the reporting half of D-237, and each is recorded because the
+choice is otherwise indistinguishable from a preference.
+
+**THE SPACE ITSELF, and it is the reason the report is careful rather than loud.**
+
+| Figure | Measured |
+| --- | --- |
+| shared temp roots after realpath dedup | **3** — `/private/tmp`, `/private/var/folders/…/T`, `/private/var/tmp` |
+| top-level entries across all three | **861** |
+| bytes in `/tmp` alone, depth 4 | **236.4 MB** across 647 dirs / 2,081 files |
+| bytes in `$TMPDIR` alone, depth 4 | **575.3 MB** across 1,303 dirs / 2,707 files |
+| `bio-battery-*` fences belonging to OTHER pids, during one run | **2** |
+| legacy-prefixed orphans spared by the sweep, during one run | **64**, holding **115.1 MB** |
+
+`os.tmpdir()` answers `/var/folders/3_/…/T` on this machine while both historical offenders
+wrote to the literal `/tmp`, and `lsof` answers in the `/private`-resolved spelling of both.
+**Three different names for two directories is precisely why counting inside `$TMPDIR` could
+not see either offender**, and it is why the roots are deduplicated by REALPATH rather than
+by string.
+
+**IDLE CHURN, over a 150 s window with no battery of ours running** — the figure that decides
+whether "something changed in a shared root while we ran" is signal or a flood:
+**3 arrivals, 4 changed entries, 0 vanished.** Of the four changed, **three moved by ZERO
+BYTES** (`TemporaryItems`, `com.apple.icloud.searchpartyuseragent`, `duetexpertd` — macOS
+daemons touching directories they own). So the report names a byte delta or an arrival and
+SUMMARISES an mtime touch, and that rule is measured rather than tidy.
+
+**THE COST OF THE ONLY CONCLUSIVE ARM.** `lsof -n -P -FpRn` unscoped: **276 / 118 / 117 ms**
+over three calls, 1,261,760 bytes of output. Scoped `-c node -c workerd`: **17 / 17 / 17 ms**,
+46,739 bytes. Every process in this battery's own tree is one of those two commands, so the
+scope costs nothing in reach and 7× in time — 2 samples × 133 suites is ~4.5 s on a 113 s run.
+
+**THE BOUNDED WALK.** Depth 4, one pass per root: `/tmp` **134 ms / 3,478 ops**,
+`$TMPDIR` **170 ms / 5,233 ops**, `/var/tmp` **0 ms / 15 ops**. ~300 ms total, which is why
+the deep scan runs TWICE per battery (before and after) and never per suite — per suite would
+be ~40 s on a 113 s run.
+
+**SUITE DURATIONS, which set the sampling cadence.** 133 suites: minimum **32 ms**, median
+**505 ms**, maximum ~1.6 s. Suites finishing before a first sample at 200 ms: **13**; at
+100 ms: **11**; at 60 ms: **10**. The floor is the handful of suites shorter than an `lsof`
+call, so the cadence is 60 ms / 700 ms and **the suites the arm never covered are COUNTED and
+PRINTED** rather than assumed sampled.
+
+**WHAT WAS STANDING ON THE MACHINE, unreported, when this was written:** `/tmp/mfp`
+**10.9 MB / 18 files**, written 2026-07-31 17:36 .. 2026-08-05 05:13 — D-237's own subject,
+eight days on; and `/tmp/mfp-m0-10-arm` **2.7 MB / 18 files**, written 2026-08-08 17:55, the
+residue of **M0-10's own control arm**. Neither is inside any `$TMPDIR` this estate owns,
+neither matches any prefix the orphan sweep knows, and no instrument in the repository had
+ever mentioned either.

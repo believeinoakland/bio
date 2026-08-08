@@ -65,7 +65,11 @@ const REAL_RUNNER = join(DIR, "..", "scripts", "battery.mjs");
    so the scratch repository needs BOTH files or the runner cannot start. Copied
    from the real tree for the same reason the runner is: a fixture copy of the
    check would agree with itself and prove nothing about what actually runs. */
-const REAL_MODULES = ["provenance.mjs"];
+/* D-237 added `residue.mjs` to the runner's imports, so the scratch repository
+   needs it too or the runner cannot start — which is exactly what happened on
+   the first full battery after that item, and it is this list's whole purpose.
+   Corrected, not exempted: the arms below are unchanged and still 23 pass. */
+const REAL_MODULES = ["provenance.mjs", "residue.mjs"];
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
