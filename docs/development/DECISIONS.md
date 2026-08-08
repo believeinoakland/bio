@@ -4342,6 +4342,25 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full
   consequences).
 enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
+### DEC-64 · open
+for: bob
+raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
+subject: Should a surface state a bound the record APPLIED but that did not BITE?
+
+UI-46 removed a false completeness claim and replaced it with the record's own bound. The question underneath: **the bound is now stated on EVERY answer, not only when the answer was actually cut.**
+
+the two shapes:
+  (a) **STATE IT ALWAYS** — every answer says what bound the record applied, whether or not it truncated. Shipped.
+  (b) **STATE IT ONLY WHEN CUT** — silence on the common path, a sentence only when something was left out.
+
+provisional: **(a) is shipped and running.** Nothing is blocked either way, and the wording lives in ONE shared function, so this is a small lever.
+
+recommendation: **keep (a).** UI-39's argument is the one that decides it: **a bound a member is told about only sometimes is one they cannot rely on.** If the sentence appears only when truncation happened, then its ABSENCE becomes a claim — *nothing was left out* — and that is an inference the member is invited to draw from silence, which is the failure mode this whole line of work exists to close. Stating it always costs a member a number they may not need; stating it sometimes costs them the ability to trust either state.
+
+**The honest cost of (a), stated rather than buried:** it puts a figure in front of a member on the common path where nothing was omitted, which is noise, and noise on every screen is its own kind of tax on attention.
+
+cost of reversal: **LOW — one line in the shared function, plus two pins.** The wording deliberately lives in one place, so both screens move together whichever way you rule, and a future DEC-49 ruling on the wording moves them the same way.
+
 ### DEC-63 · open
 for: bob
 raised: 2026-08-07 · CONDUCT (from IS-6, which shipped a provisional and asked)
