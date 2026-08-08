@@ -176,7 +176,7 @@ const REGISTER_FLOOR = {
      MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. A floor with slack
      is not a ratchet: this project measured one sitting 19 codes low that had ALREADY
      flipped a control from RED to GREEN. */
-  arms:       526,  // arms stated across the classified declarations
+  arms:       530,  // arms stated across the classified declarations (REC-77, 2026-08-08: 526 -> 530, the figure `--strict` PRINTED on a green run of this tree after readingname.test.mjs's declaration gained REC-77's four arms)
   classified: 126,  // declarations the detector could count arms in
   corpus:     127,  // suites the register reads
 };

@@ -2496,3 +2496,94 @@ census 406 -> 410, reach 200 -> 204, governedSites 59 -> 60, regions 46 -> 47, r
 codes arrive translated, so this item neither closes nor widens REC-64's named gap.
 `scripts/coverage.mjs`: `REGISTER_FLOOR` arms 471 -> 480, classified 119 -> 121, corpus
 120 -> 122. OPS 158 -> 159, all reached. CHECKS 201 -> 205, all named.
+
+## IC-37 · I3: `op=readingname` gates and orders its two PARTIAL correspondence tiers by MEASURED SELECTIVITY, publishes `selectivity` per candidate and `names_uninformative` on the answer · PROPOSED 2026-08-08 (REC-77 / M-4) — the version bump and the RESOLUTION are CONDUCT's
+
+**A RENUMBER IS NOT AN ERROR HERE.** Three items collided on an IC number in one day; the
+highest number in this file when this was written was IC-36. If CONDUCT renumbers this, the
+content is what matters.
+
+### PROPOSED
+
+**WHAT MOVES.** `op=readingname`'s answer, in three additive ways and one behavioural one:
+
+| change | shape | kind |
+| --- | --- | --- |
+| every candidate gains `selectivity` | `null` on a WHOLE correspondence; on a PARTIAL one `{ source, reaches, corpus, value }` where `value` is `null` when `corpus <= 1` | ADDITIVE key |
+| the answer gains `names_uninformative` | `[{ alias, source, reaches, corpus }]`, always present, usually empty | ADDITIVE key |
+| a partial candidate's `detail` gains a trailing clause | `…; that name reaches N of the M references this reader can see at this source` | wording, appended |
+| **a PARTIAL candidate whose alias reaches EVERY reference in the visible corpus at that source is WITHHELD** | fewer `documents` rows for a vacuous alias; none for a whole match, ever | **BEHAVIOURAL** |
+| **the two partial tiers are ordered by measured selectivity rather than by `#CORRESPONDENCE_RANK` position** | `documents` may come back in a different order; the WHOLE tiers keep their positions above every partial | **BEHAVIOURAL** |
+
+**WHY.** M-4 measured that `#CORRESPONDENCE_RANK` offers the LEAST selective evidence
+FIRST: a term of a reference reaches 67.5% of the reference corpus against 8.3% of labels,
+**8.1x less selective**, and `name_in_reference` is ranked ABOVE `name_in_label`. The
+sharpest figure is that the alias `"legislation"` reaches **41 of 41** references and **0
+of 41** labels — a member who registered `Legislation` as an alias of the *Rules &
+Legislation Committee* would be offered EVERY reference in the document, first. That is the
+record offering more than it can support, which `CLAUDE.md` ranks above a missing feature.
+
+**A RANK SWAP IS NOT THE FIX AND M-4 SAID SO.** The class is BIMODAL: `"legislation
+26-0844"` reaches **1 of 41** — the source's own identifier respelled around a punctuation
+mark `#normAlias` does not fold, the best correspondence in the corpus in substance — and
+`"legislation"` reaches 41 of 41 and corresponds to nothing. **Both are
+`name_in_reference`**, so swapping the two ranks demotes the good one with the bad. What
+separates them is selectivity, and it is measurable at read time.
+
+**THE RULE IS CORPUS-RELATIVE AND PINS NOTHING.** `Store.#isUninformative(reach, corpus)`
+is `corpus > 1 && reach >= corpus` — no percentage, no threshold, no figure carried from
+M-4's document. `corpus > 1` is not a threshold: it is the condition for the question to
+have an answer, and with one reference selectivity is UNDEFINED and the candidate is
+OFFERED. **Fail-open is deliberate** — a false offer costs a member a click, a suppressed
+real correspondence costs them a document they will never learn existed.
+
+**THE NO-GRADE POSTURE IS UNTOUCHED.** REC-40's third tier still ranks below every whole
+match and still carries no grade; `grade_if_resolved` comes from `#recogniseTier` exactly
+as before and no whole tier is gated on any corpus statistic.
+
+### MEASURED CONSUMER IMPACT
+
+**Instrument: `grep -rn` over `civicos-ui/`, `newgroup/`, `agent-worker/`, `pdf-worker/`,
+2026-08-08, followed by `node civicos-ui/test/run.mjs` from the repo root.**
+
+- **`op=readingname` has exactly ONE non-test consumer: `civicos-ui/app.html`.**
+  `loadResolveCandidates` at `app.html:12062`. `newgroup/`, `agent-worker/` and
+  `pdf-worker/` never call it (0 hits).
+- **NEITHER NEW KEY IS READ.** `app.html:12151` reads `ans.names_unusable`; nothing reads
+  `names_uninformative`. Nothing reads `selectivity`. The renderer at `app.html:12178-12182`
+  switches on `d.correspondence`, whose five values are UNCHANGED. `app.html`'s bound
+  sentence reads `limit`/`truncated`, both unchanged.
+- **THE ORDERING IS READ, AND THAT IS THE ONE THING TO SAY OUT LOUD.**
+  `app.html:12073` is `for(const d of (ans.documents||[])) if(!seen.has(d.capture_sha)) seen.set(...)`
+  — **first-wins on the capture**, and the comment above it at `app.html:12063` states the
+  contract it relies on in so many words: *"ordered with the stronger correspondence first,
+  so first-wins on the capture leaves each document showing the strongest way it
+  corresponded."* That contract still HOLDS and is strictly better served: whole
+  correspondences still sort above every partial, so a document with a whole match still
+  shows it; and where a document is reached only at partial tiers, first-wins now picks the
+  MORE SELECTIVE of them instead of the tier-positional one.
+- **UI HARNESS: `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read unpiped, `0`,
+  all harnesses green**, with `readingname` among the 68 distinct ops arm B observed. No UI
+  assertion moved.
+
+**So the measured impact on the shipped surface is: no key it reads changes, no wording it
+composes changes, and the one ordering contract it depends on is honoured.** What a MEMBER
+sees changes — that is the point of the item — and it changes in the direction of being
+offered fewer things that correspond to nothing.
+
+### WHAT A CONSUMER MUST NOT CONCLUDE
+
+`selectivity` is **corpus-relative and VIEWER-relative**. Its numerator and denominator are
+both taken over the references THAT READER can see, so two members with different project
+membership take different figures for the same alias on the same document. That is required
+rather than incidental: a figure computed over the whole store would publish, as an integer,
+the size of a corpus the D-15 gate exists to hide. `readingname.test.mjs` asserts it —
+dave's reach is 1 where carol's is 2 for the same name on the same document, because the
+capture he cannot see also carries that name. **A consumer must not compare one viewer's
+`selectivity` with another's, and must not read `corpus` as the size of the store.**
+
+### VERSION
+
+I3. **The bump is CONDUCT's**, per the item's brief. The behavioural half (rows withheld,
+order changed) is not additive, so this is not a PATCH; RECORD's view is that it is a MINOR
+at most on the shape and CONDUCT should weigh the withheld rows.

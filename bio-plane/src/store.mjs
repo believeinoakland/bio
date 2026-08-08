@@ -9154,12 +9154,72 @@ export class Store extends DurableObject {
        terms is a fact about the registry entry, and a member who wonders why a
        document is missing should be able to see it. */
     const unusable = [];
+    /* REC-77: THE CORPUS THIS READER CAN SEE, per term source, computed ONCE and
+       lazily — the denominator every selectivity figure below is taken against.
+       It is the SAME gate and the SAME table as the lookup, so a reach and a
+       corpus size are always commensurable; and it is the VISIBLE corpus, which
+       is a real property and is stated on the answer rather than glossed: two
+       members with different project membership compute different selectivity
+       for the same alias, because they are being offered different corpora.
+       Not a second copy of the lookup — it asks a different question (how many
+       references exist at this source at all), and it deliberately carries
+       neither the join nor the subset group the ONE builder owns. */
+    let corpusBySrc = null;
+    const corpusFor = (src) => {
+      if (corpusBySrc === null) {
+        corpusBySrc = new Map();
+        for (const row of this.#rows(
+          `SELECT src, COUNT(*) AS n
+             FROM (SELECT DISTINCT t.capture_sha, t.ref, t.src AS src
+                     FROM reading_ref_terms t WHERE (${gate.sql}))
+            GROUP BY src`, ...gate.args)) corpusBySrc.set(row.src, Number(row.n) || 0);
+      }
+      return corpusBySrc.get(src) || 0;
+    };
+    /* REC-77: the aliases whose PARTIAL match reached the WHOLE visible corpus
+       at a source, and were therefore not offered there. Stated for the same
+       reason `names_unusable` is: a member who registers `Legislation` and is
+       offered nothing must be able to see that the name reached everything
+       rather than nothing. This is NOT the REC-57 withheld-count leak one level
+       down — every number here is over references this viewer can already see,
+       so it discloses no row the gate is hiding. */
+    const uninformative = [];
+    const uninformativeSeen = new Set();
     for (const a of aliases) {
       const terms = Store.#labelTerms(a.alias);
       if (!terms.length) { unusable.push(a.alias); continue; }
       const rows = this.#rows(Store.#refTermsSql(terms.length, gate.sql),
         ...terms, ...gate.args, terms.length, cap);
       if (rows.length >= cap) aliasPageFilled = true;
+      /* REC-77: HOW FAR THIS ALIAS REACHES, per source, UNCAPPED — the
+         numerator. It is the read's OWN statement wrapped and counted, never a
+         second spelling of the subset test: if the matcher changes, the reach
+         changes with it, which is what makes the number evidence about what was
+         actually offered rather than about a twin query. `LIMIT -1` is SQLite's
+         no-limit, and it must be: a reach clipped at `cap` would report an alias
+         that reaches 700 of 700 references as reaching 500, and the whole
+         discriminator turns on that comparison. */
+      const reach = new Map();
+      for (const row of this.#rows(Store.#refReachSql(terms.length, gate.sql),
+        ...terms, ...gate.args, terms.length, -1)) reach.set(row.src, Number(row.n) || 0);
+      const uninformativeSrc = new Set();
+      for (const [src, n] of reach) {
+        const corpus = corpusFor(src);
+        /* THE DISCRIMINATOR, AND IT IS ARITHMETIC OVER THIS CORPUS — no
+           percentage, no threshold, no figure carried from a document somebody
+           else measured. A partial match is evidence about THIS reference only
+           in so far as it does not equally hold of every other reference on
+           offer; when it holds of all of them it has told the member what
+           vocabulary the source uses, not which document concerns their
+           subject.
+           `corpus > 1` IS NOT A THRESHOLD, it is the condition for the question
+           to have an answer: with one reference there is nothing to distinguish
+           it FROM, so selectivity is UNDEFINED and the candidate is OFFERED.
+           Fail-open is the deliberate direction — a false offer costs a member a
+           click, and a suppressed real correspondence costs them a document they
+           will never know existed. */
+        if (Store.#isUninformative(n, corpus)) uninformativeSrc.add(src);
+      }
       for (const r of rows) {
         /* HOW it corresponded, said plainly, because these are not the same
            claim. The SOURCE says which of the reading's three strings carried
@@ -9172,6 +9232,35 @@ export class Store extends DurableObject {
         const srcText = r.src === "ref" ? r.ref : r.src === "key" ? r.ref_key : r.label;
         const whole = Store.#normAlias(srcText) === a.alias_norm;
         const [correspondence] = Store.#CORRESPONDENCE[r.src][whole ? "whole" : "part"];
+        /* REC-77: THE GATE, AND IT BITES ONLY THE PARTIAL TIERS. A WHOLE match is
+           never withheld however far the alias reaches — it is the string
+           `#recognise` grades, it is the strongest correspondence the corpus can
+           make, and gating it on a corpus statistic would trade a false offer for
+           a lost one on exactly the evidence a member most needs. The two partial
+           correspondences carry no grade and never did (REC-40's third tier,
+           which M-4 strengthened rather than weakened); this withholds the ones
+           that also carry no information. */
+        if (!whole && uninformativeSrc.has(r.src)) {
+          const mark = `${a.alias}` + "\u0000" + `${r.src}`;
+          if (!uninformativeSeen.has(mark)) {
+            uninformativeSeen.add(mark);            /* D-131: the separator is the ESCAPE, never the raw byte */
+            uninformative.push({ alias: a.alias, source: r.src,
+              reaches: reach.get(r.src) || 0, corpus: corpusFor(r.src) });
+          }
+          continue;
+        }
+        /* REC-77: SELECTIVITY, PUBLISHED, so the member (and the next session)
+           can check the discriminator rather than take it. Null on a whole match,
+           because there the number governs nothing and a figure that governs
+           nothing beside one that does is how a reader learns to ignore both. */
+        const reachN = reach.get(r.src) || 0;
+        const corpusN = corpusFor(r.src);
+        const selectivity = whole ? null : {
+          source: r.src, reaches: reachN, corpus: corpusN,
+          /* UNDEFINED, and said so, when there is nothing to be selective
+             against — never silently 0 or 1. */
+          value: corpusN > 1 ? Number((1 - reachN / corpusN).toFixed(4)) : null,
+        };
         /* THE GRADE COMES FROM THE RECOGNISER ITSELF, never from how this alias
            corresponded, and the difference is not pedantry. The cascade does not
            fall through: if ANY registered subject matches this reference at A,
@@ -9191,7 +9280,7 @@ export class Store extends DurableObject {
           capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref,
           kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
           matched_alias: a.alias, canonical_name: !!a.canonical,
-          correspondence, matched_on: r.src,
+          correspondence, matched_on: r.src, selectivity,
           /* WHAT THE RECOGNISER WOULD MINT, and never what this read
              established: op=resolve remains the only thing that grades, so this
              is a conditional about a run that has not happened. Null both when
@@ -9203,6 +9292,14 @@ export class Store extends DurableObject {
             : `this document's reading ${where} '${srcText}', which carries every word of this subject's name '${a.alias}'`)
             + (whole && gradeIf == null
               ? `; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first`
+              : "")
+            /* REC-77: the partial candidate says HOW FAR the name that found it
+               reaches, in the same sentence that says it corresponded at all.
+               A member deciding whether to confirm needs both, and 'one of 41'
+               beside 'every word of your subject's name' is the difference
+               between evidence and vocabulary. */
+            + (selectivity && selectivity.value != null
+              ? `; that name reaches ${selectivity.reaches} of the ${selectivity.corpus} references this reader can see at this source`
               : ""),
         };
         const k = `${r.capture_sha}\u0000${r.ref}`;   /* D-131: the separator is the ESCAPE, never the raw byte */
@@ -9211,13 +9308,20 @@ export class Store extends DurableObject {
            STRONGEST correspondence any of the subject's names made with it
            through any of the three sources. A document reached by two aliases,
            or by one alias at two sources, is ONE candidate, not several. */
-        if (!prev || Store.#CORRESPONDENCE_RANK.indexOf(correspondence)
-                   < Store.#CORRESPONDENCE_RANK.indexOf(prev.correspondence)) found.set(k, cand);
+        if (!prev || Store.#candOrderCmp(cand, prev) < 0) found.set(k, cand);
       }
     }
-    const rank = (c) => Store.#CORRESPONDENCE_RANK.indexOf(c.correspondence);
+    /* REC-77: ORDERED BY MEASURED SELECTIVITY WITHIN THE PARTIAL BAND, and the
+       whole tiers keep their rank above it untouched. This is what M-4 routed
+       and it is NOT the rank swap M-4 refused: swapping `name_in_reference`
+       below `name_in_label` would demote `legislation 26-0844` (1 of 41 — the
+       source's own identifier respelled) together with `legislation` (41 of 41,
+       corresponding to nothing), because both are the same correspondence. The
+       order is a property of the alias's reach over THIS corpus, so the good
+       identifier rises and the vacuous alias sinks without either tier being
+       ranked against the other in advance. */
     const merged = [...found.values()].sort((x, y) =>
-      (rank(x) - rank(y))
+      Store.#candOrderCmp(x, y)
       || String(x.bundle_id).localeCompare(String(y.bundle_id))
       || String(x.capture_sha).localeCompare(String(y.capture_sha))
       || String(x.ref).localeCompare(String(y.ref)));
@@ -9226,6 +9330,13 @@ export class Store extends DurableObject {
     return {
       ok: true, entity_id: ent.entity_id, entity_label: ent.label, entity_kind: ent.kind,
       names_used: aliases.length - unusable.length, names_unusable: unusable,
+      /* REC-77: the names that reached EVERYTHING, which is a different failure
+         from `names_unusable`'s names that reached nothing, and is reported
+         separately because a member cannot act on the two the same way: an
+         unusable alias needs rewriting, an uninformative one needs narrowing.
+         Each row carries the arithmetic that decided it, so the rule is
+         checkable from the answer rather than taken on faith. */
+      names_uninformative: uninformative,
       count: documents.length, documents,
       /* REC-57 (UI-39's delegation): THE BOUND, AND WHETHER IT BIT. `count` is
          the length of what was SENT and always was — which is precisely the
@@ -9421,6 +9532,47 @@ export class Store extends DurableObject {
              LIMIT ?`;
   }
 
+  /* REC-77: HOW MANY references the same alias reaches, per source — the
+     numerator of the selectivity the read gates and orders on.
+     IT WRAPS THE ONE BUILDER RATHER THAN RESPELLING IT, and that is the whole
+     design of this function. A second statement that "does the same subset
+     test" would be a copy agreeing at zero cost, and the number it produced
+     would be a claim about a twin query rather than a measurement of what the
+     member was actually offered. Wrapped, the reach cannot drift from the
+     lookup: change the group, the HAVING or the gate and this moves with it or
+     stops parsing.
+     The caller passes `-1` for the inner LIMIT, which is SQLite's no-limit, and
+     it must: a reach clipped at the read's page size would report an alias
+     reaching every one of 700 references as reaching 500, and the comparison
+     this exists for is reach-against-corpus. */
+  static #refReachSql(nTerms, gateSql) {
+    return `SELECT src, COUNT(*) AS n FROM (${Store.#refTermsSql(nTerms, gateSql)}) GROUP BY src`;
+  }
+
+  /* REC-77: THE RULE, AS ONE NAMED EXPRESSION, and it lives here rather than
+     inline for a reason the item's own negative control makes concrete: pinning
+     this to a threshold has to be a VISIBLE edit to a named thing, not a tweak
+     inside a loop nobody re-reads. The whole body names `corpus` and carries no
+     literal but `1`, and `readingname.test.mjs` asserts exactly that — so an arm
+     that hard-codes 0.675 out of M-4's document fails naming the corpus-relative
+     rule rather than passing on this corpus by luck.
+
+     WHAT IT SAYS. A partial correspondence is evidence about THIS reference only
+     in so far as it does not equally hold of every other reference on offer. An
+     alias whose terms sit inside every string of the corpus at this source has
+     told the member what vocabulary the source composes its references from; it
+     has not told them which document concerns their subject. M-4 measured that
+     directly: `"legislation"` reaches 41 of 41 references and 0 of 41 labels,
+     while `"legislation 26-0844"` — the same tier, the same source — reaches 1.
+
+     `corpus > 1` IS NOT A THRESHOLD. It is the condition for the question to
+     have an answer at all: with one reference there is nothing to be selective
+     against, so selectivity is UNDEFINED, and an undefined figure must never
+     withhold. Fail-open is the deliberate direction and it is the whole item's
+     trade — a false offer costs a member a click, and a suppressed real
+     correspondence costs them a document they will never learn existed. */
+  static #isUninformative(reach, corpus) { return corpus > 1 && reach >= corpus; }
+
   /* REC-40: HOW a registered name corresponded — which of the reading's three
      strings carried it, and whether it was the WHOLE of that string or sat
      inside a longer one. This is a description of the correspondence and NOT a
@@ -9438,6 +9590,43 @@ export class Store extends DurableObject {
     label: { whole: ["name"],          part: ["name_in_label"] },
   };
   static #CORRESPONDENCE_RANK = ["reference", "reference_key", "name", "name_in_reference", "name_in_label"];
+
+  /* REC-77: THE TWO PARTIAL CORRESPONDENCES, DERIVED from #CORRESPONDENCE above
+     and never written out a second time. `#CORRESPONDENCE` already declares
+     which of the five names is the partial arm of each source; a hand-written
+     list beside it would be a copy that agrees today at zero cost, which is the
+     failure mode this file has now paid for five separate times. Add a fourth
+     term source and its partial name joins this set without anybody remembering
+     to. */
+  static #PARTIAL_CORRESPONDENCES = new Set(
+    Object.values(Store.#CORRESPONDENCE).map((s) => s.part[0]));
+  /* The band the two partials share. DERIVED as "however many whole
+     correspondences there are", so it cannot fall out of step with the rank. */
+  static #PARTIAL_BAND = Store.#CORRESPONDENCE_RANK
+    .filter((c) => !Store.#PARTIAL_CORRESPONDENCES.has(c)).length;
+
+  /* REC-77: THE ONE ORDERING, used BOTH by the per-reference "strongest
+     correspondence wins" merge and by the final sort, because two orderings for
+     one question is how a list comes back sorted differently from the way it was
+     deduplicated.
+       - every WHOLE correspondence keeps its #CORRESPONDENCE_RANK position, and
+         every one of them still ranks above every partial. `#recognise` grades
+         those and this item does not touch them.
+       - the two PARTIALS share ONE band and are ordered inside it by MEASURED
+         SELECTIVITY, highest first — the alias that reached fewest of the
+         references this reader can see is offered first.
+       - a partial whose selectivity is UNDEFINED (a corpus of one, nothing to be
+         selective against) sorts as the LEAST selective of the band rather than
+         as the most. It is still offered; it is simply not promoted on a number
+         that does not exist. */
+  static #candOrderCmp(x, y) {
+    const band = (c) => Store.#PARTIAL_CORRESPONDENCES.has(c.correspondence)
+      ? Store.#PARTIAL_BAND : Store.#CORRESPONDENCE_RANK.indexOf(c.correspondence);
+    const sel = (c) => (c.selectivity && c.selectivity.value != null) ? c.selectivity.value : -1;
+    const b = band(x) - band(y);
+    if (b) return b;
+    return band(x) === Store.#PARTIAL_BAND ? sel(y) - sel(x) : 0;
+  }
 
   /* Create a registry entry, with its canonical label seeded as an alias so the
      entry is retrievable BY that name as well as by any explicit alias, and any

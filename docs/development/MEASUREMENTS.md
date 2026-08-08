@@ -3810,3 +3810,109 @@ sharing the stack is the number that matters, and it is 60. See D-238 and
 the plane walk does not descend, and the fleet walk filters `!d.startsWith(".")`
 while worktrees live under `.claude/worktrees/`. The phantom did not arrive by a
 walk reaching out; it arrived by a write reaching in.
+
+## 2026-08-08 · REC-77 — M-4's probe RE-RUN, and the discriminator that replaces its ranking
+
+**Why re-measured.** REC-77's brief supplied M-4's figures and said to re-run the
+instrument rather than trust them, which is what the instrument was committed for.
+
+**AND THE FIRST FINDING IS ABOUT THE DEPENDENCY, NOT THE NUMBERS. M-4 IS NOT IN THIS
+WORKTREE'S BASE.** REC-77's row says `depends-on: M-4 (landed; its probe and its gate are
+committed)`. At this worker's base commit `73fca8b`, `MEASUREMENTS.md` had **no M-4
+section**, `QUEUE.md`'s `### M-4 · done` row carried **no `landed:` line**, and neither
+`bio-plane/test/ref-variance-probe.mjs` nor `bio-plane/test/ref-variance.control.mjs`
+existed. M-4 landed on commit **`911821c`**, which `git merge-base --is-ancestor 911821c
+HEAD` reports is **NOT an ancestor** of this branch — a sibling worktree's commit that has
+not been merged. The probe was therefore re-run from `git show 911821c:…` into this
+worktree, run, and **deliberately NOT committed here**, so that CONDUCT's merge of M-4
+brings its own files rather than meeting a second copy.
+
+**Instrument.** M-4's own `ref-variance-probe.mjs`, unmodified, run 2026-08-08 against
+`src/store.mjs` at this worker's base. Exit 0 — every gate held, including G2 (the fold is
+`Store.#normAlias`/`#labelTerms` read out of the shipped source and EXECUTED) and all six
+G3 positive-control arms.
+
+### M-4's figures HELD, every one of them
+
+| M-4's figure | re-measured 2026-08-08 |
+| --- | --- |
+| corpus n=41 reading references, `meeting_agenda` @ `certain` | **identical** |
+| a name against `ref` / `key` / `label`: 0/0/0, 0/0/0, 0/15/15 | **identical** |
+| row-weighted mean reach: ref 67.5%, key 51.2%, label 8.3% | **identical** (27.67 / 21.00 / 3.40 of 41) |
+| the 8.1x selectivity difference | **identical** (27.67 ÷ 3.40 = 8.14) |
+| terms reaching EVERY string: ref 2/43 (`legislation`, `26`) carrying 82/123 = 66.7% | **identical** |
+| `"legislation"` → 41/41 references, 0/41 labels | **identical** |
+| `"0844"` → 1/41; the label population's worst term `"and"` → 15/41 (36.6%) | **identical** |
+| index rows 123 + 82 + 305 = 510 against REC-36's 305 | **identical** |
+| structural: `entity()` emits no `ref`; kinds in the tree are `legislation`, `meeting` | **identical** |
+
+**Twelve consecutive items have found a briefed figure stale by measuring it. This is the
+thirteenth and it did not** — which is worth recording precisely because the streak makes
+the opposite result the expected one. The one figure the brief carried that did NOT hold is
+M-4's own commit message's battery (125/125 · 7,872); this worktree's measured baseline is
+**130/130 · 8,142**, and M-4 simply branched earlier.
+
+### The discriminator this item ships, and why it is not any of M-4's numbers
+
+`Store.#isUninformative(reach, corpus)` → `corpus > 1 && reach >= corpus`.
+
+- **`reach`** is how many distinct reading references the alias's term set reaches at that
+  source, UNCAPPED, taken by wrapping the read's OWN statement (`#refReachSql` wraps
+  `#refTermsSql` as a subquery with `LIMIT -1`) rather than by respelling the subset test.
+  A second statement "doing the same thing" would be a claim about a twin query.
+- **`corpus`** is how many distinct reading references exist at that source in the corpus
+  the READER can see — the same gate, the same table.
+- **Nothing is pinned.** No percentage, no threshold, no figure from this document.
+  `corpus > 1` is the condition for the question to have an answer, not a threshold.
+
+**Measured over the same 41-reference corpus, driven through `op=readingname` in
+`readingname.test.mjs`:**
+
+| alias | correspondence | reach / corpus | outcome |
+| --- | --- | --- | --- |
+| `"legislation 26-0844"` | `name_in_reference` | **1 / 41** (selectivity 0.9756) | **OFFERED**, ungraded, first |
+| `"Legislation"` | `name_in_reference` | **41 / 41** (selectivity 0) | **WITHHELD**, and STATED in `names_uninformative` |
+
+Both are the same correspondence at the same source, which is why a rank swap could not
+have separated them.
+
+### WHAT THIS DOES NOT SETTLE, and it is M-4's list plus two
+
+- **Every selectivity figure remains corpus-relative** — one corpus, one doctype, one
+  institution, one reader, one kind value. That is now a property of the mechanism rather
+  than a caveat on a number: the plane computes it over the corpus in front of it.
+- **No entity registry was sampled, because there is still no real one.** The 41/41 blast
+  is what WOULD happen; nothing here says any registry holds such an alias.
+- **NEW: the figure is VIEWER-relative, not only corpus-relative.** Both counts are taken
+  over the gated corpus, so two members compute different selectivity for the same alias on
+  the same document. This is required — a figure over the whole store would publish the
+  size of a hidden corpus as an integer — and it is asserted (dave reach 1, carol reach 2).
+  A consumer must not compare one viewer's figure with another's.
+- **NEW: the rule catches only the CEILING case, `reach == corpus`.** An alias reaching 40
+  of 41 is still offered. That is the deliberate fail-open direction, and it is the honest
+  cost of refusing to hard-code a threshold. A corpus with a genuinely graded distribution
+  might want more, and would need a measurement this repository cannot take today.
+- **This corpus cannot exhibit a MIDDLING reference partial**, and the suite says so where
+  it matters: the 41 keys are distinct, so at `src=ref` an alias reaches either 1 or all 41
+  and nothing in between. The ordering arm is therefore driven over the synthetic corpus,
+  where a reference partial reaching 3 of 13 can be built.
+
+### The class sweep, its corpus, and what the matcher cannot see
+
+**Corpus printed on every run: `bio-plane/src/store.mjs`, 23,4xx lines, 67 `.sort(` sites,
+128 SQL `ORDER BY` clauses. Reach: 3 sites rank by position in a named constant.**
+
+| site | constant | ordered by | verdict |
+| --- | --- | --- | --- |
+| `#requiredStrengthFor` | `BASIS_GRADES` | framework §8.1's grade order | a RULING, and it is a MIN over a vocabulary, not a presentation |
+| `queueFeed` | `Store.QUEUE_CLASSES` | obligations before conditions | a RULING, and it orders WORK not evidence: nothing is claimed about correspondence and there is nothing to confirm |
+| `documentsNamingEntity` | `#CORRESPONDENCE_RANK` | **candidate evidence** | **the only one that asserted one correspondence was better than another with no ground for the claim.** Whole tiers keep their fixed positions; the partial band defers to the measurement |
+
+**WHAT THE MATCHER CAN SEE:** the source text of ONE file, and within it the shape
+`SOME_CONSTANT.indexOf(x)`. **WHAT IT CANNOT SEE, stated rather than left to be assumed:**
+an ordering expressed as a SQL `ORDER BY` (there are 128 in this file and it reads none of
+them); an ordering expressed as a hand-written comparator with no constant to index into;
+an ordering a SURFACE applies after the plane answers; and any ordering in any other module
+(`index.mjs` has 0 `ORDER BY` and 0 ranked sorts, checked; `affordances.mjs`, `cdx.mjs`,
+`subresources.mjs` and `civicos-ui/` were not walked by this detector). **It is a shape
+detector over one file, not a census of every order in BIO.**
