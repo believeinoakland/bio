@@ -134,6 +134,35 @@
  *      in place of the authored shapes: GREEN, 358 assertions. A renderer that
  *      only accepts the shapes its author imagined would be a fixture testing
  *      itself, and it would break the day IS-6 chooses its field names.
+ *
+ *  (8) UI-52, 2026-08-08 — ARM A4 SPLIT INTO A4a..A4g, CORRECTED WITH A DATED
+ *      REASON AND NEVER EXEMPTED. The old one-line A4 conflated a claim that is
+ *      always a lie (a surface describing something that does not exist) with
+ *      one that is FALSE BY DESIGN during a plane-first wave (a published act
+ *      whose surface is scheduled four waves later). See the long note above
+ *      `ACTS_AWAITING_SURFACE` for the reasoning. The controls are COMMITTED and
+ *      re-runnable in one step rather than described here:
+ *
+ *        node civicos-ui/test/surface-registry-a4.control.mjs
+ *
+ *      RUN 2026-08-08, 6 arms, 0 control failures, every restore verified by
+ *      sha256 AND by content, polarity checked on every pin BEFORE it was
+ *      confirmed red, and the suite re-run afterwards to prove the tree came
+ *      back (exit 0). Each arm failed IN ITS OWN WORDS, naming its subject:
+ *        1a FICTION/ROUTE  -> ARM E2 "1 described route(s) do not exist in the
+ *                             runtime: inquiry -> screen:nosuchsurfacecontrol"
+ *        1b FICTION/ACT    -> ARM A4a "1 act(s) are DESCRIBED by a surface and
+ *                             published by NO plane catalogue: notanactcontrol"
+ *        2  CEILING        -> ARM A4b naming `versionseventhcontrol` and stating
+ *                             the register stands at 6 rows and this is not one
+ *        3a FLOOR/catalogue-> ARM A4d "holds 0 act(s), floor 15"
+ *        3b FLOOR/walk     -> ARM A4e "found 0 distinct hosted act(s) across 0
+ *                             placement(s), floor 15"
+ *        4  DRAIN          -> ARM A4c naming `versionhide` and demanding the row
+ *                             be STRUCK in the same commit
+ *      1a and 1b are the arms that matter most: they prove the narrowing did NOT
+ *      blind the guard. 2 and 4 are the two directions of the ratchet — it must
+ *      refuse to grow silently AND refuse to stay put once the debt is paid.
  */
 import fs from "fs";
 import vm from "vm";
@@ -622,33 +651,226 @@ await section("ARM S · the sourcing", () => {
      "ARM S9: the sourcing arm left bio-plane/src/index.mjs byte-identical");
 });
 
+/* ============================================================
+   THE ACT REGISTER — UI-52, 2026-08-08. ARM A4's TWO CLAIMS, SPLIT.
+   CORRECTED, NEVER EXEMPTED, AND THE DATED REASON IS THE WHOLE ITEM.
+
+   UNTIL TODAY ARM A4 READ, IN ONE LINE:
+
+     ok(homeless.length === 0, "the plane publishes N act(s) no described
+        surface hosts: ...")
+
+   THAT ASSERTION CONFLATED TWO CLAIMS THAT ARE NOT THE SAME KIND OF FACT, and
+   the second one is FALSE BY DESIGN for part of every wave:
+
+     (a) A SURFACE DESCRIBING SOMETHING THAT DOES NOT EXIST. Fiction. The
+         registry claiming reach it has not got. This has NO honest window and
+         is unconditional below (ARM A4a), because describing a surface that
+         does not exist is the registry LYING and that is the failure this whole
+         file was built to catch.
+
+     (b) AN ACT THE PLANE PUBLISHES THAT NO SURFACE HOSTS YET. A GAP, not a lie.
+         `IS-BUILD-PLAN.md` builds PLANE-FIRST — PL-2 lands its six member acts
+         in W3 and the surfaces that host them are UI-42/UI-43 in W7 and UI-45
+         in W8 — so between those waves the property (b) asserted is false while
+         every piece of work involved is CORRECT. **AN INSTRUMENT THAT FAILS ON
+         CORRECT WORK GETS SWITCHED OFF**, and that is the outcome this rewrite
+         exists to prevent. PL-2's own judgement was RIGHT and is not overturned
+         here: it declined to describe surfaces that do not exist.
+
+   THE ANSWER IS TO NARROW THE ASSERTION, NEVER TO WEAKEN THE GUARD AND NEVER TO
+   DO THE NEIGHBOURING WORK EARLY — REC-71's precedent one layer over, where an
+   assertion whose SCOPE overstated what its rows meant was fixed by narrowing
+   the scope rather than by softening what it enforced.
+
+   SO (b) BECOMES A NAMED, RATCHETED REGISTER — printed IN FULL on every run,
+   with a CEILING so the gap cannot grow silently and FLOORS so the walk cannot
+   go blind. Both halves are load-bearing and both were bought:
+     · REC-70 — *a ceiling alone passes trivially over nothing*: neutering a
+       walk left its ratchet green at 0 of 40.
+     · REC-71 — *a floor with slack is not a ratchet*: its census floor sat 19
+       codes low and had ALREADY flipped a control from RED to GREEN, passing a
+       reader that had lost an entire spelling. Every floor below is set to the
+       figure MEASURED on 2026-08-08 with NO slack, and ARM A3's is moved in
+       this same turn for exactly that reason (see there).
+
+   THIS REGISTER IS HAND-WRITTEN ON PURPOSE, AND THAT IS NOT THE "PRODUCE SETS
+   BY DRIVING" RULE BEING BROKEN — IT IS THE RULE BEING APPLIED. The set that
+   must agree with the system is `homeless`, and it IS driven: out of the
+   plane's own `ACT_IDS`/`CAPTURE_ACTS` module exports and out of the walked
+   registry, never typed. The register is the OTHER side of that comparison —
+   an outstanding bill somebody signed. **DERIVING IT FROM `homeless` WOULD MAKE
+   IT AGREE AT ZERO COST AND ASSERT NOTHING**, which is this repository's oldest
+   rule. If a later session is tempted to compute this list: that is the ratchet
+   being removed, and the temptation is why this paragraph is here.
+
+   IT IS ALSO DELIBERATELY UNCOMFORTABLE. Every row names WHO published the act,
+   WHICH item owes the surface, and the date the debt opened. A member-facing act
+   nobody can reach is a real debt, not a tidy exemption, and the printed block
+   below is meant to read as a bill rather than as a list of things that are
+   fine. UI-42/UI-43/UI-45 should arrive against a MEASURED obligation instead
+   of against somebody's memory. */
+const ACTS_AWAITING_SURFACE = [
+  { id: "versionaccept",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  { id: "versionreject",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  { id: "versionconsider", published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  { id: "versionrevert",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  { id: "versionhide",     published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-42 (W7) — version review: the hide-prune offer (DEC-29(b), D-214)", since: "2026-08-08" },
+  { id: "versioncurrent",  published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-45 (W8) — IS-3 CURRENT as a project property", since: "2026-08-08" },
+];
+
+/* THE ONE PLACE the act/surface partition is computed. The negative controls
+   and the over-strictness arm drive THIS function, exactly as ARM S drives
+   `opFailures` — because this file's sharpest finding is that an arm proving a
+   parse WORKS proves nothing about whether the parse is USED, and a control
+   validated down a parallel path went green with the defect present. There is
+   no second path here to hide a hand copy in.
+
+   NULL-TOLERANT for UI-49's reason: it is driven with deliberately malformed
+   registries, and a throw inside it is a throw inside the arm whose whole
+   subject is the partition. */
+function actGap(surfaces, planeActs, register){
+  const acts = planeActs instanceof Set ? planeActs : new Set(planeActs || []);
+  const rows = Array.isArray(register) ? register.filter(r => r && typeof r === "object") : [];
+  const registered = new Set(rows.map(r => r.id));
+  const hostedSet = new Set(
+    Object.values(surfaces || {}).flatMap(s => (s && Array.isArray(s.acts)) ? s.acts : []));
+  let placements = 0;
+  for(const s of Object.values(surfaces || {}))
+    placements += (s && Array.isArray(s.acts)) ? s.acts.length : 0;
+  return {
+    hostedSet, placements,
+    /* (b) the gap: published, not hosted. */
+    homeless: [...acts].filter(a => !hostedSet.has(a)),
+    /* (a) the fiction: hosted, not published. NO register allowance, ever. */
+    fiction: [...hostedSet].filter(a => !acts.has(a)),
+    /* the register's own three states, so the bill can be printed truthfully. */
+    outstanding: rows.filter(r => acts.has(r.id) && !hostedSet.has(r.id)),
+    drained:     rows.filter(r => acts.has(r.id) && hostedSet.has(r.id)),
+    unpublished: rows.filter(r => !acts.has(r.id)),
+    /* the ceiling's subject: a gap this register never signed for. */
+    unregistered: [...acts].filter(a => !hostedSet.has(a) && !registered.has(a)),
+    /* the floor's subject: the catalogue OUTSIDE the register. Measured this
+       way rather than as a bare `acts.size` so the figure is IDENTICAL before
+       and after a register-listed act lands — a floor that had to be bumped by
+       the very act it already tracks is a floor with slack built in. */
+    baseline: [...acts].filter(a => !registered.has(a)),
+  };
+}
+
 /* -------------------------------------- ARM A · acts come from the PLANE too
    `ACTS`, `ACT_IDS` and `CAPTURE_ACTS` are IMPORTED as live module exports.
    There is no copy of the act catalogue in app.html and there must never be
    one, so this cannot drift by construction rather than by discipline. */
 await section("ARM A · acts come from the plane", () => {
   const planeActs = new Set([...ACT_IDS, ...CAPTURE_ACTS.map(a => a.id)]);
+  const G = actGap(SURFACES, planeActs, ACTS_AWAITING_SURFACE);
+
+  /* THE BILL, PRINTED IN FULL AND FIRST — before any assertion, so a later
+     throw cannot take it with it, and on GREEN runs as much as on red ones. A
+     debt that is only printed when it fails is a debt nobody reads. */
+  console.log(`  ACT REGISTER — ${ACTS_AWAITING_SURFACE.length} member-facing act(s) OUTSTANDING: published by the plane, reachable by nobody.`);
+  for(const r of ACTS_AWAITING_SURFACE){
+    const state = !planeActs.has(r.id) ? "NOT YET PUBLISHED ON THIS TREE"
+                : G.hostedSet.has(r.id) ? "SURFACED — STRIKE THIS ROW"
+                : "OWED";
+    console.log(`    [${state}] ${r.id} — published by ${r.published_by}; owed by ${r.owed_by}; open since ${r.since}`);
+  }
+  console.log(`  ACT REGISTER totals: ${G.outstanding.length} owed · ${G.drained.length} surfaced-and-strikeable · ${G.unpublished.length} not yet published here · ${G.homeless.length} published-and-unhosted overall`);
+
   ok(planeActs.size >= 15, `ARM A0: the plane publishes ${planeActs.size} act ids (ACTS ${ACT_IDS.size} + CAPTURE_ACTS ${CAPTURE_ACTS.length})`);
   ok(ACTS.length === ACT_IDS.size, "ARM A0b: ACT_IDS is derived from ACTS and has not been hand-kept beside it");
 
-  let hosted = 0;
   for(const [id, s] of Object.entries(SURFACES)){
     ok(Array.isArray(s && s.acts), `ARM A1: surface '${id}' declares an acts array`);
     /* GUARDED 2026-08-07 (UI-49's rider) — see ARM L. */
-    for(const a of ((s && Array.isArray(s.acts)) ? s.acts : [])){
-      hosted++;
+    for(const a of ((s && Array.isArray(s.acts)) ? s.acts : []))
       ok(planeActs.has(a),
          `ARM A2: surface '${id}' hosts act '${a}', which the plane's own act catalogue does not publish`);
-    }
   }
-  ok(hosted >= 10, `ARM A3: ${hosted} act placements are described, floor 10 — a registry describing no acts would pass A2 vacuously`);
+  /* ARM A3's FLOOR MOVED 2026-08-08 (UI-52) FROM 10 TO 18, AND THE OLD FIGURE IS
+     THE REASON THIS ITEM DISTRUSTS FLOORS. 10 was set when the registry held
+     roughly that many placements; the tree has carried 18 for some time, so the
+     floor had EIGHT of slack and would have sat green through the deletion of
+     nearly half the act placements in the registry. That is REC-71's finding
+     exactly — *a floor with slack is not a ratchet* — arriving in the very arm
+     this item came to narrow, and it is moved in the SAME TURN rather than
+     noted, because REC-71's own floor went stale twice within hours of being
+     written down. MEASURED 2026-08-08: 18, identical with and without PL-2. */
+  ok(G.placements >= 18,
+     `ARM A3: ${G.placements} act placements are described, floor 18 (measured 2026-08-08, was 10 and eight low) — a registry describing no acts would pass A2 vacuously`);
 
-  /* AND THE PLANE'S ACTS ARE ALL HOUSED. An act the plane publishes that no
-     surface hosts is an act a member cannot reach, and nothing else says so. */
-  const allHosted = new Set(Object.values(SURFACES).flatMap(s => (s && Array.isArray(s.acts)) ? s.acts : []));
-  const homeless = [...planeActs].filter(a => !allHosted.has(a));
-  ok(homeless.length === 0,
-     `ARM A4: the plane publishes ${homeless.length} act(s) no described surface hosts: ${homeless.join(", ")}`);
+  /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
+     A surface naming an act the plane does not publish is the registry claiming
+     a reach it has not got, and there is no wave, no schedule and no plane-first
+     ordering that makes that honest. `ACTS_AWAITING_SURFACE` is not consulted
+     here and must never be: the register excuses a MISSING surface, never an
+     INVENTED one. Reported in aggregate BESIDE ARM A2's per-surface line on
+     purpose — the split is the item, and a reader has to be able to see the two
+     halves standing next to each other rather than infer the boundary. */
+  ok(G.fiction.length === 0,
+     `ARM A4a: ${G.fiction.length} act(s) are DESCRIBED by a surface and published by NO plane catalogue: ${G.fiction.join(", ")}. `
+     + `This is the registry describing something that does not exist, and unlike a missing surface it has no honest window — no register entry can excuse it and none is consulted.`);
+
+  /* ---- ARM A4b · THE GAP HALF. NAMED, RATCHETED, AND PRINTED ABOVE.
+     THE CEILING. Every act the plane publishes and no surface hosts must appear
+     on the register by NAME. A seventh unsurfaced act cannot arrive quietly:
+     it is not on the bill, so it fails here naming itself and whoever published
+     it has to sign for it. */
+  ok(G.unregistered.length === 0,
+     `ARM A4b (CEILING): the plane publishes ${G.unregistered.length} act(s) that no surface hosts AND that the act register does not name: ${G.unregistered.join(", ")}. `
+     + `A member-facing act nobody can reach is a debt, not an exemption — add it to ACTS_AWAITING_SURFACE with the item that publishes it and the item that owes its surface, or give it a surface. The register stands at ${ACTS_AWAITING_SURFACE.length} row(s) and this act is not one of them.`);
+
+  /* THE DRAIN, WHICH IS WHAT STOPS THE REGISTER BECOMING FURNITURE. A row whose
+     act is BOTH published and hosted has been paid: the ceiling must FALL in the
+     same commit that surfaces it, and the suite REQUIRES that rather than
+     tolerating a stale row. Without this arm the list would only ever grow, and
+     a ratchet that cannot turn the other way is just an exemption with a date on
+     it. This is the arm that makes the bill drain. */
+  ok(G.drained.length === 0,
+     `ARM A4c (DRAIN): ${G.drained.length} register row(s) name an act that a described surface NOW HOSTS: ${G.drained.map(r => `${r.id} (owed by ${r.owed_by})`).join(", ")}. `
+     + `The debt is paid — STRIKE THE ROW from ACTS_AWAITING_SURFACE in this same commit. A register that only grows is an exemption list wearing a ratchet's clothes.`);
+
+  /* THE FLOORS. A ceiling alone passes trivially over nothing (REC-70), so both
+     corpora the partition is computed over are pinned, and both print their own
+     size so a walk that found nothing reads as a FAILURE NAMING ZERO rather than
+     as a clean answer.
+
+     FLOOR 1 is measured over the catalogue OUTSIDE the register, which is why it
+     is 15 both before and after PL-2 publishes its six: a floor that had to be
+     raised by the very acts it already tracks would carry that slack until
+     somebody remembered. MEASURED 2026-08-08: 15 with PL-2 and 15 without.
+     FLOOR 2 is the registry walk. If it goes blind every act reads as homeless
+     and the ceiling fires anyway — but it would fire naming twenty-one innocent
+     acts, and the reader needs to be told the WALK broke rather than sent to
+     re-house the entire catalogue. MEASURED 2026-08-08: 15, both trees. */
+  ok(G.baseline.length >= 15,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 15 (measured 2026-08-08, identical with and without PL-2). `
+     + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
+  ok(G.hostedSet.size >= 15,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 15 (measured 2026-08-08, both trees). `
+     + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
+
+  /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
+     The surfaces UI-42/UI-43/UI-45 eventually write will not look like anything
+     written here: different surface ids, different kinds, fields this file has
+     never heard of, the acts listed in an order nobody chose. If the partition
+     only recognised the shapes its author imagined, it would refuse to drain on
+     the day the debt is actually paid — and the register would become permanent
+     furniture for the one reason nobody would think to check.
+
+     DRIVEN THROUGH `actGap` ITSELF, not through a re-implementation, so this arm
+     cannot pass over a copy the real run does not use. */
+  const alienSurfaces = {
+    "reading-review-workbench": { kind: "workbench", lens: "basis", ordering: ["by-recency"],
+      acts: [...ACTS_AWAITING_SURFACE.map(r => r.id)].reverse(), routes: [], levels: [] },
+  };
+  const alienActs = new Set(ACTS_AWAITING_SURFACE.map(r => r.id));
+  const AG = actGap(alienSurfaces, alienActs, ACTS_AWAITING_SURFACE);
+  eq(AG.homeless, [],
+     "ARM A4f (over-strictness): a surface shaped nothing like this file's fixtures — an id nobody here wrote, an unfamiliar `kind`, fields this file never mentions, the acts in reverse order — still HOSTS them. A partition that only recognised the author's shapes would refuse to drain on the day the debt is paid.");
+  eq(AG.drained.length, ACTS_AWAITING_SURFACE.length,
+     `ARM A4g (over-strictness): and every register row reads as DRAINED against that unfamiliar surface (${AG.drained.length} of ${ACTS_AWAITING_SURFACE.length}) — the drain fires on the alternative spelling, so the ceiling really can fall.`);
 });
 
 /* --------------------------------- ARM D · declared reads are real and reached */
