@@ -7127,6 +7127,38 @@ export const CAPTURE_REQUEST_CHECKS = {
       + 'its own queue. Nothing else can ask it to fetch something right now — including the assistant '
       + 'that asked for the document in the first place.',
   },
+  /* PL-15 / D-213 — THE LEAD'S TWO DOOR REFUSALS, ADDED TO THIS FAMILY RATHER
+     THAN TO A NEW ONE. They are enforced inside `is-capture-request`, which is
+     THIS family's governed span, so a row anywhere else would leave two codes
+     in a region whose rows do not name them and arm C would report a site it
+     could not judge. SK-1's rule applies with it: a family is a FLOOR, and
+     minting one for two rows on somebody else's door buys slack for everybody
+     else's walk. C-28.14 and C-28.15 — C-28.12 stays UNALLOCATED (see above),
+     because reusing a number this file records as deleted would make its own
+     history unreadable.
+
+     WHY THE DOOR AND NOT THE DRAIN. PL-4 moved attribution to the drain because
+     identical predicates at both points made one of two codes undrivable. That
+     reasoning does not reach these: the lead is a claim about the RECORD's own
+     shape, checkable the instant it arrives and never again — the drain has no
+     second opinion about whether a bundle is a question — so checking it at the
+     door refuses the row before it is stored rather than after it was fetched
+     for. Nothing downstream re-checks it, so neither code is shadowed. */
+  CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: {
+    check: 'C-28.14',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'This says the document bears on another question, but what it names is not a '
+      + 'question. The whole point of noting a lead is that somebody working that question will be '
+      + 'told about it, and there is nobody to tell if it does not name one.',
+  },
+  CAPTURE_REQUEST_LEAD_IS_THE_TARGET: {
+    check: 'C-28.15',
+    where: 'src/store.mjs captureRequest > is-capture-request',
+    translation: 'This names the same question twice — the one being worked, and the one the '
+      + 'document supposedly bears on. Evidence for the question you are already working is just '
+      + 'evidence for it, and flagging it as belonging somewhere else would put a note in front of '
+      + 'you saying a document you just asked for is about something other than what you asked.',
+  },
 };
 
 /* =========================================================================
@@ -7458,3 +7490,74 @@ export const VERSION_STRENGTH_DEFAULT_STATES =
    differently, so PL-14 implements §12 HERE, leaves `strengthOf()` untouched,
    and RAISES the difference rather than settling doctrine from a build item. */
 export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];
+
+/* ===========================================================================
+ * C-31 — THE QUEUE MINT: EVERY ITEM CARRIES A CLASS, AND A KIND THE CATALOGUE
+ * NAMES UNDER THAT CLASS (PL-15 / D-213, NOTIFICATIONS.md).
+ *
+ * THREE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE. C-25 is PL-1/PL-2's, C-26
+ * PL-12's, C-27 PL-3's, C-28 PL-4's, C-29 PL-11's and C-30 PL-14's — all six
+ * MEASURED as taken over this file before C-31 was claimed, and C-31 measured
+ * as free. If a parallel slot measured the same family free at the same moment,
+ * CONDUCT renumbers the later merge and the note above C-30 says why that is
+ * not the worker's error.
+ *
+ * WHY IT IS A FAMILY AND NOT AN EXTRA ROW ON SOMEBODY ELSE'S. SK-1 recorded
+ * that a new family is a FLOOR and that adding one buys slack for everybody
+ * else's walk, which is a real cost and the reason it declined to mint one.
+ * This is the case that earns it anyway: `op=queue` had TWO refusals with no
+ * translations at all (`NO_CLASS` sat inside REC-64's named reach gap, and
+ * `NO_CONDITION_KIND` never reached a surface), and the item that swept the
+ * fence for the class is the item that owes them their member-facing words.
+ * Three codes, three rows, and the reach gap FALLS by one because NO_CLASS is
+ * now translated — a family that pays for itself on the ceiling as well as
+ * costing a floor.
+ *
+ * THE SWEEP THIS FAMILY RECORDS. REC-32 fenced the mint for CONDITION items
+ * ONLY. Its reason — an uncatalogued condition kind is one no member could ever
+ * mute — was true and partial: a kind is what a surface renders and what
+ * `op=affordances` publishes, so an OBLIGATION or a FINDING minted under an
+ * unnamed kind was exactly as unrenderable and was not refused. PL-15 needed
+ * one new FINDING slug fenced and swept the class rather than fixing its own
+ * instance.
+ *
+ * TWO CODES WHERE REC-32 HAD ONE, and the split is the difference between
+ * UNKNOWN and WRONG that `classOfKind` was built three-valued to express.
+ * NO_SUCH_KIND is a typo, an invented slug, or an `N-<n>` id copied out of a
+ * design document — the catalogue does not name it at all. KIND_MISCLASSED is
+ * the sharper one: the kind is real and filed under a DIFFERENT class, and
+ * class is what decides whether leaving a member's list is a personal mute or
+ * an authored record act (D-125, DEC-16). A refusal that said only "no" to both
+ * would be the gate that pressures somebody into inventing a way past it.
+ *
+ * NO MEMBER-FACING TRANSLATION BELOW USES THE WORD `kind`, `class`, `mint`,
+ * `producer` or `catalogue` as the thing the member is asked to understand.
+ * These sentences are read by somebody whose queue just failed to load, and the
+ * only useful thing to tell them is that the list is incomplete, that nothing
+ * was lost, and that this is ours to fix rather than theirs.
+ * ========================================================================= */
+export const QUEUE_MINT_CHECKS = {
+  NO_CLASS: {
+    check: 'C-31.1',
+    where: 'src/store.mjs queueFeed > is-queue-mint',
+    translation: 'Your list could not be assembled: something on it does not say what sort of item '
+      + 'it is, and showing it without that would put an entry in front of you that nobody can act '
+      + 'on. Nothing has been lost and nothing about the record has changed — this is a fault on '
+      + 'our side, not something you did.',
+  },
+  NO_SUCH_KIND: {
+    check: 'C-31.2',
+    where: 'src/store.mjs queueFeed > is-queue-mint',
+    translation: 'Your list could not be assembled: something on it is described in a word this '
+      + 'record does not know, so there is no sentence to show you in place of it. Rather than '
+      + 'showing you a line you could not read, the list refuses whole. Nothing has been lost.',
+  },
+  KIND_MISCLASSED: {
+    check: 'C-31.3',
+    where: 'src/store.mjs queueFeed > is-queue-mint',
+    translation: 'Your list could not be assembled: something on it is filed one way and described '
+      + 'another, and the difference decides whether setting it aside is a private choice of yours '
+      + 'or a change to the record everyone shares. That is not a difference to guess at, so the '
+      + 'list refuses until it is right. Nothing has been lost.',
+  },
+};

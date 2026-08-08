@@ -150,6 +150,13 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             above, so this file still re-types no state name. */
          VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES,
          VERSION_STRENGTH_INERT_SOURCES,
+         /* PL-15 / D-213: the QUEUE MINT's three DEC-49 rows. The vocabulary
+            they refuse against is queuestate.mjs's and is imported separately
+            below — the catalogue holds the member-facing WORDS for a refusal,
+            queuestate.mjs holds the SET being refused against, and keeping them
+            in two files is what stops either becoming a second authority on the
+            other's business. */
+         QUEUE_MINT_CHECKS,
          /* MERGED AT INTEGRATION 2026-08-08: PL-11 and PL-14 each appended to
             this import and each ended its own list with `MACHINE_AUTHOR_PREFIX`,
             so the two tails collided textually while agreeing perfectly about
@@ -496,6 +503,13 @@ export class Store extends DurableObject {
          version projected before this item existed was composed by a member and
          is a suggestion of no kind, which NULL states exactly. */
       ["inquiry_basis_versions", "kind", "TEXT"],
+      /* PL-15 / D-213: the OTHER question a requested capture bears on. Additive
+         and nullable for the same reason every column above is — a request
+         written before this item existed was made under the question the run was
+         working and named no lead, and NULL states exactly that. A non-null
+         default here would invent an observation nobody made, which on THIS
+         column would mint a member-facing notification out of a migration. */
+      ["capture_requests", "lead_inquiry", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -11237,6 +11251,212 @@ export class Store extends DurableObject {
     return out;
   }
 
+  /** PL-15 / D-213 — WHAT THE RECORD CAN SAY ABOUT A CAPTURED DOCUMENT'S PLACE
+   *  IN A CASE, MEASURED, and the reason it is measured rather than asserted.
+   *
+   *  The out-of-inquiry lead's defining property is an ABSENCE: the document is
+   *  in the store and is deliberately part of NO claim. `CLAUDE.md` is explicit
+   *  that an absence at one level is not evidence of absence at the next, and
+   *  that saying WHICH is true is a first-class obligation rather than a
+   *  diagnostic detail. A `basis` field simply omitting the leg would say
+   *  nothing at all — a reader could not tell "we looked and it is in no case"
+   *  from "nobody has read this document yet" from "this producer does not
+   *  report that". So this asks BOTH basis projections directly and reports the
+   *  counts it got, so the absence in the answer is the record's own and is
+   *  dated by the read that made it.
+   *
+   *  BOTH PROJECTIONS, because there are two and they are different questions.
+   *  `inquiry_basis` is the CURRENT basis of an inquiry (D-21's projection of
+   *  `basis[]`), and `inquiry_basis_version_legs` holds the legs of every
+   *  alternative composition anybody has proposed (PL-1's versions). A document
+   *  absent from the first and present in the second IS part of a case — a
+   *  suggested one — and reporting only the first would let the item announce
+   *  "not part of any claim" about a document a run has already built a reading
+   *  on. Neither table is filtered by inquiry: the claim being made is about the
+   *  whole record, and narrowing it to inquiry B would make the sentence
+   *  narrower than it reads.
+   *
+   *  A CAPTURE WITH NO REGISTER ROW IS `undetermined`, NOT `absent`. The
+   *  register is what says which bundle a capture's bytes were registered
+   *  under, so with no row there is no bundle to ask about and the honest answer
+   *  is that this producer could not determine it — which is a different fact
+   *  from "it is in no case", and the two must never be published as one word. */
+  #leadBasisAbsence(captureSha) {
+    const sha = typeof captureSha === "string" ? captureSha.trim() : "";
+    if (!sha)
+      return { state: "undetermined", reason: "no_capture_sha", bundle_id: null, bundle_state: null,
+               basis_legs: null, version_legs: null,
+               detail: "the request records no capture digest, so there is no document to ask about. "
+                     + "That this producer could not look is a different fact from the document being "
+                     + "part of nothing, and it is reported as the first rather than the second." };
+    const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha);
+    if (!reg)
+      return { state: "undetermined", reason: "unregistered_capture", bundle_id: null, bundle_state: null,
+               basis_legs: null, version_legs: null,
+               detail: "no register entry answers to this capture, so the bytes are not attached to a "
+                     + "document this store can name and there is nothing whose place in a case could "
+                     + "be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape)." };
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, reg.bundle_id);
+    const legs = this.#one(
+      `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?`, reg.bundle_id).n;
+    const vlegs = this.#one(
+      `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?`, reg.bundle_id).n;
+    const none = legs === 0 && vlegs === 0;
+    return {
+      state: none ? "absent" : "present",
+      reason: none ? "not_made_part_of_the_case" : "carried_by_a_reading",
+      bundle_id: reg.bundle_id,
+      bundle_state: b ? b.current_state : null,
+      basis_legs: legs, version_legs: vlegs,
+      detail: none
+        ? "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The "
+        + "document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no "
+        + "leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the "
+        + "case, which is a different sentence from nobody having read it, and this producer counted "
+        + "both basis projections to be able to say which."
+        : "this document IS carried by a reading of some question, so the lead has already been acted "
+        + "on or the document was evidence before the lead was raised. Reported rather than "
+        + "suppressed: the item is still the record of an observation somebody made.",
+    };
+  }
+
+  /** `out-of-inquiry-lead` (D-213, ANSWERED 2026-08-06 by Bob under DEC-60) —
+   *  THE FINDING-CLASS SLUG WITH A PRODUCER, and this is the producer.
+   *
+   *  THE HOLE IT FILLS. DEC-60's investigative session reads ALL of a project's
+   *  inquiries for context and writes only to the SUBJECT one, so evidence it
+   *  turns up bearing on a DIFFERENT question — the same vendor holding three
+   *  other contracts, met while investigating whether one was competitively bid
+   *  — had nowhere to go and was dropped BY CONSTRUCTION. That is D-194's
+   *  authored frontier with a PRODUCER generating them continuously rather than
+   *  a member noticing one occasionally, which is what makes it worth a kind.
+   *
+   *  THE FACT IS THE REQUEST ROW'S OWN. `lead_inquiry` is written at the door by
+   *  the run that made the observation, and this walk reads it. Nothing here
+   *  infers a lead from subject matter, from a shared entity or from a
+   *  similarity: an observation a producer can manufacture is one a producer can
+   *  invent, and a notification claiming a member's attention on a manufactured
+   *  connection is the record claiming more than it can support.
+   *
+   *  THE `case` SET DERIVES FROM INQUIRY B'S ANCESTORS, NOT A'S, and that IS the
+   *  item. Filing a lead under the question the run happened to be working is
+   *  what made these homeless in the first place — the evidence is about B, the
+   *  people who need it are the people working B, and REC-20's every-ancestor
+   *  walk over B is what routes it to them. `#conditionsCaptureRequested` walks
+   *  the SAME table and files on `target`, which is correct for what IT
+   *  announces (a capture this run asked for has completed) and wrong for this.
+   *  Two producers, one table, two different homes, and the difference is the
+   *  whole reason both exist.
+   *
+   *  FINDING AND NOT CONDITION. A CONDITION is a fact about our own machinery
+   *  and a member may MUTE it personally (D-125, DEC-16). A lead is a fact about
+   *  the world, and muting is exactly what must not be available: one member's
+   *  inbox hygiene would remove a real lead from their view while the record
+   *  went on believing the team had been told. It leaves the list the way every
+   *  finding does — adopted, deferred or dismissed as an authored, attributed
+   *  act. queuestate.mjs classes the slug FINDING and the mint refuses anything
+   *  else, so this is enforced rather than intended.
+   *
+   *  GATED ON `lead_inquiry` AND NOT ON `target`. The item is ABOUT question B,
+   *  it is FILED under B, and its acts are offered on B — so B is what a viewer
+   *  must be able to see for the item to exist for them at all. A member invited
+   *  to B and not to A learns nothing about A here beyond the fact that some run
+   *  captured this document, which is the same disclosure `basis.source` makes
+   *  everywhere else. Withheld WHOLE and with no count, the posture REC-30 set.
+   *
+   *  ONLY `captured` ROWS. A lead whose capture has not landed is not yet a
+   *  lead a member can act on: the point of D-213's answer is that the DOCUMENT
+   *  IS IN THE STORE, and announcing one before the bytes arrive would offer a
+   *  member acts over something that may still be refused at the drain. */
+  #findingsOutOfInquiryLead(viewer, now) {
+    const out = [];
+    const seen = this.#bundleGate("cr.lead_inquiry", viewer);
+    for (const r of this.#rows(
+      `SELECT cr.* FROM capture_requests cr
+        WHERE cr.state='captured' AND cr.lead_inquiry IS NOT NULL AND cr.lead_inquiry <> ''
+          AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
+      const attribution = this.#captureRequestAttribution(r);
+      /* THE SAME DEFENCE `#conditionsCaptureRequested` STATES, for the same
+         reason and with the same honesty about what it is. The drain refuses to
+         capture a row it cannot attribute, so no `captured` row reaching this
+         walk can fail the composer today and this `continue` is UNDRIVABLE. It
+         is kept because this is a READ over stored rows, which outlive the rules
+         that wrote them, and a member-facing item that could not say whose act
+         it announces is DEC-27(b)'s defect surfaced to a person. It mints no
+         DEC-49 code: an unreachable branch costs a reader a moment, an
+         unreachable CODE costs its family the floor that proves codes fire. */
+      if (!attribution.ok) continue;
+      const basisEntry = this.#leadBasisAbsence(r.capture_sha);
+      const capturedMs = Date.parse(r.captured_at);
+      const leadTitle = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, r.lead_inquiry);
+      out.push({
+        id: `FINDING::out-of-inquiry-lead::${r.request}`,
+        class: "FINDING",
+        kind: "out-of-inquiry-lead",
+        /* INQUIRY B'S ANCESTORS. The one line this item exists for. */
+        case: this.#queueAncestors([r.lead_inquiry], viewer),
+        subject: { kind: "capture_request", id: r.request,
+                   inquiry: r.lead_inquiry, address: r.address,
+                   capture_sha: r.capture_sha ?? null,
+                   bundle_id: basisEntry.bundle_id },
+        summary: `evidence bearing on ${leadTitle && leadTitle.title ? leadTitle.title : r.lead_inquiry} `
+               + `was met while another question was being worked, and captured`,
+        detail: `${r.address} was captured at an investigative session's request while it was working `
+              + `${r.target}, because it bears on ${r.lead_inquiry}. ${attribution.statement}. `
+              + "The document is IN THE STORE and is part of NO claim: it was captured, which is an "
+              + "entry to the cache, and it was deliberately not made part of any question's basis. "
+              + "Nothing about any conclusion has moved, and nothing here is evidence until somebody "
+              + "decides it is.",
+        basis: {
+          source: "capture_requests", request: r.request, run: r.run,
+          /* NAMED APART, deliberately. `found_while_working` is inquiry A and
+             `bears_on` is inquiry B, and a single `inquiry` field would collapse
+             the distinction the whole item is about — which is exactly what the
+             sibling producer's basis does, correctly, because for IT there is
+             only one question. */
+          found_while_working: r.target,
+          bears_on: r.lead_inquiry,
+          address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
+          capture_sha: r.capture_sha ?? null, captured_at: r.captured_at,
+          attribution,
+          basis_entry: basisEntry,
+          detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED "
+                + "(D-213): the act is the daemon's, performed at the session's request, and the "
+                + "session was working one question when it met evidence for another. The absence of "
+                + "a basis entry is MEASURED and reported on `basis_entry` rather than left to be "
+                + "inferred from an empty field — absence at one level is not evidence of absence at "
+                + "the next, and which one is true is the answer, not a footnote (CLAUDE.md).",
+        },
+        age: Number.isFinite(capturedMs)
+          ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
+          : { state: "undetermined", reason: "unparseable_captured_at",
+              detail: "the request row carries a completion stamp this producer cannot read as an instant" },
+        assignee: null,
+        assignee_role: null,
+        /* THE ACTS ON INQUIRY B, derived by the same composer every other item
+           uses. D-213 named this half honestly when it was answered and the
+           naming still holds: the NATURAL options here are inquiry-grain acts —
+           *take this up under B*, *set it aside* — and those do not exist yet
+           (D-222's grain problem, one surface over). What `#queueOptions`
+           offers is the document-grain acts that DO exist, on B itself, which
+           are real acts a member can actually take rather than a promise the
+           surface would have to break. The gap is DECLARED on the item rather
+           than hidden by an empty array. */
+        options: this.#queueOptions([r.lead_inquiry], viewer),
+        options_grain: {
+          offered: "document",
+          missing: "inquiry",
+          detail: "the acts offered are the ones this record can actually perform on the question "
+                + "this lead is filed under. The acts a member would most naturally want here are at "
+                + "INQUIRY grain — take this up under that question, or set it aside — and they do "
+                + "not exist yet (D-222). Declared rather than left as an absence a surface would "
+                + "have to explain.",
+        },
+      });
+    }
+    return out;
+  }
+
   /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
   #queueConditions(viewer, now) {
@@ -11380,6 +11600,20 @@ export class Store extends DurableObject {
       });
     }
 
+    /* -------------------------------- FINDING · PL-15 / D-213 · THE LEAD
+       The FINDING half's SECOND producer, and the first one that is not derived
+       from proposalsFeed. It is pushed with the findings rather than beside
+       them because it IS one: something the record noticed that may become
+       evidence, leaving the list only by an authored act.
+
+       ITS HOMES ARE NOT THIS RUN'S. Every other producer in this feed files an
+       item under the ancestors of the thing it is about, and so does this one —
+       the difference is only that the thing it is about is a question the run
+       was NOT working. Stated here because a reader scanning the feed's
+       assembly would otherwise have no reason to expect two producers over one
+       table to disagree about where their items go. */
+    items.push(...this.#findingsOutOfInquiryLead(viewer, now));
+
     /* ------------------------------------------ CONDITION · REC-32
        The three generators, derived on read from the producing subsystems' own
        facts. They are pushed BEFORE the mute loop deliberately: the admission
@@ -11388,7 +11622,108 @@ export class Store extends DurableObject {
        that machinery does anything on a live item. */
     items.push(...this.#queueConditions(viewer, now));
 
+    /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
+     *
+     * WHAT WAS HERE AND WHY IT WAS HALF A FENCE. REC-32 refused an uncatalogued
+     * kind for CONDITION items ONLY, and its stated reason was that an
+     * uncatalogued condition kind would produce an item no member could ever
+     * mute. That reason is true and it is not the only one. A kind is the word
+     * a SURFACE renders, a feed groups on and a member recognises across items,
+     * and `queuestate.mjs`'s three vocabularies are the single authority on the
+     * whole set — `op=affordances` publishes them and `check-refusal-codes`'
+     * arm E holds every term to carrying the sentence a member reads. So an
+     * OBLIGATION or a FINDING minted under a kind no vocabulary names is
+     * exactly as unrenderable as a CONDITION was, and it was reaching members.
+     * PL-15 needed one new FINDING slug refused when it is misspelled, and
+     * fixing only that would have left the class standing for the other two —
+     * which is the shape this project's standing instruction names.
+     *
+     * TWO REFUSALS WHERE REC-32 HAD ONE, and the split is `classOfKind`'s own
+     * three-valued answer finally being used. `null` means the catalogue does
+     * not name this kind AT ALL — a typo, an `N-<n>` id from a design document,
+     * a slug somebody invented at a producer. A NON-NULL answer that differs
+     * from the item's class means the kind is real and FILED ELSEWHERE, which is
+     * a different defect with a different fix, and it is the dangerous one: a
+     * CONDITION kind minted as a FINDING would be unmuteable, and an OBLIGATION
+     * kind minted as a CONDITION would be MUTEABLE — one member able to silence
+     * a task the record believes reached a person. `queuestate.mjs` says in its
+     * own header that unknown is not the same as wrong and that the refusals
+     * must say which happened. Now they do.
+     *
+     * IT REFUSES THE WHOLE ANSWER rather than dropping the item. A feed quietly
+     * one item shorter is indistinguishable from nobody caring, which is the
+     * same argument the mute block below makes about reporting suppressions.
+     *
+     * AND IT RUNS **BEFORE** THE MUTE LOOP, WHICH IT DID NOT UNTIL PL-15. THIS
+     * ORDER IS THE FENCE AND THE OLD ONE WAS A HOLE — found by RUNNING the
+     * control rather than by reading the code, and it is the sharpest thing
+     * this item did. The mute loop removes items from the feed, so an item a
+     * member had muted never reached the mint at all. Now put those two facts
+     * together: a FINDING minted under a kind the catalogue files as a
+     * CONDITION is exactly what the mute's write fence WILL accept — the fence
+     * is `classOfKind(kind) === "CONDITION"` and the kind IS one — so the
+     * misclassed item could be muted, was then suppressed, and the mint that
+     * exists to refuse it never saw it. The single worst case the class
+     * distinction protects against, escaping through the one door that made it
+     * reachable. Validating what a producer MINTS is a different question from
+     * what survives one member's preferences, and it is asked first. */
+    const refusal = (code, detail, extra) => {
+      const row = QUEUE_MINT_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+    for (const it of items) {
+      /* DEC-49 REGION is-queue-mint
+       *
+       * THE SPAN `QUEUE_MINT_CHECKS`' rows name (REC-71). A REGION and not the
+       * whole of `queueFeed`, which is several hundred lines of producers whose
+       * later refusals must not be conscripted into this family by a `where`
+       * that claims too much — and whose set would GROW with the function. The
+       * helper sits ABOVE the marker so its own variable-coded return is not
+       * inside the governed span, and every code below is a STRING LITERAL at
+       * its site, which is what lets arm C COMPARE them rather than read past
+       * them (PL-3's convention, REC-71's measurement). */
+      if (!Store.QUEUE_CLASSES.includes(it.class))
+        return refusal("NO_CLASS",
+          `every queue item carries a class from ${Store.QUEUE_CLASSES.join(" | ")}, and this one `
+          + `carries ${it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. `
+          + `The feed is DERIVED rather than stored, so the constraint a column would have carried is `
+          + `enforced at the one place an item is minted.`,
+          { id: it.id ?? null });
+      if (classOfKind(it.kind) === null)
+        return refusal("NO_SUCH_KIND",
+          `${it.kind === undefined || it.kind === null || it.kind === ""
+              ? "this item carries no kind at all"
+              : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. `
+          + `The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute `
+          + `refuses against, what op=affordances publishes, and what carries the sentence a member `
+          + `reads instead of the slug. A kind invented at a producer would reach a surface with no `
+          + `words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that `
+          + `no code has ever used.`,
+          { id: it.id ?? null, kind: it.kind ?? null });
+      if (classOfKind(it.kind) !== it.class)
+        return refusal("KIND_MISCLASSED",
+          `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item `
+          + `mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a `
+          + `producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an `
+          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would `
+          + `let one member silence a task the record believes reached a person, and minting a `
+          + `condition's kind as a finding would make a fact about our own machinery undismissable.`,
+          { id: it.id ?? null, kind: it.kind ?? null,
+            catalogued_as: classOfKind(it.kind), minted_as: it.class });
+      /* END DEC-49 REGION is-queue-mint */
+    }
+
     /* ------------------------------------------- REC-21 · the PERSONAL half
+       MOVED BELOW THE MINT BY PL-15 (it used to run above it), and the reason
+       is at the mint: an item a member had muted was suppressed BEFORE the
+       fence could look at it, so a FINDING minted under a kind the catalogue
+       files as a CONDITION — the one case the mute's write fence WILL accept —
+       could be muted and vanish without the mint ever seeing it. Nothing else
+       about this block changes, and nothing about its result does either for
+       any correctly-minted feed: every item reaching here has now been
+       validated, which is the state this block always assumed.
+
        ONE admission point, consulted for EVERY item whatever its class, over
        queuestate.mjs's pure decision. The class fence is at the WRITE (queueMute
        refuses anything that is not a CONDITION kind), so a kind present in
@@ -11411,28 +11746,6 @@ export class Store extends DurableObject {
     }
     items.length = 0;
     items.push(...admitted);
-
-    /* `class` NOT NULL on the producer. The feed is derived, not stored, so
-       the constraint a column would carry is enforced here, at the one place
-       an item is minted — and it REFUSES rather than emitting a classless item,
-       because a surface that receives one has no honest way to render it. */
-    for (const it of items) {
-      if (!Store.QUEUE_CLASSES.includes(it.class))
-        return { ok: false, reason: "NO_CLASS", id: it.id ?? null,
-                 detail: "every queue item carries a class from " + Store.QUEUE_CLASSES.join(" | ")
-                       + "; this producer refuses to emit one that does not" };
-      /* REC-32, the same constraint one level down and for the same reason.
-         queuestate.mjs's vocabulary is the SINGLE authority on what a CONDITION
-         kind is — it is what the mute's write fence refuses against — so a
-         generator here that emitted a kind the catalogue does not name would
-         produce an item no member could ever mute, silently. It is refused at
-         the mint instead, by name. */
-      if (it.class === "CONDITION" && classOfKind(it.kind) !== "CONDITION")
-        return { ok: false, reason: "NO_CONDITION_KIND", id: it.id ?? null, kind: it.kind ?? null,
-                 detail: "a CONDITION item's kind must be one queuestate.mjs's catalogue names as a "
-                       + "CONDITION (the same vocabulary op=queuemute's fence refuses against); this "
-                       + "producer refuses to emit a kind no member could mute" };
-    }
 
     /* Obligations first — something a named person must do outranks something
        the record noticed — then stable on id so the feed does not shuffle. */
@@ -13061,6 +13374,34 @@ export class Store extends DurableObject {
            one thing DEC-47's structure is for. For a non-inquiry bundleId this
            DELETE matches no rows. */
         this.sql.exec(`DELETE FROM capture_requests WHERE target=?`, bundleId);
+        /* PL-15 / D-213 / D-113 — THE SECOND BUNDLE ID ON THAT ROW, and it is a
+           genuinely different act from the DELETE above rather than a widening
+           of it.
+           *
+           * `lead_inquiry` names the question the evidence BEARS ON, which is
+           * not the question the request was made under. So purging inquiry B
+           * must not delete a request accountable to inquiry A — A still exists,
+           * the capture was still made under it, and removing the row would
+           * destroy a live work item because a DIFFERENT question went away. The
+           * lead is CLEARED instead, which is exactly what became true: the
+           * observation pointed somewhere that is no longer in the store.
+           * *
+           * WHY IT CANNOT BE SKIPPED. `#findingsOutOfInquiryLead` derives its
+           * `case` set from this column, so a surviving row would mint a
+           * member-facing FINDING whose home is a bundle nobody can read — and
+           * `#queueAncestors` would answer `ungrouped`, so the lead would present
+           * as a homeless notification about a question that no longer exists.
+           * That is D-113's silent-leftover arriving through a COLUMN rather
+           * than through a table, which is why hygiene's structural check — it
+           * compares TABLE lists — cannot see it. This item proves the coverage
+           * by CONSEQUENCE instead: the suite purges B and asserts the FEED goes
+           * quiet, which is the only form of the assertion that would have
+           * failed had this line been left out.
+           * *
+           * The DELETE above runs FIRST and this UPDATE therefore never touches
+           * a row it just removed — the case where one purge is both A and B
+           * cannot arise, because the door refuses `lead === target`. */
+        this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -17921,6 +18262,44 @@ export class Store extends DurableObject {
         + `accountable to the question it was asked under, and a fetch belonging to nothing is a fetch `
         + `nobody can account for afterwards.`, { target: target || null });
 
+    /* PL-15 / D-213 — THE LEAD, and it is OPTIONAL by construction. Absent on
+       every ordinary request, and absent is the common case: a run working one
+       question and capturing for that question names nothing here.
+
+       WHEN IT IS PRESENT it must be a question this caller can read, exactly as
+       `target` must, and for the identical reason — a lead filed under a bundle
+       the caller cannot see would let this door probe for the existence of a
+       project nobody invited them to, which is the D-15 leak `#queueCaseFor`
+       already refuses one surface over. Reusing `gate` rather than recompiling
+       it: one predicate, one compilation point.
+
+       AND IT MAY NOT BE THE TARGET. A "lead" pointing back at the question the
+       run is already working is not out-of-inquiry evidence at all — it is
+       ordinary evidence wearing the notification's clothes, and admitting it
+       would put a FINDING on inquiry A's own queue saying *evidence for another
+       question was found*, about A. Refused rather than normalised to NULL: a
+       caller whose field was silently dropped learns nothing about where the
+       distinction is, which is the same argument the spine check below makes. */
+    const lead = String(args.lead_inquiry ?? args.lead ?? "").trim();
+    if (lead) {
+      const lb = this.#one(
+        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+        lead, ...gate.args);
+      if (!lb || normalizeType(lb.object_type) !== "inquiry")
+        return refusal("CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
+          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this `
+          + `evidence bears on, so it names a question or it names nothing — a document, a project or a `
+          + `bundle id nothing answers to would give the notification a home that cannot hold it.`,
+          { lead_inquiry: lead });
+      if (lead === target)
+        return refusal("CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
+          `this request names ${lead.slice(0, 60)} as both the question it was made under and the `
+          + `question the evidence bears on. That is ordinary evidence for this question, which needs `
+          + `no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one `
+          + `pointing back here would file a notification about this question saying evidence for a `
+          + `different one was found.`, { lead_inquiry: lead, target });
+    }
+
     /* THE SPINE, AT THE DOOR. A request that arrives carrying bytes, a digest or
        a provenance hop is a caller trying to be the fetcher. Refused BY NAME
        rather than by dropping the fields: CLAUDE.md's rule is that a provenance
@@ -17971,17 +18350,23 @@ export class Store extends DurableObject {
     if (standing)
       return { ok: true, request: standing.request, run, target: standing.target, address,
                host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
+               /* PL-15: the STANDING row's lead, never this call's. Idempotence
+                  means the second ask returns what the first one recorded, and
+                  echoing the caller's field back would report a lead nothing
+                  stored — the answer disagreeing with the row it stands for. */
+               lead_inquiry: standing.lead_inquiry ?? null,
                state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
     this.sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode,
       runRow.principal_plane, runRow.principal_claude,
-      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS));
+      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null);
     return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
+             lead_inquiry: lead || null,
              state: "requested", requested: true, already: false,
              principals: { plane: runRow.principal_plane, claude: runRow.principal_claude },
              detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
@@ -18328,6 +18713,17 @@ export class Store extends DurableObject {
       purpose: r.purpose, ua_mode: r.ua_mode, state: r.state, code: r.code, detail: r.detail,
       capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
       updated: r.updated, expires: r.expires, captured_at: r.captured_at,
+      /* PL-15 / D-213: THE LEAD, PUBLISHED. Additive — every existing reader
+         keeps the shape it reads — and it is not decoration. This projection is
+         explicit rather than a row spread, so a column omitted here is a column
+         no caller can see: a run cannot read back the observation it filed, and
+         an operator cannot see a lead pointing at a purged question. The second
+         of those is the one that matters, because a MACHINE viewer's bundle
+         gate is `1=1` and this read is therefore the only place a stale pointer
+         is visible at all. FOUND BY DRIVING IT: the suite's purge arm filtered
+         on this field before it was published, so it counted zero for every
+         input and would have passed over a missing purge clause. */
+      lead_inquiry: r.lead_inquiry ?? null,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less

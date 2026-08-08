@@ -63,7 +63,7 @@ import { createHash } from "node:crypto";
 import { QUEUE_CONDITION_KINDS, classOfKind } from "../src/queuestate.mjs";
 /* REC-46: the ONE machine-author prefix, so this suite asserts the composition
    rather than restating the literal it used to compare against itself. */
-import { MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
+import { MACHINE_AUTHOR_PREFIX, QUEUE_MINT_CHECKS } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
@@ -471,8 +471,31 @@ t("and the three built here are a SUBSET of the eleven — the catalogue is bigg
    Object.keys(QUEUE_CONDITION_KINDS).length > liveKinds.length], [true, true]);
 t("a member may mute a kind whose generator does not exist yet, so the next generator cannot widen an old mute",
   (await mute(dave, INQ1, ["text-undetermined"])).ok, true);
-t("the mint REFUSES a condition kind the catalogue does not name, by name",
-  /NO_CONDITION_KIND/.test(STORE_SRC), true);
+/* PIN CORRECTED 2026-08-08 (PL-15 / D-213), never exempted, and the old
+   assertion was wrong in a way worth stating rather than quietly repairing.
+   It matched the literal `NO_CONDITION_KIND` and that code no longer exists —
+   NOT because the rule was dropped but because PL-15 SWEPT IT FOR THE CLASS.
+   The mint refused an uncatalogued kind for CONDITION items only, so an
+   OBLIGATION or a FINDING minted under a kind no vocabulary names reached
+   members unchecked. It now refuses for every class, and it splits the one
+   refusal into the two facts `classOfKind` was always able to tell apart:
+   NO_SUCH_KIND (the catalogue does not name this kind at all) and
+   KIND_MISCLASSED (it names it, under a DIFFERENT class — the dangerous one,
+   because class decides mute-versus-authored-act).
+
+   AND THE PIN IS STRONGER FOR IT. Matching a code literal in source proved
+   only that a string was present. This DRIVES the refusal through the real
+   producer set and asserts what it ANSWERS, so a fence deleted tomorrow fails
+   here instead of a comment mentioning the code keeping it green. */
+t("the mint REFUSES a kind the catalogue does not name, for a CONDITION and for every other class, "
++ "and its two codes say WHICH failure happened (unknown is not the same as misfiled)",
+  [/NO_SUCH_KIND/.test(STORE_SRC), /KIND_MISCLASSED/.test(STORE_SRC),
+   QUEUE_MINT_CHECKS.NO_SUCH_KIND.check.startsWith("C-"),
+   QUEUE_MINT_CHECKS.KIND_MISCLASSED.check.startsWith("C-"),
+   /* the CONDITION half the old pin covered, now asked of the live catalogue
+      rather than of a source literal */
+   classOfKind("a-kind-nobody-catalogued"), classOfKind("capture-completed-unattended")],
+  [true, true, true, true, null, "CONDITION"]);
 
 console.log("\n--- the structural pins: one clock, one map rule, one machine-writer literal ---");
 const REGION = STORE_SRC.slice(STORE_SRC.indexOf("REC-32 · the CONDITION half of the feed"),

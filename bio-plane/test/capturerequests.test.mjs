@@ -287,7 +287,24 @@ console.log("\n--- 2. the door writes a row and holds no fetch (the spine, asser
   const c2 = drive(await request({ address: PEC, provenance_chain: [{ hop: "invented" }] }));
   t("and the same refusal catches a hand-supplied provenance chain",
     [c2.ok, codeOf(c2), c2.fields], [false, "CAPTURE_REQUEST_CARRIES_A_CAPTURE", ["provenance_chain"]]);
-  t("no fetch has left this instance yet: four refusals and one door, and the source has seen nothing",
+  /* ADDED 2026-08-08 BY PL-15 (D-213), AND ADDED HERE RATHER THAN EXEMPTED
+     THERE. PL-15's out-of-inquiry lead put two more refusals inside THIS door's
+     `is-capture-request` region, so they belong in THIS family — a family is a
+     DEC-49 floor and minting a second one for two rows on somebody else's door
+     buys slack for everybody else's walk (SK-1's rule). But block 9 below holds
+     this family to a FLOOR: every code in it must be DRIVEN by this suite, and
+     two codes driven only by `leadslug.test.mjs` would have made that arm fail.
+     The honest repair is to drive them here too rather than to narrow the arm —
+     a floor relaxed to fit new rows is not a floor. */
+  const ld = drive(await request({ address: PEC, lead_inquiry: "INFO-2026-4000-not-a-question" }));
+  t("PL-15: a LEAD naming something that is not a question is refused by name — a notification "
+  + "filed on a document has no question and therefore nobody to reach (D-213)",
+    [ld.ok, codeOf(ld), ld.check], [false, "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY", "C-28.14"]);
+  const ls = drive(await request({ address: PEC, lead_inquiry: INQ }));
+  t("PL-15: and a LEAD pointing back at the question the run is working is refused by name — that "
+  + "is ordinary evidence for this question, not evidence for another one (D-213)",
+    [ls.ok, codeOf(ls), ls.check], [false, "CAPTURE_REQUEST_LEAD_IS_THE_TARGET", "C-28.15"]);
+  t("no fetch has left this instance yet: six refusals and one door, and the source has seen nothing",
     SEEN.length, 0);
 }
 
