@@ -125,6 +125,22 @@ export const QUEUE_FINDING_KINDS = {
   "export-performed":           "an export was performed; every administrator is notified (D-52 8.1)",
   "audit-finding":              "op=audit found something about the record",
   "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
+  /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
+     store.mjs #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
+     while a run was working inquiry A, is CAPTURED — an entry to the store, and
+     deliberately NOT an entry to any leg of any claim — and the OBSERVATION
+     becomes this item.
+
+     FINDING AND NOT CONDITION, and the distinction is doctrine rather than
+     taxonomy. A CONDITION is a fact about our own machinery and is personally
+     MUTABLE (D-125, DEC-16); a lead is a fact about the WORLD that a team must
+     see, and one member's inbox hygiene must not be able to make it disappear
+     for everybody with nothing recorded. It leaves the list the way every
+     finding does — adopted, deferred or dismissed through op=proposedispose,
+     an authored record act carrying its author and its reason. */
+  "out-of-inquiry-lead":        "evidence for ANOTHER question was met while working this one: captured, "
+                              + "and deliberately not made part of any claim (D-213, DEC-60) "
+                              + "— LIVE: store.mjs #findingsOutOfInquiryLead",
 };
 
 /* The ONE class lookup. Returns "CONDITION" | "OBLIGATION" | "FINDING", or null

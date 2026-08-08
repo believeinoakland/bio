@@ -224,7 +224,23 @@ const returnBare = (body) => {
    Narrow on purpose: it excludes a CALL to the refusal helper and nothing else,
    and the arm below drives it in BOTH directions so the correction cannot
    quietly become an exemption. */
-const REFUSAL_CALL = /^refuse\s*\(/;
+/* WIDENED 2026-08-08 (PL-15), CORRECTED AND NOT EXEMPTED, and the correction is
+   PL-1's own finding meeting a spelling it did not know about. This read
+   `/^refuse\s*\(/` and the plane's landed convention is `refusal(` — PL-3 named
+   the helper that way, and PL-4, PL-11, PL-14 and PL-15 have all followed,
+   because `check-refusal-codes`' arm C keys on it. So the first bare
+   `return refusal("CODE", `…${x.slice(0, 60)}…`)` in a READ op put `op=queue` on
+   the bare roster and pushed the ratchet to 41 of a ceiling of 40 — a FALSE
+   POSITIVE of exactly the class PL-1 measured, wearing the other name. It
+   inflates the roster rather than hiding a defect, which is the safe direction
+   and also the one that makes the ratchet unholdable.
+   STILL NARROW ON PURPOSE: it excludes a CALL to either spelling of the refusal
+   helper and nothing else, and the arm below drives it in BOTH directions — now
+   over both names — so the widening cannot quietly become an exemption. AND THE
+   ARM CAUGHT THIS EDIT'S OWN FIRST DRAFT: `/^refusals?\s*\(/` matches `refusal`
+   and `refusals` and NOT `refuse`, so it silently swapped which spelling was
+   seen instead of covering both. The alternation is explicit for that reason. */
+const REFUSAL_CALL = /^refus(?:e|al)\s*\(/;
 
 /* Top-level `key: value` pairs of an object literal, depth-aware so a nested object's keys
    are not read as the answer's own. */
@@ -453,6 +469,11 @@ t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a ret
   const refusalOnly = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n"
     + "    if (!a) return refuse(\"NO_A\", `a=${String(a).slice(0, 60)} is not an id`);\n"
     + "    return { ok: true, rows, limit: 1, truncated: false };\n  }";
+  /* THE OTHER SPELLING, driven rather than assumed to follow (PL-15). `refusal`
+     is the name every family since PL-3 has used, and it was invisible here. */
+  const refusalOnlyLongName = "  someRead(a) {\n    const rows = this.#rows(`SELECT x FROM y`);\n"
+    + "    if (!a) return refusal(\"NO_A\", `a=${String(a).slice(0, 60)} is not an id`);\n"
+    + "    return { ok: true, rows, limit: 1, truncated: false };\n  }";
   const bareOf = (src) => {
     const b = [...segments(src).values()][0] || "";
     return returnBare(b).some((e) => ARRAY_EXPR.test(e) && !REFUSAL_CALL.test(e));
@@ -460,7 +481,7 @@ t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a ret
   t("WALK GUARD (PL-1, 2026-08-07): the bare-array reader still SEES a real bare array, and no longer "
   + "counts a refusal that trims a value with `.slice(` — measured in both directions, so the "
   + "narrowing is a correction and not an exemption",
-    [bareOf(realBare), bareOf(refusalOnly)], [true, false]);
+    [bareOf(realBare), bareOf(refusalOnly), bareOf(refusalOnlyLongName)], [true, false, false]);
 }
 
 /* ------------------------------------------------------- THE ITEM'S OWN (a).
@@ -538,10 +559,24 @@ t("REACH: every DISPATCHED op is accounted for EXACTLY ONCE — bare, bounded, u
    subject on the day it was written. "Publishes no collection" is a verdict a
    broken reader produces for free; "scans rows and publishes nothing this
    reader can find" is not. */
+/* MOVED 8 -> 9 ON 2026-08-08 (PL-15), AND THE REASON IS THE SAME SHAPE AS
+   REC-70's OWN 27 -> 41: the roster did not grow, the READER stopped being
+   wrong. `op=versionstrength` (PL-14) returns bare `refusal(...)` calls whose
+   detail strings trim a value with `.slice(`, so REFUSAL_CALL's old `refuse(`-
+   only spelling counted it as a BARE ARRAY. It sat on the BARE roster as a
+   FALSE POSITIVE, which meant this ceiling never saw it — and the bare roster
+   read one too high for the same reason. Widening REFUSAL_CALL to both
+   spellings moves it out of BARE and reveals what it actually is: DISPATCHED,
+   scanning rows, and outside every bucket. **The 8 was never a smaller blind
+   spot; it was a smaller measurement**, which is the finding REC-70 recorded
+   one layer down and is why the figure moves with a date rather than being
+   argued away. PL-15's own new work adds NOTHING here: `op=queue` came OFF the
+   bare roster by the same correction and is on neither residual. */
 t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPATCHED, and lands "
 + "outside every bucket is a BLIND SPOT and not a clean bill. `op=airunlog` was one of 24 on "
-+ "2026-08-07; correcting the success-marker gate left the 8 printed above, and a NEW one fails here",
-  OPAQUE.length <= 8, true);
++ "2026-08-07; correcting the success-marker gate left 8, and correcting REFUSAL_CALL's spelling "
++ "on 2026-08-08 revealed a 9th that had been hiding inside the bare roster. A NEW one fails here",
+  OPAQUE.length <= 9, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
   OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
@@ -555,7 +590,15 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
   OPAQUE, ["projectfork->forkProject", "projectionplan->projectionPlan",
            "projectowneradd->projectOwnerAdd", "publish->publish",
            "registeraudit->registerAudit", "select->selectionCreate",
-           "selectionrelease->selectionRelease", "taskdrain->taskDrain"]);
+           "selectionrelease->selectionRelease", "taskdrain->taskDrain",
+           /* ADDED 2026-08-08 (PL-15) — and it is the ONE member of this list
+              that is NOT a write path scanning rows for its own logic. It is a
+              READ, and it is here because the reader could not classify what it
+              publishes once it stopped mistaking it for a bare array. Named
+              rather than absorbed, because "9" satisfied by a different nine is
+              exactly what this arm exists to refuse. Whether it should be
+              BOUNDED is PL-14's family's question, and it is delegated. */
+           "versionstrength->versionStrength"]);
 t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
 + "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "
 + "would keep reading '82 of 156' over a source this reader could no longer parse",

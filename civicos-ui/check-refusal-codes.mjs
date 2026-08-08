@@ -173,6 +173,21 @@ const FLOOR = {
               5 COMPARED — the sixth being the local helper's own variable-coded
               return. Narrowed to a REGION before any floor moved.
 
+
+     PL-15 (agent-aa5e6711b4eb2c064), 2026-08-08: every figure below RE-MEASURED
+     from what THIS FILE PRINTED on a green run of the tree carrying PL-15, and
+     nothing was arrived at by adding to the number in the file. PL-15 found NO
+     pre-existing slack — every floor sat exactly at the measured value, which
+     is the first time in eight items that has been true, and it is what a
+     ratchet moved in the same turn looks like from the next item's seat. What
+     moved is what PL-15 grew: one new family (QUEUE_MINT_CHECKS), five new rows
+     (C-31.1..3 at the queue mint, C-28.14/15 added to PL-4's door family rather
+     than minting a second family for two rows — SK-1's rule that a family is a
+     floor), one new region (is-queue-mint), and one new vocabulary term (the
+     `out-of-inquiry-lead` slug in QUEUE_FINDING_KINDS). `reachGap` FELL by one
+     because C-31.1 gives `NO_CLASS` — a code that has sat inside REC-64's named
+     gap since VF-2 — its first canned translation.
+
      THE TWO INTEGRATION COLLISIONS, both created by parallel slots and neither
      visible to any worker: **PL-11 and SK-1 each remeasured this whole block
      from its own tree**, so both were right where they stood and both were wrong
@@ -182,16 +197,16 @@ const FLOOR = {
      **The figures below are the ones the guard PRINTED on a green run of the
      tree carrying all three** — neither worker's numbers, because on a merged
      tree neither worker's numbers are true. */
-  families:     10,    // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
+  families:     11,    // + QUEUE_MINT_CHECKS (PL-15); + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
                        // Was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        100,    // + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
+  rows:        105,    // + C-31.1..3 and C-28.14/15 (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 81 at PL-4, 70 at PL-3.
-  census:      402,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      405,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       187,    // codes a surface can receive (R1 + R2 + R3) (was 178, 168, 157, 127, 116, 98)
-  governedSites: 27,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 25, 20, 17, 13, 9, 5)
+                       // (was 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+  reach:       191,    // codes a surface can receive (R1 + R2 + R3) (was 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 28,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -202,16 +217,30 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      15,    // + PL-14's two (is-version-strength, is-pair-composed). Was 13 with
+  regions:      16,    // + PL-15's one (is-queue-mint); + PL-14's two (is-version-strength,
+                       // is-pair-composed). Was 15 at PL-14, 13 with
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 851,    // lines inside the regions. Floored BELOW the measured figure on purpose,
-                       // so an ordinary edit inside a governed arm does not fail the guard while
-                       // a COLLAPSE still does. The per-region trivial-span arm (REGION_MIN_LINES)
+  regionLines: 953,    /* MOVED 919 -> 953 AT INTEGRATION 2026-08-08 by CONDUCT, and it is the block's
+                          own subject arriving from a direction no worker could have covered. PL-15
+                          set 919 — correct, and measured on a green run of ITS tree. M0-13 landed in
+                          the same integration and its one-expression fix to `suggestVersion`'s
+                          substance comparison sits INSIDE a governed region, so the merged tree
+                          measures 953. Neither item touched the other's files and neither could have
+                          seen it: a region's line count is a property of the MERGED source, not of
+                          either branch. 34 of slack is more than the 19 that had already flipped a
+                          control from RED to GREEN, and this is the fourth floor in two days that
+                          only the integrator could set. */
+                       // lines inside the regions. The wording below said this is floored BELOW the
+                       // measured figure; PL-15 MEASURED that the last three items have each set it
+                       // EQUAL to what the guard printed, so the intent is recorded and the practice
+                       // is what the numbers show. Kept equal here for the same reason a ratchet is:
+                       // an ordinary edit ADDING lines inside a governed arm still passes, while a
+                       // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
-                       // reasons. (was 724, 632, 45)
-  codesChecked: 71,    // refusal codes actually COMPARED against a family row — NOT the same as
+                       // reasons. (was 851, 724, 632, 45)
+  codesChecked: 76,    // refusal codes actually COMPARED against a family row — NOT the same as
                        // refusals JUDGED, and not the same as lines read. Was 58, 46, 30, 11.
                        // The growth is a convention landing, not luck: PL-3 named its helper
                        // `refusal` and passed a STRING LITERAL at every site, and every family
@@ -221,7 +250,7 @@ const FLOOR = {
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
   vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 50, // terms across them. Read 40 over a tree carrying 50 for long enough that
+  vocabularyTerms: 51, // + PL-15's `out-of-inquiry-lead` FINDING slug. Terms across them. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
                        // still have cleared 40.
@@ -232,7 +261,9 @@ const FLOOR = {
    this to zero, one family at a time, and until then no new receivable code may
    arrive without a translation. Measured 2026-08-07 by this file. */
 const CEILING = {
-  reachGap:     74,    // codes in reach with no canned translation — may only FALL
+  reachGap:     73,    // codes in reach with no canned translation — may only FALL. FELL from 74
+                       // at PL-15: C-31.1 gives `NO_CLASS` its first canned translation, and it had
+                       // sat inside REC-64's named gap since VF-2.
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the

@@ -2051,7 +2051,27 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   requested_at      TEXT NOT NULL,
   updated           TEXT NOT NULL,
   expires           TEXT NOT NULL,
-  captured_at       TEXT
+  captured_at       TEXT,
+  -- PL-15 / D-213: THE OTHER QUESTION. NULL on every ordinary request, and NULL
+  -- is the honest answer there rather than a default -- a capture asked for
+  -- under the question the run is working bears on that question and on nothing
+  -- else until somebody says otherwise.
+  --
+  -- WHEN IT IS SET it names a DIFFERENT inquiry from 'target': the run met
+  -- evidence for question B while working question A, and this column is the
+  -- observation. 'target' stays A, because the request is still accountable to
+  -- the question it was made under, while THIS column names what the evidence
+  -- is ABOUT. The two may never be equal, and the door refuses that rather than
+  -- storing a lead that leads back where it started.
+  --
+  -- IT IS A SECOND BUNDLE ID ON THIS ROW, which is why purge's PER-BUNDLE arm
+  -- gained a predicate for it in the same turn. The whole-store arm already
+  -- clears the table, while the per-bundle arm matched 'target' only, so purging
+  -- inquiry B would have left a lead standing that points at a question no
+  -- longer in the store -- D-113's class arriving through a column instead of
+  -- through a table, and invisible to hygiene's structural check for exactly
+  -- that reason.
+  lead_inquiry      TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);

@@ -183,6 +183,19 @@ what exists to be numbered. Class in brackets.
 - a connection whose grade is improvable `[FINDING]` (D-72)
 - gap list derived from an objective's satisfaction condition `[FINDING]` (D-76)
 - measure decay on a bias statement `[FINDING]` (D-87, D-90 — reports, never blocks)
+- **the out-of-inquiry lead** — evidence for ANOTHER question, met while working this one
+  `[FINDING]` (D-213, answered 2026-08-06 by Bob as DEC-60's remaining hole; **LIVE** from
+  PL-15: `store.mjs #findingsOutOfInquiryLead`, slug `out-of-inquiry-lead`).
+  Three things about it are the whole entry and none of them is optional:
+  **(1)** it is a FINDING and not a CONDITION — a condition is personally mutable, and one
+  member could otherwise silently mute a lead the team must see;
+  **(2)** its `case` set derives from the ancestors of the inquiry the evidence BEARS ON,
+  never from the ancestors of the inquiry the run was working — filing it under the run's
+  own question is precisely the mistake that made it homeless;
+  **(3)** the document is CAPTURED and **no basis entry is made**, and the item's `basis`
+  says so as a MEASUREMENT rather than leaving a reader to infer it from an empty field
+  (`CLAUDE.md`: absence at one level is not evidence of absence at the next, and saying
+  which is a first-class obligation).
 
 **Integrity and operations:**
 
