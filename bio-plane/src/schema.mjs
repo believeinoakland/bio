@@ -1860,6 +1860,81 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
 CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
 -- =========================================================================
 
+-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
+-- statements[] frontmatter and never a second authority. Exactly the sense
+-- inquiry_basis is a projection of basis[] (D-21: one place to state a fact),
+-- written inside promote's transaction and rewritten whole on every revision,
+-- so the document and this table cannot drift.
+--
+-- WHY IT EXISTS AT ALL, since the bytes already carry it: the EFFECTIVE SET is
+-- a computation over several bundles at once — instance statements at pinned
+-- revisions, minus project nullifications of unlocked statements, plus project
+-- replacements and additions — and computing that by re-parsing every adopted
+-- bundle's markdown on every read would make the manifest too expensive to be
+-- carried by every run, which is the one thing it must be.
+--
+-- 'nullifies' is safeguard 1's mechanism: a project statement that loosens an
+-- instance statement IS an override whatever it calls itself, and must NAME the
+-- statement it loosens. The column is what makes the override visible as a diff
+-- rather than as an argument about intent. 'locked' binds PROJECTS only — the
+-- instance may amend or retire its own locked statements through its documented
+-- adoption process.
+--
+-- Carries bundle_id, so it clears in BOTH purge arms via the TABLES list
+-- (D-113); hygiene.test.mjs holds that list against this file.
+CREATE TABLE IF NOT EXISTS bias_statements (
+  bundle_id     TEXT NOT NULL,   -- the bias bundle
+  ord           INTEGER NOT NULL,-- position in statements[], the addressable slot
+  statement_id  TEXT NOT NULL,   -- stable within the bundle, and what an override names
+  kind          TEXT NOT NULL,   -- scrutiny | inference | pattern (the closed set of three)
+  subject       TEXT NOT NULL,   -- ENT-YYYY-NNNN, a subject registry key (safeguard 4)
+  text          TEXT NOT NULL,
+  justification TEXT NOT NULL,
+  citations     TEXT,            -- JSON array, required for kind=pattern to leave draft
+  locked        INTEGER NOT NULL DEFAULT 0,
+  nullifies     TEXT,            -- the instance statement id this override names
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS bias_statements_subject ON bias_statements(subject);
+CREATE INDEX IF NOT EXISTS bias_statements_id ON bias_statements(bundle_id, statement_id);
+
+-- PL-12 / DEC-54 (c) and (d): THE ADOPTION, which is the authored act and the
+-- PIN in one row. A row here is the ONLY thing that puts a bias set in force.
+--
+-- WHY IT IS A TABLE AND NOT A STATE ALONE. The state says the set is adopted;
+-- this says BY WHOM, WHEN, AT WHICH REVISION and OVER WHAT. 'bundle_sha' is the
+-- revision pinned at the authored moment — DEC-12's edition pattern at a third
+-- altitude — so a case published under this lens stays checkable after the
+-- bundle moves on. 'author' is a member id and is stamped by the control plane
+-- from the SESSION: a machine credential holds no name and cannot adopt
+-- (C-25.9), because adoption without a name is how "we follow BBC standards"
+-- becomes true of a group in which nobody agreed to anything.
+--
+-- 'source_url', 'retrieved' and 'source_sha256' are DEC-54 (d)'s pin for an
+-- INHALED policy, copied here from the bundle's frontmatter at adoption time
+-- rather than read live. Copied, deliberately: an external policy MOVES, and a
+-- pin that re-reads the bundle would follow it. NULL on a natively authored
+-- set, which is the honest value — there is no external source to pin.
+--
+-- scope_type is 'instance' or 'project'. An instance row carries scope_id ''
+-- because there is one instance; a project row carries the project's bundle id,
+-- which is why the per-bundle purge arm clears by scope_id as well as by
+-- bundle_id (the project_participants precedent).
+CREATE TABLE IF NOT EXISTS bias_adoptions (
+  scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
+  scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
+  bundle_id     TEXT NOT NULL,   -- the bias bundle adopted
+  bundle_sha    TEXT NOT NULL,   -- THE PIN: the revision adopted, never re-read
+  author        TEXT NOT NULL,   -- the member who adopted it, server-stamped
+  at            TEXT NOT NULL,
+  source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
+  retrieved     TEXT,
+  source_sha256 TEXT,
+  PRIMARY KEY (scope_type, scope_id, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS bias_adoptions_scope ON bias_adoptions(scope_type, scope_id);
+CREATE INDEX IF NOT EXISTS bias_adoptions_bundle ON bias_adoptions(bundle_id);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

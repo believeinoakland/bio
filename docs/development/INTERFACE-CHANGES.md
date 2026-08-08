@@ -1928,3 +1928,48 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 
 **SETTLED. I3 10.3.0 → 10.4.0; I5 gains its tables.** Open against it: **PL-2 owns wiring the transitive basis-cycle check at the accept path** — self-reference is refused here, but a leg naming an inquiry that transitively rests on this one is refused only when a version's legs BECOME the basis, and **that path is IS-2's and is not built.** Recorded rather than half-built, because a second cycle walk would drift from the first.
 
+---
+## IC-30 · PL-12 / D-84 — the BIAS OBJECT: four new ops, two new tables, and a new bundle type
+
+**PROPOSED 2026-08-07 by `is-wave-pl12` (RECORD); RENUMBERED IC-29 → IC-30 at the rebase, 2026-08-08.** PL-1 landed on `main` while this item was running and its entry took IC-29, which is now SETTLED above. Neither session could see the other; under the collision protocol the earlier merge keeps its number and this one moves. **The same collision moved this item's check family from C-25.x to C-26.x** — see the note at `BIAS_CHECKS` in `bio-checks.mjs`.
+
+The I3 version bump and the RESOLUTION are **NOT** taken by this session — the registry entry is CONDUCT's to move at integration, per IC-25's precedent. **I3 stands at 10.4.0 as this is filed** (IC-29 took it from 10.3.0), and I5 has just been touched by IC-29 as well: this item's two tables are the third and fourth to land in that window.
+
+### 1 · WHAT MOVES
+
+**A NEW CANONICAL OBJECT TYPE.** `bias` joins `OBJECT_TYPES` as a fifth canonical type with the `BIAS-` id prefix, the heading set `## Statements · ## Adoption · ## What This Does Not Enforce · ## Session Log · ## Review Notes`, the state machine `draft → proposed → adopted → retired`, and the schema stamp `bias@1`. Ten C-numbers are allocated (C-25.1 … C-25.10), each with a DEC-49 error code and a canned translation read from ONE place.
+
+**FOUR NEW OPS, all additive; nothing is removed and no existing shape moves.**
+
+| op | mutating | what it answers |
+| --- | --- | --- |
+| `op=biasmanifest` | no | the EFFECTIVE SET in force for a scope, its `statements_sha`, the bundles-and-revisions in force with their pins, the RESIDUE, and any lock violations. Enveloped: `limit`/`offset`/`count`/`total`/`truncated`. Gated. |
+| `op=biasadopt` | yes | the AUTHORED, ATTRIBUTED adoption and its PIN (DEC-54 c, d). `author` is server-stamped from the session; a machine credential is refused C-25.9. |
+| `op=biasinhale` | **no** | reads an external policy and PROPOSES. Splits BARS from bias statements (DEC-54 a) and publishes the unenforceable RESIDUE at the same rank as the extraction (DEC-54 b). |
+| `op=airunspawn` | no | the run's spawn payload per half. §14's FENCE, as an object an assertion can read. |
+
+**ONE PUBLISHED SHAPE GAINS A FIELD.** `op=airun`'s `session` gains a `bias` block: `{ in_force, stated, manifest, now, moved }`. **It is ADDITIVE — no existing key moves, is renamed, or changes type.**
+
+**TWO NEW TABLES** (I5): `bias_statements` (a projection of the bundle's own `statements[]`, D-21) and `bias_adoptions` (the authored act and its pin). Both are in `purge`'s `TABLES` list, and a project-scoped adoption also clears on `scope_id`.
+
+### 2 · WHY THE `op=airun` FIELD IS NOT A BREAKING CHANGE, AND WHY IT MATTERS ANYWAY
+
+**MEASURED, not assumed:** before this change `op=airun` published **no bias field of any kind**. `ai_runs.bias_manifest` was written by `op=airunopen` and read by nothing. So `INVESTIGATIVE-SESSION.md` §3's honest absence — *"no manifest was in force," STATED* — was **stated nowhere a reader could see it**. The run held a column and the answer was silent, which is DEC-56/57/58's ruling exactly: an unstated limit reads as completeness.
+
+The field is therefore new rather than changed, and **the run now distinguishes three answers where it published none**: no manifest was in force · the lens the run carried is the lens the record holds · **the lens has MOVED since, so the run's output owes a re-run** — which is ordinary BIAS DEBT, disclosed, travelling, blocking nothing (DEC-20, D-188).
+
+### 3 · WHO CONSUMES IT
+
+**`op=airun`'s only consumer is `civicos-ui`'s running-session indicator (UI-49)**, whose renderers are FIELD-NAME-BLIND: they print published name/value pairs verbatim in publication order and know no field names. A new key is therefore rendered rather than ignored, and nothing breaks. **The three bias ops have no consumer at all** — the surfaces that would read them are D-189's, which is open and explicitly sequenced behind D-84.
+
+### 4 · WHAT IS NOT CLAIMED
+
+**No cursor is minted** on `op=biasmanifest` (REC-55's declined-second-copy rule), so a caller cut at the 2000 ceiling pages with `offset` and nothing else. **`statements_sha` covers the WHOLE set before any bound is applied** and is stated as doing so, because a manifest hash that moved with `limit` would make two runs under one identical lens cite two different manifests.
+
+**The malformedness and bar predicates are NARROW and are not claimed to be complete.** The doctrine's own safeguard 5 says why: *pattern statements and artful language are not fully machine-judgeable, and the design does not pretend otherwise.* What is guaranteed is that nothing on a shared subject is QUIET.
+
+**No lens DIFF op is minted.** PL-12 makes the diff COMPUTABLE — two scopes, two manifests, two hashes, statements addressable by `(bundle_id, statement_id)` — and the accept ceremony that renders it is a later item.
+
+### 5 · STATUS
+
+**PROPOSED, with the code landed on this session's branch.** Battery 110/110 at 6,521 → **111/111 at 6,659**, the +138 fully attributed (bias +126 new, bounds +9, hygiene +3, no other suite moved). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**, OPS 138 → 142 all reached, CHECKS 64 → 74 all named. Twelve negative-control arms RUN.
