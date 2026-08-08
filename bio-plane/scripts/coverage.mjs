@@ -183,7 +183,7 @@ const REGISTER_FLOOR = {
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542 · FW-13 550 · FW-14 552 · M0-17 553 · FW-15 557.
+     REC-77 530 · M0-16 542 · FW-13 550 · FW-14 552 · M0-17 553 · FW-15 557 · REC-78 581.
 
      THE COMPARISON IS AGAINST THE **REPRODUCIBLE** FIGURE, not the counted one (M0-16): a
      phantom suite inflates the corpus, and a floor moved while one is present would be
@@ -191,9 +191,14 @@ const REGISTER_FLOOR = {
      UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
      at the site — one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
-  arms:       570,  // arms stated across the classified declarations
-  classified: 129,  // declarations the detector could count arms in
-  corpus:     130,  // suites the register reads
+  /* MOVED 2026-08-08 by REC-78 (570→581, 129→130, 130→131), from the figures a
+     green `--strict` run PRINTED as REPRODUCIBLE at commit 7f7cbb8 — never
+     counted, never incremented by hand. The cause is one new suite,
+     `test/shadowed-refusals.test.mjs`, whose `NEGATIVE CONTROL:` declaration
+     states eleven arms. Every one of those arms was RUN. */
+  arms:       581,  // arms stated across the classified declarations
+  classified: 130,  // declarations the detector could count arms in
+  corpus:     131,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
