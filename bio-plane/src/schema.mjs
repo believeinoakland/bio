@@ -2188,6 +2188,72 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
   ON provenance_route_marks(finding, bundle_id);
 
+-- CPDF-10: TEXT ATTESTATIONS. A member says they compared a document's text
+-- against the image of the page and it matches, OVER A STATED EXTENT.
+--
+-- FIRST-CLASS, MEMBER-DECLARED STATE, not a projection. Nothing derives this
+-- and nothing can re-derive it: it is a person's testimony, so a re-promotion
+-- must not rebuild it and a reader must not be able to mint it. That is the
+-- resolutions precedent rather than the readings one, and it is why this table
+-- is written by its own act and not by promote.
+--
+-- WHY THE EXTENT IS THREE COLUMNS AND NOT A BLOB. extent_kind / extent_page /
+-- extent_rect are separate because COVERAGE IS A QUERY: "does any attestation
+-- cover this leg's region" is asked per leg, and an extent locked inside JSON
+-- would make that a scan the store cannot index. The rect is JSON because it is
+-- four numbers read as a unit and never compared column-wise in SQL.
+--
+-- attestor is a MEMBER ID and never a machine stamp. The act refuses a machine
+-- credential before it reaches here (C-35.10), and this column carrying a
+-- token: prefix would mean that fence had been bypassed.
+--
+-- bundle_id rides so a purge takes it in BOTH arms (D-113). It is the bundle
+-- the capture is filed in at the moment of attesting.
+CREATE TABLE IF NOT EXISTS text_attestations (
+  capture_sha  TEXT    NOT NULL,
+  bundle_id    TEXT,
+  attestor     TEXT    NOT NULL, -- a member id, never a machine stamp
+  at           TEXT    NOT NULL,
+  extent_kind  TEXT    NOT NULL, -- region, page or document
+  extent_page  INTEGER,          -- NULL for a document extent
+  extent_rect  TEXT,             -- JSON [x0,y0,x1,y1], NULL unless kind=region
+  note         TEXT,
+  chain        TEXT,             -- the chain AS IT STOOD when attested
+  PRIMARY KEY (capture_sha, attestor, extent_kind, extent_page, extent_rect)
+);
+CREATE INDEX IF NOT EXISTS text_attestations_capture ON text_attestations(capture_sha);
+CREATE INDEX IF NOT EXISTS text_attestations_bundle ON text_attestations(bundle_id);
+
+-- CPDF-10: the TRANSCRIPTION PROVENANCE PROJECTION -- what a reading's text
+-- chain says, in columns, so an OCR'd document is distinguishable from a
+-- published text layer by a QUERY and not only by reading a JSON blob.
+--
+-- DERIVED from the reading exactly as reading_refs is, rebuilt in the same
+-- transaction, and cleared by a purge in both arms (D-113). Nothing here is a
+-- second authority: every column is computed from the stored chain by
+-- textchain.mjs, so this table can be dropped and rebuilt and cannot disagree
+-- with the reading it projects.
+--
+-- transcribed is the headline: 1 when some machine derived this text, which is
+-- TRUE FOR A TEXT LAYER TOO -- a layer is somebody else's transcription that we
+-- decode faithfully (CPDF-9 measured ABBYY FineReader in 3 of 14 recent
+-- Legistar attachments). terminal_step names the last thing that touched it.
+-- derivation_cap is the weakest link over the chain's derivation steps and is
+-- NULL when no step carries a measured fidelity -- undetermined, stated.
+CREATE TABLE IF NOT EXISTS reading_text_source (
+  capture_sha    TEXT PRIMARY KEY,
+  bundle_id      TEXT NOT NULL,
+  transcribed    INTEGER NOT NULL DEFAULT 0,
+  terminal_step  TEXT,
+  engines        TEXT,    -- JSON array of engine names the chain runs through
+  derivation_cap TEXT,    -- a BASIS_GRADES letter, or NULL for undetermined
+  steps          INTEGER NOT NULL DEFAULT 0,
+  chain          TEXT     -- the chain itself, so a reader needs no second lookup
+);
+CREATE INDEX IF NOT EXISTS reading_text_source_bundle ON reading_text_source(bundle_id);
+CREATE INDEX IF NOT EXISTS reading_text_source_kind
+  ON reading_text_source(transcribed, terminal_step);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

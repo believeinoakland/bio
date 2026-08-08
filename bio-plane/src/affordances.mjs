@@ -751,6 +751,26 @@ export const RUNG_ABSENT = {
   entityalias:          { ground: "undetermined", is: "a registry write adding an alias to an entity" },
   resolve:              { ground: "undetermined", is: "a recogniser write: this reference means this entity, at this grade" },
   resolvetestify:       { ground: "undetermined", is: "recogniser TESTIMONY about a resolution" },
+  /* CPDF-10, AND IT IS A CORRECTION OF THIS ITEM'S OWN FIRST ANSWER, recorded
+     rather than quietly fixed because the mistake is instructive.
+     `attesttext` was first declared `attested`, reasoning from DEC-4's doctrine
+     that member attestation is the only route to the top of the transcription
+     axis. THE SUITE REFUSED IT — "`attested` is carried by exactly the two acts
+     Constructs:275 sources" — and the suite was right: this ladder's `attested`
+     is not "the word attest appears in the op name", it is the property stated
+     at the rung itself, that the act requires AN AUTHORITY THE GROUP DOES NOT
+     HOLD ALONE (a registered signer's key, a timestamp authority's token).
+     op=attesttext requires neither. It is a signed-in member saying they looked
+     at the image. Declaring it `attested` would have claimed a signature that
+     does not exist — and a rung tighter than its rule is not a safer rung, it
+     is an undeclared change to what the rung MEANS, wearing the costume of
+     caution.
+     So it lands in exactly the bucket this block describes: performed once,
+     kept attributed and dated, corrected by a further act moving FORWARD, and
+     NOT signed. `resolvetestify` directly above is the same shape one axis over
+     — recogniser testimony about a resolution — which is why the gap this
+     records is the LADDER's and not this table's. */
+  attesttext:           { ground: "undetermined", is: "a member's TESTIMONY that a capture's transcribed text matches the page image, over a stated extent; superseded by further testimony, never withdrawn, and never signed" },
   progressiondefine:    { ground: "undetermined", is: "a member's claim about how an institution ought to behave (framework §8.1)" },
   thread:               { ground: "undetermined", is: "threads real documents into a progression instance" },
   airunopen:            { ground: "undetermined", is: "opens an AI run against the record" },
@@ -843,6 +863,21 @@ export const CAPTURE_ACTS = [
      replaces said "no document assigns one, and RUNGS carries only the sourced
      seven", which was true and is no longer the reason. */
   { id: "monitor", label: "Check this source against what was captured" },
+  /* op=attesttext (CPDF-10). Capture-directed for `attest`'s reason exactly —
+     the subject is a CAPTURE SHA and an extent within it, not a bundle in a
+     state — so it lands here rather than splitting the class, which is the
+     third reason PROMOTING `attest` INTO `ACTS` was rejected above.
+     THE LABEL NAMES THE COMPARISON AND THE SCOPE, because both are the act.
+     "Confirm" would be wrong: nothing is being approved. A member is saying
+     they looked at the image and the text agrees with it, over the part they
+     actually looked at — and a leg citing outside that part does not inherit
+     it. A label that hid the scope would invite exactly the over-reading the
+     extent exists to prevent.
+     RUNG: NONE, on the ground `undetermined` (RUNG_ABSENT below), and the
+     reasoning — including why `attested` was tried first and REFUSED — is at
+     that entry rather than restated here. Not guessed at this site; no rung is
+     guessed anywhere in this file. */
+  { id: "attesttext", label: "Attest that this text matches the page image" },
 ];
 
 /* One legal-edge lookup, over the IMPORTED table, THROUGH the catalog's own
@@ -1289,6 +1324,12 @@ export const NON_ACTS = {
      and the suite holds the two lists equal in both directions. */
   attest: "capture-directed: co-attestation of a capture's existence in time (metadata published in capture_acts)",
   monitor: "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)",
+  /* CPDF-10. NOT an object-directed act for `attest`'s three reasons above: the
+     subject is a capture sha plus an extent, `affordanceFacts` carries no
+     capture, and an applies() writable over those facts would publish the act
+     for an information bundle holding no reading — a pre-flight disagreeing
+     with the refusal it fronts, which is DEC-8's headline failure. */
+  attesttext: "capture-directed: a member attesting that a capture's transcribed text matches the page image, over a stated extent (metadata published in capture_acts)",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",

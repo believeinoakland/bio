@@ -4136,3 +4136,107 @@ the bundle skill, outside this repository. Nothing in this item's measurement de
 distinction (`data/deletions.json` has no producer in code OR in a document: §2.5 specifies
 the FILE, and the substrate that would have written it is the one the plane replaced), but the
 next member of the class may.
+
+## CLAIM 2026-08-08 CONTENT-PDF (CPDF-10)
+session: cpdf10-tier3-ocr-path (worktree agent-abf7fa164b4016146)
+opened: 2026-08-08T00:00:00Z
+paths: **`bio-plane/src/textchain.mjs` (NEW, the whole file)** — the transcription provenance chain, engine-generic. **`bio-plane/checks/bio-checks.mjs`** — ONE new export `TEXT_CHAIN_CHECKS` (C-35.1..11) APPENDED at the end of the file; **no existing family, row or constant is touched**. **`bio-plane/src/index.mjs`** — named BY SITE: the `textchain.mjs` import line, `needsTier2` (one guard added), the NEW `needsTier3`, the NEW `ocrTextFromMember`, the two `LAYER_FIDELITY_*` constants, the acquire reading assembly's wire branch and its three reading literals, ONE `READING_READS` line, three `OPS` rows, two `SESSION_OPS` lines, one `NEEDS` capability row, one `REC30_VIEWER_READS` line. **`bio-plane/src/store.mjs`** — by site: the `textchain.mjs` import, the `safeJson` module helper, `#writeTextSource` + `attestText` + `attestationsFor` + `transcribedDocuments` (all NEW), two lines inside `#writeReadings`, the `readingFor` return, the `TABLES` purge array (two names added), `TEXT_SOURCE_LIMIT_*`, three arms of the DO dispatch map. **`bio-plane/src/schema.mjs`** — TWO new tables (`text_attestations`, `reading_text_source`) placed BEFORE the `host_governor` block; no backticks and no semicolon in any comment, both traps checked BY GREP rather than by memory. **`bio-plane/src/affordances.mjs`** — one `CAPTURE_ACTS` entry, one `NON_ACTS` row, one `RUNG_ABSENT` row. **`bio-plane/src/pdfstructure.mjs`** (CONTENT-PDF's own) — the image-only marker and `pageDrawsImage`. **`bio-plane/test/textchain.test.mjs`** (NEW, this item's suite). **`bio-plane/test/reading-wire.test.mjs`** — ONE superseded assertion CORRECTED with the reason at the site. **`bio-plane/test/gate-reads.test.mjs`** — two rows in `GATED`. **`bio-plane/test/bounds.test.mjs`** — the roster pin, two `DRIVEN_ELSEWHERE` names, two `answersByOp` entries. **`bio-plane/test/provenance-marker.test.mjs`** — the `CEILING` constant only. `docs/development/INTERFACE-CHANGES.md` (NEW IC-39), `docs/development/DEBT.md` (three NEW rows), `docs/development/CLAIMS.md` (this entry and its delegations). **NOT** `docs/development/INTERFACES.md` (I2's version bump is CONDUCT's — IC-39 is PROPOSED), **NOT** `docs/development/QUEUE.md`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `agent-worker/**`, **NOT** `pdf-worker/**`, **NOT** `bio-plane/scripts/coverage.mjs`.
+interfaces consumed: I1 (bytes), I2 (the text shape, structurally unchanged), I6 (the fleet-member call shape, for the seam only), I7 (the FORMAT registry).
+interfaces owned: I2's producer side at the reading boundary. **IC-39 filed, PROPOSED; the version bump is CONDUCT's.**
+expected: QUEUE.md CPDF-10 — the Tier-3 OCR path, placement re-based by DEC-35/DEC-42 to in-account tesseract-as-a-fleet-member pending CPDF-12.
+
+**WHAT WAS BUILT, AND WHAT WAS DELIBERATELY NOT.** CPDF-12 is running in parallel on the page-to-pixels renderer and the tesseract member. So this item built EVERYTHING THAT DOES NOT NEED PIXELS and declared the seam exactly. **NO SECOND RENDERER WAS BUILT AND NO ENGINE WAS MEASURED.** The Tier-3 arms drive a STUB member answering the declared contract; the suite's header says so and every arm's label says so, so no reader can mistake a green here for a measured engine.
+
+**THE ITEM'S OWN THESIS, BUILT: `text_source` IS A CHAIN.** It was the string `"layer"`; it is now an ordered array of steps (`layer · pixels · ocr · ai · attested`), each naming what performed it, with FOUR rules ENFORCED rather than documented — (1) a single label is REFUSED by name, and so is an `ocr`/`ai` step that does not name its engine, which is rule 1 arriving one level down; (2) EVERY DERIVATION STEP MAY ONLY WEAKEN — `appendStep` computes the cap as the minimum over derivation steps and refuses a stronger claim, saying why (*cleaned text is more READABLE, not more RELIABLE*); (3) confidence is `{value, basis:"engine"}` or the STATED string `"none"`, and the fence is on the BASIS not the value, because a self-reported 0.99 and a computed 0.99 are the same bytes; (4) a region below the floor becomes `undetermined` **with its text DISCARDED** — while its ANCHOR is KEPT, so a reader can still be pointed at the pixels nobody could read.
+
+**THE SUBTLE PART, AND WHERE THE ITEM COULD HAVE GONE WRONG.** Rule 2 says every step weakens; attestation plainly does not. The resolution is NOT an exception — `attested` is a VERIFICATION step and not a derivation, so `derivationCap()` is never raised by anything, and `gradeCeiling()` is where an attestation covering the extent supersedes it. That is QUEUE.md's own sentence — *"verification supersedes it as grade determinant, never as record"* — as two functions, both driven. Collapsing them is exactly how an attestation would come to look like a derivation that improved the text.
+
+**ATTESTATION IS A MEMBER ACT AND IT IS SCOPED.** `op=attesttext` is refused to a machine credential at BOTH doors (`mutating: true` keeps a machine off the session route; `checkAttestation` refuses the stamp at the store) — two fences on purpose, because REC-45 measured the gate accepting `asserted_by: token:member`. The predicate is `isMachineIdentity`, IMPORTED, because REC-46 measured what eleven hand-typed copies of that question cost. **`extentCovers` DEFAULTS TO NOT COVERING**: an extent this module cannot parse covers nothing, since the failure that matters is an unreadable extent quietly reading as "all of it" — which is how a member's careful check of one paragraph would come to underwrite a whole scanned budget book.
+
+**DISTINGUISHABLE IN THE PROJECTION, THE INDEX AND AN EXPORT — all three driven through ops.** `op=reading` spells the provenance out; `reading_text_source` is a derived table so the question is a QUERY (`op=textprovenance&step=ocr`) rather than a blob a reader must parse; the exported bundle's `data/provenance.json` carries the chain step for step with the engine named.
+measured before deciding, and TWO MEASUREMENTS CHANGED THE DESIGN:
+  **(1) THE IMAGE-ONLY CLASS — THE ENTIRE REASON OCR EXISTS — REACHED NO ESCALATION AT ALL, AND IT WAS FOUND BY DRIVING THE CODE RATHER THAN BY READING IT.** `needsTier2` fires when undetermined REGIONS outnumber decoded CHARACTERS. A scanned page produces **zero of each** — there is no font, so nothing ever reaches the decode path to fail — so the test was `0 > 0`, FALSE. MEASURED on a real Tier-1 run over an image-only fixture: `{"document":"","pages":[{"page":0,"text":"","undetermined":[]}],"counts":{"chars":0,"undetermined":0}}`. **A Tier-3 trigger reading Tier 2's `no_text_layer` marker would therefore have fired on NOTHING, for ever, while looking entirely correct** — a mechanism believed on the strength of its existence, which WORKER.md names as the defect this project meets most. FIXED in `pdfstructure.mjs`: Tier 1 now emits `no_text_layer` (I2's EXISTING vocabulary, not a new spelling) when a page has **no font resource AND draws an image** — CPDF-9's own structural signal (its exhibit verified image-only at *4 pages, 0 fonts*), a fact about the file rather than a threshold on an output. **AND A BLANK PAGE IS NOT A SCAN**: zero fonts alone would route every separator sheet to an engine, which is the invitation to invention CPDF-9's blank-page control exists to catch, so the image half is REQUIRED and the over-strictness arm drives it. A rider landed with it: a pure scan now does NOT escalate to Tier 2 either, because pdf.js would walk the same file and reach the same answer one cross-worker hop later — and the test is *is EVERY marker a scan marker*, never *is ANY*, so a MIXED document still escalates.
+  **(2) A TEXT LAYER'S FIDELITY IS UNMEASURED, so it is recorded as `null` — UNDETERMINED, STATED.** The tempting answer was a strong letter (Tier 1 decodes the real agenda at 99.9%). That is the DECODE, not the fidelity: `pdfstructure.mjs` decodes through the FILE'S OWN `/ToUnicode` map, so a perfect decode of a wrong layer is a perfect decode of a wrong layer — and CPDF-9 measured that 3 of 14 recent Legistar attachments name ABBYY FineReader, meaning the Clerk's **certified enacted resolutions** carry garbled machine OCR the record has been reading as authored text. A letter invented here would have been the record overclaiming **one field wide on every document in the store**. Recorded as D-251 with the ~30-line read that would narrow it.
+accepts-when: as the CPDF-10 row, every clause driven THROUGH AN OP. **THE THREE NEGATIVE CONTROLS THE ROW NAMES ARE STANDING ARMS RATHER THAN ONE-TIME BREAKAGES**: strip the marker → `checkChain` refuses and an OCR'd document would be indistinguishable (RULE 1 arms); drop the floor → a garbled region emits a best guess (RULE 4 arms, driven through the seam with a 0.12-confidence `$10,000`); collapse the chain to one label → `TEXT_CHAIN_COLLAPSED`.
+numbers: **BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT, on a quiet tree: 133/133 suites green · 8,319 assertions · 113.6s · exit 0** at HEAD `bb426ac`; `git status --short` empty; `coverage.mjs --strict` exit 0 read UNPIPED; `civicos-ui/test/run.mjs` exit 0. The worktree was **0 commits behind `main`** (checked, not assumed) and arrived **without `bio-plane/node_modules`** — `npm ci` run first, per WORKER.md. FINAL figures are in the report.
+floors: **THREE MOVED, EACH FROM A PRINTED FIGURE, AND ONE THAT WAS NOT MOVED IS THE MORE INTERESTING ENTRY.**
+  - **`meaning-bounds.test.mjs`'s BARE-COLLECTION RATCHET: NOT MOVED, deliberately.** It went **38 → 40** the moment the two new reads landed unbounded. The fix was to BOUND THEM (`limit`/`truncated`, the plane's own spelling, `cap + 1` so `truncated` is MEASURED rather than inferred from a full page) — back to **38, the baseline exactly**, with both ops now printed on the BOUNDED roster. **A ceiling is not a ratchet**; moving it would have bought the item a fortieth unbounded read.
+  - **`bounds.test.mjs`'s capped-op roster: 26 → 28**, MEASURED by running the walk and taking what it PRINTED (28 against a pin of 26), never by adding two — which matters here more than usual, because that pin's own recorded history is two items colliding on it by arithmetic. Both arrivals are the ORDINARY `named-cap` kind, so nothing about the detector had to move.
+  - **`provenance-marker.test.mjs`'s SWALLOWED-READ ratchet: 23 → 24.** That ratchet's rule is that the number may not RISE without somebody LOOKING at the new one. Looked at: it is ONE site, `safeJson`, and it is the class's REMEDY rather than a new instance of it — every caller SURFACES its null as a stated absence (`readingFor` publishes `{recorded:false, why:…}`, distinguished deliberately from "not transcribed"). It also REPLACED two ad-hoc `try { JSON.parse } catch {}` blocks written earlier in this same item, so the net contribution is one site instead of three. The reasoning is at the constant.
+  - **`coverage.mjs`'s `FLEET_FLOOR` and `REGISTER_FLOOR`: untouched.** No fleet member was added (the OCR member is CPDF-12's), and `TEXT_CHAIN_CHECKS` is a `*_CHECKS` family so the DEC-49 guard harvests it automatically — the RESERVED-SUFFIX trap was respected without re-learning it.
+  - `civicos-ui/check-refusal-codes.mjs`'s five floors DO move and are **UI's paths** — see the DELEGATION below rather than an edit here.
+what came back WRONG, recorded rather than smoothed:
+  - **A REFUSAL PATH REPORTED THE WRONG FINDING, AND THE SUITE CAUGHT IT.** The seam's HTTP-failure arm was declared to leave the document unread naming the STATUS; it came back naming *"the OCR member could not be reached"* — because the code parsed `r.json()` before checking `r.ok`, and parsing a 500's body THROWS into the catch. **Two different facts were collapsing into the wrong one**: "the member is down" and "the member failed on this document" are not the same finding, and only the second is about the document. Corrected at the site with the receipt in the comment.
+  - **I CLASSIFIED THE NEW ACT'S RUNG WRONG, AND `rung-ladder.test.mjs` REFUSED IT.** `attesttext` was first declared `attested`, reasoning from DEC-4's doctrine that member attestation is the route to the top of the transcription axis. The suite's pin — *"`attested` is carried by exactly the two acts Constructs:275 sources"* — was RIGHT: that rung's stated property is that the act requires AN AUTHORITY THE GROUP DOES NOT HOLD ALONE (a signer's key, a timestamp authority's token), and `attesttext` requires neither. **A rung tighter than its rule is not a safer rung; it is an undeclared change to what the rung MEANS.** Corrected to `RUNG_ABSENT` on the ground `undetermined` — the bucket whose own comment describes exactly this shape (performed once, kept attributed and dated, corrected by a further act moving FORWARD, and NOT signed), beside `resolvetestify`, which is the same shape one axis over. **The ladder's gap is named rather than papered over, which is what that bucket is for.**
+  - **THREE MORE OF THE PLANE'S TOTALITY GUARDS FIRED ON THE NEW OPS, which is them working**: `affordances.test.mjs` (an op in `NEEDS` that is neither a published act nor a named NON_ACT — answered by classifying `attesttext` CAPTURE-DIRECTED for `op=attest`'s three stated reasons, rather than promoting it into `ACTS` and splitting the class); `gate-reads.test.mjs` (two unclassified reads); `hygiene.test.mjs` (a suite building two Miniflares and disposing neither, plus a non-deterministic exit).
+  - **A test-arithmetic error of my own**: two arms asserted a 3-step chain where `layerChain()` + one append is 2. Corrected in the TEST, not the code — the code was right.
+concurrency: checked over the whole file. No live claim names `textchain.mjs`, `text_attestations`, `reading_text_source`, `TEXT_CHAIN_CHECKS` or any C-35 id. `bio-checks.mjs` is opened by live claims BY SITE and at different sites (the type catalog, `ACT_SHAPE_CHECKS` rows, the counterparty constants); this item only APPENDS a new export at the end and touches no existing row. `index.mjs`/`store.mjs`/`schema.mjs`/`affordances.mjs` are RECORD's and CAPTURE's — see the DELEGATION below. **If `TABLES` in `store.mjs`'s purge conflicts at integration, KEEP BOTH SIDES' NAMES IN ONE ARRAY**: that array has already been merged by hand once (PL-1/PL-12, recorded in its own comment), and taking either side alone silently drops derived tables from the purge, which is D-113's exact failure arriving through a merge. Three test files carry PINNED FIGURES this item moved (`bounds`, `provenance-marker`) or left deliberately unmoved (`meaning-bounds`) — **if any of them conflicts, RE-RUN THE INSTRUMENT AND TAKE WHAT IT PRINTS**; none of these numbers may be arrived at by arithmetic.
+released:
+
+### DELEGATION 2026-08-08 CONTENT-PDF (CPDF-10) -> RECORD / CAPTURE: **THIS ITEM LANDED IN `index.mjs`, `store.mjs`, `schema.mjs` AND `affordances.mjs` IN ONE TURN, AND EVERY SITE IS NAMED**
+
+The CPDF-6 precedent exactly: a content area's capability that cannot exist without an op, a table
+and a projection lands WITH the item and is FLAGGED, rather than being split across a delegation
+round-trip that would leave the module unreachable in the meantime. Every site is enumerated in
+`paths:` above.
+
+Nothing existing was reshaped. The ops are additive, the two tables are new, the purge array gained
+two names, and **the only edit to an existing behaviour is `needsTier2` gaining a guard in the same
+turn that created the behaviour it guards** — a scan could not reach that predicate at all until
+Tier 1 learned to name it, so this is a bound on new behaviour rather than a narrowing of old.
+
+**One judgement RECORD may want to revisit, named rather than buried:** `attesttext` carries
+`contribute` and mints NO fifth capability token, on REC-13's stated reasoning. What makes it
+different from its siblings is not a permission — it is that a MACHINE cannot perform it — and that
+is enforced where machine-ness is decided rather than by a capability a group would have to be
+told about.
+
+### DELEGATION 2026-08-08 CONTENT-PDF (CPDF-10) -> UI / WHOEVER OWNS `civicos-ui/check-refusal-codes.mjs`: **FIVE FLOORS MOVE, AND THEY ARE YOURS TO MOVE FROM THE FIGURES THE INSTRUMENT PRINTS**
+
+`TEXT_CHAIN_CHECKS` is a new DEC-49 family with **11 rows** and **5 new governed REGIONS**
+(`is-text-chain-shape`, `is-text-chain-monotone`, `is-text-region-confidence`, `is-text-anchor`,
+`is-text-attestation`), all reachable by a surface through `op=attesttext`. So `families`, `rows`,
+`reach`, `governedSites` and `regions` all rise.
+
+**NOT MOVED HERE deliberately.** `civicos-ui/**` is not this item's path, and — more to the point —
+every one of those keys must be moved **from the figure the instrument PRINTED on a green run**,
+never by adding to the number in the file. This item cannot print that figure honestly for a file it
+does not own and a harness whose other subjects it did not measure. Run `node civicos-ui/test/run.mjs`,
+read the printed counts, move the five keys to them.
+
+**One thing worth checking while you are there, and it is a real question rather than a formality:**
+the eleven translations are written for a member looking at a scanned document. C-35.7
+(pseudo-confidence) and C-35.11 (extent) are the two a member is most likely to actually receive, and
+they are the two most likely to want a surface's own wording review.
+
+### DELEGATION 2026-08-08 CONTENT-PDF (CPDF-10) -> CPDF-12 / WHOEVER LANDS THE OCR MEMBER: **THE SEAM IS DECLARED, DRIVEN AND REFUSING — THE ONLY NEW CODE IS THE MEMBER**
+
+The contract is `ocrTextFromMember` in `bio-plane/src/index.mjs`, stated in full in the comment block
+directly above it. The member binds as `OCR_WORKER` and answers `POST /transcribe` with
+`{ok, engine, version, cap, measured_by, confidence_floor, pages:[{page, regions:[{text, source:{kind:"pdf-page",page,rect}, confidence}]}]}`.
+
+**FIVE THINGS IT MUST NOT DO, each already REFUSED and each already driven by an arm in
+`test/textchain.test.mjs`** — these are not requests, they are fences you will meet: report a `cap`
+with no `measured_by`; omit an engine or a version; omit a region's `{page, rect}` anchor;
+self-report confidence (`basis` must be `engine`, or the region says `none`); send a best guess for a
+region below its own floor. A member doing any of them leaves the document HONESTLY UNREAD with the
+reason on the reading's basis — never half-transcribed, never crashing an acquire.
+
+**WHAT YOU DO NOT HAVE TO BUILD:** the chain, the monotone rule, the confidence contract, the anchor
+check, the floor, the attestation act, the projection, the index, the export, the purge coverage, or
+any of the refusals. All of it is landed and driven.
+
+**AND THE PREDICATE THAT ROUTES TO YOU IS ALREADY REAL** — this is the finding above, restated here
+because it is the half of the seam that would otherwise have silently never fired. Tier 1 emits
+`no_text_layer` for a page with no font resource that draws an image, so `needsTier3` selects the
+image-only class structurally. Before this item it selected nothing, for ever.
+
+**WHAT THIS ITEM COULD NOT CLOSE AND HANDS YOU (D-252):** Tier-3 routing is PER DOCUMENT and the
+thing it routes is PER PAGE. A mixed document — a text-layer report with scanned exhibits stapled to
+the back, an ordinary Council packet shape — routes WHOLE to OCR, and the wire assigns
+`i2text = built.text` wholesale, so a good text layer would be REPLACED by an OCR pass at cap `C`.
+Harmless today (the branch is untaken); a live defect the moment your member exists. The fix is a
+page-wise merge, and I2's text shape already has the right grain (`text.pages[]`), so it is a merge
+rule rather than a contract change. **It wants writing in the turn that lands the member, not
+guessing at now** — which is why it is a debt row pointed at your item rather than code written blind
+against a producer that does not exist yet.

@@ -471,7 +471,25 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      `catch (e) {`, which is the same one-vocabulary trap REC-70 measured at the
      root of its own classifier. The number may FALL freely; it may not RISE
      without somebody looking at the new one. */
-  const CEILING = 23;
+  /* MOVED 23 -> 24 by CPDF-10 (2026-08-08), from the figure THIS WALK PRINTED,
+     and the rule this ratchet states is that a rise needs somebody to have
+     LOOKED AT THE NEW ONE. Looked at, and it is one site: `safeJson` at the top
+     of `store.mjs` -- a column this store itself WROTE as JSON, read back.
+     WHY IT IS THE CLASS'S REMEDY AND NOT A NEW INSTANCE OF IT. The defect this
+     sweep is pointed at is a catch that turns something the plane could not
+     establish into a NORMAL-LOOKING ANSWER. `safeJson` returns null, and every
+     one of its callers SURFACES that null as a stated absence rather than
+     smoothing it: `readingFor` publishes `{recorded:false, why:"...nobody
+     recorded how it was produced"}` -- which it distinguishes, deliberately,
+     from "this text was not transcribed" -- and `attestationsFor` publishes a
+     null chain and reports `stale:false` rather than inventing a comparison
+     nobody made. It also REPLACED two ad-hoc `try { JSON.parse } catch {}`
+     blocks written earlier in the same item, so the item's own net contribution
+     to this roster is one site instead of three.
+     WHY IT IS A CATCH AT ALL: there is no non-throwing JSON parse, and the
+     alternative -- letting it throw -- ends a projection with no answer at all,
+     which is a worse finding than a null a caller can see and publish. */
+  const CEILING = 24;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

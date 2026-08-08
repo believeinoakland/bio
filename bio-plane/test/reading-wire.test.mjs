@@ -268,8 +268,20 @@ t("with the item's own facts read from the packet",
   real.reading.entities.find((e) => e.ref === "legislation:26-0910")?.facts?.from, "Councilmember Wang");
 t("the meeting's facts ride the reading (body)", real.reading.facts.body, "Rules & Legislation Committee");
 t("and the meeting date", real.reading.facts.date, "2026-07-16");
-t("text provenance is stamped (D-152's rule from day one): the text LAYER, never OCR",
-  real.reading.text_source, "layer");
+/* CORRECTED 2026-08-08 by CPDF-10, and the old assertion was WRONG rather than
+   merely superseded, which is why it is changed here instead of exempted.
+   It asserted `text_source === "layer"` — a single LABEL. That was right about
+   the FACT (this text came out of the document's own layer) and wrong about the
+   SHAPE, and the shape was load-bearing: the moment a second derivation exists,
+   one label cannot say which engine produced the text or how many hands it
+   passed through, and CPDF-10's whole thesis is that a chain which collapses is
+   a chain nobody can audit. `text_source` is now the CHAIN. A text layer is
+   itself an unverified transcription (CPDF-9 measured ABBYY FineReader in 3 of
+   14 recent Legistar attachments), so `layer` is a derivation STEP like any
+   other rather than the absence of one. `text_tier`/`text_container` below are
+   untouched — a consumer reading only those is unaffected (IC-39). */
+t("text provenance is a CHAIN (CPDF-10; was the token \"layer\" until 2026-08-08)",
+  real.reading.text_source.map((s) => s.step), ["layer"]);
 t("by tier", real.reading.text_tier, 1);
 t("from which container", real.reading.text_container, "pdf");
 t("a PARTIAL decode is STATED, never silent (the packet's 45-code-point residue)",

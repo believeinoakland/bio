@@ -706,6 +706,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     queue: "REC-30: the obligation's subject and the finding's bundles (the case set was gated at birth)",
     reading: "REC-30: the bundle back-reference on a capture's reading",
     readingref: "REC-30: the bundle back-reference on the reverse reference index",
+    /* CPDF-10, 2026-08-08. Classified by the item that adds them, and BOTH are
+       gated for REC-30's reason exactly rather than by resemblance: each answer
+       names the bundle a capture is filed in, so an ungated one would disclose
+       that a document sits in a project the caller was never invited to — by
+       telling them what produced its text, which is a new door onto the same
+       fact. `textprovenance` additionally ENUMERATES, so it takes the redactor
+       on every row rather than on one. */
+    textprovenance: "CPDF-10 / REC-30: the bundle back-reference on every row of the transcription index",
+    textattest: "CPDF-10 / REC-30: the bundle back-reference on each attestation over a capture",
     /* REC-36's read, classified by the item that adds it (2026-08-04,
        rec36-agent). It is the FIRST reading read to take the WITHHOLD-THE-ROW
        shape rather than the redact-the-reference one, and the distinction is

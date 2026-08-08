@@ -8249,3 +8249,117 @@ export const ROUTE_MARK_CHECKS = {
       + 'so there is no route to show or to doubt.',
   },
 };
+
+/* =========================================================================
+ * CPDF-10 — THE TRANSCRIPTION PROVENANCE CHAIN'S REFUSALS (C-35, DEC-49).
+ *
+ * The family for `src/textchain.mjs`, and it is worth saying what these
+ * conditions have in common because it is not "OCR went wrong". Every one of
+ * them refuses a claim the record could not support LATER, at the moment it is
+ * made — a chain that collapsed to a label, a derivation that claimed to have
+ * improved what it received, a confidence number with nothing behind it, a
+ * region nobody could read offered as text anyway, an attestation with no
+ * person or no scope behind it. None of them is about accuracy. All of them
+ * are about the record claiming more than it can support, which CLAUDE.md
+ * ranks above a missing feature and far above an ugly one.
+ *
+ * THE TRANSLATIONS ARE WRITTEN FOR A MEMBER LOOKING AT A SCANNED DOCUMENT,
+ * because that is who receives them: op=attesttext is a member-facing act, and
+ * the chain refusals surface wherever a caller composes provenance by hand.
+ *
+ * C-35 IS THIS FAMILY, minted with `node tools/mintid.mjs C` (floor C-34) —
+ * not measured free by hand, because seven items collided on a hand-measured
+ * id in one day and every one of them was right when it looked.
+ * ========================================================================= */
+export const TEXT_CHAIN_CHECKS = {
+  /* RULE 1. The condition this family exists for. `text_source: "ocr"` is what
+     a careful author writes and it is still a loss: the engine is gone, and an
+     engine is what a calibration is OF (CPDF-13) and what a re-run would need. */
+  TEXT_CHAIN_COLLAPSED: {
+    check: 'C-35.1',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says the text came from a machine but not which one, or through how many '
+      + 'hands. A scanned document can pass through a scanner, a reader and a clean-up pass before '
+      + 'anyone sees it, and each one can change what it says — so the record keeps the whole '
+      + 'sequence rather than a single word for it.',
+  },
+  TEXT_CHAIN_EMPTY: {
+    check: 'C-35.2',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'Nothing here says where this text came from. Text with no stated origin looks '
+      + 'exactly like text a publisher typed, and the difference is the whole reason this record '
+      + 'is worth trusting.',
+  },
+  TEXT_CHAIN_STEP_SHAPE: {
+    check: 'C-35.3',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'One of the steps that produced this text is not readable as a step.',
+  },
+  TEXT_CHAIN_STEP_UNKNOWN: {
+    check: 'C-35.4',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'One step in this text\'s history is of a kind the record does not know. It cannot '
+      + 'tell whether that step produced the text or checked it, and those are very different '
+      + 'things, so it will not guess.',
+  },
+  /* Rule 1 arriving one level down: the chain is an array and one of its
+     entries is still just a label. */
+  TEXT_CHAIN_STEP_UNNAMED: {
+    check: 'C-35.5',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says a machine read the text but not which machine. Two readers of the same '
+      + 'scan disagree, and knowing which one produced a line is what lets anybody check it later.',
+  },
+  /* RULE 2, and the translation carries the distinction the rule turns on,
+     because the member who trips this will believe they improved the text —
+     and they will be right about readability. */
+  TEXT_CHAIN_STRENGTHENS: {
+    check: 'C-35.6',
+    where: 'src/textchain.mjs appendStep > is-text-chain-monotone',
+    translation: 'This step claims the text became more reliable by being processed further. '
+      + 'Cleaning up a garbled line makes it easier to READ, not more likely to be what the page '
+      + 'actually said — so a later step can only ever be as trustworthy as what it was given.',
+  },
+  /* RULE 3. Note the fence is on the BASIS, not on the number: a self-reported
+     0.99 and a computed 0.99 are the same bytes. */
+  TEXT_CONFIDENCE_PSEUDO: {
+    check: 'C-35.7',
+    where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
+    translation: 'This confidence figure is the machine\'s own opinion of itself. A reader that '
+      + 'measures how clearly each character resolved is saying something checkable; a model asked '
+      + 'how sure it is will answer confidently either way, and that number cannot be used as a '
+      + 'threshold. Where an engine reports no confidence, the record says so plainly instead.',
+  },
+  TEXT_CONFIDENCE_SHAPE: {
+    check: 'C-35.8',
+    where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
+    translation: 'The confidence on this region is not readable. Note that saying "this engine '
+      + 'reports no confidence" is a real answer here — an absent one is not the same thing.',
+  },
+  /* The anchor. Without it there is no way to point a reader at the pixels, and
+     an unverifiable transcription is the thing this item refuses to ship. */
+  TEXT_ANCHOR_MISSING: {
+    check: 'C-35.9',
+    where: 'src/textchain.mjs checkAnchor > is-text-anchor',
+    translation: 'Text a machine read off an image has to say WHERE on the page it came from, so '
+      + 'anyone can look at that part of the scan and see for themselves. Without it the reading '
+      + 'cannot be checked against the document at all.',
+  },
+  /* Attestation, (a): a member act, refusable to a machine credential. */
+  TEXT_ATTEST_MACHINE: {
+    check: 'C-35.10',
+    where: 'src/textchain.mjs checkAttestation > is-text-attestation',
+    translation: 'Attesting is a person saying they compared this text against the image of the '
+      + 'page and it matches. The credential that asked here is an automated one: it can run the '
+      + 'reader and lay the two side by side, and it cannot be the one who says they agree. Sign '
+      + 'in and attest it yourself.',
+  },
+  /* Attestation, (b): scoped to what was actually checked. */
+  TEXT_ATTEST_EXTENT: {
+    check: 'C-35.11',
+    where: 'src/textchain.mjs checkAttestation > is-text-attestation',
+    translation: 'An attestation has to say how much of the document you checked — this region, '
+      + 'this page, or all of it. Checking one table and having that stand behind an entire scanned '
+      + 'report is exactly what this record will not do on your behalf.',
+  },
+};
