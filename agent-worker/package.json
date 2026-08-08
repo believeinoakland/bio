@@ -1,0 +1,12 @@
+{
+  "name": "agent-worker",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node test/agent-worker.test.mjs",
+    "control": "node test/agent-worker.control.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

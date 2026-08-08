@@ -1,0 +1,7 @@
+{
+  "name": "agent-worker",
+  "entry": "src/index.mjs",
+  "surface": "SURFACE",
+  "testDir": "test",
+  "note": "The fleet-coverage marker (D-117). scripts/coverage.mjs discovers a fleet member by this file, reads its `surface` table from `entry`, and holds it to the same surfaces the plane is held to: each surface op reached by a suite in `testDir`, a declared negative control, and fleet rule 2 (no surface op may declare `mutating: true` — a member ASSERTS nothing). scripts/battery.mjs discovers members by this file too and RUNS their suites, because a member whose suite nothing executes is a component going dark while the coverage figure holds still. HIDING THIS FILE DOES NOT HIDE THE MEMBER: coverage.mjs cross-checks every directory carrying a wrangler.jsonc, so a Worker with no manifest FAILS --strict instead of quietly shrinking the fleet."
+}

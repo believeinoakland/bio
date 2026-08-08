@@ -949,3 +949,157 @@ subresource guard (content-type-only at that seam, because the primary is
 deliberately unread there; behaviour pinned HTML-only) and `op=pdfstructure` (asks
 for "pdf" BY NAME — the op names its format — and an absent entry is a 501
 `FORMAT_UNREGISTERED` naming the format, never a guess at another extractor).
+
+---
+
+## I8 — plane ↔ agent-worker (the second fleet service binding)
+
+- **ID:** I8
+- **Owner:** `FLEET` (the code); `DIST` releases it
+- **Version:** 0.1.0 — **PROVISIONAL.** Registered 2026-08-08 by FL-2, **before the
+  first commit of the worker's code**, which is `PARALLELISM.md`'s rule and I6's
+  precedent rather than a formality. It becomes 1.0.0 and STABLE when the shape is
+  RE-READ from the code that exists — and the re-read is scheduled below rather than
+  promised, because I6 sat PROVISIONAL for a week after its worker shipped.
+- **Consumers:** the plane (`RECORD` owns the calling side); `DIST` (DS-1 installs the
+  fleet, DS-4 deploys it); `FLEET` itself (FL-3 fills the `run` endpoint, FL-6 resolves
+  the model-account cascade behind it)
+- **Status:** PROVISIONAL
+
+### What it is
+
+The **second** member of the function-specific Worker fleet, and the first one that
+CALLS BACK. `pdf-worker` (I6) is a pure function of bytes: the plane hands it a capture
+sha and it answers. The agent worker holds an investigative RUN, so it consumes the
+plane's op surface while it works — which makes it the first component in this system
+that is both called by the plane and a caller of it.
+
+That is the whole reason this is a separate interface entry rather than a second
+paragraph under I6. **The direction of trust is different**, and every rule below
+follows from that one fact.
+
+### The shape
+
+**Transport: a SERVICE BINDING, in both directions, and never a URL.** The plane
+reaches the member on `env.AGENT_WORKER`; the member reaches the plane on `env.PLANE`.
+
+This is not a preference. **FL-1 MEASURED (2026-08-08, `MEASUREMENTS.md`) that a Worker
+CANNOT fetch another Worker on this account's own `*.workers.dev` name: 404, body
+`error code: 1042`, in 7 ms, every time — while the service binding to the same script
+answered 200.** It cost two probe passes, which looked like a CPU story and were a
+routing story. So the member's source is asserted to contain no `workers.dev` literal,
+no `https://` plane URL and no bare global `fetch(` — the binding or nothing.
+
+**In:** `POST /run`
+
+    { run_id:     <opaque, the PLANE's run identity — the member mints none>,
+      store:      <namespace token>,
+      credential: <the `ai`-class token, shape aik-<64 lowercase hex> (PL-11)>,
+      turns:      <optional, the segment size the caller wants> }
+
+**Out:** the run object, in the RECORD's terms (fleet rule 1):
+
+    { ok: true, run_id, store,
+      segment:   { turns_requested, turns_bound, bound_source },
+      principal: <the viewer the PLANE stated for this credential — never the member's own guess>,
+      plane:     { version, op },     // WHICH BUILD ANSWERED (fleet rule 4 / D-108)
+      worker:    { name, version } }
+
+**Also `GET /version`** — `{ ok, name, version }`. **This closes a real gap in I6.**
+Fleet rule 4 says *"a verification must establish which build ANSWERED, for the member
+as well as the plane"*, and `pdf-worker` has no way to say. A member that cannot name
+its own build makes D-108's second face unverifiable, so this member can. A DELEGATION
+is filed for `pdf-worker` to gain the same endpoint (`CLAIMS.md`).
+
+### Where the authority lives, and it is not here
+
+**PL-11's `ai` credential is HANDED TO the member per call and never held by it.** The
+member stores no credential, holds no secret binding, and has no token of its own. It
+therefore cannot act except while somebody is asking it to, and it cannot act as anyone
+but the principal the record names for the credential it was handed.
+
+**THE SCOPE IS NEVER EVALUATED IN THE MEMBER.** D-199 (2): what an agent may reach is a
+row a member authored, read from the record at the gate by `aiTaskScope`. A member-side
+copy of that judgement would be a second enforcement point that drifts from the first,
+and a scope compiled into a Worker is exactly the settings row D-199 refused. So the
+member names no op allow-list, no scope, and no class. **The ops it may name are PINNED
+as an exact set in its own suite — floor and ceiling both — so a call the member gains
+is a call somebody decided to give it.**
+
+**A plane refusal is PASSED THROUGH UNCHANGED.** The plane's refusal carries its
+C-number and its DEC-49 canned translation; the member re-words nothing. A component
+that paraphrases a refusal is thirteen surfaces inventing wording, which is the drift
+DEC-49's guard exists to close.
+
+### What it must NOT do (fleet rules 2/3, inherited from I6 and asserted here)
+
+- **Write anything, by any route.** No `STORE` (Durable Object) binding, no `CAPTURES`,
+  no `PUBLISHED`, no R2 at all — it has exactly ONE binding, the plane service binding,
+  which is the narrowest that does the job. It calls no mutating op. Asserted
+  BEHAVIOURALLY (the plane's record is byte-identical after a run) and by a SOURCE SCAN,
+  as I6's are for `pdf-worker`.
+- **Hold a second credential.** One credential per call, the one it was handed.
+  Asserted behaviourally: the plane mock records every token it saw and the distinct
+  count must be exactly 1.
+- **Echo the credential.** The response body and every note in it are asserted not to
+  contain the token it was given.
+- **Be reached by anything but the plane.** No member-facing surface, no token classes
+  of its own. The plane's op layer is the authorisation boundary — the same sentence as
+  I6's, and it is the same boundary.
+
+### The segment bound, and WHICH MEASURED NUMBER SET IT
+
+`MAX_TURNS_PER_SEGMENT` defaults to **120**, overridable by env.
+
+**It is set on FL-1's MEMORY curve and NOT on its CPU curve, and the difference is a
+factor of about ten.** FL-1 measured (2026-08-08, platform GraphQL analytics, not
+self-timed): at **200 turns the isolate reports `memoryUsageBytesP99` = 120.4 MB against
+a 128 MB ceiling**, while billed CPU is 757.65 ms — **2.5% of the 30 s ceiling**.
+Extrapolated on the measured CPU exponent (~n^1.9), ~1,100 turns would fit that ceiling.
+**A segment sized on CPU headroom would therefore be roughly 10× too long, and would meet
+the memory wall instead.** 120 sits inside the 100–150 band FL-1 named as inside both:
+the 100-turn point measured 51.2 MB P50 and 189.28 ms.
+
+Two of FL-1's other findings are load-bearing here and are recorded so a later session
+does not re-derive them:
+
+- **Waiting is effectively free**: 25 subrequests each held open 2 s cost **4.29 ms**
+  billed CPU across 50.0 SECONDS of wall time — ~0.16 ms per awaited subrequest,
+  independent of how long the wait lasts. So a run that spends its life waiting on model
+  responses is not what bounds a segment. Memory is.
+- **At least 160 external subrequests per invocation with no refusal**, and that is a
+  FLOOR on the ceiling rather than the ceiling — the walk stopped at its own cap.
+
+### DEC-49: this member owes NO check family, and the reasoning is the ruling's own
+
+DEC-49's reach is *"every code a SURFACE can receive"*, which the guard's own header
+says is **smaller** than every refusal code in the plane. **No member ever receives this
+worker's codes**: it has no member-facing surface, and its only caller is the plane.
+`civicos-ui/check-refusal-codes.mjs` walks `bio-plane/src` and `bio-plane/checks` and
+does not walk the fleet — which is correct for the same reason, and is why `pdf-worker`'s
+`BAD_SHA`/`NOT_FOUND` carry no rows either.
+
+So no family is minted, no floor moves, and that is a decision rather than an omission.
+**The obligation it creates instead, recorded here because it will fall due:** the day
+any surface renders one of this member's codes verbatim to a member — which FL-3/FL-4
+could do while composing a run's failure — a family is owed AND the guard must be taught
+to walk the member. The member nevertheless uses a helper named `refusal` passing codes
+as **STRING LITERALS** at the site, so arm C would have teeth the day it is pointed here;
+a local helper taking the code in a variable is invisible to that walk, which is how
+seven of thirteen governed sites once read 776 lines and compared zero codes.
+
+### Open before it can go STABLE (→ 1.0.0)
+
+- **FL-3 fills `/run`** with the IS-9 harness (the deterministic control-flow table).
+  Until then `/run` performs the round trip and reports what the plane said about the
+  credential it was handed — it runs no model turns, and it says so on the wire rather
+  than returning an empty success. Nothing here is a stub that pretends.
+- **FL-6 resolves the model-account cascade** behind it; today no model token is
+  resolved and no model is called at all.
+- **A DIST deploy** of the member and the plane's `AGENT_WORKER` binding (DS-4), and
+  the installer learning to install a THREE-member fleet (DS-1, D-115). Until then the
+  binding config is landed and the path is dark on any live instance, exactly as I6's
+  was — and that is DELEGATED to DIST, not something this entry can close.
+- **The re-read.** The shape above is written from the code as it stands at FL-2. When
+  FL-3 lands, whoever lands it re-reads this entry against the code and either confirms
+  it to 1.0.0/STABLE or amends it through `INTERFACE-CHANGES.md`.

@@ -1,0 +1,56 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agent-worker",
+
+  // PINNED, and this is the line that decides where a deploy GOES. `wrangler`
+  // authenticates from an OAuth session stored on the MACHINE, and a machine may
+  // well be logged in to a different account for unrelated work: on 2026-07-31 a
+  // fresh checkout was found authenticated to `neologic`, not to this project's
+  // account, and a deploy would have SUCCEEDED — putting a Worker somewhere
+  // nobody was looking, with no error to notice (CLAUDE.md). With this line the
+  // REPOSITORY decides the account rather than the machine. Do not remove it, and
+  // do not add a new Worker config without it.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // The SOURCE deploys, not a bundle. `pdf-worker` commits a bundle because
+  // esbuild has to INLINE unpdf/pdf.js — a bare npm specifier does not resolve in
+  // un-bundled Worker source, which is the breakage the fleet split exists to
+  // avoid. This member imports NOTHING from npm today, so a build step would add
+  // a second place its version lives and a committed artifact that can drift from
+  // its source (D-106's class, multiplied per fleet member — PARALLELISM.md rule
+  // 5). FL-3 adds the build step in the turn it adds the first dependency;
+  // reversing this decision is copying `pdf-worker/scripts/build.mjs`.
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "vars": { "VERSION": "0.1.0" },
+
+  // THE NARROWEST BINDING THAT DOES THE JOB (fleet rule 3, I6/I8), and here that
+  // is EXACTLY ONE. The member reads and writes nothing itself: everything it
+  // learns, it learns by asking the plane, under a credential the plane hands it
+  // per call. So there is:
+  //
+  //   NO durable_objects (STORE)  — it structurally CANNOT write the record.
+  //   NO r2_buckets              — not CAPTURES, and above all not PUBLISHED.
+  //                                Every Worker holding a PUBLISHED binding is one
+  //                                more component inside the ratification fence.
+  //   NO secrets, no token vars  — it holds no credential of its own, so it cannot
+  //                                act except while somebody is asking it to.
+  //
+  // The binding is to the plane, and a SERVICE BINDING is not a stylistic choice:
+  // FL-1 MEASURED that a Worker CANNOT fetch another Worker on this account's own
+  // *.workers.dev name (404, `error code: 1042`, 7 ms, every time), while the
+  // service binding to the same script answered 200. Two probe passes were lost to
+  // that. The binding or nothing.
+  //
+  // For the INSTALLER the plane's name is per instance (the instance name IS the
+  // worker name, D-102), so this `service` value must be templated from the
+  // installer's slug — that half is a DIST delegation in CLAIMS.md, exactly as the
+  // plane's own SELF binding is.
+  "services": [
+    { "binding": "PLANE", "service": "bio-plane" }
+  ],
+
+  "observability": { "enabled": true }
+}
