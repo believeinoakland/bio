@@ -296,7 +296,8 @@ const rowCalls = (body) => {
  * 156 ops; the walk graded 55 of them. Twenty-seven dispatched ops answer
  * success WITHOUT `ok: true` — `found: true` (`op=airunlog`, `op=airun`,
  * `op=airuntick`) or NO marker at all (`op=signerlist` returns `{ signers }`,
- * `op=publishedlist` `{ bundles, cases }`, `op=inboxlist` `{ inbox }`,
+ * `op=publishedlist` `{ bundles, cases }`, `op=inbox` `{ inbox }` (M0-12: its DO
+ * path is `inboxlist`, which is not itself an op),
  * `op=memberlist`, `op=verify`, `op=index`, `op=thread`, …) — and EVERY ONE of
  * them was invisible to a walk built to find exactly this class. `op=airunlog`
  * was merely the one that got caught, by hand, at another item's integration.
@@ -516,9 +517,12 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    embarrassment. It read 27 while the walk could only see 55 of 156 dispatched
    ops; correcting the success-marker gate (above) brought 27 more ops into
    view, 14 of which were bare all along — `op=signerlist`, `op=publishedlist`,
-   `op=inboxlist`, `op=memberlist`, `op=verify`, `op=index`, `op=thread`,
-   `op=selection`, `op=reusedparts`, `op=reuseverdicts`, `op=readingnameplan`,
-   `op=airun`, `op=airuntick`, and `op=airunlog`. `op=airunlog` is the one this
+   `op=inbox`, `op=memberlist`, `op=verify`, `op=index`, `op=thread`,
+   `op=selection`, `op=airun`, `op=airuntick`, and `op=airunlog`, plus the
+   DO-INTERNAL paths `reusedparts`, `reuseverdicts` and `readingnameplan` —
+   M0-12: the gate is measured over the STORE's dispatch, so three of these
+   fourteen are routes no `op=` reaches and are named as paths, not as ops.
+   `op=airunlog` is the one this
    item BOUNDED, so the honest figure is 41 members of the class MINUS the one
    fixed = 40. **The old 27 was never a smaller problem; it was a smaller
    measurement**, and a ratchet over a corpus the instrument could not see is
@@ -999,8 +1003,9 @@ const REC70_ALTERNATIVES = [
     const hits = this.#rows(\`SELECT * FROM t WHERE q=? LIMIT ?\`, q, n);
     return { found: true, rows_out: hits.map((r) => r), row_limit: n, rows_truncated: hits.length > n };
   }`, "bounded"],
-  /* NO marker at all, which is how op=signerlist, op=publishedlist, op=inboxlist
-     and op=memberlist answer — and every one of them was invisible. Unbounded,
+  /* NO marker at all, which is how op=signerlist, op=publishedlist, op=inbox
+     (DO path `inboxlist`) and op=memberlist answer — and every one of them was
+     invisible. Unbounded,
      so it must be called BARE: reaching it is worth nothing if reaching it
      forgives it. */
   ["ncNoMarkerUncapped", `  ncNoMarkerUncapped({ q } = {}) {

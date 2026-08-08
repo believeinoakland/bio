@@ -5,12 +5,24 @@
  * FENCE THE ANSWER TURNS OUT TO REST ON.
  *
  * THE ITEM'S PREMISE IS FALSE ABOUT THE OP, AND THAT IS THIS ITEM'S RESULT.
- * REC-58 was raised to decide whether `op=publishcase` should stop publishing
- * `case.opened`. It does not publish it. It never did: `Store.publishCase()` —
- * the method `op=publishcase` actually dispatches to — computes no `opened`,
- * reads none, and returns none. The only occurrence of the letters anywhere in
- * its body is the word "reopened" inside a refusal sentence, which is why this
- * suite blinds string CONTENTS before it counts anything.
+ * REC-58 was raised to decide whether the publish-case act should stop
+ * publishing `case.opened`. It does not publish it. It never did:
+ * `Store.publishCase()` — the method that act dispatches to — computes no
+ * `opened`, reads none, and returns none. The only occurrence of the letters
+ * anywhere in its body is the word "reopened" inside a refusal sentence, which
+ * is why this suite blinds string CONTENTS before it counts anything.
+ *
+ * M0-12, 2026-08-08 — AND THE OP NAME IN THIS VERY BLOCK WAS ITSELF AT THE
+ * WRONG LEVEL. Corrected here rather than dropped, because this is the file
+ * that recorded the class. Every sentence above used to write `publishcase` as
+ * though it were an op. IT IS THE STORE'S DO PATH. `DO_PATH` in index.mjs
+ * aliases `op=publish` onto it, so the routing chain in full is
+ * **`op=publish` -> DO path `publishcase` -> `Store.publishCase()`**, and a
+ * caller sending the path name as the `op=` parameter gets `unknown op`.
+ * REC-58 was right about the FIELD and wrong about the OP inside the very
+ * comment it wrote to record that REC-41 had been right about the field and
+ * wrong about the op. FOURTH TIME. The mechanical check that finally caught it
+ * is `scripts/op-claims.mjs`, driven by `test/op-claims.test.mjs`.
  *
  * This is REC-41's lesson arriving for the third time, and the third time is
  * worth stating plainly: an item's assertion about an OP is a claim about
@@ -288,7 +300,8 @@ t("REC-58 PRODUCER: `#caseEditionState`'s RETURN OBJECT declares `opened` among 
 
 /* THE FINDING. Measured over the skeleton, so the word "reopened" inside
    publishCase's own ILLEGAL_TRANSITION sentence cannot masquerade as the field. */
-t("REC-58 THE FINDING: `op=publishcase`'s method — `Store.publishCase()` — DECLARES NO `opened`, READS "
+t("REC-58 THE FINDING: the publish-case method — `Store.publishCase()`, reached by `op=publish` through "
++ "the DO path `publishcase` (M0-12) — DECLARES NO `opened`, READS "
 + "no `opened`, and never calls the producer at all. The item's premise is FALSE ABOUT THE OP",
   [declares(publishCase.text, "opened"),
    /\bopened\b/.test(publishCase.text),

@@ -3585,3 +3585,28 @@ Two of those are checkable against the suites' own prose and both land exactly:
 stated. `suggest.test.mjs` reads 8 against a real 10 because two of its arms carry LABELS
 (`(D-231a)`) rather than ordinals, and widening the ordinal to any bracketed token would
 count every `(D-113)` and `(DEC-46)` this prose is full of.
+
+## The op-claim corpus, 2026-08-08 (M0-12)
+
+Instrument: `bio-plane/scripts/op-claims.mjs`, driven by `bio-plane/test/op-claims.test.mjs`.
+**Printed on every battery run**, so a corpus that SHRANK is visible rather than silent —
+three separate walks this week reported a clean verdict over an empty corpus.
+
+| | measured | note |
+| --- | --- | --- |
+| files scanned | **401** | walked, never hand-listed; `.mjs .js .md .html .json .jsonc .txt .sh` |
+| characters scanned | **16,940,634** | |
+| generated embeds excluded | **2** · `newgroup/src/release.mjs` (1,737,506) and `release/bio-plane.bundled.mjs` (1,681,700) | recognised STRUCTURALLY at byte 0, never by filename — REC-58's predicate reused verbatim. The GENERATOR is kept IN and asserted |
+| `op=` mentions checked | **7,063** | over **199** distinct names |
+| template-built names skipped | **79** | `op=version${act}` cannot be resolved from source; counted, not guessed at |
+| ops declared (`OPS`, index.mjs) | **158** | the strict whitelist — the entire set of names `op=` may take |
+| store dispatch routes (`map`, store.mjs) | **180** | DO paths, resolved from `pathname`. **No `op=` reaches this level** |
+| `DO_PATH` aliases | **4** | `inbox→inboxlist`, `memberlist`, `signerlist`, **`publish→publishcase`** |
+| sites naming a NON-op, first run | **135** over 93 `(file,name)` pairs in 38 files | 23 CORRECTED in `bio-plane/**`, which now reads **zero**; the rest ledgered and delegated |
+| ledger registrations after the item | **64** pairs · **79** sites | held EXACTLY, in both directions |
+| routing attributions found and checked | **6** | prose of the form "op=X dispatches to `Y()`" |
+
+**The two language-reading drafts, measured and discarded** (kept because the number is
+the argument): a 220-character negation window called **141** mentions of real ops claims
+that they do not exist; tightened to +110/-40 it still called **48**, and every one
+inspected was noise. See `VERIFICATION.md`'s section for the four worked examples.

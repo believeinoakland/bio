@@ -462,7 +462,9 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
   /* ---- REC-58: `case.opened` REACHES NO CALLER ON ANY OP, DRIVEN THROUGH THE
      OPS RATHER THAN READ OFF THE SOURCE.
      ------------------------------------------------------------------------
-     REC-58 was raised to remove `case.opened` from `op=publishcase`. That op
+     REC-58 was raised to remove `case.opened` from the publish-case act —
+     `op=publish`, routed through the DO path `publishcase` (M0-12: the path
+     name is not itself an op). That op
      does not publish it and never did — the item was right about the FIELD and
      wrong about the OP, which is REC-41's lesson for the third time. The RULING
      IS KEEP, because there is no publication to retire: `#caseEditionState`
@@ -484,7 +486,7 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
      that never carried the key and of one carrying it set to undefined, so a
      value test cannot tell REMOVED from BLANKED — which is the entire
      distinction the ruling rests on. */
-  t("REC-58: `op=publishcase`'s own answer carries NO `opened` — the field the item was raised to remove "
+  t("REC-58: the publish-case act's own answer (`op=publish`) carries NO `opened` — the field the item was raised to remove "
   + "is absent from the act's return, which is the item's premise contradicted at the wire",
     ["opened" in E1, "opened" in (E1.completeness || {})], [false, false]);
   t("REC-58: `op=ratify`'s answer carries a `case` block and it carries NO `opened` — on the INCOMPLETE "

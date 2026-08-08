@@ -159,9 +159,15 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       470,  // arms stated across the classified declarations
-  classified: 119,  // declarations the detector could count arms in
-  corpus:     120,  // suites the register reads
+  /* MOVED 2026-08-08 by M0-12, from 470/119/120, to the figures a green run PRINTED
+     after `test/op-claims.test.mjs` joined the battery with an 8-arm declaration.
+     M0-14's own rule and the reason it exists: move these only UPWARD and only to a
+     printed figure — a floor left with slack is not a ratchet, and this project has
+     measured a floor sitting 19 codes low that had already flipped a control from
+     RED to GREEN. */
+  arms:       478,  // arms stated across the classified declarations
+  classified: 120,  // declarations the detector could count arms in
+  corpus:     121,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
