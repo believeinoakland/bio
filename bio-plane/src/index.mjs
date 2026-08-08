@@ -1160,7 +1160,12 @@ const EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
    keeps finding). The three WRITES are stamped with the declaring member below, like
    the expertise actions: a declared relation is a member's constitutive statement,
    and who declared it is part of the record. The reads take no viewer stamp: they key
-   on an entity id, an alias and a relation id, not on the corpus view. */
+   on an entity id, an alias and a relation id, not on the corpus view.
+   REC-65 / DEC-52: "Members BUILD the registry" is now *members AND machine credentials
+   build it*. Bob ruled 2026-08-07 that the machine may rule, and nothing here ever refused
+   one — the code was the right half and this sentence was the wrong one. A machine's entry
+   carries `class:<cls>` where a member's carries their id, so who built what stays legible.
+   The reasoning is at the FW-6 stamp site and deliberately not copied here. */
 const REGISTRY_ACTIONS = ["entitycreate", "entityalias", "relationdeclare",
                           "entity", "entitybyalias", "relation"];
 /* D-98, the TASK construct's two member verbs. Forwarding and resolving a task
@@ -1251,7 +1256,16 @@ const RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concern
    REC-9 adds a READ: `captureprogressions` is the per-document lookup — it maps a CAPTURE back to the
    progression instances it is threaded into, its stage in each, and each instance's missing-predecessor
    + overdue-successor findings (the same ONE derivation op=proposals reads, keyed by capture). Ungated
-   like the other progression reads, named here so the two lists cannot drift apart. */
+   like the other progression reads, named here so the two lists cannot drift apart.
+   REC-65 / DEC-52 CORRECTS THE ACTOR IN EVERY SENTENCE ABOVE, and it is one correction rather
+   than five: where this block says a MEMBER authors a progression definition, threads an instance
+   or discharges a skip, read *a member OR a machine credential*. Bob ruled 2026-08-07 that the
+   machine may rule; nothing here ever refused one, and DEC-52 settles that the CODE was right and
+   this prose was wrong. Who acted is recorded either way — `class:<cls>` for a machine, never a
+   person's name — so the two remain distinguishable claims. The full reasoning, and the four
+   things the ruling carries with it, are at the FW-6 stamp site in the request path; it is not
+   restated here, because a ruling copied into two files is a ruling that will disagree with
+   itself. `proposedispose` is the EXCEPTION and is NOT covered — see its own site. */
 const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "progression",
                              "thread", "instance", "discharge", "exceptions", "proposals",
                              "proposedispose", "captureprogressions"];
@@ -5448,7 +5462,20 @@ export default {
        server like every other authorship here, and a caller-supplied `author` is
        overwritten rather than honoured. It is NOT added to STATE_ACTIONS: it
        moves no state and applies to no selection, so it would inherit an `owner`
-       stamp and a set-application shape it does not have. */
+       stamp and a set-application shape it does not have.
+       IDENTITY-CLAIM: OPEN — DEC-52 rules on three verbs and reconstructing a provenance
+       chain is not one of them. Routed to CONDUCT, pinned by name, not decided.
+       OPEN AND NAMED, REC-65: the sentence above says "a named member's judgement"
+       and **NOTHING IN THE PLANE REFUSES A MACHINE FROM MAKING IT** —
+       `provenanceChainRebuild` carries no identity fence of any kind. DEC-52 ruled on
+       three verbs and this is not one of them, so REC-65 neither fenced it nor extended
+       the ruling to cover it; a worker doing either would be deciding doctrine nobody
+       asked for. It is ROUTED to CONDUCT and PINNED as a known-open finding in
+       `test/identity-claims.test.mjs`, which fails if a fence appears OR if this
+       sentence stops making the claim — so the gap cannot close silently in either
+       direction. What is NOT open: the stamp itself. A machine arrives named
+       `token:<class>`, so whatever is ruled later can be enforced on an honest
+       identity rather than a guessed one. */
     /* PL-2 / IS-2 joins them, and this is FENCE LAYER 1 (see VERSION_ACTIONS
        above). The name this stamps is the name that goes against "this is the
        reading this record stands on" and against the reason a member gave for
@@ -5603,7 +5630,34 @@ export default {
        THEMSELVES. Both stamped from the session and overwritten if supplied, on
        the same reasoning as author and by: a declaration a caller can address to
        someone else is not a declaration. Without a session there is no member to
-       be, so the store refuses on the identity it is handed. */
+       be, so the store refuses on the identity it is handed.
+
+       IDENTITY-CLAIM: ENFORCED-ELSEWHERE NO_SUCH_MEMBER ADMIN_ONLY — the machine is
+       refused here, but NOT as a machine, and the difference is the finding.
+
+       CORRECTED BY DEC-52 (REC-65), AND THIS PAIR IS THE ONE WHERE THE RULING AND THE
+       BEHAVIOUR COME APART — which is why it gets its own paragraph instead of a
+       pointer to FW-6. DEC-52 permits a machine credential to perform the constitutive
+       acts, so the last sentence above must NOT be read as a machine fence. It is not
+       one, and it never was. What actually refuses is MEASURED rather than inferred
+       (REC-65, driven through the control plane under a machine credential with a
+       payload a member then completes successfully with the same body):
+         - op=expertisedeclare answers **NO_SUCH_MEMBER** — `class:member` is not a
+           member id, so there is no row to hang a licence on;
+         - op=expertiseconfirm answers **ADMIN_ONLY** — `#isAdminMember("class:admin")`
+           is false, so a machine ADMIN credential is not an administrator MEMBER.
+       NEITHER IS A MACHINE REFUSAL, and saying so is the point: this is D-229's exact
+       shape — a fence believed to be doing work that an ordinary identity guard is
+       doing instead. The distinction is load-bearing here, because a later author who
+       thought a machine fence stood here might delete the membership guard as
+       redundant and open BOTH doors at once.
+       WHY THE OUTCOME IS NEVERTHELESS RIGHT AND IS NOT A GAP TO CLOSE: expertise (§1.3)
+       is a claim about a PERSON'S standing, and confirmation is one person VOUCHING FOR
+       another. DEC-52 licenses a machine to declare things about the RECORD; it says
+       nothing about a machine acquiring a licence of its own, and there is nowhere in
+       the members table to put one. The act is permitted by doctrine and impossible by
+       construction, which is a better outcome than a fence and is left exactly as it
+       is. */
     if ((op === "expertisedeclare" || op === "expertiseconfirm") && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5617,7 +5671,47 @@ export default {
        on the same reasoning as author, by and memberId above: a declared relation is
        a member's constitutive statement, so an entry a caller could attribute to
        someone else is not that member's declaration. A machine credential says what
-       it is (class:<cls>) rather than borrowing a person's name. */
+       it is (class:<cls>) rather than borrowing a person's name.
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may declare a relation, and
+       the record names it.
+
+       CORRECTED 2026-08-07 BY DEC-52 (enacted as REC-65), AND THE CORRECTION RUNS THE
+       OPPOSITE WAY FROM THE ONE THE SENTENCE ABOVE INVITES. Bob ruled: *"allowing the
+       machine to rule doesn't go against doctrine. So it can rule."* A MACHINE
+       CREDENTIAL MAY DECLARE A RELATION DIRECTLY INTO THE RECORD — the act is
+       permitted, not tolerated. The paragraph above read for months as though only a
+       member could, and NOTHING HAS EVER ENFORCED THAT: REC-46 measured the gap,
+       deliberately changed no site here, and every one stayed green, which WAS the
+       measurement. **The comment was the wrong half, not the code. No fence is to be
+       added at `declareRelation`, `createEntity` or `addEntityAlias` to make the older
+       wording true**, and the absence of one is now a DECISION a later author may rely
+       on rather than an oversight to tidy up. This block is the long form; the FW-7,
+       FW-8, FW-9 and expertise sites below point back here rather than restating it,
+       because five copies of a ruling drift and this project has measured that five
+       times.
+
+       WHY A FALSE COMMENT WAS WORTH AN ITEM: a comment describing a constraint that
+       does not exist is a FENCE THAT READS AS PRESENT TO EVERY SUBSEQUENT AUTHOR —
+       the class D-229, REC-73, D-228 and IC-33 each cost a whole item, in its cheapest
+       and most durable form.
+
+       WHAT THE RULING CARRIES WITH IT, and a later author must not drop any of it:
+         - THE RECORD NAMES THE MACHINE PRINCIPAL on every such act — `class:<cls>`,
+           never a person's name (DEC-55 det 4 / D-199.4). That is what the stamp on
+           the next line is FOR, and it is now load-bearing rather than merely honest:
+           permission to act is granted against a named actor.
+         - A machine-declared statement is therefore VISIBLY MACHINE-ATTRIBUTED
+           (D-82's look-derived rule) — a reader can tell a machine's declaration from
+           a member's, which is the whole reason the two may sit in one table.
+         - GRADES STAY EARNED (framework §8.1). The ruling decides WHO may declare and
+           says nothing about what a declaration is worth; a declared relation still
+           carries no connection grade at all (D-83).
+         - DEC-15 stands: a hunch is a member act.
+         - The earlier provisional — sidebar approval as the act of record — is
+           SUPERSEDED AS A GATE. The sidebar (INVESTIGATIVE-SESSION.md §14a) remains a
+           visibility and bulk-review surface, and reviewing is not the same as
+           permitting. */
     if ((op === "entitycreate" || op === "entityalias" || op === "relationdeclare") && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5630,7 +5724,24 @@ export default {
        reasoning as the registry writes above: a resolution a caller could attribute to
        someone else is not that member's act, and a grade-D testimony without a named
        author is not testimony at all (framework 8.1). A machine credential says what it
-       is (class:<cls>) rather than borrowing a person's name. */
+       is (class:<cls>) rather than borrowing a person's name.
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may resolve a reference and
+       may testify, and the record names it (class:<cls>).
+
+       CORRECTED BY DEC-52 (REC-65) — SEE THE FW-6 BLOCK ABOVE FOR THE RULING IN FULL.
+       A MACHINE CREDENTIAL MAY RESOLVE A REFERENCE, and nothing here refuses one BY
+       DESIGN rather than by omission. Two things this site adds to the ruling and they
+       are not decoration. (1) DEC-52's own reasoning records that `resolve` is DERIVED
+       — `#recogniseTier` is a deterministic cascade over aliases a member ALREADY
+       registered, and it never mints the weakest grade — so it asserts nothing the
+       member's alias declaration did not already imply. Fencing it would have cost the
+       automated-recognition capability and bought no honesty; that is why the derived
+       act was the easiest of the three to rule on. (2) `resolvetestify` is the opposite
+       case — PURE TESTIMONY, and the sentence above about a grade-D testimony needing a
+       named author STANDS UNCHANGED under the ruling, because `class:<cls>` IS a name.
+       What §8.1 refuses is anonymity, not machinery: the act is permitted and the
+       ANONYMITY is not, which is the distinction the whole stamp exists to draw. */
     if ((op === "resolve" || op === "resolvetestify") && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5644,7 +5755,23 @@ export default {
        writes are. And a DERIVED connection is asserted by the SYSTEM in slice A: asserted_by
        is FORCED to "system" server-side so a caller cannot pass it off as source- or
        member-asserted (a member-asserted connection is a distinct, slice-B fact — an
-       equality a caller can hand us is one a caller can invent). */
+       equality a caller can hand us is one a caller can invent).
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may define a progression, and
+       the record names it (class:<cls>).
+
+       CORRECTED BY DEC-52 (REC-65) — SEE THE FW-6 BLOCK ABOVE FOR THE RULING IN FULL.
+       A MACHINE CREDENTIAL MAY DEFINE A PROGRESSION and is refused by nothing here, BY
+       DECISION. The §8.1 note-3 sentence above still describes what the claim IS — a
+       constitutive claim about how an institution ought to behave — and the ruling
+       changes only who may make it, on Bob's reasoning that letting the machine rule
+       does not go against doctrine. The record says which: `class:<cls>` on the row, so
+       a definition proposed by an agent and one authored by a member are DISTINGUISHABLE
+       facts rather than one indistinguishable one.
+       THE `assertedBy: "system"` FORCE ON op=connect IS A DIFFERENT RULE AND IS
+       UNTOUCHED. It is not an identity fence at all: it stops a caller passing a DERIVED
+       connection off as source- or member-asserted, which is a claim about HOW the
+       connection was reached, not about who reached it. DEC-52 does not reach it. */
     if (op === "progressiondefine" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5664,7 +5791,22 @@ export default {
        caller supplied it, on the same reasoning as the registry, recogniser and progression
        writes above. The GRADE of each placement is the record's (a document's resolution to the
        entity), never the caller's, so only the authorship is stamped here. A machine credential
-       says what it is (class:<cls>) rather than borrowing a person's name. */
+       says what it is (class:<cls>) rather than borrowing a person's name.
+
+       IDENTITY-CLAIM: RULED DEC-52 — a machine credential may thread a progression, and
+       the record names it (class:<cls>).
+
+       CORRECTED BY DEC-52 (REC-65) — SEE THE FW-6 BLOCK ABOVE FOR THE RULING IN FULL. A
+       MACHINE CREDENTIAL MAY THREAD A PROGRESSION, and the absence of a fence here is a
+       decision rather than an omission. The sentence above about an authored judgment
+       stands as a description of the JUDGMENT; what it no longer implies is that only a
+       member may make it.
+       AND THE SECOND SENTENCE IS WHY THIS ACT WAS THE SAFEST OF THE THREE TO RULE ON,
+       which is worth having at the site: the GRADE of each placement is EARNED from the
+       document's resolution to the entity and is never taken from the caller, so a
+       machine that threads a progression cannot thereby make the record claim anything
+       stronger than the evidence already supports (framework §8.1). Grades stay earned
+       is not a promise made elsewhere about this act — it is a property of this act. */
     if (op === "thread" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5677,7 +5819,13 @@ export default {
        declared relation carries its author. Stamped from the session and overwritten if the caller
        supplied it; a machine credential says what it is (class:<cls>) rather than borrowing a
        person's name. The GRADE-like earning (the document must resolve to the entity) is the
-       record's, checked in the store, never the caller's. */
+       record's, checked in the store, never the caller's.
+       REC-65 / DEC-52: this site states its rule BY REFERENCE — "exactly as a progression
+       definition or a declared relation carries its author" — so the reference now points at
+       corrected prose, and that is deliberate rather than incidental. A machine credential may
+       discharge a lawful skip, for the same reason and with the same naming (`class:<cls>`).
+       A comment that inherits its rule inherits its corrections too, which is the argument for
+       writing it by reference in the first place. */
     if (op === "discharge" && passBody) {
       try {
         const b = JSON.parse(passBody);
@@ -5691,7 +5839,29 @@ export default {
        progression writes are: a member's decision to set aside the record's question, addressed to
        nobody but themselves. A machine credential says what it is (class:<cls>) rather than
        borrowing a person's name; the store refuses a blank decider (NO_DECIDER), so a bypass fails
-       closed. */
+       closed.
+
+       IDENTITY-CLAIM: OPEN — DEC-52 rules on three verbs and setting aside the record's
+       own question is not one of them. Routed to CONDUCT, pinned by name, not decided.
+
+       OPEN, NAMED, AND DELIBERATELY NOT CLOSED BY REC-65 — read this before adding a
+       fence OR relying on its absence. **DEC-52 DOES NOT REACH THIS ACT.** Bob ruled on
+       three verbs — declare a relation, resolve a reference, thread a progression — and
+       setting aside the record's own question is none of them. But the sentence above
+       describes it as a member's decision and NOTHING REFUSES A MACHINE, which REC-65
+       MEASURED rather than inferred: driven through the control plane under a machine
+       credential, `op=proposedispose` SUCCEEDS and the row reads
+       `decided_by: "class:member"`. So an agent can defer the record's own question to
+       nobody but itself, and the record will say so honestly and permit it.
+       WHY IT IS LEFT AS IT IS RATHER THAN FENCED OR BLESSED: fencing it would be a
+       worker deciding a doctrine question Bob has not been asked, and blessing it would
+       be worse — it would extend a ruling by analogy, which is exactly how a ruling
+       drifts. It is ROUTED to CONDUCT (REC-65's report) as the question DEC-52's
+       reasoning raises without answering, and it is PINNED as a known-open finding in
+       `test/identity-claims.test.mjs` so it cannot quietly become normal. **The pin
+       fails when either half moves** — when a fence appears, or when this comment stops
+       claiming it is a member's decision — which is the mechanical expiry M0-12's ledger
+       technique exists for. */
     if (op === "proposedispose" && passBody) {
       try {
         const b = JSON.parse(passBody);
