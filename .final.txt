@@ -1,0 +1,160 @@
+
+> bio-plane@0.56.0 test:battery
+> node scripts/battery.mjs
+
+
+temp sweep: 2 orphan(s) removed, 73 live or too recent to be sure (spared)
+
+battery: 134 suites (130 plane · 4 fleet)
+
+  ok    acquire.test.mjs                     5250ms  84 pass
+  ok    action-loop.test.mjs                  477ms  79 pass
+  ok    affordances.test.mjs                  451ms  81 pass
+  ok    aicredential.test.mjs                 519ms  90 pass
+  ok    airun.test.mjs                        519ms  103 pass
+  ok    archive-monitoring.test.mjs          2010ms  22 pass
+  ok    attest.test.mjs                      1177ms  48 pass
+  ok    audit.test.mjs                        459ms  18 pass
+  ok    basis.test.mjs                        354ms  29 pass
+  ok    battery-provenance.test.mjs          1100ms  23 pass
+  ok    bias.test.mjs                         523ms  127 pass
+  ok    bootstrap.test.mjs                    569ms  18 pass
+  ok    bounds.test.mjs                      1468ms  151 pass
+  ok    browse.test.mjs                       390ms  41 pass
+  ok    bundle.test.mjs                       554ms  assertions unknown
+  ok    capability.test.mjs                   474ms  63 pass
+  ok    capture-progressions.test.mjs         365ms  13 pass
+  ok    capture.test.mjs                      348ms  19 pass
+  ok    capturerequests.test.mjs              582ms  99 pass
+  ok    case-opened.test.mjs                  423ms  28 pass
+  ok    cdx.test.mjs                           31ms  37 pass
+  FAIL  check-firing.test.mjs                  54ms  92 pass, 1 FAIL
+            PASS  a conformant information bundle has zero errors
+            PASS  a conformant focus bundle has zero errors
+            PASS  a conformant project bundle has zero errors
+            PASS  a conformant action bundle has zero errors
+            PASS  C-8.1: the same tamper (a claim lacks claim_id/claim/cites[]/snapshot/as_of) under data/citations-under-another-name.json draws no error at all
+            PASS  C-7.1: the same tamper (a record lacks timestamp/reason/items[]/preserved_to) under data/deletions-under-another-name.json draws no error at all
+            FAIL  C-7.1 is retired and the estate grew NO producer for data/deletions.json — the record keeps ONE claim structure  want [] got ["tools/mintid.mjs"]
+  ok    cite.test.mjs                         745ms  73 pass
+  ok    citeinquiry.test.mjs                  470ms  49 pass
+  ok    citeproject-inquiry.test.mjs          473ms  37 pass
+  ok    conclude.test.mjs                     467ms  50 pass
+  ok    conformance.test.mjs                  372ms  56 pass
+  ok    connection-derive-sweep.test.mjs      881ms  26 pass
+  ok    connection.test.mjs                   418ms  41 pass
+  ok    counterparty.test.mjs                 368ms  39 pass
+  ok    coverage-provenance.test.mjs         1012ms  28 pass
+  ok    daemon-token.test.mjs               10339ms  56 pass
+  ok    derivation-bounds.test.mjs            548ms  42 pass
+  ok    disposition.test.mjs                  686ms  47 pass
+  ok    divide.test.mjs                       521ms  82 pass
+  ok    doorbell.test.mjs                     564ms  36 pass
+  ok    earnedbasis.test.mjs                  445ms  54 pass
+  ok    edges.test.mjs                        398ms  50 pass
+  ok    empty-body.test.mjs                   358ms  10 pass
+  ok    entityregistry.test.mjs               402ms  47 pass
+  ok    fence.test.mjs                        477ms  33 pass
+  ok    formats-docx.test.mjs                  58ms  82 pass
+  ok    formats-pptx.test.mjs                  78ms  110 pass
+  ok    formats-xlsx.test.mjs                 541ms  75 pass
+  ok    formats.test.mjs                      389ms  35 pass
+  ok    framework-digest-audit.test.mjs       409ms  21 pass
+  ok    gate-reads.test.mjs                   616ms  115 pass
+  ok    gathering.test.mjs                    382ms  40 pass
+  ok    governor.test.mjs                     471ms  37 pass
+  ok    grounds.test.mjs                      544ms  68 pass
+  FAIL  hygiene.test.mjs                      340ms  535 pass, 1 FAIL
+            FAIL  every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (["bio-plane/test/mintid.test.mjs"])
+  ok    identity-claims.test.mjs              438ms  31 pass
+  ok    inbox.test.mjs                        438ms  71 pass
+  ok    inquiry.test.mjs                      620ms  34 pass
+  ok    inquiryground.test.mjs                572ms  81 pass
+  ok    inquirystrength.test.mjs              566ms  48 pass
+  ok    installer.test.mjs                   1445ms  30 pass
+  ok    leadslug.test.mjs                     632ms  72 pass
+  ok    livefire.test.mjs                     667ms  assertions unknown
+  ok    machine-fences.test.mjs               734ms  45 pass
+  ok    machinefences-dec49.test.mjs           48ms  60 pass
+  ok    meaning-bounds.test.mjs               497ms  85 pass
+  ok    meaningquery.test.mjs                 455ms  102 pass
+  ok    meaningread.test.mjs                  543ms  106 pass
+  ok    mechanical.test.mjs                 14171ms  44 pass
+  ok    members.test.mjs                      627ms  93 pass
+  ok    membership.test.mjs                   458ms  97 pass
+  ok    migrate.test.mjs                      470ms  40 pass
+  ok    mintid.test.mjs                       651ms  77 pass
+  ok    monitor-cadence.test.mjs            17311ms  59 pass
+  ok    multifinding.test.mjs                 677ms  74 pass
+  ok    ooxml.test.mjs                         50ms  101 pass
+  ok    op-claims.test.mjs                   1089ms  33 pass
+  ok    overdue-successor.test.mjs            652ms  22 pass
+  ok    pdf-worker-binding.test.mjs           724ms  12 pass
+  ok    pdfstructure-op.test.mjs              404ms  29 pass
+  ok    pdfstructure.test.mjs                  49ms  84 pass
+  ok    pipeline-e2e.test.mjs                 489ms  53 pass
+  ok    plane-envelope.test.mjs               715ms  54 pass
+  ok    planning-hygiene.test.mjs              47ms  283 pass
+  ok    profile.test.mjs                      409ms  25 pass
+  ok    progression-exception.test.mjs        453ms  36 pass
+  ok    progression-instance.test.mjs         442ms  37 pass
+  ok    projection.test.mjs                   335ms  35 pass
+  ok    projects.test.mjs                     476ms  114 pass
+  ok    proposals-feed.test.mjs               422ms  20 pass
+  ok    proposedispose.test.mjs               407ms  18 pass
+  ok    provenance-chain.test.mjs             516ms  63 pass
+  ok    provenance-marker.test.mjs            534ms  113 pass
+  ok    publish.test.mjs                      915ms  88 pass
+  ok    publishedcase.test.mjs                673ms  100 pass
+  ok    purge.test.mjs                        391ms  14 pass
+  ok    query.test.mjs                         35ms  88 pass
+  ok    queue-conditions.test.mjs             632ms  51 pass
+  ok    queue-state.test.mjs                  615ms  66 pass
+  ok    queue.test.mjs                        556ms  36 pass
+  ok    ratify-envelope.test.mjs              709ms  35 pass
+  ok    ratify.test.mjs                       534ms  37 pass
+  ok    reachability.test.mjs                 432ms  40 pass
+  ok    reading-wire.test.mjs                1023ms  55 pass
+  ok    reading.test.mjs                      441ms  30 pass
+  ok    readingname.test.mjs                  771ms  100 pass
+  ok    reevaluation.test.mjs                 560ms  63 pass
+  ok    refuse-gate.test.mjs                  430ms  61 pass
+  ok    release.test.mjs                      414ms  31 pass
+  ok    reopen.test.mjs                       779ms  58 pass
+  ok    repair-reachability.test.mjs          565ms  40 pass
+  ok    resolution.test.mjs                   430ms  39 pass
+  ok    reuse-ratify.test.mjs                 599ms  36 pass
+  ok    rung-ladder.test.mjs                  116ms  47 pass
+  ok    scheduler.test.mjs                   1338ms  18 pass
+  ok    search.test.mjs                      1687ms  164 pass
+  ok    selection.test.mjs                   1495ms  65 pass
+  ok    setup-honesty.test.mjs                 39ms  6 pass
+  ok    signpage.test.mjs                     223ms  35 pass
+  ok    skillpack.test.mjs                    392ms  46 pass
+  ok    sshsig.test.mjs                        44ms  18 pass
+  ok    store.test.mjs                        355ms  43 pass
+  ok    strength.test.mjs                     493ms  42 pass
+  ok    strengthpair.test.mjs                 513ms  90 pass
+  ok    subresources.test.mjs                 689ms  344 pass
+  ok    suggest.test.mjs                      889ms  80 pass
+  ok    surfaced-by.test.mjs                  393ms  8 pass
+  ok    task-drain-alarm.test.mjs             809ms  19 pass
+  ok    task-fence.test.mjs                   529ms  19 pass
+  ok    task-machine.test.mjs                 535ms  32 pass
+  ok    unattended-lease.test.mjs             517ms  22 pass
+  ok    versionchain.test.mjs                 703ms  91 pass
+  ok    versions.test.mjs                     531ms  77 pass
+  ok    versionstate.test.mjs                 579ms  72 pass
+  ok    agent-worker/agent-worker.test.mjs    619ms  98 pass
+  ok    agent-worker/harness.test.mjs        1742ms  194 pass
+  ok    pdf-worker/pagepixels.test.mjs        584ms  63 pass
+  ok    pdf-worker/pdf-worker.test.mjs       1245ms  48 pass
+
+132/134 suites green · 8429 assertions passing · 120.7s
+  2 suite(s) reported no assertion count: bundle.test.mjs, livefire.test.mjs
+  FAILED: check-firing.test.mjs, hygiene.test.mjs
+fleet: 2 members beside the plane · 4 suite(s) discovered · 2 member(s) actually RAN
+provenance: 136 of 136 discovered item(s) are in the commit at HEAD (1b4e648) · 134 suite(s) run · 2 fleet manifest(s)
+temp: this run left 0 directories holding 0 miniflare sandboxes (was 0/0 before the suites ran) · host orphans 73 -> 73
+
+BATTERY_EXIT=2

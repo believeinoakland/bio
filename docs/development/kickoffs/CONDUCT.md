@@ -167,6 +167,29 @@ defect it is.
    `CLAIMS.md` / queue collisions; never force-push), record bookkeeping (release
    claims, route delegations into queues, register/annotate interfaces and DEBT),
    push, and spawn the area's next item.
+
+   **AND AFTER THE MERGE, BEFORE THE PUSH, RUN `node tools/mintid.mjs --audit --base origin/main`.**
+   D-243, closed 2026-08-08. **A merge is the only moment two branches' ids become one
+   corpus, so a collision that existed in NEITHER branch appears at your hands and
+   nowhere earlier** — which is why this is your step and not a worker's. It answers four
+   questions and they do not have equal standing: **duplicate allocations and an
+   unregistered prefix are BREAKS** (definitive, in the commit, no ledger needed, and
+   `plancheck` fails on both as well so you cannot push past them); **an id the ledger
+   does not hold is a QUESTION you ASK the worker, never a failure**, because every id
+   allocated before 2026-08-08 is honestly `unknown` and a gate answering unknown over
+   the whole corpus is the shape `VERIFICATION.md` refuses.
+   **WHAT IT FOUND THE DAY IT WAS WRITTEN, over `origin/main`, is why it exists: SIX id
+   collisions already sitting in the repository and known to nobody** — `D-121`, `D-124`,
+   `IC-30`, `CPDF-9`, `FW-15`, `M0-16`. Three of the six are in **YOUR file**, `QUEUE.md`,
+   and `D-124` had already been renumbered once, ONTO a second collision. They are
+   registered in `KNOWN_COLLISIONS` with a reason each and **owed as a renumber under
+   D-248** — a seventh fails, and a registered one that gets renumbered fails too, so the
+   register cannot outlive its reason.
+   **What it CANNOT see, so you do not read a clean run as more than it is:** an un-minted
+   id that has not collided yet and sits below its namespace's watermark; a collision
+   inside `C` or `M` (both NAMED as ungradable in its own output rather than scored
+   clean); and a collision between two branches nobody has merged — which is exactly the
+   one your merge creates, and therefore exactly why you run it AFTER merging.
 3. **Enqueue decompositions from BOB** — you are the GATE that confirms each
    piece is genuinely independent before it becomes runnable. **And test every
    scope you write against CLAUDE.md's "CONTENT IS THE UNIT" section** (added by

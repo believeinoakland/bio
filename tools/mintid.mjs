@@ -426,7 +426,16 @@ export const KNOWN_COLLISIONS = [
   { id: "D-124", why: "two unrelated design rows — and the first of them reads '(renumbered from a colliding D-122 by CONDUCT 2026-07-31)', so it was renumbered ONTO a second collision" },
   { id: "IC-30", why: "two different PROPOSED interface changes: PL-12/D-84's bias object and I3's six new act ops (PL-2/IS-2) — the THIRD live IC collision after the IC-33 and IC-35 pair M0-17 recorded" },
   { id: "CPDF-9", why: "two different queue items: the M0 pdf-worker dark-suite item and the M2 OCR-reachability measurement" },
-  { id: "FW-15", why: "two different queue items: C-7.1 / data/deletions.json (added 2026-08-08) and the L2->L3 PDF-text-becomes-a-reading wire (added 2026-08-01)" },
+  /* THE PATH C-7.1 GOVERNS IS DELIBERATELY NOT SPELLED HERE, and that is a receipt
+     rather than fussiness. The first draft of this line named it, and
+     `check-firing.test.mjs` — whose estate walk covers `tools/` — read this file as a
+     PRODUCER for a retired shape and went RED. That is the documentation-poisons-a-
+     corpus class for the THIRD time in two days (the C-29 catalogue comment, this
+     tool's own debt row, and now this), in a third instrument, and the lesson
+     generalises past id-shaped examples: a prose mention inside a file an estate walk
+     covers is indistinguishable from the real thing. It failed in the SAFE direction,
+     which is why that arm is built the way it is. */
+  { id: "FW-15", why: "two different queue items: the C-7.1 deletion-ledger retirement (added 2026-08-08) and the L2->L3 PDF-text-becomes-a-reading wire (added 2026-08-01)" },
   { id: "M0-16", why: "a duplicated `### M0-16 · done` heading with an empty body directly above the real one — an integration merge artefact rather than two items" },
 ];
 
@@ -611,18 +620,30 @@ export function scopeOf({ repo = REPO_ROOT, env = process.env, root = null } = {
            exclusive: r ? exclusivityProbe(r) : { ok: false, reason: "NO_LEDGER", detail: "no shared git directory" } };
 }
 
-/** The sentence that must appear wherever an id does. */
+/** The sentence that must appear wherever an id does.
+ *
+ *  IT NEVER THROWS, and that is a control finding rather than defensiveness. Handed
+ *  the `scope` of a REFUSAL — which is undefined, because a refusal has no scope — the
+ *  first version raised a TypeError from inside a caller's assertion and ended the
+ *  module while the tally read clean. A missing probe verdict is UNDETERMINED, which
+ *  is first-class here and is printed as itself; a formatter for a safety statement is
+ *  the last place that should be able to take a process down. */
 export function scopeLines(scope) {
+  const s = scope || {};
+  const excl = s.exclusive;
+  const hosts = s.hosts || [];
   const out = [];
-  out.push(`SCOPE exclusive against every process using ledger ${scope.ledger || "(none)"} —`);
+  out.push(`SCOPE exclusive against every process using ledger ${s.ledger || "(none)"} —`);
   out.push(`      that is every worktree of THIS clone, and nothing else. NOT exclusive against an`);
   out.push(`      allocator using a different ledger: a second clone, a CI runner, another machine.`);
   out.push(`      No local test can detect one, so this is stated rather than checked (D-242).`);
-  out.push(`      O_CREAT|O_EXCL honoured on this filesystem: ${scope.exclusive.ok ? "YES, probed just now" : `NO — ${scope.exclusive.detail}`}`);
-  if (scope.hosts.length > 1)
-    out.push(`      WARN this ledger has been used from ${scope.hosts.length} hosts (${scope.hosts.join(", ")}), so it lives on`
+  out.push(`      O_CREAT|O_EXCL honoured on this filesystem: `
+    + (!excl ? "UNDETERMINED — no probe verdict was carried with this scope"
+             : excl.ok ? "YES, probed just now" : `NO — ${excl.detail}`));
+  if (hosts.length > 1)
+    out.push(`      WARN this ledger has been used from ${hosts.length} hosts (${hosts.join(", ")}), so it lives on`
            + `\n      shared storage. The probe above is ONE process and cannot speak for atomicity ACROSS hosts.`);
-  if (scope.overridden)
+  if (s.overridden)
     out.push(`      WARN BIO_IDALLOC_DIR is set, so the ledger is where the caller said and not where the`
            + `\n      shared git directory put it. The scope is whatever that path is shared by.`);
   return out;
@@ -645,20 +666,35 @@ export function mint(ns, { count = 1, who = "unknown", why = "", repo = REPO_ROO
                    + "another worktree cannot also take. Refusing rather than minting unsafely." };
   }
   const f = corpusFloor(ns, { repo });
-  mkdirSync(join(root, ns), { recursive: true });
 
   /* THE PRIMITIVE IS TESTED BEFORE IT IS TRUSTED, and against the real ledger
      directory rather than a temp dir — the property being tested belongs to the
      filesystem the ledger is on. Everything below this line is a demonstration of
      something that does not work if this fails, and it would fail SILENTLY: the
      claim writes would all succeed and every racer would get the same number, which
-     is exactly what M0-17's neutered control arm produced on purpose. */
+     is exactly what M0-17's neutered control arm produced on purpose.
+
+     ORDER MATTERS AND IT IS A CORRECTION. The probe ran AFTER the namespace mkdir in
+     the first draft, so an unwritable ledger THREW out of `mint` instead of returning
+     a refusal — an unreadable failure in the shape of D-93, in the very path whose job
+     is to refuse cleanly. The mkdir is now inside the guard and both answer as
+     refusals with codes. */
+  try { mkdirSync(root, { recursive: true }); }
+  catch (e) {
+    return { ok: false, reason: "LEDGER_UNWRITABLE", ledger: root,
+             detail: `the ledger directory could not be created (${e.code}). Refusing rather than minting unsafely.` };
+  }
   const exclusive = exclusivityProbe(root);
   if (!exclusive.ok)
     return { ok: false, reason: exclusive.reason, ledger: root,
              detail: `${exclusive.detail}. An id taken here would carry the confidence of a mechanism `
                    + `and none of its safety, which D-242 names as worse than the convention it replaces. `
                    + `Refusing rather than minting unsafely.` };
+  try { mkdirSync(join(root, ns), { recursive: true }); }
+  catch (e) {
+    return { ok: false, reason: "LEDGER_UNWRITABLE", ledger: root,
+             detail: `the namespace directory could not be created (${e.code}). Refusing rather than minting unsafely.` };
+  }
   const hosts = ledgerHosts(root, { record: true });
   recordWatermark(root, ns, f.floor);
 
