@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (REC-22's three arms, each broken ALONE and restored; 72 pass when whole; ALL RUN 2026-08-04, rec22-agent, and the numbers below are what they MEASURED) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 70 pass, 2 FAIL: the object PLANTED in the published bucket that no published_shas row names STREAMS 200 to an anonymous caller and the assertion reports the working capture's own sha where it wanted a 404. NOTE WHAT ELSE THIS MEASURED, because it is the reason block 3 has an adversary in it at all: "a working capture that was never ratified is not reachable" STILL PASSES under the broken guard, because the working corpus lives under <store>/captures/ and the published corpus under <store>/published/ — the key is not there to fetch. BUILD-ORDER's wording ("a working-corpus capture sha streams") is therefore unreachable by removing the guard alone, and what the guard actually defends is anything in the published bucket that ratification did not put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 69 pass, 3 FAIL: the published child names NEITHER its parent NOR its sibling, because the store's restriction then drops both (neither is published) — R4's disclosure vanishes from the exact surface R4 was written for, which is RECONCILED R4-e reproduced. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 71 pass, 1 FAIL naming all three working targets admitted as SERVE edges, the terminal parent among them (supersedes -> INQ-...-mixed): the published graph starts asserting it can serve material that was never published. (b2) FAILED TO FAIL ON THE FIRST RUN and that is why unresolved[] exists: serves[] was empty either way, so "every served edge names a published edition" passed on an empty list — an outcome that costs nothing to produce. The store now REPORTS an edge it classified servable and cannot resolve instead of dropping it, and the control bites. Restore after each. (d) UI-40 / IC-22, RUN 2026-08-05 by ui40-agent — `opened` RESTORED TO THE PUBLISHED SHAPE: put `opened: state.opened,` back into `Store.publishedCase()`'s success return in src/store.mjs -> 77 pass, 1 FAIL, naming it ("IC-22: `opened` is NOT PUBLISHED — removed from the answer, not blanked (the key is absent)"). THE ASSERTION IS `"opened" in c` AND NOT A VALUE COMPARISON, deliberately: `c.opened === undefined` is true of an answer that never carried the key AND of one carrying it set to undefined, so a value test cannot tell REMOVED from BLANKED, which is the entire distinction REC-41's form of removal rests on. It is also driven THROUGH THE OP rather than against source, because index.mjs answers `{ok:true, ...c, findings, verification}` — a SPREAD — so the field reached the wire without the control plane ever naming it and a source-level grep would have proved nothing. civicos-ui/test/publishedcase.test.mjs catches the same restoration independently at the surface (225 pass, 1 fail). src/store.mjs restored byte-identically, sha256 795d4f27… compared before and after. */
+/* NEGATIVE CONTROL: (REC-22's three arms, each broken ALONE and restored; 72 pass when whole; ALL RUN 2026-08-04, rec22-agent, and the numbers below are what they MEASURED) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 70 pass, 2 FAIL: the object PLANTED in the published bucket that no published_shas row names STREAMS 200 to an anonymous caller and the assertion reports the working capture's own sha where it wanted a 404. NOTE WHAT ELSE THIS MEASURED, because it is the reason block 3 has an adversary in it at all: "a working capture that was never ratified is not reachable" STILL PASSES under the broken guard, because the working corpus lives under <store>/captures/ and the published corpus under <store>/published/ — the key is not there to fetch. BUILD-ORDER's wording ("a working-corpus capture sha streams") is therefore unreachable by removing the guard alone, and what the guard actually defends is anything in the published bucket that ratification did not put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 69 pass, 3 FAIL: the published child names NEITHER its parent NOR its sibling, because the store's restriction then drops both (neither is published) — R4's disclosure vanishes from the exact surface R4 was written for, which is RECONCILED R4-e reproduced. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 71 pass, 1 FAIL naming all three working targets admitted as SERVE edges, the terminal parent among them (supersedes -> INQ-...-mixed): the published graph starts asserting it can serve material that was never published. (b2) FAILED TO FAIL ON THE FIRST RUN and that is why unresolved[] exists: serves[] was empty either way, so "every served edge names a published edition" passed on an empty list — an outcome that costs nothing to produce. The store now REPORTS an edge it classified servable and cannot resolve instead of dropping it, and the control bites. Restore after each. (d) UI-40 / IC-22, RUN 2026-08-05 by ui40-agent — `opened` RESTORED TO THE PUBLISHED SHAPE: put `opened: state.opened,` back into `Store.publishedCase()`'s success return in src/store.mjs -> 77 pass, 1 FAIL, naming it ("IC-22: `opened` is NOT PUBLISHED — removed from the answer, not blanked (the key is absent)"). THE ASSERTION IS `"opened" in c` AND NOT A VALUE COMPARISON, deliberately: `c.opened === undefined` is true of an answer that never carried the key AND of one carrying it set to undefined, so a value test cannot tell REMOVED from BLANKED, which is the entire distinction REC-41's form of removal rests on. It is also driven THROUGH THE OP rather than against source, because index.mjs answers `{ok:true, ...c, findings, verification}` — a SPREAD — so the field reached the wire without the control plane ever naming it and a source-level grep would have proved nothing. civicos-ui/test/publishedcase.test.mjs catches the same restoration independently at the surface (225 pass, 1 fail). src/store.mjs restored byte-identically, sha256 795d4f27… compared before and after. (M0-11, 2026-08-08, m011-loose-branch) BLOCK 8 — `#looseEditionState`, the LOOSE branch, driven through the op for the first time in this battery. FIVE ARMS, EACH RUN ALONE against a pristine `src/store.mjs` with the others held open, plus a BASELINE row that ran with NO patch at all so six-arms-failing-for-the-wrong-reason is distinguishable from six arms working; the harness printed each arm's ARMED state and its patch-match count, and restored the file after every arm against a PRE-ARM COPY NAMED PER ARM, verified by sha256 AND by `cmp` (final store.mjs sha256 64948896d038… identical to pristine). BASELINE ROW: 123/123 green, 7,774 assertions, publishedcase 100 pass, `civicos-ui` harness exit 0. (e) THE LOOSE BRANCH IS SWITCHED OFF — in `Store.publishedCase()` replace `if (st) { theCase = null; ed = r.edition; state = st; }` with `if (false) { … }` -> 85 pass, 15 FAIL, headed by "the LOOSE branch is REACHED THROUGH THE OP by an anonymous caller, and it ANSWERS". AND THIS ARM CARRIES THE MEASUREMENT THE ITEM EXISTS FOR: the `civicos-ui` harness stayed GREEN (exit 0) all the way through it, because the surface asserts this shape against a MOCK — so before block 8, switching this branch off turned NOTHING RED ANYWHERE IN THE REPOSITORY, which is sharper than the item's own premise that "today only the UI harness would". THE FIRST RUN OF THIS ARM ALSO FOUND A DEFECT IN BLOCK 8 ITSELF and it is recorded rather than smoothed: `c.findings.length` on the refusal threw a TypeError, the module died at the first assertion, and the battery reported `assertions unknown` — a crash NAMES NOTHING, and the acceptance is that the plane's own battery fails NAMING the branch. The block now reads defensively and the same arm reports 15 named failures with the suite reaching its own foot. (f) THE BRANCH MANUFACTURES A SCOPE — in `#looseEditionState` set `scope: "the ratified bytes and everything they touch"` -> 99 pass, 1 FAIL naming it ("it manufactures NO case identity, NO scope, NO completeness and NO bias acknowledgement"), which is D-187's conflation arriving one level down. (g) THE SUCCESS RETURN SPREADS THE STATE — add `...state,` to `publishedCase()`'s success return -> THREE PLANE SUITES catch it independently: publishedcase 97 pass / 3 FAIL (the key-set arm, the dropped-sentence arm, and IC-22's own), case-opened 25/3 and multifinding 73/1 — AND the `civicos-ui` harness at exit 1, the one arm of the five the surface does catch. (h) OVER-STRICTNESS I — the loose state's own `detail` sentence rewritten in wording nothing in this suite wrote -> 123/123 GREEN at 7,774, UI exit 0. That arm is also the FINDING's own control: the sentence reaches no caller, so rewriting it moves nothing anywhere. (i) OVER-STRICTNESS II — the PUBLISHED keys REORDERED in the success return, `bias_acknowledgement` ahead of `caseId`, same key set and same values, nothing changed on the wire -> block 8 stays at 100 pass, because the key set is compared SORTED and not as a sequence. The arm's measurement is that `case-opened.test.mjs` (25/3) and the UI's mock-envelope check go RED on a purely cosmetic reorder: REC-58's anchor is order-sensitive and reports its return as NOT FOUND, which is the SAFE direction — an anchor refusing to read what it cannot locate rather than passing on an empty slice — and it is DELEGATED rather than changed here. */
 /* REC-22: `op=publishedcase` and `op=publishedbytes` — the public read path, over EDITIONS.
  *
  * This is the surface a STRANGER meets, and the only one in the plane that
@@ -756,6 +756,204 @@ console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the pub
   const purgeSrc = store.slice(pStart, store.indexOf("\n  #", pStart) > -1 ? store.indexOf("\n  #", pStart) : pStart + 6000);
   t("and it is cleared in BOTH arms of op=purge — an index that outlives what it indexes is D-113",
     (purgeSrc.match(/DELETE FROM published_edges/g) || []).length, 2);
+}
+
+/* ============ 8. M0-11: RATIFIED BYTES THAT BELONG TO NO CASE (#looseEditionState) */
+console.log("\n--- 8. M0-11: the LOOSE branch — ratified bytes in no case, driven through the op ---");
+{
+  /* WHY THIS BLOCK EXISTS, and it is not "more coverage". Until 2026-08-08 no
+     suite in this battery drove `#looseEditionState` AT ALL: its answer shape
+     was asserted only from `civicos-ui/test/publishedcase.test.mjs`, against a
+     MOCK. So the plane's own battery could not tell you if the branch changed,
+     and the surface would have gone red for a plane change in another area's
+     session with no indication whose defect it was. UI-35 found it while
+     measuring the op's published shape and REPORTED it rather than relying on
+     it quietly, which is the only reason it is here (M0-11).
+
+     WHAT THE BRANCH ACTUALLY ANSWERS WAS MEASURED BEFORE ANY OF THIS WAS
+     ASSERTED — driven under Miniflare, keys printed, then pinned. Two things
+     came back that reading the source would not have settled, and both are
+     recorded at their assertion below: the edition_index rows on this branch
+     carry NO `manifest_sha` KEY AT ALL (the case path's do), and the store's
+     own sentence for this state is COMPUTED AND NEVER PUBLISHED. */
+  const LOOSE = "INFO-2026-2200-loose-memo";
+  const NEVER = "INFO-2026-2200-never-ratified";
+  /* A ratifiable information document. The suite's `infoMd` above is promoted
+     and never ratified, so it carries no Session Log entry and the CATALOG
+     refuses it at the gate (C-13.2) — measured, not guessed: the first fixture
+     here came back `GATE_REFUSED` and the finding was the fixture's, not the
+     branch's. Stated so the next session does not pay for it again. */
+  const ratifiableInfoMd = (id) => ["---",
+    `id: ${id}`, "object_type: information", "schema: information@1",
+    `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
+    `created: "${NOW}"`, `last_updated: "${LATER}"`,
+    "produced_by:", "  mode: agent", "  capability_tier: high",
+    "group: believe-in-oakland", "references: []", "state_history: []",
+    "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+    "visuals: []", "criticality: supporting", "source_status: unchanged",
+    "source:", '  locator: "https://oaklandca.opengov.com/transfer-memo"',
+    '  authority: "Oakland OpenGov portal"', '  retrieved: "2026-07-01"',
+    "monitoring:", "  enabled: false", "  frequency: none",
+    "---", "", "## Summary", "", "A captured document, ratified and in no case.", "",
+    "## Provenance Notes", "", "## Session Log", "",
+    `### Session ${LATER} | Formation | agent`,
+    "Trigger: surfacing", "Changes: created.", "",
+    "## Review Notes", ""].join("\n");
+
+  await mustPromote(LOOSE, ratifiableInfoMd(LOOSE), "information", "collected");
+  const LOOSE_SHA = await shaOf(LOOSE);
+  const ratL = await ratify(LOOSE);
+  /* THE FIXTURE IS ASSERTED NON-EMPTY BEFORE ANYTHING IS ASSERTED ABOUT IT.
+     This project's most-repeated instrument defect is an arm that passes over an
+     empty set: a ratification that silently failed would leave every assertion
+     below reading NOT_PUBLISHED, and `!("detail" in c)` is TRUE of a refusal.
+     `container: null` is part of the fixture's own claim — a non-case
+     ratification assembles no case container (DEC-44), and if one appeared here
+     this would no longer be the state the block is named for. */
+  t("the fixture RATIFIED: bytes in no case, edition 1, and NO case container was assembled for them",
+    [ratL.ok, ratL.edition, ratL.container, ratL.existed], [true, 1, null, false]);
+
+  const c = await anonCase(`id=${LOOSE}`);
+  /* READ DEFENSIVELY, AND THE REASON IS THIS BLOCK'S OWN NEGATIVE CONTROL RATHER
+     THAN CAUTION. Arm (e) switches the loose branch OFF, and the answer is then
+     `{ok:false, reason, detail}` — so `c.findings.length` THREW a TypeError, the
+     module died at the first assertion, and the whole block after it went through
+     NO ASSERTION AT ALL. The battery reported it as `assertions unknown` rather
+     than as a named failure. That is D-93's class inside one block (UI-35 paid
+     for the same thing on its arm (e)), and it matters here specifically: the
+     item's acceptance is that the plane's OWN battery FAILS NAMING the branch,
+     and a crash names nothing. With these readers the same arm reports 12 named
+     failures and the suite reaches its own foot. */
+  const f0 = (c.findings && c.findings[0]) || {};
+  const ver = c.verification || {};
+  const ed0 = (c.edition_index && c.edition_index[0]) || {};
+  const str = (v) => (typeof v === "string" ? v : "");
+  t("M0-11: the LOOSE branch is REACHED THROUGH THE OP by an anonymous caller, and it ANSWERS",
+    [c.ok, c.caseId, c.edition, (c.findings || []).length, f0.bundle_id ?? null],
+    [true, null, 1, 1, LOOSE]);
+
+  /* THE ITEM'S OWN CONTRACT: ONE SUCCESS RETURN, TWO BRANCHES. `publishedCase`
+     picks its fields BY NAME and never spreads the state, so the case path and
+     this one are the same key set by construction — UI-35 measured that from
+     source and this asserts it END TO END, over the wire, where a spread added
+     later would be visible and a source read would not. `asked` is compared
+     separately because it is the one key either branch adds conditionally. */
+  const caseAns = await anonCase(`id=${CASE}`);
+  const keysOf = (o) => Object.keys(o).filter((k) => k !== "asked").sort();
+  t("the two branches answer with the SAME top-level key set — one success return, and it is the op's contract",
+    keysOf(c), keysOf(caseAns));
+  t("and the key set is not empty, which is what makes the comparison above evidence rather than agreement",
+    keysOf(c).length >= 18, true);
+  t("`asked` is conditional on BOTH branches alike: absent when the id IS the answer, present when it was reached for",
+    [ "asked" in c, "asked" in (await anonCase(`sha256=${LOOSE_SHA}`)), "asked" in caseAns ],
+    [false, true, true]);
+
+  /* WHAT IT REFUSES TO MANUFACTURE, and it is the whole of DEC-44 one level
+     down. A case identity, a scope statement, a completeness assertion and an
+     acknowledgement of bias are claims a CASE makes; this is not one. They are
+     STATED AS NULL rather than omitted, so a renderer meets "no such assertion"
+     instead of a missing key it might read as absence of bias. */
+  t("it manufactures NO case identity, NO scope, NO completeness and NO bias acknowledgement — stated null, not omitted",
+    [c.caseId, c.scope, c.completeness, c.bias_acknowledgement,
+     ["caseId", "scope", "completeness", "bias_acknowledgement"].every((k) => k in c)],
+    [null, null, null, null, true]);
+  t("and no container: a non-case ratification has no manifest, no files and nothing to serve as a container",
+    [c.manifest_sha ?? null, c.manifest ?? null, c.files ?? null, ver.container ?? null, ver.manifest ?? null],
+    [null, null, [], null, null]);
+  /* `complete` IS NOT `completeness`, and the pair is asserted together so
+     neither can be read as the other. `complete` says nothing is AWAITED —
+     every member of this edition has ratified, and here the only member is
+     itself. `completeness` is DEC-13's authored assertion, and there is none. */
+  t("`complete: true` says nothing is AWAITED — it is not a completeness assertion, and `completeness` is still null",
+    [c.complete, c.awaiting, c.completeness], [true, [], null]);
+  t("there is no case-level strength here either: one letter over anything is R2's forbidden composition",
+    "strength" in c, false);
+  /* An INFORMATION bundle is not a finding and derives no pair. That is a
+     different fact from "the container is not assembled yet", and the two must
+     not collapse — REC-49 corrected the surface's index for exactly that. */
+  t("the loose member carries NO frozen pair and NO declared bar, because an information bundle derives neither",
+    [f0.strength ?? null, f0.required ?? null, f0.object_type ?? null],
+    [null, null, "information"]);
+
+  /* THE BODY, FROM THE BUNDLE'S OWN PUBLISHED BYTES (D-1), and the canonical
+     inquiry sections come back NULL rather than empty — `sectionText` finds no
+     `## Conclusion` in an information document, and null and "" are different
+     claims about what the signed bytes contain. Measured. */
+  t("the body renders from the SAME bytes the signature covers, and it is served from the published bucket",
+    [(f0.body || {}).state ?? null, (f0.body || {}).from_sha ?? null, f0.bundle_sha ?? null],
+    ["published", LOOSE_SHA, LOOSE_SHA]);
+  t("an information document has no inquiry sections, and they answer NULL rather than empty string",
+    [f0.body ? f0.body.question : "NO BODY AT ALL", f0.body ? f0.body.conclusion : "NO BODY AT ALL",
+     f0.body && f0.body.authored ? f0.body.authored.conclusion : "NO BODY AT ALL",
+     f0.basis ?? null], [null, null, null, []]);
+  t("the doorbell's promise holds for bytes that are not a case: they stream, by hash, to nobody in particular",
+    (await anonBytes(`sha256=${LOOSE_SHA}`)).status, 200);
+
+  /* THE EDITION INDEX IS A DIFFERENT SHAPE ON THIS BRANCH, and it was found by
+     driving rather than by reading. The case path selects `edition, ratified_at,
+     manifest_sha FROM published_cases`; this one selects `edition, ratified_at
+     FROM published_bundles` — so a loose edition row has NO `manifest_sha` KEY
+     AT ALL, where the case path's row has one. It is asserted as a key-set
+     difference and not as a value, because `undefined` is what both a missing
+     key and a null-valued key read as, which is the distinction IC-22 rests on.
+     `civicos-ui`'s LOOSE fixture states `manifest_sha: null` on this row; that
+     is the mock inventing a field the wire does not send, and it is delegated
+     rather than fixed here (D-173's class, and the second instance of it in
+     this one fixture — UI-35 removed the first). */
+  t("a LOOSE edition row carries edition and ratified_at and NO manifest_sha key; the CASE path's row carries one",
+    [Object.keys(ed0).sort(), Object.keys((caseAns.edition_index || [])[0] || {}).sort()],
+    [["edition", "ratified_at"], ["edition", "manifest_sha", "ratified_at"]]);
+  t("and the editions come from the BUNDLE's own publications, latest named",
+    [c.editions ?? null, c.latest_edition ?? null], [[1], 1]);
+
+  /* THE FINDING, AND IT IS REPORTED BEFORE IT IS ASSERTED. `#looseEditionState`
+     COMPUTES a `detail` sentence written for exactly this state — "this is a
+     RATIFIED BUNDLE that is not a member of any published case: … no case
+     identity, no scope statement, no completeness assertion and no bias
+     acknowledgement" — and `publishedCase`'s success return picks its fields by
+     name, so THAT SENTENCE REACHES NO CALLER. What the answer does carry is
+     `case_detail`, a paragraph describing what a published CASE is, byte-for-byte
+     the same on both branches. So the one branch where the plane deliberately
+     refuses to manufacture case-ness is the branch whose only prose describes a
+     case, and the sentence saying it is not one is dropped.
+     ASSERTED IN BOTH DIRECTIONS ON PURPOSE. This is NOT a pin that the defect
+     persists: the claim is that the two branches share ONE return, which is the
+     op's contract and the reason this block exists. If the delegated fix lands
+     and the loose branch starts publishing its own account, this goes RED and
+     somebody decides deliberately, which is what a superseded assertion is for.
+     Delegated to the plane, not fixed here: publishing a new top-level key on a
+     public I3 op is an interface change and plane behaviour, and this is the
+     test estate. */
+  t("M0-11 FINDING: the loose state's OWN sentence is computed and NEVER published — the key is absent from the wire",
+    ["detail" in c, "detail" in caseAns], [false, false]);
+  t("and the only prose either branch carries is the CASE's account, identical on both — including for bytes that are NOT a case",
+    [str(c.case_detail) !== "" && c.case_detail === caseAns.case_detail,
+     str(c.graph_detail) !== "" && c.graph_detail === caseAns.graph_detail,
+     str(c.case_detail).includes("a published case is a CONTAINER")], [true, true, true]);
+  /* `graph_detail` was pinned by NO plane suite before this line — M0-11's own
+     sweep found it named only in `civicos-ui`. It is named here so the plane's
+     battery holds its own contract. */
+  t("`graph_detail` states what serves[] may hand over and what names[] may only name, on a branch that has neither",
+    [str(c.graph_detail).includes("serves[] is what this surface may hand over"),
+     f0.serves ?? null, f0.names ?? null, f0.unresolved ?? null],
+    [true, [], [], []]);
+
+  /* THE NEGATIVE DIRECTION, which is where this class hides. Three states that
+     must NOT take this branch, each driven rather than reasoned about. */
+  t("bytes that DO belong to a case never take this branch: the case path still answers with its identity and its container",
+    [typeof caseAns.caseId, caseAns.caseId !== null, caseAns.manifest_sha !== null, caseAns.completeness !== null],
+    ["string", true, true, true]);
+  const nrAns = await (async () => {
+    await mustPromote(NEVER, ratifiableInfoMd(NEVER), "information", "collected");
+    return anonCase(`id=${NEVER}`);
+  })();
+  t("bytes in no case that were NEVER RATIFIED answer NOT_PUBLISHED — belonging to no case is not what opens this door",
+    [nrAns.ok, nrAns.reason], [false, "NOT_PUBLISHED"]);
+  t("and that refusal is byte-identical to an id that never existed, so the branch cannot be used to test for existence",
+    JSON.stringify(nrAns) === JSON.stringify(await anonCase("id=INFO-2026-9999-nothing")), true);
+  t("an edition of the loose bundle that does not exist is the same refusal again",
+    (await anonCase(`id=${LOOSE}&edition=7`)).reason, "NOT_PUBLISHED");
 }
 
 await mf.dispose();

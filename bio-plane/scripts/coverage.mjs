@@ -159,7 +159,14 @@ const controlRows = battery.map(({ file, src }) => {
 
    MOVE THESE ONLY UPWARD, and only to a figure a green run PRINTED. */
 const REGISTER_FLOOR = {
-  arms:       471,  /* arms stated across the classified declarations. MOVED 470 -> 471 AT
+  arms:       476,  /* arms stated across the classified declarations. MOVED 471 -> 476 BY M0-11,
+                       2026-08-08, from the figure THIS INSTRUMENT PRINTED on a green run of this
+                       worktree (`476 arms … GREW by 5 arm(s)`, `--strict` exit 0 read unpiped) —
+                       never by adding five to the number in the file. The five are block 8's arms
+                       (e)..(i) in `test/publishedcase.test.mjs`, all RUN, each alone against a
+                       pristine `store.mjs` with a BASELINE row beside them.
+                       PRIOR ENTRY, kept because it is the receipt for how this figure moves:
+                       MOVED 470 -> 471 AT
                        INTEGRATION 2026-08-08 by CONDUCT, from the figure this instrument
                        PRINTED (`GREW by 1`) on a green run of the merged tree. M0-14 set 470
                        and REC-75 added an arm afterwards, so the figure was TRUE OF ONE
