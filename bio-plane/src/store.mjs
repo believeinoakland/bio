@@ -157,6 +157,12 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             in two files is what stops either becoming a second authority on the
             other's business. */
          QUEUE_MINT_CHECKS,
+         /* REC-64 / UI-38's §14a rider: the run-open door's capability sentence,
+            plus the 28 single-homed act-shape refusals this file already made and
+            could not explain. Imported rather than re-typed for the reason every
+            other line in this import block gives — the catalogue is the ONE place
+            a code, its C-number and its canned translation live together. */
+         ACT_SHAPE_CHECKS,
          /* MERGED AT INTEGRATION 2026-08-08: PL-11 and PL-14 each appended to
             this import and each ended its own list with `MACHINE_AUTHOR_PREFIX`,
             so the two tails collided textually while agreeing perfectly about
@@ -2162,9 +2168,11 @@ export class Store extends DurableObject {
    *             failure the record exists to prevent.
    *  Bob's decision, 2026-07-25. */
   selectionResolve({ handle, viewer = null, owner = null, weight = "report" } = {}) {
+    /* DEC-49 REGION is-selection-known — REC-64/C-33.20. */
     this.#sweepSelections();
     const sel = this.#one(`SELECT * FROM selections WHERE handle=?`, handle);
     if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
+    /* END DEC-49 REGION is-selection-known */
     /* Ownership is enforced, not inferred from the handle being hard to guess.
        A capability that is only protected by being unguessable is protected by
        nothing once it appears in a log. */
@@ -2602,13 +2610,16 @@ export class Store extends DurableObject {
       if (!b || normalizeType(b.object_type) !== "inquiry") { offenders.push(id); continue; }
       if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
     }
+    /* DEC-49 REGION is-dispose-inquiries — REC-64/C-33.13. The kind check alone;
+       the transition check below refuses with a code eight sites mint. */
     if (offenders.length)
-      /* NOT_INQUIRIES, né NOT_PROBLEMS: REC-10's one wire change inside this
-         op (DATA-MODEL §2.7 change 13 — the refusal stops naming a construct
-         that no longer exists). */
+      /* né NOT_PROBLEMS: REC-10's one wire change inside this op (DATA-MODEL
+         §2.7 change 13 — the refusal stops naming a construct that no longer
+         exists). */
       return { ok: false, reason: "NOT_INQUIRIES", offenders: offenders.sort(),
                detail: "disposition moves an inquiry's state, and this selection carries something else. "
                      + "The set is refused whole rather than narrowed to the inquiries in it." };
+    /* END DEC-49 REGION is-dispose-inquiries */
     if (illegal.length)
       return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: "these are not legal moves in the catalog's state table. A move to the state "
@@ -2974,13 +2985,21 @@ export class Store extends DurableObject {
         refused whole. */
   release({ handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-release — REC-64/C-32.1. The FENCE and only the
+       fence: everything below in this method is a payload complaint and not this
+       family's business. D-229 measured that the two are confusable from the
+       outside, which is exactly why the governed span stops here. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_RELEASE",
                detail: "the collected-to-verified transition is a named member's decision (Intake Doctrine "
                      + "section 4, C-18.1). A machine credential may read and may prepare the review packet, "
                      + "and may not release. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-release */
     const ack = String(acknowledgment ?? "").trim();
     const mit = String(mitigation ?? "").trim();
+    /* DEC-49 REGION is-release-account — REC-64/C-33.10-11. What the member has
+       to SAY to release a batch. The loop below refuses through a
+       template-literal code and is outside the span for that reason. */
     if (!ack)
       return { ok: false, reason: "NO_ACKNOWLEDGMENT",
                detail: "a bulk release records the member's explicit acknowledgment that the batch is "
@@ -2991,6 +3010,7 @@ export class Store extends DurableObject {
                detail: "a bulk release records what the member actually did: what was sampled, what was "
                      + "checked. 'Sender domains verified on a sample of twelve' can be audited later; "
                      + "silence cannot." };
+    /* END DEC-49 REGION is-release-account */
     for (const [name, v] of [["acknowledgment", ack], ["mitigation", mit]])
       if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
@@ -3067,6 +3087,7 @@ export class Store extends DurableObject {
                      + "ratifying it requires verifying its co-attestations, which is per-document work, "
                      + "and a batch containing crucial material is not a low-variance collection. Release "
                      + "these individually, or re-select without them." };
+    /* DEC-49 REGION is-release-entry — REC-64/C-33.12. */
     if (entry.length)
       return { ok: false, reason: "ENTRY_REQUIREMENTS",
                offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
@@ -3074,6 +3095,7 @@ export class Store extends DurableObject {
                      + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
                      + "for every document in the register (C-18.9). Releasing these as they stand would mint "
                      + "bundles the catalog immediately rejects." };
+    /* END DEC-49 REGION is-release-entry */
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     const released = [];
@@ -3179,13 +3201,20 @@ export class Store extends DurableObject {
    * is a promotion, and then it concludes like any other. */
   conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. The fence alone; the
+       conclusion's own payload conditions below are governed by nothing here. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",
                detail: "a conclusion is a named member's assertion about what the record shows. A machine "
                      + "credential may SURFACE a question, gather what it rests on and prepare the answer, "
                      + "and may never author the conclusion. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-conclude */
     const concl = String(conclusion ?? "").trim();
     const fals = String(falsifier ?? "").trim();
+    /* DEC-49 REGION is-conclude-answer — REC-64/C-33.1-2. The two conditions on
+       the ANSWER itself. The loop below refuses through a template-literal code
+       and is deliberately outside the span: arm C cannot compare a code it
+       cannot read, and a span it reads past is worse than one it never entered. */
     if (!concl)
       return { ok: false, reason: "NO_CONCLUSION",
                detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
@@ -3196,6 +3225,7 @@ export class Store extends DurableObject {
                detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be "
                      + "checked by anyone, including its author, and a record that cannot be checked claims "
                      + "more than it can support." };
+    /* END DEC-49 REGION is-conclude-answer */
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
       if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
@@ -3361,11 +3391,13 @@ export class Store extends DurableObject {
    * DERIVED on read (see #actionDerived) and what to do about it is the member's. */
   actionMove({ target, to, reason = "", resolution = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-move-action — REC-64/C-32.3. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_MOVE_ACTION",
                detail: "moving an action is a named member's decision to reach outside this system, or to "
                      + "declare that reaching out is finished. A machine credential may prepare an action and "
                      + "may never advance one. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-move-action */
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
@@ -3420,6 +3452,8 @@ export class Store extends DurableObject {
        DISPOSITIONS arrangement REC-11 unwound, and it survived here because
        nothing published the set, so nothing could pin the two identical. */
     const res = String(resolution ?? "").trim();
+    /* DEC-49 REGION is-move-resolution — REC-64/C-33.3-4. The two conditions on
+       HOW an action ended, which are this pair's whole subject. */
     if (to === "resolved" && !RESOLUTIONS.includes(res))
       return { ok: false, reason: "NO_RESOLUTION", target, legal: RESOLUTIONS,
                detail: "an action that is resolved says HOW it resolved: one of "
@@ -3429,6 +3463,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "RESOLUTION_WITHOUT_RESOLVING", target, to,
                detail: "a resolution describes how an action ENDED; supplying one on a move to "
                      + `${to} would record an outcome the action has not reached.` };
+    /* END DEC-49 REGION is-move-resolution */
 
     const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
     const withHistory = Store.#appendStateHistory(text, {
@@ -3513,13 +3548,20 @@ export class Store extends DurableObject {
   actionCorrespond({ target, direction = "", at = "", medium = "", party = "",
                      artifactSha = "", account = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_CORRESPOND",
                detail: "a correspondence entry is a named member's statement that this exchange happened — "
                      + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
                      + "and may not testify to an exchange. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-correspond */
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
+    /* DEC-49 REGION is-correspond-entry — REC-64/C-33.5-8. The four conditions
+       on the ENTRY's own shape. The target guard above and the hash checks below
+       refuse with codes minted at several other sites, so they are outside this
+       span: a `where` claims ONE span, and a code enforced in eight places
+       cannot honestly name one of them as the site. */
     if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
       return { ok: false, reason: "BAD_DIRECTION", legal: CORRESPONDENCE_DIRECTIONS, direction,
                detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
@@ -3541,6 +3583,7 @@ export class Store extends DurableObject {
                detail: "an entry carries either an artifact_sha that resolves in the register or an account "
                      + "with an author. Neither is an entry that asserts an exchange and offers no way to "
                      + "check that it happened." };
+    /* END DEC-49 REGION is-correspond-entry */
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     if (sha && direction === "no_response")
@@ -3565,10 +3608,12 @@ export class Store extends DurableObject {
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */
+    /* DEC-49 REGION is-correspond-artifact — REC-64/C-33.9. */
     if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
       return { ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
                detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
                      + "record a named account instead — those are the two honest ways to hold an exchange." };
+    /* END DEC-49 REGION is-correspond-artifact */
 
     /* THE COURTESY LOCK, under the acting member. */
     const lease = this.acquireLease(target, who, Store.CORRESPOND_LEASE_MS);
@@ -3816,11 +3861,13 @@ export class Store extends DurableObject {
    * the state machine lying, which is the argument this op was built on. */
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-reopen — REC-64/C-32.5. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_REOPEN",
                detail: "reopening is a named member's judgement that a question the group set down has to "
                      + "be worked again. A machine credential may surface a question and pursue one, and "
                      + "may not overturn the group's own disposition. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-reopen */
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
@@ -4035,11 +4082,13 @@ export class Store extends DurableObject {
                 subjectJustification = "", biasAcknowledgement = "",
                 viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-publish — REC-64/C-32.6. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_PUBLISH",
                detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
                      + "may never author the completeness assertion or the position on putting it to its "
                      + "subject, both of which are declared bias. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-publish */
     /* REC-44: the SET. `targets` is the shape; `target` is the one-finding
        degenerate case DEC-44 determination 5 keeps legal, and it is normalised
        here so nothing below has two arities to think about. A comma-separated
@@ -4082,10 +4131,12 @@ export class Store extends DurableObject {
        this act's. Nothing here reads WHICH bias is named, exactly as nothing
        reads which subject position was declared. */
     const back = String(biasAcknowledgement ?? "").trim();
+    /* DEC-49 REGION is-publish-statement — REC-64/C-33.14. */
     if (!stmt)
       return { ok: false, reason: "NO_STATEMENT",
                detail: "a published case states what it does NOT cover. A case silent about its own limits is "
                      + "claiming to cover everything, which is the overclaim this record exists to refuse." };
+    /* END DEC-49 REGION is-publish-statement */
     if (!SUBJECT_POSITIONS.includes(pos))
       return { ok: false, reason: "NO_SUBJECT_POSITION", allowed: SUBJECT_POSITIONS,
                detail: "declare the group's position on putting this case to its subject. The gate is that the "
@@ -4589,12 +4640,14 @@ export class Store extends DurableObject {
    * — is refused rather than quietly given a state its contract never had. */
   divide({ target, reason = "", children = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-divide — REC-64/C-32.7. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
                detail: "dividing is a named member's judgement that the group's own question was malformed — "
                      + "that it was two questions — and that judgement carries a name. A machine credential "
                      + "may surface a question and gather what it rests on; it may not restructure the "
                      + "record's questions. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-divide */
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
@@ -5124,6 +5177,7 @@ export class Store extends DurableObject {
    */
   groundInquiry({ target, grounds, reason = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-ground — REC-64/C-32.8. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_GROUND",
                detail: "grouping is a named member's judgement that some of their reasons are enough on "
@@ -5131,6 +5185,7 @@ export class Store extends DurableObject {
                      + "finding STRONGER. A machine credential may surface a question and gather what it "
                      + "rests on; it may not decide that part of the gathering was sufficient by itself. "
                      + "Sign in as a member." };
+    /* END DEC-49 REGION is-machine-ground */
     if (!target)
       return { ok: false, reason: "NO_TARGET",
                detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
@@ -5534,10 +5589,15 @@ export class Store extends DurableObject {
      happen is a bar that gates while saying nothing about which axis it gates. */
   strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
     const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-strength-bar — REC-64/C-32.9. THE FENCE D-229
+       CALLED ITS OWN PROOF: this is the one of the twelve that FULLY SUCCEEDED
+       under a complete payload when the predicate was neutered, so a machine set
+       the group's required evidentiary strength. It is governed here first. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DECLARE",
                detail: "the required evidentiary strength is the GROUP's declaration about its own work. A "
                      + "machine credential may not make it. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-strength-bar */
     const gid = String(group ?? "").trim() || "believe-in-oakland";
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       /* REC-51: the membership test AND the sentence that reports it both read
@@ -5841,10 +5901,12 @@ export class Store extends DurableObject {
        quote or a newline in here would not be escaped, it would silently
        reshape the document. Refused rather than sanitised: mangling an
        operator's words is worse than declining them. */
+    /* DEC-49 REGION is-cite-note — REC-64/C-33.15. */
     const nt = String(note ?? "");
     if (nt.length > 200 || /["\\\r\n]/.test(nt))
       return { ok: false, reason: "BAD_NOTE",
                detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
+    /* END DEC-49 REGION is-cite-note */
 
     /* THE ROLE (REC-37), judged before the selection's members so a member who
        has not said what the material DOES is told that first, and told it
@@ -5860,6 +5922,9 @@ export class Store extends DurableObject {
        REFUSED, not ignored, on the case arm. A `cites` edge has no role and a
        role quietly dropped is the D-21 class in miniature: a field authored in
        one place and honoured nowhere. */
+    /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. All three conditions on
+       the ROLE a leg carries, and nothing else: the citability checks below
+       refuse with codes minted at four other sites each. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
       if (rl === null)
@@ -5880,6 +5945,7 @@ export class Store extends DurableObject {
                      + "recorded — refused instead, because a field stated in one place and honoured nowhere is "
                      + "how the record and its projections drift apart." };
     }
+    /* END DEC-49 REGION is-cite-role */
 
     /* Every member of the selection must be CITABLE, and what that means
        depends on what is doing the citing.
@@ -5970,12 +6036,14 @@ export class Store extends DurableObject {
       else if (ontoInquiry ? legged.has(id) : st !== undefined) already.push(id);
       else add.push(id);
     }
+    /* DEC-49 REGION is-cite-severed — REC-64/C-33.19. */
     if (severed.length)
       return { ok: false, reason: "SEVERED_EDGE", project, handle,
                offenders: severed.sort(), drift: sel.drift,
                detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut "
                      + "the dependency, not the absence of one. Citing neither reverses it silently nor skips "
                      + "past it. Reinstating a severance is a separate action that records its own reason." };
+    /* END DEC-49 REGION is-cite-severed */
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
 
@@ -7476,8 +7544,13 @@ export class Store extends DurableObject {
                        : "only an owner of this project may reactivate it." };
         }
       }
+      /* DEC-49 REGION is-promote-cas — REC-64/C-33.21. THE COMPARE-AND-SWAP, and
+         it is one of the 32 refusals PL-1's whole-function `where` conscripted
+         into DEC-49's scope by accident (REC-71). It is in scope now on purpose,
+         with a span that claims exactly the two lines that enforce it. */
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
+      /* END DEC-49 REGION is-promote-cas */
 
       for (const f of files) {
         if (f.text !== undefined && f.text.length > INLINE_MAX)
@@ -7861,6 +7934,8 @@ export class Store extends DurableObject {
          * refusal NAMES THE PATH it found, because "cycle refused" without the
          * path leaves the member to re-derive the walk the store just did.
          */
+        /* DEC-49 REGION is-basis-acyclic — REC-64/C-33.22-23. Both ways a basis
+           write would close a loop, in one span because they are one rule. */
         for (const leg of basisLegs) {
           if (leg.target === bundleId)
             return { ok: false, reason: "SELF_BASIS", path: [bundleId, bundleId],
@@ -7875,6 +7950,7 @@ export class Store extends DurableObject {
           return { ok: false, reason: "BASIS_CYCLE", path: cycle,
                    detail: `this write would close a cycle: ${cycle.join(" -> ")}. `
                          + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` };
+        /* END DEC-49 REGION is-basis-acyclic */
       }
 
       // history is append-only: snapshot the outgoing live state first
@@ -7927,6 +8003,7 @@ export class Store extends DurableObject {
        * the history it reconstructs may legitimately contain deletions, and a
        * replayed revision is already marked as such in the manifest.
        */
+      /* DEC-49 REGION is-promote-files — REC-64/C-33.24. */
       if (cur && !pkg.replay) {
         const had = new Set(this.#rows(`SELECT path FROM files WHERE bundle_id=?`, bundleId).map((r) => r.path));
         const now2 = new Set(files.map((f) => f.path));
@@ -7937,6 +8014,7 @@ export class Store extends DurableObject {
                    detail: "this promotion would remove files the previous revision had. "
                          + "Carry them forward, or name them in drop[] to delete them on purpose." };
       }
+      /* END DEC-49 REGION is-promote-files */
       this.sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
       for (const f of files)
         this.sql.exec(
@@ -8947,8 +9025,10 @@ export class Store extends DurableObject {
   addEntityAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
+    /* DEC-49 REGION is-alias-named — REC-64/C-33.25. */
     const norm = Store.#normAlias(alias);
     if (!norm) return { ok: false, reason: "NO_ALIAS", detail: "an alias needs a name" };
+    /* END DEC-49 REGION is-alias-named */
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
     const dup = this.#one(`SELECT alias FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
@@ -9633,11 +9713,13 @@ export class Store extends DurableObject {
     }
     /* after_stage must name a stage in THIS definition (or be null): a stage cannot
        presuppose one that does not exist. */
+    /* DEC-49 REGION is-progression-order — REC-64/C-33.26. */
     for (const s of norm) {
       if (s.after_stage != null && !seen.has(s.after_stage))
         return { ok: false, reason: "UNKNOWN_AFTER", stage_key: s.stage_key, after: s.after_stage,
                  detail: `stage '${s.stage_key}' is after '${s.after_stage}', which is not a stage of this progression` };
     }
+    /* END DEC-49 REGION is-progression-order */
     const at = new Date().toISOString();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     this.ctx.storage.transactionSync(() => {
@@ -11925,10 +12007,12 @@ export class Store extends DurableObject {
           detail: "the notification catalogue does not name that kind. Unknown is not the same as "
                 + "forbidden, and this refusal is the first rather than the second.",
           available: Object.keys(QUEUE_CONDITION_KINDS) };
+      /* DEC-49 REGION is-mute-class — REC-64/C-33.27. */
       if (cls !== "CONDITION")
         return { ok: false, reason: "KIND_NOT_PERSONAL", kind: k, kind_class: cls, case: c.id,
           detail: MUTE_REFUSAL_DETAIL[cls],
           available: Object.keys(QUEUE_CONDITION_KINDS) };
+      /* END DEC-49 REGION is-mute-class */
     }
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
     const row = this.#one(
@@ -14238,12 +14322,14 @@ export class Store extends DurableObject {
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
 
+    /* DEC-49 REGION is-owner-floor — REC-64/C-33.28. */
     const owners = this.#owners(projectId);
     const math = Store.ownerMath(owners.length);
     if (!math.possible)
       return { ok: false, reason: "LAST_OWNER", ...math,
                detail: "one owner is the floor, so the last owner of a project is not removable. Add "
                      + "another owner first, or deactivate the project (7.11)." };
+    /* END DEC-49 REGION is-owner-floor */
     /* At three and above the target does not vote. At two they must, which is
        the whole divergence from 4.7 and the reason ownerMath exists separately. */
     if (!math.targetMayVote && by === target.member_id)
@@ -19458,8 +19544,35 @@ export class Store extends DurableObject {
       return { run: run || null, started: false,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
+    /* REC-64 — UI-38's §14a RIDER, DISCHARGED HERE AND NOT AT A SURFACE.
+       §14a promises the running-session surface SAYS SO when the capability is
+       unavailable, and IS-BUILD-PLAN's FL-6 row states the failure it is
+       guarding against: *"when no token resolves the capability is UNAVAILABLE
+       and says so — never a silent no-op"*. UI-38 correctly LEFT that sentence
+       rather than authoring it, because member-facing refusal wording is DEC-49's
+       and not a surface's.
+
+       THIS GUARD ALREADY WAS THAT CONDITION and was answering it with a
+       CODELESS note — a sentence a surface can only render verbatim or blank,
+       which is the state DEC-49 ended. It now carries a RECEIVED code, its
+       C-number and the canned translation, read from the catalogue at the moment
+       of refusal (RUNTIME lookup — see MACHINE_FENCE_CHECKS' header for the
+       choice and the reason). The `note` is kept unchanged beside it: it is the
+       OPERATOR's sentence and names the cascade's levels, which is exactly the
+       "keep the design explanation, translate the jargon" split REC-64's own row
+       makes at the credential gate. DEC-8 is intact — the surface RECEIVES the
+       code and computes nothing.
+
+       WHAT THIS DOES NOT DO: it does not build the cascade. Resolving member ->
+       project -> instance is FL-6's, and when it lands the honest refusal may
+       want to distinguish *no account resolved at any level* from *the plane
+       credential is missing*. Those are two conditions and would be two codes;
+       one code is stated here rather than two invented ahead of the producer. */
     if (!principalPlane || !principalClaude)
       return { run, started: false,
+               code: "AI_RUN_CAPABILITY_UNAVAILABLE",
+               check: ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.check,
+               translation: ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE.translation,
                note: "a run names TWO principals — the plane credential acting and WHICH LEVEL of the "
                    + "Claude-account cascade pays (member, then project, then instance). They are "
                    + "different principals and an act must say both (DEC-27(b), DEC-55.4)" };
@@ -20530,12 +20643,16 @@ export class Store extends DurableObject {
    *  not shared is the bare-class arm, for the reason in the paragraph above. */
   taskForward({ id = null, to = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a forward is recorded under the member who made it" };
+    /* DEC-49 REGION is-machine-forward — REC-64/C-32.10. The fence alone. REC-73
+       measured that this pair is the ONLY one of the twelve with a second
+       independent fence behind it, so the span stops before that one. */
     if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
       return { ok: false, reason: "MACHINE_CANNOT_FORWARD",
                detail: "forwarding a task hands an obligation to a named person, and deciding who is "
                      + "better placed to answer it is a member's judgement. A machine credential may "
                      + "surface a task and route it at drain time, and may not re-address one. "
                      + "Sign in as a member." };
+    /* END DEC-49 REGION is-machine-forward */
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
@@ -20574,12 +20691,14 @@ export class Store extends DurableObject {
    *  rather than discharging it. Nothing a drain does closes an obligation. */
   taskResolve({ id = null, actor = null, now = null } = {}) {
     if (!actor) return { ok: false, reason: "NO_ACTOR", detail: "a resolution is recorded under the member who made it" };
+    /* DEC-49 REGION is-machine-resolve — REC-64/C-32.11. The fence alone. */
     if (isMachineStamp(actor))                          /* REC-46: the NARROW predicate, deliberately — see the note above */
       return { ok: false, reason: "MACHINE_CANNOT_RESOLVE",
                detail: "resolving a task says the obligation the record raised has been answered, and "
                      + "that is a named member's act. A machine credential may surface a task, route it "
                      + "and prepare what it needs, and may not close it — an unassigned task is nobody's "
                      + "work, and closing nobody's work is still closing. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-resolve */
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };

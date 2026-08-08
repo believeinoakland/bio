@@ -196,17 +196,41 @@ const FLOOR = {
      integration (the note is at the catalogue, where the next allocator reads).
      **The figures below are the ones the guard PRINTED on a green run of the
      tree carrying all three** — neither worker's numbers, because on a merged
-     tree neither worker's numbers are true. */
-  families:     11,    // + QUEUE_MINT_CHECKS (PL-15); + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
-                       // Was 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        105,    // + C-31.1..3 and C-28.14/15 (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
-                       // Was 81 at PL-4, 70 at PL-3.
-  census:      405,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+     tree neither worker's numbers are true.
+
+     REC-64 (agent-a0fc522fabe53b533), 2026-08-08 — THE SWEEP ITSELF, and it
+     moves more of this block than any item before it. Every figure below is one
+     THIS FILE PRINTED on a green run of this worktree, read off the run and
+     never added to the number that was here. REC-64 found NO pre-existing slack:
+     every floor sat exactly at the measured value, which is now the second item
+     running for which that is true — the ratchet moved in the same turn is
+     holding. What moved is what REC-64 grew: two new families
+     (MACHINE_FENCE_CHECKS, ACT_SHAPE_CHECKS), 40 rows, 30 new REGIONS, and one
+     new code at the run-open door (UI-38's §14a rider). The CEILING fell 73 ->
+     42, which is the item's whole point and the first time it has moved by more
+     than one. */
+  families:     13,    // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
+                       // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
+                       // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
+  rows:        145,    // + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
+                       // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
+                       // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
+                       // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
+  census:      406,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
-  reach:       191,    // codes a surface can receive (R1 + R2 + R3) (was 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 28,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 27, 25, 20, 17, 13, 9, 5)
+                       // (was 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
+                          answer is SIX. Arm 3 of `bio-plane/test/nc-rec64.mjs` neuters M2 — the widest
+                          matcher, the one that earned the matcher set — and the union falls 406 -> 401.
+                          **M2's EXCLUSIVE contribution is five codes**, because the matchers overlap
+                          heavily by design. So a floor carrying six codes of slack would let the widest
+                          walk in this file go completely blind and still report GREEN. PL-1 left
+                          NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
+                          and it is recorded here as a number rather than a principle so the next item
+                          can see how little margin it takes to disarm the control. */
+  reach:       200,    // codes a surface can receive (R1 + R2 + R3) (was 191, 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 59,   // spans named by a row's `where` — a function, or a region inside one.
+                       // (was 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -217,12 +241,26 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      16,    // + PL-15's one (is-queue-mint); + PL-14's two (is-version-strength,
+  regions:      46,    // + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
+                       // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
+                       // is-correspond-artifact, is-release-account, is-release-entry,
+                       // is-dispose-inquiries, is-publish-statement, is-cite-note, is-cite-role,
+                       // is-cite-severed, is-selection-known, is-promote-cas, is-basis-acyclic,
+                       // is-promote-files, is-alias-named, is-progression-order, is-mute-class,
+                       // is-owner-floor). Every one COMPARES every code it judges.
+                       // + PL-15's one (is-queue-mint); + PL-14's two (is-version-strength,
                        // is-pair-composed). Was 15 at PL-14, 13 with
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 953,    /* MOVED 919 -> 953 AT INTEGRATION 2026-08-08 by CONDUCT, and it is the block's
+  regionLines: 1220,   /* REC-64: 953 -> 1220, thirty new regions. NOTE FOR THE INTEGRATOR, because the
+                          note below is a receipt that this exact figure is the one only an integrator
+                          can set: REC-64 opened no line inside another item's region, but three other
+                          workers were running against `store.mjs` and A REGION'S LINE COUNT IS A
+                          PROPERTY OF THE MERGED SOURCE. If any of them landed a line inside one of the
+                          46 spans, re-read this from a green run of the merged tree rather than from
+                          this number. */
+                       /* MOVED 919 -> 953 AT INTEGRATION 2026-08-08 by CONDUCT, and it is the block's
                           own subject arriving from a direction no worker could have covered. PL-15
                           set 919 — correct, and measured on a green run of ITS tree. M0-13 landed in
                           the same integration and its one-expression fix to `suggestVersion`'s
@@ -240,8 +278,27 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 76,    // refusal codes actually COMPARED against a family row — NOT the same as
-                       // refusals JUDGED, and not the same as lines read. Was 58, 46, 30, 11.
+  codesChecked: 115,   // refusal codes actually COMPARED against a family row — NOT the same as
+                       // refusals JUDGED, and not the same as lines read. Was 76, 58, 46, 30, 11.
+                       /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
+                          BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed
+                          sites unfalsifiable — 776 lines read, ZERO codes compared — and said the
+                          trend was the finding, every family since VF-2 adding more. THE TREND HAS
+                          REVERSED: 9 of 59 sites compare zero today (1,156 lines), down from 8 of 28
+                          at REC-64's own baseline. All 30 of REC-64's new regions compare EVERY code
+                          they judge, because the convention works — a string literal at the site.
+                          THE WORSE HALF, and it is a finding about the INSTRUMENT rather than the
+                          subject, recorded because REC-64's own new site is the one that exposed it:
+                          `aiRunOpen` is a governed site that judges NOTHING, and not because its code
+                          is a variable. Arm C's matcher is `ok: false`, and `aiRunOpen` refuses with
+                          `started: false`. MEASURED over bio-plane/src: 704 `ok: false`, 5
+                          `started: false`, 3 computed `ok: !x`. So arm C is structurally blind to
+                          eight refusal objects in the plane, and a codeless refusal in any of them
+                          would pass this guard silently. Two of those five are inside `aiRunOpen`
+                          itself and one of them was codeless until REC-64 gave it a code by hand.
+                          NOT fixed here: widening the matcher is a change to VF-2's instrument under
+                          `civicos-ui/`, which REC-64 did not claim beyond this constant block.
+                          Delegated in CLAIMS.md with the measurement. */
                        // The growth is a convention landing, not luck: PL-3 named its helper
                        // `refusal` and passed a STRING LITERAL at every site, and every family
                        // since has done the same, because a local `refuse(key, …)` passes the code
@@ -261,9 +318,36 @@ const FLOOR = {
    this to zero, one family at a time, and until then no new receivable code may
    arrive without a translation. Measured 2026-08-07 by this file. */
 const CEILING = {
-  reachGap:     73,    // codes in reach with no canned translation — may only FALL. FELL from 74
-                       // at PL-15: C-31.1 gives `NO_CLASS` its first canned translation, and it had
-                       // sat inside REC-64's named gap since VF-2.
+  reachGap:     42,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
+                          REC-64, the enactment itself: 31 codes inside the reach gained a canned
+                          translation in one item. Was 74 before PL-15, which took it to 73 by giving
+                          `NO_CLASS` its first translation.
+
+                          **WHAT THE REMAINING 42 ARE, because the count alone would mislead whoever
+                          reads it next.** They are not a tail of the same work. REC-64 closed every
+                          gap code minted at exactly ONE site in `store.mjs`; what is left is two
+                          kinds, and NEITHER is closed by writing more translations:
+
+                          (1) THE MULTI-SITE CODES — the large half. A row holds ONE `where`, and a
+                              `where` names THE SMALLEST SPAN IN WHICH THE REFUSAL IS ENFORCED. One
+                              code may not hold two rows: arm A refuses a duplicated check number and
+                              a duplicated translation, and two rows for one code is two wordings for
+                              one condition — the drift this guard exists to stop. So a code minted at
+                              fifteen sites cannot honestly name one of them. MEASURED in the plane:
+                              NO_SUCH_BUNDLE 15 sites, NO_REASON 12, NO_ENTITY 10, NO_SUCH_PROJECT 9,
+                              NOT_A_PROJECT 8, NO_TARGET 9, ILLEGAL_TRANSITION 8, NOT_AN_INQUIRY 7,
+                              NO_SUCH_ENTITY 7, NO_SHA 5, NOT_THE_OWNER 5, EMPTY_SELECTION 5. The
+                              honest fix is a `where` that can name a SET of spans, or those refusals
+                              consolidated behind one helper so there IS one site — a change to this
+                              guard or to the plane's shape, not a translation.
+                          (2) THE FOUR IN `index.mjs` — BAD_LOCATOR, GATE_REFUSED, NO_ATTESTATION,
+                              NO_SUCH_CAPTURE, all minted inside the control plane's `fetch`. REC-64
+                              did not claim `index.mjs` and did not reach into an unclaimed file for
+                              four codes.
+
+                          So this ceiling does NOT fall to zero by continuing REC-64's method, and
+                          saying so here is the point: a ratchet whose next move is unavailable reads
+                          as neglect unless the reason is written where the number is. */
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
