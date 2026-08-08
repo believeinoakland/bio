@@ -3199,34 +3199,83 @@ function checkProjectExtension(ctx, findings) {
   }
 }
 
-/** C-8: citation register shape, hash format, and cite resolution. */
-function checkCitationRegister(ctx, findings) {
-  const raw = ctx.files.get('data/citations.json');
-  if (!raw) return;
-  let reg;
-  try { reg = JSON.parse(asText(raw)); } catch { return; /* C-14.3 reports */ }
-  const claims = Array.isArray(reg?.claims) ? reg.claims : null;
-  if (!claims) { findings.push(f('C-8.1', 'error', 'data/citations.json must be {"claims": [...]}')); return; }
-  for (let i = 0; i < claims.length; i++) {
-    const c = claims[i];
-    if (!c || !c.claim_id || !c.claim || !Array.isArray(c.cites) || c.cites.length === 0 || !c.snapshot || !DATE_RE.test(c.as_of || '')) {
-      findings.push(f('C-8.1', 'error', `citations claims[${i}] lacks claim_id/claim/cites[]/snapshot/as_of`,
-        ['supply keys resolving to an Information object', 'demote claim to commentary', 'move claim to Open Questions']));
-      continue;
-    }
-    if (!CONTENT_HASH_RE.test(c.hash || '')) {
-      findings.push(f('C-8.1', 'error', `citations ${c.claim_id}: hash '${String(c.hash).slice(0, 20)}' is not sha256:<64 hex>`));
-    }
-    for (const t of c.cites) {
-      if (!BUNDLE_ID_RE.test(t)) {
-        findings.push(f('C-8.1', 'error', `citations ${c.claim_id}: cite '${t}' is not a canonical ID`));
-      } else if (ctx.resolveTarget && !ctx.resolveTarget(t)) {
-        findings.push(f('C-8.1', 'error', `citations ${c.claim_id}: cite '${t}' does not resolve in the store`,
-          ['supply keys resolving to an Information object', 'demote claim to commentary', 'move claim to Open Questions']));
-      }
-    }
-  }
-}
+/* RETIRED CHECKS — ids this catalogue once carried and deliberately no longer
+ * enforces. RECORDED here rather than deleted, for the reason ORCHESTRATION's
+ * supersession rule gives: an item that vanishes is indistinguishable from one
+ * nobody did, and a check silently gone is exactly the limbo the retirement was
+ * supposed to end. Two mechanisms depend on this being a TABLE and not a comment:
+ *
+ *   - `scripts/coverage.mjs` derives the catalogue by reading C-numbers out of
+ *     THIS FILE's text, so a retired id keeps being counted and keeps demanding
+ *     an assertion that names it. That is the design, not a leak: the assertion
+ *     that names a retired id is the one PROVING IT NO LONGER FIRES, and
+ *     `--strict` therefore cannot forget the retirement.
+ *   - `test/check-firing.test.mjs` reads this table and asserts, for every row,
+ *     that nothing in this file pushes a finding under that id and that the
+ *     estate grew no producer for the shape it gated. Reintroducing either
+ *     FAILS, by name.
+ *
+ * Adding a row means: delete the check, state below what it was for and why it
+ * is wrong to keep, and let the suite's retirement arms bite.
+ *
+ * THE NAME IS NOT `RETIRED_CHECKS`, AND THE REASON IS A MEASUREMENT RATHER THAN
+ * A PREFERENCE. It was, for about an hour. `civicos-ui/check-refusal-codes.mjs`
+ * HARVESTS every export in this file matching /_CHECKS$/ as a DEC-49 refusal
+ * FAMILY — never a hand-kept list, precisely so a new family cannot escape the
+ * guard by not being mentioned — and it therefore read this table as a family of
+ * one, failed four times over a row with no wire code, no canned translation, no
+ * C-number and no `where`, AND silently grew its own family/row floor from 14/152
+ * to 15/153. Both halves matter: the guard was right to fail (a row in that shape
+ * IS malformed) and the floor movement was FALSE GROWTH in a ratchet whose whole
+ * purpose is to have none. `_CHECKS` is a reserved suffix in this file. */
+export const CHECK_RETIREMENTS = {
+  /* WHAT IT WAS FOR. `data/citations.json` is the emission shape written into
+   * `BIO_State_Rules_Consistency_v1_5.md` for a workproduct's machine-checked
+   * citation register: {claims:[{claim_id, claim, cites[], snapshot, as_of,
+   * hash}]} — a claim, the keys it rests on, an as-of date, and a content hash.
+   * C-8.1 validated that shape, the sha256 hash format, and that every cite
+   * resolved in the store. It was correct code for a register the record never
+   * grew, and it drew a finding on nothing, ever, in production.
+   *
+   * WHY THE OLD RULE WAS WRONG, which is the half a deletion would have lost.
+   * It was not wrong when it was written; it was superseded. The register put a
+   * CLAIM inside another object's file, and a claim that lives inside another
+   * object's file cannot be cited, contradicted, graded or composed — which is
+   * the precise argument that produced the inquiry object. `inquiry_basis` and
+   * `inquiry_basis_versions` now hold that structure as first-class rows: legs
+   * with a target, a role, a per-axis grade and a `grade_source` the caller
+   * cannot hand us. Keeping C-8.1 alongside them would have left the record
+   * carrying TWO claim structures with overlapping shapes and no relation
+   * between them, so a reader asking "what does this rest on?" would have had
+   * two places to look and no rule saying which was authoritative. That is the
+   * diffusion D-69 measures, and it is worse than the missing check: the second
+   * structure is the one a member could fill in by hand while the plane knew
+   * nothing about it.
+   *
+   * MEASURED BEFORE DECIDING (FW-13, 2026-08-08). Nothing in bio-plane/src,
+   * civicos-ui, docprofile, tools, agent-worker, pdf-worker or newgroup/src
+   * writes or reads `data/citations.json` — the only occurrence outside this
+   * catalogue and its suite is `newgroup/src/release.mjs`, which is one
+   * `RELEASE_SOURCE` string holding a copy of this file. Every sibling register
+   * the catalogue gates has a real producer (`data/provenance.json` 9,
+   * `_history/manifest.json` 4, `data/inbox.json` and `data/dataset.json` 2
+   * each); this one had 0. The check FIRED correctly on a hand-planted file and
+   * fired ALONE — nothing else was doing its work — so this is not a redundant
+   * check and not an unreachable one. It is a check with no producer.
+   *
+   * WHAT REPLACES IT: nothing, deliberately. A claim belongs on an inquiry as a
+   * basis leg, in the rows op=cite writes and op=earnedbasis reads, where the
+   * strength rules can reach it. A file called `data/citations.json` in a bundle
+   * is now an ordinary data file: C-14.2 still judges its name and C-14.3 still
+   * judges that it parses, exactly as they do for any other. */
+  'C-8.1': {
+    what: 'the per-bundle citation register data/citations.json',
+    retired: '2026-08-08',
+    item: 'FW-13',
+    superseded_by: 'inquiry_basis / inquiry_basis_versions — the claim layer, as rows',
+    gated_path: 'data/citations.json',
+  },
+};
 
 /** C-2.10's counterparty arm (D-130 / REC-23). See COUNTERPARTY_STATES above for
  *  the shape, why it is `source`'s, why there is no counterparty table, and the
@@ -5393,7 +5442,8 @@ export async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: the bias bundle's own arm, beside its four siblings. It
        returns immediately for every other type, exactly as they do. */
     checkBiasExtension(ctx, findings);
-    checkCitationRegister(ctx, findings);
+    /* checkCitationRegister ran here until FW-13 retired it (2026-08-08). See
+       CHECK_RETIREMENTS above for what it gated and why keeping it was wrong. */
     checkDeletionRecords(ctx, findings);
     checkAppendOnly(ctx, findings);
     checkHistoryCoherence(ctx, findings);

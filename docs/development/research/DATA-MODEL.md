@@ -413,6 +413,17 @@ that is already built and tested.
    why. My recommendation is retire: a claim that lives inside another object's file cannot be
    cited, contradicted, graded or composed, which is exactly the argument that produced the
    inquiry object (design `:214-217`).
+   **DECIDED 2026-08-08 (FW-13): RETIRED, and this recommendation is the one that was
+   taken.** The measurement behind it went further than the grep quoted above: every
+   sibling register the catalogue gates has a real producer (`data/provenance.json` 9
+   files, `_history/manifest.json` 4, `data/inbox.json` and `data/dataset.json` 2 each)
+   and this one had **0**, while C-8.1 fired correctly and fired ALONE on a hand-planted
+   file — so it was a check with no producer rather than a redundant or an unreachable
+   one. The check is gone from `bio-checks.mjs`; the id and the reasoning live on in
+   `CHECK_RETIREMENTS` there, and `check-firing.test.mjs` now asserts that the shape draws
+   nothing, that no retired id is pushed anywhere in the catalogue, and that **the estate
+   grew no producer** for it. `data/citations.json` in a bundle is now ordinary data:
+   C-14.2 judges its name and C-14.3 judges that it parses, as for any other file.
 3. **`elevated_into` is required by C-6.3 and produced by no op** (§1.6). The `focus →
    project` promotion, which is the transition the current triage path turns on, is entirely
    hand-authored. Whatever inquiry does about elevation must not inherit that.
