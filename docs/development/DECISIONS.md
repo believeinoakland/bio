@@ -3482,6 +3482,10 @@ reversal cost: low either way — one predicate at the cite path plus the suites
 
 ### DEC-49 · answered
 
+**INPUT ADDED 2026-08-07 · CONDUCT, from UI-47 — the subject has a NEW MEMBER-FACING CONSUMER, and it is inside the PLANE rather than a surface.** `src/airun.mjs` composes condition sentences (*"the run stopped on 'fetches'"*, and the bound vocabulary's explanations) and the running-session surface renders them **VERBATIM**, which is correct under the derive-nothing rule and under this entry's own ruling that a surface renders what the record published. **The consequence: those strings are now read by members**, so when this entry's code-and-canned-translation rule is enacted (REC-64) it must cover **`src/airun.mjs`'s vocabulary texts, not only `civicos-ui`**. The cost is nil today and **grows with every screen that renders a condition** — which is the reason to record it now rather than when it is expensive.
+
+
+
 **INPUT ADDED 2026-08-05 · CONDUCT, from UI-40 — the subject grew again, and one addition is a WORD THE PLANE CHOSE reaching an unauthenticated reader.** Recorded here rather than acted on, because the wording is exactly what this entry is about:
 
 - **Rendering `case_detail` VERBATIM puts `R2` in front of a reader who is not signed in.** UI-40 shipped it rendered and PINNED, on the reasoning that withholding it re-creates the very withholding the item existed to end — a reader met a case whose index contradicted itself and was told nothing. The guard now measures the true cost, so whichever way this entry rules, the price is visible rather than discovered.
