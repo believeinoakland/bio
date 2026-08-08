@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN.
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN. (run 2026-08-08, M0-10/D-235) restore the shared literal to a scanned suite, putting `const ROOT = "/tmp/civicos-fixture";` back into migrate.test.mjs -> the containment arm FAILS naming the file and the path, 487 pass 1 fail ("no suite roots a filesystem ground at an absolute literal (1 found: [\"migrate.test.mjs: /tmp/civicos-fixture\"])"); restored byte-identical, verified by sha256 AND by cmp. (b) neuter the ground detector itself, so its pattern matches nothing -> the REACH arm fails ("the ground detector catches all 3 planted literals"), 487 pass 1 fail, WHILE the corpus arm above still passes over a clean estate — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (c) widen the detector to any quoted absolute literal, the over-strictness direction -> "and flags none of the 5 derived forms" FAILS and the corpus arm reports 687 false findings from URL pathnames, 486 pass 2 fail.
    (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
    SHAPE RESTORED BY M0-9 (2026-08-04), and it is the point rather than tidying. REC-48 wrote the arms as a continuation of this block, `coverage.mjs` then reported BOTH this suite and acquire.test.mjs as declaring NO CONTROL — its detector could not read past the marker's own line — and the arms were moved into a second comment the register never saw, so the register quoted a summary while the evidence sat outside it. The detector now reads the whole block (scripts/control-register.mjs) and is itself asserted at the foot of this suite; the arms are back where they belong. A declaration ends at its comment's close or at a blank line, so keep this paragraph unbroken and it stays one declaration.
    REC-48's THREE ARMS, in full:
@@ -117,6 +117,79 @@ for (const f of suites) {
   if (!/new Miniflare\(|mkdtempSync\(/.test(src)) continue;
   t(`${f} imports test/sandbox.mjs`, /^import ["']\.\/sandbox\.mjs["'];/m.test(src), true);
 }
+
+/* ---- and the import is NOT the guarantee: the ground must be CONTAINED ------
+ * M0-10/D-235, and this is the correction rather than a new rule. The assertion
+ * above certified that a suite IMPORTS the sandbox. It cannot see whether the
+ * suite then USES it, and two suites did not: `migrate.test.mjs` built and WIPED
+ * its whole fixture tree at the literal `/tmp/civicos-fixture`, and
+ * `bootstrap.test.mjs` persisted Durable Object and R2 SQLite to `/tmp/mfp`.
+ * Both imported sandbox.mjs. Both satisfied the check. Both were shared by every
+ * process on the machine, and both were MEASURED red under two and three
+ * concurrent runs — the cause of M0-10's "fails under concurrency, passes
+ * alone", which nothing in the estate could see.
+ *
+ * IT WAS INVISIBLE IN THE GENEROUS DIRECTION, which is the direction this
+ * project treats as worst. `scripts/battery.mjs` accounts for temp residue by
+ * counting inside `$TMPDIR`, so a suite that writes OUTSIDE it is not
+ * under-reported — it is not reported at all. The battery printed `0 directories,
+ * 0 miniflare sandboxes` while 12 MB of SQLite sat in /tmp/mfp accumulating since
+ * 2026-07-31. A true sentence about the fence, and a false impression of the
+ * estate.
+ *
+ * THE RULE IS THE PRINCIPLE, NOT A LIST OF PATHS (REC-70's lesson: a list of
+ * spellings goes stale the moment a new one is written). What makes a temp ground
+ * safe under concurrency is not that it avoids `/tmp` — it is that it is DERIVED
+ * at runtime rather than fixed in the source. `mkdtempSync` mints a name no other
+ * process can hold; a string literal names the same directory for everybody. So
+ * the check is: no suite may pass an absolute-path LITERAL to anything that roots
+ * a filesystem ground. A path derived from `tmpdir()`, from `import.meta.url`, or
+ * from `mkdtempSync` is fine by construction and needs no allowlist.
+ *
+ * WHAT THIS CANNOT SEE, stated rather than left to be discovered: a literal built
+ * by concatenation or held in a variable this walk does not follow, a path handed
+ * in through an environment variable, and a shared resource that is not a
+ * filesystem path at all — a fixed PORT is the same class and this check is blind
+ * to it (no suite pins one today; `migrate/local-plane.mjs` does, deliberately,
+ * and is not a suite). It reads the source; it does not run it. */
+console.log("\n--- and a temp ground is DERIVED, never a shared literal ---");
+/* `[^"'\n]*` and not `[^"']*`: a filesystem path literal never spans a newline,
+   and letting it do so made a single match swallow kilobytes of unrelated source.
+   That is not cosmetic — it was measured. Under the over-strictness control arm
+   the unbounded form produced a findings list so large that the suite never
+   printed its tally, which is precisely the unreadable-failure mode D-93 exists
+   to prevent, arriving inside a check written to prevent a different one. */
+const GROUND = /(?:defaultPersistRoot|persistTo|const\s+ROOT|const\s+PERSIST)\s*[:=]\s*(["'])(\/[^"'\n]*)\1|(?:mkdirSync|writeFileSync|rmSync|readFileSync|mkdtempSync)\(\s*(["'])(\/[^"'\n]*)\3/g;
+const strayGround = [];
+for (const f of suites) {
+  const src = readFileSync(join(DIR, f), "utf8");
+  for (const m of src.matchAll(GROUND)) strayGround.push(`${f}: ${m[2] ?? m[4]}`);
+}
+/* The message is CAPPED and says so when it truncates. A failure nobody can read
+   is a failure nobody acts on; the count is the part that must always survive. */
+const groundShown = strayGround.length > 8
+  ? `${JSON.stringify(strayGround.slice(0, 8))} … and ${strayGround.length - 8} more`
+  : JSON.stringify(strayGround);
+t(`no suite roots a filesystem ground at an absolute literal (${strayGround.length} found: ${groundShown})`, strayGround, []);
+/* A detector that finds nothing passes everything, so its REACH is asserted on a
+   fixture rather than assumed — the same delta discipline the D-113 walk uses. */
+const GROUND_FIXTURE = [
+  `const ROOT = "/tmp/civicos-fixture";`,          // migrate's original defect
+  `  defaultPersistRoot: "/tmp/mfp",`,             // bootstrap's original defect
+  `rmSync("/tmp/somewhere", { recursive: true });`, // a direct call
+].join("\n");
+t("the ground detector catches all 3 planted literals",
+  [...GROUND_FIXTURE.matchAll(GROUND)].map((m) => m[2] ?? m[4]),
+  ["/tmp/civicos-fixture", "/tmp/mfp", "/tmp/somewhere"]);
+/* Over-strictness: the DERIVED forms the estate actually uses must NOT match. */
+const GROUND_CLEAN = [
+  `const ROOT = mkdtempSync(join(tmpdir(), "civicos-fixture-"));`,
+  `  defaultPersistRoot: PERSIST,`,
+  `const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));`,
+  `if (u.pathname === "/report.pdf") return html(PAGE);`,
+  `readFileSync(join(ROOT, "index/index.json"), "utf8")`,
+].join("\n");
+t("and flags none of the 5 derived forms", [...GROUND_CLEAN.matchAll(GROUND)].map((m) => m[2] ?? m[4]), []);
 
 
 /* ---- the generated page cannot be broken by its own comments ----
