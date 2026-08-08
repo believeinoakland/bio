@@ -3610,3 +3610,42 @@ three separate walks this week reported a clean verdict over an empty corpus.
 the argument): a 220-character negation window called **141** mentions of real ops claims
 that they do not exist; tightened to +110/-40 it still called **48**, and every one
 inspected was noise. See `VERIFICATION.md`'s section for the four worked examples.
+
+## REC-72, 2026-08-08 — the curated-producer census, and a battery baseline the brief got wrong by four
+
+**Instrument for the battery: `cd bio-plane && npm run test:battery`, exit read unpiped.**
+Measured in REC-72's worktree at `722c37b` BEFORE any edit: **124/124 suites green ·
+7,811 assertions · exit 0**. REC-72's brief carried *"around 124/124 · ~7,815 assertions"*.
+**The suite count agreed and the assertion count was four high** — the tenth consecutive
+item to find a figure in its brief stale by measuring it, and the smallest miss yet, which
+is worth recording precisely because a near-miss is the kind a session waves through.
+
+After the item: **125/125 green · 7,851 · exit 0.** The +40 is attributed per suite by
+DIFFING the two runs' own per-suite lines, never by subtraction:
+
+    citeproject-inquiry.test.mjs   new, 35   (the act driven through the control plane)
+    citeinquiry.test.mjs           48 → 49   (REC-37's §8 case arm, corrected not exempted)
+    repair-reachability.test.mjs   39 → 40   (its act oracle now proves it did not swallow a throw)
+    hygiene.test.mjs              504 → 507  (its detector-reach arms are deltas over the real
+                                              corpus, so a new suite with a control moves them)
+
+**Instrument for the census: `node bio-plane/test/curated-producer.probe.mjs`** (a probe and
+not a suite: it measures the estate and must not pin it). Over `REL_VOCAB` read out of
+`checks/bio-checks.mjs`, **9 relations, 5 source files, 1,963,450 bytes walked, comments
+blanked before matching**:
+
+    WITH a curated producer  (5)  cites · derived_from · supersedes · links_to · responds_to
+    WITHOUT one, authored-only (4)  relates_to · elevated_into · initiates · corroborates
+
+`links_to` is the only one of the five written by an `INSERT INTO refs` rather than through
+a document. **The first draft of this matcher read PROSE and scored two comment paragraphs
+as producers of `cites`** — wrong in the generous direction, which is the one direction a
+sweep for missing producers must never be wrong in; the blanking pass and an arm asserting
+no hit falls inside a comment are the fix.
+
+**And a figure the census could not have produced, because a source read cannot tell an
+unreachable arm from an absent one — DRIVEN against the real control plane:**
+`op=sever` on a QUESTION withdrawing a leg of its own basis answers
+`{ok:false, reason:"NOT_A_PROJECT", got:"inquiry"}`, and `op=reinstate` answers identically.
+`#spliceBasis` has exactly ONE caller in the plane. **A basis leg has a producer and no
+withdrawal**, which is REC-72's own shape one altitude up and is delegated open.

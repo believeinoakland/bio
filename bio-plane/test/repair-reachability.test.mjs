@@ -254,10 +254,25 @@ const opsIn = (text) => [...String(text).matchAll(/\bop=([a-z]+)\b/g)].map((m) =
 const probeFacts = (machine, state) => ({
   ok: true, object_type: normalizeType(machine), declared_type: machine, current_state: state,
   cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 },
+  /* REC-72: `cited_by_case` is what `sever`/`reinstate` are now derived over.
+     Stated rather than left to the rule's `?? 0` default — see the arm below
+     that asserts `actsAt` did not silently swallow a throw. */
+  cited_by_case: { confirmed: 0, severed: 0 },
   basis_legs: 1, rested_on: { working: 0, frozen: 0, severed: 0 },
 });
+/* THE SWALLOW IS RECORDED, NOT SILENT (REC-72, and it is a finding about this
+   instrument rather than about its subject). This helper used to be
+   `try { … } catch { return []; }`. When REC-72 added a fact the probe object
+   did not carry, `deriveActs` threw a TypeError on EVERY call, the catch turned
+   it into "the plane offers no act at any state", and A3 then reported SIX
+   offenders that do not exist — a wrong number, which is harder to notice than
+   a zero. The catch is kept, because a throw here must not take the suite's
+   other judgements down with it, but every throw is now COUNTED and the foot of
+   the file asserts the count is zero. */
+const ACTS_THREW = [];
 const actsAt = (machine, state) => {
-  try { return deriveActs(probeFacts(machine, state)).map((a) => a.id); } catch { return []; }
+  try { return deriveActs(probeFacts(machine, state)).map((a) => a.id); }
+  catch (e) { ACTS_THREW.push(`${machine}@${state}: ${e && e.message}`); return []; }
 };
 
 const DECLARED_OPS = new Set([...INDEX_SRC.matchAll(/^ {2}([a-z][a-z0-9]*):\s*\{\s*classes:/gm)].map((m) => m[1]));
@@ -564,6 +579,13 @@ const plant = (why, anchor, replacement) => {
   t("and A3 in particular runs over REAL strings, not only planted ones",
     moveDirectives(REAL).filter((d) => opsIn(d.text).length).length > 0, true);
 }
+
+/* REC-72: THE ORACLE ANSWERED, IT DID NOT MERELY FAIL TO OBJECT. Every A3
+   judgement above rests on `actsAt`, and `actsAt` returns the same empty list
+   for "this state offers nothing" as it would for "the derivation crashed". The
+   two are different claims and this arm is what keeps them apart. */
+t("the act oracle never threw: A3's answers are the plane's derivation and not a swallowed crash",
+  ACTS_THREW, []);
 
 await mf.dispose();
 console.log(`\nrepair-reachability: ${pass} pass, ${fail} fail`);
