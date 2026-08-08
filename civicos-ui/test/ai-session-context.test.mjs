@@ -186,7 +186,10 @@ await promote(PROJ, "project", CAROL);
 
 const openRun = (run, contextType, contextId, label, bounds, tok = "mem-ui49") => post("airunopen", {
   run, contextType, contextId, label, mode: `mode-${tag()}`,
-  principalClaude: "project", principalClaudeRef: `acct-${tag()}`, skillVersion: `skill-${tag()}`,
+  /* CORRECTED 2026-08-08 BY SK-1, NOT EXEMPTED: `skill-<tag>` names a version and
+     no PACK, and SK-1's C-22.7 requires the run to say which pack it is a
+     version OF — two AI features write this one column. Still drawn at runtime. */
+  principalClaude: "project", principalClaudeRef: `acct-${tag()}`, skillVersion: `pack-${tag()}@${tag()}`,
   bounds,
 }, tok);
 

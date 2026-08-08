@@ -5462,7 +5462,17 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). SIX C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ * and §14b.6). SEVEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ *
+ * SIX UNTIL 2026-08-08, when SK-1 added C-22.7 — the run's THIRD condition,
+ * the skill version, refused at the open where the two principals already are.
+ * The count is corrected in place rather than left standing: a header carrying
+ * a number nobody re-measures is this repository's most-repeated finding, and
+ * this file is where a reader comes to learn how many the family holds. C-22.7
+ * is in THIS family rather than a new one on purpose — it is a fact about the
+ * run object, and a new `*_CHECKS` family is a floor in
+ * `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's
+ * walk unless it is moved in the same turn.
  *
  * WHY THEY ARE IN THIS FILE AT ALL, since none of them judges a bundle
  * document. §14b.4 is explicit: *every refusal this design promises "BY NAME"
@@ -5560,6 +5570,32 @@ export const AI_RUN_CHECKS = {
     check: 'C-22.6',
     where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
     translation: 'The observation log is not part of any published document and cannot be filed into one.',
+  },
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+     bias manifest in force, the launching project's standard pair, and THE
+     SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+     a hat" and a version is only interpretable against them. SK-1's row makes
+     the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+     disclosure standard), and a condition that may be omitted is not recorded:
+     it is recorded by the runs that felt like it.
+
+     REFUSED AT THE OPEN, beside the two principals, for the same reason those
+     are: refusing later would mean a run had already searched under
+     instructions nobody can name. Two ways to fail and ONE code, because they
+     are one fact — the run object cannot say what it ran under. The worse of
+     the two is a version that names no pack: `3` reads as an answer and
+     identifies nothing, which is the blank-principal shape PL-4 measured one
+     field over, arriving on a condition instead of an identity.
+
+     A WHOLE-FUNCTION `where`, and it is the case the convention above blesses:
+     `checkSkillVersion` is small, single-purpose, and the only refusal it makes
+     is this one — `src/airun.mjs`'s three check functions are the named model. */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: 'C-22.7',
+    where: 'src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen',
+    translation: 'This run did not say which version of its instructions it was working under. '
+      + 'What a run found can only be read against the instructions it was given, so the record '
+      + 'asks for that version before the run starts rather than guessing at it afterwards.',
   },
 };
 

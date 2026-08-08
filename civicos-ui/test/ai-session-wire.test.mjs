@@ -154,7 +154,15 @@ const LABEL      = `label-${tag()}`;
 const MODE       = `mode-${tag()}`;
 const CLAUDE_LVL = `project`;                      /* §14a's cascade word; the LEVEL is a real vocabulary, so it is not randomised — the REF beside it is */
 const CLAUDE_REF = `acct-${tag()}`;
-const SKILL      = `skill-${tag()}`;
+/* CORRECTED 2026-08-08 BY SK-1, NOT EXEMPTED, and the reason is worth the line:
+   this fixture drew `skill-<tag>`, which names a version and no PACK. SK-1 makes
+   the skill version the run's third CONDITION (C-22.7) and requires it to say
+   WHICH pack it is a version of, because the investigative session and the
+   assistant pilot are siblings with two packs writing one `skill_version`
+   column — an opaque token identifies nothing the day the second one exists.
+   Still drawn at runtime, so the value cannot have been in app.html when it was
+   written, which is what this suite is actually about. */
+const SKILL      = `pack-${tag()}@${tag()}`;
 console.log(`  fixture drawn at runtime — fetches ${FETCH_CONSUMED}/${FETCH_ALLOWED}, `
   + `subsessions ${SUBS_CONSUMED}/${SUBS_ALLOWED}, label ${LABEL}, ref ${CLAUDE_REF}, skill ${SKILL}`);
 console.log(`  (a literal in app.html cannot match a value that did not exist when it was written)`);

@@ -186,6 +186,18 @@ const FLOOR = {
   reach:       177,    // codes a surface can receive (R1 + R2 + R3) (was 168, 157, 127, 116, 98)
   governedSites: 24,   // spans named by a row's `where` — a function, or a region inside one
                        // (was 20, 17, 13, 9, 5; 11 whole functions + 13 regions, four of them PL-11's)
+  /* REMEASURED 2026-08-08 AT SK-1's LANDING, in worktree agent-a1f06561dfc61e51c,
+     BY THIS FILE — every figure below is the number it PRINTED on a green run and
+     not one this item added up. SK-1 adds ONE row (C-22.7,
+     `AI_RUN_SKILL_VERSION_UNNAMED`) to the EXISTING `AI_RUN_CHECKS` family and
+     one governed site (`src/skillpack.mjs checkSkillVersion`, a whole function —
+     small, single-purpose, and every refusal in it is an AI_RUN row, which is
+     the case this file's own convention blesses). No new family: a family is a
+     floor here, and a code that buys slack for everybody else's walk is the
+     defect REC-71 measured. */
+                       // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
+                       // (was 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // (was 20, 17, 13, 9, 5; 12 whole functions + 9 regions, three of them PL-4's)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
                        // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -219,6 +231,9 @@ const FLOOR = {
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
   codesChecked: 56,  // was 46, was 11. PL-3 nearly TRIPLED it, and deliberately: a local
+                       // one helper named `refusal`, a STRING LITERAL at each site, which is the
+                       // shape that makes arm C able to COMPARE a code rather than read past it.
+                       // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
                        // `refuse(key, …)` passes the code as a VARIABLE and arm C compares NOTHING,
                        // which is why seven of thirteen governed sites read 776 lines and checked zero.
                        // PL-3's three regions name their helper `refusal` and pass a string LITERAL at
@@ -234,6 +249,12 @@ const FLOOR = {
   vocabularyTerms: 50, // terms across them. WAS 40 OVER A TREE CARRYING 50 when PL-11
                        // arrived, and PL-11 added no vocabulary: ten of pre-existing slack,
                        // found by measuring rather than by adding one to the number here.
+                       // this item grew the corpus — it grew none of it. The floor was printing 50
+                       // against a floor of 40, and TEN of slack is the floor not being a ratchet:
+                       // a walk that lost a whole vocabulary would still have cleared 40. Found the
+                       // only way slack is ever found, by reading what the instrument printed
+                       // rather than by adding to the number in the file (PL-3's finding, and
+                       // REC-71's before it, arriving on a different row of the same block).
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a
