@@ -1492,7 +1492,7 @@ The three joined REC-57's roster in `bounds.test.mjs`, whose `OPS.size` pin **fa
 
 ---
 
-## IC-26 · I3: one NEW read op `op=meaningrows` — the meaning layer answered at MEANING GRAIN · PROPOSED 2026-08-07 (PL-9, D-222 option C), ADDITIVE
+## IC-26 · I3: one NEW read op `op=meaningrows` — the meaning layer answered at MEANING GRAIN · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (PL-9, D-222 option C), ADDITIVE
 
 - **Interface:** I3 (plane → UI), **10.0.0 STABLE** → proposed **10.1.0**
 - **Proposer and owner to land it:** `RECORD` (session is-wave-w3a-pl9), from
@@ -1644,3 +1644,17 @@ confirms the pin bites: making `op=meaningrows` answer a bare array fails
 - **UI** — nothing to migrate: no existing shape moves. The new op is available and
   unconsumed.
 - **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — expected NOT-AFFECTED; none reaches it.
+
+
+### RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-07
+
+**RESPONSES.** CONDUCT answered for the consuming areas (the IC-1 precedent). **RECORD (producer)** — AGREE. **UI — NOT AFFECTED and asserted so: the op is available and UNCONSUMED**, and no existing shape moves, so no UI edit is owed; PL-9 said so explicitly rather than leaving it inferred. **DIST, CAPTURE, CONTENT-\*, FRAMEWORK** — NOT AFFECTED.
+
+**RESOLUTION — ACCEPTED as ADDITIVE, and the reasoning is the mirror of IC-25's.** Nothing existing is renamed, reshaped or withdrawn: one new op, one new argument on it, and `op=searchfields` gains a `rows:` block. **A caller that ignores it sees exactly what it saw before**, which is the test IC-3's line of reasoning applies — and unlike IC-25, no caller's correctness depended on the absence of this.
+
+**What settles it as SOUND rather than merely additive**, and each was measured rather than asserted: it is **one compilation point** (the mint-site COUNT is pinned in two suites, and a second point fails them both); the **viewer gate is the same call** and dropping it makes the op REFUSE at D-15 rather than answer ungated; **`total` is gated WITH the rows**, so an uninvited member is not told there are two where they reach one; and **REC-36's withhold rule is staged LIVE**, against a row a real uninvited member genuinely cannot see — which was only possible because PL-9 measured that a project bundle CAN carry resolution rows, correcting a false sentence in PL-8's header on the way.
+
+**THE ONE STATED DEPARTURE, recorded because it is a departure and not an oversight:** a leg whose target the record no longer holds is **RETURNED**, with `target_id_present` false, rather than withheld by `#bundleGate`'s usual rule. **On a basis, a dangling leg IS the debt, and hiding it UNDER-REPORTS** — `Store#purge`'s own comment is the authority, and the population is real because `purge` produces such legs by design while `promote` refuses to write one (D-168).
+
+**SETTLED. I3 10.0.0 → 10.1.0.** I5 NOT touched. Open against it: nothing. **Related and NOT closed by it: D-227** — these suites assert the statement carries its `LIMIT` and that the published cap is the applied cap, which is the HONESTY half; **an unbounded derivation feeding a bounded answer would still pass**, and that is D-227's subject, riding REC-66. PL-9 states that limit in its own suite rather than leaving it to be discovered.
+
