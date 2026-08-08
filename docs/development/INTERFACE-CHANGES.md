@@ -2008,3 +2008,36 @@ The field is therefore new rather than changed, and **the run now distinguishes 
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+
+
+## IC-31 · I3: ONE new write op — the investigative session's suggest endpoint · I5: one additive nullable column and one scratch table · PROPOSED 2026-08-08 (PL-3 / IS-4) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, and it is additive in both interfaces.**
+
+**I3 gains ONE mutating op: `op=suggest`.** It is the investigative session's ONE write — §4 group 2, *"It SUGGESTS — versions, in `suggested` state"* — and it is ONE endpoint for BOTH modes because §10 rules that *"Export means the AI adds a new version to the inquiry being investigated"*, so nothing the interactive mode can do lies outside what the background job could do. The composition arrives in the POST body (a description is prose held to a commit message's standard and a legs array is a structure; both would be truncated by the first proxy with an opinion about URL length — `op=biasinhale`'s recorded reasoning). `target`, `kind` and `run` may arrive either way. `author` and `viewer` are SERVER-STAMPED and never taken from the caller.
+
+**THE SOLE POSSIBLE OUTPUT IS A `suggested` VERSION CARRYING ITS RUN**, and that is written as a LITERAL with no parameter behind it — §4's fence expressed as the absence of a variable rather than as a check on one. **All five of §9's kinds** — `basis-version`, `sharpen-question`, `new-inquiry`, `level-empty`, `new-edition` — write that one object; the kind is a FIELD on it and not a second endpoint, because five write paths would be five fences.
+
+**I3 gains SEVENTEEN refusal codes** (`C-27.1`–`C-27.17`), every one with a DEC-49 canned translation. Sixteen are reachable only by a caller of the new op; **one (`C-27.15`, `VERSION_KIND_UNKNOWN`) is reachable by any DOCUMENT** carrying a version with a kind outside the closed set, and fires at `op=promote` and at the gate through `basisVersionFindings`.
+
+**EVERY ROW NAMES A REGION AND NOT A WHOLE FUNCTION** (REC-71) — `is-suggest-shape`, `is-suggest-checks`, `is-suggest-write`, delimited by `DEC-49 REGION` markers. That is the rule applied at allocation time rather than paid for at integration, which is what PL-1's two whole-function `where`s cost.
+
+**I5 is TOUCHED in two ways.** (a) ONE additive NULLABLE column `kind` on PL-1's `inquiry_basis_versions` — NULL on every version a member composed by hand, which is exactly true of it. **It is inside the frozen canonical composition and EMITTED ONLY WHEN PRESENT**: an unconditional line would change the composition of every version already in any record and the next promotion of any of them would fail PL-1's freeze. That is DRIVEN in the suite, not reasoned about. (b) ONE new SCRATCH-class table `suggest_refusals`, in `capture_sessions`' and `ai_runs`' family — F10's stored refusal, in `purge` in both arms and counted by `op=stats` (D-113). **Its name deliberately carries no `version` substring**, because PL-1 pinned the tables carrying versions of a basis at exactly two and this carries refusals.
+
+**F10 IS A WIRE-VISIBLE PROPERTY, so consumers must know it.** A verbatim resubmit of a refused submission returns the STORED refusal with `evaluated: false`, `repeated: true`, `wrote: false` and a `repeats` counter, WITHOUT a second evaluation and without touching the record. The submission's identity includes the inquiry's `bundle_sha`, so the key cannot go stale into a false refusal: the moment the question moves, the same bytes are re-evaluated.
+
+**THE ANSWER IS ENVELOPED** per IC-25/26/27/28/29/30: `limit` is the bound APPLIED, `truncated` is published on the empty answer too, and the bound REFUSES rather than truncates — a read cut at its cap must say so or a caller believes it saw everything; a write over its cap is turned away naming the bound. It also publishes `pair` (per axis, never composed), `shared_origins` (D-195's derivation, `[]` meaning the plane LOOKED) and `origins_complete`.
+
+**WHAT IS NOT CLAIMED, and it is the honest half.** `op=suggest` is **NOT an ACT** and is a named `NON_ACTS` row: no member takes it, so no surface owes it and it adds nothing to UI-52's act register. It mints **no notification slug** — §9's kinds are FINDING-class slugs and the vocabulary, its subscriber and the shared-inquiry semantics stay PL-13's and PL-4's. It writes **no capture request** (PL-4's table) and **no credential class** (PL-11's, which will NARROW this op's classes from `admin/member/probe` to include `ai`; widening later is the safe direction).
+
+**MEASURED CONSUMER IMPACT: ZERO surfaces, ONE product bound worth a consumer's attention.** `civicos-ui` reaches none of this (the harness is exit 0 with the floors moved and no new act on the register); `newgroup`, `docprofile`, `pdf-worker` and `tools` reach none of it. **The bound: a submission that RESTS on documents requires a NAMED MEMBER**, because PL-1's C-25.5 makes a version's partition total and C-25.15 requires every declared part to be asserted by a member. A machine credential can therefore write `level-empty` and cannot write a legged reading — refused BY NAME as C-27.13 rather than discovered at the write. See the DELEGATION in `CLAIMS.md`: this is a real product consequence and it is raised rather than engineered around.
+
+### 2 · RESPONSES
+
+*(Awaiting. RECORD is the owner. No consumer is affected today; FLEET is the consumer that arrives with FL-3.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*

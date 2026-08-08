@@ -140,14 +140,26 @@ const FLOOR = {
      and must be moved WITH it, in the turn that grows it, or the ratchet quietly
      stops being one. A family added without moving them is a family whose codes
      buy slack for everybody else's walk. */
-  families:      5,    // + BIAS_CHECKS (was 4 pre-PL-12, 3 pre-PL-1)
-  rows:         40,    // + C-26.1..11 (was 29 pre-PL-12, 11 pre-PL-1)
-  census:      341,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  /* REMEASURED 2026-08-08 at PL-3's landing, in worktree agent-acad3e0b337d0848f,
+     BY THIS FILE — every figure below is the number it PRINTED on a green run and
+     not one this item added up. Moved IN THE SAME TURN that grew the plane,
+     which is REC-71's rule and the reason it exists: its census floor sat 19
+     codes low, had already turned a control from RED to GREEN, and went stale
+     AGAIN within hours.
+
+     AND THE FAMILY FLOOR WAS ALREADY STALE WHEN THIS ITEM ARRIVED. It read 5;
+     the tree carried SIX families before PL-3 added a seventh (VERSION_CHAIN_CHECKS
+     landed with PL-10 and nobody moved it). One of slack, found the only way slack
+     is ever found — by measuring rather than by adding one to the number in the
+     file. */
+  families:      7,    // + SUGGEST_CHECKS (was 6 pre-PL-3 while the floor said 5 — see above)
+  rows:         70,    // + C-27.1..17 (was 40 when the floor was set, 69 measured pre-PL-3)
+  census:      371,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 330 pre-PL-12, 311 pre-PL-1 — see the block above for the cost)
-  reach:       127,    // codes a surface can receive (R1 + R2 + R3) (was 116, 98)
-  governedSites: 13,   // spans named by a row's `where` — a function, or a region inside one
-                       // (was 9, 5; 10 whole functions + REC-71's 3 regions)
+                       // (was 341 at PL-12, 330, 311 pre-PL-1)
+  reach:       157,    // codes a surface can receive (R1 + R2 + R3) (was 127, 116, 98)
+  governedSites: 17,   // spans named by a row's `where` — a function, or a region inside one
+                       // (was 13, 9, 5; 11 whole functions + 6 regions, three of them PL-3's)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED 546, and
                        // DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -161,14 +173,21 @@ const FLOOR = {
                        // `codesChecked` below carries the ratchet instead.
   /* REC-71's three, measured 2026-08-08 in worktree agent-ab9e84c9e27f4eff7 by
      this file, on the tree carrying PL-1. */
-  regions:       3,    // region `where`s resolved — basis-version-freeze, basis-version-resolve,
-                       // bias-set-refusal (was 2, before PL-12's row was narrowed too)
-  regionLines:  45,    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
+  regions:       6,    // region `where`s resolved — basis-version-freeze, basis-version-resolve,
+                       // bias-set-refusal, and PL-3's three (is-suggest-shape, is-suggest-checks,
+                       // is-suggest-write). Was 3; PL-3 gave EVERY row it minted a region rather
+                       // than a whole function, which is REC-71's rule applied at allocation time
+                       // instead of paid for at integration.
+  regionLines:  483,  // was 45 — PL-3's three regions are 425 lines of the 483    // lines inside them. MEASURED 58 (19 + 16 + 23); floored BELOW the
                        // figure on purpose, so an ordinary edit inside a governed arm does
                        // not fail the guard while a COLLAPSE still does. The per-region
                        // trivial-span arm (REGION_MIN_LINES) is the tight half and this is
                        // the aggregate one; they fail for different reasons.
-  codesChecked: 11,    // refusal codes actually COMPARED against a family row. MEASURED 11.
+  codesChecked: 30,  // was 11. PL-3 nearly TRIPLED it, and deliberately: a local
+                       // `refuse(key, …)` passes the code as a VARIABLE and arm C compares NOTHING,
+                       // which is why seven of thirteen governed sites read 776 lines and checked zero.
+                       // PL-3's three regions name their helper `refusal` and pass a string LITERAL at
+                       // every site, so 19 of its 19 refusals are actually COMPARED against a row.    // refusal codes actually COMPARED against a family row. MEASURED 11.
                        // NOT the same as refusals judged (12) and NOT the same as lines
                        // read: **SEVEN of the thirteen governed sites read 776 lines and
                        // compare NOTHING AT ALL** — they refuse through a local

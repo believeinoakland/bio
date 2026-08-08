@@ -121,6 +121,15 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             members short of its catalogue for months after a ruling changed it,
             which is why nothing below re-types a state name. */
          VERSION_MACHINE, VERSION_ACT_CHECKS, versionNeedsReason,
+         /* PL-3 / IS-4: §9's five kinds, the four levels the empty-level kind may
+            report on, the suggest endpoint's DEC-49 rows, and the ONE
+            boilerplate predicate. All four IMPORTED for the reason the block
+            above gives — nothing here re-types a vocabulary, because a
+            hand-typed one agrees with its author at zero cost. */
+         SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECKS, isBoilerplate,
+         /* And the catalog's OWN canonical serializer, used for F10's
+            idempotence key rather than a second one written here. */
+         canonicalJson,
          MACHINE_AUTHOR_PREFIX } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* The disposition set is the PUBLISHED one (op=affordances), imported so there
@@ -452,6 +461,11 @@ export class Store extends DurableObject {
       ["inquiry_basis_versions", "state_by", "TEXT"],
       ["inquiry_basis_versions", "state_at", "TEXT"],
       ["inquiry_basis_versions", "state_reason", "TEXT"],
+      /* PL-3 / IS-4: which of §9's five kinds a run proposed this version as.
+         Additive and nullable for the same reason the three above are — a
+         version projected before this item existed was composed by a member and
+         is a suggestion of no kind, which NULL states exactly. */
+      ["inquiry_basis_versions", "kind", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -6278,6 +6292,38 @@ export class Store extends DurableObject {
     return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
   }
 
+  /* PL-3 / IS-4 — APPEND WHOLE ROWS TO ONE ARRAY-OF-OBJECTS BLOCK.
+   *
+   * `#setVersionField` moves ONE field on ONE existing row and `#spliceReferences`
+   * appends to the ONE block it is named for. Adding a version needs rows in
+   * THREE sibling blocks, any of which may be absent, inline-empty or populated,
+   * so this is `#setCurrentVersionRow`'s three-shape handling with the block
+   * name as a parameter instead of baked in — one implementation for the three
+   * blocks rather than three that agree today.
+   *
+   * IT REFUSES RATHER THAN GUESSES, returning null when the block is an inline
+   * scalar this restricted grammar cannot extend. That is `#spliceReferences`'
+   * posture and its reason: the grammar has no escapes, so a wrong guess
+   * corrupts a document silently and the store would then promote the corruption. */
+  static #appendFmRows(text, key, rowLines) {
+    if (!rowLines.length) return text;
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let at = -1;
+    for (let i = 1; i < end; i++) if (new RegExp(`^${key}:`).test(lines[i])) { at = i; break; }
+    if (at === -1)
+      return [...lines.slice(0, end), `${key}:`, ...rowLines, ...lines.slice(end)].join("\n");
+    const rest = lines[at].slice(key.length + 1).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, at), `${key}:`, ...rowLines, ...lines.slice(at + 1)].join("\n");
+    if (rest !== "") return null;
+    let i = at + 1;
+    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) i++;
+    return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
+  }
+
   /* PL-2's two write sites both append their Session Log entry through REC-24's
      EXISTING `#appendSessionLog` above (C-13.2 requires the entry whenever
      `last_updated` moves, and BEAT 4 requires the receipt to land IN THE RECORD
@@ -7153,8 +7199,21 @@ export class Store extends DurableObject {
                        at: str(g.at), statement: typeof g.statement === "string" ? g.statement : null }))
         .sort((a, b) => (a.ground < b.ground ? -1 : a.ground > b.ground ? 1 : 0));
       const c = Store.#canon;
+      const kind = str(v.kind);
       const composition = [
         `name\t${c(name)}`,
+        /* PL-3 / IS-4 — WHAT THIS VERSION PROPOSES, and it is INSIDE the freeze
+           because it is part of what the version IS rather than of what happened
+           to it: a reading offered as "we looked at this level and it is empty"
+           becoming "a new account of the basis" without a new version would be
+           the composition moving under a member who already read it.
+           EMITTED ONLY WHEN PRESENT, and that is not a convenience. PL-1 froze
+           every existing version against a composition with no such line, so an
+           unconditional line would change the composition of EVERY version in
+           the record and make the next promotion of any of them fail the freeze.
+           Absent and null mean the same thing here — a version no run proposed —
+           so one representation for one value still holds. */
+        ...(kind === null ? [] : [`kind\t${c(kind)}`]),
         `description\t${c(v.description)}`,
         `claim\t${c(v.claim)}`,
         `relationship\t${c(typeof v.relationship === "string" ? v.relationship.trim().toLowerCase() : "")}`,
@@ -7170,6 +7229,7 @@ export class Store extends DurableObject {
         state: typeof v.state === "string" ? v.state : "",
         derived_from: str(v.derived_from) === "null" ? null : str(v.derived_from),
         hidden: v.hidden === true ? 1 : 0,
+        kind,
         claim: typeof v.claim === "string" ? v.claim : null,
         /* §14b.7: named, NEVER resolved. Nothing here or at the write joins on
            the run being alive, so a version outlives the run that proposed it. */
@@ -7639,7 +7699,16 @@ export class Store extends DurableObject {
         if (verrs.length)
           return { ok: false, reason: "BASIS_VERSION_REFUSED",
                    findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
-                                                 translation: BASIS_VERSION_CHECKS[x.code]?.translation,
+                                                 /* PL-3 / IS-4: BOTH REGISTRIES, and the DEC-49 guard
+                                                    is not what found this — the item its own negative
+                                                    control did. `basisVersionFindings` now pushes ONE
+                                                    finding from the SUGGEST family (the kind
+                                                    vocabulary), and a lookup in one registry sent it out
+                                                    with `translation: undefined`: an untranslated code
+                                                    reaching a member, which is the exact condition
+                                                    DEC-49 ended. Arm C could not see it because the code
+                                                    is a variable here. */
+                                                 translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code])?.translation,
                                                  ...(x.repairs ? { repairs: x.repairs } : {}) })) };
         const offered = Store.basisVersionsOf(docFmW);
         /* DEC-49 REGION basis-version-resolve
@@ -7928,15 +7997,18 @@ export class Store extends DurableObject {
           this.sql.exec(
             `INSERT INTO inquiry_basis_versions
                (bundle_id,name,ord,description,relationship,state,derived_from,hidden,claim,run,author,at,
-                regroup_by,regroup_at,regroup_note,composition,leg_count,state_by,state_at,state_reason)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                regroup_by,regroup_at,regroup_note,composition,leg_count,state_by,state_at,state_reason,kind)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId, v.name, v.ord, v.description, v.relationship, v.state, v.derived_from,
             v.hidden, v.claim, v.run, v.author, v.at,
             v.regroup_by, v.regroup_at, v.regroup_note, v.composition, v.legs.length,
             /* PL-2 / IS-2: who moved this reading, when, and why — projected in
                the SAME statement, so an act cannot land in one table and its
                attribution in another. */
-            v.state_by, v.state_at, v.state_reason);
+            v.state_by, v.state_at, v.state_reason,
+            /* PL-3 / IS-4: and what the run proposed it AS, in the same
+               statement and through the SAME one write site PL-1 pinned. */
+            v.kind);
           for (let k = 0; k < v.legs.length; k++) {
             const l = v.legs[k];
             if (!l.target_id) continue;   // replay of a malformed shape: unprojectable
@@ -11706,6 +11778,11 @@ export class Store extends DurableObject {
          readings of the evidence exist is an operator fact, and what they say is
          not an operator surface. */
       basisVersions: n("inquiry_basis_versions"), basisVersionLegs: n("inquiry_basis_version_legs"),
+      /* PL-3 / IS-4: F10's stored refusals, reported so a purge can PROVE it
+         took them (D-113) and so an operator can see that a run is looping
+         against a refusal without opening one. A COUNT AND NOTHING ELSE — the
+         same line queueState, aiRuns and basisVersions draw. */
+      suggestRefusals: n("suggest_refusals"),
 
       /* PL-12 / D-84: the declared-bias statements and the adoptions that put
          them in force, reported so a whole-store purge can PROVE it took them
@@ -12333,8 +12410,20 @@ export class Store extends DurableObject {
      control (remove the bound, feed it a store-constructed cycle) is real
      rather than masked by a cache. REC-11 refuses a cycle at the WRITE, so a
      cycle can only reach here if something wrote around that guard. */
-  #strengthWalk(bundleId, depth, bound) {
-    const legs = this.basisFor(bundleId).legs ?? [];
+  /* PL-3 / IS-4 ADDS `legsOverride`, AND IT IS ONE PARAMETER RATHER THAN A
+     SECOND WALK. §14b.5 requires the suggest endpoint to prove that a CANDIDATE
+     version's pair COMPUTES PER AXIS over its declared partition — and a
+     candidate is not in `inquiry_basis` yet, because it has not been written.
+     The alternative was a second implementation of the arithmetic over the
+     version's legs, which is exactly the shape that absorbed IS-6's C-22.4
+     control: one rule, two implementations, either one covering for the other.
+     So the ONLY thing that changes is where the TOP level's legs come from; the
+     recursion below still reads each sub-inquiry's OWN stored basis, which is
+     right — a candidate reading of THIS question does not restate what the
+     questions beneath it rest on. Null (every existing caller) reads the
+     projection exactly as before. */
+  #strengthWalk(bundleId, depth, bound, legsOverride = null) {
+    const legs = legsOverride ?? (this.basisFor(bundleId).legs ?? []);
     const members = { capture: [], connection: [] };
     const exhausted = { capture: [], connection: [] };
     for (const leg of legs) {
@@ -12809,6 +12898,14 @@ export class Store extends DurableObject {
            archive-monitor's subjects are ADDRESSES, so this DELETE matches none
            of them, which is correct: an address outlives any one bundle. */
         this.sql.exec(`DELETE FROM monitor_fired WHERE subject=?`, bundleId);
+        /* PL-3 / IS-4 / D-113. A stored refusal is keyed on `target`, which IS a
+           bundle id, so it is NOT in TABLES and takes its own DELETE. Leaving it
+           would keep F10's no-op keyed to an inquiry that no longer exists — and
+           a later bundle allocated a colliding id would inherit somebody else's
+           refusal and be told, without a second evaluation, that its perfectly
+           good suggestion had already been turned down. For a non-inquiry
+           bundleId this DELETE matches no rows. */
+        this.sql.exec(`DELETE FROM suggest_refusals WHERE target=?`, bundleId);
         this.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundleId);
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
@@ -12945,6 +13042,12 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM ai_run_log`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
         this.sql.exec(`DELETE FROM ai_runs`);
+        /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
+           about: every key names an inquiry this purge just removed, so a
+           whole-store purge reporting scope ALL while they stood would be the
+           silent leftover in its most confusing form — a run resubmitting into
+           an empty store, told its submission had already been refused. */
+        this.sql.exec(`DELETE FROM suggest_refusals`);
       }
     });
     const after = this.stats();
@@ -12981,7 +13084,10 @@ export class Store extends DurableObject {
                  projectOwnerVotes: d("projectOwnerVotes"),
                  /* IS-6 / D-113: the runs, their budgets and their observation
                     logs a whole-store purge took. */
-                 aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog") },
+                 aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog"),
+                 /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
+                    by consequence rather than asserted. */
+                 suggestRefusals: d("suggestRefusals") },
     };
   }
 
@@ -16421,6 +16527,639 @@ export class Store extends DurableObject {
     });
   }
 
+  /* ==============================================================
+   * PL-3 / IS-4 — THE SUGGEST ENDPOINT. ONE WRITE PATH FOR BOTH MODES.
+   *
+   * §10 is the ruling that makes this one endpoint rather than two: *"Export
+   * means the AI adds a new version to the inquiry being investigated"*, so the
+   * background job and the interactive session are two ways into ONE piece of
+   * work and *"nothing the interactive mode can do lies outside what the
+   * background job could do, and the fence needs no second design."*
+   *
+   * THE SOLE POSSIBLE OUTPUT IS A `suggested` VERSION CARRYING ITS RUN. All
+   * five of §9's kinds — a new version of the basis, sharpen the question, a new
+   * inquiry, THIS LEVEL IS EMPTY, flag for a new edition — write that one
+   * object. The kind is a FIELD on it, not a second endpoint, because §4's fence
+   * is a fence about WRITES and five write paths would be five fences.
+   *
+   * THE ACCEPTANCE IS THE PRE-WRITE CHECKS AND THEY ARE PLANE-SIDE (§14b.5,
+   * SWEEP C11). If the fleet member computed them it would hold a copy of the
+   * plane's rules, which is the drift class DEC-8 closed. So they live here,
+   * each with its own C-number and canned translation, and the fleet member
+   * receives their verdicts.
+   *
+   * WHY THE LOCAL HELPER IS CALLED `refusal` AND TAKES A STRING LITERAL. The
+   * DEC-49 guard's arm C compares a code against its family only when it can SEE
+   * the code — a local `refuse(key, …)` passes the code as a VARIABLE, and seven
+   * of the plane's thirteen governed sites today read 776 lines and compare ZERO
+   * codes for exactly that reason (REC-71's measurement, and the trend was
+   * getting worse). Writing the code as a literal at every site makes this span
+   * FALSIFIABLE by the guard rather than merely read by it.
+   *
+   * WHAT THIS ENDPOINT DOES NOT DO. It does not accept, hide, reject or make
+   * current — §4, and PL-2 owns all six of those. It writes no capture and
+   * requests none — that is PL-4's table. It mints no credential class — that is
+   * PL-11. And it does not notify: §9's kinds are FINDING-class slugs and the
+   * slug vocabulary, its subscriber and the shared-inquiry semantics are PL-13's
+   * and PL-4's, so this item writes the object and NOT the notification, rather
+   * than minting half a slug family that another item would then have to move.
+   * ================================================================== */
+
+  /** A version's legs, bounded. The read cap `BASIS_VERSION_LEGS_MAX` is 500 and
+   *  this is the WRITE cap, deliberately lower: a reading a member has to review
+   *  is not the same object as a projection a query pages through, and §6 rule 4
+   *  makes every one of these a thing somebody must actually read. */
+  static SUGGEST_LEGS_MAX = 120;
+  /** How far the independence trace walks per step before it declares the answer
+   *  UNDETERMINED. A bound, published in the refusal that hits it, rather than a
+   *  silent truncation — a truncated trace that reported "independent" would be
+   *  the check failing in the one direction that overstates a finding. */
+  static SUGGEST_ORIGIN_MAX = 200;
+
+  /** op=suggest — the investigative session's ONE write (IS-4 / §4 group 2). */
+  suggestVersion(a = {}) {
+    const args = a || {};
+    const refusal = (code, detail, extra) => {
+      const row = SUGGEST_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail, ...(extra || {}) };
+    };
+    const str = (x) => (typeof x === "string" && x.trim() !== "" ? x.trim() : null);
+
+    /* DEC-49 REGION is-suggest-shape
+     *
+     * THE SPAN `SUGGEST_CHECKS`' shape rows name (REC-71). Everything between
+     * this marker and its `END` is a DEC-49 GOVERNED SITE: every refusal inside
+     * it owes a code with a canned translation, and
+     * `civicos-ui/check-refusal-codes.mjs` arm C fails the harness on one that
+     * does not. It is a REGION and not the whole function deliberately — a
+     * whole-function `where` conscripts every refusal that arrives here later,
+     * which is the defect REC-71 measured on PL-1's two rows and the reason
+     * `main`'s UI harness sat at exit 1. */
+    const target = String(args.target ?? "").trim();
+    if (!target)
+      return refusal("SUGGEST_NO_TARGET",
+        "a suggestion is a reading of ONE question's evidence: pass target=<INQ-…>. There is no "
+        + "default question and there must not be one.");
+    if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "inquiry")
+      return refusal("SUGGEST_NOT_AN_INQUIRY",
+        `${target.slice(0, 60)} is not an inquiry, so there is nothing under it for a version to be a `
+        + `version of.`, { target });
+
+    const kind = String(args.kind ?? "").trim();
+    if (!Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, kind))
+      return refusal("SUGGEST_UNKNOWN_KIND",
+        `'${kind.slice(0, 40) || "(none)"}' is not one of §9's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. `
+        + `The set is closed because §15's empty-run instrument needs an object to count — without `
+        + `'level-empty' a run that honestly found nothing is indistinguishable from a run that emitted `
+        + `nothing.`,
+        { target, kinds: Object.keys(SUGGEST_KINDS) });
+
+    /* THE VIEWER GATE, fail-closed, the same one every read here takes (D-15):
+       a question the caller may not see answers exactly as an absent one does. */
+    const gate = viewerPredicate(args.viewer ?? null);
+    const b = this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
+    if (!b)
+      return refusal("SUGGEST_NOT_AN_INQUIRY",
+        "no question by that id is readable here, so there is nothing to add a reading to.", { target });
+
+    /* §11: EVERY VERSION NAMES THE RUN THAT PRODUCED IT, and the run is what
+       carries the conditions it was formed under and the observation log. NAMED
+       AND RESOLVED HERE, which is deliberately NOT what `promote` does: PL-1
+       records that the projection never joins on the run being alive, so a
+       version OUTLIVES the run that proposed it. Both are right — a version must
+       be born from a run that existed, and must not die when that scratch row is
+       reaped. */
+    const run = String(args.run ?? "").trim();
+    const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
+    if (!runRow)
+      return refusal("SUGGEST_NO_RUN",
+        run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only `
+              + `interpretable against the conditions its run was formed under (§11).`
+            : "pass run=<the run that composed this>: §11 requires every version to name the piece of "
+              + "work that produced it, because the bias in force, the declared standard and the claim "
+              + "set can all change at the drop of a hat.",
+        { target, run: run || null });
+
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    if (!liveMd || liveMd.content === null)
+      return refusal("SUGGEST_NO_DOCUMENT",
+        "this question has no readable file, so no reading can be added to it.", { target });
+    const text0 = liveMd.content;
+    const fm0 = parseFrontmatter(text0).data || {};
+    const existing = Array.isArray(fm0.basis_versions) ? fm0.basis_versions : [];
+
+    const name = String(args.name ?? "").trim();
+    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === name))
+      return refusal("SUGGEST_NAME_TAKEN",
+        `'${name.slice(0, 60)}' already names a reading of ${target}. §6 rule 2: a version name is `
+        + `unique WITHIN its inquiry, and derived_from reads by name.`,
+        { target, name, known: existing.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
+
+    const legsIn = Array.isArray(args.legs) ? args.legs : [];
+    if (legsIn.length > Store.SUGGEST_LEGS_MAX)
+      return refusal("SUGGEST_TOO_MANY_LEGS",
+        `${legsIn.length} legs were submitted and a version may carry ${Store.SUGGEST_LEGS_MAX}. The `
+        + `bound is PUBLISHED here rather than applied silently, so a caller splits the reading rather `
+        + `than guessing what fitted.`,
+        { target, legs: legsIn.length, limit: Store.SUGGEST_LEGS_MAX });
+
+    /* §9's empty-level kind carries WHICH level and WHERE THE SEARCH IS LOGGED.
+       CLAUDE.md makes saying which absence a first-class obligation — *"no
+       meaning derived may mean nothing was extracted; nothing extracted may mean
+       the document was never read; no document may mean nobody looked"* — and an
+       empty answer with neither of those is exactly the shape nobody can check. */
+    const level = str(args.level);
+    const observedAt = str(args.observed_at);
+    if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
+      return refusal("SUGGEST_EMPTY_LEVEL_UNSTATED",
+        `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log `
+        + `address of the search that establishes it>. Absence at one level is not evidence of absence at `
+        + `the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
+        { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS });
+    /* END DEC-49 REGION is-suggest-shape */
+
+    /* ---- F10. THE SUBMISSION'S IDENTITY, AND THE STRUCTURAL NO-OP ----------
+     *
+     * F10: the design says how the plane REFUSES and never how a run must
+     * RESPOND. A run that resends the identical submission would otherwise be
+     * caught only by the budget, and the budget is the BACKSTOP rather than the
+     * mechanism. So a verbatim resubmit changes NOTHING: the stored refusal
+     * comes back unaltered, the six checks are not re-run, no document is
+     * touched and no version is written.
+     *
+     * THE KEY IS THE SUBMISSION ITSELF, BYTE FOR BYTE, NOT A HASH — PL-1's own
+     * reasoning, transplanted: a hand-rolled synchronous hash would put a
+     * collision argument underneath the mechanism that decides whether a caller
+     * is told the truth about its own submission.
+     *
+     * AND THE INQUIRY'S `bundle_sha` IS PART OF THAT IDENTITY. "Verbatim
+     * resubmit" means NOTHING HAS CHANGED — neither the submission nor the
+     * document it would be written into. The moment the inquiry moves, the same
+     * bytes are a different question and are evaluated again, which is what
+     * stops the key from ever going stale into a false refusal.
+     *
+     * WHAT IS NOT KEYED, and it is stated rather than left to be discovered: the
+     * two refusals above that fire BEFORE a target resolves cannot be stored,
+     * because there is no target to key them to. They cost one string compare
+     * and touch nothing, so a loop on them is a loop on nothing. */
+    const submission = canonicalJson({
+      kind, name, description: args.description ?? null, claim: args.claim ?? null,
+      relationship: args.relationship ?? null, derived_from: args.derived_from ?? null,
+      level, observed_at: observedAt, run,
+      grounds: (Array.isArray(args.grounds) ? args.grounds : []).map((g) => ({
+        ground: g?.ground ?? null, statement: g?.statement ?? null, asserted_by: g?.asserted_by ?? null })),
+      legs: legsIn.map((l) => ({
+        target: l?.target ?? null, role: l?.role ?? null, ground: l?.ground ?? null,
+        grade: l?.grade ?? null, grade_axis: l?.grade_axis ?? null,
+        grade_source: l?.grade_source ?? null, note: l?.note ?? null, date: l?.date ?? null })),
+      /* The fields §4 forbids ride the key TOO, so a caller that fixes one of
+         them is genuinely re-evaluated rather than handed its old refusal. */
+      /* KEYED WITH A PREFIX, so that `state:` appears in this function's code in
+         exactly ONE shape — the LITERAL the composed row carries. The suite
+         asserts that count over comment-stripped source, and a key spelled
+         `state:` here would have made §4's fence unfalsifiable by that arm
+         while changing nothing about the fence itself. */
+      refused_state: args.state ?? null, refused_hidden: args.hidden ?? null,
+      refused_state_by: args.state_by ?? null, refused_state_at: args.state_at ?? null,
+      refused_state_reason: args.state_reason ?? null, refused_at: args.at ?? null,
+    });
+    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const prior = this.#one(
+      `SELECT * FROM suggest_refusals WHERE target=? AND base_sha=? AND submission=?`,
+      target, b.bundle_sha, submission);
+    if (prior) {
+      /* THE COUNTER IS THE ONE THING THAT MOVES, and it is instrumentation
+         rather than record: §15 asks for instruments from the first run, and a
+         retry loop that leaves NO trace at all is a loop nothing but the budget
+         can see. The record — the document, its history, its versions — is
+         untouched, which is what "structural no-op" means. */
+      this.sql.exec(
+        `UPDATE suggest_refusals SET repeats = repeats + 1, last_at = ? WHERE target=? AND base_sha=? AND submission=?`,
+        nowIso, target, b.bundle_sha, submission);
+      const stored = JSON.parse(prior.payload);
+      return { ...stored, repeated: true, evaluated: false, wrote: false,
+               repeats: prior.repeats + 1, first_refused_at: prior.first_at };
+    }
+    /* One helper, so every refusal below is stored by the SAME path it is
+       returned by — a second store call somewhere would be the shape that lets
+       one refusal escape the no-op. */
+    const remember = (r) => {
+      this.sql.exec(
+        `INSERT INTO suggest_refusals (target, submission, base_sha, code, payload, first_at, last_at, repeats)
+         VALUES (?,?,?,?,?,?,?,0)`,
+        target, submission, b.bundle_sha, r.code, JSON.stringify(r), nowIso, nowIso);
+      return { ...r, repeated: false, evaluated: true, wrote: false };
+    };
+
+    /* DEC-49 REGION is-suggest-checks
+     *
+     * §14b.5's SIX CHECKS, in the order a caller can most cheaply act on. THE
+     * SPAN `SUGGEST_CHECKS`' six pre-write rows name (REC-71). Each check is its
+     * own C-number and each is REMOVABLE ON ITS OWN, which is what VF-1's owed
+     * control 6 requires: remove any ONE refusal and its suite fails naming that
+     * check. A control that removed them all together would prove only that the
+     * block exists. */
+
+    /* CHECK 6 FIRST — NOTHING IN IT IS IN A STATE THE SESSION MAY NOT WRITE.
+       §4: THE AI HOLDS NO OP THAT ACCEPTS. The sole possible output is a version
+       in state `suggested`, so a submission that arrives already decided is
+       REFUSED rather than quietly overwritten — a caller told its `state:
+       accepted` was ignored learns nothing, and a caller refused by name learns
+       where the fence is. */
+    const forbidden = ["state", "hidden", "state_by", "state_at", "state_reason", "at"]
+      .filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
+    if (forbidden.length)
+      return remember(refusal("SUGGEST_UNWRITABLE_STATE",
+        `a suggestion is born in state 'suggested' and carries nothing else about what has been decided `
+        + `about it, and this submission set: ${forbidden.join(", ")}. Every one of those is a member `
+        + `act (§6 rule 4) reachable only through op=versionaccept and its five siblings.`,
+        { target, name, fields: forbidden }));
+
+    /* AND THE STRUCTURAL ASSERTION ONLY A MEMBER CAN MAKE. "These legs are
+       enough on their own" is an authored judgment that makes a finding
+       STRONGER, and C-25.15 refuses it in a machine's name at the document gate.
+       Here it is refused BEFORE the write, and `asserted_by` is STAMPED from the
+       session rather than taken from the caller — a caller naming it would be a
+       caller signing for somebody else. So the interactive mode (§10), running
+       under a named member, may propose branches; the background job may not,
+       and its refusal says which act it is short of. */
+    const who = String(args.author ?? "").trim();
+    const groundsIn = Array.isArray(args.grounds) ? args.grounds : [];
+    const declared = groundsIn.map((g) => str(g?.ground)).filter(Boolean);
+    /* MEASURED RATHER THAN ASSUMED, and the measurement moved this arm from
+       "more than one branch" to "any leg at all". PL-1's C-25.5 requires a
+       version's partition to be TOTAL — *"a version does not get the
+       not-at-all arm, because §3 requires it to CARRY the partition"* — so
+       EVERY version carrying legs declares at least one part, and C-25.15
+       requires every declared part to be asserted by a NAMED MEMBER. Composing
+       one and discovering that at `promote` would be a refusal in another
+       family's words about a document this endpoint had already built; refused
+       here it names the act the caller is short of.
+       THE PRODUCT CONSEQUENCE IS REAL AND IS RAISED RATHER THAN ENGINEERED
+       AROUND: a run under a machine credential can propose the kinds that rest
+       on nothing — 'this level is empty' above all — and cannot propose a
+       reading that rests on documents, because the structure such a reading
+       carries is a claim only a member may sign. The interactive mode (§10)
+       runs under a named member and can propose all five. */
+    const needsPartition = legsIn.length > 0;
+    if ((declared.length || needsPartition) && (!who || isMachineIdentity(who)))
+      return remember(refusal("SUGGEST_UNWRITABLE_STATE",
+        `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} `
+        + `declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A `
+        + `reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying `
+        + `a part of an argument would carry the answer on its own is an authored judgment a named member `
+        + `signs for (C-25.15). A machine COMPOSES a reading and does not assert its structure — it may `
+        + `still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
+        { target, name, legs: legsIn.length, branches: declared.length }));
+
+    /* CHECK 5 — NO BOILERPLATE. The placeholder defect at machine scale. Held to
+       the ONE predicate in the catalog, which is a BOUNDARY and not a prose
+       judge, and says so where it is defined. */
+    const filler = [];
+    if (isBoilerplate(args.description)) filler.push("description");
+    if (args.claim !== undefined && args.claim !== null && args.claim !== ""
+        && isBoilerplate(args.claim)) filler.push("claim");
+    if (str(args.description) && str(args.claim)
+        && str(args.description).toLowerCase() === str(args.claim).toLowerCase()) filler.push("claim (repeats the description verbatim)");
+    for (const g of groundsIn)
+      if (g && g.statement !== undefined && g.statement !== null && g.statement !== ""
+          && isBoilerplate(g.statement)) filler.push(`a statement on '${String(g.ground).slice(0, 40)}'`);
+    for (let i = 0; i < legsIn.length; i++)
+      if (legsIn[i] && legsIn[i].note !== undefined && legsIn[i].note !== null && legsIn[i].note !== ""
+          && isBoilerplate(legsIn[i].note)) filler.push(`the note on leg ${i}`);
+    if (filler.length)
+      return remember(refusal("SUGGEST_BOILERPLATE",
+        `${filler.join(", ")} carries filler rather than an account of anything. §6 rule 1 holds a `
+        + `version's description to a commit message's standard — what changed and why — because it is `
+        + `what survives a conversation that was deliberately not kept (§10).`,
+        { target, name, fields: filler }));
+
+    /* CHECK 1 — EVERY LEG EXISTS AND IS REACHABLE AT ITS ADDRESS.
+       D-168 IS THE WHOLE REASON THIS IS NOT A TYPE CHECK. `op=cite` is TYPE-ONLY
+       today: it reads the id prefix and asks nothing about what is there. A
+       type-only check here would PASS RETIRED INFORMATION — a leg resting on a
+       document the record itself retired, reading to every later member as live
+       support. So three questions are asked and not one: is it IN the record, is
+       it READABLE from here, and has the record RETIRED it. */
+    const unreachable = [];
+    for (let i = 0; i < legsIn.length; i++) {
+      const t = str(legsIn[i]?.target);
+      if (!t) { unreachable.push({ ord: i, target: null, why: "no address" }); continue; }
+      const g2 = viewerPredicate(args.viewer ?? null);
+      /* ALIASED `b`, and it has to be: `viewerPredicate` compiles a predicate
+         that names `b` — ONE compilation point (D-15), so the caller supplies
+         the alias the compiler expects rather than the compiler learning a
+         second one. A different alias here failed at the FIRST leg with a raw
+         SQLITE_ERROR, which is the whole reason the leg walk is driven through
+         the op in this item's suite rather than reasoned about. */
+      const row = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+         WHERE b.bundle_id=? AND (${g2.sql})`, t, ...g2.args);
+      if (!row) { unreachable.push({ ord: i, target: t, why: "not in the record, or not readable from here" }); continue; }
+      if (String(row.current_state ?? "").trim() === "retired")
+        unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
+    }
+    if (unreachable.length)
+      return remember(refusal("SUGGEST_LEG_UNREACHABLE",
+        `${unreachable.length} of ${legsIn.length} legs cannot be reached at the address given: `
+        + `${unreachable.map((u) => `${u.target ?? "(none)"} — ${u.why}`).join("; ")}. A type check would `
+        + `have passed every one of these, which is D-168 exactly.`,
+        { target, name, legs: unreachable }));
+
+    /* CHECK 2 — THE PAIR COMPUTES, PER AXIS, OVER THE DECLARED PARTITION.
+       DEC-21/DEC-44 refuse a single composed number four ways, so what has to
+       compute is TWO answers over two populations and never one. Run through the
+       EXISTING arithmetic with the candidate's legs, never a second walk. */
+    const walkLegs = legsIn.map((l, k) => ({
+      ord: k, target_id: str(l?.target) ?? "",
+      target_type: normalizeType(OBJECT_TYPES[String(l?.target || "").split("-")[0]]) ?? "",
+      role: typeof l?.role === "string" ? l.role : "",
+      grade: l?.grade ?? null, grade_axis: l?.grade_axis ?? null,
+      grade_source: l?.grade_source ?? null, ground: str(l?.ground) ?? null,
+    }));
+    let pair = null, pairError = null;
+    try { pair = this.#strengthWalk(target, 0, Store.QUEUE_ANCESTOR_DEPTH, walkLegs); }
+    catch (e) { pairError = String(e && e.message ? e.message : e).slice(0, 200); }
+    const legal = ["graded", "unrated", "undetermined"];
+    const axisBad = (x) => !x || !legal.includes(x.state) || (x.state === "graded" && (x.grade == null || !x.weakest));
+    /* THE PARTITION THE ARITHMETIC ACTUALLY USED, compared against the one the
+       version DECLARES. This is the arm with teeth: a leg naming a branch no
+       row declares would let the MAXIMUM be taken over a branch nobody signed
+       for, and a declared branch no leg belongs to asserts that nothing is
+       sufficient on its own. Both are refused here, BEFORE the write. */
+    const usedLabels = [...new Set(walkLegs.map((l) => l.ground).filter(Boolean))].sort();
+    const declaredLabels = [...new Set(declared)].sort();
+    /* Compared as SERIALISED LISTS rather than by joining on a separator:
+       a branch label may legally contain a space (GROUND_LABEL_RE allows one), so
+       any separator inside the alphabet would make two different partitions
+       compare equal. */
+    const partitionDisagrees = JSON.stringify(usedLabels) !== JSON.stringify(declaredLabels);
+    if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)
+      return remember(refusal("SUGGEST_PAIR_DOES_NOT_COMPUTE",
+        pairError
+          ? `the arithmetic could not be run over this reading: ${pairError}`
+          : partitionDisagrees
+            ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately `
+              + `sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version `
+              + `CARRIES its own structure (§3), so the two have to be the same set — otherwise the `
+              + `maximum is taken over a part nobody declared, or a declared part holds nothing.`
+            : `the pair did not resolve on both axes: capture=${pair?.capture?.state ?? "(none)"}, `
+              + `connection=${pair?.connection?.state ?? "(none)"}.`,
+        { target, name, declared: declaredLabels, used: usedLabels,
+          pair: pair ? { capture: pair.capture.state, connection: pair.connection.state } : null }));
+
+    /* CHECK 4 — D-195, INDEPENDENCE OVER THE SEPARATELY SUFFICIENT PARTS.
+       The sweep's phrase for an AI composing these at volume is *"the Judith
+       Miller error with arithmetic behind it"*, and the arithmetic is the point:
+       §12 takes a MAXIMUM across independently sufficient branches, so two
+       branches tracing to one upstream origin make a finding look better
+       supported for a reason that is not there.
+       DERIVED FROM CONTENT-ADDRESSED PROVENANCE, which is what makes it a check
+       rather than a judgement: `register` maps a capture's SHA to the bundle
+       that holds it, and `captured_locators` maps that SHA to the address it was
+       retrieved from. Two branches sharing a bundle, a capture sha, or a source
+       address share an upstream origin, and the plane can SAY SO rather than
+       guess. DERIVED INFORMS, AUTHORED BINDS: the derivation is REFUSED to a
+       machine composing at volume and PUBLISHED on every version that passes, so
+       the member affirming independence at §12's accept ceremony is affirming it
+       against what the record can see. */
+    const OMAX = Store.SUGGEST_ORIGIN_MAX;
+    let originsComplete = true;
+    const originsOf = (bundleIds) => {
+      const out = new Set();
+      for (const id of bundleIds) {
+        out.add(`bundle:${id}`);
+        /* BOUNDED, AND THE BOUND FAILS CLOSED. D-225's half is that every row
+           scan carries a LIMIT; the half that matters more here is that a
+           TRUNCATED trace could miss the very origin the check exists to find,
+           and a missed origin is a silent pass on the side that overstates the
+           finding. So the walk asks for one more than the cap, and reaching it
+           makes the answer UNDETERMINED rather than clean. */
+        const caps = this.#rows(
+          `SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, OMAX + 1);
+        if (caps.length > OMAX) originsComplete = false;
+        for (const r of caps.slice(0, OMAX)) {
+          out.add(`capture:${r.capture_sha}`);
+          const addrs = this.#rows(
+            `SELECT address_norm FROM captured_locators WHERE capture_sha=? LIMIT ?`,
+            r.capture_sha, OMAX + 1);
+          if (addrs.length > OMAX) originsComplete = false;
+          for (const l of addrs.slice(0, OMAX)) out.add(`address:${l.address_norm}`);
+        }
+      }
+      return out;
+    };
+    const shared = [];
+    if (declaredLabels.length > 1) {
+      const byBranch = new Map();
+      for (const l of walkLegs) if (l.ground) {
+        if (!byBranch.has(l.ground)) byBranch.set(l.ground, []);
+        byBranch.get(l.ground).push(l.target_id);
+      }
+      const originSets = [...byBranch].map(([label, ids]) => [label, originsOf(ids)]);
+      for (let i = 0; i < originSets.length; i++)
+        for (let j = i + 1; j < originSets.length; j++) {
+          const common = [...originSets[i][1]].filter((o) => originSets[j][1].has(o));
+          if (common.length)
+            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });
+        }
+    }
+    if (declaredLabels.length > 1 && !originsComplete)
+      return remember(refusal("SUGGEST_COMPARISON_INCOMPLETE",
+        `tracing the separately sufficient parts of this reading back to their upstream material `
+        + `reached the published bound of ${OMAX} per step, so independence is UNDETERMINED rather than `
+        + `established. D-129: not found and did not finish looking are different facts, and only one `
+        + `of them licenses putting this forward.`,
+        { target, name, limit: OMAX, origins_complete: false }));
+    if (shared.length)
+      return remember(refusal("SUGGEST_BRANCHES_NOT_INDEPENDENT",
+        `${shared.length} pair(s) of separately sufficient parts trace to the same upstream material: `
+        + `${shared.map((s) => `'${s.a}' and '${s.b}' through ${s.through.join(", ")}`).join("; ")}. `
+        + `§12 takes the MAXIMUM across them, so treating them as separate overstates the finding — `
+        + `D-195. A named member may still affirm they are genuinely separate at the accept ceremony; a `
+        + `machine composing at volume may not.`,
+        { target, name, shared }));
+
+    /* CHECK 3 — DIFFERS IN SUBSTANCE FROM EVERY EXISTING VERSION.
+       §6 rule 8, Bob's rule and the write gate in his own words. Compared over
+       PL-1's CANONICAL COMPOSITION — the same bytes the freeze compares — so
+       "the same reading" means ONE thing in this plane rather than two.
+       NAME AND PARENTAGE ARE EXCLUDED FROM THE COMPARISON and that is the whole
+       content of the word "substance": a name is how a reading is ADDRESSED and
+       derived_from is where it came FROM, and neither is anything it SAYS. A
+       comparison that kept them would pass every duplicate, because the endpoint
+       refuses a repeated name one screen up — the check would be green and
+       asserting nothing. */
+    const candidateFm = Store.#suggestionFrontmatter({
+      id: target, kind, name, description: args.description, claim: args.claim,
+      relationship: args.relationship, derived_from: args.derived_from,
+      run, author: who || null, at: nowIso, grounds: groundsIn, legs: legsIn,
+    });
+    const candidate = Store.basisVersionsOf(candidateFm)[0] ?? null;
+    const substanceOf = (c) => String(c).split("\n")
+      .filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).join("\n");
+    const mine = candidate ? substanceOf(candidate.composition) : "";
+    const held = this.#rows(
+      `SELECT name, composition FROM inquiry_basis_versions WHERE bundle_id=? LIMIT ?`,
+      target, Store.BASIS_VERSIONS_LIMIT_MAX + 1);
+    /* FAIL CLOSED for the reason the trace above does: a comparison that did not
+       reach every existing reading cannot say this one is new. */
+    if (held.length > Store.BASIS_VERSIONS_LIMIT_MAX)
+      return remember(refusal("SUGGEST_COMPARISON_INCOMPLETE",
+        `${target} holds more than ${Store.BASIS_VERSIONS_LIMIT_MAX} readings, which is the bound this `
+        + `comparison publishes, so whether this one differs in substance from every existing one was `
+        + `not settled. A duplicate the comparison never reached would read exactly like a new reading.`,
+        { target, name, limit: Store.BASIS_VERSIONS_LIMIT_MAX }));
+    const twin = held.find((r) => substanceOf(r.composition) === mine);
+    if (twin)
+      return remember(refusal("SUGGEST_NOT_DIFFERENT",
+        `this reading is identical in substance to '${twin.name}', which ${target} already holds. §6 rule `
+        + `8 is the write gate: a run adds its output as a new version ONLY IF it differs in substance `
+        + `from every existing one. Compared over the same canonical composition the freeze compares, `
+        + `with the name and the parentage excluded — those are how a reading is addressed, not what it `
+        + `says.`,
+        { target, name, same_as: twin.name }));
+    /* END DEC-49 REGION is-suggest-checks */
+
+    /* DEC-49 REGION is-suggest-write
+     *
+     * THE WRITE, AND THERE IS NO SECOND WRITE PATH. The rows go into the
+     * inquiry's own `bundle.md` and the document is re-promoted, so the document
+     * stays the authority (D-21) and the projection is re-derived by the ONE
+     * write site PL-1 pinned. This endpoint holds no INSERT into either version
+     * table and there is not going to be one. */
+    const q = (s) => `"${Store.#fmSafe(String(s ?? ""))}"`;
+    const vRow = [`  - name: ${q(name)}`,
+                  `    kind: ${q(kind)}`,
+                  `    description: ${q(args.description)}`,
+                  ...(str(args.claim) ? [`    claim: ${q(args.claim)}`] : []),
+                  `    relationship: ${q(String(args.relationship ?? "and").trim().toLowerCase())}`,
+                  /* THE SOLE POSSIBLE OUTPUT, written as a literal and not from a
+                     parameter: there is no path through this function that writes
+                     any other state, which is §4's fence expressed as the absence
+                     of a variable rather than as a check on one. */
+                  `    state: "suggested"`,
+                  `    hidden: false`,
+                  `    derived_from: ${str(args.derived_from) ? q(args.derived_from) : "null"}`,
+                  `    run: ${q(run)}`,
+                  ...(who ? [`    author: ${q(who)}`] : []),
+                  `    at: ${q(nowIso)}`,
+                  ...(kind === "level-empty"
+                      ? [`    level: ${q(level)}`, `    observed_at: ${q(observedAt)}`] : [])];
+    const gRows = groundsIn.filter((g) => str(g?.ground)).map((g) =>
+      [`  - version: ${q(name)}`, `    ground: ${q(g.ground)}`,
+       /* STAMPED FROM THE SESSION, never the caller's word — the same rule
+          `author` and `viewer` take at the control plane, and for the same
+          reason: this field says WHO signed for a structural claim. */
+       `    asserted_by: ${q(who)}`, `    at: ${q(nowIso)}`,
+       ...(str(g?.statement) ? [`    statement: ${q(g.statement)}`] : [])].join("\n"));
+    const lRows = legsIn.map((l) =>
+      [`  - version: ${q(name)}`, `    target: ${q(l?.target)}`,
+       `    role: ${q(String(l?.role ?? "supports"))}`,
+       ...(str(l?.ground) ? [`    ground: ${q(l.ground)}`] : []),
+       ...(str(l?.grade) ? [`    grade: ${q(l.grade)}`] : []),
+       ...(str(l?.grade_axis) ? [`    grade_axis: ${q(l.grade_axis)}`] : []),
+       ...(str(l?.grade_source) ? [`    grade_source: ${q(l.grade_source)}`] : []),
+       ...(str(l?.note) ? [`    note: ${q(l.note)}`] : []),
+       ...(str(l?.date) ? [`    date: ${q(l.date)}`] : [])].join("\n"));
+
+    let text = Store.#appendFmRows(text0, "basis_versions", [vRow.join("\n")]);
+    if (text !== null && gRows.length) text = Store.#appendFmRows(text, "basis_version_grounds", gRows);
+    if (text !== null && lRows.length) text = Store.#appendFmRows(text, "basis_version_legs", lRows);
+    if (text === null)
+      return remember(refusal("SUGGEST_UNWRITABLE_DOCUMENT",
+        "this question's version block is in a shape the restricted frontmatter grammar cannot be "
+        + "extended in place, so nothing was written. The grammar has no escapes and a guess would "
+        + "corrupt the document silently.", { target, name }));
+
+    text = Store.#setScalar(text, "last_updated", `"${nowIso}"`);
+    /* C-13.2: last_updated moving requires a Session Log entry — and it is also
+       where the act lands IN THE RECORD rather than only in an HTTP response. */
+    text = Store.#appendSessionLog(text,
+      `### Session ${nowIso} | Suggestion | ${who || run}\n`
+      + `Trigger: op=suggest on ${target}\n`
+      + `Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run ${run}.\n`);
+
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const promoted = this.promote({
+      bundleId: target, base: b.bundle_sha,
+      snapKey: `${nowIso.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who || run,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm0.object_type ?? b.object_type, group: fm0.group || "believe-in-oakland",
+              title: fm0.title, current_state: b.current_state, prior_state: fm0.prior_state ?? null,
+              created: fm0.created, last_updated: nowIso,
+              criticality: fm0.criticality ?? null },
+    });
+    /* PROMOTE'S OWN REFUSALS COME BACK UNCHANGED AND UNWRAPPED — the version
+       grammar (C-25.x), the freeze, the basis DAG. This act COMPOSES a reading;
+       promote is what judges the document, and re-stating its rules here would
+       be the second implementation §14b.4 spends a paragraph forbidding. They
+       are stored under the same key, so a verbatim resubmit of a submission
+       promote refused is a no-op exactly as one this endpoint refused is. */
+    if (!promoted.ok) return remember({ ...promoted, code: promoted.reason, target, name });
+    /* END DEC-49 REGION is-suggest-write */
+
+    return {
+      ok: true, target, version: name, kind, run, state: "suggested",
+      author: who || null, at: nowIso, weight: "single",
+      /* IC-25/26/27/28/29/30: the bound APPLIED and whether it truncated,
+         published on the answer rather than left for a consumer to infer — a
+         bare collection fails a pin reading ZERO with no exception list to join.
+         Nothing here truncates, and that is SAID rather than implied by silence:
+         a submission over the bound was refused above and named the bound. */
+      legs: candidate ? candidate.legs : [], count: legsIn.length,
+      limit: Store.SUGGEST_LEGS_MAX, truncated: false,
+      grounds: declaredLabels, ground_count: declaredLabels.length,
+      /* DERIVED INFORMS. The independence derivation is published on the PASS
+         path too, so the member at §12's accept ceremony affirms independence
+         against what the record can see rather than against nothing. `[]` here
+         means the plane looked and found no shared origin, which is a different
+         fact from nobody having looked. */
+      shared_origins: shared, origins_complete: originsComplete,
+      origin_limit: Store.SUGGEST_ORIGIN_MAX,
+      /* The pair, per axis, as it was computed BEFORE the write — DEC-21/DEC-44,
+         never composed into one value. */
+      pair: { capture: pair.capture, connection: pair.connection },
+      composition: candidate ? candidate.composition : null,
+      bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
+      evaluated: true, repeated: false, wrote: true,
+    };
+  }
+
+  /* The candidate version as a FRONTMATTER OBJECT, so the canonical composition
+     is computed by `Store.basisVersionsOf` — PL-1's ONE composer — over exactly
+     the shape it will read after the write. Building a composition by hand here
+     would be a second composer, and two assemblies of one shape agree at zero
+     cost, which is the instrument failure this repository has measured
+     repeatedly. */
+  static #suggestionFrontmatter({ id, kind, name, description, claim, relationship, derived_from,
+                                  run, author, at, grounds, legs }) {
+    return {
+      id,
+      basis_versions: [{ name, kind, description, claim: claim ?? null,
+                         relationship: String(relationship ?? "and").trim().toLowerCase(),
+                         state: "suggested", hidden: false, derived_from: derived_from ?? null,
+                         run, author, at }],
+      basis_version_grounds: (grounds || []).filter((g) => g && g.ground)
+        .map((g) => ({ version: name, ground: g.ground, asserted_by: author, at,
+                       statement: g.statement ?? null })),
+      basis_version_legs: (legs || []).map((l) => ({
+        version: name, target: l?.target, role: l?.role ?? "supports", ground: l?.ground ?? null,
+        grade: l?.grade ?? null, grade_axis: l?.grade_axis ?? null,
+        grade_source: l?.grade_source ?? null, note: l?.note ?? null, date: l?.date ?? null })),
+    };
+  }
+
   /** File the links a captured document made. Replaces this capture's rows
    *  rather than appending, because a capture's own links are a property of its
    *  bytes and do not change; a second filing is a re-run, not new information. */
@@ -19390,6 +20129,28 @@ export class Store extends DurableObject {
         versionrevert:   () => this.versionRevert(Store.#versionArgs(url, body)),
         versioncurrent:  () => this.versionCurrent(Store.#versionArgs(url, body)),
         versionhide:     () => this.versionHide(Store.#versionArgs(url, body)),
+        /* PL-3 / IS-4 — THE SUGGEST ENDPOINT, and the ONE write the
+           investigative session holds (§4 group 2). The composition arrives in
+           the BODY and not the query string: a description is prose held to a
+           commit message's standard (§6 rule 1) and a legs array is a
+           structure, and both would be truncated by the first proxy with an
+           opinion about URL length — the same reasoning `op=biasinhale` records
+           one screen up, where a truncated policy silently produces a smaller
+           residue.
+           `author` and `viewer` are stamped by the control plane and never
+           taken from the caller. That is what makes the two identity rules
+           below real rather than advisory: a machine credential arrives
+           honestly named `token:<class>`, so the branch-assertion refusal can
+           recognise it BY SHAPE through REC-46's one predicate, and a caller
+           cannot sign a structural claim in a member's name. */
+        suggest: () => this.suggestVersion({
+          ...(body || {}),
+          target: (body && body.target) || url.searchParams.get("target"),
+          kind: (body && body.kind) || url.searchParams.get("kind"),
+          run: (body && body.run) || url.searchParams.get("run"),
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer"),
+        }),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are

@@ -1002,6 +1002,24 @@ export const NON_ACTS = {
   airunopen: "investigative run lifecycle, keyed by run id: starts a background session in the context of an inquiry or a project and changes NOTHING about that object (§14a)",
   airuntick: "investigative run lifecycle, keyed by run id: the run's own heartbeat, budget spend and observation log — no bundle, no state, no record act",
   airunclose: "investigative run lifecycle, keyed by run id: ends a run and names the bound that stopped it (§14b.6); what the run PROPOSED is a separate act with its own author",
+  /* PL-3 / IS-4 — AND THE PREDICTION ABOVE IS ANSWERED HERE RATHER THAN LEFT
+     HANGING, because it was half right. The IS-6 lander wrote that *"what a run
+     eventually proposes IS an act on an object, and it is IS-1's and IS-2's;
+     that act will be an ACTS row"*. It IS an ACTS row — six of them, PL-2's
+     accept/reject/consider/revert/current/hide, all published and all
+     object-directed. `op=suggest` is not one of them and is not a seventh.
+     WHY THIS ONE IS NOT AN ACT. An ACTS row is a thing this record OFFERS A
+     MEMBER beside an object: it appears in `op=affordances`, a surface hosts it,
+     and `civicos-ui/test/surface-registry.test.mjs` then owes that surface. No
+     member presses this. In the background mode a run calls it unattended; in
+     the interactive mode (§10) the member's act is "export", performed inside
+     the session, and the plane call the session then makes is this one. Offering
+     it beside an inquiry would tell a member they may compose a machine
+     suggestion by hand, which is not a thing this record does — and would put an
+     act on UI-52's register that no item owes a surface for.
+     WHAT A MEMBER DOES SEE is the suggestion itself, through `op=basisversions`,
+     and the six acts on it. That is where the four beats live. */
+  suggest: "the investigative session's ONE write (§4 group 2), keyed by inquiry and run: proposes a reading of the evidence in state suggested. Not object-directed — no member takes it; the six acts ON the proposal are the member-facing ones and they are ACTS rows",
 };
 
 export const ACT_IDS = new Set(ACTS.map((a) => a.id));
