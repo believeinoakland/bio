@@ -4477,3 +4477,101 @@ declared.** Two of them are worth carrying:
 **And the FOOT SENTINEL fired during the controls**, printing `53 pass, 2 fail — SUITE
 ENDED BEFORE ITS OWN FOOT` where a TypeError inside an assertion would otherwise have
 ended the module through no assertion at all.
+
+## 2026-08-08 · D-243 / D-242 · SIX IDS ARE ALREADY ALLOCATED TWICE IN `origin/main`, AND NOTHING HAD EVER LOOKED
+
+**Instrument:** `tools/mintid.mjs` — `allocations()` / `collisions()` / `unregisteredNamespaces()`,
+read at commit `a777538`, on a quiet tree. **Reproduce in one step:**
+`node tools/mintid.mjs --audit`.
+
+**THE HEADLINE, and it is the reason the item exists rather than a by-product of it.**
+The first run of an in-commit duplicate detector over the live planning surface found
+**SIX ids allocated twice**, none of them known to anybody, all of them in `origin/main`:
+
+| id | what collides |
+| --- | --- |
+| `D-121` | two unrelated debt rows, both dated 2026-07-31 — a stale-`surfaced_by` defect and the office-formats capture gap |
+| `D-124` | two unrelated design rows — **and the first reads "(renumbered from a colliding D-122 by CONDUCT 2026-07-31)", so it was renumbered ONTO a second collision** |
+| `IC-30` | two different PROPOSED interface changes — **the THIRD live IC collision after the IC-33/IC-35 pair M0-17 recorded** |
+| `CPDF-9` | two different queue items: the M0 pdf-worker dark-suite item and the M2 OCR-reachability measurement |
+| `FW-15` | two different queue items: the C-7.1 deletion-ledger retirement and the L2→L3 PDF-text wire |
+| `M0-16` | a duplicated `### M0-16 · done` heading with an empty body above the real one — an integration merge artefact |
+
+**REACH, printed and floored: 593 allocation sites across 18 graded namespaces**
+(`D` 249 · `DEC` 65 · `IC` 39 · `REC` 77 · `UI` 52 · `CPDF` 13 · `COFF` 7 · `CAP` 4 ·
+`FW` 14 · `FL` 6 · `PL` 16 · `SK` 4 · `IS` 9 · `VF` 5 · `M0` 18 · `DIST` 3 · `DS` 4 ·
+`I` 8). **What the matcher CANNOT see, stated rather than left to be assumed:** `C`,
+whose dotted members repeat a family number by design, and `M`, which declares no
+allocation site — both NAMED as ungradable in the instrument's own output rather than
+scored clean; an un-minted id that has not collided yet; and a collision between two
+branches nobody has merged.
+
+**AN ALLOCATION SITE HAS EXACTLY TWO SHAPES, AND THE SECOND WAS FOUND BY ASKING THE
+CORPUS.** A heading-only matcher (`### NS-n · state`, QUEUE.md's own item shape) reads
+five prefixes as clean zeros — `PL`, `FL`, `SK`, `VF` and `DS` allocate as TABLE ROWS in
+`IS-BUILD-PLAN.md`, and so do four of `UI`'s items. Measured across the five queue-corpus
+files: QUEUE.md yields ten prefixes as headings and no rows; IS-BUILD-PLAN.md yields six
+as rows and no headings; MILESTONES.md, UI-PLAN.md and PLAN.md yield neither. **Zero noise
+in either shape.** Five of the six collisions were visible to the heading-only draft; the
+sixth arrived with the row shape.
+
+**THE REGISTRATION PROMPT GAP WAS REAL AND HAD ALREADY COST A COLLISION.** Four prefixes
+allocated ids with no register row — `FW` (14 items), `COFF` (7), `CAP` (4) and `DS` (4) —
+so `mintid` refused them by name and those families stayed on the convention. **`FW-15` is
+one of the six.** M0-17 left this open on a measurement: a wide census over every
+prefix-number TOKEN returns `INFO`, `SHA`, `UTF`, `RFC`, `FY2023` and thirty more. **That
+census asked the wrong question.** Over allocation SITES the same scan returns fifteen
+prefixes and no noise at all, which is the difference between a list of spellings and a
+statement of what makes something recognisable in principle.
+
+**D-242's "there is no cheap local test" — HALF TRUE, MEASURED.** True of the two-clone
+half: nothing on this machine can see a second ledger, and that stays open. **Not true of
+the non-atomic-filesystem half**, which is now a three-way probe against the real ledger
+directory (exclusive create · a second exclusive create that must be refused `EEXIST` ·
+a re-read proving the first writer's bytes did not move) and refuses `EXCL_NOT_HONOURED`
+rather than minting. Measured on the live ledger `/Users/sparky/ClaudeCodeBIO/bio/.git/bio-idalloc`:
+**honoured.** The probe is ONE process and cannot speak for atomicity across hosts, which
+is why a ledger seen from more than one host warns instead.
+
+**THE LEDGER HAD ALREADY OUTGROWN THE RESERVATION THAT DEFERRED THIS.** D-243 said the
+audit was not owed yet because the ledger held 2 ids. Measured at `a777538`: it holds
+**9 in `D` (242..250), 1 in `C`, 2 in `IC`, 1 in `REC`** — and `--audit --base HEAD~8`
+already classifies M0-17's own `D-242` and `D-243` as **HELD** against `IC-38`, `FW-15`,
+`FW-14` and `M0-17` as **PRE-LEDGER**, which is the classification working in both
+directions on real history.
+
+**BATTERY, and the baseline was re-measured rather than carried.** True baseline at
+`origin/main` (`86f0e73`), run in a scratch worktree: **134/134 suites green · 8,386
+assertions · 128.9 s · exit 0**. Final at `a777538`: **134/134 · 8,431 · 130.3 s · exit 0**.
+**Delta +45 attributed by DIFFING the two runs per suite, never by subtraction:**
+`mintid.test.mjs` 33 → 77 (+44), `planning-hygiene.test.mjs` 282 → 283 (+1, the new debt
+row), **130 of 132 suites identical in count**. `REGISTER_FLOOR.arms` moved **570 → 576**
+from the figure the green run PRINTED (`GREW by 6 arm(s)`); `classified` 129 and `corpus`
+130 unmoved.
+
+**THREE INSTRUMENT FINDINGS, recorded rather than smoothed — the controls found the
+instrument wrong three times and the subject none.**
+
+- **A CONTROL ARM READ `-1 pass, -1 fail` AND THE SUITE HAD NOT DIED.** The loose-matcher
+  arm made the suite print 5,276 sites, and `process.exit()` TRUNCATES a large PIPED
+  stdout, losing the suite's own tally line. The harness now writes to a file. **The `-1`
+  convention is the only reason this was distinguishable from a clean zero.**
+- **A REFUSAL IS NOT A THROW, and M0-17's own hardening covered only the throw.** Neutering
+  the exclusivity probe makes every `mint` refuse; `a.ids.length` on a refusal raised a
+  TypeError and ended the module with the arm's declared failures never reaching an
+  assertion. Two sites hardened, and `scopeLines` no longer throws on a partial scope —
+  a formatter for a safety statement is the last thing that should take a process down.
+- **THE ESTATE CAUGHT PROSE IN A COMMENT BEING READ AS A PRODUCER, which is the
+  documentation-poisons-a-corpus class for the THIRD time in two days and in a THIRD
+  instrument.** A collision's explanatory string named the file path C-7.1 governs;
+  `check-firing.test.mjs`'s estate walk covers `tools/`, read this file as a producer for
+  a retired shape, and went RED. It failed in the SAFE direction. The lesson generalises
+  past id-shaped examples: **a prose mention inside a file an estate walk covers is
+  indistinguishable from the real thing.** Separately, `hygiene.test.mjs`'s walk-class
+  ratchet named this item's new sandbox walk on the first full battery, before anyone read
+  the diff — the ratchet working for the third recorded time.
+
+**AND ONE FINDING ABOUT THE PRACTICE ITSELF:** the scratch worktree used to measure the
+true baseline was created INSIDE the worker's own worktree, where `op-claims.test.mjs`'s
+repo-wide walk found it and reported 15,007 op mentions from a nested second copy of the
+repository. A scratch checkout for measurement belongs OUTSIDE the tree the estate walks.
