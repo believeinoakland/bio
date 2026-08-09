@@ -3057,7 +3057,26 @@ function checkGrounds(fm, legs, findings) {
     /* REC-46 — THE SITE THE ITEM WAS ROUTED FOR. This asked the word list
        alone, so `token:member` (and `class:member`) reached the record here
        while `agent` was refused. It now asks the one predicate, and so does
-       every other site that asks the same question. */
+       every other site that asks the same question.
+
+       DEC-65's SINGLE-PART LICENCE STOPS ONE LEVEL UP, AND THIS IS A CLOSURE
+       DECIDED RATHER THAN A SITE MISSED (PL-19, 2026-08-09). C-25.6 —
+       `basisVersionFindings`, the identical question over a VERSION's ground
+       rows — now accepts PL-17's explicit no-claim value on a version declaring
+       exactly one part, because a MACHINE composes versions and would otherwise
+       have to sign a member's name to one. THIS block governs the INQUIRY's own
+       `grounds[]`, and it has NO machine writer to protect: `store.mjs`'s
+       `groundInquiry` is the only op that writes these rows and it refuses a
+       machine credential OUTRIGHT, before anything else, inside its own DEC-49
+       region (`MACHINE_CANNOT_GROUND`, REC-64 / C-32.8). MEASURED at that op,
+       not assumed from this file.
+       So there is nothing here for the third state to keep honest, and admitting
+       it would widen what the record may hold for a population that cannot
+       produce it — which is the quiet widening DEC-65's own licence and PL-17's
+       delegation both warn against. If a machine writer ever reaches these rows,
+       THAT is when this arm earns the same treatment, and the sweep in
+       `test/dec65-single-part.test.mjs` finds this site by shape so the question
+       is put again rather than forgotten. */
     if (typeof r.asserted_by !== 'string' || r.asserted_by.trim() === ''
         || isMachineIdentity(r.asserted_by)) {
       findings.push(f('C-2.8', 'error', `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`,
@@ -6602,6 +6621,25 @@ export function basisVersionFindings(fm, findings) {
     if (!legsOf.has(vn)) legsOf.set(vn, []);
     legsOf.get(vn).push([i, l]);
   }
+  /* DEC-65's SINGLE-PART LICENCE NEEDS THE COUNT BEFORE THE VERDICT, which is
+     why this pre-pass exists and is not folded into the loop below. The arm that
+     judges `asserted_by` runs per ROW, and whether the licence applies is a
+     property of the WHOLE VERSION — how many parts it declares. Judging row 1 of
+     2 before row 2 has been seen would have exempted the first part of a
+     two-part version, which is exactly the widening DEC-65 forbids.
+     COUNTED OVER DISTINCT, WELL-FORMED LABELS, deliberately: a malformed label
+     and a duplicate label are each already their own C-25.6 finding below, and a
+     version does not earn the licence by declaring its one real part twice. */
+  const partsOf = new Map();              // version name -> Set(distinct valid label)
+  for (const g0 of groundRows) {
+    const vn0 = g0 && typeof g0.version === 'string' ? g0.version.trim() : '';
+    if (!byName.has(vn0)) continue;
+    const l0 = typeof g0.ground === 'string' ? g0.ground.trim() : '';
+    if (!l0 || !GROUND_LABEL_RE.test(l0)) continue;
+    if (!partsOf.has(vn0)) partsOf.set(vn0, new Set());
+    partsOf.get(vn0).add(l0);
+  }
+
   const groundsOf = new Map();            // version name -> Map(label -> row index)
   for (let i = 0; i < groundRows.length; i++) {
     const g = groundRows[i];
@@ -6622,10 +6660,55 @@ export function basisVersionFindings(fm, findings) {
     }
     groundsOf.get(vn).set(label, i);
     /* REC-46's one predicate, never a word list: `token:member` and `class:member`
-       reached the record here when this was asked as a word list. */
-    if (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by)) {
+       reached the record here when this was asked as a word list.
+       AND SINCE PL-19 / DEC-65 SHAPE (b) THE PREDICATE IS ASKED, NEVER THE
+       LITERAL. `sufficiencyClaimState` is the ONE place the field's states are
+       decided (PL-17), so a fourth state added there reaches this arm without
+       this arm being edited — the REC-46 lesson taken a second time.
+
+       THE LICENCE, AND ITS EXACT BOUND. DEC-65 (answered 2026-08-09) permits a
+       version that declares EXACTLY ONE part to carry the explicit no-claim
+       value in this field, and nothing wider. The arithmetic is the whole
+       argument: with one part there is no MAXIMUM to take, so §12 derives the
+       same conservative weakest-leg answer whether or not anybody asserted
+       independent sufficiency — no member is credited with a structural claim
+       they did not make, and DEC-32's default is what you get either way. With
+       TWO parts the maximum is live, and an unclaimed part in that maximum is
+       precisely the finding-made-stronger-by-nobody this rule exists to refuse.
+       So the second case is refused BY NAME below rather than falling through.
+
+       WHAT IS *NOT* LICENSED, stated because a reader will reach for it: a
+       MACHINE'S STAMP is still refused on a single-part version. The licence is
+       for the record saying `nobody claimed this` OUTRIGHT, never for the record
+       saying `a machine claimed this` — those are different findings and the
+       second is the overclaim DEC-65 was raised about. A BLANK is still refused
+       too: undetermined is first-class only when it is STATED. */
+    /* ASKED AS A PREDICATE, AND THE `typeof` ARM IS KEPT BESIDE IT RATHER THAN
+       FOLDED IN. `isSufficiencyUnclaimed` coerces (`String(x ?? '')`), which is
+       right for a caller-supplied identity and wrong for a frontmatter field
+       that may hold a number or an object — so the shape test stays where it
+       has always been, in the arm below that already carries it. Absent is not
+       machine and is not the no-claim value either: three findings, three arms.
+
+       THE SHAPE OF THIS PAIR IS ALSO WHAT `hygiene.test.mjs`'s (D1) READS. Its
+       anchor is the sentence `is not a named member` and it resolves upward to
+       the nearest `if (`, so the refusal that says a machine may not sign must
+       be produced by a guard that VISIBLY asks the one predicate. Written as an
+       `if/else if` on a state name it resolved to the licence arm instead and
+       (D1a)/(D1b) both fired — correctly, on an instrument working exactly as
+       built. Two independent `if`s, each answering its own question. */
+    const singlePart = (partsOf.get(vn)?.size ?? 0) === 1;
+    const noClaim = typeof g.asserted_by === 'string' && isSufficiencyUnclaimed(g.asserted_by);
+    if (noClaim && !singlePart) {
+      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] declares '${label}' one of ${partsOf.get(vn).size} separately sufficient parts of version '${vn}' and records that nobody asserted it: a reading whose strength is the STRONGEST of its parts takes that maximum over a part somebody signed for, so the explicit no-claim value is open only to a version carrying exactly ONE part, where there is no maximum to take (DEC-65)`,
+        ['name the member asserting that this ground is independently sufficient',
+         `or put every leg of version '${vn}' in ONE part — a reading nobody has asserted the structure of is read as its weakest leg`]);
+    }
+    if (!noClaim
+        && (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by))) {
       push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}].asserted_by '${String(g.asserted_by).slice(0, 40)}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's, and a machine-composed version PROPOSES the structure rather than asserting it`,
-        ['name the member asserting that this ground is independently sufficient']);
+        ['name the member asserting that this ground is independently sufficient',
+         `or, on a version carrying exactly ONE part, record '${SUFFICIENCY_UNCLAIMED}' — the record saying outright that nobody claimed it, which is not the same as a machine's name standing where a member's has to be`]);
     }
     if (!ISO_TS_RE.test(String(g.at || ''))) {
       push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] requires 'at' as an ISO timestamp (got '${String(g.at).slice(0, 40)}'): a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`);

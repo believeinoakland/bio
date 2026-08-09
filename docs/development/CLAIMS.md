@@ -5167,3 +5167,64 @@ directly (the `elicReceiptHtml` block). **PL-17 did not edit it — `civicos-ui/
   therefore carried in `bio-plane/test/sufficiency-state.test.mjs` instead, in the battery, and the
   limitation is stated at the site. If you want them under arm E properly, the shape rule needs a
   way to tell a member-facing text map from a machine-to-machine one, and that is a real item.
+
+## CLAIM 2026-08-09 RECORD (PL-19 — DEC-65's shape (b): the check AND the endpoint guard, together)
+session: pl19-dec65-shape-b (worktree agent-a875e2afd837947d7)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/checks/bio-checks.mjs` — named by SITE, not by file:** (1) `basisVersionFindings`'
+  `basis_version_grounds[]` loop — the `asserted_by` arm at C-25.6 and ONE new pre-pass that counts the
+  distinct declared parts per version. **`C-2.8` / `checkGrounds` KEEPS EVERY EXECUTABLE LINE IT HAD
+  and gains a COMMENT ONLY, stating why it is a MEASURED closure rather than a site the sweep missed**
+  — amended into these paths mid-item, deliberately, because a reader meeting two sites that ask the
+  identical question with only one of them wired would read the second as a miss. The `git diff` on
+  that span contains no executable change. PL-17's mint block
+  (`SUFFICIENCY_UNCLAIMED`, `sufficiencyClaimState`, `isSufficiencyClaimed`, `SUFFICIENCY_CLAIM_STATES`)
+  is IMPORTED and READ, never edited. CPDF-10's open claim on this file appends `TEXT_CHAIN_CHECKS`
+  at the END of the file; my span is ~line 6600 and does not meet it.
+  **`bio-plane/src/store.mjs` — named by SITE, not by file:** (2) `suggestVersion`'s machine-asserter
+  pre-write guard (the `needsPartition` arm inside `DEC-49 REGION is-suggest-checks`, the site FL-3
+  measured as firing FIRST); (3) `#suggestionPersisted`'s ONE `asserted_by` stamp line. **NOT**
+  `#standardForRun`/`aiRunRead`/`aiRunSpawnPayload` (the open RECORD claim's spans), **NOT**
+  `suggestVersion`'s success return (D-235a's, released), **NOT** `groundInquiry`, **NOT** `promote`.
+  **`bio-plane/test/dec65-single-part.test.mjs`** (NEW), **`bio-plane/test/dec65-single-part.control.mjs`**
+  (NEW — the negative-control driver, deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES).
+  **`bio-plane/test/sufficiency-state.test.mjs`** — §7's superseded pins CORRECTED with the dated reason
+  at the site, never exempted. **`bio-plane/test/suggest.test.mjs`** — the SAME, and it was not
+  predicted by the brief: PL-17's arm (7) shows which assertions move in ITS suite and cannot see this
+  one, where TWO more were superseded (CHECK 6's machine arm and F10's absolute version count).
+  **`civicos-ui/check-refusal-codes.mjs`** — the `regionLines` FLOOR figure ONLY, moved from what the
+  guard PRINTED on this worktree's green run; no matcher, arm, ceiling or row touched. **AMENDED INTO
+  THESE PATHS MID-ITEM AND IT IS A KNOWN CONCURRENCY:** the open RECORD claim (`airun.mjs` /
+  `STANDARD_BASIS`) names this same FLOOR block. If it conflicts, KEEP BOTH COMMENTS AND ONE KEY.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/DECISIONS.md`
+  (DEC-65's enactment note ONLY — appended, no other row touched), `docs/development/MEASUREMENTS.md`.
+  **NOT** `bio-plane/src/schema.mjs` (see the release line — the sentence PL-17 flagged stays TRUE),
+  **NOT** `bio-plane/src/index.mjs`, **NOT** `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT**
+  `pdf-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: I3 (the plane's op surface — `op=suggest`).
+interfaces owned: none. No shape a consumer builds against changes: `op=suggest`'s parameters and
+  its success object are untouched. What changes is WHICH submissions are accepted (strictly more)
+  and what the plane STAMPS into one field of the document it composes.
+expected: DEC-65, answered 2026-08-09 by session BOB and enacted in three steps by CONDUCT. Step ONE
+  was PL-17 (the third `asserted_by` state, minted and deliberately inert). **This is step TWO: land
+  shape (b) — the single-part exemption — in `C-25.6` AND in PL-3's endpoint guard TOGETHER**, per
+  DEC-65's own sequencing and FL-3's measurement that the guard refuses on `legsIn.length > 0` and
+  therefore fires first, so amending the check alone would land, pass its own suite, and change no
+  behaviour. Step THREE is PL-14's re-measurement of the strength pair over grounds.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief
+  (the brief carried no figure): **140 suites (136 plane + 4 fleet) · 140/140 green · 8,907 assertions
+  · 135.9 s · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED;
+  `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs`
+  clean but for UNPUSHED. Negative controls RUN, each arm ALONE with the other defences held OPEN, an
+  OVER-STRICTNESS arm included (a genuine member claim in a spelling I did not anticipate must still
+  be ACCEPTED), a BASELINE arm included, restores verified by sha256 AND `cmp` against uniquely-named
+  per-arm pristine copies. Tested THROUGH `op=suggest`, not only at the store. No push, no merge.
+concurrency: checked over the whole file at `8096452` (this worktree was ONE MERGE BEHIND `main` on
+  arrival — PL-17's merge — and was fast-forwarded before anything was measured). Of the claims open
+  today, **two name my files and NEITHER meets my spans**: CPDF-10 appends `TEXT_CHAIN_CHECKS` at the
+  END of `checks/bio-checks.mjs` (mine is `basisVersionFindings`, ~6600), and the open RECORD/airun
+  claim names `store.mjs`'s `#standardForRun` / `aiRunRead` / `aiRunSpawnPayload` (mine is
+  `suggestVersion`'s pre-write guard and `#suggestionPersisted`). D-235a's `store.mjs` claim is
+  RELEASED and its span was `suggestVersion`'s SUCCESS RETURN, after the region I edit.
+released:
+

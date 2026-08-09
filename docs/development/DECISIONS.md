@@ -4481,6 +4481,41 @@ enacted: 2026-08-09 · CONDUCT · **PARTLY, AND THE SEQUENCE IS THE RULING.** DE
   only, and `schema.mjs` states at the `inquiry_basis` site why it is deliberately not projected.
   Nothing writes the new value, and every stored row predating it carries a named member because
   both gates refused anything else at the moment it was written.
+
+**ENACTMENT, STEP TWO OF THREE — PL-19, 2026-08-09: THE LICENCE IS LANDED, AT BOTH SITES.** Shape
+  (b) is now running. **`C-25.6` ADMITS the explicit no-claim value on a version declaring EXACTLY
+  ONE part and REFUSES it on a version declaring two or more** — asked through PL-17's
+  `isSufficiencyUnclaimed`, never by matching the literal, so a fourth state added to that predicate
+  reaches this arm without this arm being edited. **AND PL-3's ENDPOINT GUARD MOVED IN THE SAME
+  TURN**, from `legsIn.length > 0` to *a machine may compose one part and no more*, because FL-3
+  measured it as the site that FIRES FIRST. **The endpoint STAMPS `SUFFICIENCY_UNCLAIMED` on a
+  machine's ground row instead of the composer's identity** — the substitution the third state was
+  minted for, so `class:ai` never stands in a field whose published meaning is *a member said this
+  part is enough on its own*. The version's own `author` still names the machine that composed it:
+  WHO COMPOSED and WHO ASSERTED are different facts and only the second is a claim.
+  **DEC-65's NARROW LICENCE WAS NOT WIDENED, AND ONE SITE WAS DELIBERATELY LEFT CLOSED WITH ITS
+  REASON AT THE SITE.** `C-2.8` / `checkGrounds` asks the identical question one level down and is
+  UNCHANGED: its rows are the INQUIRY's own `grounds[]`, whose only writer is `op=inquiryground`,
+  which refuses a machine credential outright (`MACHINE_CANNOT_GROUND`, REC-64 / C-32.8) — MEASURED
+  by calling the op, not read off the source. There is no machine writer there for the third state
+  to keep honest, so admitting it would widen what the record may hold for a population that cannot
+  produce it. **`schema.mjs` IS THEREFORE UNTOUCHED**: PL-17 predicted its `inquiry_basis` sentence
+  (*"asserted per ground, by a named member"*) would become incomplete on this landing, and it does
+  not — that sentence is about the block PL-19 did not change, and it stays true.
+  **THE WRONG C-NUMBER WAS STILL LIVE IN THE PLANE.** PL-3's guard cited `C-25.15` in its comment
+  and TWICE in the refusal a caller reads. FL-3 corrected it in this entry; PL-19 corrected it at
+  the site, where it had been sending a member to `VERSION_ORPHAN_ROW`.
+  **AND A FINDING FOR WHOEVER READS PL-17's RECORDED WRONG FIX.** Adding `none:` to
+  `MACHINE_STAMP_PREFIXES` NO LONGER makes `C-25.6` refuse the value — PL-19's wiring asks the
+  sufficiency predicate, and `sufficiencyClaimState` tests the minted value BEFORE `isMachineIdentity`.
+  PL-17's comment claims that arm ordering is load-bearing; it is now MEASURED against the exact
+  patch it was written to survive. The one-line change is now purely a defect: it makes the record
+  read *a machine claimed this* about a value meaning *nobody did*, and buys nothing.
+  **WHAT REMAINS IS STEP THREE — PL-14 re-measures the strength pair over grounds.** PL-19 measured
+  the half DEC-65's argument rests on and no more: the DERIVED PAIR of a machine's single-part
+  reading is identical to the same reading under a member's claim (`["graded","B","unrated",null]`
+  both), which is the arithmetic argument driven on the plane rather than restated. A re-measurement
+  ACROSS several grounds is PL-14's and is not done here.
 ### DEC-64 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
