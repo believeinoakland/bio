@@ -5576,3 +5576,50 @@ slug is the drift class DEC-8 closes, and the absence is asserted so it cannot g
 stated rule about the mute to the control beside it; the alternative (leave them, let the plane
 refuse) is the "gate that pressures somebody into finding a way around it" the record already rules
 against. Nothing here is a consequence Bob has not already ruled on.
+
+## CLAIM 2026-08-09 RECORD (PL-20 — DEC-65's step THREE: the strength pair re-measured over grounds)
+session: pl20-dec65-step-three (worktree agent-a04afa9454cdf0bc2)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/test/dec65-strength-reach.test.mjs`** (NEW — this item's suite: the reach
+  instrument, the driven differential over several grounds, and the licence statement),
+  **`bio-plane/test/dec65-strength-reach.control.mjs`** (NEW — the negative-control driver,
+  deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs).
+  `docs/development/CLAIMS.md` (this entry and its delegations),
+  `docs/development/DECISIONS.md` (DEC-65's enactment note for step THREE ONLY — appended, no other
+  row touched), `docs/development/MEASUREMENTS.md` (one entry).
+  **`bio-plane/scripts/coverage.mjs`** and **`civicos-ui/check-refusal-codes.mjs`** — the FLOOR
+  figures ONLY, and ONLY if this item's own run PRINTS a move. **NO SOURCE FILE IS EDITED.**
+  `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs`, `bio-plane/src/schema.mjs` and
+  `bio-plane/src/index.mjs` are **READ AND NEVER WRITTEN** — this step is a MEASUREMENT, and the two
+  outcomes it can have are "the licence is closed" and "there is a defect to report", neither of
+  which is an edit to the arithmetic. **NOT** `civicos-ui/**` (beyond the one FLOOR figure),
+  **NOT** `agent-worker/**`, **NOT** `newgroup/**`, **NOT** `release/**`.
+interfaces consumed: I3 (the plane's op surface — `op=versionstrength`, `op=inquirystrength`,
+  `op=promote`, `op=earnedbasis`). interfaces owned: none. **No shape any consumer builds against
+  changes, because no source changes.**
+expected: DEC-65, answered 2026-08-09 by session BOB and enacted in three steps. Step ONE was PL-17
+  (the third `asserted_by` state, minted and deliberately inert); step TWO was PL-19 (`C-25.6` and
+  PL-3's endpoint guard, together). **This is step THREE: re-measure the strength pair over
+  GROUNDS** — specifically the survey PL-19 named as the thing it did not do, *"whether anything in
+  the strength walk READS `asserted_by` at all across SEVERAL grounds"*.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief;
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. Negative
+  controls RUN, each arm ALONE with the other defences held OPEN, a BASELINE arm included, an
+  OVER-STRICTNESS arm included (a genuine member claim in a spelling I did not anticipate must still
+  read as a member claim), restores verified by sha256 AND `cmp` against uniquely-named per-arm
+  pristine copies. Tested THROUGH the ops, not only at the store. No push, no merge.
+concurrency: **AND THE FIRST THING THIS ITEM MEASURED IS THAT ITS OWN PREREQUISITE IS NOT IN `main`.**
+  PL-19 is committed on `worktree-agent-a875e2afd837947d7` (`7844e16`, `4b3f7a7`) and is NOT merged
+  and NOT pushed; this worktree's `main` (`1081a6a`) carries PL-17's merge and UI-45's and nothing of
+  step two. Measured, not assumed: `git branch -a --contains 7844e16`. **The item is deliberately NOT
+  merged into this branch** — a trial `git merge` conflicts in `bio-plane/scripts/coverage.mjs`'s
+  `REGISTER_FLOOR`, `civicos-ui/check-refusal-codes.mjs`'s floor, `CLAIMS.md` and `MEASUREMENTS.md`,
+  which is CONDUCT's integration and is the exact `REGISTER_FLOOR` keep-both-keys shape that has gone
+  wrong six times. **What this item does instead is measure on BOTH trees** and say so, which is a
+  stronger result than either alone: the answer is a property of `#strengthWalk`, and PL-19 did not
+  touch `#strengthWalk`. **The id was NOT minted here either, and that is a finding:**
+  `node tools/mintid.mjs PL --floor-only` reports FLOOR `PL-18`, because the floor is derived from
+  `QUEUE.md` and PL-19's entry is unmerged — so minting would have handed out `PL-19` and collided
+  with a live item. The shared ledger (`.git/bio-idalloc`) already holds `17..20`, so `PL-20` was
+  allocated when the brief was written and the ledger, not the floor, is what caught it.
