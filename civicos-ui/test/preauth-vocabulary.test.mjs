@@ -527,11 +527,29 @@ ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
    halves of that classification, so a later edit that hoists the router above
    the gate fails HERE and the surface is re-classified rather than drifting
    into the pre-auth set unnoticed. */
-ok("WALK 2 REACH: the script declares exactly the five routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (a sixth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 5
+/* CORRECTED AGAIN 2026-08-09 BY UI-42, five -> SIX, and for the second time the
+   old assertion was RIGHT to fail rather than wrong to exist:
+   `versionReviewRouteFromHash` arrived with the version-review surface and this
+   arm stopped it arriving UNCLASSIFIED — which is the whole reason UI-38 left it
+   counting. The classification, made against this walk's own rule ("`boot()`
+   cannot run without a credential, so the routers it asks are not
+   pre-authentication surfaces"):
+
+     `versionReviewRouteFromHash` is POST-AUTHENTICATION. It is asked inside
+     `boot()`'s router chain and NOWHERE at the top level, so
+     `#versions/<INQ-…>[/<name>]` resolves for nobody holding nothing. It reads
+     `op=basisversions`, whose classes are admin/member/probe — there is no
+     uncredentialed arm to reach — so it adds no member-facing pre-auth
+     vocabulary.
+
+   Asserted rather than asserted-by-comment: the two pins below check both halves
+   of that classification for THIS router as well, so a later edit that hoists it
+   above the gate fails HERE. */
+ok("WALK 2 REACH: the script declares exactly the six routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (a seventh must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 6
    && ["actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
-       "publishedRouteFromHash","routeFromHash"].every(f => ROUTE_FNS.includes(f)));
+       "publishedRouteFromHash","routeFromHash","versionReviewRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
   const BOOTCHAIN = /if\(!publishedRouteFromHash\(\)[\s\S]{0,400}?\)\s*go\("queue"/.exec(SCRIPT);
@@ -544,6 +562,19 @@ ok("WALK 2 REACH: the script declares exactly the five routers this walk has cla
   const TOPLEVEL = SCRIPT.slice(SCRIPT.indexOf("/*__AI_SESSION_END__*/"));
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #session/<id> resolves for nobody holding nothing",
      !TOPLEVEL.includes("aiSessionRouteFromHash()"));
+  /* UI-42's router, the same two halves. The slice starts at the END of the
+     version-review block for the same reason the one above starts at the end of
+     the running-session block: a router's own `hashchange` registration sits
+     inside its block and is not a pre-gate invocation, and everything after the
+     block IS the pre-gate tail of the file — which is where the published
+     router is deliberately asked and where a second one must never appear. */
+  ok("WALK 2 CLASSIFICATION: versionReviewRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("versionReviewRouteFromHash()"));
+  const TAIL = SCRIPT.slice(SCRIPT.indexOf("/*__VERSION_REVIEW_END__*/"));
+  ok("WALK 2 REACH: the version-review block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__VERSION_REVIEW_END__*/") > 0 && TAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #versions/<INQ-…> resolves for nobody holding nothing",
+     !TAIL.includes("versionReviewRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
