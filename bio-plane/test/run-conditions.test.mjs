@@ -186,6 +186,18 @@ const ROLE = {
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",
+  /* FL-4's two, and ARM W3 IS WHY THEY ARE HERE — they arrived as a FAILURE
+     naming both of them by name, which is the sweep behaving exactly as its own
+     comment promises rather than absorbing a new reader in silence.
+     HOUSEKEEPS, on the reaper's reasoning and beside it: they ask the CLOCK a
+     question — is this run still waiting on the daemon, and has the daemon
+     answered — to decide whether to hold a lease or deliver a completion. They
+     publish no fact OF the run to anybody. The wake's own observation entry is
+     written through `#aiRunAppend`, whose subject is the log and not this row,
+     and the only run field either of them causes to move is `expires`, which is
+     the lifecycle column the reaper reads. */
+  "#aiRunWakeHolds":   "HOUSEKEEPS",
+  "#aiRunWakeRuns":    "HOUSEKEEPS",
   purge:               "HOUSEKEEPS",
 };
 

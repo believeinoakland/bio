@@ -228,10 +228,16 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      the corpus is 9. THE SHAPE OF THE ARM IS UNCHANGED and that is the point: it
      is still a DELTA with the corpus printed, so a parse that matched nothing
      still cannot report an empty registry as a clean answer, and this item's own
-     entry still has to be the LAST one with every predecessor untouched. */
-  t("ARM S1 (REACH, as a delta): the registry parse reaches 9 consumers, was 8 before PL-4 "
-    + "appended the capture-request drain",
-    [names.length, names.length - 1], [9, 8]);
+     entry still has to be the LAST one with every predecessor untouched.
+     CORRECTED AGAIN 2026-08-09 BY FL-4, NOT EXEMPTED, and for the third time in
+     the same shape: FL-4 appended `ai-run-wake` as the TENTH, so the corpus is
+     10. WHY THE ARM IS CORRECTED RATHER THAN LOOSENED TO `>= 9`: the number is
+     what makes this a DELTA, and a comparison against a floor would go on
+     passing over a registry that had lost a consumer. What each successive
+     correction costs is one line here; what a floor would cost is the arm. */
+  t("ARM S1 (REACH, as a delta): the registry parse reaches 10 consumers, was 9 before FL-4 "
+    + "appended the suspended run's wake",
+    [names.length, names.length - 1], [10, 9]);
   t("ARM S2: the investigative run joined as ONE appended entry",
     names.filter((n) => n === "ai-run-reap").length, 1);
   t("ARM S2b (PL-4): and the capture-request drain joined as ONE appended entry too — no second "
@@ -243,6 +249,10 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
   t("ARM S3b (PL-4): the reaper is still the EIGHTH, so the new entry was APPENDED rather than "
     + "inserted — an insertion would renumber every consumer a later delta names",
     names[7], "ai-run-reap");
+  t("ARM S3c (FL-4): the drain is still the NINTH and the wake is the TENTH, so THIS entry was "
+    + "appended too — and the wake sitting AFTER the drain is what lets a completion be delivered "
+    + "on the alarm that produced it rather than one cadence later",
+    [names[8], names[9]], ["capture-request-drain", "ai-run-wake"]);
   /* NO SECOND ALARM. SCHEDULER.md: "Do NOT add a second alarm or a cron; that is
      the decision this file records." The pin is over the WHOLE plane's source
      and it is a count, so a second arming site anywhere fails it by name. */
