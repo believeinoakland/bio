@@ -345,9 +345,11 @@ const REGISTER_FLOOR = {
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 674 -> 714 / 138 -> 143 / 139 -> 144,
      from the merged tree's printed `GREW by 40 arm(s)` after D-265, D-269, PL-20 and
      PL-2's verification landed. */
-  arms:        714,
-  classified:  143,
-  corpus:      144,
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
+     from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
+  arms:        731,
+  classified:  145,
+  corpus:      146,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

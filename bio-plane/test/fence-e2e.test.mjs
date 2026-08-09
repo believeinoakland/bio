@@ -322,7 +322,11 @@ const ROSTER = [
   { n: 1, act: "accept",         op: "versionaccept",       code: "MACHINE_CANNOT_MOVE_VERSION", check: "C-25.24", layer: "identity",         wire: true },
   { n: 2, act: "make-current",   op: "versioncurrent",      code: "MACHINE_CANNOT_MOVE_VERSION", check: "C-25.24", layer: "identity",         wire: true },
   { n: 3, act: "hide",           op: "versionhide",         code: "MACHINE_CANNOT_MOVE_VERSION", check: "C-25.24", layer: "identity",         wire: true },
-  { n: 4, act: "publish",        op: "publish",             code: "MACHINE_CANNOT_PUBLISH",      check: "C-32.6",  layer: "identity",         wire: false },
+  /* `wire` was FALSE here when VF-5 measured it, and that flag is what made this
+     suite report its own accepts-when as five of six rather than dressing it as a
+     pass. D-262 closed it — one decoration in `json()` — so it is TRUE as of
+     2026-08-09. Corrected, never exempted; the history is this comment. */
+  { n: 4, act: "publish",        op: "publish",             code: "MACHINE_CANNOT_PUBLISH",      check: "C-32.6",  layer: "identity",         wire: true },
   { n: 5, act: "direct capture", op: "acquire",             code: "CAPTURE_NOT_DRAINING",        check: "C-28.13", layer: "capture-conduct",  wire: true },
   { n: 6, act: "direct enqueue", op: "capturerequestdrain", code: "AI_BEYOND_TASK_SCOPE",        check: "C-29.6",  layer: "credential-shape", wire: true },
 ];
@@ -377,7 +381,7 @@ const attempt = (n, payload, r) => {
      C-number and the translation are ABSENT, which is a pin on the defect: the
      turn that fixes it fails this line and must correct it, and that is the
      superseded-test discipline rather than an exemption. */
-  t(`   DEC-49 on the wire: C-number and canned translation ${row.wire ? "arrive with the refusal" : "DO NOT arrive (measured 2026-08-09, see block 10)"}`,
+  t(`   DEC-49 on the wire: C-number and canned translation ${row.wire ? "arrive with the refusal" : "DO NOT arrive — no roster row carries this any more, see block 10"}`,
     [checkOf(r), transOf(r) === REGISTRY[row.code].translation],
     row.wire ? [row.check, true] : [null, false]);
   return r;
@@ -648,14 +652,19 @@ console.log("\n--- 7. the pass is closed: six attempts, six named refusals, noth
   t("and every one of them answered the refusal its roster row names — six attempts, six named "
   + "refusals, which is the row's own accepts-when",
     ROSTER.filter((r) => ANSWERED.get(r.n)?.code !== r.code).map((r) => `${r.n}:${r.act}`), []);
-  /* THE HALF OF THE ACCEPTS-WHEN THAT IS NOT MET, STATED AS A NUMBER RATHER THAN
-     AS A PASS. "every refusal fires by C-number with its translation" holds for
-     five of six. The sixth is named, and the class it belongs to is block 10. */
-  t("DEC-49 on the wire holds for FIVE of the six, and the one it does not hold for is NAMED rather "
-  + "than dropped — this is the row's accepts-when reported as it MEASURES, not as it reads",
+  /* CORRECTED AT INTEGRATION 2026-08-09 by CONDUCT. VF-5 reported this half of its
+     own accepts-when as UNMET and stated it as a number rather than dressing it as a
+     pass: DEC-49 on the wire held for five of six, and the sixth
+     (`MACHINE_CANNOT_PUBLISH`) was NAMED. Reporting the shortfall honestly is what
+     produced D-262, and D-262 closed it — one decoration in `json()` rather than
+     eleven site edits. **The accepts-when is now MET in full: six of six.** The old
+     figure is kept here because a row that reads as always-having-passed loses the
+     reason the fix exists. */
+  t("CORRECTED (VF-5 measured FIVE of six and named the sixth): DEC-49 on the wire now holds for "
+  + "ALL SIX — every attempt's refusal carries the C-number its roster row names",
     [ROSTER.filter((r) => ANSWERED.get(r.n)?.check === r.check).length,
      ROSTER.filter((r) => ANSWERED.get(r.n)?.check !== r.check).map((r) => r.code)],
-    [5, ["MACHINE_CANNOT_PUBLISH"]]);
+    [6, []]);
   t("no attempt was absorbed by a layer in front of the one it was aimed at — the five held-open "
   + "attempts did not answer the credential layer's refusal",
     ROSTER.filter((r) => r.layer !== "credential-shape"
@@ -889,16 +898,26 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      — REC-73/REC-78's shape. A thirteenth fence written the mute way fails this;
      so does the turn that fixes any of the eleven, which is the point: it must
      then correct this line rather than exempt it. */
-  t("MEASURED 2026-08-09: exactly ONE of the twelve carries its C-number and canned translation to "
-  + "the caller. The other eleven answer `reason` and `detail` only, so the words REC-64 wrote for "
-  + "them reach nobody. This is a PIN on the defect and not an approval of it — the turn that fixes "
-  + "one of the eleven fails this line and must move it",
-    [explained, mute.length], [["MACHINE_CANNOT_MOVE_VERSION"], 11]);
-  t("(and the eleven are NAMED here, not scored zero — a thing an instrument cannot explain must be "
-  + "named; this set is D-262's own corpus)", mute.length && mute.includes("MACHINE_CANNOT_PUBLISH"), true);
-  t("and the one that DOES carry them is the one whose site refuses through a helper reading the "
-  + "catalog row — so the class is a CONVENTION that eleven sites do not follow, not twelve "
-  + "separate omissions", explained.length && REGISTRY[explained[0]].where.includes("moveVersionState"), true);
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT, which is exactly what the pin above
+     demanded and NOT an exemption. VF-5 measured ONE of twelve carrying its C-number
+     and translation, pinned the other eleven as a SET, and wrote in its own words that
+     *the turn that fixes one of the eleven fails this line and must move it*. **D-262
+     is that turn**, and it fixed all eleven at once — with ONE control-plane decoration
+     in `json()` rather than eleven site edits, chosen on the measurement that 118 of
+     125 response returns pass through it and that the class was 47 sites, not 11.
+     So the floor moves from 1 to 12 and the mute set to empty. The old figures are
+     kept in this comment because they are the receipt for why the decoration exists. */
+  t("CORRECTED (was a PIN on D-262's defect, MEASURED 2026-08-09 at one of twelve): ALL TWELVE now "
+  + "carry their C-number and canned translation to the caller, so the words REC-64 wrote for them "
+  + "reach whoever meets the fence",
+    [mute, explained.length], [[], 12]);
+  t("(and the set is asserted EMPTY by name rather than by count, so a thirteenth fence written the "
+  + "mute way lands here as a FAILURE naming itself rather than as a silent fall)",
+    mute.includes("MACHINE_CANNOT_PUBLISH"), false);
+  t("and it is one MECHANISM rather than twelve conformances — the decoration attaches the catalog "
+  + "row on the way out, so a fence added tomorrow is explained without its author knowing this "
+  + "rule exists. That is what VF-5's finding bought.",
+    explained.length === 12 && explained.includes("MACHINE_CANNOT_MOVE_VERSION"), true);
 }
 
 } finally {
