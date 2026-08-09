@@ -5578,3 +5578,79 @@ existence, so nothing here measures how they will render. It **cannot judge the 
 that `op=queue` files a lead under inquiry B's ancestors is PL-15's acceptance. And, as with every
 UI suite here, **the DOM stub fires no events**, so the stance router is driven directly at its
 address rather than through `hashchange`, and the substitution is labelled at the site.
+
+## 2026-08-09 · D-262 — THE REFUSAL A CALLER ACTUALLY RECEIVES, GRADED AGAINST THE CATALOGUE
+
+**Instrument:** `bio-plane/test/refusal-wire.test.mjs` (22 assertions, NEW) and its harness
+`bio-plane/test/refusal-wire.control.mjs` (7 arms, all RUN). Driven through the control plane against
+Miniflare. The corpus is HARVESTED on every run and never typed: the catalogue by the `_CHECKS`
+suffix (the DEC-49 guard's own rule), the op surface out of `index.mjs`'s `OPS` table, the machine
+fences out of `store.mjs`.
+
+**THE DEFECT, MEASURED AT THE WIRE. Eleven of the twelve `MACHINE_CANNOT_*` fences carried neither
+their C-number nor their canned translation to the caller.** All twelve fire (REC-73); all twelve
+have a catalogued translation (REC-64 wrote eleven); **exactly one — `MACHINE_CANNOT_MOVE_VERSION` —
+put either on the wire, and it is the only site in the family that refuses through a helper that
+READS the row.** The measurement is arm (b) of the control: with the decoration removed the suite
+goes **18 pass / 4 fail** and names them.
+
+**WHY NO INSTRUMENT SAW IT.** Four instruments watch this family and none grades the response.
+`civicos-ui/check-refusal-codes.mjs` arm C grades the SITE against the CATALOGUE and says in its own
+header that it *"says nothing about a LIVE plane"*; `machinefences-dec49.test.mjs` grades the
+CATALOGUE against its RENDERER; `machine-fences.test.mjs` grades the FENCE against the ACT. A fence
+could pass every one of them and still hand a member a bare machine word.
+
+**THE FIGURES, 2026-08-09, printed by the instrument on a green run:**
+
+| Corpus | Figure |
+| --- | --- |
+| DEC-49 families harvested by `_CHECKS` suffix | **16** |
+| catalogue codes carrying a canned translation | **166** |
+| codes minted in two families (the property the one-place attach rests on) | **0** |
+| `OPS` rows parsed | **163** · **137** admit the member class · **68** of those mutating |
+| calls driven (137 ops × member + machine) | **274** |
+| refusal envelopes received | **176** · **60** distinct codes |
+| codes GRADED (received, and catalogued) | **30** — every one carrying `check` and `translation` EQUAL to its row |
+| codes in the CENSUS (received, no catalogue row) | **30** — REC-64's remaining sweep |
+| refusals carrying NO code at all | **9 observations over 6 ops** — raised as **D-270** |
+| bodies the walk could not classify | **0** |
+| machine fences reached by an EMPTY payload | **11 of 12**, every one carrying its row |
+
+**AN INDEPENDENT AGREEMENT THAT COST SOMETHING.** This walk reported **16 families / 166 rows**
+without being told either number, and `civicos-ui/check-refusal-codes.mjs` floors at exactly 16/166.
+The guard PARSES `bio-checks.mjs` as text; this IMPORTS the module and reads its exported objects.
+Two different mechanisms over one source agreeing is evidence; a hand copy of the guard's constants
+would have agreed for nothing.
+
+**WHAT THE ITEM DID NOT PREDICT: eleven of the twelve fences are reachable with an EMPTY payload.**
+The item expected two or three to sit behind acts an empty call cannot address. It is D-229's finding
+from the other side — these fences sit ABOVE the payload complaints, so the thinnest possible call
+reaches them. **The single exception is `MACHINE_CANNOT_MOVE_VERSION`, the one fence that was never
+broken**: it is reached through the six version acts, whose argument reader refuses a missing
+`target`/`version` before the fence. The fence with the helper is the fence an empty payload cannot
+see — a coincidence, recorded so it is not mistaken for a cause.
+
+**THE FIX IS ONE DECORATION, AND THE CHOICE IS A MEASUREMENT.** `dec49Attach()` in
+`bio-plane/src/index.mjs`, called from `json()`. **118 of that file's 125 response returns pass
+through `json()`** (the other 7 are a 204, a version string, two HTML pages and three byte bodies —
+none a refusal carrier), which covers the generic store forward AND **the 36 `doAnswer` handlers that
+never reach it**. Eleven site edits would have closed the forward's eleven and left all 36 as they
+were. It never overwrites and never invents; it mints no code, so no DEC-49 floor or ceiling moves.
+
+**NEGATIVE CONTROL — 7 ARMS, each armed ALONE with the others held open, restores verified by sha256
+AND by `cmp` against uniquely-named per-arm pristine copies plus a pristine-of-record, byte counts
+printed and floored against the empty-string digest. ONE CAME BACK NOT AS DECLARED AND IT FOUND THIS
+ITEM'S OWN INSTRUMENT WRONG.** Arm (d) — the catalogue harvest neutered — was declared RED and came
+back **`NO TALLY` (-1/-1)**: with an empty catalogue every later block read `ROWS.get(code)
+.translation` on `undefined`, a `TypeError` ended the module, and the tally never printed. The arm
+was right and the instrument was wrong. Corrected (null-tolerant catalogue reads, and a corpus below
+its floor HALTS at the floor with its tally printed) and re-run: **all seven as declared — (a) GREEN
+22/0 · (b) RED 18/4 · (c) RED 19/3 · (d) RED 1/2 · (e) RED 15/7 · (f) RED 21/1 · (g) GREEN 22/0.**
+
+**BATTERY:** baseline measured in this worktree before any edit, **142 suites (137 plane · 5 fleet) ·
+142/142 green · 9,179 assertions · exit 0** — the brief carried no figure, so there was nothing to
+agree or disagree with; the worktree arrived without `bio-plane/node_modules` and `npm ci` was run
+first. Final **143/143 · 9,213 · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with
+`$?` read UNPIPED, **exit 0** — OPS 163/163, CHECKS 222/222. `node civicos-ui/test/run.mjs` from the
+REPO ROOT, exit read UNPIPED, **0**, with the DEC-49 guard's REACH unmoved at 220 and its `reachGap`
+CEILING unmoved at 41 (this item mints no code, and that is what the unmoved figures show).

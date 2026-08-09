@@ -34,6 +34,14 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             what an op is or which classes may call it. */
          AI_CREDENTIAL_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+/* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
+   below resolves a refusal code against every DEC-49 family the catalogue
+   exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
+   `civicos-ui/check-refusal-codes.mjs` harvests by, so a family minted tomorrow
+   is reachable here with no edit. A named-import list would be a hand-kept copy
+   of a set that grows every week, which is the staleness this project meets
+   most; the named imports above stay named because they are used AS VALUES. */
+import * as CHECK_CATALOGUE from "../checks/bio-checks.mjs";
 /* REC-22 / DEC-34: the container serialiser. The manifest REC-14 writes carries
    a `layout` block that says how the parts assemble; this module reads it and
    writes the zip, so nothing about the container's shape is decided twice. */
@@ -2033,9 +2041,131 @@ function aiTaskScope(cred, op, spec) {
 }
 
 const json = (o, status = 200) =>
-  new Response(JSON.stringify(o, null, 1), {
+  new Response(JSON.stringify(dec49Attach(o), null, 1), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
+
+/* =========================================================================
+ * D-262 — THE CATALOGUE ROW, ATTACHED ON THE WAY OUT. ONE PLACE.
+ *
+ * WHAT WAS WRONG, MEASURED RATHER THAN SUSPECTED. Twelve `MACHINE_CANNOT_*`
+ * fences fire; twelve carry a catalogued C-number and a canned translation
+ * (REC-64 wrote eleven of them); **exactly ONE put either on the wire.** That
+ * one — `MACHINE_CANNOT_MOVE_VERSION` — is the only site in the family that
+ * refuses through a helper that reads the catalogue row. The other eleven build
+ * `{ ok: false, reason: "MACHINE_CANNOT_…", detail: … }` by hand, and a hand
+ * cannot carry a row it does not read. So a member's agent met the string
+ * `MACHINE_CANNOT_RELEASE` and nothing else, which is the exact failure DEC-49
+ * exists to prevent, surviving inside the mechanism built to prevent it.
+ *
+ * WHY A DECORATION AND NOT ELEVEN EDITS — decided by measurement, and the
+ * measurement is the reversal cost as much as the write cost. Eleven site edits
+ * are eleven places to be right and eleven places to be wrong, and they close
+ * ELEVEN sites out of a plane that mints hundreds of refusals in eight
+ * separately-written `refuse` closures; the twelfth site proves the per-site fix
+ * does not generalise, because it was written and the other eleven still were
+ * not. This file already rules on the shape: `doAnswer`'s own header says *"the
+ * fix is a CHOKEPOINT, not twenty-four remembered checks, because a rule that
+ * must be remembered at every site is a rule that will be forgotten at the
+ * twenty-fifth."* `json()` is that chokepoint on the way OUT — **MEASURED
+ * 2026-08-09: 118 of this file's 125 response returns go through `json()`, and
+ * the other 7 are `new Response(...)` returning a 204, a version string, two
+ * HTML pages and three byte bodies — not one of them a refusal carrier.** It
+ * covers the generic store forward AND the 36 `doAnswer` handlers that never
+ * reach that forward. Eleven site edits would have closed the generic forward's
+ * eleven and left every one of the 36 exactly as it was.
+ *
+ * WHAT IT COSTS TO REVERSE: delete this block and the one call above. Nothing
+ * else in the plane depends on it, because nothing in the plane READS these
+ * three fields — they exist for the caller. That is the asymmetry that decided
+ * it: the decoration's blast radius is one function, and eleven site edits'
+ * blast radius is eleven member-facing methods.
+ *
+ * WHAT IT DELIBERATELY DOES NOT DO, and each is a fence rather than an omission:
+ *
+ *   - **IT NEVER OVERWRITES.** A field already present is left exactly as the
+ *     site wrote it. So a site that says something DIFFERENT from the catalogue
+ *     is not silently corrected into agreement — `test/refusal-wire.test.mjs`
+ *     compares what the caller RECEIVED against the row and fails on a
+ *     divergence. A decoration that overwrote would make that check unable to
+ *     fail, which is the "equality that costs nothing" this project refuses.
+ *   - **IT NEVER INVENTS.** A code with no catalogue row is left bare and is
+ *     reported by the instrument as census. Untranslated codes are REC-64's
+ *     remaining sweep; making one up here would hide that work rather than do
+ *     it.
+ *   - **IT ADDS NO CODE OF ITS OWN**, so it mints nothing DEC-49 must catalogue
+ *     and it moves no floor in the guard.
+ *   - **IT DOES NOT MAKE A SITE'S CODE INVISIBLE.** Every code stays a STRING
+ *     LITERAL at its site; arm C of the DEC-49 guard still COMPARES it. This
+ *     decoration is downstream of the guard's whole subject and replaces none
+ *     of it.
+ *
+ * REACH, STATED PLAINLY BECAUSE IT IS NOT TOTAL: this covers what leaves through
+ * `json()`. The eight `new Response(...)` returns in this file (bytes, HTML, the
+ * setup and signing pages) do not pass through it and are not refusal carriers;
+ * a future one that IS would be outside this and is exactly what the
+ * instrument's op sweep would find.
+ * ========================================================================= */
+
+/* Built ONCE, LAZILY, and never at module load — a Worker pays module
+   initialisation on every cold start, and this is only needed by a response that
+   actually refuses. Families are found by the `_CHECKS` suffix (a RESERVED
+   SUFFIX in this repository: the DEC-49 guard harvests every one of them as a
+   refusal family), so this is a PROPERTY and not a list. */
+let DEC49_ROWS = null;
+function dec49Row(code) {
+  if (DEC49_ROWS === null) {
+    DEC49_ROWS = new Map();
+    /* Sorted so a duplicated code — which the guard's arm A already refuses —
+       resolves the same way on every isolate rather than by module order. */
+    for (const family of Object.keys(CHECK_CATALOGUE).sort()) {
+      if (!/_CHECKS$/.test(family)) continue;
+      const rows = CHECK_CATALOGUE[family];
+      if (!rows || typeof rows !== "object") continue;
+      for (const [key, row] of Object.entries(rows)) {
+        if (!row || typeof row !== "object") continue;
+        if (typeof row.translation !== "string" || row.translation === "") continue;
+        if (!DEC49_ROWS.has(key))
+          DEC49_ROWS.set(key, { check: row.check ?? null, translation: row.translation });
+      }
+    }
+  }
+  return DEC49_ROWS.get(code) ?? null;
+}
+
+/* A REFUSAL is `ok: false` carrying a code — and `ok: false` is required rather
+   than inferred from the presence of a `reason`, because an ANSWER may carry a
+   `reason` field for something that is not a refusal at all, and decorating one
+   of those would put a member-facing sentence on a success. A refusal shape that
+   does NOT say `ok: false` is therefore out of reach here, and the instrument
+   prints it rather than quietly covering for it. */
+function dec49Decorate(r) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return;
+  if (r.ok !== false) return;
+  const code = typeof r.reason === "string" ? r.reason
+             : typeof r.code === "string" ? r.code : null;
+  if (!code) return;
+  const row = dec49Row(code);
+  if (!row) return;
+  if (r.code === undefined) r.code = code;
+  if (r.check === undefined) r.check = row.check;
+  if (r.translation === undefined) r.translation = row.translation;
+}
+
+/* TWO LEVELS AND NO MORE. The control plane answers a refusal in exactly two
+   shapes: its own, at the top level, and the store's, forwarded UNDER `result`
+   by the generic tail (the Durable Object's envelope is `{ok:true, result:…}`
+   even when the method inside it refused, which is precisely why `result.ok`
+   has to be looked at). A general deep walk would reach into arrays of rows and
+   sub-objects that are DATA rather than refusals — `residue` entries, per-part
+   verdicts, a run's steps — and put a member-facing sentence on something no
+   member is being refused. Bounded on purpose. */
+function dec49Attach(o) {
+  if (!o || typeof o !== "object" || Array.isArray(o)) return o;
+  dec49Decorate(o);
+  if (o.result && typeof o.result === "object") dec49Decorate(o.result);
+  return o;
+}
 
 /* ===============================================================   REC-52: A FAILURE TO ANSWER IS NOT AN ANSWER, AND THE PLANE MUST NOT
    CONVERT ITS OWN INTO A CLAIM ABOUT THE RECORD.

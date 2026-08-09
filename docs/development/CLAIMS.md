@@ -5576,3 +5576,63 @@ slug is the drift class DEC-8 closes, and the absence is asserted so it cannot g
 stated rule about the mute to the control beside it; the alternative (leave them, let the plane
 refuse) is the "gate that pressures somebody into finding a way around it" the record already rules
 against. Nothing here is a consequence Bob has not already ruled on.
+
+## CLAIM 2026-08-09 RECORD (D-262 — the refusal that reaches the caller BARE, and the instrument that cannot see it)
+session: d262-refusal-wire (worktree agent-a0afb13cbfcc0d6b9)
+opened: 2026-08-09T22:20:00Z
+paths:
+  - `bio-plane/src/index.mjs` — **TWO SPANS AND NOTHING ELSE.** (1) ONE added namespace import of
+    `../checks/bio-checks.mjs` beside the existing named import (the named import list is NOT
+    touched); (2) ONE new block placed IMMEDIATELY AFTER `const json = (o, status = 200)` —
+    `dec49Row()` and `dec49Attach()`, plus the single call to `dec49Attach(o)` inside `json`'s own
+    body. **Placed AFTER `const json =` on purpose:** `test/daemon-token.test.mjs` anchors its
+    `scopeFor` region on the literal `const json = (o, status = 200)`, so anything added BEFORE that
+    line is conscripted into that region's sweep. **No DEC-49 REGION marker is added, moved or
+    edited; no refusal site, no `OPS` row, no `classes` list and no handler is touched.**
+  - `bio-plane/test/refusal-wire.test.mjs` (NEW — the instrument) and
+    `bio-plane/test/refusal-wire.control.mjs` (NEW — its negative-control driver, deliberately NOT a
+    `.test.mjs` because it EDITS REAL SOURCES while it runs; PL-3/PL-4/PL-11/REC-73's precedent).
+    Both INSIDE this worktree, never in the shared scratchpad.
+  - `docs/development/DEBT.md` — **TWO APPENDED ROWS (D-262, D-270) and no existing row edited.**
+  - `docs/development/MEASUREMENTS.md` — appended.
+  - `docs/development/INTERFACE-CHANGES.md` — **ONE APPENDED SECTION (IC-48)**, nothing edited in
+    place (that file is append-only by its own protocol). CONDUCT takes the RESOLUTION and the I3
+    version bump, per IC-25's precedent.
+  - `bio-plane/scripts/coverage.mjs` — **THE `REGISTER_FLOOR` CONSTANT BLOCK ONLY**, and only because
+    this item invalidates it by adding a suite. **ONE key set, verified by `grep -c`** — keep-both
+    merges have left duplicate `arms:` keys there SIX times, valid JavaScript where the last silently
+    wins and once the last was the lowest. Figures taken from a run made AFTER the new files were in
+    a commit, because a pre-commit run reports the same numerals as CONTAMINATED and a floor moved on
+    those is permanently too high (D-238, PL-17's receipt).
+  - `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/src/store.mjs` (READ ONLY — the eleven refusal sites are deliberately NOT
+  edited; that is the item's decision, recorded below), **NOT** `bio-plane/checks/bio-checks.mjs`
+  (READ ONLY — REC-64's remaining sweep is live in it and this item adds no row and no translation),
+  **NOT** `civicos-ui/**` (the DEC-49 guard's `FLOOR`/`CEILING` block is NOT opened; this item mints
+  no code, so nothing there moves — MEASURED on a green run, not assumed: REACH stayed 220 and the
+  `reachGap` CEILING stayed 41), **NOT** any other line of `bio-plane/scripts/**`,
+  **NOT** `bio-plane/package.json` (no per-suite script entry — REC-73's and REC-64's suites have
+  none either, and that file is high-traffic), **NOT** `docs/development/QUEUE.md` (CONDUCT's),
+  **NOT** `docs/development/DECISIONS.md`, **NOT** `docs/development/INTERFACES.md` (the registry
+  entry and the I3 version bump are CONDUCT's).
+interfaces consumed: I3 (the op contracts — a refusal gains `code`/`check`/`translation`, ADDITIVE)
+interfaces owned: none — **I3 is widened, not changed, and IC-48 is filed with MEASURED consumer
+  impact.** No field is removed, renamed or re-typed; every existing key of every existing refusal is
+  byte-identical (the attach NEVER overwrites), and the three added keys are the ones DEC-49 already
+  licenses and that one refusal in this family already carried.
+expected: D-262 — eleven of the twelve `MACHINE_CANNOT_*` fences carry NEITHER their C-number NOR
+  their canned translation to the caller, and **no instrument grades the RESPONSE against the
+  catalog** (DEC-49's guard arm C grades the SITE against the catalog). Close the eleven with ONE
+  decoration rather than eleven site edits, and BUILD the instrument that would have caught it.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief;
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` UNPIPED; `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. Negative
+  controls RUN, each arm ALONE with the others held open, declared before arming, restores verified
+  by sha256 AND by `cmp` against uniquely-named per-arm pristine copies, with a BASELINE arm and an
+  OVER-STRICTNESS arm. No push, no merge.
+concurrency: **REC-64's remaining translation sweep is a SIBLING and is live in
+  `bio-plane/checks/bio-checks.mjs`**, which this item does not open. The boundary: REC-64 owns codes
+  with NO translation; this item owns translations that EXIST and do not reach the caller. The
+  instrument reports the first bucket as a printed census and gates only on the second, so the two
+  cannot collide and REC-64's landing moves this item's census without touching its gate.
+released:
