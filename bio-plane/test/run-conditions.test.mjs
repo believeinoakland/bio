@@ -278,6 +278,56 @@ const ROLE = {
   "#aiRunWakeHolds":   "HOUSEKEEPS",
   "#aiRunWakeRuns":    "HOUSEKEEPS",
   purge:               "HOUSEKEEPS",
+  /* PL-13's, AND ARM W3 IS AGAIN WHY IT IS HERE — it arrived as a FAILURE
+     naming itself, on the item's first full battery, which is the third time
+     this ratchet has caught a new reader rather than absorbing one.
+     A SIXTH ROLE, `ATTRIBUTES`, minted with the same care REC-69 minted the
+     fifth and refused the same shortcut.
+
+     WHAT THE READER DOES. `#findingsVersionFromAnotherTeam` produces a
+     member-facing FINDING about a VERSION of a shared inquiry, and it consults
+     `ai_runs` for exactly one thing: WHICH of the projects the item has ALREADY
+     NAMED — from `refs` and from each project's own frontmatter — the reading
+     was proposed under. It publishes `from_project`, and that value is `p.id`
+     off the drawing set, never a column of this table.
+
+     WHY NONE OF THE FIVE NAMES IT, taken in order rather than waved at.
+       PUBLISHES — the test the role actually applies is whether stored columns
+         of `ai_runs` reach a member THROUGH THIS READER. None do. Classifying it
+         PUBLISHES would oblige twenty matrix cells (ARM P1), nineteen of them
+         reading "not published here" and the twentieth a copy of `aiRunRead`'s —
+         a declaration agreeing with its subject FOR FREE, which is the shape
+         this repository has measured seven times as proving nothing, and which
+         can DRIFT from the code while the code cannot drift from itself.
+       SELECTS — closer, and it fails on the clause that is the whole basis of
+         SELECTS' own exemption: a SELECTS reader DELEGATES every published fact
+         about each chosen run to a PUBLISHES reader BY CALLING IT. This one
+         calls none and publishes no fact about the run at all. Filing it here
+         would make the delegation clause optional, and an exemption whose
+         condition is optional is not an exemption.
+       AUTHORISES — its SECOND clause fits exactly (publishes no stored fact of
+         its own) and its FIRST is the definition: a reader that decides whether
+         A DIFFERENT ACT MAY PROCEED. No act is decided here; whether an ITEM IS
+         MINTED is. Broadening "an act" to "an act or a publication" would weaken
+         what AUTHORISES currently claims about `suggestVersion` and
+         `captureRequest`, and weakening a role to admit a member is how a
+         classification stops classifying — this file's own words.
+       WRITES, HOUSEKEEPS — not arguable.
+
+     SO THE HONEST ANSWER IS TO SAY SO:
+
+       ATTRIBUTES — a read whose answer is about WHICH ALREADY-NAMED ENTITY a
+                    fact belongs to. It matches IN THE PREDICATE, projects the
+                    row's own primary key and nothing else, and publishes no
+                    value read from this table — the attribution it publishes is
+                    a fact it already held from another source. It owes no
+                    disposition row because it composes none.
+
+     AND IT IS NOT BELIEVED ON THE STRENGTH OF ITS DEFINITION — ARM W9 below
+     drives it, the same way ARM W8 drives SELECTS. A reader in this role whose
+     SQL projects any stored column beyond the key FAILS THERE, which is what
+     makes the exemption from ARM P1 EARNED rather than granted. */
+  "#findingsVersionFromAnotherTeam": "ATTRIBUTES",
 };
 
 const COLUMNS = runColumns(SCHEMA_SRC);
@@ -349,8 +399,23 @@ const SELECTORS = WALK.readers.filter((r) => ROLE[r] === "SELECTS");
    called with. Naming it here rather than deriving it keeps the exemption narrow:
    any OTHER stored column appearing in a projection is a violation. */
 const KEY_COLUMN = "run";
+/* CORRECTED 2026-08-09 (PL-13), and the old reader was wrong rather than merely
+   narrow. It was `/SELECT\s+([\s\S]*?)\s+FROM\s+ai_runs/gi` — non-greedy, but
+   with NOTHING stopping the capture from starting at an EARLIER `SELECT` aimed
+   at a different table. In a method holding `SELECT name, description, state …
+   FROM inquiry_basis_versions` and then `SELECT run FROM ai_runs`, it captured
+   everything between the two and reported `ai_runs` projecting `state` — a
+   column of the OTHER table, named as a violation of this one.
+
+   MEASURED, not reasoned: PL-13's `#findingsVersionFromAnotherTeam` failed ARM
+   W9 naming exactly that, with a key-only `ai_runs` projection in the source.
+   **The same defect was in ARM W8's reach all along** — no SELECTS reader
+   happened to hold two statements, so it had never fired, which is precisely
+   how a matcher stays wrong. `(?:(?!SELECT)[\s\S])*?` refuses to cross another
+   `SELECT`, so the capture is the projection of the statement that really names
+   `ai_runs`. ARM W9b's polarity cases cover both directions. */
 const projectedColumns = (segment) =>
-  [...segment.matchAll(/SELECT\s+([\s\S]*?)\s+FROM\s+ai_runs/gi)]
+  [...segment.matchAll(/SELECT((?:(?!SELECT)[\s\S])*?)\s+FROM\s+ai_runs/gi)]
     .flatMap((m) => COLUMNS.filter((c) => new RegExp(`(?:^|[\\s,(]|\\w\\.)${c}\\b`).test(m[1])));
 const selectorViolations = SELECTORS.flatMap((name) => {
   const seg = WALK.bodies.get(name) || "";
@@ -371,6 +436,53 @@ t("ARM W8: SELECTS IS EARNED, NOT GRANTED — every SELECTS reader projects noth
 + "`ai_runs` and delegates to a PUBLISHES reader. One that started selecting a stored column, or "
 + "composed its own rows, lands here BY NAME instead of quietly sitting outside ARM P1's matrix",
   selectorViolations, []);
+
+/* ---- ARM W9 (PL-13): `ATTRIBUTES` IS EARNED, NOT GRANTED ------------------
+   The sixth role's exemption from ARM P1 rests on ONE property — the reader
+   projects the row's own primary key and nothing else — so that property is
+   DRIVEN here rather than asserted in the ROLE table's comment. It deliberately
+   does NOT carry SELECTS' delegation clause: an ATTRIBUTES reader publishes no
+   fact about the run at all, so there is nothing to delegate, and importing a
+   condition that cannot apply would be a fence tighter than its rule.
+   The POLARITY guard below is W8b's lesson taken as read: the reader is proved
+   able to SEE a violation over a segment this file constructs, never over one
+   made by string-replacing the live subject. */
+const ATTRIBUTORS = WALK.readers.filter((r) => ROLE[r] === "ATTRIBUTES");
+const attributorViolations = ATTRIBUTORS.flatMap((name) => {
+  const seg = WALK.bodies.get(name) || "";
+  return [...new Set(projectedColumns(seg))].filter((c) => c !== KEY_COLUMN)
+    .map((c) => `${name} PROJECTS stored column ${c}`);
+});
+console.log(`  ARM W9 corpus: ${ATTRIBUTORS.length} ATTRIBUTES reader(s) — ${ATTRIBUTORS.join(", ") || "NONE"}`
+          + `; each judged on its projection over ${COLUMNS.length} stored columns`);
+t("ARM W9 GUARD: there IS at least one ATTRIBUTES reader — the exemption below is judged over a real "
++ "corpus rather than reported clean over an empty one",
+  ATTRIBUTORS.length >= 1, true);
+t("ARM W9: ATTRIBUTES IS EARNED, NOT GRANTED — an attributing reader matches IN THE PREDICATE and "
++ "projects nothing but the key, so no stored column of `ai_runs` can reach a member through it. One "
++ "that started projecting a column lands here BY NAME instead of quietly sitting outside ARM P1",
+  attributorViolations, []);
+t("ARM W9b POLARITY: the reader can SEE the violation it exists to catch, proved over segments THIS "
++ "FILE constructs rather than over the live subject's spelling (W8b's lesson) — a key-only "
++ "projection is clean and one naming a second column is not",
+  [projectedColumns("this.#one(`SELECT run FROM ai_runs WHERE run=? AND context_id=?`, a, b)")
+     .filter((c) => c !== KEY_COLUMN),
+   projectedColumns("this.#one(`SELECT run, context_id FROM ai_runs WHERE run=?`, a)")
+     .filter((c) => c !== KEY_COLUMN)],
+  [[], ["context_id"]]);
+t("ARM W9c: THE MATCHER DOES NOT CROSS A PRECEDING `SELECT` AIMED AT ANOTHER TABLE — the defect this "
++ "item measured, where a versions query's `state` was reported as an `ai_runs` projection. Both "
++ "directions: a two-statement segment whose ai_runs half is key-only reads CLEAN, and the same "
++ "segment with a real second column still reads DIRTY, so the fix narrowed the reader without "
++ "blinding it",
+  [projectedColumns("this.#rows(`SELECT name, state, run FROM inquiry_basis_versions WHERE b=?`, x);"
+                  + " this.#one(`SELECT run FROM ai_runs WHERE run=? AND context_id=?`, a, b)")
+     .filter((c) => c !== KEY_COLUMN),
+   projectedColumns("this.#rows(`SELECT name, state, run FROM inquiry_basis_versions WHERE b=?`, x);"
+                  + " this.#one(`SELECT run, status FROM ai_runs WHERE run=?`, a)")
+     .filter((c) => c !== KEY_COLUMN)],
+  [[], ["status"]]);
+
 /* ARM W8b, REWRITTEN 2026-08-09 IN THE TURN THAT WROTE IT, and the reason is a
    control that came back WRONG rather than a preference — recorded here instead
    of smoothed. The first draft built its polarity cases by STRING-REPLACING the

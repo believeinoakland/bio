@@ -17389,13 +17389,32 @@ function notifBasisEntryHtml(it){
 }
 
 /* ------------------------------------------- (3) WHICH FINDINGS CAN BE DISPOSED */
-/* THE PROPERTY, not a list of kinds. `op=proposedispose` is keyed on
+/* THE PROPERTY, not a list of kinds — and AS OF PL-13 THE PLANE ANSWERS IT AND
+   THIS FUNCTION READS THE ANSWER.
+
+   UI-45's rule was right and stays: `op=proposedispose` is keyed on
    (progression_key, stage_key) and refuses a pair that is not a real stage of a
-   defined progression, so a finding whose basis carries neither key has no
-   identity the act can be recorded against. Asking the ITEM rather than
-   consulting a table of slugs is what keeps this true for a kind nobody has
-   written yet. */
+   defined progression, so a finding carrying neither has no identity the act can
+   be recorded against — and asking the ITEM rather than consulting a table of
+   slugs is what kept this true when PL-13 minted two kinds nobody had written.
+
+   WHAT CHANGED, AND WHY IT HAD TO. The old body reached into the item's `basis`
+   and tested for two FIELD NAMES it had learned by reading the plane's
+   producers. That is a copy of the act's key living in a renderer: the moment a
+   second disposition identity exists, or one producer spells the pair on
+   `subject` while another spells it on `basis`, this surface is wrong and
+   nothing fails. The act's key is the act's own business (DEC-8), so the plane
+   now publishes `disposition` on EVERY queue item — whether the act is
+   available, what it is keyed on, and the key itself — derived once at the mint.
+
+   THE OLD READ IS KEPT AS A NAMED FALLBACK AND IS NOT DEAD CODE: this surface
+   is deployed against whatever plane an instance is running, and a plane built
+   before PL-13 publishes no `disposition` field. Falling back to the previous
+   rule there is the same answer that plane would have given, rather than a
+   silent "no" that would withdraw a control a member legitimately has. */
 function notifDispositionKeyed(it){
+  const d = (it && it.disposition) || null;
+  if(d && typeof d.available === "boolean") return d.available;
   const b = (it && it.basis) || {};
   const pk = typeof b.progression_key === "string" ? b.progression_key.trim() : "";
   const sk = typeof b.stage_key === "string" ? b.stage_key.trim() : "";
