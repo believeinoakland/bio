@@ -316,7 +316,14 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    BOUNDED AT BIRTH rather than shipped bare and bounded later — the ratchet in
    `meaning-bounds.test.mjs` read 38 -> 40 on their first landing and is back at
    38. Both are DRIVEN in `test/textchain.test.mjs`; see DRIVEN_ELSEWHERE. */
-t("WALK: the roster is TWENTY-EIGHT ops — the sweep is the item, not the two the item named",
+/* CORRECTED 2026-08-09 (REC-69), not exempted: the WORD went stale while the
+   assertion below moved. It read "TWENTY-EIGHT" against a pin now measured at
+   29, so the sentence would have taught a reader a number the arm beneath it
+   disagreed with — a pin whose claim goes false while its assertion still
+   passes, which is this suite's own subject one layer up. The number lives in
+   ONE place now (the assertion) and the sentence names none. */
+t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item, not the two the item "
++ "named, and the figure is in the assertion rather than in this sentence",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
    inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,

@@ -43,6 +43,25 @@
    `battery.mjs`'s summary, which prints an assertion's LABEL and not its `want`/`got`, so arms 1
    and 2 were reported as "not naming the run" while they had leaked and printed exactly that run.
    The check now runs the suite directly. To re-run everything: `node test/airuns.control.mjs`. */
+/* NEGATIVE CONTROL: (run 2026-08-09, rec69-replay, REC-69's REBASE ONTO `main`) FOUR further arms
+   covering ONLY what the replay added to THIS file — the roster figure re-measured 11 -> 13 and
+   the two arrivals named. RUN through `node test/nc-rec69-selects.mjs` (the driver lives INSIDE
+   this worktree), each armed ALONE, each DECLARED before it ran, each mutation passing an
+   anchor-occurs-EXACTLY-ONCE and a bytes-really-changed guard, every restore verified by sha256
+   AND by `cmp` against a per-arm uniquely-named pristine copy with a byte count and a minimum,
+   and an opening AND closing baseline row (49/0 here, 54/0 in run-conditions, identical at both
+   ends). ALL FOUR CAME BACK AS DECLARED.
+   (4) A NEW INDEX ON AN UNFILTERED COLUMN (`nc_r69_ceiling ON provenance_route_marks(documents_n)`)
+   -> the CEILING fails and the roster PRINTS `nc_r69_ceiling`, while the floor and the by-name pin
+   correctly stay green. (5) REMOVE `provenance_route_marks_finding` -> the FLOOR fails AND the
+   by-name pin fails NAMING it, while the ceiling correctly stays green — the roster is ratcheted in
+   BOTH directions and by identity, not only by count. (6) REMOVE THE COMPOSED FILTER THE
+   EXCULPATION RESTS ON (`where.push(\`transcribed=?\`)` in `transcribedDocuments`) -> the
+   `reading_text_source_kind` blind-spot arm fails, which is what makes that exculpation a
+   measurement rather than a sentence; the ceiling and floor correctly do not move, because the
+   index was already unread BY THIS READER either way. (7) is run-conditions' over-strictness arm.
+   WHAT THIS FILE'S ARMS CANNOT SEE: they are all SOURCE-level. The runtime half of this suite is
+   covered by `airuns.control.mjs` above and is untouched by the replay. */
 
 /* REC-69 — op=airuns: WHICH RUNS ARE IN THIS CONTEXT.
  * =====================================================================
@@ -413,14 +432,14 @@ t("the context is echoed NORMALISED, so a caller reads what was actually asked",
 /* THE THREE REFUSALS. Every expected string is read LIVE from the catalogue —
    typing one here would be the hand copy DEC-49's own acceptance forbids. */
 const noType = await GET(`op=airuns&token=${dave}&contextId=${INQ}`);
-t("C-34.1 — no context KIND named: refused with its code, its C-number and the CANNED TRANSLATION "
+t("C-36.1 — no context KIND named: refused with its code, its C-number and the CANNED TRANSLATION "
 + "read from the one row, never composed here",
   [noType.ok, noType.reason, noType.code, noType.check, noType.translation],
   [false, "AI_RUNS_NO_CONTEXT_TYPE", "AI_RUNS_NO_CONTEXT_TYPE",
    AI_RUNS_CONTEXT_CHECKS.AI_RUNS_NO_CONTEXT_TYPE.check,
    AI_RUNS_CONTEXT_CHECKS.AI_RUNS_NO_CONTEXT_TYPE.translation]);
 const badType = await GET(`op=airuns&token=${dave}&contextType=meeting&contextId=${INQ}`);
-t("C-34.2 — an UNRECOGNISED kind is REFUSED, never answered empty. An empty list here would tell a "
+t("C-36.2 — an UNRECOGNISED kind is REFUSED, never answered empty. An empty list here would tell a "
 + "member nothing is running, on the strength of a word the record did not recognise: a claim about "
 + "the record manufactured out of a typo, which is REC-52/D-197's class arriving by the front door",
   [badType.ok, badType.reason, badType.check, badType.translation],
@@ -432,7 +451,7 @@ t("and its DETAIL names the kinds the record DOES hold, taken from the plane's o
   Object.keys(RUN_CONTEXTS).every((k) => badType.detail.includes(k)
                                       && badType.detail.includes(RUN_CONTEXTS[k])), true);
 const noId = await GET(`op=airuns&token=${dave}&contextType=inquiry`);
-t("C-34.3 — a kind but no WHICH ONE: refused, because the gate compiles over the context's own id "
+t("C-36.3 — a kind but no WHICH ONE: refused, because the gate compiles over the context's own id "
 + "and a blank one asks about every context at once",
   [noId.ok, noId.reason, noId.check, noId.translation],
   [false, "AI_RUNS_NO_CONTEXT_ID", AI_RUNS_CONTEXT_CHECKS.AI_RUNS_NO_CONTEXT_ID.check,
@@ -518,7 +537,50 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 + "day IS-6 landed and nothing filtered `ai_runs` by `context_id` until op=airuns, which is the "
 + "access path having been built for a question no op asked",
   unread.some((ix) => ix.index === "ai_runs_context"), false);
-/* WHAT THE SWEEP ACTUALLY FOUND, MEASURED 2026-08-08 by REC-69 and printed
+/* ==================================================================== *
+ * THE FIGURE MOVED 11 -> 13, 2026-08-09, at REC-69's REPLAY ONTO `main`,
+ * AND THIS ROSTER'S OWN RULE WAS HONOURED RATHER THAN WAIVED: a rise needs
+ * somebody to have LOOKED AT THE NEW ONE. Both are named, both were read,
+ * and they are NOT the same kind of arrival.
+ * ==================================================================== *
+ *
+ * HOW IT WAS ATTRIBUTED, because arithmetic would have been wrong here in the
+ * usual way. The roster was re-run over THREE trees rather than adjusted: this
+ * item's own branch tip (79 indexes, 11 unread), `main` without this item (84
+ * indexes, 14 unread — `ai_runs_context` back on the list, which is this item's
+ * whole premise measured a second time), and the merged tree (84 indexes, 13).
+ * So 11 was true of a tree that no longer exists and 14 of one without
+ * `op=airuns`; neither is the merged figure, and 11 + 2 agreeing with 13 is a
+ * coincidence rather than evidence.
+ *
+ *   `provenance_route_marks(finding)` — REC-63/DEC-56's arrival, AND IT IS A REAL
+ *        INSTANCE OF THIS ITEM'S CLASS. `finding` appears in NO `WHERE` anywhere
+ *        in the plane: every reader takes the LATEST mark per bundle by `seq` and
+ *        classifies in JS, and `op=list`'s route tally is computed over the gated
+ *        PAGE. THE QUESTION NO OP ASKS: *"which documents in this instance carry a
+ *        standing LOOKED_INDETERMINATE marker"* — a group asking where its own
+ *        record's provenance is doubted must page the whole store and count for
+ *        itself. The index for it was declared the day the table landed. DELEGATED
+ *        with this list, exactly as the three below are; not fixed here, because
+ *        an op per unread index on one battery is how a diff stops being reviewable.
+ *
+ *   `reading_text_source(transcribed)` — CPDF-10's arrival, AND IT IS NOT AN
+ *        INSTANCE. IT IS THIS SWEEP'S OWN DECLARED BLIND SPOT, FIRING. The header
+ *        above names it in advance: *"an index whose column is filtered through a
+ *        dynamically composed fragment"*. `transcribedDocuments` — `op=textprovenance`,
+ *        dispatched — pushes `transcribed=?` and `terminal_step=?` into a `where`
+ *        array joined into the statement at runtime, so it filters on BOTH columns
+ *        of this index and the reader cannot see either. Named here rather than
+ *        counted silently: a roster of "access paths no op asks for" that lists a
+ *        path an op DOES ask for is the record claiming more than it can support,
+ *        in the direction of a gap that is not there. The arm below DRIVES that
+ *        claim rather than asserting it, so this entry is a measured blind spot
+ *        and not an excuse. The matcher is deliberately NOT widened in this item:
+ *        broadening it to match a bare `col=?` would also match an UPDATE's SET
+ *        clause and would SHRINK this roster by hiding real gaps, which is the
+ *        one direction a ratchet must never move by accident.
+ *
+ * WHAT THE SWEEP ACTUALLY FOUND, MEASURED 2026-08-08 by REC-69 and printed
    above every run: ELEVEN indexes whose leading column no statement filters on.
    Three were read by hand before this figure was pinned, so it is a measurement
    rather than a regex's opinion:
@@ -538,11 +600,40 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 11, true);
+  unread.length <= 13, true);
 t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure being moved means the "
 + "READER lost sight of indexes, not that the plane got better. REC-70's ratchet spent two days "
 + "reporting 27 over a corpus it could not see",
-  unread.length >= 11, true);
+  unread.length >= 13, true);
+/* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
+   13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
+   spot and the figure would never move — which is how a roster stops being about
+   the plane and starts being about its own arithmetic. */
+t("SWEEP: the roster is pinned BY NAME as well as by count — the two indexes that took this figure "
++ "from 11 to 13 are both ON it, so a real gap cannot be swapped for a blind spot under a ceiling "
++ "that never moves",
+  ["provenance_route_marks_finding", "reading_text_source_kind"]
+    .filter((n) => !unread.some((ix) => ix.index === n)), []);
+/* THE BLIND SPOT, DRIVEN RATHER THAN ASSERTED. The comment above claims
+   `reading_text_source_kind` is on the roster because this reader cannot see a
+   dynamically composed WHERE, not because no op asks the question. A claim about
+   an instrument's own blindness is exactly the kind believed on the strength of
+   its existence, so it is measured in three parts: this reader says UNREAD; a
+   reader that understands a pushed fragment says READ; and the op is DISPATCHED,
+   so the statement is one a caller can actually reach (D-43). */
+const pushesFragment = (col) =>
+  new RegExp(`push\\(\`?[^\`)]*\\b${col}\\s*(?:=|IN|>|<|LIKE|IS)`, "i").test(SQLSRC);
+t("SWEEP: `reading_text_source_kind` is this reader's DECLARED BLIND SPOT FIRING, not a gap — "
++ "`op=textprovenance` filters BOTH its columns through a WHERE composed at runtime. Measured "
++ "three ways so the exculpation is evidence: unread HERE, read by a fragment-aware reader, and "
++ "the op is dispatched",
+  [unread.some((ix) => ix.index === "reading_text_source_kind"),
+   pushesFragment("transcribed"), pushesFragment("terminal_step"),
+   SRC_STORE.includes("textprovenance:")],
+  [true, true, true, true]);
+t("SWEEP: POLARITY on that exculpation — the fragment-aware reader does NOT find a column nobody "
++ "pushes, so the three trues above are a measurement rather than a matcher that matches anything",
+  [pushesFragment("zzz_no_such_column_anywhere"), pushesFragment("finding")], [false, false]);
 
 await mf.dispose();
 console.log(`\nairuns: ${pass} pass, ${fail} fail`);

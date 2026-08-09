@@ -5735,7 +5735,19 @@ export const AI_RUN_CHECKS = {
 };
 
 /* ===========================================================================
- * REC-69 — THE CONTEXT-KEYED RUN LIST'S REFUSALS. C-34, THREE NUMBERS.
+ * REC-69 — THE CONTEXT-KEYED RUN LIST'S REFUSALS. C-36, THREE NUMBERS.
+ *
+ * RENUMBERED C-34 -> C-36 on 2026-08-09 at this item's replay onto `main`, with
+ * `node tools/mintid.mjs C` (floor C-35) rather than by reading this file and
+ * adding one. REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is
+ * already on `main`, so it keeps the number. **REC-69 measured C-34 free when it
+ * looked and was right when it looked** — which is exactly the finding D-243
+ * recorded when seven items collided on an id in one day: the convention was the
+ * defect, not the vigilance. **AND THE COLLISION WAS INVISIBLE TO THE BATTERY.**
+ * 139/139 suites green at 8,887 assertions with two families both claiming
+ * C-34.1-3; only `node civicos-ui/test/run.mjs` caught it, with *"Two conditions
+ * behind one C-number are one condition as far as op=audit can see."* If you are
+ * about to skip the UI harness because you opened no UI file, this is the receipt.
  *
  * `op=airuns&contextType=&contextId=` answers the one question about a run
  * that no op could answer at all: WHICH RUNS ARE IN THIS CONTEXT. Every other
@@ -5777,7 +5789,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
      when the caller meant the other is a confidently wrong answer about a
      different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
   AI_RUNS_NO_CONTEXT_TYPE: {
-    check: 'C-34.1',
+    check: 'C-36.1',
     where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
     translation: 'That request did not say what kind of thing to look in. '
       + 'Background work is attached either to a question or to a project, and those are '
@@ -5787,7 +5799,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
      answered empty: see the header — an empty answer here would be the record
      saying nothing is running, on the strength of a word it did not recognise. */
   AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
-    check: 'C-34.2',
+    check: 'C-36.2',
     where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
     translation: 'Background work is not attached to anything of that kind. '
       + 'Rather than answer as though nothing were running there, the record says so '
@@ -5797,7 +5809,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
      would ask the record about every context at once — which is not a wider
      answer, it is a different question nobody asked. */
   AI_RUNS_NO_CONTEXT_ID: {
-    check: 'C-34.3',
+    check: 'C-36.3',
     where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
     translation: 'That request named a kind of thing but not which one. '
       + 'Background work belongs to a particular question or a particular project, '

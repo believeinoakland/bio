@@ -2943,7 +2943,18 @@ published** — that count is the disclosure that somebody is investigating some
 cannot see. **The bound is applied BEHIND the gate**, because a `truncated` computed over
 rows the viewer may not see would be that count arriving as a boolean.
 
-**THREE REFUSALS, C-34.1-3, in a new `AI_RUNS_CONTEXT_CHECKS` family**, each with a
+**RENUMBERED C-34 → C-36 on 2026-08-09 at this item's REPLAY onto `main`, with
+`node tools/mintid.mjs C` (floor C-35) rather than by reading the file and adding one.**
+REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is already on `main`, so it
+keeps the number. **REC-69 measured C-34 free when it looked and was right when it looked**
+— the same shape as this file's own IC-35 → IC-42 renumber above, and the same shape as the
+seven items that collided on an id in one day. **THE COLLISION WAS INVISIBLE TO THE BATTERY:
+139/139 green with two families claiming C-34.1-3, and only `node civicos-ui/test/run.mjs`
+caught it** — *"Two conditions behind one C-number are one condition as far as `op=audit`
+can see."* That is the fourth cross-item ratchet this pair fired and the reason the UI
+harness is run even by an item that opened no UI file.
+
+**THREE REFUSALS, C-36.1-3, in a new `AI_RUNS_CONTEXT_CHECKS` family**, each with a
 canned translation read from ONE row (DEC-49), each fired inside the
 `DEC-49 REGION is-airuns-context` span, each naming its code as a STRING LITERAL so the
 guard's arm C compares all three. What is refused is the malformed QUESTION — no kind, an

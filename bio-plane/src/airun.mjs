@@ -215,7 +215,7 @@ export const STANDARD_BASIS = {
  * happened to type.
  *
  * IT IS A TEXT VOCABULARY, in RUN_BOUNDS' shape, for DEC-49's reason and not
- * for symmetry: `op=airuns` REFUSES a context kind outside it (C-34.2), and a
+ * for symmetry: `op=airuns` REFUSES a context kind outside it (C-36.2), and a
  * refusal that names the kinds it does hold must name them in words a member
  * reads rather than in the machine word they typed wrongly. The values are
  * therefore the sentence, and `civicos-ui/check-refusal-codes.mjs` arm E holds

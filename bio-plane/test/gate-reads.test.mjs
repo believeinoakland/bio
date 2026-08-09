@@ -796,7 +796,7 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "reason: `truncated` computed over rows the viewer may not see would be that count arriving as "
       + "a flag. It follows that a real context holding no visible runs answers an ordinary EMPTY LIST — "
       + "'no runs here' and 'no runs you may see' are ONE answer by construction. What IS refused is "
-      + "the malformed QUESTION (C-34.1-3), never the invisible answer.",
+      + "the malformed QUESTION (C-36.1-3), never the invisible answer.",
     /* REC-34's read, classified by the item that adds it (2026-08-04,
        rec34-agent). op=reevaluations' posture is the model and both of the
        sweep's shapes appear here too, with one addition the earlier reads did

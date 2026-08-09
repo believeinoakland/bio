@@ -21315,7 +21315,7 @@ export class Store extends DurableObject {
     const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
     const id = contextId == null ? "" : String(contextId).trim();
 
-    /* DEC-49 REGION is-airuns-context — REC-69 / C-34.1-3. The three ways the
+    /* DEC-49 REGION is-airuns-context — REC-69 / C-36.1-3. The three ways the
      * QUESTION can be malformed, and nothing else: everything below this marker
      * is the answer, and a well-formed question about a context that holds no
      * visible runs is answered rather than refused. */
