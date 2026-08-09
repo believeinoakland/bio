@@ -5585,4 +5585,72 @@ interfaces consumed: none. interfaces owned: none. No op, no table, no check fam
 expected: close the DETECTOR rather than guard another instance. M0-16's class census in `hygiene.test.mjs` grades a file by whether THAT FILE contains a literal `readdirSync(`, so when the WALK and the FLOOR live in different files the census names the walking file and never enumerates the file carrying the floors behind it. A walk-derived floor is recognisable in principle by the DATA FLOW from a walk to a comparison, not by the two happening to sit in one file.
 accepts-when: the REAL `op-claims` split (`scripts/op-claims.mjs` walks, `test/op-claims.test.mjs` floors four times and contains no `readdirSync` at all) is FOUND; a file that legitimately imports from a walking module without flooring on it is NOT reported; an over-strictness arm passes. Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and reported either way. `coverage.mjs --strict` run DIRECTLY with `$?` UNPIPED; `civicos-ui/test/run.mjs` from the REPO ROOT; `tools/plancheck.mjs` clean but for UNPUSHED. No push, no merge, no deploy.
 concurrency: checked over the whole file. **No live claim names `bio-plane/scripts/walkfloor.mjs`, `bio-plane/test/walkfloor.test.mjs` or `bio-plane/test/walkfloor.control.mjs` — all three are new.** Every claim that has ever named `test/hygiene.test.mjs` is a LANDED item whose work is merged (M0-15, M0-16, M0-14, CPDF-9, UI-48, REC-73, FW-13, D-243/D-242, D-237, REC-78/D-230). **D-257's claim has a BLANK `released:` line but its work IS in this worktree's base** — verified by READING the file rather than the claim: the seven removals and the `D-257 CLOSED 2026-08-09` comment are at `hygiene.test.mjs:1719`. This item appends a new block below that list and edits none of it. `scripts/coverage.mjs` is touched for the `REGISTER_FLOOR` NUMERALS only — **if this conflicts at integration, COLLAPSE TO ONE KEY SET and re-read the printed figures; do not keep both.**
-released:
+released: 2026-08-09 — committed on branch `worktree-agent-a14d53f778e91eb68`, **NOT pushed and NOT merged**; CONDUCT integrates. **THE DETECTOR IS CLOSED AND RATCHETED, AND THE FIVE INSTANCES IT FOUND ARE NAMED RATHER THAN GUARDED — the residual is in D-268 and in a DELEGATION, not hidden in a green report.** `scripts/walkfloor.mjs` answers by DATA FLOW what M0-16's census answered by CO-LOCATION: strip comments/strings/regex literals, close walk-derivation over same-module calls to a fixpoint, resolve relative imports, seed locals bound to walk-derived exports, and find the comparisons they reach. **It grades at BINDING granularity, and that is the whole design**: the benign shape that kills a file-granularity detector is live twenty-two lines from the real one (`LEDGER.length >= 20`, a floor on a STATIC array imported from the SAME walking module by the SAME suite), and a check that cries wolf gets switched off — `VERIFICATION.md`'s own stated reason for not making `--strict` the gate yet. **BATTERY BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 142/142 suites green · 9,179 assertions · 137.0 s · exit 0** (`npm ci` run first; the brief carried no figure). **FINAL: 143/143 green · 9,220 assertions · 166.7 s · exit 0.** Delta **+41, ATTRIBUTED PER SUITE by diffing the runs and never by subtraction:** `walkfloor.test.mjs` +31 (new), `hygiene.test.mjs` 561 -> 570 (+9, the cross-file block), `planning-hygiene.test.mjs` 294 -> 295 (+1, the D-268 row); **140 of 142 pre-existing suites byte-identical in count.** **TWO EARLIER FULL RUNS EACH LOST ONE DIFFERENT SUITE TO A WORKERD SOCKET ERROR** (`entityregistry` `ECONNREFUSED 127.0.0.1:56317`, then `daemon-token` `SocketError: other side closed`) — **each passed ALONE immediately afterwards (47/47 and 56/56) and each run's total reconciles EXACTLY to 9,220 minus that suite's assertions (9,173 and 9,164)**, which is what identified it as machine contention from the other worktrees' concurrent batteries rather than anything this item did. Recorded rather than smoothed. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0** — OPS 163/163 · CHECKS 222/222 · provenance `149 of 149 discovered item(s) are in the commit at HEAD`. **`REGISTER_FLOOR` MOVED 654 -> 665 arms / 136 -> 137 classified / 137 -> 138 corpus, ALL THREE IN THE SAME TURN**, from the figures a green run PRINTED as REPRODUCIBLE and read only AFTER the new files were in a commit; **ONE key set, verified by line number against `FLEET_FLOOR`'s separate `arms:`.** `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **0**; no refusal code and no DEC-49 region touched. `node tools/plancheck.mjs` clean but for UNPUSHED. **EIGHT CONTROL ARMS, each armed ALONE with every other defence held OPEN, declared before running, restores verified by sha256 AND by byte compare against uniquely-named per-arm pristine copies with byte counts printed and floored against the empty-string digest; a BASELINE arm and an OVER-STRICTNESS arm included; final 8/8 AS DECLARED.** **THREE THINGS CAME BACK OTHER THAN DECLARED AND ALL THREE ARE WRITTEN INTO THE FILES RATHER THAN SMOOTHED:** (i) the BASELINE arm went RED on its first run and **the failure was this item's own new suite, not the arm** — `walkfloor.test.mjs` minted temp directories without `import "./sandbox.mjs"`, caught by the D-186 rule `hygiene.test.mjs` has enforced since M0-8, and **without a baseline row that reading was not available**; (ii) **this detector shipped TWO first-draft bugs, EACH OF WHICH REPORTED A PERFECTLY CLEAN ESTATE over five real findings** — a destructured parameter list read as a function body (`sweep({root})`), and imports read off source with string literals blanked so every file read as importing nothing AND as unguarded — both now pinned as arms (`destructured`, `stringstrip`); (iii) the control declaration was first a COLUMN TABLE that `control-register.mjs` read as **2** arms against a real 8 (D-233's under-count class, which installs slack), and the enumerated rewrite then put a paragraph between marker and list, which made it read **null** and dropped the suite out of `classified` entirely, taking `--strict` to exit 1 — both states measured, and the working order recorded at the site and in `coverage.mjs`. **WHAT THIS ITEM COULD NOT DO:** it does not GUARD the five `test/op-claims.test.mjs` floors it found. By D-257's ruling it should; this item's claim does not name that suite and a sibling was briefed to guard exactly these instances, so it is a DELEGATION and D-268's open residual rather than a silent exemption. **WHAT THE MATCHER CANNOT SEE is stated in the module header and PINNED AS ARMS** — re-export chains, flow through a data structure or a parameter, `require`/dynamic import, a walk passed as an argument, and temp-versus-repository directories (the last being the same judgement M0-16's named list already carries by hand) — so closing a blind spot FAILS the suite and forces the header to be corrected instead of going stale. Unclassifiable comparisons are PRINTED as UNKNOWN, never scored zero; the estate currently has 0. **`git stash` was NOT used at any point.**
+
+### DELEGATION 2026-08-09 M0 (M0-21 / D-268) → WHOEVER OWNS `bio-plane/test/op-claims.test.mjs`: **FIVE WALK-DERIVED FLOORS ARE NAMED AND STILL UNGUARDED, AND THE FIFTH HAD NEVER BEEN NAMED BY ANYTHING**
+
+Not raised as new debt because it IS D-268's residual, carried in that row rather than in a
+green report. The detector found these on its first real run over the estate:
+
+| line | floor | flows from |
+|---|---|---|
+| 122 | `result.files >= 300` | `scripts/op-claims.mjs` `corpus()` |
+| 122 | `result.chars >= 10_000_000` | same |
+| 124 | `result.mentions >= 5000` | same |
+| 124 | `result.names.length >= 150` | same |
+| 146 | **`result.attributions.length >= 4`** | same |
+
+**The first four were predicted; the fifth was not, by any census row, any sweep or any brief.**
+By D-257's own ruling these should be GUARDED rather than named — naming is defensible for a walk
+that only REPORTS and much weaker for one whose count feeds a ratchet, and all five feed ratchets.
+**The fix is D-257's two-line pattern**: keep the sweep over the whole working tree so a finding in
+uncommitted work is not hidden, and compute the FLOOR over `git ls-tree HEAD` alone, saying
+UNVERIFIED rather than clean when git cannot answer. `corpus()` returns `{files:[{file,rel,body}]}`
+and `mentionsIn` is exported and pure, so **all five can be recomputed over the tracked subset from
+inside the suite without touching `scripts/op-claims.mjs` at all** — which is why this is a two-line
+shape and not an interface change.
+
+**WHY M0-21 DID NOT DO IT, stated plainly rather than left to be inferred:** this item's claim does
+not name that suite, and the brief that raised this work said a sibling item (`D-265`/`M0-18` by its
+numbering) was to guard exactly these instances. Two worktrees guarding one suite is a merge
+conflict in a file neither owns. If that sibling has not landed by integration, this is one edit.
+
+### DELEGATION 2026-08-09 M0 (M0-21) → CONDUCT: **THE BRIEF'S TWO IDS WERE ALLOCATED TO OTHER TREES AND NEITHER ROW WAS EVER WRITTEN**
+
+Reported because it cost this item its first twenty minutes and because it is the repository-is-the-
+channel failure in its purest form, not to assign blame.
+
+- The brief named **`D-265`** as "its row in `docs/development/DEBT.md` … the authority", and said
+  that row carried **`M0-18`**'s measurement. **NEITHER EXISTS IN THE TREE.** `DEBT.md`'s highest
+  row is D-260; `CLAIMS.md`'s highest M0 is M0-17. Verified over the files, not inferred.
+- **Both ids ARE minted**, in the shared ledger under the common gitdir: `D/265` is held by
+  `worktree-agent-a62aec7acd493144e` (21:39:07Z) and `M0/18` by **`main`** (21:06:50Z, no `why`),
+  along with M0-19 and M0-20. So the plan existed; **the rows were never committed, and a row that
+  is not committed reaches no worker** — which is exactly what `CLAUDE.md` says about the channel.
+- **M0-21 therefore minted its own** (`D-268`, `M0-21`) with `tools/mintid.mjs` and wrote into
+  those, rather than squatting on a number another live worktree holds. **If the D-265 holder lands
+  a row for this same defect, the two rows are duplicates and D-268 is the one with the
+  measurements in it.**
+- The brief's three claims about M0-18's landed state were each measured FALSE against this tree:
+  the instances are **not** guarded (`scripts/op-claims.mjs` is still on `CLASS_NAMED_UNGUARDED`,
+  and D-257's delegation names five further bio-plane floors still unguarded); the detector was
+  blind because **M0-16** left it so, not because M0-18 chose to; and **`corpus()` still has no
+  dot-segment rule at all** — `SKIP_DIR` is a NAMED list (`node_modules`, `.git`, `.claude`, `dist`,
+  `coverage`, `.worktrees`). **That question is NOT reopened here and nothing in this item touches
+  `scripts/op-claims.mjs`**; it is recorded because the brief asked that it not be reopened
+  silently, and the honest answer is that it was never closed.
+
+### DELEGATION 2026-08-09 M0 (M0-21) → CONDUCT: **THE `VERIFICATION.md` REGISTER ROW IS STALE AGAIN, AND IT IS RAISED RATHER THAN EDITED BECAUSE THAT ROW SAYS SO**
+
+Measured, not suspected. `docs/development/VERIFICATION.md`'s "suites declaring a negative control"
+row reads **135 of 135 · 632 arms across 134 classified · 1 UNCLASSIFIED**. A green `--strict` run
+of this worktree, with every discovered item in the commit at HEAD, PRINTS **138 suites · 665 arms
+across 137 classified**. `VERIFICATION.md` is NOT in this item's claimed paths and was not touched.
+
+That row carries its own rule and this item is following it rather than being the ninth item to
+break it: *"a HAND-CARRIED figure in prose is moved by the INTEGRATOR, once, from a printed run of
+the merged tree — and a worker that RAISES it rather than editing it has done the right thing and
+should not be corrected for it."* Eight consecutive items have now found this row stale by measuring
+it. **The instrument prints the figure on every `--strict` run; that is the authority, and the row
+is a convenience.** `REGISTER_FLOOR` in `scripts/coverage.mjs` — the mechanised half, which does
+gate — WAS moved in the same turn that invalidated it (654 -> 665 / 136 -> 137 / 137 -> 138).

@@ -279,9 +279,24 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* M0-21 / D-268, 2026-08-09: 654 -> 665 / 136 -> 137 / 137 -> 138, ALL THREE MOVED
+     IN THE SAME TURN and every one taken from the figure a green `--strict` run
+     PRINTED as REPRODUCIBLE (`arms 665/654 · classified 137/136 · corpus 138/137 ·
+     GREW by 11 arm(s)`, provenance `149 of 149 discovered item(s) are in the commit
+     at HEAD`) — read only AFTER the new files were in a commit, never by adding to
+     the numbers above. The cause is ONE new suite, `test/walkfloor.test.mjs`, whose
+     declaration enumerates EIGHT arms; every one of those arms was RUN, and the
+     remaining three are the arms M0-21 added to `hygiene.test.mjs`'s own
+     declaration for the cross-file block.
+     WORTH KNOWING BEFORE YOU MOVE THIS AGAIN, because it cost two runs here: that
+     suite's declaration was FIRST a column table, which this register read as TWO
+     arms (D-233's under-count class, and it would have installed slack); rewritten
+     as an enumerated list it read EIGHT, but with a paragraph between the marker
+     and the list it read NULL and the suite left `classified` entirely, taking
+     `--strict` to exit 1. Marker paragraph, then the list, then prose. */
+  arms:       665,  // arms stated across the classified declarations
+  classified: 137,  // declarations the detector could count arms in
+  corpus:     138,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
