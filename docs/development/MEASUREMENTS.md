@@ -5080,3 +5080,51 @@ the register's floor met EXACTLY, with the six new arms scoring zero. They are L
 (`(D-235a)`) rather than numbered, and the register says in its own output that a labelled
 arm is not counted. **This is the same blindness REC-75 measured on the same file and the
 same day, reproduced by an item that did not set out to measure it.**
+
+## 2026-08-09 · PL-18 · TWO SWEEPS OVER THE PLANE, AND THE SECOND WAS EARNED BY A REGRESSION
+
+Instrument: two one-shot walks over `bio-plane/src/index.mjs` and `src/store.mjs`, run in
+worktree `agent-a4e2eff5ca09197e2` on a quiet tree. **Both are reported here rather than
+kept as suites, deliberately: neither answers a question that can go stale silently, and a
+new suite buys a ratchet three other items would then have to maintain.**
+
+### (1) WHICH ACTS CONSULT PROJECT PARTICIPATION AT ALL
+
+**Corpus: 74 ops in `NEEDS` · 184 routes in the Durable Object's dispatch table · 11
+consult participation · 56 do not · 7 UNCLASSIFIED AND NAMED** (`acquire`, `attest`,
+`capture`, `linkproject`, `monitor`, `promote`, `ratify` — each handled in `index.mjs`
+rather than through a named store method, so this walk cannot follow them and says so
+instead of scoring them zero).
+
+**The finding is the split, and it is sharper than the count.** Of the 11, EIGHT are the
+project ROSTER's own acts — invite, join, leave, remove, the three owner acts, fork. In
+other words, **before PL-18 participation was a fence over PARTICIPATION ITSELF and fenced
+no WORK anywhere in the plane.** The three that now do are DEC-63's run verbs. Every other
+corpus act — `cite`, `conclude`, `suggest`, the six version acts, `inquiryground`,
+`biasadopt` — is gated on a capability alone.
+
+**Reach, stated: the walk follows `this.#private(` calls TRANSITIVELY.** Its first shape
+read one level and **scored PL-18's own three verbs as ungated**, because their gate is
+reached through `#aiRunProjectGate`. A matcher that cannot see the fix it was written to
+check would report every properly-factored gate as absent, so the reach was INVERTED rather
+than taught the one name it was missing (REC-70's lesson). What it still cannot see:
+whether an op's subject is project-scoped at all (semantic), and `viewerPredicate` gating,
+which is a VISIBILITY fence and a different question from an authority one.
+
+### (2) SERVER-SIDE QUERY STAMPS THAT CAN COLLIDE — the sweep a regression earned
+
+PL-18 shipped an UNCONDITIONAL `inner.searchParams.delete("actor")` on the `ownerMemberId`
+precedent and **broke `op=lease`**, which has stamped its own `actor` since REC-21's
+neighbourhood. One assertion in `members.test.mjs` caught it. The precedent was safe and the
+copy of it was not, for a reason worth keeping: **`ownerMemberId` is a name only `promote`
+uses; `actor` is not.**
+
+**Corpus: 11 distinct query keys stamped server-side in `index.mjs` across 17 sites. FIVE
+keys are stamped from more than one site** — `actor`, `author`, `member`, `viewer`, `who`.
+**All of the other four are conditional SETs and none is a DELETE**, so the failure they
+could produce is an overwrite (loud, and caught by the op that loses its value) rather than
+a wipe. **After PL-18's fix there is no unconditional stamp of any kind in the file.**
+
+Cannot see: whether two sites naming one key are mutually exclusive by their conditions;
+keys stamped through a variable; and body-field deletions (`delete b.author` and its
+neighbours), which are the same class one layer over and were not walked.

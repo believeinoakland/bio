@@ -171,6 +171,23 @@ const FLOOR = {
               a tree without PL-11 — and added ONE row to the existing
               `AI_RUN_CHECKS` rather than minting a family, because a family is a
               floor here and a new one buys slack for everybody else's walk.
+     PL-18 (agent-a4e2eff5ca09197e2), 2026-08-09 — DEC-63's project-membership
+     gate. EIGHT figures moved, every one from what this file PRINTED on a green
+     run of that worktree: `rows` 163->164, `census` 424->425, `reach` 217->218,
+     `governedSites` 66->67, `codesChecked` 141->142, `outcomeReturns` 70->74,
+     `refusalsJudged` 143->145, `vocabularyTerms` 56->59. **`regions` AND
+     `regionLines` ARE DELIBERATELY UNCHANGED AND WERE RE-READ RATHER THAN
+     ASSUMED — 53 and 1407, exactly the figures already in this file, no slack.**
+     PL-18's first draft DID add three `DEC-49 REGION` marker pairs in
+     `store.mjs` and this guard FAILED BY NAME for it: they were relays around a
+     refusal minted in `airun.mjs`, so no row's `where` claimed them, and *a
+     defence that is documented and not wired is worse than a missing one.* The
+     markers were removed rather than given rows — one refusal, one governed
+     site. **The guard also failed the same item for reading its gate's two
+     PERMITTING returns as CODELESS REFUSALS**, because the verdict field was
+     named `applied` (whether the gate had anything to check) rather than
+     `permitted` (whether it said yes). It was right on both counts and the
+     source moved, not the floor.
      - PL-14  (agent-a78ca0f9b029b7dfa): added ZERO unfalsifiable sites, the number
               REC-71 delegated to REC-64. Its first draft gave the pair guard a
               WHOLE-FUNCTION `where` and this guard reported 6 refusals judged and
@@ -283,12 +300,12 @@ const FLOOR = {
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
                        // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        163,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
+  rows:        164,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
                        // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      424,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      425,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
                        // (was 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
@@ -300,8 +317,8 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       217,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 66,   // spans named by a row's `where` — a function, or a region inside one.
+  reach:       218,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 67,   // spans named by a row's `where` — a function, or a region inside one.
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
@@ -392,7 +409,7 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 141,   // refusal codes actually COMPARED against a family row — NOT the same as
+  codesChecked: 142,   // refusal codes actually COMPARED against a family row — NOT the same as
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
                        // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
@@ -427,17 +444,17 @@ const FLOOR = {
                        // thirteen governed sites once read 776 lines and checked zero — arm C's
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
-  outcomeReturns: 70,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+  outcomeReturns: 74,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
                           literals across the governed spans. Set from what the guard PRINTED on
                           a green run of this worktree. It is floored SEPARATELY from
                           `refusalsJudged` because the two fail for different reasons — the
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 143,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
+  refusalsJudged: 145,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
                           successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
                           a walk that had lost every spelling but one would still have cleared. */
-  vocabularies:  9,    // the plane's own code->text maps a surface renders verbatim (arm E).
+  vocabularies:  10,    // the plane's own code->text maps a surface renders verbatim (arm E).
                        // WAS 8. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
                        // run's declared standard pair can be known, each carrying the sentence a
                        // member reads instead of the machine word. Moved IN THE SAME TURN from
@@ -445,7 +462,7 @@ const FLOOR = {
                        // the number: five consecutive items found this block already stale by
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
-  vocabularyTerms: 56, // WAS 51 (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
+  vocabularyTerms: 59, // WAS 51 (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
                        // FINDING slug. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
