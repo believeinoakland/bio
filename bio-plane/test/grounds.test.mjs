@@ -286,8 +286,20 @@ const OR2 = "INQ-2026-1000-two-grounds";
     s.capture.grounds.map((x) => [x.population, x.load_bearing]), [[2, 1], [2, 1]]);
   t("the axis still counts the WHOLE population, so nothing left a branch and vanished",
     [s.capture.population, s.connection.population], [4, 4]);
-  t("the sentence says the grade came from the strongest ground and names it",
-    [/STRONGEST of the 2 independently sufficient grounds/.test(s.capture.detail),
+  /* CORRECTED 2026-08-09 AT D-269, and the old assertion was WRONG rather than
+     merely stale. It pinned `STRONGEST of the 2 independently sufficient
+     grounds` — so this suite was the thing HOLDING IN PLACE a live breach of
+     DEC-32 clause 1 (*"NEVER show AND / OR / disjunction / grounds"*), because
+     that sentence is rendered verbatim to members at five channels: the axis
+     panel on the inquiry page, the same panel on the PUBLISHED SIGNED case, the
+     undetermined pane, `legConsequence` beside the weakest leg, and a leg's
+     `why` where `#strengthWalk` embeds the whole sentence. WHAT THE ASSERTION
+     IS FOR is unchanged and is asserted below: the sentence says the grade came
+     from the strongest set and NAMES it. Only the nouns moved, onto the words
+     UI-27's elicitation already renders. `test/analystvocab.test.mjs` is the
+     instrument that will not let them move back. */
+  t("the sentence says the grade came from the strongest set of reasons and names it",
+    [/STRONGEST of the 2 sets of reasons that each carry this conclusion on their own/.test(s.capture.detail),
      s.capture.detail.includes('"charter"'), s.connection.detail.includes('"code"')],
     [true, true, true]);
   t("a MIN across the two branches is what the arithmetic must NOT do: it would have read C on both",
@@ -381,8 +393,18 @@ console.log("\n--- 3. THE DEFAULT IS AND: two independent defences, the gate and
   const sr = await strength(RAW);
   t("add ONE UNLABELLED leg around the gate and the axis gets WEAKER, never stronger: D",
     [sr.capture.state, sr.capture.grade, sr.capture.weakest?.target_id ?? null], ["graded", "D", SPARE]);
+  /* CORRECTED 2026-08-09 AT D-269 — THE NOUN ONLY, same reason as the three
+     blocks above. THIS ONE IS RECORDED SEPARATELY BECAUSE OF HOW IT WAS FOUND:
+     D-269's own consumer-impact grep searched for the sentence's phrase as the
+     SOURCE spells it (`is needed by every ground`) and this assertion spells it
+     `needed by every ground`, so the grep MISSED IT and reported three
+     consumers where there were four. That is the identical failure UI-43's
+     first matcher made one layer up — a matcher keyed on a spelling
+     under-reports and says the problem is smaller than it is. The BATTERY found
+     it, in one run, which is why the battery is the consumer instrument and a
+     grep is only a hint. */
   t("the unlabelled leg is read as NECESSARY and the sentence says so",
-    /needed by every ground/.test(sr.capture.detail), true);
+    /needed by every one of those sets/.test(sr.capture.detail), true);
   t("it is carried as its own implicit branch, listed with a null label beside the two authored ones",
     sr.capture.grounds.map((x) => [x.ground, x.grade]), [["charter", "B"], ["code", "B"], [null, "D"]]);
   t("so the strengthening direction is unreachable by omission: the max is capped by the AND part",
@@ -485,8 +507,12 @@ console.log("\n--- 5. R1 one level up: an unfinished leg leaves ITS branch undet
   t("the SECOND graded branch still carries the finding: the axis is graded at C",
     [s.connection.state, s.connection.grade, s.connection.determined, s.connection.weakest?.target_id ?? null],
     ["graded", "C", true, CO_CON]);
-  t("the unfinished branch is NAMED rather than dropped, and the sentence says which way it could move",
-    [/1 further ground is UNDETERMINED and could only be stronger, never weaker/.test(s.connection.detail),
+  /* CORRECTED 2026-08-09 AT D-269 — THE NOUN ONLY, same reason as the block
+     above. `ground` is the analyst's word and clause 1 forbids it on any
+     member-facing surface; the property (the unfinished set is NAMED, and the
+     sentence says which way it could move) is untouched. */
+  t("the unfinished set is NAMED rather than dropped, and the sentence says which way it could move",
+    [/1 further set is UNDETERMINED and could only be stronger, never weaker/.test(s.connection.detail),
      s.connection.detail.includes('"deep"')], [true, true]);
   t("the branch names WHERE it stopped, so a reader is sent to the leg and not to the hop",
     (s.connection.grounds[0].undetermined_at ?? []).map((m) => m.target_id), [D(0)]);
@@ -502,8 +528,9 @@ console.log("\n--- 5. R1 one level up: an unfinished leg leaves ITS branch undet
   t("with EVERY branch unfinished the axis is undetermined — the boundary the composition turns on",
     [s2.connection.state, s2.connection.grade, s2.connection.determined],
     ["undetermined", null, false]);
+  /* CORRECTED 2026-08-09 AT D-269 — THE NOUN ONLY, same reason. */
   t("and it says so in the plural, naming the depth rather than a low score",
-    [/EVERY one of the 2 grounds it rests on is undetermined/.test(s2.connection.detail),
+    [/EVERY one of the 2 sets of reasons it rests on is undetermined/.test(s2.connection.detail),
      /depth bound of 6/.test(s2.connection.detail)], [true, true]);
   /* CORRECTED WHILE WRITING, and kept because the first version was wrong in an
      instructive way: this inquiry's CAPTURE axis is undetermined too, not

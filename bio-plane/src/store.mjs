@@ -13946,6 +13946,44 @@ export class Store extends DurableObject {
        or must be told are unfinished. A NULL label never reaches these. */
     const label = (g) => `"${g.ground}"`;
 
+    /* ================= D-269 · THE WORDS BELOW ARE MEMBER-FACING ==============
+       EVERY `detail:` in this function is rendered VERBATIM to a member —
+       `axisPanel` prints it on the inquiry page AND on the published, signed
+       case, `legConsequence` prints it beside the leg that set the grade, and
+       `#strengthWalk` embeds it whole into a leg's `why`, which is printed at a
+       fifth site. Five channels, all live.
+
+       SO DEC-32 CLAUSE 1 BINDS HERE: *"NEVER show AND / OR / disjunction /
+       grounds — not even as tooltips."* Until 2026-08-09 all three sentences
+       below broke it, and only in the fragments REC-42 added for the STRUCTURED
+       case — 18 of 30 composed sentences, 42 hits, measured by
+       `test/analystvocab.test.mjs` before the correction. The FLAT sentences
+       were and remain clean.
+
+       WHY THE PLANE WAS RE-WORDED RATHER THAN THE SURFACES SILENCED, because
+       that was the live choice and this is where the reasoning belongs. DEC-32
+       bans the VOCABULARY, not the INFORMATION: clause 3's own remedy for
+       machine structure is to *"SHOW THE DERIVED FALSIFIER BACK, IN PLAIN
+       WORDS"*, and clause 7 makes *which set carried this, and what capped it*
+       the thing a READER must be able to test — *"the reader is the final
+       check, which is what makes this safe to ship."* Dropping the sentence
+       from the surfaces would have removed exactly that, at every consumer,
+       for ever, and would have been a fence tighter than its rule wearing the
+       costume of caution. The nouns were the defect; the content was not.
+
+       THE WORDS ARE NOT NEW AND MUST NOT BE. `set of reasons` / `carries it on
+       its own` are UI-27's elicitation vocabulary (`elicLabel`, the
+       `Carries it on its own` heading, `sets of reasons`), which is the flow
+       DEC-32 clause 2 built to keep the machine's words away from members —
+       and it is the flow a member has just come through when they see this.
+       Authoring a third spelling here is the defect UI-42's delegation names.
+
+       IF YOU EDIT A SENTENCE BELOW, `test/analystvocab.test.mjs` drives this
+       function's real bytes over all three states and classifies the RENDERED
+       string, so concatenation cannot hide a word from it. A source-text grep
+       CAN be hidden from — that is how the first measurement read 2 of 3.
+       ======================================================================== */
+
     /* A NECESSARY PART IS UNKNOWN. The implicit legs, or every branch. */
     if (parts.some((p) => p.state === "undetermined")) {
       return withGrounds({ axis, state: "undetermined", grade: null, determined: false,
@@ -13955,9 +13993,9 @@ export class Store extends DurableObject {
                undetermined_at: allExhausted,
                detail: `this ${axis} axis has NO computed strength: `
                      + (structured && branches.length && !implicit
-                         ? `EVERY one of the ${branches.length} grounds it rests on is undetermined, and `
+                         ? `EVERY one of the ${branches.length} sets of reasons it rests on is undetermined, and `
                          : structured
-                         ? `a leg every ground needs is undetermined, and `
+                         ? `a leg every one of those sets needs is undetermined, and `
                          : ``)
                      + `the basis walk reached its `
                      + `depth bound of ${Store.QUEUE_ANCESTOR_DEPTH} at `
@@ -13973,7 +14011,7 @@ export class Store extends DurableObject {
                not_load_bearing: inert, depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
                detail: population
                  ? `UNRATED on ${axis}: no leg on this axis carries an established grade`
-                 + (structured ? ` on any of the ${branches.length} grounds` : ``)
+                 + (structured ? ` on any of the ${branches.length} sets of reasons` : ``)
                  + `, so this conclusion rests on nothing established here. Not load-bearing: `
                  + `${nlb}.`
                  : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.` });
@@ -13988,17 +14026,17 @@ export class Store extends DurableObject {
              population, not_load_bearing: inert,
              depth_bound: Store.QUEUE_ANCESTOR_DEPTH,
              detail: (orSets
-                 ? `${axis} ${setter.grade} — the STRONGEST of the ${branches.length} independently `
-                 + `sufficient grounds this conclusion rests on, which is ${label(best)}, and no stronger `
-                 + `than the weakest ${axis} WITHIN that ground, which is ${w.target_id}`
+                 ? `${axis} ${setter.grade} — the STRONGEST of the ${branches.length} sets of reasons `
+                 + `that each carry this conclusion on their own, which is ${label(best)}, and no stronger `
+                 + `than the weakest ${axis} WITHIN that set, which is ${w.target_id}`
                  : `${axis} ${setter.grade} — no stronger than the weakest ${axis} it rests on, `
                  + `which is ${w.target_id}`)
                    + (w.through ? ` (through ${w.through})` : "")
                    + `.`
                    + (structured && !orSets && implicit
-                       ? ` That leg is needed by every ground, so no ground can be stronger than it.` : ``)
+                       ? ` That leg is needed by every one of those sets, so no set can be stronger than it.` : ``)
                    + (openBranches.length
-                       ? ` ${openBranches.length} further ground${openBranches.length === 1 ? " is" : "s are"} `
+                       ? ` ${openBranches.length} further set${openBranches.length === 1 ? " is" : "s are"} `
                        + `UNDETERMINED and could only be stronger, never weaker: `
                        + `${openBranches.map(label).join(", ")}.` : ``)
                    + ` ${inert.length ? `Present and not yet load-bearing: ${nlb}.` : ""}`.trimEnd() });

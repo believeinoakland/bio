@@ -6185,3 +6185,123 @@ should not be corrected for it."* Eight consecutive items have now found this ro
 it. **The instrument prints the figure on every `--strict` run; that is the authority, and the row
 is a convenience.** `REGISTER_FLOOR` in `scripts/coverage.mjs` — the mechanised half, which does
 gate — WAS moved in the same turn that invalidated it (654 -> 665 / 136 -> 137 / 137 -> 138).
+## CLAIM 2026-08-09 RECORD/UI (D-269 — the analyst's vocabulary in the plane's SUCCESS prose)
+session: d269-analyst-vocabulary (worktree agent-aac7ddaefbfcf8a7a)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/src/store.mjs`, BY SPAN AND NOT BY FILE** — `static #axisResult` ONLY, and
+  inside it ONLY the five STRUCTURED-ONLY prose fragments of the three `detail:` sentences (the
+  `orSets` clause, the `structured && !orSets && implicit` tail, the `openBranches` tail, the
+  `structured` clause of the UNDETERMINED sentence, and the `structured` clause of the UNRATED
+  sentence). **NO ARITHMETIC LINE IS TOUCHED**: the partition, `best`, `orPart`, `parts`, `setter`,
+  `withGrounds`, `label`, every `state`/`grade`/`weakest`/`load_bearing`/`population` and every
+  returned KEY are untouched, and the FLAT (unstructured) sentences are byte-identical — which is
+  DEC-32's anti-gaming keystone and is asserted rather than asserted-about. **NOT** `#groundResult`
+  (it composes no prose), **NOT** `#namedMember`, **NOT** `#weakestOf`, **NOT** `#strengthWalk`
+  (its four `why` sentences are MEASURED clean and left alone), **NOT** `strengthOf`, **NOT**
+  `versionStrength`, **NOT** any dispatch entry, **NOT** `schema.mjs`, **NOT** `index.mjs`, **NOT**
+  `checks/bio-checks.mjs`. No op is added and no shape changes: `detail` is free prose and stays
+  free prose.
+  **`bio-plane/test/analystvocab.test.mjs`** (NEW, this item's suite — named so
+  `node scripts/battery.mjs analystvocab` selects it) and **`bio-plane/test/analystvocab.control.mjs`**
+  (NEW, the negative-control driver, deliberately not a `.test.mjs`).
+  **`bio-plane/test/grounds.test.mjs`** — THREE assertions CORRECTED, never exempted, each with a
+  dated comment saying why the old one was wrong. They pinned the retired words.
+  `docs/development/DEBT.md` (the D-269 row, NEW), `docs/development/INTERFACE-CHANGES.md` (the
+  IC-15 row, NEW), `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/CLAIMS.md` (this entry and its DELEGATIONS).
+  **`civicos-ui/app.html` IS NOT EDITED.** The surfaces were correct; the plane's sentence was not.
+concurrency: checked over the whole file. The two live claims naming `bio-plane/src/store.mjs` are
+  **FL-4** (`#schedConsumers`, `onAlarm` — the scheduler seam) and **REC-69** (`aiRunsInContext` and
+  its dispatch); both name their spans and neither is within 3,000 lines of `#axisResult`. **UI-43
+  (`agent-a9e7e017d06799858`) is live on `civicos-ui/app.html` and this item does not open it**;
+  UI-45's claim above names the same file by site. `civicos-ui/test/**` is NOT opened — D-257's
+  claim lists nine of those suites. `bio-plane/test/grounds.test.mjs` is named by no live claim
+  (REC-42's is released).
+expected: **D-269 — DEC-32 clause 1 is being broken on a live member-facing surface**, found and
+  measured by UI-43 and delegated because the fix is a CHOICE rather than an edit. Decide it, argue
+  it from the measurement, record the reasoning at the site, and file the IC row with MEASURED
+  consumer impact. Sweep the CLASS, not the four sites reported.
+accepts-when: **Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the
+  brief** (the brief carried no figure). Full `npm run test:battery` green with the delta ATTRIBUTED
+  per suite; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped;
+  `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read unpiped. Six control arms RUN, each
+  armed ALONE, **including an OVER-STRICTNESS arm that must NOT fire on a legitimate non-member-
+  facing use**. No push, no merge — CONDUCT integrates.
+released:
+
+### DELEGATION 2026-08-09 D-269 -> PL-14 / WHOEVER OWNS THE REFUSALS' WORDING: **THE REST OF THE CLASS IS MEASURED AND NAMED, AND THE BOUNDARY FELL AT THE SUCCESS/REFUSAL LINE**
+
+D-269 was told plainly that PL-14 owns the refusals' wording and that this item is the SUCCESS
+answers and the surfaces. **So the refusal corpora were MEASURED and NOT EDITED**, and here is
+everything that walk found, so the next item does not have to re-derive it.
+
+| corpus | walked | hits |
+| --- | --- | --- |
+| canned translations on every `*_CHECKS` family row | **166 rows over 16 families** | **1** |
+| per-site refusal `detail`s (`refusal(` call sites) | **62 over 5 source files** | 2, **both false positives** |
+| every `detail:` composed in `store.mjs` | **460 sites** | **8 real** |
+
+- **THE ONE CANNED TRANSLATION** is `MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND`, whose member
+  sentence opens *"Grounding says some of the reasons behind an answer are strong enough to carry
+  it on their own…"*. That confirms UI-43's *1 of 163* exactly; the corpus has since grown to
+  166/16 on `main`. **The word is the ACT'S NAME, which is the hard part of the judgement and is
+  why it is yours**: `elicitation.test.mjs` already asserts the WIRE name `inquiryground` never
+  reaches a member, so the surface calls the act something else — but this translation calls it
+  "Grounding" in prose. Either the act has a member-facing name and this sentence should use it,
+  or DEC-32 clause 1 has an exception for act names and it should say so.
+- **THE EIGHT REAL `detail:` HITS ARE ALL ONE SITE**: `groundInquiry`, `store.mjs:5394–5503`, where
+  `grounds[]` is the WIRE PARAMETER the refusal is documenting (*"pass grounds[] — an array of
+  { ground, legs: [ord, …] }"*, *"a grouping is a partition OF THE LEGS"*). **Whether that is a
+  breach at all turns on a thing UI-43 already delegated and this item did not verify: if
+  `actRefusalHtml` really does drop the DEC-49 canned translation and render the raw `detail`, all
+  eight are live member-facing prose. If a member only ever sees the translation, they are wire
+  documentation for a caller and are fine.** That question decides eight sites and it is one
+  measurement, not an argument.
+- **THE TWO REFUSAL-DETAIL HITS ARE FALSE POSITIVES AND ARE NAMED SO NOBODY "FIXES" THEM**:
+  `ROUTE_MARK_NO_AUTHOR` says *"DEC-52's ground"* (the idiom — territory, not a partition) and
+  `AI_CREDENTIAL_MINT_NOT_A_MEMBER` says *"REC-46's ONE predicate"*. A spelling-keyed matcher
+  cannot tell either from the real thing, which is the argument for the derived classifier in
+  `bio-plane/test/analystvocab.test.mjs` rather than a fourth hand list.
+
+### DELEGATION 2026-08-09 D-269 -> UI / WHOEVER OWNS `civicos-ui/test/`: **THERE ARE NOW FOUR BAN INSTRUMENTS AND THREE OF THEM ARE HAND LISTS THAT DISAGREE**
+
+`elicitation.test.mjs`, `notifications.test.mjs` and `version-review.test.mjs` each carry a
+`const BANNED = [...]`, **no two of them agree, and NOT ONE would have caught `independently
+sufficient`** — which is the phrase that was actually reaching members. That is measured, and
+`analystvocab.test.mjs` ARM L pins that all three still exist and that none of them carries the
+phrase, so the argument stays checkable rather than becoming a story.
+
+**What is owed, and it is not "add the phrase to three lists":** the three lists should become
+consumers of ONE derived family, on the same principle as the new suite — *machine-side and not
+member-side*, harvested at run time — so a fourth spelling joins the family in the commit that
+invents it. D-269 did not do it because `civicos-ui/test/**` is not this item's ground (D-257 holds
+nine of those suites) and because widening a landed guard from the item that merely bumped into it
+is the mistake REC-71 exists to correct. **The seed floor in `analystvocab.test.mjs` is the union
+of all three, so nothing is lost while this waits.**
+
+### DELEGATION 2026-08-09 D-269 -> RECORD / WHOEVER OWNS UI-27's ELICITATION: **A MEMBER MAY NAME THEIR OWN SET "GROUND 1", AND THE RECORD WILL RENDER IT BACK**
+
+`#axisResult`'s sentence interpolates `label(g)` — the member's OWN authored ground label, verbatim.
+`analystvocab.test.mjs` feeds neutral placeholders on purpose, so it classifies the COMPOSER'S words
+and says nothing about the member's. **Rendering a member's own word back is DEC-8 and is right.**
+But DEC-32 clause 1 says the vocabulary must never be SHOWN, and a member who has read a design
+document and types `ground 1` puts it on the screen through a door no ban can close from this side.
+**This is a real, small, unruled question and it is NOT a defect today** — nothing observed it
+happening. Whoever next touches the elicitation should decide whether the label field warns,
+refuses, or does nothing, and say which. Doing nothing is a legitimate answer; leaving it undecided
+in three places is not.
+
+### DECISIONS FOR BOB 2026-08-09 (D-269): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests, and this item was handed a genuine choice, so
+the reasoning is worth stating rather than a bare "none". **The choice — re-word the plane, or stop
+rendering the sentence — is one the record already answers**, and answering it from the record is
+what makes it not Bob's. DEC-32 clause 1 bans a VOCABULARY; clause 3's own remedy for machine
+structure is *"SHOW THE DERIVED FALSIFIER BACK, IN PLAIN WORDS"* rather than suppression; and
+clause 7 makes *which set carried this, and what capped it* the thing **a reader must be able to
+test** — *"the reader is the final check, which is what makes this safe to ship."* Silencing the
+surfaces would have removed exactly what clause 7 relies on, at every consumer, for ever, and would
+have been a fence tighter than its rule. **What Bob would have been asked, had the record been
+silent, is on the record anyway as IC-50's reversal cost:** re-wording is two functions today and
+rises with every new consumer of a strength axis; the alternative is unrecoverable per-surface
+deletion.
