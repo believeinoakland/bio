@@ -3243,3 +3243,79 @@ DEC-49 already licenses and that one refusal in this family already carried.)*
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*
+
+## IC-53 · I3: every `op=queue` ITEM gains ONE ADDITIVE FIELD — `disposition`, the identity the disposition act is keyed on · PROPOSED 2026-08-09 (PL-13, answering UI-45's handed-over plane question) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**The interface:** I3, the control plane. **The op:** `op=queue`. **The change: ONE new
+object on every item in `items[]`, and nothing removed, renamed, reordered or
+re-typed.**
+
+```
+disposition: {
+  available:   boolean,              // can this item be adopted / deferred / dismissed at all
+  op:          "proposedispose"|null,// the act, when there is one
+  keyed_on:    ["progression_key","stage_key"],   // ALWAYS present: what the act is keyed on
+  key:         "<progression>::<stage>"|null,     // the key itself, ready to send
+  progression_key, stage_key,        // present only when available
+  reason:      "<slug>"|undefined,   // present only when NOT available
+  instead:     "taskresolve"|"queuemute"|null,    // the act that DOES apply, by class
+  detail:      "<sentence>"          // always
+}
+```
+
+**WHY, and it is a defect that was LIVE rather than a tidiness.** `op=proposedispose`
+is keyed on `(progression_key, stage_key)` — that pair is `proposal_dispositions`'
+primary key — and it refuses a pair that is not a real stage of a defined progression.
+Only the two kinds `proposalsFeed` produces carry it. **UI-45 found the surface drawing
+Adopt / Defer / Dismiss on EVERY FINDING**, so on PL-15's `out-of-inquiry-lead` — whose
+basis carries neither key by design — all three controls could only ever have been
+refused, and the act dialog they fed was built from two nulls.
+
+UI-45 fixed the surface correctly and by the right method (*ask what identity the act is
+keyed on; do not ask what kind it is*), **but it had to answer the question by reaching
+into the item's `basis` and testing for two FIELD NAMES it had learned from reading the
+plane's producers.** That is a copy of the act's key living in a renderer — DEC-8's drift
+class exactly. The moment a second disposition identity exists, or one producer spells
+the pair on `subject` while another spells it on `basis`, the surface is wrong and
+nothing fails. **The act's key is the act's own business, so the plane answers it.**
+
+**Derived ONCE, at the mint** (`#dispositionOf`, called in `queueFeed`'s minting loop
+beside the class checks), so six producers cannot hold six copies of the act's key. It is
+deliberately OUTSIDE the `DEC-49 REGION is-queue-mint` markers: it mints no refusal code,
+and a `where` that swallowed it would claim a span whose refusal set the guard would then
+have to account for.
+
+**WHAT IT DOES NOT DO, stated so nobody reads the field as more than it is.** It does not
+widen the act, does not change `proposal_dispositions`, and mints no new refusal. It says
+*this item has an identity the act can be keyed on* — the act still checks that identity
+against the definition tables, and those are different claims. Widening the act to a
+second identity is a doctrine question about what declining means for a finding
+recomputed on every read (D-222's grain problem) and is open as **D-266**.
+
+**MEASURED CONSUMER IMPACT — ONE FUNCTION, in one file, and it was already the seam.**
+`grep -a "disposition" civicos-ui/app.html` before this change: the only consumer of the
+concept is `notifDispositionKeyed`, UI-45's own predicate, called from exactly two sites
+(`queueEntryControlsHtml`'s FINDING branch and `queueItemHtml`'s grade line). Its body now
+reads `it.disposition.available` **and keeps the old basis-shape read as a NAMED
+fallback** — not dead code: this surface is deployed against whatever plane an instance is
+running, and a plane built before PL-13 publishes no such field. Falling back there gives
+that plane's own answer rather than a silent "no" that would withdraw a control a member
+legitimately has. No other consumer exists in `civicos-ui/**`, `agent-worker/**`,
+`pdf-worker/**` or `newgroup/**` — checked over all four.
+
+**Additive, so nothing that reads `op=queue` today can break**: a consumer that ignores
+the field sees the answer it saw yesterday.
+
+### 2 · RESPONSES
+
+*(PL-13's own position, for the areas it can answer for.)* **RECORD: ADDITIVE and safe.**
+**UI: NOT-AFFECTED IN THE BREAKING SENSE and MIGRATED IN THE SAME COMMIT** — the one
+consumer is `notifDispositionKeyed` and it is updated here, with `notifications.test.mjs`
+green. UI-43 is live on `app.html` and this touches one function body inside UI-45's
+`__NOTIFICATIONS__` region, disjoint from the four transition acts.
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's and IC-42's precedent.)*

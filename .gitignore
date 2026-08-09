@@ -23,3 +23,8 @@
 # to M0 about `bio-plane/test/op-claims.test.mjs`). Ignored so an interrupted
 # control cannot become somebody else's corpus.
 .ui*-harness/
+# PL-13's pen, same rule and named for its item rather than squeezed into the
+# `.ui*` pattern: a plane-side control driver needs a pen too, and naming it
+# `.ui…` so an existing line would cover it is the kind of small dishonesty that
+# makes the next reader mistrust the whole file.
+.pl13-harness/

@@ -141,6 +141,43 @@ export const QUEUE_FINDING_KINDS = {
   "out-of-inquiry-lead":        "evidence for ANOTHER question was met while working this one: captured, "
                               + "and deliberately not made part of any claim (D-213, DEC-60) "
                               + "— LIVE: store.mjs #findingsOutOfInquiryLead",
+  /* PL-13 / IS-3, MINTED 2026-08-09, and BOTH ARRIVE WITH A PRODUCER. The plan
+     row named these two slugs; UI-45 asserted them ABSENT so the gap would have
+     an alarm on it rather than be a comment, and this is the item that sets the
+     alarm off on purpose. Neither is a word without a generator: see store.mjs
+     `#findingsStanceDiverged` and `#findingsVersionFromAnotherTeam`.
+
+     THEY EXIST BECAUSE D-216's ANSWER IS **PER-PROJECT** (measured 2026-08-08,
+     driven through twelve ops, not read). An inquiry shared across projects
+     holds NO stance in its own bytes; each project authors its own dated
+     pointer, and two projects may stand on two different readings of one
+     question SIMULTANEOUSLY with the plane refusing neither. That is the right
+     model and it has a cost, which is exactly what these two kinds carry: the
+     divergence is now INVISIBLE unless somebody is told, because nothing
+     refuses it and nothing reconciles it. A model that permits divergence
+     silently is a model that lets a team build a case on a reading its partners
+     abandoned a month ago.
+
+     FINDING AND NOT CONDITION, and it is doctrine rather than taxonomy — the
+     plan row's own second negative-control arm turns on it. A CONDITION is a
+     fact about OUR OWN MACHINERY and is personally MUTABLE (D-125, DEC-16). A
+     divergence of stance is a fact about the WORLD OF THE WORK: another team
+     reads the shared question differently. One member's inbox hygiene must not
+     be able to make that disappear for everybody with nothing recorded, which
+     is precisely what `op=queuemute` would allow if either were a CONDITION.
+     Both leave a list the way every finding does — by an authored, attributed
+     act — and `test/current.test.mjs` DRIVES the mute refusal rather than
+     asserting the classification. */
+  "stance-changed-here-not-elsewhere":
+                                "a project moved what it stands on for a SHARED question and the other "
+                              + "projects drawing on it did not: one question, two live readings, "
+                              + "refused by nothing (§7, D-216 — per-project stance) "
+                              + "— LIVE: store.mjs #findingsStanceDiverged",
+  "new-version-arrived-from-another-team":
+                                "a new reading of a question this project draws on was proposed under "
+                              + "ANOTHER project's work, so it arrived without anybody here authoring it "
+                              + "(§7, D-216 — one question beneath several projects) "
+                              + "— LIVE: store.mjs #findingsVersionFromAnotherTeam",
 };
 
 /* The ONE class lookup. Returns "CONDITION" | "OBLIGATION" | "FINDING", or null

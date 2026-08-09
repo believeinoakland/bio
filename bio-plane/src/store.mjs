@@ -12599,6 +12599,602 @@ export class Store extends DurableObject {
     return out;
   }
 
+  /* ======================================================================
+   * PL-13 / IS-3 — THE TWO SHARED-INQUIRY SLUGS, AND WHY THE MODEL NEEDS THEM.
+   *
+   * D-216's MODEL CHECK IS THE PRECONDITION AND ITS ANSWER IS **PER-PROJECT**
+   * (landed 2026-08-08, DRIVEN through twelve ops against the real control
+   * plane rather than read). §7 is correct and cloning the inquiry on
+   * divergence is NOT the honest answer, because a clone duplicates the whole
+   * evidence trail and the copies drift, so the shared investigation stops
+   * being shared. The sharing edge is a `cites` row in `refs`; the inquiry's
+   * own bytes carry NO stance; a read naming no project gets no `current` field
+   * at all, which is a refusal to guess rather than a default.
+   *
+   * THAT ANSWER IS WHAT MAKES THESE TWO KINDS NECESSARY, and stating it the
+   * other way round is the whole design. Because the stance is per-project,
+   * NOTHING REFUSES A DIVERGENCE — two projects standing on two readings of one
+   * question is a legal state that was measured happening with no refusal from
+   * the plane. A legal state nobody is told about is a silent one, and the
+   * failure mode is concrete: a team builds a case on a reading its partners
+   * abandoned, and finds out at publication. So the cost of the correct model
+   * is paid HERE, in the feed, by telling people — never by a reconciliation
+   * that would quietly re-impose the single shared stance §7 rejected.
+   *
+   * BOTH ARE DERIVED ON READ AND NEITHER ADDS A TABLE. That is a finding rather
+   * than a shortcut and it is worth naming, because a stance-divergence LEDGER
+   * is the obvious build and it would be wrong twice over: it would be a second
+   * place a stance is stated (D-21), and it would be a derived table that
+   * `op=purge` must be taught about or silently leave rows behind (D-113). The
+   * facts these two walk are ALREADY the record's own — `refs`, the projects'
+   * own frontmatter, `inquiry_basis_versions` — so there is nothing to store,
+   * nothing to go stale, and nothing for a purge to miss.
+   *
+   * WHAT THEY DO NOT DO. Neither refuses anything, neither moves a pointer, and
+   * neither writes. `op=versioncurrent` moves ONE project's stance and moves
+   * nothing else — PL-2 built it, D-216 measured it, and the plan row's
+   * accepts-when says so in terms. These producers report; they do not
+   * reconcile. A notification that changed somebody else's stance would be the
+   * single shared stance arriving through the back door.
+   * ====================================================================== */
+
+  /** WHICH PROJECTS DRAW ON THIS QUESTION, through the SAME authority the
+   *  make-current act's own refusal uses, and that identity is deliberate.
+   *
+   *  TWO STEPS AND BOTH ARE LOAD-BEARING. `refs` NARROWS — it is a projection
+   *  of `references[]` written inside `promote`'s transaction, indexed on
+   *  `target_id`, so finding the candidate projects is one indexed lookup and
+   *  never a scan. The project's OWN FRONTMATTER then CONFIRMS, because `refs`
+   *  carries `rel` and DROPS `status`: a reference marked `status: severed`
+   *  still leaves a `cites` row in the table. A producer trusting `refs` alone
+   *  would announce a stance for a project that has WITHDRAWN from the question
+   *  — and `versionAct` refuses to move that project's stance for exactly that
+   *  reason (`VERSION_CURRENT_UNRELATED`). One rule, so the feed and the act
+   *  cannot disagree about who is even in this conversation (DEC-8).
+   *
+   *  VIEWER-GATED at the bundle, so a project the caller may not see is not
+   *  named, not counted, and does not contribute a stance to anybody's
+   *  divergence. The consequence is stated rather than hidden: a viewer who can
+   *  see only one of two diverging projects sees no divergence, which is the
+   *  correct posture (REC-30 withholds WHOLE) and is asserted in the suite so
+   *  nobody mistakes a gated read for an absent fact. */
+  #projectsDrawingOn(inquiryId, viewer) {
+    const inq = String(inquiryId ?? "").trim();
+    if (!inq) { const e = []; e.truncated = false; e.bound = Store.QUEUE_SHARED_PROJECTS_MAX; return e; }
+    const gate = this.#bundleGate("bx.bundle_id", viewer);
+    const out = [];
+    /* BOUNDED, AND THE BATTERY'S OWN CEILING IS WHY — `derivation-bounds.test.mjs`
+       counts methods that AMPLIFY work over an unbounded scan and refuses a new
+       one, which is exactly what the first draft of this method was. It ASKS FOR
+       ONE MORE THAN IT MAY USE, the plane's standing idiom, so the answer can
+       tell that more existed rather than reporting a full page as the whole set
+       (REC-57's discipline). The overshoot is dropped below and the fact that
+       there WAS one is published on the item. */
+    const cap = Store.QUEUE_SHARED_PROJECTS_MAX;
+    const seen = this.#rows(
+      `SELECT DISTINCT rf.bundle_id AS pid FROM refs rf
+        JOIN bundles bx ON bx.bundle_id = rf.bundle_id
+        WHERE rf.target_id=? AND rf.kind='cites' AND (${gate.sql})
+        ORDER BY rf.bundle_id LIMIT ?`, inq, ...gate.args, cap + 1);
+    out.truncated = seen.length > cap;
+    out.bound = cap;
+    for (const r of seen.slice(0, cap)) {
+      const row = this.#one(
+        `SELECT bundle_id, object_type, title FROM bundles WHERE bundle_id=?`, r.pid);
+      if (!row || normalizeType(row.object_type) !== "project") continue;
+      const md = this.#one(
+        `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.pid);
+      if (!md || md.content === null) continue;
+      const fm = parseFrontmatter(md.content).data || {};
+      const refs = Array.isArray(fm.references) ? fm.references : [];
+      /* THE `versionAct` PREDICATE, character for character. If this ever needs
+         to change, it changes in both places or the feed starts talking about
+         projects the act refuses to move. */
+      const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites"
+                                  && x.status !== "severed"
+                                  && String(x.target ?? "").trim() === inq);
+      if (!draws) continue;
+      out.push({ id: r.pid, title: row.title ?? null,
+                 /* PL-2's ONE reader. Never a second parse of the same block. */
+                 current: this.#currentVersionOf(r.pid, inq, viewer) });
+    }
+    return out;
+  }
+
+  /** THE SHARED QUESTIONS, and the walk is bounded by the edge table rather
+   *  than by the corpus. An inquiry is SHARED when two or more distinct bundles
+   *  cite it; the `refs_target` index answers that with one grouped read, and
+   *  the expensive per-project frontmatter confirmation then runs only over
+   *  questions that could possibly diverge. A question ONE project draws on can
+   *  hold no divergence and is never opened.
+   *
+   *  THE `HAVING COUNT(*) > 1` IS ON THE UNGATED TABLE ON PURPOSE. It is a
+   *  CANDIDATE filter, not the answer: the gate and the severed-status
+   *  confirmation both run afterwards in `#projectsDrawingOn`, and either can
+   *  take the real count back below two, in which case no item is minted. Doing
+   *  it the other way — gating first — would make the candidate set a function
+   *  of the viewer and turn one indexed group-by into a per-viewer scan, for a
+   *  narrowing the second step performs anyway. */
+  #queueSharedInquiryCandidates() {
+    const cap = Store.QUEUE_SHARED_INQUIRIES_MAX;
+    const rows = this.#rows(
+      `SELECT target_id FROM refs WHERE kind='cites'
+        GROUP BY target_id HAVING COUNT(DISTINCT bundle_id) > 1
+        ORDER BY target_id LIMIT ?`, cap + 1);
+    const out = rows.slice(0, cap).map((r) => r.target_id);
+    out.truncated = rows.length > cap;
+    out.bound = cap;
+    return out;
+  }
+
+  /** THE TWO BOUNDS THESE PRODUCERS WALK UNDER, AND THEY EXIST BECAUSE THE
+   *  BATTERY REFUSED THE UNBOUNDED VERSION RATHER THAN BECAUSE ANYONE PREDICTED
+   *  IT. `derivation-bounds.test.mjs` holds a CEILING on how many methods derive
+   *  over an unbounded scan — a class of defect this record has paid for (D-227,
+   *  REC-66) — and the first draft of both producers walked straight into it:
+   *  an unbounded read of `refs` with per-row work inside the loop.
+   *
+   *  PUBLIC so a suite can read them and so the bound a member is told about is
+   *  the bound that was applied, never a second copy of the number.
+   *
+   *  WHAT A TRUNCATION MEANS HERE, AND IT IS PUBLISHED RATHER THAN SWALLOWED. A
+   *  bounded project set makes `elsewhere` a FLOOR: the projects named really do
+   *  stand where the item says, and there may be more the read did not reach. A
+   *  divergence reported over a truncated set is still true; the ABSENCE of a
+   *  divergence over one is not, so the item says which it had. */
+  static QUEUE_SHARED_INQUIRIES_MAX = 64;
+  static QUEUE_SHARED_PROJECTS_MAX = 32;
+  static QUEUE_SHARED_VERSIONS_MAX = 64;
+
+  /** IS THE QUESTION ITSELF STILL THERE, AND MAY THIS VIEWER SEE IT?
+   *
+   *  **THIS GUARD EXISTS BECAUSE THE PURGE ARM CAUGHT ITS ABSENCE, and the
+   *  defect is worth recording rather than quietly fixed.** The sharing edge
+   *  lives in the CITING PROJECT'S OWN BYTES — a `references[]` row and a
+   *  `current_versions[]` row — and those OUTLIVE the target. So after
+   *  `op=purge` removed the shared question, both producers went on announcing
+   *  a divergence about a question that no longer existed, naming a bundle id
+   *  nothing answers to. The candidate walk reads `refs`, which is a projection
+   *  of the citing side, so nothing in it requires the target to be there.
+   *
+   *  It is also the VIEWER gate for the subject. `#queueAncestors` and
+   *  `#projectsDrawingOn` each gate what they name, but the question the item is
+   *  ABOUT is named in its own `summary`, `detail` and `subject` — REC-30's
+   *  posture is that an item about a bundle a viewer may not see is withheld
+   *  WHOLE, and this is where that happens for these two kinds. */
+  #queueSharedInquiry(inquiryId, viewer) {
+    const gate = this.#bundleGate("bx.bundle_id", viewer);
+    return this.#one(
+      `SELECT bx.bundle_id, bx.title, bx.object_type FROM bundles bx
+        WHERE bx.bundle_id=? AND (${gate.sql})`, inquiryId, ...gate.args) || null;
+  }
+
+  /** `stance-changed-here-not-elsewhere` (PL-13 / IS-3) — ONE ITEM PER
+   *  (QUESTION, PROJECT THAT HOLDS A DATED STANCE) THAT STANDS APART.
+   *
+   *  THE GRAIN IS PER-PROJECT AND THE REASON IS THE DATE. The obvious
+   *  alternative is one item per diverging QUESTION, and it fails on the one
+   *  thing §7's field actually carries: the pointer is DATED, and the date is
+   *  the whole of *changed*. Two projects standing apart have TWO dated
+   *  pointers, so a per-question item would have to pick one date, invent one,
+   *  or report its age undetermined — throwing away the only fact that makes
+   *  this a change rather than a standing difference. Per-project, `age.since`
+   *  is the project's OWN authored `at`, read from its OWN bytes.
+   *
+   *  ONLY A PROJECT THAT HOLDS A STANCE MINTS AN ITEM, and this is what makes
+   *  the plan row's accepts-when come out right rather than approximately
+   *  right. Project A moves to a reading while B has named none: ONE item, A's,
+   *  saying B stands on nothing. B then moves to a different reading: TWO
+   *  items, because there are now two dated acts and two teams who each need to
+   *  know the other is elsewhere. A project with NO pointer is never the
+   *  subject of one of these — it has not changed anything, and announcing "you
+   *  stand nowhere" every time a partner moves would be the feed nagging a team
+   *  about an act it has not taken.
+   *
+   *  FILED UNDER THE QUESTION'S ANCESTORS, WHICH IS EVERY PROJECT DRAWING ON
+   *  IT. `#queueAncestorEdges` walks `refs kind='cites'` upward, so the homes of
+   *  an item about a shared question ARE the projects sharing it — both sides
+   *  of the divergence, by the same walk every other producer uses. That is the
+   *  point: an item only the diverging team could see would tell the one team
+   *  that already knows.
+   *
+   *  `elsewhere` IS ENUMERATED AND NEVER SUMMARISED TO A COUNT. A member needs
+   *  to know WHICH reading the other team is on to decide whether the
+   *  difference matters, and "2 projects differ" is the shape that reads as
+   *  disagreement when it may be one project that simply has not caught up. */
+  #findingsStanceDiverged(viewer, now) {
+    const out = [];
+    const shared = this.#queueSharedInquiryCandidates();
+    for (const inq of shared) {
+      const q = this.#queueSharedInquiry(inq, viewer);
+      if (!q) continue;
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      if (drawing.length < 2) continue;
+      const qname = q.title || inq;
+      for (const p of drawing) {
+        if (!p.current || !p.current.version) continue;
+        const elsewhere = drawing
+          .filter((q) => q.id !== p.id
+                      && (!q.current || q.current.version !== p.current.version))
+          .map((q) => ({ project: q.id, title: q.title,
+                         version: q.current ? q.current.version : null,
+                         at: q.current ? q.current.at : null,
+                         by: q.current ? q.current.by : null,
+                         state: q.current ? "stands_elsewhere" : "stands_on_nothing" }));
+        if (elsewhere.length === 0) continue;
+        const movedMs = Date.parse(p.current.at ?? "");
+        out.push({
+          id: `FINDING::stance-changed-here-not-elsewhere::${inq}::${p.id}`,
+          class: "FINDING",
+          kind: "stance-changed-here-not-elsewhere",
+          case: this.#queueAncestors([inq], viewer),
+          subject: { kind: "project_stance", id: p.id, inquiry: inq,
+                     version: p.current.version },
+          summary: `${p.title || p.id} stands on reading '${p.current.version}' of ${qname}, `
+                 + `and ${elsewhere.length === 1 ? "the other project drawing on it does" : "the other projects drawing on it do"} not`,
+          detail: `${qname} is drawn on by ${drawing.length} projects and holds NO stance of its own: `
+                + `what a project stands on is that project's own dated, authored property (§7), so `
+                + `this difference is a legal state and nothing in this record refuses it. `
+                + `${p.id} named '${p.current.version}'${p.current.at ? ` on ${p.current.at}` : ""}`
+                + `${p.current.by ? ` (${p.current.by})` : ""}. `
+                + `Nothing here has moved anybody else's stance and nothing here will: this is a `
+                + `report, and moving another project's pointer is that project's own act.`,
+          basis: {
+            source: "project frontmatter (current_versions[]) + refs",
+            inquiry: inq,
+            here: { project: p.id, title: p.title, version: p.current.version,
+                    at: p.current.at, by: p.current.by },
+            elsewhere,
+            drawing_projects: drawing.map((q) => q.id),
+            /* THE BOUNDS, PUBLISHED WITH THE ANSWER THEY SHAPED. A truncated
+               project set makes `elsewhere` a FLOOR — what is named really does
+               stand there, and there may be more. Said here rather than left
+               for a reader to wonder about, because a bounded walk reporting a
+               complete-looking answer is the shape REC-57's discipline exists
+               to end. */
+            bounds: {
+              inquiries_examined: shared.length, inquiries_bound: shared.bound,
+              inquiries_truncated: shared.truncated === true,
+              projects_named: drawing.length, projects_bound: drawing.bound,
+              projects_truncated: drawing.truncated === true,
+              detail: "this feed examines a bounded number of shared questions per read and a "
+                    + "bounded number of projects per question. Where either is truncated the "
+                    + "divergence reported is a FLOOR: the projects named do stand where this says, "
+                    + "and the read did not reach every one that might. A divergence over a "
+                    + "truncated set is still true; an ABSENCE of one over a truncated set is not, "
+                    + "which is why the flags are published rather than the counts alone.",
+            },
+            /* THE SHAPE OF THE POINTER, PUBLISHED ON THE ITEM. §7's field is a
+               project-authored DATED frontmatter row and NEVER a settings row,
+               and this producer read it as one — so a member (and a suite) can
+               see from the notification itself where the fact came from,
+               instead of taking the sentence's word for it. */
+            pointer: { kind: "dated_frontmatter_field", field: "current_versions",
+                       held_by: "the project's own bundle.md", settings_row: false,
+                       detail: "DEC-17's reasoning: a settings row would be a way to change the "
+                             + "standard with nothing to read afterwards. Every stance named here "
+                             + "was read out of a project's own promoted bytes, where the act that "
+                             + "wrote it is in the append-only history beside it." },
+            detail: "D-216 measured this model rather than assuming it (2026-08-08): two projects "
+                  + "were driven onto two different readings of one shared question SIMULTANEOUSLY, "
+                  + "the plane refused neither, and after divergence each still saw every version "
+                  + "and every leg of the other's. The sharing is real and the stance is not shared "
+                  + "— which is why this item exists at all.",
+          },
+          /* THE DATE IS THE PROJECT'S OWN AUTHORED `at`, never this read's
+             clock. A pointer whose date cannot be parsed reports UNDETERMINED
+             rather than falling back to now: a stance dated by the reader is a
+             fact about the reader. */
+          age: Number.isFinite(movedMs)
+            ? { state: "determined", since: p.current.at, ms: Math.max(0, now - movedMs) }
+            : { state: "undetermined", reason: "unparseable_stance_date",
+                detail: "this project's pointer carries no date this producer can read as an "
+                      + "instant, so how long the two teams have stood apart is undetermined and "
+                      + "is reported as such rather than measured from this read" },
+          assignee: null,
+          assignee_role: null,
+          options: this.#queueOptions([inq], viewer),
+          options_grain: {
+            offered: "document",
+            missing: "stance",
+            detail: "the natural acts here are at STANCE grain — move to the reading the others are "
+                  + "on, or record why we are staying — and the first of those is op=versioncurrent "
+                  + "on THIS project and nobody else's. It is deliberately not offered as an option "
+                  + "on an item another project's members can also see: an act one team performs "
+                  + "from a notification another team is reading is the single shared stance §7 "
+                  + "rejected, arriving through a button (D-222's grain problem).",
+          },
+        });
+      }
+    }
+    return out;
+  }
+
+  /** `new-version-arrived-from-another-team` (PL-13 / IS-3) — A READING OF A
+   *  SHARED QUESTION, PROPOSED UNDER SOMEBODY ELSE'S WORK.
+   *
+   *  THE TEAM IS READ, NOT INFERRED, AND WHERE IT CANNOT BE READ NO ITEM IS
+   *  MINTED. A version row carries `author` (a member) and `run`. A MEMBER does
+   *  not name a team: this record has no member-to-project map and inventing
+   *  one from who-has-edited-what is exactly the manufactured connection
+   *  `#findingsOutOfInquiryLead` refuses to make. What IS a stored fact is the
+   *  RUN's context: `ai_runs.context_type='project'` with a `context_id`, set
+   *  when the run was opened. So the source team is the run's context project
+   *  or it is nothing, and a version composed by hand — or by a run whose
+   *  context is the instance rather than a project — mints NO item at all.
+   *
+   *  THAT SILENCE IS A REAL COST AND IT IS DECLARED RATHER THAN ABSORBED. A
+   *  hand-composed version of a shared question genuinely does reach the other
+   *  team unannounced, and this producer cannot fix that without claiming to
+   *  know something the record does not hold. Announcing it anyway — "arrived
+   *  from another team" about a version whose team is undetermined — is the
+   *  record claiming more than it can support, which this project ranks as
+   *  worse than a missing feature. The gap is stated here, asserted in
+   *  `test/current.test.mjs` (a run-less version produces NO item, driven), and
+   *  raised as **D-266** so it is a known hole with a name rather than a
+   *  surprise for whoever next reads this feed.
+   *
+   *  THE SOURCE PROJECT IS REMOVED FROM ITS OWN ITEM'S HOMES, and this is the
+   *  one place this file filters a walk's result. `#queueAncestors([inquiry])`
+   *  returns EVERY project citing the question, including the one the version
+   *  came from — and telling a team that a reading "arrived from another team"
+   *  when they authored it is a false sentence, not merely noise. So the source
+   *  is dropped from `case.ancestors` and the drop is DECLARED on the item
+   *  (`case.excluded`) rather than performed quietly: a home set that is
+   *  silently shorter is the exact failure DEC-16's truncation rule exists to
+   *  prevent, and a filtered set that says so is not one.
+   *
+   *  HIDDEN VERSIONS ARE INCLUDED AND FLAGGED, NEVER FILTERED (D-214,
+   *  DEC-29(b)). Hiding is a display decision one project made; it is not a
+   *  reason another project should never learn the reading was proposed. */
+  #findingsVersionFromAnotherTeam(viewer, now) {
+    const out = [];
+    const shared = this.#queueSharedInquiryCandidates();
+    for (const inq of shared) {
+      const q = this.#queueSharedInquiry(inq, viewer);
+      if (!q) continue;
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      if (drawing.length < 2) continue;
+      const ids = new Set(drawing.map((p) => p.id));
+      const qname = q.title || inq;
+      /* BOUNDED, for the reason the two bounds above are: a per-question read
+         with per-row work inside it is the amplification class the battery's
+         ceiling refuses. One more than may be used, so the truncation is a fact
+         rather than an inference. */
+      const vcap = Store.QUEUE_SHARED_VERSIONS_MAX;
+      const vrows = this.#rows(
+        `SELECT name, description, state, hidden, author, at, run
+           FROM inquiry_basis_versions WHERE bundle_id=? AND run IS NOT NULL AND run <> ''
+          ORDER BY ord, name LIMIT ?`, inq, vcap + 1);
+      const vtrunc = vrows.length > vcap;
+      for (const v of vrows.slice(0, vcap)) {
+        /* A MEMBERSHIP TEST, NOT A PROJECTION — and `run-conditions.test.mjs`'s
+           sweep is why it is written this way rather than as the obvious
+           `SELECT context_type, context_id`.
+
+           REC-74 holds every reader of `ai_runs` to a declared ROLE, and a
+           reader that PROJECTS a stored column of that table owes a disposition
+           for all twenty of them. This producer does not want a run's facts: it
+           wants to know WHICH OF THE PROJECTS IT HAS ALREADY NAMED the reading
+           came from. So the match happens IN THE PREDICATE and the projection is
+           the row's own primary key and nothing else — `from_project` below is
+           `p.id`, which came from `refs` and from the project's own frontmatter,
+           never a value read off this table.
+
+           IT IS ALSO THE STRICTER GATE. Iterating the DRAWING set means a run
+           whose context is a project this viewer cannot see can never be
+           matched, so the item cannot name it — REC-30's withheld-WHOLE posture
+           obtained by construction rather than by a second check. */
+        const from = drawing.find((p) => this.#one(
+          `SELECT run FROM ai_runs WHERE run=? AND context_type='project' AND context_id=?`,
+          v.run, p.id));
+        if (!from) continue;
+        const src = from.id;
+        if (!ids.has(src)) continue;
+        /* THE OTHER TEAMS. If the source is the only project drawing on the
+           question that this viewer can see, there is no "another team" for the
+           reading to have arrived at, and no item is the honest answer. */
+        const receiving = drawing.filter((p) => p.id !== src);
+        if (receiving.length === 0) continue;
+        const homes = this.#queueAncestors([inq], viewer);
+        const kept = homes.ancestors.filter((a) => a.id !== src);
+        const arrivedMs = Date.parse(v.at ?? "");
+        const srcRow = from;
+        out.push({
+          id: `FINDING::new-version-arrived-from-another-team::${inq}::${v.name}`,
+          class: "FINDING",
+          kind: "new-version-arrived-from-another-team",
+          case: {
+            ...homes,
+            ancestors: kept,
+            ungrouped: homes.state === "determined" && kept.length === 0,
+            /* DECLARED, NEVER QUIET. The one home this producer removed and the
+               reason, so a reader can tell a filtered set from a short one. */
+            excluded: [{ id: src, reason: "authored_here",
+                         detail: "the project this reading was proposed under is not a team it "
+                               + "arrived FROM, so this item is not filed under it. Stated rather "
+                               + "than performed silently: a home set that is quietly shorter is "
+                               + "indistinguishable from nobody caring (DEC-16)." }],
+          },
+          subject: { kind: "basis_version", id: `${inq}::${v.name}`,
+                     inquiry: inq, version: v.name },
+          summary: `a new reading of ${qname} — '${v.name}' — was proposed under `
+                 + `${srcRow && srcRow.title ? srcRow.title : src}'s work`,
+          detail: `${qname} is drawn on by ${drawing.length} projects. '${v.name}' was proposed by a `
+                + `run working under ${src}${v.author ? `, authored ${v.author}` : ""}`
+                + `${v.at ? ` on ${v.at}` : ""}, and it is currently ${v.state}`
+                + `${v.hidden === 1 ? " and hidden from that project's display" : ""}. `
+                + `Nothing about what this project stands on has moved: a reading arriving is not a `
+                + `reading being adopted, and the stance is a per-project act somebody here would `
+                + `have to take (§7).`,
+          basis: {
+            source: "inquiry_basis_versions + ai_runs",
+            inquiry: inq, version: v.name, description: v.description,
+            state: v.state,
+            /* RETURNED AND FLAGGED, NEVER FILTERED — D-214 / DEC-29(b). */
+            hidden: v.hidden === 1,
+            from_project: src,
+            from_project_title: srcRow ? srcRow.title : null,
+            to_projects: receiving.map((p) => p.id),
+            run: v.run, author: v.author ?? null, at: v.at ?? null,
+            bounds: {
+              inquiries_examined: shared.length, inquiries_bound: shared.bound,
+              inquiries_truncated: shared.truncated === true,
+              projects_named: drawing.length, projects_bound: drawing.bound,
+              projects_truncated: drawing.truncated === true,
+              versions_bound: vcap, versions_truncated: vtrunc,
+              detail: "this feed examines a bounded number of shared questions per read, a bounded "
+                    + "number of projects per question and a bounded number of run-proposed readings "
+                    + "per question. A truncation here means READINGS THIS READ DID NOT REACH, never "
+                    + "readings that do not exist — the arrival of this one is unaffected by it, and "
+                    + "the flag is published so the silence about any other cannot be read as "
+                    + "evidence there is none.",
+            },
+            team_attribution: {
+              state: "determined", via: "ai_runs.context",
+              detail: "the source team is the RUN's own context project, a fact stored when the run "
+                    + "was opened. It is never inferred from who authored the version: a member "
+                    + "does not name a team in this record, and a producer that guessed one would "
+                    + "be manufacturing the connection the notification is claiming attention for. "
+                    + "A version with no run, or a run whose context is not a project, mints NO "
+                    + "item — the silence is a declared gap (D-266), not a filtered one.",
+            },
+            detail: "D-216 measured that one question sits beneath several projects and that each "
+                  + "reads the whole version set (2026-08-08): after two projects diverged, each "
+                  + "still saw every version and every leg of the other's. So this item announces "
+                  + "an arrival, not a disclosure — the reading was already readable here, and what "
+                  + "was missing was anybody being told it had appeared.",
+          },
+          age: Number.isFinite(arrivedMs)
+            ? { state: "determined", since: v.at, ms: Math.max(0, now - arrivedMs) }
+            : { state: "undetermined", reason: "unparseable_version_date",
+                detail: "the version row carries no authored instant this producer can read, so how "
+                      + "long this reading has been standing unanswered is undetermined" },
+          assignee: null,
+          assignee_role: null,
+          options: this.#queueOptions([inq], viewer),
+          options_grain: {
+            offered: "document",
+            missing: "version",
+            detail: "the natural acts here are at VERSION grain — consider this reading, accept it, "
+                  + "turn it down — and they exist (op=versionconsider / accept / reject), but they "
+                  + "move the SHARED question's row and are therefore not this project's to take "
+                  + "from a notification about somebody else's proposal. What IS this project's own "
+                  + "act is op=versioncurrent, which moves only this project's stance (§7).",
+          },
+        });
+      }
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * PL-13 — **WHAT IDENTITY A QUEUE ITEM CAN BE DISPOSITIONED ON, ANSWERED BY
+   * THE PLANE AND PUBLISHED, INSTEAD OF BEING GUESSED AT A SURFACE.**
+   *
+   * UI-45 HANDED THIS OVER AND IT IS THE PLANE'S QUESTION. That item found a
+   * live defect: `queueEntryControlsHtml` drew Adopt / Defer / Dismiss on EVERY
+   * FINDING, while `op=proposedispose` is keyed on (`progression_key`,
+   * `stage_key`) and refuses a pair that is not a real stage of a defined
+   * progression. So on PL-15's `out-of-inquiry-lead` — whose basis carries
+   * neither by design — all three controls could only ever have been refused.
+   * UI-45's fix is the right SHAPE and its stated rule is the right rule: *ask
+   * what identity the act is keyed on and whether THIS item carries it; do not
+   * ask what kind it is.* Inverting rather than lengthening a list is what kept
+   * that fix from going stale the day this item minted two new kinds.
+   *
+   * WHAT WAS STILL WRONG, AND IT IS WHY THIS IS PLANE-SIDE. The SURFACE was
+   * answering it, by reaching into the item's `basis` and testing for two field
+   * names it had learned from reading the plane's producers. That is a copy of
+   * the plane's key living in a renderer — the drift class DEC-8 closed and the
+   * one this codebase has paid for repeatedly. The moment a second disposition
+   * key exists, or one producer spells the pair on `subject` while another
+   * spells it on `basis`, the surface is wrong and nothing fails. **The act's
+   * key is the act's own business, so the plane now says, on every item,
+   * whether the item can be dispositioned and what the act would be keyed on.**
+   *
+   * **THE ANSWER TO THE QUESTION ITSELF, STATED PLAINLY: EXACTLY ONE IDENTITY
+   * IS DISPOSITIONABLE TODAY — A DEFINED PROGRESSION'S REAL STAGE — AND THAT IS
+   * TRUE OF THE CLASS AND NOT OF ANY KIND.** `proposal_dispositions` is keyed
+   * `(progression_key, stage_key)`; `proposeDispose` refuses `NO_SUCH_PROGRESSION`
+   * and `BAD_STAGE` against the definition tables. So a FINDING-class kind can
+   * be dispositioned exactly when its item carries that pair — which today
+   * means the two kinds `proposalsFeed` produces and nothing else. The lead
+   * cannot. NEITHER OF THIS ITEM'S TWO NEW KINDS CAN, and that is now said out
+   * loud on the item rather than discovered by a member clicking a button that
+   * was always going to be refused.
+   *
+   * **WHAT THIS ITEM DELIBERATELY DID NOT DO, AND WHY IT IS NOT COWARDICE.**
+   * Widening the act to take a generic item identity is a real option and it is
+   * the wrong one to take from here. `proposal_dispositions`' primary key IS
+   * the proposal's identity, so widening means a new key shape, a migration,
+   * and a decision about what a disposition even MEANS for a kind that is
+   * recomputed on every read — a dismissed stance-divergence would have to
+   * un-dismiss itself when either project moves again, or it would silence a
+   * fact that has since changed. That is D-222's grain problem, it is a
+   * doctrine question about what declining means for a derived finding rather
+   * than a plumbing question, and it now has a row (**D-266**) instead of a
+   * hurried answer. What IS this item's to do is stop the record implying an
+   * act it will refuse — and that is what publishing the key does.
+   * ====================================================================== */
+
+  /** The identity `op=proposedispose` is keyed on, in ONE place, read by the
+   *  publication below. A list of field names rather than a list of kinds: the
+   *  kinds change every wave and this pair has not changed since REC-7. */
+  static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
+
+  /** Does THIS item carry the identity the disposition act is keyed on?
+   *
+   *  Reads `subject` first and `basis` second because that is the order the
+   *  producers write them, and takes the pair from EITHER — a producer that
+   *  carried the pair on only one of the two would otherwise be undispositionable
+   *  for a reason that is about spelling rather than about identity.
+   *
+   *  IT REPORTS THE KEY IT WOULD USE, not merely a boolean. A surface that has
+   *  the key does not have to reconstruct it from two fields, and a suite can
+   *  assert that the published key is the one the act actually accepts — which
+   *  is the difference between a claim about the act and a measurement of it. */
+  #dispositionOf(item) {
+    const KEYED_ON = Store.QUEUE_DISPOSITION_KEY;
+    const pick = (o, k) => (o && typeof o === "object" && typeof o[k] === "string"
+                            && o[k].trim() ? o[k].trim() : null);
+    const pk = pick(item.subject, "progression_key") || pick(item.basis, "progression_key");
+    const sk = pick(item.subject, "stage_key") || pick(item.basis, "stage_key");
+    if (item.class === "OBLIGATION")
+      return { available: false, op: null, keyed_on: KEYED_ON, key: null,
+               reason: "an_obligation_is_resolved_not_disposed",
+               instead: "taskresolve",
+               detail: "an OBLIGATION is something a named person must do for the record to proceed "
+                     + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
+                     + "is not a narrower version of that act, it is a different one." };
+    if (item.class === "CONDITION")
+      return { available: false, op: null, keyed_on: KEYED_ON, key: null,
+               reason: "a_condition_is_acknowledged_or_muted",
+               instead: "queuemute",
+               detail: "a CONDITION is a fact about our own machinery, and the only thing a member "
+                     + "does to it is acknowledge or MUTE it — personally, with the condition "
+                     + "persisting and every other member still seeing it." };
+    if (pk && sk)
+      return { available: true, op: "proposedispose", keyed_on: KEYED_ON,
+               key: `${pk}::${sk}`, progression_key: pk, stage_key: sk,
+               detail: "this finding carries the identity the disposition act is keyed on, so Adopt, "
+                     + "Defer and Dismiss are acts a member can actually complete. The act still "
+                     + "checks the pair against the definition tables (NO_SUCH_PROGRESSION, "
+                     + "BAD_STAGE) — this says the item has an identity, not that the identity is "
+                     + "valid, and those are different claims." };
+    return { available: false, op: null, keyed_on: KEYED_ON, key: null,
+             reason: "no_disposition_identity",
+             instead: null,
+             detail: "op=proposedispose is keyed on a defined progression's real stage, and this "
+                   + "finding carries no such pair — it is about a document, a question or a "
+                   + "reading rather than about a progression stage. Offering Adopt, Defer or "
+                   + "Dismiss on it would offer an act that could only ever be refused, so the "
+                   + "record says so here instead of letting a surface find out at the click. "
+                   + "WIDENING the act to a second identity is a doctrine question about what "
+                   + "declining means for a finding that is recomputed on every read (D-222's "
+                   + "grain problem), and it is open as D-266 rather than answered in passing." };
+  }
+
   /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
   #queueConditions(viewer, now) {
@@ -12756,6 +13352,16 @@ export class Store extends DurableObject {
        table to disagree about where their items go. */
     items.push(...this.#findingsOutOfInquiryLead(viewer, now));
 
+    /* ---------------------------------------- FINDING · PL-13 / IS-3
+       THE TWO SHARED-INQUIRY SLUGS, and they are pushed HERE — beside the lead
+       and above the mint — for the same reason every other producer is: the
+       mint validates what a producer MINTS, and a producer added below it
+       would be a producer nothing checks. Both derive on read and neither
+       writes; see their headers for why D-216's per-project answer is what
+       makes them necessary rather than optional. */
+    items.push(...this.#findingsStanceDiverged(viewer, now));
+    items.push(...this.#findingsVersionFromAnotherTeam(viewer, now));
+
     /* ------------------------------------------ CONDITION · REC-32
        The three generators, derived on read from the producing subsystems' own
        facts. They are pushed BEFORE the mute loop deliberately: the admission
@@ -12854,6 +13460,15 @@ export class Store extends DurableObject {
           { id: it.id ?? null, kind: it.kind ?? null,
             catalogued_as: classOfKind(it.kind), minted_as: it.class });
       /* END DEC-49 REGION is-queue-mint */
+      /* PL-13 — THE DISPOSITION KEY, PUBLISHED AT THE MINT AND NOWHERE ELSE.
+         Deliberately OUTSIDE the governed region above: it mints no refusal
+         code and a `where` that swallowed it would claim a span whose set the
+         DEC-49 guard would then have to account for. And deliberately AT THE
+         MINT rather than in each producer: this is a property of the ITEM,
+         asked of every item whatever its class and by one implementation, which
+         is the same argument `suppressedBy` makes one block down. A producer
+         computing its own answer would be six copies of the act's key. */
+      it.disposition = this.#dispositionOf(it);
     }
 
     /* ------------------------------------------- REC-21 · the PERSONAL half

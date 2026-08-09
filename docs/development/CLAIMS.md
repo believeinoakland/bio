@@ -6565,3 +6565,184 @@ code.** Giving that refusal a code changes what every consumer switches on and r
 whether *"this verb is not for a person"* and *"your credential does not reach this verb"* are one
 answer or two — a DEC-37/DEC-52 question about the machine/member split. It is routed to REC-64's
 remaining sweep with the question stated, and pinned as a set so it cannot close silently.
+## CLAIM 2026-08-09 RECORD (PL-13 — IS-3, CURRENT as a project property + the two shared-inquiry slugs)
+session: pl13-current (worktree agent-a5e5b5027dcedb11c)
+opened: 2026-08-09T00:00:00Z
+paths: **named by SPAN and by METHOD, never by file** — `bio-plane/src/store.mjs` and
+  `bio-plane/src/index.mjs` are shared ground and several workers are live on them.
+  `bio-plane/src/queuestate.mjs`: TWO new keys APPENDED to `QUEUE_FINDING_KINDS` and their comment
+  block; **no existing key, no other export, no function touched.**
+  `bio-plane/src/store.mjs`: (1) THREE NEW private methods placed together immediately after
+  `#findingsOutOfInquiryLead` — `#projectsDrawingOn`, `#findingsStanceDiverged`,
+  `#findingsVersionFromAnotherTeam` — plus ONE new private static `#queueSharedInquiries`;
+  (2) TWO `items.push(...)` LINES added inside `queueFeed`'s FINDING section, immediately after the
+  existing `#findingsOutOfInquiryLead` push; (3) the NEW `#dispositionOf` helper and ONE line inside
+  the existing `DEC-49 REGION is-queue-mint` loop stamping `it.disposition` — **no refusal added, no
+  code minted, no existing clause reordered, the region's markers untouched.**
+  **NOT** `#findingsOutOfInquiryLead`'s body, **NOT** `#leadBasisAbsence`, **NOT** `#queueConditions`,
+  **NOT** `#queueAncestors`/`#queueAncestorEdges`, **NOT** `queueMute`, **NOT** `proposeDispose`,
+  **NOT** `versionAct`/`#setProjectCurrentVersion`/`#currentVersionOf` (PL-2's, READ and CALLED only),
+  **NOT** `promote`, **NOT** `purge`, **NOT** any schema table.
+  `bio-plane/src/schema.mjs` — **NOT OPENED. This item adds NO table**, which is the item's own
+  finding rather than an omission: both producers derive on read from `refs`, the projects' own
+  frontmatter and `inquiry_basis_versions`, so there is nothing for `op=purge` to miss (D-113).
+  `bio-plane/test/current.test.mjs` (NEW — the item's suite; `scripts/battery.mjs current` selects it
+  by name, which is the plan row's own accepts-when spelling),
+  `bio-plane/test/current.control.mjs` (NEW — the negative-control driver, deliberately NOT a
+  `.test.mjs` because it EDITS REAL SOURCES while it runs and the battery must not discover it).
+  `civicos-ui/test/notifications.test.mjs` — **UI-45's §0 ABSENT arm CORRECTED, never exempted**, with
+  the dated reason in the assertion text. **That block and nothing else in the file.**
+  `civicos-ui/app.html` — **ONE predicate body**, `notifDispositionKeyed`, rewritten to read the
+  plane's published `disposition.available` with the old basis-shape read kept as the named fallback.
+  Nothing else in `app.html`, no region marker moved, no `SURFACES` key added.
+  `bio-plane/test/run-conditions.test.mjs` — **AMENDED AFTER THE CLAIM WAS WRITTEN, and the amendment
+  is recorded rather than folded in silently**: REC-74's ARM W3 held this item's new `ai_runs` reader
+  as an unclassified thirteenth and FAILED naming it, which is that ratchet working. ONE `ROLE` row
+  (`#findingsVersionFromAnotherTeam: "ATTRIBUTES"`, a SIXTH role with its argument), THREE new arms
+  (W9, W9b, W9c) and ONE CORRECTED matcher (`projectedColumns` no longer crosses a preceding `SELECT`
+  aimed at another table — a blind spot that was in ARM W8's reach all along). No existing arm's
+  expectation weakened, no floor moved, no other role touched.
+  `.gitignore` — ONE pattern, `.pl13-harness/`, for this item's control pen.
+  `docs/development/DEBT.md` (TWO new rows, **D-266** and **D-267**),
+  `docs/development/INTERFACE-CHANGES.md` (ONE new IC row, **IC-53**, for the additive `disposition`
+  field), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS),
+  `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/checks/bio-checks.mjs` (no code minted — the mint's existing `QUEUE_MINT_CHECKS`
+  family is REUSED), **NOT** `bio-plane/scripts/**`, **NOT** `newgroup/**`, **NOT** `pdf-worker/**`,
+  **NOT** `agent-worker/**`, **NOT** `release/**`, **NOT** `QUEUE.md`, **NOT** `IS-BUILD-PLAN.md`,
+  **NOT** `DECISIONS.md`, **NOT** `INTERFACES.md`, **NOT** `MILESTONES.md`.
+interfaces consumed: I3 (`op=queue`, `op=basisversions`, `op=versioncurrent`, `op=queuemute`,
+  `op=proposedispose` — all READ or DRIVEN, none reshaped), I5.
+interfaces owned: none. **ONE ADDITIVE FIELD on `op=queue`'s items (`disposition`) is registered as
+  an IC row** with its measured consumer impact — see below.
+expected: IS-BUILD-PLAN PL-13 (IS-3). **D-216's model check is the PRECONDITION and it LANDED
+  2026-08-08 with the answer PER-PROJECT** — so this item CONFIRMS the pointer rather than rebuilding
+  it (PL-2 shipped it and D-216's delegation says in terms *do not re-specify it*), and its own build
+  is the TWO FINDING-class slugs with real producers plus the plane-side disposition question UI-45
+  handed over.
+accepts-when: as IS-BUILD-PLAN PL-13. **Battery baseline MEASURED IN THIS WORKTREE ON A QUIET TREE
+  BEFORE ANY EDIT and trusted over the brief: 142 suites (137 plane · 5 fleet) · 142/142 green ·
+  9,179 assertions** — which AGREES with UI-45's post-merge figure, reported because a confirmed
+  brief is as much a measurement as a corrected one. The worktree arrived four merges behind `main`
+  (UI-45 among them) and was fast-forwarded before anything was measured. Full battery green with the
+  delta ATTRIBUTED PER SUITE by re-running the true baseline, never by subtraction;
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit read UNPIPED. Negative controls RUN, each armed ALONE with every other
+  defence held OPEN, declared before arming, restores verified by sha256 AND by `cmp` against
+  per-arm pristine copies, harness INSIDE this worktree. The plan row's TWO named arms first, the
+  second being the sharp one: **suppressing the notification as a personally-mutable CONDITION must
+  FAIL the FINDING-class assertion.** An OVER-STRICTNESS arm included. No push, no merge.
+concurrency: checked over the whole file. **UI-45's claim (`agent-a4f9c3083de5f28e3`) is MERGED on
+  `main` at `1081a6a`** and its `released:` line is blank — the same stale-but-landed shape UI-50
+  recorded; its `civicos-ui/**` work is IN this worktree and one arm of it is CORRECTED here by its
+  own written instruction. **UI-43 (the accept ceremony) is live on `civicos-ui/app.html`** and this
+  item opens exactly ONE predicate body there, inside UI-45's `__NOTIFICATIONS__` region, disjoint
+  from the four transition acts UI-43 is adding. No live claim names `queuestate.mjs`,
+  `bio-plane/test/current.test.mjs` or `civicos-ui/test/notifications.test.mjs`.
+released:
+
+### DELEGATION 2026-08-09 RECORD (PL-13) -> UI-45's SUCCESSOR AND WHOEVER NEXT DRAWS A CONTROL ON A QUEUE ITEM: **YOUR ALARM FIRED, IT IS CORRECTED, AND THE PLANE NOW ANSWERS THE QUESTION YOU HANDED OVER**
+
+**Both halves of UI-45's delegation are discharged and neither was deleted.**
+
+- **THE ABSENT-SLUG ARM FIRED EXACTLY AS BUILT.** `notifications.test.mjs` §0 asserted
+  `stance-changed-here-not-elsewhere` and `new-version-arrived-from-another-team` ABSENT from the
+  imported catalogue. PL-13 minted both, each with a real producer, and the arm went RED. It is
+  **CORRECTED WITH THE DATED REASON IN THE ASSERTION TEXT, never exempted**: it now asserts both are
+  present and are FINDING, plus the property that actually protects this surface — **that `app.html`
+  authors no words for either**, read over the WHOLE file rather than one region, because a wording
+  table added anywhere is the same DEC-8 drift the original control was pointed at.
+- **NOTHING NEEDED A NEW RENDERER, exactly as you predicted.** The queue renders a FINDING from the
+  producer's own `summary`, `detail` and `basis.detail`, so both kinds arrive rendered.
+
+**THE PLANE QUESTION YOU DECLINED TO ANSWER IS ANSWERED, AND THE ANSWER HAS TWO PARTS.**
+
+- **WHAT A FINDING CAN BE DISPOSITIONED ON: EXACTLY ONE IDENTITY — a defined progression's real
+  stage — and that is true of the CLASS and not of any kind.** `proposal_dispositions`' primary key
+  IS `(progression_key, stage_key)`. So `missing_predecessor` and `overdue_successor` are
+  dispositionable and **nothing else is** — not PL-15's lead and not either of PL-13's two.
+- **THE PLANE NOW PUBLISHES IT rather than leaving a surface to reconstruct it.** Every `op=queue`
+  item carries `disposition: { available, op, keyed_on, key, reason, instead, detail }`, derived ONCE
+  at the mint. **Your rule was right and your implementation of it had to move**: asking the item is
+  correct, but asking it by testing for two FIELD NAMES learned from reading the plane's producers
+  is a copy of the act's key living in a renderer. `notifDispositionKeyed` now reads
+  `disposition.available` **and keeps your basis-shape read as a NAMED fallback** — not dead code: a
+  plane built before PL-13 publishes no such field, and falling back there gives that plane's own
+  answer rather than withdrawing a control a member legitimately has. Registered as **IC-53**
+  (additive), with the measured consumer impact: one function, two call sites, migrated in the same
+  commit.
+- **IT IS A MEASUREMENT OF THE ACT AND NOT A CLAIM ABOUT IT.** `current.test.mjs` §7 takes the key
+  the plane publishes STRAIGHT OFF THE ITEM into the real `op=proposedispose` (accepted), and an
+  identity one of this item's own kinds carries into the same op (`NO_SUCH_PROGRESSION`). Control
+  arm 7 makes the publication always-true and five arms go red.
+- **WHAT IS STILL OPEN AND WHY IT IS NOT PLUMBING: D-266.** Widening the act needs a ruling on what
+  DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ — a dismissed stance-divergence must either
+  un-dismiss itself when either project moves, or silence a fact that has since changed. That is
+  D-222's grain problem at its third instance and it is a doctrine question. **A surface builder
+  should read `disposition.reason` and render the plane's sentence; do not invent a control for these
+  kinds while that is open.**
+
+### DELEGATION 2026-08-09 RECORD (PL-13) -> WHOEVER OWNS `#queueAncestors` / THE QUEUE'S HOMES RULE: **THE ANCESTOR WALK IS BLIND TO A SEVERANCE, AND IT IS CLASS-WIDE RATHER THAN THIS ITEM'S**
+
+Raised as **D-267** and DRIVEN rather than read. `promote` projects `references[]` into
+`refs(bundle_id, target_id, kind)` carrying `rel` and **dropping `status`**, so
+`#queueAncestorEdges`' `SELECT ... FROM refs WHERE target_id=? AND kind='cites'` cannot see a
+severance the document itself records. **A project that WITHDREW from a question is still a home for
+every item filed under it** — `out-of-inquiry-lead` and the two proposal kinds identically.
+
+- **THE PLANE ALREADY HAS THE OPPOSITE RULE ONE OP OVER**, which is what makes this a defect rather
+  than an open question: `versionAct` refuses `VERSION_CURRENT_UNRELATED` for exactly that project,
+  reading its own frontmatter. PL-13's `#projectsDrawingOn` reproduces that predicate character for
+  character so the feed and the act agree about who is in the conversation — **but the HOMES still
+  come from the blind walk**, so today the act says a severed project has no stance to move while
+  the feed still routes it that question's notifications.
+- **PL-13 DID NOT FIX IT, AND THAT IS THE PROJECT'S OWN RULE APPLIED TO ITSELF.** One producer
+  filtering its own homes would be a SECOND implementation of the homes rule. The assertions in
+  `current.test.mjs` §4 and §5 record the walk's ACTUAL answer with the reason in the assertion
+  text, so the day it changes they fail and say why.
+- **THE FIX IS ONE OF TWO AND BOTH ARE NAMED IN THE ROW.** Whoever takes it should sweep the other
+  `refs kind='cites'` readers in the same turn.
+
+### DELEGATION 2026-08-09 RECORD (PL-13) -> REC-74's FAMILY / WHOEVER OWNS `run-conditions.test.mjs`: **YOUR ARM W3 CAUGHT A THIRTEENTH READER, AND CHASING IT FOUND A BLIND SPOT IN ARM W8**
+
+**ARM W3 worked.** A new `ai_runs` reader arrived and landed as a FAILURE naming itself rather than
+as a silent addition — the third time that ratchet has done its job.
+
+- **A SIXTH ROLE, `ATTRIBUTES`, was minted with its argument taken against all five in order**, and
+  the reader was RESTRUCTURED to earn it: `#findingsVersionFromAnotherTeam` now matches IN THE
+  PREDICATE (`WHERE run=? AND context_type='project' AND context_id=?`) and projects the primary key
+  and nothing else, so no stored column of `ai_runs` can reach a member through it. **The restructure
+  is also the stricter gate**: iterating the drawing set means a run whose context is a project the
+  viewer cannot see can never be matched.
+- **ARM W9 gives the role teeth and W9b proves the reader can see a violation**, both modelled on
+  REC-69's W8/W8b rather than invented.
+- **AND THE PART THAT IS YOURS RATHER THAN MINE: `projectedColumns` WAS WRONG, AND HAD BEEN ALL
+  ALONG.** `/SELECT\s+([\s\S]*?)\s+FROM\s+ai_runs/gi` has nothing stopping the capture from starting
+  at an EARLIER `SELECT` aimed at a different table. In a method holding
+  `SELECT name, description, state … FROM inquiry_basis_versions` and then `SELECT run FROM ai_runs`,
+  it captured everything between and **reported `ai_runs` projecting `state` — a column of the other
+  table.** MEASURED here, as ARM W9 failing over a key-only projection. **The same defect was in ARM
+  W8's reach**; no SELECTS reader happened to hold two statements, so it had never fired, which is
+  exactly how a matcher stays wrong. Corrected with `(?:(?!SELECT)[\s\S])*?` and **ARM W9c drives it
+  in both directions** — a two-statement segment whose `ai_runs` half is key-only reads clean, and
+  the same segment with a real second column still reads dirty, so the fix narrowed the reader
+  without blinding it.
+
+### DELEGATION 2026-08-09 RECORD (PL-13) -> CONDUCT: **THE REGISTER FLOOR AND THE DERIVATION CEILING, AND WHY ONE MOVED AND THE OTHER DID NOT**
+
+- **`derivation-bounds.test.mjs`'s CEILING of 30 REFUSED both new producers and it was right.** The
+  first draft took it to **32** — both walked `refs` unbounded with per-row work inside the loop,
+  the D-227/REC-66 amplification class. **The ceiling was NOT moved.** Three reads were BOUNDED
+  instead (`QUEUE_SHARED_INQUIRIES_MAX` 64, `QUEUE_SHARED_PROJECTS_MAX` 32,
+  `QUEUE_SHARED_VERSIONS_MAX` 64), each asking for one more than it may use, with the truncation
+  PUBLISHED on the item and what a truncation MEANS stated there (a divergence over a truncated set
+  is still true; an ABSENCE of one is not). 32 → 31 → **30, exactly at the ceiling, no slack taken.**
+- **The DEC-49 guard is unmoved and no refusal floor is owed.** This item mints NO code: the queue's
+  existing `QUEUE_MINT_CHECKS` family is reused, and the `disposition` stamp sits deliberately
+  OUTSIDE the `DEC-49 REGION is-queue-mint` markers so the governed span's set does not grow.
+- **THE REGISTER FLOOR IS YOURS TO MOVE AND THE FIGURES ARE HERE RATHER THAN MOVED BY ME.** A green
+  `--strict` run in this worktree printed **664 arms / 138 suites counted**, of which **654 / 137**
+  are reproducible at `1081a6a` — the difference is exactly this item's `current.test.mjs` and its
+  ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
+  committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
+  the number is reported for the merged run rather than written here.

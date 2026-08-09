@@ -6464,3 +6464,82 @@ files were in a commit; ONE key set, verified by `grep -c`. `node scripts/covera
 `$?` read UNPIPED, **exit 0** — OPS 163/163, CHECKS 222/222. `node civicos-ui/test/run.mjs` from the
 REPO ROOT, exit read UNPIPED, **0**, with the DEC-49 guard's REACH unmoved at 220 and its `reachGap`
 CEILING unmoved at 41 (this item mints no code, and that is what the unmoved figures show).
+## 2026-08-09 · PL-13 (IS-3) — CURRENT confirmed, the two shared-inquiry slugs minted, and four things the instruments found that the item did not predict
+
+**Instruments:** `bio-plane/test/current.test.mjs` (NEW, 59 assertions, driven through the real
+control plane in workerd), `bio-plane/test/current.control.mjs` (NEW, 10 arms),
+`bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict`,
+`civicos-ui/test/run.mjs`, `bio-plane/test/derivation-bounds.test.mjs`.
+
+### The baseline, MEASURED IN THIS WORKTREE ON A QUIET TREE BEFORE ANY EDIT — and it AGREED
+
+**142 suites (137 plane · 5 fleet) · 142/142 green · 9,179 assertions.** That is exactly UI-45's
+post-merge figure. Reported because a *confirmed* brief is as much a measurement as a corrected
+one, and because five consecutive items here have found a briefed figure stale — the practice is
+to trust the measurement, not the streak, in either direction. The worktree arrived **four merges
+behind local `main`** (UI-45's merge among them) and was fast-forwarded before anything was read.
+
+### The four findings the item did not predict, each measured rather than reasoned
+
+**(1) §6 RULE 5 IS BUILT, and D-216's own report says it is not.** `op=versioncurrent` refuses
+`VERSION_NOT_ACCEPTED` (**C-25.28**) on a `suggested` reading — *a project can only stand on a
+reading its members have accepted.* D-216's landed record states *"§6 rule 5 is not built (re-run
+when PL-16 lands)"*. Found by DRIVING the act, not by reading §6; the fixture now accepts before
+it stands, which is the product's own order of acts.
+
+**(2) THE ANCESTOR WALK IS BLIND TO `status: severed`** — `refs` carries `rel` and DROPS `status`
+at the projection in `promote`, so `#queueAncestorEdges` cannot see a severance the document
+records, and a project that WITHDREW from a question stays a home for every item filed under it.
+Class-wide (identical for `out-of-inquiry-lead`), and the plane has the OPPOSITE rule one op over:
+`versionAct` refuses `VERSION_CURRENT_UNRELATED` for exactly that project. Raised as **D-267** and
+asserted in `current.test.mjs` AS THE WALK ANSWERS rather than as the arm first expected.
+
+**(3) THE PURGE ARM FOUND A DEFECT IN THIS ITEM'S OWN PRODUCERS.** `op=purge` removed the shared
+question and both new items went on announcing a divergence about it, because the sharing edge
+lives in the CITING project's bytes and OUTLIVES the target. Fixed by `#queueSharedInquiry`, and
+kept as control arm (8) rather than quietly repaired: a defect found by a control is the best
+evidence the control is real.
+
+**(4) THE BATTERY'S DERIVATION CEILING REFUSED BOTH PRODUCERS, and it was right.**
+`derivation-bounds.test.mjs` holds a CEILING of **30** methods deriving over an unbounded scan
+(measured 2026-08-08). The first draft took it to **32**. Both producers walked `refs` unbounded
+with per-row work inside the loop — the D-227/REC-66 amplification class. **The ceiling was NOT
+moved**; three reads were BOUNDED instead (`QUEUE_SHARED_INQUIRIES_MAX` 64,
+`QUEUE_SHARED_PROJECTS_MAX` 32, `QUEUE_SHARED_VERSIONS_MAX` 64), each asking for one more than it
+may use, with the truncation PUBLISHED on the item — 32 → 31 → **30, exactly at the ceiling with
+no slack taken**.
+
+### Three defects in the INSTRUMENT, found by the instrument, and all three are the named classes
+
+- **A `ReferenceError` in the second producer made `op=queue` answer `STORE_DID_NOT_ANSWER`, and
+  every arm read as an EMPTY FEED rather than as a broken one.** This is `op=invitelook`'s class
+  exactly — shipped with a ReferenceError while 1,276 assertions passed — and the only reason it
+  was caught in minutes is that this suite drives THROUGH THE OP. A store-level test would have
+  seen nothing.
+- **Control arms 2 and 2b KILLED the suite instead of failing it**, reported `-1` by the driver's
+  own no-tally convention. Cause: `QUEUE_FINDING_KINDS[K1].length` on a key the arm had MOVED — a
+  TypeError inside an assertion goes through no assertion at all. Both the arm's line and every
+  raw `q.items` read are now null-tolerant, so a refused feed FAILS the arms and says so.
+- **Control arm 5 came back GREEN when RED was declared: AN ARM THAT COULD NEVER HAVE BEEN
+  HONOURED.** Its fallback took the source team from the version's `author`, and the very next
+  line drops any source not in the drawing-project set — a member id never is. Re-declared against
+  a project that really is in the set, and the first version is kept in the driver's own header.
+- **The suite was GREEN AT 59/0 AND NEVER EXITED** (Miniflare holds open handles, and this fixture
+  opens run leases). A green tally printed by a process that never exits is the most expensive
+  shape of all — it looks like success and blocks the battery. `mf.dispose()` + exit-on-result.
+- **The tally line read `N pass, M FAIL`** and `battery.mjs` reads `fail(?:ed)?` lower-case, so
+  the whole suite reported `assertions unknown` and contributed **zero** to the battery total
+  while showing `ok`. Corrected to the runner's own grammar.
+
+### What these instruments CANNOT see, stated
+
+`op=cite` REFUSES an inquiry on the project arm and `op=sever` is refused identically (D-216's
+finding, open as REC-72), so **the sharing edge in every fixture here is HAND-AUTHORED into
+`references[]` and promoted.** Every arm proves what the plane DOES with a sharing edge and NONE
+proves a member can make one. The runs are real `ai_runs` rows with real project contexts, but the
+JUDGEMENT that a session works under a project is FL-3's to prove. One isolate. The OBLIGATION and
+CONDITION branches of the disposition publication are pinned STRUCTURALLY and labelled as such —
+this fixture emits neither class, and `queue-state.test.mjs` is the suite that drives them for
+real. Reaching `taskenqueue` directly (it is deliberately not an op) via
+`mf.getDurableObjectNamespace("STORE")` **HUNG this harness past 300 seconds** rather than
+failing, which is recorded because a hang reads as a slow test.

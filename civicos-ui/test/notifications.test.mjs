@@ -218,14 +218,48 @@ const V_SUGGESTED = {
      classOfKind(LEAD(null).kind) === "FINDING"
      && classOfKind(PROPOSAL.kind) === "FINDING"
      && classOfKind(CONDITION.kind) === "CONDITION");
-  /* THE TWO SLUGS THE ITEM'S ROW NAMES, ASSERTED ABSENT. PL-13 mints them; PL-13
-     has not landed. When it does, this arm FAILS and the next session surfaces
-     them — which is the difference between a gap with an alarm on it and a gap. */
+  /* CORRECTED 2026-08-09 (PL-13), NEVER EXEMPTED — and the alarm did exactly
+     what UI-45 built it to do.
+
+     THIS ARM READ: *PL-13's two slugs are NOT in the plane's catalogue.* That
+     was TRUE when UI-45 landed and it is now FALSE. PL-13 minted
+     `stance-changed-here-not-elsewhere` and `new-version-arrived-from-another-
+     team` in `queuestate.mjs`, each with a real producer in `store.mjs`
+     (`#findingsStanceDiverged`, `#findingsVersionFromAnotherTeam`), driven by
+     `bio-plane/test/current.test.mjs`. UI-45's delegation predicted this exact
+     failure and asked for the assertion to be corrected rather than deleted:
+     *when PL-13 lands, that arm FAILS, and the next session surfaces them
+     instead of discovering the gap a wave later.*
+
+     WHY THE OLD ASSERTION WAS RIGHT AND IS NOW WRONG. It was never a claim that
+     the slugs should not exist — it was UI-45's own negative control, performed
+     deliberately: authoring member-facing words for a slug the plane does not
+     publish is the DEC-8 drift class, so the honest surface for an unbuilt
+     producer is silence WITH AN ALARM ON IT. The producer exists now, so the
+     defect the arm guarded against is no longer possible and the arm has to say
+     something else.
+
+     WHAT IT SAYS INSTEAD, and it is the same property one turn on: both slugs
+     are in the IMPORTED catalogue, both are FINDING, and — the part that
+     matters for THIS surface — **neither carries member-facing wording written
+     here.** The queue renders a FINDING from the producer's own `summary`,
+     `detail` and `basis.detail`, so a new kind under an existing class arrives
+     rendered with no renderer of its own; that is what UI-45's delegation
+     promised the next session would find. This file authors no string for
+     either slug and that absence is what is now asserted. */
   const PL13 = ["stance-changed-here-not-elsewhere", "new-version-arrived-from-another-team"];
-  ok("PL-13's two slugs are NOT in the plane's catalogue, so this surface renders no words for them — "
-     + "when PL-13 lands this arm fails and UI-45's successor surfaces them: found ["
+  ok("PL-13's two slugs are now IN the plane's catalogue and are FINDING — the arm that asserted "
+     + "their ABSENCE fired the day PL-13 landed, exactly as UI-45 built it to, and is CORRECTED "
+     + "here rather than exempted: found ["
      + PL13.filter(k => classOfKind(k) !== null).join(", ") + "]",
-     PL13.every(k => classOfKind(k) === null));
+     PL13.every(k => classOfKind(k) === "FINDING"));
+  const APP_SRC = fs.readFileSync(new URL("../app.html", import.meta.url).pathname, "utf8");
+  ok("and this SURFACE still authors no words for either — the queue renders a FINDING from the "
+     + "producer's own summary and detail, so a new kind under an existing class arrives rendered, "
+     + "and a string written here would be the DEC-8 drift UI-45's control was pointed at. Read "
+     + "over the WHOLE of app.html rather than over one region, because a wording table added "
+     + "anywhere in the file is the same defect",
+     PL13.every(k => !APP_SRC.includes(`"${k}"`) && !APP_SRC.includes(`'${k}'`)));
 }
 
 /* ============================ THE MOCK PLANE ============================ */
