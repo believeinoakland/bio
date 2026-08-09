@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 5 is armed on this file and is the half the floor change must not cost: a
+   phantom .md carrying an unregistered 'Order of work' heading still REDS this suite.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: (run 2026-07-31) strip the M7 token from open DEBT row D-50 (cell -> "open") -> 2 fail (the D-50 row + the aggregate); AND strip the BUILT(FW-3) marker from CONSTRUCTS "The plan" Step 1 -> 2 fail (the Step 1 item + the aggregate); each restored, 154 pass 0 fail. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
@@ -39,6 +50,8 @@
  * runtime, and catches the drift at the moment it is made.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
+/* M0-18 — ONE mechanism, imported. The reason is at `allDocs()`. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
@@ -69,6 +82,23 @@ function allDocs() {
   walk(DEV); walk(ARCH);
   return out;
 }
+
+/* M0-18 — the provenance of the walk above. `refs/stash` is repository-wide
+   across all sixty worktrees of this repository and `git stash push -u` carries
+   untracked files, so a `.md` can arrive under `docs/development/` from a tree
+   that never wrote it (D-238, measured). This suite's discovery guard FLOORS on
+   what the walk found, and an arrival can only push that floor UP.
+   THE GUARD ITSELF STILL READS THE WHOLE WORKING TREE — an "Order of work"
+   heading in an uncommitted design doc is still an unregistered heading and must
+   still fail the `orphan` arm below, which is the direction that matters. Only
+   the FLOOR narrows to `git ls-tree HEAD`. */
+const PROV = readGitProvenance(REPO);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));
+/* SAY UNVERIFIED, NEVER CLEAN (D-233), in the assertion's prose and not only in
+   the report. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk and is NOT a claim about any commit"
+  : `in the commit at HEAD (${PROV.headSha})`;
 
 /* ------------------------------------------------------------------ inventory */
 
@@ -187,11 +217,39 @@ console.log("\n--- no unregistered 'Order of work' list escapes the check ---");
   const governed = new Set(ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const exempt = new Set(EXEMPT_ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const found = [];
-  for (const { file, body } of allDocs()) {
+  const DOCS = allDocs();
+  for (const { file, body } of DOCS) {
     for (const m of body.matchAll(/^#{2,3}\s+((?:\d+\.\s*)?Order of work)\b.*$/gim))
       found.push({ file, heading: m[1].trim() });
   }
-  t("the discovery guard finds the known 'Order of work' headings", found.length >= 2, true);
+  /* M0-18: the FLOOR is the reproducible figure; the ORPHAN arm below is not. */
+  const foundRepro = found.filter((f) => inCommit(f.file));
+  const docsRepro = DOCS.filter((d) => inCommit(d.file));
+  console.log(`  discovery corpus: ${DOCS.length} doc(s) walked, ${found.length} 'Order of work' heading(s)`);
+  console.log(`  discovery corpus, REPRODUCIBLE: ${docsRepro.length} of ${DOCS.length} doc(s) and `
+    + `${foundRepro.length} of ${found.length} heading(s) are ${HEAD_SAYS} — the floor of 2 applies to THESE`);
+  reportProvenance({
+    prov: PROV,
+    items: DOCS.map((d) => ({ path: repoPath(REPO, d.file), what: d.file.slice(REPO.length + 1),
+      counted: `${found.filter((f) => f.file === d.file).length} 'Order of work' heading(s)` })),
+    instrument: "the planning-doc discovery guard",
+    corpus: `${DOCS.length} doc(s) walked, ${docsRepro.length} of them in the commit`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "'Order of work' headings", contaminated: found.length, reproducible: foundRepro.length, source: "docs" },
+    ],
+  });
+  /* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED: this floor was computed over
+     a working-tree walk of `docs/`, where an untracked arrival raises it. The
+     question — did the guard find the headings it is supposed to govern — is
+     unchanged; it is now asked about the docs another checkout reproduces. */
+  t(`the discovery guard finds the known 'Order of work' headings, counted over the docs another checkout `
+  + `REPRODUCES (${foundRepro.length} of ${found.length}, ${HEAD_SAYS})`, foundRepro.length >= 2, true);
+  t("the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never a silent "
+  + "third state, and under UNVERIFIED the two figures COLLAPSE rather than the reproducible one reading zero",
+    [PROV.inHead instanceof Set || PROV.inHead === null,
+     foundRepro.length <= found.length,
+     PROV.inHead === null ? foundRepro.length === found.length : true],
+    [true, true, true]);
   const orphan = found
     .filter((f) => !governed.has(`${f.file}::${f.heading}`) && !exempt.has(`${f.file}::${f.heading}`))
     .map((f) => `${f.file.slice(REPO.length + 1)} · "${f.heading}"`);

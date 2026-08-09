@@ -5576,3 +5576,71 @@ slug is the drift class DEC-8 closes, and the absence is asserted so it cannot g
 stated rule about the mute to the control beside it; the alternative (leave them, let the plane
 refuse) is the "gate that pressures somebody into finding a way around it" the record already rules
 against. Nothing here is a consequence Bob has not already ruled on.
+
+---
+
+## CLAIM 2026-08-09 M0-18
+session: worktree-agent-a62aec7acd493144e
+opened: 2026-08-09T00:00:00Z
+paths: bio-plane/test/bounds.test.mjs, bio-plane/test/case-opened.test.mjs, bio-plane/test/identity-claims.test.mjs, bio-plane/test/machinefences-dec49.test.mjs, bio-plane/test/planning-hygiene.test.mjs, bio-plane/test/check-firing.test.mjs, bio-plane/test/machine-fences.test.mjs, bio-plane/scripts/op-claims.mjs, bio-plane/test/provenance-floor.control.mjs (new), the CLASS_NAMED_UNGUARDED allowlist and its census matcher in bio-plane/test/hygiene.test.mjs
+interfaces consumed: none
+interfaces owned: none
+expected: D-257's delegation, one estate over. The class is A SUITE THAT READS ITS CORPUS OFF THE WORKING TREE AND THEN FLOORS ON WHAT IT FOUND — an untracked arrival can only push such a floor the wrong way, and `refs/stash` being repository-wide across all sixty worktrees is the measured delivery mechanism (M0-15, D-238). The fix is D-257's exactly: the SWEEP keeps reading the whole working tree, because a finding in an uncommitted file is still a finding, while the FLOOR is computed over `git ls-tree HEAD` alone via `bio-plane/scripts/provenance.mjs`. Plus two questions of my own: `machine-fences.test.mjs`'s walk feeds a SATISFACTION rather than a floor and needed a different answer, and `scripts/op-claims.mjs` descends into dot-directories where its two sibling whole-repo walks do not.
+released:
+
+**NOTE FOR CONDUCT — A PREDICTED CONFLICT, NAMED BEFORE IT LANDS.** This item edits
+`CLASS_NAMED_UNGUARDED` in `bio-plane/test/hygiene.test.mjs`, removing the entries for the six
+bio-plane walks it guards. **D-257's own branch edits the same array**, removing seven civicos-ui
+entries. The two removals are disjoint by path and the resolution is KEEP BOTH REMOVALS — but a
+keep-both merge of a JS array literal is the `REGISTER_FLOOR` duplicate-key shape that has bitten
+this repository six times, so re-read the printed census line after merging rather than trusting the
+diff. The census assertion (`newlyUnguarded`) does NOT catch a stale entry left behind; only
+`goneFromList` does, and it is silent for a file that became guarded.
+
+### M0-18 RESULT 2026-08-09 — seven floors guarded, one different exposure closed, NO FLOOR MOVED
+
+**The sweep found more than the brief.** Seven walk-derived floors in `bio-plane/`, not five:
+`test/check-firing.test.mjs` (`estate.length >= 50`) and the `scripts/op-claims.mjs` /
+`test/op-claims.test.mjs` pair (four floors) were not in the brief. The op-claims pair is the
+one worth reading twice — **the WALK and the FLOOR live in different files**, so
+`hygiene.test.mjs`'s class census, which grades a file by whether IT contains a
+`readdirSync(`, had graded the walk as harmless and never enumerated the suite that floors on
+it. Filed as **D-265**, because the two instances are now guarded and the detector's blindness
+is not.
+
+**The brief was right about the sixth**, and it needed a different answer:
+`test/machine-fences.test.mjs` floors on nothing its walk produced (`methods` and `rows` come
+from a `readFileSync` of one named path) and instead lets a walked file SATISFY the `unpinned`
+ratchet. `pinned()` now asks `git ls-tree HEAD` — the OPPOSITE narrowing from the six, because
+there it would hide a finding and here it is what makes one visible. The cost (a red for a
+worker whose pinning suite is uncommitted), the reason it departs from `provenance.mjs`'s
+report-only provisional, and the one-line reversal are all at the site.
+
+**NO FLOOR MOVED, and it is a measurement.** Six of seven reproducible figures equalled their
+contaminated one on a clean tree. **The seventh did not:** `check-firing`'s estate walk counted
+129 files of which 127 are in any commit — `agent-worker/.wrangler/cache/cf.json` and
+`pdf-worker/.wrangler/cache/cf.json`, wrangler's local cache. The floor of 50 had slack so it
+did not move; the printed figure did.
+
+**`scripts/op-claims.mjs` no longer descends into dot-directories**, decided under the standing
+delegation and recorded at the site with the measurement (**cost: zero tracked files**), the
+rejected alternative (`git check-ignore`), and the one-line reversal.
+
+Gates: battery 139/139 green, **8,869 → 8,880 assertions**, attributed per suite by re-running
+the baseline (bounds +1, case-opened +1, check-firing +1, identity-claims +1, machine-fences +2,
+machinefences-dec49 +1, op-claims +2, planning-hygiene +2 — and the last of those is +1 for the
+floor and +1 because `planning-hygiene` asserts one arm per open DEBT row and this item wrote
+D-265). `coverage.mjs --strict` exit 0
+unpiped. `civicos-ui/test/run.mjs` green — **on the second run: the first was RED at 224/226
+because this item wrote a field name as prose inside a STRING LITERAL and UI-40's consumer walk,
+which keeps strings by design, counted the sentence as a consumer.** The walk was right.
+`test/provenance-floor.control.mjs`: **58 of 58 as declared**, two arms wrong first, both
+finding defects in the harness rather than in the subject.
+
+### DECISIONS FOR BOB 2026-08-09 (M0-18): **NONE**
+
+Both judgements this item made are ones the record already assigns to a worker. The
+dot-directory rule is a walk's own corpus definition, decided with a measurement and reversible
+in one line. The `machine-fences` narrowing is an instrument's own strictness, and its
+alternative is written beside it. Neither is a consequence Bob has not already ruled on.
+
