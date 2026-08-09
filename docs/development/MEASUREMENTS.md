@@ -5179,3 +5179,31 @@ returns early when the address already IS what is shown. **The DOM stub in every
 here fires no events, so no suite can reproduce the event**; the router is driven directly
 at the address rotation just wrote, which is what the event would do, and the substitution
 is labelled as one at the site and in the suite.
+## 2026-08-09 · FL-5 — A FENCE'S ONLY WITNESS COULD NOT FAIL: `harness.test.mjs`'s §14 ARM, MEASURED
+
+**Instrument:** `agent-worker/test/harness.test.mjs`, run unmodified except for ONE patch to the
+plane MOCK it carries. Worktree `agent-a0b07bfdf348ecea8`, HEAD `ad87db7`, tree otherwise clean.
+
+**What was patched.** The mock's `op=airunspawn` SEARCH-half payload was given a full bias block —
+`bias: { in_force: true, manifest: { statements_sha: "LEAKED-LENS-SHA" } }` — which is exactly the
+state §14's fence exists to make impossible: *the search half never receives the lens.*
+
+**Result: 194 pass / 0 fail.** The suite's own arm, `no search-half spawn payload carried a bias
+field`, **PASSED while the fence was defeated.**
+
+**Mechanism, and it is not subtle once seen.** The driver computed `manifest_field_present` into a
+local (`spawned`) that was never published, and the arm read `out.trace` for notes matching the
+literal `manifest_field_present` — a phrase the notes never carry. The assertion could only ever
+fail if somebody wrote those nineteen characters into a trace note. Restore verified by sha256
+(`e4ca9f14…`, identical before and after) and by `cmp`.
+
+**Why it is recorded here rather than only fixed.** This is the project's most-repeated finding —
+*a mechanism believed on the strength of its EXISTENCE rather than its behaviour* — arriving inside
+a FENCE rather than inside a document, in a member that was asserting the property ABOUT ITSELF
+over a value nothing outside it could read. **The general rule it pays for: a component asserting a
+fence about its own behaviour must PUBLISH the thing the fence is about, or the assertion is over a
+value nobody can see.** FL-5 publishes the spawn contracts on `POST /run` and asserts on the
+manifest's own `statements_sha` BYTES, which no spelling can dodge; and arm F4b of
+`fanout.control.mjs` exists solely to prove that replacement arm CAN fail — with the field added,
+the second witness removed and the driver made to fetch the composing half, the suite goes to
+**151 pass / 21 FAIL** and the value-level arms are among the failures.

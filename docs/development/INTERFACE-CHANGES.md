@@ -2654,6 +2654,53 @@ than take "additive keys" as the whole answer.
 
 ---
 
+## IC-43 · I8: `agent-worker`'s `POST /run` publishes the SPAWN CONTRACT each sub-session was handed, and NAMES every return that broke the REPORT contract · PROPOSED 2026-08-09 (FL-5) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC`. **IC-44 was minted by the same item in a
+double invocation of the tool and is UNUSED — it is burned, not free**, and it is named here so
+nobody spends an afternoon proving the ledger wrong about it.
+
+### PROPOSED
+
+**WHAT MOVES.** Four ADDITIVE keys on `POST /run`'s success answer. Nothing is removed, renamed or
+re-valued.
+
+| change | shape | kind |
+| --- | --- | --- |
+| the answer gains `fanout` | `{ of_pass, levels[], scope[], contracts[] }` — `contracts` is exactly the frozen brief each sub-session was handed, one per level | ADDITIVE key |
+| the answer gains `reports_taken` | integer: returns that honoured the REPORT contract | ADDITIVE key |
+| the answer gains `reports_refused` | `[{ level, code, detail, fields? }]` — NAMED, never a count alone | ADDITIVE key |
+| the answer gains `citations_reread` | integer: citations the PARENT resolved by address | ADDITIVE key |
+| a NEW refusal shape on this surface | 502 `SPAWN_PAYLOAD_CARRIES_LENS` / `SPAWN_PAYLOAD_MISSING`, with `level` | ADDITIVE refusal |
+
+**WHY THE CONTRACTS THEMSELVES GO ON THE WIRE, and it is the finding rather than a preference.**
+FL-3 asserted §14's fence from inside this member by computing `manifest_field_present` into a
+local that never reached the wire, and checking it by grepping a trace note that never carries the
+phrase. **MEASURED at FL-5 rather than argued: with the plane mock's SEARCH-half payload made to
+carry a full bias block, `harness.test.mjs` stayed 194 pass / 0 fail and that arm PASSED.** A fence
+whose only witness cannot fail is not a witness. Publishing the brief makes the property READABLE
+FROM OUTSIDE — the party protected by the fence can be checked without trusting the member's
+summary of itself — and FL-5's suite then asserts on the manifest's own `statements_sha` bytes,
+which no spelling can dodge.
+
+### CONSUMER IMPACT — MEASURED, and it is ZERO
+
+`grep -a AGENT_WORKER bio-plane/src/` returns NOTHING: the plane's binding is still inert and this
+member has exactly one caller, which does not exist yet. No surface, no suite outside
+`agent-worker/test/` and no installer path reads this answer. So the impact is not "small", it is
+**nil, and measured** — every key is additive besides.
+
+### VERSION
+
+**I8, and the bump is CONDUCT's. FL-5's own verdict is that I8 STAYS PROVISIONAL at 0.1.0**, for
+FL-3's reason unchanged and re-measured here: the interface exists to describe trust running BOTH
+ways, and it still has ONE implemented end. Nothing about this member is live-verified, nothing
+deployed, and a registry entry promoted on the strength of a richer response body would be a claim
+about a direction no code takes. `I3` is NOT bumped — this item adds no op and changes none; it
+CONSUMES `op=meaningrows`' existing `ids` restriction, which PL-9 already published.
+
+---
+
 ## IC-41 · AN UNDECLARED CROSS-AREA COUPLING, NAMED BECAUSE IT BROKE: `bio-plane/test/airun.test.mjs` LIFTS `civicos-ui/app.html`'s RUNNING-SESSION RENDERERS BY FUNCTION NAME · PROPOSED 2026-08-08 (UI-38) — the RESOLUTION and any registration are CONDUCT's
 
 - **Interface:** **NONE — and that is the row.** `INTERFACES.md` registers I1–I8; not one of them

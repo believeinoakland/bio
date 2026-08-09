@@ -5232,3 +5232,76 @@ under a dot-directory — turned the battery RED with ten findings attributed to
 same class M0-16 found in `coverage.mjs`'s fleet walk, in the opposite direction: one walk admits what
 another would never run. Whether op-claims SHOULD descend into dot-directories is M0's call; it is
 recorded here because it is a real difference between two walks of the same estate.
+## CLAIM 2026-08-09 FLEET (FL-5 — sub-session fan-out with REPORT contracts, IS-9(a))
+session: is-fl5 (worktree agent-a0b07bfdf348ecea8)
+opened: 2026-08-09T00:00:00Z
+paths: **`agent-worker/src/subsession.mjs` (NEW)**, `agent-worker/src/index.mjs` (the driver's `fanout` and a NEW `collect` step, plus the one `meaningRead` helper), `agent-worker/src/harness.mjs` (`collect` becomes a JUDGED row and its `why` names both numbers — the return contract must be enforced at the row that COLLECTS, not at `compose`, which has already interpreted), **`agent-worker/test/fanout.test.mjs` (NEW, the suite)**, **`agent-worker/test/fanout.control.mjs` (NEW, the negative-control driver — deliberately NOT a `.test.mjs`)**, `agent-worker/test/harness.test.mjs` (FL-3's suite: one VACUOUS arm corrected with its measurement at the site, and five judgement fixtures given `collect`'s slot), `agent-worker/test/harness.control.mjs` (H8's patch SITE moved with FL-5's second reader; figures re-measured), `docs/development/INTERFACE-CHANGES.md` (NEW IC-43), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `bio-plane/scripts/coverage.mjs` (**REGISTER_FLOOR only**, moved from the figures a green run PRINTED after this item's suite entered a commit). **NOT** `bio-plane/src/**`, `schema.mjs`, `checks/bio-checks.mjs`, `civicos-ui/**`, `pdf-worker/**`, `newgroup/**`: this item adds no op, no table, no check family and no member-facing surface.
+interfaces consumed: I3 (the plane's op surface, read-only through the service binding — `op=airunspawn`'s search half and `op=meaningrows`' EXISTING `ids` restriction, both consumed and neither changed), I8 (this member's own).
+interfaces owned: **I8 — CHANGED ADDITIVELY, filed as IC-43 PROPOSED with MEASURED consumer impact of ZERO (`grep -a AGENT_WORKER bio-plane/src/` returns nothing). FL-5's verdict is that I8 STAYS PROVISIONAL at 0.1.0 and the bump is CONDUCT's. `I3` is NOT bumped.**
+expected: IS-BUILD-PLAN **FL-5**, W7. The spawn contract (four levels, no write scope, **no bias-manifest field BY CONSTRUCTION** — an exact key set written out one by one, so there is no field under any spelling) and the return contract (a REPORT with a citation, **never documents**; the parent re-reads by address). Sub-sessions share no state — the briefs are deep-frozen and share no object with each other or the parent. The parent holds the only write and the only manifest.
+accepts-when: as IS-BUILD-PLAN FL-5. `node scripts/battery.mjs fanout` green; a sub-session's return validated against the REPORT shape; the spawn payload has no manifest field to read. **Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT** and reported either way. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. **The declared negative control is IS-9(a)'s and it is the point of the item:** neuter the return-contract check and a document-returning sub-session must FAIL an assertion. Nine arms, each armed ALONE, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with a byte-count floor. FL-3's ten arms RE-RUN because this item changed their subject. No push, no merge, NO DEPLOY.
+concurrency: checked over the whole file. The only claims naming `agent-worker/**` are FL-2/VF-3's and FL-3's, both MERGED TO `main` (their code is at HEAD `ad87db7`, verified by reading it). No live claim names `bio-plane/scripts/coverage.mjs`. `bio-plane/src/**` and `checks/bio-checks.mjs` are NOT claimed and NOT edited by this item.
+released:
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> WHOEVER TOUCHES A FENCE THIS MEMBER ASSERTS ABOUT ITSELF: **FL-3's §14 ARM WAS VACUOUS, AND IT WAS MEASURED RATHER THAN REVIEWED**
+
+Not raised as debt because it is FIXED here, but the CLASS is worth carrying, and it is this
+project's most-repeated finding arriving inside a fence rather than inside a document.
+
+- **What it was.** FL-3's driver computed `manifest_field_present` for each spawn payload into a
+  local (`spawned`) that **never reached the wire**, and `harness.test.mjs` asserted the fence by
+  filtering trace notes for the literal `manifest_field_present` — a phrase the notes never carry.
+  The arm could only ever fail if somebody wrote those nineteen characters into a note.
+- **The measurement, taken before anything was changed.** The plane mock's SEARCH-half payload was
+  patched to carry a full bias block; `harness.test.mjs` came back **194 pass / 0 fail** with that
+  arm PASSING. Restored, verified by sha256 and `cmp`.
+- **The general rule this pays for again:** a member asserting a fence ABOUT ITSELF must publish
+  the thing the fence is about, or the assertion is over a value nobody can see. FL-5 publishes the
+  spawn contracts on `/run` and asserts on the manifest's own `statements_sha` bytes, and F4b of
+  `fanout.control.mjs` exists solely to prove that arm CAN fail.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> FL-6 (the cascade) AND SK-2 (the skill): **WHAT THE CONTRACTS HAND YOU, AND THE ONE HALF THAT IS STILL SUPPLIED**
+
+- **FL-6.** The returns are still CALLER-SUPPLIED — `collect` is a judged row and the answer says
+  `turns_run: 0` / `judgement_source: "supplied"`, unchanged from FL-3. What you replace is where a
+  return comes FROM, never the contract it is held to: `checkReport` runs on whatever your cascade
+  hands back, and a sub-session your cascade spawns has to satisfy the same exact key set. The brief
+  it needs is already composed — `spawnContract` — and it carries the return contract with it.
+- **SK-2.** Do NOT restate the return contract in the skill. It is code (`subsession.mjs`), it
+  travels to the sub-session in `contract.returns`, and a second statement of it in prose is the
+  §14b.4 defect this item is on the other side of. If the skill needs to explain it, cite it.
+- **BOTH: a refused return is UNDETERMINED and never an absence.** If you need a level's state after
+  a broken return, the honest answer is "we do not know" — `reports_refused` names it. Nothing
+  downstream may read a refused level as `LOOKED_ABSENT`, and `emptyLevelCandidates` cannot see one
+  because the parent never accepted it.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> PL-1 / WHOEVER LANDS D-164: **THE CITATION HAS ONE FIELD ON PURPOSE, AND IT IS WHERE THE EXTENT GOES**
+
+`CITATION_KEYS` is exactly `{ address }`, and a citation carrying an `extent` is REFUSED today
+(driven, `fanout.test.mjs` A3). That is §14b.2's declared precondition kept honest: legs are
+DOCUMENT-GRAIN, the passage lives in the description, and a field for a grain the record cannot
+express would read as coverage while carrying none. **When D-164 lands, the extent belongs on the
+LEG first and arrives here as a second citation field with an arm behind it** — not as a hole
+somebody fills in because the shape looked incomplete.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> WHOEVER OWNS `scripts/coverage.mjs` (VF-3's instrument): **THE CONTROL REGISTER CANNOT SEE A FLEET SUITE, AND THE FLEET LINE COUNTS MEMBERS RATHER THAN SUITES**
+
+Measured while landing FL-5's own suite, not suspected, and NOT fixed here because widening a
+shared instrument from inside a feature item is the mistake REC-71 exists to correct.
+
+- **The register's corpus is the PLANE's `test/` only.** `const battery = suites.map(... join(ROOT,
+  "test", f) ...)` — so `fanout.test.mjs`'s declaration and its **ten stated arms are invisible to
+  `arms` / `classified` / `corpus`**. Measured: those figures read **621/621 · 133/133 · 134/134**
+  identically before and after this item's suite entered a commit. **No floor was owed and that is
+  the reason** — not slack, and worth saying, because "the ratchet did not move" would otherwise
+  read as an item that added no control.
+- **The FLEET line is PER MEMBER:** `fleet.filter((m) => !m.control)`. `agent-worker` now has THREE
+  suites and the line still reads `2/2 declaring a negative control`. **A fleet member can gain a
+  suite with no declared control and no instrument anywhere says so** — D-233's own shape (a thing
+  the instrument cannot see, scored as if it were fine) one directory out, and the same class as
+  the dark `pdf-worker` suite VF-3 closed.
+- **Recommendation:** count fleet suites into the register's corpus rather than adding a second
+  tally — one instrument, one number — and report `MISSING` per SUITE while keeping the member-level
+  gate. **Reversal cost:** none; the figures only get more honest. **Cost of not doing it:** every
+  fleet suite added from here is an undeclared control nobody is measuring, and the fleet is the
+  half of this system that is growing.
