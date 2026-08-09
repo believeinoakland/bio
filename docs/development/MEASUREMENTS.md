@@ -4581,3 +4581,144 @@ instrument wrong three times and the subject none.**
 true baseline was created INSIDE the worker's own worktree, where `op-claims.test.mjs`'s
 repo-wide walk found it and reported 15,007 op mentions from a nested second copy of the
 repository. A scratch checkout for measurement belongs OUTSIDE the tree the estate walks.
+## D-240 · the last two classifiers that graded a return by one literal — 2026-08-08
+
+**Instruments:** `bio-plane/test/meaning-bounds.test.mjs` and
+`bio-plane/test/plane-envelope.test.mjs`, each printing its own census every run;
+`bio-plane/test/verdict-excluder.control.mjs` for the arms; a throwaway estate walk for the
+class sweep. Taken on a QUIET tree (no battery running), on a worktree verified byte-identical
+to `origin/main` for every file below.
+
+### The corpus, and three figures that were stale
+
+| | carried in the row / the file | measured 2026-08-08 |
+| --- | --- | --- |
+| `store.mjs` lines | ~16,300 (CLAUDE.md's old note), 21,248 (2026-08-08) | **23,523** |
+| ops dispatched by `store.mjs` | 156 (`meaning-bounds`'s own comments) | **179** |
+| `store.mjs` return-object literals | — | **843** |
+| `index.mjs` `json()` call sites | 152 (D-240's row) | **117** |
+
+The `json()` figure is not a shrinking corpus: it predates **REC-67**'s anchor correction,
+which found `/\bjson\(/` matching `await r.json()` METHOD calls and took a 19%-inflated corpus
+off this same walk. The spelling-only anchor still reads 144 here.
+
+### (1) The excluder — `meaning-bounds.test.mjs`
+
+Over `store.mjs`'s 843 return-object literals:
+
+| bucket | count |
+| --- | --- |
+| excluded by the OLD `/\bok\s*:\s*false/` | 487 |
+| excluded by the DECLARED-REFUSAL rule shipped | **520** |
+| **newly excluded (+)** | **33, in 14 verdict spellings** |
+| excluded by the OLD rule and NOT the new one | **0** |
+| carrying a COMPUTED verdict — GRADED on purpose | 23 |
+| carrying NO boolean-shaped property — GRADED (REC-70's inversion) | 115 |
+
+The 14 spellings: `found` x10, `recorded` x4, `started` x4, `admitted` x3, `targetMayVote` x2,
+`configured` x2, and `declared`, `applies`, `ungrouped`, `bounded`, `rootOfTrust`, `repeated`,
+`saved`, `known` once each.
+
+**Every roster is unchanged: BARE 38, BOUNDED 20, UNJUDGED 29, OPAQUE 10, 87 of 179 ops
+judged.** The correction costs nothing today and is a hardening; its value is shown by the
+control rather than by a moved number.
+
+### The measurement that chose the policy, and it went the way that looks like a regression
+
+Applying **REC-76's own policy** (a COMPUTED verdict is a refusal) to this corpus:
+
+| | REC-76's policy | shipped (`false` only) |
+| --- | --- | --- |
+| suite | **82 pass / 3 fail** | 92 / 0 |
+| BARE | 36 | 38 |
+| **BOUNDED** | **16** | **20** |
+| OPAQUE | 16 | 10 |
+| methods publishing a collection | 131 | 143 |
+
+Four correctly-bounded reads lose their clean bill, because a COMPARISON in this plane is
+usually a **cursor** or a **truncation flag**: `projection` and `listBundles`
+(`bundles.length === cap ? … : null`), `aiCredentials` and `captureRequests`
+(`truncated: found.length > cap`), `searchIndexCheck`, `verifySha`
+(`published: matches.length > 0`), `selectionResolve` (`ok: !stopped`). **REC-76's reading is
+right in REC-76's guard and wrong here**, because the two ask different questions of the same
+verdict: *does this refusal owe a code* versus *does this method publish an unbounded
+collection*. One reader, two stated polarities.
+
+**And the ordering rule is a property of REC-76's corpus, not of the plane.** *The first
+boolean-shaped property is the verdict* was measured true over its 60 governed sites. Over 843
+returns it fails twice in the `false` direction as well: `#sessionRights` (`rootOfTrust: false`)
+and `#conditionHomes` (`ungrouped: false`) are SUCCESS answers leading with a datum and are now
+excluded. Both are pinned by name, and neither is reached by a dispatched op.
+
+### (2) The gate — `plane-envelope.test.mjs` DETECTOR A
+
+Over `index.mjs`'s 117 `json()` sites: **23** declare a success, **2** carry a computed verdict,
+**78** declare a refusal, **14** are UNCLASSIFIED (11 hand `json()` a VARIABLE; 3 are literals
+with no boolean property). Graded **23 -> 25**; violations **0 -> 0**.
+
+**The reach delta is where the widening shows: with all 30 answered-guards mechanically removed,
+the old gate finds 9 unguarded spreads and the new gate finds 15.** The six extra are all
+`index.mjs:4608`, `json({ ok: !!promoted.result?.ok, …, ...promoted.result… })` — D-240's own
+cited site. It was correctly guarded all along; nothing was checking that it stayed so.
+
+Three sites skipped by the old gate spread a store `.result`: `2569` and `5980` are declared
+refusals (`{ ok: false, ...rec.result }`, `{ ok: false, ...(minted.result || {}) }`) and are
+outside this detector's subject, pinned by site; `4608` is the computed one. **No unclassified
+site spreads a `.result`, gated at zero.**
+
+### The class sweep, re-run rather than inherited — and 2 is the number
+
+**280 instrument-candidate files across 10 roots, 8,674,710 chars, 251 of them reading or
+matching source or answer text. 33 regex literals name a verdict-shaped field beside a boolean
+literal; 30 are in classifier position.** `newgroup/src/release.mjs` is excluded BY NAME — it
+holds a whole copy of the bundled plane inside a string, and including it turns 33 candidates
+into 101 (FW-13 paid for this once already).
+
+Hand-verified: **2 real classifiers**, both fixed here. Of the other 31 —
+
+- **13 are the `mutating:` DECLARATION-TABLE family** (`coverage.mjs` x2, `op-claims.mjs`,
+  `capability.test.mjs` x2, `gate-reads`, `bias`, `inquirystrength`, `meaningread`,
+  `publishedcase`, `strengthpair`, `versionchain`, plus the two fleet workers). **This is the
+  same SHAPE closed BY CONSTRUCTION and is named rather than counted as an instance:** `mutating`
+  is one field of one hand-maintained table, **159 of 159 `OPS` rows write the literal**, nothing
+  computes it, and `capability.test.mjs` holds the table total. A declaration table with an
+  enforced grammar is not a return whose verdict has several spellings.
+- the rest are **single-site PINS** — a regex anchoring one named return so it cannot change
+  shape unnoticed (`plane-envelope`'s `doAnswer` pin, `ratify-envelope`'s container pin,
+  `preauth-vocabulary`'s three wording extractors, `case-opened`, `refusal-codes`,
+  `bias-vocabulary`, `mechanical`'s frontmatter flag, `gate-reads`' `ms:` absence pin).
+
+A second sweep for the NON-regex form (`includes` / `indexOf` / `startsWith` / `new RegExp` over
+a verdict) found two further hits, both single-site anchors, plus bundled `dist/` output.
+
+**What neither sweep can see, stated rather than implied:** a classifier assembled from a string
+into a `RegExp` at runtime; one whose verdict field is held in a variable; one that tests a
+PARSED value rather than source text. And neither can tell a classifier from a pin without a
+human reading it — which is why 33 were hand-verified rather than reported as the answer.
+
+### The arms
+
+Ten, in `bio-plane/test/verdict-excluder.control.mjs`, **10 of 10 as declared**, each armed
+alone, every restore verified by sha256 **and** by content against uniquely-named per-arm
+pristine copies with printed byte counts under a floor, every arm reading the suite's own FOOT
+line. Baseline meaning-bounds 92/0 and plane-envelope 60/0, restored exactly after every arm.
+**Run twice — once on the spawn tree and once on the shipped tree after the rebase onto
+`origin/main` — and 10 of 10 came back as declared both times, with `git status` byte-clean
+afterwards.** Battery figures, both baselines RE-RUN rather than subtracted: spawn tree
+133/133 · 8,319 -> 133/133 · 8,332; shipped tree 134/134 · 8,387 -> 134/134 · 8,400. **The +13 is
+the same on both** — meaning-bounds 85 -> 92, plane-envelope 54 -> 60, no other suite moving.
+
+The two pairs are the receipts:
+
+- **(5)/(5b)** — the SAME planted `found: false` refusal publishing a collection off an
+  unbounded scan: **ratchet GREEN at BARE 38** under the new excluder, **RED at 39 of 38 over a
+  NON-DEFECT** under the old one.
+- **(4)/(4b)** — the SAME removed `promoted.answered` guard: **DETECTOR A fires naming
+  `promoted`** under the new gate, **ZERO violations** under the old one.
+
+**Two defects the control found in this item's own instruments, recorded rather than smoothed.**
+Both new censuses first read `verdictOf` DIRECTLY instead of asking the gate/excluder in use, so
+arm (1) left every printed figure UNCHANGED over a REVERTED classifier — a report about a
+subject nobody was running. And the harness's own arm register first compared declared
+SENTENCES with observed ones and reported all ten arms, including the working ones, as NOT AS
+DECLARED.
