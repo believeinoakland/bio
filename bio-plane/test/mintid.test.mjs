@@ -40,6 +40,29 @@
  * still raises the floor" section loses its strict floor and the "the gap it
  * will cost is NAMED rather than silent" arm FAILS, which is the arm that came
  * out of this tool catching its own documentation poisoning its own corpus.
+ * ARMS (8)-(13) ARE D-243's AND D-242's, added 2026-08-08. THE SUBJECT WIDENED: the
+ * tool now DETECTS an id allocated without it, which M0-17 judged impossible for an
+ * instrument. Half of that judgement held and half did not, and the arms are split the
+ * same way — the ledger-side question is a QUESTION, and the in-commit collision is a
+ * FAILURE. (8) remove `IC-30` from `KNOWN_COLLISIONS` in `tools/mintid.mjs` -> the "no
+ * NEW duplicate allocation" arm FAILS, which is the arm proving the detector grades the
+ * REAL corpus rather than a fixture; (9) add a `D-9999` entry to `KNOWN_COLLISIONS` ->
+ * the "no registered collision has quietly stopped being one" arm FAILS, which closes
+ * the register from the OTHER side so the list cannot outlive its reason; (10) delete
+ * the `FW` row from `NAMESPACES` -> the "every allocating prefix has a register row"
+ * arm FAILS, which is the prompt gap M0-17 left open and `FW-15` already paid for;
+ * (11) in `exclusivityProbe` change the second create's `{ flag: "wx" }` to
+ * `{ flag: "w" }` — a filesystem that does not honour O_EXCL, simulated at the one line
+ * that tests it -> the "probe passes" and "the REAL ledger's filesystem honours the
+ * exclusive create" arms FAIL; (12) remove the `--audit` mention from
+ * `docs/development/kickoffs/CONDUCT.md` -> the "CONDUCT's loop names the audit
+ * COMMAND" arm FAILS, which is the mechanism-in-the-loop rule enforced against itself
+ * a second time; (13) the OVER-STRICTNESS arm for the detector, armed from the loose
+ * side — make `allocations` match a bare `\bNS-\d+\b` instead of the declared
+ * allocation sites -> the "a corpus that MENTIONS an id repeatedly but allocates it
+ * once is NOT flagged" arm FAILS and the live corpus lights up, which is what proves
+ * this is a detector of ALLOCATIONS and not a counter of tokens.
+ *
  * RUN 2026-08-08 m0-17-mintid, each arm ALONE, restores verified by sha256 AND
  * by `cmp` against uniquely-named per-arm pristine copies (22,547 B tool /
  * 15,865 B brief, both digests printed and guarded against the empty-string
@@ -65,12 +88,14 @@
  * gone, exactly as the C-29 catalogue comment removed its own.
  */
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync, readdirSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn, execFileSync } from "node:child_process";
-import { NAMESPACES, corpusFloor, ledgerRoot, mint, held, REPO_ROOT } from "../../tools/mintid.mjs";
+import { spawn, spawnSync, execFileSync } from "node:child_process";
+import { NAMESPACES, corpusFloor, ledgerRoot, mint, held, REPO_ROOT,
+         allocations, collisions, KNOWN_COLLISIONS, unregisteredNamespaces,
+         exclusivityProbe, scopeOf, scopeLines, watermark } from "../../tools/mintid.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const TOOL = join(REPO_ROOT, "tools/mintid.mjs");
@@ -86,7 +111,7 @@ const t = (label, got, want) => {
    went through no assertion at all, ending the module while the tally read
    clean. Every section bumps this; the last assertion in the file requires all
    of them, so a section that dies silently cannot leave a green count. */
-const SECTIONS = 7;
+const SECTIONS = 11;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -171,9 +196,19 @@ section("over-strictness: an item that legitimately takes SEVERAL ids");
      verdict by killing the suite instead of by failing an assertion, which is
      D-93's unreadable-failure class arriving inside a control. It was found
      because the FOOT sentinel read false. A refusal is now a NAMED failure. */
+  /* WIDENED 2026-08-08 (D-243's item), and the widening is a CONTROL FINDING about
+     this very hardening. It caught a THROW and not a REFUSAL — so when arm (11)
+     neutered the exclusivity probe, `mint` returned `{ok:false}` with no `ids`,
+     `a.ids.length` threw a TypeError, and the module ENDED at `-1 pass, -1 fail` with
+     arm (11)'s declared arms never reaching an assertion. That is the same class this
+     shape was written to close, one step further out: a guard tight enough for the
+     failure mode its author knew about and open to the next one. A refusal is now a
+     NAMED failure exactly as a throw is. */
   const take = (who) => {
-    try { return mint("D", { count: 9, who, env: { BIO_IDALLOC_DIR: ledger } }); }
-    catch (e) { return { ok: false, ids: [], collided: [], threw: String(e.message) }; }
+    try {
+      const r = mint("D", { count: 9, who, env: { BIO_IDALLOC_DIR: ledger } });
+      return r.ok ? r : { ok: false, ids: [], collided: [], threw: `REFUSED ${r.reason}: ${r.detail}` };
+    } catch (e) { return { ok: false, ids: [], collided: [], threw: String(e.message) }; }
   };
   const a = take("bulk-a"), b = take("bulk-b");
   t(`nine at once is not refused${a.threw ? ` (threw: ${a.threw})` : ""}`, [a.ok, a.ids.length], [true, 9]);
@@ -253,9 +288,18 @@ section("the floor refuses year-shaped noise, and SAYS it did");
 
   /* UNDETERMINED IS FIRST-CLASS. A namespace that has not declared what an
      allocation looks like answers `null`, never 0 — a strict floor guessed wrong
-     would be wrong in the DANGEROUS direction. */
+     would be wrong in the DANGEROUS direction.
+     CORRECTED 2026-08-08, not exempted: this arm used to read `IC`, and IC now
+     DECLARES its allocation site (`## IC-n ·`, the heading that opens an entry —
+     the `### IC-n · RESPONSES/RESOLUTION` blocks beneath it are that entry's own
+     sub-sections, measured at four for IC-2). The old assertion was testing the
+     absence of a declaration rather than the null answer, so it stopped being about
+     its own subject the moment the declaration was added. `M` is the namespace that
+     genuinely declares none, and its reason is recorded at its register row. */
   t("a namespace with no declared allocation site answers null, not zero",
-    [corpusFloor("IC").allocFloor, corpusFloor("IC").proseDriven], [null, false]);
+    [corpusFloor("M").allocFloor, corpusFloor("M").proseDriven], [null, false]);
+  t("...and IC, which now DOES declare one, answers a real strict floor rather than null",
+    Number.isInteger(corpusFloor("IC").allocFloor), true);
 }
 
 /* ========================================================================== */
@@ -318,6 +362,228 @@ section("the sweep, and the mechanism being in the loop the reader runs");
   console.log(`  kickoffs/CONDUCT.md: ${conduct.length} bytes read`);
   t("the brief CONDUCT writes at spawn time names the allocator", conduct.includes("tools/mintid.mjs"), true);
   t("...and the read above was of a real file rather than an empty one", conduct.length > 4000, true);
+}
+
+/* ========================================================================== */
+section("D-243 · TWO THINGS WEARING ONE ID — the half that needs no ledger");
+/* D-243 reasoned that nothing could DETECT an un-minted id because the ledger is in
+   no commit a suite could read. The reasoning is sound about the CAUSE and it stands:
+   "was this minted?" needs the ledger, so it is `--audit` on CONDUCT's machine, and
+   the honest answer for every id allocated before 2026-08-08 is `unknown`.
+
+   IT IS NOT SOUND ABOUT THE HARM. What an un-minted id COSTS is a collision, and a
+   collision is entirely in the text of the commit: it needs no ledger and it answers
+   yes or no. So the class splits and this is the half a suite can hold — which is
+   worth more than a step a human performs, because it runs in every session's battery
+   and in `plancheck` rather than only in the loop of the one reader who remembers. */
+{
+  /* THE SCRATCH ARM FIRST, so a green over the live corpus is known to mean
+     something. An instrument that has never been shown to fire is a mechanism
+     believed on the strength of its existence. */
+  const dupRepo = join(SANDBOX, "duprepo");
+  mkdirSync(join(dupRepo, "docs/development"), { recursive: true });
+  writeFileSync(join(dupRepo, "docs/development/DEBT.md"),
+    "| D-10 | one thing |\n| D-11 | another |\n| D-10 | A SECOND THING WEARING D-10 |\n");
+  const injected = allocations("D", { repo: dupRepo });
+  console.log(`  scratch corpus: ${injected.sites.length} allocation site(s), duplicates ${JSON.stringify(injected.duplicates.map((d) => d.id))}`);
+  t("a duplicated allocation in a scratch corpus is FOUND", injected.duplicates.map((d) => d.id), ["D-10"]);
+  t("...and it names BOTH sites by line, not just a count", injected.duplicates[0]?.at.length, 2);
+  t("...and the corpus it read was real rather than empty (a scan over nothing agrees with everything)",
+    injected.sites.length, 3);
+
+  /* OVER-STRICTNESS, armed from the strict side: a corpus that is merely REPETITIVE
+     in prose must not be flagged. Only an allocation SITE counts, which is the same
+     distinction the prose-driven floor made. */
+  writeFileSync(join(dupRepo, "docs/development/DEBT.md"),
+    "| D-10 | one thing, and this row talks about D-10 and D-10 again in its own prose |\n| D-11 | another |\n");
+  t("a corpus that MENTIONS an id repeatedly but allocates it once is NOT flagged",
+    allocations("D", { repo: dupRepo }).duplicates, []);
+
+  /* A namespace whose sites cannot be recognised must be NAMED, never scored clean.
+     `C` repeats a family number once per dotted member by design. */
+  const cov = allocations("C");
+  t("C is reported as NOT COVERED with a reason rather than silently clean", [cov.covered, cov.why.length > 40], [false, true]);
+  t("M is reported as NOT COVERED too (it declares no allocation site)", allocations("M").covered, false);
+
+  /* THE LIVE CORPUS. The registered set is EXACT in both directions: a seventh
+     collision fails here, and a registered one that somebody renumbers ALSO fails, so
+     the list cannot outlive its reason. A ceiling is not a ratchet and a register
+     with slack is not one either. */
+  const live = collisions();
+  console.log(`  live corpus: ${live.sites} allocation site(s) across ${live.graded.length} graded namespace(s)`);
+  console.log(`  graded: ${live.graded.map((g) => `${g.ns}:${g.sites}`).join(" ")}`);
+  console.log(`  not gradable: ${live.notCovered.map((n) => n.ns).join(", ")}`);
+  t("the live sweep read a real corpus and floored it (a headline totality over an empty corpus has passed three times in this project)",
+    live.sites > 400, true);
+  t("...across every registered namespace that declares a unique allocation site",
+    live.graded.length + live.notCovered.length, Object.keys(NAMESPACES).length);
+  t(`no NEW duplicate allocation (${JSON.stringify(live.fresh.map((d) => `${d.id} at ${d.at.join(" + ")}`))})`,
+    live.fresh, []);
+  t(`no registered collision has quietly stopped being one (${JSON.stringify(live.stale.map((s) => s.id))})`,
+    live.stale.map((s) => s.id), []);
+  t("every registered collision carries a REASON, so the register is evidence rather than an exemption",
+    KNOWN_COLLISIONS.filter((k) => !k.why || k.why.length < 20).map((k) => k.id), []);
+  /* AND THE SIX ARE THE FINDING. They were in `origin/main`, known to nobody, and only
+     an instrument could see them — which is the whole of M0-17's case, measured. */
+  t("the six pre-existing collisions this detector found are all still present and registered",
+    live.found.map((d) => d.id).sort(), KNOWN_COLLISIONS.map((k) => k.id).sort());
+}
+
+/* ========================================================================== */
+section("the register cannot fall behind — an unregistered prefix is FOUND, not merely refused");
+/* M0-17 left this open on a measurement: a wide census over every prefix-number token
+   returns INFO, SHA, UTF, RFC, FY2023 and thirty more, and a detector nobody can read
+   is one nobody runs. That census asked the wrong question. Over ALLOCATION SITES the
+   same scan returns fifteen prefixes and NO noise — and three of them (FW, COFF, CAP)
+   were unregistered, with FW-15 already collided. Fail-closed with nothing prompting
+   is a gate nobody can pass. */
+{
+  const nsRepo = join(SANDBOX, "nsrepo");
+  mkdirSync(join(nsRepo, "docs/development"), { recursive: true });
+  writeFileSync(join(nsRepo, "docs/development/QUEUE.md"),
+    "### REC-1 · done\n### ZZZ-4 · queued\nprose mentioning ZZZ-9 and INFO-2026-0001 and RFC-7231\n");
+  writeFileSync(join(nsRepo, "docs/development/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
+  const u = unregisteredNamespaces({ repo: nsRepo });
+  console.log(`  scratch queue: prefixes ${JSON.stringify(u.prefixes)}`);
+  t("an unregistered prefix allocating at a queue site is FOUND, in both shapes",
+    u.unregistered.map((x) => x.prefix).sort(), ["QQ", "ZZZ"]);
+  t("...and a registered one is not reported", u.unregistered.some((x) => x.prefix === "REC"), false);
+  /* OVER-STRICTNESS: the noise M0-17 measured must NOT be picked up. A prefix-number
+     token in PROSE is not an allocation, and that is the distinction that makes this
+     usable where the wide census was not. */
+  t("prose tokens (ZZZ-9 in a sentence, INFO-2026-0001, RFC-7231) do not make a namespace",
+    u.prefixes.includes("INFO") || u.prefixes.includes("RFC"), false);
+
+  const liveU = unregisteredNamespaces();
+  console.log(`  live: ${liveU.prefixes.length} allocating prefix(es) across ${liveU.filesRead} corpus file(s): ${liveU.prefixes.join(" ")}`);
+  t("the live scan read the real queue corpus rather than nothing", liveU.filesRead >= 4 && liveU.prefixes.length >= 10, true);
+  t(`every prefix that allocates a queue id has a register row (${JSON.stringify(liveU.unregistered.map((x) => x.prefix))})`,
+    liveU.unregistered, []);
+  /* The three this closed, pinned by name so a revert is visible. */
+  t("FW, COFF and CAP are registered — they were allocating without a row, and FW-15 is one of the six collisions",
+    ["FW", "COFF", "CAP", "DS"].filter((n) => !NAMESPACES[n]), []);
+  /* And the table-row shape is what made five families visible at all. */
+  t("the track families that allocate as TABLE ROWS are graded rather than scored zero",
+    ["PL", "FL", "SK", "VF", "DS"].map((ns) => allocations(ns).sites.length > 0), [true, true, true, true, true]);
+}
+
+/* ========================================================================== */
+section("D-242 · the guarantee is PROBED and PRINTED, never implied");
+/* D-242's sharp half is the CONFIDENCE, not the collision: a tool believed to make
+   collisions impossible, which quietly does not somewhere, is worse than the
+   convention it replaced. M0-17 stated its failure modes in a comment and a debt row
+   while its output said only `MINTED D-248`, and the output is what a worker believes.
+   The row also said there is no cheap local test — true of the two-clone half, and NOT
+   true of the non-atomic-filesystem half, which is what this probes. */
+{
+  const probeDir = ledgerFor("probe");
+  const good = exclusivityProbe(probeDir);
+  t("the probe passes on a filesystem that honours O_CREAT|O_EXCL", good.ok, true);
+  t("...and it left nothing behind (a probe that litters the ledger would be read as an id)",
+    readdirSync(probeDir).length, 0);
+
+  /* THE LIVE LEDGER, because a probe that only ever ran against a temp dir has not
+     spoken about the filesystem the real ids are taken on. */
+  const liveScope = scopeOf();
+  console.log(`  live ledger ${liveScope.ledger} · hosts ${JSON.stringify(liveScope.hosts)} · exclusive ${JSON.stringify(liveScope.exclusive)}`);
+  t("the REAL ledger's filesystem honours the exclusive create", liveScope.exclusive.ok, true);
+
+  const gone = exclusivityProbe(join(SANDBOX, "no-such-dir-at-all"));
+  t("a ledger directory that cannot be written is a REFUSAL with a code, not a throw",
+    [gone.ok, gone.reason], [false, "PROBE_UNWRITABLE"]);
+
+  /* DRIVEN, not reasoned about: an unwritable ledger must make `mint` REFUSE rather
+     than throw. It threw in the first draft, because the namespace mkdir ran before
+     the probe — D-93's unreadable-failure class inside the path whose entire job is to
+     refuse cleanly. */
+  const ro = ledgerFor("readonly");
+  chmodSync(ro, 0o500);
+  const asRoot = typeof process.getuid === "function" && process.getuid() === 0;
+  let refused;
+  try { refused = mint("D", { env: { BIO_IDALLOC_DIR: ro } }); }
+  catch (e) { refused = { ok: null, reason: `THREW ${e.code || e.message}` }; }
+  chmodSync(ro, 0o700);
+  if (asRoot)
+    t("(running as root: a read-only directory cannot discriminate here — stated rather than counted as a pass)", true, true);
+  else
+    /* THE ARM'S DECLARED CODE WAS WRONG AND THE BEHAVIOUR WAS RIGHT — recorded rather
+       than smoothed, because in this project the controls find the instrument wrong
+       more often than the subject. It expected `LEDGER_UNWRITABLE` and got
+       `PROBE_UNWRITABLE`: `mkdirSync(root, {recursive:true})` SUCCEEDS on a directory
+       that already exists whatever its mode, so the read-only case is caught one line
+       later by the probe, which is the more informative of the two codes.
+       `LEDGER_UNWRITABLE` is the different case — a ledger path that cannot be created
+       at all. Both refuse; what this arm proves is that neither THROWS. */
+    t(`an unwritable ledger REFUSES with a code rather than throwing (${refused.reason})`,
+      [refused.ok, refused.reason], [false, "PROBE_UNWRITABLE"]);
+
+  /* AND THE SENTENCE IS ON THE HAPPY PATH, which is where a false belief is formed. */
+  const sane = ledgerFor("scope");
+  const r = mint("D", { who: "scope-arm", env: { BIO_IDALLOC_DIR: sane } });
+  t("a successful mint carries its scope on the RESULT, so a caller that never prints still has it",
+    [r.ok, Boolean(r.scope), r.scope?.exclusive?.ok], [true, true, true]);
+  /* A REFUSAL IS A NAMED FAILURE HERE, and this shape is a CONTROL FINDING rather
+     than caution — the second time this suite has learned it. Arm (11) neuters the
+     exclusivity probe, which makes every `mint` refuse; on its first run `scopeLines`
+     was handed the undefined `scope` of a refusal, threw a TypeError, and ENDED THE
+     MODULE — `-1 pass, -1 fail`, no assertion involved, its declared arms never
+     reaching an assertion at all. That is exactly M0-17's arm (6) finding arriving a
+     second time in the same file, and exactly the receipt WORKER.md carries: a
+     TypeError inside an assertion goes through no assertion. */
+  const lines = r.scope ? scopeLines(r.scope).join("\n")
+    : `MINT REFUSED ${r.reason}: ${r.detail} — every arm below therefore fails by assertion rather than by killing this module`;
+  t("...and the scope names what the take is NOT exclusive against", /NOT exclusive against/.test(lines), true);
+  t("...and names D-242 as the reason it is stated rather than checked", /D-242/.test(lines), true);
+  t("...and reports the probe's verdict rather than asserting the guarantee", /honoured on this filesystem: YES/.test(lines), true);
+  t("an overridden ledger path WARNS that the scope is whatever the caller said",
+    /WARN BIO_IDALLOC_DIR is set/.test(scopeLines({ ...r.scope, overridden: true }).join("\n")), true);
+  t("a ledger seen from more than one host WARNS that one process cannot speak for cross-host atomicity",
+    /WARN this ledger has been used from 2 hosts/.test(scopeLines({ ...r.scope, hosts: ["a", "b"] }).join("\n")), true);
+
+  /* The watermark: undetermined is first-class, and a DERIVED figure is not a
+     RECORDED one. Both are labelled; neither answers 0. */
+  const w = watermark("D", { root: sane });
+  t("a namespace whose ledger recorded its watermark answers `recorded`", w.source, "recorded");
+  t("...with the corpus floor it began from, not zero", Number.isInteger(w.floor) && w.floor > 0, true);
+  const wNone = watermark("UI", { root: sane });
+  t("a namespace with no ledger history answers null — never 0 — and says why", [wNone.floor, wNone.source.length > 20], [null, true]);
+}
+
+/* ========================================================================== */
+section("the audit is in the loop CONDUCT actually runs");
+/* The same self-check M0-17 built for the spawn-brief line, aimed at the integration
+   step. A mechanism that is not in the loop the reader actually runs is not a
+   mechanism, and prose describing a step is a mechanism believed on the strength of
+   its existence — the defect this project meets most. So the step is a COMMAND, and
+   this asserts CONDUCT's own file names it. */
+{
+  const conduct = readFileSync(join(DIR, "../../docs/development/kickoffs/CONDUCT.md"), "utf8");
+  console.log(`  kickoffs/CONDUCT.md: ${conduct.length} bytes read`);
+  t("...the read was of a real file rather than an empty one", conduct.length > 4000, true);
+  t("CONDUCT's loop names the audit COMMAND, not merely the idea of one",
+    /mintid\.mjs --audit/.test(conduct), true);
+  t("...at the integration step, after the merge and before the push",
+    /AFTER THE MERGE, BEFORE THE PUSH/.test(conduct), true);
+  t("...and says a not-held id is a QUESTION rather than a failure, because unknown is first-class",
+    /QUESTION you ASK the worker, never a failure/.test(conduct), true);
+
+  /* THE COMMAND IS DRIVEN, not asserted about. `op=invitelook` shipped with a
+     ReferenceError while 1,276 assertions passed, because nothing ran the caller. */
+  const run = (args) => {
+    const kid = spawnSync(process.execPath, [TOOL, ...args], { encoding: "utf8", cwd: REPO_ROOT });
+    return { code: kid.status, out: `${kid.stdout}${kid.stderr}` };
+  };
+  const a = run(["--audit"]);
+  console.log(`  --audit exited ${a.code}, ${a.out.length} bytes printed`);
+  t("`--audit` runs and exits 0 on a corpus with no NEW duplicate", a.code, 0);
+  t("...and prints the SCOPE, so the integrator sees what the ledger does not cover", /NOT exclusive against/.test(a.out), true);
+  t("...and NAMES what it cannot see rather than reading as a complete sweep", /What this CANNOT see/.test(a.out), true);
+  t("...and prints its four sections", [/1\. DUPLICATE ALLOCATIONS/, /2\. ALLOCATED ABOVE THE LEDGER/, /3\. IDS INTRODUCED BY A DIFF/, /4\. THE REGISTER/].map((re) => re.test(a.out)),
+    [true, true, true, true]);
+  const bad = run(["ZZZ"]);
+  t("an unregistered namespace is still refused BY NAME", [bad.code, /REFUSED: unknown namespace/.test(bad.out)], [2, true]);
+  t("...and the refusal now says what to DO, which is the half that was missing",
+    /add a row to NAMESPACES/i.test(bad.out), true);
 }
 
 /* ========================================================================== */

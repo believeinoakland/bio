@@ -4196,3 +4196,37 @@ why it is not fixed here: `bio-plane/scripts/**` is not this item's paths, and
   items moved in parallel on 2026-08-08 with keep-both merges leaving duplicate
   `arms:` keys four times. That number must be re-read from a PRINTED green run
   of the MERGED tree, which is the integrator's position, not a branch's.
+
+## CLAIM 2026-08-08 M0 (test-estate / tooling lane) — D-243 + D-242
+session: d243-detect-unminted (worktree agent-a14199b914b9086e2)
+opened: 2026-08-08T21:33:00Z
+paths: **`tools/mintid.mjs`** (the register, the allocation-site patterns, the new `--audit` mode, the exclusivity probe and the SCOPE line). **`bio-plane/test/mintid.test.mjs`** (its suite — new sections). **`tools/plancheck.mjs`** (ONE new block: the duplicate-allocation gate; it also removes the dead `readdirSync` import M0-16 delegated). `bio-plane/test/hygiene.test.mjs` (**ONE line added to `CLASS_NAMED_UNGUARDED`, nothing else** — the walk-class ratchet named this item's new sandbox walk on its first full battery, which is the ratchet working and is a decision that has to be recorded at the site). `docs/development/kickoffs/CONDUCT.md` (**step 2 only** — the integration-side audit command; M0-17 edited step 1 and this edits step 2). `docs/development/DEBT.md` (**D-242 and D-243 rows amended; D-248 appended** — append-only otherwise). `docs/development/MEASUREMENTS.md` (append). `docs/development/CLAIMS.md` (append).
+interfaces consumed: none
+interfaces owned: none — tooling only. No plane behaviour, no op, no field, no shape.
+expected: **D-243** — nothing detects an id taken WITHOUT `tools/mintid.mjs`; **D-242** — the ledger is one clone on one machine and the real cost is the CONFIDENCE rather than the collision.
+accepts-when: **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 133/133 suites green · 8,319 assertions · 116.2 s · exit 0**, provenance 135/135 discovered items in the commit at HEAD (`bb426ac`). Battery green at the end, `node scripts/coverage.mjs --strict` exit 0 read UNPIPED, `node civicos-ui/test/run.mjs` from the repo root exit 0, `node tools/plancheck.mjs` clean but for UNPUSHED.
+concurrency: `tools/mintid.mjs` and `bio-plane/test/mintid.test.mjs` are named by no other live claim (M0-17's claim is `released:`). `tools/plancheck.mjs` is opened in ONE new block plus the dead-import removal M0-16 delegated; no live claim names it. `docs/development/kickoffs/CONDUCT.md` step 2 only — M0-17 took step 1 and is released. **`docs/development/DEBT.md` D-242 and D-243 are AMENDED IN PLACE**, which is the one non-append edit here: both rows are M0-17's own residuals and this item is the one that answers them. **`bio-plane/scripts/coverage.mjs` is touched for the `REGISTER_FLOOR.arms` NUMERAL ONLY (570 -> 576) — if this conflicts at merge, COLLAPSE TO ONE SET and re-read the printed figures; do NOT keep both, which has left duplicate `arms:` keys there six times.**
+released: 2026-08-08 — committed on `worktree-agent-a14199b914b9086e2`, NOT pushed, NOT merged. **TRUE BASELINE RE-MEASURED AT `origin/main` (`86f0e73`) IN A SCRATCH WORKTREE rather than carried from the pre-rebase run: 134/134 suites green · 8,386 assertions · 128.9 s · exit 0.** Final: **134/134 · 8,431 assertions · 130.3 s · exit 0**, provenance 136/136 discovered items in the commit at HEAD. **Delta +45 attributed by DIFFING the two runs per suite:** `mintid.test.mjs` 33 -> 77 (+44), `planning-hygiene.test.mjs` 282 -> 283 (+1, the new D-248 row), **130 of 132 suites identical in count**. `node scripts/coverage.mjs --strict` exit 0 read UNPIPED — 159/159 ops · 208/208 checks · `REGISTER_FLOOR.arms` **570 -> 576** from the figure a green run PRINTED (`GREW by 6 arm(s)`), `classified` 129 and `corpus` 130 unmoved. `node civicos-ui/test/run.mjs` from the repo root exit 0, unchanged. **SIX control arms declared before arming, each run ALONE, all six agreed**, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with byte counts printed and guarded against the empty-string sha256; **M0-17's legacy arms (1) and (4) re-run because `mint` was restructured — both still fire** (arm (1) gave all eight racers ONE AND THE SAME id — **the number is deliberately not written here: this file is `D`'s own corpus, and naming it would raise the floor off prose, which is the defect M0-17 caught in its own debt row and this item caught again in this very sentence**). **THREE INSTRUMENT FINDINGS, all recorded rather than smoothed** — a control arm reading `-1 pass, -1 fail` because `process.exit()` truncated a large PIPED stdout and lost the tally; M0-17's bulk-take hardening covering a THROW but not a REFUSAL, so arm (11) ended the module before its declared arms reached an assertion; and **`check-firing.test.mjs` reading a prose mention in this tool's own comment as a PRODUCER for a retired shape** — the documentation-poisons-a-corpus class for the third time in two days, in a third instrument, failing in the safe direction. `hygiene.test.mjs`'s walk-class ratchet named this item's new sandbox walk on the first full battery, which is why that file is in the paths above. Residual: **D-248** (renumber the six), delegated to CONDUCT rather than smuggled in.
+
+## DELEGATION 2026-08-08 M0 (D-243) → CONDUCT: **SIX IDS ARE ALLOCATED TWICE IN `origin/main`, AND THREE OF THEM ARE IN YOUR FILE**
+from: d243-detect-unminted (worktree agent-a14199b914b9086e2), D-243
+what: **D-248.** The in-commit detector this item built found six live collisions on its
+first run over the real corpus, known to nobody: **`D-121`**, **`D-124`**, **`IC-30`**,
+**`CPDF-9`**, **`FW-15`**, **`M0-16`**. `D-124`'s first row already reads *(renumbered
+from a colliding D-122 by CONDUCT 2026-07-31)* — **it was renumbered onto a second
+collision**, which is the sharpest available argument that a renumber done by hand needs
+an instrument watching it. `IC-30` is the worst of the six because an interface-change
+number is a contract identity two areas build against.
+why it is yours and not a worker's: **three of the six (`CPDF-9`, `FW-15`, `M0-16`) are
+`QUEUE.md` headings and you are its sole writer**, and a renumber is a by-the-number sweep
+across code, suites, claims and **reports written by sessions that have ENDED** — the exact
+cost M0-17 priced when it chose minting over mechanising the renumber. Doing it inside a
+tooling item would have been a worker editing another area's paths on a sweep it cannot
+verify.
+how to do it safely, and the mechanism is already in your loop: renumber the LATER member
+of each pair **with a minted id** (`node tools/mintid.mjs <NS>`), sweep every reference —
+**including regex literals, where `C-29\.` is not the text `C-29.`** — then **DELETE that
+entry from `KNOWN_COLLISIONS` in `tools/mintid.mjs`**. The register has no slack in either
+direction: a seventh collision FAILS `plancheck` and the battery, and **a registered
+collision that has stopped being one ALSO fails**, so a renumber that leaves its entry
+behind cannot pass. `node tools/mintid.mjs --audit` reports the whole state in one command.

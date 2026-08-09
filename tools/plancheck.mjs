@@ -25,7 +25,9 @@
  * FAIL is a structural break. WARN is worth a look and never blocks.
  */
 
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+/* `readdirSync` was imported and never used — M0-16 measured it and delegated it, and
+   it is removed here rather than left for a third reader to re-derive. */
+import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -210,6 +212,60 @@ if (register) {
     if (!/ORCHESTRATION\.md/.test(k))
       warn(`${f} does not point at ORCHESTRATION.md, where the coordination skill lives.`);
   }
+}
+
+/* ------------------------------- 2b. TWO THINGS WEARING ONE ID (D-243)
+
+   THE INTEGRATION-SIDE HALF, AND IT IS HERE BECAUSE THIS IS WHERE CONDUCT ALREADY
+   STANDS. `kickoffs/CONDUCT.md` step 6 runs this file before every push, and a merge
+   is the exact moment two branches' ids become one corpus — so a collision that
+   existed in neither branch appears here and nowhere earlier. D-243 reasoned that the
+   check could not be an instrument because the LEDGER is in no commit. That is true of
+   the question "was this minted?", which needs `mintid.mjs --audit` on CONDUCT's
+   machine. It is not true of the HARM: a duplicate allocation is fully visible in the
+   text, needs no ledger, and answers yes or no rather than unknown.
+
+   SIX WERE ALREADY SITTING IN `origin/main` when this was written, none of them known.
+   They are registered in `KNOWN_COLLISIONS` with a reason each, and the registration
+   has no slack in either direction — a seventh fails, and a registered one that has
+   been renumbered ALSO fails, so the list cannot outlive its reason.
+
+   The predicate lives in `tools/mintid.mjs` and is shared with the battery suite, for
+   the reason planning-hygiene already states: two checks in two places for one
+   invariant is the cheap-and-early copy plus the cannot-be-bypassed copy. */
+
+{
+  const { collisions, unregisteredNamespaces } = await import("./mintid.mjs");
+  const c = collisions({ repo: ROOT });
+  notes.push(`id allocations: ${c.sites} site(s) across ${c.graded.length} graded namespace(s); `
+    + `${c.notCovered.map((n) => n.ns).join(", ") || "none"} not gradable; `
+    + `${c.known.length} pre-existing collision(s) registered`);
+  if (c.fresh.length)
+    fail(`DUPLICATE ID — ${c.fresh.length} id(s) are allocated TWICE, which is the defect\n`
+       + `        tools/mintid.mjs exists to prevent and the one a merge creates out of two\n`
+       + `        clean branches:\n`
+       + c.fresh.map((d) => `          ${d.id}  at ${d.at.join("  and  ")}`).join("\n")
+       + `\n        Renumber one of each pair. If it predates the detector, add it to\n`
+       + `        KNOWN_COLLISIONS in tools/mintid.mjs WITH A REASON — that list is dated\n`
+       + `        evidence, not an exemption.`);
+  if (c.stale.length)
+    fail(`STALE COLLISION REGISTER — ${c.stale.length} id(s) in KNOWN_COLLISIONS are no longer\n`
+       + `        duplicated (${c.stale.map((s) => s.id).join(", ")}). Somebody renumbered them, which is\n`
+       + `        good; delete the entries, or the register outlives its reason and starts\n`
+       + `        excusing a collision nobody measured.`);
+
+  /* An unregistered prefix is REFUSED by name, which is fail-closed and right — but
+     nothing prompted anyone to add one, so `FW`, `COFF` and `CAP` allocated by the old
+     convention for weeks and `FW-15` collided. This is the prompt. */
+  const u = unregisteredNamespaces({ repo: ROOT });
+  if (u.unregistered.length)
+    fail(`UNREGISTERED ID NAMESPACE — ${u.unregistered.length} prefix(es) allocate queue ids and have\n`
+       + `        no row in NAMESPACES, so mintid REFUSES them by name and that family is still\n`
+       + `        on the read-the-file convention that collided seven times in one day:\n`
+       + u.unregistered.map((x) => `          ${x.prefix}  ${x.items} allocation(s), first in ${x.first}`).join("\n")
+       + `\n        Add a row to NAMESPACES in tools/mintid.mjs naming the corpus its floor is\n`
+       + `        read from. Fail-closed with nothing prompting is a gate nobody can pass.`);
+  else notes.push(`id namespaces: ${u.prefixes.length} allocating prefix(es), all registered (${u.prefixes.join(" ")})`);
 }
 
 /* ------------------------------------------- 3. THE DECISION CHANNEL */

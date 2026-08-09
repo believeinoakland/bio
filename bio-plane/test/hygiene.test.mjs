@@ -1715,6 +1715,16 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        number IS a baseline. It is not fixed here because `civicos-ui/**` is not
        this item's to open; it is DELEGATED in CLAIMS.md. */
     "civicos-ui/test/run.mjs",
+    /* ADDED 2026-08-08 by D-243's item, AND THE RATCHET WORKED A THIRD TIME — the
+       census named this walk on the first full battery, before anyone read the diff.
+       WHY IT IS NAMED AND NOT GUARDED: it walks a `mkdtemp` SANDBOX THIS SUITE ITSELF
+       CREATED, to assert that the D-242 exclusivity probe leaves no file behind — a
+       probe that littered the ledger would be counted as a held id. It is not a
+       repository directory at all, no other worker can deposit into it, it reports no
+       census and nothing it prints is a figure anybody quotes. Provenance would tell
+       it something true and useless, which is the same reason `ref-variance-probe.mjs`
+       is named rather than guarded. */
+    "bio-plane/test/mintid.test.mjs",             // its own mkdtemp sandbox, asserting the probe left nothing behind
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
