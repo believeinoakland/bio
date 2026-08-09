@@ -5490,3 +5490,91 @@ independently reached 1407 without it.
 **CHECKS 219 → 222 after the C-34→C-36 renumber.** The collision was not only ambiguous, it was
 UNDERCOUNTING the catalog by three: two families claiming one set of numbers are one set of
 checks as far as the register can see.
+
+## 2026-08-09 — UI-45: the notification surface, measured; and two live defects in the queue
+
+**Instruments:** `node civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED;
+`cd bio-plane && npm run test:battery`; `node bio-plane/scripts/coverage.mjs --strict` run
+DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/notifications.control.mjs`.
+Worktree `agent-a4f9c3083de5f28e3`, fast-forwarded to `main` at `d579ae8` before measuring,
+`npm ci` run in `bio-plane/` first.
+
+**EVERY FIGURE WAS TAKEN TWICE, BECAUSE `main` MOVED UNDER THIS ITEM WHILE IT RAN.** The
+item was built and measured on `d579ae8`; by the time it was committed, `origin/main` had
+advanced to `ae34ec8` (eight merges, including REC-69, FL-4, FL-5, D-255, D-257 and PL-17).
+`main` was merged in, `npm ci` re-run, and **the whole gate re-run on the merged tree** —
+which is the only figure CONDUCT can integrate against. Both are recorded, because a figure
+measured on a base that no longer exists is not a claim about the tree anybody will merge.
+
+| figure | baseline (`d579ae8`) | final (`d579ae8`) | **final, MERGED (`ecf8743`)** | attribution |
+| --- | --- | --- | --- | --- |
+| UI harnesses | **42, exit 0** | **43, exit 0** | **43, exit 0** | `notifications.test.mjs`, 67 assertions |
+| plane battery | 139/139 · 8,869 | 139/139 · 8,869 | **142/142 · 9,179** | **ZERO delta from this item, and structurally so — it modifies no file under `bio-plane/`.** The +3 suites and +310 assertions are the eight merges', not this item's |
+| `coverage.mjs --strict` | exit 0 | exit 0 | **exit 0** | merged: OPS 163/163 · CHECKS 222/222 · controls 137/137, 654 arms |
+| negative control | — | 12/12 as declared | **12/12 as declared** | re-run on the merged tree, every restore re-verified |
+
+**The battery delta is attributed rather than subtracted.** This item touches no file under
+`bio-plane/`, which is checkable from the diff and is the attribution: 139→142 suites and
+8,869→9,179 assertions are entirely the eight merges that landed between the two runs.
+`preauth-vocabulary.test.mjs` was the one file both this item and `main` edited; it
+auto-merged, and its own run confirms both sets of arms — 68 assertions, all green (65
+before this item's three).
+
+**The baseline was measured in this worktree before any edit and it was not taken on trust:**
+the first `ls` of `bio-plane/node_modules` came back MISSING, which is `WORKER.md`'s named
+hazard — a scratch checkout without it made three suites read `NO TALLY (-1)` for an earlier
+worker. `npm ci` ran before anything was measured, and again after the merge.
+
+### Two live defects the item was not sent for, both in the queue, both found by asking what a control is keyed on
+
+1. **Adopt / Defer / Dismiss were drawn on EVERY FINDING.** `op=proposedispose` is keyed on
+   (`progression_key`, `stage_key`) and refuses a pair that is not a real stage of a defined
+   progression, so on PL-15's `out-of-inquiry-lead` — whose basis carries neither, by design —
+   **all three controls could only ever have been refused**, and the act dialog behind them was
+   built from a context row carrying two nulls. PL-15's delegation states the rule for the MUTE
+   one control over (*"a surface that shows a mute control it cannot honour is worse than one
+   that shows none"*); the queue honoured it for the mute and not for the disposition.
+2. **A disposed finding vanished from the screen.** The plane ages it out of the open feed
+   correctly and returns the disposition beside it; the surface showed the receipt inside a
+   dialog that then closed, so after `renderQueue()` the item was simply gone with nothing said.
+   *"A finding that disappears is indistinguishable from one never made"* — the plane's own
+   sentence, and the surface was the half that did not hold it.
+
+**Both fixes are properties rather than lists.** The disposition test asks the ITEM whether it
+carries the identity the act is keyed on, so a finding kind nobody has written yet is judged
+correctly the day it arrives — *invert, do not lengthen a list*.
+
+### The negative control — 12 arms, 12 as declared, and the one that came back wrong was the ARM
+
+Full declarations and results are in `civicos-ui/test/notifications.control.mjs`'s header.
+**Arm 8 was RED and correct on its first run and the driver called it NOT AS DECLARED**,
+because its `says` string quoted **the sentence the patch deletes** rather than the assertion
+that fires when it is gone — an expectation that could only ever be wrong. Recorded rather than
+smoothed; the rule (`says` quotes the ASSERTION, never the source) is now written at the arm.
+
+Arm 5 (**draw the disposition controls on every finding** — the pre-UI-45 surface exactly):
+**5 of 67 fail**, naming the lead. Arm 1 (**surface-authored wording**, the item's first named
+NC): 4 of 67, the verbatim arms. Arm 3 (**a dismissed proposal vanishes**, the second named NC):
+4 of 67. Arm 10 (**the sweep goes blind**): fails on its FLOOR at *"0 phases were kept"* rather
+than reporting the vocabulary ban clean over nothing. Two over-strictness arms and the baseline
+came back GREEN at 67/67.
+
+### The five floors moved, and NO SLACK ANYWHERE — the opposite of the day before
+
+`surface-registry.test.mjs`: ARM A3 19→**20**, A4d 16→**17**, A4e 16→**17**, D1 64→**65**,
+D5 39→**41**. Every figure was taken by driving the arm to fail on an absurd floor so it would
+PRINT, then restoring the file and verifying by `cmp` before the real number was written.
+**Every one of the five sat exactly where UI-42 left it a day earlier** — each move is exactly
+the delta this item created (one act placement, one struck register row, one new op call, two
+declared reads). UI-42 found 13 and 7 of slack in D1 and D5; this item found none, which is what
+a just-re-measured ratchet looks like and is worth recording because the other finding would
+have been the interesting one.
+
+### What the instrument could NOT see, stated
+
+The suite drives eleven rendered phases and asserts its own corpus floor, but it **cannot see a
+producer that does not exist**: PL-13's two slugs are asserted ABSENT rather than fixtured into
+existence, so nothing here measures how they will render. It **cannot judge the plane's answer** —
+that `op=queue` files a lead under inquiry B's ancestors is PL-15's acceptance. And, as with every
+UI suite here, **the DOM stub fires no events**, so the stance router is driven directly at its
+address rather than through `hashchange`, and the substitution is labelled at the site.

@@ -1353,7 +1353,7 @@ async function boot(){
      when it is not. */
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
-     && !versionReviewRouteFromHash()) go("queue", true);
+     && !versionReviewRouteFromHash() && !stanceRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2056,6 +2056,24 @@ const SURFACES = {
     purpose: "Every reading the record holds of one question's evidence, reviewed by rotating between them: moving to another reading IS the comparison. It draws where each reading came from, and it offers to take one out of the display while saying, in the offer itself, that hiding removes nothing from the record.",
     levels: ["meaning"],
     acts: ["versionhide"],
+    reads: ["basisversions", "affordances"],
+  },
+
+  /* UI-45 · §7's stance, and it is a SECOND surface over one read rather than a
+     second read, deliberately. `op=basisversions` publishes `current` only when
+     a project is named, because a stance is a property of the PROJECT's
+     relationship with a question and never of the question — one question sits
+     beneath several projects and one team's reading must not read as
+     everybody's. The version-review surface above names no project and
+     therefore renders no `current`; this one names one, so it gets the field
+     and it hosts the act. Splitting them is what keeps `#versions/<INQ-…>` an
+     address for the QUESTION's readings and `#stands/<PROJ-…>/<INQ-…>` an
+     address for one project's relationship to them. */
+  "inquiry-stance": {
+    routes: ["hash:stands"],
+    purpose: "Which reading of one question a named project stands on: the project's own dated declaration (§7), the act that makes it, and every reading the question has so the choice is made against the alternatives. Where the record names no reading it says so, and says which several situations answer identically rather than picking one.",
+    levels: ["meaning"],
+    acts: ["versioncurrent"],
     reads: ["basisversions", "affordances"],
   },
 
@@ -10883,6 +10901,17 @@ function queueEntryControlsHtml(it){
       + `</div><div class="q-err" data-err="${esc(it.id)}"></div>`;
   }
   if(it.class === "FINDING"){
+    /* UI-45. THE THREE CONTROLS ARE DRAWN ONLY WHERE THE RECORD CAN RECORD THE
+       DECISION, and until UI-45 they were drawn on every FINDING. op=proposedispose
+       is keyed on (progression_key, stage_key) and refuses a pair that is not a
+       real stage of a defined progression, so on a finding whose basis carries
+       neither — PL-15's out-of-inquiry lead is the live one — Adopt, Defer and
+       Dismiss were three controls that could only ever be refused. PL-15 states
+       the rule for the mute one control over: a control the record cannot honour
+       is worse than none. The test is a PROPERTY of the item rather than a list
+       of kinds, so a finding kind nobody has written yet is judged correctly the
+       day it arrives. */
+    if(!notifDispositionKeyed(it)) return notifNoDispositionHtml(it);
     const key = queueFindingKey(it);
     if(!key || !canProposalAct()) return "";
     return `<div class="q-entry-acts">`
@@ -10926,9 +10955,17 @@ function queueItemHtml(it){
     ${queueCountsHtml(it)}
     ${queueCaseNoteHtml(it)}
     ${it.class === "FINDING" ? proposalDerivedBadgeHtml(it) : ""}
-    ${it.class === "FINDING" ? proposalGradeHtml(queueFindingAsProposal(it)) : ""}
+    ${/* UI-45. THE DERIVED BADGE IS ON EVERY FINDING — D-82's "must LOOK derived"
+         is the load-bearing honesty and nothing narrows it. THE STRENGTH LINE IS
+         NOT: it is the grade of a derived proposal's weakest instance, and a
+         finding with no progression identity has no such population, so printing
+         "strength: undetermined" beside it would answer a question that was never
+         asked about it. */""}
+    ${it.class === "FINDING" && notifDispositionKeyed(it) ? proposalGradeHtml(queueFindingAsProposal(it)) : ""}
+    ${notifBasisEntryHtml(it)}
     ${queueBasisHtml(it)}
     ${queueOptionsHtml(it)}
+    ${notifOptionsGrainHtml(it)}
     ${queueEntryControlsHtml(it)}
   </article>`;
 }
@@ -11058,8 +11095,12 @@ function queuePaint(){
   const { groups, ungrouped, unknownHome } = queueGrouped(items);
   QUEUE_GROUPS = groups;
   QUEUE_ITEMS = new Map(items.map(i=>[String(i.id), i]));
-  /* The three proposal affordances take their context from THIS feed. */
-  PROPOSALS_LAST = items.filter(i => i.class === "FINDING").map(queueFindingAsProposal);
+  /* The three proposal affordances take their context from THIS feed — and, since
+     UI-45, only from the findings op=proposedispose can actually be keyed on. A
+     finding with no progression identity used to enter this list with two null
+     keys, so the act dialog it fed had nothing to send. */
+  PROPOSALS_LAST = items.filter(i => i.class === "FINDING" && notifDispositionKeyed(i))
+                        .map(queueFindingAsProposal);
 
   const notices = queueNotices();
   const byCase = new Map(); const looseNotices = [];
@@ -11116,6 +11157,13 @@ function queuePaint(){
     + queueAllClearHtml()
     + `<p class="q-rule">${esc(QUEUE_ORDER_RULE)}</p>`
     + queueBoundHtml()
+    /* UI-45. WHICH LEVEL WAS EMPTY, per class, off the plane's own `classes`,
+       `classes_deferred` and `counts`. It sits above the items rather than inside
+       the all-clear because it is true whether or not the list is empty: a class
+       nothing produces yet is a bound on this record that a member reading three
+       obligations is entitled to know about as much as one reading none. */
+    + notifAbsenceHtml()
+    + notifDisposedHtml()
     + queueMuteReportHtml()
     + groupsHtml + ungroupedHtml + unknownHtml + emptyHtml;
   queueWire();
@@ -12995,6 +13043,10 @@ async function doProposalDispose(){
     if(!PROP_ACT || PROP_ACT.key !== key) return;
     PROP_ACT.busy = false;
     if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }
+    /* UI-45 / §6.4. The record's own answer is kept so the queue can say where
+       an aged proposal went. Recorded HERE, at the one place the answer arrives,
+       rather than reconstructed later from what this page sent. */
+    notifRememberDisposition(out);
     proposalDisposeReceipt(out, PROP_ACT, to, reason);
     return out;
   }catch(e){
@@ -17177,6 +17229,509 @@ function versionReviewRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionReviewRouteFromHash(); }); }catch(_){}
 /*__VERSION_REVIEW_END__*/
+
+/*__NOTIFICATIONS_START__*/
+/* ============================================================
+   UI-45 · NOTIFICATIONS RENDERED — THE FINDING CLASS, THE ABSENCE THAT SAYS
+   WHICH LEVEL WAS EMPTY, AND WHAT THIS PROJECT STANDS ON.
+
+   THIS BLOCK IS TWO THINGS THAT SHARE ONE RULE. The first half is a set of
+   renderers the queue calls on a notification the plane raised; the second is a
+   surface where a project declares which reading of a question it stands on
+   (§7, `op=versioncurrent`). The rule they share is DEC-8's: **every word about
+   what happened is the plane's, and every word about what did NOT happen names
+   which level was empty.**
+
+   ---- WHY THESE RENDERERS ARE NOT INSIDE THE QUEUE BLOCK
+
+   `__QUEUE_START__` is UI-14's and is shared ground with other live UI work.
+   These are new functions with new names and no existing renderer moved into
+   them; the queue block gains only the four CALLS that reach them, so what this
+   item owns can be read off one marker pair rather than diffed out of a
+   six-hundred-line region.
+
+   ---- (1) `options_grain` IS PART OF THE CONTRACT, NOT DECORATION
+
+   PL-15's delegation names this by name. `op=queue`'s out-of-inquiry lead
+   carries `options[]` at DOCUMENT grain and declares, on the item, that the acts
+   a member would most naturally want are at INQUIRY grain and do not exist
+   (D-222). The plane declared the gap rather than hiding it behind an empty
+   array; a surface that then rendered only the array would put the gap back.
+   *"An empty-looking action row with no explanation is how a member concludes
+   the lead is broken."*
+
+   ---- (2) `basis_entry` IS THREE-VALUED AND ALL THREE MEAN DIFFERENT THINGS
+
+   `undetermined` (no document in this store holds these bytes yet), `absent`
+   (looked for, part of no case), `present` (a reading carries it). Collapsing
+   `undetermined` into `absent` is the overclaim the plane refused to make — it
+   would tell a member the record has checked when it has not (`CLAUDE.md`:
+   absence at one level is not evidence of absence at the next, and saying which
+   is true is a first-class obligation). So the STATE IS NAMED on the row and the
+   plane's own sentence is rendered beneath it, and a fourth state this surface
+   has no rule for is NAMED as unclassified rather than defaulted into one of the
+   three.
+
+   ---- (3) A CONTROL THE RECORD CANNOT HONOUR IS WORSE THAN NO CONTROL
+
+   PL-15 states it for the mute — *"a surface that shows a mute control it cannot
+   honour is worse than one that shows none"* — and the queue already honours
+   that half: the mute names CONDITION kinds only. **The same defect existed one
+   control over and was live.** `op=proposedispose` is keyed on
+   (`progression_key`, `stage_key`) and refuses a key that is not a real stage of
+   a defined progression; the queue drew Adopt / Defer / Dismiss on EVERY
+   FINDING, so on an out-of-inquiry lead — whose basis carries neither key —
+   all three were controls that could only ever be refused.
+
+   THE FIX IS A PROPERTY, NOT A LIST OF SLUGS. `notifDispositionKeyed` asks
+   whether the item's own basis carries the identity the act is keyed on. That is
+   what makes a finding dispositionable *in principle*: a list of kinds would go
+   stale the day PL-13 mints its two, and a surface that grew a fourth
+   non-derived finding would draw three dead controls again with nothing failing.
+
+   ---- (4) SPARSE IS NORMAL AT EVERY LEVEL, SO SAY WHICH LEVEL WAS EMPTY
+
+   A feed that renders nothing has said nothing until it says WHY it is empty,
+   and the two reasons are not the same fact:
+
+     · **nothing happened** — the record produces this class, it looked, and it
+       raised none;
+     · **we did not look** — nothing on this plane produces this class yet, so
+       silence here is not evidence about the world.
+
+   `op=queue` publishes both halves itself: `classes` is what it can raise and
+   `classes_deferred` is what it declares it does not produce yet, with `counts`
+   per class beside them. `notifAbsenceHtml` renders that and derives nothing —
+   a class the feed has not answered for at all is a THIRD state and is said as
+   one. **No kind is named here.** A surface holding its own list of kinds would
+   be the drift DEC-8 closes, and would let this page claim a producer exists
+   before one does.
+
+   AND THE TWO SLUGS THIS ITEM'S ROW NAMES ARE NOT RENDERED, WHICH IS THE HONEST
+   RESULT RATHER THAN A GAP. `IS-BUILD-PLAN.md`'s UI-45 row names
+   `stance-changed-here-not-elsewhere` and
+   `new-version-arrived-from-another-team`; both are **PL-13's to mint**, PL-13
+   has not landed, and `queuestate.mjs` names neither. Authoring words for them
+   here is exactly the negative control this item declares — *render a slug with
+   surface-authored wording and the published-words assertion fails* — so this
+   surface renders no slug the plane does not publish, and the suite asserts
+   their ABSENCE so nobody reads a quiet screen as evidence they exist.
+
+   ---- (5) WHAT THIS PROJECT STANDS ON (§7, and it is UI-42's delegated half)
+
+   `op=basisversions` publishes `current` **only when a project is named**,
+   because a stance belongs to the PROJECT's relationship with the question and
+   never to the question: one question can sit beneath several projects and one
+   team's reading must not read as everybody's. UI-42's surface names no project
+   and therefore renders no `current`, and said so. This surface is the other
+   half: it names one, so it gets the field — and it hosts `op=versioncurrent`,
+   the act `ACTS_AWAITING_SURFACE` records as owed to this item.
+
+   THE ABSENT STANCE IS THREE-VALUED HERE TOO, and the plane's own reader says
+   why: `#currentVersionOf` returns null for a project the gate hides, for a
+   project with no document, AND for a project that has named no reading — *"one
+   answer deliberately, [because] a caller learns nothing about a project it
+   cannot see."* So this page must NOT say "this project has not chosen"; it says
+   the record answered with no reading and names all the things that answer
+   identically. Reporting the collapse is the honest rendering of a deliberate
+   collapse.
+
+   ---- WHAT IS REUSED RATHER THAN RE-SPELLED (UI-42's delegation, honoured)
+
+   `VREV_STATE_WORD` (the four state sentences, pinned against the catalog's own
+   `VERSION_MACHINE.legal`), `vrevComposition` (which reuses `VREV_FAILS_ALL` /
+   `VREV_FAILS_ANY`, the elicitation's own two stems) and `versionsBoundHtml`
+   are CALLED here. No second spelling of any of them is written: UI-42 filed a
+   delegation saying a third would be the defect, and `notifications.test.mjs`
+   pins that this block declares none.
+   ============================================================ */
+
+/* ---------------------------------------------------------------- (1) GRAIN */
+/* The plane's own three fields, rendered and not summarised. `offered` and
+   `missing` are grain words the producer chose; `detail` is its sentence. */
+function notifOptionsGrainHtml(it){
+  const g = it && it.options_grain;
+  if(!g || typeof g !== "object") return "";
+  const offered = String(g.offered == null ? "" : g.offered).trim();
+  const missing = String(g.missing == null ? "" : g.missing).trim();
+  const head = (offered && missing)
+    ? "The acts below are at " + offered + " level. The ones a member would most naturally want here are at "
+      + missing + " level, and the record says they do not exist yet."
+    : "The record has something to say about which acts it can and cannot offer on this.";
+  return '<div class="q-grain"><b>' + esc(head) + '</b>'
+    + (g.detail ? ' <span class="q-grain-why">' + esc(String(g.detail)) + '</span>' : "")
+    + '</div>';
+}
+
+/* -------------------------------------------------------- (2) THE BASIS ENTRY */
+/* The three states, each NAMED, with the producer's own sentence beneath it. The
+   headings say what the state MEANS at the level it is about; the explanation is
+   the plane's. A state outside the three is named as one this surface has no
+   rule for — never folded into the nearest one, which is the collapse the plane
+   refused to make one layer down. */
+const NOTIF_BASIS_ENTRY_WORD = {
+  undetermined: "Whether this document is part of any case is UNDETERMINED — the record could not look, so this is not a statement that it is part of nothing.",
+  absent:       "The record LOOKED, and this document is part of no case. It was captured, and it was not made part of any question's evidence.",
+  present:      "This document IS carried by a reading of some question, so it is already part of a case.",
+};
+function notifBasisEntryHtml(it){
+  const b = (it && it.basis) || {};
+  const e = b.basis_entry;
+  if(!e || typeof e !== "object") return "";
+  const st = String(e.state == null ? "" : e.state).trim();
+  const word = NOTIF_BASIS_ENTRY_WORD[st];
+  const head = word
+    || ("The record answered with a state this page has no words for, and it is named rather than "
+        + "read as one of the ones it does know: " + (st || "no state at all") + ".");
+  return '<div class="q-basisentry"><b>' + esc(head) + '</b>'
+    + (e.detail ? ' <span class="q-basisentry-why">' + esc(String(e.detail)) + '</span>' : "")
+    + '</div>';
+}
+
+/* ------------------------------------------- (3) WHICH FINDINGS CAN BE DISPOSED */
+/* THE PROPERTY, not a list of kinds. `op=proposedispose` is keyed on
+   (progression_key, stage_key) and refuses a pair that is not a real stage of a
+   defined progression, so a finding whose basis carries neither key has no
+   identity the act can be recorded against. Asking the ITEM rather than
+   consulting a table of slugs is what keeps this true for a kind nobody has
+   written yet. */
+function notifDispositionKeyed(it){
+  const b = (it && it.basis) || {};
+  const pk = typeof b.progression_key === "string" ? b.progression_key.trim() : "";
+  const sk = typeof b.stage_key === "string" ? b.stage_key.trim() : "";
+  return !!(pk && sk);
+}
+/* What a member is told instead of three controls that could only be refused.
+   It states the fact and points at what IS published for the item, so the
+   absence reads as a bound on the record rather than as a broken screen. */
+function notifNoDispositionHtml(it){
+  const opts = Array.isArray(it && it.options) ? it.options.length : 0;
+  return '<div class="q-nodispose"><b>There is no adopt, defer or dismiss on this one.</b> '
+    + 'Those are recorded against a question the record derived for itself, keyed by the progression '
+    + 'and stage it came from, and this notification carries neither — so the record has nowhere to '
+    + 'write such a decision and this screen offers no control that would only be refused. '
+    + (opts
+        ? 'What the record does publish as doable here is listed above.'
+        : 'The record publishes no act on it for this credential either, which is stated above rather than left blank.')
+    + '</div>';
+}
+
+/* ------------------------------------------------- (4) WHICH LEVEL WAS EMPTY */
+/* Read off `op=queue`'s own three published fields and NOTHING else. A class the
+   plane names in `classes_deferred` is one nothing on this plane produces yet;
+   a class it names in `classes` with a count of zero is one it looked for and
+   raised none of; a class it published no count for at all is a third fact and
+   is said as one rather than counted as zero. */
+function notifClassLine(cls, deferred, counts, haveCounts){
+  const key = String(cls || "").toLowerCase();
+  if(deferred.includes(cls))
+    return "<b>" + esc(cls) + "</b> — nothing on this plane raises one of these yet. This part of the "
+         + "list being empty says nothing about the world; it says nobody has built the thing that "
+         + "would look.";
+  if(!haveCounts || !Object.prototype.hasOwnProperty.call(counts, key))
+    return "<b>" + esc(cls) + "</b> — the record published no count for these, so this screen cannot "
+         + "tell you whether it looked. That is stated rather than shown as none.";
+  const n = Number(counts[key]);
+  if(!Number.isFinite(n))
+    return "<b>" + esc(cls) + "</b> — the record published something this screen cannot read as a "
+         + "count, so nothing is claimed about how many there are.";
+  if(n === 0)
+    return "<b>" + esc(cls) + "</b> — the record looked and raised none.";
+  return "<b>" + esc(cls) + "</b> — " + n + " raised.";
+}
+/* ------------------------------------- (4b) AN AGED PROPOSAL DOES NOT VANISH */
+/* §6.4: proposals AGE rather than disappear. The plane already holds that half —
+   `proposalsFeed` filters a disposed proposal out of the OPEN feed and returns
+   the disposition beside it, because *"a finding that disappears is
+   indistinguishable from one never made"*. THE SURFACE HAD ONLY THE FIRST HALF:
+   a member deferred or dismissed a finding, read a receipt inside a dialog,
+   closed it, and the item was simply gone from the queue with nothing on the
+   screen saying where it went. The receipt lived exactly as long as the dialog.
+
+   So the record's own answer is kept and rendered on the queue itself. Every
+   word of it is the plane's — `to`/`state`, `reason`, `decided_by`, `at` come
+   back from `op=proposedispose` — and a field the answer did not carry is said
+   to be missing rather than filled in from what this page sent. */
+const NOTIF_DISPOSED = new Map();
+function notifRememberDisposition(res){
+  if(!res || typeof res !== "object") return;
+  const key = String(res.key || "").trim();
+  if(!key) return;
+  NOTIF_DISPOSED.set(key, res);
+}
+function notifDisposedHtml(){
+  if(!NOTIF_DISPOSED.size) return "";
+  const rows = [...NOTIF_DISPOSED.values()].map(r => {
+    const state = String(r.to || r.state || "").trim();
+    const who = String(r.decided_by || "").trim();
+    const at = String(r.at || "").trim();
+    const why = String(r.reason || "").trim();
+    const gaps = [];
+    if(!state) gaps.push("what it was moved to");
+    if(!who)   gaps.push("who decided");
+    if(!at)    gaps.push("when");
+    if(!why)   gaps.push("their reason");
+    return '<div class="q-notice" data-disposed="' + esc(String(r.key || "")) + '">'
+      + '<b>Set aside' + (state ? " as " + esc(state) : "") + (who ? " by " + esc(who) : "")
+      + (at ? " on " + esc(at) : "") + '.</b> '
+      + 'It has left the list of open questions and it has not left the record: the decision is kept '
+      + 'with its author and their reason, and it can be re-triaged.'
+      + (why ? ' <span class="q-notice-why">Their reason, as the record recorded it: ' + esc(why) + '</span>' : "")
+      + (gaps.length
+          ? ' <span class="q-gap">The record did not say ' + esc(gaps.join(", ")) + ', and none of it is invented here.</span>'
+          : "")
+      + '</div>';
+  }).join("");
+  return '<div class="q-aged"><b>Questions you set aside in this session.</b> A finding that simply '
+    + 'disappeared would be indistinguishable from one nobody ever raised, so what left the open list '
+    + 'is shown here with the record\'s own account of why.</div>' + rows;
+}
+
+function notifAbsenceHtml(){
+  const d = (typeof queueData === "function") ? queueData() : null;
+  if(!d) return "";
+  const classes = Array.isArray(d.classes) ? d.classes : [];
+  if(!classes.length) return "";
+  const deferred = Array.isArray(d.classes_deferred) ? d.classes_deferred : [];
+  const counts = (d.counts && typeof d.counts === "object") ? d.counts : {};
+  const haveCounts = !!(d.counts && typeof d.counts === "object");
+  return '<div class="q-levels"><b>What this list can and cannot be empty about.</b> '
+    + 'An empty stretch of a list is not one fact but two — the record looked and found nothing, or '
+    + 'nothing on this plane looks yet — and which one is true is said here per class rather than '
+    + 'left to be inferred from a quiet screen.'
+    + '<ul class="q-levels-list">'
+    + classes.map(c => '<li>' + notifClassLine(c, deferred, counts, haveCounts) + '</li>').join("")
+    + '</ul></div>';
+}
+
+/* ============================================================
+   (5) WHAT THIS PROJECT STANDS ON — the stance surface, and the home of
+   `op=versioncurrent`.
+   ============================================================ */
+
+/* THE ASK, STATED RATHER THAN INHERITED, and never rendered: the plane clamps it
+   and publishes the bound it APPLIED, which is the only figure a member is told
+   (REC-57's discipline; `bound-sweep` ARM E asserts no constant declared here
+   reaches a member-facing sentence). `versionsBoundHtml` — UI-42's, reused
+   rather than re-spelled — is what turns the published bound into words. */
+const STANCE_ASK = 200;
+
+/* { project, inquiry, versions[], current, currentPublished, bound, acts[],
+     refusal, refusalAct, receipt, err, busy, present } */
+let STANCE = null;
+let STANCE_HASH_LOCK = false;
+
+/* THE ONE DOOR, and it names the project — which is the whole difference between
+   this read and the version-review one. `op=basisversions` publishes `current`
+   ONLY when `project` is given (§7: there is no default project and there must
+   not be one), so the ask carries it explicitly and the answer's own bound is
+   read and said at the door. */
+async function stanceRead(projectId, inquiryId){
+  const answer = await recR("basisversions",
+    { id: String(inquiryId || ""), project: String(projectId || ""), limit: String(STANCE_ASK) });
+  const bound = (answer && answer.ok !== false && answer.limit !== undefined
+                 && answer.truncated !== undefined)
+    ? versionsBoundHtml(answer, "for this question")
+    : versionsBoundHtml(null, "for this question");
+  return { answer: answer || null, bound };
+}
+
+function stanceList(){ return (STANCE && Array.isArray(STANCE.versions)) ? STANCE.versions : []; }
+function stanceFind(name){
+  const n = String(name == null ? "" : name);
+  return n ? (stanceList().find(v => v && String(v.name) === n) || null) : null;
+}
+
+/* WHAT THE PROJECT STANDS ON, OR WHICH ABSENCE IT IS.
+   Three states and they are not interchangeable:
+     · the field was not published at all — the read named no project, so there
+       is no stance to have an answer about;
+     · the field was published as null — and the plane collapses THREE cases into
+       that one answer on purpose, so this says which three rather than picking
+       the flattering one;
+     · a reading is named — rendered with the date and the member on it, because
+       §7's pointer is dated and authored and a stance with neither is the shape
+       D-214 refuses. */
+function stanceCurrentHtml(){
+  if(!STANCE) return "";
+  if(!STANCE.currentPublished)
+    return '<div class="q-gap">The record published nothing about what any project stands on here, '
+         + 'because this read named no project. A stance belongs to a project\'s relationship with a '
+         + 'question and never to the question itself, so there is no answer to give without one.</div>';
+  const c = STANCE.current;
+  if(!c || typeof c !== "object")
+    return '<div class="q-gap"><b>The record names no reading for this project on this question.</b> '
+         + 'That one answer covers three different situations on purpose, and the record will not tell '
+         + 'them apart: this project has stood on no reading; or this project holds no document to '
+         + 'record one in; or this credential may not see the project at all. They answer identically '
+         + 'so that asking cannot be used to find out which projects exist.</div>';
+  const named = stanceFind(c.version);
+  return '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">This project stands on</span><span class="v plain">'
+    + (named
+        ? '<a onclick="stanceRotateToReview(' + esc(JSON.stringify(String(c.version))) + ')" class="mono">'
+          + esc(String(c.version)) + '</a>'
+        : '<span class="mono">' + esc(String(c.version)) + '</span>')
+    + '</span></div>'
+    + (named ? "" : '<div class="q-gap">That reading is not among the ones this answer carries, so nothing '
+                  + 'else about it is shown here rather than drawn from something else.</div>')
+    + '<div class="subj-how">Declared by ' + esc(String(c.by || "an unnamed member"))
+    + ' on ' + esc(String(c.at || "an unrecorded date")) + '.</div>'
+    + (named ? '<div class="subj-how">' + esc(vrevDecision(named)) + '</div>' : "")
+    + (named && vrevComposition(named) ? '<div class="subj-how">' + esc(vrevComposition(named)) + '</div>' : "")
+    + '</div>';
+}
+
+/* THE ACT. Its label is the plane's and is rendered unmodified (DEC-8); where
+   the plane publishes no `versioncurrent` for this question THERE IS NO CONTROL
+   AT ALL and no sentence about one — a capability a member has not got is
+   absent, never greyed (Q12). The plane offers it only where some reading has
+   been accepted (§6 rule 5), so its absence here is the record's answer about
+   the question's state, not this page's rule. */
+function stanceActHtml(act){
+  if(!act) return "";
+  const rows = stanceList().filter(v => v && v.state === "accepted");
+  if(!rows.length)
+    return '<div class="q-gap">' + esc(act.label || "") + ' — the record publishes this act on this '
+         + 'question, and this answer carries no reading anybody has accepted, so there is nothing to '
+         + 'stand on yet.</div>';
+  return '<div class="intent-box"><div class="intent-lede">' + esc(act.label || "") + '</div>'
+    + '<p class="subj-note">Standing on a reading is this project\'s own dated declaration and changes '
+    + 'nothing for any other project reading the same question. It can be declared again, and each '
+    + 'declaration stands in the record beside the one before it.</p>'
+    + rows.map(v => '<button class="btn" onclick="stanceSend('
+        + esc(JSON.stringify(String(v.name))) + ')">Stand this project on '
+        + esc(String(v.name)) + '</button>').join("")
+    + '</div>';
+}
+
+function stanceReceiptHtml(){
+  const r = STANCE && STANCE.receipt;
+  if(!r) return "";
+  return '<div class="intent-ok">The record recorded this. This project now stands on <span class="mono">'
+    + esc(String(r.version || "")) + '</span>, declared by ' + esc(String(r.author || "an unnamed member"))
+    + ' on ' + esc(String(r.at || "an unrecorded date")) + '.</div>';
+}
+
+function stanceHtml(){
+  if(!STANCE) return "";
+  const crumb = recordCrumb(STANCE.inquiry, " &rsaquo; what this project stands on");
+  if(STANCE.err) return errPane(STANCE.err, crumb);
+  if(STANCE.refusal) return crumb + actRefusalHtml(STANCE.refusal);
+  if(STANCE.busy) return crumb + '<div class="empty">Reading what the record holds for this question.</div>';
+  const all = stanceList();
+  const act = actNamed(STANCE.acts, "versioncurrent");
+  return crumb
+    + '<div class="trow"><h1 class="rec">What this project stands on</h1></div>'
+    + '<p class="lede"><span class="mono">' + esc(STANCE.project) + '</span> on <span class="mono">'
+    + esc(STANCE.inquiry) + '</span></p>'
+    + credentialSentence(PLANE.me)
+    + '<h2 class="sec">The reading this project stands on</h2>'
+    + stanceCurrentHtml()
+    + stanceReceiptHtml()
+    + (STANCE.refusalAct ? actRefusalHtml(STANCE.refusalAct) : "")
+    + '<h2 class="sec">Declaring a stance</h2>'
+    + (act ? stanceActHtml(act)
+           : '<div class="q-gap">The record publishes no way for this credential to change what this '
+             + 'project stands on, so none is offered here.</div>')
+    + '<h2 class="sec">The readings this question has</h2>'
+    + (STANCE.bound || "")
+    + (all.length
+        ? '<p class="count-line">' + all.length + ' reading(s) came back. Which of them this project '
+          + 'stands on is above; the readings themselves belong to the question and are the same ones '
+          + 'every project reading it sees.</p>'
+          + all.map(v => vrevVersionHtml(v, "")).join("")
+        : '<div class="empty">' + (STANCE.present
+            ? "The record holds no reading of this question's evidence yet, so there is nothing for any project to stand on."
+            : "Nothing answers here for this question. That is the same answer the record gives for a question it does not hold and for one this credential may not see, and the two are the same answer on purpose.")
+          + '</div>');
+}
+
+function stancePaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = stanceHtml();
+}
+
+/* Leaving for the review surface is a MOVE, not a copy: this page holds no
+   rotation memory of its own and does not grow a second version-review. */
+function stanceRotateToReview(name){
+  if(!STANCE) return;
+  versionReviewOpen(STANCE.inquiry, String(name));
+}
+
+/* Sent, never pre-flighted: whatever comes back that is a refusal is rendered in
+   the plane's own words (DEC-8), and the answer is re-read afterwards so what
+   the page shows is what the record holds rather than what this function
+   assumed. */
+async function stanceSend(name){
+  if(!STANCE || STANCE.busy) return;
+  STANCE.busy = true; STANCE.receipt = null; STANCE.refusalAct = null;
+  stancePaint();
+  const a = await actAsk("versioncurrent",
+    { target: STANCE.inquiry, version: String(name), project: STANCE.project });
+  if(a.accepted) STANCE.receipt = a.result || null;
+  else STANCE.refusalAct = a.refusal || null;
+  STANCE.busy = false;
+  await stanceLoad();
+}
+
+async function stanceLoad(){
+  if(!STANCE) return;
+  STANCE.busy = true;
+  stancePaint();
+  const [read, actsR] = await Promise.all([
+    stanceRead(STANCE.project, STANCE.inquiry).then(r => r || null, e => { STANCE.err = e; return null; }),
+    actsFor(STANCE.inquiry).then(r => r, () => ({ ok:false, acts:[] })),
+  ]);
+  const answer = read ? read.answer : null;
+  STANCE.bound = read ? read.bound : "";
+  if(answer && answer.ok === false){ STANCE.refusal = answer; STANCE.versions = []; }
+  else if(answer){
+    STANCE.refusal = null;
+    STANCE.versions = Array.isArray(answer.versions) ? answer.versions.filter(v => v && typeof v === "object") : [];
+    STANCE.present = answer.inquiry_present === true;
+    /* PUBLISHED vs NULL are different answers and are kept apart here, at the
+       one place the wire is read: `current` absent means nothing was asked about
+       a project, `current: null` means the record answered and named no
+       reading. Collapsing them into a falsy check is how the surface would come
+       to say "this project has not chosen" about a read that never asked. */
+    STANCE.currentPublished = Object.prototype.hasOwnProperty.call(answer, "current");
+    STANCE.current = STANCE.currentPublished ? answer.current : null;
+  }
+  STANCE.acts = (actsR && actsR.ok) ? actsR.acts : [];
+  STANCE.busy = false;
+  stancePaint();
+}
+
+async function stanceOpen(projectId, inquiryId){
+  const p = String(projectId == null ? "" : projectId).trim();
+  const id = String(inquiryId == null ? "" : inquiryId).trim();
+  if(!p || !id) return;
+  STANCE = { project:p, inquiry:id, versions:[], current:null, currentPublished:false,
+             bound:"", acts:[], refusal:null, refusalAct:null, receipt:null, err:null,
+             present:false, busy:true };
+  STANCE_HASH_LOCK = true;
+  try{ location.hash = "#stands/" + p + "/" + id; }catch(_){}
+  STANCE_HASH_LOCK = false;
+  await stanceLoad();
+}
+
+/* `#stands/<PROJ-…>/<INQ-…>` is a real address, and BOTH halves are in it
+   because a stance is the pair. It is asked inside `boot()`'s router chain and
+   nowhere at the top level, which is what makes it post-authentication —
+   `preauth-vocabulary.test.mjs` WALK 2 classifies it and pins both halves. */
+function stanceRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#stands\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  if(STANCE && STANCE.project === m[1] && STANCE.inquiry === m[2]) return true;
+  stanceOpen(m[1], m[2]);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRouteFromHash(); }); }catch(_){}
+/*__NOTIFICATIONS_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

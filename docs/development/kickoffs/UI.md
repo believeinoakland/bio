@@ -232,3 +232,60 @@ here, because DEC-32 clause 5's ordering rule is that structure is read before s
 and a review surface that put a grade beside each alternative is the surface that invites choosing
 by the number. It also names no `project`, so it renders no `current` (§7: a stance is the
 project's, not the question's) — that half is UI-45's.
+
+---
+
+## UI-45 — NOTIFICATIONS RENDERED (landed 2026-08-09, worktree `agent-a4f9c3083de5f28e3`)
+
+**The block is `__NOTIFICATIONS_START__` … `__NOTIFICATIONS_END__`, appended after
+`__VERSION_REVIEW_END__`, plus four named renderers inside `__QUEUE_START__` and one key in
+`SURFACES`.** UI-42's delegated `current`/project half is discharged here, and `versioncurrent` is
+struck from `ACTS_AWAITING_SURFACE` in the same commit.
+
+**Read these five before you touch a notification renderer.**
+
+1. **EVERY WORD ABOUT WHAT HAPPENED IS THE PLANE'S.** The queue renders a FINDING from the
+   producer's own `summary`, `detail` and `basis.detail`, and this item added three more of the
+   plane's own sentences to that list — `options_grain.detail`, `basis_entry.detail` and the
+   disposition answer's `reason`. **The surface holds NO per-kind wording table and names no kind
+   slug at all**, and `notifications.test.mjs` §1 asserts that structurally over the block's source.
+   The plane's per-kind sentences live in `queuestate.mjs` and are not published to any op; copying
+   them here would be two answers to one question in two repositories, which is DEC-8's drift class.
+2. **THE TWO SLUGS UI-45's ROW NAMES DO NOT EXIST, AND THEIR ABSENCE IS ASSERTED.**
+   `stance-changed-here-not-elsewhere` and `new-version-arrived-from-another-team` are **PL-13's**
+   to mint and PL-13 has not landed. §0 of the suite imports `queuestate.mjs` and requires both to
+   be absent, so **the day PL-13 lands that arm goes red** and the next session surfaces them. Do
+   not "fix" that failure by deleting the arm; it is the alarm.
+3. **A CONTROL THE RECORD CANNOT HONOUR IS WORSE THAN NO CONTROL, AND THIS IS NOW A PROPERTY.**
+   `op=proposedispose` is keyed on (`progression_key`, `stage_key`). Until this item the queue drew
+   Adopt / Defer / Dismiss on every FINDING, so on PL-15's out-of-inquiry lead all three could only
+   ever be refused. `notifDispositionKeyed(it)` asks the ITEM whether it carries the identity the
+   act is keyed on. **If you add a control to a queue item, ask what identity the act is keyed on
+   and whether THIS item carries it — never what kind it is.** A list of kinds goes stale the day
+   somebody mints a fourth.
+4. **AN EMPTY LIST OWES THE READER WHICH LEVEL WAS EMPTY.** `notifAbsenceHtml` reads `op=queue`'s
+   own `classes`, `classes_deferred` and `counts` and says, per class, which of THREE is true:
+   nothing on this plane raises one yet (*we did not look*), the record looked and raised none
+   (*nothing happened*), or the record published no count at all (a third fact, said as one rather
+   than shown as zero). A feed that did not answer produces NO level statement — with no published
+   class list there is nothing to say, and a line composed here would claim the record said
+   something it did not.
+5. **AN AGED PROPOSAL LEAVES THE OPEN LIST AND STAYS ON THE SCREEN.** §6.4 and the item's second
+   named negative control. The plane already ages a disposed proposal out of the open feed; the
+   surface used to show the receipt inside a dialog that then closed, so the finding simply vanished.
+   `notifDisposedHtml` renders the record's own `op=proposedispose` answer on the queue, and a field
+   the answer did not carry is **said to be missing rather than filled in from what this page sent**.
+
+**What the stance surface is, and why it is a second surface rather than a second read.**
+`#stands/<PROJ-…>/<INQ-…>` — `op=basisversions` publishes `current` **only when a project is
+named**, so the read names one and the surface hosts `op=versioncurrent`. A NULL `current` is **not**
+"this project has not chosen": the plane's `#currentVersionOf` collapses three situations into that
+one answer on purpose (no reading named, no document to record one in, a project this credential may
+not see), and the page says which three and why they answer identically. **Do not replace that with
+the flattering one.** UI-42's `VREV_STATE_WORD`, `vrevComposition` (and through it the elicitation's
+two falsifier stems) and `versionsBoundHtml` are CALLED here — no third spelling exists, and the
+suite pins that.
+
+**The seventh router.** `stanceRouteFromHash` is classified POST-AUTHENTICATION in
+`preauth-vocabulary.test.mjs` WALK 2, both halves pinned. That arm fired on this item's first run,
+which is the third consecutive time it has stopped a router arriving unclassified.
