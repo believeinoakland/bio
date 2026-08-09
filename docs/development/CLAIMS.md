@@ -6305,3 +6305,173 @@ have been a fence tighter than its rule. **What Bob would have been asked, had t
 silent, is on the record anyway as IC-50's reversal cost:** re-wording is two functions today and
 rises with every new consumer of a strength axis; the alternative is unrecoverable per-surface
 deletion.
+## CLAIM 2026-08-09 RECORD (PL-20 — DEC-65's step THREE: the strength pair re-measured over grounds)
+session: pl20-dec65-step-three (worktree agent-a04afa9454cdf0bc2)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/test/dec65-strength-reach.test.mjs`** (NEW — this item's suite: the reach
+  instrument, the driven differential over several grounds, and the licence statement),
+  **`bio-plane/test/dec65-strength-reach.control.mjs`** (NEW — the negative-control driver,
+  deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs).
+  `docs/development/CLAIMS.md` (this entry and its delegations),
+  `docs/development/DECISIONS.md` (DEC-65's enactment note for step THREE ONLY — appended, no other
+  row touched), `docs/development/MEASUREMENTS.md` (one entry).
+  **`bio-plane/scripts/coverage.mjs`** and **`civicos-ui/check-refusal-codes.mjs`** — the FLOOR
+  figures ONLY, and ONLY if this item's own run PRINTS a move. **NO SOURCE FILE IS EDITED.**
+  `bio-plane/src/store.mjs`, `bio-plane/checks/bio-checks.mjs`, `bio-plane/src/schema.mjs` and
+  `bio-plane/src/index.mjs` are **READ AND NEVER WRITTEN** — this step is a MEASUREMENT, and the two
+  outcomes it can have are "the licence is closed" and "there is a defect to report", neither of
+  which is an edit to the arithmetic. **NOT** `civicos-ui/**` (beyond the one FLOOR figure),
+  **NOT** `agent-worker/**`, **NOT** `newgroup/**`, **NOT** `release/**`.
+interfaces consumed: I3 (the plane's op surface — `op=versionstrength`, `op=inquirystrength`,
+  `op=promote`, `op=earnedbasis`). interfaces owned: none. **No shape any consumer builds against
+  changes, because no source changes.**
+expected: DEC-65, answered 2026-08-09 by session BOB and enacted in three steps. Step ONE was PL-17
+  (the third `asserted_by` state, minted and deliberately inert); step TWO was PL-19 (`C-25.6` and
+  PL-3's endpoint guard, together). **This is step THREE: re-measure the strength pair over
+  GROUNDS** — specifically the survey PL-19 named as the thing it did not do, *"whether anything in
+  the strength walk READS `asserted_by` at all across SEVERAL grounds"*.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief;
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. Negative
+  controls RUN, each arm ALONE with the other defences held OPEN, a BASELINE arm included, an
+  OVER-STRICTNESS arm included (a genuine member claim in a spelling I did not anticipate must still
+  read as a member claim), restores verified by sha256 AND `cmp` against uniquely-named per-arm
+  pristine copies. Tested THROUGH the ops, not only at the store. No push, no merge.
+concurrency: **AND THE FIRST THING THIS ITEM MEASURED IS THAT ITS OWN PREREQUISITE IS NOT IN `main`.**
+  PL-19 is committed on `worktree-agent-a875e2afd837947d7` (`7844e16`, `4b3f7a7`) and is NOT merged
+  and NOT pushed; this worktree's `main` (`1081a6a`) carries PL-17's merge and UI-45's and nothing of
+  step two. Measured, not assumed: `git branch -a --contains 7844e16`. **The item is deliberately NOT
+  merged into this branch** — a trial `git merge` conflicts in `bio-plane/scripts/coverage.mjs`'s
+  `REGISTER_FLOOR`, `civicos-ui/check-refusal-codes.mjs`'s floor, `CLAIMS.md` and `MEASUREMENTS.md`,
+  which is CONDUCT's integration and is the exact `REGISTER_FLOOR` keep-both-keys shape that has gone
+  wrong six times. **What this item does instead is measure on BOTH trees** and say so, which is a
+  stronger result than either alone: the answer is a property of `#strengthWalk`, and PL-19 did not
+  touch `#strengthWalk`. **The id was NOT minted here either, and that is a finding:**
+  `node tools/mintid.mjs PL --floor-only` reports FLOOR `PL-18`, because the floor is derived from
+  `QUEUE.md` and PL-19's entry is unmerged — so minting would have handed out `PL-19` and collided
+  with a live item. The shared ledger (`.git/bio-idalloc`) already holds `17..20`, so `PL-20` was
+  allocated when the brief was written and the ledger, not the floor, is what caught it.
+
+released: 2026-08-09 — committed on `worktree-agent-a04afa9454cdf0bc2`, **NOT pushed and NOT merged**;
+  CONDUCT integrates. **DEC-65's STEP THREE IS DONE AND THE ANSWER IS THE FIRST OF THE BRIEF'S TWO
+  LEGITIMATE OUTCOMES: `#strengthWalk` NEVER READS `asserted_by`, so the third state cannot move a
+  pair, and the licence is CLOSED at the arithmetic.** Stated as a measurement with its reach
+  printed, not as an absence of findings. **NO SOURCE FILE WAS EDITED** — the two floors below are
+  the only non-test, non-record change.
+  **THE REACH, static over comment-stripped real source.** The arithmetic is the transitive callee
+  closure of `#strengthWalk` — **COMPUTED, never listed**, so a helper added tomorrow is swept
+  without this suite being edited — and it is **8 functions** (`#strengthWalk`, `#axisResult`,
+  `#groundResult`, `#weakestOf`, `#namedMember`, `#rows`, `basisFor`, `normalizeType`) over a corpus
+  of **406 methods and 109 catalog functions** (`store.mjs` is **24,468 lines** — measured; CLAUDE.md's
+  warning is earning its keep, the figure was 21,248 a day ago). **NOT ONE names the field.** The
+  closure's whole **47-name property vocabulary is PRINTED** so the negative is checkable rather than
+  trusted. The recogniser is **RE-RUN over a source that DOES read the field and finds it**, and over
+  one naming it only in a COMMENT and does not — so the zero is neither a matcher looking in the
+  wrong place nor a sweep citing its own prose. **Every unresolved callee name is CLASSIFIED** (6
+  self-declaration lines, 4 local bindings) and **the genuinely-unknown bucket is asserted EMPTY**.
+  **THE SUPPLY.** Exactly **FOUR** call sites — the walk's recursion plus `strengthOf`,
+  `versionStrength`, `suggestVersion` — enumerated by the instrument. Neither table feeding the walk
+  projects the field, and the pin **tells them apart from `connections`**, which carries a column of
+  that name about a different fact, so it cannot pass vacuously. `op=suggest`'s candidate legs are a
+  **closed literal** the attribution is not a key of — the one route a caller's own bytes could ride.
+  **THE DIFFERENTIAL, DRIVEN, AT BOTH ALTITUDES** and never naming the field, so it would catch the
+  value arriving under an alias: over a **THREE-part** finding through `op=inquirystrength` and a
+  two-part version through `op=versionstrength`, every attribution fact rewritten — different
+  members, dates, statements, row order — and the pair is **byte-identical**; while the same
+  comparison over a changed part **LABEL moves it on both axes** (capture B→C, connection A→C), so
+  the equalities are a finding and not a free agreement.
+  **TWO THINGS THE ITEM DID NOT GO LOOKING FOR.** (1) A version's frozen composition string
+  **INCLUDES its attribution row**, so an attribution-only edit to a stored reading is refused as
+  `VERSION_FROZEN`, named `ground changed` — driven, not read off the source. (2) **A LIVE OVERCLAIM
+  ON `main`:** a hand-authored **TWO-part** reading whose second part carries `SUFFICIENCY_UNCLAIMED`
+  is **ADMITTED at `op=promote`** — `C-25.6`'s member arm asks `isMachineIdentity` and PL-17 minted
+  the value in a namespace deliberately neither `token:` nor `class:` — and the maximum is then taken
+  over a part whose own row says outright nobody claimed it: **connection A where the parts anybody
+  signed for support only C**, with nothing in the answer saying so. PL-17 measured that arm over ONE
+  part and pinned it; nobody measured it over SEVERAL, which is exactly what step three was
+  delegated. **PL-19 CLOSES IT**, measured rather than inferred.
+  **FIGURES.** Battery **143/143 green · 9,209 assertions · 136.5 s · exit 0**, against a true
+  baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **142/142 · 9,179 · 131.9 s** (the brief
+  carried no figure; PL-19's 140/140 · 8,907 is stale against today's `main`, which is what measuring
+  your own baseline is for). **Delta +30 attributed by DIFFING the two full runs PER SUITE, never by
+  subtraction: 141 of 143 byte-identical** — `dec65-strength-reach.test.mjs` +27 (new) and
+  `hygiene.test.mjs` 561→564 (it reads `test/`). `node scripts/coverage.mjs --strict` run DIRECTLY
+  with `$?` read UNPIPED, **exit 0** — OPS 163/163, CHECKS 222/222, provenance `149 of 149 discovered
+  item(s) are in the commit at HEAD`. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read
+  UNPIPED, **0**. `node civicos-ui/check-refusal-codes.mjs` exit **0** — `regionLines` is UNMOVED at
+  1425 and no governed DEC-49 region was touched, because this item edited no source.
+  **TWO FLOORS MOVED, BOTH FROM PRINTED FIGURES, ONE KEY SET EACH (verified by `grep`).**
+  `REGISTER_FLOOR` 654→**661** arms / 136→**137** classified / 137→**138** corpus, read AFTER the new
+  files were in a commit. **AND IT WAS NOT STALE ON ARRIVAL, WHICH BREAKS A STREAK AND IS RECORDED
+  BECAUSE THE OTHER FINDING WOULD HAVE BEEN THE EXPECTED ONE:** `main` at `1081a6a` checked out into
+  a scratch `git worktree` (never `git stash`) and `--strict` run on that quiet tree printed
+  `654/654 · 136/136 · 137/137` — no slack, no contamination note — so the whole +7/+1/+1 is this
+  item's seven control arms and one new suite. `FLEET_FLOOR` 4→**5** suites / 35→**43** arms, and
+  **none of that is this item's**: `agent-worker/test/fanout.test.mjs` is a fifth fleet suite
+  declaring eight arms that landed without the ratchet being re-read, and the same slack prints on
+  quiet `main`. Closed because a floor with slack is not a ratchet; attributed rather than absorbed.
+  **SEVEN CONTROL ARMS**, each armed ALONE with every other defence held OPEN, a BASELINE arm and an
+  OVER-STRICTNESS arm included, every restore verified by sha256 AND by `cmp` against uniquely-named
+  per-arm pristine copies with byte counts printed and floored against the empty-string digest; zero
+  restore problems. **TWO DECLARATIONS WERE WRONG ON THEIR FIRST RUN and both are corrected at the
+  arm rather than smoothed:** (1) declared 2 failures, measured 5 — the suite's own in-memory
+  sensitivity mutation is anchored on THE SAME LINE that arm patches, so it could not apply, and the
+  suite **said so** through its `an arm that never armed is a finding` assertion instead of passing
+  quietly; (3) declared 3, measured 2 — the closure and the property vocabulary survive a desynced
+  scanner intact, so the desync self-check and the call-site roster are the ONLY two things between a
+  broken scanner and a result that reads perfectly clean. **ARM 4 IS THE RECEIPT THAT §3's SENSITIVITY
+  ARM IS LOAD-BEARING:** with the partition collapsed, the two attribution equalities stay GREEN over
+  an arithmetic that has stopped composing at all. **ARM 5 IS NOT A PATCH — IT IS THE OTHER TREE:**
+  the unpatched suite run against PL-19's own sources in a scratch worktree at `4b3f7a7`, where
+  **exactly** §4's two defect pins fail and nothing else does, with an identical closure (8),
+  vocabulary (47), call-site roster and both differentials. **`git stash` was NOT used at any point.**
+  **WHAT THIS ITEM DID NOT DO:** it did not merge PL-19 (a trial merge conflicts in both floors and
+  two record files — CONDUCT's integration), it edited no source, and it did not touch `C-2.8`,
+  whose closure PL-19 decided and this item deliberately did not reopen. **TWO DELEGATIONS filed.
+  NO DECISIONS FOR BOB.**
+
+### DELEGATION 2026-08-09 RECORD (PL-20) -> CONDUCT: **STEP TWO IS UNMERGED AND IT CLOSES A LIVE OVERCLAIM, AND WHEN IT LANDS THREE OF MY ASSERTIONS MUST BE CORRECTED**
+
+**PL-19 (`7844e16`, `4b3f7a7` on `worktree-agent-a875e2afd837947d7`) IS NOT IN `main`** — measured
+with `git branch -a --contains`, not assumed. That is not merely a queue position:
+
+- **`main` today carries a live overclaim that PL-17's mint opened and nobody had measured.** A
+  hand-authored TWO-part reading whose second part carries `SUFFICIENCY_UNCLAIMED` is accepted at
+  `op=promote`, and the maximum is taken over it — the fixture reports connection **A** where the
+  parts anybody signed for support only **C**, with nothing in the answer saying so. It needs a
+  hand-written document to reach (nothing in the plane writes the value on `main`), so the exposure
+  is bounded — and it is exactly the class this project ranks worst, on the axis the whole product
+  is about.
+- **PL-19 closes it, and that is MEASURED rather than read off a diff:** the unpatched PL-20 suite
+  run against PL-19's own sources fails exactly the two defect pins and nothing else.
+- **WHEN YOU INTEGRATE PL-19, THREE ASSERTIONS IN `test/dec65-strength-reach.test.mjs` §4 FAIL BY
+  DESIGN.** They are labelled `PINNED DEFECT (correct at integration)` and the file's header says
+  who corrects them and why they were right when written. **CORRECT them to the refusal with a dated
+  reason at the site; do not exempt them.** This is PL-17's own idiom one step on — PL-17 pinned
+  assertions written to fail when PL-19 wired the state, and PL-19 corrected them.
+- **A TRIAL MERGE OF PL-19 INTO THIS BRANCH CONFLICTS** in `bio-plane/scripts/coverage.mjs`'s
+  `REGISTER_FLOOR`, `civicos-ui/check-refusal-codes.mjs`'s floor, `CLAIMS.md` and `MEASUREMENTS.md`.
+  The first is the keep-both-keys shape that has gone wrong eight times. **COLLAPSE TO ONE KEY SET
+  and RE-READ the printed figures from a green run on the merged tree** — neither PL-19's 647/136/137
+  nor this item's 661/137/138 is true of the merge, and adding them together would be wrong in both
+  directions for the reason CONDUCT already recorded at that site on 2026-08-08.
+
+### DELEGATION 2026-08-09 RECORD (PL-20) -> WHOEVER OWNS `agent-worker/test/fanout.test.mjs`: **A RATCHET MOVED WITHOUT YOU**
+
+`FLEET_FLOOR` sat at 4 suites / 35 arms while a green `--strict` run printed 5 suites / 43 arms, and
+the same slack prints on a quiet `main` at `1081a6a`, so it predates this item. The cause is
+`fanout.test.mjs` — a fifth fleet suite declaring eight arms — landing without the fleet ratchet
+being re-read. **PL-20 closed the floor to the printed figure and attributed it to you at the site
+rather than absorbing it**, because a figure that moves without attribution is how a ratchet quietly
+becomes a decoration. What is owed is the provenance line this item's comment is standing in for:
+which item, which run printed 43, and whether every one of the eight arms was RUN.
+
+### DECISIONS FOR BOB 2026-08-09 (PL-20): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. The one candidate was *should the pair SAY
+which parts a member claimed and which nobody did* — and the record already answers it: once step
+two lands, a reading with more than one part cannot carry an unclaimed one at all, so there is
+nothing for the answer to distinguish and a sentence about it would be describing a state the gates
+refuse. The live overclaim above is not a decision either; it is a defect with a fix already
+written, waiting on integration. Nothing here is a consequence Bob has not already ruled on in
+DEC-65 itself.

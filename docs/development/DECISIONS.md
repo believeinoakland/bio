@@ -4516,6 +4516,48 @@ enacted: 2026-08-09 · CONDUCT · **PARTLY, AND THE SEQUENCE IS THE RULING.** DE
   reading is identical to the same reading under a member's claim (`["graded","B","unrated",null]`
   both), which is the arithmetic argument driven on the plane rather than restated. A re-measurement
   ACROSS several grounds is PL-14's and is not done here.
+**ENACTMENT, STEP THREE OF THREE — PL-20, 2026-08-09: THE STRENGTH PAIR RE-MEASURED OVER GROUNDS,
+  AND THE LICENCE IS CLOSED AT THE ARITHMETIC.** The ruling's third clause was *"PL-14 re-measures
+  the strength pair over grounds after"*, and PL-19's delegation named the exact question it left:
+  **whether anything in the strength walk READS `asserted_by` at all across SEVERAL grounds.**
+  **IT DOES NOT, AND THAT IS A MEASUREMENT WITH ITS REACH PRINTED RATHER THAN AN ABSENCE OF
+  FINDINGS.** The arithmetic is the transitive callee closure of `#strengthWalk` — **COMPUTED, never
+  listed** — and it is **8 functions** (`#strengthWalk`, `#axisResult`, `#groundResult`, `#weakestOf`,
+  `#namedMember`, `#rows`, `basisFor`, `normalizeType`) over a corpus of 406 methods and 109 catalog
+  functions. **Not one of them names the field**, and the closure's WHOLE property vocabulary — 47
+  names — is printed so the negative is checkable rather than trusted. The recogniser is **RE-RUN
+  over a source that DOES read the field and finds it**, and over one that names it only in a
+  COMMENT and does not, so the zero is neither a matcher looking in the wrong place nor a sweep
+  citing its own prose. **Two SQL tables feed the walk and neither projects the field** (`connections`
+  does, about a different fact, and the pin tells them apart); the third supply route, `op=suggest`'s
+  candidate legs, is a **closed literal** the attribution is not a key of.
+  **AND IT IS DRIVEN AS WELL AS READ, at BOTH altitudes.** Through `op=inquirystrength` over a
+  THREE-part finding and through `op=versionstrength` over a two-part version, every attribution fact
+  is rewritten — different members, different dates, statements added, rows reordered — and the pair
+  does not move by one byte; while the SAME comparison over a changed part LABEL moves it on both
+  axes, so the equalities are not the free agreement this project refuses to count as evidence.
+  **A SECOND, INDEPENDENT CLOSURE FOUND WHILE MEASURING:** a version's frozen composition string
+  INCLUDES its `ground/asserted_by/at/statement` row, so an attribution-only edit to a stored reading
+  is refused as `VERSION_FROZEN` — the field cannot be rewritten at that altitude at all.
+  **THE CONSEQUENCE, AND IT IS NOT ONLY GOOD NEWS: the arithmetic is attribution-BLIND, so
+  *the maximum is never taken over a part nobody claimed* is a WRITE-TIME fact and nothing else.**
+  The gates are not a belt beside a brace; they are the whole defence, which is what makes step two's
+  integration load-bearing rather than tidy.
+  **AND THE ITEM MEASURED A LIVE DEFECT ON `main` THAT NOBODY HAD LOOKED FOR.** With PL-17 landed and
+  PL-19 committed-but-unmerged, a hand-authored **TWO-part** reading whose second part carries
+  `SUFFICIENCY_UNCLAIMED` is **ADMITTED at `op=promote`** — `C-25.6`'s member arm asks
+  `isMachineIdentity`, and PL-17 minted the value in a namespace deliberately neither `token:` nor
+  `class:`, so the arm reads it as a named member. The maximum is then taken over a part whose own
+  row says outright nobody claimed it: in the fixture the reading reports **connection A where the
+  parts anybody signed for support only C**, with nothing in the answer saying so. PL-17 measured
+  that arm over ONE part and pinned it; over SEVERAL it is the overclaim this project ranks worst.
+  **PL-19 CLOSES IT** — measured, not inferred: the unpatched suite run against PL-19's own sources in
+  a scratch worktree fails **exactly** the two pins and nothing else. **So this is the integration
+  gap, not a design gap, and DEC-65's own three-step order is what opened it.**
+  **THE REACH ANSWER IS TREE-INVARIANT AND WAS MEASURED ON BOTH TREES:** identical closure (8),
+  identical vocabulary (47), identical call-site roster, identical differentials. **NOTHING FURTHER IS
+  OWED TO THE ARITHMETIC and DEC-65's licence is closed there.** What remains owed is the one thing
+  it always was: that the write gates stay whole, which is now asserted rather than assumed.
 ### DEC-64 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)

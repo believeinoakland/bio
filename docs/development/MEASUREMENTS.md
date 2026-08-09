@@ -6248,3 +6248,71 @@ the suite 41,191).
 is `[a,b]`) and left a bracket unbalanced. The suite went RED and the row read "as declared" — for
 a SyntaxError. The give-away was that no `FAIL` line was named beneath it where every other red
 arm named one. The arm now empties the corpus at the loop.
+## 2026-08-09 · PL-20 · DEC-65 STEP THREE — THE STRENGTH ARITHMETIC'S REACH OVER `asserted_by`
+
+Instrument: `bio-plane/test/dec65-strength-reach.test.mjs` (the reach analyser + the driven
+differential) and `bio-plane/test/dec65-strength-reach.control.mjs` (seven arms). Tree:
+`main` at `1081a6a` in worktree `agent-a04afa9454cdf0bc2`, `npm ci` run before anything was
+measured. **PL-19 (step two) was committed on `worktree-agent-a875e2afd837947d7` and NOT merged;
+every figure below was taken on BOTH trees and the reach figures are identical on both.**
+
+### The corpus, and the reach
+
+| figure | main @1081a6a | PL-19 @4b3f7a7 |
+| --- | --- | --- |
+| `src/store.mjs` lines | 24,468 | 24,024 |
+| `Store` methods parsed | 406 | 399 |
+| `checks/bio-checks.mjs` top-level functions | 109 | 109 |
+| arithmetic closure (transitive callees of `#strengthWalk`) | **8** | **8** |
+| functions in that closure naming `asserted_by` | **0** | **0** |
+| property names the closure touches | **47** | **47** |
+| call sites of `#strengthWalk` | **4** (self + 3 suppliers) | **4** |
+| callee names the matcher could not resolve | 10, **all explained**, 0 unknown | 10, same |
+
+The closure is `#strengthWalk`, `#axisResult`, `#groundResult`, `#weakestOf`, `#namedMember`,
+`#rows`, `basisFor`, `normalizeType`. The three suppliers are `strengthOf`, `versionStrength` and
+`suggestVersion`. **`store.mjs` is 24,468 lines on `main` — measured, and the figure CLAUDE.md
+warns about was 21,248 on 2026-08-08, so it has moved again in a day.**
+
+### What the matcher can and cannot see, stated
+
+It CAN see the field named in any syntactic position, in any function reachable from the walk,
+across both `store.mjs` and `bio-checks.mjs`, over comment-stripped source — and it was RE-RUN over
+a source that DOES read the field and found it, and over one that names it only in a comment and
+did not. It CANNOT see the value arriving **under an alias**: a property renamed at an intermediate
+hop is, to a name matcher, an innocent property. That is why the whole 47-name vocabulary is
+PRINTED rather than summarised, and why the driven differential — which never names the field and
+compares by VALUE — is a second instrument rather than a decoration. It also cannot see anything
+that exists only at runtime in workerd: the static arm reads source files node-side, so every
+behavioural claim in this item is made through an op and not from the probe.
+
+### The differential, driven through the ops
+
+Over a THREE-part finding (`op=inquirystrength`) and a two-part version (`op=versionstrength`),
+every attribution fact rewritten — different members, different dates, statements added, rows
+reordered — the pair is **byte-identical**. The SENSITIVITY arm over a changed part LABEL moves it
+on both axes (`capture B → C`, `connection A → C`), so the equalities are not free.
+
+### Two findings the item did not go looking for
+
+1. **A version's frozen composition string INCLUDES its attribution row**
+   (`ground\t<label>\t<asserted_by>\t<at>\t<statement>`), so an attribution-only edit to a stored
+   reading is refused as `VERSION_FROZEN`, named `ground changed`. Driven, not read off the source.
+2. **On `main`, a hand-authored TWO-part reading carrying `SUFFICIENCY_UNCLAIMED` in one part is
+   ADMITTED at `op=promote`**, and the maximum is taken over it: the fixture reports connection
+   **A** where the parts anybody signed for support only **C**, with nothing in the answer saying
+   so. `C-25.6`'s member arm asks `isMachineIdentity` and the minted value is deliberately not a
+   machine stamp. **PL-19 closes it** — measured by running the unpatched suite against PL-19's own
+   sources in a scratch worktree, where **exactly** the two defect pins fail and nothing else does.
+
+### The seven control arms
+
+Baseline 27/0. (1) the arithmetic READS the field → 22/5 (**declared 2**). (2) the field in a
+COMMENT only → 27/0. (3) the scanner's regex arm removed → 25/2 (**declared 3**). (4) the partition
+collapsed → 23/4, **and the two attribution equalities stay GREEN over an arithmetic that has
+stopped composing at all**, which is the receipt that §3's sensitivity arm is load-bearing.
+(5) the real step two, unpatched suite against PL-19's sources → 25/2, exactly the two pins.
+(6) over-strictness → 27/0. **Two declarations were wrong on their first run and are corrected with
+their reasons at the arm, never the guards that caught them.** Every restore verified by sha256 AND
+by `cmp` against uniquely-named per-arm pristine copies, byte counts printed and floored, no digest
+equal to the empty-string one.
