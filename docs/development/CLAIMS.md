@@ -4790,3 +4790,69 @@ The delegation stands unchanged and unworked. The agent worker's `principal_sour
 - **Recommendation: keep the vocabulary.** It costs one exported map in `airun.mjs`, it is the same shape PL-12's bias block already established one field over, and the sentence travels WITH the answer so no surface holds a copy (DEC-8). The cases are not decorative: **`context-has-no-project` is DEC-17's structural absence and `none-recorded` is a fact about the formation, and a reader that could not tell them apart would read a projectless run as a project that failed to set a standard.**
 - **The one place this reads beyond what was said.** DEC-17 rules that a project with no declared strength *"gates nothing, and the case says so rather than showing a blank"*. This item applies that to the RUN as well as to the case, on the reasoning that §11's conditions exist so a version is interpretable against them and an uninterpretable condition is not one. If the intent was that the run object stay silent about a bar it never had, **that is a one-line change to `#standardForRun`'s return and nothing else moves** — the consumer would then read UNKNOWN, which the suite already drives as its own arm.
 - **What reversing it costs: LOW, AND IT DOES NOT RISE THE WAY A SCHEMA DECISION WOULD.** No column, no table, no migration and no refusal was added — the change is entirely in what two readers publish, and both are additive. Reversing means deleting one key from two returns and one exported map; every consumer that reads what it read yesterday is unaffected either way. **It gets slightly more expensive once a surface renders the sentence**, because the surface would then have to grow the wording the plane stopped supplying — which is the direction DEC-49 exists to prevent, and is the real argument for deciding it now rather than later.
+## CLAIM 2026-08-08 RECORD (REC-69)
+session: worker-rec69 (worktree agent-a5723f4c87dfd5bd0)
+opened: 2026-08-08T00:00:00Z
+paths: bio-plane/src/store.mjs (the ONE new method `aiRunsInContext` and its dispatch
+  entry — nothing else in the file), bio-plane/src/index.mjs (the `OPS` row for
+  `op=airuns` and its addition to the fail-closed list that already names
+  `airun`/`airunlog`/`airunspawn`), bio-plane/checks/bio-checks.mjs (the new
+  `AI_RUNS_CONTEXT_CHECKS` family, C-34 — measured free before allocating),
+  bio-plane/test/airuns.test.mjs (new), bio-plane/test/bounds.test.mjs (the roster pin
+  moves 25 -> 26 and the new op joins DRIVEN — it MUST, or the roster pin fails),
+  civicos-ui/check-refusal-codes.mjs (the FLOOR constants only, moved from PRINTED
+  figures because this item invalidates them by adding a family and a region)
+interfaces consumed: I3 (the op contracts)
+interfaces owned: none; files IC-27 for the new op
+expected: REC-69 — `op=airuns&contextType=&contextId=`, the read that answers WHICH RUNS
+  ARE IN THIS CONTEXT. Gated on `context_id` through the SAME `#bundleGate` every other
+  `ai_runs` read compiles (D-15's one compilation point — no second predicate), bounded
+  with its bound published after clamping, per-row `session` shape identical to
+  `op=airun`'s.
+NOT CLAIMED, delegated instead: `civicos-ui/**` (app.html's surface — UI-49 built the
+  seam and exactly one function changes there; see the DELEGATION below).
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> UI (UI-49's own follow-on): **THE OP EXISTS. `op=airuns&contextType=&contextId=` ANSWERS "WHICH RUNS ARE IN THIS CONTEXT", AND EXACTLY ONE FUNCTION ON THE SURFACE CHANGES**
+
+UI-49 built the seam and said what it needed. This is it, landed and driven.
+
+- **The call:** `op=airuns&contextType=<inquiry|project>&contextId=<bundle id>[&limit=N]`. The envelope is `{ ok, context:{type,id}, runs:[…], count, limit, truncated }`.
+- **Every row is `op=airun`'s OWN `session` block** — not a similar shape, the SAME one: the list calls `aiRunRead` per run, and `airuns.test.mjs` asserts the two answers BYTE-IDENTICAL for the same run. The field-name-blind renderers do not move.
+- **The bound is 200 by default and 1000 at the ceiling**, published AFTER clamping, with `truncated` beside it — and both are published on the empty answer too, so the seam never has to guess which bound it was answered at. **`truncated` is a fact about what THIS VIEWER may see**: the gate is applied before the bound, deliberately.
+- **Whether a member may see a run is the record's answer, not the page's.** A run over a project they were not invited to is absent byte-identically to one that does not exist, and no count of the withheld travels. So the surface needs NO branch for "you may not see this".
+- **What UI-49's device-local roster still has that this does not:** nothing. This is strictly wider — it reaches runs the device never opened, which is the half §14a's promise was about. Whether the two sources are merged or the device one retired is UI's call and is NOT decided here.
+- **One thing to code against rather than discover:** an unrecognised `contextType` is a REFUSAL (`AI_RUNS_UNKNOWN_CONTEXT_TYPE`, C-34.2) and not an empty list, because an empty list would tell a member nothing is running on the strength of a typo. It carries a canned translation; render it, do not compose one.
+- **Reversal cost: none for UI.** The op is additive and nothing existing moved.
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> PL-5 / WHOEVER OWNS THE RUN OBJECT: **`aiRunOpen` DOES NOT FENCE `contextType`, SO A RUN CAN BE OPENED IN A CONTEXT KIND NO READ WILL ASK ABOUT**
+
+MEASURED, not inferred: `aiRunOpen` stores `String(contextType)` verbatim and `ai_runs.context_type` is a bare `TEXT` column. **§14a names exactly two kinds — an inquiry or a project — and until REC-69 the plane held those two words NOWHERE.** They now exist as `RUN_CONTEXTS` in `src/airun.mjs`, a text vocabulary beside `RUN_BOUNDS` and `RUN_ENDINGS`, and `op=airuns` refuses a kind outside it (C-34.2).
+
+- **The asymmetry that remains:** the READ is fenced and the WRITE is not. A run opened as `contextType: "meeting"` is in the record and no member can ever ask for it.
+- **NOT closed here, and the reason is scope rather than difficulty:** the open is PL-5's site, its refusals are C-22's family (facts about the run object, refused where it is written), and widening a WRITE's refusal set from inside a READ's item is how one item's blast radius becomes another item's red suite.
+- **What is owed:** `aiRunOpen` refuses a `contextType` outside `RUN_CONTEXTS`, as a C-22 row with its own canned translation, driven in `airun.test.mjs`. **Read `op=airuns`' case-blind match before deciding**: it matches `lower(r.context_type)` precisely because the write is unfenced today, and a fenced write would let that come back out — but only after the fence lands, never before, or a capitalised run already in a record becomes unreachable.
+- **Reversal cost: low now, rising.** Today no instance has a run with a rogue kind. Once one does, fencing the write is a migration question rather than a guard.
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> WHOEVER TAKES THE CLASS: **ELEVEN ACCESS PATHS THE SCHEMA BUILT FOR QUESTIONS NO OP ASKS**
+
+The item was told to sweep for the class — *which other questions a surface plainly needs cannot be asked of the plane at all?* — and the sweep is MECHANICAL rather than a reading, because REC-69's own gap had a fingerprint: `CREATE INDEX ai_runs_context ON ai_runs(context_id)` existed from the day IS-6 landed and **nothing in the plane filtered `ai_runs` by `context_id`.** Somebody built the access path for §14a's question and no op ever asked it.
+
+**MEASURED (`airuns.test.mjs`, printed every run): 79 indexes declared in `schema.mjs`, 68 with a statement filtering their leading column, 11 without.** Ratcheted as a CEILING *and* a FLOOR, so a new one fails the build naming the index and a shrinking list forces somebody to say why.
+
+Three were read by hand rather than trusted to the matcher, and all three are real:
+- **`links(source_bundle)`** — `source_bundle` appears only in an INSERT's column list and one projected field. Nothing asks *which links start at this bundle*.
+- **`tasks(assignee)`** — appears only as a field set to `null`. Nothing asks *what is assigned to me*, which is a question an inbox surface plainly needs.
+- **`inquiry_basis(grade_source)`** — appears only where a row is PROJECTED. Nothing asks *which legs got their grade from a resolution rather than from a member*.
+
+The other eight: `bundles(last_updated)`, `site_asset_refs(primary_sha)`, `links(citation_norm)`, `resolutions(grade)`, `connection_dirty(stamped_at)`, `proposal_dispositions(at)`, `correspondence(artifact_sha)`, `ai_credentials(principal_kind)`.
+
+**WHAT THE SWEEP CANNOT SEE, stated so nobody reads it as a census:** an index reached only through a JOIN's ON clause; one filtered through a dynamically composed fragment; and — the important one — **a missing question nobody built an index for.** It is a FLOOR on the class. **Eleven ops on one battery is how a diff stops being reviewable**, so none of them is built here.
+
+### FINDING 2026-08-08 RECORD (REC-69) -> REC-70's RATCHET, and it is a HAZARD rather than a defect
+
+While building this op the `session` block was first EXTRACTED into a shared private composer, which is the obvious way to make two reads publish one shape. **`meaning-bounds.test.mjs`'s FLOOR caught it within one run**, and the reason is worth carrying: `op=airun` sits on that ratchet's BARE roster because `aiRunRead` publishes `budget` off an unbounded `ai_run_bounds` scan, and moving that scan into a PRIVATE method took the op off the roster — **not because the read got better, but because the walk cannot follow a private helper.** The bare roster would have shrunk 39 → 38 and nothing in the plane would have improved.
+
+- **The extraction was REVERTED** and the list calls the public `aiRunRead` per row instead. `op=airun` is classified exactly as it was; the floor did not move.
+- **The general hazard, for whoever next refactors a dispatched read:** extracting a scan into a private helper is invisible to that walk, so it silently converts a KNOWN residual into an UNKNOWN one. The floor is the only thing that catches it, which is exactly what REC-67 moved it for.
+- **The residual itself is unchanged and is NOT this item's:** `aiRunRead`'s `budget` scan is still unbounded, and `aiRunSpawnPayload` already shows what bounding it looks like (`Object.keys(RUN_BOUNDS).length`, `cap + 1`, `limit`/`truncated` published). **Bounding it changes `op=airun`'s published shape**, which UI-49's suite pins, so it is a two-area change rather than a one-line one.
