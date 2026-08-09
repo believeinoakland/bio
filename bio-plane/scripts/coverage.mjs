@@ -278,8 +278,14 @@ const REGISTER_FLOOR = {
      silently absorbed, and DELEGATED to M0-14's area in CLAIMS.md: two DIFFERENT
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
-     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
+     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed.
+     MOVED 2026-08-09 by D-258: 654 -> 659, from this run's printed `GREW by 5 arm(s)`
+     — the five arms D-258 added to `test/fieldread.control.mjs` (R2, P2, P3, O3, C2),
+     declared in `query.test.mjs`'s NEGATIVE CONTROL block. `classified` and `corpus`
+     do NOT move: no suite was added. ONE key set, deliberately — keep-both merges
+     have left duplicate `arms:` keys here six times, and once the last won and was
+     the lowest. */
+  arms:       659,  // arms stated across the classified declarations
   classified: 136,  // declarations the detector could count arms in
   corpus:     137,  // suites the register reads
 };
