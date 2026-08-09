@@ -5157,9 +5157,42 @@ accepts-when: as IS-BUILD-PLAN UI-43. **Baselines MEASURED IN THIS WORKTREE BEFO
   this worktree. No push, no merge — CONDUCT integrates.
 concurrency: checked over the whole file. The only claim naming `civicos-ui/**` above this one is
   UI-42's, which is `released:` and merged on main at d579ae8; its region is not reopened and the one
-  line taken inside it is named by site. No live claim names `civicos-ui/test/surface-registry.test.mjs`
-  or `civicos-ui/test/preauth-vocabulary.test.mjs`. `bio-plane/**` is not claimed and not edited.
-released:
+  line taken inside it is named by site. No live claim names `civicos-ui/test/surface-registry.test.mjs`,
+  `civicos-ui/test/preauth-vocabulary.test.mjs` or `civicos-ui/test/ai-session-wire.test.mjs`.
+  `bio-plane/**` is not claimed and not edited.
+released: 2026-08-09 — committed on `worktree-agent-a9e7e017d06799858` at `fd1e2ae`, **NOT pushed and
+  NOT merged**; CONDUCT integrates. **Battery 139/139 at 8,869, exit 0, ZERO DELTA — and the delta is
+  MEASURED rather than argued: the true baseline was re-run in a scratch worktree at `d579ae8` and the
+  per-suite lines diffed BYTE-IDENTICAL across all 139 suites.** `coverage.mjs --strict` run DIRECTLY
+  with `$?` unpiped, exit 0; REGISTER FLOOR unmoved at arms 632/632 · classified 134/134 · corpus
+  135/135, and the `civicos-ui/test` control census 112 -> 121 arms with the new suite CLASSIFIED
+  (its declaration was UNCLASSIFIED at first — corrected into the arrow-and-enumeration grammar the
+  detector reads, rather than left to raise that walk's unclassified count). UI harness exit 0 read
+  UNPIPED, 42 -> 43 suites, `accept-ceremony` new at 90; `surface-registry` 424 unchanged in count
+  with four register rows struck and three floors moved; `preauth-vocabulary` 65 -> 68;
+  `ai-session-wire` 81 -> 85. Negative control: 9 arms plus a baseline row, ALL RUN, ALL AS DECLARED
+  after two were corrected — arm 4 ARMED WRONG (a `SyntaxError`, reported as `-1` and never `0`) and
+  arm 1's DECLARATION wrong rather than its patch. `app.html` restored byte-identically after every
+  arm, verified by sha256 AND by content, `a566574e6afe…` before and after.
+
+**TWO INSTRUMENT FINDINGS THIS ITEM PAID FOR AND THE NEXT SESSION SHOULD NOT.**
+(1) **THE SHARED SCRATCHPAD IS NOT ISOLATED AND IT SILENTLY SUBSTITUTED ANOTHER SESSION'S
+MEASUREMENT FILE FOR THIS ONE'S.** A coverage baseline written to
+`/tmp/claude-501/.../scratchpad/cov-base.txt` PRINTED `arms 632/632` to the terminal and, re-read
+minutes later, CONTAINED `arms 621/621` — a figure from a tree with the older floor. The same thing
+happened to a UI harness capture. **Caught only because a floor figure in the file disagreed with what
+the terminal had printed**, which is luck rather than method: had the numbers been merely plausible,
+this item would have reported another session's baseline as its own. Every figure above is taken from
+a file written INSIDE this worktree or from the terminal directly. WORKER.md already says to keep
+harness files in your own worktree; this is a measured receipt for it, and the exposure it names is
+BASELINES rather than harnesses.
+(2) **A `git worktree add` PLACED INSIDE YOUR OWN WORKTREE TURNS TWO REPO-WIDE WALKS RED FOR A REASON
+THAT HAS NOTHING TO DO WITH YOUR CHANGE.** Measured: with a scratch checkout at `.ui43-harness/baseline`,
+`op-claims.test.mjs` reported 31 pass / 2 FAIL — *"BOTH generated embeds of the plane are excluded"*
+and *"no comment and no planning document names an op that is not in the dispatch table (15,571
+mentions checked)"* — because the walk was reading two copies of the plane. Removing the scratch
+worktree returned it to 33/0 with no other change. WORKER.md recommends `git worktree add` for a clean
+tree and does not say WHERE; it belongs beside your worktree, never inside it.
 
 ### DELEGATION 2026-08-09 UI (UI-43) -> RECORD / WHOEVER OWNS `#axisResult`: **THE PLANE'S SUCCESS SENTENCE FOR A STRENGTH AXIS CARRIES THE VOCABULARY DEC-32 CLAUSE 1 FORBIDS, AND FOUR SURFACES ARE ALREADY RENDERING IT TO MEMBERS**
 
