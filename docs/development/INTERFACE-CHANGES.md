@@ -3078,3 +3078,69 @@ changes on the surface.
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*
+
+---
+
+## IC-50 · I3: `op=inquirystrength` / `op=versionstrength` — the WORDS of `pair.<axis>.detail` change for a STRUCTURED basis · PROPOSED 2026-08-09 (D-269, enacting DEC-32 clause 1) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-46; three ids — 47, 48, 49 —
+already held by other worktrees and stepped over).
+
+- **Interface:** I3 (the plane's op surface), **STABLE**.
+- **Proposer:** D-269, 2026-08-09, on UI-43's delegation.
+- **Owner to land it:** `RECORD` (landed here).
+- **Kind:** **PROSE ONLY.** No key is added, removed or renamed; no key's TYPE moves; no number,
+  state, grade or id changes. Every arithmetic value this op publishes is byte-identical.
+
+### PROPOSED
+
+**WHAT MOVES.** The words of ONE free-prose field, and only on the branches that describe a
+STRUCTURED basis:
+
+| where | was | is |
+| --- | --- | --- |
+| graded, when a set of reasons sets the grade | `the STRONGEST of the N independently sufficient grounds this conclusion rests on, … no stronger than the weakest capture WITHIN that ground` | `the STRONGEST of the N sets of reasons that each carry this conclusion on their own, … no stronger than the weakest capture WITHIN that set` |
+| graded, when a shared leg caps it | `That leg is needed by every ground, so no ground can be stronger than it.` | `That leg is needed by every one of those sets, so no set can be stronger than it.` |
+| graded, an unfinished set beside a graded one | `N further ground(s) is/are UNDETERMINED` | `N further set(s) is/are UNDETERMINED` |
+| undetermined, structured | `EVERY one of the N grounds it rests on is undetermined` / `a leg every ground needs is undetermined` | `EVERY one of the N sets of reasons it rests on is undetermined` / `a leg every one of those sets needs is undetermined` |
+| unrated, structured | `…on any of the N grounds` | `…on any of the N sets of reasons` |
+
+**THE FLAT (UNSTRUCTURED) SENTENCES ARE UNCHANGED TO THE BYTE**, and that is a correctness
+requirement rather than a courtesy: DEC-32's anti-gaming keystone is that a basis nobody structured
+reads exactly as it did before, and `grounds.test.mjs` asserts it.
+
+**WHY.** DEC-32 clause 1 forbids that vocabulary on any member-facing surface, and this field is
+rendered VERBATIM at five channels — `axisPanel` on the inquiry page, the SAME panel inside the
+published signed case, the undetermined pane, `legConsequence` beside the weakest leg, and a leg's
+`why`, into which `#strengthWalk` embeds the whole sentence. `#freezeStrength` also writes it into
+`bundle.md`'s frozen frontmatter. It was live, and it fired exactly when a member had used UI-27's
+elicitation. See D-269.
+
+**CONSUMER IMPACT, MEASURED RATHER THAN ASSERTED.**
+
+| consumer | reads `detail` how | impact | measured |
+| --- | --- | --- | --- |
+| `civicos-ui/app.html` (4 sites) | renders it VERBATIM through `esc()`; parses nothing, matches nothing | **NONE** | `node civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED, `0` before and after; app.html is not edited by this item |
+| `bio-plane/test/grounds.test.mjs` | four assertions MATCHED the retired words | **FOUR, all corrected in the same commit with a dated reason, none exempted** | the battery |
+| `bio-plane/test/strengthpair.test.mjs` | one assertion matches `/STRONGEST/` | **NONE — and this row is the reason the change is MINIMAL.** An intermediate wording of this correction also lowercased `STRONGEST` and `WITHIN`, which broke it for nothing: those two words are emphasis, not the vocabulary DEC-32 bans. The landed change moves ONLY the forbidden nouns and this consumer never sees it | the battery, which failed on the wider edit and is green on the narrow one |
+| UI fixtures in `inquiry-page` / `conclude-act` / `publication-entry` / `publishedcase` / `elicitation` `.test.mjs` | build FLAT `detail` strings | **NONE** — the flat sentences did not move | the UI harness, green |
+| `agent-worker/**` | its `.detail` uses are REFUSAL details, never an axis's | **NONE** | grep over `agent-worker/src` |
+| a case ALREADY PUBLISHED | carries the OLD sentence in its signed bytes | **NONE, AND DELIBERATELY SO** | see below |
+
+**THE PUBLISHED-BYTES CONSEQUENCE, STATED RATHER THAN GLOSSED.** A case published before today
+carries the retired sentence inside signed frontmatter and will carry it for ever. That is CORRECT
+— the record is append-only and rewriting a signed artifact to improve its wording is the one thing
+this project must never do — but it means **the vocabulary DEC-32 forbids survives in already-published
+cases, and no future item should read that as a regression.** Nothing in this change reaches back.
+
+**A NOTE FOR THE NEXT CONSUMER, because the measurement above has a trap in it.** D-269's own
+consumer-impact grep searched for the sentence as the SOURCE spells it and found THREE pinning
+assertions; the battery found a FOURTH, spelled a hair differently. **A grep over prose is a hint,
+not a consumer census** — the same failure, one layer up, that made the first measurement of D-269
+itself read 2 of 3. If you consume `detail`, do not match its words: it is free prose and IC-50 is
+the proof that it moves.
+
+### RESPONSES
+
+_(awaiting: `UI` — the only measured consumer. `FRAMEWORK`, `CAPTURE`, `CONTENT-*`, `FLEET` and
+`DIST` are not consumers of this field.)_

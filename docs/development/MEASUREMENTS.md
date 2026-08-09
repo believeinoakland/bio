@@ -5578,3 +5578,97 @@ existence, so nothing here measures how they will render. It **cannot judge the 
 that `op=queue` files a lead under inquiry B's ancestors is PL-15's acceptance. And, as with every
 UI suite here, **the DOM stub fires no events**, so the stance router is driven directly at its
 address rather than through `hashchange`, and the substitution is labelled at the site.
+
+## 2026-08-09 · D-269 — the analyst's vocabulary in the plane's SUCCESS prose
+
+Instrument: `bio-plane/test/analystvocab.test.mjs` (new), driven; class sweep by a scratch
+walker over the canned translations, the per-site refusal calls and every `detail:` in
+`store.mjs`. Worktree `agent-aac7ddaefbfcf8a7a`, at `main` 1081a6a.
+
+### The battery, this worktree, before any edit
+
+`142/142 suites green · 9179 assertions passing · 132.8s`, `$?` read UNPIPED, exit 0. The brief
+carried no figure to correct. Two suites report `assertions unknown` (`bundle.test.mjs`,
+`livefire.test.mjs`) and that is the runner's `-1`, not a zero.
+
+### The defect, BEFORE the correction
+
+`#axisResult` lifted from `store.mjs` by its real bytes and executed over a 12-fixture matrix on
+both axes — **30 composed sentences**, all three states reached:
+
+| corpus | size | sentences carrying the vocabulary | hits |
+| --- | --- | --- | --- |
+| `#axisResult` `detail`, DRIVEN | 30 | **18** | **42** |
+| … of which FLAT (unstructured) | 12 | **0** | 0 |
+| … of which STRUCTURED | 18 | **18** | 42 |
+| `#strengthWalk`'s own `why` sentences | 6 | 0 | 0 |
+
+**The defect is exactly REC-42's structured extension.** The pre-DEC-32 flat answer never carried
+it, which is why it survived four waves of surface sweeps.
+
+**Reach: FIVE channels, not the four reported.** `civicos-ui/app.html` renders the sentence
+verbatim at `axisPanel`'s graded and unrated panels, its undetermined pane, and `legConsequence`
+— and `#strengthWalk` embeds the WHOLE sentence into a leg's `why`, which `legConsequence` also
+prints. `axisPanel` is called from the PUBLISHED CASE's own pages as well as the inquiry page (the
+verbatim render appears **2** times in `app.html`), and `#freezeStrength` writes `detail` into
+`bundle.md`'s signed frontmatter.
+
+### After the correction
+
+**30 sentences, 0 hits, exit 0.** `analystvocab: 104 pass, 0 fail`.
+Reach line printed on every green run: `corpus 30 sentences over 12 fixtures x 2 axes · states
+[graded, undetermined, unrated] · machine lexicon 246 · member lexicon 383 (26 from the driven flat
+baseline) · adjudicated 41 · seeds 9`.
+
+### The class, swept beyond what was reported
+
+| corpus | walked | hits | disposition |
+| --- | --- | --- | --- |
+| B · canned translations on DEC-49 family rows | **166 rows over 16 families** | **1** — `MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND` ("Grounding says some of the reasons…") | **NOT FIXED — PL-14's ground.** Confirms UI-43's "1 of 163"; main has since moved to 166/16 |
+| C · per-site refusal `detail`s | **62 `refusal(` call sites over 5 source files**, flattened across every `+` | 2 raw, **both adjudicated FALSE POSITIVES** | `ROUTE_MARK_NO_AUTHOR` says *"DEC-52's ground"* — the idiom, not the noun; `AI_CREDENTIAL_MINT_NOT_A_MEMBER` says *"REC-46's ONE predicate"* |
+| D · every `detail:` composed in `store.mjs` | **460 sites**, the detail EXPRESSION only, flattened | **8 real** (plus 2 comment over-reads, named) | all 8 in `groundInquiry` (`store.mjs:5394–5503`), where `grounds[]` is the WIRE parameter being documented in a refusal. **NOT FIXED — PL-14's ground** |
+
+**What the class sweep could NOT see, stated:** it classifies PROSE only, so a word carried in a
+CSS class, a `data-` attribute or an id is invisible to it; it treats every interpolated record
+value as OPAQUE, so a member who names their own set *"ground 1"* has that rendered back and this
+instrument will not say so; and corpora B/C/D are matched by a SEED pattern rather than by the
+driven, lexicon-inverted classifier, so they over-report (two adjudicated false positives above)
+and could in principle under-report a spelling nobody has written yet.
+
+### Two findings about the instruments themselves
+
+1. **A SPELLING-KEYED GREP UNDER-REPORTS, TWICE IN ONE ITEM.** UI-43's first matcher read 2 of 3
+   because the source splits `independently ` from `sufficient grounds` across a `+`. D-269's own
+   consumer grep then found THREE pinning assertions in `grounds.test.mjs` and the BATTERY found a
+   FOURTH, spelled a hair differently. **The same class, one layer up, inside the item written to
+   fix it.** Control ARM 2 now measures the point rather than asserting it: with the phrase planted
+   split across a `+`, **0 of 5,030 string literals in `store.mjs` carry it** and a literal-scanning
+   matcher reads the tree clean — while the driven suite still goes red.
+   **AND THERE WAS A THIRD.** An intermediate wording of the correction also lowercased the
+   sentence's two emphasis capitals, and the battery then failed a FIFTH pinning assertion in
+   `strengthpair.test.mjs` (`/STRONGEST/`) that neither the grep NOR the first battery run had
+   surfaced. `STRONGEST` and `WITHIN` are not the vocabulary DEC-32 bans, so the landed change
+   moves **only the forbidden nouns** and that consumer never sees it. The wider edit would have
+   been a fence tighter than its rule, and it cost a consumer for nothing — which is the same
+   argument control ARM 6 makes from the other direction.
+2. **A RUNAWAY SPAN ANSWERING LOUDLY.** The lift's first brace scanner toggled *"in a template
+   literal"* on every backtick INCLUDING those in block comments, which store.mjs is full of. The
+   span ran to end-of-file and the `why` walk reported **1,704** string literals for a 90-line
+   function. It is **6**. The length floor did not catch it; an assertion that a span swallows no
+   OTHER function's anchor does.
+
+### The six control arms, declared before arming, all as declared
+
+Baseline GREEN first. (1) restore the landed wording → RED. (2) the phrase SPLIT across a `+` →
+RED. (3) fixture matrix emptied → RED on the corpus floor. (4) derived machine lexicon emptied →
+RED on its floor. (5) `axisPanel` stops rendering `detail` verbatim → RED. (6) **OVER-STRICTNESS:
+a block comment, an internal identifier and a test-fixture id all using the banned words → GREEN,
+as required.** Every restore verified by sha256 AND by content against a uniquely-named per-arm
+pristine, byte count printed and floored (`store.mjs` 1,543,540 bytes, `app.html` 1,138,342,
+the suite 41,191).
+
+**ARM 3 WAS WRONG ON ITS FIRST RUN AND IS RECORDED RATHER THAN SMOOTHED.** It patched
+`const MATRIX = [` into `const MATRIX = [].concat([`, which empties nothing (`[].concat([a,b])`
+is `[a,b]`) and left a bracket unbalanced. The suite went RED and the row read "as declared" — for
+a SyntaxError. The give-away was that no `FAIL` line was named beneath it where every other red
+arm named one. The arm now empties the corpus at the loop.
