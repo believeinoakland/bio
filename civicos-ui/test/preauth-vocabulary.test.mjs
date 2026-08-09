@@ -382,6 +382,9 @@ import vm from "vm"; import fs from "fs"; import path from "path";
 import { webcrypto } from "crypto";
 import { fileURLToPath } from "url";
 import { appScript } from "./extract.mjs";
+/* D-257 — WALK 3 harvests its term list off `civicos-ui/test/` and FLOORS on how
+   many suites it read. One mechanism, imported; the argument is at the walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
 const HERE = path.dirname(SELF);
@@ -1739,9 +1742,21 @@ if(S("case-address-not-published")){
    publication-entry reversibility sweep builds a RegExp) are excluded by the
    `includes(word)` requirement, because their entries are ordinary English. */
 function harvestSiblingTerms(){
-  if(EMPTY_TERMS) return { terms:[], files:[] };   // NEGATIVE CONTROL (b)
+  if(EMPTY_TERMS) return { terms:[], files:[], repro:[], prov:null };   // NEGATIVE CONTROL (b)
   const files = fs.readdirSync(HERE).filter(f => f.endsWith(".test.mjs") && path.join(HERE,f) !== SELF).sort();
-  const terms = new Set(); const from = [];
+  const terms = new Set(); const from = [], reproFrom = [];
+  /* D-257 / M0-16 — THIS WALK READS `civicos-ui/test/` OFF THE WORKING TREE AND
+     THE COUNT BELOW IS A FLOOR. `refs/stash` is repository-wide across all sixty
+     worktrees and `git stash push -u` carries untracked files, so another
+     worker's suite lands here and is counted (D-238, and the instance was a
+     whole `.test.mjs`, 57 assertions, in no commit). The TERMS are still
+     harvested from every suite present — a term a sibling is policing in
+     uncommitted work is still a term this surface must not spell, and dropping
+     it would weaken the sweep — but the REACH FLOOR is counted over
+     `git ls-tree HEAD` alone, so a phantom cannot raise it. */
+  const REPO = fileURLToPath(new URL("../../", import.meta.url));
+  const prov = readGitProvenance(REPO);
+  const inCommit = f => prov.inHead === null || prov.inHead.has(repoPath(REPO, path.join(HERE, f)));
   for(const f of files){
     const src = fs.readFileSync(path.join(HERE, f), "utf8");
     let hit = 0;
@@ -1749,9 +1764,20 @@ function harvestSiblingTerms(){
       if(!m[2].includes("includes(word)")) continue;
       for(const lit of m[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)){ terms.add(JSON.parse('"' + lit[1] + '"')); hit++; }
     }
-    if(hit) from.push(f + "(" + hit + ")");
+    if(hit){ from.push(f + "(" + hit + ")"); if(inCommit(f)) reproFrom.push(f); }
   }
-  return { terms:[...terms].sort(), files:from };
+  reportProvenance({
+    prov,
+    items: files.map(f => ({ path: repoPath(REPO, path.join(HERE, f)), what: f,
+      counted: "read for sibling-policed terms; the contributing ones carry WALK 3's reach floor" })),
+    instrument: "WALK 3's sibling harvest",
+    corpus: `civicos-ui/test/: ${files.length} suite(s) walked, ${from.length} contributed terms,`
+      + ` ${reproFrom.length} of those are in the commit`,
+    totals: prov.inHead === null ? [] : [
+      { label: "contributing suites", contaminated: from.length, reproducible: reproFrom.length, source: "suites" },
+    ],
+  });
+  return { terms:[...terms].sort(), files:from, repro:reproFrom, prov };
 }
 const SIBLING = harvestSiblingTerms();
 /* THE FOUR PHRASES DEC-49 ITSELF QUOTES, added on top and declared as added.
@@ -1761,9 +1787,17 @@ const SIBLING = harvestSiblingTerms();
 const DEC49_PHRASES = ["no active credential", "a salted derivation", "its stored hash", "this instance"];
 const TERMS = [...new Set([...SIBLING.terms, ...(EMPTY_TERMS ? [] : DEC49_PHRASES)])];
 
+/* THE FLOOR IS THE REPRODUCIBLE COUNT (D-257): a phantom suite deposited in
+   `civicos-ui/test/` may still contribute a term, and must never raise a floor. */
 ok("WALK 3 REACH: the term list was harvested from the sibling sweeps and is not empty — read "
-   + SIBLING.files.length + " suites [" + SIBLING.files.join(", ") + "]",
-   SIBLING.terms.length > 0 && SIBLING.files.length >= 8);
+   + SIBLING.files.length + " suites [" + SIBLING.files.join(", ") + "], floored on the "
+   + SIBLING.repro.length + " of them "
+   /* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4) — D-257 control ARM 3. */
+   + (!SIBLING.prov || SIBLING.prov.inHead === null
+        ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+        : "in the commit at HEAD (" + SIBLING.prov.headSha + ")")
+   + ", floor 8",
+   SIBLING.terms.length > 0 && SIBLING.repro.length >= 8);
 ok("WALK 3 REACH: it inherits " + SIBLING.terms.length + " terms from the siblings, including the ones "
    + "every one of them polices", ["op=", "capture_sha", "bundle_id"].every(t => SIBLING.terms.includes(t)));
 ok("WALK 3 REACH: and it carries the four phrases DEC-49 quotes, so the measurement can see its own subject",

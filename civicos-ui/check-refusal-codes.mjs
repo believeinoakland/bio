@@ -107,10 +107,35 @@ import { fileURLToPath } from "url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..", "bio-plane");
+/* D-257 / M0-16 — THE TWO WALKS BELOW READ THE WORKING TREE AND THIS FILE'S
+   `FLOOR` TABLE IS MOVED BY HAND TO FIGURES A GREEN RUN PRINTED. That pairing is
+   exactly D-238's payload: `refs/stash` is repository-wide across all sixty
+   worktrees and `git stash push -u` carries untracked files, so a phantom
+   `src/*.mjs` or a phantom suite raises the census or the reach, somebody moves
+   the floor to the figure the run printed, and the floor is then PERMANENTLY TOO
+   HIGH — it fails every honest run afterwards until the gate gets switched off.
+   The census and the reach are still computed over the whole working tree (a
+   code minted in uncommitted work is still a code, and the GAP ceiling must
+   still see it — that direction fails safe); the FLOORS are computed over
+   `git ls-tree HEAD` alone, which is the figure another checkout reproduces and
+   the only one this table may be moved to. */
+import { readGitProvenance, repoPath, reportProvenance } from "../bio-plane/scripts/provenance.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
 const TESTDIR = path.join(HERE, "test");
+const REPO = path.join(HERE, "..");
+const PROV = readGitProvenance(REPO);
+/* True for everything when git cannot answer — which is UNVERIFIED, printed as
+   UNVERIFIED by `reportProvenance`, and never reported as clean (D-233). */
+const inCommit = abs => PROV.inHead === null || PROV.inHead.has(repoPath(REPO, abs));
+/* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4), and it binds this file's
+   own NOTEs as well as the report: a line reading "in the commit at HEAD
+   (unverified)" claims the commit in the same breath as admitting it could not
+   look, which is D-233. Found by D-257's control ARM 3. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+  : `in the commit at HEAD (${PROV.headSha})`;
 
 const fails = [];
 const notes = [];
@@ -567,16 +592,22 @@ let FAMILY_CODES = new Set();
 
 function planeCensus() {
   const files = fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"));
-  const yields = {}, union = new Set();
+  const yields = {}, union = new Set(), unionRepro = new Set();
   for (const name of Object.keys(MATCHERS)) yields[name] = new Set();
+  const off = [];
   for (const f of files) {
-    const src = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
+    const abs = path.join(PLANE_SRC, f);
+    const committed = inCommit(abs);
+    if (!committed) off.push(f);
+    const src = fs.readFileSync(abs, "utf8");
     for (const [name, fn] of Object.entries(MATCHERS))
-      for (const c of fn(src)) { yields[name].add(c); union.add(c); }
+      for (const c of fn(src)) { yields[name].add(c); union.add(c); if (committed) unionRepro.add(c); }
   }
+  /* The family rows come from `checks/bio-checks.mjs`, a NAMED path rather than a
+     discovered one, so they belong to both unions on the same terms. */
   yields["M6 a DEC-49 row"] = new Set(FAMILY_CODES);
-  for (const c of FAMILY_CODES) union.add(c);
-  return { files: files.length, yields, union };
+  for (const c of FAMILY_CODES) { union.add(c); if (inCommit(CATALOG)) unionRepro.add(c); }
+  return { files: files.length, filesRepro: files.length - off.length, yields, union, unionRepro };
 }
 
 /* ============================================================
@@ -739,12 +770,18 @@ function armB(rows, census, surfaceTables) {
      mints it. Without the intersection this would harvest every constant name
      in two large files and call the noise "reach". */
   const R2 = new Set([...screamingLiterals(app)].filter(c => census.union.has(c)));
-  const R3 = new Set();
-  for (const s of suites)
+  const R3 = new Set(), R3repro = new Set();
+  for (const s of suites) {
+    const committed = inCommit(path.join(TESTDIR, s));
     for (const c of screamingLiterals(fs.readFileSync(path.join(TESTDIR, s), "utf8")))
-      if (census.union.has(c)) R3.add(c);
+      if (census.union.has(c)) { R3.add(c); if (committed) R3repro.add(c); }
+  }
 
   const reach = new Set([...R1, ...R2, ...R3]);
+  /* THE REACH FLOOR IS THE REPRODUCIBLE ONE (D-257). `suites` is discovered off
+     `civicos-ui/test/`; `app.html` and the catalog are NAMED paths and cannot be
+     inflated by an arrival, so R1 and R2 sit in both figures unchanged. */
+  const reachRepro = new Set([...R1, ...R2, ...R3repro]);
 
   /* THE TRANSLATIONS AVAILABLE, from the two licensed places and no third.
      DEC-49 licenses BOTH — Bob left build-time and runtime lookup open — but it
@@ -797,9 +834,35 @@ function armB(rows, census, surfaceTables) {
      rather than an impression. */
   const gap = [...reach].filter(c => !translated.has(c)).sort();
 
-  if (reach.size < FLOOR.reach)
-    FAIL(`the reach is ${reach.size} codes, floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
+  if (reachRepro.size < FLOOR.reach)
+    FAIL(`the reach is ${reachRepro.size} codes that are in the commit at HEAD (${reach.size} over the `
+       + `working tree), floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
        + `failure a ceiling cannot see. Establish which of R1/R2/R3 stopped yielding before moving the floor.`);
+
+  /* ONE PROVENANCE REPORT FOR BOTH WALKS — the plane sources the census read and
+     the suites R3 was harvested from, plus the two named paths, so a reader owed
+     the corpus is owed all of it (M0-16 rule 3: print the reproducible total
+     beside the contaminated one, at the place the figure is quoted). */
+  reportProvenance({
+    prov: PROV,
+    items: [
+      ...fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"))
+        .map(f => ({ path: repoPath(REPO, path.join(PLANE_SRC, f)), what: `src/${f}`,
+          counted: "matched for refusal codes, and counted into the census floor" })),
+      ...suites.map(s => ({ path: repoPath(REPO, path.join(TESTDIR, s)), what: `test/${s}`,
+        counted: "harvested for R3, and counted into the reach floor" })),
+      { path: repoPath(REPO, APP), what: "app.html", counted: "harvested for R2 (a NAMED path, not discovered)" },
+      { path: repoPath(REPO, CATALOG), what: "checks/bio-checks.mjs",
+        counted: "the DEC-49 families, R1 (a NAMED path, not discovered)" },
+    ],
+    instrument: "this guard's census and reach walks",
+    corpus: `bio-plane/src/: ${census.files} file(s), ${census.filesRepro} in the commit`
+      + ` · civicos-ui/test/: ${suites.length} suite(s)`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "census codes", contaminated: census.union.size, reproducible: census.unionRepro.size, source: "plane sources" },
+      { label: "codes in reach", contaminated: reach.size, reproducible: reachRepro.size, source: "sources and suites" },
+    ],
+  });
 
   if (gap.length > CEILING.reachGap)
     FAIL(`${gap.length} code(s) a surface CAN RECEIVE have no canned translation; the ratchet's ceiling is `
@@ -809,8 +872,10 @@ function armB(rows, census, surfaceTables) {
        + `than wording at the call site, then lower this ceiling in the same turn.`);
 
   NOTE(`arm B: REACH ${reach.size} codes — R1 family rows ${R1.size}, R2 named by app.html ${R2.size}, `
-     + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · floor ${FLOOR.reach}`
-     + `${reach.size > FLOOR.reach ? ` · GREW by ${reach.size - FLOOR.reach}` : ""}`);
+     + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · `
+     + `${reachRepro.size} of them ${HEAD_SAYS}, which is the figure `
+     + `floored and the one a floor may be moved to · floor ${FLOOR.reach}`
+     + `${reachRepro.size > FLOOR.reach ? ` · GREW by ${reachRepro.size - FLOOR.reach}` : ""}`);
   NOTE(`arm B: enacted perimeter ${perimeter.size} codes, ALL translated, gated at zero — `
      + `${R1.size} plane rows + ${perimeter.size - R1.size} minted into a surface table proved total`);
   NOTE(`arm B: RATCHET — ${gap.length} of ${reach.size} codes in reach still have no canned translation `
@@ -1602,9 +1667,14 @@ for (const [, table] of families) for (const c of Object.keys(table)) FAMILY_COD
 const census = planeCensus();
 for (const [name, set] of Object.entries(census.yields))
   NOTE(`walk: ${name.padEnd(20)} ${String(set.size).padStart(4)} codes`);
-NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src · floor ${FLOOR.census}`);
-if (census.union.size < FLOOR.census)
-  FAIL(`the plane census is ${census.union.size} refusal codes, floor is ${FLOOR.census}. The WALK lost `
+NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src`
+   + ` · ${census.unionRepro.size} of them from the ${census.filesRepro} file(s) ${HEAD_SAYS} · floor ${FLOOR.census}`);
+/* THE FLOOR IS COMPARED AGAINST THE REPRODUCIBLE CENSUS (D-257), and that is the
+   figure to move this table to. A floor moved to a contaminated run's number is
+   permanently too high — the payload D-238 names. */
+if (census.unionRepro.size < FLOOR.census)
+  FAIL(`the plane census is ${census.unionRepro.size} refusal codes that are in the commit at HEAD `
+     + `(${census.union.size} over the working tree), floor is ${FLOOR.census}. The WALK lost `
      + `sight — read the per-matcher line above to see which spelling stopped yielding. This is REC-70's `
      + `failure exactly, and a ceiling alone would have stayed green through it.`);
 

@@ -133,6 +133,11 @@ import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
    file spells no grade letter of its own anywhere. */
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../bio-plane/checks/bio-checks.mjs";
 import { ATTEST_FENCE, ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/affordances.mjs";
+import { fileURLToPath } from "url";
+/* D-257 — the doctrine sweep at the foot of this file walks the working tree and
+   FLOORS on what it found. The one provenance mechanism is imported rather than
+   restated; the argument for why this walk needed it is at the walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 /* The render companion's bytes, so the rendition can be read back and verified. */
 const COMPANION = new TextEncoder().encode("<!doctype html><html><body>companion</body></html>");
@@ -674,6 +679,34 @@ for(const word of ["subrequest", "runtime", "manifest", "register", "corroborati
   const rel = f => path.relative(ROOT, f);
   const isSuite = f => rel(f).startsWith("test" + path.sep);
 
+  /* ---- PROVENANCE, AND WHY THIS WALK CARRIES IT (D-257 / M0-16) ------------
+     `refs/stash` is REPOSITORY-WIDE across all sixty worktrees and `git stash
+     push -u` carries UNTRACKED files, so a `pop` deposits another worker's file
+     into a tree that never wrote it (D-238, measured). This walk read the
+     WORKING TREE and floored on the counts, so a phantom raised `FILES.length`,
+     `SURFACE.length` and `SUITES.length` at once — the reach guard's three
+     floors — and pushed them the wrong way.
+
+     THE SPLIT IS THE SAME ONE `version-predecessor.test.mjs` states in full: the
+     DETECTORS still run over the whole working tree, because a grade letter in a
+     file nobody has committed yet is still a finding and must still red this
+     suite; the FLOORS are computed over `git ls-tree HEAD` alone, because those
+     are the figures another checkout reproduces and the only ones a ratchet may
+     be compared against. When git cannot answer, `inCommit` says true for
+     everything, the two collapse, and `reportProvenance` prints UNVERIFIED
+     rather than clean (D-233). */
+  const REPO = fileURLToPath(new URL("../../", import.meta.url));
+  const PROV = readGitProvenance(REPO);
+  const inCommit = f => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, f));
+  const FILES_REPRO = FILES.filter(inCommit);
+  /* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4), and it binds this
+     caller's own prose too — a label reading "in the commit at HEAD (unverified)"
+     claims the commit while admitting it could not look. Found by D-257's control
+     ARM 3 in the sibling suite and corrected in all of them. */
+  const HEAD_SAYS = PROV.inHead === null
+    ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+    : `in the commit at HEAD (${PROV.headSha})`;
+
   /* The comment forms this tree actually writes. The line-comment strip is
      ANCHORED TO LINE START on purpose and REC-48 paid for the lesson: an
      unanchored `//` strip eats everything after `https:` inside a string
@@ -719,9 +752,26 @@ for(const word of ["subrequest", "runtime", "manifest", "register", "corroborati
      paper. Every claim this sweep makes is measured before it is made. */
   const SURFACE = FILES.filter(f => !isSuite(f));
   const SUITES  = FILES.filter(isSuite);
+  /* THE FLOORED FIGURES ARE THE REPRODUCIBLE ONES (D-257). The detectors below
+     still read `FILES`; only the ratchet reads `*_REPRO`. */
+  const SURFACE_REPRO = FILES_REPRO.filter(f => !isSuite(f));
+  const SUITES_REPRO  = FILES_REPRO.filter(isSuite);
+  reportProvenance({
+    prov: PROV,
+    items: FILES.map(f => ({ path: repoPath(REPO, f), what: rel(f),
+      counted: isSuite(f) ? "swept by detector (B), and counted into the SUITES floor"
+                          : "swept by detectors (A) and (B), and counted into the SURFACE floor" })),
+    instrument: "this suite's package walk",
+    corpus: `civicos-ui/: ${FILES.length} file(s) walked, ${FILES_REPRO.length} of them in the commit`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "package files walked", contaminated: FILES.length, reproducible: FILES_REPRO.length, source: "files" },
+    ],
+  });
   ok(`REACH: the walk reads the whole package — ${FILES.length} files, `
-     + `${SURFACE.length} of them outside test/`,
-     FILES.length > 30 && SURFACE.length >= 5 && SUITES.length >= 25);
+     + `${SURFACE.length} of them outside test/ — and it is FLOORED on the `
+     + `${FILES_REPRO.length} ${HEAD_SAYS}: `
+     + `${SURFACE_REPRO.length} surface, ${SUITES_REPRO.length} suite(s), floors 30/5/25`,
+     FILES_REPRO.length > 30 && SURFACE_REPRO.length >= 5 && SUITES_REPRO.length >= 25);
   ok("REACH: and it names the surface itself, this suite, and the two guards, rather than a subset it happened to find",
      [ "app.html", "worker.template.mjs", "check-semantics.mjs", "check-mock-envelope.mjs",
        path.join("test", "add-surface.test.mjs"), path.join("test", "act-attest.test.mjs") ]

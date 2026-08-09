@@ -199,6 +199,9 @@ import { appScript } from "./extract.mjs";
    finding, and the reason this correction costs two lines instead of a textual
    read of the plane's source. */
 import { CAPTURE_ACTS, ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
+/* D-257 — the retired-login-code sweep below walks the working tree and FLOORS
+   on what it found. One mechanism, imported; the argument is at the walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
 /* Set when this file is re-run by its own coverage/NC arms, so the child does
@@ -353,9 +356,35 @@ const RETIRED_LOGIN_CODES = [["BAD", "PASSWORD"], ["NO", "SUCH", "ROLE"]].map(p 
     return e.isDirectory() ? walk(p) : [p];
   });
   const files = walk(root);
-  /* A walk that reached nothing would pass silently, so it is measured. */
-  ok("the sweep reads the whole package, including the surface and this suite",
-     files.length > 20 && files.includes(path.join(root, "app.html")) && files.includes(SELF));
+  /* A walk that reached nothing would pass silently, so it is measured.
+     AND THE MEASUREMENT IS THE REPRODUCIBLE ONE (D-257 / M0-16): this walk reads
+     the WORKING TREE, `refs/stash` is repository-wide across all sixty worktrees
+     and `push -u` carries untracked files, so a phantom deposited here used to
+     raise `files.length` — the floor — the wrong way. The SWEEP still reads the
+     whole working tree (a retired code in an uncommitted file is still a finding
+     and must still red this suite); the FLOOR reads `git ls-tree HEAD` alone.
+     `inCommit` says true for everything when git cannot answer, and
+     `reportProvenance` prints UNVERIFIED rather than clean. */
+  const REPO = fileURLToPath(new URL("../../", import.meta.url));
+  const PROV = readGitProvenance(REPO);
+  const filesRepro = files.filter(f => PROV.inHead === null || PROV.inHead.has(repoPath(REPO, f)));
+  reportProvenance({
+    prov: PROV,
+    items: files.map(f => ({ path: repoPath(REPO, f), what: path.relative(root, f),
+      counted: "read for retired login codes, and counted into this sweep's reach floor" })),
+    instrument: "this suite's retired-code sweep",
+    corpus: `civicos-ui/: ${files.length} file(s) walked, ${filesRepro.length} of them in the commit`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "files swept", contaminated: files.length, reproducible: filesRepro.length, source: "files" },
+    ],
+  });
+  /* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4) — see D-257 control ARM 3. */
+  const HEAD_SAYS = PROV.inHead === null
+    ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+    : `in the commit at HEAD (${PROV.headSha})`;
+  ok(`the sweep reads the whole package, including the surface and this suite — ${files.length} file(s) walked,`
+     + ` floored on the ${filesRepro.length} ${HEAD_SAYS}, floor 20`,
+     filesRepro.length > 20 && files.includes(path.join(root, "app.html")) && files.includes(SELF));
   const found = [];
   for(const f of files){
     let src = ""; try{ src = fs.readFileSync(f, "utf8"); }catch(_){ continue; }

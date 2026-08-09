@@ -124,12 +124,58 @@
  *   (7) BASELINE: no patch at all, and the whole suite green — the row without
  *       which six arms failing for the wrong reason is indistinguishable from
  *       six arms working.
+ *
+ * NEGATIVE CONTROL (D-257, the provenance guard): seven more arms, RUN 2026-08-09
+ * through `test/provenance-floor.control.mjs` — committed, so the next session
+ * re-runs them in one step instead of re-deriving how to break the subject —
+ * each ARMED ALONE with every other defence
+ * held open, declared before arming, every restore verified by sha256 AND by
+ * `cmp` against a UNIQUELY-NAMED per-arm pristine copy with the byte count
+ * printed and floored at 1,000,000. **7 of 7 came back as declared, but only
+ * after ARM 3 came back WRONG and found a defect in this file rather than in the
+ * arm** — see (3) below. The phantom is WRITTEN rather than delivered by `git
+ * stash`: `refs/stash` is repository-wide across all sixty worktrees, so arming
+ * the real mechanism would arm it for everybody, and what these arms need is the
+ * STATE it produces (present in the tree, absent from HEAD).
+ *   (0) BASELINE: no patch — 43 assertions green, reproducible corpus 6 of 6
+ *       files, 600 functions, 5 sites.
+ *   (1) A PHANTOM `civicos-ui/zz-d257-phantom.mjs` with 400 functions -> the
+ *       report NAMES it UNTRACKED, the CONTAMINATED corpus rises to 7 files, the
+ *       REPRODUCIBLE figures hold at 6/600, and this suite plus add-surface,
+ *       auth-surface and bound-sweep all stay GREEN.
+ *   (2) THE SAME PHANTOM CARRYING AN UNLICENSED POSITIONAL PICK -> this suite
+ *       goes RED naming the phantom's function. The sweep still reads the whole
+ *       working tree, so a finding in uncommitted work is NOT hidden — that is
+ *       the half of the split the floor change must not cost.
+ *   (3) GIT SHIMMED TO EXIT 1 -> the report says UNVERIFIED and the suite stays
+ *       green. **THIS ARM CAME BACK NOT AS DECLARED THE FIRST TIME AND IT IS
+ *       RECORDED RATHER THAN SMOOTHED:** the provenance line said UNVERIFIED
+ *       while this file's OWN printed line still read "N of N file(s) are in the
+ *       commit at HEAD (unverified)" — a sentence claiming the commit in the same
+ *       breath as admitting it could not look, which is D-233 exactly and which
+ *       provenance.mjs's rule 4 exists to forbid. The prose was corrected here
+ *       and in all six sibling walks, not the arm.
+ *   (4) OVER-STRICTNESS: an UNCOMMITTED EDIT TO A TRACKED FILE (a function
+ *       appended to app.html) must still COUNT — provenance answers about a
+ *       PATH, never about content -> reproducible functions 600 -> 601, green.
+ *   (5) THE IMPORT REMOVED, with the allowlist entry already gone -> hygiene's
+ *       class census goes RED naming this file. Removing the entry is enforced
+ *       rather than decorative.
+ *   (6) THE DECISIVE PAIR, and without it this whole item could be decoration:
+ *       with the phantom present, the reach floor raised to 7 FAILS in the D-257
+ *       spelling (6 reproducible) and PASSES in the pre-D-257 spelling (7
+ *       walked). The git backing is what makes the difference, measured.
  */
 import { appScript } from "./extract.mjs";
 import fs from "fs";
 import path from "path";
 import vm from "vm";
 import { webcrypto } from "crypto";
+import { fileURLToPath } from "url";
+/* D-257 — ONE mechanism, imported, never a fourth copy of the rule. The full
+   argument for why this module exists and what it cannot see is in its own
+   header; the argument for why THIS suite needed it is at the corpus walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 let n = 0;
 const ok = (label, cond) => { if (!cond) { console.error("FAIL " + label); process.exit(1); } n++; };
@@ -495,11 +541,69 @@ ok(`SWEEP INSTRUMENT: the dispatch yields a real roster — ${DISPATCH.size} ops
 ok("SWEEP INSTRUMENT: and op=search is in it, found through the plane's source and not named into it here",
    RANKED.has("search"));
 
-/* ---- the surface corpus ---- */
+/* ---- the surface corpus, AND ITS PROVENANCE (D-257 / M0-16) ----------------
+ *
+ * THIS WALK READS THE WORKING TREE, AND UNTIL D-257 IT FLOORED ON WHAT IT FOUND.
+ * `refs/stash` is REPOSITORY-WIDE across all sixty worktrees of this repository
+ * and `git stash push -u` carries UNTRACKED files, so a `pop` deposits another
+ * worker's files into a tree that never wrote them (D-238, measured, with the
+ * stash commit named in the row). Nothing in a `readdirSync` distinguishes a
+ * tracked surface from one that arrived that way, so a phantom `.mjs` beside
+ * `app.html` was counted into `UI_FILES`, into `S.functions` and into `S.sites`
+ * — the three figures the reach guard below floors on. That is M0-15's phantom
+ * class in a suite written after M0-15 closed it, and it was NAMED rather than
+ * guarded at the 2026-08-08 integration because `civicos-ui/**` was not that
+ * item's to open.
+ *
+ * WHAT IS DONE ABOUT IT, AND THE SPLIT IS THE WHOLE DESIGN:
+ *
+ *   - THE SWEEP RUNS OVER THE WHOLE WORKING TREE. A positional pick in a file
+ *     nobody has committed yet is still a finding, and it still reds this suite.
+ *     Narrowing the SWEEP to the commit would hide exactly the work a member is
+ *     in the middle of writing, which is the HIDING direction.
+ *   - THE FLOOR IS COMPUTED OVER THE COMMIT ALONE. `git ls-tree HEAD` decides
+ *     which files another checkout at this HEAD reproduces, and only those feed
+ *     the reach guard. A phantom can therefore red this suite (safe) and can no
+ *     longer raise its floor (the payload D-238 names: a floor moved to a
+ *     contaminated figure is permanently too high and gets switched off).
+ *
+ * This is `coverage.mjs`'s `REGISTER_FLOOR` discipline, one estate over, and it
+ * is deliberately STRONGER than the report-only precedent in `hygiene.test.mjs`
+ * — that block reports and floors on the contaminated union, which is right for
+ * a walk whose count nobody quotes and wrong for one that carries a floor.
+ *
+ * WHEN GIT CANNOT ANSWER, `inCommit` says true for everything and the two
+ * figures collapse onto each other. That is UNVERIFIED, printed as UNVERIFIED by
+ * `reportProvenance`, and it is never reported as clean (D-233).
+ *
+ * `DISPATCH.size > 100` and `BODIES.size > 200` above are NOT walk-derived and
+ * are deliberately left alone: they are read out of the single named file
+ * `bio-plane/src/store.mjs`, which no arrival can inflate. D-257's row says the
+ * suite floors on those counts; measured, it floors on them off a `readFileSync`
+ * of one path, and the walk-derived floor is the reach guard further down. Both
+ * paths are still handed to the provenance report, because a reader owed the
+ * corpus is owed all of it.
+ */
 const UI_DIR = new URL("../", import.meta.url);
+const REPO = fileURLToPath(new URL("../../", import.meta.url));
+const PROV = readGitProvenance(REPO);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));
+
 const UI_FILES = fs.readdirSync(UI_DIR)
   .filter(f => /\.(html|mjs|js)$/.test(f))
-  .map(f => ({ file:f, text: fs.readFileSync(new URL(f, UI_DIR), "utf8") }));
+  .map(f => ({ file:f, abs: fileURLToPath(new URL(f, UI_DIR)),
+               text: fs.readFileSync(new URL(f, UI_DIR), "utf8") }));
+/* The corpus another checkout at this HEAD reproduces. */
+const UI_REPRO = UI_FILES.filter(x => inCommit(x.abs));
+/* SAY UNVERIFIED, NEVER CLEAN, WHEN GIT CANNOT ANSWER — provenance.mjs's fourth
+   rule, and it applies to the CALLER'S OWN PROSE as well as to the report. The
+   first draft of this block printed "N of N file(s) are in the commit at HEAD
+   (unverified)" when git was shimmed to fail: a sentence claiming the commit in
+   the same breath as admitting it could not look, which is D-233 exactly. Caught
+   by control ARM 3 and corrected here rather than by relaxing the arm. */
+const HEAD_SAYS = PROV.inHead === null
+  ? `UNVERIFIED — git could not answer \`ls-tree HEAD\`, so this is the whole working-tree walk and is NOT a claim about any commit`
+  : `in the commit at HEAD (${PROV.headSha})`;
 const stripComments = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 const functionsOf = (code) => {
   const out = [];
@@ -705,8 +809,42 @@ for(const r of S.rows)
 if(UNJUDGED_OPS.length)
   console.log(`     SWEEP UNJUDGED (${UNJUDGED_OPS.length}): dispatched to a method this walk cannot segment — ${UNJUDGED_OPS.join(" ")}`);
 
-ok(`SWEEP GUARD: the walk reaches a real corpus rather than reporting a verdict over nothing — ${S.functions} functions, ${S.sites} sites`,
-   UI_FILES.length >= 3 && S.functions >= 200 && S.sites >= 1);
+/* ---- THE FLOOR IS THE REPRODUCIBLE FIGURE (D-257) -------------------------
+   The SAME sweep, over the committed corpus alone — the numbers another checkout
+   at this HEAD reproduces, and the only ones a floor may be compared against.
+   Every path this suite read is handed to the one provenance report, including
+   the two plane sources it reads by name, so the report covers its whole reach
+   rather than the part that happened to be discovered. */
+const PLANE_READS = [["bio-plane/src/store.mjs", "the dispatch and method-body roster"],
+                     ["bio-plane/src/query.mjs", "the plane's own statement that the default order is bm25"]];
+const PROV_REPORT = reportProvenance({
+  prov: PROV,
+  items: [
+    ...UI_FILES.map(x => ({ path: repoPath(REPO, x.abs), what: x.file,
+      counted: "swept for picks out of a relevance-ordered answer" })),
+    ...PLANE_READS.map(([p, why]) => ({ path: p, what: p.split("/").pop(), counted: why })),
+  ],
+  instrument: "this suite's surface walk",
+  corpus: `civicos-ui/: ${UI_FILES.length} file(s) walked, ${UI_REPRO.length} of them in the commit`
+    + ` · ${S.functions} function(s), ${S.sites} site(s) over the working tree`,
+  totals: PROV.inHead === null ? [] : [
+    { label: "surface files swept", contaminated: UI_FILES.length, reproducible: UI_REPRO.length, source: "files" },
+  ],
+});
+const S_REPRO = sweep(UI_REPRO, RANKED_OPS);
+console.log(`     SWEEP FLOOR IS THE REPRODUCIBLE CORPUS: ${UI_REPRO.length} of ${UI_FILES.length} file(s) ${HEAD_SAYS}`
+  + ` — ${S_REPRO.functions} function(s), ${S_REPRO.sites} site(s) · floors 3 / 200 / 1`);
+ok(`SWEEP GUARD: the walk reaches a real corpus rather than reporting a verdict over nothing, and the figures it is floored on are the ones ANOTHER CHECKOUT REPRODUCES — ${S_REPRO.functions} functions, ${S_REPRO.sites} sites over ${UI_REPRO.length} file(s) ${HEAD_SAYS}`,
+   UI_REPRO.length >= 3 && S_REPRO.functions >= 200 && S_REPRO.sites >= 1);
+/* AND THE PROVENANCE CHECK ITSELF REACHED SOMETHING. A report narrowed to
+   nothing is spotless (M0-16's own stated failure mode), so the accounting is
+   pinned to the corpus it was handed rather than believed. */
+ok(`PROVENANCE REACH: every file this suite read was classified against the commit — ${PROV_REPORT.accounted} accounted, ${UI_FILES.length} walked + ${PLANE_READS.length} read by name`,
+   PROV_REPORT.accounted === UI_FILES.length + PLANE_READS.length && UI_FILES.length >= 3);
+/* AND IT ANSWERED, OR IT SAID IT COULD NOT — never a third silent state (D-233). */
+ok(`PROVENANCE STATE: the check either verified against \`git ls-tree HEAD\` or reported UNVERIFIED (verified=${PROV_REPORT.verified})`,
+   typeof PROV_REPORT.verified === "boolean"
+   && (PROV_REPORT.verified ? PROV.inHead instanceof Set : PROV.inHead === null));
 const findingsOf = (rows) => rows.flatMap(r => r.risky
   .filter(k => !LICENSED.has(`${r.fn}/${r.op}/${k}`))
   .map(k => ({ ...r, kind:k })));

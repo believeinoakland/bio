@@ -5193,3 +5193,42 @@ FL-3 filed *"the plane has no `AGENT_WORKER` caller, and I8 cannot go STABLE wit
 ### DELEGATION 2026-08-09 FLEET (FL-4) -> WHOEVER OWNS `INVESTIGATIVE-SESSION.md`: **§14b.3 CARRIES TWO STALE FIGURES OF THE KIND THIS PROJECT MEASURES MOST OFTEN**
 
 §14b.3 reads *"**SEVEN live consumers today** (`store.mjs:1452`)"*. **MEASURED 2026-08-09: the registry holds TEN and sits at `store.mjs:1778`**, and `store.mjs` is **23,971** lines rather than the ~16,300 the surrounding plan was written against. PL-5 added the eighth, PL-4 the ninth, FL-4 the tenth, and none of them moved the design's sentence. **NOT EDITED HERE** because the design document is not this item's path and because a build item rewriting the design it was built from is the wrong direction — but it is the hand-carried-number failure this repository names as its most repeated, sitting in the paragraph that tells the next consumer how to join. The IS-BUILD-PLAN FL-4 row's own two stale figures WERE corrected, from measurement, in the same turn.
+## CLAIM 2026-08-09 UI (D-257)
+session: agent-ab5e6576a583e2cc4
+opened: 2026-08-09T00:00:00Z
+paths: civicos-ui/test/version-predecessor.test.mjs, civicos-ui/test/add-surface.test.mjs, civicos-ui/test/auth-surface.test.mjs, civicos-ui/test/bound-sweep.test.mjs, civicos-ui/test/preauth-vocabulary.test.mjs, civicos-ui/test/publishedcase.test.mjs, civicos-ui/test/run.mjs, civicos-ui/check-refusal-codes.mjs, the CLASS_NAMED_UNGUARDED list in bio-plane/test/hygiene.test.mjs, the D-257 row in docs/development/DEBT.md
+interfaces consumed: none
+interfaces owned: none
+expected: D-257 — wire `bio-plane/scripts/provenance.mjs` into the civicos-ui walks that FLOOR on what their working-tree walk found, so every floored figure is the `git ls-tree HEAD`-backed one, and remove the D-257 entry from the hygiene allowlist. The sweep for the class is what decides which files are touched; the list above is what the measurement found.
+released:
+
+## DELEGATION 2026-08-09 UI (D-257) → M0 (VERIFICATION)
+D-257 guarded every `civicos-ui` walk that FLOORS on what its working-tree walk found, and removed
+seven entries from `hygiene.test.mjs`'s `CLASS_NAMED_UNGUARDED` allowlist. The sweep asked the same
+question of the bio-plane entries and **five of them floor on their own walk**, measured by reading
+each site rather than by the matcher alone:
+
+- `bio-plane/test/bounds.test.mjs` — a whole-repository walk floored at `corpus.length > 200 && walkChars > 5_000_000`.
+- `bio-plane/test/case-opened.test.mjs` — the same shape, the same two floors.
+- `bio-plane/test/identity-claims.test.mjs` — `files.length >= 24` over its `src/` + `checks/` walk.
+- `bio-plane/test/machinefences-dec49.test.mjs` — `minted.size >= 12`, the codes harvested by walking `src/`.
+- `bio-plane/test/planning-hygiene.test.mjs` — `found.length >= 2` over headings discovered by walking `docs/`.
+
+A sixth is a DIFFERENT exposure and is named rather than counted: `bio-plane/test/machine-fences.test.mjs`
+walks `test/` only to decide whether a code is `pinned()` by some suite. A phantom cannot raise a floor
+there, but it CAN satisfy a requirement — a fence code reads as pinned by a suite no other checkout has,
+which fails in the GENEROUS direction.
+
+**The fix is the two lines this item wrote seven times**, and the pattern is in any of
+`civicos-ui/test/{version-predecessor,add-surface,auth-surface,bound-sweep,publishedcase}.test.mjs`:
+import `scripts/provenance.mjs`, keep the SWEEP over the whole working tree (so a finding in
+uncommitted work is not hidden), and compute the FLOOR over `git ls-tree HEAD` alone. Say UNVERIFIED
+rather than clean when git cannot answer — including in the caller's OWN printed labels, which is the
+defect D-257's control ARM 3 caught in its own first draft.
+
+**And a second finding, paid for rather than reasoned about:** `bio-plane/scripts/op-claims.mjs` walks
+the whole repository with NO dotfile filter, so D-257's control harness — pristine copies of `app.html`
+under a dot-directory — turned the battery RED with ten findings attributed to the copies. That is the
+same class M0-16 found in `coverage.mjs`'s fleet walk, in the opposite direction: one walk admits what
+another would never run. Whether op-claims SHOULD descend into dot-directories is M0's call; it is
+recorded here because it is a real difference between two walks of the same estate.
