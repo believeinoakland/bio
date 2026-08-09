@@ -5471,8 +5471,13 @@ expected: IS-BUILD-PLAN UI-45, W8 slot B. The FINDING-class slugs surfaced from 
   `versioncurrent`'s owed surface from `ACTS_AWAITING_SURFACE`.
 accepts-when: as IS-BUILD-PLAN UI-45. **UI harness baseline MEASURED IN THIS WORKTREE BEFORE ANY
   EDIT, on a quiet tree, after `npm ci` in `bio-plane/`: 42 harnesses, exit 0 read UNPIPED.** Final:
-  **43 harnesses, exit 0 read UNPIPED**, the new suite at **67 assertions**. Battery and
-  `coverage.mjs --strict` re-run and reported. NEGATIVE CONTROLS RUN — `node
+  **43 harnesses, exit 0 read UNPIPED**, the new suite at **67 assertions**. **`main` MOVED UNDER
+  THIS ITEM WHILE IT RAN — `d579ae8` -> `ae34ec8`, eight merges — so it was merged in and THE WHOLE
+  GATE WAS RE-RUN on the merged tree at `ecf8743`: UI harness 43, exit 0 unpiped; battery
+  **142/142 at 9,179** (this item's own delta is ZERO and structurally so, it modifies no file under
+  `bio-plane/`); `coverage.mjs --strict` run DIRECTLY, `$?` unpiped, **exit 0** (OPS 163/163, CHECKS
+  222/222, controls 137/137 at 654 arms); the negative control re-run **12/12 as declared**. Both
+  sets of figures are in `MEASUREMENTS.md`.** NEGATIVE CONTROLS RUN — `node
   civicos-ui/test/notifications.control.mjs`, **12 arms, 12 as declared**, each armed ALONE with
   every other defence held OPEN, two OVER-STRICTNESS arms GREEN, a BASELINE row GREEN, every restore
   verified by sha256 AND by `cmp` against a per-arm pristine copy AND a pristine-of-record, the pen

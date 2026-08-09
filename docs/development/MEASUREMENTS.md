@@ -5499,16 +5499,31 @@ DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/notifications.control.mjs
 Worktree `agent-a4f9c3083de5f28e3`, fast-forwarded to `main` at `d579ae8` before measuring,
 `npm ci` run in `bio-plane/` first.
 
-| figure | baseline | final | attribution |
-| --- | --- | --- | --- |
-| UI harnesses | **42, exit 0** | **43, exit 0** | `notifications.test.mjs`, 67 assertions |
-| plane battery | 139/139 · 8,869 | 139/139 · 8,869 | **ZERO delta, and structurally so — this item modifies no file under `bio-plane/`** |
-| `coverage.mjs --strict` | exit 0 | exit 0 | OPS 162/162 · CHECKS 219/219 · controls 135/135, 632 arms |
+**EVERY FIGURE WAS TAKEN TWICE, BECAUSE `main` MOVED UNDER THIS ITEM WHILE IT RAN.** The
+item was built and measured on `d579ae8`; by the time it was committed, `origin/main` had
+advanced to `ae34ec8` (eight merges, including REC-69, FL-4, FL-5, D-255, D-257 and PL-17).
+`main` was merged in, `npm ci` re-run, and **the whole gate re-run on the merged tree** —
+which is the only figure CONDUCT can integrate against. Both are recorded, because a figure
+measured on a base that no longer exists is not a claim about the tree anybody will merge.
+
+| figure | baseline (`d579ae8`) | final (`d579ae8`) | **final, MERGED (`ecf8743`)** | attribution |
+| --- | --- | --- | --- | --- |
+| UI harnesses | **42, exit 0** | **43, exit 0** | **43, exit 0** | `notifications.test.mjs`, 67 assertions |
+| plane battery | 139/139 · 8,869 | 139/139 · 8,869 | **142/142 · 9,179** | **ZERO delta from this item, and structurally so — it modifies no file under `bio-plane/`.** The +3 suites and +310 assertions are the eight merges', not this item's |
+| `coverage.mjs --strict` | exit 0 | exit 0 | **exit 0** | merged: OPS 163/163 · CHECKS 222/222 · controls 137/137, 654 arms |
+| negative control | — | 12/12 as declared | **12/12 as declared** | re-run on the merged tree, every restore re-verified |
+
+**The battery delta is attributed rather than subtracted.** This item touches no file under
+`bio-plane/`, which is checkable from the diff and is the attribution: 139→142 suites and
+8,869→9,179 assertions are entirely the eight merges that landed between the two runs.
+`preauth-vocabulary.test.mjs` was the one file both this item and `main` edited; it
+auto-merged, and its own run confirms both sets of arms — 68 assertions, all green (65
+before this item's three).
 
 **The baseline was measured in this worktree before any edit and it was not taken on trust:**
 the first `ls` of `bio-plane/node_modules` came back MISSING, which is `WORKER.md`'s named
 hazard — a scratch checkout without it made three suites read `NO TALLY (-1)` for an earlier
-worker. `npm ci` ran before anything was measured.
+worker. `npm ci` ran before anything was measured, and again after the merge.
 
 ### Two live defects the item was not sent for, both in the queue, both found by asking what a control is keyed on
 
