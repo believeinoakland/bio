@@ -19,16 +19,33 @@
  * ALONE with every other defence held OPEN, each DECLARING before it ran what must
  * fail and what must not, every restore verified by sha256 AND by a byte compare
  * against a UNIQUELY NAMED per-arm pristine copy with the byte count printed and
- * floored against the empty-string digest.  Run 2026-08-09, all eight AS DECLARED
- * (walkfloor pass/fail · hygiene pass/fail):
- *   baseline      no edit                                   31/0 · 570/0   (GREEN, as declared)
- *   hop           never seed an imported walk-derived export 21/10 · 567/3
- *   destructured  restore first-draft bug (a)                21/10 · 567/3
- *   stringstrip   restore first-draft bug (b)                20/11 · 567/3
- *   modulegrain   grade at MODULE granularity                27/4  · 569/1
- *   stripper      make the stripper a no-op                  28/3  · 570/0
- *   overstrict    NEW consumer that floors AND is guarded    31/0  · 570/0   (GREEN, as declared)
- *   ratchet       NEW consumer that floors and is NOT        31/0  · 569/1   (fails BY NAME)
+ * floored against the empty-string digest.  Run 2026-08-09, all eight AS DECLARED.
+ * Figures are walkfloor pass/fail · hygiene pass/fail.
+ *
+ * THE ARMS ARE ENUMERATED RATHER THAN TABULATED, AND THAT IS NOT A STYLE CHOICE.
+ * The first draft of this declaration was a column table, and `control-register.mjs`
+ * read TWO arms out of it against a real eight — the D-233 under-count class, in
+ * which `bias.test.mjs` stated thirteen arms in a grammar the detector could not
+ * see and scored zero.  An under-declared arm count installs slack in the
+ * `REGISTER_FLOOR` ratchet, which is the same payload D-238 is about.  Measured
+ * with `countArms` directly before and after rewriting this block.
+ *
+ *   (1) baseline — NO EDIT AT ALL: 31/0 · 570/0, GREEN as declared.  The row that
+ *       makes every other row interpretable.
+ *   (2) hop — never seed a binding from an imported walk-derived export: 21/10 · 567/3.
+ *   (3) destructured — restore first-draft bug (a), a destructured parameter list
+ *       read as a function body: 21/10 · 567/3.
+ *   (4) stringstrip — restore first-draft bug (b), imports read off source with
+ *       string literals blanked: 20/11 · 567/3.
+ *   (5) modulegrain — grade at MODULE granularity instead of BINDING granularity:
+ *       27/4 · 569/1.  THE ARM THAT PROVES THE FALSE-POSITIVE GUARD IS REAL.
+ *   (6) stripper — make the stripper a no-op, so prose and regex literals count as
+ *       code: 28/3 · 570/0.
+ *   (7) overstrict — a NEW consumer that floors on a walk one import away AND asks
+ *       `provenance.mjs`: 31/0 · 570/0, GREEN as declared.  Correct work in a
+ *       spelling the ratchet was not written against must PASS.
+ *   (8) ratchet — a NEW consumer that floors and is NOT guarded: 31/0 · 569/1, and
+ *       the failure NAMES the new file.
  *
  * TWO ARMS CAME BACK OTHER THAN DECLARED ON THE FIRST RUN AND ARE RECORDED RATHER
  * THAN SMOOTHED: `baseline` and `overstrict` both read hygiene 569/1, and the
