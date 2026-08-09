@@ -17365,6 +17365,46 @@ export class Store extends DurableObject {
    *  the moment it was written, which is the acceptance clause "a version
    *  SURVIVES the death of the run that proposed it — identity is not the run's",
    *  enforced by the ABSENCE of a join rather than by a promise about one. */
+
+  /** D-235 — THE COLLECTIONS THE RECORD HOLDS FOR ONE VERSION, READ ONCE AND
+   *  READ BY BOTH.
+   *
+   *  ONE READER, TWO CONSUMERS: `op=basisversions` and `op=suggest`'s success
+   *  answer. REC-75 settled that `composition` publishes THE RECORD'S bytes;
+   *  D-235 is the same question about everything else on that answer, and the
+   *  same shape answers it. **A second assembly of one collection agrees with
+   *  the first at zero cost** — the instrument failure this repository has
+   *  measured five times — so the remedy is to remove the second computation
+   *  rather than to teach it the first one's shape. `op=suggest` used to publish
+   *  the CANDIDATE's legs, which carried no `ord` at all, so the two readers of
+   *  one row published leg objects of different shape.
+   *
+   *  THE GROUND LABELS COME FROM THE LEGS AND THE BLANK IS DROPPED, and both
+   *  halves are deliberate. There is no ground PROJECTION table: the ground ROWS
+   *  live inside the composition, and the LABELS are exactly the labels the legs
+   *  carry — which `suggestVersion`'s CHECK 2 (C-27.9) makes identical to the
+   *  DECLARED set at every write, because a leg in a part nobody declared and a
+   *  declared part holding no leg are both refused there. `basisVersionsOf`
+   *  writes `ground: ""` for a leg naming no part, and an empty string in a list
+   *  of *the parts this reading declares* is a part nobody declared, so it is
+   *  dropped here rather than published.
+   *
+   *  DERIVED FROM THE LEGS THIS ANSWER ACTUALLY CARRIES, which is a change of
+   *  substance only above `BASIS_VERSION_LEGS_MAX` legs: the labels are then the
+   *  labels of the legs published, and `legs_complete: false` beside them is
+   *  what says the answer was cut. A DISTINCT scan of its own would report parts
+   *  belonging to legs this answer does not contain. */
+  #versionCollections(bundleId, row) {
+    const legs = this.#rows(
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
+         FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
+      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX);
+    const grounds = [...new Set(legs
+      .map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();
+    return { legs, grounds, leg_count: row.leg_count,
+             legs_complete: legs.length === row.leg_count };
+  }
+
   basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
     const refuse = (key, detail) => {
       const row = BASIS_VERSION_CHECKS[key];
@@ -17411,20 +17451,17 @@ export class Store extends DurableObject {
     const rows = present ? this.#rows(
       `SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord, name LIMIT ? OFFSET ?`,
       inq, cap, from) : [];
-    const legCap = Store.BASIS_VERSION_LEGS_MAX;
     const versions = rows.map((r) => {
-      const legs = this.#rows(
-        `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
-           FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
-        inq, r.name, legCap);
+      /* D-235: THE ONE READER, and `op=suggest`'s success answer reads it too,
+         so the two ops cannot publish different shapes for one row. It also
+         DROPS the blank label a legless-part leg projects — see the helper. */
+      const rec = this.#versionCollections(inq, r);
       return {
         name: r.name, description: r.description,
         /* The two the item is judged on, on EVERY version: the relationship the
            version states and the partition it states it over. */
         relationship: r.relationship,
-        grounds: [...new Set(this.#rows(
-          `SELECT DISTINCT ground FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ground LIMIT ?`,
-          inq, r.name, legCap).map((g) => g.ground))],
+        grounds: rec.grounds,
         state: r.state,
         derived_from: r.derived_from,
         hidden: r.hidden === 1,
@@ -17441,9 +17478,9 @@ export class Store extends DurableObject {
         /* The RECORD's own count, stored at the write, beside the legs actually
            carried — and the question settled outright rather than left to a
            consumer comparing them. A basis returned in part reads as a basis. */
-        leg_count: r.leg_count,
-        legs_complete: legs.length === r.leg_count,
-        legs,
+        leg_count: rec.leg_count,
+        legs_complete: rec.legs_complete,
+        legs: rec.legs,
       };
     });
     return {
@@ -19054,36 +19091,116 @@ export class Store extends DurableObject {
      *
      * WHAT IT COSTS IF IT IS WRONG: one read, and one field. Reversing it is
      * substituting `candidate.composition` back and dropping `composition_of`. */
-    const storedComposition = this.#one(
-      `SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
-      target, pv.name)?.composition ?? null;
+    /* D-235 — AND THE SAME QUESTION ASKED OF EVERY OTHER FIELD, NOT ONLY OF
+     * `composition`. REC-75 settled `composition` and RAISED THIS AT ITS OWN
+     * LANDING: `version`, `kind`, `run`, `state`, `author`, `at`, `legs`,
+     * `count`, `grounds` and `ground_count` were still caller- or
+     * candidate-derived, unlabelled, and sitting on one answer beside bytes that
+     * were the record's. **One answer with two sources and only one of them
+     * named is REC-74's shape — two readers of one row — arriving inside a
+     * single answer instead of across two ops.**
+     *
+     * TWO OF THOSE DIVERGED LIVE, MEASURED BY DRIVING THE PLANE BEFORE THE FIX
+     * AND NOT READ OFF THIS SOURCE. `#fmSafe` folds `[\r\n]+` to a SPACE, and a
+     * space is the one thing it produces that `VERSION_NAME_RE` and
+     * `GROUND_LABEL_RE` both ADMIT — so a reading submitted as `the folded\n
+     * reading name` is stored as `the folded reading name` and the answer said
+     * the former, and a part declared as `paper\ntrail` is stored as `paper
+     * trail` and the answer said the former. **The first is the record's own
+     * ADDRESS published wrong**: a caller feeding that `version` back as
+     * `derived_from` names a reading that does not exist. CHECK 2 cannot see the
+     * second, and that is not a hole in CHECK 2 — it compares the DECLARED set
+     * against the USED set and both sides are raw, so the two agree with each
+     * other and neither agrees with the document.
+     *
+     * SO THE ANSWER IS ASSEMBLED OUT OF THREE NAMED GROUPS AND LABELS ITSELF:
+     *
+     *   `record`  — read back out of the projection the promotion above just
+     *               wrote, through `#versionCollections`, THE SAME READER
+     *               `op=basisversions` uses. One reader, two consumers, and
+     *               therefore no second computation to drift.
+     *   `derived` — computed by the plane over this submission and NOT stored:
+     *               the strength pair and the independence trace. Publishing
+     *               these is DERIVED INFORMS; labelling them is what stops a
+     *               consumer reading them as facts the record holds.
+     *   `call`    — true of this ACT rather than of the version: the bounds it
+     *               ran under, whether it truncated, whether it was evaluated.
+     *
+     * `fields_of` IS COMPUTED FROM THOSE GROUPS AND NEVER TYPED. A hand-written
+     * list of field names is a list of spellings and goes stale the moment a
+     * fourth is written; computing it means a field cannot reach this answer
+     * without saying where its bytes came from, and `suggest.test.mjs` asserts
+     * the label is TOTAL over the answer's own keys so the one that arrives
+     * outside a group fails visibly.
+     *
+     * WHAT IT COSTS IF IT IS WRONG: one extra read of two projection rows, and
+     * a caller that was relying on `version` echoing its own submitted spelling
+     * now gets the record's. IC-40. */
+    const recorded = this.#one(
+      `SELECT name, kind, run, state, author, at, composition, leg_count
+         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, target, pv.name);
+    const rc = recorded ? this.#versionCollections(target, recorded) : null;
+
+    /* THE RECORD'S OWN FACTS, AND `null` RATHER THAN A SUBSTITUTE IF THE READ
+       COMES BACK EMPTY. It cannot today — `promote` rebuilds this projection
+       from the document inside the same transaction, and it returned ok — so
+       this is a FAIL-SAFE and is named as one rather than dressed up as a
+       mechanism. What it must never do is fall back to the candidate: an
+       undetermined value STATED is first-class here, and a substituted one that
+       looks like the record's is the record claiming more than it can support.
+       `read_back` on the answer says which of the two happened. */
+    const fromRecord = {
+      target: b.bundle_id,
+      version: recorded ? recorded.name : null,
+      kind: recorded ? recorded.kind : null,
+      run: recorded ? recorded.run : null,
+      state: recorded ? recorded.state : null,
+      author: recorded ? recorded.author : null,
+      at: recorded ? recorded.at : null,
+      legs: rc ? rc.legs : null,
+      count: rc ? rc.leg_count : null,
+      grounds: rc ? rc.grounds : null,
+      ground_count: rc ? rc.grounds.length : null,
+      composition: recorded ? recorded.composition : null,
+      bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
+    };
+    /* DERIVED INFORMS. The independence derivation is published on the PASS
+       path too, so the member at §12's accept ceremony affirms independence
+       against what the record can see rather than against nothing. `[]` here
+       means the plane looked and found no shared origin, which is a different
+       fact from nobody having looked — and `derived` on the label is what says
+       the record does not hold any of it.
+       The pair is per axis, as computed BEFORE the write — DEC-21/DEC-44, never
+       composed into one value. */
+    const derived = {
+      pair: { capture: pair.capture, connection: pair.connection },
+      shared_origins: shared, origins_complete: originsComplete,
+    };
+    /* IC-25/26/27/28/29/30: the bound APPLIED and whether it truncated,
+       published on the answer rather than left for a consumer to infer — a bare
+       collection fails a pin reading ZERO with no exception list to join.
+       `truncated` is now READ rather than asserted: the write cap is 120 and the
+       read cap is 500, so it is false by construction — and it is derived from
+       the read that produced `legs` instead of being written as a literal
+       beside them, because a literal is a claim about a collection somebody
+       else assembled. */
+    const call = {
+      ok: true, weight: "single",
+      limit: Store.SUGGEST_LEGS_MAX, truncated: rc ? !rc.legs_complete : false,
+      origin_limit: Store.SUGGEST_ORIGIN_MAX,
+      evaluated: true, repeated: false, wrote: true, read_back: !!recorded,
+    };
+    const fields_of = { fields_of: "label", composition_of: "label" };
+    for (const [src, group] of [["record", fromRecord], ["derived", derived], ["call", call]])
+      for (const k of Object.keys(group)) fields_of[k] = src;
 
     return {
-      ok: true, target, version: name, kind, run, state: "suggested",
-      author: who || null, at: nowIso, weight: "single",
-      /* IC-25/26/27/28/29/30: the bound APPLIED and whether it truncated,
-         published on the answer rather than left for a consumer to infer — a
-         bare collection fails a pin reading ZERO with no exception list to join.
-         Nothing here truncates, and that is SAID rather than implied by silence:
-         a submission over the bound was refused above and named the bound. */
-      legs: candidate ? candidate.legs : [], count: legsIn.length,
-      limit: Store.SUGGEST_LEGS_MAX, truncated: false,
-      grounds: declaredLabels, ground_count: declaredLabels.length,
-      /* DERIVED INFORMS. The independence derivation is published on the PASS
-         path too, so the member at §12's accept ceremony affirms independence
-         against what the record can see rather than against nothing. `[]` here
-         means the plane looked and found no shared origin, which is a different
-         fact from nobody having looked. */
-      shared_origins: shared, origins_complete: originsComplete,
-      origin_limit: Store.SUGGEST_ORIGIN_MAX,
-      /* The pair, per axis, as it was computed BEFORE the write — DEC-21/DEC-44,
-         never composed into one value. */
-      pair: { capture: pair.capture, connection: pair.connection },
-      composition: storedComposition,
-      /* WHICH BYTES THESE ARE, published rather than left to be inferred. */
-      composition_of: "record",
-      bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
-      evaluated: true, repeated: false, wrote: true,
+      ...fromRecord, ...derived, ...call, fields_of,
+      /* REC-75's field, KEPT rather than replaced: a consumer reading it today
+         must keep reading it. It is the same answer `fields_of.composition`
+         gives, and the suite asserts the two agree rather than letting one
+         question have two answers. */
+      composition_of: recorded ? "record" : "unread",
     };
   }
 

@@ -320,12 +320,22 @@ arm("(D-234c) THE PUBLICATION REVERTED, AND IT IS COMPOUND ON PURPOSE. REC-75 de
   + "candidate goes back to raw args AND the answer goes back to publishing the candidate. That is "
   + "exactly the pre-REC-75 plane, and it is the state in which a caller was handed bytes the record "
   + "does not hold with nothing on the answer to say so.",
+  /* THE ANCHOR MOVED, AND THE HARNESS SAID SO RATHER THAN ARMING NOTHING.
+     D-235 replaced the standalone `storedComposition` read with a `fromRecord`
+     group fed by one read-back, so this arm's second edit matched ZERO sites and
+     `edit()` refused to arm blind — which is that guard earning its keep, and is
+     recorded here rather than quietly re-anchored. Re-anchored to the new
+     spelling, and the arm's DECLARED failures grew by two: with the composition
+     coming off the candidate again, D-235's cross-op arm sees it and D-235's
+     structural pin sees the identifier. */
   [["store", `    const fs = (s) => Store.#fmSafe(s);`,
              `    const fs = (s) => String(s ?? "");`],
-   ["store", `      composition: storedComposition,`,
+   ["store", `      composition: recorded ? recorded.composition : null,`,
              `      composition: candidate ? candidate.composition : null,`]],
   ["REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
    "AND IT IS THE SAME STRING `op=basisversions` PUBLISHES FOR THAT VERSION",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK",
    "D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
    "D-234 (4) THE TRAILING AND LEADING SPACE", "D-234 (5) AND IT IS NOT ONLY THE VERSION ROW",
    "STRUCTURALLY NOTHING MOVED"],
@@ -372,6 +382,114 @@ arm("(D-234e) THE STRUCTURAL RATCHET — put ONE field of the write back on raw 
    "REC-75 OVER-STRICTNESS",
    "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
    "CHECK 1: a leg naming a document"]);
+
+/* ============================== D-235 — THE ANSWER'S TWO SOURCES ========= */
+
+/* REC-75 SETTLED `composition` AND RAISED THIS AT ITS OWN LANDING, and the arms
+   below are shaped by the finding REC-75's own controls produced: after the
+   candidate was made persist-derived, a field re-sourced from the candidate is
+   BEHAVIOURALLY INVISIBLE wherever the two happen to agree — which is almost
+   everywhere. So there is a structural pin AND behavioural arms, and (a) below
+   is armed against the two fields where the two sources genuinely diverge. */
+
+arm("(D-235a) THE COLLECTIONS RE-SOURCED FROM THE CANDIDATE — put `legs` and `grounds` back on the "
+  + "pre-write candidate and the raw declared labels, which is exactly the answer as REC-75 left it. "
+  + "THE GROUND-LABEL FOLD ARM MUST FAIL (a part declared `paper<newline>trail` is stored as `paper "
+  + "trail` and the caller was handed its own spelling), THE CROSS-OP ARM MUST FAIL (the candidate's "
+  + "legs carry no `ord`, so the two readers of one row published different shapes), AND THE STRUCTURAL "
+  + "PIN MUST FAIL WITH THEM — declared rather than discovered, because the pin bans exactly the two "
+  + "identifiers this edit reintroduces. The NAME arm must stay GREEN, which is what says the three "
+  + "fields are three fields and not one thing measured three times.",
+  [["store", `      legs: rc ? rc.legs : null,`, `      legs: candidate ? candidate.legs : null,`],
+   ["store", `      grounds: rc ? rc.grounds : null,`, `      grounds: declaredLabels,`]],
+  ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "AND THE LEGS ARE THE PROJECTION'S OWN ROWS",
+   "D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK"],
+  ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
+   "D-235 (4) THE LABEL IS TOTAL",
+   "D-235 OVER-STRICTNESS",
+   "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
+   "CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
+
+arm("(D-235b) THE NAME RE-SOURCED FROM THE SUBMISSION — `version: name` again. This is the sharpest of "
+  + "the three because the field is an ADDRESS: `derived_from` reads by name, so a caller feeding this "
+  + "answer's `version` straight back named a reading the record does not hold. `VERSION_NAME_RE` "
+  + "admits a space and `#fmSafe` folds a newline INTO one, which is the whole of the reachable gap. "
+  + "THE NAME ARM AND THE CROSS-OP ARM MUST FAIL; the ground-label arm must stay GREEN.",
+  [["store", `      version: recorded ? recorded.name : null,`, `      version: name,`]],
+  ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK"],
+  ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "AND THE LEGS ARE THE PROJECTION'S OWN ROWS",
+   "D-235 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
+
+arm("(D-235c) THE READ-BACK ITSELF BROKEN — point the lookup at a version name the record cannot hold, "
+  + "so `recorded` comes back null. THIS IS THE ONLY ARM THAT DRIVES THE FAIL-SAFE SIDE, which no "
+  + "submission can reach: `promote` rebuilds the projection from the document inside the same "
+  + "transaction and returned ok, so the row is always there. The arm proves two things at once — that "
+  + "every `record` field really is that read and not a coincidence, and that when the read says "
+  + "nothing the answer publishes `null` and `composition_of: \"unread\"` rather than substituting the "
+  + "candidate. An undetermined value STATED is first-class; a substituted one that looks like the "
+  + "record's is the record claiming more than it can support.",
+  [["store", `         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?\`, target, pv.name);`,
+             `         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?\`, target, pv.name + " (no such version)");`]],
+  ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
+   "D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "AND `composition_of` STILL SAYS `record`",
+   "D-235 OVER-STRICTNESS",
+   "REC-75 — `composition` PUBLISHES THE RECORD'S BYTES"],
+  ["D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK",
+   "D-235 (4) THE LABEL IS TOTAL",
+   "CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
+
+arm("(D-235d) THE LABEL DE-TOTALISED — drop ONE field out of the computed source map while leaving it "
+  + "on the answer, which is precisely the shape a field added tomorrow and returned without a source "
+  + "arrives in. THE TOTALITY ARM MUST FAIL AND EVERY BEHAVIOURAL ARM MUST STAY GREEN: the bytes are "
+  + "unchanged and only the answer's account of itself is wrong, so nothing else can see it. That is "
+  + "the arm's justification rather than a weakness in it — a label nobody checks is a label that goes "
+  + "stale silently, which is this repository's most-repeated finding.",
+  [["store", `      for (const k of Object.keys(group)) fields_of[k] = src;`,
+             `      for (const k of Object.keys(group)) if (k !== "legs") fields_of[k] = src;`]],
+  ["D-235 (4) THE LABEL IS TOTAL",
+   "AND THE PARTITION IS THE DECISION, PINNED"],
+  ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
+   "D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 OVER-STRICTNESS",
+   "REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
+   "CHECK 1: a leg naming a document"]);
+
+arm("(D-235e) THE BLANK PART LABEL RE-ADMITTED — drop the `filter(Boolean)` from the shared reader's "
+  + "ground derivation. `basisVersionsOf` writes `ground: \"\"` for a leg naming no part, and `op=suggest` "
+  + "cannot produce one because C-25.5 refuses it at `promote` — but the shape arm is `!pkg.replay`, so "
+  + "a REPLAYED document may carry one and the record must be able to hold its own past. With this "
+  + "armed, `op=basisversions` publishes `[\"\"]` as a declared part of that reading: a part nobody "
+  + "declared, in a list of the parts a reading declares. ONLY THE REPLAY ARM MAY FAIL — every "
+  + "submission-path arm must stay green, which is what says the filter is aimed at the path that can "
+  + "actually reach it.",
+  [["store", `      .map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();`,
+             `      .map((l) => String(l.ground ?? "").trim()))].sort();`]],
+  ["D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE"],
+  ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 (5) A LEG THAT NAMES NO PART IS REFUSED",
+   "D-235 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
+
+arm("(D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY — make the shared reader drop the LEG as well "
+  + "as the blank label. The label is not a part anybody declared and comes out; THE LEG IS A FACT THE "
+  + "RECORD HOLDS and must not. This is the control that keeps the correction from becoming the worse "
+  + "defect: a reader that silently withheld evidence a version rests on would make a basis returned in "
+  + "part read as a basis, which is PL-9's finding at the grain it bites. THE REPLAY ARM MUST FAIL "
+  + "(its leg vanishes) while every other arm stays green.",
+  [["store", `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX);`,
+             `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX).filter((l) => String(l.ground ?? "").trim());`]],
+  ["D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE"],
+  ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
+   "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
+   "D-235 OVER-STRICTNESS", "CHECK 1: a leg naming a document"]);
 
 console.log(`\n=================================================================`);
 console.log(`arms run: ${armsRun} · arms that did NOT behave as declared: ${armsWrong}`);

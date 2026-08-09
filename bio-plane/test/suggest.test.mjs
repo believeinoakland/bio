@@ -15,7 +15,13 @@
    (D-234c) THE PUBLICATION REVERTED, COMPOUND ON PURPOSE: `fs` to the identity AND `composition: storedComposition` back to `composition: candidate ? candidate.composition : null`. Reverting the publication alone changes nothing observable, because after REC-75 the two are equal — so an arm that edited only it would be green while proving nothing. THE PUBLICATION ARM AND THE CROSS-OP AGREEMENT ARM MUST FAIL, which is the pre-REC-75 state: a caller handed bytes the record does not hold, with nothing on the answer to say so.
    (D-234d) THE NAME COMPARISON REVERTED: compare `name` instead of `nameWritten` at the SUGGEST_NAME_TAKEN check. THE FOLDED-NAME ARM MUST FAIL — a reading named `the ledger<newline>account` walks past this endpoint and is refused by `promote` as VERSION_NAME_NOT_UNIQUE instead, in another family's words over a document this endpoint had already composed.
    (D-234e) THE STRUCTURAL RATCHET. Replace `q(pv.description)` in the write with `q(args.description)`. ONLY the block 7 structural arm may fail; EVERY behavioural arm must stay GREEN — and that is the arm's justification rather than a weakness in it. `q()` applies `#fmSafe` and `#fmSafe` is IDEMPOTENT, so the two spellings emit identical bytes and no driven arm can tell them apart. The defect D-234 named was never in the write but in the CANDIDATE, so the write's source is unobservable from outside and only a structural pin can hold it.
-   NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the D-231 and D-234 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
+   (D-235a) THE COLLECTIONS RE-SOURCED FROM THE CANDIDATE. In src/store.mjs's success answer put `legs` back on `candidate.legs` and `grounds` back on `declaredLabels` — the answer exactly as REC-75 left it. THE GROUND-FOLD ARM, THE CROSS-OP ARM, THE LEG-SHAPE ARM AND THE STRUCTURAL PIN MUST ALL FAIL while the NAME arm stays green, which is what says the fields are separate rather than one thing measured three times.
+   (D-235b) THE NAME RE-SOURCED FROM THE SUBMISSION: `version: name` again. THE NAME ARM, THE CROSS-OP ARM AND THE STRUCTURAL PIN MUST FAIL. This arm is the one that CORRECTED both the cross-op fixture (whose name had to carry a fold before it could see the field at all) and the structural pin (whose banned-list spelling could not name the local `name` without also matching `recorded.name`) — a re-sourced field is invisible wherever the two sources agree, which is REC-75's own receipt one field over.
+   (D-235c) THE READ-BACK BROKEN AT THE QUERY: make the projection lookup name a version the record cannot hold, so `recorded` is null. THE ONLY ARM THAT DRIVES THE FAIL-SAFE SIDE, which no submission can reach. Every record-sourced arm must fail and the answer must publish `null` with `composition_of: "unread"` rather than substituting the candidate.
+   (D-235d) THE LABEL DE-TOTALISED: drop one field out of the computed source map while leaving it on the answer. ONLY THE TOTALITY ARM AND THE PARTITION PIN MAY FAIL; every behavioural arm stays GREEN, because the bytes are unchanged and only the answer's account of itself is wrong. That is the arm's justification, not a weakness in it.
+   (D-235e) THE BLANK PART LABEL RE-ADMITTED: drop `filter(Boolean)` from the shared reader's ground derivation. ONLY THE REPLAY ARM MAY FAIL — `op=suggest` cannot produce a leg with no part (C-25.5 refuses it at `promote`), but the shape arm is `!pkg.replay`, so the record's own history can carry one.
+   (D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY: make the shared reader drop the LEG as well as the blank label. The empty label is not a part anybody declared and comes out; the leg is a fact the record holds and must not. THE REPLAY ARM MUST FAIL, and a reader that silently withheld evidence would make a basis returned in part read as a basis.
+   NOTE ON NUMBERING: the harness has always carried more arms than this list names its own ordinals for, so the D-231, D-234 and D-235 arms are LABELLED rather than numbered and `suggest.control.mjs` runs them under the same labels.
  * =========================================================================
  *
  * WHY THIS SUITE WAS INTERMITTENTLY RED, NAMED HERE RATHER THAN IN A COMMIT
@@ -162,6 +168,14 @@ function suggestBlock() {
   if (at < 0) return "";
   const end = STORE_SRC.indexOf("\n  static #suggestionFrontmatter(", at);
   return STORE_SRC.slice(at, end < 0 ? at + 40000 : end);
+}
+/* THE SPAN THAT COMPOSES THE VERSION ROW, isolated for §4's fence walk — D-235.
+   The fence's rule is about the row this endpoint WRITES, and the write is one
+   declared region inside a method that is now several screens longer than it. */
+function suggestWriteRegion() {
+  const from = STORE_SRC.indexOf("DEC-49 REGION is-suggest-write");
+  const to = STORE_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
+  return from < 0 || to < from ? "" : STORE_SRC.slice(from, to);
 }
 
 try {
@@ -377,13 +391,30 @@ const read = async () => (await GET(`op=basisversions&token=${RUTH}&id=${INQ}&li
 /* THE FENCE AS THE ABSENCE OF A VARIABLE. §4's rule is not enforced by checking
    a parameter — there is no parameter. Asserted over the source so a future
    edit that introduces one fails here. */
-t("THE SOLE OUTPUT IS A LITERAL: the endpoint writes `state: \"suggested\"` and the source carries no "
-+ "other state assignment on the version row it composes — §4's fence expressed as the absence of a "
-+ "variable rather than as a check on one",
-  [/state: "suggested"/.test(suggestBlock()),
-   (decomment(suggestBlock()).match(/\bstate:(?!\s*"suggested")/g) || []).length,
-   suggestBlock().length > 3000],
-  [true, 0, true]);
+/* CORRECTED 2026-08-08 BY D-235, AND THE OLD SPELLING WAS WRONG RATHER THAN
+   MERELY SUPERSEDED — corrected, never exempted. This walk ran over the WHOLE
+   METHOD and counted every `state:` in it, which was sound only while the method
+   had no other reason to write that word. D-235 gives it one: the success answer
+   now READS THE STATE BACK OUT OF THE RECORD (`state: recorded.state`), which is
+   the opposite of the thing §4 forbids and which the whole-method walk scored as
+   a violation. A walk that conscripts every later line is exactly the defect
+   REC-71 measured on DEC-49's `where` rows, one instrument over.
+   THE RULE IS ABOUT THE ROW THIS ENDPOINT COMPOSES, so the walk is over the span
+   that composes it — and the NARROWING IS CLOSED IN THE SAME ASSERTION rather
+   than taken on trust: every `#appendFmRows` call in the method is inside that
+   region, so a second row composition outside it cannot slip past the narrowed
+   walk. Loosening the span without that pin would have been the weakening it
+   looks like. */
+t("THE SOLE OUTPUT IS A LITERAL: the endpoint writes `state: \"suggested\"` and the write region "
++ "carries no other state assignment on the version row it composes — §4's fence expressed as the "
++ "absence of a variable rather than as a check on one — AND every row this method composes is inside "
++ "that region, so the narrowed walk cannot be escaped by composing a row somewhere else",
+  [/state: "suggested"/.test(suggestWriteRegion()),
+   (decomment(suggestWriteRegion()).match(/\bstate:(?!\s*"suggested")/g) || []).length,
+   suggestWriteRegion().length > 1500,
+   (suggestBlock().match(/#appendFmRows\(/g) || []).length,
+   (suggestWriteRegion().match(/#appendFmRows\(/g) || []).length],
+  [true, 0, true, 3, 3]);
 
 /* ====================================================================== 2
  * THE SIX PRE-WRITE CHECKS, EACH DRIVEN, EACH BY ITS OWN C-NUMBER.
@@ -1141,11 +1172,16 @@ console.log("\n--- 7. instrument guards: the source walk is non-trivial and the 
   + "inside the guard built to prevent it",
     [body.length > 6000, body.split("\n").length > 150, /END DEC-49 REGION is-suggest-write/.test(body)],
     [true, true, true]);
+  /* THE GUARD FOLLOWS THE WALK IT GUARDS — corrected with the walk above
+     (D-235). Over the whole method this now reads 2, because the method's own
+     answer legitimately carries `state: recorded.state`; over the WRITE REGION,
+     which is what §4's fence is about, the planted line is the only one. */
   t("WALK GUARD: and the same reader over a subject that MUST trip it does trip — a walk that found "
   + "nothing would report a clean state literal count over an empty span",
     [(("x").match(/state: "suggested"/g) || []).length,
-     ((decomment(body) + '\n    state: "accepted"').match(/\bstate:(?!\s*"suggested")/g) || []).length],
-    [0, 1]);
+     ((decomment(suggestWriteRegion()) + '\n    state: "accepted"').match(/\bstate:(?!\s*"suggested")/g) || []).length,
+     body.length > 6000],
+    [0, 1, true]);
   t("THE THREE REGIONS THIS ITEM DECLARES ARE ALL CLAIMED BY A ROW — an unclaimed marker tells the next "
   + "reader a span is governed when nothing is governing it, and the DEC-49 guard fails on one",
     [...new Set(Object.values(SUGGEST_CHECKS)
@@ -1196,6 +1232,312 @@ console.log("\n--- 7. instrument guards: the source walk is non-trivial and the 
   t("ONE WRITE SITE STILL: the suggest endpoint appends to `bundle.md` and re-promotes, and holds no "
   + "INSERT into either version table — PL-1's pin, re-asserted from the other side",
     [writes, /INSERT INTO inquiry_basis_versions/.test(suggestBlock())], [1, false]);
+}
+
+/* ====================================================================== 8
+ * D-235 — ONE ANSWER, TWO SOURCES, AND IT NOW SAYS WHICH IS WHICH.
+ *
+ * REC-75 settled what `composition` publishes — THE RECORD'S BYTES, read back
+ * from the projection and labelled `composition_of: "record"` — and raised
+ * D-235 at its own landing because the SAME answer's `version`, `kind`, `run`,
+ * `state`, `author`, `at`, `legs`, `count`, `grounds` and `ground_count` were
+ * still caller- or candidate-derived and carried no label at all. **One answer
+ * sourced from two places with only one of them named is REC-74's shape — two
+ * readers of one row disagreeing about which of its facts exist — arriving
+ * inside a single answer instead of across two ops.**
+ *
+ * THE DECISION, AND IT IS THE ONE REC-75's SHAPE ALREADY IMPLIED:
+ *
+ *   - a field that is a fact ABOUT THE VERSION is READ BACK out of the record
+ *     after the write, through the SAME reader `op=basisversions` uses — one
+ *     reader, two consumers, no second computation to drift. A candidate taught
+ *     the projection's shape would agree with it only until somebody changed
+ *     one of them, which is the hand-copy failure this repository has measured
+ *     five times;
+ *   - a field the record does NOT hold — the strength pair, the independence
+ *     derivation, the bounds this call ran under — says so rather than being
+ *     quietly mixed in with bytes that are the record's;
+ *   - and the answer publishes `fields_of`, ONE SOURCE PER FIELD, **computed
+ *     from the groups the answer is assembled out of rather than typed**, so a
+ *     field added tomorrow cannot arrive without saying where its bytes came
+ *     from. A hand-written list of field names is a list of spellings and goes
+ *     stale the moment a fourth is written; the totality arm below is what
+ *     makes the label unfalsifiable-proof rather than decorative.
+ *
+ * THE TWO DIVERGENCES THE BEHAVIOURAL ARMS DRIVE ARE LIVE AND WERE MEASURED BY
+ * DRIVING THE PLANE BEFORE THE FIX, never read off the source. Both are the
+ * `[\r\n]` -> SPACE fold, which is the one `#fmSafe` transform the version-name
+ * and ground-label grammars ADMIT on the written side (`VERSION_NAME_RE` and
+ * `GROUND_LABEL_RE` both allow a space and neither allows a quote), so it is
+ * the transform that reaches the record and the caller's copy alike.
+ * ====================================================================== */
+console.log("\n--- 8. D-235: the answer names the source of every field it publishes ---");
+{
+  const inRecord = async (name) => ((await read()).versions ?? []).find((v) => v.name === name) ?? null;
+
+  /* ---- (1) THE NAME THE RECORD ACTUALLY HOLDS -----------------------------
+     A name that FOLDS onto nothing already held is not refused — REC-75's
+     `SUGGEST_NAME_TAKEN` fix only catches a fold onto an EXISTING name — so it
+     lands, and the record holds `the folded reading name`. Before D-235 the
+     answer echoed the submitted spelling, so a caller that fed `version` back
+     as `derived_from` addressed a reading that does not exist. */
+  const folded = drive(await suggest({ kind: "basis-version",
+    name: "the folded\nreading name",
+    description: "A reading submitted under a name the restricted grammar will fold before it stores it.",
+    relationship: "and", grounds: [{ ground: "paper trail" }],
+    legs: [{ target: MINUTES, role: "supports", ground: "paper trail" }] }));
+  const foldedHeld = await inRecord("the folded reading name");
+  t("D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS: a submission named `the folded<newline>"
+  + "reading name` is stored as `the folded reading name`, and the answer says so rather than echoing "
+  + "what was sent. A caller feeding the old answer's `version` back as `derived_from` addressed a "
+  + "reading that does not exist — the record's own address, published wrong",
+    [folded.ok, folded.version, foldedHeld?.name ?? null, folded.version === (foldedHeld?.name ?? null)],
+    [true, "the folded reading name", "the folded reading name", true]);
+
+  /* ---- (2) THE PART LABELS THE RECORD ACTUALLY HOLDS ---------------------
+     `grounds` was `declaredLabels`, taken from the RAW submission: CHECK 2
+     compares the declared set against the used set and both sides are raw, so
+     the two agree with each other and neither agrees with the document. */
+  const foldedPart = drive(await suggest({ kind: "basis-version",
+    name: "the reading whose part folds",
+    description: "A reading declaring its separately sufficient part under a label the document will fold.",
+    relationship: "and", grounds: [{ ground: "paper\ntrail" }],
+    legs: [{ target: LEDGER, role: "cuts_against", ground: "paper\ntrail" }] }));
+  const partHeld = await inRecord("the reading whose part folds");
+  t("D-235 (2) `grounds` PUBLISHES THE PART LABELS THE RECORD HOLDS: a part declared as `paper<newline>"
+  + "trail` is stored as `paper trail`, and the answer publishes the stored spelling. The old answer's "
+  + "`grounds` came from the raw submission, and CHECK 2 could not see it — that check compares the "
+  + "DECLARED set against the USED set and both of them are raw, so the two agreed with each other and "
+  + "neither agreed with the document",
+    [foldedPart.ok, foldedPart.grounds, foldedPart.ground_count, partHeld?.grounds ?? null],
+    [true, ["paper trail"], 1, ["paper trail"]]);
+
+  /* ---- (3) THE WHOLE ANSWER AGAINST THE OTHER READER OF THE SAME ROW -----
+     TEN FACTS, DRIVEN ACROSS TWO OPS rather than asserted at the helper, which
+     is what REC-75's single `composition` arm did for one of them. The corpus
+     is PRINTED and FLOORED: a mapping that had gone empty would compare nothing
+     and pass, which is the shape three instruments in this repository took in
+     one week. */
+  /* WHAT THIS ARM CANNOT SEE, AND IT IS A FINDING RATHER THAN AN OMISSION.
+     `kind` IS ABSENT FROM THIS MAP BECAUSE `op=basisversions` DOES NOT PUBLISH
+     IT AT ALL. Measured, not read: the first run of this arm came back
+     `["kind!=kind", "legs!=legs"]`, and only one of those was the defect D-235
+     names. The projection STORES `kind` — PL-3 put it in the composition and
+     therefore inside the freeze, because what a run PROPOSED a reading as is
+     part of what the version IS — and the read op's answer never carries it.
+     That is a stored-and-never-published field, REC-74's own subject one op
+     over, and it is DELEGATED rather than folded in here: adding a field to a
+     read op is a different act with a different blast radius from labelling the
+     source of a write op's answer. So `kind` is still LABELLED `record` on the
+     answer below (it is read back from the projection row) and simply cannot be
+     cross-checked against the other reader, because the other reader is silent
+     about it. Saying so is the point — a thing the matcher cannot see must be
+     NAMED, never silently scored zero. */
+  const MAP = { version: "name", run: "run", state: "state", author: "author",
+                at: "at", legs: "legs", count: "leg_count", grounds: "grounds",
+                composition: "composition" };
+  /* THE FIXTURE'S NAME FOLDS TOO, AND THAT IS A CORRECTION MADE BY RUNNING THE
+     CONTROL RATHER THAN BY WRITING IT. This arm was first driven under a plain
+     name, and `suggest.control.mjs`'s (D-235b) — which re-sources `version` from
+     the submission — printed `WRONG: expected an assertion naming "D-235 (3)" to
+     FAIL and none did`. The reason is exactly REC-75's own receipt one field
+     over: **a re-sourced field is invisible wherever the two sources agree**,
+     and under a name the document keeps verbatim they agree. So the fixture
+     carries a fold, and this arm genuinely covers `version` instead of covering
+     it in appearance only. */
+  const quoted = drive(await suggest({ kind: "basis-version",
+    name: "every field\nread back",
+    description: `A reading whose fields carry the "" the document cannot hold, so the two sources cannot agree by accident.`,
+    relationship: "and",
+    grounds: [{ ground: "the audit", statement: `The form's own words are "unstated".` }],
+    legs: [{ target: AUDIT, role: "supports", ground: "the audit", grade: "B",
+             grade_axis: "capture", grade_source: "capture",
+             note: `The blank sits on page 9 of the "award form".`, date: "2026-06-01" }] }));
+  const heldQ = await inRecord("every field read back");
+  const disagree = Object.entries(MAP)
+    .filter(([a, b]) => JSON.stringify(quoted[a]) !== JSON.stringify(heldQ?.[b]))
+    .map(([a, b]) => `${a}!=${b}`);
+  console.log(`      corpus: ${Object.keys(MAP).length} field(s) compared across op=suggest and op=basisversions`);
+  t("D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD IS THE SAME FACT `op=basisversions` PUBLISHES "
+  + "FOR THAT VERSION — nine of them, driven across two ops rather than asserted at the helper, over a "
+  + "submission carrying characters the document cannot hold so the two sources cannot coincide by "
+  + "accident. REC-75 proved this for `composition` alone; the rest of the answer was the half D-235 "
+  + "named. `kind` is NOT in the corpus and the comment above says why: the other reader is silent "
+  + "about it",
+    [quoted.ok, heldQ !== null, disagree, Object.keys(MAP).length >= 9],
+    [true, true, [], true]);
+  t("AND THE LEGS ARE THE PROJECTION'S OWN ROWS, ORDINAL AND ALL — the candidate's legs carried no "
+  + "`ord`, so the two readers of this one row published leg objects of DIFFERENT SHAPE and a consumer "
+  + "joining them had to know which op it had asked",
+    [Array.isArray(quoted.legs), quoted.legs?.length, quoted.legs?.[0]?.ord,
+     Object.keys(quoted.legs?.[0] ?? {}).sort().join(",")],
+    [true, 1, 0, "at,grade,grade_axis,grade_source,ground,note,ord,role,target_id,target_type"]);
+
+  /* ---- (4) THE LABEL, AND IT IS TOTAL --------------------------------------
+     THE ARM THAT OUTLIVES THE ITEM. The behavioural arms above catch the fields
+     that exist today; this catches the field somebody adds tomorrow. `fields_of`
+     is COMPUTED from the three groups the answer is assembled out of, so a key
+     that reaches the answer without belonging to a group is missing from the
+     label and this arm fails naming it. */
+  const keys = Object.keys(quoted).sort();
+  const labelled = Object.keys(quoted.fields_of ?? {}).sort();
+  const sources = [...new Set(Object.values(quoted.fields_of ?? {}))].sort();
+  t("D-235 (4) THE LABEL IS TOTAL OVER THE ANSWER'S OWN KEYS — every field published carries a source "
+  + "and no source names a field that is not published. This is the arm that lasts: a field added to "
+  + "this endpoint tomorrow and returned without a source FAILS HERE, which a list of field names "
+  + "written out by hand could never do because it goes stale the moment a fourth is added",
+    [keys.length >= 20, JSON.stringify(keys) === JSON.stringify(labelled),
+     keys.filter((k) => !labelled.includes(k)), labelled.filter((k) => !keys.includes(k)), sources],
+    [true, true, [], [], ["call", "derived", "label", "record"]]);
+  t("AND THE PARTITION IS THE DECISION, PINNED: the facts ABOUT THE VERSION are `record`, the "
+  + "derivations the record does not hold are `derived`, and what is true of this CALL rather than of "
+  + "the version is `call`. A field silently reclassified from `record` to anything else would be the "
+  + "answer quietly withdrawing a claim, and this is what says so",
+    [["version", "kind", "run", "state", "author", "at", "legs", "count", "grounds", "ground_count",
+      "composition", "target", "bundleSha", "rowVersion"].map((k) => quoted.fields_of?.[k]),
+     ["pair", "shared_origins", "origins_complete"].map((k) => quoted.fields_of?.[k]),
+     ["ok", "weight", "limit", "truncated", "origin_limit", "evaluated", "repeated", "wrote",
+      "read_back"].map((k) => quoted.fields_of?.[k])],
+    [Array(14).fill("record"), Array(3).fill("derived"), Array(9).fill("call")]);
+  t("AND `composition_of` STILL SAYS `record` — REC-75's field is kept rather than replaced, because a "
+  + "consumer reading it today must keep reading it, and `fields_of` must agree with it rather than "
+  + "become a second answer to one question",
+    [quoted.composition_of, quoted.fields_of?.composition, quoted.read_back],
+    ["record", "record", true]);
+
+  /* ---- (5) OVER-STRICTNESS ------------------------------------------------
+     The label must not change what LANDS, and the read-back must not turn an
+     honestly empty collection into a missing one. §9's empty-level kind is the
+     case that matters: it holds no legs and declares no parts, and `[]`/`0`
+     there is a fact about the record rather than a failure to read it. */
+  const empty = drive(await suggest({ kind: "level-empty", name: "nothing at the content level either",
+    description: "We read every document this question rests on and none of them speaks to the transfer basis.",
+    relationship: "and", level: "content", observed_at: "observation:d235-content-1" }));
+  const emptyHeld = await inRecord("nothing at the content level either");
+  t("D-235 OVER-STRICTNESS: §9's empty-level kind still LANDS, and its empty collections are the "
+  + "RECORD'S empty collections — `[]` and `0` read back rather than defaulted. An answer that had to "
+  + "invent them would be exactly the shape the read-back exists to remove, and a kind that rests on "
+  + "nothing is the one a machine may write",
+    [empty.ok, empty.legs, empty.count, empty.grounds, empty.ground_count, empty.truncated,
+     emptyHeld?.legs?.length ?? null, emptyHeld?.grounds ?? null],
+    [true, [], 0, [], 0, false, 0, []]);
+  /* THE LEG THAT NAMES NO PART, and the arm exists to say WHICH of the two
+     answers the plane gives — because `basisVersionsOf` writes `ground: ""` for
+     such a leg and a `[""]` in a list of *the parts this reading declares* is a
+     part nobody declared. Whether the record can hold one at all is a
+     MEASUREMENT and not a reading: C-25.5 is quoted in this endpoint as
+     requiring a version's partition to be TOTAL, and whether that refuses at
+     `promote` or only at CHECK 2 decides whether the blank filter in
+     `#versionCollections` is load-bearing or defensive. The assertion records
+     the answer either way, so the next reader does not have to re-derive it. */
+  const unlabelled = drive(await suggest({ kind: "basis-version", name: "a reading whose leg names no part",
+    description: "A reading resting on one document and declaring no separately sufficient part at all.",
+    relationship: "and",
+    legs: [{ target: MINUTES, role: "supports" }] }));
+  t("D-235 (5) A LEG THAT NAMES NO PART IS REFUSED AT `promote`, SO `op=suggest` CANNOT PRODUCE THE "
+  + "BLANK LABEL — measured, not read. C-25.5 requires a version's partition to be TOTAL and the "
+  + "document gate enforces it, which is what makes the blank filter in `#versionCollections` a REPLAY "
+  + "concern rather than a live one on this path. Recorded so the next reader does not re-derive it",
+    [unlabelled.ok, unlabelled.code], [false, "BASIS_VERSION_REFUSED"]);
+
+  /* ---- AND THE PATH THAT IS EXEMPT FROM THAT GATE, DRIVEN ------------------
+     THE SHAPE ARM IS `!pkg.replay`, and it says why in `promote`: *the record's
+     own history must be holdable verbatim*. So a REPLAYED inquiry document may
+     carry a version whose leg names no part, `basisVersionsOf` projects that leg
+     with `ground: ""`, and before D-235 `op=basisversions` published `[""]` in
+     `grounds` — a list of *the parts this reading declares* containing a part
+     nobody declared. That is the record claiming something the document does not
+     say, on the one path that exists precisely so the record can hold its past.
+     DRIVEN ON ITS OWN INQUIRY so nothing above is disturbed. */
+  {
+    const RINQ = "INQ-2026-3000-replayed-partition";
+    await mustPromote(RINQ, inquiryMd(RINQ), "inquiry");
+    const withUnlabelledLeg = inquiryMd(RINQ).replace("visuals: []", [
+      "visuals: []",
+      "basis_versions:",
+      `  - name: "held from before the rule"`,
+      `    kind: "basis-version"`,
+      `    description: "A reading the record already held, whose leg names no separately sufficient part."`,
+      `    relationship: "and"`,
+      `    state: "suggested"`,
+      `    hidden: false`,
+      `    derived_from: null`,
+      `    run: "${RUN}"`,
+      `    author: "ruth"`,
+      `    at: "${LATER}"`,
+      "basis_version_legs:",
+      `  - version: "held from before the rule"`,
+      `    target: "${MINUTES}"`,
+      `    role: "supports"`].join("\n"));
+    const replayed = await POST(`op=promote&token=${RUTH}`, {
+      bundleId: RINQ, base: await shaOf(RINQ), replay: true,
+      snapKey: `${RINQ}-replay`,
+      files: [{ path: "bundle.md", text: withUnlabelledLeg,
+                bytes: withUnlabelledLeg.length, sha256: sha(withUnlabelledLeg) }],
+      meta: { object_type: "inquiry", group: "believe-in-oakland", title: `Bundle ${RINQ}`,
+              current_state: "open", created: NOW, last_updated: LATER } });
+    const held = ((await GET(`op=basisversions&token=${RUTH}&id=${RINQ}&limit=10`)).versions ?? [])[0];
+    t("D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE, DRIVEN END TO END: a "
+    + "replayed document carrying a leg that names no part projects that leg with `ground: \"\"`, and "
+    + "`op=basisversions` used to publish `[\"\"]` as a declared part. The leg is still published — the "
+    + "filter drops the LABEL and never the leg, because the leg is a fact and the empty label is not a "
+    + "part anybody declared",
+      [replayed.ok, held?.name ?? null, held?.grounds ?? null,
+       held?.legs?.length ?? null, held?.legs?.[0]?.ground ?? null, held?.leg_count ?? null],
+      [true, "held from before the rule", [], 1, "", 1]);
+  }
+  const plain = drive(await suggest({ kind: "basis-version", name: "a reading with no punctuation at all",
+    description: "A reading whose every field is spelled in characters the document keeps exactly as sent.",
+    relationship: "and", grounds: [{ ground: "the audit" }],
+    legs: [{ target: AUDIT, role: "cuts_against", ground: "the audit" }] }));
+  t("AND A SUBMISSION THE DOCUMENT KEEPS VERBATIM IS UNCHANGED BY ANY OF THIS — the read-back is not a "
+  + "transform, so correct work in a spelling the record preserves comes back exactly as it was sent",
+    [plain.ok, plain.version, plain.grounds, plain.fields_of?.version],
+    [true, "a reading with no punctuation at all", ["the audit"], "record"]);
+
+  /* ---- (6) THE STRUCTURAL PIN --------------------------------------------
+     REC-75's own receipt, applied to this half: reverting a read-back to the
+     candidate is INVISIBLE to a behavioural arm whenever the two agree, and
+     after REC-75 they agree for every field except the two the folds above
+     expose. So the source is pinned over the SOURCE as well as over the wire —
+     the answer's record group may name only the read-back and the promotion,
+     and never the candidate, the submitted collections or the derivations. */
+  {
+    /* INVERTED, AND THE INVERSION IS A CORRECTION MADE BY RUNNING THE CONTROL.
+       This arm was first written as a BANNED LIST — `candidate`, `legsIn`,
+       `declaredLabels`, `args.` — and `suggest.control.mjs`'s (D-235b) walked
+       straight past it, because re-sourcing the version name reintroduces the
+       local `name`, which was not on the list and could not sensibly be added
+       (`\bname` also matches `recorded.name`). **A list of spellings goes stale
+       the moment a fourth is written, and this one was stale before it ran.**
+       So the arm asks what makes a value recognisable IN PRINCIPLE: every root
+       identifier in the group must come from the APPROVED set — the read-back,
+       the promotion's receipt, and the gated bundle row — and anything else,
+       whatever it is called, fails. The roots are PRINTED so a narrowing that
+       matched nothing cannot pass as a clean result. */
+    const rootsOf = (src) => [...new Set([...src
+      .replace(/(^|,)\s*[\w$]+\s*:/gm, "$1")
+      .matchAll(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)/g)].map((m) => m[1]))]
+      .filter((n) => !["null", "true", "false", "const", "fromRecord"].includes(n)).sort();
+    const at = STORE_SRC.indexOf("const fromRecord = {");
+    const to = STORE_SRC.indexOf("};", at);
+    const group = at < 0 ? "" : decomment(STORE_SRC.slice(at, to));
+    const roots = rootsOf(group);
+    console.log(`      record-group roots: ${JSON.stringify(roots)}`);
+    t("D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK AND NOTHING ELSE — pinned over the "
+    + "SOURCE, because a field re-sourced from the candidate is invisible to every behavioural arm "
+    + "whenever the two happen to agree, which after REC-75 is almost always. Asked as a TOTALITY over "
+    + "the roots the group draws on rather than as a list of forbidden names, so a value taken from "
+    + "somewhere nobody anticipated fails too",
+      [at > 0 && to > at, group.length > 200, roots],
+      [true, true, ["b", "promoted", "rc", "recorded"]]);
+    const SYNTH = `const fromRecord = {\n  legs: rc.legs,\n  version: name,\n  grounds: declaredLabels,\n};`;
+    t("WALK GUARD for that arm: the same reader over a FIXED synthetic group that MUST trip it does "
+    + "trip, AND it trips on the identifier the banned-list spelling of this arm could not see — a walk "
+    + "that took an empty span would report a clean root set and congratulate itself, which is the "
+    + "shape this repository has measured repeatedly",
+      rootsOf(SYNTH), ["declaredLabels", "name", "rc"]);
+  }
 }
 
 } catch (e) {

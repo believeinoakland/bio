@@ -766,10 +766,37 @@ console.log("\n--- 12. the bound PUBLISHED is the bound APPLIED, and the empty a
      SQL bound is pinned directly, and the answer settles wholeness per version
      rather than leaving a consumer to compare two numbers — because a basis
      returned in part reads as a basis (PL-9's finding, at the grain it bites). */
-  const body = STORE_SRC.slice(STORE_SRC.indexOf("basisVersions({"), STORE_SRC.indexOf("basisVersions({") + 4600);
-  t("D-227: EVERY row source behind this answer carries a LIMIT in the SQL — the legs and the grounds "
-  + "as well as the versions, so a bounded envelope is not sitting on an unbounded scan",
-    [(body.match(/#rows\(/g) || []).length, (body.match(/LIMIT \?/g) || []).length], [3, 3]);
+  /* CORRECTED 2026-08-08 BY D-235, AND THE OLD SPELLING WAS RIGHT WHEN IT WAS
+     WRITTEN — corrected, never exempted, with why the old one no longer holds.
+     It sliced 4,600 characters from `basisVersions({` and demanded exactly THREE
+     `#rows(` and THREE `LIMIT ?`, which pinned the topology of the reader as
+     much as the rule. D-235 changed that topology for a reason of its own: the
+     legs read moved into `#versionCollections` so `op=suggest`'s answer and this
+     op read one row through ONE reader, and the separate `SELECT DISTINCT
+     ground` scan is GONE — the part labels are now derived from the legs this
+     answer already carries, which is one bounded read fewer rather than an
+     unbounded one more. A COUNT OF THREE would have failed for a change that
+     strictly tightened the thing it guards.
+     SO THE ARM ASSERTS THE RULE INSTEAD OF THE TOPOLOGY: over the whole span
+     that answers this op — the shared reader and the assembly that calls it —
+     every `#rows(` is matched by a `LIMIT ?`, the corpus is PRINTED, and it is
+     FLOORED so a span that read nothing cannot pass. A future helper split or
+     merge moves the number and the rule still holds. */
+  const body = STORE_SRC.slice(STORE_SRC.indexOf("#versionCollections(bundleId, row) {"),
+                               STORE_SRC.indexOf("      ok: true,\n      inquiry: inq,"));
+  const nRows = (body.match(/#rows\(/g) || []).length;
+  const nLimit = (body.match(/LIMIT \?/g) || []).length;
+  console.log(`      D-227 corpus: ${body.length} chars spanning the shared reader and the assembly · `
+            + `${nRows} #rows( · ${nLimit} LIMIT ?`);
+  t("D-227: EVERY row source behind this answer carries a LIMIT in the SQL — asserted as the RULE "
+  + "rather than as a count, so a reader refactored into a shared helper cannot fail it while "
+  + "tightening it, and a span that read NOTHING cannot pass it either",
+    [body.length > 800, nRows > 0, nRows === nLimit], [true, true, true]);
+  t("WALK GUARD for that arm: the same reader over a FIXED synthetic span carrying an UNBOUNDED "
+  + "`#rows(` does trip — an equality between two zeroes is an equality that costs nothing",
+    [(`this.#rows(\`SELECT a FROM t WHERE b=?\`, x);`.match(/#rows\(/g) || []).length,
+     (`this.#rows(\`SELECT a FROM t WHERE b=?\`, x);`.match(/LIMIT \?/g) || []).length],
+    [1, 0]);
   const whole = await versionsOf(INQ);
   t("and each version settles its own wholeness: `leg_count` is the RECORD's count, `legs_complete` "
   + "answers the question outright, and both read true on a version that fits",
