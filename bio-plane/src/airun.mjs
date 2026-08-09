@@ -245,7 +245,16 @@ export const RUN_CONTEXTS = {
    NULL-TOLERANT ON PURPOSE. Every read below tolerates an absent or wrongly
    typed field rather than throwing on `.length` of undefined: a control that
    dies early hides the arms behind it, and a refusal function that throws
-   cannot NAME what it broke. */
+   cannot NAME what it broke.
+
+   ONE EXCEPTION TO THE NULL-OR-REFUSAL SHAPE, and it is named here rather than
+   discovered: PL-18's `projectGate` returns a VERDICT OBJECT carrying its
+   `refusal` (null or built) alongside the GROUND it decided on. It has to,
+   because two of its four grounds PERMIT and both of those must still be
+   stated on the answer — DEC-17's projectless case is a permission the record
+   has to be able to explain, not an absence of refusal. Splitting it into a
+   check and a separate statement-builder would put the sentence and the verdict
+   in two places that can disagree. */
 
 function refusal(key, detail) {
   const row = AI_RUN_CHECKS[key];
@@ -326,6 +335,137 @@ export function checkBound(bound) {
   return refusal("AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; `
     + `endings: ${Object.keys(RUN_ENDINGS).join(", ")} (§14b.6)`);
+}
+
+/* ------------------------------------------------- DEC-63's gate (PL-18)
+
+   THE THREE GROUNDS ON WHICH THE PROJECT GATE CAN PERMIT, as a CLOSED
+   VOCABULARY rather than three booleans a reader has to combine. **All three
+   PERMIT, and every one of them is STATED on the answer** — which is the half
+   that is easy to skip and is the reason this vocabulary exists at all. DEC-17
+   makes the projectless case real rather than an edge case, and a permission
+   granted silently is indistinguishable from a gate that never ran. That is the
+   overclaim shape this project refuses everywhere else: the record must be able
+   to say WHY a run was allowed to start, not merely that it started.
+   THE REFUSING OUTCOME IS NOT HERE. It is named by its code, C-22.8, and giving
+   it a ground as well would be two names for one fact — see the note under this
+   object. */
+export const PROJECT_GATE_GROUNDS = {
+  /* No member is behind this caller at all — a machine credential. The gate is
+     NOT APPLIED, and the reason is that it CANNOT be: participation is a
+     relationship between a PERSON and a project, and a token class is not a
+     person. This keeps the gate's population identical to the capability
+     FLOOR's, which `index.mjs` already applies only `if (viaSession)` — a fence
+     wider than the floor beneath it would be an undeclared interface change
+     wearing the costume of caution, and it would refuse the daemon outright.
+     DEC-63 names the lever for this half explicitly and it is a different one:
+     *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
+     scope, which can only narrow what a machine may reach. */
+  NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
+  /* DEC-17, VERBATIM: *"An inquiry outside any project has no bar and inherits
+     none."* So an inquiry in no project is PERMITTED and the permission is
+     STATED. Deciding it the other way would invent a constraint the model does
+     not carry — and answering it with a silent allow would be the same defect
+     one layer down, because nobody reading the answer could tell a projectless
+     inquiry from a gate that failed to run. */
+  PROJECTLESS: "this question is in no project, and DEC-17 puts no bar on one that is not",
+  PARTICIPANT: "the account participates in at least one project this question belongs to",
+};
+/* THERE IS NO `NOT_PARTICIPANT` GROUND, AND ITS ABSENCE IS A CORRECTION THIS
+   ITEM'S OWN GUARD RUN FORCED RATHER THAN AN OMISSION. The first draft had one,
+   and it was a SECOND NAME for a fact that already has a canonical one: the
+   refusal's C-22.8 code. `civicos-ui/check-refusal-codes.mjs` failed the
+   harness on the shape that produced it — a refusing return whose code arrived
+   through a spread rather than as a literal at the site — and the fix that
+   satisfies the guard is the same fix that removes the duplicate name: the
+   refusing path returns THE REFUSAL ITSELF, built by `refusal()` with the code
+   spelled out, exactly as `checkObservation`, `checkCondition` and `checkBound`
+   do three functions up. **A refusal is named by its code; a permission is
+   named by its ground.** Two vocabularies for two different things, and neither
+   one restating the other. */
+
+/** DEC-63 / PL-18 — MAY THIS ACCOUNT ASK THE SYSTEM TO LOOK AT THIS CONTEXT?
+ *
+ *  PURE, like everything else in this file: the STORE supplies the facts (which
+ *  projects hold the context, and which of those the account has JOINED) and
+ *  this function makes the decision and builds the refusal. One decision for
+ *  all three run verbs, so `airunopen`, `airuntick` and `airunclose` cannot
+ *  drift apart — which is the failure mode IS-6's own header warned about when
+ *  it gave the three verbs one capability rather than gating only the open.
+ *
+ *  IT RETURNS BOTH THE VERDICT AND THE SENTENCE FROM ONE COMPUTATION. There is
+ *  deliberately no second function computing the stated ground, because a
+ *  statement derived separately from the decision it describes is a statement
+ *  that can disagree with it — this repository has measured that class five
+ *  times as "a hand copy agrees at zero cost".
+ *
+ *  `permitted` IS THE VERDICT AND IT LEADS EVERY RETURN, and that is a
+ *  CORRECTION THIS ITEM'S OWN GUARD RUN FORCED rather than a shape chosen up
+ *  front. The first draft led with `applied`, which is not a verdict at all —
+ *  it says whether the gate had anything to check — so the two PERMITTING
+ *  grounds returned `applied: false` and `civicos-ui/check-refusal-codes.mjs`
+ *  read both of them as CODELESS REFUSALS and failed the harness. It was right
+ *  to: a reader who cannot tell *this gate did not apply* from *this gate
+ *  refused* by looking at the verdict is the member-facing version of the same
+ *  confusion. `permitted` is a literal `true` on all three permitting paths and
+ *  a literal `false` on the one refusal, so the guard grades this function
+ *  correctly and so does a person. `applied` survives beside it as the FACT it
+ *  always was, which is what DEC-17's projectless case needs stated.
+ *
+ *  JOINED, NOT MERELY INVITED. `projectsJoined` is the store's `joined` set and
+ *  the choice is `forkProject`'s, one door over: an invited member sees the
+ *  project's SKELETON only, so there is nothing there for them to investigate.
+ *  A `leaving` participant is likewise not counted — 7.6 makes that a REQUEST
+ *  rather than a removal, but it is the member's own statement that they are
+ *  done with this work, and starting new work on the strength of it would be
+ *  the record acting against what the member said.
+ *
+ *  NO ADMINISTRATOR BYPASS, and it is deliberate rather than an oversight.
+ *  Membership Architecture v2 4.9 is that an administrator SEES every project
+ *  and DIRECTS none of them; the admin bypasses that exist (7.2, 7.7) are over
+ *  PARTICIPATION ITSELF, which is custodial. Starting an investigation is WORK,
+ *  and DEC-63's words are *"any member of a project"* — an administrator who is
+ *  not in the project is not one. They have a remedy the refusal names: join.
+ *
+ *  `contextLabel` is what the CALLER named, and it is the only identifier the
+ *  detail sentence carries. The projects are NOT named to a non-participant:
+ *  7.12's skeleton rule means the existence of a project can itself be
+ *  something an outsider is not entitled to, and a refusal that leaks the
+ *  roster of projects touching a question would be this gate defeating the
+ *  visibility rule it sits beside. */
+export function projectGate({ actor = null, contextType = null, contextId = null,
+                              projects = [], projectsJoined = [] } = {}) {
+  const who = actor == null ? "" : String(actor).trim();
+  const all = Array.isArray(projects) ? projects.map(String) : [];
+  const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
+  const label = `${contextType == null ? "" : String(contextType)} ${contextId == null ? "" : String(contextId)}`.trim()
+                || "the named context";
+
+  if (!who)
+    return { permitted: true, applied: false, ground: "NO_MEMBER_BEHIND_CALLER",
+             why: PROJECT_GATE_GROUNDS.NO_MEMBER_BEHIND_CALLER, projects: all.length };
+  if (all.length === 0)
+    return { permitted: true, applied: false, ground: "PROJECTLESS",
+             why: PROJECT_GATE_GROUNDS.PROJECTLESS, projects: 0 };
+  if (mine.length > 0)
+    return { permitted: true, applied: true, ground: "PARTICIPANT",
+             why: PROJECT_GATE_GROUNDS.PARTICIPANT, projects: all.length };
+
+  /* THE REFUSAL ITSELF IS THE RETURN — not an object carrying one — and that is
+     what puts the code where DEC-49 requires it. `refusal()` is the family's
+     one builder and the code is a STRING LITERAL at this site, so the guard in
+     `civicos-ui/check-refusal-codes.mjs` can see it; a code held in a variable
+     or arriving through a spread is invisible to it, and one shipped
+     `translation: undefined` to a member exactly that way. THIS IS THE ONE
+     PLACE THE CODE IS WRITTEN: the three store call sites RELAY what comes
+     back, precisely as `aiRunOpen` already relays C-22.7 from `skillpack.mjs`.
+     The answer carries `ok: false` and no `permitted`, so a caller's
+     `if (!gate.permitted)` reads it correctly — and there is no second field
+     that could disagree with the code about whether this was a refusal. */
+  return refusal("AI_RUN_NOT_PROJECT_MEMBER",
+    `starting or continuing a run over ${label} is work inside the project it belongs to, `
+    + `and this account has joined none of them (DEC-63). This is not a capability: holding `
+    + `contribute would not change it, and an owner of that project inviting you would`);
 }
 
 /** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and

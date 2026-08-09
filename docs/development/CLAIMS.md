@@ -5834,3 +5834,213 @@ DEC-52-final leaves the sidebar as visibility and BULK REVIEW. The review half i
 - **ONE EXPRESSION CHANGED**: `aiSessionPanelHtml`'s single `return`, which now interpolates `aiConnectionsSidebarHtml(session)` between the run block and the transcript.
 - **A NEW REGION**, `/*__AI_CONNECTIONS_START__*/`…`/*__AI_CONNECTIONS_END__*/`, inside the existing AI-session region and before `let AI_SESSION_HASH_LOCK`. Everything else this item wrote is inside it.
 - **NO ROUTER WAS ADDED**, deliberately: the sidebar is reached at the `#session/<id>` address that already exists, so `preauth-vocabulary.test.mjs`'s address walk is untouched and no new router needed classifying. **NO PLANE READ AND NO PLANE WRITE WAS ADDED**, so `bound-sweep.test.mjs`'s two walks see nothing new — there is no explicit ask to state because there is no ask.
+## CLAIM 2026-08-09 PLANE (PL-18 — DEC-63's enactment: the run verbs' gate is PROJECT MEMBERSHIP)
+session: pl18-project-membership-gate (worktree agent-a4e2eff5ca09197e2)
+opened: 2026-08-09T00:00:00Z
+paths: named by SITE, never by whole file, because up to four other workers may be in these three files.
+  **`bio-plane/checks/bio-checks.mjs`** — the `AI_RUN_CHECKS` family ONLY: its header's C-22 COUNT
+  sentence (corrected in place, SEVEN -> EIGHT, per that header's own rule) and ONE new row,
+  `AI_RUN_NOT_PROJECT_MEMBER` (`C-22.8`), appended after `AI_RUN_SKILL_VERSION_UNNAMED`. **No new
+  `*_CHECKS` family** — SK-1's precedent and the `FLOOR` block's own rule, because a family is a floor
+  in `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's walk. No other family,
+  no `checkBundle` arm, no existing row edited.
+  **`bio-plane/src/airun.mjs`** — ONE new exported function, `projectGate`, appended to the refusals
+  section after `checkBound`, plus its `PROJECT_GATE_GROUNDS` vocabulary and the section header's
+  function list. The existing `refusal` helper is CALLED, never copied. `checkObservation`,
+  `checkCondition`, `checkBound`, `finishedBound`, `translationOf` and every vocabulary already there
+  are READ and DRIVEN, never modified.
+  **`bio-plane/src/store.mjs`** — FOUR sites and nothing else: (1) two new private helpers
+  `#runContextProjects` and `#aiRunProjectGate`, inserted immediately before `aiRunOpen`; (2) one guard
+  block inside `aiRunOpen` between the `AI_RUN_NO_CONTEXT` refusal and the principals refusal, plus the
+  `actor` parameter in its signature and the gate statement on its success return; (3) the same guard
+  in `aiRunTick` and (4) in `aiRunClose`, each placed AFTER the run row is resolved; plus the three
+  `airunopen`/`airuntick`/`airunclose` lines in the DO dispatch table, which gain `actor`. `#participation`
+  and `#citesInto` are CALLED and not modified — the gate deliberately reuses the record's existing
+  predicates rather than writing a second membership test or a second citation test.
+  **`bio-plane/src/index.mjs`** — THREE sites: (1) one new const `RUN_VERB_ACTIONS` beside
+  `AI_RUN_ACTIONS` (which is NOT edited — it also carries `suggest` and `capturerequest`, which this
+  item does not gate); (2) the `actor` server-side stamp, added beside the existing `principal` stamp,
+  deleted-then-set on QUEUE_ACTIONS' precedent; (3) the `NEEDS` COMMENT above `airunopen`/`airuntick`/
+  `airunclose`, rewritten to say the capability is now the FLOOR and the gate is participation. **The
+  three `NEEDS` VALUES stay `contribute`** — that is the ruling, not an omission.
+  **`bio-plane/test/airun-projectgate.test.mjs` (NEW — entirely this item's)** and
+  **`bio-plane/test/nc-pl18.mjs` (NEW harness, deliberately NOT a `.test.mjs`: it EDITS REAL SOURCES
+  while it runs and `scripts/battery.mjs` discovers by that suffix — `nc-rec72.mjs` is the precedent)**.
+  **`bio-plane/scripts/coverage.mjs`** — the `REGISTER_FLOOR` NUMERALS ONLY, from the figures the
+  instrument PRINTS, because a new suite carrying arm declarations invalidates all three.
+  **`civicos-ui/check-refusal-codes.mjs`** — the `FLOOR` NUMERALS ONLY, from the figures that harness
+  PRINTS. No matcher, no gate, no walk.
+  `docs/development/MEASUREMENTS.md` — ONE dated section, APPENDED: the two class sweeps.
+  `docs/development/CLAIMS.md` (this entry and its DELEGATIONS).
+  **TWO MORE `.test.mjs` FILES, EACH CORRECTED AND NEITHER EXEMPTED, both found by the WHOLE
+  battery and by nothing smaller.** **`bio-plane/test/leadslug.test.mjs`** — the FIXTURE only: its
+  run was opened by `ruth` over a question `PROJ_A` draws on while `carol` was that project's only
+  participant, which DEC-63 now refuses. The fixture is made LEGAL through the real acts (carol
+  invites, ruth joins) with the reason at the site; **no assertion in that suite is changed and
+  none is exempted** — the refusal it hit was correct. **`bio-plane/test/run-conditions.test.mjs`**
+  — ONE row in its `ROLE` table: DEC-63's gate makes `aiRunClose` the THIRTEENTH reader of
+  `ai_runs`, and ARM W3 FAILED naming it, which is that arm working exactly as its own sentence
+  promises. Classified `WRITES` with the reasoning at the site; ARM W4's "exactly three publishers"
+  re-checked rather than assumed. (Neither path was in the claim as first written; both are added
+  here in the turn they were edited.)
+  **`bio-plane/test/airun.test.mjs` — ARM D1 ONLY, CORRECTED AND NEVER EXEMPTED.** That arm pins the
+  C-22 family's SIZE and it went RED on this item's first run, which is the arm working. The count and
+  its comment are moved SEVEN -> EIGHT with the reason at the site, on the identical terms SK-1 used
+  one row earlier. **No other assertion in that suite is touched and none is exempted.** (This path was
+  NOT in the claim as first written; it is added here in the turn it was edited rather than left to be
+  discovered in the diff.)
+  **NOT** `docs/development/QUEUE.md` (CONDUCT is its sole writer), **NOT** `src/schema.mjs`,
+  **NOT** `src/skillpack.mjs`, **NOT** any other `.test.mjs`, **NOT** `civicos-ui/app.html`,
+  **NOT** `newgroup/**`, **NOT** `pdf-worker/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3. interfaces owned: none reshaped. **No op added and no op contract moved:** the
+  three verbs keep their names, arguments and answer shape. What changes is WHICH CALLERS ARE REFUSED
+  and a new STATED field on the success answer, which is additive. An IC row is filed if the refusal is
+  a shape a consumer builds against — see the delegation below.
+expected: **PL-18 / DEC-63.** The three run verbs check participation in the project the inquiry belongs
+  to, `contribute` stays as the FLOOR beneath it, and **the refusal NAMES WHICH OF THE TWO FAILED** —
+  because "you are not in this project" and "you lack contribute" are different facts about a member.
+  Plus the case DEC-17 makes real rather than edge: **an inquiry outside any project**, decided and
+  STATED rather than answered by a silent allow or a silent deny.
+concurrency: checked over the whole file. The only claims still open are DIST's (`newgroup/**`,
+  `release/**`, `scripts/deploy.mjs`, tags — disjoint), VERIFY/M0-15's (`scripts/battery.mjs`,
+  `test/battery-provenance.test.mjs`, and `scripts/coverage.mjs`'s `REGISTER_FLOOR` numerals) and
+  M0/D-237's (`scripts/residue.mjs`, `scripts/battery.mjs`, `test/battery-residue.*`, and the same
+  `REGISTER_FLOOR` numerals). **NO OPEN CLAIM NAMES `src/store.mjs`, `src/index.mjs`,
+  `src/airun.mjs`, `checks/bio-checks.mjs` or `civicos-ui/check-refusal-codes.mjs`.** The one overlap
+  is `scripts/coverage.mjs`'s `REGISTER_FLOOR`, which three items now touch for its numerals alone:
+  **if this conflicts at integration, COLLAPSE TO ONE KEY SET and re-read the printed figures — do not
+  keep both, because the last duplicate key silently wins and once it was the lowest.**
+  `git stash` was NOT used at any point.
+baseline: **MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief, which carried no
+  figure: `npm run test:battery` -> 138/138 suites green (134 plane · 4 fleet) · 8,827 assertions ·
+  exit 0 read UNPIPED.**
+released:
+
+### DELEGATION 2026-08-09 PLANE (PL-18) -> CONDUCT, AND IT CORRECTS THE RECORD: **DEC-63's ENACTMENT SAYS THE PROVISIONAL IS "NARROWER THAN THE RULING". IT IS NOT — IT IS WIDER ON THE AXIS THE RULING IS ABOUT, AND SOMETHING *WAS* PERMITTED MEANWHILE THAT THE RULING FORBIDS**
+
+`DECISIONS.md` DEC-63's `enacted:` line, and `QUEUE.md`'s PL-18 row after it, both say:
+
+> *The provisional keeps running until PL-18 lands. It is NARROWER than the ruling, so nothing is
+> permitted meanwhile that the ruling would forbid — the safe direction, and stated rather than
+> assumed.*
+
+**Measured against the shipped code, that sentence is false in one direction.** The provisional
+was `contribute` ALONE. The ruling is participation AND `contribute`. So:
+
+- A **project member without `contribute`** was refused under the provisional and is still refused
+  under the ruling. On this axis the provisional is indeed no wider.
+- A **`contribute`-holder who is in NO project** was PERMITTED under the provisional and is REFUSED
+  under the ruling. **That is the exact population DEC-63 is about, and the provisional let them
+  start runs that spend the group's Claude budget.**
+
+The correct sentence is that the provisional was **narrower on the capability axis and WIDER on the
+participation axis**, and the participation axis is the one the ruling moved. Nothing needs undoing —
+no run's record is invalid, and the window was one day — but the register should not carry
+"nothing is permitted meanwhile that the ruling would forbid" as a settled claim, because a future
+reader will use it as a precedent for how to phrase the next provisional. **The accepts-when in the
+same row is what settles the reading and it is unambiguous: it asks for BOTH members to be refused,
+each in their own words, which is what shipped.**
+
+I have not edited `DECISIONS.md` or `QUEUE.md` — both are outside this claim and `QUEUE.md` has a
+sole writer. This is CONDUCT's one-line correction to make.
+
+### DELEGATION 2026-08-09 PLANE (PL-18) -> WHOEVER OWNS THE CAPABILITY REFUSAL (REC-64's remaining sweep): **`NOT_CAPABLE` IS ONE OF THE TWO REFUSALS THIS ITEM IS ABOUT, AND IT IS UNTRANSLATED UNDER DEC-49**
+
+PL-18's requirement is that the two refusals NAME WHICH OF THE TWO FAILED. I made the participation
+half fully DEC-49-compliant: `AI_RUN_NOT_PROJECT_MEMBER` / C-22.8, a canned translation in
+`AI_RUN_CHECKS`, the code a string literal at its site through `refusal()`.
+
+**The capability half is not, and it is not mine to fix.** `civicos-ui/check-refusal-codes.mjs`
+prints `NOT_CAPABLE` in arm B's ratchet list — *41 of 218 codes in reach still have no canned
+translation* — and it is there because the control plane's capability gate answers with a hand-written
+`detail` and no code. It is a **plane-wide** refusal shared by roughly sixty ops, so giving it a code
+is a change to every capability-gated op's answer and a fence far wider than DEC-63's rule. I
+deliberately did not touch it.
+
+**Why it is worth naming rather than leaving in a list of 41:** every other untranslated code in that
+list is a lone condition. This one is now HALF OF A PAIR whose whole point is that a member can tell
+the two apart. Today they CAN — the sentences differ, the shapes differ, and
+`bio-plane/test/airun-projectgate.test.mjs` ARM C3 pins that neither carries the other's subject —
+but one of the two is a sentence a surface must render verbatim or blank while the other is one it
+can author. **`civicos-ui/app.html:3039` already hand-authors a NOT_CAPABLE sentence, and it is
+about CAPTURING** (*"Capturing needs a member holding contribute"*), so a surface rendering it for a
+refused run would tell a member the wrong thing about the wrong act. That is the concrete cost.
+
+### DELEGATION 2026-08-09 PLANE (PL-18) -> UI: **C-22.8 IS A NEW CODE A MEMBER CAN RECEIVE AND NO SURFACE BRANCHES ON IT**
+
+`AI_RUN_NOT_PROJECT_MEMBER` is in the guard's REACH (family row, R1) and is NOT in R2 — `app.html`
+names 52 codes and this is not one of them. That is correct today: `app.html:16239` states in its own
+words that `op=airunopen` has no UI consumer. **The plane sends the code AND its canned translation
+on the wire**, so a surface that renders `translation` verbatim is already correct without changing
+anything; a surface that branches per code will want this one when the running-session panel gains a
+start control. Nothing is broken and nothing is owed today — this exists so the next UI item does not
+have to rediscover the code.
+
+### DECISION FOR BOB 2026-08-09 (PL-18) — **PARTICIPATION NOW FENCES *WORK* FOR THE FIRST TIME, AND THE SAME REASONING REACHES SEVERAL NEIGHBOURS. WHETHER IT SHOULD IS DOCTRINE, NOT MECHANISM**
+
+**What is running:** exactly DEC-63 and nothing wider. The three run verbs check project
+participation; every other act is unchanged.
+
+**Why it is raised:** the class sweep measured something the ruling did not mention.
+**Of 74 capability-gated ops, ELEVEN consult project participation — and before PL-18, ALL EIGHT of
+them were the project ROSTER's own acts** (invite, join, leave, remove, the three owner acts, fork).
+So until today participation was a fence over PARTICIPATION ITSELF and fenced no work anywhere.
+PL-18's three verbs are the first acts in the plane where being in the project decides whether you
+may do something to the record.
+
+**The ambiguity:** DEC-63's reason — *"participation in the project the inquiry belongs to is what
+licenses asking the system to look"* — is not obviously specific to runs. It reads at least as
+strongly for `op=suggest` (proposing a reading of that project's evidence), the six version acts
+(moving what a project stands on), `op=conclude`, and `op=inquiryground`. Each is gated on
+`contribute` alone today, so **a contributor in no project can propose a version of a question that
+three teams are working on.**
+
+**The alternative:** leave it. Participation scopes a group's THINKING (§7's own words) and the
+evidence corpus stays shared; a broad participation fence over ordinary record work would be a
+significant narrowing of who can contribute, and it is the kind of change that is cheap to make and
+expensive to walk back once members have organised around it.
+
+**My recommendation: LEAVE IT, and do not extend by analogy.** DEC-63's argument names a specific
+thing — SPENDING THE GROUP'S BUDGET — which is true of a run and of nothing else on that list. The
+sweep is worth having on the record so the next person to ask this question starts from the
+measurement rather than from an impression, but extending a fence because its reasoning *sounds*
+general is the shape `CLAUDE.md` calls a fence tighter than its rule.
+
+**Cost of reversal: LOW today and rising.** Each op would gain the same three-line gate that already
+exists and is tested; the expensive part is not the code, it is that members will have arranged
+themselves around whichever answer runs. Reversing after a group has organised its projects around a
+tight fence means telling people their access changed twice.
+
+### DELEGATION 2026-08-09 PLANE (PL-18) -> WHOEVER OWNS `VERIFICATION.md`'s REGISTER ROW (M0-15 and D-237 both hold it open): **IT IS STALE AGAIN — AND IT EXISTS TWICE, WHICH NOBODY HAS RECORDED**
+
+**RAISED, NOT EDITED,** on UI-48's and CPDF-9's precedent: two open claims name
+`docs/development/VERIFICATION.md` and two items moving one shared figure in parallel is the
+failure this row is itself about.
+
+**(1) STALE.** The row reads `128 of 128 suites · 542 arms across 127 classified declaration(s)`.
+`node scripts/coverage.mjs --strict` on this worktree at commit `d8c6653` PRINTS
+**`arms 631 · classified 134 · corpus 135`**. PL-18 contributed 10 of that gap and moved
+`REGISTER_FLOOR` to `631/134/135` in the same turn from the printed figures. The rest is other
+items' — **so this is the SIXTH consecutive item to find this row stale by measuring it**, and the
+first to find it stale by roughly ninety arms.
+
+**(2) THE DEFECT NOBODY HAS RECORDED, AND IT IS WORSE THAN THE STALENESS: THE ROW EXISTS THREE
+TIMES.** `grep -n "suites declaring a negative control" docs/development/VERIFICATION.md` returns
+**lines 54, 56 AND 58** — three rows with the same label in the same table, carrying **three
+different figures** (`127 of 127 · 526 arms`, `120 of 120 · 470 arms`, `120 of 120 · 486 arms`),
+each with its own accreted history, and **the NEWEST measurement is the FIRST of the three**, so a
+reader scrolling to the label finds the freshest figure only by luck. That is a
+keep-both merge artefact of exactly the class `REGISTER_FLOOR`'s own header block warns about six
+times over — *"valid JavaScript where the last key silently wins"* — reproduced in Markdown, where
+there is no last-wins rule at all and **a reader simply gets whichever one they scroll to first.**
+Every one of the three is stale against 631/134/135, so there is no question of picking a survivor
+by freshness — all three are wrong and the live figure is the instrument's.
+
+**Why it outranks its size, and it is this row's own argument turned on itself:** the row exists so
+a session can see at a glance whether the estate's controls are growing. A row that appears twice
+with two different numbers cannot be falsified by reading it — you cannot tell a stale figure from
+the other copy. **Fixing only the staleness would leave three rows and make it worse**, because the
+corrected one would then disagree with its twins by ~100 arms rather than by 16. **Collapse to ONE
+row and take the figure from a green `--strict` run on the merged tree** — do not reconcile the two
+histories by hand, and do not move the numeral in only one of them.
+released: 2026-08-09 — committed on `worktree-agent-a4e2eff5ca09197e2`, **NOT pushed and NOT merged**; CONDUCT integrates. **Battery 139/139 suites green · 8,877 assertions · exit 0 read UNPIPED**, against a true baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **138/138 · 8,827** (the brief carried no figure). **Delta +50, attributed by DIFFING the two full runs and never by subtraction: `airun-projectgate.test.mjs` ABSENT -> 47 (new) and `hygiene.test.mjs` 553 -> 556 (its per-suite arms over one new file). 137 of 139 suites IDENTICAL.** `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0** (162 ops, 220 checks, all named). `node civicos-ui/test/run.mjs` from the repo root, exit unpiped, **0**. `node civicos-ui/check-refusal-codes.mjs` exit unpiped, **0**. `node tools/plancheck.mjs` clean but for UNPUSHED. **TEN FLOORS MOVED, every one from a figure an instrument PRINTED on a green run: `check-refusal-codes.mjs` rows 163->164, census 424->425, reach 217->218, governedSites 66->67, codesChecked 141->142, outcomeReturns 70->74, refusalsJudged 143->145, vocabularies 9->10, vocabularyTerms 56->59; `coverage.mjs` REGISTER_FLOOR 621/133/134 -> 631/134/135, read AFTER the suite was in a commit because the register compares against the REPRODUCIBLE figure. `regions` (53) and `regionLines` (1407) DELIBERATELY UNCHANGED and RE-READ rather than assumed — this item adds, moves and removes no `DEC-49 REGION` marker; `git diff` carries zero marker lines. `REGISTER_FLOOR` verified ONE key set by grep.** **TEN CONTROL ROWS in `test/nc-pl18.mjs`, each armed ALONE, each declared before arming, each refusing to arm on an anchor not occurring exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy under a byte floor — and the refuse-to-arm guard FIRED TWICE on my own restructures, which is it working.** Four arms came back other than declared and all four are recorded rather than smoothed: (b) declared B2 and **B2 stayed GREEN** — both sides of that arm read one catalogue and move together, so it can see a mis-keyed translation and never a wrong one (named at B2's site; B3 is what holds the content); (d), (e) and (f) each went WIDER than declared, (e) most usefully — the P arms caught PROJECTLESS becoming unreachable. **THREE THINGS THE INSTRUMENTS CAUGHT IN MY OWN WORK AND THE SOURCE MOVED FOR, NEVER A FLOOR:** the DEC-49 guard read the gate's two PERMITTING returns as codeless refusals (the verdict field was named `applied`, which is not a verdict) and named three REGION markers no row claimed; and an UNCONDITIONAL `searchParams.delete("actor")` **BROKE `op=lease`**, caught by one assertion in `members.test.mjs`. **THREE SUPERSEDED PINS CORRECTED AND NONE EXEMPTED**, each with why the old one was right when written: `airun.test.mjs` ARM D1 (C-22 family SEVEN -> EIGHT), `leadslug.test.mjs`'s fixture (made legal through the real acts), `run-conditions.test.mjs` ARM W3 (`aiRunClose` classified as the thirteenth reader of `ai_runs`). IC-47 filed; the version bump and the RESOLUTION are CONDUCT's. `git stash` was NOT used at any point.

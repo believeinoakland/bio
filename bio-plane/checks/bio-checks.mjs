@@ -5750,15 +5750,18 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). SEVEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ * and §14b.6). EIGHT C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
  *
  * SIX UNTIL 2026-08-08, when SK-1 added C-22.7 — the run's THIRD condition,
  * the skill version, refused at the open where the two principals already are.
+ * SEVEN UNTIL 2026-08-09, when PL-18 added C-22.8 — DEC-63's gate, the one
+ * refusal in this family that is about WHO IS ASKING rather than about what the
+ * run object says.
  * The count is corrected in place rather than left standing: a header carrying
  * a number nobody re-measures is this repository's most-repeated finding, and
  * this file is where a reader comes to learn how many the family holds. C-22.7
- * is in THIS family rather than a new one on purpose — it is a fact about the
- * run object, and a new `*_CHECKS` family is a floor in
+ * and C-22.8 are in THIS family rather than a new one on purpose — both are
+ * facts about the run, and a new `*_CHECKS` family is a floor in
  * `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's
  * walk unless it is moved in the same turn.
  *
@@ -5884,6 +5887,37 @@ export const AI_RUN_CHECKS = {
     translation: 'This run did not say which version of its instructions it was working under. '
       + 'What a run found can only be read against the instructions it was given, so the record '
       + 'asks for that version before the run starts rather than guessing at it afterwards.',
+  },
+  /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
+     THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
+     Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
+     THE PROJECT: the gate is participation in the project the inquiry belongs
+     to, and the capability token stays `contribute` only as the FLOOR beneath
+     it. IS-6's provisional checked `contribute` alone.
+
+     WHY IT IS ITS OWN CODE AND NOT THE CAPABILITY REFUSAL'S, which is the whole
+     content of the item rather than a nicety. *You are not a member of this
+     project* and *you lack contribute* are DIFFERENT FACTS ABOUT A MEMBER, and
+     they have different remedies: one is answered by an owner of that project
+     inviting you, the other by an administrator granting a capability. A single
+     refusal covering both would tell a member nothing they can act on, which is
+     DEC-49's rule and the ACT-AND-SAY principle in one place. The capability
+     half keeps its own existing, differently-shaped refusal at the control
+     plane (`NOT_CAPABLE`, carrying `needs`), so a caller can always tell which
+     of the two stopped them.
+
+     THE TRANSLATION DELIBERATELY NAMES NO PROJECT. A member who is not in a
+     project may not be entitled to learn it exists — the skeleton-visibility
+     rule (7.12) — so the canned sentence a surface renders says what happened
+     and what to do, and the refusal's own `detail`, composed at the site, names
+     only what the caller already put in their own request. */
+  AI_RUN_NOT_PROJECT_MEMBER: {
+    check: 'C-22.8',
+    where: 'src/airun.mjs projectGate, called from store.mjs aiRunOpen/aiRunTick/aiRunClose',
+    translation: 'Asking the system to look into a question is work inside the project that question '
+      + 'belongs to, and this account is not one of that project\'s participants. This is not about '
+      + 'what the account is allowed to do in general — it is about which piece of work it is part '
+      + 'of. Someone who owns that project can invite you to it.',
   },
 };
 

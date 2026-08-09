@@ -181,10 +181,21 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      family would have been a floor in `civicos-ui/check-refusal-codes.mjs`
      bought for one row. The count is corrected rather than exempted: an arm
      that stopped counting the family it exists to count would be a pin nobody
-     is holding. */
-  t("ARM D1: the C-22 family is SEVEN C-numbers — IS-6's six and SK-1's skill-version condition",
+     is holding.
+     CORRECTED AGAIN 2026-08-09 BY PL-18, on exactly the same terms and for the
+     same reason: the family now holds EIGHT. C-22.8
+     (`AI_RUN_NOT_PROJECT_MEMBER`) is DEC-63's gate — an investigation is
+     started by any member of the PROJECT, and that refusal is deliberately its
+     own code rather than being folded into the capability refusal, because
+     *you are not in this project* and *you lack contribute* are different facts
+     about an account with different remedies. It is in this family for D1's
+     standing reason: it is a fact about the run, and a new `*_CHECKS` family is
+     a floor bought for one row. **THIS ARM FIRED ON PL-18's FIRST RUN AND THAT
+     IS THE ARM WORKING** — the number was corrected, never exempted. */
+  t("ARM D1: the C-22 family is EIGHT C-numbers — IS-6's six, SK-1's skill-version condition, and "
+    + "PL-18's project-membership gate",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7"]);
+    ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);

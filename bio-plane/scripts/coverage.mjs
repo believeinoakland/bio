@@ -302,6 +302,17 @@ const REGISTER_FLOOR = {
      and an OVER-STRICTNESS arm — so `corpus` and `classified` each rise by one and `arms`
      by seven. Every one of those arms was RUN, through
      `test/dec65-single-part.control.mjs`. Nothing FELL. */
+  /* PL-18, 2026-08-09 (worktree agent-a4e2eff5ca09197e2): 621 -> 631 / 133 -> 134 /
+     134 -> 135, ALL THREE MOVED IN THE SAME TURN and every one taken from the figure
+     THIS ITEM'S OWN GREEN RUN PRINTED (`arms 631/621 · classified 134/133 ·
+     corpus 135/134 · GREW by 10 arm(s)`), never by adding to the numbers above.
+     One new suite, `test/airun-projectgate.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states ten rows — the baseline plus the nine arms `test/nc-pl18.mjs`
+     drives — so `corpus` and `classified` each rise by one and `arms` by ten.
+     Nothing FELL. **THE FIGURES WERE READ AFTER THE SUITE WAS IN A COMMIT**, because
+     the register compares against the REPRODUCIBLE figure and an untracked suite is
+     not one: read before the commit, the same run printed the floors met EXACTLY with
+     nothing to collect, which is what an uncommitted suite looks like. */
   arms:       654,  // arms stated across the classified declarations
   classified: 136,  // declarations the detector could count arms in
   corpus:     137,  // suites the register reads
