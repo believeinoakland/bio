@@ -4962,3 +4962,81 @@ page-wise merge, and I2's text shape already has the right grain (`text.pages[]`
 rule rather than a contract change. **It wants writing in the turn that lands the member, not
 guessing at now** — which is why it is a debt row pointed at your item rather than code written blind
 against a producer that does not exist yet.
+
+## CLAIM 2026-08-09 RECORD (PL-17 — the THIRD `asserted_by` state)
+session: pl17-third-asserted-by-state (worktree agent-a6ce65818b1c1b8d2)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/checks/bio-checks.mjs`** (the MINT ONLY — a new block beside the REC-46 machine-identity predicates at the head of the file. **`C-25.6` / `VERSION_GROUND_UNASSERTED` and `C-2.8` / `checkGrounds` ARE NOT TOUCHED**, which is DEC-65's own sequencing and the reason this item exists separately from the one that owns them), **`bio-plane/src/affordances.mjs`** (`VOCABULARIES` gains one key, IMPORTED and never restated), **`bio-plane/test/sufficiency-state.test.mjs`** (NEW), **`bio-plane/test/sufficiency-state.control.mjs`** (NEW — the negative-control driver, deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs), **`bio-plane/scripts/coverage.mjs`** (`REGISTER_FLOOR` only, moved from PRINTED figures), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `docs/development/DECISIONS.md` (DEC-65's enactment note ONLY — appended, no other row touched), `docs/development/INTERFACE-CHANGES.md` (the IC row for the additive `op=affordances` key). **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/schema.mjs`, **NOT** `civicos-ui/**`, **NOT** `pdf-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: I3 (the plane's op surface — `op=affordances`).
+interfaces owned: none. The `op=affordances` addition is ADDITIVE and its IC row is filed; **CONDUCT takes the version bump and the RESOLUTION.**
+expected: DEC-65, answered 2026-08-09 by session BOB under Bob's standing delegation: *"take (b) as amended by FL-3 … with the third `asserted_by` state minted FIRST."* Mint an explicit **"no independent-sufficiency claim was made"** value for the field whose published meaning is *a member said this part is enough on its own* — undetermined-is-first-class applied to one field — so that a machine's single-part ground row never wears a member's meaning. **The check (`C-25.6`) and PL-3's endpoint guard are the NEXT item's** and are not touched here; PL-14 re-measures the strength pair after that.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief (the brief carried no figure): **138 suites (134 plane + 4 fleet) · 138/138 green · 8,827 assertions · 126.0 s · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED (baseline: OPS 162/162 · CHECKS 219/219 · controls 134/134, 621 arms · REGISTER_FLOOR arms 621 / classified 133 / corpus 134 · exit 0); `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED (baseline exit 0); `node tools/plancheck.mjs` clean but for UNPUSHED. Negative controls RUN, each arm ALONE with the other defences held OPEN, an OVER-STRICTNESS arm included, restores verified by sha256 AND by `cmp` against uniquely-named per-arm pristine copies, the driver written INSIDE THIS WORKTREE. No push, no merge, no deploy, no version bump.
+concurrency: checked over the whole file at `ad87db7` (this worktree is AT `origin/main`, not behind). **No claim in `CLAIMS.md`, open or released, names `bio-plane/checks/bio-checks.mjs` as a live path today**: FL-3's claim (the item that raised this work) names it under **NOT**, and the DELEGATION that owns `C-25.6` and PL-3's endpoint guard is FILED but UNCLAIMED — DEC-65 sequences it AFTER this one. `bio-plane/src/store.mjs` and `bio-plane/src/schema.mjs` are deliberately NOT in the paths above so that item finds them untouched.
+released:
+
+### DELEGATION 2026-08-09 RECORD (PL-17) -> WHOEVER LANDS DEC-65's SHAPE (b) — the item that owns `checks/bio-checks.mjs`'s C-25.6 AND PL-3's ENDPOINT GUARD: **THE STATE IS MINTED AND HERE IS EXACTLY WHAT IS LEFT**
+
+DEC-65's first clause is done. FL-3's DELEGATION above is still the scope of yours, minus the
+vocabulary question, which is answered. What you inherit:
+
+- **THE VALUE AND THE PREDICATE, ALREADY THERE.** `SUFFICIENCY_UNCLAIMED` and
+  `isSufficiencyClaimed` / `isSufficiencyUnclaimed` / `sufficiencyClaimState` are exported from
+  `checks/bio-checks.mjs`, beside the REC-46 identity predicates. **ASK THE PREDICATE, NEVER MATCH
+  THE LITERAL.** `isSufficiencyClaimed` answers TRUE for a named member and for nothing else, which
+  is where DEC-32's *only ever reached by an affirmative, attributed act* is enforced in one place.
+  A site that matches `'none:independent-sufficiency'` itself has rebuilt the predicate and will be
+  wrong the day a fourth state exists.
+- **TWO ASKING SITES, NOT ONE, AND A SWEEP THAT FINDS THEM.** `C-25.6` (`basisVersionFindings`) and
+  `C-2.8` (`checkGrounds`) ask the IDENTICAL question one level apart. `test/sufficiency-state.test.mjs`
+  finds them structurally rather than by name, so a third site written later is found too — **and
+  its first two matchers were both WRONG in ways worth knowing before you write yours:** a line-wise
+  matcher saw only one of the two (`checkGrounds` wraps its condition across two lines), and a
+  matcher keyed on `isMachineIdentity` made a CONVERTED site VANISH from the sweep while the
+  assertion over it went on passing.
+- **BLOCK 7 OF THAT SUITE WILL FAIL WHEN YOU LAND, AND THAT IS ITS PURPOSE.** It pins that the value
+  passes `C-25.6` today and that no site consumes it. **CORRECT those assertions with a comment
+  saying why the old expectation was right when it was written. Do not exempt them.** Control arm
+  (7) in `test/sufficiency-state.control.mjs` IS your change, run for one arm, so you can see in
+  advance exactly which two assertions move: `node test/sufficiency-state.control.mjs`.
+- **THE SECOND SITE STILL FIRES FIRST.** FL-3's measurement stands and PL-17 did not touch it:
+  PL-3's endpoint guard in `src/store.mjs` refuses on `legsIn.length > 0` — **any leg at all** —
+  so amending `C-25.6` alone still unblocks nothing.
+- **AND `schema.mjs` CARRIES A SENTENCE THAT BECOMES INCOMPLETE THE DAY YOU LAND.** The
+  `inquiry_basis` comment reads *"asserted per ground, by a named member"*. **PL-17 deliberately did
+  NOT correct it**, because until a gate accepts the third state that sentence is still true, and
+  documenting a mechanism that does not exist is the defect this project meets most. Correct it in
+  the same turn as the check. **Mind the trap while you are in there: no semicolon inside an inline
+  `--` comment in `schema.mjs`.**
+- **AND DEC-65's NARROW LICENCE, so it is not quietly widened.** The arithmetic argument is that
+  with **exactly one part** there is no maximum to take. Several parts, none of them claimed, is a
+  different thing and this state does not license it. If your check permits the second, say so out
+  loud, because it is a doctrine change and not an implementation detail.
+
+### DELEGATION 2026-08-09 RECORD (PL-17) -> UI: **A SURFACE RENDERS THIS FIELD VERBATIM, AND THE PLANE NOW PUBLISHES THE WORDS FOR IT**
+
+`civicos-ui/app.html`'s grounding receipt renders `Asserted by ${esc(String(g.asserted_by||""))}`
+directly (the `elicReceiptHtml` block). **PL-17 did not edit it — `civicos-ui/**` is yours.**
+
+- **WHAT IS AVAILABLE:** `op=affordances` now answers `vocabularies.sufficiency_claim_states`, a
+  map of the field's states to the sentence a member reads instead of the machine word. IC-45 is
+  filed with the measured consumer impact (zero: the key is additive, the UI harness reads exit 0
+  before and after).
+- **WHAT TO DO WITH IT:** read the field through the plane's `sufficiencyClaimState()` reading
+  rather than printing the stored value. Today the field can only hold a member's name, so nothing
+  is broken; **the moment DEC-65's shape (b) lands, that same line prints
+  `Asserted by none:independent-sufficiency` at a member.**
+- **AND THE WORDING IS WORTH YOUR OWN REVIEW rather than mine.** The four sentences honour DEC-32's
+  ban — *never show AND / OR / disjunction / grounds, not even as tooltips* — and speak in the
+  register `groundInquiry`'s own receipt already uses ("group of reasons", "enough on its own").
+  A matcher in the suite holds them to the ban, and **it can only see the analyst's WORDS; it
+  cannot see a sentence that teaches the structure without using them.** That reading is a person's.
+- **ONE MEASURED THING NOT TO DO, so you do not spend the hour I did.** `check-refusal-codes.mjs`
+  arm E does not reach this vocabulary, and **adding either module to its `VOCABULARY_MODULES` walk
+  would make the guard FAIL ON CORRECT CODE**: harvesting `checks/bio-checks.mjs` by arm E's shape
+  rule picks up four maps that are not member-facing text at all (`OBJECT_TYPES`,
+  `LEGACY_TYPE_ALIASES`, `FORBIDDEN_ALIASES`, `EARNED_SOURCE_AXIS`), and `src/affordances.mjs`
+  picks up `RUNGS`, whose values are single ladder words — every one of them would fail arm E's
+  phrase rule. **A fence tighter than its rule is not a safer fence.** Arm E's three rules are
+  therefore carried in `bio-plane/test/sufficiency-state.test.mjs` instead, in the battery, and the
+  limitation is stated at the site. If you want them under arm E properly, the shape rule needs a
+  way to tell a member-facing text map from a machine-to-machine one, and that is a real item.

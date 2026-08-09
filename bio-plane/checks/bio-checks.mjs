@@ -1317,6 +1317,140 @@ export function isMachineIdentity(who) {
   return isMachineStamp(s) || ACTOR_CLASSES.includes(s) || NON_MEMBER_AUTHORS.includes(s);
 }
 
+/* ===================================================================== *
+ * THE THIRD `asserted_by` STATE (DEC-65, answered 2026-08-09; PL-17).
+ *
+ * WHICH `asserted_by`, BECAUSE THERE ARE TWO AND THEY ARE NOT THE SAME FIELD.
+ * This block is about the SUFFICIENCY assertion — `grounds[].asserted_by` on an
+ * inquiry basis (C-2.8, `checkGrounds`) and `basis_version_grounds[].asserted_by`
+ * on a version of one (C-25.6, `basisVersionFindings`). It is NOT the
+ * `connections.asserted_by` column in `schema.mjs`, whose three values are
+ * `system` / `source` / `member` and which answers "who claims these two
+ * documents are connected". Nothing here belongs anywhere near that column, and
+ * a reader who wires the two together will have made one field mean two things.
+ *
+ * THE FIELD'S PUBLISHED MEANING, and it is the whole reason a third state was
+ * needed: *a member said this part of the argument is enough on its own.*
+ * DEC-32 makes that the ONE thing a member can write that makes a finding
+ * STRONGER — the strength is the MAXIMUM over parts asserted independently
+ * sufficient — so it carries a named member and a date, and a machine may not
+ * write it.
+ *
+ * THE GAP FL-3 MEASURED (DEC-65, and its reasoning is transplanted rather than
+ * summarised). Under DEC-65's shape (b) a machine's SINGLE-PART version still
+ * carries a row here, because C-25.5 makes the partition TOTAL. The endpoint
+ * STAMPS the field from the session, so that row would read `class:ai` in a
+ * field whose published meaning is a member's affirmative claim. **That is the
+ * record claiming something nobody claimed** — the overclaim class this project
+ * ranks worst, and worse than the missing feature it was reached for.
+ *
+ * SO THE HONEST SHAPE IS A THIRD STATE, and it is CLAUDE.md's *undetermined is
+ * first-class and must be STATED* applied to exactly one field. The field's
+ * legal values are now THREE, not two:
+ *
+ *   A NAMED MEMBER      the claim was made, by them, on that date.
+ *   `SUFFICIENCY_UNCLAIMED`  no independent-sufficiency claim was made, said
+ *                       OUTRIGHT. Distinct from a member's claim, and equally
+ *                       distinct from a blank field.
+ *   ABSENT / BLANK      the record does not say. The silent default, and both
+ *                       gates refuse it — that has not changed and is not this
+ *                       item's to change.
+ *
+ * WHY IT IS NOT A BACK DOOR TO DEC-32, which is the one thing this state could
+ * have been. DEC-32's default is AND and *independent sufficiency is only ever
+ * reached by an affirmative, attributed act.* `isSufficiencyClaimed` answers
+ * TRUE for a named member and for NOTHING ELSE — not for this value, not for a
+ * blank, not for a machine stamp — so a consumer that asks the one predicate
+ * cannot take a maximum over a part nobody signed for however the field is
+ * spelled. The state widens what the record can SAY; it widens nothing about
+ * what it may CLAIM. And DEC-65's arithmetic argument is the narrow licence
+ * this state is minted for and is stated here so it is not quietly widened
+ * later: with EXACTLY ONE part there is no maximum to take, so the conservative
+ * weakest-leg reading is what you get either way. Several parts, none of them
+ * claimed, is a different thing and this state does not license it.
+ *
+ * WHY A COLON-SHAPED LITERAL RATHER THAN A WORD. REC-46's finding, one field
+ * over: a word list is the shape to remove, not to extend, because a new
+ * spelling escapes it silently and because a bare word can be somebody's name.
+ * The colon puts the value in the control plane's own minted-identity grammar,
+ * where it cannot collide with a person. The namespace is deliberately NEITHER
+ * `token:` NOR `class:`: those two mean *a machine did this*, and this value
+ * means *nobody did*. "A machine said" and "nobody said" are different
+ * findings, which is the identical distinction the block above draws when it
+ * refuses to call an ABSENT identity a machine one.
+ *
+ * WHAT IS NOT WIRED YET, STATED PLAINLY RATHER THAN LEFT TO BE DISCOVERED.
+ * NOTHING WRITES THIS VALUE AND NO GATE CONSUMES IT. `C-25.6`, `C-2.8` and
+ * PL-3's `SUGGEST_UNWRITABLE_STATE` endpoint guard are UNCHANGED, per DEC-65's
+ * own sequencing (mint first, then the check and the guard together in the item
+ * that owns those files, then PL-14 re-measures). Until that item lands, a
+ * document hand-written with this value in the field is judged by C-25.6's
+ * member arm exactly as any other non-blank, non-machine string is — which is
+ * MEASURED in `test/sufficiency-state.test.mjs` and pinned there, so the next
+ * item corrects the pin rather than finding it stale.
+ * ===================================================================== */
+
+/** The explicit "no independent-sufficiency claim was made" value for a
+ *  sufficiency `asserted_by` field. ONE literal, in ONE place, so the writer
+ *  that will stamp it and the checks that will read it cannot drift apart —
+ *  which is the REC-46 lesson taken before it has a chance to repeat. */
+export const SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency';
+
+/** The three legal states of a sufficiency `asserted_by`, plus the one a gate
+ *  refuses, each carrying the sentence a member reads INSTEAD OF the machine
+ *  word (DEC-49's rule reaches a published vocabulary's texts too). Published
+ *  through `vocabularies.sufficiency_claim_states` so no surface invents its
+ *  own wording for a state the record now distinguishes.
+ *
+ *  THE WORDING CARRIES DEC-32's BAN, and it is a constraint on us: *never show
+ *  AND / OR / disjunction / grounds — not even as tooltips.* The member-facing
+ *  word for a part of an argument is a GROUP OF REASONS, which is the register
+ *  `groundInquiry`'s own receipt already speaks in ("each group's strength is
+ *  its weakest leg, and this question's is its strongest group"). */
+export const SUFFICIENCY_CLAIM_STATES = {
+  claimed:        'a member said this group of reasons would carry the answer on its own, and the record holds their name and the date',
+  unclaimed:      'nobody said this group of reasons would carry the answer on its own, and the record states that outright rather than leaving it blank',
+  unstated:       'the record does not say whether anyone claimed this group of reasons would carry the answer on its own',
+  machine_stamped: 'a machine credential stands where the name of the member making that claim has to be, so no member has claimed anything here',
+};
+
+/** Read a sufficiency `asserted_by` as ONE of the four states above.
+ *
+ *  THE ORDER OF THE ARMS IS LOAD-BEARING, not stylistic. Blank is answered
+ *  first because "nobody said" and "the record does not say" are different
+ *  findings. The minted value is answered BEFORE `isMachineIdentity` so that
+ *  this state can never be swallowed by a future addition to the machine
+ *  prefixes — and the suite pins `isMachineIdentity(SUFFICIENCY_UNCLAIMED) ===
+ *  false` besides, so a collision fails loudly instead of hiding behind this
+ *  ordering.
+ *
+ *  `machine_stamped` is NOT a legal value of the field: both gates refuse it
+ *  and neither is changed here. It is answered anyway, for the reason
+ *  `#axisResult` gives one field over — a row may reach a projection around a
+ *  gate, and the reading of one must not be a member's claim. */
+export function sufficiencyClaimState(assertedBy) {
+  const s = String(assertedBy ?? '').trim();
+  if (s === '') return 'unstated';
+  if (s.toLowerCase() === SUFFICIENCY_UNCLAIMED) return 'unclaimed';
+  if (isMachineIdentity(s)) return 'machine_stamped';
+  return 'claimed';
+}
+
+/** Did a NAMED MEMBER affirmatively claim independent sufficiency here? The one
+ *  predicate every consumer asks, so that DEC-32's *only ever reached by an
+ *  affirmative, attributed act* is enforced in ONE place rather than by four
+ *  sites agreeing. TRUE for a named member and for nothing else. */
+export function isSufficiencyClaimed(assertedBy) {
+  return sufficiencyClaimState(assertedBy) === 'claimed';
+}
+
+/** Is this the explicit no-claim state? Case-folded, because the value reaches
+ *  a check hand-written in a document exactly as `token:member` does, and
+ *  `None:Independent-Sufficiency` is the same statement. */
+export function isSufficiencyUnclaimed(assertedBy) {
+  return sufficiencyClaimState(assertedBy) === 'unclaimed';
+}
+
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
 /** C-18.9: what a capture must establish before it may be PUBLISHED.
