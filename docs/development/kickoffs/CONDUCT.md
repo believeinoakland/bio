@@ -144,6 +144,30 @@ merge, and resolve a duplicated row by keeping the version from the branch that 
 CLOSED or NARROWED it** — not the longer one, and never both. `git diff` will not help you;
 compare the STATUS field of each copy.
 
+**AND THAT RULE HAS A MISSING HALF THAT COST A ROW THE SAME DAY IT WAS WRITTEN. FIRST ASK
+WHETHER THE TWO ROWS ARE THE SAME DEFECT AT ALL.** Comparing STATUS fields silently assumes
+they are, and on 2026-08-08 CONDUCT applied it to a `D-236` pair, kept the `closed` copy,
+dropped the `open` one — **and the dropped row was a DIFFERENT DEFECT that merely shared the
+number.** It was restored from the branch only because the detector reported `D-236` a THIRD
+time after two resolutions had each looked complete. **Three distinct defects had been filed
+as `D-236` in one day** (REC-64/REC-76's arm-C blindness, REC-68's dead `atom.phrase` field,
+UI-50's unreachable-backwards fix), every author having measured the number free and every
+one right when they looked — the exact failure `tools/mintid.mjs` exists to prevent, arriving
+in the ROW rather than in the code.
+
+So the resolution splits in two, and the order matters:
+
+1. **Read both bodies. Do they describe the SAME defect?**
+2. **Same defect →** keep the version from the branch that closed or narrowed it; drop the
+   stale copy. This is the merge-duplicate case.
+3. **Different defects →** it is an ID COLLISION. **Mint a fresh id with
+   `node tools/mintid.mjs <NS>` and RENUMBER one, updating its references.** Deleting either
+   row loses a defect, and the one you delete is the one nobody will miss, because the id
+   still resolves to something plausible.
+
+**A detector that keeps naming the same id after you have fixed it twice is not flaky — it
+is telling you your model of the conflict is wrong.**
+
 **So the rule is: the moment a worker reports, SPAWN ITS REPLACEMENT BEFORE YOU MERGE
 ANYTHING.** Spawning is one tool call and costs seconds; integration costs twenty minutes.
 Doing the cheap thing first is free, and doing it second has now cost this project two
