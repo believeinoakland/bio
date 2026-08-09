@@ -279,6 +279,9 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
+  /* D-262 measured 661/137/138 on its own branch and that figure is SUPERSEDED here —
+     recorded so the mover is not missing from the provenance. A floor moves only
+     upward, and the merged tree's figure is re-read from a green run below. */
   /* MOVED 2026-08-09 by PL-19 (DEC-65 shape (b)): 632 -> 647 / 134 -> 136 / 135 -> 137,
      ALL THREE IN THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
      `--strict` RUN PRINTED AS REPRODUCIBLE (`arms 647/632 · classified 136/134 · corpus

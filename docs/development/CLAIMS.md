@@ -6487,3 +6487,81 @@ released:
 ### AMENDMENT 2026-08-09 PLANE (worktree-agent-ae8e8c4d786783a6b) — **TWO RATCHET FILES OUTSIDE THE CLAIM ABOVE, TOUCHED ON PURPOSE**
 
 Appended rather than edited into the block above, because a claim's history is read the same way the record's is. The turn moved four floors, and three of them live in files this claim did not name: `civicos-ui/check-refusal-codes.mjs` (`rows` 166→167, `census` 427→428, `reach` 220→221) and `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR.arms` 654→657). **Every figure is one the instrument PRINTED on a green run and none was arrived at by adding to the number in the file**, which is WORKER.md's rule and the reason these edits belong in the same turn as the change that invalidated them rather than in a delegation. **NO PRE-EXISTING SLACK was found in any of the four** — each sat exactly where REC-69's replay and CONDUCT's 2026-08-09 integration left it. `reachGap` is deliberately NOT moved (the new code arrives translated, and a ceiling nudged for bookkeeping stops measuring the gap it names); `families`, `classified` and `corpus` are deliberately NOT moved (no new family, no new declaration, no new suite). In `coverage.mjs` the `arms:` key was left as ONE key set, WORKER.md's six-keep-both-merges warning read before the edit.
+## CLAIM 2026-08-09 RECORD (D-262 — the refusal that reaches the caller BARE, and the instrument that cannot see it)
+session: d262-refusal-wire (worktree agent-a0afb13cbfcc0d6b9)
+opened: 2026-08-09T22:20:00Z
+paths:
+  - `bio-plane/src/index.mjs` — **TWO SPANS AND NOTHING ELSE.** (1) ONE added namespace import of
+    `../checks/bio-checks.mjs` beside the existing named import (the named import list is NOT
+    touched); (2) ONE new block placed IMMEDIATELY AFTER `const json = (o, status = 200)` —
+    `dec49Row()` and `dec49Attach()`, plus the single call to `dec49Attach(o)` inside `json`'s own
+    body. **Placed AFTER `const json =` on purpose:** `test/daemon-token.test.mjs` anchors its
+    `scopeFor` region on the literal `const json = (o, status = 200)`, so anything added BEFORE that
+    line is conscripted into that region's sweep. **No DEC-49 REGION marker is added, moved or
+    edited; no refusal site, no `OPS` row, no `classes` list and no handler is touched.**
+  - `bio-plane/test/refusal-wire.test.mjs` (NEW — the instrument) and
+    `bio-plane/test/refusal-wire.control.mjs` (NEW — its negative-control driver, deliberately NOT a
+    `.test.mjs` because it EDITS REAL SOURCES while it runs; PL-3/PL-4/PL-11/REC-73's precedent).
+    Both INSIDE this worktree, never in the shared scratchpad.
+  - `docs/development/DEBT.md` — **TWO APPENDED ROWS (D-262, D-270) and no existing row edited.**
+  - `docs/development/MEASUREMENTS.md` — appended.
+  - `docs/development/INTERFACE-CHANGES.md` — **ONE APPENDED SECTION (IC-48)**, nothing edited in
+    place (that file is append-only by its own protocol). CONDUCT takes the RESOLUTION and the I3
+    version bump, per IC-25's precedent.
+  - `bio-plane/scripts/coverage.mjs` — **THE `REGISTER_FLOOR` CONSTANT BLOCK ONLY**, and only because
+    this item invalidates it by adding a suite. **ONE key set, verified by `grep -c`** — keep-both
+    merges have left duplicate `arms:` keys there SIX times, valid JavaScript where the last silently
+    wins and once the last was the lowest. Figures taken from a run made AFTER the new files were in
+    a commit, because a pre-commit run reports the same numerals as CONTAMINATED and a floor moved on
+    those is permanently too high (D-238, PL-17's receipt).
+  - `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/src/store.mjs` (READ ONLY — the eleven refusal sites are deliberately NOT
+  edited; that is the item's decision, recorded below), **NOT** `bio-plane/checks/bio-checks.mjs`
+  (READ ONLY — REC-64's remaining sweep is live in it and this item adds no row and no translation),
+  **NOT** `civicos-ui/**` (the DEC-49 guard's `FLOOR`/`CEILING` block is NOT opened; this item mints
+  no code, so nothing there moves — MEASURED on a green run, not assumed: REACH stayed 220 and the
+  `reachGap` CEILING stayed 41), **NOT** any other line of `bio-plane/scripts/**`,
+  **NOT** `bio-plane/package.json` (no per-suite script entry — REC-73's and REC-64's suites have
+  none either, and that file is high-traffic), **NOT** `docs/development/QUEUE.md` (CONDUCT's),
+  **NOT** `docs/development/DECISIONS.md`, **NOT** `docs/development/INTERFACES.md` (the registry
+  entry and the I3 version bump are CONDUCT's).
+interfaces consumed: I3 (the op contracts — a refusal gains `code`/`check`/`translation`, ADDITIVE)
+interfaces owned: none — **I3 is widened, not changed, and IC-48 is filed with MEASURED consumer
+  impact.** No field is removed, renamed or re-typed; every existing key of every existing refusal is
+  byte-identical (the attach NEVER overwrites), and the three added keys are the ones DEC-49 already
+  licenses and that one refusal in this family already carried.
+expected: D-262 — eleven of the twelve `MACHINE_CANNOT_*` fences carry NEITHER their C-number NOR
+  their canned translation to the caller, and **no instrument grades the RESPONSE against the
+  catalog** (DEC-49's guard arm C grades the SITE against the catalog). Close the eleven with ONE
+  decoration rather than eleven site edits, and BUILD the instrument that would have caught it.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief;
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` UNPIPED; `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. Negative
+  controls RUN, each arm ALONE with the others held open, declared before arming, restores verified
+  by sha256 AND by `cmp` against uniquely-named per-arm pristine copies, with a BASELINE arm and an
+  OVER-STRICTNESS arm. No push, no merge.
+concurrency: **REC-64's remaining translation sweep is a SIBLING and is live in
+  `bio-plane/checks/bio-checks.mjs`**, which this item does not open. The boundary: REC-64 owns codes
+  with NO translation; this item owns translations that EXIST and do not reach the caller. The
+  instrument reports the first bucket as a printed census and gates only on the second, so the two
+  cannot collide and REC-64's landing moves this item's census without touching its gate.
+released: 2026-08-09 — committed on branch `worktree-agent-a0afb13cbfcc0d6b9` at base `1081a6a`, **NOT pushed and NOT merged**; CONDUCT integrates. **D-262 CLOSED with ONE control-plane decoration and NO site edit, and the choice is a MEASUREMENT rather than a preference.** `dec49Attach()` in `src/index.mjs`, called from `json()`: **118 of that file's 125 response returns pass through it**, covering the generic store forward AND **the 36 `doAnswer` handlers that never reach that forward** — eleven site edits would have closed the forward's eleven and left all 36 as they were. **THE CLASS IS FOUR TIMES WHAT WAS REPORTED: 47 sites / 45 codes** name a catalogued code and carry no translation of their own (16 carry the row themselves), so the eleven fences are 11 of 47 and the figure grows on its own every time a refusal is written by hand. It NEVER overwrites and NEVER invents; it mints no code and touches no refusal site, no DEC-49 REGION marker and no `OPS` row, so arm C of the guard still COMPARES every code. **REVERSAL COST: delete one function and one call** — nothing in the plane READS the three fields, they exist for the caller. **THE COUNTER-READING IS ANSWERED RATHER THAN IGNORED, AND THE ANSWER IS BOTH.** `agent-worker` deliberately holds NO catalogue and passes a plane refusal through unchanged (it says so three times in its own source), so for the one consumer built since DEC-49 a bare code resolves to nothing; and the code belongs on the wire too, because code and sentence answer different questions — what happened, and where the rule is written.
+  **THE SECOND HALF IS THE ONE THAT LASTS: `bio-plane/test/refusal-wire.test.mjs` (23 assertions, NEW) grades the RESPONSE against the catalogue, which NOTHING did** — the DEC-49 guard grades the SITE and says in its own header that it *"says nothing about a LIVE plane"*, `machinefences-dec49` grades the RENDERER, REC-73 grades the ACT. 274 calls over 137 member-reachable ops × {member session, `ai` credential whose scope is HARVESTED from the OPS table} · 176 refusal envelopes · 60 distinct codes · **30 graded, every one carrying `check` and `translation` EQUAL to its row** · 30 census · 9 codeless observations over 6 ops (raised as **D-270**) · 0 unclassified. Corpus floored and printed on every run; what it cannot classify is printed BY NAME.
+  **BATTERY BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 142 suites (137 plane · 5 fleet) · 142/142 green · 9,179 assertions · exit 0** — the brief carried no figure, so there was nothing to agree or disagree with; the worktree arrived without `bio-plane/node_modules` and `npm ci` was run first. FINAL **143/143 · 9,207 · exit 0**, delta **+28 ATTRIBUTED PER SUITE by DIFFING the two full runs, never by subtraction**: `refusal-wire.test.mjs` +23 (new), `hygiene.test.mjs` 561 → 564, `planning-hygiene.test.mjs` 294 → 296 (the two new DEBT rows); **138 of 140 pre-existing suites byte-identical in count.** `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0** — OPS 163/163 · CHECKS 222/222 · **`REGISTER_FLOOR` MOVED 654 → 661 arms / 136 → 137 classified / 137 → 138 corpus, ALL THREE IN THE SAME TURN**, from the figures a green run printed as REPRODUCIBLE and read only AFTER the new files were in a commit (a pre-commit run reports the same numerals as CONTAMINATED — D-238), **ONE key set, verified by `grep -c`**. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **0**, with the DEC-49 guard's REACH unmoved at **220** and its `reachGap` CEILING unmoved at **41** — which is itself the measurement that this item mints no code. `node tools/plancheck.mjs` **clean but for UNPUSHED**.
+  **SEVEN NEGATIVE-CONTROL ARMS, each armed ALONE with the others held OPEN, declared before arming, restores verified by sha256 AND by `cmp` against uniquely-named per-arm pristine copies plus a pristine-of-record, byte counts printed and floored against the empty-string digest, a BASELINE arm included. ONE CAME BACK NOT AS DECLARED AND IT FOUND THIS ITEM'S OWN INSTRUMENT WRONG** — arm (d), the catalogue harvest neutered, was declared RED and returned `NO TALLY`: a blind catalogue threw a `TypeError` and the module ended while the tally read clean, WORKER.md's named failure arriving inside the file built to find that class. Corrected (null-tolerant catalogue reads; a corpus below its floor HALTS with its tally printed) and re-run, then **RE-RUN A THIRD TIME against the final suite rather than adjusted on paper — all seven as declared.**
+  **TWO INSTRUMENT DEFECTS THIS ITEM PAID FOR AND RECORDS SO THE NEXT AUTHOR DOES NOT:** (i) a fixture label spelled `op=<name>` fails `op-claims.test.mjs`, correctly — a fixture inventing an op name is how a document comes to reference a verb nobody built; (ii) a `NEGATIVE CONTROL:` declaration using UPPERCASE `(A)`…`(G)` counts **ZERO** arms, because `control-register.mjs`'s `OPENS_ITEM` matches `[a-z]{1,2}` — `--strict` failed naming the suite UNCLASSIFIED, which is D-233's shape caught by the instrument built for D-233. **IC-48 filed with MEASURED consumer impact** (zero `.translation` reads in `app.html`; `agent-worker` gains what it was already documented as carrying; 3,569 op answers observed by the UI harness with no assertion moving). **ONE FLAKE OBSERVED AND NAMED RATHER THAN SMOOTHED:** an intermediate battery run under concurrent load reported `search.test.mjs` FAIL with `TypeError: fetch failed / SocketError: other side closed`; the same suite is green (182 pass) in the clean final run and in the baseline, so it is recorded as load-related and NOT as a result. **`git stash` was NOT used at any point.**
+
+### DECISIONS FOR BOB 2026-08-09 (D-262): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. Two judgements were made and both are ones the
+record had already answered. **(a) One decoration rather than eleven site edits** is a tactical
+mechanism choice decided by a measurement the repository itself supplies — `doAnswer`'s own header
+rules that the fix for a rule that must be remembered at every site is a CHOKEPOINT — and the numbers
+(118/125 returns, 36 bypassing handlers, 47 sites in the class) point one way only. **(b) BOTH the
+code and the sentence belong on the wire**, and that is not a preference either: the one consumer
+built since DEC-49 holds no catalogue by design, so the alternative reading is false for the consumer
+that exists. **What is deliberately NOT decided here and is named instead: D-270's session-gate
+code.** Giving that refusal a code changes what every consumer switches on and requires choosing
+whether *"this verb is not for a person"* and *"your credential does not reach this verb"* are one
+answer or two — a DEC-37/DEC-52 question about the machine/member split. It is routed to REC-64's
+remaining sweep with the question stated, and pinned as a set so it cannot close silently.

@@ -3188,3 +3188,58 @@ the proof that it moves.
 
 _(awaiting: `UI` — the only measured consumer. `FRAMEWORK`, `CAPTURE`, `CONTENT-*`, `FLEET` and
 `DIST` are not consumers of this field.)_
+
+## IC-48 · I3: EVERY refusal leaving the control plane now carries its DEC-49 row — `code`, `check`, `translation` — attached at ONE chokepoint · PROPOSED 2026-08-09 (D-262), ADDITIVE
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-46, one id already held and
+stepped over, so IC-47 belongs to another worktree).
+
+### 1 · PROPOSED
+
+**INTERFACE: I3, the op contracts. THE CHANGE: a refusal answer gains up to three keys.** When a
+response leaving `json()` in `bio-plane/src/index.mjs` carries `ok: false` and a `reason`/`code` that
+resolves to a row in a DEC-49 family (`*_CHECKS` in `checks/bio-checks.mjs`), the answer gains
+`code`, `check` and `translation` from that row. This applies at the top level (the control plane's
+own refusals) and one level under `result` (the Durable Object's, forwarded).
+
+**WHY. Eleven of the twelve `MACHINE_CANNOT_*` fences put NEITHER their C-number NOR their canned
+translation on the wire** (D-262, measured 2026-08-09), and the same was true of any other refusal
+whose site built its object by hand. DEC-49's whole protection is that a surface renders a sentence
+it RECEIVED rather than one it invented; a refusal that arrives bare leaves the surface nothing to
+render. **The one consumer built since DEC-49 deliberately holds no catalogue** — `agent-worker`
+passes a plane refusal through unchanged, by design — so "the consumer can look the code up" is
+false for the consumer that exists.
+
+**WHAT IT IS NOT.** No field is removed, renamed or re-typed. No existing key of any existing
+refusal changes value: the attach **never overwrites**, so a site that already sends `translation`
+is byte-identical, and a code with no catalogue row is left exactly as it was. Success answers are
+untouched (`ok: false` is required, not inferred). No code is minted, so DEC-49's guard, its reach
+and its ratchets do not move.
+
+**MEASURED CONSUMER IMPACT — inside the repository, and it is a measurement rather than a survey.**
+
+- **`civicos-ui`** — the surface reads NO `.translation` off a response today (measured: zero
+  `.translation` reads in `app.html`'s script; the five occurrences are comments). `node
+  civicos-ui/test/run.mjs` from the repo root, exit **0**, with the DEC-49 guard's REACH unmoved at
+  **220** and its `reachGap` CEILING unmoved at **41**. `check-mock-envelope` green. The harness
+  observed **3,569 op answers across 72 distinct ops** under this change with no assertion moving.
+- **`agent-worker`** — passes a plane refusal through as `plane: answer`, unchanged. It GAINS the
+  translation it was already documented as carrying. Fleet suites green in the battery.
+- **`newgroup`** — reads no refusal translation (measured: no occurrence in `setup.mjs`).
+- **The battery** — 143/143 suites green, and no suite that compares a refusal object had to change.
+
+**THE ONE THING A CONSUMER MUST KNOW AND CANNOT INFER:** the attach is keyed on the DEC-49 catalogue,
+so a refusal whose code has no row still arrives bare. That set is REC-64's remaining sweep and is
+printed as a census by `bio-plane/test/refusal-wire.test.mjs` on every run — **30 such codes
+observed** in the 2026-08-09 drive. A consumer must therefore treat `translation` as PRESENT-OR-NOT
+rather than guaranteed, and must not synthesise one when it is absent (DEC-8).
+
+### 2 · RESPONSES
+
+*(To be answered by the consumer areas. RECORD's own position: **ADDITIVE and safe to accept** —
+the change can only add keys, never alter or remove one, and the three keys it adds are the three
+DEC-49 already licenses and that one refusal in this family already carried.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*
