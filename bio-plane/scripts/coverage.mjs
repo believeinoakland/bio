@@ -213,9 +213,19 @@ const REGISTER_FLOOR = {
      the other's new suite, so 581 was true of neither tree, and the merged figure is
      higher than either. This is what "re-read it from a green run after every
      multi-item merge" is for. */
-  arms:       621,  // arms stated across the classified declarations
-  classified: 133,  // declarations the detector could count arms in
-  corpus:     134,  // suites the register reads
+  /* MOVED 2026-08-09 by VF-1: 621 -> 632 / 133 -> 134 / 134 -> 135, ALL THREE IN
+     THE SAME TURN and every one taken from the figure this item's own green
+     `--strict` run PRINTED as REPRODUCIBLE, never counted and never added to the
+     numbers above (631 was read first, then 632 once the class-sweep arm was
+     written into the declaration — which is the register's own known property:
+     recording a control in prose moves the tally, so these are figures a run
+     printed and never deltas anybody computed). The cause is one new suite,
+     `test/owed-controls.test.mjs`, whose declaration states eleven arms — nine
+     run by `test/owed-controls.control.mjs` plus the two over-strictness arms
+     that live IN the suite. Nothing FELL. */
+  arms:       632,  // arms stated across the classified declarations
+  classified: 134,  // declarations the detector could count arms in
+  corpus:     135,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -292,6 +302,14 @@ const NOT_A_FLEET_MEMBER = {
 const FLEET_FLOOR = {
   members:    2,   // pdf-worker (I6, CPDF-6) + agent-worker (I8, FL-2).
   surfaceOps: 4,   // pdf-worker: structure, version (CPDF-9). agent-worker: run, version.
+  /* VF-1, 2026-08-09, from the figures a green `--strict` run PRINTED once the
+     fleet's controls were read at the SUITE grain — never counted by hand.
+     `suites` is the fleet's REACH (pdf-worker: pdf-worker + pagepixels;
+     agent-worker: agent-worker + harness), `arms` its tally: 7 + 7 + 12 + 9.
+     Move both only UPWARD and only to a printed figure, and a fall needs its
+     reason AT THIS SITE. */
+  suites:     4,
+  arms:       35,
 };
 
 function discoverFleet() {
@@ -323,13 +341,29 @@ function discoverFleet() {
     try { suites = readdirSync(join(dir, meta.testDir || "test")).filter((f) => f.endsWith(".test.mjs")); } catch { /* none */ }
     const suiteSrcs = suites.map((f) => ({ file: f, src: readText(join(dir, meta.testDir || "test", f)) }));
     const allSuiteText = suiteSrcs.map((s) => s.src).join("\n");
-    const control = suiteSrcs.some((s) => readControl(s.src) != null);
+    /* VF-1, 2026-08-09 — THIS WAS `suiteSrcs.some(...)` AND THE OLD RULE IS
+       CORRECTED HERE RATHER THAN EXEMPTED, because it was measured wrong rather
+       than reasoned wrong. `some` means A MEMBER counts as controlled when ANY
+       ONE of its suites declares, so `agent-worker/test/harness.test.mjs` —
+       FL-3/IS-9, the suite that OWNS VF-1's owed control 7 — could stop
+       declaring a negative control entirely while this instrument printed
+       `2/2 declaring a negative control` and `control declared` beside the
+       member's name. MEASURED, not reasoned: hiding that declaration on
+       2026-08-09 left `--strict` at EXIT 0 with every figure unmoved. VF-1's
+       own accepts-when is *"every IS suite declaring · an undeclared IS suite
+       would be its first regression"*, and for the one IS suite that lives in
+       the fleet that sentence was FALSE. The unit is the SUITE, here as it is
+       for the plane's 134. */
+    const suiteControls = suiteSrcs.map((s) => {
+      const c = readControl(s.src);
+      return { file: s.file, declared: c != null, arms: c ? c.arms : null };
+    });
     const ops = surfaceOps.map(({ op, decl }) => ({
       op,
       reached: surfaceCalled(op, allSuiteText),
       mutating: decl == null ? null : /mutating:\s*true/.test(decl),
     }));
-    members.push({ name: meta.name || name, dir: name, ops, control, suites: suites.length, hasSurface: surfBody != null,
+    members.push({ name: meta.name || name, dir: name, ops, suiteControls, suites: suites.length, hasSurface: surfBody != null,
       /* M0-16: the paths this walk was ADMITTED BY and the paths it READ, kept so
          their provenance can be asked. The manifest is the larger hole of the two
          because it enrols a whole DIRECTORY rather than one file. */
@@ -340,7 +374,19 @@ function discoverFleet() {
 }
 const fleet = discoverFleet();
 const fleetUnreached = fleet.flatMap((m) => m.ops.filter((o) => !o.reached).map((o) => ({ member: m.name, op: o.op })));
-const fleetUncontrolled = fleet.filter((m) => !m.control);
+/* VF-1: the fleet's own register, at the SUITE grain the plane's is measured at.
+   THERE IS EXACTLY ONE IMPLEMENTATION OF THIS RULE, and that is deliberate. The
+   first draft of this change left the old member-level `control` flag in place
+   beside the new suite-level walk, and the arm written to prove the fix — putting
+   the old `some()` back — CAME BACK GREEN, because nothing read the flag any
+   more. A second copy of a rule absorbs the control that was meant to prove the
+   first: IS-6's C-22.4 arm was green at 98/98 for exactly this reason. The flag
+   is deleted rather than kept for compatibility. */
+const fleetSuiteRows = fleet.flatMap((m) => m.suiteControls.map((s) => ({ member: m.name, dir: m.dir, ...s })));
+const fleetSuitesUndeclared = fleetSuiteRows.filter((s) => !s.declared);
+const fleetSuitesClassified = fleetSuiteRows.filter((s) => typeof s.arms === "number");
+const fleetSuitesUnclassified = fleetSuiteRows.filter((s) => s.declared && s.arms == null);
+const fleetArms = fleetSuitesClassified.reduce((n, s) => n + s.arms, 0);
 const fleetSurfaceOps = fleet.reduce((n, m) => n + m.ops.length, 0);
 /* (3) — no readable surface table, or a table with nothing in it. */
 const fleetSurfaceless = fleet.filter((m) => !m.hasSurface || m.ops.length === 0);
@@ -360,6 +406,142 @@ if (fleet.length < FLEET_FLOOR.members)
   fleetBelowFloor.push(`${fleet.length} fleet member(s) discovered, floor is ${FLEET_FLOOR.members}`);
 if (fleetSurfaceOps < FLEET_FLOOR.surfaceOps)
   fleetBelowFloor.push(`${fleetSurfaceOps} fleet surface op(s) enumerated, floor is ${FLEET_FLOOR.surfaceOps}`);
+/* VF-1: the same ratchet the plane's register carries, one directory over. A
+   count of declaring suites with no floor cannot see a SUITE DELETED — the
+   remaining ones still all declare and `4/4` becomes `3/3`, which reads greener
+   than before. The arms floor is what makes a declaration that got SHORTER
+   visible; both figures are what a green run PRINTED. */
+if (fleetSuiteRows.length < FLEET_FLOOR.suites)
+  fleetBelowFloor.push(`${fleetSuiteRows.length} fleet suite(s) read, floor is ${FLEET_FLOOR.suites}`);
+if (fleetArms < FLEET_FLOOR.arms)
+  fleetBelowFloor.push(`${fleetArms} fleet control arm(s) stated, floor is ${FLEET_FLOOR.arms}`);
+
+/* ------------------------------- VF-1: the register's reach, stated in full */
+/* THE CLASS SWEEP THAT CAME OUT OF THE FLEET HOLE, and it is REPORTED rather
+ * than GATED, deliberately.
+ *
+ * The defect above was not "the fleet walk used `some`". The KIND is **an
+ * instrument whose REACH is narrower than the claim it prints** — a set of
+ * suites held to a weaker rule than its siblings, so a component can go quiet
+ * without moving a figure. Asking where else that is true found two more
+ * directories of suites that NO instrument in this repository holds to a
+ * declared control, and the numbers are printed here rather than written into a
+ * document, because a hand-carried figure goes stale silently and that is this
+ * project's most-repeated finding.
+ *
+ * WHY IT IS NOT A GATE. These suites belong to other areas (`civicos-ui` is UI's,
+ * `newgroup` is DIST's and is out of bounds without an explicit instruction).
+ * Turning their state into a `--strict` failure would fail every honest run until
+ * another area does work it has not been asked for, and a gate that fails honest
+ * runs gets switched off — VERIFICATION.md's own stated reason for what `--strict`
+ * does and does not enforce. A fence tighter than its rule is not a safer fence.
+ * So: MEASURED, NAMED, and put in front of whoever runs this, which is the loop
+ * the reader actually runs.
+ *
+ * WHAT THIS WALK CANNOT SEE, stated plainly: it reads `*.test.mjs` only, so a
+ * suite in another spelling is invisible to it, and it says nothing about whether
+ * a declared control was ever RUN — that is the owner's own measured figure and
+ * no matcher can supply it. */
+const OTHER_SUITE_DIRS = [
+  ["civicos-ui/test", "UI's harness suites — run by `node civicos-ui/test/run.mjs`, never by the battery"],
+  ["newgroup/test",   "the INSTALLER's suites — DIST's, out of bounds without an explicit instruction"],
+];
+const otherDirs = OTHER_SUITE_DIRS.map(([dir, why]) => {
+  let files = [];
+  try { files = readdirSync(join(REPO, dir)).filter((f) => f.endsWith(".test.mjs")).sort(); } catch { /* absent */ }
+  const rows = files.map((f) => ({ file: f, control: readControl(readText(join(REPO, dir, f))) }));
+  return { dir, why, total: files.length,
+    declaring: rows.filter((r) => r.control).length,
+    unclassified: rows.filter((r) => r.control && r.control.arms == null).length,
+    arms: rows.reduce((n, r) => n + (r.control && r.control.arms != null ? r.control.arms : 0), 0),
+    quiet: rows.filter((r) => !r.control).map((r) => r.file) };
+}).filter((d) => d.total > 0);
+
+/* ------------------------------------------------- VF-1: the owed controls */
+/* THE SEVEN OWED NEGATIVE CONTROLS (`INVESTIGATIVE-SESSION.md` §18, placed by
+ * `IS-BUILD-PLAN.md`'s VF-1 row, which is the authority for the placement). They
+ * are here, in the gate every worker runs, for one reason: **VF-1 is a LEDGER,
+ * and a ledger kept in a document is the thing this project keeps re-learning
+ * does not reach anybody.** Four of the seven are RUN. Three cannot be placed
+ * yet because PL-16 has not landed, and that is STATED rather than answered with
+ * an invented placement — `bio-plane/test/publishedcase.test.mjs` is REC-22's
+ * suite for the EXISTING public read path and is not IS-8's, so putting DEC-44's,
+ * DEC-34's and DEC-46(a)'s arms there would be a placement that looks like
+ * coverage and measures nothing.
+ *
+ * WHAT THIS TABLE CAN AND CANNOT SEE, because that sentence is load-bearing:
+ *  - IT CAN see that a placed control's suite still EXISTS and still DECLARES.
+ *    That is the regression it exists to catch — an owed control quietly losing
+ *    the suite it was recorded in.
+ *  - IT CANNOT read a declaration and judge that the owed arm is *the one
+ *    described*. No matcher can: the four owners spell the reference four
+ *    different ways (`OWED CONTROL 1`, `VF-1's NUMBER 6`, `VF-1's owed control
+ *    7`, `VF-1(3)`), and grading one spelling is REC-70's defect exactly. The
+ *    EVIDENCE that each arm RAN is the measured figure in the owner's own
+ *    `NEGATIVE CONTROL:` line; this table asserts the line is still there and
+ *    points at it.
+ *  - IT CANNOT tell that PL-16 has landed. Nothing structural distinguishes
+ *    "PL-16 shipped" from "PL-16 did not" without guessing at its shape, so the
+ *    tripwire is the arithmetic instead: `total` is PINNED at seven, so an
+ *    outstanding row cannot be deleted to make this section tidy, and
+ *    `outstanding` is a CEILING that may only fall — and falling means an owner
+ *    landed, placed the arm, ran it, and moved this number in the same turn. */
+const OWED_CONTROLS = [
+  { n: 1, item: "PL-11", suite: "bio-plane/test/aicredential.test.mjs",
+    what: "DEC-55.5's SECOND HALF — remove the machine predicate and every MACHINE_CANNOT_* must stop firing",
+    ran: "arm (1): 75 pass, 15 FAIL. Eleven of twelve fences were luck, not fences (D-229)." },
+  { n: 2, item: "PL-16", suite: null,
+    what: "DEC-44's two-finding case — any surface presenting ONE case-level strength must fail",
+    ran: "NOT RUN. PL-16 (IS-8, M10, W9) has not landed; there is no published-case suite to place it in." },
+  { n: 3, item: "PL-14", suite: "bio-plane/test/strengthpair.test.mjs",
+    what: "DEC-40's strip-the-filter-line — a what-if rendering without its filter/state-set line must fail the harness",
+    ran: "arms (1a)-(1d) plus the DEC-44 composition arms; 17 arms, run by test/strengthpair.control.mjs." },
+  { n: 4, item: "PL-16", suite: null,
+    what: "DEC-34's page-without-header — a page lacking the per-page header incl. the version NAME must fail",
+    ran: "NOT RUN, same reason as 2. REC-22's publishedcase suite asserts the plane emits NO page at all, which is the OTHER claim." },
+  { n: 5, item: "PL-16", suite: null,
+    what: "DEC-46(a)'s carried-forward bias acknowledgement — must be refused",
+    ran: "NOT RUN, same reason as 2." },
+  { n: 6, item: "PL-3", suite: "bio-plane/test/suggest.test.mjs",
+    what: "ONE REFUSAL AT A TIME — remove any one of the six pre-write refusals and its suite fails naming that C-number",
+    ran: "arms (1)-(6), each neutering one check with the other five held OPEN, run by test/suggest.control.mjs." },
+  { n: 7, item: "FL-3", suite: "agent-worker/test/harness.test.mjs",
+    what: "THE EMPTY-RUN INSTRUMENT — an empty run and a silent failure must be distinguishable",
+    ran: "arm (H9): `emptyLevelCandidates` returns [] -> the empty-run arm fails. Run by agent-worker/test/harness.control.mjs." },
+];
+/* PINNED. `total` is the design's own count and does not move without a ruling.
+   `outstanding` may only FALL, and only in the turn that places AND RUNS the arm
+   — a ceiling here is the right shape precisely because the quantity is a DEBT.
+   A floor would be the wrong direction and a count with neither is a promise. */
+const OWED_TOTAL = 7;
+const OWED_OUTSTANDING = 3;   // 2, 4 and 5 — all three PL-16's, W9/M10.
+/* THE LEDGER'S REACH, STATED. These rows describe THIS repository's IS build, and
+   `coverage.mjs` is also copied into throwaway repositories by two suites that
+   drive the real instrument against a synthetic tree. In such a tree every named
+   suite is legitimately absent, and a ledger that reported four MISSING suites
+   there would be making a claim about a repository it is not describing — the
+   generous direction's mirror image, and just as wrong. The anchor is the file
+   that IS the authority for the placement: a tree with no `IS-BUILD-PLAN.md` has
+   no VF-1 to keep a ledger for. The table is still PRINTED either way; only the
+   assertions are conditioned, and the report says which it did. */
+const OWED_ANCHOR = "docs/development/IS-BUILD-PLAN.md";
+const owedInScope = readText(join(REPO, OWED_ANCHOR)) !== "";
+const owedRows = OWED_CONTROLS.map((r) => {
+  if (!r.suite) return { ...r, state: "OUTSTANDING" };
+  const src = readText(join(REPO, r.suite));
+  if (src === "") return { ...r, state: "SUITE MISSING" };
+  return { ...r, state: readControl(src) ? "PLACED" : "SUITE DECLARES NO CONTROL" };
+});
+const owedOutstanding = owedRows.filter((r) => r.state === "OUTSTANDING");
+const owedProblems = [];
+if (owedInScope) {
+  for (const r of owedRows.filter((r) => r.state === "SUITE MISSING" || r.state === "SUITE DECLARES NO CONTROL"))
+    owedProblems.push(`owed control ${r.n} (${r.item}) -> ${r.suite}: ${r.state}`);
+  if (owedRows.length !== OWED_TOTAL)
+    owedProblems.push(`${owedRows.length} owed control(s) in the ledger, the design states ${OWED_TOTAL}`);
+  if (owedOutstanding.length > OWED_OUTSTANDING)
+    owedProblems.push(`${owedOutstanding.length} outstanding, the pin is ${OWED_OUTSTANDING} — an owed control cannot be un-run`);
+}
 
 /* ---- M0-16 / D-238: WHAT DID THESE THREE WALKS COUNT, AND IS IT IN A COMMIT?
  *
@@ -503,10 +685,14 @@ if (JSON_OUT) {
   const fleetOps = fleetSurfaceOps;
   console.log(`\nFLEET  ${fleet.length} member${fleet.length === 1 ? "" : "s"} beside the plane · `
     + `${fleetOps - fleetUnreached.length}/${fleetOps} surface ops reached · `
-    + `${fleet.length - fleetUncontrolled.length}/${fleet.length} declaring a negative control · `
-    + `floor ${FLEET_FLOOR.members} member(s) / ${FLEET_FLOOR.surfaceOps} op(s)`
+    + `${fleetSuiteRows.length - fleetSuitesUndeclared.length}/${fleetSuiteRows.length} SUITES declaring a negative control · `
+    + `${fleetArms} arms · `
+    + `floor ${FLEET_FLOOR.members} member(s) / ${FLEET_FLOOR.surfaceOps} op(s) / `
+    + `${FLEET_FLOOR.suites} suite(s) / ${FLEET_FLOOR.arms} arm(s)`
     + `${fleet.length > FLEET_FLOOR.members ? ` · GREW by ${fleet.length - FLEET_FLOOR.members} member(s)` : ""}`
-    + `${fleetOps > FLEET_FLOOR.surfaceOps ? ` · GREW by ${fleetOps - FLEET_FLOOR.surfaceOps} op(s)` : ""}`);
+    + `${fleetOps > FLEET_FLOOR.surfaceOps ? ` · GREW by ${fleetOps - FLEET_FLOOR.surfaceOps} op(s)` : ""}`
+    + `${fleetArms > FLEET_FLOOR.arms ? ` · GREW by ${fleetArms - FLEET_FLOOR.arms} arm(s)` : ""}`
+    + `${fleetSuitesUnclassified.length ? ` · ${fleetSuitesUnclassified.length} UNCLASSIFIED` : ""}`);
   console.log(`  A second Worker's surface was uncounted (D-117); each member is held to the`);
   console.log(`  plane's own two behavioural surfaces — every surface op reached by one of the`);
   console.log(`  member's suites, and a declared control. Discovered from fleet-member.json.`);
@@ -515,16 +701,54 @@ if (JSON_OUT) {
   console.log(`  own sentence. So every Worker directory is now accounted for, the count carries a`);
   console.log(`  FLOOR, an unreadable or empty SURFACE table FAILS instead of reporting 0/0, and`);
   console.log(`  fleet rule 2 (a member ASSERTS nothing) is a gate rather than a convention.`);
+  console.log(`  VF-1: the control figure is per SUITE, not per member. It used to be ANY suite of`);
+  console.log(`  a member, so FL-3/IS-9's own suite could stop declaring while this line still read`);
+  console.log(`  2/2 — measured on 2026-08-09, --strict stayed exit 0 with every figure unmoved.`);
   for (const m of fleet) {
     const reached = m.ops.filter((o) => o.reached).length;
+    const declaring = m.suiteControls.filter((s) => s.declared).length;
     console.log(`\n    ${m.name} (${m.dir}/)  ${reached}/${m.ops.length} ops reached · `
-      + `${m.suites} suite${m.suites === 1 ? "" : "s"} · control ${m.control ? "declared" : "MISSING"}`);
+      + `${declaring}/${m.suites} suite${m.suites === 1 ? "" : "s"} declaring a control`);
+    for (const s of m.suiteControls)
+      console.log(`      ${s.declared ? (s.arms == null ? "UNCLASSIFIED" : `${String(s.arms).padStart(2)} arms    `) : "NO CONTROL  "} ${s.file}`);
     for (const o of m.ops)
       console.log(`      ${o.reached ? "reached  " : "UNREACHED"} ${o.op}`
         + `${o.mutating === false ? "" : o.mutating === true ? "   MUTATING — a fleet member asserts nothing (fleet rule 2)" : "   DECLARATION UNREADABLE — cannot show it is non-mutating"}`);
     if (!m.hasSurface) console.log(`      NO SURFACE TABLE found at its entry (${m.dir}/) — the surface is uncounted, which is the D-117 failure itself`);
     else if (m.ops.length === 0) console.log(`      SURFACE TABLE IS EMPTY — 0 of 0 reached is the emptiest possible green`);
   }
+  console.log(`\nOWED CONTROLS (VF-1)  ${owedRows.length - owedOutstanding.length}/${owedRows.length} placed and RUN · `
+    + `${owedOutstanding.length} OUTSTANDING (pin ${OWED_OUTSTANDING}) · total pinned at ${OWED_TOTAL}`
+    + `${owedInScope ? "" : ` · NOT ASSERTED HERE (no ${OWED_ANCHOR} — this is not the repository the ledger describes)`}`);
+  console.log(`  The design's seven (§18), on their owners. A control that is DECLARED and never RUN`);
+  console.log(`  is a mechanism believed on its EXISTENCE, which is the defect this project meets most.`);
+  console.log(`  This table asserts a placed control's suite still exists and still declares; it does`);
+  console.log(`  NOT read the declaration and judge that the owed arm is the one described — the four`);
+  console.log(`  owners spell the reference four different ways, and grading one spelling is REC-70's`);
+  console.log(`  defect. The evidence each arm RAN is the measured figure in the owner's own line.`);
+  for (const r of owedRows) {
+    console.log(`\n    (${r.n}) ${r.item}  ${r.state}${r.suite ? `  ${r.suite}` : ""}`);
+    console.log(`         ${r.what}`);
+    console.log(`         ${r.ran}`);
+  }
+
+  if (otherDirs.length) {
+    console.log(`\nSUITES NO REGISTER READS (VF-1's class sweep — REPORTED, NOT GATED)`);
+    console.log(`  The register's corpus is the plane's ${suites.length} suites; the fleet's ${fleetSuiteRows.length} are held to the`);
+    console.log(`  same rule one directory over. These are the rest of this repository's suites, and`);
+    console.log(`  NO instrument holds them to a declared negative control. Not gated because they`);
+    console.log(`  belong to other areas and a gate that fails honest runs gets switched off — but a`);
+    console.log(`  figure nobody prints is a figure nobody re-measures, which is how the fleet hole`);
+    console.log(`  survived. This walk reads *.test.mjs only, and says nothing about whether a`);
+    console.log(`  declared control was ever RUN.`);
+    for (const d of otherDirs) {
+      console.log(`\n    ${d.dir}  ${d.declaring}/${d.total} declaring · ${d.arms} arms`
+        + `${d.unclassified ? ` · ${d.unclassified} unclassified` : ""}`);
+      console.log(`      ${d.why}`);
+      if (d.quiet.length) console.log(`      NO CONTROL (${d.quiet.length}): ${d.quiet.join(", ")}`);
+    }
+  }
+
   const accountedNote = Object.entries(NOT_A_FLEET_MEMBER)
     .map(([d, why]) => `${d} (${why.split(".")[0]})`).join(" · ");
   console.log(`\n    Workers accounted for but NOT fleet members: ${accountedNote}`);
@@ -562,6 +786,17 @@ if (fleetBelowFloor.length)
   console.error(`\nFLEET FLOOR: ${fleetBelowFloor.join("; ")}. THE WALK LOST SIGHT of a member or a surface — this is`
     + `\n  the failure a ceiling cannot see. Establish what stopped being discovered before moving the floor,`
     + `\n  and move it only to a figure this instrument PRINTED on a green run.`);
+if (fleetSuitesUndeclared.length)
+  console.error(`\nFLEET CONTROL: ${fleetSuitesUndeclared.map((s) => `${s.dir}/test/${s.file}`).join(", ")} declare${fleetSuitesUndeclared.length === 1 ? "s" : ""}`
+    + `\n  no negative control. A fleet suite is held to what a plane suite is held to. This used to be`
+    + `\n  measured per MEMBER — any one suite declaring covered the rest — so the IS suite that owns`
+    + `\n  VF-1's owed control 7 could go quiet behind a sibling's declaration and nothing failed (VF-1,`
+    + `\n  measured 2026-08-09).`);
+if (fleetSuitesUnclassified.length)
+  console.error(`\nFLEET REGISTER: ${fleetSuitesUnclassified.map((s) => `${s.dir}/test/${s.file}`).join(", ")} declare${fleetSuitesUnclassified.length === 1 ? "s" : ""} a`
+    + `\n  control this register cannot count the arms of. NAMED rather than scored zero (D-233), and it`
+    + `\n  fails here rather than being folded into the tally: state the arms as a marked list — an arrow`
+    + `\n  per arm, or a parenthesised ordinal per arm, in the paragraph the marker opens.`);
 if (fleetSurfaceless.length)
   console.error(`\nFLEET SURFACE: ${fleetSurfaceless.map((m) => m.name).join(", ")} — no readable SURFACE table, or an`
     + `\n  empty one. It would report 0/0 ops reached and pass; a member whose surface cannot be read is a member`
@@ -587,9 +822,17 @@ if (newlyUnclassified.length)
     + `\n  arrow per arm, or a parenthesised ordinal per arm, in the paragraph the marker opens — or add`
     + `\n  the suite to REGISTER_UNCLASSIFIED with the reason it cannot be counted.`);
 
+if (owedProblems.length)
+  console.error(`\nOWED CONTROLS: ${owedProblems.join("; ")}. VF-1's ledger no longer matches the tree. An owed`
+    + `\n  control whose suite went missing, or whose suite stopped declaring, is one nobody can re-run`
+    + `\n  in one step — and a row deleted to make this section tidy is how a debt gets discharged by`
+    + `\n  arithmetic. Move the pins only in the turn that PLACES and RUNS the arm.`);
+
 if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
     || registerBelowFloor.length || newlyUnclassified.length
-    || fleetUnreached.length || fleetUncontrolled.length
+    || fleetUnreached.length
+    || fleetSuitesUndeclared.length || fleetSuitesUnclassified.length
+    || owedProblems.length
     || unaccountedWorkers.length || fleetBelowFloor.length || fleetSurfaceless.length || fleetMutating.length)) {
   console.error("STRICT: coverage floor not met.");
   process.exit(1);
