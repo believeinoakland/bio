@@ -1716,24 +1716,24 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "bio-plane/test/machinefences-dec49.test.mjs",// src/, reports minted fence codes
     "bio-plane/test/planning-hygiene.test.mjs",   // docs/, reports a planning-surface census
     "bio-plane/test/publishedcase.test.mjs",      // src/, reports emitted rendering modules
-    "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, reports a suite census
-    "civicos-ui/check-refusal-codes.mjs",         // plane src/ AND civicos-ui/test/, reports two censuses
-    "civicos-ui/test/add-surface.test.mjs",       // civicos-ui/, reports a surface census
-    /* ADDED AT INTEGRATION 2026-08-08 by CONDUCT, and it is the SAME SHAPE as the entry
-       directly above: a walk of `civicos-ui/` reporting a surface census. NAMED for that
-       precedent, and recorded as a decision rather than left as a silence.
-
-       A MERGE-INDUCED SIGHTING NEITHER WORKER COULD HAVE SEEN. D-237 widened this census to
-       reach `civicos-ui/test/`; UI-50 added a walking suite. Each branch was green alone and
-       the PAIR is red — which is exactly why the whole battery is re-run on the MERGED tree
-       rather than trusting two green reports.
-
-       WHAT NAMING DOES NOT DO, stated because the floor is real: this suite floors on
-       `DISPATCH.size > 100` and `BODIES.size > 200` read off the working tree, so an
-       untracked file in `civicos-ui/` inflates its corpus exactly as M0-15's phantom did.
-       Guarding it is a UI change and CONDUCT writes no area code, so it is ROUTED as D-257
-       rather than done here. */
-    "civicos-ui/test/version-predecessor.test.mjs", // civicos-ui/, surface census (UI-50); guarding routed as D-257
+    /* D-257 CLOSED 2026-08-09, AND IT TOOK SEVEN ENTRIES OUT OF THIS LIST RATHER THAN ONE.
+       The row routed `civicos-ui/test/version-predecessor.test.mjs`; the sweep asked of every
+       entry here whether it FLOORS on what its walk found, because naming is defensible for a
+       walk that only REPORTS and much weaker for one whose count feeds a ratchet. SEVEN
+       civicos-ui walks floored, including the sibling this list justified the routed one by,
+       and `check-refusal-codes.mjs` — whose `FLOOR` table is MOVED BY HAND to figures a green
+       run printed, which is D-238's payload exactly. All seven now ask `provenance.mjs` and
+       are GUARDED above; `civicos-ui/test/run.mjs`, the runner CLAIMS.md delegated, is guarded
+       too. The measurements and what the sweep could not see are in the D-257 row. */
+    /* MEASURED BY D-257'S SWEEP AND KEPT: it walks `civicos-ui/test/` and PRINTS a suite
+       count, but nothing it prints is compared against a number — there is no floor here to
+       raise, so the D-238 payload cannot reach it. WHAT IT DOES DO, named because it is a
+       DIFFERENT exposure rather than a smaller one: it EXECUTES every suite it discovers,
+       so a phantom deposited in that directory is RUN. That is the runner's exposure
+       (`civicos-ui/test/run.mjs`, now guarded), and closing it here means failing on an
+       uncommitted suite — a decision about how workers work rather than about this
+       instrument, and the same residual M0-15 stated and kept. */
+    "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, runs and counts suites, floors on none
     /* ADDED AT INTEGRATION 2026-08-08 by CONDUCT, AND THE RATCHET CAUGHT IT ON THE DAY IT
        LANDED — which is the whole reason M0-16 made this a census rather than a fix.
        M-4's measurement probe arrived in the SAME integration as M0-16's census, so
@@ -1758,19 +1758,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        naming the retired path makes the estate arm go RED rather than quietly
        green. Provenance would tell it something true and useless. */
     "bio-plane/test/check-firing.test.mjs",       // the estate, reports a producer census for a retired shape
-    "civicos-ui/test/auth-surface.test.mjs",      // civicos-ui/, reports a surface census
-    "civicos-ui/test/bound-sweep.test.mjs",       // civicos-ui/, reports a bound census
-    "civicos-ui/test/preauth-vocabulary.test.mjs",// civicos-ui/test/, reports a suite census
-    "civicos-ui/test/publishedcase.test.mjs",     // civicos-ui/, reports a file census
-    "civicos-ui/test/refusal-codes.test.mjs",     // civicos-ui/test/, asserts NO fixture residue
-    /* THE ONE WORTH AN ITEM, and it is named in the report rather than left in a
-       list: `civicos-ui/test/run.mjs` is the UI battery's RUNNER. It discovers
-       `.test.mjs` in a directory it does not control and prints the total a
-       session quotes as its UI baseline — the same shape as `battery.mjs`
-       before M0-15, one estate over, and the only member of this class whose
-       number IS a baseline. It is not fixed here because `civicos-ui/**` is not
-       this item's to open; it is DELEGATED in CLAIMS.md. */
-    "civicos-ui/test/run.mjs",
+    /* MEASURED BY D-257'S SWEEP AND KEPT, WHICH IS A DIFFERENT CLAIM FROM THE ONE THAT WAS
+       HERE. This suite's walk feeds an assertion that the fixture directory holds NO residue
+       — a CEILING AT ZERO — so an untracked file deposited beside it makes this suite go RED
+       rather than quietly green. Provenance would tell it something true and useless, and the
+       exposure the guarded walks carry (a phantom raising a figure somebody quotes into a
+       floor) is absent because there is no floor here to raise. */
+    "civicos-ui/test/refusal-codes.test.mjs",     // civicos-ui/test/, asserts NO fixture residue (a ceiling at zero)
     /* ADDED 2026-08-08 by D-243's item, AND THE RATCHET WORKED A THIRD TIME — the
        census named this walk on the first full battery, before anyone read the diff.
        WHY IT IS NAMED AND NOT GUARDED: it walks a `mkdtemp` SANDBOX THIS SUITE ITSELF

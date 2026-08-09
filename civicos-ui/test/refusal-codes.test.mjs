@@ -319,6 +319,35 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
     `const VOCABULARY_MODULES = new Map(Object.entries({ "src/vocab.mjs": "the fixture's vocabularies" }));`);
   if (over.mutateGuard) guard = over.mutateGuard(guard);
   fs.writeFileSync(path.join(ui, "check-refusal-codes.mjs"), guard);
+
+  /* ---- D-257: THE FIXTURE IS NOW A REPOSITORY, BECAUSE THE GUARD ASKS ONE ----
+     The guard imports `bio-plane/scripts/provenance.mjs` and compares its census
+     and reach floors against the figures `git ls-tree HEAD` says another checkout
+     reproduces. Two things follow for this fixture, and neither is optional:
+
+       1. THE MODULE MUST EXIST IN THE TREE. It is COPIED from the real one rather
+          than re-written here — a hand copy agrees with the original at zero cost
+          and then goes stale in one of its homes, which is the failure the module
+          itself was created to avoid.
+       2. THE TREE MUST BE A CHECKOUT. A `mkdtemp` directory inside this worktree
+          is inside a repository whose HEAD does not describe it, so `git ls-tree
+          HEAD` answers EMPTY — verified, and every fixture file UNTRACKED, which
+          would floor the guard's census at zero and fail every arm. Initialising
+          and committing the fixture makes it what the guard is entitled to
+          assume, and it exercises the VERIFIED path rather than the degraded one,
+          which is the better half to cover.
+
+     The nested `.git` lives and dies with the fixture: the residue arm at the
+     foot of this file already asserts no `.vf2-fixture-*` survives the run. */
+  const provDir = path.join(root, "bio-plane", "scripts");
+  fs.mkdirSync(provDir, { recursive: true });
+  fs.copyFileSync(fileURLToPath(new URL("../../bio-plane/scripts/provenance.mjs", import.meta.url)),
+                  path.join(provDir, "provenance.mjs"));
+  const git = (...args) => execFileSync("git", args, { cwd: root, stdio: "pipe" });
+  git("init", "-q");
+  git("-c", "user.email=fixture@bio.test", "-c", "user.name=VF-2 fixture", "add", "-A");
+  git("-c", "user.email=fixture@bio.test", "-c", "user.name=VF-2 fixture",
+      "commit", "-q", "-m", "the fixture tree, so the guard's provenance check has a commit to ask about");
   return { root, ui };
 }
 
@@ -485,7 +514,17 @@ withTree({
 }, tree => {
   const r = runGuard(tree);
   t("ARM 5: exits 1 — a walk that lost sight is a FAILURE, not a green run", r.exit, 1);
-  t("ARM 5: on the CENSUS FLOOR", /the plane census is \d+ refusal codes, floor is/.test(r.out), true);
+  /* CORRECTED 2026-08-09 (D-257), NEVER EXEMPTED. The old pin was
+     `/the plane census is \d+ refusal codes, floor is/`, and it was right for the
+     sentence the guard used to compose. The guard now floors on the REPRODUCIBLE
+     census — the codes `git ls-tree HEAD` says another checkout gets — and says
+     both figures, so the sentence reads "... N refusal codes that are in the
+     commit at HEAD (M over the working tree), floor is X". The old spelling is
+     wrong rather than merely narrower: it would pass over a guard that had gone
+     back to flooring on the contaminated figure. This pin requires BOTH numbers,
+     so the two-figure form is what is asserted. */
+  t("ARM 5: on the CENSUS FLOOR, and it states the reproducible figure beside the contaminated one",
+    /the plane census is \d+ refusal codes that are in the commit at HEAD \(\d+ over the working tree\), floor is/.test(r.out), true);
   t("ARM 5: and the per-matcher line shows WHICH spelling went blind",
     /M1 reason:"CODE"\s+0 codes/.test(r.out), true);
 });

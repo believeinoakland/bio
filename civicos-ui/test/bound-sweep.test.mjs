@@ -213,6 +213,10 @@ import fs from "fs";
 import vm from "vm";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { fileURLToPath } from "url";
+/* D-257 — arms F and G walk the working tree and FLOOR on what they found. One
+   mechanism, imported; the argument is at the walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 let n = 0, bad = 0;
 const ok = (what, cond) => { n++; if(!cond){ bad++; console.error("  NOT OK:", what); } };
@@ -1366,7 +1370,40 @@ ok("ARM E · op=tasks's surface reads the record's own `truncated`, and no longe
 const UI_DIR = new URL("../", import.meta.url);
 const UI_FILES = fs.readdirSync(UI_DIR)
   .filter(f => /\.(html|mjs|js)$/.test(f))
-  .map(f => ({ file: f, text: fs.readFileSync(new URL(f, UI_DIR), "utf8") }));
+  .map(f => ({ file: f, abs: fileURLToPath(new URL(f, UI_DIR)),
+               text: fs.readFileSync(new URL(f, UI_DIR), "utf8") }));
+
+/* ---- PROVENANCE, AND WHY THIS WALK CARRIES IT (D-257 / M0-16) --------------
+   Arms F and G both floor on this walk (`UI_FILES.length >= 3`, `F.functions >=
+   200`, `G.functions >= 200`, `G.rows.length >= 8`), and the walk reads the
+   WORKING TREE. `refs/stash` is repository-wide across all sixty worktrees and
+   `git stash push -u` carries untracked files, so a phantom deposited beside
+   `app.html` was counted into every one of those figures (D-238, measured).
+
+   THE SPLIT: the arms still SWEEP the whole working tree, because a dropped
+   bound in a file nobody has committed yet is still a finding and must still red
+   this suite; the FLOORS read `git ls-tree HEAD` alone, because those are the
+   figures another checkout reproduces. When git cannot answer the two collapse
+   and the report says UNVERIFIED rather than clean (D-233). */
+const UI_REPO = fileURLToPath(new URL("../../", import.meta.url));
+const UI_PROV = readGitProvenance(UI_REPO);
+const UI_REPRO = UI_FILES.filter(x => UI_PROV.inHead === null || UI_PROV.inHead.has(repoPath(UI_REPO, x.abs)));
+/* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4) — a label reading "in the
+   commit at HEAD (unverified)" claims the commit while admitting it could not
+   look, which is D-233. Found by D-257's control ARM 3. */
+const UI_HEAD_SAYS = UI_PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+  : `in the commit at HEAD (${UI_PROV.headSha})`;
+reportProvenance({
+  prov: UI_PROV,
+  items: UI_FILES.map(x => ({ path: repoPath(UI_REPO, x.abs), what: x.file,
+    counted: "swept by arms F and G, and counted into both reach floors" })),
+  instrument: "this suite's surface walk (arms F and G)",
+  corpus: `civicos-ui/: ${UI_FILES.length} file(s) walked, ${UI_REPRO.length} of them in the commit`,
+  totals: UI_PROV.inHead === null ? [] : [
+    { label: "surface files swept", contaminated: UI_FILES.length, reproducible: UI_REPRO.length, source: "files" },
+  ],
+});
 
 /* ASSERTIONS of non-limitation only. Negations — "not read as the whole of what
    exists", "cannot tell you whether all of them are here" — are the HONEST form
@@ -1428,8 +1465,13 @@ console.log(`  ARM F CORPUS: ${UI_FILES.length} files in civicos-ui/ · ` +
   `${F.functions} functions · ${F.reading} of them read one of the ${CAPPED_OPS.length} unconditionally-capped ops · ` +
   `${F.claimsAnywhere} completeness claims anywhere in the corpus`);
 
-ok("ARM F GUARD: the walk reaches a real corpus — files, functions, and functions that actually read a capped op",
-   UI_FILES.length >= 3 && F.functions >= 200 && F.reading >= 3);
+/* THE FLOOR IS THE REPRODUCIBLE FIGURE (D-257): the same walk over the committed
+   corpus alone, which is what another checkout at this HEAD reproduces. */
+const F_REPRO = completenessFindings(UI_REPRO, CAPPED_OPS);
+ok(`ARM F GUARD: the walk reaches a real corpus — files, functions, and functions that actually read a capped op — `
+   + `floored on the ${UI_REPRO.length} of ${UI_FILES.length} file(s) ${UI_HEAD_SAYS}: `
+   + `${F_REPRO.functions} functions, ${F_REPRO.reading} reading a capped op · floors 3/200/3`,
+   UI_REPRO.length >= 3 && F_REPRO.functions >= 200 && F_REPRO.reading >= 3);
 ok("ARM F GUARD: and the op roster it checks against is WALK 1's, the plane's own fact, not a list written here",
    CAPPED_OPS.includes("concerns") && CAPPED_OPS.length === OPS.size);
 
@@ -1690,8 +1732,12 @@ console.log(`  ARM G CORPUS: ${UI_FILES.length} files in civicos-ui/ · ${G.func
 console.log(`     ARM G BUCKETS: ` + Object.entries(tally).map(([k,v])=>`${k} ${v}`).join(" · "));
 for(const r of G.rows) console.log(`       ${r.verdict.padEnd(20)} ${r.file}:${r.line ?? "?"} ${r.fn}() op=${r.op} -> ${r.why}`);
 
-ok("ARM G GUARD: the walk reaches a real corpus — files, named functions, and call sites that actually read a capped op",
-   UI_FILES.length >= 3 && G.functions >= 200 && G.rows.length >= 8);
+/* THE FLOOR IS THE REPRODUCIBLE FIGURE (D-257), as at arm F. */
+const G_REPRO = envelopeWalk(UI_REPRO, CAPPED);
+ok(`ARM G GUARD: the walk reaches a real corpus — files, named functions, and call sites that actually read a capped op — `
+   + `floored on the ${UI_REPRO.length} of ${UI_FILES.length} file(s) ${UI_HEAD_SAYS}: `
+   + `${G_REPRO.functions} functions, ${G_REPRO.rows.length} site(s) · floors 3/200/8`,
+   UI_REPRO.length >= 3 && G_REPRO.functions >= 200 && G_REPRO.rows.length >= 8);
 ok("ARM G GUARD: and the roster it walks is WALK 1's, the plane's own fact, not a list written here",
    CAPPED.length === OPS.size && CAPPED.includes("concerns")
    && CAPPED.includes("connections") && CAPPED.includes("resolutions"));
