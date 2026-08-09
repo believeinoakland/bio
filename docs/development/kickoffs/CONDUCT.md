@@ -168,6 +168,33 @@ So the resolution splits in two, and the order matters:
 **A detector that keeps naming the same id after you have fixed it twice is not flaky — it
 is telling you your model of the conflict is wrong.**
 
+## `--is-ancestor` PROVES A MERGE HAPPENED. IT DOES NOT PROVE THE CONTENT SURVIVED.
+
+**Measured 2026-08-08, and it is the ancestry rule's own blind spot.** The rule
+*"after every merge, assert `git merge-base --is-ancestor <branch> HEAD`"* exists because the
+previous CONDUCT inferred merges from the absence of the word CONFLICT and ledgered four items
+that never landed. It is the right rule and it has a second edge:
+
+**A REVERTED MERGE STILL PASSES IT.** REC-69 was merged, its conflicts hand-resolved, the merged
+tree failed two ratchets, and it was backed out with `git revert -m 1`. `--is-ancestor` answers
+TRUE for `worktree-agent-a5723f4c87dfd5bd0` against `origin/main` **and every line of its code is
+gone** — `airuns.test.mjs` absent, `RUN_CONTEXTS` absent, `aiRuns` absent.
+
+So a future session auditing "did REC-69 land?" with the ancestry check alone gets **YES**, which
+is the same false green the rule was written to prevent, reached from the other direction.
+
+**When it matters — an audit, a handoff, any claim that an item IS in the tree — check for the
+CONTENT, not the ancestry:**
+
+```
+git cat-file -e origin/main:<a file the item added>
+git show origin/main:<a file it changed> | grep -c '<a symbol it added>'
+```
+
+Ancestry is the right check at the moment of merging (it catches a merge that silently did
+nothing). Content is the right check for "is it in the tree now". **They answer different
+questions and this session needed both.**
+
 **So the rule is: the moment a worker reports, SPAWN ITS REPLACEMENT BEFORE YOU MERGE
 ANYTHING.** Spawning is one tool call and costs seconds; integration costs twenty minutes.
 Doing the cheap thing first is free, and doing it second has now cost this project two
