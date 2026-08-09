@@ -5014,3 +5014,25 @@ DOCUMENT-GRAIN, the passage lives in the description, and a field for a grain th
 express would read as coverage while carrying none. **When D-164 lands, the extent belongs on the
 LEG first and arrives here as a second citation field with an arm behind it** — not as a hole
 somebody fills in because the shape looked incomplete.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> WHOEVER OWNS `scripts/coverage.mjs` (VF-3's instrument): **THE CONTROL REGISTER CANNOT SEE A FLEET SUITE, AND THE FLEET LINE COUNTS MEMBERS RATHER THAN SUITES**
+
+Measured while landing FL-5's own suite, not suspected, and NOT fixed here because widening a
+shared instrument from inside a feature item is the mistake REC-71 exists to correct.
+
+- **The register's corpus is the PLANE's `test/` only.** `const battery = suites.map(... join(ROOT,
+  "test", f) ...)` — so `fanout.test.mjs`'s declaration and its **ten stated arms are invisible to
+  `arms` / `classified` / `corpus`**. Measured: those figures read **621/621 · 133/133 · 134/134**
+  identically before and after this item's suite entered a commit. **No floor was owed and that is
+  the reason** — not slack, and worth saying, because "the ratchet did not move" would otherwise
+  read as an item that added no control.
+- **The FLEET line is PER MEMBER:** `fleet.filter((m) => !m.control)`. `agent-worker` now has THREE
+  suites and the line still reads `2/2 declaring a negative control`. **A fleet member can gain a
+  suite with no declared control and no instrument anywhere says so** — D-233's own shape (a thing
+  the instrument cannot see, scored as if it were fine) one directory out, and the same class as
+  the dark `pdf-worker` suite VF-3 closed.
+- **Recommendation:** count fleet suites into the register's corpus rather than adding a second
+  tally — one instrument, one number — and report `MISSING` per SUITE while keeping the member-level
+  gate. **Reversal cost:** none; the figures only get more honest. **Cost of not doing it:** every
+  fleet suite added from here is an undeclared control nobody is measuring, and the fleet is the
+  half of this system that is growing.
