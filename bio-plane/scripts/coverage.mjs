@@ -277,9 +277,11 @@ const REGISTER_FLOOR = {
      can still only fall if a declaration really shrinks. NAMED here rather than
      silently absorbed, and DELEGATED to M0-14's area in CLAIMS.md: two DIFFERENT
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
-  arms:       646,  // arms stated across the classified declarations
-  classified: 135,  // declarations the detector could count arms in
-  corpus:     136,  // suites the register reads
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
+     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
+  arms:       654,  // arms stated across the classified declarations
+  classified: 136,  // declarations the detector could count arms in
+  corpus:     137,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
