@@ -1719,6 +1719,21 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, reports a suite census
     "civicos-ui/check-refusal-codes.mjs",         // plane src/ AND civicos-ui/test/, reports two censuses
     "civicos-ui/test/add-surface.test.mjs",       // civicos-ui/, reports a surface census
+    /* ADDED AT INTEGRATION 2026-08-08 by CONDUCT, and it is the SAME SHAPE as the entry
+       directly above: a walk of `civicos-ui/` reporting a surface census. NAMED for that
+       precedent, and recorded as a decision rather than left as a silence.
+
+       A MERGE-INDUCED SIGHTING NEITHER WORKER COULD HAVE SEEN. D-237 widened this census to
+       reach `civicos-ui/test/`; UI-50 added a walking suite. Each branch was green alone and
+       the PAIR is red — which is exactly why the whole battery is re-run on the MERGED tree
+       rather than trusting two green reports.
+
+       WHAT NAMING DOES NOT DO, stated because the floor is real: this suite floors on
+       `DISPATCH.size > 100` and `BODIES.size > 200` read off the working tree, so an
+       untracked file in `civicos-ui/` inflates its corpus exactly as M0-15's phantom did.
+       Guarding it is a UI change and CONDUCT writes no area code, so it is ROUTED as D-257
+       rather than done here. */
+    "civicos-ui/test/version-predecessor.test.mjs", // civicos-ui/, surface census (UI-50); guarding routed as D-257
     /* ADDED AT INTEGRATION 2026-08-08 by CONDUCT, AND THE RATCHET CAUGHT IT ON THE DAY IT
        LANDED — which is the whole reason M0-16 made this a census rather than a fix.
        M-4's measurement probe arrived in the SAME integration as M0-16's census, so
