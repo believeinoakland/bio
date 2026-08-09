@@ -384,7 +384,32 @@ t("WALK: the roster is TWENTY-EIGHT ops — the sweep is the item, not the two t
    can produce a version over 500 legs — the WRITE cap is 120 — so the refusal
    would be a code nobody could drive, which PL-4 recorded as the reason to
    delete rather than ship one. The honest fact is published instead. */
-  OPS.size, 28);
+/* CORRECTED TO 26, 2026-08-08 by REC-69 — MEASURED by running the walk in this
+   worktree and taking what it PRINTED (it reported 26 against a pin of 25),
+   never by adding one to PL-14's figure. The arrival is `op=airuns`, the runs
+   attached to an inquiry or a project, and it is PL-10's ordinary kind — a NEW
+   capped read, born with its bound as a named constant beside `LIMIT ?`, so
+   nothing about the detector had to move to admit it.
+
+   WHAT IS WORTH READING ON THIS ONE IS NOT THE BOUND, IT IS WHERE THE BOUND
+   SITS RELATIVE TO THE GATE. Every read on this roster applies a cap to an
+   answer; this is the first whose cap could LEAK if it were applied in the
+   wrong order. The op is keyed by CONTEXT, and its rows are gated by the D-15
+   viewer predicate on `context_id` — so a `truncated` computed before the gate
+   would count runs the caller may not see and announce, in a boolean, that
+   hidden work exists. op=backlinks' no-count rule broken by a flag rather than
+   by a number. The gate is therefore inside the same statement as the `LIMIT`,
+   and the arm below drives exactly that with an uninvited member. */
+/* CORRECTED TO 29, 2026-08-09 at REC-69's REPLAY onto `main` — MEASURED by
+   running the walk on THIS merged tree and taking what it printed, never by
+   adding one to either side's figure. REC-69 measured 26 from a base of 25 in
+   its own worktree; `main` independently reached 28 while REC-69 sat reverted,
+   so 26 was true of a tree that no longer exists and 28 was true of a tree
+   without `op=airuns`. Neither number is the merged tree's, which is the exact
+   failure the two blocks above record twice. The paragraph above stays: its
+   subject is WHERE the bound sits relative to the gate, and that is a fact about
+   the op rather than about the count. */
+  OPS.size, 29);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -637,6 +662,39 @@ const R70_RUN = "RUN-2026-0807-bounds70";
 t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=airunlog's cap of 1 cuts it",
   (await GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=5000`)).entries?.length, 3);
 
+/* ------------------------------------------------------- REC-69's FIXTURE.
+   The context-keyed run list joined this roster as a NEW capped read. It counts
+   THE RUNS IN ONE CONTEXT, so the context needs more than one before a cap of 1
+   can be shown to bite — three, matching everything else in this file. REC-70's
+   run above is the first; two more are opened in the SAME inquiry, and a FOURTH
+   is opened in a DIFFERENT one so the count below is a measurement of the
+   context filter and not merely of the table. */
+for (const i of [2, 3]) {
+  const opened = await POST(`op=airunopen&token=mem-r57`, {
+    run: `RUN-2026-0808-bounds69-${i}`, contextType: "inquiry", contextId: "INFO-2026-0001-r57",
+    label: `REC-69 fixture run ${i} — the context list, bounded`, mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`REC-69 fixture airunopen ${i}: ${JSON.stringify(opened)}`);
+}
+{
+  const elsewhere = await POST(`op=airunopen&token=mem-r57`, {
+    run: "RUN-2026-0808-bounds69-elsewhere", contextType: "inquiry",
+    contextId: "INFO-2026-0002-r57",
+    label: "REC-69 fixture — a run in ANOTHER context", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null, bounds: [], leaseMs: 600000 });
+  if (elsewhere?.started !== true)
+    throw new Error(`REC-69 fixture airunopen elsewhere: ${JSON.stringify(elsewhere)}`);
+}
+t("FIXTURE ARMS THE TRAP: THREE runs sit in one inquiry, so op=airuns' cap of 1 has something to cut — "
++ "and a FOURTH run in a different inquiry is NOT among them, so this count measures the context filter "
++ "rather than the size of the table",
+  [(await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INFO-2026-0001-r57&limit=1000")).count,
+   (await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INFO-2026-0002-r57&limit=1000")).count],
+  [3, 1]);
+
 /* ------------------------------------------------------- PL-1 / IS-1's FIXTURE.
    The basis-version read joined this roster as a NEW capped read. An inquiry
    carrying THREE alternative accounts of its evidence is what a cap of 1 has to
@@ -817,6 +875,20 @@ const DRIVEN = [
     more: (a) => a.truncated, says: "`truncated`",
     lost: "whether these are the run's observations or its first N — and §14b.7's RESUMED run reads its own "
         + "log to continue rather than restart, so a cut it cannot see is work silently redone" },
+  /* REC-69, 2026-08-08: the CONTEXT-keyed run list, a NEW capped read. It
+     answers in `op=airunlog`'s vocabulary — `limit` beside `truncated` — and
+     reuses `op=versionchain`'s 200/1000 pair rather than minting a third,
+     because it is the same KIND of read as that one and as `op=basisversions`:
+     a KEYED lookup whose answer is a list, not a query paged through a corpus.
+     Its fixture is REC-70's run plus two more in the same inquiry, so a cap of
+     one provably bites. */
+  { op: "airuns", bite: 1, whole: 1000,
+    drive: (n) => GET(`op=airuns&token=mem-r57&contextType=inquiry`
+                    + `&contextId=INFO-2026-0001-r57&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are ALL the runs in this inquiry or the first N — and §14a's whole promise is "
+        + "that a window shows the work happening in the object in view, so a member who cannot see that "
+        + "the list was cut is a member told a teammate's investigation is not running" },
   /* PL-1 / IS-1, 2026-08-07: the basis versions of one inquiry, a NEW capped
      read. It answers in `op=versionchain`'s vocabulary — `limit` beside
      `truncated`, with `offset` — because it is the same KIND of read: a KEYED

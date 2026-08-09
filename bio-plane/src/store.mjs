@@ -103,6 +103,10 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
          MEANING_READ_CHECKS,
+         /* REC-69 / DEC-49: the C-number, the wire code and the canned
+            translation for the context-keyed run list's three refusals, as ONE
+            row read from the catalog rather than restated here. */
+         AI_RUNS_CONTEXT_CHECKS,
          /* PL-10 / DEC-49: the C-number, the wire code and the canned
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
@@ -205,6 +209,12 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    bound through ONE function — two paths that agree is the failure this
    repository has measured five times. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
+         /* REC-69: the two kinds of thing a run can be in the context of, as a
+            TEXT vocabulary read from `airun.mjs` rather than typed at the one
+            site that judges it. `op=airuns` names them back to a caller who got
+            it wrong, and a hand copy of two words agrees with itself for free —
+            which is the failure this repository has now measured six times. */
+         RUN_CONTEXTS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
@@ -20628,6 +20638,26 @@ export class Store extends DurableObject {
   static AI_RUN_LOG_LIMIT_DEFAULT = 200;
   static AI_RUN_LOG_LIMIT_MAX = 5000;
 
+  /* REC-69 — THE CONTEXT-KEYED RUN LIST'S PAIR, AND NEITHER FIGURE IS NEW.
+   *
+   * 200/1000 is `op=versionchain`'s pair, which `op=basisversions` reused
+   * rather than minting a second, and this read is the SAME KIND as both: a
+   * KEYED lookup — one context, not a query a caller pages through a corpus
+   * with — whose answer is a list of the objects hanging off that key. The log
+   * pair above is deliberately NOT reused: it bounds ONE RUN'S OBSERVATIONS,
+   * which grow one row per tick with nothing capping the tick count, and this
+   * bounds THE RUNS IN A CONTEXT, which grow one row per investigation a member
+   * launched. Different populations at different rates, so borrowing the log's
+   * 5000 ceiling here would be a figure carried across on the strength of the
+   * table name alone.
+   *
+   * WHAT THIS DOES NOT GIVE, on REC-60's sentence and `aiRunLog`'s above: a
+   * caller cut at the CEILING has no way past it. No cursor is minted (REC-55's
+   * declined-second-copy rule); the honest bound is published instead of the
+   * complete answer being promised. */
+  static AI_RUNS_LIMIT_DEFAULT = 200;
+  static AI_RUNS_LIMIT_MAX = 1000;
+
   static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
 
   /** Append ONE observation. The single write site for `ai_run_log`, which is
@@ -21082,7 +21112,7 @@ export class Store extends DurableObject {
           bound: row.stopped_bound, at: row.stopped_at }
       : null;
 
-    /* PL-12: THE MANIFEST BLOCK. Read the header above this method for what the
+    /* PL-12: THE MANIFEST BLOCK. Read the header on `aiRunRead` for what the
        three answers mean and why the comparison rather than the echo is the
        point. Computed in ONE function because `aiRunSpawnPayload`'s COMPOSING
        half publishes the same block, and two computations of "what lens was
@@ -21194,6 +21224,172 @@ export class Store extends DurableObject {
          map (DEC-8, and `op=airunlog`'s own precedent one method down). */
       stated: STANDARD_BASIS[basis],
       pair: basis === "recorded" ? { capture, connection } : null,
+    };
+  }
+
+  /** op=airuns — WHICH RUNS ARE IN THIS CONTEXT. REC-69, UI-49's delegation.
+   *
+   *  ===========================================================
+   *  THE QUESTION NO OP COULD ANSWER, AND WHY THAT MATTERED.
+   *  ===========================================================
+   *
+   *  §14a promises that *"any window focused on an inquiry or a project shows
+   *  an animated indicator that a job is running"*. UI-47 found the indicator
+   *  had no call site at all; UI-49 built one — and MEASURED, while building
+   *  it, that the plane could not be asked the question. `op=airun`,
+   *  `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
+   *  queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer,
+   *  **so the browser never learns a run id by opening one.** UI-49 therefore
+   *  fed its seam from the only source that existed — the run addresses THIS
+   *  DEVICE had already opened — which is honest, is pinned, and reaches only
+   *  the member who already held the address. §14a's promise is about the
+   *  TEAMMATE WHO DID NOT, and this method is the half that reaches them.
+   *
+   *  ===========================================================
+   *  THE GATE, AND WHY THIS SHAPE IS THE ONE THAT LEAKS IF IT IS WRONG.
+   *  ===========================================================
+   *
+   *  A run-id read is a poor leak: a caller must already hold the id. A
+   *  CONTEXT-KEYED LIST is the opposite — it takes an id a member can see on
+   *  their own screen and answers with everything hanging off it. So the gate
+   *  is not incidental here, it is the feature's whole security posture.
+   *
+   *  IT IS `#bundleGate` ON `context_id`, THE SAME PREDICATE AND THE SAME
+   *  COMPILATION POINT (D-15) that `aiRunRead`, `aiRunLog` and
+   *  `aiRunSpawnPayload` already compile. **NO SECOND PREDICATE IS WRITTEN
+   *  HERE**, and that is deliberate rather than economical: PL-11 measured that
+   *  `viewerPredicate`'s MACHINE alternation returns an unfiltered `1=1`, so a
+   *  hand-rolled gate that forgot the carve-out — or remembered it wrongly —
+   *  would hand an agent the whole store, and a hand-rolled one that forgot the
+   *  FAIL-CLOSED deny would turn a missing control-plane stamp from an outage
+   *  into a leak. Both arms are `viewerPredicate`'s and neither is restated.
+   *
+   *  THE POSTURE IS WITHHOLD, NEVER REDACT (REC-36). A run over a project the
+   *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
+   *  run that does not exist, and **no count of what was withheld is reported**
+   *  — that count is exactly the disclosure that somebody is investigating
+   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
+   *  carries the classification). It follows that a well-formed context with no
+   *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
+   *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
+   *
+   *  ===========================================================
+   *  BOUNDED, AND THE BOUND IS PUBLISHED — IC-25/IC-26's rule.
+   *  ===========================================================
+   *
+   *  `limit` is the cap AFTER clamping, never the number the caller asked for;
+   *  `truncated` is the completeness signal, in the spelling its three siblings
+   *  already use (`op=airunlog`, `op=versionchain`, `op=basisversions`) rather
+   *  than a fifth word beside the plane's four (REC-55). Both are published on
+   *  the EMPTY answer too, so a reader who sees nothing does not have to guess
+   *  which bound they would have been answered at. `cap + 1` is asked for and
+   *  `cap` delivered — `op=exportlog`'s mechanism — because the extra row is
+   *  the whole difference between "this context has 200 runs" and "here are its
+   *  first 200".
+   *
+   *  ORDER IS NEWEST FIRST, and the cut therefore falls on the OLDEST. This is
+   *  NOT `op=airunlog`, which is replayed FROM THE START by a resuming run
+   *  (§14b.7) and must keep ascending order; the question here is "what is
+   *  happening in this context", and a surface cut off from the newest run
+   *  would be a surface that cannot see the job that is running now.
+   *
+   *  NO STATUS FILTER, deliberately. A `status='running'` filter here would put
+   *  the judgement in the plane and leave a surface unable to render the run
+   *  that ENDED — which is the overclaim UI-49 removed one layer up when it
+   *  made the indicator carry the record's own status word instead of pulsing
+   *  unconditionally. The record answers what is there; the surface decides
+   *  what to draw. */
+  async aiRunsInContext({ contextType = null, contextId = null,
+                          viewer = null, limit = null } = {}) {
+    /* The helper sits ABOVE the marker, on `#refusePairComposed`'s precedent
+       and for its measured reason: the code here is a VARIABLE, so a `where`
+       that enclosed it would report a refusal the DEC-49 guard cannot compare
+       against a row. Every refusal INSIDE the region names its code as a STRING
+       LITERAL, which is what makes arm C's verdict on this site evidence. */
+    const refusal = (code, detail) => {
+      const row = AI_RUNS_CONTEXT_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail };
+    };
+    const kinds = Object.keys(RUN_CONTEXTS);
+    const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
+    const id = contextId == null ? "" : String(contextId).trim();
+
+    /* DEC-49 REGION is-airuns-context — REC-69 / C-34.1-3. The three ways the
+     * QUESTION can be malformed, and nothing else: everything below this marker
+     * is the answer, and a well-formed question about a context that holds no
+     * visible runs is answered rather than refused. */
+    if (!type)
+      return refusal("AI_RUNS_NO_CONTEXT_TYPE",
+        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. `
+        + "An inquiry and a project are different objects with different membership, so there is no "
+        + "default here that would not be answering about something you did not ask about.");
+    if (!kinds.includes(type))
+      return refusal("AI_RUNS_UNKNOWN_CONTEXT_TYPE",
+        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. `
+        + `The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. `
+        + "Answered as a refusal rather than as an empty list, because an empty list here would say "
+        + "nothing is running in a place the record does not recognise.");
+    if (!id)
+      return refusal("AI_RUNS_NO_CONTEXT_ID",
+        `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over `
+        + "the context's own id, so a blank id would ask about every context at once — a different "
+        + "question, not a wider answer.");
+    /* END DEC-49 REGION is-airuns-context */
+
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.AI_RUNS_LIMIT_DEFAULT),
+                                     Store.AI_RUNS_LIMIT_MAX));
+    /* `lower(r.context_type)` because the WRITE does not fence the word:
+       `aiRunOpen` stores `String(contextType)` verbatim, so a run opened as
+       `Inquiry` is in the record and a case-sensitive match here would answer
+       "nothing is running" over a run that plainly is. Matching case-blind is
+       the honest reading of what the record holds; fencing the WRITE is PL-5's
+       site and C-22's family, and it is DELEGATED rather than reached into. */
+    /* THE PAGE IS IDS, AND IT IS GATED — both halves matter and the second one
+       is the security property rather than a detail. The gate is applied HERE,
+       before the bound, so `truncated` counts only rows this viewer may see: a
+       `truncated: true` computed over rows they may not would announce that
+       hidden runs exist, which is op=backlinks' no-count rule broken by a flag
+       instead of by a number. */
+    const page = this.#rows(
+      `SELECT r.run FROM ai_runs r
+       WHERE lower(r.context_type) = ? AND r.context_id = ? AND ${seen.sql}
+       ORDER BY r.created DESC, r.run LIMIT ?`,
+      type, id, ...seen.args, cap + 1);
+    /* EACH ROW IS COMPOSED BY `aiRunRead` ITSELF — the list IS the read, run per
+       run, and that is the strongest available form of "the same `session`
+       shape per row".
+       WHY NOT A SHARED PRIVATE COMPOSER, which was written first and REVERTED,
+       because the reason is a finding rather than a preference: extracting the
+       block out of `aiRunRead` took `op=airun` OFF `meaning-bounds.test.mjs`'s
+       bare roster — not because the read got better, but because its unbounded
+       `ai_run_bounds` scan moved into a PRIVATE method the walk cannot follow.
+       The ratchet's FLOOR caught it immediately, which is exactly what that
+       floor is for, and REC-70's whole subject is a read the instrument could
+       not see. Calling the public method leaves `op=airun` classified exactly as
+       it was and creates no blind spot for the next reader to inherit.
+       WHAT IT COSTS, stated rather than hidden: one extra keyed lookup per row,
+       and the gate compiled once more per row through the SAME `#bundleGate`.
+       The bound above is what keeps that finite, and re-asking the gate cannot
+       widen the answer — it can only ever agree or withhold, so the redundancy
+       fails safe.
+       WHAT IT INHERITS: `op=airun`'s `budget` is a collection off an UNBOUNDED
+       scan of `ai_run_bounds`. That is a known residual on REC-70's ratchet and
+       it is untouched here rather than quietly fixed inside another item's
+       method; it is DELEGATED with the measurement. */
+    const runs = (await Promise.all(page.slice(0, cap)
+      .map((r) => this.aiRunRead({ run: r.run, viewer }))))
+      .filter((a) => a && a.found).map((a) => a.session);
+
+    return {
+      ok: true,
+      /* The context is echoed NORMALISED, so a caller sees what was actually
+         asked rather than what they typed — the same reason op=meaningrows
+         publishes the arm it resolved. */
+      context: { type, id },
+      runs, count: runs.length,
+      limit: cap, truncated: page.length > cap,
     };
   }
 
@@ -23601,6 +23797,15 @@ export class Store extends DurableObject {
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),
+        /* REC-69: the CONTEXT-keyed read, beside the three run-id-keyed ones.
+           `viewer` is the control plane's server-side stamp exactly as it is for
+           its three siblings — a caller that could name the viewer could read
+           the runs of a project it was never invited to, which is the whole
+           point of the op being gated at all. */
+        airuns: () => this.aiRunsInContext({ contextType: url.searchParams.get("contextType"),
+                                             contextId: url.searchParams.get("contextId"),
+                                             viewer: url.searchParams.get("viewer"),
+                                             limit: url.searchParams.get("limit") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

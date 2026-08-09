@@ -944,6 +944,10 @@ const OPS = {
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-69 / UI-49's delegation: the CONTEXT-keyed read. Same classes as its
+     three run-id-keyed siblings, because what a caller may see is decided by
+     the D-15 viewer stamp in the store and never by the class here. */
+  airuns:             { classes: ["admin", "member", "probe"],      mutating: false },
   /* PL-3 / IS-4 — THE SUGGEST ENDPOINT, the ONE write the investigative
      session holds (§4 group 2: it REQUESTS acquisition, it SUGGESTS, and it
      ACCEPTS nothing). It rides the SAME classes as the run ops above and for
@@ -5662,6 +5666,14 @@ export default {
            nonexistent run does — REC-25/REC-30's leak, one object over. The
            store fails closed on an absent stamp, like every op in this list. */
         || op === "airun" || op === "airunlog" || op === "airunspawn"
+        /* REC-69: the same gate, keyed the other way round. Its three siblings
+           take a RUN ID and answer about the context that run names; this one
+           takes the CONTEXT and answers about the runs in it — so it is the
+           shape that leaks if the stamp is missing, rather than the shape that
+           merely refuses. A run in a project the caller was never invited to is
+           ABSENT from the list, byte-identically to one that does not exist, and
+           the store fails closed on an absent stamp like every op in this list. */
+        || op === "airuns"
         /* PL-10 / D-220: a version chain names a BUNDLE per version, so a
            document captured inside a project the caller was never invited to
            must be absent from the chain exactly as it is absent from op=list.

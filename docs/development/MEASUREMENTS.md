@@ -5080,3 +5080,58 @@ the register's floor met EXACTLY, with the six new arms scoring zero. They are L
 (`(D-235a)`) rather than numbered, and the register says in its own output that a labelled
 arm is not counted. **This is the same blindness REC-75 measured on the same file and the
 same day, reproduced by an item that did not set out to measure it.**
+---
+
+## 2026-08-08 · REC-69 · `op=airuns`, and FOUR figures measured rather than carried
+
+**Instrument: `bio-plane/scripts/battery.mjs`, `bio-plane/test/airuns.control.mjs`,
+`bio-plane/test/airuns.test.mjs`'s own index sweep, `civicos-ui/check-refusal-codes.mjs`.**
+
+**1 · THE BATTERY, ATTRIBUTED BY RE-RUNNING THE TRUE BASELINE IN THIS WORKTREE.**
+`124/124 green · 7,811 assertions` → `125/125 green · 7,864`. The brief carried ~7,815;
+**the measured figure is 7,811, and the item's brief was stale — the tenth consecutive
+item to find that by measuring.** The delta is `+53` and every unit of it is attributed:
+`airuns.test.mjs` NEW at 46, `bounds.test.mjs` 147 → 152 (the roster pin and the new op's
+four live arms), `hygiene.test.mjs` 504 → 507 (a per-file sweep, and this item adds files
+to `test/`). **120 counted suites moved by ZERO.** The baseline was produced by reverting
+the item's eight files to HEAD in this worktree and re-running, then restoring and
+verifying every restore by sha256 AND by `cmp` against uniquely-named pristine copies.
+
+**A MEASUREMENT HAZARD WORTH RECORDING, because it nearly produced a false number.** The
+first "after" run was written to a generically-named scratchpad file that ANOTHER
+concurrent checkout was also writing. The tail read `125/125 · 7,864` — the right answer
+by coincidence — while the file's body listed a suite this worktree does not have
+(`provenance-marker.test.mjs`), no `airuns.test.mjs`, and a RED `hygiene`. **A tally read
+from a file another process is writing is not a measurement of your tree**, and the only
+reason it was caught is that the per-suite attribution disagreed with the headline. Every
+figure here was re-produced with uniquely-named files.
+
+**2 · THE INDEX SWEEP — 11 ACCESS PATHS BUILT FOR A QUESTION NO OP ASKS.** REC-69's own
+shape, generalised and made mechanical: **79 indexes are declared in `schema.mjs`; 68
+have a statement in `store.mjs`/`query.mjs` filtering their leading column; 11 do not.**
+`ai_runs_context ON ai_runs(context_id)` was one of them — declared the day IS-6 landed,
+with nothing in the plane filtering `ai_runs` by `context_id` until this op. Three of the
+remaining eleven were read by hand rather than trusted to the regex:
+`links(source_bundle)` appears only in an INSERT's column list and one projected field;
+`tasks(assignee)` appears only as a field set to `null`; `inquiry_basis(grade_source)`
+appears only where a row is PROJECTED. **What the sweep can see: an index whose leading
+column no `WHERE`/`AND` clause names. What it CANNOT: an index reached only through a
+JOIN's ON clause, one filtered through a dynamically composed fragment, and — the big one
+— a missing question that nobody built an index for. It is a FLOOR on the class, never a
+census.** Ratcheted both ways in `airuns.test.mjs`.
+
+**3 · THE DEC-49 GUARD'S FLOORS, ALL MOVED FROM PRINTED FIGURES.** families 13 → 14, rows
+145 → 148, census 406 → 409, reach 200 → 203, governedSites 59 → 60, regions 46 → 47,
+regionLines 1263 → 1281, codesChecked 115 → 118, vocabularies 8 → 9, vocabularyTerms
+51 → 53. **The `reachGap` CEILING did NOT move and stands at 42** — three new codes
+arrived already translated, which is the property a new family owes. **`regionLines` is a
+property of the MERGED source**: several workers are in `store.mjs` concurrently, so if
+any lands a line inside one of the other 46 spans this figure must be re-read from a
+green run of the merged tree.
+
+**4 · THE CONTROL REGISTER, RAISED AND NOT MOVED.** `scripts/coverage.mjs --strict`
+prints `arms 481/471 · classified 121/119 · corpus 122/120`. **The floor was already 4
+arms behind on `main` before this item touched anything** (it read `475/471` on the
+untouched tree), and this item's one new suite takes it to 481. It is NOT edited here:
+`bio-plane/scripts/coverage.mjs` is M0-14's ground and two items moving one shared floor
+in parallel is the collision UI-48 and CPDF-9 each declined to cause. Raised for CONDUCT.

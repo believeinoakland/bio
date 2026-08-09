@@ -5735,6 +5735,77 @@ export const AI_RUN_CHECKS = {
 };
 
 /* ===========================================================================
+ * REC-69 — THE CONTEXT-KEYED RUN LIST'S REFUSALS. C-34, THREE NUMBERS.
+ *
+ * `op=airuns&contextType=&contextId=` answers the one question about a run
+ * that no op could answer at all: WHICH RUNS ARE IN THIS CONTEXT. Every other
+ * `ai_runs` read is keyed by RUN ID — measured by UI-49 at all 14 sites — so a
+ * window could show a run only to the member who already held its address, and
+ * §14a's promise is about the teammate who did not.
+ *
+ * WHY THIS IS A NEW FAMILY RATHER THAN THREE MORE C-22 ROWS, since C-22's own
+ * header warns that a new `*_CHECKS` family is a floor somebody must move.
+ * C-22's invariant is stated there: its rows are facts about THE RUN OBJECT,
+ * refused where the object is WRITTEN — the observation's absence word, the
+ * ending's condition, the bound that stopped it, the three conditions the run
+ * was formed under. **None of these three is a fact about a run.** They are
+ * facts about THE QUESTION A CALLER ASKED, refused at a READ that may well
+ * match no run at all — MEANING_READ_CHECKS' shape one construct over, and that
+ * family is the precedent this one follows rather than C-22's. The floor in
+ * `civicos-ui/check-refusal-codes.mjs` is moved in the same turn, from the
+ * figure the guard PRINTED.
+ *
+ * WHY THEY ARE REFUSALS AND NOT AN EMPTY ANSWER, which is the whole judgement
+ * here. An unrecognised context kind that answered `runs: []` would tell a
+ * member THERE ARE NO RUNS HERE — a claim about the record manufactured out of
+ * a caller's typo, which is the failure this repository ranks worst (REC-52,
+ * D-197) and the one `op=meaningrows` refuses for the same reason one table
+ * over. The absence must be distinguishable from the mistake, so the mistake
+ * stops.
+ *
+ * AND WHAT IS DELIBERATELY *NOT* REFUSED, because it is the same distinction
+ * read the other way: a context that is REAL, well-formed, and holds no runs —
+ * or holds runs the caller may not see — answers an ordinary EMPTY LIST. The
+ * viewer gate withholds the row whole (REC-36) and publishes no count of what
+ * it withheld, so "no runs here" and "no runs you may see" are ONE answer BY
+ * CONSTRUCTION rather than by care. A fourth code for the unviewable case would
+ * be the leak wearing a refusal's clothes.
+ * ========================================================================= */
+export const AI_RUNS_CONTEXT_CHECKS = {
+  /* No kind named at all. There is no honest default: `inquiry` and `project`
+     are different objects with different membership, and answering from one
+     when the caller meant the other is a confidently wrong answer about a
+     different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
+  AI_RUNS_NO_CONTEXT_TYPE: {
+    check: 'C-34.1',
+    where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
+    translation: 'That request did not say what kind of thing to look in. '
+      + 'Background work is attached either to a question or to a project, and those are '
+      + 'different places — so the record asks which rather than choosing one for you.',
+  },
+  /* A kind was named and the record has no such context. Refused rather than
+     answered empty: see the header — an empty answer here would be the record
+     saying nothing is running, on the strength of a word it did not recognise. */
+  AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
+    check: 'C-34.2',
+    where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
+    translation: 'Background work is not attached to anything of that kind. '
+      + 'Rather than answer as though nothing were running there, the record says so '
+      + 'and names the kinds of thing it does attach work to.',
+  },
+  /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
+     would ask the record about every context at once — which is not a wider
+     answer, it is a different question nobody asked. */
+  AI_RUNS_NO_CONTEXT_ID: {
+    check: 'C-34.3',
+    where: 'src/store.mjs aiRunsInContext > is-airuns-context, reached from op=airuns',
+    translation: 'That request named a kind of thing but not which one. '
+      + 'Background work belongs to a particular question or a particular project, '
+      + 'and the record answers for the one you are looking at rather than for all of them.',
+  },
+};
+
+/* ===========================================================================
  * PL-9 / D-222 OPTION C — THE MEANING-GRAIN READ'S REFUSALS.
  *
  * `op=meaningrows` is a SEVENTH STATEMENT SHAPE on the query compiler, not a
