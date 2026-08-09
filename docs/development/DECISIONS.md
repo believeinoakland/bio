@@ -4554,8 +4554,17 @@ enacted: 2026-08-09 · CONDUCT · **THIS ONE CHANGES SHIPPED BEHAVIOUR, so it be
   participation, `contribute` stays as the floor, and the refusal NAMES which of the two it failed —
   because "you are not in this project" and "you lack contribute" are different facts about a member and
   a single refusal covering both tells them nothing they can act on.
-  The provisional keeps running until PL-18 lands. It is NARROWER than the ruling, so nothing is
-  permitted meanwhile that the ruling would forbid — the safe direction, and stated rather than assumed.
+  The provisional keeps running until PL-18 lands. ~~It is NARROWER than the ruling, so nothing is
+  permitted meanwhile that the ruling would forbid — the safe direction.~~ **CORRECTED 2026-08-09 BY
+  PL-18, WHICH MEASURED IT: that claim is FALSE on the axis the ruling is about.** `contribute` alone
+  permitted a `contribute`-holder OUTSIDE the project, which is exactly what the ruling forbids. The
+  two gates are not nested — they are different questions — and CONDUCT asserted a containment
+  between them without measuring it. The provisional was more permissive in one direction and less
+  in the other, so "the safe direction" was never available to claim. **The accepts-when is what
+  settles the reading and it is unambiguous.** Left standing with the correction beside it rather
+  than edited away: a wrong reassurance about a live gate is worth more as a record than as a
+  deletion, and the failure mode was mine — reassuring in prose about a relationship I had not
+  measured, in the same breath as telling workers to measure.
   reasoning now carried by: this entry; `INVESTIGATIVE-SESSION.md` §3.
 
 ### DEC-62 · answered
