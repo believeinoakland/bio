@@ -4346,7 +4346,7 @@ reasoning recorded in: docs/development/INVESTIGATIVE-SESSION.md §14a (the full
   consequences).
 enacted: 2026-08-07 · CONDUCT — recorded as a BINDING CONSTRAINT on the items that build the run rather than as separate work, which is what the ruling implies: transcripts are internal notes — **device-local, TTL'd, deleted as part of the publication process, and NEVER in the record store.** IS-6 already carries the half that reaches the plane (the observation log is never written into `bundle.md`); the device-local and TTL halves bind the surface and the run harness, so they sit with **IS-6 and IS-9**. Raised retroactively by session BOB precisely because the ruling existed only in a design document — the register's founding rule is that a Bob ruling lives in the register — and that is why no queue item is owed beyond the constraint being carried. Reasoning in this entry and INVESTIGATIVE-SESSION.md §14a.
 
-### DEC-66 · open
+### DEC-66 · answered
 for: bob
 raised: 2026-08-08 · CONDUCT (from SK-1, which shipped the strict shape, refused the loose one by name, and left the widening reversible)
 subject: A run's skill version must NAME ITS PACK (`<pack>@<edition>`), not merely be non-empty — is a bare edition a version, or a number nobody can resolve later?
@@ -4368,7 +4368,20 @@ recommendation: **KEEP (a).** The whole point of recording the condition is that
 
 cost of reversal: **LOW IN ONE DIRECTION AND HIGH IN THE OTHER, which is why the strict shape ships first.** Widening (a) to (b) later costs one predicate and strands nothing — every stored version already names a pack. Narrowing (b) to (a) later cannot repair the records written meanwhile: the runs that would say which pack are finished, so those rows stay unresolvable permanently.
 
-### DEC-65 · open
+response: **KEEP (a) — a version names its pack, and a bare edition stays refused by name.**
+  Decided 2026-08-09 by session BOB under Bob's standing delegation of tactical decisions
+  (2026-08-07/08-09). The entry's own reasoning is the record's reasoning: a value that
+  LOOKS like an answer while naming nothing is the overclaim class this project ranks worst;
+  the distribution model makes bare editions permanently unresolvable the day a group runs
+  its own pack; and the reversal asymmetry (widening strands nothing, narrowing cannot
+  repair) says the strict shape ships first. The deliberate non-check — any well-formed
+  pack accepted, including one this repository never wrote — is confirmed as part of the
+  ruling, for the entry's own reason: pinning to the current pack would destroy the very
+  distinguishability being bought.
+decided: 2026-08-09 · session BOB (delegated)
+reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §11/§14a (the run records its
+  skill version); DEC-54 (the pin-the-version precedent).
+### DEC-65 · answered
 for: bob
 raised: 2026-08-08 · CONDUCT (from PL-3, which met the gap, refused by name rather than engineering around it, and recommended where the fix belongs)
 subject: A BACKGROUND run cannot propose a reading that rests on documents — is that the intended reach, or an accident of two checks meeting?
@@ -4403,7 +4416,22 @@ amended recommendation: **still take (b) — the arithmetic argument holds** (wi
 
 cost of reversal (unchanged): **LOW TODAY AND RISING**, and FL-3 wrote nothing under either shape.
 
-### DEC-64 · open
+response: **TAKE (b) AS AMENDED BY FL-3 — the exemption is built in the OWNING items, with
+  the third `asserted_by` state minted first.** Decided 2026-08-09 by session BOB under
+  Bob's standing delegation. The arithmetic argument stands (one part → no maximum to take →
+  DEC-32's conservative default either way), and FL-3's three measurements shape the build:
+  PL-1 mints the third state for `asserted_by` — an explicit "no independent-sufficiency
+  claim was made" value, which is undetermined-is-first-class applied to that field, so a
+  machine's single-part row never wears a member's meaning; then the check (C-25.6) and
+  PL-3's endpoint guard (the site that fires first) change together in the item that owns
+  those files, per the DELEGATION already filed; PL-14 re-measures the strength pair over
+  grounds after. Until that lands, (a) stands as the running provisional — exercised, not
+  merely surviving, per FL-3's B5/B6 trace. The C-number correction is noted with thanks:
+  the wrong number was caught exactly because the change went to the check before the edit.
+decided: 2026-08-09 · session BOB (delegated)
+reasoning recorded in: this entry (FL-3's measurements and disposition); DEC-32 (the
+  conservative default); CLAIMS.md (the delegation).
+### DEC-64 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
 subject: Should a surface state a bound the record APPLIED but that did not BITE?
@@ -4422,6 +4450,16 @@ recommendation: **keep (a).** UI-39's argument is the one that decides it: **a b
 
 cost of reversal: **LOW — one line in the shared function, plus two pins.** The wording deliberately lives in one place, so both screens move together whichever way you rule, and a future DEC-49 ruling on the wording moves them the same way.
 
+response: **KEEP (a) — the bound is stated always.** Decided 2026-08-09 by session BOB under
+  Bob's standing delegation. The record already rules this: silence that reads as
+  completeness is the failure class the whole bounded-ops line exists to close (REC-57,
+  UI-39, DEC-56/57/58's ACT-AND-SAY principle) — a bound stated only sometimes converts its
+  absence into a claim nobody made. The stated cost (a figure on the common path) is
+  accepted as the cheaper harm; it is presentation, and any future DEC-49-vocabulary pass
+  moves both screens through the one shared function.
+decided: 2026-08-09 · session BOB (delegated)
+reasoning recorded in: this entry; REC-57/IC-23 (the bound discipline); DEC-56/57/58 (act
+  and say what you could not establish).
 ### DEC-63 · open
 for: bob
 raised: 2026-08-07 · CONDUCT (from IS-6, which shipped a provisional and asked)
