@@ -563,6 +563,20 @@ const html = (sel) => (els.get(sel) || {}).innerHTML || "";
 
 /* ==========================================================================
  * ARM A — THE WRITE. The item's centre.
+ *
+ * WHAT ARM A NOW DRIVES, RECORDED 2026-08-08 (UI-50) BECAUSE IT MOVED UNDER IT
+ * AND EVERY ASSERTION BELOW STAYED GREEN — which is worth saying out loud, since
+ * a suite that passes through a change is either measuring something durable or
+ * measuring nothing. `heldMatch`'s address arm now asks `op=versionchain` first
+ * and takes the LAST version at the address as the predecessor; the paged
+ * `op=search` walk survives underneath it as an IDENTITY-ONLY backstop for a
+ * bundle registered without a `captured_locators` row. This fixture serves no
+ * chain, so the chain is UNESTABLISHED here and ARM A drives that backstop —
+ * deliberately, and it is the arm that keeps UI-39's property alive: a match at
+ * row 600 of 700 must still be found, the walk must still page on the plane's
+ * own total, and `op=promote` must still never reach the wire. The DIFFERENT
+ * question UI-50 asks — WHICH of the versions the record then names — is
+ * `version-predecessor.test.mjs`'s, over a sixty-version chain.
  * ========================================================================== */
 
 const DOC = Buffer.from("%PDF-1.7 sewer fund transfers, as published");
@@ -744,6 +758,24 @@ ok("ARM A · and it states which bound stopped it rather than implying completen
         return { hits:[{ bundle_id:HELD2, title:"Sewer fund report" }], total:1,
                  limit:Number(p.limit)||LIMIT_MAX, offset:Number(p.offset)||0 };
       return { hits:[], total:0, limit:1, offset:0 };
+    }
+    /* ADDED 2026-08-08 (UI-50), and its absence is why this arm went red rather
+       than a fault in the arm. The changed-from sentence is no longer composed
+       off whichever row the FTS query put first: `heldMatch` asks
+       `op=versionchain` for the LAST version at the address and names THAT one.
+       So a fixture that wants a genuine changed re-capture has to hold a chain.
+       ONE version here, which is the whole history this arm needs; the
+       sixty-version case where the difference between the first row and the last
+       one is visible is `version-predecessor.test.mjs`'s subject. */
+    if(op === "versionchain"){
+      const versions = [{ capture_sha:OLD_SHA, bundle_id:HELD2, first_retrieved:"2026-08-01T00:00:00Z",
+                          last_retrieved:"2026-08-01T00:00:00Z", observations:1, sightings:1,
+                          via:["direct"], address:ADDRESS }];
+      const off = Number(p.offset) || 0, lim = Math.max(1, Number(p.limit) || 200);
+      const page = versions.slice(off, off + lim);
+      return { ok:true, address_norm:ADDRESS, documents:1, versions:page, count:page.length,
+               total:versions.length, limit:lim, offset:off,
+               truncated: off + page.length < versions.length, at:null, at_index:null, predecessor:null };
     }
     if(op === "projection")
       return { bundle_id:HELD2, title:"Sewer fund report", content_hash:`sha256:${OLD_SHA}` };
