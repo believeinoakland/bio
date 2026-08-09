@@ -107,10 +107,35 @@ import { fileURLToPath } from "url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..", "bio-plane");
+/* D-257 / M0-16 — THE TWO WALKS BELOW READ THE WORKING TREE AND THIS FILE'S
+   `FLOOR` TABLE IS MOVED BY HAND TO FIGURES A GREEN RUN PRINTED. That pairing is
+   exactly D-238's payload: `refs/stash` is repository-wide across all sixty
+   worktrees and `git stash push -u` carries untracked files, so a phantom
+   `src/*.mjs` or a phantom suite raises the census or the reach, somebody moves
+   the floor to the figure the run printed, and the floor is then PERMANENTLY TOO
+   HIGH — it fails every honest run afterwards until the gate gets switched off.
+   The census and the reach are still computed over the whole working tree (a
+   code minted in uncommitted work is still a code, and the GAP ceiling must
+   still see it — that direction fails safe); the FLOORS are computed over
+   `git ls-tree HEAD` alone, which is the figure another checkout reproduces and
+   the only one this table may be moved to. */
+import { readGitProvenance, repoPath, reportProvenance } from "../bio-plane/scripts/provenance.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
 const TESTDIR = path.join(HERE, "test");
+const REPO = path.join(HERE, "..");
+const PROV = readGitProvenance(REPO);
+/* True for everything when git cannot answer — which is UNVERIFIED, printed as
+   UNVERIFIED by `reportProvenance`, and never reported as clean (D-233). */
+const inCommit = abs => PROV.inHead === null || PROV.inHead.has(repoPath(REPO, abs));
+/* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4), and it binds this file's
+   own NOTEs as well as the report: a line reading "in the commit at HEAD
+   (unverified)" claims the commit in the same breath as admitting it could not
+   look, which is D-233. Found by D-257's control ARM 3. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+  : `in the commit at HEAD (${PROV.headSha})`;
 
 const fails = [];
 const notes = [];
@@ -279,18 +304,49 @@ const FLOOR = {
      the new module mints codes; `unclassifiedOutcomes` is UNCHANGED at 3, and
      none of the new sites is among them.
    */
-  families:     15,    // + ROUTE_MARK_CHECKS (REC-63);
+  /* ================================================================== *
+   * TEN FLOORS MOVED IN ONE TURN, 2026-08-09, at REC-69's REPLAY onto `main`,
+   * EVERY ONE FROM THE FIGURE THIS GUARD PRINTED ON A GREEN RUN OF THE MERGED
+   * TREE — and the reason they were ALL stale is the finding, not the arithmetic.
+   *
+   * **THE 2026-08-08 MERGE SILENTLY DROPPED THIS ENTIRE FILE.** REC-69's branch
+   * (`2d9c57b`) changed `civicos-ui/check-refusal-codes.mjs` by 70 lines, moving
+   * every floor below in the same turn as the family that invalidated them —
+   * measured here by `git diff 722c37b 2d9c57b --stat`. The merge commit
+   * `e241672` carried ELEVEN files and NOT this one (`git diff 7e5f9b0 e241672
+   * --stat`), so the floor moves never landed, and the `git revert -m 1` that
+   * backed the merge out could not remove what was never there. **The replay
+   * therefore restores the code WITHOUT the floors, and nothing failed** —
+   * because a dropped floor move does not go red, it goes SLACK. That is the
+   * dangerous direction: `--strict` exit 0, battery green, UI harness green, and
+   * ten ratchets quietly carrying between 1 and 18 of headroom. The only reason
+   * this was caught is that the figures were re-read from the printed run rather
+   * than trusted. **A hand-resolved merge can drop a whole file and every
+   * instrument in this repository will report success.**
+   * ================================================================== */
+  families:     16,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+                       // + ROUTE_MARK_CHECKS (REC-63);
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
-                       // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        163,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
+                       // Was 15 at REC-63, 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
+                       /* C-22's own header states the tax this line charges: *"a new `*_CHECKS`
+                          family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack
+                          for everybody else's walk unless it is moved in the same turn"*. It is
+                          moved in the same turn — for the SECOND time, the first having been
+                          dropped by the merge. */
+  rows:        166,    // + C-36.1..3 (REC-69, all three DRIVEN through the op).
+                       // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
                        // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
-                       // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      424,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+                       // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
+  census:      427,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
-                       // (was 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // (was 424 pre-REC-69, 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
+                       // REC-69: +3 (C-36.1..3), MOVED FROM THE PRINTED FIGURE and set EQUAL to it,
+                       // for the reason the paragraph below gives in a number: SIX of slack blinds the
+                       // widest matcher in this file completely, so three is already half of that —
+                       // which is exactly how much the dropped merge left sitting here.
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
                           answer is SIX. Arm 3 of `bio-plane/test/nc-rec64.mjs` neuters M2 — the widest
                           matcher, the one that earned the matcher set — and the union falls 406 -> 401.
@@ -300,9 +356,13 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       217,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 66,   // spans named by a row's `where` — a function, or a region inside one.
-                       // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
+  reach:       220,    // codes a surface can receive (R1 + R2 + R3) (was 217 pre-REC-69, 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+                       // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
+                       // move, which is the property a new family owes rather than the number itself.
+                       // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
+  governedSites: 67,   // spans named by a row's `where` — a function, or a region inside one.
+                       // + REC-69's `aiRunsInContext > is-airuns-context`.
+                       // (was 66 pre-REC-69, 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -313,7 +373,10 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      53,    // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
+  regions:      54,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+                       // its `refusal` helper sits ABOVE the marker so every call inside the span
+                       // names its code as a STRING LITERAL, which is what makes arm C bite here).
+                       // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
                        // that could not be written until arm C could see a computed verdict).
                        // + REC-63's ONE (is-route-mark, judging 4 and comparing 4). + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
                        // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
@@ -327,7 +390,17 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1407,   /* MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
+  regionLines: 1425,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+                          OF THE MERGED TREE and not taken from REC-69's branch — which is the whole
+                          instruction the two prior entries below leave, honoured here rather than
+                          quoted. The 18 are `is-airuns-context`'s own span and nothing else: the
+                          three malformed-question refusals, and REC-69 opened no line inside any of
+                          the other 53 spans. **AND THE STANDING NOTE EARNED ITSELF AGAIN — this
+                          figure has now moved at integration five times out of six.** REC-69's own
+                          branch computed 1281 against a base of 1263; `main` reached 1407 without it
+                          while it sat reverted, so neither number was ever true of this tree.
+                          PRIOR ENTRY, kept as the receipt for how this figure moves:
+                          MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
                           green run of that worktree. The 21 are `is-selection-moved`'s own span and
                           nothing else — REC-76 opened no line inside another item's region. **NOTE FOR
                           THE INTEGRATOR: THIS FIGURE HAS MOVED AT INTEGRATION FOUR TIMES OUT OF FIVE
@@ -392,8 +465,12 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 141,   // refusal codes actually COMPARED against a family row — NOT the same as
-                       // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
+  codesChecked: 144,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+                       // ABOVE the marker and every call inside it names its code as a STRING LITERAL,
+                       // which is the convention the note below says is what makes arm C bite.
+                       // refusal codes actually COMPARED against a family row — NOT the same as
+                       // refusals JUDGED, and not the same as lines read. Was 141 pre-REC-69,
+                       // 119 pre-REC-76 (and 118 on
                        // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
                           BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed
@@ -434,18 +511,29 @@ const FLOOR = {
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 143,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
+  refusalsJudged: 146,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+                          printed figure on a green run of the merged tree. `outcomeReturns` does NOT
+                          move: the three refusals are all return positions inside ONE outcome the
+                          walk already counted, which is what the two figures being separate is for.
+                          REC-76 — the YIELD: outcomes graded as refusals rather than as declared
                           successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
                           a walk that had lost every spelling but one would still have cleared. */
-  vocabularies:  9,    // the plane's own code->text maps a surface renders verbatim (arm E).
-                       // WAS 8. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
+  vocabularies: 10,    // the plane's own code->text maps a surface renders verbatim (arm E).
+                       // + REC-69's `RUN_CONTEXTS` in src/airun.mjs — the two kinds of thing a run can
+                       // be in the context of, held as a TEXT vocabulary rather than typed at the one
+                       // site that judges them, so `op=airuns`' refusal names them in words a member
+                       // reads. **It landed inside this arm the moment it was written, because the arm
+                       // harvests BY SHAPE and not by name** — which is the property that was worth
+                       // building, and it is proved here by an item that never had to register it.
+                       // WAS 9. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
                        // run's declared standard pair can be known, each carrying the sentence a
                        // member reads instead of the machine word. Moved IN THE SAME TURN from
                        // the figure THIS FILE PRINTED on a green run (9/56), never by adding to
                        // the number: five consecutive items found this block already stale by
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
-  vocabularyTerms: 56, // WAS 51 (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
+  vocabularyTerms: 58, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
+                       // WAS 56, and 51 before that (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
                        // FINDING slug. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
@@ -567,16 +655,22 @@ let FAMILY_CODES = new Set();
 
 function planeCensus() {
   const files = fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"));
-  const yields = {}, union = new Set();
+  const yields = {}, union = new Set(), unionRepro = new Set();
   for (const name of Object.keys(MATCHERS)) yields[name] = new Set();
+  const off = [];
   for (const f of files) {
-    const src = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
+    const abs = path.join(PLANE_SRC, f);
+    const committed = inCommit(abs);
+    if (!committed) off.push(f);
+    const src = fs.readFileSync(abs, "utf8");
     for (const [name, fn] of Object.entries(MATCHERS))
-      for (const c of fn(src)) { yields[name].add(c); union.add(c); }
+      for (const c of fn(src)) { yields[name].add(c); union.add(c); if (committed) unionRepro.add(c); }
   }
+  /* The family rows come from `checks/bio-checks.mjs`, a NAMED path rather than a
+     discovered one, so they belong to both unions on the same terms. */
   yields["M6 a DEC-49 row"] = new Set(FAMILY_CODES);
-  for (const c of FAMILY_CODES) union.add(c);
-  return { files: files.length, yields, union };
+  for (const c of FAMILY_CODES) { union.add(c); if (inCommit(CATALOG)) unionRepro.add(c); }
+  return { files: files.length, filesRepro: files.length - off.length, yields, union, unionRepro };
 }
 
 /* ============================================================
@@ -739,12 +833,18 @@ function armB(rows, census, surfaceTables) {
      mints it. Without the intersection this would harvest every constant name
      in two large files and call the noise "reach". */
   const R2 = new Set([...screamingLiterals(app)].filter(c => census.union.has(c)));
-  const R3 = new Set();
-  for (const s of suites)
+  const R3 = new Set(), R3repro = new Set();
+  for (const s of suites) {
+    const committed = inCommit(path.join(TESTDIR, s));
     for (const c of screamingLiterals(fs.readFileSync(path.join(TESTDIR, s), "utf8")))
-      if (census.union.has(c)) R3.add(c);
+      if (census.union.has(c)) { R3.add(c); if (committed) R3repro.add(c); }
+  }
 
   const reach = new Set([...R1, ...R2, ...R3]);
+  /* THE REACH FLOOR IS THE REPRODUCIBLE ONE (D-257). `suites` is discovered off
+     `civicos-ui/test/`; `app.html` and the catalog are NAMED paths and cannot be
+     inflated by an arrival, so R1 and R2 sit in both figures unchanged. */
+  const reachRepro = new Set([...R1, ...R2, ...R3repro]);
 
   /* THE TRANSLATIONS AVAILABLE, from the two licensed places and no third.
      DEC-49 licenses BOTH — Bob left build-time and runtime lookup open — but it
@@ -797,9 +897,35 @@ function armB(rows, census, surfaceTables) {
      rather than an impression. */
   const gap = [...reach].filter(c => !translated.has(c)).sort();
 
-  if (reach.size < FLOOR.reach)
-    FAIL(`the reach is ${reach.size} codes, floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
+  if (reachRepro.size < FLOOR.reach)
+    FAIL(`the reach is ${reachRepro.size} codes that are in the commit at HEAD (${reach.size} over the `
+       + `working tree), floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
        + `failure a ceiling cannot see. Establish which of R1/R2/R3 stopped yielding before moving the floor.`);
+
+  /* ONE PROVENANCE REPORT FOR BOTH WALKS — the plane sources the census read and
+     the suites R3 was harvested from, plus the two named paths, so a reader owed
+     the corpus is owed all of it (M0-16 rule 3: print the reproducible total
+     beside the contaminated one, at the place the figure is quoted). */
+  reportProvenance({
+    prov: PROV,
+    items: [
+      ...fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"))
+        .map(f => ({ path: repoPath(REPO, path.join(PLANE_SRC, f)), what: `src/${f}`,
+          counted: "matched for refusal codes, and counted into the census floor" })),
+      ...suites.map(s => ({ path: repoPath(REPO, path.join(TESTDIR, s)), what: `test/${s}`,
+        counted: "harvested for R3, and counted into the reach floor" })),
+      { path: repoPath(REPO, APP), what: "app.html", counted: "harvested for R2 (a NAMED path, not discovered)" },
+      { path: repoPath(REPO, CATALOG), what: "checks/bio-checks.mjs",
+        counted: "the DEC-49 families, R1 (a NAMED path, not discovered)" },
+    ],
+    instrument: "this guard's census and reach walks",
+    corpus: `bio-plane/src/: ${census.files} file(s), ${census.filesRepro} in the commit`
+      + ` · civicos-ui/test/: ${suites.length} suite(s)`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "census codes", contaminated: census.union.size, reproducible: census.unionRepro.size, source: "plane sources" },
+      { label: "codes in reach", contaminated: reach.size, reproducible: reachRepro.size, source: "sources and suites" },
+    ],
+  });
 
   if (gap.length > CEILING.reachGap)
     FAIL(`${gap.length} code(s) a surface CAN RECEIVE have no canned translation; the ratchet's ceiling is `
@@ -809,8 +935,10 @@ function armB(rows, census, surfaceTables) {
        + `than wording at the call site, then lower this ceiling in the same turn.`);
 
   NOTE(`arm B: REACH ${reach.size} codes — R1 family rows ${R1.size}, R2 named by app.html ${R2.size}, `
-     + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · floor ${FLOOR.reach}`
-     + `${reach.size > FLOOR.reach ? ` · GREW by ${reach.size - FLOOR.reach}` : ""}`);
+     + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · `
+     + `${reachRepro.size} of them ${HEAD_SAYS}, which is the figure `
+     + `floored and the one a floor may be moved to · floor ${FLOOR.reach}`
+     + `${reachRepro.size > FLOOR.reach ? ` · GREW by ${reachRepro.size - FLOOR.reach}` : ""}`);
   NOTE(`arm B: enacted perimeter ${perimeter.size} codes, ALL translated, gated at zero — `
      + `${R1.size} plane rows + ${perimeter.size - R1.size} minted into a surface table proved total`);
   NOTE(`arm B: RATCHET — ${gap.length} of ${reach.size} codes in reach still have no canned translation `
@@ -1602,9 +1730,14 @@ for (const [, table] of families) for (const c of Object.keys(table)) FAMILY_COD
 const census = planeCensus();
 for (const [name, set] of Object.entries(census.yields))
   NOTE(`walk: ${name.padEnd(20)} ${String(set.size).padStart(4)} codes`);
-NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src · floor ${FLOOR.census}`);
-if (census.union.size < FLOOR.census)
-  FAIL(`the plane census is ${census.union.size} refusal codes, floor is ${FLOOR.census}. The WALK lost `
+NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src`
+   + ` · ${census.unionRepro.size} of them from the ${census.filesRepro} file(s) ${HEAD_SAYS} · floor ${FLOOR.census}`);
+/* THE FLOOR IS COMPARED AGAINST THE REPRODUCIBLE CENSUS (D-257), and that is the
+   figure to move this table to. A floor moved to a contaminated run's number is
+   permanently too high — the payload D-238 names. */
+if (census.unionRepro.size < FLOOR.census)
+  FAIL(`the plane census is ${census.unionRepro.size} refusal codes that are in the commit at HEAD `
+     + `(${census.union.size} over the working tree), floor is ${FLOOR.census}. The WALK lost `
      + `sight — read the per-matcher line above to see which spelling stopped yielding. This is REC-70's `
      + `failure exactly, and a ceiling alone would have stayed green through it.`);
 

@@ -76,6 +76,13 @@
  *       **95 pass, 3 FAIL**: the pinned-op-set arms fail in BOTH suites; the
  *       write arms hold, because the gained op is non-mutating — which is
  *       exactly why a write test alone would not catch it.
+ *       **RE-MEASURED 2026-08-09 UNDER FL-5, WHICH MOVED THIS ARM'S SITE: harness
+ *       193/1 and member 96/2, still AS DECLARED.** FL-5 gave the member a second
+ *       CONSUMER of PL-9's read and routed both through one `meaningRead` helper,
+ *       so the arm now inserts the second reader beside the citation re-read. The
+ *       old find-string no longer exists in the source, and an arm whose patch
+ *       matches zero times reports nothing while looking like a green run — which
+ *       is why the figures are corrected here rather than left.
  *   H9  `emptyLevelCandidates` returns nothing -> **187 pass, 7 FAIL**: the
  *       empty-run arms fail. An empty run and a silent failure become
  *       indistinguishable, which is the defect §9's kind exists to prevent.
@@ -382,9 +389,17 @@ arm({
   mustFail: "the pinned-op-set arms in BOTH suites (a GAINED call fails an exact equality just as a lost one does)",
   mustNot: "the write arms — the gained op is non-mutating, which is exactly why a write test alone would not catch it",
   file: DRIVER,
-  find: `      const rows = await call("meaningrows", { q: state.q || "", rows: "legs", limit: 50 });`,
-  replace: `      await call("meaningquery", { q: state.q || "" });
-      const rows = await call("meaningrows", { q: state.q || "", rows: "legs", limit: 50 });`,
+  /* THE PATCH TARGET MOVED AT FL-5 AND IS CORRECTED HERE RATHER THAN LEFT TO GO
+     STALE — "an arm that did not arm is a finding" is what this file is for, and
+     an arm whose find-string no longer exists reports nothing while looking like
+     a green run. FL-5 gave the member a SECOND consumer of PL-9's read (the
+     parent re-reads a citation by address), and rather than a second call site
+     naming the op it routed both through one `meaningRead` helper — which is what
+     the "named in exactly one place" arm is actually protecting. The arm now
+     inserts the second reader at the new site. */
+  find: `        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });`,
+  replace: `        await call("meaningquery", { q: address });
+        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });`,
   run: () => {
     const rh = runHarness();
     const rm = runMember();

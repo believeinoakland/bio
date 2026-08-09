@@ -126,6 +126,10 @@
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { fileURLToPath } from "url";   /* UI-40: the consumer walk resolves the repo root from this file */
 import { appScript } from "./extract.mjs";
+/* D-257 — UI-40's consumer walk reads the WHOLE REPOSITORY off the working tree
+   and FLOORS on what it found. One mechanism, imported; the argument is at the
+   walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 let n = 0; const fails = [];
 /* `detail` is not decoration: DEC-44's negative control requires the harness to
@@ -2085,15 +2089,38 @@ console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
 
   /* The corpus is built ONCE and reported, so a corpus that shrank is visible
      rather than silent (this week's standing practice). */
+  /* D-257 / M0-16 — THE CORPUS CARRIES ITS PROVENANCE. This walk reads the whole
+     repository off the WORKING TREE and floors on `corpus.length` and on `chars`.
+     `refs/stash` is repository-wide across all sixty worktrees and `push -u`
+     carries untracked files, so a phantom deposited anywhere under the root was
+     counted into both figures (D-238). The CONSUMER SEARCH still reads the whole
+     working tree — a consumer of this shape in uncommitted work is still a
+     consumer, and the positive control must still find it — while the REACH
+     FLOOR is counted over `git ls-tree HEAD` alone. */
+  const PROV = readGitProvenance(ROOT);
+  const inCommit = f => PROV.inHead === null || PROV.inHead.has(repoPath(ROOT, f));
   const corpus = [];
   const excluded = [];
+  let reproFiles = 0, reproChars = 0;
   for(const f of files){
     const raw = fs.readFileSync(f, "utf8");
     const g = generatedReason(raw);
     if(g){ excluded.push({ f: path.relative(ROOT, f), why: g, chars: raw.length }); continue; }
-    corpus.push({ f: path.relative(ROOT, f), code: codeOf(raw) });
+    const code = codeOf(raw);
+    corpus.push({ f: path.relative(ROOT, f), code });
+    if(inCommit(f)){ reproFiles++; reproChars += code.length; }
   }
   const chars = corpus.reduce((a, x) => a + x.code.length, 0);
+  reportProvenance({
+    prov: PROV,
+    items: corpus.map(x => ({ path: x.f, what: x.f,
+      counted: "read for op=publishedcase consumers, and counted into UI-40's reach floor" })),
+    instrument: "UI-40's consumer walk",
+    corpus: `the repository: ${corpus.length} file(s) read, ${reproFiles} of them in the commit`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "files read", contaminated: corpus.length, reproducible: reproFiles, source: "files" },
+    ],
+  });
   console.log(`UI-40 CORPUS: ${corpus.length} files, ${chars} chars scanned; `
             + `${excluded.length} generated artifact(s) excluded (${excluded.map(x => x.f + " " + x.chars).join("; ")})`);
 
@@ -2107,8 +2134,15 @@ console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
     return hits;
   };
 
-  ok("UI-40 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it",
-     corpus.length > 200 && chars > 5_000_000, `${corpus.length} files / ${chars} chars`);
+  /* THE FLOOR IS THE REPRODUCIBLE FIGURE (D-257): a phantom may still be read by
+     the search above, and may never raise this ratchet. */
+  ok("UI-40 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it, counted over the commit at HEAD",
+     reproFiles > 200 && reproChars > 5_000_000,
+     `${reproFiles} of ${corpus.length} files / ${reproChars} of ${chars} chars `
+     /* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4) — D-257 control ARM 3. */
+     + (PROV.inHead === null
+          ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
+          : `in the commit at HEAD (${PROV.headSha})`));
   ok("UI-40 REACH: BOTH generated embeds are excluded, each recognised STRUCTURALLY and neither by name "
      + "— the second one is the trap this item's own brief did not name",
      excluded.length === 2 && excluded.every(x => x.chars > 1_000_000)

@@ -223,9 +223,65 @@ const REGISTER_FLOOR = {
      `test/owed-controls.test.mjs`, whose declaration states eleven arms — nine
      run by `test/owed-controls.control.mjs` plus the two over-strictness arms
      that live IN the suite. Nothing FELL. */
-  arms:       632,  // arms stated across the classified declarations
-  classified: 134,  // declarations the detector could count arms in
-  corpus:     135,  // suites the register reads
+  /* MOVED 2026-08-09 by PL-17 (DEC-65's third `asserted_by` state): 621 -> 629 /
+     133 -> 134 / 134 -> 135, ALL THREE IN THE SAME TURN and every one taken from
+     the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE
+     (`arms 629/621 · classified 134/133 · corpus 135/134 · GREW by 8 arm(s)`) —
+     read AFTER the new files were in a commit, so the figures are the
+     reproducible ones and not the contaminated ones the pre-commit run reported
+     under the same numerals. One new suite, `test/sufficiency-state.test.mjs`,
+     whose `NEGATIVE CONTROL:` declaration states EIGHT arms — a BASELINE, six
+     break-it arms and an OVER-STRICTNESS arm — so `corpus` and `classified` each
+     rise by one and `arms` by eight. Every one of those arms was RUN, through
+     `test/sufficiency-state.control.mjs`. Nothing FELL. */
+  /* COLLAPSED TO ONE KEY SET AT INTEGRATION 2026-08-09 by CONDUCT — the EIGHTH time
+     this block has carried duplicate keys out of a parallel merge. The mechanism this
+     time was CONDUCT's own: keeping BOTH movers' provenance comments (VF-1's and
+     PL-17's, each true of its own branch) dragged in the key line that follows each.
+     Keep every comment; keep ONE key set. Figures re-read from the merged green run. */
+  /* D-255, 2026-08-09: 621 -> 627, from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED (`arms 627/621 · classified 133/133 · corpus 134/134
+     · GREW by 6`), never by adding to the number above. `classified` and
+     `corpus` do NOT move: no suite was added, and the seven D-255 arms are
+     declared inside `query.test.mjs`'s EXISTING block.
+     SEVEN ARMS WERE DECLARED AND THE FIGURE ROSE BY SIX, WHICH IS ARITHMETIC
+     AND NOT A LOST ARM — checked rather than assumed, because "an arm that
+     scored zero" is exactly D-233's shape. `countArms` is
+     `max(transitions, enumerations)`; this suite's declaration had FIVE
+     transitions and SIX enumerated items, so its recorded figure was already
+     the ENUMERATION count. Adding seven transitions took transitions 5 -> 12,
+     which now wins the max, and 12 - 6 = 6. Every one of the seven arms RAN and
+     is stated with the counts it produced. */
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 632 -> 646 / 134 -> 135 / 135 -> 136,
+     from the figures a green `--strict` run PRINTED on the merged tree carrying VF-1,
+     UI-42, PL-17, FL-4, D-257, FL-5 and D-255 (`GREW by 14 arm(s)`). Six of those seven
+     moved this figure on their own branch and NOT ONE of their numbers is true here. */
+  /* MOVED 2026-08-09 by REC-69's REPLAY onto `main`: 621 -> 629 / 133 -> 134 /
+     134 -> 135, ALL THREE IN THE SAME TURN and every one taken from the figures a
+     green `--strict` run PRINTED on this tree (`arms 629/621 · classified 134/133
+     · corpus 135/134 · GREW by 8`), never by adding to the numbers above. The
+     corpus and classified rises are ONE new suite, `test/airuns.test.mjs`.
+     AND A PROPERTY OF THIS REGISTER, MEASURED HERE RATHER THAN ASSUMED, because
+     the +8 is smaller than the arms this item actually declared and a reader who
+     did the arithmetic would think a declaration had shrunk. This item added a
+     SECOND `NEGATIVE CONTROL:` paragraph to two suites that already had one —
+     three new arms in `run-conditions.test.mjs`, four in `airuns.test.mjs`, all
+     seven RUN through `test/nc-rec69-selects.mjs`. The detector records the block
+     STATING THE MOST ARMS and never the sum, which is right for the case it was
+     built for (M0-2's backfill left most suites stating ONE control twice) and
+     undercounts this one: `airuns.test.mjs` still reports its original block's 7
+     and the new block contributes 0, while `run-conditions.test.mjs` moved 5 -> 6
+     because the NEW block became the larger of the two. So `arms` is a floor on
+     ARMS STATED IN THE LARGEST SINGLE DECLARATION PER SUITE, not on arms stated —
+     which is safe, because the number is reported and never gated, and the floor
+     can still only fall if a declaration really shrinks. NAMED here rather than
+     silently absorbed, and DELEGATED to M0-14's area in CLAIMS.md: two DIFFERENT
+     controls in one suite is a shape the "never the sum" rule did not anticipate. */
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
+     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
+  arms:       654,  // arms stated across the classified declarations
+  classified: 136,  // declarations the detector could count arms in
+  corpus:     137,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

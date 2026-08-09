@@ -21,6 +21,16 @@
  * walks the table, performing each row's plane call and appending an observation
  * entry for every step it takes.
  *
+ * WHAT IT GAINED AT FL-5 (IS-9(a), §14b.1). The fan-out now composes a SPAWN
+ * CONTRACT per level — read-only, one level each, sharing no state, with no field
+ * for the bias manifest to arrive in — and the returns are held to a RETURN
+ * CONTRACT: a REPORT with a citation, never documents, with the parent re-reading
+ * each citation BY ADDRESS through the one meaning reader it already had. Both
+ * contracts are `src/subsession.mjs` and both are pure. The rule they enforce is
+ * the design's own: *a sub-session that returns documents rather than reports has
+ * defeated the architecture* — so a return that breaks the contract is REFUSED
+ * and NAMED, and its level goes UNDETERMINED rather than becoming an absence.
+ *
  * **IT STILL RUNS NO MODEL TURNS AND IT STILL SAYS SO ON THE WIRE**
  * (`turns_run: 0`, `judgement_source: "supplied"`). The DETERMINISTIC half is
  * what FL-3 builds; the model account that would supply the judgement inside a
@@ -109,6 +119,16 @@ import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates,
 } from "./harness.mjs";
+
+/* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
+ * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
+ * control flow, so they live beside the table rather than inside it — and the
+ * suite can drive every spelling of a return in a plain node process while the
+ * driver's job is reduced to asking and obeying. Read `subsession.mjs`'s header
+ * for why the rule is an exact key set rather than a list of banned fields. */
+import {
+  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses,
+} from "./subsession.mjs";
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -314,6 +334,17 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* WHAT THE ROW DOES, IN PLANE CALLS. */
     const work = await performStep(call, state, runId);
     if (work.silent) return { refusal: planeSilent(work.silent) };
+    /* THE SPAWN CONTRACT COULD NOT BE COMPOSED, AND THE RUN STOPS RATHER THAN
+       FANNING OUT ANYWAY. This is the §14 fence firing: the plane's search-half
+       payload arrived carrying the lens, or carrying nothing at all. Continuing
+       would mean a run that searched under a bias nobody can afterwards prove it
+       did not use — so it refuses, names the level it was composing for, and
+       passes the plane's payload nowhere. 502, because the fault is upstream of
+       this member and reporting it as this member's would be REC-52's rule read
+       backwards. */
+    if (work.contract)
+      return { refusal: refusal(work.contract.code, work.contract.detail, 502,
+        { level: work.level ?? null, run_id: runId }) };
     if (work.refused) { refusals.push(work.refused); }
     state = work.state;
     if (work.submitted) submitted += 1;
@@ -391,9 +422,36 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   return {
     mode: state.mode, trace, passes: state.pass, ended, logged, submitted,
     refusals, adjusted, verbatimResubmits, resumedFrom,
+    /* FL-5's FACTS, PUBLISHED RATHER THAN HELD. FL-3 computed the fence's answer
+       into a local nobody could read and asserted it by grepping a note — which
+       measured nothing (see the fan-out step). What a suite, and a later reader,
+       actually need is the object a sub-session WAS HANDED. So the contracts
+       themselves go on the wire: whatever is true of the spawn contract can then
+       be read off the answer rather than taken on the member's word. They are the
+       LAST pass's, and the field says so. */
+    fanout: {
+      of_pass: state.pass, levels: LEVELS, scope: SUBSESSION_OPS,
+      contracts: state.contracts || [],
+    },
+    reportsTaken: (state.reports || []).length,
+    /* NAMED, NEVER A COUNT ALONE. A refused return is a component of this system
+       breaking its contract; a bare number would say it happened and not what. */
+    reportsRefused: state.reportsRefused || [],
+    citationsReread: state.rereads || 0,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
   };
 }
+
+/** THE ONE MEANING READER IN THIS MEMBER, AND THE OP IS NAMED IN EXACTLY ONE
+ *  PLACE. Two rows now need PL-9's read — `compose` queries at meaning grain and
+ *  `collect` re-reads a citation BY ADDRESS through the same compiler's `ids`
+ *  restriction — and two call sites naming the op would be two readers to keep in
+ *  step. §14b.1's query-never-load is not "call this op"; it is that the run
+ *  reaches everything it does not hold by ASKING, through one door. D-15's
+ *  one-compilation-point rule is the same argument one layer down, and FL-3's
+ *  suite pins the literal to a single occurrence for exactly this reason. */
+const meaningRead = (call, { q = "", rows = "legs", limit = 50, ids = null } = {}) =>
+  call("meaningrows", { q, rows, limit }, ids ? { ids } : null);
 
 /** WHAT EACH ROW ACTUALLY DOES AGAINST THE PLANE. One `case` per row that has
  *  work, and rows that have none say so by falling through — the table already
@@ -415,22 +473,35 @@ async function performStep(call, state, runId) {
          at all — so the fence is the payload's shape rather than this member's
          discipline. Asking for it here rather than composing one is what makes
          that true at runtime and not only in `store.mjs`. */
-      const spawned = [];
+      const contracts = [];
       for (const level of LEVELS) {
         const p = await call("airunspawn", { run: runId, half: "search" });
         if (!p.reached) return { silent: p };
         const payload = (p.body?.result ?? p.body ?? {}).payload ?? null;
-        spawned.push({ level, payload_seen: payload != null,
-                       /* ASSERTED HERE AS WELL AS IN THE PLANE'S SUITE, because
-                          this is the party that would be harmed by the fence
-                          failing and a fence proved only at its own site is a
-                          fence with one witness. */
-                       manifest_field_present: payload != null
-                         && Object.prototype.hasOwnProperty.call(payload, "bias") });
+
+        /* FL-5's SPAWN CONTRACT. The payload is read key by key into a frozen
+           brief for ONE level — never spread — so there is no field for a
+           manifest to arrive in under any spelling, and two sub-sessions share
+           no object with each other or with the parent.
+
+           AND THE SECOND WITNESS IS NOW A REFUSAL RATHER THAN A FLAG, WHICH IS A
+           CORRECTION FL-3's OWN SUITE COULD NOT HAVE CAUGHT. FL-3 computed
+           `manifest_field_present` into a local that never reached the wire and
+           asserted the fence by grepping a trace note that never carries the
+           phrase — MEASURED at FL-5: with the plane mock's SEARCH payload made
+           to carry a full bias block, FL-3's suite stayed 194/0 and its
+           "no search-half spawn payload carried a bias field" arm PASSED. A
+           mechanism believed on the strength of its existence rather than its
+           behaviour is the defect this project meets most, so the flag is gone
+           and `spawnContract` REFUSES the payload instead. */
+        const made = spawnContract({ level, payload });
+        if (!made.ok) return { contract: made, level };
+        contracts.push(made.contract);
       }
       out.consume.subsessions = LEVELS.length;
-      out.note = `${spawned.length} sub-session payloads taken, one per level`;
-      out.state = { ...state, spawned };
+      out.note = `${contracts.length} sub-session contract(s) composed, one per level, each read-only `
+               + `(${SUBSESSION_OPS.join(", ")}) and with no field for the lens to arrive in`;
+      out.state = { ...state, contracts };
 
       /* THE INTERNET LEVEL REQUESTS ACQUISITION AND DOES NOT PERFORM IT (§4
          group 1, PL-4). One request per internet target the judgement named, and
@@ -445,6 +516,42 @@ async function performStep(call, state, runId) {
       return out;
     }
 
+    case "collect": {
+      /* FL-5 / IS-9(a) — THE RETURN CONTRACT, ENFORCED AT THE ROW THAT COLLECTS.
+         The four returns arrived as this row's judgement (until FL-6's cascade
+         runs the sub-sessions themselves, they arrive from the caller — the same
+         honesty `turns_run: 0` states one field over). Every one is held to
+         `checkReport`: a REPORT with a citation, never documents.
+
+         A REFUSED RETURN IS NOT DROPPED AND NEVER BECOMES AN ABSENCE. It is
+         named, it is published, and its level is UNDETERMINED — because a
+         contract violation that fell through to `LOOKED_ABSENT` would let a
+         defect MANUFACTURE an empty-level claim, and §9's kind would then be
+         written off a report the parent never accepted. */
+      const { taken, refused } = takeReports(state.reports);
+
+      /* AND THE PARENT RE-READS BY ADDRESS. §14b.1: *"the parent re-reads by
+         address if it needs the bytes"* — a behaviour, not a promise, and the
+         suite observes these reads arriving at the plane. It is the same one
+         meaning reader `compose` uses: the sub-session hands back an ADDRESS and
+         the parent resolves it itself, which is the whole trade the memory model
+         is making. Bounded by `citedAddresses`, so a report cannot turn the
+         parent's context into the reading it was supposed to replace. */
+      const addresses = citedAddresses(taken);
+      let reread = 0;
+      for (const address of addresses) {
+        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });
+        if (!got.reached) return { silent: got };
+        reread += 1;
+      }
+
+      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} citation(s) `
+               + `re-read BY ADDRESS. No document was returned by a sub-session and none was loaded`;
+      out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
+                    reportsRefused: [...(state.reportsRefused || []), ...refused] };
+      return out;
+    }
+
     case "compose": {
       /* QUERY, NEVER LOAD (§14b.1). The run holds the inquiry, its versions and
          its working set; everything else it reaches by ASKING. This is PL-9's
@@ -452,7 +559,7 @@ async function performStep(call, state, runId) {
          meaning grain — CONSUMED and not rebuilt. There is no second reader in
          this Worker and there must not be: D-15's one compilation point is what
          makes the viewer gate a gate. */
-      const rows = await call("meaningrows", { q: state.q || "", rows: "legs", limit: 50 });
+      const rows = await meaningRead(call, { q: state.q || "", rows: "legs", limit: 50 });
       if (!rows.reached) return { silent: rows };
       const got = rows.body?.result ?? rows.body ?? {};
 
@@ -676,6 +783,17 @@ async function handleRun(req, env) {
     adjusted: drive.adjusted,
     verbatim_resubmits: drive.verbatimResubmits,
     resumed_from: drive.resumedFrom,
+
+    /* FL-5 / IS-9(a) ON THE WIRE. `fanout.contracts` is exactly what each
+       sub-session was handed — the party protected by §14's fence can be read
+       from outside instead of trusting this member's own summary of itself.
+       `reports_refused` names every return that broke the contract, because a
+       sub-session that returns documents has defeated the architecture and that
+       is a fact about the run, not a detail of its plumbing. */
+    fanout: drive.fanout,
+    reports_taken: drive.reportsTaken,
+    reports_refused: drive.reportsRefused,
+    citations_reread: drive.citationsReread,
     budget: drive.budget,
     segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE },
 

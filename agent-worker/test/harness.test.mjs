@@ -39,7 +39,7 @@
    (H8) query-never-load: name a second meaning reader -> the pinned-op-set arm must FAIL (floor and ceiling both).
    (H9) THE EMPTY-RUN INSTRUMENT (VF-1's owed control 7). Make `emptyLevelCandidates` return `[]` -> the empty-run arm must FAIL: an empty run and a silent failure become indistinguishable, which is the exact defect §9's kind exists to prevent.
    (H10) OVER-STRICTNESS, nothing broken, and these must PASS.
-   ALL TEN ARMS RUN 2026-08-08 IN WORKTREE agent-ad6e5ed43aac4a2ab, baseline 194/0 (this suite) and 98/0 (agent-worker.test.mjs) before each; every one AS DECLARED on the recorded pass. **FOUR CAME BACK WRONG FIRST AND EVERY ONE WAS A FINDING ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed:** H1 never ARMED (patch matched 0 times), then exited 2 on a restore MISMATCH (two snapshots of one file collided on the copy's name — the `cmp` instrument caught what the sha256 could not), then had its MUST-NOT corrected (`queue` is DEDUP'S output, so F10 cannot hold when dedup is skipped); H2 and H9 both KILLED the suite rather than failing it (`0 pass, -1 FAIL`) on a nested read of an empty collection — the CLASS was swept, not the two sites. MEASURED figures: H1 166/28 · H2 184/10 · H3 191/3 · H4 189/4 · H5 186/8 · H6 193/1 · H7 191/3 · H8 harness 192/2 + member 95/3 · H9 187/7 · H10 194/0, 98/0, coverage --strict exit 0.
+   ALL TEN ARMS RUN 2026-08-08 IN WORKTREE agent-ad6e5ed43aac4a2ab, baseline 194/0 (this suite) and 98/0 (agent-worker.test.mjs) before each; every one AS DECLARED on the recorded pass. **FOUR CAME BACK WRONG FIRST AND EVERY ONE WAS A FINDING ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed:** H1 never ARMED (patch matched 0 times), then exited 2 on a restore MISMATCH (two snapshots of one file collided on the copy's name — the `cmp` instrument caught what the sha256 could not), then had its MUST-NOT corrected (`queue` is DEDUP'S output, so F10 cannot hold when dedup is skipped); H2 and H9 both KILLED the suite rather than failing it (`0 pass, -1 FAIL`) on a nested read of an empty collection — the CLASS was swept, not the two sites. MEASURED figures: H1 166/28 · H2 184/10 · H3 191/3 · H4 189/4 · H5 186/8 · H6 193/1 · H7 191/3 · H8 harness 192/2 + member 95/3 · H9 187/7 · H10 194/0, 98/0, coverage --strict exit 0. **ALL TEN RE-RUN 2026-08-09 UNDER FL-5 (which changed this file's subject: `collect` became a judged row and the fan-out composes spawn contracts) — 10 of 10 still AS DECLARED, every figure identical except H8, whose patch SITE moved and now reads harness 193/1 + member 96/2.**
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
  * ========================================================================= */
 
@@ -589,9 +589,29 @@ console.log("\n--- B1 · a CHECK run walks the table and the plane holds the who
   t("the ops actually named are a subset of the pinned set",
     [...new Set(st.log.map((l) => l.op))].filter((op) => !PLANE_OPS[op]), []);
 
-  console.log("\n  -- PL-12's fence, observed from the party it protects --");
-  t("no search-half spawn payload carried a bias field",
-    (out.trace || []).filter((x) => x.note && /manifest_field_present/.test(String(x.note))), []);
+  /* PL-12's FENCE MOVED TO `fanout.test.mjs` AT FL-5, AND THE OLD ARM IS
+     CORRECTED HERE RATHER THAN DELETED — it was measured VACUOUS and the
+     measurement belongs on the record. It read:
+
+       t("no search-half spawn payload carried a bias field",
+         (out.trace || []).filter((x) => x.note && /manifest_field_present/.test(x.note)), []);
+
+     `manifest_field_present` was computed into a local (`spawned`) that never
+     reached the wire, and the trace note it grepped is fixed text that never
+     contains the phrase — so the arm could only ever fail if somebody wrote those
+     nineteen characters into a note. MEASURED at FL-5 rather than reasoned:
+     with the plane mock's SEARCH-half payload made to carry a full bias block,
+     this suite stayed **194 pass / 0 fail** and this arm PASSED. A mechanism
+     believed on the strength of its existence rather than its behaviour is the
+     defect this project meets most often, and it had one here.
+     FL-5's replacement is a REFUSAL and three arms that can fail: the driver
+     refuses a search payload carrying the lens (`SPAWN_PAYLOAD_CARRIES_LENS`),
+     the spawn contract is published on the wire so its key set is read rather
+     than promised, and a manifest genuinely in force on the composing half must
+     appear in ZERO bytes of what any sub-session was handed. */
+  console.log("\n  -- the fan-out spawned per level; FL-5's fence arms live in fanout.test.mjs --");
+  t("four sub-session contracts were composed, one per level",
+    (out.fanout?.contracts || []).map((c) => c.level), LEVELS);
   await mf.dispose();
 }
 
@@ -672,9 +692,17 @@ console.log("\n--- B4 · F10 — A REFUSAL IS FOLLOWED BY AN ADJUSTED SUBMISSION
   const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, boilerplate: ["TBD"] });
   const res = await runOp(mf, {
     ...base,
+    /* THE JUDGEMENT LIST GAINED A SLOT AT FL-5 AND THE OLD SHAPE WAS WRONG
+       RATHER THAN MERELY OLD. Judgements are consumed in order by the rows that
+       judge, and FL-5 made `collect` one of them — because a sub-session's return
+       must be held to the REPORT contract at the row that COLLECTS it, not at
+       `compose`, which is the row that has already interpreted it. Supplying
+       `reports` at `compose` was therefore supplying them one row after the
+       contract could protect anything. */
     judgements: [
       { targets: [] },                                                   /* plan */
-      { reports: [], candidates: [{ kind: "new-version", name: "v1", description: "TBD" }] }, /* compose */
+      { reports: [] },                                                   /* collect */
+      { candidates: [{ kind: "new-version", name: "v1", description: "TBD" }] }, /* compose */
       {},                                                                /* dedup */
       { submission: { kind: "new-version", name: "v1", description: "what changed, and why, in full" } }, /* adjust */
     ],
@@ -710,7 +738,8 @@ console.log("\n--- B5 · F10's other half: an unanswerable refusal DROPS the can
     ...base,
     judgements: [
       { targets: [] },
-      { reports: [], candidates: [{ kind: "new-version", name: "v1", description: "d" }] },
+      { reports: [] },                                                   /* collect — FL-5's row */
+      { candidates: [{ kind: "new-version", name: "v1", description: "d" }] },
       {},
       /* THE MODEL HANDS BACK THE SAME SUBMISSION — which is what happens when
          the refusal names an act a machine cannot perform (DEC-65's measured
@@ -742,8 +771,12 @@ console.log("\n--- B6 · THE EMPTY RUN (VF-1's owed control 7): proposes NOTHING
     ...base,
     judgements: [
       { targets: [] },
-      { candidates: [],
-        reports: LEVELS.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` })) },
+      /* THE REPORTS ARRIVE AT `collect` SINCE FL-5, where the return contract
+         judges them. Each is a legal REPORT: an absence CITES NOTHING and is not
+         required to — there would be nothing to cite — but it must say WHERE the
+         search that establishes it was written down. */
+      { reports: LEVELS.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` })) },
+      { candidates: [] },
       {},
     ],
   })).json();
@@ -764,7 +797,8 @@ console.log("\n--- B6 · THE EMPTY RUN (VF-1's owed control 7): proposes NOTHING
   const out2 = await (await runOp(mf2, {
     ...base,
     judgements: [{ targets: [] },
-                 { candidates: [], reports: LEVELS.map((l) => ({ level: l, state: "NEVER_LOOKED" })) },
+                 { reports: LEVELS.map((l) => ({ level: l, state: "NEVER_LOOKED" })) }, /* collect */
+                 { candidates: [] },
                  {}],
   })).json();
   const st2 = await mockState(mf2);
@@ -796,7 +830,8 @@ console.log("\n--- B8 · DEDUP-BEFORE-WRITE, observed at the plane ---");
   const out = await (await runOp(mf, {
     ...base,
     judgements: [{ targets: [] },
-                 { reports: [], candidates: [{ kind: "new-version", name: "v1" }, { kind: "new-version", name: "v3" }] },
+                 { reports: [] },                                        /* collect — FL-5's row */
+                 { candidates: [{ kind: "new-version", name: "v1" }, { kind: "new-version", name: "v3" }] },
                  {}],
   })).json();
   const st = await mockState(mf);
@@ -816,8 +851,9 @@ console.log("\n--- B9 · VERSIONS ARE WRITTEN AS FORMED, NEVER BATCHED ---");
   const out = await (await runOp(mf, {
     ...base,
     judgements: [{ targets: [] },
-                 { reports: [], candidates: [{ kind: "new-version", name: "a" }, { kind: "new-version", name: "b" },
-                                             { kind: "new-version", name: "c" }] },
+                 { reports: [] },                                        /* collect — FL-5's row */
+                 { candidates: [{ kind: "new-version", name: "a" }, { kind: "new-version", name: "b" },
+                                { kind: "new-version", name: "c" }] },
                  {}],
   })).json();
   const st = await mockState(mf);

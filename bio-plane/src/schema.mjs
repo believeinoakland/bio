@@ -2076,7 +2076,24 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- longer in the store -- D-113's class arriving through a column instead of
   -- through a table, and invisible to hygiene's structural check for exactly
   -- that reason.
-  lead_inquiry      TEXT
+  lead_inquiry      TEXT,
+  -- FL-4 / IS-9 / section 14b.3: WHEN THE RUN WAS WOKEN FOR THIS COMPLETION,
+  -- and NULL means the daemon has answered and the run has not been told yet.
+  --
+  -- IT IS ON THE REQUEST AND NOT ON THE RUN, because the thing that completes is
+  -- a request and a run may be waiting on several. A flag on the run would make
+  -- "this run has been woken" true while a second request was still owed an
+  -- answer, and the wake would be consumed by the first completion to land.
+  --
+  -- AN INSTANT RATHER THAN A FLAG, on the same reasoning captured_at carries:
+  -- the record can then say WHEN the run was told, which is what makes a lease
+  -- extension accountable to something rather than an unexplained clock move.
+  --
+  -- NULL IS THE HONEST DEFAULT AND IT INVENTS NOTHING. A row written before this
+  -- column existed was never woken -- nothing existed to wake it -- and the
+  -- consumer's own predicate requires the run to still be running, so a request
+  -- belonging to a run that has already ended is never woken retroactively.
+  run_woken_at      TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);

@@ -103,6 +103,10 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
          MEANING_READ_CHECKS,
+         /* REC-69 / DEC-49: the C-number, the wire code and the canned
+            translation for the context-keyed run list's three refusals, as ONE
+            row read from the catalog rather than restated here. */
+         AI_RUNS_CONTEXT_CHECKS,
          /* PL-10 / DEC-49: the C-number, the wire code and the canned
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
@@ -205,6 +209,12 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    bound through ONE function — two paths that agree is the failure this
    repository has measured five times. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
+         /* REC-69: the two kinds of thing a run can be in the context of, as a
+            TEXT vocabulary read from `airun.mjs` rather than typed at the one
+            site that judges it. `op=airuns` names them back to a caller who got
+            it wrong, and a hand copy of two words agrees with itself for free —
+            which is the failure this repository has now measured six times. */
+         RUN_CONTEXTS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
@@ -533,6 +543,14 @@ export class Store extends DurableObject {
          default here would invent an observation nobody made, which on THIS
          column would mint a member-facing notification out of a migration. */
       ["capture_requests", "lead_inquiry", "TEXT"],
+      /* FL-4 / IS-9: the instant the run waiting on this request was woken for
+         its completion. Additive and nullable for the same reason every column
+         above is — a request written before this item existed was never woken,
+         because nothing existed to wake it, and NULL states exactly that. A
+         non-null default would claim the run had been told about a completion
+         nobody delivered, which on THIS column would mean a wake that never
+         happened reading as one that did. */
+      ["capture_requests", "run_woken_at", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -1937,6 +1955,83 @@ export class Store extends DurableObject {
         due:  (now) => this.#captureRequestPending() > 0 ? now : null,
         wake: (now) => this.#captureRequestPending() > 0 ? now + this.#captureRequestTickMs() : null,
         tick: (now) => this.captureRequestDrain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
+      /* FL-4 / IS-9 / INVESTIGATIVE-SESSION.md §14b.3 — THE SUSPENDED RUN'S
+         WAKE: the TENTH consumer on the one alarm, and ONE APPENDED ENTRY
+         exactly as SCHEDULER.md instructs: *"append an entry to
+         #schedConsumers… Do NOT add a second alarm or a cron; that is the
+         decision this file records."* No cron line is added to wrangler.jsonc,
+         no second alarm exists, and this entry holds no timer of its own.
+
+         IT IS APPENDED AFTER `capture-request-drain` ON PURPOSE. onAlarm walks
+         the registry in order, so the drain's tick has already landed its
+         captures by the time this one runs: a request that completes on an
+         alarm wakes its run on that SAME alarm rather than one cadence later.
+         That ordering is a property of the array and is asserted by name in
+         test/scheduler.test.mjs, because an ordering nobody pins is an ordering
+         a later append silently changes.
+
+         WHAT "SUSPENDED" MEANS HERE, DERIVED AND NEVER DECLARED. §14a: a run
+         *"has natural suspension points by construction: search → identify →
+         request captures → WAIT ON THE DAEMON → post-process"*. A run is
+         therefore SUSPENDED when it is still `running` and the daemon still
+         owes it an answer — a `capture_requests` row of its own in `requested`
+         or `draining`. No status was added and no op was minted to say so, and
+         that is a decision rather than a shortcut: a declared `suspended` state
+         would be a second place to state a fact the request rows already state
+         (D-21), and — the deciding half — nothing in this plane can RE-ENTER a
+         suspended run, so a run parked in a status the reaper does not see
+         would be a run nothing could ever end. The delegation below the claim
+         records what is missing and whose it is.
+
+         THE TWO THINGS IT DOES, AND THE FIRST ONE IS A DEFECT BEING CLOSED:
+
+           1. THE HOLD, on every resumption tick. A run's liveness test is its
+              LEASE, and a suspended run is not heartbeating BECAUSE IT IS
+              WAITING ON US. Before this consumer the reaper took every such run
+              at one hour and recorded `lease` as the bound that stopped it —
+              our own daemon's pacing written into the record as the run's
+              death, which is D-104's split inverted at the run grain. So while
+              the daemon owes an answer this tick pushes `expires` forward, and
+              the run stays alive to be resumed.
+
+              BOUNDED, AND THE BOUND IS THE REQUEST'S OWN. Only a request that
+              has not itself expired holds a run open, so a request nothing can
+              ever satisfy stops holding at its own TTL and the reaper takes the
+              run then, with an honest bound. An unbounded hold would be a run
+              that can never die, which is a worse defect than the one this
+              closes. Removing that predicate is a declared control arm.
+
+              GATED ON THE DRAIN BEING CONFIGURED, for the same reason the drain
+              is: on an instance with no self binding and no daemon credential
+              no request will EVER complete, so holding a run open there would
+              keep a run alive for something that is not coming. Unconfigured,
+              this consumer contributes no wake and holds no alarm.
+
+           2. THE WAKE, on daemon completion. A request that has reached a
+              terminal state (`captured` or `refused` — a refusal is an answer)
+              and has not yet been delivered wakes its run: ONE observation
+              entry through the one append site, a full lease so the driver has
+              a whole window to come back, and `run_woken_at` stamped so the
+              completion is delivered EXACTLY ONCE and the consumer then
+              SELF-TERMINATES rather than re-waking for ever.
+
+         THE HOLD WRITES NO LOG LINE AND THE WAKE WRITES ONE. A hold is the
+         plane declining to kill a run, not an observation about the world, and
+         a line every sixty seconds would fill a log that has a published
+         ceiling (AI_RUN_LOG_LIMIT_MAX) with the fact that nothing happened. The
+         wake's entry DERIVES its state through `#aiRunSearchState` — the same
+         function the one exit uses — so it restates what the run has already
+         established and invents nothing about a document it never saw.
+
+         INTERVAL-CONSUMER SHAPE, like queue-renotify, monitor-cadence and the
+         reaper: due only when a run actually needs holding or waking, so it
+         fires at its own moment and no other's, and its wake is null the
+         instant no run does — an instance with no suspended run holds no alarm
+         at all. */
+      { name: "ai-run-wake",
+        due:  (now) => this.#aiRunWakePending(now) > 0 ? now : null,
+        wake: (now) => this.#aiRunWakeWake(now),
+        tick: (now) => ({ airunwake: this.#aiRunWake(now) }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -1964,7 +2059,8 @@ export class Store extends DurableObject {
     const reg = this.#schedConsumers(probe);
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
-        queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null;
+        queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null,
+        airunwake = null;
     const probes = [];
     for (const c of reg) {
       const d = c.due(now);
@@ -1997,6 +2093,13 @@ export class Store extends DurableObject {
          `probes` is this instance's outward behaviour becoming invisible in the
          alarm's own account of itself. */
       else if (c.name === "capture-request-drain") capturerequests = r && r.capturerequests;
+      /* FL-4, named for the fifth time and for the same reason: an unnamed
+         consumer is reported as a test probe, and a WAKE that disappears into
+         `probes` is a suspended run being held and resumed with no account of
+         it in the alarm's own answer — which is exactly the shape of a
+         mechanism believed because it exists rather than because it was seen to
+         behave. */
+      else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -2018,7 +2121,8 @@ export class Store extends DurableObject {
              ...(queuerenotify ? { queuerenotify } : {}),
              ...(monitorcadence ? { monitorcadence } : {}),
              ...(airunreap ? { airunreap } : {}),
-             ...(capturerequests ? { capturerequests } : {}) };
+             ...(capturerequests ? { capturerequests } : {}),
+             ...(airunwake ? { airunwake } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -20096,6 +20200,17 @@ export class Store extends DurableObject {
          on this field before it was published, so it counted zero for every
          input and would have passed over a missing purge clause. */
       lead_inquiry: r.lead_inquiry ?? null,
+      /* FL-4 / IS-9: WHEN THE RUN WAITING ON THIS REQUEST WAS TOLD, and NULL
+         means the daemon has answered and the run has not been told yet.
+         Published for the reason the field above it was, applied to this
+         column: the projection is explicit, so a column omitted here is a
+         column no caller can see — and the wake is the one fact about a
+         request that is about the RUN rather than about the fetch. An operator
+         looking at a suspended run needs to be able to tell "the daemon has not
+         answered" from "the daemon answered and nothing collected it", and
+         those are the two states this one field distinguishes. Additive, on
+         PL-15's precedent: no existing reader's shape moves. */
+      run_woken_at: r.run_woken_at ?? null,
       /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
          drain used. A row whose principals cannot both be named answers with the
          refusal rather than with a half attribution — the read cannot state less
@@ -20628,6 +20743,26 @@ export class Store extends DurableObject {
   static AI_RUN_LOG_LIMIT_DEFAULT = 200;
   static AI_RUN_LOG_LIMIT_MAX = 5000;
 
+  /* REC-69 — THE CONTEXT-KEYED RUN LIST'S PAIR, AND NEITHER FIGURE IS NEW.
+   *
+   * 200/1000 is `op=versionchain`'s pair, which `op=basisversions` reused
+   * rather than minting a second, and this read is the SAME KIND as both: a
+   * KEYED lookup — one context, not a query a caller pages through a corpus
+   * with — whose answer is a list of the objects hanging off that key. The log
+   * pair above is deliberately NOT reused: it bounds ONE RUN'S OBSERVATIONS,
+   * which grow one row per tick with nothing capping the tick count, and this
+   * bounds THE RUNS IN A CONTEXT, which grow one row per investigation a member
+   * launched. Different populations at different rates, so borrowing the log's
+   * 5000 ceiling here would be a figure carried across on the strength of the
+   * table name alone.
+   *
+   * WHAT THIS DOES NOT GIVE, on REC-60's sentence and `aiRunLog`'s above: a
+   * caller cut at the CEILING has no way past it. No cursor is minted (REC-55's
+   * declined-second-copy rule); the honest bound is published instead of the
+   * complete answer being promised. */
+  static AI_RUNS_LIMIT_DEFAULT = 200;
+  static AI_RUNS_LIMIT_MAX = 1000;
+
   static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
 
   /** Append ONE observation. The single write site for `ai_run_log`, which is
@@ -21010,6 +21145,192 @@ export class Store extends DurableObject {
     return { at: iso, lapsed: lapsed.length, reaped };
   }
 
+  /* ---- FL-4's three parts, and none of them decides anything either ----
+
+     The reaper's three above answer *is this run over*. These three answer *is
+     this run waiting on us, and has the daemon answered* — and they are
+     deliberately built in the reaper's shape, next to it, because they are the
+     other half of one question about a run that is not heartbeating. A run that
+     stopped because it died and a run that stopped because it is waiting on our
+     own daemon look identical from outside, and telling them apart is the whole
+     of this item: before it, the reaper took both and recorded `lease` over
+     both.
+
+     THE WAKE'S LOG ENTRY DERIVES ITS STATE THROUGH `#aiRunSearchState`, the
+     SAME reducer the one exit uses. So a resumed run and a reaped one describe
+     what the search established through ONE function rather than two that
+     agree — the parallel-path failure this repository has measured repeatedly,
+     avoided here the way `finishedBound` avoids it one method up. */
+
+  /* THE PRODUCER'S OWN CADENCE, CAPPED BY THE THING THE HOLD PROTECTS.
+
+     Following `#captureRequestTickMs` rather than minting a second constant is
+     the point: this consumer exists to notice what THAT one produced, and a
+     wake slower than the producer it follows leaves a completed capture sitting
+     undelivered for the difference. There is no second number to drift.
+
+     THE CAP IS A CORRECTNESS REQUIREMENT AND NOT TIDINESS. The hold has to
+     reach a suspended run BEFORE its lease lapses, so an instance that slows
+     the drain past the lease (the env override admits any value) must not slow
+     the hold with it — a quarter of the lease leaves three ticks of margin.
+     THE FLOOR IS THE OTHER DIRECTION and it is not shared with the drain: the
+     drain's queue empties, so a zero cadence there is a burst that ends, while
+     a hold persists as long as the daemon owes an answer and a zero wake would
+     spin an idle-looking instance for as long as that lasts. */
+  #aiRunWakeTickMs() {
+    return Math.max(1000, Math.min(this.#captureRequestTickMs(),
+                                   Math.floor(Store.AI_RUN_LEASE_MS / 4)));
+  }
+
+  /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
+     WAS FORCED BY AN INSTRUMENT. The first shape of this consumer scanned
+     `ai_runs` unbounded and looped over what came back, which is precisely the
+     class `derivation-bounds.test.mjs` ratchets (31 methods measured
+     2026-08-08, 11 of them dispatched): a method that AMPLIFIES work over an
+     unbounded scan. The suite failed on the new member and named it, so the
+     scan is bounded rather than the ceiling moved — a ceiling is not a ratchet.
+
+     SIZED ON THE PRODUCER IT FOLLOWS. The drain lands at most
+     `CAPTURE_REQUEST_TICK_BATCH` completions per tick, so a wake batch smaller
+     than that would fall permanently behind the thing it exists to notice.
+     Larger, because a hold is two integers and an UPDATE while a capture is a
+     fetch, and because an instance that was unconfigured for a while can have a
+     backlog of runs to hold on its first configured tick.
+
+     A BATCH IS NOT A LOSS. While more remain the pending count stays above zero,
+     so the wake re-arms and the next tick takes the next batch — the
+     connection-derive sweep's progressive drain, and the reason that consumer
+     can be bounded without dropping anything. */
+  static AI_RUN_WAKE_TICK_BATCH = 25;
+
+  /** THE SUSPENDED RUNS TO HOLD: still running, and the daemon still owes them
+   *  an answer.
+   *
+   *  GATED ON THE DRAIN BEING CONFIGURED, exactly as `#captureRequestPending`
+   *  is and for the same reason one layer up: where nothing drains, no request
+   *  will ever complete, so a hold would keep a run alive for something that is
+   *  not coming — an instance that has not wired this behaves byte-for-byte as
+   *  it did before.
+   *
+   *  BOUNDED BY THE REQUEST'S OWN EXPIRY. `cr.expires > ?` is what stops this
+   *  from being an immortality clause: a request nothing can satisfy stops
+   *  holding its run at its own TTL, and the reaper then takes the run with an
+   *  honest bound. Removing that predicate is declared control arm (4). */
+  #aiRunWakeHolds(iso) {
+    if (!this.#captureRequestConfigured()) return [];
+    return this.#rows(
+      `SELECT r.run,
+              (SELECT count(*) FROM capture_requests cr
+                WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND cr.expires > ?) outstanding
+         FROM ai_runs r
+        WHERE r.status = 'running'
+          AND EXISTS (SELECT 1 FROM capture_requests cr
+                       WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND cr.expires > ?)
+        ORDER BY r.run LIMIT ?`, iso, iso, Store.AI_RUN_WAKE_TICK_BATCH);
+  }
+
+  /** THE RUNS TO WAKE: a completion the daemon has landed and this run has not
+   *  been told about. `captured` and `refused` are BOTH completions — a refusal
+   *  is an answer, and a run left waiting on a request that will never be tried
+   *  again is a run waiting on nothing. */
+  #aiRunWakeRuns() {
+    return this.#rows(
+      `SELECT r.run, r.context_id
+         FROM ai_runs r
+        WHERE r.status = 'running'
+          AND EXISTS (SELECT 1 FROM capture_requests cr
+                       WHERE cr.run = r.run AND cr.state IN ('captured','refused')
+                         AND cr.run_woken_at IS NULL)
+        ORDER BY r.run LIMIT ?`, Store.AI_RUN_WAKE_TICK_BATCH);
+  }
+
+  #aiRunWakePending(now) {
+    const iso = Store.#aiIso(now);
+    return this.#aiRunWakeHolds(iso).length + this.#aiRunWakeRuns().length;
+  }
+
+  #aiRunWakeWake(now) {
+    /* NULL WHEN NOTHING IS SUSPENDED — the self-termination property REC-1
+       prized, stated here rather than inherited: an instance with no run
+       waiting on the daemon contributes no wake and holds no alarm at all. */
+    if (this.#aiRunWakePending(now) <= 0) return null;
+    return now + this.#aiRunWakeTickMs();
+  }
+
+  /** THE TICK. The hold keeps a legitimately-waiting run alive; the wake
+   *  delivers the daemon's answer exactly once.
+   *
+   *  THE HOLD MOVES `expires` AND DELIBERATELY NOT `updated`. `updated` is when
+   *  the RUN last acted, and the plane declining to kill a run is not the run
+   *  acting — a reader must still be able to see how long it has been silent.
+   *  Moving both would have made a held run indistinguishable from a
+   *  heartbeating one, which is the fact this consumer exists to preserve.
+   *
+   *  IT GRANTS THE STANDARD LEASE AND NOT THE RUN'S OWN, stated because it is
+   *  visible from outside: `leaseMs` is an argument to `aiRunOpen` and
+   *  `aiRunTick`, it is never stored, and the record therefore has no memory of
+   *  what a particular caller chose. `AI_RUN_LEASE_MS` is the only figure the
+   *  store holds, so a run opened on a shorter lease is held on the standard
+   *  one while the daemon owes it an answer. That is a widening and it is
+   *  bounded twice over — by the request's own expiry, and by the fact that
+   *  nothing renews it once the request is answered. */
+  #aiRunWake(now) {
+    const iso = Store.#aiIso(now);
+    const until = Store.#aiIso(now + Store.AI_RUN_LEASE_MS);
+    const holds = [], wakes = [];
+
+    for (const r of this.#aiRunWakeHolds(iso)) {
+      this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+      holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
+    }
+
+    for (const r of this.#aiRunWakeRuns()) {
+      /* BOUNDED TOO, and for the same reason the run scan is: one run may have
+         asked for many documents, and a wake that read all of them would put
+         the unbounded scan back one level down. Completions past the batch stay
+         unstamped, so the run is woken again on the next tick with the rest —
+         a completion is DELAYED by a backlog and never dropped by one. */
+      const done = this.#rows(
+        `SELECT request, state FROM capture_requests
+          WHERE run = ? AND state IN ('captured','refused') AND run_woken_at IS NULL
+          ORDER BY updated, request LIMIT ?`, r.run, Store.AI_RUN_WAKE_TICK_BATCH);
+      if (!done.length) continue;      // the row's own EXISTS already proved otherwise
+      const captured = done.filter((q) => q.state === "captured").length;
+      const refused = done.length - captured;
+      const bad = this.ctx.storage.transactionSync(() => {
+        /* THE ENTRY FIRST, then the lease and the stamp — `#aiRunTerminate`'s
+           order and its reasoning: if anything could fail it is the append, and
+           a run left unwoken with nothing written is retried on the next tick,
+           while a run stamped as woken with no entry has lost the record of it.
+           THE APPEND CANNOT REFUSE FROM HERE BY CONSTRUCTION — the state comes
+           from the reducer, there is no bundle, no condition and `governed` is
+           false — so this branch is undrivable today. It is kept, and the
+           failure is reported rather than swallowed, because the consequence of
+           swallowing it is a wake that silently never happened: the answer
+           NAMES it and the row stays unstamped, so a defect here is loud on
+           every alarm instead of invisible on all of them. */
+        const refusal = this.#aiRunAppend(r.run, {
+          level: "internet",
+          subject: r.context_id,
+          state: this.#aiRunSearchState(r.run, false),
+          governed: false,
+          detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
+                + `(${captured} captured, ${refused} refused). The run is resumable: its own log `
+                + `carries what each request established, and §14b.7's resumed run reads it and `
+                + `continues rather than restarting`,
+        }, iso, 0);
+        if (refusal) return refusal;
+        this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
+        for (const q of done)
+          this.sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso, q.request);
+        return null;
+      });
+      wakes.push({ run: r.run, completions: done.length, captured, refused,
+                   woken: !bad, ...(bad ? { unwritable: bad } : { expires: until }) });
+    }
+    return { at: iso, held: holds.length, holds, woken: wakes.length, wakes };
+  }
+
   /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
    *
    *  The shape is chosen to be what UI-38's renderers already walk, because
@@ -21082,7 +21403,7 @@ export class Store extends DurableObject {
           bound: row.stopped_bound, at: row.stopped_at }
       : null;
 
-    /* PL-12: THE MANIFEST BLOCK. Read the header above this method for what the
+    /* PL-12: THE MANIFEST BLOCK. Read the header on `aiRunRead` for what the
        three answers mean and why the comparison rather than the echo is the
        point. Computed in ONE function because `aiRunSpawnPayload`'s COMPOSING
        half publishes the same block, and two computations of "what lens was
@@ -21194,6 +21515,172 @@ export class Store extends DurableObject {
          map (DEC-8, and `op=airunlog`'s own precedent one method down). */
       stated: STANDARD_BASIS[basis],
       pair: basis === "recorded" ? { capture, connection } : null,
+    };
+  }
+
+  /** op=airuns — WHICH RUNS ARE IN THIS CONTEXT. REC-69, UI-49's delegation.
+   *
+   *  ===========================================================
+   *  THE QUESTION NO OP COULD ANSWER, AND WHY THAT MATTERED.
+   *  ===========================================================
+   *
+   *  §14a promises that *"any window focused on an inquiry or a project shows
+   *  an animated indicator that a job is running"*. UI-47 found the indicator
+   *  had no call site at all; UI-49 built one — and MEASURED, while building
+   *  it, that the plane could not be asked the question. `op=airun`,
+   *  `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
+   *  queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer,
+   *  **so the browser never learns a run id by opening one.** UI-49 therefore
+   *  fed its seam from the only source that existed — the run addresses THIS
+   *  DEVICE had already opened — which is honest, is pinned, and reaches only
+   *  the member who already held the address. §14a's promise is about the
+   *  TEAMMATE WHO DID NOT, and this method is the half that reaches them.
+   *
+   *  ===========================================================
+   *  THE GATE, AND WHY THIS SHAPE IS THE ONE THAT LEAKS IF IT IS WRONG.
+   *  ===========================================================
+   *
+   *  A run-id read is a poor leak: a caller must already hold the id. A
+   *  CONTEXT-KEYED LIST is the opposite — it takes an id a member can see on
+   *  their own screen and answers with everything hanging off it. So the gate
+   *  is not incidental here, it is the feature's whole security posture.
+   *
+   *  IT IS `#bundleGate` ON `context_id`, THE SAME PREDICATE AND THE SAME
+   *  COMPILATION POINT (D-15) that `aiRunRead`, `aiRunLog` and
+   *  `aiRunSpawnPayload` already compile. **NO SECOND PREDICATE IS WRITTEN
+   *  HERE**, and that is deliberate rather than economical: PL-11 measured that
+   *  `viewerPredicate`'s MACHINE alternation returns an unfiltered `1=1`, so a
+   *  hand-rolled gate that forgot the carve-out — or remembered it wrongly —
+   *  would hand an agent the whole store, and a hand-rolled one that forgot the
+   *  FAIL-CLOSED deny would turn a missing control-plane stamp from an outage
+   *  into a leak. Both arms are `viewerPredicate`'s and neither is restated.
+   *
+   *  THE POSTURE IS WITHHOLD, NEVER REDACT (REC-36). A run over a project the
+   *  viewer was never invited to is absent from this list BYTE-IDENTICALLY to a
+   *  run that does not exist, and **no count of what was withheld is reported**
+   *  — that count is exactly the disclosure that somebody is investigating
+   *  something you cannot see (op=backlinks' rule, and `gate-reads.test.mjs`
+   *  carries the classification). It follows that a well-formed context with no
+   *  visible runs answers an ordinary EMPTY LIST: "no runs here" and "no runs
+   *  you may see" are ONE answer BY CONSTRUCTION rather than by care.
+   *
+   *  ===========================================================
+   *  BOUNDED, AND THE BOUND IS PUBLISHED — IC-25/IC-26's rule.
+   *  ===========================================================
+   *
+   *  `limit` is the cap AFTER clamping, never the number the caller asked for;
+   *  `truncated` is the completeness signal, in the spelling its three siblings
+   *  already use (`op=airunlog`, `op=versionchain`, `op=basisversions`) rather
+   *  than a fifth word beside the plane's four (REC-55). Both are published on
+   *  the EMPTY answer too, so a reader who sees nothing does not have to guess
+   *  which bound they would have been answered at. `cap + 1` is asked for and
+   *  `cap` delivered — `op=exportlog`'s mechanism — because the extra row is
+   *  the whole difference between "this context has 200 runs" and "here are its
+   *  first 200".
+   *
+   *  ORDER IS NEWEST FIRST, and the cut therefore falls on the OLDEST. This is
+   *  NOT `op=airunlog`, which is replayed FROM THE START by a resuming run
+   *  (§14b.7) and must keep ascending order; the question here is "what is
+   *  happening in this context", and a surface cut off from the newest run
+   *  would be a surface that cannot see the job that is running now.
+   *
+   *  NO STATUS FILTER, deliberately. A `status='running'` filter here would put
+   *  the judgement in the plane and leave a surface unable to render the run
+   *  that ENDED — which is the overclaim UI-49 removed one layer up when it
+   *  made the indicator carry the record's own status word instead of pulsing
+   *  unconditionally. The record answers what is there; the surface decides
+   *  what to draw. */
+  async aiRunsInContext({ contextType = null, contextId = null,
+                          viewer = null, limit = null } = {}) {
+    /* The helper sits ABOVE the marker, on `#refusePairComposed`'s precedent
+       and for its measured reason: the code here is a VARIABLE, so a `where`
+       that enclosed it would report a refusal the DEC-49 guard cannot compare
+       against a row. Every refusal INSIDE the region names its code as a STRING
+       LITERAL, which is what makes arm C's verdict on this site evidence. */
+    const refusal = (code, detail) => {
+      const row = AI_RUNS_CONTEXT_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check,
+               translation: row.translation, detail };
+    };
+    const kinds = Object.keys(RUN_CONTEXTS);
+    const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
+    const id = contextId == null ? "" : String(contextId).trim();
+
+    /* DEC-49 REGION is-airuns-context — REC-69 / C-36.1-3. The three ways the
+     * QUESTION can be malformed, and nothing else: everything below this marker
+     * is the answer, and a well-formed question about a context that holds no
+     * visible runs is answered rather than refused. */
+    if (!type)
+      return refusal("AI_RUNS_NO_CONTEXT_TYPE",
+        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. `
+        + "An inquiry and a project are different objects with different membership, so there is no "
+        + "default here that would not be answering about something you did not ask about.");
+    if (!kinds.includes(type))
+      return refusal("AI_RUNS_UNKNOWN_CONTEXT_TYPE",
+        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. `
+        + `The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. `
+        + "Answered as a refusal rather than as an empty list, because an empty list here would say "
+        + "nothing is running in a place the record does not recognise.");
+    if (!id)
+      return refusal("AI_RUNS_NO_CONTEXT_ID",
+        `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over `
+        + "the context's own id, so a blank id would ask about every context at once — a different "
+        + "question, not a wider answer.");
+    /* END DEC-49 REGION is-airuns-context */
+
+    const seen = this.#bundleGate("r.context_id", viewer);
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.AI_RUNS_LIMIT_DEFAULT),
+                                     Store.AI_RUNS_LIMIT_MAX));
+    /* `lower(r.context_type)` because the WRITE does not fence the word:
+       `aiRunOpen` stores `String(contextType)` verbatim, so a run opened as
+       `Inquiry` is in the record and a case-sensitive match here would answer
+       "nothing is running" over a run that plainly is. Matching case-blind is
+       the honest reading of what the record holds; fencing the WRITE is PL-5's
+       site and C-22's family, and it is DELEGATED rather than reached into. */
+    /* THE PAGE IS IDS, AND IT IS GATED — both halves matter and the second one
+       is the security property rather than a detail. The gate is applied HERE,
+       before the bound, so `truncated` counts only rows this viewer may see: a
+       `truncated: true` computed over rows they may not would announce that
+       hidden runs exist, which is op=backlinks' no-count rule broken by a flag
+       instead of by a number. */
+    const page = this.#rows(
+      `SELECT r.run FROM ai_runs r
+       WHERE lower(r.context_type) = ? AND r.context_id = ? AND ${seen.sql}
+       ORDER BY r.created DESC, r.run LIMIT ?`,
+      type, id, ...seen.args, cap + 1);
+    /* EACH ROW IS COMPOSED BY `aiRunRead` ITSELF — the list IS the read, run per
+       run, and that is the strongest available form of "the same `session`
+       shape per row".
+       WHY NOT A SHARED PRIVATE COMPOSER, which was written first and REVERTED,
+       because the reason is a finding rather than a preference: extracting the
+       block out of `aiRunRead` took `op=airun` OFF `meaning-bounds.test.mjs`'s
+       bare roster — not because the read got better, but because its unbounded
+       `ai_run_bounds` scan moved into a PRIVATE method the walk cannot follow.
+       The ratchet's FLOOR caught it immediately, which is exactly what that
+       floor is for, and REC-70's whole subject is a read the instrument could
+       not see. Calling the public method leaves `op=airun` classified exactly as
+       it was and creates no blind spot for the next reader to inherit.
+       WHAT IT COSTS, stated rather than hidden: one extra keyed lookup per row,
+       and the gate compiled once more per row through the SAME `#bundleGate`.
+       The bound above is what keeps that finite, and re-asking the gate cannot
+       widen the answer — it can only ever agree or withhold, so the redundancy
+       fails safe.
+       WHAT IT INHERITS: `op=airun`'s `budget` is a collection off an UNBOUNDED
+       scan of `ai_run_bounds`. That is a known residual on REC-70's ratchet and
+       it is untouched here rather than quietly fixed inside another item's
+       method; it is DELEGATED with the measurement. */
+    const runs = (await Promise.all(page.slice(0, cap)
+      .map((r) => this.aiRunRead({ run: r.run, viewer }))))
+      .filter((a) => a && a.found).map((a) => a.session);
+
+    return {
+      ok: true,
+      /* The context is echoed NORMALISED, so a caller sees what was actually
+         asked rather than what they typed — the same reason op=meaningrows
+         publishes the arm it resolved. */
+      context: { type, id },
+      runs, count: runs.length,
+      limit: cap, truncated: page.length > cap,
     };
   }
 
@@ -23601,6 +24088,15 @@ export class Store extends DurableObject {
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),
+        /* REC-69: the CONTEXT-keyed read, beside the three run-id-keyed ones.
+           `viewer` is the control plane's server-side stamp exactly as it is for
+           its three siblings — a caller that could name the viewer could read
+           the runs of a project it was never invited to, which is the whole
+           point of the op being gated at all. */
+        airuns: () => this.aiRunsInContext({ contextType: url.searchParams.get("contextType"),
+                                             contextId: url.searchParams.get("contextId"),
+                                             viewer: url.searchParams.get("viewer"),
+                                             limit: url.searchParams.get("limit") }),
         savecapturesession: () => this.saveCaptureSession(body || {}),
         loadcapturesession: () => this.loadCaptureSession({ session: url.searchParams.get("session") }),
         dropcapturesession: () => this.dropCaptureSession({ session: url.searchParams.get("session") }),

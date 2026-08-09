@@ -2654,6 +2654,53 @@ than take "additive keys" as the whole answer.
 
 ---
 
+## IC-43 · I8: `agent-worker`'s `POST /run` publishes the SPAWN CONTRACT each sub-session was handed, and NAMES every return that broke the REPORT contract · PROPOSED 2026-08-09 (FL-5) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC`. **IC-44 was minted by the same item in a
+double invocation of the tool and is UNUSED — it is burned, not free**, and it is named here so
+nobody spends an afternoon proving the ledger wrong about it.
+
+### PROPOSED
+
+**WHAT MOVES.** Four ADDITIVE keys on `POST /run`'s success answer. Nothing is removed, renamed or
+re-valued.
+
+| change | shape | kind |
+| --- | --- | --- |
+| the answer gains `fanout` | `{ of_pass, levels[], scope[], contracts[] }` — `contracts` is exactly the frozen brief each sub-session was handed, one per level | ADDITIVE key |
+| the answer gains `reports_taken` | integer: returns that honoured the REPORT contract | ADDITIVE key |
+| the answer gains `reports_refused` | `[{ level, code, detail, fields? }]` — NAMED, never a count alone | ADDITIVE key |
+| the answer gains `citations_reread` | integer: citations the PARENT resolved by address | ADDITIVE key |
+| a NEW refusal shape on this surface | 502 `SPAWN_PAYLOAD_CARRIES_LENS` / `SPAWN_PAYLOAD_MISSING`, with `level` | ADDITIVE refusal |
+
+**WHY THE CONTRACTS THEMSELVES GO ON THE WIRE, and it is the finding rather than a preference.**
+FL-3 asserted §14's fence from inside this member by computing `manifest_field_present` into a
+local that never reached the wire, and checking it by grepping a trace note that never carries the
+phrase. **MEASURED at FL-5 rather than argued: with the plane mock's SEARCH-half payload made to
+carry a full bias block, `harness.test.mjs` stayed 194 pass / 0 fail and that arm PASSED.** A fence
+whose only witness cannot fail is not a witness. Publishing the brief makes the property READABLE
+FROM OUTSIDE — the party protected by the fence can be checked without trusting the member's
+summary of itself — and FL-5's suite then asserts on the manifest's own `statements_sha` bytes,
+which no spelling can dodge.
+
+### CONSUMER IMPACT — MEASURED, and it is ZERO
+
+`grep -a AGENT_WORKER bio-plane/src/` returns NOTHING: the plane's binding is still inert and this
+member has exactly one caller, which does not exist yet. No surface, no suite outside
+`agent-worker/test/` and no installer path reads this answer. So the impact is not "small", it is
+**nil, and measured** — every key is additive besides.
+
+### VERSION
+
+**I8, and the bump is CONDUCT's. FL-5's own verdict is that I8 STAYS PROVISIONAL at 0.1.0**, for
+FL-3's reason unchanged and re-measured here: the interface exists to describe trust running BOTH
+ways, and it still has ONE implemented end. Nothing about this member is live-verified, nothing
+deployed, and a registry entry promoted on the strength of a richer response body would be a claim
+about a direction no code takes. `I3` is NOT bumped — this item adds no op and changes none; it
+CONSUMES `op=meaningrows`' existing `ids` restriction, which PL-9 already published.
+
+---
+
 ## IC-41 · AN UNDECLARED CROSS-AREA COUPLING, NAMED BECAUSE IT BROKE: `bio-plane/test/airun.test.mjs` LIFTS `civicos-ui/app.html`'s RUNNING-SESSION RENDERERS BY FUNCTION NAME · PROPOSED 2026-08-08 (UI-38) — the RESOLUTION and any registration are CONDUCT's
 
 - **Interface:** **NONE — and that is the row.** `INTERFACES.md` registers I1–I8; not one of them
@@ -2876,3 +2923,158 @@ reads as "provenance was never recorded", which is exactly what is true of them.
 `op=attesttext` (the member act). The first two are reads on `READING_READS`' terms; the third is
 `mutating: true`, carries `contribute`, and is refused to a machine credential at BOTH the
 control plane and the store (C-35.10).
+
+---
+
+## IC-45 · I3: `op=affordances` publishes ONE ADDITIVE VOCABULARY — `sufficiency_claim_states`, the three states of a sufficiency `asserted_by` with the sentence a member reads instead of each · PROPOSED 2026-08-09 (PL-17, enacting DEC-65) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-41, four ids already held and
+stepped over). **AND THE TOOL WAS INVOKED TWICE BY THIS SESSION IN ERROR, so `IC-46` IS ALSO HELD
+BY THIS WORKTREE AND IS UNUSED** — named here rather than left as a silent gap, because an id that
+nobody can account for is exactly what the allocator exists to prevent.
+
+- **Interface:** I3 (the plane's op surface), **STABLE**.
+- **Proposer:** PL-17, 2026-08-09, enacting **DEC-65** (answered 2026-08-09 by session BOB under
+  Bob's standing delegation: *"the third `asserted_by` state minted FIRST"*).
+- **Owner to land it:** `RECORD` (landed here).
+
+### PROPOSED
+
+**WHAT MOVES.** One key on `op=affordances`' answer, and nothing else:
+
+| change | shape | kind |
+| --- | --- | --- |
+| `vocabularies` gains `sufficiency_claim_states` | `{ claimed, unclaimed, unstated, machine_stamped }` → a member-facing sentence each | **ADDITIVE key** |
+
+**No key is removed, no key is renamed, and no VALUE of an existing key moves.** Every other
+vocabulary this op publishes is unchanged, byte for byte.
+
+**WHY.** DEC-65 mints a third legal value for a sufficiency `asserted_by` — an explicit *no
+independent-sufficiency claim was made* — so the field can hold something that is neither a
+member's affirmative claim nor a silence. **A surface that renders that field verbatim would then
+print a machine word at a member**, and one already does: `civicos-ui/app.html`'s grounding receipt
+renders `Asserted by ${g.asserted_by}` directly. Publishing the states with their words is what
+stops every surface inventing its own name for a state the record now distinguishes — the DEC-8
+drift class `affordances.mjs` exists to close — and it is DEC-49's rule that a term a member meets
+carries the sentence they read instead of it.
+
+**CONSUMER IMPACT, MEASURED RATHER THAN ASSERTED.** `grep -rn "vocabularies" civicos-ui/` finds the
+consumers: `app.html` reads the whole `vocabularies` object into `ACT_SOURCE.vocab` and indexes it
+BY KEY, and three UI test fixtures build `vocabularies: {}` or a one-key object. **An additive key
+is read by none of them and breaks none of them — measured, not assumed: `node
+civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED, `0` before and after.**
+`civicos-ui/check-refusal-codes.mjs` arm E does NOT reach this vocabulary either, and that was
+measured rather than assumed — see the DELEGATION to UI in `CLAIMS.md`, which carries the figures
+and the reason adding the module to that walk would make the guard over-strict on correct code.
+
+**WHAT A CONSUMER SHOULD DO WITH IT, since a published vocabulary nobody renders is a promise
+nothing keeps:** read the field through the plane's `sufficiencyClaimState()` rather than matching
+the stored literal. A surface that keys on `none:independent-sufficiency` itself has rebuilt the
+predicate, and will be wrong the day a fourth state is minted.
+
+### RESPONSES
+
+_(awaiting: `UI`. `FRAMEWORK`, `CAPTURE`, `CONTENT-*` and `DIST` are not consumers of this key.)_
+
+---
+
+## IC-42 · I3: one NEW read op `op=airuns&contextType=&contextId=` — WHICH RUNS ARE IN THIS CONTEXT · PROPOSED 2026-08-08 (REC-69, UI-49's delegation), ADDITIVE
+
+**RENUMBERED from IC-35 to IC-42 by CONDUCT 2026-08-08** — REC-66 had taken IC-35 the same day for `op=connect`'s derivation bound, and it is already on `main`, so it keeps the number. REC-69's own note below is exactly right and is the reason this is a renumber rather than a reprimand: **IC-35 was MEASURED as the next free number over the real file** (the maximum allocated
+was IC-34) rather than assumed. Three items collided on an IC number earlier the same
+day; if CONDUCT renumbers this at integration, the report, the claim and
+`test/airuns.test.mjs`'s header all name IC-35 and that is recorded rather than silently
+corrected.
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, AND IT IS PURELY ADDITIVE.** One new op, reachable by the `admin`,
+`member` and `probe` classes and non-mutating:
+
+    op=airuns&contextType=<inquiry|project>&contextId=<bundle id>[&limit=N]
+      ->  { ok: true,
+            context: { type, id },              // the caller's own words, normalised
+            runs: [ <op=airun's `session` block>, ... ],
+            count: <length of what was SENT>,
+            limit: <the cap AFTER clamping>,
+            truncated: <was anything cut> }
+
+Nothing existing moves. `op=airun`, `op=airunlog` and `op=airunspawn` keep their request
+shapes, their response shapes and their refusals byte for byte — asserted by a zero-delta
+battery, with `airun.test.mjs` unmoved at 103 assertions.
+
+**WHY IT IS OWED, AND IT IS A GAP RATHER THAN A GAIN.** `INVESTIGATIVE-SESSION.md` §14a:
+*"A background session runs in a CONTEXT and is associated with an inquiry or a project.
+Any window focused on any of those objects shows an animated indicator that a job is
+running."* UI-47 measured that the indicator had no call site at all. UI-49 built one —
+and measured, while building it, that **the plane could not be asked the question**:
+`op=airun`, `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
+queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer, so the browser
+never learns a run id by opening one. UI-49's seam therefore feeds on the only source
+that existed — the run addresses THIS DEVICE has already opened — which is honest, is
+pinned, and **reaches only the member who already started the run on that machine. A
+second member's run in the same inquiry is invisible to them, and §14a's promise is about
+exactly that teammate.**
+
+**THE SHAPE IS NOT NEW, AND THAT IS THE POINT.** Every row is `op=airun`'s own `session`
+block, produced by calling `aiRunRead` per run rather than by a second composer, and the
+suite asserts the two answers are BYTE-IDENTICAL for the same run. §14a's surface renders
+a run through field-name-blind renderers, so "the same shape" is load-bearing rather than
+tidy — and a second composer would be a hand copy, which this repository has measured
+five times agrees with its author at zero cost.
+
+**ENVELOPED, per IC-25/IC-26/IC-27/IC-28/IC-29/IC-30.** `limit` is the bound APPLIED
+after clamping — never the number the caller asked for — and `truncated` is the
+completeness signal in the spelling its three siblings already use, rather than a fifth
+word beside the plane's four (REC-55's declined-second-copy rule). Both are published on
+the EMPTY answer too. The 200/1000 pair is `op=versionchain`'s, which `op=basisversions`
+already reused: this is the same KIND of read, a KEYED lookup whose answer is a list.
+`op=airunlog`'s 200/5000 is deliberately NOT borrowed — it bounds one run's observations,
+which grow per tick, and this bounds the runs in a context, which grow per investigation.
+
+**GATED, AND THE GATE IS THE FEATURE'S WHOLE SECURITY POSTURE.** `#bundleGate` on
+`context_id` — the same predicate compiled at the same one point (D-15) as its three
+siblings, with NO second predicate written. A run-id read is a poor leak (a caller must
+already hold the id); a context-keyed list takes an id a member can see on their own
+screen and answers with everything hanging off it. The posture is WITHHOLD THE ROW
+(REC-36), so a run over a project the viewer was never invited to is absent
+byte-identically to one that does not exist, and **no count of the withheld is
+published** — that count is the disclosure that somebody is investigating something you
+cannot see. **The bound is applied BEHIND the gate**, because a `truncated` computed over
+rows the viewer may not see would be that count arriving as a boolean.
+
+**RENUMBERED C-34 → C-36 on 2026-08-09 at this item's REPLAY onto `main`, with
+`node tools/mintid.mjs C` (floor C-35) rather than by reading the file and adding one.**
+REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is already on `main`, so it
+keeps the number. **REC-69 measured C-34 free when it looked and was right when it looked**
+— the same shape as this file's own IC-35 → IC-42 renumber above, and the same shape as the
+seven items that collided on an id in one day. **THE COLLISION WAS INVISIBLE TO THE BATTERY:
+139/139 green with two families claiming C-34.1-3, and only `node civicos-ui/test/run.mjs`
+caught it** — *"Two conditions behind one C-number are one condition as far as `op=audit`
+can see."* That is the fourth cross-item ratchet this pair fired and the reason the UI
+harness is run even by an item that opened no UI file.
+
+**THREE REFUSALS, C-36.1-3, in a new `AI_RUNS_CONTEXT_CHECKS` family**, each with a
+canned translation read from ONE row (DEC-49), each fired inside the
+`DEC-49 REGION is-airuns-context` span, each naming its code as a STRING LITERAL so the
+guard's arm C compares all three. What is refused is the malformed QUESTION — no kind, an
+unrecognised kind, no id — and never the invisible answer: a real context holding no
+visible runs answers an ordinary empty list.
+
+**ONE THING A CALLER MUST KNOW AND CANNOT INFER, stated rather than left to be
+discovered:** the WRITE is not fenced by the same vocabulary. `aiRunOpen` stores
+`contextType` verbatim, so a run may be opened on a kind this read refuses to be asked
+about. The read matches case-blind so the ordinary mismatch (`Inquiry` vs `inquiry`) does
+not manufacture a false "nothing is running", and the asymmetry is delegated rather than
+closed from inside a read's item.
+
+### 2 · RESPONSES
+
+*(CONDUCT's, per IC-1's precedent for dormant areas.)* **RECORD's own position: ADDITIVE
+and safe to accept.** No consumer exists to break — the op is new — and the one consumer
+that WILL exist, UI-49's seam, was built with this shape in mind: exactly one function
+changes on the surface.
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*

@@ -298,9 +298,17 @@ export const LEDGER_KINDS = ["DO-PATH", "NEVER"];
    because a deferred op is legitimately named wherever it is designed and those
    documents are not wrong. SELF-CLEANING: `plannedStale()` fails the day one of
    these turns up in OPS, so an entry cannot outlive the deferral it records. */
+/* `airuns` EXPIRED AND WAS REMOVED 2026-08-09 by REC-69, and the removal is this
+   mechanism WORKING rather than a chore. The row said *"QUEUE.md's own row says NO
+   OP CAN ANSWER THAT QUESTION TODAY"*; `op=airuns` is now in OPS, so the sentence
+   the row protected became FALSE and `plannedStale()` failed the build naming
+   `airuns` — a registration outliving its deferral, caught in one run.
+   THIS IS THE THIRD RATCHET THE PAIR FIRED and the only one nobody predicted: the
+   2026-08-08 backout named two (`run-conditions` ARM W3 and `airuns` SWEEP), and
+   this one fires only because M0-12 landed between the two attempts. Recorded here
+   because "a cross-item ratchet nobody listed" is the finding, not the edit. */
 export const PLANNED_OPS = [
   { op: "publishpreflight", why: "the publication pre-flight. DEC-33 DEFERRED it — publication runs through the operator for now — and QUEUE.md carries the deferred row. DEBT D-154/D-155 name its two refusals." },
-  { op: "airuns", why: "list the AI runs attached to an inquiry or project. QUEUE.md's own row says NO OP CAN ANSWER THAT QUESTION TODAY, which is why it is queued rather than described." },
   { op: "needs", why: "research/SB-CORE.md GAP-A3 PROPOSES it (or `whoami`) as the publisher of the NEEDS map. A proposal is not a claim that the op exists." },
 ];
 

@@ -5090,6 +5090,339 @@ ones the record already assigned to the surface: DEC-29(b) states in as many wor
 wording clause is a UI string"*, and DEC-32 clause 1 forbids the analyst's vocabulary while leaving
 the member-facing rendering to the surface — which is what UI-27's elicitation already established
 one construct over. Nothing here is a consequence Bob has not already ruled on.
+## CLAIM 2026-08-09 RECORD (PL-17 — the THIRD `asserted_by` state)
+session: pl17-third-asserted-by-state (worktree agent-a6ce65818b1c1b8d2)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/checks/bio-checks.mjs`** (the MINT ONLY — a new block beside the REC-46 machine-identity predicates at the head of the file. **`C-25.6` / `VERSION_GROUND_UNASSERTED` and `C-2.8` / `checkGrounds` ARE NOT TOUCHED**, which is DEC-65's own sequencing and the reason this item exists separately from the one that owns them), **`bio-plane/src/affordances.mjs`** (`VOCABULARIES` gains one key, IMPORTED and never restated), **`bio-plane/test/sufficiency-state.test.mjs`** (NEW), **`bio-plane/test/sufficiency-state.control.mjs`** (NEW — the negative-control driver, deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs), **`bio-plane/scripts/coverage.mjs`** (`REGISTER_FLOOR` only, moved from PRINTED figures), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `docs/development/DECISIONS.md` (DEC-65's enactment note ONLY — appended, no other row touched), `docs/development/INTERFACE-CHANGES.md` (the IC row for the additive `op=affordances` key). **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/schema.mjs`, **NOT** `civicos-ui/**`, **NOT** `pdf-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: I3 (the plane's op surface — `op=affordances`).
+interfaces owned: none. The `op=affordances` addition is ADDITIVE and its IC row is filed; **CONDUCT takes the version bump and the RESOLUTION.**
+expected: DEC-65, answered 2026-08-09 by session BOB under Bob's standing delegation: *"take (b) as amended by FL-3 … with the third `asserted_by` state minted FIRST."* Mint an explicit **"no independent-sufficiency claim was made"** value for the field whose published meaning is *a member said this part is enough on its own* — undetermined-is-first-class applied to one field — so that a machine's single-part ground row never wears a member's meaning. **The check (`C-25.6`) and PL-3's endpoint guard are the NEXT item's** and are not touched here; PL-14 re-measures the strength pair after that.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief (the brief carried no figure): **138 suites (134 plane + 4 fleet) · 138/138 green · 8,827 assertions · 126.0 s · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED (baseline: OPS 162/162 · CHECKS 219/219 · controls 134/134, 621 arms · REGISTER_FLOOR arms 621 / classified 133 / corpus 134 · exit 0); `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED (baseline exit 0); `node tools/plancheck.mjs` clean but for UNPUSHED. Negative controls RUN, each arm ALONE with the other defences held OPEN, an OVER-STRICTNESS arm included, restores verified by sha256 AND by `cmp` against uniquely-named per-arm pristine copies, the driver written INSIDE THIS WORKTREE. No push, no merge, no deploy, no version bump.
+concurrency: checked over the whole file at `ad87db7` (this worktree is AT `origin/main`, not behind). **No claim in `CLAIMS.md`, open or released, names `bio-plane/checks/bio-checks.mjs` as a live path today**: FL-3's claim (the item that raised this work) names it under **NOT**, and the DELEGATION that owns `C-25.6` and PL-3's endpoint guard is FILED but UNCLAIMED — DEC-65 sequences it AFTER this one. `bio-plane/src/store.mjs` and `bio-plane/src/schema.mjs` are deliberately NOT in the paths above so that item finds them untouched.
+released: 2026-08-09 — committed on `worktree-agent-a6ce65818b1c1b8d2`, **NOT pushed and NOT merged**; CONDUCT integrates. **THE STATE IS MINTED AND IT IS DELIBERATELY INERT.** `SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency'`, `sufficiencyClaimState()`, `isSufficiencyClaimed()` / `isSufficiencyUnclaimed()` and `SUFFICIENCY_CLAIM_STATES` land in `checks/bio-checks.mjs` beside the REC-46 identity predicates — **the edit to that file is PURELY ADDITIVE, proven by `git diff` containing not one `-` line in it**, so `C-25.6` and `checkGrounds` are byte-identical and the next item finds them as FL-3 left them. The words are published through `op=affordances` (IC-45), IMPORTED and never restated. **Battery 139/139 green · 8,865 assertions · 141.9 s · exit 0** against a true baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **138/138 · 8,827 · 126.0 s** (the brief carried no figure, so there was nothing to agree or disagree with; the worktree arrived without `bio-plane/node_modules` and `npm ci` was run there first). **Delta +38 attributed by DIFFING the two full runs PER SUITE, never by subtraction:** `sufficiency-state.test.mjs` +35 (new) and `hygiene.test.mjs` 553 -> 556 (its per-suite walk gains rows for a new file); **135 of 137 suites byte-identical in count.** `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0** — OPS 162/162, CHECKS 219/219, provenance `145 of 145 discovered item(s) are in the commit at HEAD`. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **0**. `node civicos-ui/check-refusal-codes.mjs` exit **0**, **no DEC-49 region touched** (`git diff` contains ZERO `DEC-49 REGION` marker lines) and arm E unmoved at 9 vocabularies / 56 terms — **which is itself the measurement that arm E does NOT reach this vocabulary**, stated at the site and delegated to UI rather than papered over. `node tools/plancheck.mjs` **clean but for UNPUSHED**. **`REGISTER_FLOOR` moved 621 -> 629 arms / 133 -> 134 classified / 134 -> 135 corpus, ALL THREE IN THE SAME TURN**, from the figures a green run PRINTED **as REPRODUCIBLE** — read only AFTER the new files were in a commit, because the pre-commit run reported the identical numerals as CONTAMINATED and a floor moved on those is permanently too high; **ONE key set, verified by `grep -c`.** **EIGHT CONTROL ARMS, each armed ALONE with every other defence held OPEN, a BASELINE arm included, every restore verified by sha256 AND by `cmp` against uniquely-named per-arm pristine copies with byte counts printed and floored against the empty-string digest; re-run at HEAD with zero restore problems. THREE CAME BACK OTHER THAN DECLARED and all three are written into the driver's header rather than smoothed:** (6) the OVER-STRICTNESS arm caught **this suite hand-typing two case variants of a minted literal**, which agreed for free until the literal moved; (7) caught **the sweep matcher grading asking sites by the spelling they use TODAY**, so a site converted to the new predicate VANISHED from the sweep while the assertion over it went on passing — a classifier grading one literal hiding exactly what it was built to find; and (3) fell on two pins its declaration did not anticipate, and **that surprise is a DESIGN finding rather than an instrument one: adding `none:` to `MACHINE_STAMP_PREFIXES` makes `C-25.6` refuse the new value with no line of `C-25.6` changing — a fail-closed shape for one array entry, recorded precisely so the next item does not reach for it, because it makes the record say a machine claimed this about a value whose whole meaning is that nobody did.** **NO MIGRATION IS OWED and the reason is structural rather than a survey:** there is no SQL column for this field — `schema.mjs` states at the `inquiry_basis` site why the attribution is deliberately not projected — nothing writes the new value, and every stored row predating it carries a named member because both gates refused anything else at the moment it was written. **WHAT THIS ITEM COULD NOT DO:** it does not make the state DO anything. Nothing writes it and no gate distinguishes it, which is DEC-65's own sequencing and not a shortfall — but it means the state is a mechanism believed on its EXISTENCE until the next item drives it, and the only defence against that is `§7` of the suite, which MEASURES the gates' present verdict and is written to FAIL when they change. **Two DELEGATIONS filed** (the C-25.6/endpoint item, and UI). **IC-46 was minted by an accidental second invocation of `mintid.mjs` and is UNUSED — named in the IC-45 row rather than left as a silent gap.** `git stash` was NOT used at any point.
+
+### DELEGATION 2026-08-09 RECORD (PL-17) -> WHOEVER LANDS DEC-65's SHAPE (b) — the item that owns `checks/bio-checks.mjs`'s C-25.6 AND PL-3's ENDPOINT GUARD: **THE STATE IS MINTED AND HERE IS EXACTLY WHAT IS LEFT**
+
+DEC-65's first clause is done. FL-3's DELEGATION above is still the scope of yours, minus the
+vocabulary question, which is answered. What you inherit:
+
+- **THE VALUE AND THE PREDICATE, ALREADY THERE.** `SUFFICIENCY_UNCLAIMED` and
+  `isSufficiencyClaimed` / `isSufficiencyUnclaimed` / `sufficiencyClaimState` are exported from
+  `checks/bio-checks.mjs`, beside the REC-46 identity predicates. **ASK THE PREDICATE, NEVER MATCH
+  THE LITERAL.** `isSufficiencyClaimed` answers TRUE for a named member and for nothing else, which
+  is where DEC-32's *only ever reached by an affirmative, attributed act* is enforced in one place.
+  A site that matches `'none:independent-sufficiency'` itself has rebuilt the predicate and will be
+  wrong the day a fourth state exists.
+- **TWO ASKING SITES, NOT ONE, AND A SWEEP THAT FINDS THEM.** `C-25.6` (`basisVersionFindings`) and
+  `C-2.8` (`checkGrounds`) ask the IDENTICAL question one level apart. `test/sufficiency-state.test.mjs`
+  finds them structurally rather than by name, so a third site written later is found too — **and
+  its first two matchers were both WRONG in ways worth knowing before you write yours:** a line-wise
+  matcher saw only one of the two (`checkGrounds` wraps its condition across two lines), and a
+  matcher keyed on `isMachineIdentity` made a CONVERTED site VANISH from the sweep while the
+  assertion over it went on passing.
+- **BLOCK 7 OF THAT SUITE WILL FAIL WHEN YOU LAND, AND THAT IS ITS PURPOSE.** It pins that the value
+  passes `C-25.6` today and that no site consumes it. **CORRECT those assertions with a comment
+  saying why the old expectation was right when it was written. Do not exempt them.** Control arm
+  (7) in `test/sufficiency-state.control.mjs` IS your change, run for one arm, so you can see in
+  advance exactly which two assertions move: `node test/sufficiency-state.control.mjs`.
+- **THE SECOND SITE STILL FIRES FIRST.** FL-3's measurement stands and PL-17 did not touch it:
+  PL-3's endpoint guard in `src/store.mjs` refuses on `legsIn.length > 0` — **any leg at all** —
+  so amending `C-25.6` alone still unblocks nothing.
+- **AND `schema.mjs` CARRIES A SENTENCE THAT BECOMES INCOMPLETE THE DAY YOU LAND.** The
+  `inquiry_basis` comment reads *"asserted per ground, by a named member"*. **PL-17 deliberately did
+  NOT correct it**, because until a gate accepts the third state that sentence is still true, and
+  documenting a mechanism that does not exist is the defect this project meets most. Correct it in
+  the same turn as the check. **Mind the trap while you are in there: no semicolon inside an inline
+  `--` comment in `schema.mjs`.**
+- **AND DEC-65's NARROW LICENCE, so it is not quietly widened.** The arithmetic argument is that
+  with **exactly one part** there is no maximum to take. Several parts, none of them claimed, is a
+  different thing and this state does not license it. If your check permits the second, say so out
+  loud, because it is a doctrine change and not an implementation detail.
+
+### DELEGATION 2026-08-09 RECORD (PL-17) -> UI: **A SURFACE RENDERS THIS FIELD VERBATIM, AND THE PLANE NOW PUBLISHES THE WORDS FOR IT**
+
+`civicos-ui/app.html`'s grounding receipt renders `Asserted by ${esc(String(g.asserted_by||""))}`
+directly (the `elicReceiptHtml` block). **PL-17 did not edit it — `civicos-ui/**` is yours.**
+
+- **WHAT IS AVAILABLE:** `op=affordances` now answers `vocabularies.sufficiency_claim_states`, a
+  map of the field's states to the sentence a member reads instead of the machine word. IC-45 is
+  filed with the measured consumer impact (zero: the key is additive, the UI harness reads exit 0
+  before and after).
+- **WHAT TO DO WITH IT:** read the field through the plane's `sufficiencyClaimState()` reading
+  rather than printing the stored value. Today the field can only hold a member's name, so nothing
+  is broken; **the moment DEC-65's shape (b) lands, that same line prints
+  `Asserted by none:independent-sufficiency` at a member.**
+- **AND THE WORDING IS WORTH YOUR OWN REVIEW rather than mine.** The four sentences honour DEC-32's
+  ban — *never show AND / OR / disjunction / grounds, not even as tooltips* — and speak in the
+  register `groundInquiry`'s own receipt already uses ("group of reasons", "enough on its own").
+  A matcher in the suite holds them to the ban, and **it can only see the analyst's WORDS; it
+  cannot see a sentence that teaches the structure without using them.** That reading is a person's.
+- **ONE MEASURED THING NOT TO DO, so you do not spend the hour I did.** `check-refusal-codes.mjs`
+  arm E does not reach this vocabulary, and **adding either module to its `VOCABULARY_MODULES` walk
+  would make the guard FAIL ON CORRECT CODE**: harvesting `checks/bio-checks.mjs` by arm E's shape
+  rule picks up four maps that are not member-facing text at all (`OBJECT_TYPES`,
+  `LEGACY_TYPE_ALIASES`, `FORBIDDEN_ALIASES`, `EARNED_SOURCE_AXIS`), and `src/affordances.mjs`
+  picks up `RUNGS`, whose values are single ladder words — every one of them would fail arm E's
+  phrase rule. **A fence tighter than its rule is not a safer fence.** Arm E's three rules are
+  therefore carried in `bio-plane/test/sufficiency-state.test.mjs` instead, in the battery, and the
+  limitation is stated at the site. If you want them under arm E properly, the shape rule needs a
+  way to tell a member-facing text map from a machine-to-machine one, and that is a real item.
+## CLAIM 2026-08-09 FLEET (FL-4 — the scheduler consumer)
+session: is-wave-w7-fl4 (worktree agent-a970ab6bb20ad1444)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/src/store.mjs`, BY SPAN AND NOT BY FILE** — (a) the `#schedConsumers` registry ONE APPENDED ENTRY (`ai-run-wake`, the TENTH — the row's "eighth" is stale and is corrected below); (b) `onAlarm`'s named-consumer chain, ONE `else if` and ONE spread key, so the consumer does not disappear into `probes`; (c) THREE new private methods `#aiRunWakePending` / `#aiRunWakeWake` / `#aiRunWake`, appended BESIDE the reaper's three (`#aiRunReap*`) and modelled on them; (d) ONE row appended to `#migrate`'s additive-column list. **NOT** `#aiRunTerminate`, **NOT** `aiRunOpen`/`aiRunTick`/`aiRunClose`, **NOT** `#aiRunReap*` (READ as the precedent, never edited), **NOT** `captureRequest`/`captureRequestDrain`/`#captureRequestConduct` (READ, and `#captureRequestConfigured` CALLED, never edited), **NOT** `purge` (no new table — see below), **NOT** `#reconcileAlarm`/`#armScheduler`. **`bio-plane/src/schema.mjs`** — ONE nullable column (`run_woken_at`) appended to the EXISTING `capture_requests` table, which already sits before the `host_governor` block; no new table, no reshape. **`bio-plane/test/scheduler.test.mjs`** (the accepts-when's own suite) and **`bio-plane/test/scheduler.control.mjs`** (NEW — the negative-control driver, deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs; PL-4's `capturerequests.control.mjs` precedent). **THREE OTHER SUITES, EACH CORRECTED AND NEVER EXEMPTED, each with a comment at the site saying why the old one was right when written:** `bio-plane/test/airun.test.mjs` (ARM S1's registry delta 9→10, plus ONE new arm S3c pinning that the wake was APPENDED after the drain); `bio-plane/test/leadslug.test.mjs` (its NULLABLE pin read `TEXT` at END OF LINE, which pinned nullability by way of the column being LAST in the table — a trailing comma broke it); `bio-plane/test/run-conditions.test.mjs` (REC-74's `ROLE` table gains the two new `ai_runs` readers as `HOUSEKEEPS` — its ARM W3 caught them BY NAME, which is that sweep doing exactly what its own comment promises). **`docs/development/CLAIMS.md`** (this entry and its delegations), **`docs/development/IS-BUILD-PLAN.md`** (the FL-4 row's two stale figures ONLY), **`docs/development/DEBT.md`** (ONE appended row, D-260, minted with `tools/mintid.mjs`). **NOT** `bio-plane/src/airun.mjs`, **NOT** `bio-plane/src/index.mjs`, **NOT** `bio-plane/checks/bio-checks.mjs` (no new refusal is minted — see below), **NOT** `agent-worker/**` (FLEET's own live claim), **NOT** `civicos-ui/**`, **NOT** `pdf-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: I5 (the store's schema — one additive nullable column). I3 is NOT touched: no op is added, removed or reshaped, so no IC row is owed.
+interfaces owned: none.
+expected: IS-BUILD-PLAN FL-4, W7 slot A. ONE appended entry to `#schedConsumers` waking suspended runs on daemon completion and on resumption ticks. No second alarm and no cron — SCHEDULER.md's recorded decision, read before anything was designed.
+accepts-when: as IS-BUILD-PLAN FL-4. Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT: **138/138 suites green · 8,827 assertions** (2 suites report no count: `bundle`, `livefire`; fleet 2 members, both RAN — `pdf-worker` is no longer dark). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0** (OPS 162/162 · CHECKS 219/219 · controls 134/134, 621 arms · REGISTER FLOOR arms 621/621, classified 133/133, corpus 134/134 · FLEET 2 members, 4 ops). `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **exit 0**. Negative controls RUN, each arm ALONE with the others held open, an OVER-STRICTNESS arm and a BASELINE arm included, every restore verified by sha256 AND by `cmp` against uniquely-named per-arm pristine copies. No push, no merge, no deploy, no version bump.
+concurrency: checked over the whole file. The live FLEET claim (FL-3, `agent-ad6e5ed43aac4a2ab`) reserves `agent-worker/**` and says **NOT `bio-plane/src/**`** — disjoint from this claim, which is the mirror image. `store.mjs` is claimed BY SPAN per the standing budget; the spans named above are the scheduler registry and the AI-run block, and no other live claim names either.
+released:
+
+### DELEGATION 2026-08-09 FLEET (FL-4) -> RECORD / CONDUCT: **THE WAKE NOW EXISTS AND NOTHING CONSUMES IT — FL-3's DELEGATION RE-MEASURED, AND THE MISSING PIECE IS A DECISION**
+
+FL-3 filed *"the plane has no `AGENT_WORKER` caller, and I8 cannot go STABLE without one"*. FL-4 re-measured it rather than citing it: `grep -a AGENT_WORKER bio-plane/src/` still returns NOTHING. **What FL-4 changes is that the record now has something to hand a caller**, so the gap is sharper and its shape is known.
+
+- **WHAT FL-4 BUILT, AND IT IS ENTIRELY RECORD-SIDE.** On daemon completion the tenth consumer HOLDS the run's lease (so a run waiting on our own daemon is no longer reaped at one hour with `lease` written as the bound that stopped it — our pacing recorded as the run's death), appends ONE observation entry saying the daemon answered, and stamps `capture_requests.run_woken_at` so the completion is delivered exactly once. Every part is driven in `test/scheduler.test.mjs` and every part has a control arm.
+- **WHAT IT DID NOT BUILD, AND WHY NOT A CALL SITE.** `/run` wants `{ run_id, store, credential, … }` and the credential is PL-11's `ai` class. `ai_credentials` stores `token_id` and `secret_sha` and **never the value** (D-199 (2)); minting is a member act (D-199 (3)). **The plane holds nothing it could hand over**, so writing the caller is not a wiring task — it needs a ruling on whether an instance may hold a minted `ai` credential as an env binding the way it holds `DAEMON_TOKEN`. **Filed as D-260 with that framing**, and the suite's own header states the limit in words rather than leaving a reader to infer it from arms that are not there.
+- **NOTHING REGRESSES MEANWHILE.** The hold is a strict improvement whether or not anything ever resumes a run, and it is bounded by the request's own expiry — a request nothing can satisfy stops holding its run at its TTL and the reaper takes it then, with an honest bound. That bound has its own control arm, because an unbounded hold would be a worse defect than the one it closes.
+
+### DELEGATION 2026-08-09 FLEET (FL-4) -> CONDUCT: **`op=capturerequests` GAINED ONE ADDITIVE FIELD, AND NO IC IS FILED — DISAGREE CHEAPLY IF YOU WANT ONE**
+
+`op=capturerequests` now publishes `run_woken_at`. Additive: every existing reader keeps the shape it reads and no field moved. **This is PL-15's precedent taken deliberately** — that item added `lead_inquiry` to the same projection, judged an added optional field on an existing answer to be inside I3's stable contract rather than a change to it, and flagged it here instead of filing an IC. FL-4 does the same and for the same reason PL-15 gave: the projection is EXPLICIT rather than a row spread, so a column not named there is a column no caller can see — and this one is the single field that distinguishes *the daemon has not answered* from *the daemon answered and nothing collected it*, which is exactly what an operator looking at a suspended run needs. Measured consumer impact inside the repository: **ZERO** — `agent-worker/src/index.mjs` does not call this op at all, and `civicos-ui/**` does not read this answer.
+
+### DELEGATION 2026-08-09 FLEET (FL-4) -> WHOEVER OWNS `INVESTIGATIVE-SESSION.md`: **§14b.3 CARRIES TWO STALE FIGURES OF THE KIND THIS PROJECT MEASURES MOST OFTEN**
+
+§14b.3 reads *"**SEVEN live consumers today** (`store.mjs:1452`)"*. **MEASURED 2026-08-09: the registry holds TEN and sits at `store.mjs:1778`**, and `store.mjs` is **23,971** lines rather than the ~16,300 the surrounding plan was written against. PL-5 added the eighth, PL-4 the ninth, FL-4 the tenth, and none of them moved the design's sentence. **NOT EDITED HERE** because the design document is not this item's path and because a build item rewriting the design it was built from is the wrong direction — but it is the hand-carried-number failure this repository names as its most repeated, sitting in the paragraph that tells the next consumer how to join. The IS-BUILD-PLAN FL-4 row's own two stale figures WERE corrected, from measurement, in the same turn.
+## CLAIM 2026-08-09 UI (D-257)
+session: agent-ab5e6576a583e2cc4
+opened: 2026-08-09T00:00:00Z
+paths: civicos-ui/test/version-predecessor.test.mjs, civicos-ui/test/add-surface.test.mjs, civicos-ui/test/auth-surface.test.mjs, civicos-ui/test/bound-sweep.test.mjs, civicos-ui/test/preauth-vocabulary.test.mjs, civicos-ui/test/publishedcase.test.mjs, civicos-ui/test/run.mjs, civicos-ui/check-refusal-codes.mjs, the CLASS_NAMED_UNGUARDED list in bio-plane/test/hygiene.test.mjs, the D-257 row in docs/development/DEBT.md
+interfaces consumed: none
+interfaces owned: none
+expected: D-257 — wire `bio-plane/scripts/provenance.mjs` into the civicos-ui walks that FLOOR on what their working-tree walk found, so every floored figure is the `git ls-tree HEAD`-backed one, and remove the D-257 entry from the hygiene allowlist. The sweep for the class is what decides which files are touched; the list above is what the measurement found.
+released:
+
+## DELEGATION 2026-08-09 UI (D-257) → M0 (VERIFICATION)
+D-257 guarded every `civicos-ui` walk that FLOORS on what its working-tree walk found, and removed
+seven entries from `hygiene.test.mjs`'s `CLASS_NAMED_UNGUARDED` allowlist. The sweep asked the same
+question of the bio-plane entries and **five of them floor on their own walk**, measured by reading
+each site rather than by the matcher alone:
+
+- `bio-plane/test/bounds.test.mjs` — a whole-repository walk floored at `corpus.length > 200 && walkChars > 5_000_000`.
+- `bio-plane/test/case-opened.test.mjs` — the same shape, the same two floors.
+- `bio-plane/test/identity-claims.test.mjs` — `files.length >= 24` over its `src/` + `checks/` walk.
+- `bio-plane/test/machinefences-dec49.test.mjs` — `minted.size >= 12`, the codes harvested by walking `src/`.
+- `bio-plane/test/planning-hygiene.test.mjs` — `found.length >= 2` over headings discovered by walking `docs/`.
+
+A sixth is a DIFFERENT exposure and is named rather than counted: `bio-plane/test/machine-fences.test.mjs`
+walks `test/` only to decide whether a code is `pinned()` by some suite. A phantom cannot raise a floor
+there, but it CAN satisfy a requirement — a fence code reads as pinned by a suite no other checkout has,
+which fails in the GENEROUS direction.
+
+**The fix is the two lines this item wrote seven times**, and the pattern is in any of
+`civicos-ui/test/{version-predecessor,add-surface,auth-surface,bound-sweep,publishedcase}.test.mjs`:
+import `scripts/provenance.mjs`, keep the SWEEP over the whole working tree (so a finding in
+uncommitted work is not hidden), and compute the FLOOR over `git ls-tree HEAD` alone. Say UNVERIFIED
+rather than clean when git cannot answer — including in the caller's OWN printed labels, which is the
+defect D-257's control ARM 3 caught in its own first draft.
+
+**And a second finding, paid for rather than reasoned about:** `bio-plane/scripts/op-claims.mjs` walks
+the whole repository with NO dotfile filter, so D-257's control harness — pristine copies of `app.html`
+under a dot-directory — turned the battery RED with ten findings attributed to the copies. That is the
+same class M0-16 found in `coverage.mjs`'s fleet walk, in the opposite direction: one walk admits what
+another would never run. Whether op-claims SHOULD descend into dot-directories is M0's call; it is
+recorded here because it is a real difference between two walks of the same estate.
+## CLAIM 2026-08-09 FLEET (FL-5 — sub-session fan-out with REPORT contracts, IS-9(a))
+session: is-fl5 (worktree agent-a0b07bfdf348ecea8)
+opened: 2026-08-09T00:00:00Z
+paths: **`agent-worker/src/subsession.mjs` (NEW)**, `agent-worker/src/index.mjs` (the driver's `fanout` and a NEW `collect` step, plus the one `meaningRead` helper), `agent-worker/src/harness.mjs` (`collect` becomes a JUDGED row and its `why` names both numbers — the return contract must be enforced at the row that COLLECTS, not at `compose`, which has already interpreted), **`agent-worker/test/fanout.test.mjs` (NEW, the suite)**, **`agent-worker/test/fanout.control.mjs` (NEW, the negative-control driver — deliberately NOT a `.test.mjs`)**, `agent-worker/test/harness.test.mjs` (FL-3's suite: one VACUOUS arm corrected with its measurement at the site, and five judgement fixtures given `collect`'s slot), `agent-worker/test/harness.control.mjs` (H8's patch SITE moved with FL-5's second reader; figures re-measured), `docs/development/INTERFACE-CHANGES.md` (NEW IC-43), `docs/development/CLAIMS.md` (this entry and its DELEGATIONS), `bio-plane/scripts/coverage.mjs` (**REGISTER_FLOOR only**, moved from the figures a green run PRINTED after this item's suite entered a commit). **NOT** `bio-plane/src/**`, `schema.mjs`, `checks/bio-checks.mjs`, `civicos-ui/**`, `pdf-worker/**`, `newgroup/**`: this item adds no op, no table, no check family and no member-facing surface.
+interfaces consumed: I3 (the plane's op surface, read-only through the service binding — `op=airunspawn`'s search half and `op=meaningrows`' EXISTING `ids` restriction, both consumed and neither changed), I8 (this member's own).
+interfaces owned: **I8 — CHANGED ADDITIVELY, filed as IC-43 PROPOSED with MEASURED consumer impact of ZERO (`grep -a AGENT_WORKER bio-plane/src/` returns nothing). FL-5's verdict is that I8 STAYS PROVISIONAL at 0.1.0 and the bump is CONDUCT's. `I3` is NOT bumped.**
+expected: IS-BUILD-PLAN **FL-5**, W7. The spawn contract (four levels, no write scope, **no bias-manifest field BY CONSTRUCTION** — an exact key set written out one by one, so there is no field under any spelling) and the return contract (a REPORT with a citation, **never documents**; the parent re-reads by address). Sub-sessions share no state — the briefs are deep-frozen and share no object with each other or the parent. The parent holds the only write and the only manifest.
+accepts-when: as IS-BUILD-PLAN FL-5. `node scripts/battery.mjs fanout` green; a sub-session's return validated against the REPORT shape; the spawn payload has no manifest field to read. **Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT** and reported either way. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs` clean but for UNPUSHED. **The declared negative control is IS-9(a)'s and it is the point of the item:** neuter the return-contract check and a document-returning sub-session must FAIL an assertion. Nine arms, each armed ALONE, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with a byte-count floor. FL-3's ten arms RE-RUN because this item changed their subject. No push, no merge, NO DEPLOY.
+concurrency: checked over the whole file. The only claims naming `agent-worker/**` are FL-2/VF-3's and FL-3's, both MERGED TO `main` (their code is at HEAD `ad87db7`, verified by reading it). No live claim names `bio-plane/scripts/coverage.mjs`. `bio-plane/src/**` and `checks/bio-checks.mjs` are NOT claimed and NOT edited by this item.
+released:
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> WHOEVER TOUCHES A FENCE THIS MEMBER ASSERTS ABOUT ITSELF: **FL-3's §14 ARM WAS VACUOUS, AND IT WAS MEASURED RATHER THAN REVIEWED**
+
+Not raised as debt because it is FIXED here, but the CLASS is worth carrying, and it is this
+project's most-repeated finding arriving inside a fence rather than inside a document.
+
+- **What it was.** FL-3's driver computed `manifest_field_present` for each spawn payload into a
+  local (`spawned`) that **never reached the wire**, and `harness.test.mjs` asserted the fence by
+  filtering trace notes for the literal `manifest_field_present` — a phrase the notes never carry.
+  The arm could only ever fail if somebody wrote those nineteen characters into a note.
+- **The measurement, taken before anything was changed.** The plane mock's SEARCH-half payload was
+  patched to carry a full bias block; `harness.test.mjs` came back **194 pass / 0 fail** with that
+  arm PASSING. Restored, verified by sha256 and `cmp`.
+- **The general rule this pays for again:** a member asserting a fence ABOUT ITSELF must publish
+  the thing the fence is about, or the assertion is over a value nobody can see. FL-5 publishes the
+  spawn contracts on `/run` and asserts on the manifest's own `statements_sha` bytes, and F4b of
+  `fanout.control.mjs` exists solely to prove that arm CAN fail.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> FL-6 (the cascade) AND SK-2 (the skill): **WHAT THE CONTRACTS HAND YOU, AND THE ONE HALF THAT IS STILL SUPPLIED**
+
+- **FL-6.** The returns are still CALLER-SUPPLIED — `collect` is a judged row and the answer says
+  `turns_run: 0` / `judgement_source: "supplied"`, unchanged from FL-3. What you replace is where a
+  return comes FROM, never the contract it is held to: `checkReport` runs on whatever your cascade
+  hands back, and a sub-session your cascade spawns has to satisfy the same exact key set. The brief
+  it needs is already composed — `spawnContract` — and it carries the return contract with it.
+- **SK-2.** Do NOT restate the return contract in the skill. It is code (`subsession.mjs`), it
+  travels to the sub-session in `contract.returns`, and a second statement of it in prose is the
+  §14b.4 defect this item is on the other side of. If the skill needs to explain it, cite it.
+- **BOTH: a refused return is UNDETERMINED and never an absence.** If you need a level's state after
+  a broken return, the honest answer is "we do not know" — `reports_refused` names it. Nothing
+  downstream may read a refused level as `LOOKED_ABSENT`, and `emptyLevelCandidates` cannot see one
+  because the parent never accepted it.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> PL-1 / WHOEVER LANDS D-164: **THE CITATION HAS ONE FIELD ON PURPOSE, AND IT IS WHERE THE EXTENT GOES**
+
+`CITATION_KEYS` is exactly `{ address }`, and a citation carrying an `extent` is REFUSED today
+(driven, `fanout.test.mjs` A3). That is §14b.2's declared precondition kept honest: legs are
+DOCUMENT-GRAIN, the passage lives in the description, and a field for a grain the record cannot
+express would read as coverage while carrying none. **When D-164 lands, the extent belongs on the
+LEG first and arrives here as a second citation field with an arm behind it** — not as a hole
+somebody fills in because the shape looked incomplete.
+
+### DELEGATION 2026-08-09 FLEET (FL-5) -> WHOEVER OWNS `scripts/coverage.mjs` (VF-3's instrument): **THE CONTROL REGISTER CANNOT SEE A FLEET SUITE, AND THE FLEET LINE COUNTS MEMBERS RATHER THAN SUITES**
+
+Measured while landing FL-5's own suite, not suspected, and NOT fixed here because widening a
+shared instrument from inside a feature item is the mistake REC-71 exists to correct.
+
+- **The register's corpus is the PLANE's `test/` only.** `const battery = suites.map(... join(ROOT,
+  "test", f) ...)` — so `fanout.test.mjs`'s declaration and its **ten stated arms are invisible to
+  `arms` / `classified` / `corpus`**. Measured: those figures read **621/621 · 133/133 · 134/134**
+  identically before and after this item's suite entered a commit. **No floor was owed and that is
+  the reason** — not slack, and worth saying, because "the ratchet did not move" would otherwise
+  read as an item that added no control.
+- **The FLEET line is PER MEMBER:** `fleet.filter((m) => !m.control)`. `agent-worker` now has THREE
+  suites and the line still reads `2/2 declaring a negative control`. **A fleet member can gain a
+  suite with no declared control and no instrument anywhere says so** — D-233's own shape (a thing
+  the instrument cannot see, scored as if it were fine) one directory out, and the same class as
+  the dark `pdf-worker` suite VF-3 closed.
+- **Recommendation:** count fleet suites into the register's corpus rather than adding a second
+  tally — one instrument, one number — and report `MISSING` per SUITE while keeping the member-level
+  gate. **Reversal cost:** none; the figures only get more honest. **Cost of not doing it:** every
+  fleet suite added from here is an undeclared control nobody is measuring, and the fleet is the
+  half of this system that is growing.
+## CLAIM 2026-08-09 RECORD (D-255 — the dead `atom.phrase` field, and the class it belongs to)
+session: d255-dead-field (worktree agent-a7bc405e6b9c76b58)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/src/query.mjs`** — `textAtom` ONLY: the `phrase` property removed from the atom literal, plus the comment that says why the name is gone and what actually performs phrase matching, and the two `tokenize` comments that name `phrase` detection as the reason `quoted` exists (they would otherwise point at a field that no longer exists). **NOTHING ELSE in the file is edited** — `FIELDS`, `MEANING`, `viewerPredicate`, `tokenize`'s code, `selector`, `meaningAtom`, `ftsAtom`, `ftsExpr`, `rankExpr`, `setSql`, `chain` and `compile` are READ and DRIVEN, never modified. **`bio-plane/test/query.test.mjs`** — ONE new block (the compiled-expression pin for a quoted multi-word value, and the shape pin that says which fields a text atom carries) plus this item's arms declared in the suite's existing `NEGATIVE CONTROL:` block. **`bio-plane/test/fieldread.control.mjs` (NEW)** — the read detector and its arms; deliberately NOT a `.test.mjs` because it EDITS `src/query.mjs` while it runs (`query.control.mjs` and `suggest.control.mjs` are the precedent) and `scripts/battery.mjs` must not discover it. **`bio-plane/scripts/coverage.mjs`** — the `REGISTER_FLOOR` figures ONLY, moved from what a green run PRINTED, ONE key set. `docs/development/DEBT.md` — the **D-255 disposition cell** and any row this item's sweep raises. `docs/development/MEASUREMENTS.md` (APPEND — the field-read sweep). `docs/development/CLAIMS.md` (this entry).
+**NOT OPENED:** `bio-plane/src/store.mjs`, `src/index.mjs`, `src/schema.mjs`, `checks/**`, every other test suite, `civicos-ui/**`, `newgroup/**`, `pdf-worker/**`, `release/**`, `bio-plane/dist/**`. **`dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` carry the same line and are NOT edited** — they are build outputs and DIST's; the field disappears from them at the next build, and that is named in the report rather than fixed here.
+interfaces consumed: none. interfaces owned: none. **NO INTERFACE CHANGE, and it is measured rather than asserted:** `compile()`'s returned plan is unchanged field-for-field; `phrase` lives on an AST node that no op, no envelope and no surface reads, and the only reader of `plan.ast` anywhere is `query.test.mjs` (`p.ast.op`, `p.ast.kids.length`). No op added, no check minted, no refusal code named, no schema touched.
+expected: D-255 — remove a field that is COMPUTED AND READ BY NOBODY, and sweep for the class rather than the instance. The instance is REC-68's; the class is "a field a module computes onto an object it constructs and no execution ever reads", and this item's answer to it is an instrument rather than a list of spellings: every object the query language constructs is wrapped in a recording Proxy, the whole node-side corpus is driven through it, and the never-read set is what the sweep REPORTS.
+concurrency: checked over the whole file. The only claim naming `bio-plane/src/query.mjs` as an EDIT is REC-68's (`rec68-quoted-value`, line ~4400), whose `released:` line is blank but whose work is **MERGED into this worktree's base** — verified by reading the fix at `query.mjs:651` (`if (src[i] === '"') {`) and the D-228 disposition in DEBT.md, not by trusting the claim. It named `textAtom` as READ-ONLY, so even were it live this item's span is disjoint from its span. No other un-`released:` claim names `bio-plane/test/query.test.mjs` or `bio-plane/scripts/coverage.mjs`.
+released: 2026-08-09 — committed on branch `worktree-agent-a7bc405e6b9c76b58` at base `ad87db7`, NOT pushed and NOT merged; CONDUCT integrates. **D-255 CLOSED: `atom.phrase` is DELETED, and the choice REC-68 left open was decided as DELETE rather than give-it-a-reader** — FTS5 already treats a multi-word string literal as a phrase, so `ftsAtom` performs the distinction the field only named; a flag could not have changed that without changing what `ftsAtom` emits, and nothing asked it to. The reasoning is at the site, not only in the report. **REC-68'S FIGURE WAS RE-MEASURED BEFORE IT WAS ACTED ON AND HELD EXACTLY — one write site, zero read sites** (the only other occurrences in the repository are `bio-plane/dist/` and `release/`, which are BUILD OUTPUTS, are DIST's, and were not touched: the field leaves them at the next build, and that is named rather than fixed here). **BATTERY BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 138 suites (134 plane · 4 fleet) · 138/138 green · 8,827 assertions · exit 0**, `npm ci` run first. FINAL **138/138 · 8,836 · exit 0**, delta **+9 ATTRIBUTED PER SUITE against a re-measured true baseline for each**: `query.test.mjs` 117 -> 125 and `planning-hygiene.test.mjs` 292 -> 293 (the D-258 row); no other suite's file was touched. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0** — OPS 162/162 · CHECKS 219/219 · **REGISTER_FLOOR.arms MOVED 621 -> 627 in the same turn from the figure the run PRINTED**, ONE key set, classified 133 and corpus 134 unchanged (no suite added). `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **exit 0**; `check-refusal-codes` floors did not move and no refusal code is named by this item. **THE ITEM'S REAL PRODUCT IS AN INSTRUMENT RATHER THAN A DELETION: `bio-plane/test/fieldread.control.mjs`** wraps every object the query language constructs in a recording Proxy and reports the fields nothing ever asks for — the class inverted instead of listed, because a spelling-based matcher cannot see `a["ph" + "rase"]`, a destructure, a spread into an envelope or a `JSON.stringify`, and a classifier that misses one REPORTS A LIVE FIELD DEAD. **SEVEN ARMS, each armed ALONE, declared before running, restores verified by sha256 AND `cmp` against unique per-arm snapshots, with a BASELINE arm.** `atom.phrase`: written 6,517, read 0 over 41,580 compilations plus three real suites. **ONE CAME BACK NOT AS DECLARED AND IS RECORDED RATHER THAN SMOOTHED** — ARM D was declared GREEN and went RED, because this item's own pins are STRUCTURAL and fire on the field's PRESENCE; the declaration was corrected into something stronger (the exact SET of suites permitted to fail, since RED alone would also be satisfied by a field read in forty places) and RE-RUN, AS DECLARED. **THE SWEEP FOUND TWO MORE INSTANCES AND ONE NEAR-MISS THAT MATTERS MORE:** `plan.meaning.columns`/`.refs` are the same class and are raised as **D-258**, deliberately NOT deleted because "give them a reader" is a live alternative belonging to `op=meaningrows`; and FIVE of the seven `plan.meaning.*` fields the node sweep called never-read are LIVE, read by `store.mjs` inside workerd — ARM O2 arms one of them and takes the battery RED, which is the arm that stops the instrument's blind spot from becoming a deletion. **What this sweep does NOT reach, stated plainly:** anything outside `query.mjs` (`store.mjs`, `index.mjs`, the exported static registries), and a name-based scan cannot substitute there — `key`, `row`, `type` and `col` collide with unrelated reads across 297 files, so that scan cannot find a dead field in principle. **CONCURRENCY OBSERVED DIRECTLY, not inferred:** four to six `npm run test:battery` processes from other worktrees of this clone ran against this machine throughout, one writing into the SHARED scratchpad root.
+## CLAIM 2026-08-08 RECORD (REC-69)
+session: worker-rec69 (worktree agent-a5723f4c87dfd5bd0)
+opened: 2026-08-08T00:00:00Z
+paths: bio-plane/src/store.mjs (the ONE new method `aiRunsInContext` and its dispatch
+  entry — nothing else in the file), bio-plane/src/index.mjs (the `OPS` row for
+  `op=airuns` and its addition to the fail-closed list that already names
+  `airun`/`airunlog`/`airunspawn`), bio-plane/checks/bio-checks.mjs (the new
+  `AI_RUNS_CONTEXT_CHECKS` family, C-34 — measured free before allocating),
+  bio-plane/test/airuns.test.mjs (new), bio-plane/test/bounds.test.mjs (the roster pin
+  moves 25 -> 26 and the new op joins DRIVEN — it MUST, or the roster pin fails),
+  civicos-ui/check-refusal-codes.mjs (the FLOOR constants only, moved from PRINTED
+  figures because this item invalidates them by adding a family and a region)
+interfaces consumed: I3 (the op contracts)
+interfaces owned: none; files IC-27 for the new op
+expected: REC-69 — `op=airuns&contextType=&contextId=`, the read that answers WHICH RUNS
+  ARE IN THIS CONTEXT. Gated on `context_id` through the SAME `#bundleGate` every other
+  `ai_runs` read compiles (D-15's one compilation point — no second predicate), bounded
+  with its bound published after clamping, per-row `session` shape identical to
+  `op=airun`'s.
+NOT CLAIMED, delegated instead: `civicos-ui/**` (app.html's surface — UI-49 built the
+  seam and exactly one function changes there; see the DELEGATION below).
+released:
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> UI (UI-49's own follow-on): **THE OP EXISTS. `op=airuns&contextType=&contextId=` ANSWERS "WHICH RUNS ARE IN THIS CONTEXT", AND EXACTLY ONE FUNCTION ON THE SURFACE CHANGES**
+
+UI-49 built the seam and said what it needed. This is it, landed and driven.
+
+- **The call:** `op=airuns&contextType=<inquiry|project>&contextId=<bundle id>[&limit=N]`. The envelope is `{ ok, context:{type,id}, runs:[…], count, limit, truncated }`.
+- **Every row is `op=airun`'s OWN `session` block** — not a similar shape, the SAME one: the list calls `aiRunRead` per run, and `airuns.test.mjs` asserts the two answers BYTE-IDENTICAL for the same run. The field-name-blind renderers do not move.
+- **The bound is 200 by default and 1000 at the ceiling**, published AFTER clamping, with `truncated` beside it — and both are published on the empty answer too, so the seam never has to guess which bound it was answered at. **`truncated` is a fact about what THIS VIEWER may see**: the gate is applied before the bound, deliberately.
+- **Whether a member may see a run is the record's answer, not the page's.** A run over a project they were not invited to is absent byte-identically to one that does not exist, and no count of the withheld travels. So the surface needs NO branch for "you may not see this".
+- **What UI-49's device-local roster still has that this does not:** nothing. This is strictly wider — it reaches runs the device never opened, which is the half §14a's promise was about. Whether the two sources are merged or the device one retired is UI's call and is NOT decided here.
+- **One thing to code against rather than discover:** an unrecognised `contextType` is a REFUSAL (`AI_RUNS_UNKNOWN_CONTEXT_TYPE`, C-34.2) and not an empty list, because an empty list would tell a member nothing is running on the strength of a typo. It carries a canned translation; render it, do not compose one.
+- **Reversal cost: none for UI.** The op is additive and nothing existing moved.
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> PL-5 / WHOEVER OWNS THE RUN OBJECT: **`aiRunOpen` DOES NOT FENCE `contextType`, SO A RUN CAN BE OPENED IN A CONTEXT KIND NO READ WILL ASK ABOUT**
+
+MEASURED, not inferred: `aiRunOpen` stores `String(contextType)` verbatim and `ai_runs.context_type` is a bare `TEXT` column. **§14a names exactly two kinds — an inquiry or a project — and until REC-69 the plane held those two words NOWHERE.** They now exist as `RUN_CONTEXTS` in `src/airun.mjs`, a text vocabulary beside `RUN_BOUNDS` and `RUN_ENDINGS`, and `op=airuns` refuses a kind outside it (C-34.2).
+
+- **The asymmetry that remains:** the READ is fenced and the WRITE is not. A run opened as `contextType: "meeting"` is in the record and no member can ever ask for it.
+- **NOT closed here, and the reason is scope rather than difficulty:** the open is PL-5's site, its refusals are C-22's family (facts about the run object, refused where it is written), and widening a WRITE's refusal set from inside a READ's item is how one item's blast radius becomes another item's red suite.
+- **What is owed:** `aiRunOpen` refuses a `contextType` outside `RUN_CONTEXTS`, as a C-22 row with its own canned translation, driven in `airun.test.mjs`. **Read `op=airuns`' case-blind match before deciding**: it matches `lower(r.context_type)` precisely because the write is unfenced today, and a fenced write would let that come back out — but only after the fence lands, never before, or a capitalised run already in a record becomes unreachable.
+- **Reversal cost: low now, rising.** Today no instance has a run with a rogue kind. Once one does, fencing the write is a migration question rather than a guard.
+
+### DELEGATION 2026-08-08 RECORD (REC-69) -> WHOEVER TAKES THE CLASS: **ELEVEN ACCESS PATHS THE SCHEMA BUILT FOR QUESTIONS NO OP ASKS**
+
+The item was told to sweep for the class — *which other questions a surface plainly needs cannot be asked of the plane at all?* — and the sweep is MECHANICAL rather than a reading, because REC-69's own gap had a fingerprint: `CREATE INDEX ai_runs_context ON ai_runs(context_id)` existed from the day IS-6 landed and **nothing in the plane filtered `ai_runs` by `context_id`.** Somebody built the access path for §14a's question and no op ever asked it.
+
+**MEASURED (`airuns.test.mjs`, printed every run): 79 indexes declared in `schema.mjs`, 68 with a statement filtering their leading column, 11 without.** Ratcheted as a CEILING *and* a FLOOR, so a new one fails the build naming the index and a shrinking list forces somebody to say why.
+
+Three were read by hand rather than trusted to the matcher, and all three are real:
+- **`links(source_bundle)`** — `source_bundle` appears only in an INSERT's column list and one projected field. Nothing asks *which links start at this bundle*.
+- **`tasks(assignee)`** — appears only as a field set to `null`. Nothing asks *what is assigned to me*, which is a question an inbox surface plainly needs.
+- **`inquiry_basis(grade_source)`** — appears only where a row is PROJECTED. Nothing asks *which legs got their grade from a resolution rather than from a member*.
+
+The other eight: `bundles(last_updated)`, `site_asset_refs(primary_sha)`, `links(citation_norm)`, `resolutions(grade)`, `connection_dirty(stamped_at)`, `proposal_dispositions(at)`, `correspondence(artifact_sha)`, `ai_credentials(principal_kind)`.
+
+**WHAT THE SWEEP CANNOT SEE, stated so nobody reads it as a census:** an index reached only through a JOIN's ON clause; one filtered through a dynamically composed fragment; and — the important one — **a missing question nobody built an index for.** It is a FLOOR on the class. **Eleven ops on one battery is how a diff stops being reviewable**, so none of them is built here.
+
+### FINDING 2026-08-08 RECORD (REC-69) -> REC-70's RATCHET, and it is a HAZARD rather than a defect
+
+While building this op the `session` block was first EXTRACTED into a shared private composer, which is the obvious way to make two reads publish one shape. **`meaning-bounds.test.mjs`'s FLOOR caught it within one run**, and the reason is worth carrying: `op=airun` sits on that ratchet's BARE roster because `aiRunRead` publishes `budget` off an unbounded `ai_run_bounds` scan, and moving that scan into a PRIVATE method took the op off the roster — **not because the read got better, but because the walk cannot follow a private helper.** The bare roster would have shrunk 39 → 38 and nothing in the plane would have improved.
+
+- **The extraction was REVERTED** and the list calls the public `aiRunRead` per row instead. `op=airun` is classified exactly as it was; the floor did not move.
+- **The general hazard, for whoever next refactors a dispatched read:** extracting a scan into a private helper is invisible to that walk, so it silently converts a KNOWN residual into an UNKNOWN one. The floor is the only thing that catches it, which is exactly what REC-67 moved it for.
+- **The residual itself is unchanged and is NOT this item's:** `aiRunRead`'s `budget` scan is still unbounded, and `aiRunSpawnPayload` already shows what bounding it looks like (`Object.keys(RUN_BOUNDS).length`, `cap + 1`, `limit`/`truncated` published). **Bounding it changes `op=airun`'s published shape**, which UI-49's suite pins, so it is a two-area change rather than a one-line one.
+
+## CLAIM 2026-08-09 RECORD (REC-69 · THE REPLAY ONTO `main`)
+session: worker-rec69-replay (worktree agent-a7e307e5502e319c0)
+opened: 2026-08-09T00:00:00Z
+paths: **the REPLAY of the reverted merge** (`git revert` of `80473ea`, which restores `e241672`'s hand-resolution work), plus FOUR files opened to answer the two cross-item ratchets and a third nobody listed: `bio-plane/test/run-conditions.test.mjs` (the `ROLE` table gains ONE entry and a fifth role; ARM W4 and ARM W7's WORDING corrected with dated reasons; ARMs W8 / W8 GUARD / W8b added; a second `NEGATIVE CONTROL:` paragraph — **no runtime block, no fixture and no other arm touched**), `bio-plane/test/airuns.test.mjs` (the SWEEP's ceiling/floor re-measured 11 → 13, both arrivals named, three arms added, a second `NEGATIVE CONTROL:` paragraph — **REC-69's own runtime sections A–R untouched**), `bio-plane/test/bounds.test.mjs` (the capped-op roster pin re-measured to 29 and ONE stale WORD corrected), `bio-plane/scripts/op-claims.mjs` (**ONE `PLANNED_OPS` row removed — `airuns`, whose own expiry rule fired**), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR`, all three keys, ONE key set), `bio-plane/test/nc-rec69-selects.mjs` (new — the replay's control driver, inside this worktree). **NOT** `bio-plane/src/**` beyond what the revert-of-the-revert restores byte-for-byte, **NOT** `docs/development/QUEUE.md`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+interfaces consumed: I3 (IC-42, already filed by REC-69 and already renumbered by CONDUCT; **IC-42 measured FREE on `main`, whose maximum is IC-41**)
+interfaces owned: none
+expected: REC-69 merged and backed out on 2026-08-08 having failed two ratchets that only fire on the pair with REC-74. The judgement CONDUCT left open — what ROLE `aiRuns` carries — is answered below.
+
+### DECISION 2026-08-09 RECORD (REC-69) — a FIFTH ROLE, `SELECTS`, minted rather than a bad fit forced
+
+**What is running:** `aiRunsInContext` is classified `SELECTS` in `run-conditions.test.mjs`'s ROLE table, and is therefore NOT owed a row in ARM P1's twenty-column disposition matrix. The reasoning is at the site, at length, because a wrong answer here installs a false assertion about what the record publishes.
+
+- **Why not PUBLISHES.** Run facts plainly DO reach a member through `op=airuns` — but every one of them is composed by `aiRunRead`, called per row, and asserted BYTE-IDENTICAL to `op=airun`'s own `session` block. Classifying it PUBLISHES would oblige twenty disposition cells that are each a COPY of `aiRunRead`'s. A copy agrees with its original for free, and worse, a SECOND declaration can DRIFT from the reader it describes while the code cannot. The matrix would then read as two independent judgements agreeing where there is only one.
+- **Why not AUTHORISES**, the closest of the four: its second clause fits and its FIRST is its definition — a reader deciding whether a DIFFERENT ACT may proceed. No act is authorised here. Filing it there would weaken AUTHORISES to mean "reads and does not itself publish", which is a much weaker claim than it currently makes about `suggestVersion` and `captureRequest`.
+- **The role is EARNED, not granted.** ARM W8 fails if a SELECTS reader projects any stored column beyond the key, or calls no PUBLISHES reader; ARM W8 GUARD fails over an empty SELECTS corpus; ARM W8b proves the reader can see both violations. All three are driven by `test/nc-rec69-selects.mjs`.
+- **The alternative, and what reversing costs: LOW.** Reversing means deleting one ROLE entry, three arms and one paragraph, and writing twenty matrix cells that duplicate `aiRunRead`'s. No source, no schema, no refusal and no published shape moves either way — the whole decision lives in one test's classification.
+- **Stated and NOT decided:** whether a SELECTS reader that publishes a fact COMPUTED FROM the rows it selected (a count of running jobs, a newest timestamp) is still SELECTS. ARM W8 reads the SQL projection, not arithmetic over the page, and would not catch it. Named at the site.
+
+### DELEGATION 2026-08-09 RECORD (REC-69) -> whoever takes the unread-index roster
+
+`provenance_route_marks(finding)` is a REAL instance of REC-69's class and is the arrival that took the roster 11 → 12. `finding` appears in NO `WHERE` anywhere in the plane: every reader takes the LATEST mark per bundle by `seq` and classifies in JS, and `op=list`'s route tally is computed over the gated PAGE. **The question no op asks: "which documents in this instance carry a standing `LOOKED_INDETERMINATE` marker."** A group asking where its own record's provenance is doubted must page the whole store and count for itself; the index for it was declared the day the table landed. Not fixed here — one op per unread index on one battery is how a diff stops being reviewable — and it joins `links(source_bundle)`, `tasks(assignee)` and `inquiry_basis(grade_source)` on the list REC-69 already delegated.
+
+### DELEGATION 2026-08-09 RECORD (REC-69) -> M0-14 / D-233's area (`scripts/control-register.mjs`)
+
+**The register records the declaration STATING THE MOST ARMS and never the sum, and this item is the shape that rule did not anticipate: TWO DIFFERENT controls, for two different items, in ONE suite.** Measured, not inferred: `airuns.test.mjs` now carries REC-69's original 7-arm block and this replay's 4-arm block, and reports 7 — the new block contributes nothing; `run-conditions.test.mjs` carries REC-74's 5-arm block and this replay's, and moved 5 → 6 because the NEW one became the larger, so REC-74's five stopped being counted. `arms` is therefore a floor on ARMS STATED IN THE LARGEST SINGLE DECLARATION PER SUITE. It is SAFE — the number is reported and never gated, and the floor still cannot fall without a declaration really shrinking — but a reader doing the arithmetic between two `--strict` runs will conclude a declaration shrank when one was ADDED. The "never the sum" rule is right for the case it was written for (M0-2's backfill left most suites stating ONE control twice) and needs a way to tell one control stated twice from two controls stated once.
+
+### FINDING 2026-08-09 RECORD (REC-69) — A THIRD CROSS-ITEM RATCHET, AND NOBODY LISTED IT
+
+The 2026-08-08 backout named two ratchets that fire only on the pair. There are **three**. `test/op-claims.test.mjs` failed with `["airuns"]` on *"no PLANNED op has been BUILT — a registration that outlived its deferral is a document that became true while nobody re-read it"*. M0-12's `PLANNED_OPS` ledger registered `airuns` by name **with QUEUE.md's own sentence as its reason** — *"NO OP CAN ANSWER THAT QUESTION TODAY"* — and `plannedStale()` is self-cleaning by design, so building the op made the row's reason false and the build failed in one run. **M0-12 landed BETWEEN the two merge attempts**, which is why the 2026-08-08 backout could not have seen it. The row is removed with the reason at the site. **The general point is not the row: a backout that lists the ratchets it failed is listing the ones that existed THAT DAY**, and the queue moves underneath it.
+
+### FINDING 2026-08-09 RECORD (REC-69) — **THE 2026-08-08 MERGE SILENTLY DROPPED A WHOLE FILE, AND EVERY INSTRUMENT REPORTED SUCCESS**
+
+MEASURED, not inferred, with two `git diff --stat`s:
+
+- `git diff 722c37b 2d9c57b --stat` — REC-69's branch changed **twelve** files, including **`civicos-ui/check-refusal-codes.mjs`, by 70 lines**, moving every floor that its new C-family invalidated **in the same turn**, exactly as C-22's header requires.
+- `git diff 7e5f9b0 e241672 --stat` — the merge commit carried **eleven**. `civicos-ui/check-refusal-codes.mjs` is not among them.
+
+**So the floor moves never landed, and `git revert -m 1` could not remove what was never there.** The replay therefore restored the code with ten stale floors, and **nothing went red** — a dropped floor move does not fail, it goes SLACK. Battery green, `--strict` exit 0, UI harness exit 0, and ten ratchets quietly carrying between 1 and 18 of headroom: families 15/16, rows 163/166, census 424/427, reach 217/220, governedSites 66/67, regions 53/54, regionLines 1407/1425, codesChecked 141/144, refusalsJudged 143/146, vocabularies 9/10, vocabularyTerms 56/58. All moved in one turn from the printed run; each now sits EXACTLY at measured.
+
+**The general point, and it is bigger than this file.** The 2026-08-08 integration was verified by running the battery, `--strict` and the UI harness on the merged tree, and all three passed **over a merge that had lost a file**. Nothing in this repository compares the FILE SET a merge carried against the file set its branches changed. `git merge-base --is-ancestor` proves a merge happened; the queue already records that it does not prove the content survived; **this is the next step down — the content of ELEVEN files survived and a TWELFTH did not, and the difference is invisible to every green light we have.** The cheap check is `git diff <base> <merge> --stat` against `git diff <base> <branch> --stat` per branch, and it is a CONDUCT-loop step rather than a worker one, so it is stated here for `kickoffs/CONDUCT.md` rather than added to a suite.
+
+**And it explains the backout's own shape.** REC-69's `bio-checks.mjs` header says *"The floor in `civicos-ui/check-refusal-codes.mjs` is moved in the same turn, from the figure the guard PRINTED"* — a true sentence about the branch, describing work the merged tree did not contain. A comment that describes a mechanism the tree does not carry is this project's most-repeated defect arriving through the integrator rather than through an author.
 
 ## CLAIM 2026-08-09 UI (UI-45 — notifications rendered)
 session: ui45-notifications (worktree agent-a4f9c3083de5f28e3)
