@@ -25,14 +25,21 @@
  * anchor below carries the following line that tells its site from the others.
  *
  * ONE THING THAT IS DELIBERATELY *NOT* AN ARM, and it is recorded rather than
- * smoothed: `index.mjs`'s `inner.searchParams.delete("actor")` is
- * BEHAVIOURALLY INVISIBLE today. The `set` two lines below it runs
- * unconditionally for all three run verbs and `URLSearchParams.set` replaces
- * every existing value, so removing the `delete` changes nothing any arm can
- * see. It is kept as a structural guard against a future refactor that makes
- * the `set` conditional — the same shape REC-75 measured when reverting a write
- * to raw args turned out to be invisible because `#fmSafe` is idempotent. Arm
- * (i) breaks the `set` instead, which is the half that CAN be seen.
+ * smoothed: the `inner.searchParams.delete("actor")` LINE ITSELF is
+ * BEHAVIOURALLY INVISIBLE. The `set` on the next line runs for every one of the
+ * three verbs and `URLSearchParams.set` replaces every existing value, so
+ * removing the `delete` alone changes nothing any arm can see. It is kept as a
+ * structural guard against a future refactor that makes the `set` conditional —
+ * the same shape REC-75 measured when reverting a write to raw args turned out
+ * to be invisible because `#fmSafe` is idempotent. Arm (i) disarms the whole
+ * GUARD instead, which is the half that CAN be seen.
+ *
+ * AND THE SCOPE OF THAT GUARD IS ITSELF A RECEIPT. PL-18's first draft ran the
+ * `delete` UNCONDITIONALLY, outside any `if`, and BROKE `op=lease` — which has
+ * owned the `actor` key since REC-21 and had its value wiped forty lines after
+ * it was stamped. One assertion in `members.test.mjs` caught it. That is why
+ * arm (i)'s anchor is the `if (RUN_VERB_ACTIONS.includes(op)) {` line and not
+ * the `set`: the guard is the load-bearing part.
  */
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -148,8 +155,8 @@ const ARMS = [
     mustFail: "S1 (pia borrows sam's participation by naming him) and A2/D2/H4 (a caller who names "
             + "nobody now reads as a machine credential and the stated ground collapses)",
     mustNotFail: "C1 — the capability floor is decided from the SESSION and is untouched by this.",
-    from: "    if (RUN_VERB_ACTIONS.includes(op))\n      inner.searchParams.set(\"actor\", viaSession ? sessMember : \"\");",
-    to:   "    if (false && RUN_VERB_ACTIONS.includes(op))\n      inner.searchParams.set(\"actor\", viaSession ? sessMember : \"\");" },
+    from: "    if (RUN_VERB_ACTIONS.includes(op)) {\n      inner.searchParams.delete(\"actor\");",
+    to:   "    if (false) {\n      inner.searchParams.delete(\"actor\");" },
 ];
 
 const runSuite = () => {

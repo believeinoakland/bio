@@ -181,6 +181,19 @@ const ROLE = {
   aiRunOpen:          "WRITES",
   aiRunTick:          "WRITES",
   "#aiRunTerminate":  "WRITES",
+  /* THE THIRTEENTH READER, ADDED 2026-08-09 BY PL-18 — and ARM W3 is why it is
+     here rather than in nobody's list: it FAILED naming `aiRunClose`, which is
+     the arm doing exactly what its own sentence promises. DEC-63's gate made
+     `aiRunClose` read the row (`SELECT context_type, context_id`) so it can ask
+     which projects the run's question belongs to before letting a member close
+     it. WRITES rather than AUTHORISES: it is a MUTATING OP whose answer is about
+     the act (`terminated`), and it reads the row to decide whether that act is
+     legal — which is the WRITES definition word for word. AUTHORISES is for
+     `suggestVersion` and `captureRequest`, which read the run row to gate a
+     DIFFERENT act. It publishes nothing of the row: its refusal echoes only the
+     caller's own `run` argument, so ARM W4's "exactly three publishers" is
+     untouched and was re-checked rather than assumed. */
+  aiRunClose:         "WRITES",
   suggestVersion:     "AUTHORISES",
   captureRequest:     "AUTHORISES",
   "#aiRunReapPending": "HOUSEKEEPS",

@@ -5001,6 +5001,17 @@ paths: named by SITE, never by whole file, because up to four other workers may 
   PRINTS. No matcher, no gate, no walk.
   `docs/development/MEASUREMENTS.md` — ONE dated section, APPENDED: the two class sweeps.
   `docs/development/CLAIMS.md` (this entry and its DELEGATIONS).
+  **TWO MORE `.test.mjs` FILES, EACH CORRECTED AND NEITHER EXEMPTED, both found by the WHOLE
+  battery and by nothing smaller.** **`bio-plane/test/leadslug.test.mjs`** — the FIXTURE only: its
+  run was opened by `ruth` over a question `PROJ_A` draws on while `carol` was that project's only
+  participant, which DEC-63 now refuses. The fixture is made LEGAL through the real acts (carol
+  invites, ruth joins) with the reason at the site; **no assertion in that suite is changed and
+  none is exempted** — the refusal it hit was correct. **`bio-plane/test/run-conditions.test.mjs`**
+  — ONE row in its `ROLE` table: DEC-63's gate makes `aiRunClose` the THIRTEENTH reader of
+  `ai_runs`, and ARM W3 FAILED naming it, which is that arm working exactly as its own sentence
+  promises. Classified `WRITES` with the reasoning at the site; ARM W4's "exactly three publishers"
+  re-checked rather than assumed. (Neither path was in the claim as first written; both are added
+  here in the turn they were edited.)
   **`bio-plane/test/airun.test.mjs` — ARM D1 ONLY, CORRECTED AND NEVER EXEMPTED.** That arm pins the
   C-22 family's SIZE and it went RED on this item's first run, which is the arm working. The count and
   its comment are moved SEVEN -> EIGHT with the reason at the site, on the identical terms SK-1 used
@@ -5128,3 +5139,37 @@ general is the shape `CLAUDE.md` calls a fence tighter than its rule.
 exists and is tested; the expensive part is not the code, it is that members will have arranged
 themselves around whichever answer runs. Reversing after a group has organised its projects around a
 tight fence means telling people their access changed twice.
+
+### DELEGATION 2026-08-09 PLANE (PL-18) -> WHOEVER OWNS `VERIFICATION.md`'s REGISTER ROW (M0-15 and D-237 both hold it open): **IT IS STALE AGAIN — AND IT EXISTS TWICE, WHICH NOBODY HAS RECORDED**
+
+**RAISED, NOT EDITED,** on UI-48's and CPDF-9's precedent: two open claims name
+`docs/development/VERIFICATION.md` and two items moving one shared figure in parallel is the
+failure this row is itself about.
+
+**(1) STALE.** The row reads `128 of 128 suites · 542 arms across 127 classified declaration(s)`.
+`node scripts/coverage.mjs --strict` on this worktree at commit `d8c6653` PRINTS
+**`arms 631 · classified 134 · corpus 135`**. PL-18 contributed 10 of that gap and moved
+`REGISTER_FLOOR` to `631/134/135` in the same turn from the printed figures. The rest is other
+items' — **so this is the SIXTH consecutive item to find this row stale by measuring it**, and the
+first to find it stale by roughly ninety arms.
+
+**(2) THE DEFECT NOBODY HAS RECORDED, AND IT IS WORSE THAN THE STALENESS: THE ROW EXISTS THREE
+TIMES.** `grep -n "suites declaring a negative control" docs/development/VERIFICATION.md` returns
+**lines 54, 56 AND 58** — three rows with the same label in the same table, carrying **three
+different figures** (`127 of 127 · 526 arms`, `120 of 120 · 470 arms`, `120 of 120 · 486 arms`),
+each with its own accreted history, and **the NEWEST measurement is the FIRST of the three**, so a
+reader scrolling to the label finds the freshest figure only by luck. That is a
+keep-both merge artefact of exactly the class `REGISTER_FLOOR`'s own header block warns about six
+times over — *"valid JavaScript where the last key silently wins"* — reproduced in Markdown, where
+there is no last-wins rule at all and **a reader simply gets whichever one they scroll to first.**
+Every one of the three is stale against 631/134/135, so there is no question of picking a survivor
+by freshness — all three are wrong and the live figure is the instrument's.
+
+**Why it outranks its size, and it is this row's own argument turned on itself:** the row exists so
+a session can see at a glance whether the estate's controls are growing. A row that appears twice
+with two different numbers cannot be falsified by reading it — you cannot tell a stale figure from
+the other copy. **Fixing only the staleness would leave three rows and make it worse**, because the
+corrected one would then disagree with its twins by ~100 arms rather than by 16. **Collapse to ONE
+row and take the figure from a green `--strict` run on the merged tree** — do not reconcile the two
+histories by hand, and do not move the numeral in only one of them.
+released: 2026-08-09 — committed on `worktree-agent-a4e2eff5ca09197e2`, **NOT pushed and NOT merged**; CONDUCT integrates. **Battery 139/139 suites green · 8,877 assertions · exit 0 read UNPIPED**, against a true baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **138/138 · 8,827** (the brief carried no figure). **Delta +50, attributed by DIFFING the two full runs and never by subtraction: `airun-projectgate.test.mjs` ABSENT -> 47 (new) and `hygiene.test.mjs` 553 -> 556 (its per-suite arms over one new file). 137 of 139 suites IDENTICAL.** `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0** (162 ops, 220 checks, all named). `node civicos-ui/test/run.mjs` from the repo root, exit unpiped, **0**. `node civicos-ui/check-refusal-codes.mjs` exit unpiped, **0**. `node tools/plancheck.mjs` clean but for UNPUSHED. **TEN FLOORS MOVED, every one from a figure an instrument PRINTED on a green run: `check-refusal-codes.mjs` rows 163->164, census 424->425, reach 217->218, governedSites 66->67, codesChecked 141->142, outcomeReturns 70->74, refusalsJudged 143->145, vocabularies 9->10, vocabularyTerms 56->59; `coverage.mjs` REGISTER_FLOOR 621/133/134 -> 631/134/135, read AFTER the suite was in a commit because the register compares against the REPRODUCIBLE figure. `regions` (53) and `regionLines` (1407) DELIBERATELY UNCHANGED and RE-READ rather than assumed — this item adds, moves and removes no `DEC-49 REGION` marker; `git diff` carries zero marker lines. `REGISTER_FLOOR` verified ONE key set by grep.** **TEN CONTROL ROWS in `test/nc-pl18.mjs`, each armed ALONE, each declared before arming, each refusing to arm on an anchor not occurring exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy under a byte floor — and the refuse-to-arm guard FIRED TWICE on my own restructures, which is it working.** Four arms came back other than declared and all four are recorded rather than smoothed: (b) declared B2 and **B2 stayed GREEN** — both sides of that arm read one catalogue and move together, so it can see a mis-keyed translation and never a wrong one (named at B2's site; B3 is what holds the content); (d), (e) and (f) each went WIDER than declared, (e) most usefully — the P arms caught PROJECTLESS becoming unreachable. **THREE THINGS THE INSTRUMENTS CAUGHT IN MY OWN WORK AND THE SOURCE MOVED FOR, NEVER A FLOOR:** the DEC-49 guard read the gate's two PERMITTING returns as codeless refusals (the verdict field was named `applied`, which is not a verdict) and named three REGION markers no row claimed; and an UNCONDITIONAL `searchParams.delete("actor")` **BROKE `op=lease`**, caught by one assertion in `members.test.mjs`. **THREE SUPERSEDED PINS CORRECTED AND NONE EXEMPTED**, each with why the old one was right when written: `airun.test.mjs` ARM D1 (C-22 family SEVEN -> EIGHT), `leadslug.test.mjs`'s fixture (made legal through the real acts), `run-conditions.test.mjs` ARM W3 (`aiRunClose` classified as the thirteenth reader of `ai_runs`). IC-47 filed; the version bump and the RESOLUTION are CONDUCT's. `git stash` was NOT used at any point.

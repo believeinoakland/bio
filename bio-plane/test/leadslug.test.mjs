@@ -250,6 +250,26 @@ await promote(PROJ_A, projectMd(PROJ_A, "The 0042 award", [INQ_A]), "project", "
 await promote(PROJ_B, projectMd(PROJ_B, "Vendor concentration", [INQ_B, INFO_OLD]), "project", "forming", CAROL);
 
 const RUN = "RUN-2026-0808-pl15";
+/* CORRECTED 2026-08-09 BY PL-18, AND THE OLD FIXTURE IS SAID TO BE WRONG RATHER
+   THAN EXEMPTED. Bob ruled (DEC-63) that starting an investigation is licensed
+   by PARTICIPATION IN THE PROJECT the question belongs to, with `contribute`
+   only the floor beneath it. This fixture had CAROL create both projects (so
+   she is their owner and their only participant) and RUTH open the run over
+   `INQ_A`, which `PROJ_A` draws on — and RUTH is in no project at all. Under
+   the ruling that is now refused with C-22.8, and **the refusal is correct**:
+   the suite was driving a member who, from today, may not start that run.
+
+   The fix is to make the fixture LEGAL rather than to move the assertion, and
+   it is done THROUGH THE ACTS — carol invites, ruth joins — because a
+   participation row written by hand would prove nothing about whether a member
+   can actually get one. Nothing about what this suite MEASURES changes: it is
+   about out-of-inquiry leads, and ruth still drives every arm below. */
+{
+  const inv = await GET(`op=projectinvite&token=${CAROL}&projectId=${encodeURIComponent(PROJ_A)}&handle=ruth`);
+  if (inv?.ok !== true) throw new Error(`projectinvite ruth -> PROJ_A: ${JSON.stringify(inv)}`);
+  const joined = await GET(`op=projectjoin&token=${RUTH}&projectId=${encodeURIComponent(PROJ_A)}`);
+  if (joined?.state !== "joined") throw new Error(`projectjoin ruth -> PROJ_A: ${JSON.stringify(joined)}`);
+}
 {
   const r = await POST(`op=airunopen&token=${RUTH}`, {
     run: RUN, contextType: "inquiry", contextId: INQ_A,

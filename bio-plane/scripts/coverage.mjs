@@ -213,9 +213,20 @@ const REGISTER_FLOOR = {
      the other's new suite, so 581 was true of neither tree, and the merged figure is
      higher than either. This is what "re-read it from a green run after every
      multi-item merge" is for. */
-  arms:       621,  // arms stated across the classified declarations
-  classified: 133,  // declarations the detector could count arms in
-  corpus:     134,  // suites the register reads
+  /* PL-18, 2026-08-09 (worktree agent-a4e2eff5ca09197e2): 621 -> 631 / 133 -> 134 /
+     134 -> 135, ALL THREE MOVED IN THE SAME TURN and every one taken from the figure
+     THIS ITEM'S OWN GREEN RUN PRINTED (`arms 631/621 · classified 134/133 ·
+     corpus 135/134 · GREW by 10 arm(s)`), never by adding to the numbers above.
+     One new suite, `test/airun-projectgate.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states ten rows — the baseline plus the nine arms `test/nc-pl18.mjs`
+     drives — so `corpus` and `classified` each rise by one and `arms` by ten.
+     Nothing FELL. **THE FIGURES WERE READ AFTER THE SUITE WAS IN A COMMIT**, because
+     the register compares against the REPRODUCIBLE figure and an untracked suite is
+     not one: read before the commit, the same run printed the floors met EXACTLY with
+     nothing to collect, which is what an uncommitted suite looks like. */
+  arms:       631,  // arms stated across the classified declarations
+  classified: 134,  // declarations the detector could count arms in
+  corpus:     135,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
