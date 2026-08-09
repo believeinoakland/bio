@@ -47,6 +47,13 @@ const F = {
   store: ROOT + "src/store.mjs",
   index: ROOT + "src/index.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
+  /* THE SUITE ITSELF IS A RESTORABLE FILE, added 2026-08-09 for arm (9). An arm
+     that removes an assertion's SUBJECT proves the subject matters; an arm that
+     removes the CALL THAT DRIVES a refusal proves the FLOOR matters, and that
+     one has to edit the suite. It is under the same sha256-and-content restore
+     discipline as the three sources, because a harness that can rewrite the
+     suite and not put it back is worse than no harness. */
+  suite: ROOT + "test/versionstate.test.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -129,8 +136,22 @@ arm("(1a) LAYER 1 — THE CREDENTIAL STAMP, with layers 2 and 3 HELD OPEN. "
   + "caller-supplied `author: ruth` is then HONOURED, the store sees a perfectly good member name, and "
   + "the act lands under a FALSE ATTRIBUTION. Layer 3's refusal is still there and cannot see it — "
   + "which is the point.",
-  [["index", `        || VERSION_ACTIONS.includes(op)\n        || op === "provenancechain")`,
-             `        || (VERSION_ACTIONS.includes(op) && viaSession)\n        || op === "provenancechain")`]],
+  /* ANCHOR CORRECTED 2026-08-09, AND THE STALENESS IS ITSELF A FINDING. This arm
+     was written against `|| VERSION_ACTIONS.includes(op)\n || op ===
+     "provenancechain")` — two adjacent lines in the author-stamp condition. PL-3
+     landed `|| op === "suggest"` BETWEEN them, so on today's `main` the anchor
+     occurs ZERO times and THE ITEM'S HEADLINE CONTROL COULD NOT ARM AT ALL. It
+     did not fail quietly: the harness's occurs-exactly-once guard threw and named
+     the count, which is the one reason this was visible rather than reported as a
+     green run. **VF-5 requires CONDUCT to re-run this three-layer control on the
+     integrated build**, so an unarmable arm here is a gate that would have passed
+     over nothing. Re-anchored on the SINGLE line it actually edits, which cannot
+     be split by a neighbour inserting a clause after it; the occurs-once guard
+     still holds it, because `VERSION_ACTIONS.includes(op)` at this indent appears
+     once in the stamp condition and once in the viewer condition several hundred
+     lines up — so the anchor keeps the `if (` line above it to stay unique. */
+  [["index", `        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)\n        || VERSION_ACTIONS.includes(op)`,
+             `        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)\n        || (VERSION_ACTIONS.includes(op) && viaSession)`]],
   ["EVERY ONE OF THE SIX refuses a machine credential",
    "caller-supplied `author` was OVERWRITTEN"]);
 
@@ -206,6 +227,65 @@ arm("(5b) WRITE A SECOND CYCLE WALK rather than calling the existing one. The be
      That is the pin doing the right thing and the control's first claim being
      wrong about which arm would say so. */
   ["THE CYCLE CHECK CALLS THE EXISTING WALK"]);
+
+/* ------------------------------------------------------------------- (6) */
+/* THE DEFECT ITSELF, RE-ARMED — and this arm is different in kind from the eight
+   above it, because it puts the tree back into the state `main` was actually in
+   until 2026-08-09 rather than into a state nobody ever shipped. A control that
+   can restore a real past defect is the strongest evidence that the correction
+   corrected something: if this arm came back green, the C-25.32 rows would be
+   assertions about a distinction nobody could ever have got wrong.
+   THE HELD-OPEN HALF IS THE POINT. The ABSENT-reason arms must STAY GREEN while
+   this one is armed — under the collapsed code a missing reason still answers
+   C-25.26 correctly, and it always did. Only the PRESENT-but-unstorable reason
+   was being misdescribed, and requiring the absent arms to stay green is what
+   distinguishes "these two conditions are separable" from "the reason guard is
+   broken in some way". */
+arm("(7) COLLAPSE THE TWO REASON CONDITIONS BACK INTO ONE, which is what `main` did until this turn: "
+  + "answer a reason that ARRIVED and cannot be stored with VERSION_NO_REASON, whose canned "
+  + "translation tells the member it is \"worth nothing without the reason\" — about a reason they "
+  + "supplied, and on three acts that require no reason at all.",
+  [["store", `      return refuse("VERSION_REASON_MALFORMED",`, `      return refuse("VERSION_NO_REASON",`]],
+  ["A REASON THE MEMBER GAVE AND THE RECORD CANNOT STORE",
+   "AND ON THE THREE ACTS THAT REQUIRE NO REASON AT ALL",
+   "THE DRIVEN SET EQUALS THE REGISTRY"],
+  /* HELD OPEN AND REQUIRED TO STAY GREEN — the half that was always right. */
+  ["A REASON THAT IS PRESENT AND EMPTY IS REFUSED EXACTLY AS AN ABSENT ONE",
+   "LAYER 1 (the op)"]);
+
+/* ------------------------------------------------------------------- (7) */
+/* OVER-STRICTNESS, ARMED RATHER THAN ASSUMED. *"A fence tighter than its rule is
+   not a safer fence — it is an undeclared interface change wearing the costume
+   of caution."* The over-strictness assertion added with C-25.32 claims that a
+   500-character reason carrying an apostrophe LANDS; an assertion that correct
+   work passes is worth nothing unless something can make it fail. Widening the
+   grammar to refuse an apostrophe is the smallest edit that does. */
+arm("(8) TIGHTEN THE FENCE PAST ITS RULE — refuse an apostrophe as well. Every refusal arm above stays "
+  + "green (a tighter fence still refuses everything it refused before), and ONLY the over-strictness "
+  + "assertion can see it: a member's ordinary prose stops being storable.",
+  /* ANCHORED ON THE REFUSAL BENEATH IT, not on the guard alone: the identical
+     grammar test occurs THREE times in `store.mjs` (#moveAction, #divide and
+     here), so the guard line by itself would have armed three sites and the
+     harness would have refused to arm blind — which it did, on the first run of
+     this arm. */
+  [["store", `    if (why.length > Store.RELEASE_ACK_MAX || /["\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`,
+             `    if (why.length > Store.RELEASE_ACK_MAX || /["'\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`]],
+  ["OVER-STRICTNESS: a reason of EXACTLY the 500-character bound"],
+  ["A REASON THE MEMBER GAVE AND THE RECORD CANNOT STORE"]);
+
+/* ------------------------------------------------------------------- (8) */
+/* THE FLOOR, NOT THE CEILING. Block 11 requires the DRIVEN set to EQUAL the
+   registry, so a code that stops being reachable through the control plane fails
+   there — *a ceiling passes trivially over nothing*. Removing the one call that
+   drives C-25.32 is the arm that proves the floor is load-bearing rather than
+   decorative, and it is the shape that would catch the next row somebody adds to
+   the catalog and never wires to a caller. */
+arm("(9) STOP DRIVING C-25.32 OUT OF THE PLANE — leave the row in the registry and remove the call "
+  + "that provokes it. The FLOOR must fail: a refusal nobody can reach is a rule nobody is enforcing, "
+  + "and a set-equality assertion that only checked the ceiling would report this as fine.",
+  [["suite", `  drive(await act("reject", { version: "the audit alone",
+                              body: { reason: 'the audit says "it never cleared"' } }));`, ``]],
+  ["THE DRIVEN SET EQUALS THE REGISTRY"]);
 
 console.log(`\n${armsRun} arms run, ${armsWrong} did not behave as the control claims.`);
 restoreAll();

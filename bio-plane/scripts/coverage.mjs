@@ -279,7 +279,17 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
+  /* MOVED 654 -> 657, 2026-08-09, worktree agent-ae8e8c4d786783a6b (PL-2 verification
+     pass), FROM THE FIGURE `--strict` PRINTED on a green run — `REGISTER FLOOR arms
+     657/654 · GREW by 3 arm(s)` — and never by adding three to the number that was
+     here. The three are `versionstate.test.mjs`'s new arms (7), (8) and (9): the
+     C-25.32 defect re-armed, the over-strictness fence tightened past its rule, and
+     the driven-set FLOOR blinded. `classified` and `corpus` do NOT move: no new
+     declaration and no new suite, and a figure nudged without a cause behind it stops
+     being a measurement. ONE KEY SET, kept: WORKER.md records SIX keep-both merges that
+     left duplicate `arms:` keys here, valid JavaScript where the last silently wins and
+     once the last was the lowest. */
+  arms:       657,  // arms stated across the classified declarations
   classified: 136,  // declarations the detector could count arms in
   corpus:     137,  // suites the register reads
 };

@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/versionstate.control.mjs` — which is deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`check-refusal-codes.mjs`'s precedent). ALL NINE ARMS RUN 2026-08-08, pl2-agent, IS-BUILD-PLAN PL-2 / IS-2. Every arm is armed ALONE against a whole tree, every restore is verified BY sha256 AND BY CONTENT, and every arm names the assertions that MUST fail — an arm that fails "somewhere" proves the suite is sensitive to something, an arm that fails AT ITS OWN LAYER proves the layer is doing the work. THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad: a worker's harness was overwritten mid-turn by a concurrent worker on 2026-08-07, and a harness silently replaced between ARM and RESTORE reports a restore it never performed. BASELINE, whole tree: 72 pass, 0 fail.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/versionstate.control.mjs` — which is deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`check-refusal-codes.mjs`'s precedent). ALL NINE ARMS RUN 2026-08-08, pl2-agent, IS-BUILD-PLAN PL-2 / IS-2; **THREE MORE ADDED AND ALL TWELVE RE-RUN 2026-08-09** (worktree agent-ae8e8c4d786783a6b) — see the 2026-08-09 block below, which also records that arm (1a) had stopped arming. Every arm is armed ALONE against a whole tree, every restore is verified BY sha256 AND BY CONTENT, and every arm names the assertions that MUST fail — an arm that fails "somewhere" proves the suite is sensitive to something, an arm that fails AT ITS OWN LAYER proves the layer is doing the work. THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad: a worker's harness was overwritten mid-turn by a concurrent worker on 2026-08-07, and a harness silently replaced between ARM and RESTORE reports a restore it never performed. BASELINE, whole tree: 72 pass, 0 fail.
    THE THREE-LAYER ARM IS THE ITEM (VERIFICATION rule 3a). The fence that stops a machine credential settling a reading lives in THREE layers — the CREDENTIAL STAMP (index.mjs stamps `token:<class>` and overwrites a caller-supplied `author`), the ENDPOINT (index.mjs NEEDS requires `contribute`), and the TRANSITION (store.mjs refuses a machine identity by shape) — and EACH ABSORBS THE OTHER TWO when it is whole. A control that broke all three at once would prove nothing about any of them, so each is broken with the other two HELD OPEN.
    (1a) LAYER 1, THE CREDENTIAL STAMP, layers 2 and 3 held open. In src/index.mjs let the stamp fire for member sessions and NOT for machine credentials (`|| VERSION_ACTIONS.includes(op)` -> `|| (VERSION_ACTIONS.includes(op) && viaSession)`). MEASURED: 67 pass, 5 FAIL. A machine credential's `author=ruth` is HONOURED, the store sees a perfectly good member name, and all six acts LAND under a false attribution — layer 3's refusal is intact and cannot see it, which is the point. Layer 1's own assertion (`the caller-supplied author was OVERWRITTEN rather than honoured`) fails, and the `LAYER 2, BEHAVIOURALLY` arm fails with it because that call also carries an author.
    (1a-first-draft) CORRECTED WHILE RUNNING, and the correction is a finding rather than a tidy-up. The first (1a) DELETED the stamp outright — which also unstamps every MEMBER session, so the suite fell over in FOURTEEN places and not one of them was about impersonation. A control that breaks everything proves nothing about the one thing it names. It ALSO measured something the item did not predict: the impostor attempt must be made IN THE QUERY STRING, because the store's argument reader takes `author` from the stamped search params and from nowhere else — a body field could never have been honoured even with the stamp gone, so the first version of the suite's own arm was aimed at a route the attack cannot take and the control STAYED GREEN at every arm. Both were corrected; the arm is surgical now and the suite's attempt is a real one.
@@ -11,6 +11,10 @@
    (5) BREAK THE TRANSITIVE CYCLE CHECK AT ACCEPT. In src/store.mjs #moveVersionState replace `cycle = inqTargets.length ? this.#basisCyclePath(target, inqTargets) : null;` with `cycle = null;`. MEASURED: 67 pass, 5 FAIL: accepting a reading whose leg names a question that already rests on this one is PERMITTED, so the answer becomes its own support, and the DEC-49 floor loses VERSION_BASIS_CYCLE.
    (5b) WRITE A SECOND CYCLE WALK rather than calling the existing one (`#basisCyclePathTwo` delegating to it). MEASURED: 71 pass, 1 FAIL — the CALL-SITE count, which is the pin that can see it. NOTE what this corrected in the control itself: the DEFINITION count stays at 1 because the second walk carries a second NAME, so the arm's first claim about which pin would fire was wrong and the pin was right. Behaviour is identical TODAY, which is exactly the condition under which a second walk drifts from the first — PL-1 recorded this edge rather than half-building it for that reason.
    (6) OVER-STRICTNESS, and these must PASS rather than fail: a reason in Spanish from a named member LANDS; a version name with a full stop and mixed-case labels LANDS; `preview=true` from a surface that spells booleans as words is honoured; a project whose `references[]` is authored in a different field order still stands on a reading; and a reading resting on a question BELOW this one ACCEPTS — the cycle check refuses a circle, not the recursion DEC-23 licenses. A fence that refuses correct work is a defect in the fence.
+   ---- ARMS ADDED 2026-08-09 (C-25.32, the reason that arrived and could not be stored). RE-RUN OF ALL TWELVE: 12 arms run, 0 misbehaved, exit 0, whole-tree baseline 78 pass / 0 fail before each. AND THE RE-RUN'S FIRST FINDING WAS ABOUT ARM (1a) RATHER THAN ABOUT ANY SUBJECT: **(1a)'s ANCHOR HAD GONE STALE ON `main` AND THE ITEM'S HEADLINE THREE-LAYER CONTROL COULD NOT ARM AT ALL** — it was written against `|| VERSION_ACTIONS.includes(op)` immediately followed by `|| op === "provenancechain")`, and PL-3 later landed `|| op === "suggest"` BETWEEN those two lines, so the patch matched ZERO times. It did not pass quietly: the harness's occurs-exactly-once guard threw and named the count, which is the only reason it was visible. **VF-5 requires CONDUCT to re-run this three-layer control on the integrated build, so this arm would have been a gate passing over nothing.** Re-anchored on the single line it edits; MEASURED after re-anchoring: 73 pass, 5 FAIL, exactly as its original run recorded.
+   (7) THE DEFECT ITSELF, RE-ARMED — collapse the two reason conditions back into one, which is the state `main` was in until this turn: `refuse("VERSION_REASON_MALFORMED"` -> `refuse("VERSION_NO_REASON"`. MEASURED: 74 pass, 4 FAIL — the C-25.32 behavioural arm, the three-acts-that-need-no-reason arm, the DRIVEN-SET-EQUALS-REGISTRY floor and the by-name C-number pin. **The ABSENT-reason arms STAY GREEN, held open and required to**, which is what distinguishes "these two conditions are separable" from "the reason guard is broken": a missing reason always answered C-25.26 correctly, and only a reason the member GAVE was being told it was worth nothing.
+   (8) OVER-STRICTNESS, ARMED RATHER THAN ASSUMED — tighten the grammar to refuse an apostrophe as well (`/["\\\r\n]/` -> `/["'\\\r\n]/`, anchored on the refusal beneath it because the identical guard occurs THREE times in `store.mjs`). MEASURED: 70 pass, 8 FAIL. **THE BREADTH IS RECORDED RATHER THAN SMOOTHED: eight, not the one this arm declared.** The declared assertion did fail and every refusal arm stayed green as declared — but the suite's own fixtures write ordinary prose, so an apostrophe ban also took the four-state walk, both receipt arms, the act-is-queryable arm and the ageing arm. That is the finding rather than a defect in the arm: *a fence tighter than its rule* does not fail one assertion politely, it stops correct work everywhere at once.
+   (9) THE FLOOR, NOT THE CEILING — leave C-25.32 in the registry and delete the ONE call that drives it out of the plane (this arm edits the SUITE, which is why the suite joined the harness's sha256-and-content restore set). MEASURED: 76 pass, 2 FAIL — the driven-set floor and the by-name pin. A ceiling-only assertion would have reported an unreachable refusal as fine.
 /* IS-BUILD-PLAN PL-2 / IS-2 — THE SIXTH STATE MACHINE OVER BASIS VERSIONS.
  *
  * INVESTIGATIVE-SESSION.md §6 rule 4, and the design says it in these words:
@@ -488,6 +492,116 @@ console.log("\n--- 4. the authored reason, enforced at BOTH layers and reached a
     [rj.ok, codeOf(rj), rj.check, typeof rj.translation === "string" && rj.translation.length > 40],
     [false, "VERSION_NO_REASON", "C-25.26", true]);
 
+  /* PRESENT BUT EMPTY IS THE SAME REFUSAL AS ABSENT, AND IT HAS TO BE DRIVEN
+     RATHER THAN REASONED ABOUT. `String(a.reason ?? "").trim()` collapses an
+     absent field, an empty string and a run of spaces to the same value, and a
+     rule believed on the strength of a `.trim()` is a rule nobody drove. A
+     surface that always sends the field and sometimes sends it blank is the
+     ordinary case, not the exotic one. */
+  const emptyish = [];
+  for (const body of [{ reason: "" }, { reason: "   " }, { reason: "\t" }]) {
+    const r = await act("reject", { version: "the audit alone", body });
+    emptyish.push([JSON.stringify(body.reason), codeOf(r), r.check]);
+  }
+  t("A REASON THAT IS PRESENT AND EMPTY IS REFUSED EXACTLY AS AN ABSENT ONE — empty string, spaces "
+  + "and a tab all reach C-25.26, because a blank box is not an authored reason",
+    emptyish,
+    [['""', "VERSION_NO_REASON", "C-25.26"], ['"   "', "VERSION_NO_REASON", "C-25.26"],
+     ['"\\t"', "VERSION_NO_REASON", "C-25.26"]]);
+
+  /* ---------------------------------------------------------------------
+     C-25.32 — A REASON THAT ARRIVED AND CANNOT BE STORED IS NOT A MISSING ONE.
+     Corrected 2026-08-09. Until then both conditions answered
+     `VERSION_NO_REASON`, so a member who typed a reason carrying a double quote
+     read C-25.26's *"…it is worth nothing without the reason"* — a sentence
+     about an omission they did not make. THE OLD ASSERTION WAS NOT EXEMPTED: it
+     is directly above and still requires C-25.26 for the ABSENT case, which is
+     the half it was always right about.
+     The restricted frontmatter grammar has no escapes, so `he said "the budget
+     is fixed"` genuinely cannot be stored — the refusal is correct and only its
+     words were wrong, which is exactly the class PL-19 corrected one item over:
+     a refusal a caller actually reads, carrying the wrong account of itself. */
+  const QUOTED = 'the audit says "the transfer never cleared", which this reading does not answer';
+  const TOO_LONG = "x".repeat(501);
+  const malformed = [];
+  for (const [what, body] of [["a double quote", { reason: QUOTED }],
+                              ["a backslash", { reason: "the ledger path C:\\accounts disagrees" }],
+                              ["a newline", { reason: "first point\nsecond point" }],
+                              ["501 characters", { reason: TOO_LONG }]]) {
+    const r = await act("reject", { version: "the audit alone", body });
+    malformed.push([what, r.ok, codeOf(r), r.check]);
+  }
+  t("A REASON THE MEMBER GAVE AND THE RECORD CANNOT STORE IS ITS OWN REFUSAL (C-25.32) — over the "
+  + "length bound, or carrying a quote, a backslash or a newline the grammar has no escape for",
+    malformed,
+    [["a double quote", false, "VERSION_REASON_MALFORMED", "C-25.32"],
+     ["a backslash", false, "VERSION_REASON_MALFORMED", "C-25.32"],
+     ["a newline", false, "VERSION_REASON_MALFORMED", "C-25.32"],
+     ["501 characters", false, "VERSION_REASON_MALFORMED", "C-25.32"]]);
+
+  /* AND THE ACTS THAT NEED NO REASON AT ALL, which is where the old code was
+     worst rather than merely imprecise. `accept`, `current` and `hide` skip the
+     missing-reason guard entirely — `versionNeedsReason` is false for all three
+     — and reach the grammar arm alone. Under the old code a member ACCEPTING a
+     reading with a quoted note was told that setting a reading aside carries a
+     reason: a sentence about an act they did not perform, refusing an act that
+     requires no reason whatsoever. */
+  const noReasonActs = [];
+  for (const verb of ["accept", "hide", "current"]) {
+    const r = await act(verb, { version: "the audit alone", body: { reason: QUOTED },
+                                ...(verb === "current" ? { q: "&project=PROJ-2026-2000-oversight" } : {}) });
+    noReasonActs.push([verb, codeOf(r), r.check]);
+  }
+  t("AND ON THE THREE ACTS THAT REQUIRE NO REASON AT ALL, the same row answers — the old code told a "
+  + "member accepting a reading with a quoted note that turning a reading down carries a reason",
+    noReasonActs,
+    [["accept", "VERSION_REASON_MALFORMED", "C-25.32"],
+     ["hide", "VERSION_REASON_MALFORMED", "C-25.32"],
+     ["current", "VERSION_REASON_MALFORMED", "C-25.32"]]);
+
+  /* THE TRANSLATIONS ARE DIFFERENT SENTENCES AND NEITHER IS THE OTHER'S. This is
+     the assertion that would have failed on the defect and that a shared code
+     could not have carried at all: with one row for both conditions there is no
+     pair of translations to compare. */
+  t("and the two conditions do not share a sentence: the malformed row never says the reason is "
+  + "missing, and the missing row never offers to shorten anything",
+    [VERSION_ACT_CHECKS.VERSION_REASON_MALFORMED.translation
+       === VERSION_ACT_CHECKS.VERSION_NO_REASON.translation,
+     /without the reason|worth nothing/.test(VERSION_ACT_CHECKS.VERSION_REASON_MALFORMED.translation),
+     /given but could not be stored/.test(VERSION_ACT_CHECKS.VERSION_REASON_MALFORMED.translation),
+     /shorten/i.test(VERSION_ACT_CHECKS.VERSION_NO_REASON.translation)],
+    [false, false, true, false]);
+
+  /* OVER-STRICTNESS, and it is the arm that keeps the fence from being tighter
+     than its rule: a reason AT the bound, in prose a member would really write —
+     an apostrophe, an em dash, an accented word — LANDS, and the act completes.
+     A fence that refuses correct work is a defect in the fence, and a
+     length check off by one is exactly how one gets there. */
+  /* EXACTLY 500 after the store's own `.trim()`, which is the number the guard
+     compares. Built by repeat-and-slice and then FLOORED by the assertion below
+     rather than counted by hand: the first draft of this line sliced a 453-
+     character string to 500 and would have tested the bound at 453 while
+     reading as though it tested it at 500 — the arm caught itself, and a length
+     assertion that is not itself asserted is how an off-by-one arm passes. The
+     final character is forced non-blank so the trim cannot shorten it. */
+  const AT_BOUND = (("the auditor's own note — la contradicción está en la fecha — is what this reading "
+                   + "does not answer, and it is the whole of why it is being turned down. ").repeat(5)
+                   .slice(0, 499) + ".").replace(/\s\.$/, "..");
+  const okReject = await act("reject", { version: "the audit alone", body: { reason: AT_BOUND } });
+  const landed = await byName(INQ, "the audit alone");
+  t("OVER-STRICTNESS: a reason of EXACTLY the 500-character bound, carrying an apostrophe, an em dash "
+  + "and accented words, LANDS and the act completes — the bound is a bound, not a style",
+    [AT_BOUND.length, okReject.ok, codeOf(okReject), landed?.state],
+    [500, true, null, "rejected"]);
+  /* AND THE FIXTURE IS PUT BACK, verified rather than assumed: every block after
+     this one reads `the audit alone` as `suggested`, and a suite that leaves a
+     neighbour's subject moved is a suite that fails somewhere else for a reason
+     nobody can find. */
+  const restored = await act("revert", { version: "the audit alone" });
+  t("and the fixture is RESTORED to `suggested` by an act that is itself recorded, checked here rather "
+  + "than assumed, so no later block reads a state this block left behind",
+    [restored.ok, (await byName(INQ, "the audit alone"))?.state], [true, "suggested"]);
+
   /* LAYER 2 (the catalog), reached ALONE. This document never goes through the
      op: it is hand-authored already claiming a reason-bearing state with nothing
      behind it — the shape a replay, a future writer, or a member editing the
@@ -906,6 +1020,12 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
   drive(await act("current", { version: "the audit alone", q: "&project=PROJ-2026-2000-oversight" }));
   drive(await act("current", { version: "opening account" }));
   drive(await act("current", { version: "opening account", q: "&project=PROJ-2026-2000-unrelated" }));
+  /* C-25.32, driven the same way as every other row here: by making the plane
+     refuse, never by typing the code. A reason that arrived and cannot be
+     stored — this one carries a double quote the restricted frontmatter grammar
+     has no escape for. */
+  drive(await act("reject", { version: "the audit alone",
+                              body: { reason: 'the audit says "it never cleared"' } }));
   /* The one refusal no caller can provoke through a well-formed corpus: a
      document whose version block cannot be rewritten in place. Driven by
      promoting a version block the writer cannot address — an inline empty
@@ -949,7 +1069,12 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
       VERSION_ACT_NO_VERSION: "C-25.22", VERSION_ACT_UNWRITABLE: "C-25.31",
       VERSION_BASIS_CYCLE: "C-25.27", VERSION_CURRENT_NO_PROJECT: "C-25.29",
       VERSION_CURRENT_UNRELATED: "C-25.30", VERSION_ILLEGAL_TRANSITION: "C-25.25",
-      VERSION_NOT_ACCEPTED: "C-25.28", VERSION_NO_REASON: "C-25.26" });
+      VERSION_NOT_ACCEPTED: "C-25.28", VERSION_NO_REASON: "C-25.26",
+      /* C-25.32, added 2026-08-09. The old map had twelve entries because the
+         plane had twelve codes; a reason that arrived and could not be stored
+         was answering under C-25.26, so this line is the correction and not an
+         addition to a list. */
+      VERSION_REASON_MALFORMED: "C-25.32" });
   t("the catalog's own new row is held to the same bound",
     [/^C-25\.\d+$/.test(BASIS_VERSION_CHECKS.VERSION_DISPOSITION_UNATTRIBUTED.check),
      banned.test(BASIS_VERSION_CHECKS.VERSION_DISPOSITION_UNATTRIBUTED.translation)],
