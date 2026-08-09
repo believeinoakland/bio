@@ -23,3 +23,7 @@
 # to M0 about `bio-plane/test/op-claims.test.mjs`). Ignored so an interrupted
 # control cannot become somebody else's corpus.
 .ui*-harness/
+# D-271's pen. Named for the item rather than the area because the item is a
+# plane item; the `.ui*` spelling above is an accident of which area needed a
+# pen first, not a rule about who may have one.
+.d271-harness/

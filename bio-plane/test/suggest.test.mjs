@@ -742,13 +742,40 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     [notIndependent.shared?.length,
      (notIndependent.shared?.[0]?.through ?? []).some((o) => o === `address:${SHARED_ADDR}`)],
     [1, true]);
-  t("DERIVED INFORMS: the derivation is published on the PASSING path too, so a member affirming "
-  + "independence at the accept ceremony affirms it against what the record can see — and `[]` means "
-  + "the plane LOOKED and found nothing, which is a different fact from nobody having looked",
+  /* CORRECTED, NEVER EXEMPTED — D-271, 2026-08-09, and the correction is the
+     finding rather than a tidy-up. This arm used to be labelled *"`[]` means the
+     plane LOOKED and found nothing, which is a different fact from nobody having
+     looked"*. **That was false of this very fixture.** `LANDED["basis-version"]`
+     declares ONE separately sufficient part (`paper trail`), so CHECK 4's origin
+     walk never runs over it — and the answer said `[]` anyway. The old label
+     asserted the exact distinction the field could not make, over a subject that
+     demonstrates it cannot.
+     The VALUES were right and are unchanged; what was wrong was the claim about
+     what they mean. That is why this is corrected in place with its reason rather
+     than deleted: the numbers never disagreed with the plane, so nothing here
+     could ever have gone red, and a future reader re-deriving the old sentence
+     from the same green arm is exactly what this comment exists to stop. */
+  t("the two derivation fields go out on the PASSING path, and this arm now says only what they "
+  + "actually carry — that CHECK 4 cleared this write. It is a fact about the WRITE, not the "
+  + "distinction between having looked and not: this reading declares ONE part, so nothing was walked",
     [Array.isArray(LANDED["basis-version"].shared_origins),
      LANDED["basis-version"].shared_origins.length,
-     LANDED["basis-version"].origins_complete],
-    [true, 0, true]);
+     LANDED["basis-version"].origins_complete,
+     LANDED["basis-version"].grounds.length],
+    [true, 0, true, 1]);
+  /* AND THE PIN THAT MAKES THE CONSTANT UNMISSABLE. Driven rather than argued:
+     a one-part reading and a two-part reading with genuinely separate origins
+     produce BYTE-IDENTICAL derivations, because this check refuses every other
+     outcome several screens up. Any future reader tempted to treat
+     `shared_origins` on this answer as evidence of independence has to get past
+     this arm first — and the field that DOES distinguish the three cases is
+     `independence` on `op=versionstrength`, which recomputes against the record
+     rather than freezing the write's verdict (D-271, IC-52). */
+  t("AND IT IS A CONSTANT ON THE PASS PATH, pinned so nobody re-reads it as a derivation: a one-part "
+  + "reading and a two-part reading with no shared origin publish the SAME bytes, because a non-empty "
+  + "one is refused and never lands",
+    JSON.stringify([LANDED["basis-version"].shared_origins, LANDED["basis-version"].origins_complete]),
+    JSON.stringify([[], true]));
 }
 
 /* CHECK 5 (C-27.12) — no boilerplate. */

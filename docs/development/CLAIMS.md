@@ -6044,3 +6044,149 @@ corrected one would then disagree with its twins by ~100 arms rather than by 16.
 row and take the figure from a green `--strict` run on the merged tree** — do not reconcile the two
 histories by hand, and do not move the numeral in only one of them.
 released: 2026-08-09 — committed on `worktree-agent-a4e2eff5ca09197e2`, **NOT pushed and NOT merged**; CONDUCT integrates. **Battery 139/139 suites green · 8,877 assertions · exit 0 read UNPIPED**, against a true baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **138/138 · 8,827** (the brief carried no figure). **Delta +50, attributed by DIFFING the two full runs and never by subtraction: `airun-projectgate.test.mjs` ABSENT -> 47 (new) and `hygiene.test.mjs` 553 -> 556 (its per-suite arms over one new file). 137 of 139 suites IDENTICAL.** `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0** (162 ops, 220 checks, all named). `node civicos-ui/test/run.mjs` from the repo root, exit unpiped, **0**. `node civicos-ui/check-refusal-codes.mjs` exit unpiped, **0**. `node tools/plancheck.mjs` clean but for UNPUSHED. **TEN FLOORS MOVED, every one from a figure an instrument PRINTED on a green run: `check-refusal-codes.mjs` rows 163->164, census 424->425, reach 217->218, governedSites 66->67, codesChecked 141->142, outcomeReturns 70->74, refusalsJudged 143->145, vocabularies 9->10, vocabularyTerms 56->59; `coverage.mjs` REGISTER_FLOOR 621/133/134 -> 631/134/135, read AFTER the suite was in a commit because the register compares against the REPRODUCIBLE figure. `regions` (53) and `regionLines` (1407) DELIBERATELY UNCHANGED and RE-READ rather than assumed — this item adds, moves and removes no `DEC-49 REGION` marker; `git diff` carries zero marker lines. `REGISTER_FLOOR` verified ONE key set by grep.** **TEN CONTROL ROWS in `test/nc-pl18.mjs`, each armed ALONE, each declared before arming, each refusing to arm on an anchor not occurring exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy under a byte floor — and the refuse-to-arm guard FIRED TWICE on my own restructures, which is it working.** Four arms came back other than declared and all four are recorded rather than smoothed: (b) declared B2 and **B2 stayed GREEN** — both sides of that arm read one catalogue and move together, so it can see a mis-keyed translation and never a wrong one (named at B2's site; B3 is what holds the content); (d), (e) and (f) each went WIDER than declared, (e) most usefully — the P arms caught PROJECTLESS becoming unreachable. **THREE THINGS THE INSTRUMENTS CAUGHT IN MY OWN WORK AND THE SOURCE MOVED FOR, NEVER A FLOOR:** the DEC-49 guard read the gate's two PERMITTING returns as codeless refusals (the verdict field was named `applied`, which is not a verdict) and named three REGION markers no row claimed; and an UNCONDITIONAL `searchParams.delete("actor")` **BROKE `op=lease`**, caught by one assertion in `members.test.mjs`. **THREE SUPERSEDED PINS CORRECTED AND NONE EXEMPTED**, each with why the old one was right when written: `airun.test.mjs` ARM D1 (C-22 family SEVEN -> EIGHT), `leadslug.test.mjs`'s fixture (made legal through the real acts), `run-conditions.test.mjs` ARM W3 (`aiRunClose` classified as the thirteenth reader of `ai_runs`). IC-47 filed; the version bump and the RESOLUTION are CONDUCT's. `git stash` was NOT used at any point.
+
+## CLAIM 2026-08-09 PLANE (D-271 — the affirmation, and the derivation on the read)
+session: d271-independence (worktree agent-a8660daae0e0fa392)
+opened: 2026-08-09T14:00:00Z
+paths: **`bio-plane/src/store.mjs`, named by SITE and never by file**: (a) ONE new private
+  `#independenceOf`, placed immediately after `#versionCollections` on that helper's own
+  one-reader-two-consumers precedent; (b) inside `suggestVersion`, CHECK 4's origin walk REPLACED
+  by a call to it and CHECK 4's header comment corrected — **the `if (shared.length)` and
+  `if (filler.length)` anchors `suggest.control.mjs`'s arms depend on are UNTOUCHED**; (c) the
+  `derived` block's comment on `op=suggest`'s success answer (comment only — the two fields keep
+  their values); (d) CHECK 6's `forbidden` list, two entries added; (e) `versionStrength`'s returned
+  object, ONE key (`independence`) added **OUTSIDE the `DEC-49 REGION is-version-strength` span and
+  outside `pair`**; (f) `basisVersions`' per-version object, ONE key (`affirmed`); (g)
+  `#versionArgs`, ONE argument; (h) `#moveVersionState`, ONE new refusal block on the ACCEPT path
+  plus one receipt key and one `#setVersionField` line; (i) `basisVersionsOf`'s projection object,
+  ONE field, read AFTER `composition` so it stays outside the freeze; (j) the
+  `inquiry_basis_versions` INSERT, ONE column; (k) `#migrate`'s additive-column list, ONE row.
+  **NOT** `#strengthWalk`, `#axisResult`, `#groundResult`, `#refusePairComposed`, `substanceOf`,
+  `#basisCyclePath`, `#currentVersionOf`, `#versionCollections`' body, or any other method.
+  **`bio-plane/src/schema.mjs`** — ONE additive nullable column (`affirmed_parts`) on the EXISTING
+  `inquiry_basis_versions` table. No new table, so the `host_governor` placement rule does not bite.
+  **`bio-plane/checks/bio-checks.mjs`** — ONE row appended to the EXISTING `VERSION_ACT_CHECKS`
+  family (**C-25.33**; the numeral below it is stepped over, see the delegation). No existing row
+  touched.
+  **`bio-plane/test/independence.test.mjs`** (NEW, this item's suite) and
+  **`bio-plane/test/independence.control.mjs`** (NEW, the driver — deliberately not a `.test.mjs`).
+  **`bio-plane/test/versionstate.test.mjs`** — ONE new block (10b) on its OWN inquiry so no existing
+  count moves, ONE `drive(...)` line in block 11, and the C-number pin CORRECTED IN PLACE with a
+  dated reason, never exempted.
+  **`bio-plane/test/suggest.test.mjs`** — ONE arm CORRECTED IN PLACE with a dated reason (its label
+  asserted a distinction its own fixture disproves) plus ONE new arm beside it. No other arm touched;
+  M0-13's block-3 boundary arm is not in this span and is merged on `main` regardless.
+  `.gitignore` (ONE pattern for this item's pen). `docs/development/DEBT.md` (the NEW D-271 row
+  only), `docs/development/INTERFACE-CHANGES.md` (IC-52, APPENDED),
+  `docs/development/MEASUREMENTS.md` (APPENDED), `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/src/index.mjs` (no op added, no OPS row changed), **NOT**
+  `bio-plane/scripts/**` (the coverage finding below is DELEGATED, not fixed), **NOT**
+  `civicos-ui/**` (READ ONLY — UI-43's ceremony is quoted and measured, never edited), **NOT**
+  `newgroup/**`, **NOT** `agent-worker/**`, **NOT** `docs/development/QUEUE.md`, **NOT**
+  `DECISIONS.md`, **NOT** `INTERFACES.md`.
+interfaces owned: none. interfaces consumed: I3. **IC-52 is filed** — one new argument, one new
+  refusal, two additive published fields, one additive nullable column.
+expected: D-271 — UI-43's two-part delegation, verified from the plane before anything was changed.
+accepts-when: both halves MEASURED BY DRIVING THE OPS rather than by reading the source; the
+  CHECK's false sentence corrected at its site with the measurement; a negative control whose arms
+  include an OVER-STRICTNESS arm; battery, `coverage.mjs --strict` and the UI harness all green with
+  exits read UNPIPED.
+concurrency: **`released:` IS NOT A RELIABLE LIVENESS SIGNAL IN THIS FILE AND THIS ITEM MEASURED IT
+  — see the delegation to CONDUCT below.** Liveness was therefore checked against `git log --all`
+  rather than against the field. PL-14 (`versionStrength`) and M0-13 (`substanceOf` inside
+  `suggestVersion`, `suggest.test.mjs`) both carry EMPTY `released:` lines and both are MERGED ON
+  `main` (`fee6e9a`, `cfe0a28`), so their paths are free. **D-269 IS LIVE AND UNMERGED**
+  (`worktree-agent-aac7ddaefbfcf8a7a`, `9c3877d`) and takes `store.mjs` at `#axisResult`, roughly
+  lines 13937-14030 — the strength SUCCESS sentences, which is UI-43's other delegation. **This
+  item's nearest edit is ~3,700 lines away** and no span overlaps; both items append to `DEBT.md`,
+  `INTERFACE-CHANGES.md` and `MEASUREMENTS.md`, which is an append conflict for CONDUCT rather than
+  a contended span. **UI-43 is LIVE and UNMERGED** (`worktree-agent-a9e7e017d06799858`, `fd1e2ae`)
+  and owns `civicos-ui/app.html`'s `__ACCEPT_CEREMONY__` region — **not opened here, not one
+  character of `civicos-ui/**` is edited**, and IC-52 names the one line UI-43 must add. No live
+  claim names `schema.mjs`'s `inquiry_basis_versions` table, `VERSION_ACT_CHECKS`,
+  `versionstate.test.mjs`, `independence.*`, or `basisVersions`/`#moveVersionState`.
+released:
+
+### DELEGATION 2026-08-09 PLANE (D-271) -> CONDUCT: **`released:` IN THIS FILE IS NOT A LIVENESS SIGNAL, AND A WORKER OBEYING IT LITERALLY IS BLOCKED ON MERGED WORK**
+
+A concurrency sweep of all 6,046 lines of this file, run for this item, returned **38 claims as
+LIVE**. Checked against `git log --all` rather than against the field, **at least two of those are
+merged on `main` and their paths are free**: PL-14 (`fee6e9a`, *"PL-14 integrated"*) and M0-13
+(`cfe0a28`, *"M0-13 integrated"*). Both carry a `released:` line that exists and is EMPTY.
+
+- **The parsing trap underneath it is worth recording on its own:** many blocks carry TWO
+  `released:` lines — a FILLED one and then an EMPTY one left over from the template (PL-1 has them
+  at 2404 and 2405). A reader taking the LAST one reads **56 claims as live that are not**. The
+  correct rule is *free if ANY `released:` line in the block is non-empty*, and even that rule
+  returns the two false LIVEs above.
+- **Consequence, and it is the reason this is CONDUCT's rather than a note:** WORKER.md and
+  CLAIMS.md's own protocol tell every worker to check this file before editing. A worker who obeys
+  it literally concludes that `store.mjs`'s `versionStrength` is held by a live item and either
+  blocks or files a delegation for work that landed a day earlier. This item nearly did.
+- **Two blocks are also structurally unparseable**: PL-15 has NO `## CLAIM` header at all (it starts
+  at line 3038 with a bare `session:` under a `### DECISION FOR BOB` heading), and D-240 uses
+  `### CLAIM` rather than `##`.
+- **Recommendation:** the integrator fills `released:` at merge — it is one line in the same commit
+  that merges the worker — and the duplicate empty template line is dropped at the same time. A
+  cheaper stopgap that costs nothing: `tools/plancheck.mjs` already walks this file, so it could
+  refuse a claim block with two `released:` lines or none, which is a shape error rather than a
+  judgement about liveness. **Cost of not doing it:** every worker pays the same sweep, and the
+  failure mode is silent in the dangerous direction — a stale LIVE reads as "someone holds this",
+  which looks responsible and is wrong.
+
+### DELEGATION 2026-08-09 PLANE (D-271) -> M0 / WHOEVER OWNS `bio-plane/scripts/coverage.mjs`: **THE CHECK CATALOGUE IS HARVESTED BY REGEX OVER RAW SOURCE, COMMENTS INCLUDED — AND IT ALLOCATED A CHECK OUT OF THIS ITEM'S OWN COMMENT**
+
+**MEASURED, not inferred, and it is GATED — `--strict` exited 1.** `coverage.mjs:104` builds the
+catalogue as `[...checksSrc.matchAll(/C-\d+\.\d+/g)]` over the RAW text of
+`bio-plane/checks/bio-checks.mjs`. This item added ONE row and wrote a comment beside it explaining
+which numeral it was stepping over and why. **The comment's numeral became a check.** The catalogue
+read **225 where the rows are 224**, `--strict` reported *"2 never named"*, and one of the two was a
+check that has never existed. Re-wording the comment so it does not spell the numeral returned it to
+224 · 1 never named — the real new row, which is now named by an assertion.
+
+- **This is the SECOND instrument measured with this defect in two days**, and the first was
+  reported by UI-43: `hygiene.test.mjs`'s class census counts `readdirSync\s*\(` over source
+  including comments, and **caught UI-43's own correction because the correction quoted the token it
+  was correcting.** Same shape, and this one is worse in one specific way: the census is a
+  ratchet that fails a suite, while this is the `--strict` gate every item must pass to hand off.
+- **It is also the exact trap WORKER.md warns about from the other direction** — *never write a
+  worked example naming "the next free number" into a corpus file* — arriving as *never NAME a
+  number in a comment in the catalogue file at all*, which is a strictly stronger and less obvious
+  rule that nothing states anywhere.
+- **NOT FIXED HERE, deliberately.** The harvest regex is a gated instrument every area depends on
+  and no part of this item's span; changing it would be an undeclared change to everyone's gate.
+- **Recommendation:** harvest over COMMENT-STRIPPED source. The stripper exists and is driven —
+  `surface-registry.test.mjs`, `preauth-vocabulary.test.mjs` and `bound-sweep.test.mjs` all strip
+  first, and two of them were corrected into it by this identical failure. **Reversal cost:** none;
+  the walk gets strictly more accurate. **Cost of not doing it:** every future item that explains a
+  check number in a comment burns the same twenty minutes, and the one who does not read the failure
+  carefully instead invents an assertion for a check that does not exist — which would put a rule
+  nobody is enforcing into the suite that is supposed to enforce them.
+
+### DELEGATION 2026-08-09 PLANE (D-271) -> UI-43 (the accept ceremony, live and unmerged): **THE TWO THINGS YOUR PAGE SAYS THE RECORD CANNOT DO, IT CAN NOW DO — AND ONE SENTENCE ON YOUR PAGE IS NOW FALSE**
+
+Your delegation was right on both halves and this item verified both from the plane by driving the
+ops. Two consequences land on your surface, and both are small:
+
+1. **`op=versionaccept` NOW TAKES `affirmed`.** Your ceremony already gates on the affirmation and
+   already HOLDS the value — the state object carries `affirmed:{label:true}` — so this is one line:
+   send the affirmed labels with the act. It is an array or a comma-separated string. **It is
+   REQUIRED where the reading declares more than one part** (`C-25.33`,
+   `VERSION_AFFIRMATION_INCOMPLETE`), so a ceremony that gates but does not SEND will be refused
+   once both items land. It is not required, and not asked, where the reading declares one part —
+   which matches what your page already does.
+2. **THE SENTENCE SAYING THE AFFIRMATION IS "a step of the ceremony rather than a line in the
+   record" IS NOW FALSE**, and so is the one saying the derived shared origin is NOT PUBLISHED.
+   `op=basisversions` publishes `affirmed` per version (the PART NAMES, never a bare boolean —
+   `null` means nobody was asked), and `op=versionstrength` publishes `independence`
+   `{ checked, parts, shared[], complete, limit }`. **Correcting those sentences is UI's, not this
+   item's**, and this item edited nothing under `civicos-ui/`.
+3. **ONE THING YOUR READING WAS NARROWER ON, and it changes what is worth rendering.** You
+   recommended carrying `shared_origins` onto the stored version and publishing it on
+   `op=basisversions`. Measured: **that field is a CONSTANT on the pass path** — CHECK 4 refuses
+   every non-empty result, so a stored version could never carry anything but `[]`, and publishing
+   it would have satisfied the check's sentence literally while telling the member nothing. What is
+   published instead is RECOMPUTED at read time, so `independence.shared` **can be non-empty over a
+   version that passed its write gate** — the case the gate cannot reach, where provenance recorded
+   afterwards ties two parts to one upstream source. That is the fact worth putting in front of a
+   member who is about to affirm, and `checked:false` is what says the plane did not look at all.

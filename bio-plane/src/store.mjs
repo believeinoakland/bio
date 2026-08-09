@@ -545,6 +545,14 @@ export class Store extends DurableObject {
          version projected before this item existed was composed by a member and
          is a suggestion of no kind, which NULL states exactly. */
       ["inquiry_basis_versions", "kind", "TEXT"],
+      /* D-271 / DEC-32 clause 4: WHICH PARTS the accepting member affirmed were
+         separately sufficient. Additive and nullable for the same reason the four
+         above are, and here NULL carries a fact this item exists to keep
+         distinguishable: a version accepted before this column existed was
+         accepted by a surface that never asked, and the record must not read as
+         though it had. Backfilling any value here — even an empty one — would
+         manufacture the affirmation DEC-32 requires be affirmatively claimed. */
+      ["inquiry_basis_versions", "affirmed_parts", "TEXT"],
       /* PL-15 / D-213: the OTHER question a requested capture bears on. Additive
          and nullable for the same reason every column above is — a request
          written before this item existed was made under the question the run was
@@ -7989,6 +7997,14 @@ export class Store extends DurableObject {
            two versions, and freezing it would freeze the state machine shut. */
         state_by: str(v.state_by), state_at: str(v.state_at),
         state_reason: typeof v.state_reason === "string" ? v.state_reason : null,
+        /* D-271 / DEC-32 clause 4. Read here rather than above for exactly the
+           reason `state_by` is: it is what happened TO this version, so it sits
+           OUTSIDE the composition the freeze compares byte for byte. Kept as the
+           record's own text and never re-parsed into a list at this layer — the
+           projection stores what the document holds, and the op that publishes it
+           is the one place it is split. */
+        affirmed_parts: typeof v.affirmed_parts === "string" && v.affirmed_parts.trim()
+          ? v.affirmed_parts : null,
         regroup_by: str(v.regroup_by), regroup_at: str(v.regroup_at),
         regroup_note: typeof v.regroup_note === "string" ? v.regroup_note : null,
         composition, legs, grounds,
@@ -8756,8 +8772,9 @@ export class Store extends DurableObject {
           this.sql.exec(
             `INSERT INTO inquiry_basis_versions
                (bundle_id,name,ord,description,relationship,state,derived_from,hidden,claim,run,author,at,
-                regroup_by,regroup_at,regroup_note,composition,leg_count,state_by,state_at,state_reason,kind)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                regroup_by,regroup_at,regroup_note,composition,leg_count,state_by,state_at,state_reason,kind,
+                affirmed_parts)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId, v.name, v.ord, v.description, v.relationship, v.state, v.derived_from,
             v.hidden, v.claim, v.run, v.author, v.at,
             v.regroup_by, v.regroup_at, v.regroup_note, v.composition, v.legs.length,
@@ -8767,7 +8784,12 @@ export class Store extends DurableObject {
             v.state_by, v.state_at, v.state_reason,
             /* PL-3 / IS-4: and what the run proposed it AS, in the same
                statement and through the SAME one write site PL-1 pinned. */
-            v.kind);
+            v.kind,
+            /* D-271 / DEC-32 clause 4: and WHAT the accepting member affirmed,
+               in the same statement as the attribution it belongs to — an
+               affirmation landing in one write and the name behind it in another
+               is the shape that lets the two come apart. */
+            v.affirmed_parts);
           for (let k = 0; k < v.legs.length; k++) {
             const l = v.legs[k];
             if (!l.target_id) continue;   // replay of a malformed shape: unprojectable
@@ -17729,6 +17751,77 @@ export class Store extends DurableObject {
              legs_complete: legs.length === row.leg_count };
   }
 
+  /** D-271 / D-195 — THE INDEPENDENCE DERIVATION, ONE IMPLEMENTATION, TWO
+   *  CONSUMERS: `op=suggest`'s CHECK 4 (which REFUSES on it) and
+   *  `op=versionstrength` (which PUBLISHES it to the member at the accept
+   *  ceremony). D-235's shape one construct over, and the reason is the same:
+   *  a second assembly of one derivation agrees with the first at zero cost, so
+   *  the remedy is to remove the second computation rather than to teach it the
+   *  first one's shape. The write gate and the ceremony's read cannot come to
+   *  disagree about what "independent" means, because there is one answer.
+   *
+   *  DERIVED FROM CONTENT-ADDRESSED PROVENANCE, which is what makes it a check
+   *  rather than a judgement: `register` maps a capture's SHA to the bundle that
+   *  holds it, and `captured_locators` maps that SHA to the address it was
+   *  retrieved from. Two parts sharing a bundle, a capture sha, or a source
+   *  address share an upstream origin, and the plane can SAY SO rather than
+   *  guess.
+   *
+   *  `checked: false` IS THE HALF THAT COST THIS ITEM ITS MEASUREMENT, and it is
+   *  D-129 at the field grain. A reading declaring ONE separately sufficient part
+   *  has nothing to compare, so the walk never runs — and the shape this replaced
+   *  published `[]` in exactly that case, which reads as *looked and found
+   *  nothing* when the truth is *did not look*. Not found and did not finish
+   *  looking are different facts, and a third fact — there was nothing to look
+   *  for — is different from both. `complete` is `null` rather than `true` when
+   *  nothing was walked, for the same reason: a bound nothing tested did not hold.
+   *
+   *  BOUNDED, AND THE BOUND FAILS CLOSED. D-225's half is that every row scan
+   *  carries a LIMIT; the half that matters more here is that a TRUNCATED trace
+   *  could miss the very origin this exists to find, and a missed origin is a
+   *  silent pass on the side that overstates the finding. So the walk asks for one
+   *  more than the cap, and reaching it makes the answer UNDETERMINED rather than
+   *  clean. */
+  #independenceOf(legs, parts) {
+    const OMAX = Store.SUGGEST_ORIGIN_MAX;
+    let complete = true;
+    const originsOf = (bundleIds) => {
+      const out = new Set();
+      for (const id of bundleIds) {
+        out.add(`bundle:${id}`);
+        const caps = this.#rows(
+          `SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, OMAX + 1);
+        if (caps.length > OMAX) complete = false;
+        for (const r of caps.slice(0, OMAX)) {
+          out.add(`capture:${r.capture_sha}`);
+          const addrs = this.#rows(
+            `SELECT address_norm FROM captured_locators WHERE capture_sha=? LIMIT ?`,
+            r.capture_sha, OMAX + 1);
+          if (addrs.length > OMAX) complete = false;
+          for (const l of addrs.slice(0, OMAX)) out.add(`address:${l.address_norm}`);
+        }
+      }
+      return out;
+    };
+    const checked = parts > 1;
+    const shared = [];
+    if (checked) {
+      const byBranch = new Map();
+      for (const l of legs) if (l.ground) {
+        if (!byBranch.has(l.ground)) byBranch.set(l.ground, []);
+        byBranch.get(l.ground).push(l.target_id);
+      }
+      const originSets = [...byBranch].map(([label, ids]) => [label, originsOf(ids)]);
+      for (let i = 0; i < originSets.length; i++)
+        for (let j = i + 1; j < originSets.length; j++) {
+          const common = [...originSets[i][1]].filter((o) => originSets[j][1].has(o));
+          if (common.length)
+            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });
+        }
+    }
+    return { checked, parts, shared, complete: checked ? complete : null, limit: OMAX };
+  }
+
   basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
     const refuse = (key, detail) => {
       const row = BASIS_VERSION_CHECKS[key];
@@ -17797,6 +17890,19 @@ export class Store extends DurableObject {
            refuses. Null on a version nobody has moved, which is the truth about
            it rather than a default. */
         moved: r.state_by ? { by: r.state_by, at: r.state_at, reason: r.state_reason } : null,
+        /* D-271 / DEC-32 clause 4: WHAT THE ACCEPTING MEMBER AFFIRMED, published
+           beside the act that carries their name, because clause 7 makes a later
+           READER the final check and a reader cannot check an affirmation the
+           record does not show them.
+
+           `null` MEANS NOBODY WAS ASKED, and it is load-bearing rather than a
+           default: it is what every version accepted before this existed reads,
+           and what every accept of a reading with one part reads. It is a
+           different fact from an affirmation naming no parts, which this op
+           cannot publish because the act cannot write one. D-129's distinction at
+           the field grain — and the reason the surface must not render an absent
+           affirmation as a satisfied one. */
+        affirmed: r.affirmed_parts ? String(r.affirmed_parts).split("\t") : null,
         regroup: r.regroup_by ? { by: r.regroup_by, at: r.regroup_at, note: r.regroup_note } : null,
         composition: r.composition,
         /* The RECORD's own count, stored at the write, beside the legs actually
@@ -18339,6 +18445,32 @@ export class Store extends DurableObject {
       legs_complete: legRows.length === row.leg_count,
       hidden: row.hidden === 1,
       derived_from: row.derived_from,
+      /* D-271 / D-195 — THE INDEPENDENCE DERIVATION, ON THE READ THE ACCEPT
+         CEREMONY MAKES. This is the half `op=suggest`'s CHECK 4 claimed to
+         provide and did not: it published the derivation on its own WRITE answer
+         and on no read, so a member at §12's accept ceremony — who is reading —
+         affirmed independence against nothing. IC-52.
+
+         RECOMPUTED HERE, NOT REPLAYED. A write-time snapshot would answer the
+         question *were these parts independent when this was written*, and the
+         member is being asked *are they independent*. Those come apart exactly
+         when provenance is recorded AFTER the write — a locator tying two
+         captures to one upstream address, say — which is the case CHECK 4 cannot
+         reach by construction and the one most worth showing. So `shared` here
+         CAN be non-empty over a reading that passed its write gate, and that is
+         the field earning its place rather than restating a constant.
+
+         THROUGH `#independenceOf`, which CHECK 4 also calls — one implementation,
+         two consumers, so the gate and the ceremony cannot come to disagree about
+         what independent means (D-235's shape).
+
+         `parts` IS DERIVED FROM THE LEGS THIS ANSWER READ, and the blank label is
+         dropped, exactly as `#versionCollections` does it: a leg naming no part
+         is not a part anybody declared. Above `BASIS_VERSION_LEGS_MAX` legs that
+         is a change of substance, and `legs_complete: false` beside it is what
+         says the answer was cut. */
+      independence: this.#independenceOf(legRows,
+        new Set(legRows.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size),
     };
     /* DEC-44 AND DEC-40, ON THE WAY OUT. The composition is REFUSED rather than
        merely absent, which is the difference between a rule and a habit. */
@@ -18427,6 +18559,15 @@ export class Store extends DurableObject {
     const q = (k) => (b[k] !== undefined ? b[k] : url.searchParams.get(k));
     return { target: q("target"), version: q("version"), reason: q("reason"),
              project: q("project"), hidden: q("hidden"), preview: q("preview"),
+             /* D-271 / DEC-32 clause 4 — WHAT THE MEMBER AFFIRMED, and it names
+                the parts rather than being a bare yes. A field holding assent
+                without saying what was assented to would be the record carrying a
+                signature on a blank page, which is worse than holding nothing:
+                a reader could not tell it apart from one that covered the whole
+                reading. Accepts an array or a comma-separated string, so a body
+                and a query string say the same thing — the same shape
+                `op=versionstrength` already takes for `states`. */
+             affirmed: q("affirmed"),
              /* server-stamped, never the caller's */
              author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer") };
   }
@@ -18562,6 +18703,69 @@ export class Store extends DurableObject {
           { target, version: vname, path: cycle });
     }
 
+    /* D-271 / DEC-32 CLAUSE 4 — THE PER-PART AFFIRMATION, AND IT IS THE RULING'S
+       ANTI-GAMING KEYSTONE RATHER THAN A FORM FIELD.
+       *"Independent sufficiency must be affirmatively claimed, per branch. So
+       strengthening a finding by repackaging requires an ACT that carries the
+       member's name; it can never happen by omission, by default, or by a member
+       simply not understanding the question."*
+
+       ON ACCEPT ALONE, and the reason is at the site rather than in a comment
+       elsewhere: accepting is the only one of the six acts where a member's name
+       lands OVER the evidence, making a reading what the record's answer rests
+       on. Turning one down, setting it aside, putting it back, hiding it, or
+       naming what a project stands on all leave the arithmetic where it was.
+       §12 takes a MAXIMUM across separately sufficient parts, so it is acceptance
+       that cashes the repackaging in.
+
+       AND ONLY WHERE THERE IS SOMETHING TO AFFIRM BETWEEN. A reading declaring
+       ONE part has no independence to claim, and requiring a ceremony there would
+       be a fence wider than its rule wearing the costume of caution — an
+       undeclared interface change on every single-part accept in the record.
+       MEASURED: with the fence at more-than-one-part, no existing suite fixture
+       moves, because every accept in the battery today is of a single-part
+       reading. The predicate is the SAME ONE CHECK 4 uses at the write, read from
+       the same place, so the gate and the ceremony cannot come to disagree about
+       when the question is even asked.
+
+       WHAT IS REFUSED IS AN INCOMPLETE AFFIRMATION, NOT A MISSING PARAMETER, and
+       the difference is the whole content of "per branch": naming some of the
+       parts is not affirming the reading, and the record would otherwise hold an
+       affirmation that looked complete to every later reader. */
+    let affirmedParts = null;
+    if (to === "accepted") {
+      const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
+      const declared = [...new Set(vlegs
+        .filter((l) => l && typeof l === "object" && String(l.version ?? "").trim() === vname)
+        .map((l) => String(l.ground ?? "").trim()).filter(Boolean))];
+      if (declared.length > 1) {
+        const raw = a.affirmed == null || a.affirmed === ""
+          ? []
+          : (Array.isArray(a.affirmed) ? a.affirmed : String(a.affirmed).split(","));
+        const said = [...new Set(raw.map((s) => String(s).trim()).filter(Boolean))];
+        const missing = declared.filter((d) => !said.includes(d));
+        const unknown = said.filter((s) => !declared.includes(s));
+        if (missing.length || unknown.length)
+          return refuse("VERSION_AFFIRMATION_INCOMPLETE",
+            `'${vname.slice(0, 60)}' rests on ${declared.length} separately sufficient parts and this `
+            + `answer counts the STRONGEST of them, so accepting it is a claim that each one would `
+            + `carry the finding on its own. ${missing.length
+                ? `Not affirmed: ${missing.slice(0, 8).join(", ")}.`
+                : ``}${unknown.length
+                ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.`
+                : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be `
+            + `carried by omission or by default, because that is exactly how a finding gets `
+            + `strengthened by repackaging.`,
+            { target, version: vname, declared, affirmed: said, missing, unknown });
+        /* STORED IN THE RECORD'S OWN ORDER rather than the caller's, so two
+           members affirming the same reading write the same bytes and a reader
+           comparing two accepts is comparing them. Tab-separated: the restricted
+           frontmatter grammar has no lists, and the commas a caller sent are the
+           delimiter rather than content. */
+        affirmedParts = declared.join("\t");
+      }
+    }
+
     /* MAKE-CURRENT's own pre-write checks. §7: current is a property of the
        PROJECT's relationship to the inquiry, so the project is NAMED — an
        inquiry can sit beneath several projects and one team's decision must
@@ -18615,6 +18819,14 @@ export class Store extends DurableObject {
       ok: true, act, target, version: vname, from,
       to: to ?? from, moves_state: to !== null,
       hidden, reason: why || null, author: who, at: when, weight: "single",
+      /* D-271: WHAT WAS AFFIRMED, on the receipt and therefore on the PREVIEW
+         too. BEAT 2's rule is that the only difference between a preview and the
+         act is that the write does not happen, so a member seeing the ceremony's
+         pre-flight sees the same affirmation the record is about to hold. `null`
+         on every act that is not an accept and on an accept of a reading with
+         nothing to affirm between — never `[]`, which would read as an
+         affirmation that named nothing. */
+      affirmed: affirmedParts === null ? null : affirmedParts.split("\t"),
       ...(act === "current" ? { project: projectId } : {}),
     };
     if (preview) return { ...receipt, preview: true, would: act, wrote: false };
@@ -18629,6 +18841,14 @@ export class Store extends DurableObject {
       text = Store.#setVersionField(text, vname, "state_by", who);
       text = Store.#setVersionField(text, vname, "state_at", when);
       text = Store.#setVersionField(text, vname, "state_reason", why);
+      /* D-271: THE AFFIRMATION MOVES WITH THE ATTRIBUTION, in the same block and
+         unconditionally, so the three-fields-together rule above extends to it
+         rather than acquiring an exception. Writing "" on every move that is not
+         a multi-part accept is what CLEARS a previous one: a member who turns a
+         reading down and later accepts a re-worked version of it must not inherit
+         the earlier reading's affirmation, which is the same false-attribution
+         hazard that makes `state_reason` clear here. */
+      text = Store.#setVersionField(text, vname, "affirmed_parts", affirmedParts ?? "");
     }
     if (act === "hide") text = Store.#setVersionField(text, vname, "hidden", hidden);
     if (text === null)
@@ -18975,7 +19195,16 @@ export class Store extends DurableObject {
        REFUSED rather than quietly overwritten — a caller told its `state:
        accepted` was ignored learns nothing, and a caller refused by name learns
        where the fence is. */
-    const forbidden = ["state", "hidden", "state_by", "state_at", "state_reason", "at"]
+    /* D-271 adds `affirmed_parts` and `affirmed` to this list, and it is the same
+       rule rather than a new one. DEC-32 clause 4's whole defence is that
+       independent sufficiency is claimed by a NAMED MEMBER in an act — so a
+       machine composing suggestions at volume pre-setting the affirmation on its
+       own submission is precisely the gaming the clause exists to stop, arriving
+       one op earlier than anybody was watching. Refused BY NAME rather than
+       silently dropped: a caller told nothing learns nothing about where the
+       fence is. */
+    const forbidden = ["state", "hidden", "state_by", "state_at", "state_reason", "at",
+                       "affirmed_parts", "affirmed"]
       .filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
     if (forbidden.length)
       return remember(refusal("SUGGEST_UNWRITABLE_STATE",
@@ -19157,52 +19386,44 @@ export class Store extends DurableObject {
        that holds it, and `captured_locators` maps that SHA to the address it was
        retrieved from. Two branches sharing a bundle, a capture sha, or a source
        address share an upstream origin, and the plane can SAY SO rather than
-       guess. DERIVED INFORMS, AUTHORED BINDS: the derivation is REFUSED to a
-       machine composing at volume and PUBLISHED on every version that passes, so
-       the member affirming independence at §12's accept ceremony is affirming it
-       against what the record can see. */
-    const OMAX = Store.SUGGEST_ORIGIN_MAX;
-    let originsComplete = true;
-    const originsOf = (bundleIds) => {
-      const out = new Set();
-      for (const id of bundleIds) {
-        out.add(`bundle:${id}`);
-        /* BOUNDED, AND THE BOUND FAILS CLOSED. D-225's half is that every row
-           scan carries a LIMIT; the half that matters more here is that a
-           TRUNCATED trace could miss the very origin the check exists to find,
-           and a missed origin is a silent pass on the side that overstates the
-           finding. So the walk asks for one more than the cap, and reaching it
-           makes the answer UNDETERMINED rather than clean. */
-        const caps = this.#rows(
-          `SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, OMAX + 1);
-        if (caps.length > OMAX) originsComplete = false;
-        for (const r of caps.slice(0, OMAX)) {
-          out.add(`capture:${r.capture_sha}`);
-          const addrs = this.#rows(
-            `SELECT address_norm FROM captured_locators WHERE capture_sha=? LIMIT ?`,
-            r.capture_sha, OMAX + 1);
-          if (addrs.length > OMAX) originsComplete = false;
-          for (const l of addrs.slice(0, OMAX)) out.add(`address:${l.address_norm}`);
-        }
-      }
-      return out;
-    };
-    const shared = [];
-    if (declaredLabels.length > 1) {
-      const byBranch = new Map();
-      for (const l of walkLegs) if (l.ground) {
-        if (!byBranch.has(l.ground)) byBranch.set(l.ground, []);
-        byBranch.get(l.ground).push(l.target_id);
-      }
-      const originSets = [...byBranch].map(([label, ids]) => [label, originsOf(ids)]);
-      for (let i = 0; i < originSets.length; i++)
-        for (let j = i + 1; j < originSets.length; j++) {
-          const common = [...originSets[i][1]].filter((o) => originSets[j][1].has(o));
-          if (common.length)
-            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, 5) });
-        }
-    }
-    if (declaredLabels.length > 1 && !originsComplete)
+       guess.
+
+       THE SENTENCE THAT USED TO SIT HERE WAS WRONG AND IS CORRECTED RATHER THAN
+       DELETED, because the next reader will otherwise reach for it again — D-271,
+       2026-08-09, and UI-43 found it from the surface side while building the
+       ceremony it names. It read: *"the derivation is REFUSED to a machine
+       composing at volume and PUBLISHED on every version that passes, so the
+       member affirming independence at §12's accept ceremony is affirming it
+       against what the record can see."* **It was true of the WRITE and false of
+       the READ, and the write half was true only in a way that carried no
+       information.** Both halves were MEASURED by driving the op, not read off
+       the source:
+
+       (1) NO READ PUBLISHED IT. `shared_origins` and `origins_complete` went out
+       on `op=suggest`'s own answer and on nothing else. Neither
+       `op=basisversions` nor `op=versionstrength` carried them, so a member at
+       the ceremony — who is reading, not writing — affirmed independence against
+       nothing at all.
+
+       (2) ON THE PASS PATH IT WAS A CONSTANT. This check REFUSES whenever
+       `shared` is non-empty, so a version that passes necessarily carries `[]`,
+       and no version the record can hold could ever carry anything else. Driven:
+       a one-part reading and a two-part reading with genuinely separate origins
+       published byte-identical derivations — and the one-part reading never ran
+       the walk at all. So `[]` was also conflating *looked and found nothing*
+       with *there was nothing to look for*, which is D-129 at the field grain.
+
+       WHAT REPLACES IT: `#independenceOf` is the ONE implementation, this check
+       and `op=versionstrength` are its two consumers, and the READ recomputes it
+       against the record AS IT STANDS rather than replaying a write-time
+       snapshot. That is what finally makes the ceremony's affirmation land
+       against something — including the case this check cannot reach, where
+       provenance recorded AFTER the write reveals a shared origin the write
+       could not have seen. */
+    const ind = this.#independenceOf(walkLegs, declaredLabels.length);
+    const originsComplete = ind.complete !== false;
+    const shared = ind.shared;
+    if (ind.checked && !ind.complete)
       return remember(refusal("SUGGEST_COMPARISON_INCOMPLETE",
         `tracing the separately sufficient parts of this reading back to their upstream material `
         + `reached the published bound of ${OMAX} per step, so independence is UNDETERMINED rather than `
@@ -19517,12 +19738,24 @@ export class Store extends DurableObject {
       composition: recorded ? recorded.composition : null,
       bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
     };
-    /* DERIVED INFORMS. The independence derivation is published on the PASS
-       path too, so the member at §12's accept ceremony affirms independence
-       against what the record can see rather than against nothing. `[]` here
-       means the plane looked and found no shared origin, which is a different
-       fact from nobody having looked — and `derived` on the label is what says
-       the record does not hold any of it.
+    /* DERIVED INFORMS, AND WHAT THESE TWO FIELDS ACTUALLY SAY — corrected at the
+       site, D-271. `shared_origins` is EMPTY ON EVERY ANSWER THAT REACHES HERE
+       and cannot be otherwise: CHECK 4 refuses a non-empty one several screens
+       up, so this is the pass path by construction. `origins_complete` is `true`
+       here for the same reason. They are kept because they are a true statement
+       about THIS WRITE — the walk ran and cleared — and because removing a
+       published field breaks consumers for no gain (IC-52 records the judgement).
+
+       WHAT THEY ARE NOT is the derivation a reader needs, and the comment that
+       used to sit here claimed they were: it said `[]` *"means the plane looked
+       and found no shared origin, which is a different fact from nobody having
+       looked."* **That is false whenever the reading declares one part**, where
+       the walk never runs and this still says `[]` — measured by driving both
+       shapes and diffing the answers. The field that distinguishes the three
+       cases is `independence` on `op=versionstrength`, which is recomputed
+       against the record rather than frozen at the write, and `checked: false` is
+       where *there was nothing to look for* now lands.
+
        The pair is per axis, as computed BEFORE the write — DEC-21/DEC-44, never
        composed into one value. */
     const derived = {

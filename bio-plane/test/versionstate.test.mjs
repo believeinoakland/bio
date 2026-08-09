@@ -884,6 +884,112 @@ console.log("\n--- 10. make-current: the PROJECT's dated pointer, never a settin
     (await byName(INQ, "opening account"))?.state, "accepted");
 }
 
+/* ===================================================================== 10b
+ * D-271 / DEC-32 RULE 4 — THE PER-PART AFFIRMATION, DRIVEN THROUGH THE OP.
+ *
+ * ITS OWN INQUIRY ON PURPOSE. Every arm below needs a reading that declares MORE
+ * THAN ONE separately sufficient part, and `INQ` above declares one per reading.
+ * Adding a third reading THERE would move `total`, `count` and the state roster
+ * three blocks up — arms about something else, failing for a reason that is not
+ * theirs. A fixture of its own costs one promote and keeps every existing arm
+ * measuring what it was written to measure.
+ * ==================================================================== */
+console.log("\n--- 10b. DEC-32 rule 4: independent sufficiency is CLAIMED, per part ---");
+{
+  const TWO = "INQ-2026-2000-two-routes";
+  const V_TWO = {
+    name: "two separate routes", relationship: "or",
+    description: "Two routes to the answer, each resting on material the record can show came from a different place.",
+    run: "AIRUN-2026-2000-two",
+    grounds: [{ ground: "the ledger route" }, { ground: "the minutes route" }],
+    legs: [{ target: LEDGER, ground: "the ledger route", grade: "B", grade_axis: "capture", grade_source: "capture" },
+           { target: MINUTES, ground: "the minutes route", grade: "B", grade_axis: "capture", grade_source: "capture" }],
+  };
+  /* AND A ONE-PART READING BESIDE IT, because the arm that matters most here is
+     the one that must NOT fire. A fence tighter than its rule is not a safer
+     fence, and without this reading in the same fixture nothing would say so. */
+  const V_ONE = {
+    name: "one route only", relationship: "and",
+    description: "A single route to the answer, resting on the ledger the record already holds.",
+    run: "AIRUN-2026-2000-one",
+    grounds: [{ ground: "the ledger route" }],
+    legs: [{ target: LEDGER, ground: "the ledger route", grade: "B", grade_axis: "capture", grade_source: "capture" }],
+  };
+  await mustPromote(TWO, inquiryMd(TWO, { refs: [LEDGER, MINUTES], versions: [V_TWO, V_ONE] }), "inquiry");
+  const acc = async (version, body) => POST(
+    `op=versionaccept&token=${RUTH}&target=${encodeURIComponent(TWO)}`
+    + `&version=${encodeURIComponent(version)}`, body);
+
+  t("FIXTURE ARMS THE RULE: the reading really does declare two separately sufficient parts, so the "
+  + "arms below are about a reading the clause applies to rather than one it does not",
+    (await byName(TWO, "two separate routes"))?.grounds,
+    ["the ledger route", "the minutes route"]);
+
+  const bare = await acc("two separate routes", {});
+  t("ACCEPTING A MULTI-PART READING WITH NO AFFIRMATION IS REFUSED BY C-NUMBER — DEC-32 rule 4: it "
+  + "can never happen by omission, by default, or by a member not understanding the question",
+    [bare.ok, bare.code, bare.check, (bare.missing ?? []).length],
+    [false, "VERSION_AFFIRMATION_INCOMPLETE", "C-25.33", 2]);
+  t("and the refusal NAMES what is unaffirmed rather than only that something is — a member who "
+  + "cannot see which part is outstanding cannot act on the refusal",
+    bare.missing, ["the ledger route", "the minutes route"]);
+
+  const half = await acc("two separate routes", { affirmed: ["the ledger route"] });
+  t("PER PART, AND THIS IS THE ARM THAT SAYS SO: affirming SOME of the parts is refused exactly as "
+  + "affirming none is. \"Per branch\" is the whole content of the clause, and a partial affirmation "
+  + "the record accepted would read to every later reader as a complete one",
+    [half.ok, half.code, half.missing], [false, "VERSION_AFFIRMATION_INCOMPLETE", ["the minutes route"]]);
+
+  const unknown = await acc("two separate routes",
+    { affirmed: ["the ledger route", "the minutes route", "a route nobody declared"] });
+  t("and naming a part this reading does not rest on is refused too — an affirmation is checkable "
+  + "against the reading it is about, or it is a signature over an unknown text",
+    [unknown.ok, unknown.code, unknown.unknown],
+    [false, "VERSION_AFFIRMATION_INCOMPLETE", ["a route nobody declared"]]);
+
+  /* THE PREVIEW CARRIES IT TOO — BEAT 2's rule is that the only difference
+     between a preview and the act is that the write does not happen, so a
+     ceremony's pre-flight that did not refuse would disagree with the act. */
+  const prev = await acc("two separate routes", { preview: "1" });
+  t("the PREVIEW refuses identically, so a ceremony's pre-flight cannot tell a member an accept will "
+  + "land that the act would turn away (DEC-8: one answer, not two)",
+    [prev.ok, prev.code], [false, "VERSION_AFFIRMATION_INCOMPLETE"]);
+
+  const good = await acc("two separate routes",
+    { affirmed: "the ledger route,the minutes route" });
+  t("AFFIRMING EVERY PART LANDS, and a comma-separated string says the same thing an array does — a "
+  + "query string and a body must not be two different rules",
+    [good.ok, good.to, good.affirmed],
+    [true, "accepted", ["the ledger route", "the minutes route"]]);
+
+  t("AND THE RECORD HOLDS WHAT WAS AFFIRMED, not merely that something was — published on "
+  + "op=basisversions beside the act carrying the member's name, because DEC-32 clause 7 makes a "
+  + "later READER the final check and a reader cannot check what the record does not show",
+    [(await byName(TWO, "two separate routes"))?.affirmed,
+     (await byName(TWO, "two separate routes"))?.moved?.by],
+    [["the ledger route", "the minutes route"], "ruth"]);
+
+  /* THE OVER-STRICTNESS ARM. It must PASS. */
+  const one = await acc("one route only", {});
+  t("OVER-STRICTNESS: a reading declaring ONE part accepts with no affirmation at all. There is no "
+  + "independence to claim between one part and nothing, and a fence wider than its rule would be an "
+  + "undeclared interface change on every single-part accept in the record",
+    [one.ok, one.to], [true, "accepted"]);
+  t("and its stored affirmation is `null` rather than an empty list — NOBODY WAS ASKED and AFFIRMED "
+  + "NOTHING are different facts (D-129), and `null` is the one that is true of it",
+    (await byName(TWO, "one route only"))?.affirmed, null);
+
+  /* THE CLEARING ARM. An affirmation authored about one decision must not
+     survive onto another, which is the same false-attribution hazard that makes
+     `state_reason` clear on every move. */
+  const back = await POST(`op=versionreject&token=${RUTH}&target=${encodeURIComponent(TWO)}`
+    + `&version=${encodeURIComponent("two separate routes")}`,
+    { reason: "on reflection the two routes are not separate after all" });
+  t("AND A LATER MOVE CLEARS IT: an affirmation is about the accept it was made at, so turning the "
+  + "reading down does not leave the record holding a claim nobody is making any more",
+    [back.ok, (await byName(TWO, "two separate routes"))?.affirmed], [true, null]);
+}
+
 /* ====================================================================== 11
  * DEC-49 — EVERY REFUSAL CARRIES A C-NUMBER, A CODE AND A TRANSLATION.
  * ==================================================================== */
@@ -906,6 +1012,14 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
   drive(await act("current", { version: "the audit alone", q: "&project=PROJ-2026-2000-oversight" }));
   drive(await act("current", { version: "opening account" }));
   drive(await act("current", { version: "opening account", q: "&project=PROJ-2026-2000-unrelated" }));
+  /* D-271 / C-25.33 — DRIVEN OUT OF THE PLANE like every code above it, over the
+     two-part reading block 10b builds. It cannot be driven against `INQ`: every
+     reading there declares ONE part, which is exactly the shape this refusal
+     must NOT fire on, so a `drive` call aimed at it would return `ok` and this
+     floor would fail with the code looking absent rather than unreachable. */
+  drive(await POST(`op=versionaccept&token=${RUTH}`
+    + `&target=${encodeURIComponent("INQ-2026-2000-two-routes")}`
+    + `&version=${encodeURIComponent("two separate routes")}`, {}));
   /* The one refusal no caller can provoke through a well-formed corpus: a
      document whose version block cannot be rewritten in place. Driven by
      promoting a version block the writer cannot address — an inline empty
@@ -947,6 +1061,21 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
     { MACHINE_CANNOT_MOVE_VERSION: "C-25.24", VERSION_ACT_NOT_AN_INQUIRY: "C-25.21",
       VERSION_ACT_NO_INQUIRY: "C-25.20", VERSION_ACT_NO_SUCH_VERSION: "C-25.23",
       VERSION_ACT_NO_VERSION: "C-25.22", VERSION_ACT_UNWRITABLE: "C-25.31",
+      /* CORRECTED, NEVER EXEMPTED — D-271, 2026-08-09. The old list was RIGHT
+         when it was written and became wrong the moment DEC-32 rule 4 got an
+         enactment: this pin is a totality over what the plane sent, so a new
+         refusal makes it fail BY DESIGN rather than by accident. Adding the row
+         is the correction; widening the assertion to ignore unknown keys would
+         have been the exemption, and would have retired the one arm that can see
+         a code silently re-pointed at another refusal. The numeral between this
+         and C-25.31 is held by a concurrent unmerged item and is stepped over
+         rather than reused.
+         AND IT SITS IN SORTED POSITION BECAUSE THE COMPARISON IS ORDERED: `got`
+         is `Object.fromEntries([...wire].sort())` and the assertion compares
+         JSON, so a correct row appended at the end fails on key ORDER alone —
+         which it did here, and the first reading of that failure looked exactly
+         like a wrong C-number. */
+      VERSION_AFFIRMATION_INCOMPLETE: "C-25.33",
       VERSION_BASIS_CYCLE: "C-25.27", VERSION_CURRENT_NO_PROJECT: "C-25.29",
       VERSION_CURRENT_UNRELATED: "C-25.30", VERSION_ILLEGAL_TRANSITION: "C-25.25",
       VERSION_NOT_ACCEPTED: "C-25.28", VERSION_NO_REASON: "C-25.26" });
