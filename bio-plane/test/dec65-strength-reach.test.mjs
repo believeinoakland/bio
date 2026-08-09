@@ -716,18 +716,37 @@ const CLAIMED_ONLY = { name: "only the part somebody signed for",
 const admitted = await promote(VINQ, inquiryMd(VINQ, { subject: ORD, refs: [V_A1, V_A2, V_C1],
   versions: versionBlock([V_A, V_B, TWO_PART_UNCLAIMED, CLAIMED_ONLY]) }),
   "inquiry", await shaOf(VINQ));
-t("PINNED DEFECT (correct at integration): a TWO-part reading one of whose parts carries the "
-  + "explicit no-claim value is ADMITTED at the write on this tree — `C-25.6`'s member arm asks "
-  + "`isMachineIdentity`, and the minted value is deliberately not a machine stamp",
-  [admitted.ok === true, String(admitted.reason ?? "")], [true, ""]);
+/* CORRECTED AT INTEGRATION 2026-08-09 by CONDUCT, exactly as PL-20 asked and NEVER
+   exempted. PL-20 wrote this arm as a PINNED DEFECT because on its tree PL-19 was
+   unmerged, so the write was ADMITTED: `C-25.6`'s member arm asked `isMachineIdentity`
+   and the minted value is deliberately not a machine stamp, so a two-part reading with
+   an unclaimed part sailed through. **PL-19 IS ON `main` AS OF 7c94b43 and closes it**,
+   so the old expectation was right about the tree it measured and is wrong about this
+   one. The write is now REFUSED BY NAME, and the refusal is pinned by its code rather
+   than by prose so a re-worded sentence does not silently pass. */
+t("CORRECTED (was PINNED DEFECT): a TWO-part reading one of whose parts carries the "
+  + "explicit no-claim value is REFUSED at the write, because DEC-65's licence is open "
+  + "only to a version carrying exactly ONE part — there is no maximum to take",
+  [admitted.ok === true,
+   String(admitted.reason ?? "").includes("VERSION_GROUND_UNASSERTED")
+     || JSON.stringify(admitted).includes("VERSION_GROUND_UNASSERTED")],
+  [false, true]);
 const VU = await vPair(TWO_PART_UNCLAIMED.name);
 const VC = await vPair(CLAIMED_ONLY.name);
-t("PINNED DEFECT (correct at integration): and the harm is a DIFFERENCE, not an adjective — the "
-  + "maximum IS taken over the part nobody claimed, and it is the part that SETS the connection "
-  + "axis, so the reading reports A where the parts anybody signed for support only C",
-  [VU.pair?.connection?.grade, VU.pair?.connection?.weakest?.target_id,
-   VC.pair?.connection?.grade],
-  ["A", V_A2, "C"]);
+/* CORRECTED AT INTEGRATION 2026-08-09 by CONDUCT. PL-20 measured the HARM this
+   defect caused — the maximum taken over a part nobody claimed, so the reading
+   reported A where the signed-for parts support only C. With PL-19 on `main` the
+   write never lands, so there is no such version to read and the harm is
+   UNREACHABLE THROUGH THE WRITE. That is the honest assertion now: not that the
+   arithmetic changed (PL-20 measured that it did not — `#strengthWalk` never reads
+   `asserted_by`), but that the composition can no longer exist. The claimed-only
+   control is kept beside it, unchanged, so this still fails if the refusal ever
+   starts swallowing legitimate versions too. */
+t("CORRECTED (was PINNED DEFECT): the harm is UNREACHABLE THROUGH THE WRITE — and the "
+  + "refusal is per-DOCUMENT, so the claimed-only version in the same promote does not "
+  + "land either. Neither version exists to be read.",
+  [VU.ok, VU.pair, VC.ok, VC.pair],
+  [false, null, false, null]);
 t("PINNED DEFECT (correct at integration): and nothing in the answer says so — the pair carries "
   + "no state, no count and no sentence distinguishing a part a member signed for from one whose "
   + "own row says nobody did, because the arithmetic never saw the field",

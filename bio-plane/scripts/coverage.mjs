@@ -339,42 +339,12 @@ const REGISTER_FLOOR = {
      as an enumerated list it read EIGHT, but with a paragraph between the marker
      and the list it read NULL and the suite left `classified` entirely, taking
      `--strict` to exit 1. Marker paragraph, then the list, then prose. */
-  /* MOVED 2026-08-09 by PL-20 (DEC-65's step three): 654 -> 661 / 136 -> 137 /
-     137 -> 138, ALL THREE IN THE SAME TURN and every one taken from the figure
-     THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE
-     (`arms 661/654 · classified 137/136 · corpus 138/137 · GREW by 7 arm(s)`),
-     read AFTER the new files were in a commit (eb3e1d4). One new suite,
-     `test/dec65-strength-reach.test.mjs`, whose `NEGATIVE CONTROL:` declaration
-     states SEVEN arms — a BASELINE, five break-it arms and an OVER-STRICTNESS
-     arm — so `corpus` and `classified` each rise by one and `arms` by seven.
-     Every one of the seven was RUN, through
-     `test/dec65-strength-reach.control.mjs`, and two of them came back other
-     than declared and are corrected at the arm. Nothing FELL.
-     AND THE FLOOR WAS **NOT** STALE ON ARRIVAL, WHICH IS THE OTHER FINDING AND IS
-     RECORDED BECAUSE IT BREAKS A STREAK: `main` at 1081a6a was checked out into a
-     scratch `git worktree` (never `git stash`) and `--strict` run on that quiet
-     tree printed `arms 654/654 · classified 136/136 · corpus 137/137` with no
-     slack and no contamination note. Six consecutive items had found this block
-     stale by measuring it; this one measured it and found it exactly right, so
-     the whole of the +7/+1/+1 above is this item's. */
-  /* MOVED 671 -> 674, 2026-08-09, worktree agent-ae8e8c4d786783a6b (PL-2 verification
-     pass), FROM THE FIGURE `--strict` PRINTED on the MERGED tree — `REGISTER FLOOR arms
-     674/671 · GREW by 3 arm(s)` — and never by adding three to the number that was here.
-     **THE FIRST FIGURE THIS ITEM WROTE WAS 654 -> 657 AND IT WAS TRUE OF A TREE THAT NO
-     LONGER EXISTED BY THE TIME IT WAS WRITTEN**: `origin/main` took CONDUCT's
-     671/138/139 integration while this item ran, so the pre-merge number was right where
-     it stood and wrong on the merge — PL-11 and SK-1's collision, one item later and
-     recorded rather than quietly overwritten. This figure is read AFTER the merge commit,
-     on a tree with nothing uncommitted. The three are `versionstate.test.mjs`'s new arms (7), (8) and (9): the
-     C-25.32 defect re-armed, the over-strictness fence tightened past its rule, and
-     the driven-set FLOOR blinded. `classified` and `corpus` do NOT move: no new
-     declaration and no new suite, and a figure nudged without a cause behind it stops
-     being a measurement. ONE KEY SET, kept: WORKER.md records SIX keep-both merges that
-     left duplicate `arms:` keys here, valid JavaScript where the last silently wins and
-     once the last was the lowest. */
-  arms:        674,
-  classified:  138,
-  corpus:      139,
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 674 -> 714 / 138 -> 143 / 139 -> 144,
+     from the merged tree's printed `GREW by 40 arm(s)` after D-265, D-269, PL-20 and
+     PL-2's verification landed. */
+  arms:        714,
+  classified:  143,
+  corpus:      144,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -467,19 +437,6 @@ const FLEET_FLOOR = {
      invalidate rather than leaving it for the next reader to find again — the
      sixth consecutive item to find a hand-carried floor stale by measuring it.
      Named in the report so CONDUCT can re-read it on the merged tree. */
-     reason AT THIS SITE. */
-  /* MOVED 2026-08-09 by PL-20: 4 -> 5 suites / 35 -> 43 arms, from the figure a
-     green `--strict` run PRINTED (`5/5 SUITES declaring a negative control · 43
-     arms · GREW by 8 arm(s)`). **NONE OF IT IS PL-20's**, and that is stated
-     rather than absorbed: the item added no fleet suite and edited no fleet
-     file. The cause is `agent-worker/test/fanout.test.mjs`, a FIFTH fleet suite
-     declaring EIGHT arms, which landed without this ratchet being re-read — and
-     the same 4/35 slack is printed by a quiet `main` at 1081a6a in a scratch
-     worktree, so it predates this item rather than arriving with it. Closed here
-     because a floor with slack is not a ratchet, and named here because a figure
-     moved without attribution is how a ratchet quietly becomes a decoration.
-     DELEGATED to CONDUCT in `CLAIMS.md`: whoever owns `fanout.test.mjs` owes the
-     provenance line this comment is standing in for. */
   members:     2,
   surfaceOps:  4,
   suites:      5,
