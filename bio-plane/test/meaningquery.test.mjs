@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: (RUN 2026-08-07, each arm broken ALONE via a scripted mutation, the suite run, then RESTORED FROM A PRISTINE COPY and the restore verified BY sha256 AND BY CONTENT (cmp) — an NC harness once reported a byte-identical restore over a file that had not been restored. Whole: 102 pass, 0 fail (the counts inside each arm below were taken at 96, before the op=searchfields section 11b was added; each arm was re-confirmed to fire after it). src/query.mjs sha256 3ec864c6bf0f1cba654d98a2fa59e9c68c21f64b0f2b501fb1ddb789c6e73259.) (a) THE ITEM’S OWN, D-223 — MAKE HUNCH DEBT UNENUMERABLE AGAIN: delete the `leg` entry from MEANING -> 57 pass, 37 FAIL, and the first is "D-223: the hunch question is ASKABLE AT ALL"; `leg:hunch` degrades to free text, the debt PARTITION collapses, and the driven vocabulary walk reports it now covers nothing. (b) A SECOND COMPILATION POINT (D-15): meaningSql emits `WHERE ${GATE_MARK} fts_id IS NOT NULL AND ...` -> 92 pass, 4 FAIL — "the gate is minted in exactly ONE function" (4 sites, not 3), "no meaning arm mints a gate of its own", "a meaning-arm statement carries the gate exactly as many times as one without", and the fts_id shape arm. THE POINT: the arm now LOOKS gated to Store#runQuery’s marker check while carrying NO PREDICATE — a second compilation point that the throw alone cannot see, which is why the pin is on the COUNT. (c) THE VIEWER DROPPED: viewerPredicate’s member branch returns `1=1` without GATE_MARK -> 72 pass, 24 FAIL, every runtime arm, each the store REFUSING with "REFUSED: a retrieval statement reached the store without the viewer visibility gate (D-15)" at store.mjs #runQuery. The arm never runs rather than running ungated. (d) MAX_COMPOUND EXCEEDED: MAX_COMPOUND 4 -> 8 -> 92 pass, 4 FAIL: three compile-time width arms, and the eight-arm LIVE query answers `Error: too many terms in compound SELECT: SQLITE_ERROR` from inside workerd — the MEASURED ceiling of five, refusing in the engine and not in a comment. (e) THE ARM STOPS KEYING ON fts_id: meaningSql -> `SELECT rowid AS fid FROM bundles WHERE bundle_id IN (...)` -> 95 pass, 1 FAIL, and THE RESULT CORRECTS A PREDICTION THIS HEADER FIRST MADE. Only the STRUCTURAL arm fires; every runtime arm still passes, because in a corpus promoted once in order `rowid` and `fts_id` happen to be equal. A behavioural test cannot tell them apart here at any corpus size this suite would build — the structural pin is the only thing standing between this arm and a divergence that appears the first time a bundle is purged and re-promoted. Recorded as measured rather than as intended. */
+/* NEGATIVE CONTROL: (RUN 2026-08-07, each arm broken ALONE via a scripted mutation, the suite run, then RESTORED FROM A PRISTINE COPY and the restore verified BY sha256 AND BY CONTENT (cmp) — an NC harness once reported a byte-identical restore over a file that had not been restored. Whole: 102 pass, 0 fail (the counts inside each arm below were taken at 96, before the op=searchfields section 11b was added; each arm was re-confirmed to fire after it). src/query.mjs sha256 3ec864c6bf0f1cba654d98a2fa59e9c68c21f64b0f2b501fb1ddb789c6e73259.) (a) THE ITEM’S OWN, D-223 — MAKE HUNCH DEBT UNENUMERABLE AGAIN: delete the `leg` entry from MEANING -> 57 pass, 37 FAIL, and the first is "D-223: the hunch question is ASKABLE AT ALL"; `leg:hunch` degrades to free text, the debt PARTITION collapses, and the driven vocabulary walk reports it now covers nothing. (b) A SECOND COMPILATION POINT (D-15): meaningSql emits `WHERE ${GATE_MARK} fts_id IS NOT NULL AND ...` -> 92 pass, 4 FAIL — "the gate is minted in exactly ONE function" (4 sites, not 3), "no meaning arm mints a gate of its own", "a meaning-arm statement carries the gate exactly as many times as one without", and the fts_id shape arm. THE POINT: the arm now LOOKS gated to Store#runQuery’s marker check while carrying NO PREDICATE — a second compilation point that the throw alone cannot see, which is why the pin is on the COUNT. (c) THE VIEWER DROPPED: viewerPredicate’s member branch returns `1=1` without GATE_MARK -> 72 pass, 24 FAIL, every runtime arm, each the store REFUSING with "REFUSED: a retrieval statement reached the store without the viewer visibility gate (D-15)" at store.mjs #runQuery. The arm never runs rather than running ungated. (d) MAX_COMPOUND EXCEEDED: MAX_COMPOUND 4 -> 8 -> 92 pass, 4 FAIL: three compile-time width arms, and the eight-arm LIVE query answers `Error: too many terms in compound SELECT: SQLITE_ERROR` from inside workerd — the MEASURED ceiling of five, refusing in the engine and not in a comment. (e) THE ARM STOPS KEYING ON fts_id: meaningSql -> `SELECT rowid AS fid FROM bundles WHERE bundle_id IN (...)` -> 95 pass, 1 FAIL, and THE RESULT CORRECTS A PREDICTION THIS HEADER FIRST MADE. Only the STRUCTURAL arm fires; every runtime arm still passes, because in a corpus promoted once in order `rowid` and `fts_id` happen to be equal. A behavioural test cannot tell them apart here at any corpus size this suite would build — the structural pin is the only thing standing between this arm and a divergence that appears the first time a bundle is purged and re-promoted. Recorded as measured rather than as intended.
+   (D-228, run 2026-08-08 by REC-68, the item this suite's two pins were WRITTEN FOR) restore the quote-stripping defect in query.mjs's tokenizer — drop `&& src[i] !== '"'` from the BARE reader's terminator set -> 100 pass, 5 FAIL, and the five are exactly the corrected D-228 assertions, which is the flip PL-8 pinned them to produce. The sharpest of them is not the value: `leg:"hunch"` used to compile to `grade_source`'s SIBLING column, because `"hunch"` with quotes matched no vocabulary word and the arm fell through to its bare sub-field `grade` and upper-cased it — so the arm silently answered a DIFFERENT QUESTION rather than answering none, and only the `meaningArms` assertion can see that. Armed ALONE against a UNIQUE pre-arm snapshot, restored and verified by sha256 AND `cmp`. */
 /* D-222 option A: THE MEANING ARM, and D-223 is what it is accepted against.
  *
  * WHAT WAS WRONG, in one sentence taken from the register: `schema.mjs` names a
@@ -352,18 +353,40 @@ const same = (a, b) => {
 t("`leg:source=hunch` is the same query as `leg:hunch`", same("leg:hunch", "leg:source=hunch"), [true, true]);
 t("`concerns:entity=ENT-1` is the same query as `concerns:ENT-1`", same("concerns:ENT-1", "concerns:entity=ENT-1"), [true, true]);
 t("`resolves:grade=C` is the same query as `resolves:C`", same("resolves:C", "resolves:grade=C"), [true, true]);
-/* PINNED, NOT ASSERTED TO WORK. `leg:"hunch"` binds the value WITH ITS QUOTES,
-   and so does `state:"open"` and every other field — the tokenizer's
-   quoted-field-value branch (`rest === "" && src[i] === '"'`) is unreachable,
-   because the bare reader consumes the quote characters before it is tested.
-   FOUND by this item and PRE-EXISTING: it is a defect of the whole language,
-   not of this arm, and fixing it changes what every selector matches, so it is
-   recorded as debt (D-228) rather than widened into here. The pin is on the CURRENT
-   behaviour so the fix flips a visible assertion instead of landing unnoticed. */
-t("D-228 PINNED: a quoted field value keeps its quotes today, on the arm as everywhere else",
-  compile({ q: 'leg:"hunch"', viewer: M }).statements.page().args.includes('"HUNCH"'), true);
-t("D-228 PINNED: the same is true of an ordinary projected field, which is what makes it pre-existing",
-  compile({ q: 'state:"open"', viewer: M }).statements.page().args.includes('"open"'), true);
+/* D-228 CLOSED 2026-08-08 by REC-68. THESE TWO ASSERTIONS ARE CORRECTED, NOT
+   EXEMPTED, AND THE FLIP IS THE EVIDENCE THE FIX WORKED — which is exactly what
+   PL-8 pinned them for.
+
+   What they used to say, and it was TRUE when written: `leg:"hunch"` bound the
+   value WITH ITS QUOTES (`"HUNCH"`), and so did `state:"open"` (`"open"`),
+   because the tokenizer's quoted-field-value branch — guarded by
+   `rest === "" && src[i] === '"'` — was UNREACHABLE. The bare reader stopped
+   only at whitespace and parens, so it had already swallowed the opening quote
+   by the time `rest` was tested, and `rest` was therefore never empty while
+   `src[i]` was never a quote. PL-8 pinned the wrong behaviour deliberately so
+   that fixing it would flip something visible instead of landing unnoticed.
+
+   REC-68 made the branch reachable by stopping the bare reader at a quote. Both
+   spellings now compile to exactly what their unquoted twins compile to, and
+   the old `"HUNCH"` reading is worth reading twice: it was not merely the wrong
+   VALUE, it was the wrong COLUMN — `"hunch"` with quotes matched no vocabulary
+   word, so the arm fell through to its bare sub-field `grade` and upper-cased
+   it. The arm silently answered a different question. The `meaningArms`
+   assertion below is what pins that, because an args-only check could not see
+   it. The whole-language sweep lives in `query.test.mjs`. */
+t("D-228 CLOSED: a quoted value on the arm is the value, not the quotes",
+  compile({ q: 'leg:"hunch"', viewer: M }).statements.page().args.includes("hunch"), true);
+t("D-228 CLOSED: and it is the SAME QUERY as the unquoted spelling",
+  compile({ q: 'leg:"hunch"', viewer: M }).statements.page().sql
+    === compile({ q: "leg:hunch", viewer: M }).statements.page().sql, true);
+t("D-228 CLOSED: the arm now reads the column it was asked for, not its bare fall-through",
+  compile({ q: 'leg:"hunch"', viewer: M }).meaningArms,
+  compile({ q: "leg:hunch", viewer: M }).meaningArms);
+t("D-228 CLOSED: the same is true of an ordinary projected field, which is what made it pre-existing",
+  compile({ q: 'state:"open"', viewer: M }).statements.page().args.includes("open"), true);
+t("D-228 CLOSED: and no argument anywhere still carries a quote character",
+  compile({ q: 'state:"open" leg:"hunch"', viewer: M }).statements.page().args
+    .filter((a) => typeof a === "string" && a.includes('"')), []);
 t("case does not matter on an enumerated word", same("leg:hunch", "leg:HUNCH"), [true, true]);
 t("nor on a grade letter", same("resolves:c", "resolves:C"), [true, true]);
 t("`LEG:hunch` — the selector name itself is case-folded", same("leg:hunch", "LEG:hunch"), [true, true]);

@@ -566,7 +566,16 @@ function tokenize(input) {
   const out = [];
   let i = 0;
   const isSpace = (c) => c === " " || c === "\t" || c === "\n" || c === "\r";
-  /* Read a value: a quoted run, or a bare run ended by whitespace or a paren. */
+  /* Read a value: a quoted run, or a bare run ended by whitespace, a paren, or
+     A QUOTE.
+
+     D-228 / REC-68, 2026-08-08, and the quote in that terminator set is the
+     whole fix. It used to read `!isSpace && "(" && ")"`, which meant the bare
+     reader SWALLOWED an opening quote instead of stopping in front of it — so
+     `state:"open"` came back as the single bare run `state:"open"` and the
+     value kept its quote characters all the way into the bound argument. Every
+     consequence below follows from this one line, which is why the defect was
+     language-wide rather than a property of any field. */
   const readValue = () => {
     if (src[i] === '"') {
       i++;
@@ -576,7 +585,7 @@ function tokenize(input) {
       return { text: s, quoted: true };
     }
     let s = "";
-    while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")") s += src[i++];
+    while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")" && src[i] !== '"') s += src[i++];
     return { text: s, quoted: false };
   };
   while (i < src.length) {
@@ -587,16 +596,72 @@ function tokenize(input) {
     /* A leading minus is negation, the shorthand every search box has. `-` on
        its own is not negation of nothing; it is discarded. */
     if (c === "-" && i + 1 < src.length && !isSpace(src[i + 1])) { out.push({ k: "not" }); i++; continue; }
-    const start = i;
     const first = readValue();
     /* field:value, where the value may itself be quoted or carry a comparison. */
     if (!first.quoted && first.text.includes(":")) {
       const at = first.text.indexOf(":");
       const field = first.text.slice(0, at);
       let rest = first.text.slice(at + 1);
-      /* `field:"two words"` splits at the quote, so back up and read the value
-         properly rather than truncating it at the space. */
-      if (rest === "" && src[i] === '"') { i = start + at + 1; rest = readValue().text; out.push({ k: "sel", field, value: rest, quoted: true }); continue; }
+      /* `field:"two words"` splits at the quote, so read the rest of the value
+         properly rather than truncating it at the space.
+
+         WHY THIS BRANCH HAD NEVER RUN, because the mechanism is the finding
+         (D-228, REC-68). It used to be guarded by `rest === "" && src[i] === '"'`,
+         and that conjunction is UNSATISFIABLE against the reader that produces
+         its inputs. The bare reader stopped only at whitespace or a paren, so
+         after it returns, `src[i]` is whitespace, a paren, or undefined — never
+         a quote. And a quote right after the colon was CONSUMED rather than
+         stopped at, so `rest` began with `"` and was never empty. The two halves
+         each falsified the other. The rewind the old line performed
+         (`i = start + at + 1`) existed to undo that over-consumption; now that
+         the reader stops in front of the quote there is nothing to undo, and its
+         absence is what makes the branch reachable at all.
+
+         GENERALISED past the shape the old comment named, because a comparison
+         lead is the spelling a member reaches for next: `created:>"2026-01-01"`
+         and `fm:a.b="c"` leave a non-empty `rest` in front of the quoted run,
+         and refusing them would have fixed the documented case while leaving its
+         nearest neighbours broken. `quoted` stays true only when the quoted run
+         IS the whole value — that flag drives PHRASE detection in `textAtom`,
+         and a value with an operator glued to its front is not a phrase.
+
+         A VALUE IS READ TO ITS END, in as many pieces as it takes, rather than
+         in a fixed two or three. The first draft of this fix took one bare
+         piece plus one quoted run and documented the remainder as a known
+         limit — `fm:"a.b"="c"` kept `a.b=` and let `c` fall out as a separate
+         free-text term, which is a value SILENTLY TRUNCATED into a query that
+         still matches things. That is the shape this whole item exists to
+         remove, so a stated limit was the wrong answer to it: the loop below
+         costs one line more and leaves nothing to state. It terminates because
+         every branch of `readValue` advances `i` by at least one character,
+         and the cursor is re-tested against the same terminators the bare
+         reader uses.
+
+         IT TERMINATES, AND THE ARGUMENT IS WRITTEN DOWN RATHER THAN GUARDED.
+         The first draft carried an `if (i === before) break;` as a belt against
+         a non-advancing read. THAT GUARD WAS UNREACHABLE — measured, by the
+         same coverage sweep that measured D-228 — and shipping a new
+         unreachable defence inside the fix for an unreachable defence is the
+         one thing this item may not do. So it is gone, and the proof is here
+         instead. On entry to the body: `i < src.length`, and `src[i]` is not
+         whitespace and not a paren. If it is a quote, `readValue` consumes the
+         opening quote and advances at least one. If it is not, the bare
+         reader's own condition holds for that character, so it consumes at
+         least one. Every iteration advances `i`. */
+      if (src[i] === '"') {
+        let pieces = 0, onlyQuoted = rest === "";
+        while (i < src.length && !isSpace(src[i]) && src[i] !== "(" && src[i] !== ")") {
+          const piece = readValue();
+          rest += piece.text;
+          pieces++;
+          if (!piece.quoted) onlyQuoted = false;
+        }
+        /* `quoted` drives PHRASE detection in `textAtom`, so it is true only
+           when the value IS one quoted run and nothing else. A value with a
+           comparison lead or a second piece glued on is not a phrase. */
+        out.push({ k: "sel", field, value: rest, quoted: onlyQuoted && pieces === 1 });
+        continue;
+      }
       out.push({ k: "sel", field, value: rest, quoted: false });
       continue;
     }

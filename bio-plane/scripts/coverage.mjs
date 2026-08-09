@@ -183,7 +183,7 @@ const REGISTER_FLOOR = {
      IF YOU ARE RESOLVING A CONFLICT HERE: COLLAPSE TO ONE SET and re-read the printed
      figures. Do not keep both. Worker figures, each true of its own branch and none true
      here: M0-11 476 · M0-12 478 · REC-63 480 · REC-66 482 · REC-65 483 · M0-15 486 ·
-     REC-77 530 · M0-16 542 · FW-13 550 · FW-14 552 · M0-17 553 · FW-15 557 · D-243 576 ·
+     REC-68 482 · REC-77 530 · M0-16 542 · FW-13 550 · FW-14 552 · M0-17 553 · FW-15 557 · D-243 576 ·
      D-237 581 · REC-78 581. (D-237 moved the figure to 581 without adding itself to this
      list; recorded here at the 2026-08-08 rebuild so the provenance is not missing a mover.)
 

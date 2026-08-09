@@ -1244,7 +1244,12 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   role         TEXT NOT NULL,   -- 'supports' | 'cuts_against'
   grade        TEXT,            -- A|B|C|D, NULL = undetermined and STATED as such
   grade_axis   TEXT,            -- 'capture' | 'connection': the axis the grade is on
-  grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' (DEC-15)
+  grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' | 'inherited' | 'capture'
+                                -- GRADE_SOURCES in checks/bio-checks.mjs is the authority (DEC-15)
+                                -- this line named only the first three until 2026-08-08, REC-68
+                                -- the last two arrived with REC-31/DEC-21 and were never added here
+                                -- hygiene.test.mjs now DRIVES this list against the export, because
+                                -- hand-typing a vocabulary is how it went stale in the first place
   note         TEXT,
   at           TEXT,
   ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)

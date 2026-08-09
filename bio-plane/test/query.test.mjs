@@ -1,4 +1,11 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) change the positive-FTS-term join in compile() from " AND " to " OR " (query.mjs) -> the AND-semantics assertions fail (86 pass, 2 fail); restored, 88 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) change the positive-FTS-term join in compile() from " AND " to " OR " (query.mjs) -> the AND-semantics assertions fail (86 pass, 2 fail); restored, 88 pass.
+   D-228 / REC-68, SEVEN ARMS RUN 2026-08-08, each armed ALONE with the others held open, each DECLARING before it ran what must fail AND what must not, every restore verified against a UNIQUE pre-arm snapshot by sha256 AND by `cmp`. Baseline at the moment they ran: 123/123 suites green, 7,805 assertions, this suite 117 pass. The harness lives in the worker's own worktree, not a shared scratchpad.
+   (b) RESTORE THE DEFECT — drop `&& src[i] !== '"'` from the BARE reader's terminator set in `tokenize` (query.mjs) -> this suite 95 pass, 22 FAIL and `search.test.mjs` 170 pass, 12 FAIL. The search failures ARE the measurement this item needed and they separate the two failure modes: `state:"collected"` got 0 where it should get 1 (MATCHED NOTHING — honest), while `title:"Fund general"` got 1 where it should get 0 and `title:"billing Water"` got 1 where it should get 0 (MATCHED THE WRONG THING — a phrase that is in no title returned a real row). And `-state:"collected"` got 3 against 2: a selector that matches nothing, NEGATED, returns THE WHOLE CORPUS, which turns an honest empty answer into a confident complete one. `meaningquery.test.mjs` 100 pass, 5 FAIL.
+   (c) MAKE THE BRANCH UNREACHABLE AGAIN — re-guard it with the original unsatisfiable conjunction while LEAVING the reader's quote terminator in place -> 100 pass, 17 FAIL. DECLARED as "the reachability block"; ACTUAL is wider and the correction is recorded rather than smoothed: with the reader stopping at the quote and the branch skipped, the value is not merely mis-read, it is LOST (`state:"open"` compiles to a presence test plus a stray term), so the value assertions fail too. This arm proves the branch is load-bearing; arm (d) is the one that isolates reachability.
+   (d) AN EQUIVALENT-MECHANISM REVERT, which is the arm that matters for a fix a later author could call a harmless refactor — restore the swallowing bare reader AND strip the quotes downstream in `selector()`/`meaningAtom()` instead -> 100 pass, 17 FAIL, and WHICH ones is the finding: every SINGLE-WORD projected-field equality PASSES (the value round-trips perfectly), and what catches it is the STRUCTURAL pin ("the bare value reader STOPS at a quote"), the PHRASE assertions, and the four directives the downstream strip cannot reach (`has:`, `text:`, `fm:`, `sort:`) — the corpus sweep's residue is exactly `["has:state","text:sewer","fm:a.b=c","sort:created"]`. A behavioural value arm alone would have called this revert green.
+   (d0) THE ARM THAT COULD NOT FIRE, kept as a result rather than deleted — set `quoted: false` on the token the branch emits, expecting phrase detection to die -> 117 pass, 0 FAIL. CAUSE, measured: `textAtom` writes `phrase` onto the atom and NOTHING in `src/` or `civicos-ui/` EVER READS IT (one write site, zero read sites), and the compiled literal is the same either way because FTS5 treats a multi-word string literal as a phrase on its own. The arm was armed against a DEAD FIELD and could never have been honoured. `atom.phrase` is reported to CONDUCT as a second instance of this item's own class, one layer along.
+   (e) OVER-STRICTNESS — thirteen legitimate spellings nobody anticipated (`created:>"2026-01-01"`, `created:>="2026-01-01"`, `fm:a.b="c"`, `has:"state"`, `sort:"created"`, a bare `"two words"` term, `-state:"open"`, `state:"open"` inside parens, an unclosed `state:"open`, a quoted value containing a paren, a stray trailing quote, `fm:"a.b"="c"` quoted on BOTH sides, `fm:"a.b"=c` quoted on one) must all still compile to what their unquoted twins compile to; all thirteen PASS. The last two of those REMOVED A STATED LIMIT rather than documenting one: the first draft read a value as one bare piece plus one quoted run and let the tail fall out as a separate free-text term, which is a value silently TRUNCATED into a query that still matches things — the exact shape this item exists to remove, so the reader now consumes a value to its end. THAT REDRAFT ALSO PRODUCED, AND THEN REMOVED, A NEW UNREACHABLE BRANCH: its `if (i === before) break;` no-progress guard could not be entered, measured by the same sweep that measured D-228, and shipping a fresh unreachable defence inside the fix for an unreachable defence is the one thing this item may not do. It is deleted and the termination argument is written into the comment instead. `tokenize` now has ZERO never-entered ranges.
+   TWO HARNESS DEFECTS FOUND BEFORE ANY SUBJECT DEFECT, both recorded because the instrument was wrong before the subject was: (i) the first driver passed the OBJECT viewer shape where `viewerPredicate` takes a STRING, so 43,400 compilations ran against the DENY gate and the participant branch could not have been entered; (ii) arms (b) and (d) first armed BLIND — the anchor ` && src[i] !== '"') s += src[i++];` occurs TWICE in `tokenize`, in the QUOTED reader and in the BARE one, and `String.replace` silently took the first, so both arms patched the wrong loop, failed 16 assertions and looked convincing while measuring something else. The harness now COUNTS every anchor and refuses a non-unique one — which immediately caught a THIRD ambiguity, `let raw = String(tok.value);` in both `selector()` and `meaningAtom()`. */
 /* The query language, S-10 step 3.
  *
  * This suite needs no runtime, no store and no corpus, because query.mjs holds
@@ -22,7 +29,8 @@
  *   - A member's words never reach SQL or an FTS5 expression as syntax. Terms
  *     are bound as arguments and quoted as FTS5 string literals.
  */
-import { compile, viewerPredicate, GATE_MARK, FIELDS, SORTABLE } from "../src/query.mjs";
+import { compile, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, MEANING } from "../src/query.mjs";
+import { readFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -117,11 +125,68 @@ console.log("\n--- phrases, prefixes, and what a member types that is not syntax
     compile({ q: "audit*", viewer: M }).statements.page().args.find((a) => typeof a === "string" && a.includes("audit")),
     '"audit"*');
   /* A member's words are DATA. An embedded quote must not be able to end the
-     FTS5 string literal and turn the rest of the term into syntax. */
+     FTS5 string literal and turn the rest of the term into syntax.
+     ------------------------------------------------------------------------
+     CORRECTED 2026-08-08 (D-228 / REC-68), NOT EXEMPTED, and the reason matters
+     because this is a SAFETY assertion and it moved.
+
+     The property has not changed and still holds. What changed is the READING
+     of `say"NEAR(a b, 2)`. The old tokenizer's bare reader did not stop at a
+     quote, so the whole thing arrived as ONE term `say"NEAR` whose embedded
+     quote `ftsLiteral` then doubled — and the two old assertions checked for
+     that doubling (`say""NEAR`) and for the absence of the substring `NEAR(`.
+     Both were PROXIES for "nothing became syntax", and both were reading the
+     accident of where the token boundary fell.
+
+     The bare reader now stops at a quote, so the same string reads as the term
+     `say` followed by an unclosed quoted phrase — which is exactly the rule
+     this same block asserts four lines below ("an unclosed quote is read to the
+     end rather than refused"), applied consistently instead of only when the
+     quote happened to open a token. It compiles to `("say" AND "NEAR(a b, 2)")`.
+     `NEAR(` is now PRESENT as a substring and is INSIDE a string literal, so
+     the old proxy reports danger where there is none: inside an FTS5 literal
+     the only special character is `"`, and it is doubled.
+
+     MEASURED CONSEQUENCE, stated because it is the kind of thing this project
+     treats as a finding rather than a detail: no token value can contain a
+     quote character at all any more — a bare run stops at one and a quoted run
+     ends at one — so `ftsLiteral`'s doubling is no longer reachable FROM THE
+     TOKENIZER. It is deliberately kept: it is a serialisation-boundary defence,
+     and unreachable-because-the-input-cannot-contain-it is a stronger
+     guarantee than unreachable-because-the-guard-is-unsatisfiable, which is
+     what D-228 was. The assertion below is therefore written against the
+     PROPERTY — no member-typed character escapes a literal — over an
+     adversarial corpus, so it holds whichever layer is doing the work. */
   {
-    const e = compile({ q: 'say"NEAR(a b, 2)', viewer: M }).statements.page().args.find((a) => typeof a === "string" && a.includes("say"));
-    t("an embedded quote is escaped rather than ending the literal", e.includes('say""NEAR'), true);
-    t("so nothing the member typed becomes FTS5 syntax", /NEAR\(/.test(e), false);
+    const argOf = (q) => compile({ q, viewer: M }).statements.page().args
+      .filter((a) => typeof a === "string" && (a.includes('"') || a.includes("{")));
+    /* Strip every well-formed FTS5 string literal, doubled quotes and all.
+       What is left is the syntax the COMPILER emitted, and a member's
+       characters must never appear in it. */
+    const skeleton = (e) => e.replace(/"(?:[^"]|"")*"/g, "@");
+    const HOSTILE = ['say"NEAR(a b, 2)', 'a" OR "b', 'x"" NEAR(p q)', '"a""b"',
+                     'title:"x" OR "y', 'a*"b', '{title}:z', 'x AND "y'];
+    const leaks = [];
+    for (const q of HOSTILE)
+      for (const e of argOf(q)) {
+        const s = skeleton(e);
+        /* Only these may survive: the operators, the column filters, the
+           parentheses, the prefix star and whitespace. Anything else is a
+           member's character reaching FTS5 as syntax. */
+        if (!/^[@\s()*]*(?:(?:AND|OR|NOT|\{[a-z]+\}|:)[@\s()*]*)*$/.test(s)) leaks.push([q, e, s]);
+        if (s.includes('"')) leaks.push([q, e, "unbalanced literal"]);
+      }
+    t("no member-typed character reaches FTS5 as syntax, over an adversarial corpus", leaks, []);
+    t("and the sweep actually looked at something — REACH, not a vacuous pass",
+      HOSTILE.every((q) => argOf(q).length > 0), true);
+    /* The specific string the old assertions used, kept so the change is
+       legible rather than merely replaced. */
+    const e = compile({ q: 'say"NEAR(a b, 2)', viewer: M }).statements.page().args
+      .find((a) => typeof a === "string" && a.includes("say"));
+    t("the old fixture now reads as a term and an unclosed phrase, both as data",
+      e, '("say" AND "NEAR(a b, 2)")');
+    t("and its NEAR( sits INSIDE a literal rather than beside one",
+      skeleton(e), "(@ AND @)");
   }
   t("a lone minus is discarded rather than negating nothing",
     compile({ q: "- sewer", viewer: M }).terms, ["sewer"]);
@@ -294,6 +359,141 @@ console.log("\n--- the vocabulary is a closed list ---");
   const cols = new Set(Object.values(FIELDS).map((f) => f.col));
   t("no field name reaches SQL except through the registry",
     /^[a-z_]+$/.test([...cols].join("")), true);
+}
+
+/* ====================================================================
+ * D-228 / REC-68: A QUOTED FIELD VALUE, AND THE BRANCH THAT NEVER RAN.
+ *
+ * Until 2026-08-08 `state:"open"` bound the literal `"open"` WITH its quote
+ * characters, so it matched nothing; `title:"two words"` compiled to a mangled
+ * FTS5 expression. The tokenizer carried a branch written for exactly this,
+ * with a comment describing what it does, AND THAT BRANCH COULD NOT BE REACHED
+ * — which is a worse thing than a missing defence, because the comment tells
+ * every later reader it is handled. PL-8 found it, deliberately did not fix it
+ * (it changes what every selector matches and must not ride another item's
+ * battery) and PINNED THE WRONG BEHAVIOUR so the fix would flip something
+ * visible. Those pins are in `meaningquery.test.mjs` and are CORRECTED there.
+ *
+ * THE MECHANISM, because the symptom is not the finding: the guard was
+ * `rest === "" && src[i] === '"'`, and the two halves each falsified the other
+ * against the reader that produced their inputs. The bare reader stopped only
+ * at whitespace or a paren, so `src[i]` after it was whitespace, a paren or
+ * undefined — never a quote; and a quote after the colon was CONSUMED, so
+ * `rest` began with `"` and was never empty. Unsatisfiable, not merely unusual.
+ * ================================================================== */
+console.log("\n--- D-228: a quoted field value means the value, not the quotes ---");
+{
+  const argsOf = (q) => compile({ q, viewer: M }).statements.page().args;
+  const sqlOf = (q) => compile({ q, viewer: M }).statements.page().sql;
+  const same = (a, b) => sqlOf(a) === sqlOf(b) && JSON.stringify(argsOf(a)) === JSON.stringify(argsOf(b));
+
+  /* THE CORPUS IS PRINTED AND ITS REACH IS ASSERTED AS A DELTA. A sweep that
+     narrowed to nothing would report a beautiful 100% over an empty set, which
+     is the failure this file's own register section exists to catch. */
+  const sample = (f) => f.type === "number" ? "3" : f.type === "bool" ? "true"
+                      : f.type === "time" ? "2026-01-01" : "open";
+  const corpus = [
+    ...Object.entries(FIELDS).map(([n, f]) => [`${n}:${sample(f)}`, `${n}:"${sample(f)}"`]),
+    ...Object.keys(MEANING).map((n) => [`${n}:hunch`, `${n}:"hunch"`]),
+    ["has:state", 'has:"state"'], ["text:sewer", 'text:"sewer"'],
+    ["fm:a.b=c", 'fm:a.b="c"'], ["sort:created", 'sort:"created"'],
+  ];
+  const disagree = corpus.filter(([a, b]) => !same(a, b)).map(([a]) => a);
+  console.log(`      corpus: ${Object.keys(FIELDS).length} projected fields · `
+    + `${Object.keys(MEANING).length} meaning arms · 4 directives = ${corpus.length} selectors driven`);
+  t("the sweep reaches the whole language, not a sample of it — REACH, as a delta",
+    corpus.length >= Object.keys(FIELDS).length + Object.keys(MEANING).length + 4, true);
+  t("quoting a field value changes NOTHING it compiles to, across every selector there is",
+    disagree, []);
+
+  /* The two shapes D-228 names, spelled out rather than left to the sweep. */
+  t('`state:"open"` binds the value and not the quote characters', argsOf('state:"open"')[0], "open");
+  t("and it is the same query as the unquoted spelling", same('state:"open"', "state:open"), true);
+  t('`leg:"hunch"` reaches the arm rather than falling to the bare sub-field',
+    compile({ q: 'leg:"hunch"', viewer: M }).meaningArms,
+    compile({ q: "leg:hunch", viewer: M }).meaningArms);
+
+  /* THE PHRASE IS THE HALF THAT CHANGES WHAT MATCHES. `title:"two words"` used
+     to compile to `({title} : """two" AND "words""")` — the column filter binds
+     to the FIRST phrase only in FTS5, so the second word was searched over
+     EVERY column. That is not a query that matched nothing; it is a query that
+     matched the WRONG ROWS, and it is the case worth driving. */
+  t("a quoted multi-word value compiles to one FTS5 PHRASE scoped to its column",
+    argsOf('title:"two words"')[0], '{title} : "two words"');
+  t("which is a DIFFERENT query from the unquoted spelling — the phrase is the point",
+    same('title:"two words"', "title:two words"), false);
+  t("the unquoted spelling still means AND, unchanged by this item",
+    argsOf("title:two words")[0], '({title} : "two" AND "words")');
+  t("and no mangled literal survives anywhere in the expression",
+    /"""/.test(argsOf('title:"two words"')[0]), false);
+}
+
+console.log("\n--- D-228: the branch is REACHABLE, which is the actual subject ---");
+{
+  const argsOf = (q) => compile({ q, viewer: M }).statements.page().args;
+  /* STRUCTURAL, because a behavioural arm alone cannot see this revert. If the
+     branch were re-guarded by the unsatisfiable conjunction while the reader
+     kept its quote terminator, `state:"open"` would still bind `open` — the
+     value round-trips through the OTHER path — and every equality assertion
+     above would stay green over a defence that had stopped running. A revert
+     that is behaviourally invisible needs a structural pin; that lesson is
+     recorded in the register and this is the arm that applies it. */
+  const src = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
+  const bare = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  t("the bare value reader STOPS at a quote — the one line the whole fix is",
+    /while \(i < src\.length && !isSpace\(src\[i\]\)[^\n]*src\[i\] !== '"'\)/.test(bare), true);
+  t("and the unsatisfiable guard that made the branch unreachable is GONE from executable source",
+    /rest === ""\s*&&\s*src\[i\] === '"'/.test(bare), false);
+  t("the guard that replaced it tests only the cursor, which the reader can now leave on a quote",
+    /if \(src\[i\] === '"'\) \{/.test(bare), true);
+
+  /* BEHAVIOURAL, over the compiler's answer rather than the tokenizer's
+     internals: `quoted: true` on a selector token has exactly ONE producer in
+     the whole tokenizer — this branch — and its only observable consequence is
+     phrase detection in `textAtom`. So a compiled PHRASE is proof the branch
+     ran, and it is proof no other path can forge. */
+  t("a phrase can only exist if the branch ran, and it does",
+    argsOf('title:"two words"')[0].includes('"two words"'), true);
+  t("the same string unquoted cannot produce it, so the arm is not passing for free",
+    argsOf("title:two words")[0].includes('"two words"'), false);
+}
+
+console.log("\n--- D-228: over-strictness — spellings this item did not anticipate ---");
+{
+  const argsOf = (q) => compile({ q, viewer: M }).statements.page().args;
+  const sqlOf = (q) => compile({ q, viewer: M }).statements.page().sql;
+  const same = (a, b) => sqlOf(a) === sqlOf(b) && JSON.stringify(argsOf(a)) === JSON.stringify(argsOf(b));
+  /* Every one of these is a genuinely correct way to ask its question. A fix
+     that only understood the shape its own comment named would pass everything
+     above and still fail a member. */
+  t("a comparison with a quoted operand", same('created:>"2026-01-01"', "created:>2026-01-01"), true);
+  t("a range lead with a quoted operand", same('created:>="2026-01-01"', "created:>=2026-01-01"), true);
+  t("the frontmatter tail, where the quote sits after an `=` rather than the colon",
+    same('fm:a.b="c"', "fm:a.b=c"), true);
+  t("`has:` — a directive, not a predicate", same('has:"state"', "has:state"), true);
+  t("`sort:` — likewise, and it must still be consumed rather than become a term",
+    same('sort:"created"', "sort:created"), true);
+  t("a bare quoted phrase with no field at all still means a phrase",
+    argsOf('"two words"')[0], '"two words"');
+  t("a negated quoted selector", same('-state:"open"', "-state:open"), true);
+  t("a quoted selector inside parentheses", same('(state:"open" OR state:reviewed)', "(state:open OR state:reviewed)"), true);
+  t("an UNCLOSED quote is tolerated rather than refused, as it always was",
+    argsOf('state:"open')[0], "open");
+  t("a quoted value containing a parenthesis is a value, not a grouping",
+    argsOf('title:"a (b)"')[0], '{title} : "a (b)"');
+  t("a stray trailing quote no longer poisons the value",
+    same('state:open"', "state:open"), true);
+  /* THE ARM THAT REMOVED A STATED LIMIT. The first draft of the fix read a
+     value as one bare piece plus one quoted run, and documented `fm:"a.b"="c"`
+     — quotes on BOTH sides — as a known limit: it kept `a.b=` and let `c` fall
+     out as a separate free-text term, which is a value silently TRUNCATED into
+     a query that still matches things. A stated limit was the wrong answer to
+     the shape this item exists to remove, so the reader now consumes a value to
+     its end in as many pieces as it takes. */
+  t("a value quoted on BOTH sides of its `=` is one value, not a value and a stray term",
+    same('fm:"a.b"="c"', "fm:a.b=c"), true);
+  t("and the same holds when only the left side is quoted",
+    same('fm:"a.b"=c', "fm:a.b=c"), true);
 }
 
 console.log(`\nquery: ${pass} pass, ${fail} fail`);

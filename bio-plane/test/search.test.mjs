@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass.
+   (b) D-228/REC-68, run 2026-08-08: restore the quote-stripping defect in query.mjs's tokenizer (drop `&& src[i] !== '"'` from the BARE reader's terminator set) -> 170 pass, 12 FAIL, and this suite is where the two failure modes SEPARATE. MATCHED NOTHING, which fails honestly: `state:"collected"` 0 against 1, `type:"problem"` [] against one row, `monitored:"true"` 0, `annotations:">0"` 0, `fm:monitoring.frequency="monthly"` 0, `schema:"problem@1"` []. MATCHED THE WRONG THING, which does not: `title:"Fund general"` returned 1 for a phrase that is in NO title (the column filter bound to the first word only and the second was matched over every column), and `title:"billing Water"` returned 1 with the words reversed. AND THE SHARPEST: `-state:"collected"` returned 3 against 2 — a selector matching nothing, under NEGATION, returns THE WHOLE CORPUS, so an honest empty answer becomes a confident complete one. Restored, verified by sha256 AND `cmp`. */
 /* Retrieval end to end, S-10 steps 2 to 4.
  *
  * Negative-control detail: index the empty string instead of the bundle's text in promote's FTS write (store.mjs: `...FTS_COLUMNS.map(() => "")`), so the text index diverges from the corpus it is derived from -> 19 assertions fail (op=searchindexcheck disagrees, and no body/title term is found) then the suite throws on the empty hit set; restored, 164 pass.
@@ -403,6 +404,85 @@ console.log("\n--- filters, ranges, presence, and the per-schema tail ---");
   t("text and metadata mix", (await S("q=fund+type:problem&facets=none")).total, 1);
   t("an unknown field warns rather than refusing",
     (await S("q=nosuchfield:x&facets=none")).query.warnings.length, 1);
+}
+
+/* ====================================================================
+ * D-228 / REC-68, DRIVEN OVER THE PLANE'S ANSWER RATHER THAN THE COMPILER'S SQL.
+ *
+ * `query.test.mjs` proves what a quoted value COMPILES to. That is necessary
+ * and it is not the claim a member cares about, which is which rows come back.
+ * This block asks the op.
+ *
+ * THE TWO FAILURE MODES ARE NOT EQUALLY BAD AND THIS BLOCK SEPARATES THEM,
+ * because the cost is asymmetric and the project has already ruled on it:
+ *
+ *   MATCHED NOTHING — `state:"collected"` bound the literal `"collected"`
+ *   against an indexed equality on a corpus that stores `collected`, so it
+ *   returned zero rows and said nothing. A selector that matches nothing FAILS
+ *   HONESTLY: the member sees an empty page and knows something is wrong. This
+ *   is the shape 28 of the 34 projected fields had.
+ *
+ *   MATCHED THE WRONG THING — `title:"Fund general"` bound the FTS5 expression
+ *   `({title} : """Fund" AND "general""")`. In FTS5 a column filter binds to the
+ *   PHRASE THAT FOLLOWS IT, so `{title}` scoped only the first word and the
+ *   second was searched over EVERY column. It returned rows, confidently, and
+ *   they were not the rows asked for. This is the shape the free-text fields
+ *   had, and PL-10 measured the same distinction one component over
+ *   (`heldMatch`) and concluded that confidently matching the wrong row is the
+ *   WORSE of the two. It is therefore the case driven hardest here.
+ * ================================================================== */
+console.log("\n--- D-228: a quoted field value, over the plane's own answer ---");
+{
+  const ids = async (q) => (await S(`q=${encodeURIComponent(q)}&facets=none`)).hits.map((h) => h.bundle_id).sort();
+  const total = async (q) => (await S(`q=${encodeURIComponent(q)}&facets=none`)).total;
+
+  /* --- the half that matched NOTHING, and now matches what it was asked --- */
+  t("an enumeration filter answers when its value is quoted", await total('state:"collected"'), 1);
+  t("and it is the SAME ROW the unquoted spelling finds",
+    await ids('state:"collected"'), await ids("state:collected"));
+  t("a quoted type filter answers too", await ids('type:"problem"'), [C.id]);
+  t("a quoted boolean is a boolean, not the string it was typed as", await total('monitored:"true"'), 1);
+  t("a quoted number is a number", await total('annotations:">0"'), 2);
+  t("a quoted frontmatter value reaches the per-schema tail",
+    await total('fm:monitoring.frequency="monthly"'), 3);
+  t("a quoted schema stamp, punctuation and all", await ids('schema:"problem@1"'), [C.id]);
+
+  /* --- the half that matched the WRONG THING, which is the worse one --- */
+  /* A's title is "Sewer Service Fund transfer series" and A's BODY contains
+     "general" ("...to the general fund"). A's title does NOT contain the phrase
+     "Fund general" and never did. Under the old reading `{title}` scoped only
+     `Fund`, and `general` was matched against every column — so A came back,
+     confidently, for a phrase it does not contain. */
+  t("the phrase is not in any title, so the honest answer is none",
+    await total('title:"Fund general"'), 0);
+  t("and the row the broken reading returned is a row that really exists — "
+    + "so the old answer was WRONG, not merely empty",
+    await ids("title:Fund general"), [A.id]);
+  /* Read those two together: the unquoted spelling still means AND-across-
+     columns and still returns A, which is correct for what it asks. The quoted
+     spelling asks a different question and now gets a different answer. Before
+     this item BOTH returned A, and only one of them should have. */
+  t("a phrase that IS in a title is found, so the phrase arm is not just refusing",
+    await ids('title:"Water billing"'), [B.id]);
+  t("word order inside a phrase is load-bearing, which is what a phrase means",
+    await total('title:"billing Water"'), 0);
+  t("while the unquoted spelling ignores order, unchanged by this item",
+    await total("title:billing Water"), 1);
+  /* PL-10 measured that the FTS columns' single-word case matched the same 63
+     hits both ways — the defect did not bite there — and that is re-measured
+     here rather than inherited, because a fact taken on report is not a
+     measurement. */
+  t("a SINGLE-word quoted value on a free-text column matched the same rows before and after "
+    + "(PL-10's finding, re-measured here rather than inherited)",
+    await ids('locator:"opengov"'), await ids("locator:opengov"));
+  t("which is why `heldMatch` was confidently wrong rather than silently empty (UI-50's subject)",
+    await total('locator:"opengov"'), 2);
+
+  /* --- the composition, because an arm that only works alone is not a fix --- */
+  t("a quoted value composes with an unquoted one", await total('type:"information" state:collected'), 1);
+  t("with negation", await total('-state:"collected"'), 2);
+  t("with parentheses and OR", await total('(state:"collected" OR state:"surfaced")'), 2);
+  t("and a quoted value never becomes a warning", (await S(`q=${encodeURIComponent('state:"collected"')}&facets=none`)).query.warnings, []);
 }
 
 console.log("\n--- facet counts drive the filter sidebar ---");
