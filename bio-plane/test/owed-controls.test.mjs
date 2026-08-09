@@ -57,7 +57,19 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
 const REPO = join(DIR, "..", "..");
 /* The REAL instrument and the REAL modules it imports. */
-const REAL = ["coverage.mjs", "control-register.mjs", "provenance.mjs"];
+/* D-277, 2026-08-09: `declared-source.mjs` and `walkfloor.mjs` JOIN THE LIST.
+   `coverage.mjs` now takes its check-catalog corpus from DECLARED CODE rather
+   than raw source, through `declared-source.mjs`, which imports the estate's ONE
+   comment-stripping lexer from `walkfloor.mjs` instead of growing a third copy.
+   THIS LIST IS HAND-KEPT AND IT IS THE SECOND COPY OF IT — `coverage-provenance.
+   test.mjs` carries the other — so a module added to the instrument has to be
+   added in two places or the scratch repository throws ERR_MODULE_NOT_FOUND and
+   this suite reports eleven failures whose cause is entirely in the HARNESS.
+   Measured on the day: eleven, exactly like that. NAMED here rather than
+   silently fixed, and DELEGATED in CLAIMS.md: two hand-kept copies of one
+   instrument's dependency list is a thing that will go stale. */
+const REAL = ["coverage.mjs", "control-register.mjs", "provenance.mjs",
+              "declared-source.mjs", "walkfloor.mjs"];
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {

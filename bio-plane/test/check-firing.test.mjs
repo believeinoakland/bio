@@ -58,6 +58,14 @@
  * So 31 of the 33 are still proven to FIRE; two are now proven NOT to, and
  * proven to have no producer.
  *
+ * (2026-08-09, D-277) THREE PROOFS ADDED, AND THE REASON THEY WERE MISSING IS THE ITEM.
+ * `coverage.mjs` credited a check as "named by an assertion" when its id appeared anywhere in a
+ * suite's RAW bytes, comments included, so three checks read as covered on the strength of a
+ * SENTENCE — an identity-grammar check named only in `audit.test.mjs`'s prose, a capture-hash
+ * check named only in `acquire.test.mjs`'s prose, and an append-only check named only in THIS
+ * FILE'S OWN HEADER. A description of a check is not a proof of one. The credit rule now reads
+ * code, the hole became visible, and each of the three now has a paired FIRES / absent-on-clean
+ * proof above. Their built-in control is the same one this whole suite rests on, stated next.
  * NEGATIVE CONTROL: remove any tamper (bundle == the conformant base) -> that check's `fires` assertion fails. Spot-checked 2026-07-31 on C-2.1, C-13.1, C-16.4: deleting the tamper drops the finding and flips fires true->false; the paired `absent on clean base` assertion encodes this for all 31 that still fire.
  * (run 2026-08-08, FW-13) FOUR ARMS ON THE RETIREMENT ITSELF, each armed ALONE with the other three held open, each DECLARING BEFORE IT RAN what must fail and what must not, and every touched file restored from a UNIQUELY NAMED per-arm pristine copy verified by sha256 AND by a byte compare. Re-run in one step: `node test/retirement.control.mjs all` from bio-plane/. Baseline at the moment they ran: this suite 83 pass, 0 fail. ZERO arms behaved other than declared. (i) PUT THE RETIRED CHECK BACK — a MINIMAL restoration of `checkCitationRegister` (ONE of its four refusing branches) plus its call site in checks/bio-checks.mjs -> 81 pass, 2 FAIL: the behavioural arm for that branch ("no finding when the register is not {claims:[...]}") and the SOURCE arm, which names the file and the LINE ("C-8.1 at line 3235"). Exactly one behavioural arm bites BECAUSE the plant is minimal, and that is the arm's point: the source arm catches ANY branch of any reintroduction, which is why the retirement does not depend on guessing which branch somebody puts back. MUST NOT move, and did not: the 32 surviving `fires` arms, and the estate arm — restoring a CHECK grows no PRODUCER. (ii) GROW A PRODUCER — append `data/citations.json` to a real module under src/ -> 82 pass, 1 FAIL, the ESTATE arm naming `bio-plane/src/cdx.mjs`, while every behavioural arm stays GREEN, because a second claim structure appearing in the estate is invisible to any bundle-level assertion. (iii) NEUTER THE ESTATE WALK so its matcher can never match -> 82 pass, 1 FAIL, and it is the REACH arm alone ("the estate walk CATCHES a planted producer"), WHILE the corpus floor and the clean-estate arm BOTH STILL PASS — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (iv) OVER-STRICTNESS — nothing planted, a LEGITIMATE bundle carrying a well-formed citation register -> 83 pass, 0 fail, NOTHING drawn, because retirement means the shape is ordinary data and not forbidden data.
  * (run 2026-08-08, FW-15) THE SAME HARNESS WIDENED, NOT A SECOND ONE: arms (i) and (ii) are now keyed by RETIRED ID and run once per id, each plant ALONE and each restored before the next, so the two per-check arms cover C-7.1 exactly as they cover C-8.1. Arm (i)'s call-site anchor moved to the surviving `checkAppendOnly` line because both retirement notes now share one comment block and a statement spliced into a block comment is a syntax error, not a plant; the arm's MEANING is unchanged and it was re-run. Baseline at the moment they ran: this suite 93 pass, 0 fail. SIX ARM-RUNS, ZERO behaved other than declared ON THE RECORDED RUN — but see arm (v), which came back WRONG the first time and is recorded here rather than smoothed. (i) RESTORE C-8.1 -> 91 pass, 2 FAIL (its behavioural arm + the source arm, "C-8.1 at line 3235"); RESTORE C-7.1 -> 91 pass, 2 FAIL (its behavioural arm + the source arm, "C-7.1 at line 3235"), and in each case the OTHER id's arms did not move. (ii) GROW A PRODUCER for data/citations.json -> 92 pass, 1 FAIL, the estate arm naming `bio-plane/src/cdx.mjs` BY FILE; for data/deletions.json -> 92 pass, 1 FAIL, the estate arm naming the same file BY FILE, the other id's estate arm green in both. (iii) NEUTER -> 92 pass, 1 FAIL, the REACH arm alone. (iv) OVER-STRICTNESS -> 93 pass, 0 fail. (v) NEW — UNCOVERED: rename one id's entry in RETIRED_SHAPES so a row in CHECK_RETIREMENTS has no behavioural arms -> 84 pass, 1 FAIL, the COMPLETENESS arm naming C-7.1, and the pass count falls by the arms that no longer run. **ARM (v) FIRST CAME BACK AS "THE SUITE NEVER REACHED ITS FOOT": the different-filename loop indexed RETIRED_SHAPES[id][1] unguarded and threw a TypeError, ending the module through no assertion at all — the exact failure this project recorded twice this week, found only because this harness READS THE FOOT LINE rather than trusting a tally. The guard and its receipt are at the site; the arm then behaved as declared.**
@@ -171,6 +179,17 @@ for (const type of ["information", "focus", "project", "action"]) {
 console.log("\n--- identity and annotations ---");
 await proves("C-1.3", "an annotations/ file is not a .json record", "information",
   new Map([["bundle.md", baseMd("information")], ["annotations/note.txt", "not json"]]));
+/* D-277, 2026-08-09. THIS CHECK HAD NO ASSERTION AND READ AS COVERED FOR MONTHS,
+   and the way it did is the item: `coverage.mjs` credited a check as "named by an
+   assertion" if the id appeared ANYWHERE in a suite's raw bytes — comments
+   included — and the only occurrence in this battery was a SENTENCE in
+   `audit.test.mjs`'s prose. The credit rule now reads code, so the hole became
+   visible; this is the proof that closes it. The tamper keeps the id's SHAPE
+   (prefix, year, ordinal) and violates only the slug grammar, so it is the
+   grammar being proven and not the prefix. */
+await proves("C-1.2", "the frontmatter id violates the canonical ID grammar", "information",
+  new Map([["bundle.md", baseMd("information")
+    .replace("id: " + idFor("information"), "id: INFO-2026-0001-Bad_Slug")]]));
 
 /* ---- frontmatter grammar and contract (C-2.x, C-3.1) ---- */
 console.log("\n--- frontmatter grammar and contract ---");
@@ -329,6 +348,32 @@ await proves("C-18.7", "an @2 collected->verified transition is unsigned", "info
 await proves("C-18.8", "a release at/after the migration instant carries no checkable signature", "information",
   new Map([["bundle.md", verifiedInfoMd("information@1", "2026-07-01T00:00:00Z")]]),
   { releaseRegistry: { migrationInstant: "2026-01-01T00:00:00Z" } });
+/* D-277, 2026-08-09: the register's REGISTERED HASH against the STORED BYTES.
+   Same story as the identity-grammar proof above — the only occurrence of this id
+   in the whole battery was a sentence in `acquire.test.mjs`'s prose describing how
+   the check streams parts, and a description of a check is not a proof of one. The
+   register names a stored file and records a hash the bytes do not have, which is
+   the silent-content-mutation case the check exists for. `information@2`, because
+   that contract is where the register becomes mandatory. */
+await proves("C-18.6", "the registered capture hash disagrees with the stored bytes", "information",
+  new Map([["bundle.md", verifiedInfoMd("information@2", "2026-07-01T00:00:00Z")],
+    ["data/provenance.json", JSON.stringify({ documents: [
+      { file: "snapshots/doc.pdf", capture: { sha256: H64, encoding: "utf8" } }] })],
+    ["snapshots/doc.pdf", "these are not the bytes the register recorded"]]));
+
+/* ---- append-only surfaces against the latest history snapshot (C-5.1) ----
+   D-277, 2026-08-09, and the third of the three this item's credit-rule change
+   exposed. This id appeared in the battery only inside `check-firing.test.mjs`'s
+   OWN header — a sentence explaining what replaced a retired check — and in a
+   comment in `conformance.test.mjs`. Both are prose. The check has five refusing
+   branches; the tamper drives the FIRST, a state_history that SHRANK against the
+   snapshot, which is the one a rewrite of history actually looks like. */
+console.log("\n--- append-only surfaces ---");
+await proves("C-5.1", "state_history shrank against the latest _history snapshot", "information",
+  new Map([["bundle.md", baseMd("information")],
+    ["_history/bundle_20260724T000000Z_aaaa1111.md",
+      baseMd("information").replace("state_history: []", releaseHistory(NOW).join(NL))],
+    ["_history/manifest.json", JSON.stringify({ entries: [] })]]));
 
 /* ================= RETIRED CHECKS (FW-13, widened by FW-15) ================
  *
