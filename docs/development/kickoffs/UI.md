@@ -191,3 +191,44 @@ session after; append to `DEBT.md` and `MEASUREMENTS.md`, prepend to
   the ordinary price of an append-only record: they cannot be removed, only
   superseded in turn. That asymmetry is the reason the enumeration comes first
   and the writing second.
+
+## UI-42 landed 2026-08-09 — version review: rotation and diff (append, not a rewrite: other UI workers are live)
+
+**What exists now that did not.** A surface of its own, `SURFACES["basis-versions"]`, addressed
+`#versions/<INQ-…>` and `#versions/<INQ-…>/<name>`, living between
+`/*__VERSION_REVIEW_START__*/` and `/*__VERSION_REVIEW_END__*/` in `app.html`. It reads
+`op=basisversions` and `op=affordances`, hosts exactly ONE act (`versionhide`), and is driven by
+`civicos-ui/test/version-review.test.mjs` (85 assertions) with a nine-arm negative control in
+`civicos-ui/test/version-review.control.mjs`.
+
+**Three things the next UI session should know before touching it.**
+
+1. **ROTATION IS THE DIFF, AND THE MEMORY LIVES IN STATE.** `VREV.focus` is the reading in front of
+   the member and `VREV.against` is the one they came from. The default focus is settled in
+   `versionReviewLoad` and NOT in the renderer — it was in the renderer first, and the first
+   rotation then compared against nothing, which is the member's first move being the one that tells
+   them least. If you make the focus a derived value again, that regression comes back.
+2. **THE ANALYST'S VOCABULARY IS READ AND NEVER PRINTED.** The record stores `relationship` as the
+   token `and`/`or` and files each set of reasons under a member-authored label. The surface renders
+   the CONSEQUENCE (*"fails only if ALL of these fail"* / *"fails if ANY of these fails"*, the
+   elicitation's own two stems) and names a set by the reasons in it, never by its label. The
+   fixture deliberately files one set under `"OR-branch: the ground partition"`, so a renderer that
+   ever prints a label fails the sweep naming the phase and the word.
+3. **HIDING SHRINKS THE DISPLAY AND NOTHING ELSE.** `op=basisversions` keeps returning a hidden
+   reading and the surface keeps holding it; only the LIST is filtered, the count line says how many
+   it is holding back, one control puts them back, and `#versions/<INQ>/<name>` opens a hidden
+   reading directly with its rejection act intact. The negative control's arm 1 makes the load drop
+   hidden readings — 10 of 85 assertions go red, five of them named ACTS PERSIST.
+
+**What UI-43 and UI-45 inherit.** The two falsifier stems and the four state sentences are named
+constants in this block and are pinned against UI-27's elicitation block and against the catalog's
+`VERSION_MACHINE.legal`; reuse them rather than authoring a third spelling. The other five version
+acts are still on `ACTS_AWAITING_SURFACE`, and `surface-registry.test.mjs`'s ARM A4c requires the
+row struck in the same commit that surfaces each one.
+
+**What this surface does NOT do, stated so it is not read as a gap.** It shows no strength, no grade
+and no pair for any reading — PL-14's `op=versionstrength` exists and is deliberately not asked
+here, because DEC-32 clause 5's ordering rule is that structure is read before strength is shown,
+and a review surface that put a grade beside each alternative is the surface that invites choosing
+by the number. It also names no `project`, so it renders no `current` (§7: a stance is the
+project's, not the question's) — that half is UI-45's.

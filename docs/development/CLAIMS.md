@@ -5002,3 +5002,91 @@ mechanised for you today; the figure above is, and it moves when you move it.
 
 **NOT A DEBT ROW ON PURPOSE.** `DEBT.md` is not written by this session, and CONDUCT should decide
 whether this is one row or twenty-two. The measurement is the part that was missing.
+## CLAIM 2026-08-09 UI (UI-42 — version review: rotation and diff)
+session: ui42-version-review (worktree agent-a8c8ed9c32eb56980)
+opened: 2026-08-09T00:00:00Z
+paths: **`civicos-ui/app.html` — named by SITE, not by file** (it is shared ground and other UI
+  workers may be live): (1) the NEW region between `/*__VERSION_REVIEW_START__*/` and
+  `/*__VERSION_REVIEW_END__*/`, appended after `__AI_SESSION_END__` — every renderer in it is new
+  and nothing outside it moved into it; (2) ONE key ADDED to `SURFACES` inside
+  `__SURFACES_START__`/`__SURFACES_END__` — `"basis-versions"`, no existing key touched; (3) ONE
+  line inside `boot()` — the route chain `if(!publishedRouteFromHash() && …)`, which gains
+  `&& !versionReviewRouteFromHash()` and nothing else. **NOT** the CSS block (this surface reuses
+  existing classes and adds none), **NOT** `__CATALOG__`, **NOT** `__SEMANTICS__`, **NOT**
+  `__DOCPROFILE__`, **NOT** `__INQUIRY_PAGE__`, **NOT** `__ELICITATION__`, **NOT** any other
+  marked region.
+  `civicos-ui/test/version-review.test.mjs` (NEW), `civicos-ui/test/version-review.control.mjs` (NEW).
+  `civicos-ui/test/surface-registry.test.mjs` — **the `versionhide` row STRUCK from
+  `ACTS_AWAITING_SURFACE` (ARM A4c's DRAIN requires it in the same commit), and FIVE floors moved
+  from the figures the arms PRINTED: ARM A3 18→19, A4d 15→16, A4e 15→16, D1 50→64, D5 30→39.**
+  No other arm touched.
+  `civicos-ui/test/preauth-vocabulary.test.mjs` — WALK 2's router census five → SIX and the new
+  router CLASSIFIED as post-authentication, with both halves of the classification pinned. That arm
+  exists to stop a new router arriving unclassified and it fired on the first run of this item; it
+  is CORRECTED, never exempted. No other arm touched.
+  `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already
+  documents transient harness directories under `civicos-ui/`.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not
+  rewritten — other UI workers are live), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/src/**` (READ ONLY), **NOT** `bio-plane/checks/**` (read only — the suite
+  IMPORTS `VERSION_MACHINE` rather than copying it), **NOT** `bio-plane/test/**`, **NOT**
+  `bio-plane/scripts/**`, **NOT** `civicos-ui/tokens.css`, **NOT** `civicos-ui/check-*.mjs`,
+  **NOT** `docs/development/QUEUE.md`, **NOT** `docs/development/IS-BUILD-PLAN.md`, **NOT**
+  `newgroup/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3 — `op=basisversions` (read) and `op=versionhide` (the one act this surface
+  hosts). Nothing else is asked of the plane and no shape is changed, so no IC row is owed.
+interfaces owned: none.
+
+### DELEGATION 2026-08-09 UI (UI-42) -> UI-43 (the accept ceremony) AND UI-45 (CURRENT): **THE MEMBER-FACING WORDS FOR THIS VOCABULARY NOW EXIST IN ONE PLACE, AND A THIRD SPELLING WOULD BE THE DEFECT**
+
+UI-43's row asks for *"the derived falsifier back in plain words (\"your answer fails only if ALL of
+these fail\")"*. That sentence already exists TWICE and must not come to exist three times:
+
+- `elicFalsifier` in `__ELICITATION_START__` (UI-27) composes it for the member AUTHORING a
+  structure — *"Your answer fails only if ALL of these fail: …"* / *"Your answer fails if ANY of
+  these fails: …"*.
+- `VREV_FAILS_ALL` / `VREV_FAILS_ANY` in `__VERSION_REVIEW_START__` (this item) compose it for a
+  member READING one back — *"This reading fails …"*, the same two tails, different subject.
+
+`version-review.test.mjs` §0b pins that the elicitation block still carries both tails, so if UI-43
+re-words either, that pin fails and the next session re-words BOTH rather than shipping two answers
+to one question. **Reuse one of the two constants; do not author a third.** The same applies to
+`VREV_STATE_WORD`, the four member-facing sentences for `suggested/considering/accepted/rejected`:
+its keys are pinned against `VERSION_MACHINE.legal`, IMPORTED from `bio-plane/checks/bio-checks.mjs`
+rather than copied, so a fifth state fails the harness instead of rendering a blank line.
+
+**AND WHAT THIS SURFACE DELIBERATELY DID NOT TAKE.** It hosts `versionhide` and nothing else. The
+other five version acts are still on `ACTS_AWAITING_SURFACE` in
+`civicos-ui/test/surface-registry.test.mjs` with your item names on them; ARM A4c will require the
+row struck in the same commit that surfaces each one, and ARM A4d/A4e's floors move UP by one each
+time. For UI-45 specifically: `op=basisversions` publishes `current` ONLY when a `project` is named,
+and **this surface names none and therefore renders none** — §7's rule that a stance belongs to the
+project and not to the question, honoured by not asking rather than by filtering an answer.
+
+### DELEGATION 2026-08-09 UI (UI-42) -> CONDUCT: **FIVE FLOORS MOVED IN `surface-registry.test.mjs`, AND TWO OF THEM WERE ALREADY SLACK BEFORE THIS ITEM TOUCHED THEM**
+
+Moved from the figures the arms PRINTED, never by adding to the number in the file, and each with
+its reason at the site:
+
+| arm | was | now | why it moved |
+| --- | --- | --- | --- |
+| A3 (act placements) | 18 | 19 | this item hosts `versionhide` |
+| A4d (catalogue outside the register) | 15 | 16 | STRIKING the register row moves that act into this floor's corpus |
+| A4e (distinct hosted acts) | 15 | 16 | a surface now hosts it |
+| D1 (ops called statically from app.html) | 50 | **64** | this item added ONE call; the floor was already **13 low** |
+| D5 (declared reads) | 30 | **39** | this item added TWO; the floor was already **seven low** |
+
+**The last two are the reportable half.** D1 and D5 are not floors this item invalidated — they were
+carrying 13 and 7 of slack before it arrived, which is REC-71's finding (*a floor with slack is not
+a ratchet*) sitting in two arms nobody had re-measured since they were written. D1 at 50 would have
+sat green through the deletion of a fifth of app.html's static op calls. They are moved rather than
+noted, because noting a stale floor is what left them stale, and moving three of five while leaving
+two known-slack ones behind is the inconsistency the next reader would trip on.
+
+### DECISIONS FOR BOB 2026-08-09 (UI-42): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. The two wording judgements this item made are
+ones the record already assigned to the surface: DEC-29(b) states in as many words that *"(b)'s
+wording clause is a UI string"*, and DEC-32 clause 1 forbids the analyst's vocabulary while leaving
+the member-facing rendering to the surface — which is what UI-27's elicitation already established
+one construct over. Nothing here is a consequence Bob has not already ruled on.

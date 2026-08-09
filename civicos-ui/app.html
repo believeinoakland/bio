@@ -1345,8 +1345,15 @@ async function boot(){
      a reload landed on the queue with the url still claiming otherwise. Adding
      the router without adding it to this chain would have repeated that, in the
      same file, against a written warning. */
+  /* UI-42: SIX real addresses. `#versions/<INQ-…>[/<name>]` is the version
+     review, and the second segment addresses ONE reading — including one held
+     back from the display, which is D-214's "the display shrinks, the acts
+     remain" expressed as a URL. Added to this chain in the same turn the router
+     was written, because the comment two blocks up records exactly what happens
+     when it is not. */
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
-     && !actionRouteFromHash() && !aiSessionRouteFromHash()) go("queue", true);
+     && !actionRouteFromHash() && !aiSessionRouteFromHash()
+     && !versionReviewRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2033,6 +2040,23 @@ const SURFACES = {
     levels: ["meaning", "documents"],
     acts: [],
     reads: ["publishedcase", "publishedmanifest"],
+  },
+
+  /* UI-42 · the readings of one question's evidence, reviewed by rotating
+     between them. It is a surface of its own and not a panel on the inquiry
+     page because it carries STATE the inquiry page has no business holding —
+     which reading you are on and which one you came from — and because a
+     reading held back from the display still needs an ADDRESS (D-214: the
+     display shrinks, the acts remain). `versionhide` is the one act hosted
+     here; the other five version acts belong to UI-43's ceremony and UI-45's
+     make-current and are NOT claimed here, which is why the act register still
+     names them. */
+  "basis-versions": {
+    routes: ["hash:versions"],
+    purpose: "Every reading the record holds of one question's evidence, reviewed by rotating between them: moving to another reading IS the comparison. It draws where each reading came from, and it offers to take one out of the display while saying, in the offer itself, that hiding removes nothing from the record.",
+    levels: ["meaning"],
+    acts: ["versionhide"],
+    reads: ["basisversions", "affordances"],
   },
 
   /* ---- THE ONCE-ONLY RUNNING-SESSION SURFACE (E10, absorbed into UI-38) ----
@@ -16573,6 +16597,586 @@ function aiSessionRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!AI_SESSION_HASH_LOCK) aiSessionRouteFromHash(); }); }catch(_){}
 /*__AI_SESSION_END__*/
+
+/*__VERSION_REVIEW_START__*/
+/* ============================================================
+   UI-42 · VERSION REVIEW — ROTATION IS THE DIFF, AND THE PRUNE OFFER SAYS
+   WHAT PRUNING DOES.
+
+   WHAT THIS SURFACE IS. One question can be read more than one way. Every
+   reading of its evidence is written as its own version, and this is where a
+   member reviews them. `INVESTIGATIVE-SESSION.md` §14a's table gives the
+   interaction in one line — *"review the diff | rotate between versions;
+   comparison IS the diff"* — and that is a design statement rather than a
+   layout note: there is no separate "diff view" to open and nothing to select
+   two of. You are always looking at ONE reading, and the moment you rotate to
+   another the page tells you what is different about where you just came from.
+   `VREV.against` is that memory and it is the whole mechanism.
+
+   ---- THE VOCABULARY BAN, SATISFIED RATHER THAN EVADED (DEC-32 clause 1, D-226)
+
+   *"NEVER show AND / OR / disjunction / grounds — not even as tooltips … the
+   vocabulary is the analyst's, not the member's, and a member who must learn it
+   to state a finding will state a worse finding."* The record stores exactly
+   that vocabulary — `relationship` is the token `and` or `or`, and each leg
+   carries the label of the part it sits in — so this surface has to read it and
+   must never print it. Two decisions follow, and both are structural:
+
+     1. THE COMPOSITION IS RENDERED AS ITS CONSEQUENCE, in the same two shapes
+        the elicitation shows a member back (UI-27, `elicFalsifier`): the reading
+        fails if ANY of its reasons fails, or it fails only if ALL of its sets of
+        reasons fail. That is the same sentence a member already read when they
+        authored the structure, so reading it back here teaches nothing new and
+        asks nothing of them. **The two stems are DELIBERATELY the same words as
+        `elicFalsifier`'s, and `version-review.test.mjs` pins that they are still
+        present in the elicitation block** — two copies of one member-facing
+        sentence is a drift hazard and the pin is what makes the drift visible
+        rather than silent. UI-43's ceremony needs the same two stems; they are
+        named here so it reuses them instead of writing a third spelling.
+
+     2. THE PART LABELS ARE NEVER RENDERED. A set of reasons is named by the
+        REASONS IN IT and never by the label the record files it under. The
+        labels are member-authored (`elicLabel` derives *"reasons 1 3"* and the
+        member may write over it), so printing them would put an author's own
+        working shorthand — or an analyst's, if a run wrote it — onto a surface
+        this ruling governs. Naming a set by its members costs nothing and can
+        never carry a word this page is not allowed to say.
+
+   AND AN UNSTATED COMPOSITION IS STATED AS UNSTATED. A version whose
+   `relationship` is neither token gets `VREV_COMPOSITION_UNSTATED` and NO
+   guessed sentence. Defaulting to either shape would be this page deciding how
+   somebody's reasons stand together — the conservative default is a rule about
+   what the RECORD holds (C-2.8), not licence for a renderer to fill a blank.
+
+   ---- HIDING: WHAT THE OFFER MUST SAY, AND WHY (DEC-29(b), D-214, DEC-29(b)'s
+        wording clause is a UI string and this is it)
+
+   D-217(a) asked for a prune. `IS-SWEEP-2026-08-07.md` §4b item 6 settled what
+   prune MEANS here, because D-217(a) and D-214 collided: **prune HIDES and never
+   deletes — the display shrinks, the acts remain, and the version stays
+   queryable.** DEC-29(b)'s ruling one construct over is the pattern for the
+   surface's half: *"the prompt's wording must state the disclosure … so what is
+   offered is visibly honesty, not concealment."* So `VREV_HIDE_OFFER` is
+   rendered beside the control, verbatim, and the suite asserts it verbatim. An
+   offer that said only "Hide" would be this surface letting a member believe
+   they had removed something.
+
+   THE ACT'S OWN LABEL IS THE PLANE'S AND IS RENDERED UNMODIFIED. The offer is
+   this surface's sentence about a consequence; the label, the weight and the
+   need are read off `op=affordances` and never re-worded (DEC-8). Where the
+   plane publishes no `versionhide` for this question, THERE IS NO CONTROL AT
+   ALL and no sentence about one — a capability a member does not hold is absent,
+   never greyed (Q12).
+
+   ---- REACHABILITY: THE DISPLAY SHRINKS AND NOTHING ELSE DOES
+
+   A hidden reading is reachable three ways from here, and all three are the same
+   fact seen from different angles:
+
+     · the count line ALWAYS states how many readings this display is holding
+       back and that they are still in the record — a shrunk display that does
+       not say it shrank is a display claiming to be complete;
+     · one control puts them back on the page;
+     · `#versions/<INQ-…>/<name>` opens a hidden reading DIRECTLY, and the focus
+       is rendered whether or not it is hidden. That is what "stays queryable"
+       means at this altitude: the address still resolves.
+
+   REJECTED READINGS ARE NOT HIDDEN BY DEFAULT AND ARE NOT TREATED AS PRUNED.
+   D-214: rejection is an act, it is recorded in its own right, and the pattern
+   over rejections is the anti-omission instrument — so a rejected reading sits
+   in the list with the member who turned it down, when, and their reason. Only
+   the hide flag shrinks this display, and only because a member asked it to.
+
+   ---- THE HONEST BOUNDS, PUBLISHED RATHER THAN ASSUMED
+
+   Three, each read off the plane's own answer and none of them inferred:
+     · `legs_complete: false` — the answer carries fewer reasons than the record
+       holds for that reading, so the composition sentence is over what ARRIVED.
+       It is said on the page, beside the sentence, not in a comment.
+     · `truncated` — the answer is a page of the readings, not all of them, so
+       the derivation lines drawn here are over that page.
+     · a `derived_from` naming a reading NOT in this answer is drawn as a root
+       and SAYS the parent is not here. Silently rooting it would draw a
+       different shape from the one the record holds.
+   ============================================================ */
+
+/* THE FOUR STATES, each with the sentence a member reads instead of the token.
+   The KEYS are pinned to the catalog's own `VERSION_MACHINE.legal` by
+   `version-review.test.mjs`, which IMPORTS it — a fifth state added to the
+   catalog fails the harness here rather than rendering a blank line beside a
+   reading. That is check-semantics.mjs's own rule (*"a state with no row renders
+   an invented first-letter seal over an empty explanation"*), applied to the one
+   vocabulary this surface renders that the catalog owns. */
+const VREV_STATE_WORD = {
+  suggested:   "Nobody has acted on this reading yet.",
+  considering: "Somebody set this reading aside to decide on later, and said why.",
+  accepted:    "Somebody adopted this reading of the evidence.",
+  rejected:    "Somebody turned this reading down, and said why. It stays on the record.",
+};
+
+/* DEC-29(b)'s wording clause, and the sentence the acceptance asserts VERBATIM.
+   Every clause in it is a fact about the act rather than reassurance: the store
+   writes a flag and re-promotes the document (D-214 — prune hides, never
+   deletes); `op=basisversions` goes on returning the reading, which is what
+   "asked for by name" means; the state and its attribution are untouched, so
+   every act already on it stays; and the act is itself recorded, because a
+   hidden reading with no account of who hid it is the shape D-214 refuses. */
+const VREV_HIDE_OFFER =
+  "Hiding takes this reading out of this display and does nothing else. It stays in the record, "
++ "it can still be opened and asked for by name, every act already recorded on it stays recorded, "
++ "and this act is recorded too. Nothing is deleted, and hiding can be undone.";
+
+/* The two stems. DELIBERATELY the elicitation's own words — see the header. */
+const VREV_FAILS_ALL = "This reading fails only if ALL of these fail: ";
+const VREV_FAILS_ANY = "This reading fails if ANY of these fails: ";
+const VREV_COMPOSITION_UNSTATED =
+  "The record does not say how these reasons stand together, so this page says nothing about it.";
+
+/* { inquiry, focus, against, showAll, versions[], total, truncated, limit, offset,
+     present, acts[], refusal, receipt, err, busy } */
+let VREV = null;
+let VREV_HASH_LOCK = false;
+
+/* THE ASK, STATED RATHER THAN INHERITED. `op=basisversions` is on the plane's
+   own unconditionally-capped roster (bound-sweep WALK 1), and a read that names
+   no page inherits a cap it never stated — which reads as completeness even
+   where it happens to be harmless. This number is ASKED FOR and never rendered:
+   the plane clamps it and publishes the bound it actually APPLIED, and the
+   published figure is the only one a member is told (REC-57's discipline, and
+   bound-sweep ARM E asserts no constant declared here reaches a sentence a
+   member reads). */
+const VREV_ASK = 200;
+
+/* THE BOUND THE RECORD PUBLISHED, SAID — never derived, and never inferred from
+   a full page. `limit` is the clamp the plane applied and `truncated` is its own
+   verdict on completeness; where it publishes neither, this says nothing is
+   claimed rather than manufacturing a bound out of the rows in hand. */
+function versionsBoundHtml(answer, what){
+  const lim = (answer && answer.limit != null && answer.limit !== "") ? Number(answer.limit) : null;
+  if(lim == null || !(lim === lim))
+    return '<p class="count-line">The record did not say how many readings it would answer '
+         + esc(what) + ' with, so nothing here claims to be all of them.</p>';
+  return '<p class="count-line">The record answered ' + esc(what) + ' with at most ' + lim
+       + ' reading(s) — the bound it applied, not the one this page asked for — and it '
+       + (answer && answer.truncated === true ? 'held more back beyond this page.' : 'held none back.')
+       + '</p>';
+}
+
+/* THE ONE DOOR. `op=basisversions` is asked here and nowhere else in this block,
+   and what it answers is rendered rather than reshaped: the gate, the bound and
+   the completeness flags are the plane's and this surface publishes them as it
+   received them. THE BOUND IS READ AND SAID AT THE DOOR, so no renderer
+   downstream has to remember to — the envelope never leaves here unaccompanied. */
+async function versionReviewRead(inquiryId){
+  const answer = await recR("basisversions",
+    { id: String(inquiryId || ""), limit: String(VREV_ASK) });
+  const bound = (answer && answer.ok !== false && answer.limit !== undefined
+                 && answer.truncated !== undefined)
+    ? versionsBoundHtml(answer, "for this question")
+    : versionsBoundHtml(null, "for this question");
+  return { answer: answer || null, bound };
+}
+
+function vrevList(){ return (VREV && Array.isArray(VREV.versions)) ? VREV.versions : []; }
+function vrevFind(name){
+  const n = String(name == null ? "" : name);
+  if(!n) return null;
+  return vrevList().find(v => v && String(v.name) === n) || null;
+}
+/* A reason is named by the record's own id for what it points at. */
+function vrevLegName(l){
+  return String((l && (l.target_id || l.target)) || "an unnamed reason");
+}
+function vrevLegs(v){
+  return (v && Array.isArray(v.legs)) ? v.legs.filter(l => l && typeof l === "object") : [];
+}
+function vrevLegNames(v){ return vrevLegs(v).map(vrevLegName); }
+/* The sets of reasons, keyed on the record's own label and NAMED BY THEIR
+   MEMBERS — the label itself never leaves this function (see the header). */
+function vrevSets(v){
+  const by = new Map();
+  for(const l of vrevLegs(v)){
+    const k = (typeof l.ground === "string" && l.ground.trim()) ? l.ground.trim() : "";
+    if(!k) continue;
+    if(!by.has(k)) by.set(k, []);
+    by.get(k).push(vrevLegName(l));
+  }
+  return [...by.values()];
+}
+/* HOW THE REASONS STAND TOGETHER, as the consequence rather than the structure.
+   With fewer than two sets the two readings coincide — there is no maximum to
+   take over one set, so both reduce to "any of these" over the reasons — and
+   saying it the longer way would dress one set up as a choice between several. */
+function vrevComposition(v){
+  const legs = vrevLegs(v);
+  if(!legs.length) return "";
+  const rel = (v && typeof v.relationship === "string") ? v.relationship.trim().toLowerCase() : "";
+  if(rel !== "and" && rel !== "or") return VREV_COMPOSITION_UNSTATED;
+  const sets = vrevSets(v);
+  if(rel === "or" && sets.length >= 2)
+    return VREV_FAILS_ALL + sets.map(s => s.join(", ")).join("; ") + ".";
+  return VREV_FAILS_ANY + legs.map(vrevLegName).join(", ") + ".";
+}
+function vrevText(s){
+  const t = (s == null) ? "" : String(s).trim();
+  return t || "not stated";
+}
+function vrevLegList(v){
+  const names = vrevLegNames(v);
+  return names.length ? names.join(", ") : "nothing yet";
+}
+/* WHAT THE RECORD HAS DECIDED, with the act behind it. A state with no act is
+   the shape D-214 refuses, so where the plane published `moved` it is rendered
+   and where it published null this says nobody has moved it rather than
+   defaulting to silence. */
+function vrevDecision(v){
+  const st = v && typeof v.state === "string" ? v.state : "";
+  const word = VREV_STATE_WORD[st] || "";
+  const moved = v && v.moved && typeof v.moved === "object" ? v.moved : null;
+  const head = word || "The record holds a state for this reading that this page has no words for, so it is not put into words here.";
+  if(!moved) return head + " Nobody is recorded as having moved it.";
+  return head + " Moved by " + String(moved.by || "an unnamed member")
+       + " on " + String(moved.at || "an unrecorded date")
+       + (moved.reason ? ", and their reason was: " + String(moved.reason) : ", with no reason recorded") + ".";
+}
+function vrevOrigin(v){
+  const p = (v && typeof v.derived_from === "string" && v.derived_from.trim()) ? v.derived_from.trim() : "";
+  if(!p) return "Composed on its own; it comes from no earlier reading.";
+  return "Comes from the reading called " + p
+       + (vrevFind(p) ? "." : ", which is not among the readings this answer carries.");
+}
+function vrevShown(v){
+  return (v && v.hidden === true)
+    ? "Held back from this display. It is still in the record."
+    : "Shown in this display.";
+}
+/* THE BOUND ON THE SENTENCE ABOVE, from the plane's own flag. */
+function vrevLegBound(v){
+  if(!v || v.legs_complete !== false) return "";
+  return "The record holds " + String(v.leg_count == null ? "more" : v.leg_count)
+       + " reasons for this reading and this answer carries " + String(vrevLegs(v).length)
+       + ". Everything said here about how they stand together is over the ones that arrived.";
+}
+
+/* ---------------------------------------------------- ROTATION IS THE DIFF */
+/* One row per thing a reading can differ in. `changed` is a comparison of the
+   RENDERED sentences, so two readings that say the same thing in different
+   internal shapes do not read as different — and two that read differently are
+   different in something a member can see. */
+function vrevDiff(a, b){
+  const rows = [];
+  const add = (label, from, to) => rows.push({ label, from, to, changed: from !== to });
+  add("What this reading says", vrevText(a && a.description), vrevText(b && b.description));
+  add("The reasons it rests on", vrevLegList(a), vrevLegList(b));
+  add("How the reasons stand together", vrevComposition(a) || "nothing to stand together yet",
+      vrevComposition(b) || "nothing to stand together yet");
+  add("What the record has decided", vrevDecision(a), vrevDecision(b));
+  add("Where it came from", vrevOrigin(a), vrevOrigin(b));
+  add("In this display", vrevShown(a), vrevShown(b));
+  return rows;
+}
+function vrevLegDelta(a, b){
+  const A = new Set(vrevLegNames(a)), B = new Set(vrevLegNames(b));
+  return { added: [...B].filter(x => !A.has(x)),
+           dropped: [...A].filter(x => !B.has(x)),
+           kept: [...B].filter(x => A.has(x)) };
+}
+function vrevDiffHtml(against, focus){
+  if(!focus) return "";
+  if(!against)
+    return '<div class="empty">Rotate to another reading and what is different appears here. '
+         + 'There is nothing else to open: moving between readings IS the comparison.</div>';
+  const d = vrevLegDelta(against, focus);
+  const rows = vrevDiff(against, focus);
+  const changed = rows.filter(r => r.changed);
+  const head = '<p class="subj-note">Compared with <span class="mono">' + esc(String(against.name))
+    + '</span>, the reading you were looking at a moment ago. '
+    + (changed.length
+        ? changed.length + " of " + rows.length + " things about it are different."
+        : "Nothing this page can show is different between the two.") + '</p>';
+  const delta = '<div class="card"><div class="kv"><span class="k">Reasons taken up</span><span class="v plain">'
+    + esc(d.added.length ? d.added.join(", ") : "none") + '</span></div>'
+    + '<div class="kv"><span class="k">Reasons let go</span><span class="v plain">'
+    + esc(d.dropped.length ? d.dropped.join(", ") : "none") + '</span></div>'
+    + '<div class="kv"><span class="k">Reasons kept</span><span class="v plain">'
+    + esc(d.kept.length ? d.kept.join(", ") : "none") + '</span></div></div>';
+  const body = rows.map(r =>
+    '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">' + esc(r.label) + '</span><span class="v plain">'
+    + (r.changed ? "different" : "the same") + '</span></div>'
+    + (r.changed
+        ? '<div class="subj-how">Was: ' + esc(r.from) + '</div>'
+          + '<div class="subj-how">Now: ' + esc(r.to) + '</div>'
+        : '<div class="subj-how">' + esc(r.to) + '</div>')
+    + '</div>').join("");
+  return head + delta + body;
+}
+
+/* ------------------------------------------------ WHERE EACH READING CAME FROM
+   The derivation the record carries, drawn from `derived_from` and nothing else.
+   A reading whose parent is not in this answer is drawn as a root and says so;
+   a cycle is walked once and then stopped, because a record that somehow held
+   one must still render. */
+function vrevTree(versions){
+  const list = (Array.isArray(versions) ? versions : []).filter(v => v && typeof v === "object");
+  const byName = new Map(list.map(v => [String(v.name), v]));
+  const kids = new Map();
+  const roots = [];
+  for(const v of list){
+    const p = (typeof v.derived_from === "string" && v.derived_from.trim()) ? v.derived_from.trim() : "";
+    if(p && p !== String(v.name) && byName.has(p)){
+      if(!kids.has(p)) kids.set(p, []);
+      kids.get(p).push(v);
+    } else roots.push(v);
+  }
+  return { roots, kids, byName };
+}
+function vrevTreeHtml(versions, focusName){
+  const t = vrevTree(versions);
+  if(!t.roots.length) return '<div class="empty">Nothing here to draw.</div>';
+  const seen = new Set();
+  const line = (v, depth) => {
+    const name = String(v.name);
+    if(seen.has(name))
+      return '<div class="subj-how" style="margin-left:' + (depth * 18) + 'px">'
+           + esc(name) + ' comes back round to a reading already drawn above, so it is drawn once.</div>';
+    seen.add(name);
+    const p = (typeof v.derived_from === "string" && v.derived_from.trim()) ? v.derived_from.trim() : "";
+    const orphan = p && !t.byName.has(p);
+    const self = focusName && name === String(focusName);
+    return '<div style="margin-left:' + (depth * 18) + 'px">'
+      + '<a onclick="versionRotate(' + esc(JSON.stringify(name)) + ')" class="mono">' + esc(name) + '</a>'
+      + (self ? ' <span class="chip">the one you are reading</span>' : "")
+      + (v.hidden === true ? ' <span class="chip">held back from this display</span>' : "")
+      + (orphan ? '<div class="subj-how">Comes from ' + esc(p) + ', which is not among the readings this answer carries.</div>' : "")
+      + '</div>'
+      + (t.kids.get(name) || []).map(c => line(c, depth + 1)).join("");
+  };
+  return t.roots.map(v => line(v, 0)).join("");
+}
+
+/* ------------------------------------------------------------ THE HIDE OFFER
+   The control exists only where the plane published the act for this question,
+   and the sentence exists only where the control does — an explanation of a
+   consequence nobody can bring about would be this page narrating a capability
+   the member has not got. */
+function vrevHideOfferHtml(v, act){
+  if(!v || !act) return "";
+  const back = v.hidden === true;
+  return '<div class="intent-box"><div class="intent-lede">' + esc(act.label || "") + '</div>'
+    + '<p class="subj-note">' + esc(VREV_HIDE_OFFER) + '</p>'
+    + '<button class="btn" onclick="versionHideSend(' + esc(JSON.stringify(String(v.name)))
+    + ',' + (back ? "false" : "true") + ')">'
+    + (back ? "Put this reading back in the display" : "Hide this reading from the display")
+    + '</button></div>';
+}
+
+function vrevReceiptHtml(){
+  const r = VREV && VREV.receipt;
+  if(!r) return "";
+  return '<div class="intent-ok">The record recorded this. Reading <span class="mono">' + esc(String(r.version || ""))
+    + '</span> is now ' + (r.hidden === true ? "held back from this display" : "shown in this display")
+    + ', by ' + esc(String(r.author || "an unnamed member")) + ' on ' + esc(String(r.at || "an unrecorded date"))
+    + '. It stays in the record either way.</div>';
+}
+
+/* ------------------------------------------------------------- THE WHOLE PAGE */
+function vrevVersionHtml(v, focusName){
+  const self = String(v.name) === String(focusName);
+  const bound = vrevLegBound(v);
+  return '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">Reading</span><span class="v plain">'
+    + (self ? '<span class="mono">' + esc(String(v.name)) + '</span> <span class="chip">the one you are reading</span>'
+            : '<a onclick="versionRotate(' + esc(JSON.stringify(String(v.name))) + ')" class="mono">' + esc(String(v.name)) + '</a>')
+    + (v.hidden === true ? ' <span class="chip">held back from this display</span>' : "")
+    + '</span></div>'
+    + '<div class="subj-how">' + esc(vrevText(v.description)) + '</div>'
+    + '<div class="subj-how">Rests on: ' + esc(vrevLegList(v)) + '</div>'
+    + (vrevComposition(v) ? '<div class="subj-how">' + esc(vrevComposition(v)) + '</div>' : "")
+    + (bound ? '<div class="teach" style="margin:6px 0 0">' + esc(bound) + '</div>' : "")
+    + '<div class="subj-how">' + esc(vrevDecision(v)) + '</div>'
+    + '<div class="subj-how">' + esc(vrevOrigin(v)) + '</div>'
+    + '</div>';
+}
+
+function versionReviewHtml(){
+  if(!VREV) return "";
+  const crumb = recordCrumb(VREV.inquiry, " &rsaquo; how this question has been read");
+  if(VREV.err) return errPane(VREV.err, crumb);
+  if(VREV.refusal) return crumb + actRefusalHtml(VREV.refusal);
+  if(VREV.busy) return crumb + '<div class="empty">Reading what the record holds for this question.</div>';
+  const all = vrevList();
+  if(!all.length)
+    return crumb + '<div class="empty">' + (VREV.present
+      ? "The record holds no reading of this question's evidence yet."
+      : "Nothing answers here for this question. That is the same answer the record gives for a question it does not hold and for one this credential may not see, and the two are the same answer on purpose.")
+      + '</div>';
+
+  const focus = vrevFind(VREV.focus) || all.find(v => v && v.state === "accepted") || all[0];
+  const against = vrevFind(VREV.against);
+  const focusName = focus ? String(focus.name) : "";
+  /* THE DISPLAY SHRINKS AND NOTHING ELSE DOES. The focus is rendered whether or
+     not it is hidden — that is what makes `#versions/<id>/<name>` an address for
+     a hidden reading rather than a dead end. */
+  const shown = all.filter(v => VREV.showAll || v.hidden !== true
+                             || String(v.name) === focusName
+                             || (against && String(v.name) === String(against.name)));
+  const held = all.length - shown.length;
+  /* TWO DIFFERENT INCOMPLETENESSES, SAID SEPARATELY AND NEVER MERGED. The
+     record's own bound (how much of what it holds came back) is the plane's and
+     is said in its words at the door; how many readings THIS DISPLAY is holding
+     back is this surface's own doing and is said in its own. Collapsing them
+     would let a display that shrank itself read as a record that answered
+     short. */
+  const heldLine = (VREV.bound || "")
+    + '<p class="count-line">' + all.length + ' reading(s) came back'
+    + (held
+        ? '. ' + held + ' of them are held back from THIS DISPLAY and are still in the record: they answer to a query and they can be opened by name.'
+        : '. None are held back from this display.')
+    + '</p>';
+  const toggle = '<button class="btn" onclick="versionReviewShowAll(' + (VREV.showAll ? "false" : "true") + ')">'
+    + (VREV.showAll ? "Show only the readings this display keeps" : "Show every reading the record holds")
+    + '</button>';
+  const hideAct = actNamed(VREV.acts, "versionhide");
+
+  return crumb
+    + '<div class="trow"><h1 class="rec">How this question has been read</h1></div>'
+    + '<p class="lede"><span class="mono">' + esc(VREV.inquiry) + '</span></p>'
+    + credentialSentence(PLANE.me)
+    + '<h2 class="sec">The reading in front of you</h2>'
+    + (focus ? vrevVersionHtml(focus, focusName) : "")
+    + vrevReceiptHtml()
+    + (VREV.refusalAct ? actRefusalHtml(VREV.refusalAct) : "")
+    + (focus ? vrevHideOfferHtml(focus, hideAct) : "")
+    + '<h2 class="sec">What is different</h2>'
+    + vrevDiffHtml(against, focus)
+    + '<h2 class="sec">Every reading of this question</h2>'
+    + heldLine + toggle
+    + shown.map(v => vrevVersionHtml(v, focusName)).join("")
+    + '<h2 class="sec">Where each reading came from</h2>'
+    + '<p class="subj-note">Drawn from what each reading records about the reading it came from, over the readings this answer carries and no others.</p>'
+    + vrevTreeHtml(shown, focusName);
+}
+
+function versionReviewPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = versionReviewHtml();
+}
+
+/* ROTATION. The reading you were on becomes the one you are compared against,
+   which is the entire "comparison IS the diff" mechanism: there is no second
+   thing to select and no diff to open. */
+function versionRotate(name){
+  if(!VREV) return;
+  const next = String(name == null ? "" : name);
+  if(!next || next === String(VREV.focus || "")) return;
+  VREV.against = VREV.focus || null;
+  VREV.focus = next;
+  VREV.receipt = null; VREV.refusalAct = null;
+  VREV_HASH_LOCK = true;
+  try{ location.hash = "#versions/" + VREV.inquiry + "/" + next; }
+  catch(_){}
+  finally{ VREV_HASH_LOCK = false; }
+  versionReviewPaint();
+}
+function versionReviewShowAll(on){
+  if(!VREV) return;
+  VREV.showAll = !!on;
+  versionReviewPaint();
+}
+
+/* THE ONE ACT THIS SURFACE HOSTS. Sent, never pre-flighted: whatever comes back
+   that is a refusal is rendered in the plane's own words (DEC-8), and the answer
+   is re-read afterwards so what the page shows is what the record holds rather
+   than what this function assumed it would hold. */
+async function versionHideSend(name, hidden){
+  if(!VREV || VREV.busy) return;
+  VREV.busy = true; VREV.receipt = null; VREV.refusalAct = null;
+  versionReviewPaint();
+  const a = await actAsk("versionhide",
+    { target: VREV.inquiry, version: String(name), hidden: hidden ? "1" : "0" });
+  if(a.accepted) VREV.receipt = a.result || null;
+  else VREV.refusalAct = a.refusal || null;
+  VREV.busy = false;
+  await versionReviewLoad();
+}
+
+async function versionReviewLoad(){
+  if(!VREV) return;
+  VREV.busy = true;
+  versionReviewPaint();
+  const [read, actsR] = await Promise.all([
+    versionReviewRead(VREV.inquiry).then(r => r || null, e => { VREV.err = e; return null; }),
+    actsFor(VREV.inquiry).then(r => r, () => ({ ok:false, acts:[] })),
+  ]);
+  const answer = read ? read.answer : null;
+  VREV.bound = read ? read.bound : "";
+  if(answer && answer.ok === false){ VREV.refusal = answer; VREV.versions = []; }
+  else if(answer){
+    VREV.refusal = null;
+    VREV.versions = Array.isArray(answer.versions) ? answer.versions.filter(v => v && typeof v === "object") : [];
+    VREV.total = answer.total == null ? VREV.versions.length : answer.total;
+    VREV.truncated = answer.truncated === true;
+    VREV.limit = answer.limit == null ? null : answer.limit;
+    VREV.offset = answer.offset == null ? null : answer.offset;
+    VREV.present = answer.inquiry_present === true;
+  }
+  VREV.acts = (actsR && actsR.ok) ? actsR.acts : [];
+  /* THE READING IN FRONT OF THE MEMBER IS SETTLED HERE, IN STATE, and not left
+     for the renderer to work out each time. Rotation compares against the
+     reading you were ON, so a focus that existed only inside the renderer would
+     make the FIRST rotation compare against nothing — the member's first move
+     being the one that tells them least. Where the member named no reading, the
+     accepted one is the record's own answer to "which of these is it"; where
+     nothing is accepted it is the first the record listed, which is its order
+     and not this surface's. */
+  if(!vrevFind(VREV.focus)){
+    const settled = vrevList().find(v => v && v.state === "accepted") || vrevList()[0] || null;
+    VREV.focus = settled ? String(settled.name) : null;
+  }
+  VREV.busy = false;
+  versionReviewPaint();
+}
+
+async function versionReviewOpen(inquiryId, focusName){
+  const id = String(inquiryId == null ? "" : inquiryId).trim();
+  if(!id) return;
+  VREV = { inquiry:id, focus: focusName ? String(focusName) : null, against:null, showAll:false,
+           versions:[], total:0, truncated:false, limit:null, offset:null, present:false,
+           bound:"", acts:[], refusal:null, refusalAct:null, receipt:null, err:null, busy:true };
+  VREV_HASH_LOCK = true;
+  try{ location.hash = "#versions/" + id + (focusName ? "/" + String(focusName) : ""); }catch(_){}
+  VREV_HASH_LOCK = false;
+  await versionReviewLoad();
+}
+
+/* `#versions/<INQ-…>` is a real address, and `#versions/<INQ-…>/<name>` is an
+   address for ONE reading — including a reading held back from the display,
+   which is the reachability half of D-214 stated as a URL. */
+function versionReviewRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#versions\/([A-Za-z0-9._-]+)(?:\/([A-Za-z0-9._-]+))?$/.exec(h);
+  if(!m) return false;
+  /* AN ADDRESS THAT ALREADY IS WHAT IS SHOWN NEEDS NO REOPEN, and this is not an
+     optimisation — it is what keeps the rotation memory alive in a real browser.
+     `versionRotate` writes the new address into the bar, and a browser then
+     fires `hashchange` AFTER the lock has been released; reopening on that event
+     would rebuild `VREV` with `against: null` and wipe the comparison the member
+     just asked for. The lock alone cannot close that, because the event is
+     asynchronous and the lock is not. THE HARNESS CANNOT SEE THIS — its DOM stub
+     fires no events — so the router is driven directly at the current address by
+     `version-review.test.mjs` instead, which is the honest substitute and is
+     labelled as one. */
+  const inq = m[1], name = m[2] || null;
+  if(VREV && VREV.inquiry === inq && String(VREV.focus || "") === String(name || VREV.focus || ""))
+    return true;
+  versionReviewOpen(inq, name);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionReviewRouteFromHash(); }); }catch(_){}
+/*__VERSION_REVIEW_END__*/
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

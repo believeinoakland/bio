@@ -728,7 +728,15 @@ const ACTS_AWAITING_SURFACE = [
   { id: "versionreject",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
   { id: "versionconsider", published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
   { id: "versionrevert",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionhide",     published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-42 (W7) — version review: the hide-prune offer (DEC-29(b), D-214)", since: "2026-08-08" },
+  /* `versionhide` STOOD HERE AND WAS STRUCK 2026-08-09 BY UI-42, WHICH IS THE
+     ROW THE DRAIN EXISTS FOR — and it fired on the first run of this item,
+     naming the row and the item that owed it, before anything else was touched.
+     The act is now hosted by `SURFACES["basis-versions"]`, the version-review
+     surface, whose prune offer states in its own wording that hiding removes
+     nothing from the record (DEC-29(b)'s wording clause, D-214). The register is
+     one row shorter and ARM A4d's floor moves UP by exactly one in the same
+     commit, because a struck row moves its act from the register into the
+     catalogue-outside-the-register that floor is measured over. */
   { id: "versioncurrent",  published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-45 (W8) — IS-3 CURRENT as a project property", since: "2026-08-08" },
   /* CPDF-10. Registered as a DEBT rather than exempted, which is what this arm
      asked for by name. The act is `op=attesttext`: a member says they compared a
@@ -823,8 +831,12 @@ await section("ARM A · acts come from the plane", () => {
      this item came to narrow, and it is moved in the SAME TURN rather than
      noted, because REC-71's own floor went stale twice within hours of being
      written down. MEASURED 2026-08-08: 18, identical with and without PL-2. */
-  ok(G.placements >= 18,
-     `ARM A3: ${G.placements} act placements are described, floor 18 (measured 2026-08-08, was 10 and eight low) — a registry describing no acts would pass A2 vacuously`);
+  /* MOVED AGAIN 2026-08-09 (UI-42) FROM 18 TO 19, from the figure THIS ARM
+     PRINTED on this tree rather than by adding one to the number in the file:
+     the version-review surface hosts `versionhide`, so the registry describes
+     one more placement and 18 had a placement of slack the moment it landed. */
+  ok(G.placements >= 19,
+     `ARM A3: ${G.placements} act placements are described, floor 19 (measured 2026-08-09 by UI-42; was 18, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -870,11 +882,19 @@ await section("ARM A · acts come from the plane", () => {
      and the ceiling fires anyway — but it would fire naming twenty-one innocent
      acts, and the reader needs to be told the WALK broke rather than sent to
      re-house the entire catalogue. MEASURED 2026-08-08: 15, both trees. */
-  ok(G.baseline.length >= 15,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 15 (measured 2026-08-08, identical with and without PL-2). `
+  /* BOTH MOVED 2026-08-09 (UI-42) FROM 15 TO 16, from the figures THIS ARM
+     PRINTED. They move for two different reasons and the difference is the
+     point of measuring rather than reasoning about them: A4d rose because
+     STRIKING `versionhide` from the register moved that act OUT of the register
+     and INTO the catalogue-outside-it this floor is measured over, and A4e rose
+     because a surface now hosts it. A register row being paid moves both, in
+     opposite halves of the same partition, and 15 would have carried a whole
+     act of slack in each. */
+  ok(G.baseline.length >= 16,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when the register still named versionhide). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 15,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 15 (measured 2026-08-08, both trees). `
+  ok(G.hostedSet.size >= 16,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when no surface hosted versionhide). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
@@ -913,7 +933,13 @@ await section("ARM D · declared reads are real and reached", () => {
 
   const callRe = new RegExp(`\\b(?:${(seams.length ? seams : ["recR"]).join("|")}|apiR|apiQ|intentPreflight)\\(\\s*"([a-z]+)"`, "g");
   const called = new Set([...code.matchAll(callRe)].map(m => m[1]));
-  ok(called.size >= 50, `ARM D1: ${called.size} ops are called statically from app.html, floor 50 — an empty call set would make D3 vacuous`);
+  /* MOVED 2026-08-09 (UI-42) FROM 50 TO 64, from the figure THIS ARM PRINTED.
+     UI-42 added one op call (`basisversions`) and found the floor already 13
+     low — REC-71's finding again, in an arm nobody had re-measured since it was
+     written. It is moved rather than noted because a floor with slack is not a
+     ratchet, and this one would have sat green through the deletion of a fifth
+     of the file's static op calls. */
+  ok(called.size >= 64, `ARM D1: ${called.size} ops are called statically from app.html, floor 64 (measured 2026-08-09 by UI-42; was 50 and thirteen low) — an empty call set would make D3 vacuous`);
 
   let declared = 0;
   for(const [id, s] of Object.entries(SURFACES)){
@@ -928,7 +954,9 @@ await section("ARM D · declared reads are real and reached", () => {
       ok(called.has(op), `ARM D4: surface '${id}' declares read '${op}', which app.html never calls — a described read nothing performs is fiction`);
     }
   }
-  ok(declared >= 30, `ARM D5: ${declared} reads are described, floor 30`);
+  /* MOVED 2026-08-09 (UI-42) FROM 30 TO 39, from the figure THIS ARM PRINTED —
+     UI-42's surface declares two reads and the floor was already seven low. */
+  ok(declared >= 39, `ARM D5: ${declared} reads are described, floor 39 (measured 2026-08-09 by UI-42; was 30 and seven low)`);
 });
 
 /* ================================================= RECIPES ARE DATA, VALIDATED */

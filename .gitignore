@@ -13,3 +13,13 @@
 # the REAL plane is run from — bio-plane/ has always had one, and UI-13's
 # intent-write harness makes one under civicos-ui/ too. Never part of the tree.
 .wrangler/
+
+# NEGATIVE-CONTROL PENS. A control driver copies pristine sources into a pen
+# inside its own worktree (WORKER.md: never a shared scratchpad) and restores
+# from them; UI-50's `.ui50-harness/` and UI-42's `.ui42-harness/` are the
+# pattern. The drivers remove their pen on a clean run, but a driver INTERRUPTED
+# mid-arm leaves one behind — and an untracked scratch file left in a worktree
+# has already been swept into another item's walk (CLAIMS.md, UI-38's delegation
+# to M0 about `bio-plane/test/op-claims.test.mjs`). Ignored so an interrupted
+# control cannot become somebody else's corpus.
+.ui*-harness/

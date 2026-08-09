@@ -5080,3 +5080,102 @@ the register's floor met EXACTLY, with the six new arms scoring zero. They are L
 (`(D-235a)`) rather than numbered, and the register says in its own output that a labelled
 arm is not counted. **This is the same blindness REC-75 measured on the same file and the
 same day, reproduced by an item that did not set out to measure it.**
+
+## 2026-08-09 · UI-42 — version review: rotation and diff, measured
+
+Instruments: `node civicos-ui/test/run.mjs` (repo root, exit read UNPIPED),
+`cd bio-plane && npm run test:battery`, `node bio-plane/scripts/coverage.mjs --strict`
+(run DIRECTLY, `$?` read with nothing piped after it), `node tools/plancheck.mjs`, and
+`node civicos-ui/test/version-review.control.mjs` (this item's own nine-arm driver).
+Worktree `agent-a8c8ed9c32eb56980`, HEAD `ad87db7`.
+
+### The UI harness
+
+**True baseline measured in this worktree BEFORE any edit: 41 suites PASS · 0 FAIL · three
+guards green · exit 0.** After: **42 suites · 0 FAIL · exit 0.**
+
+Per-suite attribution by **DIFFING two full per-suite runs** — the working tree against a
+`git worktree add --detach HEAD` scratch checkout — never by subtraction:
+
+| suite | baseline | final | why |
+| --- | --- | --- | --- |
+| `surface-registry.test.mjs` | 393 pass | 405 pass | one more surface described, walked and act-checked |
+| `preauth-vocabulary.test.mjs` | 62 | 65 | WALK 2's router census 5 → 6, plus two classification pins |
+| `bound-sweep.test.mjs` | 202 | 202 | count unchanged; ARM G's walk gains one site, classified STATED-HERE |
+| `version-review.test.mjs` | — | 89 | new |
+| every other suite | unchanged | unchanged | — |
+
+**TWO INSTRUMENT FINDINGS FROM THAT DIFF, BOTH RECORDED RATHER THAN SMOOTHED.**
+
+- **The scratch checkout has no `bio-plane/node_modules`,** so `ai-session-context`,
+  `ai-session-wire` and `intent-write` reported **NO TALLY (-1)** at baseline and a real
+  figure in the working tree. That is the SCRATCH TREE missing miniflare
+  (*"the real plane could not be started — miniflare is not installed"*), not a delta, and
+  a subtraction would have booked +299 assertions this item never wrote. It is WORKER.md's
+  own `npm ci` warning arriving through the back door of a baseline checkout.
+- **A per-suite tally reader that takes the last `<n> assertions` in a suite's output is
+  blind to `preauth-vocabulary.test.mjs`,** whose footer prose contains *"5,544
+  assertions"*: it read **544 in BOTH trees** and would have reported that suite as
+  unmoved while it went 62 → 65. The true figures above come from running that suite
+  ALONE in each tree. A reader that answers the same wrong number on both sides of a
+  comparison is the shape a diff cannot catch.
+
+### The battery and coverage — UNMOVED, and that is measured rather than assumed
+
+No file under `bio-plane/`, `checks/` or `scripts/` is touched by this item
+(`git status --short` names only `civicos-ui/**`, `docs/development/**` and `.gitignore`),
+so the run below is baseline and final at once:
+
+- **138/138 suites green · 8,827 assertions · 133.8s · exit 0.**
+- `coverage.mjs --strict` **exit 0**: OPS **162 declared / 162 reached (100.0%) / 0
+  unreached**; CHECKS **219 / 219 named**; NEGATIVE CONTROLS **134 of 134 suites declare
+  one**, **621 arms stated**; REGISTER FLOOR arms 621/621 · classified 133/133 · corpus
+  134/134; FLEET 2 members · 4/4 surface ops. Provenance: 144 of 144 items at HEAD.
+
+### Five floors moved in `civicos-ui/test/surface-registry.test.mjs`
+
+Every one from the figure the arm PRINTED, taken by raising the floor to a value that
+could not pass and reading the failure line, then setting the printed number:
+
+| arm | was | now | measured |
+| --- | --- | --- | --- |
+| A3 act placements | 18 | 19 | 19 |
+| A4d catalogue outside the register | 15 | 16 | 16 |
+| A4e distinct hosted acts | 15 | 16 | 16 |
+| D1 ops called statically from app.html | 50 | **64** | 64 |
+| D5 declared reads | 30 | **39** | 39 |
+
+**D1 and D5 were slack BEFORE this item touched them — 13 and 7 respectively.** This item
+added one op call and two reads; the other 13 and 7 had been sitting unmeasured since those
+arms were written. REC-71's finding (*a floor with slack is not a ratchet*) in two more
+arms, and D1 at 50 would have sat green through the deletion of a fifth of app.html's
+static op calls.
+
+The ACT REGISTER (`ACTS_AWAITING_SURFACE`) drained one row: **7 outstanding → 6**.
+`versionhide` is now hosted. ARM A4c fired on the FIRST run of this item, naming the row and
+the item that owed it, before anything else was measured — the drain working as designed.
+
+### The negative control — 9 arms, 9 as declared, and one of them found this item's own suite wrong
+
+Full declarations and results are in `civicos-ui/test/version-review.control.mjs`'s header.
+The headline: **arm 3 (the hide offer cut in half) came back RED but NOT AS DECLARED on its
+first run, because the "asserted verbatim" arm was comparing the rendered page against the
+RUNTIME'S OWN constant** — an equality that costs nothing to produce, and therefore the one
+arm the item's acceptance names could never have failed. DEC-29(b) is a ruling about a
+sentence; the sentence is now typed into the suite. Second run: RED as declared, 6 of 85.
+
+Arm 1 (**make hide delete** — the surface drops hidden readings at the load): **10 of 85
+fail**, five of them the ACTS-PERSIST arms, and the address `#versions/<INQ>/<name>` stops
+resolving. Arm 7 (**the sweep goes blind**): 2 of 85, failing on the FLOOR with *"0
+phases"* rather than reporting the ban clean over nothing.
+
+### One hazard this harness cannot see, closed anyway
+
+A real browser fires `hashchange` **after** `versionRotate` writes the new address, and
+asynchronously — so the `*_HASH_LOCK` pattern every other routed surface in `app.html` uses
+does not cover it, and re-opening on that event would rebuild the state with nothing to
+compare against, silently undoing the member's own rotation on every move. The router now
+returns early when the address already IS what is shown. **The DOM stub in every UI suite
+here fires no events, so no suite can reproduce the event**; the router is driven directly
+at the address rotation just wrote, which is what the event would do, and the substitution
+is labelled as one at the site and in the suite.
