@@ -6512,6 +6512,42 @@ export const VERSION_ACT_CHECKS = {
       + 'words. The record of what was turned down is the instrument that makes a pattern of '
       + 'turning things down visible at all, and it is worth nothing without the reason.',
   },
+  /* A REASON THAT IS PRESENT AND UNWRITABLE IS NOT A MISSING REASON, and until
+     2026-08-09 this plane said it was.
+     PL-2 shipped both conditions under `VERSION_NO_REASON`, so a member who
+     typed a reason over the length bound, or one carrying a double quote — the
+     restricted frontmatter grammar has no escapes, so `he said "the budget is
+     fixed"` cannot be stored — was answered with C-25.26's translation:
+     *"…it is worth nothing without the reason."* Told to someone who gave one.
+     WORSE ON THE THREE ACTS THAT NEED NO REASON AT ALL. The grammar arm runs
+     unconditionally on whatever `reason` arrived, while the missing-reason arm
+     runs only for `considering` and `rejected`. So a member ACCEPTING a reading
+     with a quoted note, or HIDING one, or making one CURRENT, was told that
+     setting a reading aside carries a reason — a sentence about an act they did
+     not perform, refusing an act that requires no reason whatsoever.
+     THE DISTINCTION IS NOT NEW HERE AND THAT IS THE POINT. This plane already
+     splits absent from malformed everywhere else it asks for authored prose —
+     `NO_REASON` against `BAD_REASON`, twelve sites against eight in
+     `store.mjs` (#moveAction, #divide, #ground and their siblings). PL-2 did not
+     invent a worse rule; it collapsed a distinction the rest of the plane keeps.
+     The DEC-49 layer is exactly where that collapse becomes visible to a member,
+     because a surface may RENDER a refusal and may never compute one (DEC-8), so
+     the canned translation IS what the member reads.
+     WHY A NEW CODE RATHER THAN A WIDER TRANSLATION. A translation covering both
+     would have to say "missing or unwritable", which tells a member who can see
+     their own typed reason on the screen that the plane cannot tell the two
+     apart — and it would leave the two conditions sharing one C-number, so no
+     assertion could ever name one without naming the other. C-25.32 is a dotted
+     member of this family (the family owner allocates those; verified free
+     across the whole tree before it was taken). */
+  VERSION_REASON_MALFORMED: {
+    check: 'C-25.32',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'That reason was given but could not be stored as written: it is either longer than '
+      + 'the record allows or it contains a character the record has no way to escape, such as a '
+      + 'double quote. Nothing was changed. Shorten it, or say it without the quotation marks, and '
+      + 'the words stay yours.',
+  },
   /* THE CHECK PL-1 RECORDED RATHER THAN HALF-BUILT. A version leg naming THIS
      inquiry is a fact about one document and C-25.14 refuses it there. A leg
      naming an inquiry that TRANSITIVELY rests on this one is a fact about the

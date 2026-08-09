@@ -18557,11 +18557,20 @@ export class Store extends DurableObject {
           : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement "
             + "from an oversight"}.`,
         { target, version: vname, from, to });
+    /* AND A REASON THAT ARRIVED AND CANNOT BE STORED IS A DIFFERENT REFUSAL FROM
+       ONE THAT NEVER ARRIVED — C-25.32, corrected 2026-08-09. This arm answered
+       `VERSION_NO_REASON` until then, so a member who typed a reason carrying a
+       double quote read "it is worth nothing without the reason". It is also the
+       only reason arm the three acts that need NO reason can reach — `accept`,
+       `current` and `hide` skip the guard above and run this one — so the old
+       code sent them a sentence about setting a reading aside. Absent versus
+       malformed is the split the rest of this plane already makes (NO_REASON
+       against BAD_REASON); this is that split, in DEC-49's shape. */
     if (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
-      return refuse("VERSION_NO_REASON",
+      return refuse("VERSION_REASON_MALFORMED",
         `a reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a `
         + `backslash, or a newline: the restricted frontmatter grammar has no escapes.`,
-        { target, version: vname });
+        { target, version: vname, reason_length: why.length });
 
     /* THE EDGE, from the catalog's own table and with no state list here. Only
        the four acts that MOVE a state consult it — `current` and `hide` change

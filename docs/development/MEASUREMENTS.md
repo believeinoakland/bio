@@ -6316,3 +6316,54 @@ stopped composing at all**, which is the receipt that §3's sensitivity arm is l
 their reasons at the arm, never the guards that caught them.** Every restore verified by sha256 AND
 by `cmp` against uniquely-named per-arm pristine copies, byte counts printed and floored, no digest
 equal to the empty-string one.
+## 2026-08-09 · PL-2 verification pass · one DEC-49 code, two conditions — the census
+
+**Instrument:** `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`, deliberately not a
+`.test.mjs` (it is a census, not a suite; the battery must not discover it). **TWO RUNS, AND BOTH
+FIGURES ARE KEPT because the second is the one that is true.** First on `1081a6a` plus this item's
+change (16 families · 166 codes · 17,369 stripped lines · 16 multi-site candidates · 41 siteless);
+then RE-RUN after `origin/main` moved under the item and was merged, at `08cefb8` (16 families ·
+**168 codes** · 17,462 stripped lines · **16 multi-site candidates** · **42 siteless**). The
+JUDGEMENTS below were made on the first corpus and re-confirmed against the second: the candidate
+count did not move, and the one extra siteless code arrived with main. It harvests every `*_CHECKS` family the catalog
+exports — the RESERVED SUFFIX the DEC-49 guard already keys on, so the corpus cannot go stale by
+somebody forgetting to add a seventeenth family to a list — and counts the LITERAL return sites of
+each code in `src/store.mjs` and `src/index.mjs` over comment-stripped source.
+
+**The corpus, printed rather than assumed:** 16 `*_CHECKS` families · **166 DEC-49 codes** (167
+after this item's row) · 17,369 comment-stripped lines walked, out of 1,537,543 + 418,916 raw
+bytes. These two sources are MORE COMMENT THAN CODE — they strip to roughly a third — so the
+stripper is guarded **by content and not by a ratio**: a string that exists only inside a block
+comment must be gone, and a real return site must survive, both asserted before any count is made.
+
+**What it found: 16 multi-site candidates, of which exactly ONE is a defect.** A multi-site code is
+a CANDIDATE and never a verdict — the instrument prints the guard expression and makes no
+judgement, because "same condition at two altitudes" and "two different conditions" look identical
+to a matcher. Judged by hand: `VERSION_ACT_UNWRITABLE` (4 real sites) is one condition — the file
+could not be rewritten. `VERSION_ACT_NO_SUCH_VERSION` and `VERSION_CURRENT_UNRELATED` are
+**DELIBERATE CLOSURES, not defects**: D-15's fail-closed posture is stated in a comment at each
+site, and a question or a project the caller may not see must answer exactly as an absent one does.
+`CAPTURE_CONDUCT_UA_ILLEGIBLE` (PL-4's family) is one condition at two altitudes — an unknown agent
+MODE and an illegible composed agent STRING are both "this instance will not say who is asking in a
+form anyone can read", which is what its translation says. The defect is
+`VERSION_NO_REASON`: see below.
+
+**Two figures for the correct construct, because the point is that it already exists.**
+`store.mjs` carries **12** `NO_REASON` sites and **8** `BAD_REASON` sites — absent versus malformed,
+split everywhere this plane asks for authored prose (`#moveAction`, `#divide`, `#ground` and their
+siblings). PL-2's `#moveVersionState` was the one place that collapsed them, so this is not a
+second spelling of an existing rule but a **missing spelling of an existing distinction**.
+
+**What the instrument CANNOT see, and the sentence is load-bearing.** (a) A code returned through a
+VARIABLE rather than a string literal — DEC-49's own floor already refuses that shape, so the guard
+covers it and this walk does not. (b) Whether two sites are one condition or two: that is a
+judgement, and 16 candidates went to a human. (c) Refusals composed outside a `*_CHECKS` family
+(the older `reason:`/`detail:` shape) — they carry no canned translation to be wrong, so they are
+outside the class BY SHAPE, and they are printed as the population the class is measured AGAINST.
+(d) **41 codes have no literal site in `store.mjs` or `index.mjs` at all** — they are NAMED in the
+output rather than silently scored zero; most are catalog rows raised through `checkBundle`
+findings, which is a different composition path, and this walk says nothing about them. (e) Its
+first draft matched only three spellings (`refuse(`, `reason:`, `code:`) and scored **94** codes as
+siteless, including the whole of `SUGGEST_CHECKS` and `VERSION_STRENGTH_CHECKS`, which reach their
+rows through locally-named helpers — the list-of-spellings failure this repository already names,
+committed by the instrument and corrected by inverting to *any quoted occurrence*.

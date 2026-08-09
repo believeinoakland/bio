@@ -355,13 +355,33 @@ const FLOOR = {
                           for everybody else's walk unless it is moved in the same turn"*. It is
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
-  rows: 167,    // + C-36.1..3 (REC-69, all three DRIVEN through the op).
+  rows:        168,    /* MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
+                          THIS FILE'S OWN GREEN RUN ON THE MERGED TREE (`arm A: … 168 rows — floor
+                          16/167 · GREW by 1 row(s) since the floor was set`) and never by adding one
+                          to the number that was here. **THE FIRST FIGURE THIS ITEM WROTE WAS
+                          166 -> 167 AND IT WAS TRUE OF A TREE THAT NO LONGER EXISTED BY THE TIME IT
+                          WAS WRITTEN** — `origin/main` moved under the item and arrived at 167 for
+                          its own reasons, so the pre-merge number was right where it stood and wrong
+                          on the merge. Re-read after the merge commit, on a tree with nothing
+                          uncommitted. + C-25.32 `VERSION_REASON_MALFORMED` in the EXISTING
+                          VERSION_ACT_CHECKS — no new family, so `families` does not move: SK-1's
+                          rule that a family is a floor which buys slack for everybody else's walk.
+                          NO PRE-EXISTING SLACK FOUND in any figure on this line or the three below:
+                          every one sat exactly where REC-69's replay left it, which is the fifth
+                          item running for which that has been true. */
+                       // + C-36.1..3 (REC-69, all three DRIVEN through the op).
                        // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
                        // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census: 428,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      429,    /* MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
+                          file PRINTED on a green run of the MERGED tree (`walk: UNION (the census)
+                          429 codes over 26 files … floor 428`); the pre-merge read of 427 -> 428 was
+                          superseded by main moving under the item, and is re-read rather than kept. One code, `VERSION_REASON_MALFORMED`, minted at the
+                          one site that used to answer a reason it could not store with the code for
+                          a reason nobody gave. */
+                       // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
                        // (was 424 pre-REC-69, 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        // REC-69: +3 (C-36.1..3), MOVED FROM THE PRINTED FIGURE and set EQUAL to it,
@@ -377,7 +397,14 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach: 221,    // codes a surface can receive (R1 + R2 + R3) (was 217 pre-REC-69, 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+  reach:       222,    /* MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
+                          green run of the MERGED tree (`arm B: REACH 222 codes — R1 family rows 168
+                          … floor 221 · GREW by 1`); the pre-merge read of 220 -> 221 was superseded
+                          by main moving under the item, and is re-read rather than kept. The new code arrives TRANSLATED, so `reachGap` below does NOT move
+                          and is deliberately left at 41: a ceiling nudged for bookkeeping reasons
+                          stops being a measurement of the gap it names (REC-63's rule). Confirmed on
+                          this tree: 41 of 221, sitting exactly at the ceiling. */
+                       // codes a surface can receive (R1 + R2 + R3) (was 217 pre-REC-69, 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
                        // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
                        // move, which is the property a new family owes rather than the number itself.
                        // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
