@@ -390,9 +390,25 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
-  classified:  145,
-  corpus:      146,
+  /* MOVED 2026-08-09 by D-277: 731 -> 738 / 145 -> 146 / 146 -> 147, ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` RUN PRINTED as REPRODUCIBLE (`arms 738/731 · classified 146/145 ·
+     corpus 147/146 · GREW by 7 arm(s)`, provenance `158 of 158 discovered item(s)
+     are in the commit at HEAD`) — read only AFTER the new files were in a commit,
+     never by adding to the numbers above. The cause is ONE new suite,
+     `test/declared-corpus.test.mjs`, whose `NEGATIVE CONTROL:` declaration
+     enumerates SEVEN arms — a BASELINE, four break-it arms and TWO
+     over-strictness arms — every one of them RUN through
+     `test/declared-corpus.control.mjs`, and every one of them re-run a second
+     time against the OLD rules to show it BITES. Nothing FELL, and
+     `check-firing.test.mjs`'s own declaration did not move: it gained a
+     paragraph recording three added proofs, and the register counts the arms of
+     the largest single declaration, which that paragraph does not become. That
+     was CHECKED rather than assumed, because +7 matching one suite exactly is
+     the kind of arithmetic that hides a lost arm somewhere else. */
+  arms:        738,
+  classified:  146,
+  corpus:      147,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
