@@ -4962,3 +4962,15 @@ page-wise merge, and I2's text shape already has the right grain (`text.pages[]`
 rule rather than a contract change. **It wants writing in the turn that lands the member, not
 guessing at now** — which is why it is a debt row pointed at your item rather than code written blind
 against a producer that does not exist yet.
+
+## CLAIM 2026-08-09 VERIFY
+
+session: is-wave-vf1 (worktree agent-a66f1cf86b51a86bd)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/scripts/coverage.mjs`**, named by SITE: (a) `discoverFleet`'s per-member control flag REPLACED by a per-SUITE walk (`suiteControls`) — the old `some()` flag is DELETED, not kept beside it; (b) `FLEET_FLOOR` gains `suites` and `arms`, both from a printed green run; (c) the derived `fleetSuiteRows`/`fleetSuitesUndeclared`/`fleetSuitesUnclassified`/`fleetArms` and their two error blocks; (d) a new `OWED_CONTROLS` ledger with `OWED_TOTAL`/`OWED_OUTSTANDING`/`OWED_ANCHOR` and its report section; (e) `REGISTER_FLOOR`'s three numerals moved to what this item's own green run PRINTED. **NOT** the OPS walk, **NOT** the CHECKS walk, **NOT** `control-register.mjs`, **NOT** `provenance.mjs`. **`bio-plane/test/owed-controls.test.mjs`** (new, this item's suite) and **`bio-plane/test/owed-controls.control.mjs`** (new, its harness — NOT a `.test.mjs`, it edits real sources). `docs/development/VERIFICATION.md` — the negative-control register row RE-MEASURED, and a new VF-1 section. `docs/development/IS-BUILD-PLAN.md` — **the VF-1 row's `accepts-when` only**, corrected: it named a command that cannot report. `docs/development/CLAIMS.md` (this entry).
+interfaces consumed: none
+interfaces owned: none — no op, no schema, no wire shape. This item is an instrument.
+expected: IS-BUILD-PLAN VF-1 — the seven owed negative controls, PLACED on their owners and RUN where the owner has landed. A LEDGER item and a slot-free VERIFY lane.
+accepts-when: as IS-BUILD-PLAN VF-1, with its `accepts-when` corrected in the same turn. Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT at 138/138 / 8,827 (the brief carried no figure; VERIFICATION.md's register row said 128 of 128 · 542 arms against a real 134/621 — stale for the SIXTH time). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0. NEGATIVE CONTROLS run and recorded in the suite's own `NEGATIVE CONTROL:` line. No push, no merge — CONDUCT integrates. QUEUE.md, DECISIONS.md, MEASUREMENTS.md, INTERFACES.md and DEBT.md are not written by this session.
+concurrency: checked over every unreleased block in this file — no live claim names `scripts/coverage.mjs`, and the two new test files did not exist. `agent-worker/**` and `pdf-worker/**` are READ and armed-then-restored by the control harness, never edited: every restore in that harness is verified by sha256 AND by `cmp` against a per-arm pristine copy with its byte count printed.
+released:

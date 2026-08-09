@@ -273,6 +273,51 @@ name in `REGISTER_UNCLASSIFIED`, because that is D-233 arriving again.
 The six arms are declared in `hygiene.test.mjs`'s own control block and RUN by
 `bio-plane/test/register.control.mjs` (`node test/register.control.mjs`).
 
+### THE REGISTER'S REACH STOPPED AT THE PLANE, AND THE SUITE IT COULD NOT SEE WAS THE WORST ONE (VF-1, 2026-08-09)
+
+**Everything above is about how well the register READS a declaration. This is about
+WHICH FILES IT READS AT ALL, and the answer was wrong in the generous direction for the
+one component that had just been built.** The register's corpus is
+`bio-plane/test/*.test.mjs`. The fleet's suites — `pdf-worker/test/`, `agent-worker/test/`
+— were held to a different and much weaker rule: `coverage.mjs` asked whether **ANY ONE**
+of a member's suites declared a control, and reported the member. So:
+
+- **`agent-worker/test/harness.test.mjs` is FL-3 / IS-9 and it OWNS VF-1's owed control 7**
+  (the empty-run instrument). **Hiding its declaration entirely left `--strict` at EXIT 0**,
+  printing `2/2 declaring a negative control` and `control declared` beside the member's
+  name, with the plane's `134/134 · 621 arms` unmoved. Measured 2026-08-09, before the fix.
+- VF-1's own `accepts-when` in `IS-BUILD-PLAN.md` reads *"shows every IS suite declaring …
+  an undeclared IS suite would be its first regression."* **For the one IS suite that lives
+  in the fleet, that sentence was false**, and the row's named command
+  (`node bio-plane/scripts/control-register.mjs`) is a MODULE with no entry point that
+  prints nothing and exits 0 over any tree at all. Both are corrected at the row.
+
+**WHAT CHANGED.** The fleet's controls are now read **per SUITE**, at the grain the plane's
+are, and `FLEET_FLOOR` gained two numerals — `suites` (the reach: a suite that DISAPPEARS
+takes `4/4` to `3/3`, which reads *greener* than before, and only a floor can see that) and
+`arms` (a declaration that got SHORTER, which is M0-14's lesson one directory over). An
+undeclared or unclassifiable fleet suite now FAILS `--strict` by name. **The old member-level
+flag was DELETED rather than left beside the new walk** — the first arm written to prove the
+fix came back GREEN because nothing read the flag any more, which is IS-6's C-22.4 receipt
+(a second copy of a rule absorbs the control meant to prove the first).
+
+**AND THE SEVEN OWED CONTROLS ARE NOW A LEDGER IN THE INSTRUMENT** rather than a paragraph
+in a plan: `OWED_CONTROLS` in `scripts/coverage.mjs` prints all seven on every run with
+their owning item, the suite each is recorded in, and the measured figure from the run that
+proved it. Four are PLACED and RUN (PL-11, PL-14, PL-3, FL-3); **three are OUTSTANDING and
+say so — DEC-44's, DEC-34's and DEC-46(a)'s all belong to PL-16, which has not landed, and
+inventing a placement for them would be coverage that measures nothing.** The total is
+pinned at seven so a row cannot be deleted to make the section tidy, and the outstanding
+count is a ceiling that may only fall in the turn that places AND runs an arm. What the
+ledger CANNOT do is read a declaration and judge that the owed arm is the one described —
+the four owners spell their reference to VF-1 four different ways, and grading one spelling
+is REC-70's defect; the evidence an arm RAN stays the measured figure in the owner's own
+`NEGATIVE CONTROL:` line.
+
+The suite is `bio-plane/test/owed-controls.test.mjs`; its eight arms are declared there and
+RUN by `bio-plane/test/owed-controls.control.mjs` (`node test/owed-controls.control.mjs`
+from `bio-plane/`).
+
 ## Prose naming an op is a CLAIM about the dispatch table (M0-12)
 
 **REC-58 was a whole queue item spent establishing that a sentence was false**, and the
