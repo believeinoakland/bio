@@ -5,7 +5,8 @@
    (d) AN EQUIVALENT-MECHANISM REVERT, which is the arm that matters for a fix a later author could call a harmless refactor — restore the swallowing bare reader AND strip the quotes downstream in `selector()`/`meaningAtom()` instead -> 100 pass, 17 FAIL, and WHICH ones is the finding: every SINGLE-WORD projected-field equality PASSES (the value round-trips perfectly), and what catches it is the STRUCTURAL pin ("the bare value reader STOPS at a quote"), the PHRASE assertions, and the four directives the downstream strip cannot reach (`has:`, `text:`, `fm:`, `sort:`) — the corpus sweep's residue is exactly `["has:state","text:sewer","fm:a.b=c","sort:created"]`. A behavioural value arm alone would have called this revert green.
    (d0) THE ARM THAT COULD NOT FIRE, kept as a result rather than deleted — set `quoted: false` on the token the branch emits, expecting phrase detection to die -> 117 pass, 0 FAIL. CAUSE, measured: `textAtom` writes `phrase` onto the atom and NOTHING in `src/` or `civicos-ui/` EVER READS IT (one write site, zero read sites), and the compiled literal is the same either way because FTS5 treats a multi-word string literal as a phrase on its own. The arm was armed against a DEAD FIELD and could never have been honoured. `atom.phrase` is reported to CONDUCT as a second instance of this item's own class, one layer along.
    (e) OVER-STRICTNESS — thirteen legitimate spellings nobody anticipated (`created:>"2026-01-01"`, `created:>="2026-01-01"`, `fm:a.b="c"`, `has:"state"`, `sort:"created"`, a bare `"two words"` term, `-state:"open"`, `state:"open"` inside parens, an unclosed `state:"open`, a quoted value containing a paren, a stray trailing quote, `fm:"a.b"="c"` quoted on BOTH sides, `fm:"a.b"=c` quoted on one) must all still compile to what their unquoted twins compile to; all thirteen PASS. The last two of those REMOVED A STATED LIMIT rather than documenting one: the first draft read a value as one bare piece plus one quoted run and let the tail fall out as a separate free-text term, which is a value silently TRUNCATED into a query that still matches things — the exact shape this item exists to remove, so the reader now consumes a value to its end. THAT REDRAFT ALSO PRODUCED, AND THEN REMOVED, A NEW UNREACHABLE BRANCH: its `if (i === before) break;` no-progress guard could not be entered, measured by the same sweep that measured D-228, and shipping a fresh unreachable defence inside the fix for an unreachable defence is the one thing this item may not do. It is deleted and the termination argument is written into the comment instead. `tokenize` now has ZERO never-entered ranges.
-   TWO HARNESS DEFECTS FOUND BEFORE ANY SUBJECT DEFECT, both recorded because the instrument was wrong before the subject was: (i) the first driver passed the OBJECT viewer shape where `viewerPredicate` takes a STRING, so 43,400 compilations ran against the DENY gate and the participant branch could not have been entered; (ii) arms (b) and (d) first armed BLIND — the anchor ` && src[i] !== '"') s += src[i++];` occurs TWICE in `tokenize`, in the QUOTED reader and in the BARE one, and `String.replace` silently took the first, so both arms patched the wrong loop, failed 16 assertions and looked convincing while measuring something else. The harness now COUNTS every anchor and refuses a non-unique one — which immediately caught a THIRD ambiguity, `let raw = String(tok.value);` in both `selector()` and `meaningAtom()`. */
+   TWO HARNESS DEFECTS FOUND BEFORE ANY SUBJECT DEFECT, both recorded because the instrument was wrong before the subject was: (i) the first driver passed the OBJECT viewer shape where `viewerPredicate` takes a STRING, so 43,400 compilations ran against the DENY gate and the participant branch could not have been entered; (ii) arms (b) and (d) first armed BLIND — the anchor ` && src[i] !== '"') s += src[i++];` occurs TWICE in `tokenize`, in the QUOTED reader and in the BARE one, and `String.replace` silently took the first, so both arms patched the wrong loop, failed 16 assertions and looked convincing while measuring something else. The harness now COUNTS every anchor and refuses a non-unique one — which immediately caught a THIRD ambiguity, `let raw = String(tok.value);` in both `selector()` and `meaningAtom()`.
+   D-255, SEVEN ARMS RUN 2026-08-09 through `test/fieldread.control.mjs` (`cd bio-plane && node test/fieldread.control.mjs`, or `--arm=<id>` for one), each armed ALONE against the FINAL file, each DECLARING before it ran, every restore verified against a UNIQUE per-arm snapshot by sha256 AND by `cmp`, with a BASELINE arm included. Baseline: 138/138 suites, 8,835 assertions, this suite 125 pass.  (BASE) ARM NOTHING, the tree as it stands -> 138/138, 8,835: the baseline row exists because a harness on this project's record once reported the same answer for every arm INCLUDING the baseline, and only that row tells six-arms-broken from six-arms-working.  (P) THE INSTRUMENT'S OWN POSITIVE CONTROL — restore `phrase` as a getter that THROWS **and** inject a read of it as `a["ph" + "rase"]` in `ftsAtom`, a spelling no grep anticipates -> exit 7, 131/138, 8,234: the tripwire fires, so the greens below are not free.  (O1) OVER-STRICTNESS, SPELLING — rewrite the GENUINE read of `prefix` as `a["pre" + "fix"]` -> 138/138, 8,835 GREEN: correct work in an unanticipated spelling is not reported dead.  (O2) OVER-STRICTNESS, RUNTIME — tripwire `plan.meaning.table`, which the node sweep reports NEVER READ because its only reader is `store.mjs` inside workerd -> exit 3, 135/138, and the three failures are `bounds.test.mjs`'s three `op=meaningrows` assertions and nothing else: THIS is the arm that stops the sweep's blind spot becoming a deletion, and five of the seven `plan.meaning.*` fields are in exactly that position.  (D) THE SUBJECT — restore `phrase` as a getter that THROWS, no injected read -> 137/138, 8,832, and the ONLY failures in the whole battery are the four D-255 pins below. **DECLARED GREEN ON ITS FIRST RUN AND CAME BACK RED; the declaration was wrong, not the subject** — those pins are STRUCTURAL, so they fire on the field's PRESENCE and cannot care whether anything reads it. Corrected into something stronger than the boolean it replaced: the arm now declares the exact SET of suites permitted to fail, because RED alone would also be satisfied by a field read in forty places.  (C) THE CLASS — tripwire `plan.meaning.columns`, the other never-read field the sweep found -> 138/138 GREEN, which is what makes it D-255's class and not `plan.meaning.table`'s (raised as D-258, deliberately not deleted).  (R) THE RATCHET — re-add `phrase` as an ORDINARY field, exactly as it stood before this item -> this suite 121 pass, 4 FAIL: presence alone is what the pins see, which is the whole reason a dead field needs a structural pin and not a behavioural one. */
 /* The query language, S-10 step 3.
  *
  * This suite needs no runtime, no store and no corpus, because query.mjs holds
@@ -494,6 +495,60 @@ console.log("\n--- D-228: over-strictness — spellings this item did not antici
     same('fm:"a.b"="c"', "fm:a.b=c"), true);
   t("and the same holds when only the left side is quoted",
     same('fm:"a.b"=c', "fm:a.b=c"), true);
+}
+
+console.log("\n--- D-255: the atom carries no field that nothing reads, and FTS5 is what makes a phrase ---");
+{
+  /* D-255. `textAtom` used to write `phrase: quoted && /\s/.test(v)` onto every
+     text atom and NOTHING ever read it — one write site, zero read sites,
+     measured textually across the repository and behaviourally by
+     `test/fieldread.control.mjs`. The field is gone. These are the pins that
+     stop it coming back, and they are STRUCTURAL on purpose: a behavioural
+     assertion cannot see a field with no consumer, which is precisely how it
+     survived long enough to be filed. */
+  t("a text atom carries exactly the fields something reads, and no others",
+    Object.keys(compile({ q: '"service fund"', viewer: M }).ast),
+    ["op", "column", "value", "prefix"]);
+  t("and the same holds for a column-restricted atom",
+    Object.keys(compile({ q: 'title:"Fund general"', viewer: M }).ast),
+    ["op", "column", "value", "prefix"]);
+  t("and for a prefix atom, where `quoted` still has a job to do",
+    Object.keys(compile({ q: "audit*", viewer: M }).ast),
+    ["op", "column", "value", "prefix"]);
+
+  /* THE COMPILED EXPRESSION IS UNCHANGED FOR A QUOTED MULTI-WORD VALUE, which
+     is what D-255's row asked whoever took it to assert. Pinned as the literal
+     text, so a future author who reaches for a `phrase` flag to "make phrases
+     work" can see that they already do. */
+  t("a quoted multi-word value compiles to ONE FTS5 string literal — the phrase",
+    compile({ q: '"service fund"', viewer: M }).match, '"service fund"');
+  t("and its unquoted twin compiles to a CONJUNCTION, which is the difference",
+    compile({ q: "service fund", viewer: M }).match, '("service" OR "fund")');
+  t("the difference lives in the compiled expression, not in a flag on the atom",
+    [...new Set(compile({ q: '"service fund"', viewer: M }).statements.page().args
+      .filter((a) => typeof a === "string" && a.includes("service")))],
+    ['"service fund"']);
+
+  /* THE CLASS, ASSERTED OVER A CORPUS RATHER THAN OVER ONE QUERY, with the
+     corpus PRINTED and FLOORED — a totality assertion has passed over an empty
+     fixture three times in this project. */
+  const walk = (n, out = []) => {
+    if (!n || typeof n !== "object") return out;
+    out.push(n);
+    if (n.kid) walk(n.kid, out);
+    if (Array.isArray(n.kids)) for (const k of n.kids) walk(k, out);
+    return out;
+  };
+  const QS = ['"service fund"', "service fund", "audit*", '-title:"a b"', "sewer OR water",
+              '(a OR "b c") AND d', 'text:"two words"', "sewer:fund", 'body:"three word phrase"',
+              "has:state", 'fm:a.b="c"', "a b c d"];
+  const nodes = QS.flatMap((q) => walk(compile({ q, viewer: M }).ast));
+  const texts = nodes.filter((n) => n.op === "text");
+  console.log(`  corpus: ${QS.length} queries · ${nodes.length} AST nodes · ${texts.length} of them text atoms`);
+  t("the corpus this sweep runs over is not empty", texts.length > 12, true);
+  t("NOT ONE atom in the corpus carries a field the compiler never reads",
+    [...new Set(nodes.flatMap((n) => Object.keys(n)))].sort(),
+    ["cmp", "col", "column", "json", "kid", "kids", "op", "prefix", "value"]);
 }
 
 console.log(`\nquery: ${pass} pass, ${fail} fail`);

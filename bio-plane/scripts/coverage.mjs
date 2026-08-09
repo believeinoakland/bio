@@ -213,7 +213,20 @@ const REGISTER_FLOOR = {
      the other's new suite, so 581 was true of neither tree, and the merged figure is
      higher than either. This is what "re-read it from a green run after every
      multi-item merge" is for. */
-  arms:       621,  // arms stated across the classified declarations
+  /* D-255, 2026-08-09: 621 -> 627, from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED (`arms 627/621 · classified 133/133 · corpus 134/134
+     · GREW by 6`), never by adding to the number above. `classified` and
+     `corpus` do NOT move: no suite was added, and the seven D-255 arms are
+     declared inside `query.test.mjs`'s EXISTING block.
+     SEVEN ARMS WERE DECLARED AND THE FIGURE ROSE BY SIX, WHICH IS ARITHMETIC
+     AND NOT A LOST ARM — checked rather than assumed, because "an arm that
+     scored zero" is exactly D-233's shape. `countArms` is
+     `max(transitions, enumerations)`; this suite's declaration had FIVE
+     transitions and SIX enumerated items, so its recorded figure was already
+     the ENUMERATION count. Adding seven transitions took transitions 5 -> 12,
+     which now wins the max, and 12 - 6 = 6. Every one of the seven arms RAN and
+     is stated with the counts it produced. */
+  arms:       627,  // arms stated across the classified declarations
   classified: 133,  // declarations the detector could count arms in
   corpus:     134,  // suites the register reads
 };

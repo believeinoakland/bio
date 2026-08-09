@@ -5080,3 +5080,118 @@ the register's floor met EXACTLY, with the six new arms scoring zero. They are L
 (`(D-235a)`) rather than numbered, and the register says in its own output that a labelled
 arm is not counted. **This is the same blindness REC-75 measured on the same file and the
 same day, reproduced by an item that did not set out to measure it.**
+
+## 2026-08-09 · D-255 — IS THIS FIELD READ BY ANYBODY? asked of the field itself, not of a grep
+
+**Instrument:** `bio-plane/test/fieldread.control.mjs`, run from `bio-plane/`. It transiently
+rewrites `src/query.mjs` so that every object the query language constructs — tokens, AST
+nodes, the parser's `ctx`, the `compile()` plan and its three sub-objects — is wrapped in a
+Proxy whose `get`/`has` traps RECORD, then drives a synthetic corpus and three real suites
+through it and prints, per field, how many were WRITTEN and how many times anything asked
+for one. The source is restored and verified by sha256 AND `cmp`.
+
+**Why not a grep, which is the whole finding.** D-255 is an instance of a KIND — a field
+computed and read by nobody — and the obvious matcher grades a SPELLING. `a["ph" + "rase"]`,
+`const { phrase } = atom`, `{ ...atom }` into a published envelope and `JSON.stringify(plan)`
+are all reads no list of spellings catches, and a classifier that misses one REPORTS A LIVE
+FIELD DEAD. A property read is exactly what a Proxy traps, so the question is asked of the
+field rather than of its name.
+
+### The sweep, 2026-08-09, on the tree at `ad87db7` plus this item
+
+| | |
+|---|---|
+| corpus | 210 queries × 11 viewers × 18 option sets = **41,580 compilations**, plus `query.test.mjs`, `meaningquery.test.mjs` and `bounds.test.mjs` driven THROUGH the probe |
+| reach | **59 distinct constructed fields** before the fix, 58 after |
+| `atom.phrase` | **written 6,517 · read 0** |
+| every other atom field | `op` 11,559 reads · `column` 14,677 · `value` 19,556 · `prefix` 13,039 |
+| never read in node | 8 fields: `atom.phrase` and all seven of `plan.meaning.*` |
+
+**REC-68's figure, re-measured before it was acted on, HELD EXACTLY** — one write site, zero
+read sites. Twelve items have found a briefed figure stale; this one was right. Stated
+because the practice is to trust the measurement, not the streak.
+
+### What the sweep cannot see, and the arm that proves it matters
+
+`query.mjs` is pure and runs in node — that is what makes this instrument possible at all,
+and `query-reach.control.mjs` rests on the same fact. But its OUTPUT is consumed by
+`store.mjs` INSIDE WORKERD, where the recorder cannot be read back out. **Five of the eight
+never-read fields were exactly that case:** `plan.meaning.table`, `.grain`, `.identity`,
+`.limit` and `.offset` are read at `store.mjs:1330-1336` and published by `op=meaningrows`.
+A sweep that stopped at the node result would have deleted five live fields.
+
+So a never-read result here is a CANDIDATE, and what settles it is the TRIPWIRE: the field
+is restored as a getter that THROWS, and the WHOLE battery is run. A throw does not need to
+be read back out of workerd — the battery goes red. `plan.meaning.table` armed that way
+takes the battery RED; `atom.phrase` armed that way leaves it GREEN.
+
+### Nothing an answer depends on moved
+
+An answer-determining digest — `match`, `terms`, `warnings`, `widenable`, and the page
+statement's SQL and bound arguments over 360 compilations across every field and meaning arm
+— is **`b1e0392b7c1b1440…` before the deletion and `b1e0392b7c1b1440…` after it**.
+
+### The arms, 2026-08-09 — seven, each armed ALONE, restores verified by sha256 AND `cmp`
+
+Baseline for every one of them: **138 suites (134 plane · 4 fleet) · 138/138 green · 8,835
+assertions** with this item's four new pins in place (8,827 before them).
+
+| arm | what was armed | declared | actual |
+|---|---|---|---|
+| BASE | nothing — the tree as it stands | GREEN | GREEN · 138/138 · 8,835 |
+| P | `phrase` restored as a THROWING getter **and** a read injected as `a["ph" + "rase"]` in `ftsAtom` | RED | RED · exit 7 · 131/138 · 8,234 |
+| O1 | the genuine read of `prefix` rewritten `a["pre" + "fix"]` — over-strictness, SPELLING | GREEN | GREEN · 138/138 · 8,835 |
+| O2 | tripwire on `plan.meaning.table`, which the node sweep calls never-read — over-strictness, RUNTIME | RED | RED · exit 3 · 135/138 · 8,793, and the three failures are `bounds.test.mjs`'s three `op=meaningrows` assertions, exactly as declared |
+| D | `phrase` restored as a THROWING getter, no injected read | *(first run: GREEN — **wrong**)* | RED · 137/138 · 8,832, **and the only failures anywhere in the battery are `query.test.mjs`'s four D-255 pins** |
+| C | tripwire on `plan.meaning.columns` | GREEN | GREEN · 138/138 |
+| R | `phrase` re-added as an ORDINARY field — the ratchet | RED | RED · `query.test.mjs` 121 pass, 4 fail |
+
+**ARM D CAME BACK NOT AS DECLARED, AND THE DECLARATION WAS WRONG RATHER THAN THE SUBJECT.**
+It was declared green on the reasoning that a field nothing reads cannot make anything fail.
+That was true of the estate as it stood BEFORE this item and false after it: the item's own
+pins are STRUCTURAL — they read `Object.keys(ast)` — so they fire on the field's PRESENCE and
+cannot care whether anything reads it. Re-adding the field is precisely what they exist to
+catch. The declaration is corrected in `fieldread.control.mjs` into something stronger than
+the boolean it replaced — the arm now declares the exact SET of suites permitted to fail,
+because `RED` alone would also be satisfied by a field read in forty places, which is the
+opposite of the claim being made. The original declaration is kept at the site. **The
+corrected arm was RE-RUN, not merely re-worded** (`node test/fieldread.control.mjs --arm=D`):
+suites that failed `query.test.mjs`, declared exactly `query.test.mjs`, AS DECLARED.
+
+**What P, O1 and O2 are for, together.** P proves the tripwire fires at all, through a
+spelling no grep would have found. O1 proves a live field in an unanticipated spelling is
+NOT reported dead. O2 proves the same for a live field in a RUNTIME the sweep cannot enter —
+and it is the arm that matters most, because five of the eight never-read fields the node
+sweep reported are exactly that case.
+
+**A ONE-ASSERTION DIFFERENCE BETWEEN TWO GREEN RUNS WAS FIRST WRITTEN UP HERE AS
+CONTENTION, AND THAT WAS WRONG.** ARM BASE reported 8,835 and ARM C reported 8,836 on what
+looked like the same tree, and with four to six `npm run test:battery` processes from other
+worktrees of this clone running against the same machine throughout (observed directly with
+`ps`/`lsof`, one of them writing its output into the SHARED scratchpad root) contention was
+the easy explanation. It is not the true one, and the arithmetic says so: the D-258 row was
+appended to `DEBT.md` BETWEEN those two runs, and `planning-hygiene.test.mjs` asserts one
+line per debt row. 8,827 baseline + 8 (this item's pins) = **8,835**, + 1 (the D-258 row) =
+**8,836**, which is the final figure. Recorded because "a plausible cause reached for before
+the arithmetic was checked" is the failure this project meets most often, and it arrived
+here inside a sentence that claimed to be reporting an instrument.
+
+### Battery, attributed per suite rather than by subtraction
+
+Baseline on this worktree at `ad87db7`: **138 suites (134 plane · 4 fleet) · 138/138 green ·
+8,827 assertions · exit 0**, `npm ci` run first because the worktree arrived without
+`bio-plane/node_modules`. Final: **138/138 · 8,836 · exit 0**. Delta **+9, all of it
+attributed against a re-measured true baseline for each suite that moved:**
+`query.test.mjs` **117 → 125** (measured at 117 by driving the pre-fix suite through the
+read probe, before any edit to it) and `planning-hygiene.test.mjs` **292 → 293** (measured at
+292 by running that suite alone after the D-255 disposition and before the D-258 row). No
+other suite's file was touched. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?`
+read UNPIPED: **exit 0** · OPS 162/162 · CHECKS 219/219 · REGISTER FLOOR arms **627/627**
+(moved 621 → 627 from the printed figure, in the same turn) · classified 133/133 · corpus
+134/134. `node civicos-ui/test/run.mjs` from the repo root, exit read unpiped: **0**;
+`check-refusal-codes` floors did NOT move (REACH stays 217, census 424, ceiling 41) and no
+refusal code is named anywhere in this item.
+
+**TWO SUITES REPORT `assertions unknown` IN EVERY RUN** — `bundle.test.mjs` and
+`livefire.test.mjs`. That is a missing tally, not a zero, and it is named here rather than
+folded into the totals above.

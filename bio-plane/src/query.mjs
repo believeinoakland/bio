@@ -622,8 +622,12 @@ function tokenize(input) {
          and `fm:a.b="c"` leave a non-empty `rest` in front of the quoted run,
          and refusing them would have fixed the documented case while leaving its
          nearest neighbours broken. `quoted` stays true only when the quoted run
-         IS the whole value — that flag drives PHRASE detection in `textAtom`,
-         and a value with an operator glued to its front is not a phrase.
+         IS the whole value — a value with an operator glued to its front was
+         not typed as one quoted string, and `textAtom` reads that flag to
+         decide whether a trailing `*` is the prefix operator or a literal star
+         the member put inside their quotes. *(It also used to drive a `phrase`
+         field on the atom; that field was computed for no reader at all and is
+         gone — D-255. `quoted` still has this job, which is why it stays.)*
 
          A VALUE IS READ TO ITS END, in as many pieces as it takes, rather than
          in a fixed two or three. The first draft of this fix took one bare
@@ -656,9 +660,10 @@ function tokenize(input) {
           pieces++;
           if (!piece.quoted) onlyQuoted = false;
         }
-        /* `quoted` drives PHRASE detection in `textAtom`, so it is true only
-           when the value IS one quoted run and nothing else. A value with a
-           comparison lead or a second piece glued on is not a phrase. */
+        /* `quoted` says the value IS one quoted run and nothing else, which is
+           what `textAtom` reads to decide whether a trailing `*` is the prefix
+           operator or a literal star. A value with a comparison lead or a
+           second piece glued on was not typed as one quoted string. */
         out.push({ k: "sel", field, value: rest, quoted: onlyQuoted && pieces === 1 });
         continue;
       }
@@ -738,7 +743,24 @@ function parseTokens(tokens, implicitOp, ctx) {
 
 /* A free-text atom. `column` restricts it to one FTS column; null matches every
    column, which is what a bare word should do. A trailing star is a prefix
-   match, the affordance that stands in for a stemmer. */
+   match, the affordance that stands in for a stemmer.
+
+   THERE IS NO `phrase` FIELD, AND ITS ABSENCE IS THE POINT (D-255). This atom
+   used to carry `phrase: quoted && /\s/.test(v)`, and NOTHING EVER READ IT —
+   one write site, zero read sites, measured twice: textually across the whole
+   repository, and behaviourally by `test/fieldread.control.mjs`, which wraps
+   every object this module builds in a recording Proxy and reports the fields
+   nothing ever asks for. A name that tells a reader something is handled, with
+   nothing behind it, is the same family as D-228 one layer along.
+
+   WHAT ACTUALLY PERFORMS PHRASE MATCHING, since the name was the only thing
+   claiming otherwise: FTS5 itself. `ftsAtom` compiles every text atom to the
+   string literal `ftsLiteral(value)`, and FTS5 treats a multi-word string
+   literal AS a phrase. A flag on the atom could only have changed that by
+   changing what `ftsAtom` emits, and nothing asked it to. If a surface ever
+   needs to tell a phrase from a conjunction in an envelope it publishes, the
+   answer is to give that distinction a READER — not to re-add a field that
+   computes it for nobody. */
 function textAtom(column, value, quoted, ctx) {
   let v = value;
   let prefix = false;
@@ -748,7 +770,7 @@ function textAtom(column, value, quoted, ctx) {
      matches no row and would silently empty the result of an otherwise good
      query. A stray dash or bracket is noise the member did not mean as a term. */
   if (!/[\p{L}\p{N}]/u.test(v)) return null;
-  const atom = { op: "text", column, value: v, phrase: quoted && /\s/.test(v), prefix };
+  const atom = { op: "text", column, value: v, prefix };
   ctx.textAtoms.push(atom);
   return atom;
 }
