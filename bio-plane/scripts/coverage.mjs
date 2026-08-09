@@ -213,9 +213,20 @@ const REGISTER_FLOOR = {
      the other's new suite, so 581 was true of neither tree, and the merged figure is
      higher than either. This is what "re-read it from a green run after every
      multi-item merge" is for. */
-  arms:       621,  // arms stated across the classified declarations
-  classified: 133,  // declarations the detector could count arms in
-  corpus:     134,  // suites the register reads
+  /* MOVED 2026-08-09 by PL-17 (DEC-65's third `asserted_by` state): 621 -> 629 /
+     133 -> 134 / 134 -> 135, ALL THREE IN THE SAME TURN and every one taken from
+     the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE
+     (`arms 629/621 · classified 134/133 · corpus 135/134 · GREW by 8 arm(s)`) —
+     read AFTER the new files were in a commit, so the figures are the
+     reproducible ones and not the contaminated ones the pre-commit run reported
+     under the same numerals. One new suite, `test/sufficiency-state.test.mjs`,
+     whose `NEGATIVE CONTROL:` declaration states EIGHT arms — a BASELINE, six
+     break-it arms and an OVER-STRICTNESS arm — so `corpus` and `classified` each
+     rise by one and `arms` by eight. Every one of those arms was RUN, through
+     `test/sufficiency-state.control.mjs`. Nothing FELL. */
+  arms:       629,  // arms stated across the classified declarations
+  classified: 134,  // declarations the detector could count arms in
+  corpus:     135,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
