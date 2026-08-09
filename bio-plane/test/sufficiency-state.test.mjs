@@ -305,13 +305,40 @@ t("C-25.6 REFUSES a blank — the silent default is still refused, and this item
   suffRefused(versionFindings(versionFm(""))), true);
 t("C-25.6 ACCEPTS a named member — unchanged",
   suffRefused(versionFindings(versionFm("dave"))), false);
-/* THE MEASUREMENT, AND IT IS THE FINDING THIS BLOCK EXISTS FOR. The minted
-   value passes C-25.6 TODAY — not because this item widened anything, but
-   because C-25.6's member arm asks only "non-blank and not a machine", which
-   any string satisfies. The state is INERT: nothing writes it, and no gate
-   distinguishes it. Wiring it is the next item's, per DEC-65's sequencing. */
-t("AND THE MINTED VALUE PASSES C-25.6 TODAY — the state is INERT until the next item consumes it, and that is MEASURED here rather than assumed",
+/* CORRECTED 2026-08-09 BY PL-19, WHICH LANDED DEC-65's SHAPE (b). NOT EXEMPTED,
+   AND HERE IS WHY THE OLD EXPECTATION WAS RIGHT WHEN IT WAS WRITTEN.
+   PL-17 wrote: *"the minted value passes C-25.6 TODAY — not because this item
+   widened anything, but because C-25.6's member arm asks only 'non-blank and
+   not a machine', which any string satisfies. The state is INERT."* Every word
+   of that was true of the tree PL-17 left, and it was the honest way to say
+   that a minted state nothing consumes is a mechanism believed on its
+   EXISTENCE.
+   WHAT CHANGED: C-25.6 now asks `isSufficiencyUnclaimed` and admits the value
+   DELIBERATELY, under DEC-65's single-part licence. The verdict below is the
+   same BOOLEAN and it would have gone on passing while its sentence had become
+   false — which is exactly the shape a stale pin takes, so the ASSERTION IS
+   REPLACED rather than relabelled: it now drives the licence's BOUNDARY, in
+   both directions, where a boolean that passes for the wrong reason cannot.
+   The two-part fixture is the half that would catch a widening. */
+const versionFm2 = (assertedBy) => ({
+  id: "INQ-2026-0001",
+  basis_versions: [{ name: "v1", description: "two parts, composed by a run", relationship: "or",
+                     state: "suggested", hidden: false, at: "2026-08-09T00:00:00Z" }],
+  basis_version_grounds: [
+    { version: "v1", ground: "ledger", asserted_by: assertedBy, at: "2026-08-09T00:00:00Z" },
+    { version: "v1", ground: "audit", asserted_by: assertedBy, at: "2026-08-09T00:00:00Z" }],
+  basis_version_legs: [
+    { version: "v1", target: "INFO-2026-0002", role: "supports", ground: "ledger" },
+    { version: "v1", target: "INFO-2026-0003", role: "supports", ground: "audit" }],
+});
+t("C-25.6 ADMITS the minted value on a version declaring exactly ONE part — DEC-65's licence, landed by PL-19, and the arithmetic is the whole of it: with one part there is no maximum to take",
   suffRefused(versionFindings(versionFm(SUFFICIENCY_UNCLAIMED))), false);
+t("AND REFUSES IT ON A VERSION DECLARING TWO — the licence's BOUND, which is the half a widening would break and the half a boolean that merely kept passing could not see",
+  versionFindings(versionFm2(SUFFICIENCY_UNCLAIMED))
+    .filter((x) => /nobody asserted it/.test(String(x.message ?? ""))).map((x) => x.check),
+  ["C-25.6", "C-25.6"]);
+t("and a MACHINE's stamp is still refused on a SINGLE-part version — the licence is the record saying nobody claimed, never the record saying a machine claimed",
+  suffRefused(versionFindings(versionFm("class:ai"))), true);
 const inquiryFm = (assertedBy) => ({
   id: "INQ-2026-0001",
   basis: [{ target: "INFO-2026-0002", role: "supports", ground: "whole" }],
@@ -320,8 +347,24 @@ const inquiryFm = (assertedBy) => ({
 const inquiryFindings = (fm) => { const out = []; checkInquiryBasis(fm, out); return out; };
 t("C-2.8's own sufficiency arm one level down REFUSES a machine's stamp — the sibling rule, unchanged",
   suffRefused(inquiryFindings(inquiryFm("class:ai"))), true);
-t("and it ACCEPTS the minted value today too, so the two asking sites are in the SAME unwired state and neither is half-done",
-  suffRefused(inquiryFindings(inquiryFm(SUFFICIENCY_UNCLAIMED))), false);
+/* CORRECTED 2026-08-09 BY PL-19, AND THE CORRECTION IS TO THE REASON RATHER
+   THAN TO THE VERDICT. PL-17 asserted this as *"the two asking sites are in the
+   SAME unwired state and neither is half-done"*, which was the right thing to
+   assert while both were unwired. They are no longer in the same state, and
+   that is a DECIDED CLOSURE and not a half-done job: C-25.6 governs a VERSION,
+   which a machine composes; C-2.8 governs the INQUIRY's own `grounds[]`, whose
+   only writer is `groundInquiry`, which refuses a machine credential outright
+   (`MACHINE_CANNOT_GROUND`, REC-64 / C-32.8). There is no machine writer here
+   for the third state to keep honest, so admitting it would widen what the
+   record may hold for a population that cannot produce it. The verdict is
+   unchanged BY COINCIDENCE — C-2.8's member arm still asks only "non-blank and
+   not a machine" — so the assertion is REPLACED by one that measures the thing
+   that is actually true, rather than left standing on a boolean that agrees for
+   free. `dec65-single-part.test.mjs` drives the closure at its own op. */
+t("C-2.8 is DELIBERATELY NOT WIRED and it is not the same state as C-25.6: it still asks only non-blank-and-not-a-machine, so the minted value is not DISTINGUISHED here — it is merely not a machine",
+  [suffRefused(inquiryFindings(inquiryFm(SUFFICIENCY_UNCLAIMED))),
+   suffRefused(inquiryFindings(inquiryFm("a member who wrote the words none")))],
+  [false, false]);
 
 /* THE SWEEP, INVERTED RATHER THAN LISTED. The question is not "which two checks
    did I happen to read" but "what makes a site recognisable IN PRINCIPLE as one
@@ -356,8 +399,36 @@ const askingSites = [...stripComments(CHECKS_SRC).replace(/\s+/g, " ")
 console.log(`  sweep: ${askingSites.length} site(s) in checks/bio-checks.mjs judge an \`asserted_by\` with isMachineIdentity`);
 t("the sweep FINDS its sites rather than being handed them — a matcher that sees nothing is a walk looking in the wrong place",
   askingSites.length >= 2, true);
-t("and NONE of them consumes the minted state yet — the pin that fails when the next item wires C-25.6 and C-2.8, which is when it should be CORRECTED and not exempted",
-  askingSites.filter((l) => /isSufficiency(Claimed|Unclaimed)|SUFFICIENCY_UNCLAIMED/.test(l)), []);
+/* CORRECTED 2026-08-09 BY PL-19. NOT EXEMPTED — the old assertion was
+   `askingSites.filter(consumes) === []`, *"NONE of them consumes the minted
+   state yet"*, and it was RIGHT WHEN WRITTEN and is the pin that did its job:
+   it went red the moment C-25.6 started consuming the state, which is precisely
+   what PL-17 built it to do.
+   IT IS REPLACED BY ITS INVERSE RATHER THAN DELETED, because "nothing consumes
+   it" and "exactly these consume it" are the same question asked before and
+   after, and the second is the one that keeps biting: a THIRD asking site
+   written next month is found by the same shape and reported UNCLASSIFIED here
+   rather than scored zero.
+   AND PL-19 FOUND A GAP IN THIS MATCHER WHILE CORRECTING IT, which is worth
+   more than the correction. Its FIND set (`JUDGING_PREDICATE`, four spellings)
+   was WIDER than its VERDICT set (three spellings — `sufficiencyClaimState` was
+   missing from the second). PL-19's first draft wired C-25.6 through
+   `sufficiencyClaimState`, and the site was duly FOUND by the sweep and then
+   graded as NOT consuming the state: the assertion above went on passing over a
+   site that had just started consuming it. That is arm (7)'s own finding —
+   a classifier grading one literal hides exactly what it was built to find —
+   surviving the fix for it, one regex to the right. The verdict is now derived
+   FROM the find set so the two cannot drift again. */
+const CONSUMES = new RegExp(`${JUDGING_PREDICATE.replace("isMachineIdentity|", "")}|SUFFICIENCY_UNCLAIMED`);
+t("THE MATCHER'S TWO HALVES ARE ONE LIST: every predicate the sweep can FIND a site by is a predicate it can GRADE one by, except the pre-DEC-65 one — so a site wired through any of them cannot vanish into a passing assertion",
+  ["sufficiencyClaimState(x)", "isSufficiencyClaimed(x)", "isSufficiencyUnclaimed(x)", "isMachineIdentity(x)"]
+    .map((s) => CONSUMES.test(s)), [true, true, true, false]);
+const consuming = askingSites.filter((l) => CONSUMES.test(l));
+console.log(`  sweep: ${consuming.length} of ${askingSites.length} asking site(s) now consume the third state`);
+t("EXACTLY ONE asking site consumes the minted state, and it is C-25.6's — PL-19 landed DEC-65's shape (b) there and nowhere else",
+  [consuming.length, consuming.some((l) => /isSufficiencyUnclaimed/.test(l))], [1, true]);
+t("and the OTHER site is C-2.8's, still asking the pre-DEC-65 question — a stated closure with its reason at the site, not a site the sweep missed",
+  askingSites.filter((l) => !CONSUMES.test(l)).length >= 1, true);
 /* WHAT THIS SWEEP CANNOT SEE, stated plainly: it reads ONE file. PL-3's
    endpoint guard lives in `src/store.mjs` and refuses on `legsIn.length > 0`
    before any of these checks is reached — FL-3 measured that it is the site

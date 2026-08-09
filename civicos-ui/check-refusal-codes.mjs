@@ -390,7 +390,7 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1425,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+  regionLines: 1454,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
                           OF THE MERGED TREE and not taken from REC-69's branch — which is the whole
                           instruction the two prior entries below leave, honoured here rather than
                           quoted. The 18 are `is-airuns-context`'s own span and nothing else: the
@@ -399,6 +399,24 @@ const FLOOR = {
                           figure has now moved at integration five times out of six.** REC-69's own
                           branch computed 1281 against a base of 1263; `main` reached 1407 without it
                           while it sat reverted, so neither number was ever true of this tree.
+   /* MOVED 1407 -> 1436 BY PL-19, 2026-08-09 (DEC-65 shape (b)), from what this
+                          file PRINTED on a green run of this worktree — never by adding 29 to the
+                          number that was here. THE 29 ARE ALL MINE AND THE ATTRIBUTION IS EXACT
+                          RATHER THAN ASSUMED: `suggestVersion > is-suggest-checks` grew from 314L to
+                          343L, and 1436 minus this item's 29 added lines inside that span is 1407 —
+                          the figure that was already here, so the floor was NOT stale on arrival and
+                          the whole gap is this item's. Measured from the diff hunks, then checked
+                          against the printed total. The lines are the single-part licence: the guard
+                          moved from `legsIn.length > 0` to *a machine may compose one part and no
+                          more*, plus the comment recording why, plus the correction of a wrong
+                          C-number (C-25.15 -> C-25.6) this block had been citing at a member.
+                          **NOTE FOR THE INTEGRATOR, and it is this figure's standing property: A
+                          REGION'S LINE COUNT IS A PROPERTY OF THE MERGED SOURCE and this number has
+                          moved at integration four times out of five.** An open RECORD claim
+                          (`airun.mjs` / `STANDARD_BASIS`) names THIS FLOOR BLOCK as its own path and
+                          was running beside PL-19, and other workers were in `store.mjs`. RE-READ
+                          this from a green run of the merged tree rather than trusting this number,
+                          and if you meet a conflict here KEEP BOTH COMMENTS AND ONE KEY.
                           PRIOR ENTRY, kept as the receipt for how this figure moves:
                           MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
                           green run of that worktree. The 21 are `is-selection-moved`'s own span and

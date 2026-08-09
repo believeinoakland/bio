@@ -5644,3 +5644,146 @@ dot-directory rule is a walk's own corpus definition, decided with a measurement
 in one line. The `machine-fences` narrowing is an instrument's own strictness, and its
 alternative is written beside it. Neither is a consequence Bob has not already ruled on.
 
+
+## CLAIM 2026-08-09 RECORD (PL-19 — DEC-65's shape (b): the check AND the endpoint guard, together)
+session: pl19-dec65-shape-b (worktree agent-a875e2afd837947d7)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/checks/bio-checks.mjs` — named by SITE, not by file:** (1) `basisVersionFindings`'
+  `basis_version_grounds[]` loop — the `asserted_by` arm at C-25.6 and ONE new pre-pass that counts the
+  distinct declared parts per version. **`C-2.8` / `checkGrounds` KEEPS EVERY EXECUTABLE LINE IT HAD
+  and gains a COMMENT ONLY, stating why it is a MEASURED closure rather than a site the sweep missed**
+  — amended into these paths mid-item, deliberately, because a reader meeting two sites that ask the
+  identical question with only one of them wired would read the second as a miss. The `git diff` on
+  that span contains no executable change. PL-17's mint block
+  (`SUFFICIENCY_UNCLAIMED`, `sufficiencyClaimState`, `isSufficiencyClaimed`, `SUFFICIENCY_CLAIM_STATES`)
+  is IMPORTED and READ, never edited. CPDF-10's open claim on this file appends `TEXT_CHAIN_CHECKS`
+  at the END of the file; my span is ~line 6600 and does not meet it.
+  **`bio-plane/src/store.mjs` — named by SITE, not by file:** (2) `suggestVersion`'s machine-asserter
+  pre-write guard (the `needsPartition` arm inside `DEC-49 REGION is-suggest-checks`, the site FL-3
+  measured as firing FIRST); (3) `#suggestionPersisted`'s ONE `asserted_by` stamp line. **NOT**
+  `#standardForRun`/`aiRunRead`/`aiRunSpawnPayload` (the open RECORD claim's spans), **NOT**
+  `suggestVersion`'s success return (D-235a's, released), **NOT** `groundInquiry`, **NOT** `promote`.
+  **`bio-plane/test/dec65-single-part.test.mjs`** (NEW), **`bio-plane/test/dec65-single-part.control.mjs`**
+  (NEW — the negative-control driver, deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES).
+  **`bio-plane/test/sufficiency-state.test.mjs`** — §7's superseded pins CORRECTED with the dated reason
+  at the site, never exempted. **`bio-plane/test/suggest.test.mjs`** — the SAME, and it was not
+  predicted by the brief: PL-17's arm (7) shows which assertions move in ITS suite and cannot see this
+  one, where TWO more were superseded (CHECK 6's machine arm and F10's absolute version count).
+  **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, all three keys moved in the same turn
+  from the figures a green run PRINTED as REPRODUCIBLE; ONE key set, verified by `grep`.
+  **`civicos-ui/check-refusal-codes.mjs`** — the `regionLines` FLOOR figure ONLY, moved from what the
+  guard PRINTED on this worktree's green run; no matcher, arm, ceiling or row touched. **AMENDED INTO
+  THESE PATHS MID-ITEM AND IT IS A KNOWN CONCURRENCY:** the open RECORD claim (`airun.mjs` /
+  `STANDARD_BASIS`) names this same FLOOR block. If it conflicts, KEEP BOTH COMMENTS AND ONE KEY.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/DECISIONS.md`
+  (DEC-65's enactment note ONLY — appended, no other row touched), `docs/development/MEASUREMENTS.md`.
+  **NOT** `bio-plane/src/schema.mjs` (see the release line — the sentence PL-17 flagged stays TRUE),
+  **NOT** `bio-plane/src/index.mjs`, **NOT** `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT**
+  `pdf-worker/**`, **NOT** `newgroup/**`.
+interfaces consumed: I3 (the plane's op surface — `op=suggest`).
+interfaces owned: none. No shape a consumer builds against changes: `op=suggest`'s parameters and
+  its success object are untouched. What changes is WHICH submissions are accepted (strictly more)
+  and what the plane STAMPS into one field of the document it composes.
+expected: DEC-65, answered 2026-08-09 by session BOB and enacted in three steps by CONDUCT. Step ONE
+  was PL-17 (the third `asserted_by` state, minted and deliberately inert). **This is step TWO: land
+  shape (b) — the single-part exemption — in `C-25.6` AND in PL-3's endpoint guard TOGETHER**, per
+  DEC-65's own sequencing and FL-3's measurement that the guard refuses on `legsIn.length > 0` and
+  therefore fires first, so amending the check alone would land, pass its own suite, and change no
+  behaviour. Step THREE is PL-14's re-measurement of the strength pair over grounds.
+accepts-when: battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief
+  (the brief carried no figure): **140 suites (136 plane + 4 fleet) · 140/140 green · 8,907 assertions
+  · 135.9 s · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED;
+  `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED; `node tools/plancheck.mjs`
+  clean but for UNPUSHED. Negative controls RUN, each arm ALONE with the other defences held OPEN, an
+  OVER-STRICTNESS arm included (a genuine member claim in a spelling I did not anticipate must still
+  be ACCEPTED), a BASELINE arm included, restores verified by sha256 AND `cmp` against uniquely-named
+  per-arm pristine copies. Tested THROUGH `op=suggest`, not only at the store. No push, no merge.
+concurrency: checked over the whole file at `8096452` (this worktree was ONE MERGE BEHIND `main` on
+  arrival — PL-17's merge — and was fast-forwarded before anything was measured). Of the claims open
+  today, **two name my files and NEITHER meets my spans**: CPDF-10 appends `TEXT_CHAIN_CHECKS` at the
+  END of `checks/bio-checks.mjs` (mine is `basisVersionFindings`, ~6600), and the open RECORD/airun
+  claim names `store.mjs`'s `#standardForRun` / `aiRunRead` / `aiRunSpawnPayload` (mine is
+  `suggestVersion`'s pre-write guard and `#suggestionPersisted`). D-235a's `store.mjs` claim is
+  RELEASED and its span was `suggestVersion`'s SUCCESS RETURN, after the region I edit.
+released: 2026-08-09 — committed on `worktree-agent-a875e2afd837947d7`, **NOT pushed and NOT merged**;
+  CONDUCT integrates. **DEC-65's SHAPE (b) IS LANDED AND IT IS LANDED AT BOTH SITES.** `C-25.6` admits
+  PL-17's explicit no-claim value on a version declaring EXACTLY ONE part and REFUSES it on two or more
+  — asked through `isSufficiencyUnclaimed`, never by matching the literal — and PL-3's endpoint guard
+  moved in the same turn from `legsIn.length > 0` to *a machine may compose one part and no more*.
+  `#suggestionPersisted` STAMPS `SUFFICIENCY_UNCLAIMED` for a machine composer, so `class:ai` never
+  stands in a field whose published meaning is *a member said this part is enough on its own*; the
+  version's own `author` still names the machine, because WHO COMPOSED and WHO ASSERTED are different
+  facts. **Battery 141/141 green · 8,953 assertions · 141.2 s · exit 0** against a true baseline
+  MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **140/140 · 8,907 · 135.9 s** (the brief carried no
+  figure; the worktree arrived ONE MERGE BEHIND `main` and without `bio-plane/node_modules`, both
+  fixed before measuring). **Delta +46 attributed by DIFFING the two full runs PER SUITE, never by
+  subtraction: 135 of 139 shared suites byte-identical in count** — `dec65-single-part.test.mjs` +37
+  (new), `sufficiency-state.test.mjs` 35 -> 39, `suggest.test.mjs` 93 -> 95, `hygiene.test.mjs`
+  558 -> 561. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0** —
+  OPS 162/162, CHECKS 219/219, provenance `147 of 147 discovered item(s) are in the commit at HEAD`.
+  `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **0**.
+  `node civicos-ui/check-refusal-codes.mjs` exit **0**. **BOTH FLOORS MOVED IN THE SAME TURN, FROM
+  PRINTED FIGURES:** `REGISTER_FLOOR` 632 -> 647 arms / 134 -> 136 classified / 135 -> 137 corpus
+  (ONE key set, verified by `grep`), read only AFTER the new files were in a commit; and `regionLines`
+  1407 -> 1436, where the attribution is EXACT — `is-suggest-checks` grew 314L -> 343L and 1436 minus
+  this item's 29 lines is 1407. **AND THE REGISTER FLOOR WAS ALREADY STALE ON ARRIVAL BY 8 ARMS / 1
+  CLASSIFIED / 1 CORPUS, MEASURED RATHER THAN INFERRED:** `main` at `8096452` was checked out into a
+  scratch `git worktree` (never `git stash`) and `--strict` run on that quiet tree with nothing
+  uncommitted printed `arms 640/632 · classified 135/134 · corpus 136/135` with no contamination note
+  — so only 7 of the 15 arms are this item's, and the sixth consecutive item has found a floor stale
+  by measuring it. **I TOUCHED A GOVERNED DEC-49 REGION** (`is-suggest-checks`) and say so here
+  because `regionLines` is a property of the MERGED source and has moved at integration four times out
+  of five. **SEVEN CONTROL ARMS, each armed ALONE with every other defence held OPEN, a BASELINE arm
+  and an OVER-STRICTNESS arm included, every restore verified by sha256 AND by `cmp` against
+  uniquely-named per-arm pristine copies with byte counts printed and floored against the
+  empty-string digest; zero restore problems. THREE CAME BACK OTHER THAN DECLARED and all three are
+  written into the driver's header rather than smoothed:** (2) widening the guard showed **the two
+  sites are NOT redundant** — a clean named refusal becomes one in another family's words about a
+  document the endpoint had already composed; (4) **my own declaration was wrong about what the patch
+  does**, and correcting it showed the check half's contribution is the BOUND rather than the
+  admission; and (5) **PL-17's recorded WRONG FIX no longer refuses the value at all**, because this
+  item wired the check through the predicate whose arm ordering PL-17 built for exactly this — the
+  claim measured against the patch it was written to survive, and the one-line change is now purely a
+  defect that buys nothing. **ARM (1) IS THE RECEIPT THAT THIS HAD TO BE ONE ITEM:** with `C-25.6`
+  fully wired and only the guard reverted, the feature is completely unreachable through the op.
+  **C-2.8 IS A DECIDED CLOSURE, NOT A MISS**, with its reason at the site and DRIVEN at
+  `op=inquiryground`, which refuses a machine credential outright (`MACHINE_CANNOT_GROUND`, REC-64 /
+  C-32.8) — so there is no machine writer there for the third state to keep honest. **`schema.mjs` IS
+  THEREFORE UNTOUCHED and PL-17's prediction that its `inquiry_basis` sentence would become incomplete
+  does not come true** — that sentence is about the block this item did not change. **NO MIGRATION IS
+  OWED:** no SQL table projects `basis_version_grounds` at all (`inquiry_basis_versions` and
+  `inquiry_basis_version_legs` are the only two), so the field lives in `bundle.md` only. **AND THE
+  WRONG C-NUMBER WAS STILL LIVE IN THE PLANE:** PL-3's guard cited `C-25.15` in its comment and TWICE
+  in the refusal a caller reads; FL-3 corrected the entry, PL-19 corrected the site. **WHAT THIS ITEM
+  DID NOT DO:** it did not re-measure the strength pair ACROSS several grounds — that is PL-14's step
+  three. It measured only the half DEC-65's argument rests on: a machine's single-part reading and a
+  member's derive the IDENTICAL pair. `git stash` was NOT used at any point. **One DELEGATION filed**
+  (PL-14).
+
+
+### DELEGATION 2026-08-09 RECORD (PL-19) -> PL-14 (the strength pair): **DEC-65's STEP THREE, AND WHAT IS ALREADY MEASURED SO YOU DO NOT RE-MEASURE IT**
+
+DEC-65's sequencing is mint (PL-17), then check + guard together (PL-19), then *"PL-14 re-measures
+the strength pair over grounds after."* The first two are done. What you inherit:
+
+- **A NEW SHAPE CAN NOW REACH THE ARITHMETIC.** A version's `basis_version_grounds[].asserted_by`
+  may now hold `SUFFICIENCY_UNCLAIMED` — but **only on a version declaring exactly ONE part**, and
+  only there. `C-25.6` refuses it on two or more, and PL-3's endpoint refuses a machine composing
+  more than one. So the maximum §12 takes is never taken over an unclaimed part.
+- **ONE HALF IS ALREADY MEASURED AND IT IS THE HALF DEC-65's ARGUMENT RESTS ON.** Driven through
+  `op=suggest` over the same single leg, a machine's single-part reading and a member's derive the
+  IDENTICAL pair (`capture graded/B · connection unrated/null`). That is in
+  `test/dec65-single-part.test.mjs` §5, and it is deliberately the narrow claim: *with one part
+  there is no maximum to take.*
+- **WHAT IS NOT MEASURED, AND IT IS YOURS.** Whether anything in the strength walk READS
+  `asserted_by` at all across SEVERAL grounds. PL-19 did not touch `#strengthWalk` and did not
+  survey it. If the walk takes its maximum over declared grounds without consulting the
+  attribution, the third state is arithmetically inert by construction and that is worth saying
+  out loud; if it does consult it, the reading of the new value is a decision nobody has made.
+- **ASK THE PREDICATE, NEVER MATCH THE LITERAL.** `isSufficiencyClaimed` is TRUE for a named member
+  and for nothing else — not for this value, not for a blank, not for a machine stamp. A site that
+  tests `'none:independent-sufficiency'` itself has rebuilt the predicate and will be wrong the day
+  a fourth state exists.
+- **AND ONE THING NOT TO REACH FOR, now measured twice.** Adding `none:` to `MACHINE_STAMP_PREFIXES`
+  no longer makes `C-25.6` refuse the value (PL-19 control arm 5) and never made the record honest:
+  it makes the record say *a machine claimed this* about a value meaning *nobody did*.

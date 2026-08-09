@@ -117,7 +117,11 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { SUGGEST_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS, isBoilerplate,
-         BOILERPLATE_FORMS } from "../checks/bio-checks.mjs";
+         BOILERPLATE_FORMS,
+         /* PL-19 / DEC-65: IMPORTED, never hand-typed. PL-17's own
+            over-strictness arm caught this suite's sibling hand-typing two
+            variants of this literal, which agreed for free until it moved. */
+         SUFFICIENCY_UNCLAIMED } from "../checks/bio-checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -797,14 +801,50 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     [hidden.ok, hidden.code, hidden.fields], [false, "SUGGEST_UNWRITABLE_STATE", ["hidden"]]);
   /* THE SECOND CONDITION UNDER THIS CODE, asserted separately because the
      control neuters them separately. */
-  const machine = drive(await suggest({ kind: "basis-version", name: "a machine asserting structure",
+  /* CORRECTED 2026-08-09 BY PL-19, WHICH LANDED DEC-65's SHAPE (b). NOT
+     EXEMPTED, AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN.
+     PL-3 asserted that a machine credential submitting a reading that RESTS on
+     documents is refused, full stop — and that WAS the rule: FL-3 measured this
+     very guard refusing on `legsIn.length > 0`, any leg at all regardless of
+     how many parts were declared. It also carried the wrong C-number (C-25.15
+     is `VERSION_ORPHAN_ROW`; the rule is C-25.6), corrected at the guard in the
+     same turn.
+     WHAT CHANGED, AND IT IS A RULING RATHER THAN A RELAXATION: DEC-65 permits a
+     machine to compose a reading declaring EXACTLY ONE part, because with one
+     part there is no maximum to take and DEC-32's conservative weakest-leg
+     answer is what the arithmetic gives either way. The refusal therefore moves
+     from "any leg" to "more than one part", and BOTH SIDES ARE DRIVEN HERE —
+     the old fixture is kept as the accepting arm rather than deleted, because a
+     licence asserted only on the side that passes is a licence with no bound. */
+  const machineOnePart = drive(await suggest({ kind: "basis-version", name: "a machine composing one part",
     description: "A reading resting on a document, submitted by a credential with no member behind it.",
     relationship: "and", grounds: [{ ground: "paper trail" }],
     legs: [{ target: LEDGER, role: "supports", ground: "paper trail" }] }, "mem-pl3"));
-  t("AND A MACHINE CREDENTIAL MAY NOT ASSERT STRUCTURE: a reading that RESTS on documents carries the "
-  + "arrangement of what it rests on (C-25.5), and saying a part would carry the answer on its own is a "
-  + "member's signature (C-25.15). The machine is refused BY NAME rather than discovering it at the write",
-    [machine.ok, machine.code, machine.legs], [false, "SUGGEST_UNWRITABLE_STATE", 1]);
+  t("A MACHINE CREDENTIAL MAY NOW COMPOSE A SINGLE-PART READING (DEC-65 shape (b), landed by PL-19): with "
+  + "exactly one part there is no maximum to take, so no member is credited with a structural claim they "
+  + "did not make — and this guard is the site that FIRES FIRST, so nothing below it was reachable before",
+    [machineOnePart.ok, machineOnePart.state, machineOnePart.kind],
+    [true, "suggested", "basis-version"]);
+  /* AND THE STAMP IS THE POINT OF THE EXEMPTION, read back out of THE RECORD's
+     own bytes (`composition_of: "record"`) rather than off the candidate. The
+     ground row must NOT carry the machine's identity: this field's published
+     meaning is *a member said this part is enough on its own*. */
+  t("AND THE ROW IS STAMPED WITH THE EXPLICIT NO-CLAIM VALUE, never the composer's machine identity — the "
+  + "whole reason PL-17 minted a third state, checked in the bytes the record holds",
+    [machineOnePart.composition_of,
+     (machineOnePart.composition ?? "").split("\n").filter((l) => l.startsWith("ground\t"))
+       .map((l) => l.split("\t")[2])],
+    ["record", [SUFFICIENCY_UNCLAIMED]]);
+  const machineTwoParts = drive(await suggest({ kind: "basis-version", name: "a machine cutting two parts",
+    description: "A reading whose two halves are said to stand alone, submitted under a machine credential.",
+    relationship: "or", grounds: [{ ground: "paper trail" }, { ground: "the audit" }],
+    legs: [{ target: LEDGER, role: "supports", ground: "paper trail" },
+           { target: AUDIT, role: "supports", ground: "the audit" }] }, "mem-pl3"));
+  t("BUT TWO PARTS IS STILL REFUSED BY NAME: there the maximum is live, and choosing which legs are "
+  + "separately sufficient is the authored act DEC-32 says only a member reaches. The licence has a "
+  + "BOUND and this is it",
+    [machineTwoParts.ok, machineTwoParts.code, machineTwoParts.branches ?? machineTwoParts.legs],
+    [false, "SUGGEST_UNWRITABLE_STATE", 2]);
   const machineEmpty = await suggest({ kind: "level-empty", name: "a machine reporting an empty level",
     description: "We searched the meaning layer for a superseding reading and found none.",
     relationship: "and", level: "meaning", observed_at: "observation:pl3-meaning-1" }, "mem-pl3");
@@ -852,10 +892,16 @@ console.log("\n--- 3. F10: a verbatim resubmit is a structural no-op, not someth
      to a landing that happened before it was taken, so the harness reported the
      arm behaving other than declared — which is the harness working. The number
      moved 6 -> 8 because REC-75's own D-234 fixture lands two readings above;
-     re-measure it when you add one, and do not make it relative. */
+     re-measure it when you add one, and do not make it relative.
+     8 -> 9 on 2026-08-09 (PL-19, DEC-65 shape (b)). CORRECTED BY RE-MEASUREMENT
+     AND NOT BY SUBTRACTION, and the reason it moved is the block above rather
+     than anything in this one: the machine-credential submission in CHECK 6 used
+     to be REFUSED and now LANDS, because it declares exactly one part and DEC-65
+     licenses that. One more reading in the fixture, one more in this count. The
+     comment above says do not make it relative, and it is still right. */
     [await shaOf(INQ) === shaBefore, (await read()).total,
      statsAfter.suggestRefusals - statsBefore.suggestRefusals],
-    [true, 8, 1]);
+    [true, 9, 1]);
   /* AND THE KEY DOES NOT GO STALE INTO A FALSE REFUSAL. */
   const landed = await suggest({ kind: "level-empty", name: "the document moves under the key",
     description: "A reading recorded so the inquiry's bytes change beneath the stored refusal.",

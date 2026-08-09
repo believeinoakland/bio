@@ -99,6 +99,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             index.mjs — it is now the same string rather than a proven-equal
             one. */
          isMachineIdentity, isMachineStamp,
+         /* PL-17 / PL-19 / DEC-65: the explicit "no independent-sufficiency
+            claim was made" value, IMPORTED from the one module that mints it so
+            the writer that stamps it and the check that reads it cannot drift
+            apart. `suggestVersion` stamps it under the single-part licence. */
+         SUFFICIENCY_UNCLAIMED,
          /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
@@ -18977,12 +18982,19 @@ export class Store extends DurableObject {
 
     /* AND THE STRUCTURAL ASSERTION ONLY A MEMBER CAN MAKE. "These legs are
        enough on their own" is an authored judgment that makes a finding
-       STRONGER, and C-25.15 refuses it in a machine's name at the document gate.
+       STRONGER, and C-25.6 refuses it in a machine's name at the document gate.
        Here it is refused BEFORE the write, and `asserted_by` is STAMPED from the
        session rather than taken from the caller — a caller naming it would be a
        caller signing for somebody else. So the interactive mode (§10), running
        under a named member, may propose branches; the background job may not,
-       and its refusal says which act it is short of. */
+       and its refusal says which act it is short of.
+       THE C-NUMBER IN THIS BLOCK WAS WRONG UNTIL 2026-08-09 (PL-19). It read
+       C-25.15 in this comment and TWICE MORE in the refusal a caller reads.
+       C-25.15 is `VERSION_ORPHAN_ROW` — a row naming a version that is not
+       there — and is unrelated. The rule this guard stands in front of is C-25.6
+       / `VERSION_GROUND_UNASSERTED`. FL-3 found the same error in DEC-65's own
+       entry; it was corrected there and left here, where it was citing a member
+       at an unrelated rule. Corrected in the turn that changed the guard. */
     const who = String(args.author ?? "").trim();
     const groundsIn = Array.isArray(args.grounds) ? args.grounds : [];
     const declared = groundsIn.map((g) => str(g?.ground)).filter(Boolean);
@@ -19002,14 +19014,36 @@ export class Store extends DurableObject {
        carries is a claim only a member may sign. The interactive mode (§10)
        runs under a named member and can propose all five. */
     const needsPartition = legsIn.length > 0;
-    if ((declared.length || needsPartition) && (!who || isMachineIdentity(who)))
+    /* PL-19 / DEC-65 SHAPE (b) — THE SINGLE-PART LICENCE, AND THIS IS THE SITE
+       THAT FIRES FIRST. FL-3 measured that this arm refused on `legsIn.length >
+       0` — ANY leg at all, whatever the partition — so DEC-65's exemption
+       amended into C-25.6 alone would have landed, passed its own suite and
+       changed nothing a caller could reach. The two move together or neither
+       moves; that is the whole reason PL-19 is one item.
+       WHAT IS PERMITTED, AND NOTHING WIDER: a machine credential may now compose
+       a reading that declares EXACTLY ONE part. With one part there is no
+       maximum to take, so §12 derives the same conservative weakest-leg answer
+       either way and no member is credited with a structural claim they did not
+       make (DEC-65's arithmetic argument, and DEC-32's default is untouched).
+       TWO OR MORE PARTS IS STILL REFUSED, because there the maximum is live and
+       choosing which legs are separately sufficient is the authored act.
+       AN UNNAMED CREDENTIAL IS STILL REFUSED, separately from a machine one: the
+       licence is for the record saying `nobody claimed this` OUTRIGHT under a
+       named machine composer, never for the record not knowing who composed it.
+       DISTINCT, because a version does not earn the licence by declaring its one
+       part twice — and C-25.6 refuses the duplicate at the gate besides. */
+    const declaredParts = [...new Set(declared)];
+    const singlePart = declaredParts.length === 1 && declared.length === 1 && legsIn.length > 0;
+    if ((declared.length || needsPartition) && (!who || (isMachineIdentity(who) && !singlePart)))
       return remember(refusal("SUGGEST_UNWRITABLE_STATE",
         `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} `
         + `declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A `
         + `reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying `
         + `a part of an argument would carry the answer on its own is an authored judgment a named member `
-        + `signs for (C-25.15). A machine COMPOSES a reading and does not assert its structure — it may `
-        + `still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
+        + `signs for (C-25.6). A machine COMPOSES a reading and does not assert its structure — it may `
+        + `put everything it rests on into ONE part, where there is nothing to assert because there is no `
+        + `maximum to take, and it may still report that a level of the search is empty, which rests on `
+        + `nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }));
 
     /* CHECK 5 — NO BOILERPLATE. The placeholder defect at machine scale. Held to
@@ -19576,12 +19610,30 @@ export class Store extends DurableObject {
         level: opt(level), observed_at: opt(observed_at),
       },
       /* `asserted_by` is STAMPED from the session and written unconditionally,
-         so it is normalised unconditionally too — including the empty string a
-         machine-credential submission would carry, which the checks above refuse
-         before this is ever reached. */
+         so it is normalised unconditionally too — including the empty string an
+         unnamed submission would carry, which the checks above refuse before
+         this is ever reached.
+         PL-19 / DEC-65 — AND A MACHINE'S STAMP NEVER REACHES THIS FIELD. Under
+         the single-part licence a machine credential may now compose a reading
+         that carries a ground row, and the row is stamped with PL-17's explicit
+         no-claim value instead of the composer's machine identity. THAT
+         SUBSTITUTION IS THE ENTIRE POINT OF THE THIRD STATE: this field's
+         published meaning is *a member said this part is enough on its own*, so
+         `class:ai` standing in it would make the record claim something nobody
+         claimed — the overclaim class this project ranks worst, and worse than
+         the missing feature the exemption was reached for. The version's own
+         `author` still carries the machine identity, because WHO COMPOSED a
+         reading and WHO ASSERTED its structure are different facts and only the
+         second is a claim.
+         ASKED AS A PREDICATE, NOT MATCHED AS A LITERAL: `isMachineIdentity` is
+         the same one predicate the guard above and C-25.6 ask, so a new machine
+         spelling minted in the catalog reaches this stamp without this line
+         being edited. A blank author still stamps blank — `unstated` and
+         `unclaimed` are different findings and the guard refuses the blank. */
       grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
-        ground: fs(g.ground), asserted_by: fs(author ?? ""), at: fs(at),
-        statement: opt(g?.statement) })),
+        ground: fs(g.ground),
+        asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
+        at: fs(at), statement: opt(g?.statement) })),
       legs: (legs || []).map((l) => ({
         target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
         ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
