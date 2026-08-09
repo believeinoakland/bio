@@ -6543,3 +6543,77 @@ this fixture emits neither class, and `queue-state.test.mjs` is the suite that d
 real. Reaching `taskenqueue` directly (it is deliberately not an op) via
 `mf.getDurableObjectNamespace("STORE")` **HUNG this harness past 300 seconds** rather than
 failing, which is recorded because a hang reads as a slow test.
+
+## 2026-08-09 · D-276 (FLEET) — the refusal `agent-worker` wrote into the record as a zero, and where the refusal actually sits
+
+**Instrument:** `bio-plane/src/index.mjs` itself, stood up in workerd (miniflare, real Durable
+Object with SQLite, real R2 buckets), driven with `op=meaningrows` once per arm the compiler holds
+plus the spelling the member was sending. Worktree `agent-a76b49f4f882535a0` at base `8b60106`,
+`npm ci` run first. The drive is now permanent as section 8 of
+`agent-worker/test/agent-worker.test.mjs` rather than a one-off script.
+
+### 1 · D-276 REPRODUCED, and the arms resolve to TWO tables rather than three
+
+| `rows=` | envelope | answer's own `ok` | `reason` | `check` | `Array.isArray(rows) ? rows.length : 0` |
+| --- | --- | --- | --- | --- | --- |
+| `leg` | 200 · `ok:true` | `true` | — | — | 0 (an empty store) |
+| `resolves` | 200 · `ok:true` | `true` | — | — | 0 (an empty store) |
+| `concerns` | 200 · `ok:true` | `true` | — | — | 0 (an empty store) |
+| **`legs`** (what shipped) | **200 · `ok:true`** | **`false`** | `MEANING_ROWS_UNKNOWN_ARM` | `C-23.2` | **0** |
+| `` (empty) | 200 · `ok:true` | `false` | `MEANING_ROWS_NO_ARM` | `C-23.1` | 0 |
+
+The last column is the caller's own arithmetic, unchanged, over the refusal body: it computes
+**zero**, indistinguishable from an empty answer, and that zero was written into an AI run's
+observation entries as `0 meaning-grain row(s) queried`.
+
+### 2 · **THE REFUSAL IS NOT AT THE ENVELOPE, AND "CHECK `ok`" WOULD NOT HAVE FIXED IT**
+
+The finding the item did not predict. The control plane wraps whatever the Durable Object
+returned, so a refused arm answers **HTTP 200 with a top-level `ok: true`** and the refusal one
+level in:
+
+    { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2",
+                          translation: "…", detail: "…" }, store, tokenClass }
+
+A member that tested the envelope's `ok` — the obvious fix, and the one the delegation named —
+would have read this as a successful call and written the same zero. The answer is therefore taken
+from **the innermost object that states its own `ok`**, and a call is refused when either speaks.
+Ops whose result carries no `ok` at all (`op=airunspawn`, `op=basisversions`) are unaffected.
+
+### 3 · WHICH ARM, ESTABLISHED RATHER THAN ASSUMED
+
+`MEANING` holds three arms over **two** tables: `leg` → `inquiry_basis`; `resolves` and `concerns`
+BOTH → `resolutions`, projecting the identical row (`RESOLUTION_ROW`) and differing only in which
+bare word their bundle-grain selector takes — a distinction in the `q` language, not in what
+`rows=` returns. The member forms VERSIONS OF A BASIS (context an inquiry, `dedup` reads
+`op=basisversions`, `submit` writes `op=suggest`), so `leg` is the arm. Measured, not inferred: an
+empty store answers 0 rows for all three, so the corpus cannot distinguish them — the argument is
+what the member is FOR, and the suite pins the spelling against the plane's live registry.
+
+### 4 · THE SUITES WERE BLIND, MEASURED AS A NUMBER
+
+All three of the member's plane mocks answered `op=meaningrows` `{ ok: true, rows: [] }` for ANY
+argument. Baseline in this worktree: **agent-worker 98 · fanout 172 · harness 194 = 464 assertions
+green over a call that could not succeed.** Correcting the member's argument alone moved **none**
+of them — measured, and it is why the fixture is half the item. The fixture now DERIVES its arm
+vocabulary from `MEANING` and its refusal wording from `MEANING_READ_CHECKS`
+(`agent-worker/test/plane-meaning.mjs`), and reproduces the nesting above.
+
+### 5 · The class sweep inside `agent-worker/**`
+
+Ten plane calls. **Five wrote a claim about the record from a transport check** — `op=meaningrows`
+at both call sites (the item), `op=basisversions` (a refusal became *"compared against 0 on the
+record; N survived"*), `op=airunlog` (a refusal became `resumed_from: 0`), `op=airunclose` (a
+refusal became `ended: {bound, by: "the table"}` for a run the record still holds open). One,
+`op=airunspawn`, was closed BY CONSEQUENCE with the cause misattributed. Four already checked the
+answer at the envelope (`airun`, `airuntick`, `capturerequest`, `suggest`) and two of those were
+still blind to the nesting in §2. Every one now goes through one function.
+
+### What this measurement CANNOT see, stated plainly
+
+The plane was driven over an **EMPTY store** — enough to establish which arms exist and how a
+refusal is shaped, and NOT enough to say anything about the rows a populated record returns for
+`leg`. `meaningread.test.mjs` is the suite that does that. The member itself is still driven
+against a MOCK for everything except the meaning arm, so this measurement says the member's
+`rows=` argument is one the plane accepts and says nothing about its other nine calls' arguments.
+And the run half is FL-6's: `turns_run: 0`, so no model-produced argument was measured at all.

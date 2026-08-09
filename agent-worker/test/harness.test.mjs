@@ -41,6 +41,7 @@
    (H10) OVER-STRICTNESS, nothing broken, and these must PASS.
    ALL TEN ARMS RUN 2026-08-08 IN WORKTREE agent-ad6e5ed43aac4a2ab, baseline 194/0 (this suite) and 98/0 (agent-worker.test.mjs) before each; every one AS DECLARED on the recorded pass. **FOUR CAME BACK WRONG FIRST AND EVERY ONE WAS A FINDING ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed:** H1 never ARMED (patch matched 0 times), then exited 2 on a restore MISMATCH (two snapshots of one file collided on the copy's name — the `cmp` instrument caught what the sha256 could not), then had its MUST-NOT corrected (`queue` is DEDUP'S output, so F10 cannot hold when dedup is skipped); H2 and H9 both KILLED the suite rather than failing it (`0 pass, -1 FAIL`) on a nested read of an empty collection — the CLASS was swept, not the two sites. MEASURED figures: H1 166/28 · H2 184/10 · H3 191/3 · H4 189/4 · H5 186/8 · H6 193/1 · H7 191/3 · H8 harness 192/2 + member 95/3 · H9 187/7 · H10 194/0, 98/0, coverage --strict exit 0. **ALL TEN RE-RUN 2026-08-09 UNDER FL-5 (which changed this file's subject: `collect` became a judged row and the fan-out composes spawn contracts) — 10 of 10 still AS DECLARED, every figure identical except H8, whose patch SITE moved and now reads harness 193/1 + member 96/2.**
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
+   D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
@@ -56,6 +57,12 @@ import {
   PLANE_OPS, JUDGEABLE, NOT_JUDGEABLE,
   nextStep, stopBecause, stepLog, applyJudgement, adjustedFrom, canonical, emptyLevelCandidates,
 } from "../src/harness.mjs";
+/* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
+   registry and refusal catalog. This suite stages ROWS through `CFG.meaningRows`
+   and still can — what it may no longer do is stage a SUCCESS for an arm the
+   record does not hold. */
+import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARM } from "../src/harness.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -440,8 +447,7 @@ export default {
                    mode: CFG.mode || "check", skill: "pack-1.0.0", standard_pair: null, budget: [] } } });
     }
 
-    if (op === "meaningrows")
-      return Response.json({ ok: true, result: { rows: CFG.meaningRows || [], limit: 50, truncated: false } });
+    ${meaningRowsBranch("CFG.meaningRows || []")}
 
     if (op === "basisversions")
       return Response.json({ ok: true, result: { id: url.searchParams.get("id"),
@@ -842,6 +848,42 @@ console.log("\n--- B8 · DEDUP-BEFORE-WRITE, observed at the plane ---");
   t("and exactly one write reached the endpoint", st.log.filter((l) => l.op === "suggest").length, 1);
   t("the trace says what dedup compared", /compared against 2 on the record/.test(
     out.trace?.find((x) => x.step === "dedup")?.note ?? ""), true);
+  await mf.dispose();
+}
+
+console.log("\n--- B8b · D-276: THE MEANING READ SUCCEEDED, AND THE OBSERVATION ENTRY COUNTS REAL ROWS ---");
+/* THE ARM THAT MAKES D-276 IMPOSSIBLE TO REINTRODUCE QUIETLY IN THIS SUITE.
+   `compose`'s note used to be computed as `Array.isArray(got.rows) ? got.rows.length : 0`
+   off a body nobody had checked, so a REFUSED read wrote `0 meaning-grain
+   row(s) queried` into an AI run's observation entries — the record saying it
+   looked and found nothing about a call that never happened. The mock now
+   REFUSES an arm the plane's registry does not hold (`plane-meaning.mjs`), so
+   staging rows here and asserting the note COUNTS them fails the moment the
+   member's argument is wrong again. A count of zero would not have been enough:
+   zero is exactly what the defect produced. */
+{
+  const rows = [{ ord: 0, role: "supports", grade: "B" }, { ord: 1, role: "cuts_against", grade: "C" }];
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, meaningRows: rows });
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [{ targets: [] }, { reports: [] }, { candidates: [] }, {}],
+  })).json();
+  const compose = out.trace?.find((x) => x.step === "compose") ?? null;
+  /* PRINTED, because the SENTENCE is the subject here and an arm that could only
+     report `want true / got false` would tell a later reader that something
+     about the note changed and never WHAT. The negative control reads this line
+     to check that the false zero is really back. */
+  console.log(`  observation entry: ${JSON.stringify(compose?.note ?? null)}`);
+  t("ARMED: the run reached the step that reads the meaning layer", compose != null, true);
+  t("the observation entry COUNTS the rows the record answered with, at the arm's own grain",
+    new RegExp(`^${rows.length} meaning-grain row\\(s\\) queried at the '${MEANING_ARM}' grain;`)
+      .test(compose?.note ?? ""), true);
+  t("...and it does not say the meaning layer went UNREAD",
+    /NOT READ/.test(compose?.note ?? ""), false);
+  t("...and the run published no meaningrows refusal",
+    (out.refusals || []).filter((r) => r && r.at === "meaningrows"), []);
+  t("the arm this member sends is one the PLANE's registry holds, not a spelling of it",
+    MEANING_ARMS.includes(String(MEANING_ARM).trim().toLowerCase()), true);
   await mf.dispose();
 }
 

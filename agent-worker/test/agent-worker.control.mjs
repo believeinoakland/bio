@@ -71,6 +71,21 @@ function runSuite() {
            : { ran: false, pass: 0, fail: -1, failed, out };
 }
 
+/* ANY of this member's suites, by name — D-276 needed the OTHER two. The member
+   has three suites and this harness could run only one of them, so an arm that
+   broke something `fanout.test.mjs` or `harness.test.mjs` holds would have been
+   scored against a suite that never asserts it. Same tail-line discipline: a
+   suite that DIED reports `-1`, never `0`. */
+function runNamedSuite(name) {
+  const r = spawnSync(process.execPath, [join(HERE, `${name}.test.mjs`)],
+    { cwd: MEMBER, encoding: "utf8", env: { ...process.env } });
+  const out = (r.stdout || "") + (r.stderr || "");
+  const m = out.match(new RegExp(`^${name}:\\s*(\\d+) passed,\\s*(\\d+) failed`, "m"));
+  const failed = [...out.matchAll(/^\s*FAIL\s+(.+)$/gm)].map((x) => x[1].trim());
+  return m ? { ran: true, pass: +m[1], fail: +m[2], failed, out }
+           : { ran: false, pass: 0, fail: -1, failed, out };
+}
+
 /* The instrument, run DIRECTLY with its exit status read unpiped. */
 function runCoverageStrict() {
   const r = spawnSync(process.execPath, [join(PLANE, "scripts", "coverage.mjs"), "--strict"],
@@ -113,7 +128,7 @@ function patch(file, find, replace) {
 
 /* An arm: declare what MUST fail and what MUST NOT, arm it alone, measure, and
    restore before anything else runs. */
-function arm({ id, subject, what, mustFail, mustNot, file, find, replace, swapManifest, run }) {
+function arm({ id, subject, what, mustFail, mustNot, file, find, replace, patches, swapManifest, run }) {
   if (only.length && !only.includes(id)) return;
   armsRun++;
   console.log(`\n=== ARM ${id} · ${subject}`);
@@ -121,15 +136,27 @@ function arm({ id, subject, what, mustFail, mustNot, file, find, replace, swapMa
   console.log(`    MUST FAIL      : ${mustFail}`);
   console.log(`    MUST NOT FAIL  : ${mustNot}`);
 
-  let orig = null, moved = null;
-  if (file) {
-    orig = takeOriginal(file);
-    const p = patch(file, find, replace);
-    if (!p.armed) {
-      console.log(`    >>> THE ARM DID NOT ARM: the patch matched ${p.hits} time(s), not once.`);
+  /* D-276 needed arms that take TWO OR THREE FILES DOWN DELIBERATELY — the
+     member's argument, its fixture and its answer check are three separate
+     defences and the interesting statement is what each ONE buys. `patches`
+     is the multi-file form of `file`/`find`/`replace`; every file is snapshotted
+     and every one is restored and VERIFIED, and a patch that matches other than
+     exactly once still aborts the whole arm as never-armed. */
+  const edits = patches ?? (file ? [{ file, find, replace }] : []);
+  let origs = [], moved = null;
+  {
+    let failedAt = null;
+    for (const e of edits) {
+      const o = takeOriginal(e.file);
+      origs.push(o);
+      const p = patch(e.file, e.find, e.replace);
+      if (!p.armed) { failedAt = { file: e.file, hits: p.hits }; break; }
+    }
+    if (failedAt) {
+      console.log(`    >>> THE ARM DID NOT ARM: the patch for ${failedAt.file} matched ${failedAt.hits} time(s), not once.`);
       console.log(`        THIS IS A FINDING ABOUT THE ARM, not a green result. Nothing was measured.`);
-      findings.push(`${id}: never armed (patch matched ${p.hits} times)`);
-      restore(orig);
+      findings.push(`${id}: never armed (patch matched ${failedAt.hits} times in ${failedAt.file})`);
+      for (const o of origs.reverse()) restore(o);
       return;
     }
   }
@@ -142,7 +169,7 @@ function arm({ id, subject, what, mustFail, mustNot, file, find, replace, swapMa
   try { result = run(); }
   finally {
     if (moved) renameSync(moved, MANIFEST);
-    if (orig) console.log(`    ${restore(orig)}`);
+    for (const o of [...origs].reverse()) console.log(`    ${restore(o)} — ${o.file.replace(REPO + "/", "")}`);
     if (swapManifest) console.log(`    manifest restored (present: ${existsSync(MANIFEST)})`);
   }
 
@@ -334,8 +361,19 @@ arm({
   mustFail: "`--strict` must exit non-zero naming FLEET FLOOR — a count with no floor is not a ratchet",
   mustNot: "the undeclared-Worker gate, which has nothing to say about a directory that is not there",
   file: COVERAGE,
-  find: `  members:    2,   // pdf-worker (I6, CPDF-6) + agent-worker (I8, FL-2).`,
-  replace: `  members:    3,   // pdf-worker (I6, CPDF-6) + agent-worker (I8, FL-2).`,
+  /* RE-ANCHORED 2026-08-09 BY D-276, AND THE STALENESS IS THE FINDING RATHER
+     THAN THE FIX. This arm anchored on `  members:    2,   // pdf-worker (I6,
+     CPDF-6) + agent-worker (I8, FL-2).` — the spelling that line had when the
+     arm was written. VF-5 rewrote `FLEET_FLOOR`'s comment block and the line is
+     now `  members:     2,` with its trailing comment moved into the block
+     above, so the patch matched ZERO times and V2 reported THE ARM DID NOT ARM
+     on a clean `main`. It is the third time in this file that a control keyed to
+     a source line has gone stale when the line moved, and the only reason it is
+     visible at all is the harness's rule that an arm which did not arm is a
+     FINDING and never a pass. Anchored on the shortest span that is still
+     unambiguous. */
+  find: `  members:     2,`,
+  replace: `  members:     3,`,
   run: () => {
     const r = runCoverageStrict();
     const floor = /FLEET FLOOR: 2 fleet member\(s\) discovered, floor is 3/.test(r.out);
@@ -407,6 +445,178 @@ arm({
     };
   },
 });
+
+/* ============================================================================
+ * SECTION D — D-276. THE MEANING ARM, THE ANSWER CHECK, AND THE FIXTURE.
+ *
+ * D-276 is TWO defects and the second is about this file's own trade. The member
+ * asked `op=meaningrows` for the arm `"legs"`, which the plane does not hold, and
+ * wrote the refusal into an AI run's observation entries as `0 meaning-grain
+ * row(s) queried`. **And no suite could see it**, because all three plane mocks
+ * answered that op `{ ok: true, rows: [] }` for ANY argument.
+ *
+ * So the arms below take THREE separate defences down — the member's ARGUMENT,
+ * its ANSWER CHECK, and the FIXTURE's ability to refuse — one at a time and then
+ * together, because what matters is not that something breaks but WHICH of the
+ * three is load-bearing for which suite. D3 is the one worth reading: it
+ * reproduces the world as it shipped, and shows that with a permissive fixture
+ * the member's own suites go GREEN over a call that cannot succeed, and that the
+ * ONLY thing that sees it is the section that drives the REAL plane.
+ * ========================================================================== */
+
+const HARNESS_SRC = join(MEMBER, "src", "harness.mjs");
+const MEANING_MOCK = join(HERE, "plane-meaning.mjs");
+
+/* The arm's exact spelling, as it stands in the source. */
+const ARM_FIND = `export const MEANING_ARM = "leg";`;
+const ARM_WRONG = `export const MEANING_ARM = "legs";`;
+/* The permissive fixture, restored to what all three mocks used to say. */
+const MOCK_FIND = `      const asked = String(url.searchParams.get("rows") || "").trim().toLowerCase();`;
+const MOCK_PERMISSIVE = `      const asked = "leg"; url.searchParams.get("rows");`;
+/* The nested half of the answer check — the half a member that "checks ok"
+   would still not have. */
+const NESTED_FIND = `  if (asked.status !== 200 || envelope.ok !== true || said.ok === false)`;
+const NESTED_GONE = `  if (asked.status !== 200 || envelope.ok !== true)`;
+
+const threeSuites = () => ({
+  aw: runNamedSuite("agent-worker"), fo: runNamedSuite("fanout"), hs: runNamedSuite("harness"),
+});
+const tally = (s) => `agent-worker ${s.aw.pass}/${s.aw.fail} · fanout ${s.fo.pass}/${s.fo.fail} · harness ${s.hs.pass}/${s.hs.fail}`;
+
+arm({
+  id: "D1", subject: "D-276's DEFECT, REINTRODUCED — the arm the record does not hold",
+  what: `MEANING_ARM goes back to "legs", the spelling that shipped; the fixture and the answer check are held OPEN`,
+  mustFail: "ALL THREE of this member's suites — the arm-is-known arms, the observation-entry arms in agent-worker and harness, and fanout's citations_reread",
+  mustNot: "the bound, the refusal-passthrough, the version endpoint or the write arms — none of them is about the meaning layer",
+  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG }],
+  run: () => {
+    const s = threeSuites();
+    const allRed = s.aw.fail > 0 && s.fo.fail > 0 && s.hs.fail > 0;
+    const allRan = s.aw.ran && s.fo.ran && s.hs.ran;
+    /* The arm must fail for the RIGHT reason: the note must now say the layer
+       went unread, not merely differ. */
+    const named = s.aw.failed.some((l) => /arm this member sends is one the plane/.test(l))
+               && s.hs.failed.some((l) => /COUNTS the rows the record answered with/.test(l))
+               && s.fo.failed.some((l) => /three were re-read|ANSWERED, not merely attempted/.test(l));
+    const unrelatedHeld = !s.aw.failed.some((l) => /default bound is 120|names its own build|-> 40[01] /.test(l));
+    return {
+      observed: `${tally(s)} · all three RED ${allRed} · the meaning arms are the ones NAMED ${named} · unrelated arms ${unrelatedHeld ? "held" : "ALSO FAILED"}`,
+      asDeclared: allRan && allRed && named && unrelatedHeld,
+    };
+  },
+});
+
+arm({
+  id: "D2", subject: "THE FIXTURE ALONE — a mock that says yes to everything",
+  what: "plane-meaning.mjs stops reading the `rows` argument and accepts anything, exactly as all three mocks used to; the member's arm stays CORRECT",
+  mustFail: "ONLY agent-worker's mock-agrees-with-the-plane arms — the mock can no longer refuse, and the suite says so",
+  mustNot: "fanout or harness at all, and not one arm about the member itself — the member is not broken in this arm, its instrument is",
+  patches: [{ file: MEANING_MOCK, find: MOCK_FIND, replace: MOCK_PERMISSIVE }],
+  run: () => {
+    const s = threeSuites();
+    const mockArmsFailed = s.aw.failed.some((l) => /THE MOCK CAN REFUSE|refuses a MISSING arm/.test(l));
+    const othersQuiet = s.fo.fail === 0 && s.hs.fail === 0;
+    return {
+      observed: `${tally(s)} · the mock-agreement arms ${mockArmsFailed ? "FAILED" : "held"} · fanout+harness ${othersQuiet ? "untouched" : "ALSO FAILED"}`,
+      asDeclared: s.aw.ran && s.fo.ran && s.hs.ran && s.aw.fail > 0 && mockArmsFailed && othersQuiet,
+    };
+  },
+});
+
+arm({
+  id: "D3", subject: "THE WORLD AS IT SHIPPED — wrong arm AND a fixture that cannot refuse",
+  what: "both halves of D-276 at once: MEANING_ARM back to \"legs\" and the fixture accepting anything. TWO defences down deliberately, which is why it is stated",
+  mustFail: "agent-worker's REAL-plane arms; AND in fanout and harness EXACTLY ONE arm each — the STRUCTURAL one that reads the plane's registry without going through the mock",
+  mustNot: "every BEHAVIOURAL arm in fanout and harness — the observation entries, the notes, the counts. A permissive fixture makes the behaviour unmeasurable, and that is the finding",
+  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG },
+            { file: MEANING_MOCK, find: MOCK_FIND, replace: MOCK_PERMISSIVE }],
+  /* THIS ARM WAS DECLARED WRONG THE FIRST TIME AND THE DECLARATION WAS
+     CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED — WORKER.md's rule,
+     and the first result was the more interesting one. It was declared as
+     "fanout and harness go GREEN", on the reasoning that both drive the member
+     only through a mock that now accepts anything. They came back 174/1 and
+     198/1. The single failure in each is the arm this item ADDED that does not
+     go through the mock at all: `MEANING_ARMS.includes(...)`, read live out of
+     `bio-plane/src/query.mjs`. So the honest statement is sharper than the one
+     declared: with a fixture that says yes to everything, EVERY behavioural
+     assertion in those two suites passes over a call that cannot succeed —
+     exactly D-276's condition — and the only things that can still see it are
+     the assertions that ask the PLANE rather than the fixture. The arm now
+     declares the exact label permitted to fail, so "RED" alone will not satisfy
+     it and a second blind spot cannot hide behind this one. */
+  run: () => {
+    const s = threeSuites();
+    const realPlaneSaw = s.aw.failed.some((l) => /arm this member sends is one the plane|THE REAL PLANE ANSWERS/.test(l));
+    const STRUCTURAL = /arm it asked at is one the PLANE's compiler holds|arm this member sends is one the PLANE's registry holds/;
+    const foOnlyStructural = s.fo.fail === 1 && s.fo.failed.every((l) => STRUCTURAL.test(l));
+    const hsOnlyStructural = s.hs.fail === 1 && s.hs.failed.every((l) => STRUCTURAL.test(l));
+    return {
+      observed: `${tally(s)} · the REAL-plane arms ${realPlaneSaw ? "SAW it" : "did NOT see it"} · fanout ${foOnlyStructural ? "failed ONLY its structural arm" : "failed something else too"} · harness ${hsOnlyStructural ? "failed ONLY its structural arm" : "failed something else too"} · every BEHAVIOURAL arm in both went GREEN over a call that cannot succeed — D-276 reproduced`,
+      asDeclared: s.aw.ran && s.fo.ran && s.hs.ran && realPlaneSaw && foOnlyStructural && hsOnlyStructural,
+    };
+  },
+});
+
+arm({
+  id: "D4", subject: "THE ANSWER CHECK'S NESTED HALF — \"check ok\" is not enough",
+  what: "the arm is wrong AND `planeAnswer` stops looking inside `result`, so it checks only the ENVELOPE's ok — which the plane sets to TRUE on a refused arm (measured: HTTP 200, ok:true, the refusal nested)",
+  mustFail: "agent-worker and harness — the refusal reaches the note-writing code unrecognised, so the entry stops saying rows were queried",
+  mustNot: "the FALSE ZERO. The entry must say UNDETERMINED and must NOT say `0 meaning-grain row(s) queried`, because the note has a second defence and this arm is what proves it",
+  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG },
+            { file: SRC, find: NESTED_FIND, replace: NESTED_GONE }],
+  /* DECLARED WRONG THE FIRST TIME AND CORRECTED INTO SOMETHING STRONGER RATHER
+     THAN SMOOTHED, and the correction is a real property of the fix rather than
+     a wording change. It was declared as "the FALSE ZERO comes back" — on the
+     reasoning that removing the nested check makes the member blind to the
+     refusal exactly as it was before. It does; but the entry still does NOT say
+     zero. `0 meaning-grain row(s) queried` needed BOTH the missing check AND the
+     old arithmetic, `Array.isArray(got.rows) ? got.rows.length : 0`, which
+     converted "no rows collection" into "zero rows". The rewrite has three
+     branches instead of that ternary, so with the check gone the third branch
+     fires and the entry reads *"how many meaning-grain row(s) the record holds
+     for this query is UNDETERMINED"*. **Two independent defences, and this arm
+     is what measured that the second one exists** — it now asserts the false
+     zero is ABSENT, which is a stronger statement than the one it started with
+     and fails if either defence is removed. */
+  run: () => {
+    const s = threeSuites();
+    /* THE SENTENCE ITSELF is the measurement here, not the tally — both suites
+       PRINT the observation entry for exactly this reason. */
+    const falseZero = /0 meaning-grain row\(s\) queried/.test(s.hs.out + s.aw.out);
+    const undetermined = /is UNDETERMINED — the plane answered without a rows collection/.test(s.hs.out);
+    const noteArmFailed = s.hs.failed.some((l) => /COUNTS the rows the record answered with/.test(l));
+    const silentHeld = !s.aw.failed.some((l) => /PLANE_SILENT|silent plane/.test(l));
+    return {
+      observed: `${tally(s)} · the false zero ${falseZero ? "IS BACK" : "did NOT come back — the note's second defence held"} · the entry says UNDETERMINED ${undetermined} · the note arm ${noteArmFailed ? "FAILED" : "held"} · plane-silent arms ${silentHeld ? "held" : "ALSO FAILED"}`,
+      asDeclared: s.aw.ran && s.hs.ran && noteArmFailed && !falseZero && undetermined && silentHeld,
+    };
+  },
+});
+
+if (!only.length || only.includes("D5")) {
+  armsRun++;
+  console.log(`\n=== ARM D5 · OVER-STRICTNESS FOR D-276 — correct work in a spelling nobody anticipated`);
+  console.log(`    WHAT IS CHANGED: MEANING_ARM spelled "LEG" — upper case. The plane NORMALISES`);
+  console.log(`                     \`rows\` (\`String(input.rows).trim().toLowerCase()\`), so this is`);
+  console.log(`                     CORRECT WORK, and an arm that failed it would be a fence`);
+  console.log(`                     tighter than its rule.`);
+  console.log(`    MUST PASS      : all three suites, unchanged counts.`);
+  const o = takeOriginal(HARNESS_SRC);
+  const p = patch(HARNESS_SRC, ARM_FIND, `export const MEANING_ARM = "LEG";`);
+  let s = null;
+  if (!p.armed) {
+    console.log(`    >>> THE ARM DID NOT ARM: patch matched ${p.hits} time(s).`);
+    findings.push(`D5: never armed (patch matched ${p.hits} times)`);
+  } else {
+    try { s = threeSuites(); } finally { console.log(`    ${restore(o)}`); }
+    const ok = s.aw.ran && s.fo.ran && s.hs.ran && s.aw.fail === 0 && s.fo.fail === 0 && s.hs.fail === 0;
+    console.log(`    OBSERVED       : ${tally(s)}`);
+    if (ok) { armsAsDeclared++; console.log(`    VERDICT        : AS DECLARED`); }
+    else { console.log(`    VERDICT        : *** NOT AS DECLARED — an over-strictness failure is a defect in the FENCE ***`);
+           findings.push(`D5: ${tally(s)}`); }
+  }
+  if (p.armed === false) restore(o);
+}
 
 /* ============================================================================
  * SECTION O — OVER-STRICTNESS. Correct work in a spelling nobody anticipated

@@ -116,7 +116,7 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
  * through `POST /run` inside workerd, and the two must agree. A table exercised
  * only through the op is a table nobody can exhaust. */
 import {
-  CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS,
+  CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates,
 } from "./harness.mjs";
 
@@ -271,12 +271,19 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      The MODE above all: SK-4's gate is only a gate while the mode is the
      record's. A `mode` in the request body would be a gate the caller holds,
      which is the defect §14b.4 names one layer up. */
-  const runRead = await call("airun", { run: runId });
-  if (!runRead.reached)
-    return { refusal: planeSilent(runRead) };
-  if (runRead.status !== 200 || runRead.body?.ok !== true)
-    return { refusal: planeRefused(runId, store, runRead) };
-  const session = runRead.body.result?.session ?? runRead.body.session ?? null;
+  const runRead = planeAnswer(await call("airun", { run: runId }), "airun");
+  if (runRead.silent)
+    return { refusal: planeSilent(runRead.silent) };
+  /* D-276: this site DID check the answer, at the ENVELOPE. It is routed through
+     `planeAnswer` so it also sees a refusal the control plane wrapped inside
+     `result` — the shape the meaning read was actually refused in. A store-level
+     refusal used to fall through here as a session-less body and be re-worded as
+     this member's own NO_SUCH_RUN, which is a different sentence from the plane's
+     and is the one thing a member may never do to a refusal (A6). */
+  if (runRead.refused)
+    return { refusal: planeRefused(runId, store,
+      { status: 403, body: runRead.refused.plane ?? null }) };
+  const session = runRead.result?.session ?? null;
   if (!session)
     return { refusal: refusal("NO_SUCH_RUN",
       "the plane holds no run under that id in this namespace, so there is nothing to continue. This "
@@ -287,9 +294,18 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      The count is what the table needs; the entries are what a later reader
      needs. Both come from PL-5's `op=airunlog`, in `seq` order, which is why
      that read keeps ASCENDING order and cuts at the END. */
-  const logRead = await call("airunlog", { run: runId });
-  if (!logRead.reached) return { refusal: planeSilent(logRead) };
-  const priorLog = logRead.body?.result ?? logRead.body ?? {};
+  const logRead = planeAnswer(await call("airunlog", { run: runId }), "airunlog");
+  if (logRead.silent) return { refusal: planeSilent(logRead.silent) };
+  /* D-276's CLASS. This read was TRANSPORT-checked only, so a refused
+     `op=airunlog` left `entries` unreadable and `resumedFrom` at 0 — this member
+     stating "there is no prior log" about a run whose log the record had just
+     declined to show it, and then publishing that as `resumed_from`. It is
+     treated exactly as a refused `op=airun` above is: a run's own facts are the
+     record's, and a segment that cannot read them does not proceed on a guess. */
+  if (logRead.refused)
+    return { refusal: planeRefused(runId, store,
+      { status: 403, body: logRead.refused.plane ?? null }) };
+  const priorLog = logRead.result ?? {};
   const resumedFrom = Array.isArray(priorLog.entries) ? priorLog.entries.length : 0;
 
   const budget = {};
@@ -345,7 +361,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (work.contract)
       return { refusal: refusal(work.contract.code, work.contract.detail, 502,
         { level: work.level ?? null, run_id: runId }) };
-    if (work.refused) { refusals.push(work.refused); }
+    /* D-276: THE PLANE REFUSED A CALL THIS STEP CANNOT CONTINUE WITHOUT, and its
+       refusal is passed through in the plane's own words rather than re-worded
+       into a statement about this member's inputs. */
+    if (work.planeRefusal)
+      return { refusal: planeRefused(runId, store,
+        { status: 403, body: work.planeRefusal.plane ?? null }) };
+    /* A STEP MAY REFUSE MORE THAN ONCE — see the acquisition loop and the
+       citation re-reads. Publishing the last one only would make the run's own
+       refusal list shorter than the run's refusals. */
+    if (work.refused) refusals.push(...(Array.isArray(work.refused) ? work.refused : [work.refused]));
     state = work.state;
     if (work.submitted) submitted += 1;
     if (work.verbatim) verbatimResubmits += 1;
@@ -387,15 +412,29 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         break;
       }
     } else {
-      refusals.push({ at: "airuntick", plane: tick.body ?? null });
+      /* Already ANSWER-checked before D-276; given the same three fields as
+         every other published refusal so a reader is not told the code at four
+         sites and left to find it in the body at the fifth. */
+      refusals.push({ at: "airuntick", code: tick.body?.reason ?? tick.body?.code ?? null,
+                      check: tick.body?.check ?? null, plane: tick.body ?? null });
     }
 
     if (decision.step === "close") {
       /* THE ORDINARY EXIT, NAMING THE BOUND (C-22.5). The plane refuses a close
          that names none rather than inferring "completed" from silence, so the
          bound the TABLE computed is handed over explicitly. */
-      const closed = await call("airunclose", null, { run: runId, bound: decision.bound || "completed" });
-      if (!closed.reached) return { refusal: planeSilent(closed) };
+      const closed = planeAnswer(
+        await call("airunclose", null, { run: runId, bound: decision.bound || "completed" }),
+        "airunclose");
+      if (closed.silent) return { refusal: planeSilent(closed.silent) };
+      /* D-276's CLASS, AND THIS ONE IS A CLAIM ABOUT THE RECORD ITSELF. `ended`
+         says the run ENDED and names who ended it; it used to be written from a
+         transport check, so a REFUSED close published `ended: { bound, by: "the
+         table" }` for a run the record still holds open. A run reported as
+         terminated when the plane declined to terminate it is the record
+         claiming more than it can support. The refusal is named and `ended`
+         stays null, which is the honest "this segment did not end it". */
+      if (closed.refused) { refusals.push(closed.refused); state = { ...state, step: "close" }; break; }
       ended = { bound: decision.bound || "completed", by: "the table" };
       state = { ...state, step: "close" };
       break;
@@ -442,6 +481,64 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   };
 }
 
+/* -------------------------------------------------- D-276: THE ANSWER, NOT THE WIRE
+ *
+ * A REFUSAL THAT ARRIVES AS A WELL-FORMED HTTP RESPONSE IS STILL A REFUSAL, and
+ * this is the one place in this member that says so. `askPlane` answers the
+ * TRANSPORT question — did the plane answer at all — and nothing more. Reading
+ * `.reached` and then taking fields off the body treats `{ok: false, reason:
+ * MEANING_ROWS_UNKNOWN_ARM}` as an answer with no rows in it, which is how
+ * D-276 turned the plane's own false-coverage fence into false coverage: the
+ * run note said `0 meaning-grain row(s) queried` for a call that never
+ * succeeded, and that note lands in an AI run's OBSERVATION ENTRIES, which are
+ * record. CLAUDE.md: *"no meaning derived may mean nothing was extracted;
+ * nothing extracted may mean the document was never read; no document may mean
+ * nobody looked"* — saying WHICH is a first-class obligation, and "the record
+ * was not asked" is a fourth sentence that must never be written as the first.
+ *
+ * REC-52/REC-53 swept exactly this shape through the plane — a silence or a
+ * refusal turning into a normal-looking answer. This is that lesson on the
+ * member side, and it is a FUNCTION rather than a rule so that a new call site
+ * cannot get it wrong quietly: there are three outcomes and a caller must
+ * handle each by name.
+ *
+ *   { silent }   the plane did not answer. Nothing is known about the record.
+ *   { refused }  the plane answered, and its answer is NO. The code, the
+ *                C-number and the plane's own body travel with it — this member
+ *                re-words no refusal (A6).
+ *   { result }   the plane answered YES, and this is what it said.
+ *
+ * AND THE REFUSAL IS NOT WHERE A READER EXPECTS IT — MEASURED 2026-08-09 BY
+ * DRIVING THE REAL PLANE, and it is why "check `ok`" is only half the fix.
+ * `op=meaningrows` refusing an unknown arm answers **HTTP 200** with a
+ * **TOP-LEVEL `ok: true`**, because the control plane wraps whatever the Durable
+ * Object returned:
+ *
+ *   { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM",
+ *                         check: "C-23.2", translation: "…" }, store, tokenClass }
+ *
+ * A member that tested the ENVELOPE's `ok` would have read that as a successful
+ * call, exactly as the member that tested `.reached` did — the same defect one
+ * layer in. So the answer is the innermost object that states its own `ok`, and
+ * a call is refused when EITHER the envelope or that object says no. An op whose
+ * result carries no `ok` at all (`op=airunspawn`, `op=basisversions`) is
+ * unaffected: the envelope is then the only thing that speaks.
+ */
+function planeAnswer(asked, at) {
+  if (!asked.reached) return { at, silent: asked };
+  const envelope = (asked.body && typeof asked.body === "object") ? asked.body : {};
+  const inner = (envelope.result && typeof envelope.result === "object" && !Array.isArray(envelope.result))
+    ? envelope.result : null;
+  /* WHOEVER STATES `ok` IS WHO IS ANSWERING. */
+  const said = (inner && "ok" in inner) ? inner : envelope;
+  if (asked.status !== 200 || envelope.ok !== true || said.ok === false)
+    return { at, refused: { at,
+                            code: said.reason ?? said.code ?? envelope.reason ?? envelope.code ?? null,
+                            check: said.check ?? envelope.check ?? null,
+                            plane: asked.body ?? null } };
+  return { at, result: inner ?? envelope };
+}
+
 /** THE ONE MEANING READER IN THIS MEMBER, AND THE OP IS NAMED IN EXACTLY ONE
  *  PLACE. Two rows now need PL-9's read — `compose` queries at meaning grain and
  *  `collect` re-reads a citation BY ADDRESS through the same compiler's `ids`
@@ -449,9 +546,17 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
  *  step. §14b.1's query-never-load is not "call this op"; it is that the run
  *  reaches everything it does not hold by ASKING, through one door. D-15's
  *  one-compilation-point rule is the same argument one layer down, and FL-3's
- *  suite pins the literal to a single occurrence for exactly this reason. */
-const meaningRead = (call, { q = "", rows = "legs", limit = 50, ids = null } = {}) =>
-  call("meaningrows", { q, rows, limit }, ids ? { ids } : null);
+ *  suite pins the literal to a single occurrence for exactly this reason.
+ *
+ *  IT ANSWERS THROUGH `planeAnswer`, so there is no way to read these rows
+ *  without having decided what to do about a refusal. The op's NAME is a
+ *  constant because `planeAnswer` also wants it — writing the literal twice
+ *  would break `harness.test.mjs`'s one-meaning-reader pin with a LABEL rather
+ *  than with a second reader, and a pin that fires on a label is a pin that gets
+ *  loosened. The pin is right; the code says the name once. */
+const MEANING_OP = "meaningrows";
+const meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) =>
+  planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
 
 /** WHAT EACH ROW ACTUALLY DOES AGAINST THE PLANE. One `case` per row that has
  *  work, and rows that have none say so by falling through — the table already
@@ -475,9 +580,17 @@ async function performStep(call, state, runId) {
          that true at runtime and not only in `store.mjs`. */
       const contracts = [];
       for (const level of LEVELS) {
-        const p = await call("airunspawn", { run: runId, half: "search" });
-        if (!p.reached) return { silent: p };
-        const payload = (p.body?.result ?? p.body ?? {}).payload ?? null;
+        const p = planeAnswer(await call("airunspawn", { run: runId, half: "search" }), "airunspawn");
+        if (p.silent) return { silent: p.silent };
+        /* D-276's CLASS, CLOSED-BY-CONSEQUENCE BEFORE AND NAMED NOW. A refused
+           spawn used to fall through with `payload = null`, which `spawnContract`
+           refuses as SPAWN_PAYLOAD_MISSING — so the run did stop, but it stopped
+           saying *"the plane returned no search-half payload"* when what actually
+           happened was that the plane REFUSED, for a reason it had named. A
+           correct outcome reached by misreporting the cause is still a refusal
+           this member re-worded. */
+        if (p.refused) return { planeRefusal: p.refused, level };
+        const payload = (p.result ?? {}).payload ?? null;
 
         /* FL-5's SPAWN CONTRACT. The payload is read key by key into a frozen
            brief for ONE level — never spread — so there is no field for a
@@ -507,11 +620,22 @@ async function performStep(call, state, runId) {
          group 1, PL-4). One request per internet target the judgement named, and
          each one spends a FETCH from the run's budget. */
       const fetches = (state.targets || []).filter((t) => t && t.level === "internet");
+      /* NAMED, AND ALL OF THEM. This used to assign `out.refused` inside the
+         loop, so two refused acquisition requests published ONE — the record
+         holding fewer refusals than happened, which is the same class as
+         D-276 pointing the other way. */
+      const acqRefused = [];
       for (const t of fetches) {
-        const r = await call("capturerequest", null, { run: runId, target: t.target ?? null, url: t.url ?? null });
-        if (!r.reached) return { silent: r };
-        if (r.status !== 200 || r.body?.ok !== true) out.refused = { at: "capturerequest", plane: r.body ?? null };
+        const r = planeAnswer(await call("capturerequest", null,
+          { run: runId, target: t.target ?? null, url: t.url ?? null }), "capturerequest");
+        if (r.silent) return { silent: r.silent };
+        /* Already ANSWER-checked before D-276 — routed through `planeAnswer` so
+           every refusal this member publishes carries the same three fields
+           (code, C-number, the plane's own body) rather than two of them here
+           and three of them at `suggest`. */
+        if (r.refused) acqRefused.push(r.refused);
       }
+      if (acqRefused.length) out.refused = acqRefused;
       if (fetches.length) out.consume.fetches = fetches.length;
       return out;
     }
@@ -538,15 +662,30 @@ async function performStep(call, state, runId) {
          is making. Bounded by `citedAddresses`, so a report cannot turn the
          parent's context into the reading it was supposed to replace. */
       const addresses = citedAddresses(taken);
+      /* D-276: `reread` COUNTS READS THAT ANSWERED, never calls that were made.
+         It used to climb once per address regardless of what came back, so a
+         refused read was published as `citations_reread` — this member claiming
+         to have gone back to the record when the record had said no. A count of
+         attempts wearing the name of a count of reads is the same defect as the
+         zero below, one field along. */
       let reread = 0;
+      const rereadRefused = [];
       for (const address of addresses) {
-        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });
-        if (!got.reached) return { silent: got };
+        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });
+        if (got.silent) return { silent: got.silent };
+        if (got.refused) { rereadRefused.push(got.refused); continue; }
         reread += 1;
       }
+      if (rereadRefused.length) out.refused = rereadRefused;
 
-      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} citation(s) `
-               + `re-read BY ADDRESS. No document was returned by a sub-session and none was loaded`;
+      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of `
+               + `${addresses.length} citation(s) re-read BY ADDRESS`
+               + (rereadRefused.length
+                  ? `, and ${rereadRefused.length} could NOT be — the plane refused `
+                    + `'${String(rereadRefused[0].code ?? "?")}', so those addresses are UNREAD rather `
+                    + "than empty"
+                  : "")
+               + `. No document was returned by a sub-session and none was loaded`;
       out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
                     reportsRefused: [...(state.reportsRefused || []), ...refused] };
       return out;
@@ -559,9 +698,8 @@ async function performStep(call, state, runId) {
          meaning grain — CONSUMED and not rebuilt. There is no second reader in
          this Worker and there must not be: D-15's one compilation point is what
          makes the viewer gate a gate. */
-      const rows = await meaningRead(call, { q: state.q || "", rows: "legs", limit: 50 });
-      if (!rows.reached) return { silent: rows };
-      const got = rows.body?.result ?? rows.body ?? {};
+      const read = await meaningRead(call, { q: state.q || "", rows: MEANING_ARM, limit: 50 });
+      if (read.silent) return { silent: read.silent };
 
       /* §9's EMPTY-LEVEL KIND, ADDED BY THE TABLE. The model said what it
          observed at each level; `emptyLevelCandidates` decides that an observed
@@ -570,7 +708,33 @@ async function performStep(call, state, runId) {
          exists to catch is the run that would not emit it. */
       const empties = emptyLevelCandidates(state, state.target ?? null);
       const candidates = [...(state.candidates || []), ...empties];
-      out.note = `${Array.isArray(got.rows) ? got.rows.length : 0} meaning-grain row(s) queried; no document `
+
+      /* D-276 — THREE OUTCOMES, THREE SENTENCES, AND THE RUN NOTE IS RECORD.
+         "the record was not asked", "the record answered and said nothing about
+         its shape" and "the record holds N rows" are three different facts and
+         only one of them may be written as a zero. What was here computed
+         `Array.isArray(got.rows) ? got.rows.length : 0` off a body that had not
+         been checked, so all three collapsed into the third — and a REFUSAL
+         became the confident sentence `0 meaning-grain row(s) queried`. */
+      let said;
+      if (read.refused) {
+        out.refused = read.refused;
+        said = `the meaning layer was NOT READ — the plane refused `
+             + `'${String(read.refused.code ?? "?")}'`
+             + (read.refused.check ? ` (${read.refused.check})` : "")
+             + `, so this run knows NOTHING about meaning-grain rows for this query and does not `
+             + `report zero of them`;
+      } else if (!Array.isArray(read.result?.rows)) {
+        /* UNDETERMINED IS FIRST-CLASS AND IS STATED. This branch is the one that
+           makes the note honest even if the refusal check above is ever weakened:
+           an answer with no rows collection is NOT zero rows, and the old
+           `Array.isArray(got.rows) ? got.rows.length : 0` said it was. */
+        said = "how many meaning-grain row(s) the record holds for this query is UNDETERMINED — the "
+             + "plane answered without a rows collection this member could read";
+      } else {
+        said = `${read.result.rows.length} meaning-grain row(s) queried at the '${MEANING_ARM}' grain`;
+      }
+      out.note = `${said}; no document `
                + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`;
       out.state = { ...state, candidates };
       return out;
@@ -583,13 +747,33 @@ async function performStep(call, state, runId) {
          spend a write path to be told something it could have known. Both are
          wanted: §14b.5 is explicit that the run verifies its own work BEFORE
          proposing and that the checks are nevertheless the PLANE'S. */
-      const held = await call("basisversions", { id: state.target || "", limit: 50 });
-      if (!held.reached) return { silent: held };
-      const body = held.body?.result ?? held.body ?? {};
+      const held = planeAnswer(await call("basisversions", { id: state.target || "", limit: 50 }),
+                               "basisversions");
+      if (held.silent) return { silent: held.silent };
+      const proposed = (state.candidates || []).length;
+      /* D-276's CLASS, and this site is the one where it cost more than a
+         sentence. A refused `op=basisversions` used to leave `names` EMPTY, so
+         the note said every candidate had been *"compared against 0 on the
+         record"* and every one *"survived"* — a comparison that never happened,
+         written down as a comparison against an empty record. The run still goes
+         on to submit, because PL-3's check 3 is the fence and this arithmetic
+         was only ever the run saving itself a write path; what it may NOT do is
+         say it compared. */
+      if (held.refused) {
+        out.refused = held.refused;
+        out.note = `the record's own versions could NOT be read — the plane refused `
+                 + `'${String(held.refused.code ?? "?")}'`
+                 + (held.refused.check ? ` (${held.refused.check})` : "")
+                 + `, so this run compared its ${proposed} candidate(s) against NOTHING and says so `
+                 + `rather than reporting them all as new. PL-3's check 3 is still the fence`;
+        out.state = { ...state, queue: [...(state.candidates || [])] };
+        return out;
+      }
+      const body = held.result ?? {};
       const names = new Set((Array.isArray(body.versions) ? body.versions : [])
         .map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       const queue = (state.candidates || []).filter((c) => c && !names.has(String(c.name ?? "")));
-      out.note = `${(state.candidates || []).length} candidate(s) compared against ${names.size} on the record; `
+      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
                + `${queue.length} survived`;
       out.state = { ...state, queue };
       return out;

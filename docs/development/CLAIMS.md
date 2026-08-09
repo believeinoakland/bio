@@ -6746,3 +6746,101 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+## CLAIM 2026-08-09 FLEET (D-276 — `agent-worker` asks `op=meaningrows` for an arm that does not exist, and reports the plane's REFUSAL as an empty answer)
+session: d276-meaningrows-arm (worktree agent-a76b49f4f882535a0)
+opened: 2026-08-09T00:00:00Z
+paths: **`agent-worker/src/index.mjs`** — the `meaningRead` helper and the answer-reading of the
+  plane calls made inside `performStep`/`driveHarness`. The arm spelling, `planeAnswer` (the one
+  place that separates TRANSPORT from ANSWER), and the observation-entry notes that were computed
+  off a transport check. Nothing else in the file.
+  **`agent-worker/test/agent-worker.test.mjs`** — the PLANE MOCK's `meaningrows` branch (made able
+  to REFUSE, with its arm vocabulary and its refusal wording IMPORTED from the plane rather than
+  typed), a new section driving the member's argument against the REAL plane in workerd, and this
+  item's arms named in the suite's `NEGATIVE CONTROL:` block.
+  **`agent-worker/test/agent-worker.control.mjs`** — this item's arms added to the harness.
+  `docs/development/MEASUREMENTS.md` (APPEND), `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/**` (READ ONLY — `src/query.mjs`, `src/index.mjs` and `checks/bio-checks.mjs`
+  are imported and DRIVEN, never edited), **NOT** `docs/development/DEBT.md` (D-276's row is NOT ON
+  `main` — it is on `worktree-agent-ae6d6208e9ce45be3`, D-258's unmerged branch, so there is no cell
+  in this tree to set; the disposition is below and CONDUCT carries it onto the row at merge),
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `release/**`, **NOT** `pdf-worker/**`.
+interfaces consumed: I3 — `op=meaningrows` (read), DRIVEN against the real plane. No published
+  envelope changes anywhere, so **no IC row is owed**. `agent-worker`'s own `/run` answer gains no
+  field; two note STRINGS inside `trace[].note` change wording, and those are prose the suite reads,
+  not a shape another area builds against.
+interfaces owned: the `agent-worker` `/run` and `/version` surface (FL-2), unchanged.
+expected: D-276 — spell the arm the plane's registry actually holds, established by DRIVING all
+  three arms plus the member's own spelling against the real plane; make the caller check the
+  ANSWER rather than the transport, so a refusal is recorded as a refusal and not as a zero; and
+  make the mock able to REFUSE, so the next wrong argument is not invisible to the suite.
+  Also **`bio-plane/scripts/coverage.mjs`** — the `FLEET_FLOOR.arms` figure ONLY, moved from what a
+  green `--strict` run PRINTED, ONE key set. `bio-plane/scripts/coverage.mjs` is also TRANSIENTLY
+  armed and restored by `agent-worker.control.mjs`'s V2 (sha256 AND `cmp` verified), as it has been
+  since VF-3.
+released: 2026-08-09 — committed on branch `worktree-agent-a76b49f4f882535a0` at base `8b60106`,
+  NOT pushed and NOT merged; CONDUCT integrates. **D-276 CLOSED, BOTH HALVES.** The arm is `leg`,
+  established by DRIVING the real plane in workerd rather than by assuming the singular of `legs`;
+  the caller reads the ANSWER through one function (`planeAnswer`) instead of the transport; and
+  all three plane mocks now REFUSE an unknown arm, out of a fixture that DERIVES its vocabulary
+  from `MEANING` and its wording from `MEANING_READ_CHECKS`.
+  **THE FINDING THE DELEGATION DID NOT PREDICT, AND IT CHANGES THE FIX: "CHECK `ok`" WOULD NOT
+  HAVE BEEN ENOUGH.** Measured on the real wire — `op=meaningrows` refusing an unknown arm answers
+  **HTTP 200 with a TOP-LEVEL `ok: true`**, the refusal nested inside `result` because the control
+  plane wraps whatever the Durable Object returned. A member testing the envelope's `ok` would have
+  read that as a successful call and written the same zero. The answer is therefore taken from the
+  innermost object that states its own `ok`. Arm D4 measures exactly this.
+  **BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT, `npm ci` first: 151 suites (146 plane · 5
+  fleet) · 150/151 · 9,686 assertions · battery EXIT 1 — `mintid.test.mjs` was ALREADY RED ON
+  `main`** (`no live floor is driven by prose (["D"])`: D's floor reads 277 off the sentence
+  *"Spawned as D-277"* in `QUEUE.md` against a highest real allocation of 271, because that item has
+  a queue row and no register row — D-271's own cell describes this exact mechanism). Reproduced
+  ALONE at `8b60106`, `76 pass, 1 FAIL`, exit 1. **FINAL: 150/151 · 9,709 · the SAME one suite and
+  the SAME one assertion, unchanged at 76 pass / 1 FAIL.** Not this item's to close: the fix is a
+  `D-277` register row, which is CONDUCT's, and writing one here would be guessing at another
+  item's content.
+  **DELTA +23, ATTRIBUTED PER SUITE against a re-measured true baseline for each:**
+  `agent-worker.test.mjs` 98 -> 113, `fanout.test.mjs` 172 -> 175, `harness.test.mjs` 194 -> 199.
+  No other suite's file was touched. `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` read
+  UNPIPED, **exit 0** — OPS 163/163 · CHECKS 224/224 · `REGISTER_FLOOR` UNMOVED (731/731 ·
+  145/145 · 146/146; no plane suite added) · **`FLEET_FLOOR.arms` MOVED 43 -> 48 in the same turn
+  from the figure the run PRINTED**, ONE key set, `members`/`surfaceOps`/`suites` unmoved and not
+  invalidated. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED, **exit 0**.
+  **SEVENTEEN CONTROL ARMS, ALL AS DECLARED ON THE RECORDED PASS, and three came back wrong first
+  — every one recorded rather than smoothed.** (i) **V2 NEVER ARMED, ON A CLEAN `main`**: its
+  anchor in `coverage.mjs` was rewritten by VF-5, the patch matched ZERO times, and the harness
+  scored it a FINDING rather than a pass — the third control in that file to go stale when a source
+  line moved. Re-anchored, then AS DECLARED. (ii) **D3 was declared "fanout and harness go GREEN"
+  and came back 174/1 and 198/1** — the one failure in each is this item's own structural arm,
+  which does not go through the mock. The declaration was corrected into the stronger form (the
+  EXACT label permitted to fail) and re-run; the corrected statement is the more useful one: with a
+  permissive fixture every BEHAVIOURAL arm in both suites passes over a call that cannot succeed.
+  (iii) **D4 was declared to bring the false zero back and it did NOT** — `0 meaning-grain row(s)
+  queried` needs BOTH the missing check AND the old `Array.isArray(got.rows) ? got.rows.length : 0`.
+  The rewrite has three branches, so the entry says UNDETERMINED instead. A second defence nobody
+  had declared, found by an arm that was wrong.
+  **THE CLASS WAS SWEPT ACROSS ALL TEN OF THE MEMBER'S PLANE CALLS AND EVERY ONE HAS A VERDICT**,
+  in the report and in `MEASUREMENTS.md`: five wrote a claim about the record off a transport check
+  (`meaningrows` x2, `basisversions`, `airunlog`, `airunclose`), one was closed BY CONSEQUENCE with
+  the cause misattributed (`airunspawn`), four already checked the answer at the envelope and two of
+  those were still blind to the nesting above. **What the sweep CANNOT see, stated:** it is a
+  hand-read of ten call sites in one file, not a matcher — there is no instrument here that would
+  find an eleventh call added tomorrow, and the only structural guard is that `planeAnswer` is the
+  one place that separates the two.
+  **ONE INSTRUMENT DEFECT FOUND IN `coverage.mjs` AND RECORDED AT THE SITE:** a cross-suite pointer
+  naming another declaration's arm labels is COUNTED AS ARMS by `readControl` — the first draft of
+  this item's cross-references took the fleet tally to 50 for five real arms, five arms of phantom
+  slack in a ratchet. Reworded to name no label; measured back to 48.
+interfaces: no IC row is owed — no published envelope changed. Two `trace[].note` STRINGS are
+  reworded and `citations_reread` now counts answered reads rather than attempted ones, which is a
+  correction to what the field always claimed to mean rather than a change of shape.
+
+### DECISIONS FOR BOB 2026-08-09 (D-276): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. The one determination this item carried —
+WHICH arm — is answered by a measurement rather than a preference (the three arms resolve to two
+tables; this member forms versions of a BASIS), and the reasoning is at the site in `harness.mjs`
+rather than only here. The one judgement call, recorded rather than escalated: a REFUSED
+`op=basisversions` lets the run continue to `submit` with its candidates rather than dropping
+them, because PL-3's check 3 is the fence and this member's arithmetic was only ever saving itself
+a write path — what it may not do is SAY it compared. Reversing that is one line.

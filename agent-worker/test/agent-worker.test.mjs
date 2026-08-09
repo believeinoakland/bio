@@ -39,6 +39,13 @@
    (V4) FLEET RULE 2. Declare the `run` surface op `mutating: true` -> **exit 1** naming FLEET RULE 2; every other fleet gate silent.
    (V5) THE BATTERY ACTUALLY RUNS THIS SUITE. Break one assertion here -> `battery.mjs agent-worker` **exits 1** and NAMES this suite in FAILED. Before FL-2 the battery ran no fleet suite at all, so a member's coverage stood on a source read of a suite nobody executed.
    (O1) OVER-STRICTNESS, nothing broken, and these must PASS: a request exactly at the bound, `turns` omitted entirely, namespaces with hyphens/underscores/capitals, a run_id carrying punctuation, and a DIFFERENT well-formed credential used alone -> **89 pass, 0 FAIL, coverage --strict exit 0**.
+   **RE-MEASURED 2026-08-09 BY D-276 IN WORKTREE agent-a76b49f4f882535a0 at base `8b60106`, because D-276 changed this suite and every figure above went stale the moment it did — corrected, never left standing.** New baselines **agent-worker 113/0 · fanout 175/0 · harness 199/0** (they were 98 · 172 · 194). Re-measured: A1 106/7 · A2 110/3 · A3 74/39 · A4 109/4 · A5 106/7 · A6 110/3 · V1/V3/V4/V5 unchanged (they read the instrument, not this suite) · O1 113/0 with coverage --strict exit 0. **V2 CAME BACK "THE ARM DID NOT ARM" ON A CLEAN `main` AND IT WAS PRE-EXISTING** — its anchor in `coverage.mjs` was rewritten by VF-5 (`  members:    2,   // …` became `  members:     2,`), so the patch matched ZERO times; re-anchored on the shortest unambiguous span and AS DECLARED afterwards. That is the THIRD control in this file to go stale when a source line moved, and it was visible only because this harness scores a never-armed arm as a FINDING.
+   **SECTION D — D-276: THE MEANING ARM, THE ANSWER CHECK, AND THE FIXTURE.** Three separate defences, armed one at a time and then together, because what matters is which one is load-bearing for which suite. `runNamedSuite` was added to the harness for these: it could previously run only ONE of this member's three suites.
+   (D1) THE DEFECT REINTRODUCED. `MEANING_ARM` back to `"legs"`, the spelling that shipped; fixture and answer check held OPEN -> **agent-worker 107/6 · fanout 171/4 · harness 192/7**, all three RED, with the meaning arms NAMED in each and every unrelated arm (bound, refusal passthrough, version, write) held.
+   (D2) THE FIXTURE ALONE. `plane-meaning.mjs` stops reading `rows` and accepts anything — exactly what all three mocks used to do — with the member's arm left CORRECT -> **agent-worker 111/2** (only the mock-agrees-with-the-plane arms), **fanout 175/0 · harness 199/0** untouched. The member is not broken here; its instrument is.
+   (D3) **THE WORLD AS IT SHIPPED, and it is the arm worth reading.** Wrong arm AND a fixture that cannot refuse, two defences down deliberately -> **agent-worker 107/6 · fanout 174/1 · harness 198/1**. **EVERY BEHAVIOURAL ARM in fanout and harness went GREEN over a call that cannot succeed** — D-276's condition, reproduced — and the only things that saw it were the arms that ask the PLANE rather than the fixture. **DECLARED WRONG FIRST AND CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED:** it was declared as "fanout and harness go GREEN" and they came back 1 FAIL each — this item's own structural arms, which do not go through the mock. The declaration now names the EXACT label permitted to fail in each, so RED alone will not satisfy it.
+   (D4) **"CHECK `ok`" IS NOT ENOUGH, AND THIS ARM MEASURED A SECOND DEFENCE NOBODY DECLARED.** Wrong arm AND `planeAnswer` stops looking inside `result`, checking only the ENVELOPE's `ok` — which the plane sets to TRUE on a refused arm (measured: HTTP 200, `ok:true`, the refusal nested one level in) -> **agent-worker 109/4 · harness 197/2**. **DECLARED WRONG FIRST:** the false zero `0 meaning-grain row(s) queried` was declared to come back, and it did NOT. It needed BOTH the missing check AND the old `Array.isArray(got.rows) ? got.rows.length : 0`; the rewrite's third branch fires instead and the entry reads *"is UNDETERMINED — the plane answered without a rows collection"*. The arm now asserts the false zero is ABSENT, which is the stronger statement.
+   (D5) OVER-STRICTNESS FOR D-276. `MEANING_ARM` spelled `"LEG"` — the plane NORMALISES `rows` (`String(input.rows).trim().toLowerCase()`), so this is CORRECT WORK in a spelling the suite did not anticipate and an arm that failed it would be a fence tighter than its rule -> **agent-worker 113/0 · fanout 175/0 · harness 199/0**, all three unchanged.
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. Miniflare's
@@ -67,6 +74,14 @@ const { Miniflare } = await (async () => {
    use it, rather than being retyped here where a copy would age separately —
    the defect this file's own A2 note is about, one construct over. */
 import { PLANE_OPS } from "../src/harness.mjs";
+/* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
+   registry and refusal catalog rather than typed here. See `plane-meaning.mjs`
+   for why a fixture that says yes to everything is not a fixture. */
+import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+/* D-276: the arm the MEMBER actually sends, imported rather than retyped — a
+   suite asserting about its own copy of the value is the failure this item is
+   about, one file over. */
+import { MEANING_ARM } from "../src/harness.mjs";
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));
@@ -161,8 +176,7 @@ export default {
       return Response.json({ ok: true, result: { found: true, half: "search",
         payload: { run: url.searchParams.get("run"), mode: "check", skill: "pack-1.0.0",
                    context: { type: "inquiry", id: "INQ-1" }, standard_pair: null, budget: [] } } });
-    if (op === "meaningrows")
-      return Response.json({ ok: true, result: { rows: [], limit: 50, truncated: false } });
+    ${meaningRowsBranch("[]")}
     if (op === "basisversions")
       return Response.json({ ok: true, result: { versions: [], limit: 50, truncated: false } });
     if (MUTATING.has(op)) {
@@ -432,9 +446,26 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   t("no bare global fetch(", /(?<![.\w])(?<!async\s)fetch\s*\(/.test(CODE), false);
 
   console.log("\n  -- THE SCOPE IS THE PLANE'S, and the ops this member may name are PINNED --");
+  /* CORRECTED BY D-276, NEVER EXEMPTED, AND THE OLD SCAN WAS RIGHT WHEN IT WAS
+     WRITTEN. It read op names out of `call("literal"` only. D-276 gave the
+     meaning read's op name a CONSTANT — `const MEANING_OP = "meaningrows"` —
+     because `planeAnswer` needs the same name and writing the literal twice
+     would have fired `harness.test.mjs`'s one-meaning-reader pin on a LABEL.
+     The moment that landed, this arm reported `meaningrows` as an op the source
+     "never names" while the source was calling it every run: a matcher that
+     goes blind reads exactly like a subject that changed. So the scan RESOLVES
+     a const alias, and — because a matcher must say what it cannot see — every
+     `call(IDENTIFIER,` it fails to resolve is NAMED by the arm below rather
+     than silently scored zero. */
+  const OP_ALIAS = Object.fromEntries(
+    [...CODE.matchAll(/const\s+([A-Z][A-Z0-9_]*)\s*=\s*"([a-z]+)"\s*;/g)].map((m) => [m[1], m[2]]));
+  const viaAlias = [...CODE.matchAll(/call\(\s*([A-Za-z_$][\w$]*)\s*,/g)].map((m) => m[1]);
+  t("every op named through a CONSTANT resolves to a literal — none is invisible to this scan",
+    viaAlias.filter((id) => !(id in OP_ALIAS)), []);
   const named = [...new Set([
     ...[...CODE.matchAll(/askPlane\(\s*env\s*,\s*"([a-z]+)"/g)].map((m) => m[1]),
     ...[...CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
+    ...viaAlias.map((id) => OP_ALIAS[id]).filter(Boolean),
   ])].sort();
   /* FLOOR AND CEILING BOTH, by exact equality. A call this member gains is a call
      somebody decided to give it, and a call it loses is visible too. D-199 (2):
@@ -526,6 +557,122 @@ console.log("\n--- 7 · OVER-STRICTNESS: correct work in a spelling the guard di
   t("and none of them proposed a version, because none of them composed one",
     st.record.rows.filter((r) => r.op === "suggest"), []);
   await mf.dispose();
+}
+
+/* ================================================================ 8 · D-276
+ * THE ARM IS ONE THE RECORD ACTUALLY HOLDS, AND IT IS DRIVEN AGAINST THE REAL
+ * PLANE RATHER THAN AGAINST THIS FILE'S MOCK.
+ *
+ * D-276: this member asked `op=meaningrows` for `rows: "legs"` at all three call
+ * sites. The compiler's arms are `leg`, `resolves` and `concerns`, so the plane
+ * refused every one of those calls `MEANING_ROWS_UNKNOWN_ARM` (C-23.2) — the one
+ * fence built to stop a false sense of coverage — and the caller, which checked
+ * only whether the plane had ANSWERED, wrote `0 meaning-grain row(s) queried`
+ * into an AI run's observation entries. **A refusal recorded as a confident
+ * zero, in the record.**
+ *
+ * IT WAS INVISIBLE TO EVERY SUITE, WHICH IS THE HALF THAT MATTERS HERE. All
+ * three plane mocks answered that op `{ ok: true, rows: [] }` for ANY argument,
+ * so 464 assertions were green over a call that could not succeed. A mock and a
+ * caller that agree because the mock agrees with everything have measured
+ * nothing — the hand-copy-agrees-for-free class, and the reason `plane-meaning.mjs`
+ * DERIVES the fixture from the plane's own registry instead of restating it.
+ *
+ * SO THIS SECTION STANDS UP `bio-plane/src/index.mjs` ITSELF in workerd, with a
+ * real Durable Object, and asks it. The plane is the authority on which arms
+ * exist; a suite that asked the mock would be asking the thing that was wrong.
+ * ============================================================================ */
+console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in workerd ---");
+{
+  const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+  const plane = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: PLANE_ENTRY, script: readFileSync(PLANE_ENTRY, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { ADMIN_TOKEN: "adm-d276", MEMBER_TOKEN: "mem-d276", PROBE_TOKEN: "prb-d276", VERSION: "test" },
+  });
+  const askArm = async (spelling) => (await (await plane.dispatchFetch(
+    `http://x/api/?op=meaningrows&token=mem-d276&limit=1&rows=${encodeURIComponent(spelling)}`)).json());
+
+  /* THE PLANE NORMALISES `rows` — `String(input.rows).trim().toLowerCase()` in
+     `Store#meaningRows` — so a member spelling the arm `"LEG"` or `" leg "` is
+     doing CORRECT WORK IN A SPELLING THIS SUITE DID NOT ANTICIPATE, and an arm
+     that failed it would be a fence tighter than its rule. These comparisons are
+     made against the plane's own normalisation rather than against the literal,
+     and the over-strictness arm in `agent-worker.control.mjs` drives it. */
+  const ARM_NORM = String(MEANING_ARM).trim().toLowerCase();
+  console.log(`  the plane's arms: ${MEANING_ARMS.join(", ")} · this member reads at: ${JSON.stringify(MEANING_ARM)}`);
+  t("ARMED: the plane declares arms at all (a walk over an empty registry proves nothing)",
+    MEANING_ARMS.length > 0, true);
+  t("the arm this member sends is one the plane's own compiler holds",
+    MEANING_ARMS.includes(ARM_NORM), true);
+
+  /* THE POSITIVE POLE, THROUGH THE OP. Not "the string matches a key" — the real
+     plane, asked with the member's own exported constant, ANSWERS. */
+  const good = await askArm(MEANING_ARM);
+  t("THE REAL PLANE ANSWERS the arm this member sends: envelope ok, and the answer's own ok",
+    [good?.ok, good?.result?.ok, good?.result?.arm], [true, true, ARM_NORM]);
+  t("...and it answers with a rows collection, which is what the run note counts",
+    Array.isArray(good?.result?.rows), true);
+
+  /* THE NEGATIVE POLE, AND IT IS WHAT STOPS THE ARM ABOVE FROM BEING FREE. If
+     the plane accepted anything, the positive arm would pass over a subject that
+     could not fail. This is D-276's exact defect, reproduced live. */
+  const bad = await askArm("legs");
+  t("D-276 REPRODUCED: the spelling this member used to send is REFUSED by the real plane",
+    [bad?.ok, bad?.result?.ok, bad?.result?.reason, bad?.result?.check],
+    [true, false, "MEANING_ROWS_UNKNOWN_ARM", "C-23.2"]);
+  /* AND WHERE THE REFUSAL SITS IS ITSELF THE FINDING. HTTP 200, top-level
+     `ok: true`, the refusal nested in `result` — so a member that checked the
+     ENVELOPE's `ok` would have read this as a successful call, which is the same
+     defect one layer in from the `.reached` check that shipped. */
+  t("...at HTTP 200 with a TOP-LEVEL ok:true — checking the envelope alone would NOT have seen it",
+    [bad?.ok, "reason" in (bad ?? {}), bad?.result?.reason != null], [true, false, true]);
+  t("...and the caller's old arithmetic over that body still computes ZERO, which is the defect",
+    Array.isArray(bad?.result?.rows) ? bad.result.rows.length : 0, 0);
+
+  /* THE MOCK AND THE PLANE MUST AGREE ABOUT BOTH POLES, or this file's other
+     seven sections are measuring a plane that does not exist. */
+  const mf = newMf();
+  const mockAsk = async (spelling) => {
+    const w = await mf.getWorker("plane-mock");
+    return (await (await w.fetch(
+      `http://plane/?op=meaningrows&store=scratch&token=${AIK}&rows=${encodeURIComponent(spelling)}`)).json());
+  };
+  const mockBad = await mockAsk("legs");
+  const mockGood = await mockAsk(MEANING_ARM);
+  t("THE MOCK CAN REFUSE, and refuses the same spelling with the same code and the same C-number",
+    [mockBad?.ok, mockBad?.result?.ok, mockBad?.result?.reason, mockBad?.result?.check],
+    [bad?.ok, bad?.result?.ok, bad?.result?.reason, bad?.result?.check]);
+  t("...and it accepts the same arm the plane accepts",
+    [mockGood?.ok, mockGood?.result?.ok, mockGood?.result?.arm],
+    [good?.ok, good?.result?.ok, good?.result?.arm]);
+  t("...and it refuses a MISSING arm too, as C-23.1 does, so no default can creep back in",
+    [(await mockAsk(""))?.result?.reason, (await mockAsk(""))?.result?.check],
+    ["MEANING_ROWS_NO_ARM", "C-23.1"]);
+
+  /* AND THROUGH THE MEMBER: a whole run, and the observation entry it wrote.
+     This is the arm that fails if the argument is ever wrong again — the note in
+     an AI run's log must say rows were QUERIED, and the run must publish no
+     `meaningrows` refusal. */
+  const out = await (await run(mf, { run_id: "run-d276", store: "scratch", credential: AIK })).json();
+  const compose = (out.trace || []).find((x) => x.step === "compose");
+  /* PRINTED — the SENTENCE that lands in an AI run's observation entries is this
+     item's actual subject, and a reader (or a control) that could only see
+     `want true / got false` would know something moved and never what. */
+  console.log(`  observation entry: ${JSON.stringify(compose?.note ?? null)}`);
+  t("ARMED: the run really reached the step that reads the meaning layer",
+    compose != null, true);
+  t("THE OBSERVATION ENTRY SAYS THE RECORD WAS QUERIED, at the grain it was asked at",
+    new RegExp(`meaning-grain row\\(s\\) queried at the '${MEANING_ARM}' grain`).test(compose?.note ?? ""),
+    true);
+  t("...and it does NOT say the meaning layer went unread, which is what a refused arm writes",
+    /NOT READ/.test(compose?.note ?? ""), false);
+  t("...and the run published no meaningrows refusal at all",
+    (out.refusals || []).filter((r) => r && r.at === "meaningrows"), []);
+  await mf.dispose();
+  await plane.dispose();
 }
 
 console.log(`\nagent-worker: ${pass} passed, ${fail} failed`);
