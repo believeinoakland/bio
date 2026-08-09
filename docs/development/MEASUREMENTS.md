@@ -5581,7 +5581,7 @@ address rather than through `hashchange`, and the substitution is labelled at th
 
 ## 2026-08-09 · D-262 — THE REFUSAL A CALLER ACTUALLY RECEIVES, GRADED AGAINST THE CATALOGUE
 
-**Instrument:** `bio-plane/test/refusal-wire.test.mjs` (22 assertions, NEW) and its harness
+**Instrument:** `bio-plane/test/refusal-wire.test.mjs` (23 assertions, NEW) and its harness
 `bio-plane/test/refusal-wire.control.mjs` (7 arms, all RUN). Driven through the control plane against
 Miniflare. The corpus is HARVESTED on every run and never typed: the catalogue by the `_CHECKS`
 suffix (the DEC-49 guard's own rule), the op surface out of `index.mjs`'s `OPS` table, the machine
@@ -5592,7 +5592,7 @@ their C-number nor their canned translation to the caller.** All twelve fire (RE
 have a catalogued translation (REC-64 wrote eleven); **exactly one — `MACHINE_CANNOT_MOVE_VERSION` —
 put either on the wire, and it is the only site in the family that refuses through a helper that
 READS the row.** The measurement is arm (b) of the control: with the decoration removed the suite
-goes **18 pass / 4 fail** and names them.
+goes **19 pass / 4 fail** and names them.
 
 **WHY NO INSTRUMENT SAW IT.** Four instruments watch this family and none grades the response.
 `civicos-ui/check-refusal-codes.mjs` arm C grades the SITE against the CATALOGUE and says in its own
@@ -5614,6 +5614,19 @@ could pass every one of them and still hand a member a bare machine word.
 | codes in the CENSUS (received, no catalogue row) | **30** — REC-64's remaining sweep |
 | refusals carrying NO code at all | **9 observations over 6 ops** — raised as **D-270** |
 | bodies the walk could not classify | **0** |
+| **THE STATIC CLASS** — sites naming a catalogued code, carrying NO translation of their own | **47 sites · 45 codes** |
+| sites naming a catalogued code and carrying the row THEMSELVES | **16** |
+| sites naming a code with NO catalogue row (REC-64's) | **474** |
+| sites the static matcher could not read an object literal around | **0** |
+
+**THE CLASS IS FOUR TIMES THE SIZE OF THE ELEVEN, AND THAT IS WHAT DECIDED THE MECHANISM.** The
+eleven machine fences are 11 of **47** hand-built sites naming a catalogued code with no translation
+of their own, and the figure GROWS on its own every time a refusal is written by hand. Eleven site
+edits would have closed 11 of 47 and left the other 36 to be found later. **What the static matcher
+CANNOT see, stated because that sentence is what separates a clean result from a walk looking in the
+wrong place:** a refusal assembled across statements, one built by a helper (the twelfth fence is
+exactly that, and is correctly counted as CARRYING), or one whose code is in a variable. Every one of
+those leaves through `json()`, so the attach covers what the walk cannot.
 | machine fences reached by an EMPTY payload | **11 of 12**, every one carrying its row |
 
 **AN INDEPENDENT AGREEMENT THAT COST SOMETHING.** This walk reported **16 families / 166 rows**
@@ -5644,13 +5657,22 @@ ITEM'S OWN INSTRUMENT WRONG.** Arm (d) — the catalogue harvest neutered — wa
 back **`NO TALLY` (-1/-1)**: with an empty catalogue every later block read `ROWS.get(code)
 .translation` on `undefined`, a `TypeError` ended the module, and the tally never printed. The arm
 was right and the instrument was wrong. Corrected (null-tolerant catalogue reads, and a corpus below
-its floor HALTS at the floor with its tally printed) and re-run: **all seven as declared — (a) GREEN
-22/0 · (b) RED 18/4 · (c) RED 19/3 · (d) RED 1/2 · (e) RED 15/7 · (f) RED 21/1 · (g) GREEN 22/0.**
+its floor HALTS at the floor with its tally printed) and re-run. RE-RUN A THIRD TIME against the
+FINAL suite once the static-class block landed — re-run rather than adjusted on paper, because a
+figure carried across an edit is a figure nobody measured: **all seven as declared — (a) GREEN 23/0 ·
+(b) RED 19/4 · (c) RED 20/3 · (d) RED 1/2 · (e) RED 16/7 · (f) RED 22/1 · (g) GREEN 23/0**, all three
+files byte-identical to their pristine-of-record by sha256 AND by `cmp`.
 
 **BATTERY:** baseline measured in this worktree before any edit, **142 suites (137 plane · 5 fleet) ·
 142/142 green · 9,179 assertions · exit 0** — the brief carried no figure, so there was nothing to
 agree or disagree with; the worktree arrived without `bio-plane/node_modules` and `npm ci` was run
-first. Final **143/143 · 9,213 · exit 0**. `node scripts/coverage.mjs --strict` run DIRECTLY with
+first. Final **143/143 · 9,207 · exit 0**, delta **+28 ATTRIBUTED PER SUITE by DIFFING the two full runs,
+never by subtraction**: `refusal-wire.test.mjs` +23 (new), `hygiene.test.mjs` 561 -> 564 (its
+per-file source walk gains rows for the two new files), `planning-hygiene.test.mjs` 294 -> 296 (the
+two new DEBT rows). **138 of 140 pre-existing suites byte-identical in count.** `REGISTER_FLOOR` in
+`scripts/coverage.mjs` MOVED **654 -> 661 arms / 136 -> 137 classified / 137 -> 138 corpus, ALL THREE
+IN THE SAME TURN**, from the figures a green run printed as REPRODUCIBLE and read only AFTER the new
+files were in a commit; ONE key set, verified by `grep -c`. `node scripts/coverage.mjs --strict` run DIRECTLY with
 `$?` read UNPIPED, **exit 0** — OPS 163/163, CHECKS 222/222. `node civicos-ui/test/run.mjs` from the
 REPO ROOT, exit read UNPIPED, **0**, with the DEC-49 guard's REACH unmoved at 220 and its `reachGap`
 CEILING unmoved at 41 (this item mints no code, and that is what the unmoved figures show).

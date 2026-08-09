@@ -23,17 +23,21 @@
  *
  * WHAT IT FOUND, 2026-08-09, worktree agent-a0afb13cbfcc0d6b9 — AND THE FIRST
  * RUN FOUND THE INSTRUMENT WRONG, WHICH IS WHY THE DRIVER EXISTS.
- * FIRST RUN: A GREEN 22/0 · B RED 18/4 · C RED 19/3 · **D `NO TALLY` (-1/-1),
- * DECLARED RED** · E RED 15/7 · F RED 21/1 · G GREEN 22/0. Arm d neuters the
+ * FIRST RUN (at 22 assertions): a GREEN 22/0 · b RED 18/4 · c RED 19/3 · **d `NO TALLY` (-1/-1),
+ * DECLARED RED** · e RED 15/7 · f RED 21/1 · g GREEN 22/0. Arm d neuters the
  * catalogue harvest; with an empty catalogue every later block read
  * `ROWS.get(code).translation` on `undefined`, a `TypeError` ended the module,
  * and the tally never printed. THE ARM WAS RIGHT AND THE SUBJECT OF THE ARM —
  * this item's own instrument — WAS WRONG. Corrected in `refusal-wire.test.mjs`
  * (null-tolerant catalogue reads, and a corpus below its floor HALTS at the
  * floor with its tally printed) and re-run.
- * SECOND RUN: **ALL SEVEN AS DECLARED** — A GREEN 22/0 · B RED 18/4 · C RED
- * 19/3 · D RED 1/2 · E RED 15/7 · F RED 21/1 · G GREEN 22/0, and all three
- * files byte-identical to their pristine-of-record by sha256 AND by `cmp`.
+ * SECOND RUN: **ALL SEVEN AS DECLARED** — a GREEN 22/0 · b RED 18/4 · c RED
+ * 19/3 · d RED 1/2 · e RED 15/7 · f RED 21/1 · g GREEN 22/0.
+ * THIRD RUN, against the FINAL suite (23 assertions, after the static-class
+ * block landed) and re-run rather than adjusted on paper: **ALL SEVEN AS
+ * DECLARED** — a GREEN 23/0 · b RED 19/4 · c RED 20/3 · d RED 1/2 · e RED 16/7
+ * · f RED 22/1 · g GREEN 23/0, and all three files byte-identical to their
+ * pristine-of-record by sha256 AND by `cmp`.
  * The `NO TALLY` row is kept in this header on purpose: a driver that only ever
  * reported "as declared" would be a driver nobody could tell from a broken one.
  *

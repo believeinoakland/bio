@@ -279,9 +279,21 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* MOVED 2026-08-09 by D-262: 654 -> 661 / 136 -> 137 / 137 -> 138, ALL THREE IN
+     THE SAME TURN, from the figures a green run PRINTED as REPRODUCIBLE and read
+     only AFTER the new files were in a commit — the pre-commit run reported the
+     identical numerals as CONTAMINATED, and a floor moved on those is permanently
+     too high (D-238, PL-17's receipt). The +7 is one new suite,
+     `test/refusal-wire.test.mjs`, whose declaration states seven arms.
+     AND THE ORDINALS ARE LOWERCASE FOR A MEASURED REASON, recorded so the next
+     author does not pay for it twice: `OPENS_ITEM` in control-register.mjs
+     matches `[a-z]{1,2}`, so a declaration writing `(A)`…`(G)` counts ZERO arms
+     and lands in UNCLASSIFIED — which is exactly what this suite did on its first
+     strict run, and `--strict` failed naming it. That is D-233's shape being
+     caught by the instrument built for D-233. */
+  arms:       661,  // arms stated across the classified declarations
+  classified: 137,  // declarations the detector could count arms in
+  corpus:     138,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
