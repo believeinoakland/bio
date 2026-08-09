@@ -313,9 +313,11 @@ const REGISTER_FLOOR = {
      the register compares against the REPRODUCIBLE figure and an untracked suite is
      not one: read before the commit, the same run printed the floors met EXACTLY with
      nothing to collect, which is what an uncommitted suite looks like. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT to the merged tree's printed figures
+     after PL-18, PL-19, M0-18 and UI-44 (`GREW by 17 arm(s)`). */
+  arms:       671,  // arms stated across the classified declarations
+  classified: 138,  // declarations the detector could count arms in
+  corpus:     139,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
