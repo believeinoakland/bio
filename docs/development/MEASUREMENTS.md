@@ -5179,3 +5179,107 @@ returns early when the address already IS what is shown. **The DOM stub in every
 here fires no events, so no suite can reproduce the event**; the router is driven directly
 at the address rotation just wrote, which is what the event would do, and the substitution
 is labelled as one at the site and in the suite.
+
+---
+
+## M0-18 · the provenance floors in `bio-plane/`, 2026-08-09
+
+**Instruments:** `bio-plane/scripts/provenance.mjs` (via each suite), `npm run test:battery`,
+`node scripts/coverage.mjs --strict`, `node civicos-ui/test/run.mjs`,
+`bio-plane/test/provenance-floor.control.mjs`. **Tree:** `worktree-agent-a62aec7acd493144e`
+at `d579ae8`, a fast-forward to `main`.
+
+### The class, and what the sweep found
+
+A suite that reads its corpus off the WORKING TREE and then FLOORS on what it found. The
+brief named five instances plus one different exposure. **Measured, there are seven floors
+and one different exposure, and two of the floors the brief did not name.**
+
+| site | the floor | in the brief? |
+| --- | --- | --- |
+| `test/bounds.test.mjs` | `corpus > 200 files && > 5,000,000 chars` (whole repo) | yes |
+| `test/case-opened.test.mjs` | `corpus > 200 files && > 5,000,000 chars` (whole repo) | yes |
+| `test/identity-claims.test.mjs` | `files >= 24` **and `wide >= 80`** (`src/`+`checks/`) | partly — the second floor is at the same walk |
+| `test/machinefences-dec49.test.mjs` | `minted.size >= 12` (`src/`) | yes |
+| `test/planning-hygiene.test.mjs` | `found.length >= 2` (`docs/`) | yes |
+| `test/check-firing.test.mjs` | `estate.length >= 50` (7 roots) | **no** |
+| `scripts/op-claims.mjs` + `test/op-claims.test.mjs` | `files >= 300`, `chars >= 10,000,000`, `mentions >= 5000`, `names >= 150` | **no** |
+| `test/machine-fences.test.mjs` | *no floor* — the walk feeds `pinned()`, a SATISFACTION | yes, as the sixth |
+
+**`op-claims` is the one worth reading twice: the WALK and the FLOOR live in different
+files.** `hygiene.test.mjs`'s class census grades a file by whether IT contains a
+`readdirSync(`, so it named `scripts/op-claims.mjs` as merely *"reports a claim census"* and
+never enumerated `test/op-claims.test.mjs` at all. Four floors sat behind a walk the census
+had graded as harmless.
+
+### The figures, contaminated and reproducible, both printed at every site
+
+| site | contaminated | reproducible | floor moved? |
+| --- | --- | --- | --- |
+| bounds | 331 files / 12,355,924 chars | **331 / 12,355,924** | no |
+| case-opened | 331 files / 12,372,578 chars | **331 / 12,372,578** | no |
+| identity-claims | 27 files / 106 claim lines | **27 / 106** | no |
+| machinefences-dec49 | 12 fence codes | **12** | no |
+| planning-hygiene | 92 docs / 2 headings | **92 / 2** | no |
+| check-firing | **129 estate files** | **127** | no (floor 50, slack) |
+| op-claims | 456 files / 19,618,821 chars / 7,760 mentions / 204 names | **456 / 19,618,821 / 7,760 / 204** | no |
+| machine-fences (pin roster) | 193 suites | **193** | n/a |
+
+**NO FLOOR MOVED, and that is a measurement rather than nothing happening.** Six of the
+seven reproducible figures equalled their contaminated one on a clean tree, so there was
+nothing to move — which is what D-257 measured one estate over and is now measured twice.
+
+**THE SEVENTH DID NOT.** `check-firing.test.mjs`'s estate walk counted **129** files of
+which only **127** are in any commit: `agent-worker/.wrangler/cache/cf.json` and
+`pdf-worker/.wrangler/cache/cf.json`, wrangler's local cache, present only because a deploy
+ran on this machine. Not a stash phantom, and the same class — a printed corpus figure that
+no other checkout reproduces. The floor of 50 has enough slack that it did not move; the
+printed figure did.
+
+### `hygiene.test.mjs`'s class census — the matcher, measured before and after
+
+| | files matched |
+| --- | --- |
+| OLD (raw source, `readdirSync(` only) | 27 |
+| NEW (comment-blind, five primitives) | 27 |
+
+Same total, and **neither set is the other**: the widening ADDED
+`bio-plane/test/query-reach.report.mjs` (an `fs/promises` `readdir`, invisible to every
+previous run of this census) and the comment-blinding DROPPED
+`bio-plane/test/op-claims.test.mjs`, which had matched only on a *sentence describing the
+matcher*. Census GUARDED **3 → 11**; NAMED 18 → 16 (seven bio-plane entries removed as no
+longer applying, two added with their reasons).
+
+### `scripts/op-claims.mjs` and the dot-directory ruling
+
+`corpus()` descended into dot-directories where its two sibling whole-repo walks
+(`bounds`, `case-opened`) never would. **Measured cost of the new rule: ZERO tracked files.**
+The corpus holds 459 files on a tree with scratch present; exactly one tracked
+dot-DIRECTORY exists in this repository (`.claude/`, already skipped by name), and every
+other tracked dot-path is a FILE whose extension is not in `TEXT_EXT`. Corpus 459 → 456,
+the three lost being this item's own untracked scratch directory.
+
+### The gates
+
+| gate | result |
+| --- | --- |
+| `npm run test:battery` baseline | 139/139 green · **8,869** assertions · exit 0 |
+| `npm run test:battery` final | 139/139 green · **8,880** assertions · exit 0 |
+| per-suite attribution (re-run, never subtracted) | bounds +1, case-opened +1, check-firing +1, identity-claims +1, machine-fences +2, machinefences-dec49 +1, op-claims +2, planning-hygiene +2 = **+11**, and no other suite moved |
+
+**ONE OF THE ELEVEN IS NOT THIS ITEM'S GUARD AND IS ATTRIBUTED RATHER THAN ABSORBED.**
+`planning-hygiene` reads +2. An intermediate run measured it at +1; the second unit appeared
+when this item added the **D-265** row to `DEBT.md`, because that suite asserts one arm per
+open debt row. So: +1 from the provenance floor, +1 from a debt row this item wrote. Recorded
+because a delta nobody can account for is how a real one gets lost inside a plausible total.
+| `node scripts/coverage.mjs --strict` | exit **0**, read unpiped |
+| `node civicos-ui/test/run.mjs` (from repo root) | 42 harnesses, **all green**, exit 0 — but see below |
+| `node test/provenance-floor.control.mjs` | **58 of 58 as declared** |
+
+**THE UI HARNESS CAUGHT THIS ITEM, WHICH IS WHY WORKER.md SAYS TO RUN IT ANYWAY.** The first
+run was RED at 224/226: `civicos-ui/test/publishedcase.test.mjs` runs UI-40's consumer walk,
+which blanks COMMENTS and deliberately KEEPS STRINGS, and this item had written the field
+name `case` + `.` + `opened` as prose inside a STRING LITERAL in `test/case-opened.test.mjs`.
+The walk counted the sentence as a consumer of the very field that suite exists to prove
+nobody reads. **The walk was right and the prose was wrong**; it is reworded with the reason
+at the site, never exempted.

@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 2a/2b is the decisive pair; ARM 5 proves the SWEEP did not narrow — a
+   finding in an uncommitted file still reds its suite.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: see the block at the foot of this file. Every arm is RUN and
    recorded there with the count it MEASURED, and every file is restored
    byte-identically with sha256 compared before and after. */
@@ -84,6 +95,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, relative, extname } from "node:path";
+/* M0-18 — ONE mechanism, imported. Why it exists and what it cannot see is in
+   its own header; why THIS suite needed it is at the REC-58 corpus walk. */
+import { readGitProvenance, reportProvenance } from "../scripts/provenance.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
@@ -408,9 +422,58 @@ for (const f of files) {
   corpus.push({ f: relative(REPO, f), code: skeleton(raw) });
 }
 const chars = corpus.reduce((a, x) => a + x.code.length, 0);
-/* PRINTED EVERY RUN, so a corpus that SHRANK is visible rather than silent. */
+
+/* ---- M0-18 · THE FLOOR IS THE REPRODUCIBLE FIGURE, THE SWEEP IS NOT ---------
+ * The full argument is in `bio-plane/test/bounds.test.mjs`'s sibling block and
+ * in `scripts/provenance.mjs`; the one sentence is: this walk read the WORKING
+ * TREE and floored on what it found, `refs/stash` is repository-wide across all
+ * sixty worktrees of this repository so an untracked file can arrive here from a
+ * tree that never wrote it (D-238), and an arrival can only push a floor UP.
+ *
+ * THE SWEEP STILL READS THE WHOLE WORKING TREE — a `case.opened` read in an
+ * uncommitted file is still a consumer and must still be found, which is the
+ * half `readsOf()` below must not lose. Only the REACH FLOOR narrows to the
+ * commit, because only the reach floor is a figure another checkout must
+ * reproduce. */
+const PROV = readGitProvenance(REPO);
+const inCommit = (rel) => PROV.inHead === null ? true : PROV.inHead.has(rel);
+const REPRO = corpus.filter((x) => inCommit(x.f));
+const reproChars = REPRO.reduce((a, x) => a + x.code.length, 0);
+/* SAY UNVERIFIED, NEVER CLEAN (D-233, and provenance.mjs's fourth rule). This
+   label goes into the assertion text, not only into the report. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk and is NOT a claim about any commit"
+  : `in the commit at HEAD (${PROV.headSha})`;
+
+/* PRINTED EVERY RUN, so a corpus that SHRANK is visible rather than silent, and
+   BOTH figures are printed so a reader about to quote one into a floor is told
+   which of them another checkout reproduces. */
 console.log(`  REC-58 CORPUS: ${corpus.length} files, ${chars} chars scanned; `
           + `${excluded.length} generated artifact(s) excluded (${excluded.map((x) => `${x.f} ${x.chars}`).join("; ")})`);
+console.log(`  REC-58 CORPUS, REPRODUCIBLE: ${REPRO.length} of ${corpus.length} file(s) and ${reproChars} of `
+          + `${chars} chars are ${HEAD_SAYS} — floors 200 / 5,000,000 apply to THESE`);
+reportProvenance({
+  prov: PROV,
+  /* THE FIELD NAME IS NOT SPELLED IN THIS STRING, AND THAT IS NOT FUSSINESS —
+     it is a MEASURED failure of the first draft of this block. `civicos-ui/test/
+     publishedcase.test.mjs` runs UI-40's consumer walk over this same
+     repository, and UI-40's scanner deliberately blanks COMMENTS and KEEPS
+     STRINGS (right for counting property reads, and stated in its own header).
+     So the words `case` + `.` + the field, written here as prose inside a string
+     literal, were counted as a CONSUMER: the UI harness went red at 224/226 with
+     `bio-plane/test/case-opened.test.mjs:457` named as a reader of the field
+     this suite exists to prove nobody reads. A walk that counted a sentence as a
+     consumer — the exact failure `bounds.test.mjs` warns about for
+     `op=projection`, and the third time this item met it. Reworded, not
+     exempted, because the walk was right and the prose was wrong. */
+  items: corpus.map((x) => ({ path: x.f, what: x.f.split("/").pop(),
+    counted: "swept for reads of the case-edition field this suite fences" })),
+  instrument: "REC-58's consumer walk",
+  corpus: `${corpus.length} file(s) walked, ${REPRO.length} of them in the commit`,
+  totals: PROV.inHead === null ? [] : [
+    { label: "consumer files", contaminated: corpus.length, reproducible: REPRO.length, source: "files" },
+  ],
+});
 
 /* `set` is a PARAMETER so the neutering arm has something to neuter and the
    reach arm is a DELTA against it rather than an absolute. */
@@ -422,8 +485,22 @@ const readsOf = (key, set = corpus) => {
   return hits;
 };
 
-t("REC-58 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it",
-  corpus.length > 200 && chars > 5_000_000, true);
+/* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED. The old assertion floored on
+   `corpus.length` and `chars` read off the working tree, so an untracked arrival
+   raised the number the floor is compared against and the next session to move
+   the floor to the figure a green run PRINTED would have moved it to one no
+   other checkout reproduces. The QUESTION is unchanged; the corpus it is asked
+   about is now the committed one. */
+t(`REC-58 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it, counted over `
++ `the files another checkout REPRODUCES (${REPRO.length} file(s), ${reproChars} chars, ${HEAD_SAYS})`,
+  REPRO.length > 200 && reproChars > 5_000_000, true);
+t("REC-58 REACH: the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — "
++ "never a silent third state, and under UNVERIFIED the two figures COLLAPSE rather than the reproducible "
++ "one quietly reading zero",
+  [PROV.inHead instanceof Set || PROV.inHead === null,
+   REPRO.length <= corpus.length,
+   PROV.inHead === null ? REPRO.length === corpus.length : true],
+  [true, true, true]);
 t("REC-58 REACH: BOTH generated embeds are excluded, each recognised STRUCTURALLY and neither by name",
   [excluded.length, excluded.every((x) => x.chars > 1_000_000),
    excluded.some((x) => /newgroup/.test(x.f)), excluded.some((x) => /release\/bio-plane\.bundled/.test(x.f))],

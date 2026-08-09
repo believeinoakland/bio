@@ -1659,17 +1659,61 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    * name, which is the outcome worth having — the same shape M0-14 landed for
    * the register's unclassified declarations and CPDF-9 for the dark member.
    *
-   * WHAT THIS MATCHER CAN SEE: a literal `readdirSync(` in the source of a
+   * WHAT THIS MATCHER CAN SEE: a discovery primitive — `readdirSync(`,
+   * `readdir(`, `opendirSync(`, `opendir(` or `globSync(` — in the CODE of a
    * tracked `.mjs` under `bio-plane/` or `civicos-ui/`.
-   * WHAT IT CANNOT, stated because a matcher that hides its blind spots is read
-   * as though it had none: `fs.promises.readdir`, `opendirSync`, a glob library,
-   * a walk in a shell script or in another language, a walk reached through an
-   * aliased or destructured binding this regex does not spell, and anything
-   * outside those two directories (`newgroup/`, `tools/`, `agent-worker/`,
-   * `pdf-worker/`). It also cannot tell a walk of a TEMP directory from a walk
-   * of a repository directory — so the named list carries that judgement, made
-   * by reading each site, and the list is what goes stale if somebody is wrong.
+   *
+   * WIDENED AND MADE COMMENT-BLIND 2026-08-09 BY M0-18, AND BOTH HALVES WERE
+   * MEASURED RATHER THAN TIDIED.
+   *
+   *   - COMMENT-BLIND, and it was THIS BLOCK'S OWN RECEIPT that forced it. M0-18
+   *     wrote a sentence in `test/op-claims.test.mjs` explaining that this census
+   *     grades a file by whether it contains a `readdirSync(` — and the census
+   *     enumerated that file as a NEW UNGUARDED WALK, on the strength of the word
+   *     inside the sentence describing the matcher. That is WORKER.md's named
+   *     failure, *a check that caught its own correction because the correction
+   *     quoted the token it was correcting*, arriving inside the check. The
+   *     GUARDED half of this matcher was already corrected for the same reason
+   *     (see the note at `guarded:` below, where a header mentioning
+   *     `provenance.mjs` in prose read as an import); the WALK half was left
+   *     un-corrected and this is that correction.
+   *   - WIDENED from the single literal `readdirSync(`, because a classifier
+   *     grading ONE spelling is what hid 27 ops from a sweep that read as
+   *     complete. It found one file immediately: `test/query-reach.report.mjs`
+   *     uses `fs/promises`' `readdir`, walks the `.query-reach-cov/` directory it
+   *     creates itself, and had been invisible to every run of this census.
+   *
+   * WHAT IT STILL CANNOT SEE, stated because a matcher that hides its blind spots
+   * is read as though it had none: a third-party glob library, a walk in a shell
+   * script or in another language, a walk reached through an aliased or
+   * destructured binding these regexes do not spell, and anything outside those
+   * two directories (`newgroup/`, `tools/`, `agent-worker/`, `pdf-worker/`).
+   * **AND THE ONE THAT MATTERED MOST, because M0-18 was bitten by it: this census
+   * grades the file the WALK is in, and a walk's FLOOR can live in a DIFFERENT
+   * FILE.** `scripts/op-claims.mjs` walks and `test/op-claims.test.mjs` floors on
+   * what it found; the census named the first as merely "reports a claim census"
+   * and never enumerated the second at all. A file that imports a corpus from a
+   * walking module and floors on it is in this class and is invisible here.
+   *
+   * It also cannot tell a walk of a TEMP directory from a walk of a repository
+   * directory — so the named list carries that judgement, made by reading each
+   * site, and the list is what goes stale if somebody is wrong.
+   *
+   * NARROWED UNKNOWNS, measured 2026-08-09 by M0-18 so the blind spots above are
+   * not read as unexplored: `tools/` was hand-read and holds no member of the
+   * class (`mintid.mjs` walks its own id ledger under `.git/` and floors on
+   * nothing from it; `plancheck.mjs` imports `readdirSync` and never calls it,
+   * which M0-16 already measured). `newgroup/src/index.mjs` performs no directory
+   * walk at all. Neither root is added to the census, because adding a root whose
+   * every member is a non-instance buys a longer list and no enforcement.
    */
+  /* Comment-blind, and blind in BOTH directions: the token must be CODE. The
+     same reader `test/bounds.test.mjs` uses on the same problem, kept small
+     because it only has to blank spans rather than preserve them. */
+  const codeOnly = (text) => text
+    .replace(/\/\*[\s\S]*?\*\//g, (s) => s.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (s, p) => p + s.slice(p.length).replace(/[^\n]/g, " "));
+  const DISCOVERY = /\b(?:readdirSync|readdir|opendirSync|opendir|globSync)\s*\(/g;
   const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "src", "checks", "migrate"]],
                         ["civicos-ui", [".", "test"]]];
   const census = [];
@@ -1682,7 +1726,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
         const rel = repoPath(REPO, join(d, n));
         let src = "";
         try { src = readFileSync(join(d, n), "utf8"); } catch { continue; }
-        const walks = (src.match(/readdirSync\s*\(/g) || []).length;
+        const walks = (codeOnly(src).match(DISCOVERY) || []).length;
         if (!walks) continue;
         /* GUARDED means it IMPORTS the check, and the import is what is matched.
            Written first as a bare mention of `scripts/provenance.mjs` anywhere in
@@ -1707,15 +1751,40 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      too-high ratchet — does not reach them. A new entry here is a decision
      somebody has to make, which is the point. */
   const CLASS_NAMED_UNGUARDED = [
+    /* SEVEN bio-plane ENTRIES REMOVED 2026-08-09 BY M0-18 — `scripts/op-claims.mjs`,
+       `test/bounds.test.mjs`, `test/case-opened.test.mjs`, `test/identity-claims.test.mjs`,
+       `test/machine-fences.test.mjs`, `test/machinefences-dec49.test.mjs`,
+       `test/planning-hygiene.test.mjs` — because every one of them is now GUARDED and
+       an entry that no longer applies is a rule nobody is enforcing and nobody
+       remembers deleting. Six of the seven FLOORED on what their walk found, which
+       is D-238's payload (a floor moved to a contaminated figure is permanently too
+       high and gets switched off); `machine-fences.test.mjs` is the seventh and is a
+       DIFFERENT exposure argued in full at its own site — its walk feeds a
+       SATISFACTION, so an arrival could not raise a floor but could quietly meet a
+       requirement.
+
+       NOTE FOR WHOEVER MERGES THIS: D-257's branch removes SEVEN civicos-ui entries
+       from this same array for the same reason. The two removals are disjoint by
+       path and the resolution is KEEP BOTH — but the `newlyUnguarded` arm below does
+       NOT catch an entry left behind for a file that became guarded, so re-read the
+       printed census line rather than trusting the diff. */
     "bio-plane/migrate/migrate.mjs",              // an OPERATOR-supplied fixture tree, not a repository directory
-    "bio-plane/scripts/op-claims.mjs",            // corpus(): the whole repo, reports a claim census
-    "bio-plane/test/bounds.test.mjs",             // the whole repo, reports a bound census
-    "bio-plane/test/case-opened.test.mjs",        // the whole repo, reports a consumer census
-    "bio-plane/test/identity-claims.test.mjs",    // src/ + checks/, reports a wide-claim ledger
-    "bio-plane/test/machine-fences.test.mjs",     // test/ — reports which refusal codes a SUITE pins
-    "bio-plane/test/machinefences-dec49.test.mjs",// src/, reports minted fence codes
-    "bio-plane/test/planning-hygiene.test.mjs",   // docs/, reports a planning-surface census
-    "bio-plane/test/publishedcase.test.mjs",      // src/, reports emitted rendering modules
+    /* NOT GUARDED, AND M0-18 HAND-READ IT TO SAY SO RATHER THAN GUARDING IT FOR
+       SYMMETRY. Its walk of `src/` feeds ONE assertion — `emitted` must be EMPTY.
+       A phantom `.mjs` arriving beside `store.mjs` and matching the renderer
+       pattern makes that arm go RED, which is the SAFE direction and is the
+       assertion doing its job. Nothing here floors on a count, so there is no
+       number an arrival can push the wrong way. This is a deliberate closure, not
+       an oversight. */
+    "bio-plane/test/publishedcase.test.mjs",      // src/, asserts NO emitted rendering module; a phantom fails it SAFE
+    /* FOUND 2026-08-09 BY M0-18'S WIDENING OF THIS MATCHER, and it had been
+       invisible to every previous run because it walks with `fs/promises`'
+       `readdir` rather than `readdirSync`. WHY IT IS NAMED AND NOT GUARDED: it
+       walks `.query-reach-cov/`, a coverage directory IT CREATES ITSELF, reports
+       no repository census, and exits 2 when it finds nothing rather than
+       reporting clean over an empty corpus. No other worker can deposit into it
+       and nothing it prints is a figure anybody quotes into a floor. */
+    "bio-plane/test/query-reach.report.mjs",      // its own .query-reach-cov/, a coverage report, no census
     "civicos-ui/check-mock-envelope.mjs",         // civicos-ui/test/, reports a suite census
     "civicos-ui/check-refusal-codes.mjs",         // plane src/ AND civicos-ui/test/, reports two censuses
     "civicos-ui/test/add-surface.test.mjs",       // civicos-ui/, reports a surface census
@@ -1756,8 +1825,19 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        so a phantom deposited beside it cannot install slack anywhere — and the
        assertion it feeds fails in the SAFE direction, because an untracked file
        naming the retired path makes the estate arm go RED rather than quietly
-       green. Provenance would tell it something true and useless. */
-    "bio-plane/test/check-firing.test.mjs",       // the estate, reports a producer census for a retired shape
+       green. Provenance would tell it something true and useless.
+
+       CORRECTED 2026-08-09 BY M0-18 AND THE ENTRY IS REMOVED, because the reason
+       above was right about the ARM and silent about the LINE ABOVE IT. The
+       producer arms do fail safe and still read the whole working tree. But
+       `estate.length >= 50` is a FLOOR over the same walk, and a phantom raises
+       it — so a corpus that genuinely shrank could be held above the floor by
+       files no other checkout has. MEASURED WHEN GUARDED: the walk counted 129
+       files and only 127 are in any commit. The two were
+       `agent-worker/.wrangler/cache/cf.json` and `pdf-worker/.wrangler/cache/cf.json`
+       — wrangler's local cache, present only because a deploy ran on this
+       machine. Not a stash phantom, and the same class: the printed corpus figure
+       was not one another checkout reproduces. */
     "civicos-ui/test/auth-surface.test.mjs",      // civicos-ui/, reports a surface census
     "civicos-ui/test/bound-sweep.test.mjs",       // civicos-ui/, reports a bound census
     "civicos-ui/test/preauth-vocabulary.test.mjs",// civicos-ui/test/, reports a suite census
@@ -1799,7 +1879,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
 
-  console.log(`  class census: ${census.length} file(s) in the estate walk a directory with readdirSync ·`
+  /* M0-18 measured the matcher change rather than asserting it: over this tree the
+     widening ADDED `test/query-reach.report.mjs` (an `fs/promises` `readdir` that
+     no run of this census had ever seen) and the comment-blinding DROPPED
+     `test/op-claims.test.mjs` (matched only by a sentence describing this matcher).
+     27 before, 27 after, and neither file is the one it was. */
+  console.log(`  class census: ${census.length} file(s) in the estate walk a directory with a discovery`
+    + ` primitive in CODE (readdirSync / readdir / opendirSync / opendir / globSync) ·`
     + ` ${guarded.length} GUARDED by scripts/provenance.mjs (${guarded.map((r) => r.file).join(", ")})`
     + ` · ${unguarded.length} named and not guarded`);
   t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 15)`,

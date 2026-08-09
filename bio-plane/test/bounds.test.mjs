@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 2a/2b is the decisive pair: with a phantom present, a floor set from the
+   contaminated count FAILS in the M0-18 spelling and PASSES in the pre-M0-18 one.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: (run 2026-08-05, rec57-agent) FOUR arms, each RUN. (1) DROP THE PUBLISHED BOUND — in src/store.mjs delete `limit: cap,` from any roster op's return block (e.g. taskList) -> the LIVE arm for that op fails naming it and what a consumer can no longer tell. (2) COUNT WHAT IT SENT — in documentsNamingEntity replace `truncated: merged.length > cap || aliasPageFilled` with `truncated: false` (the pre-REC-57 behaviour: `count` is the length of what was SENT and nothing says more exists) -> the DELTA arm fails, because a bitten call and a complete call read alike. (3) NEUTER THE ROSTER WALK — replace the body of `cappedMethods` with `return new Map()` -> the three REACH assertions fail AS DELTAS and the roster-vs-driven pin fails. (4) OVER-STRICTNESS — a correct answer phrased unlike anything this file wrote must not fail; asserted in the last block. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec59-agent, IC-24/REC-59) FOUR arms, each RUN, every file restored BYTE-IDENTICALLY (sha256 compared). (1) REVERT op=projection TO THE BARE ARRAY — in src/store.mjs projection(), insert `return bundles;` above the envelope's `return {` -> 25 assertions fail across FOUR suites: bounds 6 (both PIN arms, the PIN GUARD, and three of op=projection's LIVE arms including the DELTA), gate-reads 4 (the enumeration, and all three of the viewer-gated `total` / viewer-independent `limit` arms), projection 3 (the json_extract read and both filter-total arms), projects 12. (1b) AND THE CONTROL FOUND A DEFECT IN THE INSTRUMENT RATHER THAN CONFIRMING IT: on the first run gate-reads, projection and projects all THREW on `.bundles.length` / `.find(...)` of undefined and DIED, hiding every arm behind the throw — D-93's class inside a control. Every migrated read is null-tolerant now, so the control NAMES what it broke; the failure counts above are the post-fix ones. (2) A SECOND BARE-ARRAY CAPPED OP, run in two stages because the stages fail differently and only the second is the pin: (2a) add a capped method returning a bare array plus its dispatch entry -> the walk FINDS it (`op=ncsecond -> ncSecondBareArray` prints on the roster) and 3 fail, headed by "every capped op the walk found is DRIVEN here"; (2b) additionally drive it into `answersByOp` -> **"PIN: ZERO capped ops answer with a bare array" FAILS with `got ["ncsecond"]`**, naming the offender, which is the proof it is a pin and not an exemption. (3) NEUTER THE WALKS, both of them: (3a) `cappedMethods` -> `return new Map()` -> 9 fail including all three REACH-AS-A-DELTA arms, with the corpus PRINTED as `0 carrying a cap, reaching 0 ops`; (3b) empty the consumer walk's corpus (`allFiles.length = 0`) -> 8 fail, corpus PRINTED as `0 files, 0 chars`, every REC-59 REACH arm among them — while "REC-59 REACH (THE FAILURE MODE NAMED)" deliberately STAYS GREEN, because its whole subject is that IC-24's claim still reads true over nothing. (4) OVER-STRICTNESS — inherited from REC-57 and still passing, plus this item's own PIN GUARD arm proving the array reader can still SEE an array when one is present. */
 /* NEGATIVE CONTROL: (run 2026-08-07, rec60-agent, REC-60/D-225) THIS SUITE'S SHARE of REC-60's controls, run against the three ops that JOINED its roster when they gained a bound, each restored byte-identically. (1) RESTORE EACH UNBOUNDED READ in src/store.mjs — drop `LIMIT ?`/`cap + 1` and the `limit:`/`truncated` keys — and this file fails FOUR arms per op, every one naming it: the bound-applied arm, both direction arms, and the DELTA. Run per op: resolutionsForCapture 4, documentsConcerning 4, connectionsFor 4. (2) COUNT WHAT IT SENT (`const truncated = false;` beside a real slice) -> 2 fail per op here, the cut-answer arm and the DELTA. Note that the WALK stays green under (2) — the scan is still capped, so `OPS.size` is still 14 and only the LIVE arms catch a dishonest answer. (3)/(4) are `test/meaning-bounds.test.mjs`'s, which is where REC-60's own walk and its reach deltas live. */
@@ -102,6 +113,10 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
 import { createHash } from "node:crypto";
+/* M0-18 — ONE mechanism, imported, never a copy of the rule. Why the module
+   exists and what it cannot see is in its own header; why THIS suite needed it
+   is at the REC-59 corpus walk below. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1230,11 +1245,74 @@ for (const f of allFiles) {
   consumerCorpus.push({ f: relative(REPO, f), code: blankComments(raw) });
 }
 const walkChars = consumerCorpus.reduce((a, x) => a + x.code.length, 0);
+
+/* ---- M0-18 · THE FLOOR IS THE REPRODUCIBLE FIGURE, THE SWEEP IS NOT ---------
+ *
+ * UNTIL M0-18 THIS WALK READ THE WORKING TREE AND FLOORED ON WHAT IT FOUND.
+ * `refs/stash` is REPOSITORY-WIDE across all sixty worktrees of this repository
+ * and `git stash push -u` carries UNTRACKED files, so a `pop` deposits another
+ * worker's files into a tree that never wrote them (D-238, measured, with the
+ * stash commit named in the row). Nothing in a `readdirSync` distinguishes a
+ * tracked file from one that arrived that way, so a phantom `.mjs` anywhere
+ * under the repository root was counted into `consumerCorpus` and into
+ * `walkChars` — the two figures the REC-59 REACH guard below floors on. An
+ * arrival can only push such a floor UP, so a floor moved to the figure a
+ * contaminated run PRINTED is permanently too high, fails every honest run
+ * afterwards, and gets switched off. The payload is a disabled ratchet, not a
+ * wrong number.
+ *
+ * THE SPLIT IS THE WHOLE DESIGN, and it is D-257's, one estate over:
+ *
+ *   - THE SWEEP RUNS OVER THE WHOLE WORKING TREE. A `op=projection` call site in
+ *     a file nobody has committed yet is still a consumer, and it must still be
+ *     counted and still red this suite. Narrowing the SWEEP to the commit would
+ *     hide exactly the work a member is in the middle of writing, which is the
+ *     HIDING direction and is worse than the condition it fixes.
+ *   - THE FLOOR IS COMPUTED OVER THE COMMIT ALONE. `git ls-tree HEAD` decides
+ *     which files another checkout at this HEAD reproduces, and only those feed
+ *     the REACH guard.
+ *
+ * WHEN GIT CANNOT ANSWER, `inCommit` says true for everything and the two
+ * figures collapse onto each other. That is UNVERIFIED, printed as UNVERIFIED,
+ * and it is NEVER reported as clean (D-233) — including in this file's own
+ * prose, which is where D-257's ARM 3 caught the first draft of this pattern
+ * claiming "in the commit at HEAD (unverified)".
+ *
+ * WHAT THIS DOES NOT CLOSE, stated rather than left to be discovered: provenance
+ * answers about a PATH. A TRACKED file whose CONTENT arrived from elsewhere is
+ * in the commit by this test and counts toward the reproducible figure. This
+ * detects an ARRIVAL, not a MODIFICATION.
+ */
+const PROV = readGitProvenance(REPO);
+const inCommit = (rel) => PROV.inHead === null ? true : PROV.inHead.has(rel);
+const REC59_REPRO = consumerCorpus.filter((x) => inCommit(x.f));
+const reproChars = REC59_REPRO.reduce((a, x) => a + x.code.length, 0);
+/* SAY UNVERIFIED, NEVER CLEAN. This label is interpolated into the assertion
+   text below, so a run where git could not answer says so in the sentence a
+   reader quotes rather than only in the provenance report. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk and is NOT a claim about any commit"
+  : `in the commit at HEAD (${PROV.headSha})`;
+
 /* PRINTED EVERY RUN, so a corpus that SHRANK to nothing is visible rather than
    silent. Three walks this week kept a headline assertion green over an empty
-   corpus, twice inside the instrument built to prevent it. */
+   corpus, twice inside the instrument built to prevent it. BOTH figures are
+   printed — the contaminated one this checkout saw, and the one another checkout
+   at this HEAD reproduces, which is the only one a floor may be quoted from. */
 console.log(`  REC-59 CORPUS: ${consumerCorpus.length} files, ${walkChars} chars scanned; `
           + `${consumerExcluded.length} generated artifact(s) excluded (${consumerExcluded.map((x) => `${x.f} ${x.chars}`).join("; ")})`);
+console.log(`  REC-59 CORPUS, REPRODUCIBLE: ${REC59_REPRO.length} of ${consumerCorpus.length} file(s) and `
+          + `${reproChars} of ${walkChars} chars are ${HEAD_SAYS} — floors 200 / 5,000,000 apply to THESE`);
+reportProvenance({
+  prov: PROV,
+  items: consumerCorpus.map((x) => ({ path: x.f, what: x.f.split("/").pop(),
+    counted: "swept for op=projection call sites" })),
+  instrument: "REC-59's consumer walk",
+  corpus: `${consumerCorpus.length} file(s) walked, ${REC59_REPRO.length} of them in the commit`,
+  totals: PROV.inHead === null ? [] : [
+    { label: "consumer files", contaminated: consumerCorpus.length, reproducible: REC59_REPRO.length, source: "files" },
+  ],
+});
 
 /* ============ REC-67 · THE HELPER FORM, AND THE TEST IS INVERTED =============
  * WHAT WAS WRONG, MEASURED AND NOT ARGUED. The helper arm read:
@@ -1440,8 +1518,26 @@ t("REC-59 RE-MEASURED: `civicos-ui` reaches op=projection ONLY through the `&id=
    The same reader is re-run over an EMPTY corpus and must find FEWER; the
    difference is the evidence, and the failure mode is NAMED in-suite so it
    cannot be lost the way it was lost three times this week. */
-t("REC-59 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it",
-  consumerCorpus.length > 200 && walkChars > 5_000_000, true);
+/* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED, and the old assertion was wrong
+   rather than merely weaker: it floored on `consumerCorpus.length` and
+   `walkChars`, both read off the WORKING TREE, so an untracked arrival raised
+   the number this floor is compared against and the next session to move the
+   floor to the printed figure would have moved it somewhere no other checkout
+   reproduces. The subject of the assertion — "did this walk read a real corpus"
+   — is unchanged; what changed is which corpus the question is asked about. */
+t(`REC-59 REACH: the walk read a real corpus — over 200 files and 5,000,000 characters of it, `
++ `counted over the files another checkout REPRODUCES (${REC59_REPRO.length} file(s), ${reproChars} chars, ${HEAD_SAYS})`,
+  REC59_REPRO.length > 200 && reproChars > 5_000_000, true);
+/* AND THE PROVENANCE CHECK ITSELF REACHED SOMETHING. A report narrowed to
+   nothing is spotless (provenance.mjs's own stated failure mode), so the
+   accounting is pinned to the corpus it was handed rather than believed. */
+t("REC-59 REACH: the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — "
++ "never a silent third state, and under UNVERIFIED the two figures must COLLAPSE onto each other rather "
++ "than the reproducible one quietly reading zero",
+  [PROV.inHead instanceof Set || PROV.inHead === null,
+   REC59_REPRO.length <= consumerCorpus.length,
+   PROV.inHead === null ? REC59_REPRO.length === consumerCorpus.length : true],
+  [true, true, true]);
 t("REC-59 REACH: BOTH string embeds of the plane are excluded, each recognised STRUCTURALLY at byte 0 and "
 + "neither by name, and each is over a megabyte — so neither counts the plane as its own consumer",
   [consumerExcluded.length, consumerExcluded.every((x) => x.chars > 1_000_000)], [2, true]);

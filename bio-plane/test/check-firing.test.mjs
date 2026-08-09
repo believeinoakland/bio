@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 1/2 cover the class; this file's own measurement is in the report — its
+   estate walk counted 129 files of which only 127 are in any commit.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* The catalog, judged in the direction that FAILS.
  *
  * conformance.test.mjs runs the whole check catalog over real bundles and
@@ -53,6 +64,8 @@
  */
 import { createHash, webcrypto } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
+/* M0-18 — ONE mechanism, imported. The reason is at the estate walk's floor. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { join as joinPath } from "node:path";
 import { checkBundle, CHECK_RETIREMENTS } from "../checks/bio-checks.mjs";
 
@@ -489,10 +502,58 @@ const walkEstate = (dir) => {
 for (const r of ESTATE_ROOTS) walkEstate(joinPath(REPO.pathname, r));
 console.log(`  estate corpus: ${estate.length} file(s) across ${ESTATE_ROOTS.length} roots`
   + ` — ${ESTATE_ROOTS.join(", ")}`);
+
+/* ---- M0-18 · THE FLOOR IS THE REPRODUCIBLE FIGURE, THE PRODUCER SWEEP IS NOT
+ *
+ * WHY THIS WAS GUARDED AFTER BEING NAMED, AND THE NAMING'S REASON WAS RIGHT
+ * ABOUT THE ARM AND SILENT ABOUT THE FLOOR. `hygiene.test.mjs`'s class census
+ * named this walk (FW-13, 2026-08-08) on the ground that its `producersOf` arms
+ * fail in the SAFE direction — an untracked file naming a retired path makes the
+ * estate arm go RED rather than quietly green, which is true and is why those
+ * arms are left reading the whole working tree here. But the entry said nothing
+ * about the line below it, and the line below it is a FLOOR over the same walk:
+ * a phantom raises `estate.length`, so a corpus that genuinely SHRANK past 50
+ * could be held above the floor by files no other checkout has. That is M0-15's
+ * class exactly, in the assertion whose stated purpose is to stop a verdict being
+ * reported over nothing.
+ *
+ * MEASURED, NOT ARGUED: the floor sits at 50 over a real corpus in the hundreds,
+ * so this is a reach guard with slack rather than a live ratchet — and a floor
+ * with slack is not a ratchet either (REC-71). It is guarded because the fix is
+ * the same two lines as its six siblings and because the reason it was left
+ * unguarded does not cover it, not because the exposure is large. */
+const PROV = readGitProvenance(REPO.pathname);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO.pathname, abs));
+const estateRepro = estate.filter((f) => inCommit(f.p));
+/* SAY UNVERIFIED, NEVER CLEAN (D-233). */
+const ESTATE_HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk and is NOT a claim about any commit"
+  : `in the commit at HEAD (${PROV.headSha})`;
+console.log(`  estate corpus, REPRODUCIBLE: ${estateRepro.length} of ${estate.length} file(s) are `
+  + `${ESTATE_HEAD_SAYS} — the floor of 50 applies to THESE`);
+reportProvenance({
+  prov: PROV,
+  items: estate.map((f) => ({ path: repoPath(REPO.pathname, f.p), what: f.p.slice(REPO.pathname.length),
+    counted: "read for a producer of a retired gated path" })),
+  instrument: "the estate walk",
+  corpus: `${estate.length} file(s) across ${ESTATE_ROOTS.length} roots`,
+  totals: PROV.inHead === null ? [] : [
+    { label: "estate files", contaminated: estate.length, reproducible: estateRepro.length, source: "files" },
+  ],
+});
 /* THE CORPUS FLOOR. M0-15 and M0-16 both recorded a restore check that passed
    over an EMPTY manifest and a digest reading e3b0c442… — print the size and
-   floor it, or the walk below is an equality that costs nothing to produce. */
-t("the estate walk READ a plausible corpus (floor 50)", estate.length >= 50, true);
+   floor it, or the walk below is an equality that costs nothing to produce.
+   CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED: floored on the reproducible
+   count for the reason in the block above. */
+t(`the estate walk READ a plausible corpus (floor 50), counted over the files another checkout REPRODUCES `
++ `(${estateRepro.length} of ${estate.length}, ${ESTATE_HEAD_SAYS})`, estateRepro.length >= 50, true);
+t("the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never a silent "
++ "third state, and under UNVERIFIED the two figures COLLAPSE rather than the reproducible one reading zero",
+  [PROV.inHead instanceof Set || PROV.inHead === null,
+   estateRepro.length <= estate.length,
+   PROV.inHead === null ? estateRepro.length === estate.length : true],
+  [true, true, true]);
 
 const producersOf = (path, corpus) => corpus.filter((f) => f.text.includes(path))
   .map((f) => f.p.slice(REPO.pathname.length));

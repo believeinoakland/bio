@@ -58,6 +58,10 @@
 import { readFileSync, readdirSync, lstatSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative, extname } from "node:path";
+/* M0-18 — ONE mechanism, imported, never a copy of the rule. Why the module
+   exists and what it cannot see is in its own header; why this walk needed it is
+   at the classification block inside `corpus()`. */
+import { readGitProvenance } from "./provenance.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PLANE = join(HERE, "..");
@@ -161,7 +165,57 @@ export function opReaching(doPathName, table) {
 /* ------------------------------------------------------------------ the walk */
 
 const TEXT_EXT = new Set([".mjs", ".js", ".md", ".html", ".json", ".jsonc", ".txt", ".sh"]);
-const SKIP_DIR = new Set(["node_modules", ".git", ".claude", "dist", "coverage", ".worktrees"]);
+const SKIP_DIR = new Set(["node_modules", "dist", "coverage"]);
+
+/* ---- M0-18 · THIS WALK DOES NOT DESCEND INTO A DOT-DIRECTORY, AND THE RULING
+ * IS RECORDED HERE BECAUSE THIS IS THE SITE THAT ENFORCES IT.
+ *
+ * WHAT WAS WRONG. `SKIP_DIR` was a HAND-KEPT LIST OF SPELLINGS — `.git`,
+ * `.claude`, `.worktrees` — each added the day it bit somebody, which is D-113's
+ * class and the shape WORKER.md means by *invert, do not lengthen a list*. The
+ * three siblings that walk this same repository in this same battery
+ * (`test/bounds.test.mjs`, `test/case-opened.test.mjs`) already skip EVERY
+ * dot-directory with one line, so this walk admitted directories they would never
+ * have run — M0-16's class in the opposite direction: not a walk that goes blind,
+ * a walk that sees more than its siblings and reports a number nobody else can
+ * reproduce.
+ *
+ * AND IT WAS MEASURED, NOT REASONED. D-257's negative-control harness kept its
+ * per-arm PRISTINE COPIES under a dot-directory inside the worktree — the only
+ * safe place, since `git stash` is forbidden here and the shared scratchpad is
+ * not isolated between sessions. This walk descended into it, read the copies as
+ * a third party's prose about the dispatch table, and turned the whole battery
+ * RED with TEN findings. Every control this project runs makes pristine copies;
+ * an instrument that reds because a MANDATORY negative control ran is an
+ * instrument fighting the process it belongs to.
+ *
+ * WHAT IT COSTS, MEASURED ON THIS TREE 2026-08-09 rather than asserted: ZERO
+ * files. The corpus contains 459 files; exactly ONE tracked dot-DIRECTORY exists
+ * in this repository (`.claude/`, which the old list already skipped by name),
+ * and every other tracked path beginning with a dot is a FILE at a non-dot path
+ * (`.gitignore`, `.env.example`, `.dev.vars.example`) whose extension is not in
+ * `TEXT_EXT` anyway. The rule below is therefore the same corpus with a
+ * different reason — and, unlike the list, it also covers `.query-reach-cov/`,
+ * every future control harness, and whatever the next tool writes.
+ *
+ * WHAT IT GIVES UP, said plainly rather than left for the next reader: a real
+ * `op=` claim written inside a dot-directory is now invisible here. If a tracked
+ * `.github/` or similar ever carries prose about the dispatch table, this rule is
+ * the reason it goes unchecked, and the corpus floor in
+ * `test/op-claims.test.mjs` is what makes a narrowing visible rather than silent.
+ *
+ * REJECTED ALTERNATIVE: deciding by `git check-ignore` instead of by the leading
+ * dot. It would admit a tracked `.github/` correctly, but it would STILL admit an
+ * untracked-and-unignored control directory — which is precisely the case that
+ * bit — and it would make the corpus depend on git being answerable, a third
+ * state this walk otherwise never needs. REVERSING THIS COSTS ONE LINE.
+ *
+ * THE RULE IS ON THE PATH SEGMENT, NOT ON DIRECTORIES ONLY, which is the same
+ * spelling the two sibling walks use: a dot-FILE is excluded too. Measured, that
+ * changes nothing either — no tracked dot-file in this repository carries an
+ * extension in `TEXT_EXT`. What the walk skipped is RETURNED and printed, so the
+ * narrowing is visible rather than a silence. */
+const skipSegment = (name) => SKIP_DIR.has(name) || name.startsWith(".");
 
 /* THE GENERATED EMBEDS ARE EXCLUDED STRUCTURALLY, by what stands at BYTE 0, never
    by filename — REC-58's predicate, reused verbatim rather than re-derived, because
@@ -191,12 +245,14 @@ export function generatedReason(src) {
 
 export function corpus(root = REPO, roots = null) {
   const files = [];
+  const skipped = [];
   const bases = roots ? roots.map((r) => join(root, r)) : [root];
   const walk = (d) => {
     let entries;
     try { entries = readdirSync(d); } catch { return; }
     for (const name of entries) {
-      if (SKIP_DIR.has(name)) continue;
+      /* M0-18: one rule, not a list of spellings. The full ruling is above. */
+      if (skipSegment(name)) { skipped.push(relative(root, join(d, name))); continue; }
       const p = join(d, name);
       let st;
       try { st = lstatSync(p); } catch { continue; }
@@ -222,7 +278,32 @@ export function corpus(root = REPO, roots = null) {
     chars += body.length;
     out.push({ file: f, rel: relative(root, f), body });
   }
-  return { files: out, chars, excluded };
+
+  /* ---- M0-18 · WHICH OF THESE FILES ANOTHER CHECKOUT REPRODUCES --------------
+   * This walk reads the WORKING TREE and `test/op-claims.test.mjs` FLOORS on what
+   * it finds (`files >= 300`, `chars >= 10,000,000`). `refs/stash` is
+   * repository-wide across all sixty worktrees of this repository and `git stash
+   * push -u` carries untracked files, so a phantom can arrive here from a tree
+   * that never wrote it (D-238, measured), and an arrival can only push a floor
+   * UP — a floor moved to the figure a contaminated run PRINTED is permanently
+   * too high and gets switched off.
+   *
+   * THIS FUNCTION STILL RETURNS THE WHOLE WORKING TREE, and `sweep()` still reads
+   * every byte of it. An `op=` claim written in a file nobody has committed yet
+   * is still a false claim and must still be a FINDING — narrowing the sweep
+   * would hide exactly the prose a worker is in the middle of writing. Only the
+   * FLOOR narrows, and this is the classification that lets it.
+   *
+   * THIS WAS NOT VISIBLE TO `hygiene.test.mjs`'s class census and that is a
+   * finding about the census rather than about this file: the census grades a
+   * file by whether IT contains a `readdirSync(`, and here the WALK and the FLOOR
+   * live in DIFFERENT FILES. `test/op-claims.test.mjs` performs no walk at all
+   * and was never enumerated. */
+  const prov = readGitProvenance(root);
+  const inCommit = (rel) => prov.inHead === null ? true : prov.inHead.has(rel.split("\\").join("/"));
+  const repro = out.filter((x) => inCommit(x.rel));
+  const charsRepro = repro.reduce((a, x) => a + x.body.length, 0);
+  return { files: out, chars, excluded, skipped, prov, repro, charsRepro };
 }
 
 /* --------------------------------------------------------------- the mentions */
@@ -468,7 +549,11 @@ export function mentionsIn(body) {
 export function sweep({ root = REPO, roots = null, planeDir = PLANE,
                         ledger = LEDGER, planned = PLANNED_OPS } = {}) {
   const table = readDispatch(planeDir);
-  const { files, chars, excluded } = corpus(root, roots);
+  /* M0-18: `files` is the WHOLE working tree and every byte of it is swept —
+     `repro`/`charsRepro` exist so the caller can FLOOR on what another checkout
+     reproduces without narrowing what is checked. The two are deliberately
+     different populations; see `corpus()`. */
+  const { files, chars, excluded, skipped, prov, repro, charsRepro } = corpus(root, roots);
 
   const plannedNames = new Set(planned.map((p) => p.op));
   const ledgerIndex = new Map(ledger.map((e) => [`${e.file} ${e.name}`, e]));
@@ -539,6 +624,25 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
 
   const plannedBuilt = planned.filter((p) => table.ops.has(p.op)).map((p) => p.op);
 
+  /* M0-18: `mentions` is over the whole tree; `mentionsRepro` is the same count
+     restricted to files in the commit, because `test/op-claims.test.mjs` floors
+     on it too. Computed here rather than in the loop so the sweep's own control
+     arms keep reading one population. */
+  const reproRels = new Set(repro.map((f) => f.rel));
+  let mentionsRepro = 0;
+  const namesRepro = new Set();
+  for (const f of files) {
+    if (!reproRels.has(f.rel)) continue;
+    for (const mt of mentionsIn(f.body)) {
+      if (mt.kind === "DYNAMIC") continue;
+      mentionsRepro++; namesRepro.add(mt.name);
+    }
+  }
   return { table, files: files.length, chars, excluded, mentions, dynamic, offLedger,
-           names: [...names].sort(), findings, attributions, ledgerDrift, plannedBuilt };
+           names: [...names].sort(), findings, attributions, ledgerDrift, plannedBuilt,
+           /* ADDED BY M0-18. Every field above is untouched: `test/op-claims.test.mjs`
+              pins them, and a reader of an existing field must not have its meaning
+              changed under it. */
+           skipped, prov, filesRepro: repro.length, charsRepro,
+           mentionsRepro, namesRepro: [...namesRepro].sort() };
 }
