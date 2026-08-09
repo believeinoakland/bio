@@ -205,9 +205,17 @@ const REGISTER_FLOOR = {
      whose declaration states six arms — the six negative-control arms driven by
      `test/nc-cpdf10.mjs` — so `corpus` and `classified` each rise by one and
      `arms` by six. Nothing FELL. */
-  arms:       581,  // arms stated across the classified declarations
-  classified: 130,  // declarations the detector could count arms in
-  corpus:     131,  // suites the register reads
+  /* MOVED AT INTEGRATION 2026-08-08 by CONDUCT: 581 -> 621 / 130 -> 133 / 131 -> 134,
+     from the figures a green `--strict` run PRINTED on THE MERGED TREE
+     (`arms 621/581 · classified 133/130 · corpus 134/131 · GREW by 40`) — never by
+     adding movers' numbers together. That arithmetic would have been WRONG in both
+     directions: D-237 and REC-78 each independently measured 581 on a tree lacking
+     the other's new suite, so 581 was true of neither tree, and the merged figure is
+     higher than either. This is what "re-read it from a green run after every
+     multi-item merge" is for. */
+  arms:       621,  // arms stated across the classified declarations
+  classified: 133,  // declarations the detector could count arms in
+  corpus:     134,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

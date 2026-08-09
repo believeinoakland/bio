@@ -489,7 +489,26 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      WHY IT IS A CATCH AT ALL: there is no non-throwing JSON parse, and the
      alternative -- letting it throw -- ends a projection with no answer at all,
      which is a worse finding than a null a caller can see and publish. */
-  const CEILING = 24;
+  /* MOVED 24 -> 25 AT INTEGRATION by CONDUCT (2026-08-08), and the rule this
+     ratchet states was honoured rather than waived: the rise needed somebody to
+     have LOOKED AT THE NEW ONE, and it was found by diffing this walk over the
+     merged tree against CPDF-10's own branch rather than by assuming which item
+     brought it.
+     THE NEW SITE IS REC-74's `#standardForRun`: it parses `standard_pair` and on
+     failure sets `unreadable = true`. IT IS THE CLASS'S REMEDY, NOT AN INSTANCE
+     OF IT, on exactly the grounds the paragraph above states for `safeJson`: the
+     failure is not smoothed into a normal-looking answer, it is PUBLISHED as a
+     stated absence — `basis: "unreadable"` carries `STANDARD_BASIS.unreadable`,
+     "a bar was recorded for this run and cannot be read back", which a member
+     can tell apart from "this run has no bar". It is PL-12's `#biasForRun` shape
+     one field over, and REC-74's own header says so.
+     WHY IT IS A CATCH AT ALL: there is no non-throwing JSON parse, and letting
+     it throw would end the run projection with no answer at all — a worse
+     finding than a null the caller can see and publish.
+     NEITHER WORKER COULD HAVE SEEN THIS. CPDF-10 moved the figure to 24 on a
+     tree without REC-74; REC-74 landed a swallow on a tree without this walk's
+     new figure. The pair is what fires it, which is why it is resolved here. */
+  const CEILING = 25;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 
