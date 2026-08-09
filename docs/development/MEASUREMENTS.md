@@ -5814,8 +5814,13 @@ neighbours), which are the same class one layer over and were not walked.
 ## 2026-08-09 · PL-2 verification pass · one DEC-49 code, two conditions — the census
 
 **Instrument:** `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`, deliberately not a
-`.test.mjs` (it is a census, not a suite; the battery must not discover it). Run on a quiet tree
-at commit `1081a6a` plus this item's own change. It harvests every `*_CHECKS` family the catalog
+`.test.mjs` (it is a census, not a suite; the battery must not discover it). **TWO RUNS, AND BOTH
+FIGURES ARE KEPT because the second is the one that is true.** First on `1081a6a` plus this item's
+change (16 families · 166 codes · 17,369 stripped lines · 16 multi-site candidates · 41 siteless);
+then RE-RUN after `origin/main` moved under the item and was merged, at `08cefb8` (16 families ·
+**168 codes** · 17,462 stripped lines · **16 multi-site candidates** · **42 siteless**). The
+JUDGEMENTS below were made on the first corpus and re-confirmed against the second: the candidate
+count did not move, and the one extra siteless code arrived with main. It harvests every `*_CHECKS` family the catalog
 exports — the RESERVED SUFFIX the DEC-49 guard already keys on, so the corpus cannot go stale by
 somebody forgetting to add a seventeenth family to a list — and counts the LITERAL return sites of
 each code in `src/store.mjs` and `src/index.mjs` over comment-stripped source.

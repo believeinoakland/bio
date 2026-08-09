@@ -315,17 +315,22 @@ const REGISTER_FLOOR = {
      nothing to collect, which is what an uncommitted suite looks like. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT to the merged tree's printed figures
      after PL-18, PL-19, M0-18 and UI-44 (`GREW by 17 arm(s)`). */
-  /* MOVED 654 -> 657, 2026-08-09, worktree agent-ae8e8c4d786783a6b (PL-2 verification
-     pass), FROM THE FIGURE `--strict` PRINTED on a green run — `REGISTER FLOOR arms
-     657/654 · GREW by 3 arm(s)` — and never by adding three to the number that was
-     here. The three are `versionstate.test.mjs`'s new arms (7), (8) and (9): the
+  /* MOVED 671 -> 674, 2026-08-09, worktree agent-ae8e8c4d786783a6b (PL-2 verification
+     pass), FROM THE FIGURE `--strict` PRINTED on the MERGED tree — `REGISTER FLOOR arms
+     674/671 · GREW by 3 arm(s)` — and never by adding three to the number that was here.
+     **THE FIRST FIGURE THIS ITEM WROTE WAS 654 -> 657 AND IT WAS TRUE OF A TREE THAT NO
+     LONGER EXISTED BY THE TIME IT WAS WRITTEN**: `origin/main` took CONDUCT's
+     671/138/139 integration while this item ran, so the pre-merge number was right where
+     it stood and wrong on the merge — PL-11 and SK-1's collision, one item later and
+     recorded rather than quietly overwritten. This figure is read AFTER the merge commit,
+     on a tree with nothing uncommitted. The three are `versionstate.test.mjs`'s new arms (7), (8) and (9): the
      C-25.32 defect re-armed, the over-strictness fence tightened past its rule, and
      the driven-set FLOOR blinded. `classified` and `corpus` do NOT move: no new
      declaration and no new suite, and a figure nudged without a cause behind it stops
      being a measurement. ONE KEY SET, kept: WORKER.md records SIX keep-both merges that
      left duplicate `arms:` keys here, valid JavaScript where the last silently wins and
      once the last was the lowest. */
-  arms:       671,  // arms stated across the classified declarations
+  arms:       674,  // arms stated across the classified declarations
   classified: 138,  // declarations the detector could count arms in
   corpus:     139,  // suites the register reads
 };
