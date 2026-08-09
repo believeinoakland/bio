@@ -680,6 +680,34 @@ milestone: M9 · interface: possibly I3 (the plane's SUCCESS wording) · depends
 scope: **The vocabulary DEC-32 clause 1 forbids is being rendered to MEMBERS right now.** UI-43 measured it: 3 of 3 of `#axisResult`'s detail sentences on `op=versionstrength`'s SUCCESS answer, 1 of 163 canned translations, and **`civicos-ui/app.html` already renders them at four live sites off `op=inquirystrength`** — firing exactly when a member has used UI-27's elicitation. **The CHOICE is the item: re-word the plane, or stop rendering and lose real information a member is using.** UI-43 declined to pick, correctly — it is a judgement about what a member sees.
 accepts-when: the choice made and argued from measurement with its reversal cost; an IC row with measured consumer impact if the plane's wording moves; the matcher INVERTED — UI-43's first read **2 of 3** and missed the graded branch, the case that bites, because that sentence splits across a boundary.
 
+### INTEGRATION ORDER — D-271 AND UI-43 ARE COUPLED. READ BEFORE MERGING EITHER.
+
+**Both are green on their own branches and merging them in the wrong order ships a surface
+that the plane refuses.** D-271 gives `op=versionaccept` a required `affirmed` argument
+(C-25.33) whenever the reading declares more than one part. UI-43's accept ceremony is
+UNMERGED, calls `versionaccept` once, and **already holds `affirmed: {label: true}` with
+nowhere to send it** — so the wiring is ONE LINE.
+
+- **Merge D-271 first and UI-43 unchanged** → every multi-part accept the ceremony makes is
+  refused by name, and two of its page sentences (that the affirmation and the derivation
+  are not recorded) become FALSE while still rendering.
+- **The fix is UI's and it is small**: send the field, and correct those two sentences.
+  D-271 deliberately edited nothing under `civicos-ui/`, which is right.
+
+**So: land UI-43 with the one-line wiring and the two corrected sentences in the same turn
+as D-271, or land D-271 and immediately queue the UI correction as the next item — but do
+not merge D-271 and leave the ceremony as it stands.** Filed as IC-52's sequencing.
+
+**D-271's other two findings for whoever integrates:**
+- **`released:` in `CLAIMS.md` IS NOT A LIVENESS SIGNAL.** A sweep read 38 live claims; PL-14
+  and M0-13 are merged on `main` with EMPTY `released:` lines, and many blocks carry TWO
+  `released:` lines — a filled one followed by an empty template one — which makes 56 read
+  as live. Check liveness against `git log --all`, not against this field.
+- **An instrument allocated a check out of a COMMENT** — `coverage.mjs` harvests `C-\d+\.\d+`
+  over raw source, so naming a skipped numeral in prose made the catalog read 225 against 224
+  and took `--strict` to exit 1. **Spawned as D-277**; it is the fourth outing of that class
+  and the first on a GATE.
+
 ### D-271 · running (spawned 2026-08-09)
 milestone: M9 · interface: possibly I3 · depends-on: none
 scope: **Two record-truth defects found by UI-43.** (1) **The affirmation has nowhere to land** — DEC-32 clause 4 requires each set be affirmed before a multi-set reading is accepted, and no version act has a field for it, so a ceremony the record cannot record. (2) **`shared_origins` is published on `op=suggest`'s WRITE and on no READ**, so CHECK 4's own sentence — *"published on every version that passes, so the member affirming at the accept ceremony is affirming against what the record can see"* — is **true of the write and false of the read.** A check describing a guarantee it does not provide, with the accept ceremony built on top of it.
