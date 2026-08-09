@@ -655,6 +655,37 @@ depends-on: none
 accepts-when: not a build item. It is CORRECT while the wave position it states matches `IS-BUILD-PLAN.md`'s table and the items it names are the ones actually running; CONDUCT updates it at every wave boundary and it is checked at every handover.
 added: 2026-08-07 · CONDUCT (enacting the confirmed plan; a pointer, deliberately not a transcription)
 
+### PL-19 · running (spawned 2026-08-09) — LANDED on branch, integrated 7c94b43
+milestone: M9 · interface: I3 (a refusal's condition narrows; no op contract moves) · depends-on: PL-17 (done)
+scope: **DEC-65's step TWO — `C-25.6` and PL-3's endpoint guard change TOGETHER.** FL-3 measured that the guard refuses on `legsIn.length > 0` — any leg at all — **so it FIRES FIRST and amending the check alone would land, pass its own suite, and change no behaviour.** That is the whole reason the two are one item; its control arm (1) is the receipt (revert the guard, leave the check wired, and the feature is completely unreachable).
+landed: merged 2026-08-09 at 7c94b43. **It found the WRONG C-NUMBER STILL LIVE IN THE PLANE** — FL-3 corrected DEC-65's entry, but PL-3's guard still cited `C-25.15` (`VERSION_ORPHAN_ROW`) in its comment and TWICE in a refusal a caller reads, so a member hitting it was sent to an unrelated rule.
+
+### PL-20 · running (spawned 2026-08-09) — LANDED on branch, awaiting integration
+milestone: M9 · interface: none · depends-on: PL-19
+scope: **DEC-65's step THREE — re-measure the strength pair over GROUNDS**, which PL-19 explicitly did not do and delegated with what it already knew.
+landed: green on `worktree-agent-a04afa9454cdf0bc2`. **ANSWER: `#strengthWalk` never reads `asserted_by`**, computed as the transitive callee closure (8 functions over 406 methods + 109 catalog functions) rather than listed, so the new state cannot move a pair and **DEC-65's licence closes at the arithmetic.** **AT INTEGRATION: three §4 assertions are deliberately pinned `PINNED DEFECT (correct at integration)` and are written to FAIL now that PL-19 is on `main` — CORRECT them to the refusal with a dated reason, never exempt.**
+
+### M0-18 · done — merged 2026-08-09 at f2d7020
+milestone: M0 (background lane, holds no slot) · interface: none · depends-on: D-257 (done)
+scope: **D-257's delegation — guard the PLANE's walk-derived floors** on D-257's split: the sweep keeps reading the whole working tree, the floor is computed over `git ls-tree HEAD` alone, both figures printed.
+landed: seven guarded. **Its finding beyond the brief: `op-claims`' WALK and its FLOORS live in DIFFERENT FILES, so the census — which grades a file by whether THAT file contains a `readdirSync` — never enumerated the floors at all.** Raised as D-265 and spawned rather than folded in. Also ruled the dot-directory question with its cost measured at zero tracked files.
+
+### M0-20 · done — LANDED on branch, awaiting integration
+milestone: M0 (background lane) · interface: none · depends-on: none
+scope: **Detect a merge that silently drops a file whole** — CONDUCT's 2026-08-08 merge of REC-69 carried 11 files where the branch changed 12, losing 70 lines of floor moves, and NOTHING went red because a dropped floor goes SLACK.
+landed: green on `worktree-agent-aad02e8ce9832de00`. `tools/mergecarry.mjs` + a `plancheck` gate, chosen over the battery because the battery would be a no-op in ~85 of ~86 worktrees. **182 merges audited over all of `origin/main`: 3 dropped, 0 false positives over seven benign classes each DRIVEN through a real `git merge`.** **Two more instances found already on `main`, one with a LIVE consequence — see D-264.**
+
+### D-269 · running (spawned 2026-08-09)
+milestone: M9 · interface: possibly I3 (the plane's SUCCESS wording) · depends-on: none
+scope: **The vocabulary DEC-32 clause 1 forbids is being rendered to MEMBERS right now.** UI-43 measured it: 3 of 3 of `#axisResult`'s detail sentences on `op=versionstrength`'s SUCCESS answer, 1 of 163 canned translations, and **`civicos-ui/app.html` already renders them at four live sites off `op=inquirystrength`** — firing exactly when a member has used UI-27's elicitation. **The CHOICE is the item: re-word the plane, or stop rendering and lose real information a member is using.** UI-43 declined to pick, correctly — it is a judgement about what a member sees.
+accepts-when: the choice made and argued from measurement with its reversal cost; an IC row with measured consumer impact if the plane's wording moves; the matcher INVERTED — UI-43's first read **2 of 3** and missed the graded branch, the case that bites, because that sentence splits across a boundary.
+
+### D-271 · running (spawned 2026-08-09)
+milestone: M9 · interface: possibly I3 · depends-on: none
+scope: **Two record-truth defects found by UI-43.** (1) **The affirmation has nowhere to land** — DEC-32 clause 4 requires each set be affirmed before a multi-set reading is accepted, and no version act has a field for it, so a ceremony the record cannot record. (2) **`shared_origins` is published on `op=suggest`'s WRITE and on no READ**, so CHECK 4's own sentence — *"published on every version that passes, so the member affirming at the accept ceremony is affirming against what the record can see"* — is **true of the write and false of the read.** A check describing a guarantee it does not provide, with the accept ceremony built on top of it.
+accepts-when: both halves measured FROM THE PLANE rather than inherited from the surface; if the fix corrects the CHECK's sentence rather than the code that is legitimate and is a correction with the reason in a comment, never an exemption.
+
+
 ### PL-17 · running (spawned 2026-08-09)
 milestone: M9
 interface: I5 (a new value in an existing field — additive; the shape is not reshaped)

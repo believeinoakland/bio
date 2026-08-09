@@ -168,6 +168,32 @@ So the resolution splits in two, and the order matters:
 **A detector that keeps naming the same id after you have fixed it twice is not flaky — it
 is telling you your model of the conflict is wrong.**
 
+## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
+
+**Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was
+minted, the worker was briefed, the work was real — and the item existed nowhere any other session
+could see it. *Nothing is work until it is in `QUEUE.md`* is this loop's own step 2 and I skipped it
+six times in an afternoon, because minting an id **feels** like registering the item and the ledger
+answers when you ask it.
+
+**It reached a worker as a false premise within hours.** D-265's brief told it to *"read that row in
+`DEBT.md`; it is the authority"* — and no such row existed on `main`: the raising item had written it
+on an unmerged branch. The worker measured, found the premise false, and correctly **minted its own
+ids rather than squatting on numbers another tree held**. The ledger had handed out `D/265` and
+`M0/18` to worktrees whose rows were never committed, so `mintid` knew about items the repository did
+not.
+
+**Three rules, and the third is the one that generalises:**
+
+1. **Write the queue row BEFORE you spawn, not after the worker reports.** It costs a minute and it is
+   the only artifact anyone but you can read.
+2. **Never brief a worker against a row that lives only on an unmerged branch.** Either land the row
+   first, or PASTE its content into the brief and say plainly it is not on `main` yet.
+3. **`plancheck` cannot catch this** — it validates rows that exist, and says nothing about work that
+   has none. So this is a discipline, not a gate, which is exactly the shape this project distrusts.
+   **If it recurs, mechanise it**: every id in `.git/bio-idalloc` older than an hour with no row and
+   no commit is either an abandoned mint or an unregistered item, and both are worth a WARN.
+
 ## BEFORE YOU SPAWN, CHECK FOR THE CONTENT. A LEDGER GREP RETURNING NOTHING IS NOT EVIDENCE.
 
 **Measured 2026-08-09: I spawned a worker onto PL-2, which had ALREADY LANDED — implementation
