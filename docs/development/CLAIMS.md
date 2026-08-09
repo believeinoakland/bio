@@ -4962,3 +4962,47 @@ page-wise merge, and I2's text shape already has the right grain (`text.pages[]`
 rule rather than a contract change. **It wants writing in the turn that lands the member, not
 guessing at now** — which is why it is a debt row pointed at your item rather than code written blind
 against a producer that does not exist yet.
+
+### CLAIM 2026-08-09 INTEGRITY · m0-20-agent — **M0-20: A MERGE THAT SILENTLY DROPS A FILE**
+
+item: M0-20 (new id, minted for this worker). The defect is real, recent and was found by
+accident: on 2026-08-08 the merge of REC-69 (`e241672`, first parent `7e5f9b0`, branch tip
+`2d9c57b`, forked at `722c37b`) carried **11** files where the branch had changed **12**.
+The missing one was `civicos-ui/check-refusal-codes.mjs`, 70 lines of floor moves. Nothing
+went red: eleven floors sat stale, the battery was green, `--strict` exit 0 and the UI
+harness exit 0. **A failure that reads as success**, and the same shape as the merge loop
+that ledgered four items done while `git merge` had errored out.
+
+paths: **`tools/mergecarry.mjs` (NEW)** — the predicate and its CLI.
+**`tools/plancheck.mjs`** — one new section (5) wiring the predicate into the check CONDUCT
+already runs before every push. **`bio-plane/test/mergecarry.test.mjs` (NEW)** — the battery
+copy, driving the predicate over synthetic repositories AND over the real 2026-08-08 commits.
+**`bio-plane/test/mergecarry.control.mjs` (NEW)** — the negative-control arms, deliberately
+NOT a `.test.mjs` because it mutates `tools/mergecarry.mjs` while it runs and restores it.
+`docs/development/kickoffs/CONDUCT.md` (the loop step), `docs/development/VERIFICATION.md`
+(the instrument row), `docs/development/MEASUREMENTS.md` (one appended entry),
+`docs/development/CLAIMS.md` (this entry).
+**NOT OPENED: no file under `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/scripts/`,
+`civicos-ui/` or `newgroup/`.**
+
+**SCRATCH REPOSITORIES ARE CREATED UNDER `os.tmpdir()` VIA `mkdtempSync`, NEVER INSIDE THE
+ESTATE**, and removed at exit. One worker put a scratch worktree inside the estate and
+`op-claims.test.mjs` reported 15,007 op mentions off a nested second copy of the repository;
+`git init` inside a worktree would do the same to every instrument that walks the tree.
+`git stash` is not used anywhere — `refs/stash` is repository-wide across ~85 worktrees.
+
+accepts-when: the real 2026-08-08 drop FAILS the check by name; an honest merge that
+legitimately carries fewer files than its branch changed PASSES; every benign class is
+enumerated AND DRIVEN rather than reasoned about; and the report states plainly which
+classes the check cannot distinguish.
+
+**CLAIM AMENDMENT 2026-08-09 M0-20** — two paths added, both found by the sweep rather than
+predicted. `docs/development/DEBT.md`: TWO APPENDED ROWS ONLY (D-263, D-264), for the two
+additional drops the class sweep found in main's history. **No existing row edited** — in
+particular D-232's disposition is NOT corrected here even though this item measured that it
+is wrong, because restoring another item's closure claim to the ledger is CONDUCT's and a
+worker doing it is the wrong shape. Both ids minted with `node tools/mintid.mjs D`.
+`docs/development/VERIFICATION.md`: one appended section documenting the instrument, its
+false-positive measurement and the class it cannot distinguish. No existing row touched, and
+in particular **no floor moved by this item** — it adds no refusal code, no region and no
+governed span, so `civicos-ui/check-refusal-codes.mjs` is not opened at all.
