@@ -268,6 +268,68 @@ if (register) {
   else notes.push(`id namespaces: ${u.prefixes.length} allocating prefix(es), all registered (${u.prefixes.join(" ")})`);
 }
 
+/* ------------------- 2c. A MERGE THAT SILENTLY DROPPED A FILE (M0-20)
+
+   WHY IT IS HERE AND NOT IN THE BATTERY OR IN A DOCUMENT, AND THE ARGUMENT MATTERS
+   MORE THAN THE CODE.
+
+   The defect is CONDUCT's and nobody else's: on 2026-08-08 the REC-69 merge carried 11
+   of its branch's 12 files, and the missing one held 70 lines of floor moves. Nothing
+   went red — a dropped floor goes SLACK, not broken — so the battery was green,
+   `--strict` exit 0 and the UI harness exit 0 while eleven floors sat stale for days.
+
+   Three places could hold the check, and only one of them is the loop the reader runs:
+
+   - THE BATTERY. It runs in every worker's worktree, where there is no merge to judge,
+     so the check would be a no-op for ~85 of ~86 runners. A check that finds nothing for
+     almost everybody is one nobody notices breaking. The battery DOES carry a copy —
+     `test/mergecarry.test.mjs`, which drives the predicate over real git merges and
+     grades the historical register — for the reason 2b already states: the cheap-and-early
+     copy plus the cannot-be-bypassed copy. That is the right role for it, and it is not
+     the gate.
+   - CONDUCT'S LOOP AS PROSE. `kickoffs/CONDUCT.md` already tells CONDUCT to check for the
+     CONTENT rather than the ancestry after a merge — and it names a file and a symbol the
+     reader has to think of THEMSELVES. That paragraph existed on 2026-08-08 and the drop
+     happened anyway, because the file you must think of is precisely the one you did not.
+     A mechanism believed on the strength of its existence rather than its behaviour is the
+     defect this project meets most.
+   - HERE. `kickoffs/CONDUCT.md` step 6 runs this file BEFORE EVERY PUSH; a merge is
+     exactly the moment this defect is created and this is exactly where CONDUCT already
+     stands. Section 0 (merge markers) and section 2b (duplicate ids) are both here for the
+     identical reason, and both were earned by the same integration.
+
+   CAN IT RUN IN A WORKTREE THAT IS A CHECKOUT OF ONE COMMIT? MEASURED, YES. A linked
+   worktree's `.git` is a FILE pointing into the main repository, and `git rev-parse
+   --git-common-dir` resolves to the shared `.git` — so the OBJECT STORE is shared and every
+   commit in the repository is reachable from every worktree, even though the working tree
+   holds one. Verified from a worker worktree by reading `e241672` and `2d9c57b` there. The
+   check is therefore real everywhere, and in a worker's tree it simply finds no merges to
+   judge and says so.
+
+   THE FALSE POSITIVE IS WHAT DECIDES WHETHER THIS SURVIVES. A check that cries wolf gets
+   switched off — VERIFICATION.md's own stated reason for not making `--strict` the gate.
+   Measured over the whole of main's history, 182 merges: THREE findings, and none of them a
+   false positive. The benign classes (main made the same change, the file was deleted or
+   renamed on main, an octopus, a rebase, a branch deletion main declined) are enumerated in
+   `tools/mergecarry.mjs` and DRIVEN one by one through real `git merge` in
+   `test/mergecarry.test.mjs`. */
+
+{
+  const { carryAudit, unregisteredDrops, dropMessage } = await import("./mergecarry.mjs");
+  const a = carryAudit({ repo: ROOT });
+  const drops = unregisteredDrops(a.findings);
+  notes.push(`merge carry: ${a.merges.length} merge(s) in ${a.scope} — `
+    + `${a.counts.sameEnd} same-end, ${a.counts.moved} moved, ${a.counts.goneOnMain} gone-on-main, `
+    + `${a.counts.declared} declared, ${drops.length} DROPPED`);
+  for (const n of a.notes) notes.push(`merge carry: ${n}`);
+  for (const f of a.findings.filter((f) => f.klass === "goneOnMain"))
+    warn(`GONE ON MAIN — ${f.merge} merged a branch that changed ${f.path} (${f.lines} line(s))\n`
+       + `        and main had removed the path, so the merge took the removal. That is a decision\n`
+       + `        somebody made at a modify/delete conflict rather than one that happened to them,\n`
+       + `        which is why it warns rather than fails — but the branch's work on it is gone.`);
+  if (drops.length) fail(dropMessage(drops));
+}
+
 /* ------------------------------------------- 3. THE DECISION CHANNEL */
 
 const decisions = read("docs/development/DECISIONS.md");

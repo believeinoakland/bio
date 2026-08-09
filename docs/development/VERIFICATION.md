@@ -469,6 +469,54 @@ and not `git status`, because an IGNORED file does not appear in `git status` an
 - **It says nothing about whether a commit is PUSHED.** "In a commit" is a weaker
   claim than "reaches anybody", and `tools/plancheck.mjs` is what checks the latter.
 
+## DID THE MERGE CARRY WHAT THE BRANCH CHANGED? (M0-20)
+
+`node tools/mergecarry.mjs`, and `tools/plancheck.mjs` section 2c runs it before every
+push. For every merge in `origin/main..HEAD` it compares the file set the merge CARRIED
+against the file set its branch CHANGED, and FAILS naming any path where the merge kept
+main's version byte for byte.
+
+**The receipt.** `e241672`, 2026-08-08: REC-69's branch changed 12 files, the merge carried
+11, and the missing one held **70 lines of floor moves**. **Nothing went red** — a dropped
+floor move goes SLACK, not broken — so the battery was green, `--strict` exit 0 and
+`civicos-ui/test/run.mjs` exit 0 while eleven floors sat stale for days. It surfaced by
+accident. That is the shape this whole document exists to make impossible, arriving in the
+one place none of the three instruments looks.
+
+**Why it is in `plancheck` and not in the battery.** The battery runs in every worker's
+worktree, where there is no merge to judge, so the check would be a no-op for ~85 of ~86
+runners — and a check that finds nothing for almost everybody is one nobody notices
+breaking. `plancheck` runs at the moment the defect is created, in the tree of the only
+session that merges. The battery carries a copy of the PREDICATE
+(`bio-plane/test/mergecarry.test.mjs`), for the reason `mintid` already states: the
+cheap-and-early copy plus the cannot-be-bypassed copy.
+
+**A worktree CAN judge a merge, and this was checked rather than assumed.** A linked
+worktree's `.git` is a file; `--git-common-dir` resolves to the shared object store, so
+every commit is reachable from every worktree even though the working tree holds one.
+
+**THE FALSE POSITIVE IS THE WHOLE DESIGN PROBLEM, AND IT IS THIS DOCUMENT'S OWN ARGUMENT
+TURNED ON A NEW CHECK.** A merge legitimately carries fewer files than its branch changed
+in several ordinary cases; a check that fires on them gets switched off, which is the
+stated reason `--strict` is not the gate yet. Measured over `origin/main`'s whole history —
+**182 merges, 3 findings, none of them a false positive**. The benign classes are
+enumerated in the tool and DRIVEN one by one through real `git merge`: main already made
+the same change; the file was deleted on main; the file was renamed on main; an octopus
+merge; a rebase before merging; a fast-forward; a branch deletion main declined.
+
+**WHAT IT CANNOT DISTINGUISH, AND THIS IS THE HONEST LIMIT.** A drop is also the shape of a
+correct hand-resolution that deliberately took main's side — the trees are identical and no
+archaeology separates them. The check does not claim to know which. It requires the drop to
+be **DECLARED**, per path, in a trailer:
+
+    Dropped-from-branch: <path> — <why the branch's change is correctly superseded>
+
+**Prose in the merge body is deliberately NOT the declaration**, because prose is what
+failed: REC-69's merge message named `check-refusal-codes.mjs`, described taking main's
+side, and promised a re-read that never came. The trailer's value is that it puts somebody
+at the keystroke where they must finish the sentence, and an unfinishable sentence is the
+finding.
+
 ## ONE PROVENANCE CHECK, AND WHAT IT STILL CANNOT SEE (M0-16, D-238)
 
 M0-15 closed the battery's two discovery walks and NAMED the rest. **M0-16 did not

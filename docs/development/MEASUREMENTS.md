@@ -5811,3 +5811,88 @@ a wipe. **After PL-18's fix there is no unconditional stamp of any kind in the f
 Cannot see: whether two sites naming one key are mutually exclusive by their conditions;
 keys stamped through a variable; and body-field deletions (`delete b.author` and its
 neighbours), which are the same class one layer over and were not walked.
+## 2026-08-09 · M0-20 · a merge that silently drops a file — the defect, and the false-positive rate
+
+**Instrument:** `tools/mergecarry.mjs` (new), driven by `bio-plane/test/mergecarry.test.mjs`
+and `bio-plane/test/mergecarry.control.mjs`. Every figure below is PRINTED by the instrument
+on the tree at `65a2ea1`, not carried from the brief.
+
+**THE DEFECT, REPRODUCED FROM THE REAL COMMITS.** `e241672` (Merge REC-69, first parent
+`7e5f9b0`, branch tip `2d9c57b`, forked at `722c37b`): the branch changed **12** files, the
+merge carried **11**, and the missing one is `civicos-ui/check-refusal-codes.mjs` holding
+**70** lines of change — the 12/11/70 figures DERIVED by the instrument and agreeing with
+the brief, which is the only reason the agreement is worth anything. The blobs say what
+happened exactly: base `47f17dd`, branch `6be6371`, first parent `75570b7`, merge
+`75570b7`. **Main's version was taken whole, byte for byte.**
+
+**THE FALSE-POSITIVE RATE, WHICH IS WHAT DECIDES WHETHER A CHECK SURVIVES.** Swept over the
+whole of `origin/main`'s history: **182 merges · 3 dropped · 1 gone-on-main · 0 moved ·
+0 same-end**. Three findings in 182 merges, **and none of the three is a false positive** —
+the two nobody knew about are filed as D-263 and D-264, one of them with a consequence that
+is still live today. The relevant comparison is `VERIFICATION.md`'s own stated reason for
+not making `--strict` the gate yet: a check that cries wolf gets switched off.
+
+**A LIVE CONSEQUENCE, MEASURED RATHER THAN INFERRED (D-264).** `1c5d96a` dropped CPDF-9's
+closure of D-232. On `65a2ea1`, `DEBT.md` still reads *"the battery names it dark on every
+run until it is done"*, while `npm run test:battery` prints `fleet: 2 members beside the
+plane · 4 suite(s) discovered · 2 member(s) actually RAN` and **no `DARK:` line at all**.
+`git log -S "CLOSED 2026-08-08 (CPDF-9)" origin/main -- docs/development/DEBT.md` is EMPTY.
+
+**A LINKED WORKTREE CAN JUDGE ANY MERGE, MEASURED.** The concern was that a worktree is a
+checkout of ONE commit and so could not see the merge it must judge. It can: `.git` in a
+linked worktree is a FILE, `git rev-parse --git-common-dir` resolves to the shared
+`/Users/sparky/ClaudeCodeBIO/bio/.git`, and `e241672` and `2d9c57b` were both read from a
+worker worktree. The working tree holds one commit; the OBJECT STORE is shared.
+
+**BATTERY.** Baseline on `65a2ea1`, before this item: **138/138 suites green · 8,827
+assertions · 136.8s · exit 0**. Final on `0e789ad`: **139/139 suites green · 8,889
+assertions · 180.5s · exit 0**. **THE +62 IS ATTRIBUTED PER SUITE FROM THE TWO RUNS' OWN
+PER-SUITE LINES, NEVER BY SUBTRACTION**, and exactly three suites moved:
+
+| suite | baseline | final | why |
+| --- | --- | --- | --- |
+| `mergecarry.test.mjs` | absent | 58 | this item |
+| `hygiene.test.mjs` | 553 | 555 | per-suite arms over a corpus one suite larger |
+| `planning-hygiene.test.mjs` | 292 | 294 | one arm per open DEBT row; D-263 and D-264 |
+
+**No other suite moved in either direction.** `coverage.mjs --strict` exit 0 before and
+after, run DIRECTLY with `$?` read UNPIPED; the negative-control register moved
+`134 of 134 · 621 arms` -> `135 of 135 · 629 arms`, read from what the instrument PRINTED.
+`civicos-ui/test/run.mjs` exit 0, from the REPO ROOT. `node tools/plancheck.mjs` clean but
+for UNPUSHED.
+
+**THE GATE ITSELF WAS DRIVEN END TO END, NOT INFERRED FROM ITS PARTS.** The suite proves the
+predicate and proves `plancheck` runs it; neither proves `plancheck`'s FAIL path executes,
+and *test through the op* is the rule here — `op=invitelook` shipped with a ReferenceError
+while 1,276 assertions passed. So a real dropping merge was built in this worktree (a side
+branch and this branch each appending to `DEBT.md`, `git merge --no-ff` conflicting,
+resolved `--ours`) and `node tools/plancheck.mjs` was run against it:
+
+    PLANCHECK EXIT: 1
+    note  merge carry: 1 merge(s) in origin/main..HEAD — … 1 DROPPED
+    FAIL  DROPPED BY A MERGE — 1 path(s) … cc38e9d docs/development/DEBT.md
+          (2 line(s) of branch change, forked at 2b64b9a)
+
+The merge was then amended to carry `Dropped-from-branch: docs/development/DEBT.md — …` and
+re-run: `0 DROPPED, 1 declared`, and the only remaining FAIL was UNPUSHED. **Both directions
+of the gate, on a real merge.** The probe was then reset to `2b64b9a` and its branch deleted;
+`git status` clean, `plancheck` back to UNPUSHED only.
+
+**ONE FAILURE ON THE WAY, AND IT WAS THE ESTATE'S INSTRUMENT CATCHING THIS ITEM RATHER THAN
+THE REVERSE:** the first full battery came back **138/139** with
+`hygiene.test.mjs` failing `mergecarry.test.mjs imports test/sandbox.mjs`. The suite
+mkdtemps and had not imported the sandbox, so its scratch git repositories were minted into
+a $TMPDIR nothing owned — D-186's class, in a suite whose own header warns about scratch
+trees. Fixed by importing it; the rule is right and the suite was wrong.
+
+**CONTROL.** `node bio-plane/test/mergecarry.control.mjs` — 8 arms, each armed ALONE with
+the others held open, each declaring before it ran what MUST fail and what MUST NOT: **55
+pass, 0 fail, exit 0**, every arm behaving as declared. Two arms of the FIRST draft found
+the INSTRUMENT wrong rather than the subject, and neither was visible by reading it:
+a file the branch ADDED and the merge dropped scored `goneOnMain` (a WARN) because the
+classifier asked *absent at the first parent?* without asking why — the false-negative
+direction, on the purest possible drop; and an ordinary rename on main scored the same way,
+which is the cry-wolf direction. **A third finding is the harness's own: arm 7 declared its
+anchor would match twice and it matches once, so the run reported `ARM 7 DID NOT ARM` and
+refused to score it.** An arm that did not arm is a finding, and a harness that had merely
+replaced-all would have reported a pass over an anchor that does not exist.

@@ -6044,3 +6044,46 @@ corrected one would then disagree with its twins by ~100 arms rather than by 16.
 row and take the figure from a green `--strict` run on the merged tree** — do not reconcile the two
 histories by hand, and do not move the numeral in only one of them.
 released: 2026-08-09 — committed on `worktree-agent-a4e2eff5ca09197e2`, **NOT pushed and NOT merged**; CONDUCT integrates. **Battery 139/139 suites green · 8,877 assertions · exit 0 read UNPIPED**, against a true baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT of **138/138 · 8,827** (the brief carried no figure). **Delta +50, attributed by DIFFING the two full runs and never by subtraction: `airun-projectgate.test.mjs` ABSENT -> 47 (new) and `hygiene.test.mjs` 553 -> 556 (its per-suite arms over one new file). 137 of 139 suites IDENTICAL.** `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0** (162 ops, 220 checks, all named). `node civicos-ui/test/run.mjs` from the repo root, exit unpiped, **0**. `node civicos-ui/check-refusal-codes.mjs` exit unpiped, **0**. `node tools/plancheck.mjs` clean but for UNPUSHED. **TEN FLOORS MOVED, every one from a figure an instrument PRINTED on a green run: `check-refusal-codes.mjs` rows 163->164, census 424->425, reach 217->218, governedSites 66->67, codesChecked 141->142, outcomeReturns 70->74, refusalsJudged 143->145, vocabularies 9->10, vocabularyTerms 56->59; `coverage.mjs` REGISTER_FLOOR 621/133/134 -> 631/134/135, read AFTER the suite was in a commit because the register compares against the REPRODUCIBLE figure. `regions` (53) and `regionLines` (1407) DELIBERATELY UNCHANGED and RE-READ rather than assumed — this item adds, moves and removes no `DEC-49 REGION` marker; `git diff` carries zero marker lines. `REGISTER_FLOOR` verified ONE key set by grep.** **TEN CONTROL ROWS in `test/nc-pl18.mjs`, each armed ALONE, each declared before arming, each refusing to arm on an anchor not occurring exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy under a byte floor — and the refuse-to-arm guard FIRED TWICE on my own restructures, which is it working.** Four arms came back other than declared and all four are recorded rather than smoothed: (b) declared B2 and **B2 stayed GREEN** — both sides of that arm read one catalogue and move together, so it can see a mis-keyed translation and never a wrong one (named at B2's site; B3 is what holds the content); (d), (e) and (f) each went WIDER than declared, (e) most usefully — the P arms caught PROJECTLESS becoming unreachable. **THREE THINGS THE INSTRUMENTS CAUGHT IN MY OWN WORK AND THE SOURCE MOVED FOR, NEVER A FLOOR:** the DEC-49 guard read the gate's two PERMITTING returns as codeless refusals (the verdict field was named `applied`, which is not a verdict) and named three REGION markers no row claimed; and an UNCONDITIONAL `searchParams.delete("actor")` **BROKE `op=lease`**, caught by one assertion in `members.test.mjs`. **THREE SUPERSEDED PINS CORRECTED AND NONE EXEMPTED**, each with why the old one was right when written: `airun.test.mjs` ARM D1 (C-22 family SEVEN -> EIGHT), `leadslug.test.mjs`'s fixture (made legal through the real acts), `run-conditions.test.mjs` ARM W3 (`aiRunClose` classified as the thirteenth reader of `ai_runs`). IC-47 filed; the version bump and the RESOLUTION are CONDUCT's. `git stash` was NOT used at any point.
+### CLAIM 2026-08-09 INTEGRITY · m0-20-agent — **M0-20: A MERGE THAT SILENTLY DROPS A FILE**
+
+item: M0-20 (new id, minted for this worker). The defect is real, recent and was found by
+accident: on 2026-08-08 the merge of REC-69 (`e241672`, first parent `7e5f9b0`, branch tip
+`2d9c57b`, forked at `722c37b`) carried **11** files where the branch had changed **12**.
+The missing one was `civicos-ui/check-refusal-codes.mjs`, 70 lines of floor moves. Nothing
+went red: eleven floors sat stale, the battery was green, `--strict` exit 0 and the UI
+harness exit 0. **A failure that reads as success**, and the same shape as the merge loop
+that ledgered four items done while `git merge` had errored out.
+
+paths: **`tools/mergecarry.mjs` (NEW)** — the predicate and its CLI.
+**`tools/plancheck.mjs`** — one new section (5) wiring the predicate into the check CONDUCT
+already runs before every push. **`bio-plane/test/mergecarry.test.mjs` (NEW)** — the battery
+copy, driving the predicate over synthetic repositories AND over the real 2026-08-08 commits.
+**`bio-plane/test/mergecarry.control.mjs` (NEW)** — the negative-control arms, deliberately
+NOT a `.test.mjs` because it mutates `tools/mergecarry.mjs` while it runs and restores it.
+`docs/development/kickoffs/CONDUCT.md` (the loop step), `docs/development/VERIFICATION.md`
+(the instrument row), `docs/development/MEASUREMENTS.md` (one appended entry),
+`docs/development/CLAIMS.md` (this entry).
+**NOT OPENED: no file under `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/scripts/`,
+`civicos-ui/` or `newgroup/`.**
+
+**SCRATCH REPOSITORIES ARE CREATED UNDER `os.tmpdir()` VIA `mkdtempSync`, NEVER INSIDE THE
+ESTATE**, and removed at exit. One worker put a scratch worktree inside the estate and
+`op-claims.test.mjs` reported 15,007 op mentions off a nested second copy of the repository;
+`git init` inside a worktree would do the same to every instrument that walks the tree.
+`git stash` is not used anywhere — `refs/stash` is repository-wide across ~85 worktrees.
+
+accepts-when: the real 2026-08-08 drop FAILS the check by name; an honest merge that
+legitimately carries fewer files than its branch changed PASSES; every benign class is
+enumerated AND DRIVEN rather than reasoned about; and the report states plainly which
+classes the check cannot distinguish.
+
+**CLAIM AMENDMENT 2026-08-09 M0-20** — two paths added, both found by the sweep rather than
+predicted. `docs/development/DEBT.md`: TWO APPENDED ROWS ONLY (D-263, D-264), for the two
+additional drops the class sweep found in main's history. **No existing row edited** — in
+particular D-232's disposition is NOT corrected here even though this item measured that it
+is wrong, because restoring another item's closure claim to the ledger is CONDUCT's and a
+worker doing it is the wrong shape. Both ids minted with `node tools/mintid.mjs D`.
+`docs/development/VERIFICATION.md`: one appended section documenting the instrument, its
+false-positive measurement and the class it cannot distinguish. No existing row touched, and
+in particular **no floor moved by this item** — it adds no refusal code, no region and no
+governed span, so `civicos-ui/check-refusal-codes.mjs` is not opened at all.

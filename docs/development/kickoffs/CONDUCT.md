@@ -385,6 +385,30 @@ defect it is.
    no disposition, or a planning surface you have not published. It catches a BOB
    session's handoff mistakes as well as your own, which is the point — the check is
    on the repository's state, not on who last touched it.
+
+   **AND SINCE M0-20 IT ALSO ANSWERS THE QUESTION THE SECTION ABOVE MAKES YOU ASK BY
+   HAND: DID THE MERGE CARRY WHAT THE BRANCH CHANGED?** It compares, for every merge in
+   `origin/main..HEAD`, the file set the merge carried against the file set its branch
+   changed, and FAILS naming any path where the merge kept main's version byte for byte.
+   `node tools/mergecarry.mjs --commit <sha>` runs it on one merge, `--verbose` prints
+   every class. **This is the instrument for *"`--is-ancestor` PROVES A MERGE HAPPENED,
+   IT DOES NOT PROVE THE CONTENT SURVIVED"* — that paragraph tells you to check for the
+   content by hand, naming a file and a symbol you have to think of yourself, and the
+   file you must think of is precisely the one you did not.** REC-69's merge carried 11
+   of its branch's 12 files, the missing one held 70 lines of floor moves, and it went
+   unseen for days behind a green battery, `--strict` exit 0 and a green UI harness.
+
+   **IT CANNOT TELL A CORRECT HAND-RESOLUTION FROM A FORGOTTEN ONE — THE TREES ARE
+   IDENTICAL — SO WHEN YOU DELIBERATELY TAKE ONE SIDE WHOLE, SAY SO IN A TRAILER:**
+
+       Dropped-from-branch: <path> — <why the branch's change is correctly superseded>
+
+   Per path, exact. **Prose in the merge body is NOT the declaration, deliberately.**
+   REC-69's merge message named `check-refusal-codes.mjs`, described taking main's side,
+   and promised the figures would be re-read from a green run — and the promise was never
+   kept. The trailer costs a line and puts you at the keystroke where you have to finish
+   the sentence *"the branch's 70 lines are correctly superseded because…"*. **An
+   unfinishable sentence is the finding.**
 7. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
    carries, effects on people outside the project). You write no area code; a
    turn that edits an area's code has stopped being CONDUCT — enqueue it and
