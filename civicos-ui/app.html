@@ -88,6 +88,11 @@ html,body{margin:0;min-height:100vh}
 .ai-panel{border:1px solid var(--rule);padding:12px;margin:10px 0}
 .ai-panel .ai-bound{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}
 .ai-panel .ai-bound b{font-weight:600}
+/* UI-38, 2026-08-08: a block nested INSIDE a block takes the full width and is
+   indented, so a member can see which values belong to which of the run's
+   conditions. Structure only — no colour threshold, no state, nothing that
+   could carry a judgement the record did not make. */
+.ai-panel .ai-bound .ai-bound{flex-basis:100%;margin-left:14px;border-left:1px solid var(--rule);padding-left:8px}
 
 /* ---- connect gate ---- */
 #gate{max-width:440px;margin:9vh auto;padding:0 24px}
@@ -16117,8 +16122,15 @@ try{ window.addEventListener("hashchange", ()=>{ if(!PUB_HASH_LOCK) publishedRou
    reasoning. §14a states that price explicitly. This surface therefore renders a
    transcript only when the device holds one and renders nothing when it does
    not — it does not tell a member why, because that sentence is member-facing
-   refusal wording and DEC-49 has not ruled on who owns it. Left for the ruling
-   rather than authored here, the way UI-39 deleted a falsehood without writing a
+   refusal wording and this surface does not author those.
+
+   **UPDATED 2026-08-08 (UI-38): DEC-49 HAS SINCE BEEN ENACTED, and it does not
+   change this.** REC-64 gave the run's refusable conditions codes and canned
+   translations, but a device holding no transcript is not a REFUSAL — nothing was
+   asked of anybody and no code exists to receive, because DEC-61 puts the
+   transcript somewhere the plane never sees. There is nothing to render and
+   nothing to compute, which is the same answer, reached now by measurement
+   rather than by waiting: the way UI-39 deleted a falsehood without writing a
    new word and UI-40 rendered the plane's accounts verbatim with no fallback.
 
    UI-38 pinned this as *the block reaches the plane for NOTHING AT ALL*, which
@@ -16246,8 +16258,8 @@ function aiSessionIndicatorHtml(session, ctx){
    faked here, and when it lands THIS function is the only one that changes:
    the call sites, the renderers and every pin over them stay as they are.
 
-   ---- `op=airunlog`: DECIDED, AND THE REASONING IS HERE RATHER THAN IN A
-        COMMIT MESSAGE ----
+   ---- STILL TRUE ON `main` AS OF 2026-08-08 (UI-38), MEASURED RATHER THAN
+        INHERITED ----
 
    UI-49 was asked to decide whether the indicator's click-through reaches the
    observation log or whether that is a separate surface. **IT IS A SEPARATE
@@ -16286,6 +16298,87 @@ function aiSessionIndicatorHtml(session, ctx){
         NEXT session to weigh it is weighing three reasons, not four — and that
         no suite failed when this became false, which is why it is written down
         rather than left for the next reader to re-measure.
+
+   ---- CONDUCT, 2026-08-08, AT THE REBUILD INTEGRATION ----
+
+   UI-38's paragraph immediately below was MEASURED and was correct when written:
+   `op=airuns` was genuinely absent from `main`, because REC-69 had been ledgered
+   `done` while never merging. **REC-69 IS MERGED AS OF THIS COMMIT, so `airuns`
+   IS on `main` and the sentence "IT IS NOT ON `main`" is now HISTORY rather than
+   a description of this tree.** It is kept, not deleted, because its reasoning
+   is the load-bearing part: UI-38 declined to pre-shape itself around a wire it
+   could not drive, and that judgement was right and stays right. The seam it
+   describes — ONE function changes when the op arrives — is now the seam a
+   FOLLOW-UP item may close, and no suite will fail to remind anyone.
+
+   UI-38's brief carried `op=airuns&contextType=&contextId=` as a landed input.
+   **IT IS NOT ON `main`.** `grep` over `bio-plane/src` finds no `airuns` outside
+   `airunspawn`, and `index.mjs`'s op table has no such key; the work exists on
+   an unmerged worker branch (REC-69, commit `2d9c57b`), and `QUEUE.md` marks the
+   row `done` while the code has not been integrated. So the paragraphs above
+   still describe this tree exactly, and the seam stays as UI-49 left it: **ONE
+   function changes when the op arrives, and this item did not pre-shape itself
+   around a wire nobody here can drive.** Building the consumer against an op the
+   harness cannot call would have been a surface with a read nothing performs —
+   `surface-registry.test.mjs` ARM D4's own subject.
+
+   WHEN IT DOES LAND, NOTHING HERE NEEDS A "YOU MAY NOT SEE THIS" BRANCH and
+   adding one would be a defect: the plane answers an uninvited member `runs: []`
+   byte-identical to a context that does not exist, with no count of the
+   withheld, so a surface that distinguished them would leak precisely what the
+   plane took care to withhold. This block already has no such branch, for the
+   same reason `aiSessionRead` reads `session` and never `found`.
+
+   ---- `op=airunlog`: RE-TAKEN 2026-08-08 (UI-38), NOT INHERITED ----
+
+   UI-49 ruled the observation log a SEPARATE surface on four grounds. **ONE OF
+   THE FOUR HAS EXPIRED AND A SECOND HAS WEAKENED**, so the conclusion is re-taken
+   on what is left rather than carried forward — a conclusion still standing on a
+   ground that has moved is how a stale decision survives review.
+
+     1. STILL DECIDES IT. §14a says what the click does: *"clicking it opens the
+        LIVE TRANSCRIPT"*. That is what `aiSessionOpen` does, and the log is not
+        the transcript — `airun.mjs` is explicit that the observation log "is NOT
+        a transcript and is not governed by DEC-61".
+     2. STILL DECIDES IT. They answer different questions for different readers.
+        This surface shows a member what is happening in their context NOW; the
+        log is what lets ANYONE ELSE CHECK the run (§11), long after it ended. A
+        reader arriving to audit is not a member glancing at an inquiry.
+     3. WEAKENED, AND SAID SO. UI-49 called four travelling vocabularies "a
+        surface with its own doctrine". They travel WITH the answer precisely so
+        the reader holds no copy, which is the DEC-8 case a surface is allowed —
+        the same shape this panel already renders. This ground no longer carries
+        weight on its own.
+     4. **EXPIRED, MEASURED.** UI-49 refused on the log publishing an unbounded
+        collection. `aiRunLog` now clamps to `AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX`
+        and publishes `limit` and `truncated` — on the ABSENT answer too (REC-70,
+        landed). The stated reason is gone and is not quietly retained.
+
+   AND ONE GROUND IS ADDED, WHICH IS THIS ITEM'S OWN AND IS STRUCTURAL:
+   `SURFACES["ai-session"].kind` exists so there is EXACTLY ONE surface of this
+   kind, and the suite fails a second. An audit reader of a finished run is a
+   DIFFERENT KIND of surface, not a second one of this kind — folding it in here
+   would make one surface answer two questions and would spend the "designed
+   once" guarantee in the other direction. **So: SEPARATE, and the click-through
+   stays on the transcript.** It needs its own registry entry, its own route and
+   its own bound-rendering pins; that is an item, not a rider on this one.
+
+   ---- §14a's "SAYS SO WHEN THE CAPABILITY IS UNAVAILABLE" — WHERE IT ACTUALLY
+        LANDED, MEASURED 2026-08-08 ----
+
+   §14a requires that when no Claude account resolves at any level the capability
+   is UNAVAILABLE and SAYS SO. UI-38's first pass correctly left that sentence
+   unauthored, and REC-64 has since given it one: `AI_RUN_CAPABILITY_UNAVAILABLE`
+   / `C-33.29` with a canned translation, refused by `aiRunOpen`.
+   **IT IS REFUSED AT `op=airunopen`, WHICH THIS APPLICATION NEVER CALLS** — the
+   fleet member opens runs, not the browser — so there is no run object for this
+   surface to render and nothing here to say. That is the honest state and it is
+   recorded rather than papered over with a notice: a "the capability is
+   unavailable" line rendered by a window that asked nothing would be a claim
+   about the record made by a surface that never asked, which is exactly the
+   class UI-39 and UI-40 were raised to remove. If a future item gives the
+   browser a reason to open a run, the refusal already arrives carrying its code
+   AND its translation, and DEC-8 is satisfied by rendering what was received.
    ============================================================ */
 
 /* THE DEVICE-LOCAL ADDRESS ROSTER. Addresses, never reasoning: DEC-61 governs
@@ -16354,70 +16447,90 @@ async function aiSessionContextHtml(ctx, store){
 }
 
 /* Published name/value pairs, VERBATIM, in publication order. No field is
-   known by name, so none can be invented and none can go stale. Values that are
-   themselves objects are not flattened — an unrendered nested shape is a gap a
-   later item closes, and it is stated rather than papered over with a guess. */
+   known by name, so none can be invented and none can go stale.
+   THE SCALARS OF ONE LEVEL, and the nesting is `aiSessionBlockHtml`'s. */
 function aiSessionPairsHtml(row){
   if(!row || typeof row !== "object") return "";
   const out = [];
   for(const [k, v] of Object.entries(row)){
     if(v === null || v === undefined) continue;
     if(typeof v === "object") continue;
-    out.push(`<span><b>${esc(String(k))}</b> ${esc(String(v))}</span>`);
+    /* An ARRAY's members carry no key a member could read — an index is this
+       surface's arithmetic, not the record's word — so an element is printed as
+       a bare value. Keys are printed for objects and for objects only. */
+    out.push(Array.isArray(row) ? `<span>${esc(String(v))}</span>`
+                                : `<span><b>${esc(String(k))}</b> ${esc(String(v))}</span>`);
   }
   return out.join("");
 }
 
-/* THE BUDGET AND ITS LIVE CONSUMPTION (F11). Every bound the record published,
-   with everything the record published about it. Nothing computed. */
-function aiSessionBudgetHtml(session){
-  const rows = session && Array.isArray(session.budget) ? session.budget : [];
-  if(!rows.length) return "";
-  return rows.map(r=>`<div class="ai-bound">${aiSessionPairsHtml(r)}</div>`).join("");
-}
+/* ============================================================
+   ONE NESTED BLOCK — AND IT IS THE WHOLE OF UI-38's THIRD PASS.
 
-/* WHO PAYS. §14a: the record names WHICH LEVEL of the cascade was used, beside
-   the plane-credential principal. Rendered verbatim, never the token value. */
-function aiSessionPrincipalHtml(session){
-  const p = session && session.principal;
-  if(!p || typeof p !== "object") return "";
-  const pairs = aiSessionPairsHtml(p);
-  return pairs ? `<div class="ai-bound">${pairs}</div>` : "";
-}
+   ---- WHAT WAS MEASURED, 2026-08-08, AND IT IS A DEFECT RATHER THAN A GAP ----
 
-/* THE CONDITION, when a bound stopped the run. The record's own words: the
-   plane's condition vocabulary carries the explanation (`runtime-ceiling-reached`
-   among them) and it is surfaced VERBATIM, never paraphrased. This surface holds
-   no copy of that vocabulary — it prints what arrived. */
-function aiSessionConditionHtml(session){
-  const c = session && session.condition;
-  if(!c || typeof c !== "object") return "";
-  const kind = typeof c.kind === "string" ? c.kind : "";
-  const detail = typeof c.detail === "string" ? c.detail : "";
-  if(!kind && !detail) return "";
-  return `<div class="ai-bound">${kind?`<span><b>${esc(kind)}</b></span>`:""}`
-       + `${detail?`<span>${esc(detail)}</span>`:""}</div>`;
+   `aiSessionPairsHtml` SKIPPED OBJECTS, and the panel made up for that with one
+   dedicated renderer per nested field it knew about — `aiSessionPrincipalHtml`,
+   `aiSessionBudgetHtml`, `aiSessionConditionHtml`. **That is a LIST OF FIELD
+   NAMES wearing a field-name-blind renderer's clothes**, and a list goes stale
+   the moment the plane publishes a fourth. It did: PL-12/D-84 added the run's
+   BIAS BLOCK to `op=airun` — the LENS the run was formed under, one of §11's
+   three conditions — and this panel rendered NOT ONE FIELD OF IT. The plane
+   published it; a member saw nothing. `context` was invisible for the same
+   reason, so the panel never even said which inquiry the run was in.
+
+   **AND THE SAME LIST IS WHY NOBODY NOTICED.** `ai-session-wire.test.mjs`'s
+   `wireFailures` enumerated exactly the same three nestings by name, so the
+   surface and the instrument that grades it went blind together. That walk is
+   INVERTED in the same turn — it now recurses — because a defect and the reason
+   it was invisible are one finding, not two.
+
+   ---- SO THE PANEL NOW KNOWS NO FIELD NAMES AT ALL ----
+
+   Three renderers become ONE, applied at every depth: the level's scalars, then
+   a block per nested value. `bias` renders today for that reason and nothing
+   else; `standard` — §11's third condition, stored in `ai_runs.standard_pair`
+   and not yet published by `aiRunRead` (REC-74, NOT on `main` when this was
+   written) — will render the day it is published, WITHOUT A LINE CHANGING HERE.
+   That is what "designed ONCE for all AI features" has to mean if it is going
+   to survive the next AI feature.
+
+   IT STILL DERIVES NOTHING. Every printed token is a value the record sent or a
+   key it named. No percentage, no remainder, no threshold, no ordering of its
+   own — publication order, at every depth. */
+function aiSessionBlockHtml(row, label){
+  if(!row || typeof row !== "object") return "";
+  /* GUARDED TO A STRING deliberately: this function is DRIVEN by the sweep with
+     whatever the caller passes second, and a non-string label stringified would
+     put a word on the surface that the record never published. */
+  const name = typeof label === "string" && label ? `<span><b>${esc(label)}</b></span>` : "";
+  const pairs = aiSessionPairsHtml(row);
+  const nested = [];
+  for(const [k, v] of Object.entries(row)){
+    if(!v || typeof v !== "object") continue;
+    /* An array's elements are blocks WITHOUT a label — see the note in
+       `aiSessionPairsHtml`: the index is not the record's word. */
+    const h = Array.isArray(row) ? aiSessionBlockHtml(v) : aiSessionBlockHtml(v, String(k));
+    if(h) nested.push(h);
+  }
+  if(!name && !pairs && !nested.length) return "";
+  return `<div class="ai-bound">${name}${pairs}${nested.join("")}</div>`;
 }
 
 /* THE PANEL — the indicator's click target. The live transcript if this device
-   holds one, the budget and its consumption, who pays, and the condition.
+   holds one, and everything the record published about the run: its own
+   scalars, WHO PAYS (§14a's cascade level beside the plane credential, never a
+   token value), THE BUDGET AND ITS LIVE CONSUMPTION (F11 — both figures as the
+   record published them, and no third one), the terminal condition in the
+   plane's own words, and the LENS (the bias block).
 
-   UI-47 ADDED THE RUN'S OWN SCALARS, through the SAME field-name-blind renderer
-   the budget and the principal already go through. `status` and `ticks` are
-   published at the top level of the record and UI-38's panel rendered neither,
-   because when it shipped nothing published them; the item's acceptance
-   requires both. This is the smallest change that says so: no new function, no
-   new field name, no authored word, and `aiSessionPairsHtml` skips objects and
-   arrays, so `context`, `principal`, `condition` and `budget` are not rendered
-   twice by it. */
+   ONE CALL, over the whole record. Read `aiSessionBlockHtml` for why it is one
+   and not four. */
 function aiSessionPanelHtml(session, transcript){
   if(!session) return "";
   const lines = Array.isArray(transcript) ? transcript : [];
   const body = lines.map(l=>`<div class="mono">${esc(typeof l==="string"?l:JSON.stringify(l))}</div>`).join("");
-  const own = aiSessionPairsHtml(session);
-  return `<div class="ai-panel">${own?`<div class="ai-bound">${own}</div>`:""}`
-       + `${aiSessionPrincipalHtml(session)}`
-       + `${aiSessionBudgetHtml(session)}${aiSessionConditionHtml(session)}${body}</div>`;
+  return `<div class="ai-panel">${aiSessionBlockHtml(session)}${body}</div>`;
 }
 
 let AI_SESSION_HASH_LOCK = false;

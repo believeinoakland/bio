@@ -1,4 +1,10 @@
-/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by ui47-agent, through `node civicos-ui/test/run.mjs` (the whole harness, never this suite alone), and EVERY RESTORE WAS VERIFIED BY CONTENT AS WELL AS sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had NOT been restored, so the hash alone is not trusted here. Each mutation also passes a "the file really was modified" guard before the harness runs, because UI-46's reach injection became a SILENT NO-OP by being anchored on the very line its defect removes. Clean tree: 70 pass, 0 fail.
+/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by ui47-agent, through `node civicos-ui/test/run.mjs` (the whole harness, never this suite alone), and EVERY RESTORE WAS VERIFIED BY CONTENT AS WELL AS sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had NOT been restored, so the hash alone is not trusted here. Each mutation also passes a "the file really was modified" guard before the harness runs, because UI-46's reach injection became a SILENT NO-OP by being anchored on the very line its defect removes. ~~Clean tree: 70 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 72, not 70 — a hand-carried figure stale by 2 in the header of the suite that exists to stop hand copies. Clean tree with UI-38: 81 pass, 0 fail.**
+   UI-38's OWN ARMS, 2026-08-08, all five RUN through `node civicos-ui/test/run.mjs`, each armed ALONE with an anchor asserted to occur EXACTLY ONCE and every restore verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with a 20,000-byte floor. Clean tree GREEN FIRST (exit 0, 40/40), then each arm RED — never the reverse.
+   (U1) THE DEFECT ITSELF, RESTORED. In app.html's `aiSessionBlockHtml` make the nested loop `continue` unconditionally, so the panel stops descending — exactly the state `main` was in -> harness exit 1, this suite 58 pass / 23 FAIL and `surface-registry` 368 / 25 FAIL INDEPENDENTLY. Named here: W1 (session.context.*, session.principal.*, session.budget[*].*, session.bias.*), W1t, W1c x2, W4, W5 x2, W7, W9, W10, W11, O1 x5, O2, O3 x5, O3b. **`ai-session-context` STAYS GREEN and that is correct — the indicator does not compose the panel.** **AND THE ARM THAT STAYED GREEN IS THE FINDING: `surface-registry`'s Y8/Y8b passed, because they judge the principal BLOCK on its own and the mutation broke only DESCENT. That is why ARM Y8c was added, and Y8c FAILED.**
+   (U2) THE INSTRUMENT'S OWN BLINDNESS, RESTORED, SURFACE LEFT CORRECT. Make `wireFailures`' walk return on any object -> 74 pass / 7 FAIL: **W1r fails AS A DELTA with the corpus PRINTED (`0 scalars … floor 20`)**. **UNDECLARED AND RECORDED: ARM W6 also failed, all five entries plus W6c — a crippled walk finds nothing missing, so the HAND COPY passes for free. Two arms catch one blindness.** **W1t and W1s STAY GREEN, correctly: they read the RECORD and the PANEL, not the walk.** `surface-registry` stays green, correctly — it does not use `wireFailures`.
+   (U3) A DERIVATION BY THE NEW ROUTE. Push a percentage into `aiSessionBlockHtml`'s nested list -> 77 pass / 4 FAIL: D1 x2, D2, and **ARM S5 INDEPENDENTLY**, which knows nothing about percentages.
+   (U4) OVER-STRICTNESS. Rewrite the nested walk as `for(const k of Object.keys(row))` with an explicit index guard and `nested[nested.length] =` — a correct alternative spelling nobody here wrote -> **harness exit 0, 40/40. It must pass, and it does.**
+   (U5) THE ORACLE, INVENTED. Make `aiSessionRead` answer `{id, status:"not-visible-to-you"}` on `found === false` -> exit 1, and **THREE structurally different instruments fire**: this suite N2 + N4, `surface-registry` Y1c, and `ai-session-context` A3 — the third UNDECLARED and recorded.
    (0) THE ITEM'S OWN — UN-WIRE THE READ. In app.html put `aiSessionRead` back to `return null;` -> 13 FAIL / 48 pass, and every one names what a member can no longer see: W0b (0 chars rendered from the address), W0c (op=airun never called by the surface), W1, W2 (status), W3 (ticks), W4 (both principals), W5 x2 (each bound's allowed/consumed pair), W7, W9, W10 (the condition kind), W11 (the plane's own explanation), N5 (the polarity arm — the run a viewer MAY see stops rendering too). AND `surface-registry.test.mjs` fails INDEPENDENTLY with ARM D4: *"surface 'ai-session' declares read 'airun', which app.html never calls — a described read nothing performs is fiction"*. Two structurally different instruments, neither told about the other.
    (1) MAKE THE PLANE PUBLISH A DIFFERENT BOUND AND THE SURFACE MUST MOVE WITH IT. In bio-plane/src/store.mjs, `aiRunRead`, publish a constant instead of the record: `allowed: 500` -> 6 FAIL / 59 pass: W1b x2 and W1c x2 NAME THE BOUND and print stored-versus-published (*"bound 'fetches' is PUBLISHED as it was STORED — allowed 5246, consumed 1272 (published 500/1272)"*), plus W6 and W7. **THE FIRST RUN OF THIS CONTROL FAILED ONLY 2 ARMS AND THAT IS WHY ARM W1b EXISTS.** W1 compares the render against the wire and reads the wire through the SAME op the surface reads, so when the plane published 500 the surface faithfully rendered 500 and W1 stayed GREEN — both ends of the comparison came from one source, an equality that costs nothing to produce. W1b anchors the far end on what was WRITTEN, so the chain is store -> publish -> render and a break anywhere in it is named.
    (2) A PERCENTAGE, BY ANY ROUTE. In app.html's `aiSessionPairsHtml` append `Math.round(row.consumed/row.allowed*100)+'%'` -> 4 FAIL / 61 pass: D1 x2 naming each computed percentage, D2 (a percent sign at all), and **ARM S5 INDEPENDENTLY** — the sweep catches it as a visible token the record did not publish, without knowing anything about percentages. Two instruments, one defect, no shared assumption.
@@ -266,8 +272,18 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
   fetch:bridgeFetch };
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() + ";globalThis.__U = {" + [
+  /* CORRECTED 2026-08-08 (UI-38), NEVER EXEMPTED. This list named
+     `aiSessionBudgetHtml`, `aiSessionPrincipalHtml` and `aiSessionConditionHtml`
+     — three renderers each keyed to ONE nested field name. They are gone,
+     collapsed into `aiSessionBlockHtml`, because that list of three is exactly
+     why the run's BIAS BLOCK rendered nowhere: the plane published a fourth
+     nested condition and the panel had no renderer with its name on it. The
+     replacement knows no field names, so there is nothing here to keep in step.
+     ARM S resolves functions FROM THE VM CONTEXT and not from this list, so the
+     sweep below was never at risk of going stale with it — this list is only
+     what the arms below reach for directly. */
   "PLANE","SURFACES","aiSessionRead","aiSessionOpen","aiSessionPanelHtml","aiSessionIndicatorHtml",
-  "aiSessionInContext","aiSessionBudgetHtml","aiSessionPrincipalHtml","aiSessionConditionHtml",
+  "aiSessionInContext","aiSessionBlockHtml",
   "aiSessionPairsHtml","aiSessionTranscript","aiSessionRouteFromHash",
 ].join(",") + "};", ctx);
 const U = ctx.__U;
@@ -309,21 +325,40 @@ function appearsAsAValue(rendered, v){
   return new RegExp(`(^|[^\\w.:@/-])${RE_ESC(s)}([^\\w.:@/-]|$)`).test(String(rendered));
 }
 
+/* INVERTED 2026-08-08 (UI-38), AND THE OLD SHAPE IS THE FINDING RATHER THAN A
+   TIDY-UP. This walk used to enumerate THREE nestings by name — `principal`,
+   `budget`, `condition` — skipping every other object at the top level. So did
+   the surface, with one dedicated renderer each. **The instrument and its
+   subject went blind together, and the blindness had already been paid for:**
+   PL-12/D-84 added the run's BIAS BLOCK to `op=airun`, §11's first condition,
+   and this arm reported ZERO missing values over a panel that rendered NOT ONE
+   FIELD of it. A walk that names what it grades cannot see what nobody named.
+
+   It now RECURSES over everything the record published, at every depth, and
+   grades a scalar wherever it sits. `standard` — §11's third condition, stored
+   in `ai_runs.standard_pair` and not yet published by `aiRunRead` (REC-74) —
+   will be graded the day it arrives, with nothing here changing.
+
+   THE PATH SPELLINGS MOVED WITH IT and the arms that read them were corrected
+   rather than exempted: `principal.ref` is now `session.principal.ref`, and a
+   budget row is addressed by its INDEX rather than by its `bound`, because
+   keying an array element on one of its own fields is the same name-list
+   defect one level down. */
+let WIRE_SCALARS = 0;
 function wireFailures(rendered, session){
-  const missing = [];
-  const seen = (v, what) => {
-    if(v === null || v === undefined || v === "") return;
-    if(!appearsAsAValue(rendered, v)) missing.push(`${what}=${JSON.stringify(v)}`);
-  };
   if(!session || typeof session !== "object") return ["no session record at all"];
-  for(const [k, v] of Object.entries(session)){
-    if(v === null || typeof v === "object") continue;
-    seen(v, `session.${k}`);
-  }
-  for(const [k, v] of Object.entries(session.principal || {})) seen(v, `principal.${k}`);
-  for(const b of Array.isArray(session.budget) ? session.budget : [])
-    for(const [k, v] of Object.entries(b || {})) seen(v, `budget[${b.bound}].${k}`);
-  if(session.condition) for(const [k, v] of Object.entries(session.condition)) seen(v, `condition.${k}`);
+  const missing = [];
+  let scalars = 0;
+  const walk = (v, path) => {
+    if(v === null || v === undefined) return;
+    if(Array.isArray(v)){ v.forEach((x, i) => walk(x, `${path}[${i}]`)); return; }
+    if(typeof v === "object"){ for(const [k, x] of Object.entries(v)) walk(x, `${path}.${k}`); return; }
+    if(v === "") return;
+    scalars++;
+    if(!appearsAsAValue(rendered, v)) missing.push(`${path}=${JSON.stringify(v)}`);
+  };
+  walk(session, "session");
+  WIRE_SCALARS = scalars;
   return missing;
 }
 
@@ -337,7 +372,44 @@ ok("ARM W0c: and it got there through op=airun, called by the SURFACE and not by
 
 const liveMissing = wireFailures(PANEL_LIVE, WIRE_LIVE);
 eq("ARM W1: EVERY scalar the record published for this run is on the surface — status, ticks, both principals, "
-   + "every bound with its allowed/consumed pair, and nothing the record published is dropped", liveMissing, []);
+   + "every bound with its allowed/consumed pair, the context it runs in, the LENS it was formed under, and "
+   + "nothing the record published is dropped", liveMissing, []);
+
+/* ARM W1r · THE WALK'S OWN REACH, PRINTED AND FLOORED (UI-38, 2026-08-08).
+   W1's empty answer means *nothing was missing*, and a walk that reached nothing
+   reports exactly that. Until this item the walk enumerated three nestings by
+   name and so it genuinely did miss one — the bias block — while answering []. */
+console.log(`  ARM W1r corpus: ${WIRE_SCALARS} scalars reached by the walk across the whole record, `
+  + `at every depth (top-level keys published: ${Object.keys(WIRE_LIVE).join(", ")})`);
+ok(`ARM W1r (REACH): the walk graded ${WIRE_SCALARS} scalars, floor 20 — a walk over nothing passes everything`,
+   WIRE_SCALARS >= 20);
+/* AND WHAT IT COULD NOT SEE IS NAMED RATHER THAN ASSUMED AWAY: a top-level
+   value the walk reached NO scalar inside is reported. An empty object and an
+   object the walk cannot enter look identical from W1, so they are separated
+   here. `condition` is legitimately null on a running run and is not counted. */
+{
+  const barren = Object.entries(WIRE_LIVE).filter(([k, v]) => {
+    if(v === null || typeof v !== "object") return false;
+    let n = 0; (function c(x){ if(x === null || x === undefined) return;
+      if(Array.isArray(x)) return x.forEach(c);
+      if(typeof x === "object") return Object.values(x).forEach(c); n++; })(v);
+    return n === 0;
+  }).map(([k]) => k);
+  console.log(`  ARM W1r: nested values the walk entered and found no scalar in: ${barren.length ? barren.join(", ") : "(none)"}`);
+  ok("ARM W1s: every nested value the record published carries at least one scalar the walk graded — a nesting the "
+     + "walk enters and reads nothing from would pass W1 for free", barren.length === 0);
+}
+/* ARM W1t · THE CONDITION THAT WAS INVISIBLE, NAMED. §11 records three
+   conditions a run was formed under. This asserts the walk and the surface both
+   reach the one that was published and rendered nowhere until this item — by
+   ASKING THE RECORD which top-level values are nested, not by naming `bias`. */
+{
+  const nested = Object.entries(WIRE_LIVE).filter(([, v]) => v !== null && typeof v === "object").map(([k]) => k);
+  console.log(`  ARM W1t: nested blocks the record published: ${nested.join(", ")}`);
+  ok(`ARM W1t: the record publishes ${nested.length} nested blocks and the panel names EVERY ONE of them — a block `
+     + `the panel has no renderer named after is the defect UI-38 measured`,
+     nested.every(k => PANEL_LIVE.includes(`<b>${k}</b>`)));
+}
 
 /* ARM W1b OPENS THE LOOP, AND IT WAS ADDED BECAUSE A NEGATIVE CONTROL SHOWED W1
    COULD NOT SEE THE PLANE LYING. W1 asks *does the surface render what the wire
@@ -413,12 +485,20 @@ const handFree = Object.entries(HAND_TYPED).filter(([k, v]) => v !== null && typ
   && appearsAsAValue(PANEL_LIVE, v)).map(([k]) => k);
 console.log(`  ARM W6 measurement: a hand copy agrees FOR FREE on ${handFree.length} top-level values (${handFree.join(", ")}) — `
   + `real vocabulary rather than instance data. That is why this arm names what it cannot know rather than counting.`);
-for(const cannotKnow of [`principal.ref=${JSON.stringify(CLAUDE_REF)}`, `principal.skill=${JSON.stringify(SKILL)}`,
-                         `budget[fetches].allowed=${FETCH_ALLOWED}`, `budget[subsessions].allowed=${SUBS_ALLOWED}`,
-                         `budget[subsessions].consumed=${SUBS_CONSUMED}`])
+/* CORRECTED 2026-08-08 (UI-38), NOT EXEMPTED — the CLAIM is identical and only
+   the ADDRESSES moved, because `wireFailures` now recurses instead of naming
+   three nestings. A budget row is addressed by INDEX rather than by its own
+   `bound` field, so the field the hand copy cannot know is matched on its path
+   TAIL rather than on a whole path this file would then have to keep in step. */
+for(const [cannotKnow, tail] of [
+      [`principal.ref=${JSON.stringify(CLAUDE_REF)}`,          /\.principal\.ref=/],
+      [`principal.skill=${JSON.stringify(SKILL)}`,             /\.principal\.skill=/],
+      [`the fetches allowance ${FETCH_ALLOWED}`,               /\.budget\[\d+\]\.allowed=500$/],
+      [`the subsessions allowance ${SUBS_ALLOWED}`,            /\.budget\[\d+\]\.allowed=4$/],
+      [`the subsessions consumption ${SUBS_CONSUMED}`,         /\.budget\[\d+\]\.consumed=1$/]])
   ok(`ARM W6: A HAND-TYPED RECORD FAILS THIS, AND THIS RUN IS THAT RECORD — it does not carry ${cannotKnow}, `
      + `a value drawn at runtime that no literal could have anticipated`,
-     handMissing.some(m => m.startsWith(cannotKnow.split("=")[0] + "=")));
+     handMissing.some(m => tail.test(m)));
 ok(`ARM W6c: and the hand copy fails on ${handMissing.length} values in total, every one of them instance data`,
    handMissing.length >= 5);
 ok("ARM W6b: and it fails through the SAME function the real record passed, so there is no second path a hand copy "
@@ -775,8 +855,13 @@ console.log("\n--- ARM C · nothing outside the block can render run data ---");
      window reaching past it to `aiSessionPanelHtml` — the shape that would let
      run data onto a screen this sweep never drove — still fails. */
   const DOOR = "aiSessionContextHtml";
-  const rendererNames = ["aiSessionRead", "aiSessionPanelHtml", "aiSessionIndicatorHtml", "aiSessionBudgetHtml",
-                         "aiSessionPrincipalHtml", "aiSessionConditionHtml"];
+  /* CORRECTED 2026-08-08 (UI-38): the three field-named renderers this list
+     carried are gone, collapsed into `aiSessionBlockHtml`. The containment claim
+     is unchanged and the list is SHORTER because the block is, not because
+     anything was let through — `aiSessionPairsHtml` is added, so every raw
+     renderer that survived is still named here. */
+  const rendererNames = ["aiSessionRead", "aiSessionPanelHtml", "aiSessionIndicatorHtml",
+                         "aiSessionBlockHtml", "aiSessionPairsHtml"];
   const calledOutside = rendererNames.filter(f => new RegExp(`\\b${f}\\s*\\(`).test(outside));
   eq("ARM C2 (corrected 2026-08-07, UI-49): none of the block's RAW renderers is called from outside it — every path "
      + "that can put run data in front of a member goes through the functions this suite swept, and since UI-49 it "
@@ -808,6 +893,24 @@ console.log("\n--- ARM O · a record shaped unlike anything this file wrote must
     ok(`ARM O1: a record named nothing like the plane's or this file's still renders its '${frag}'`, panel.includes(frag));
   eq("ARM O2: and the same values reach the surface, judged by the SAME function ARM W used — the over-strictness "
      + "arm is not a second, gentler instrument", wireFailures(panel, alien), []);
+
+  /* ARM O3 · UI-38's OWN OVER-STRICTNESS, and it is the one that matters for a
+     surface whose whole claim is that it will not need changing again. The
+     record below is THREE DEEP, carries an array of bare scalars, carries a
+     boolean `false` (which a falsiness guard silently eats — PL-4's measurement
+     one construct over), and is spelled in a way nothing in this repository
+     writes. If the panel only renders the shapes its author imagined, it is a
+     fixture testing itself and REC-74's `standard` will arrive to a blank. */
+  const deep = { id: "AIS-deep", context: { type: "project", id: "PRJ-deep" },
+    somethingNobodyHasWrittenYet: {
+      in_force: false,
+      note: "a sentence from a producer that does not exist yet",
+      nested_once: { nested_twice: { leaf: "three-levels-down" }, roster: ["alpha-one", "beta-two"] } } };
+  const deepPanel = U.aiSessionPanelHtml(deep, null);
+  for(const frag of ["somethingNobodyHasWrittenYet", "false", "three-levels-down", "alpha-one", "beta-two"])
+    ok(`ARM O3: a condition nobody has published yet still renders its '${frag}' — including at depth three, `
+       + `inside an array, and for a boolean false`, deepPanel.includes(frag));
+  eq("ARM O3b: and judged by the SAME walk, nothing in it is dropped", wireFailures(deepPanel, deep), []);
 }
 
 console.log(`\nai-session-wire: ${n - fails.length} pass, ${fails.length} fail`);

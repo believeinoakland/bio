@@ -2651,3 +2651,64 @@ I3, and **the bump is CONDUCT's**. Every key is ADDITIVE and no key was removed 
 RECORD's/FRAMEWORK's view is MINOR — but the `rung` VALUES moved on six acts a surface can already
 read, which is a semantic change inside an existing field, and CONDUCT should weigh that rather
 than take "additive keys" as the whole answer.
+
+---
+
+## IC-41 · AN UNDECLARED CROSS-AREA COUPLING, NAMED BECAUSE IT BROKE: `bio-plane/test/airun.test.mjs` LIFTS `civicos-ui/app.html`'s RUNNING-SESSION RENDERERS BY FUNCTION NAME · PROPOSED 2026-08-08 (UI-38) — the RESOLUTION and any registration are CONDUCT's
+
+- **Interface:** **NONE — and that is the row.** `INTERFACES.md` registers I1–I8; not one of them
+  covers this. The coupling is real, it is checked on every battery run, and nothing declares it.
+- **Proposer:** UI-38, 2026-08-08.
+- **Owner of the consumer:** PLANE-TEST (`bio-plane/test/**`). Owner of the producer: UI.
+
+### WHAT THE COUPLING IS
+
+IS-6's ARM U in `bio-plane/test/airun.test.mjs` reads `civicos-ui/app.html`, slices the
+`__AI_SESSION_START__`/`__AI_SESSION_END__` block, evaluates it in a `vm` context, and exports
+named functions out of it:
+
+    vm.runInContext(block[1] + ";globalThis.__A={aiSessionInContext,aiSessionIndicatorHtml,…};", ctx);
+
+That is a good arm and it is why UI-38's renderers were ever driven against the record's real
+shape. **But the export list makes the block's INTERNAL FUNCTION NAMES a contract another area's
+battery holds**, and a name that vanishes is not a failing assertion — it is a `ReferenceError`
+inside the `vm`, which ends the module. `airun.test.mjs` then reports **`assertions unknown`**,
+which is the shape WORKER.md warns about: a tally that reads clean while the suite never reached
+its foot.
+
+### MEASURED CONSUMER IMPACT
+
+UI-38 collapsed three field-named renderers — `aiSessionBudgetHtml`, `aiSessionPrincipalHtml`,
+`aiSessionConditionHtml` — into one field-name-blind `aiSessionBlockHtml`, because that list of
+three is exactly why `op=airun`'s BIAS BLOCK rendered nowhere. Consumers found by grep over the
+whole repository (`bio-plane/`, `agent-worker/`, `civicos-ui/`, `docprofile/`, `pdf-worker/`,
+`tools/`, `newgroup/`), and the reach is stated: the matcher finds the names as literal text, so
+it sees every source and test file and would NOT see a name built at runtime.
+
+| consumer | how it couples | impact |
+| --- | --- | --- |
+| `civicos-ui/test/ai-session-wire.test.mjs` | same `vm` export list | UI's own — corrected in the same turn |
+| `civicos-ui/test/surface-registry.test.mjs` | same `vm` export list, 6 call sites | UI's own — corrected in the same turn |
+| **`bio-plane/test/airun.test.mjs`** | **`vm` export list, 4 call sites** | **BROKE THE PLANE BATTERY: `ReferenceError: aiSessionBudgetHtml is not defined`, 131/133 with `assertions unknown`** |
+| everything else | — | none found |
+
+### WHAT UI-38 DID, AND WHY IT DID NOT JUST DELEGATE
+
+The consumer was **corrected in the same turn**, cross-area, because the alternative was landing a
+red `main` and filing a note about it. Every claim ARM U made (U3, U3b, U4, U5, U5b, U5c, U6, U7)
+is re-made through the replacement rather than dropped, and **ARM U9/U9b/U9c/U9d are ADDED** for
+the condition that was invisible. `airun.test.mjs` moves 103 → 107 assertions, green.
+
+**PLANE-TEST is asked to review the edit, not to re-do it** — see the DELEGATION in `CLAIMS.md`.
+
+### THE DECISION THAT IS CONDUCT'S
+
+Should this coupling be REGISTERED (a ninth interface, or a clause on I3), or should ARM U reach
+the block through something that is not a list of internal names? **UI-38 recommends registering
+it rather than removing it.** ARM U is the only place in the repository where the plane's real
+answer meets the surface's real renderer, and D-173's nine instances are what a mock would cost.
+What is wrong today is not the coupling; it is that the coupling is invisible until it breaks.
+
+### VERSION
+
+None to bump — no op shape, no schema, no service binding moved. This is a registration question.
