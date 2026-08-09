@@ -4460,7 +4460,7 @@ response: **KEEP (a) — the bound is stated always.** Decided 2026-08-09 by ses
 decided: 2026-08-09 · session BOB (delegated)
 reasoning recorded in: this entry; REC-57/IC-23 (the bound discipline); DEC-56/57/58 (act
   and say what you could not establish).
-### DEC-63 · open
+### DEC-63 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from IS-6, which shipped a provisional and asked)
 subject: Which CAPABILITY does starting an investigative run cost — `contribute`, `publish`, or something else?
@@ -4477,6 +4477,17 @@ recommendation: **keep `contribute`.** Two reasons, and the second is the one th
 **And the safe direction is already available:** IS-5's `ai` credential class can only NARROW this. If `contribute` proves too wide, the narrowing happens at the credential rather than by re-cutting the capability, which is the cheaper and more reversible lever.
 
 cost of reversal: **LOW — one line each in `NEEDS`.** No schema change, no op shape change, no data migration. It is raised despite being cheap because **it decides who in a group can spend that group's money**, which is a question about people rather than about mechanism, and that makes it yours rather than mine.
+
+response: **AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A PROJECT.** Bob, 2026-08-09.
+  The gate is PROJECT MEMBERSHIP, not a capability tier — participation in the project the
+  inquiry belongs to is what licenses asking the system to look, and the spend rides on
+  membership the group already governs. Tactical consequence (session's, delegated): the
+  run verbs check project participation; the capability token stays `contribute` only as
+  the floor beneath it, and any narrowing happens at the credential layer as the entry
+  already noted.
+decided: 2026-08-09 · Bob, session BOB
+reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §3 (the run is launched against
+  an inquiry in a project's context).
 
 ### DEC-62 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
