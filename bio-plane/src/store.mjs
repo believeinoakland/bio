@@ -206,6 +206,13 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    repository has measured five times. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
+/* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
+   This file projects a chain into columns and records attestations against it;
+   it holds no copy of what a chain may claim, which engine weakens what, or who
+   may attest — the eleven-copies-of-one-predicate failure REC-46 measured is
+   the reason nothing below re-derives any of it. */
+import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
+         terminalStep, describeChain, gradeCeiling, STEP_KINDS } from "./textchain.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
    it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
@@ -274,6 +281,12 @@ const taskSlug = (subject) => {
   return s || "authority";
 };
 const isHttpsPublic = (u) => isPublicHttpsLocator(u);
+/* CPDF-10: a column this store WROTE as JSON, read back. Returns null rather
+   than throwing on a malformed value, for the reason every read in this file
+   tolerates one: a parse that throws inside a projection ends the read with no
+   answer at all, and a null that a caller can see is a better finding than a
+   500 nobody can attribute. */
+const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 export class Store extends DurableObject {
   constructor(ctx, env) {
@@ -8944,6 +8957,14 @@ export class Store extends DurableObject {
          reading no longer carries. */
       this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
       this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
+      /* CPDF-10: the transcription projection goes with them, and it is rebuilt
+         below from the chain the reading carries. A revised reading that no
+         longer names OCR must not leave a row saying this document was OCR'd —
+         that is the same staleness the term projection above guards against,
+         pointed at a claim about how the text was produced rather than about
+         what it names. */
+      this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
+      this.#writeTextSource(bundleId, sha, reading.text_source);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -8980,6 +9001,132 @@ export class Store extends DurableObject {
               sha, bundleId, ref, src, term);
       }
     }
+  }
+
+  /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
+   *
+   * The accepts-when says an OCR'd document and a text-layer document must be
+   * "distinguishable in the projection, the index and an export". A chain
+   * inside a JSON blob is distinguishable to a reader who parses it and to
+   * nothing else: it cannot be filtered, counted, or asked for. This is the
+   * index half, derived in the SAME transaction as the reading it projects, on
+   * `reading_refs`' own precedent (D-21 -- a projection derived here can never
+   * disagree with the document it describes).
+   *
+   * A READING WITH NO CHAIN WRITES NO ROW, and that is deliberate rather than a
+   * default. Absence of a row means "this document's text provenance was never
+   * recorded", which is a different fact from "this document's text was not
+   * transcribed" (transcribed = 0). Writing a zero row for an unrecorded chain
+   * would collapse the two, and CLAUDE.md's sparse-at-every-level rule is
+   * exactly that no absence may stand in for another.
+   *
+   * A MALFORMED CHAIN ALSO WRITES NO ROW, and it is not silent: `checkChain`
+   * refuses it and the reading itself still carries whatever it carried, so the
+   * disagreement is visible rather than smoothed into a row that looks derived.
+   * The store is not the place to refuse it -- op=acquire built it and
+   * op=attesttext refuses one at its own door. */
+  #writeTextSource(bundleId, sha, chain) {
+    if (checkChain(chain)) return;
+    const engines = [...new Set(chain.filter((s) => typeof s.engine === "string" && s.engine)
+                                     .map((s) => s.engine))];
+    this.sql.exec(
+      `INSERT OR REPLACE INTO reading_text_source
+         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      sha, bundleId, isTranscribed(chain) ? 1 : 0, terminalStep(chain),
+      JSON.stringify(engines), derivationCap(chain), chain.length, JSON.stringify(chain));
+  }
+
+  /* CPDF-10: RECORD A MEMBER'S ATTESTATION that a document's text matches the
+   * image of the page, over a stated extent.
+   *
+   * EVERY REFUSAL IS `textchain.mjs`'s, not this file's. The machine-credential
+   * fence and the extent grammar are one function (`checkAttestation`) called
+   * from the op and from here, so an act that cannot land cannot be smuggled in
+   * through a second door -- checkInquiryBasis' precedent exactly.
+   *
+   * THE CHAIN IS SNAPSHOTTED, and this is the interesting design decision.
+   * An attestation is testimony about TEXT AS IT STOOD, so it records the
+   * chain it was made against. If the document is later re-read by a better
+   * engine the text changes and the old attestation is about text that no
+   * longer exists -- `attestationsFor` reports that as `stale` rather than
+   * deleting it, because a member's testimony is not ours to remove and
+   * because "somebody checked this before it was re-transcribed" is a fact
+   * worth keeping. Nothing re-grades on its own (D-183's asymmetric rule, one
+   * construct early). */
+  attestText(pkg = {}) {
+    const sha = typeof pkg.captureSha === "string" ? pkg.captureSha : "";
+    const att = { member: pkg.member, at: pkg.at || new Date().toISOString(), extent: pkg.extent };
+    const bad = checkAttestation(att);
+    if (bad) return bad;
+    const row = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
+    if (!row)
+      return { ok: false, reason: "NO_READING",
+               detail: `nothing in this store has been read at that capture hash, so there is no `
+                     + `text to attest to. Attesting is about what a document SAYS, and this `
+                     + `record does not yet hold what this one says` };
+    const chain = (safeJson(row.reading) || {}).text_source ?? null;
+    const e = att.extent;
+    return this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        `INSERT OR REPLACE INTO text_attestations
+           (capture_sha,bundle_id,attestor,at,extent_kind,extent_page,extent_rect,note,chain)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        sha, row.bundle_id, att.member, att.at, e.kind,
+        e.kind === "page" ? e.page : (e.kind === "region" ? e.source.page : null),
+        e.kind === "region" ? JSON.stringify(e.source.rect) : null,
+        typeof pkg.note === "string" ? pkg.note : null,
+        chain == null ? null : JSON.stringify(chain));
+      return { ok: true, capture_sha: sha, attestor: att.member, at: att.at, extent: e,
+               chain_at_attestation: chain,
+               why: `${att.member} checked this text against the image over ${e.kind === "document"
+                       ? "the whole document" : e.kind === "page" ? `page ${e.page}`
+                       : `a region of page ${e.source.page}`}. A leg citing outside that extent `
+                  + `does not inherit it` };
+    });
+  }
+
+  /* Every attestation over a capture, plus what they mean for a target region.
+   * `target` is optional: with one, the answer says what a leg citing THAT
+   * region may claim (`gradeCeiling`), which is the read a basis leg needs. */
+  attestationsFor(captureSha, target = null, viewer = null, limit = null) {
+    if (typeof captureSha !== "string" || !captureSha)
+      return { ok: false, reason: "NO_SHA", detail: "attestations are read by a capture sha256" };
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
+    const chain = row ? ((safeJson(row.reading) || {}).text_source ?? null) : null;
+    const live = chain == null ? null : JSON.stringify(chain);
+    const keep = this.#bundleRedactor(viewer);
+    /* BOUNDED for `transcribedDocuments`' reason exactly, and the objection that
+       one capture cannot have many attestations is not good enough: an extent is
+       per REGION, so a diligent group working through a scanned budget book can
+       legitimately produce hundreds over one document. An unbounded read whose
+       bound is an argument about how people will behave is precisely the kind
+       the ratchet exists to refuse. */
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.TEXT_SOURCE_LIMIT_DEFAULT),
+                                     Store.TEXT_SOURCE_LIMIT_MAX));
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id, attestor, at, extent_kind, extent_page, extent_rect, note, chain
+         FROM text_attestations WHERE capture_sha=? ORDER BY at, attestor LIMIT ?`, captureSha, cap + 1);
+    const rows = page.slice(0, cap);
+    const attestations = rows.map((a) => {
+      const extent = a.extent_kind === "document" ? { kind: "document" }
+        : a.extent_kind === "page" ? { kind: "page", page: a.extent_page }
+        : { kind: "region", source: { kind: "pdf-page", ref: `p${a.extent_page}`,
+                                      page: a.extent_page, rect: safeJson(a.extent_rect) } };
+      return {
+        bundle_id: keep(a.bundle_id), attestor: a.attestor, at: a.at, extent, note: a.note,
+        /* STALE, NOT DELETED. See attestText. A null on either side is not
+           staleness -- it is an unrecorded chain, and saying "stale" there
+           would be inventing a comparison nobody made. */
+        stale: (a.chain != null && live != null && a.chain !== live),
+        chain_at_attestation: safeJson(a.chain),
+      };
+    });
+    const ceiling = gradeCeiling(chain, target,
+      attestations.filter((a) => !a.stale).map((a) => ({ member: a.attestor, at: a.at, extent: a.extent })));
+    return { ok: true, capture_sha: captureSha, count: attestations.length,
+             limit: cap, truncated: page.length > cap,
+             chain, chain_says: describeChain(chain), attestations, ceiling };
   }
 
   /* REC-36: the bounded backfill for the name index on a store that already
@@ -9073,10 +9220,65 @@ export class Store extends DurableObject {
        bundle id is the back-reference to where that capture is filed, and it is
        withheld when it names a bundle this viewer may not see. The reading
        itself is the document's own content and is not a project's property. */
+    /* CPDF-10: the projection half of "the two are distinguishable in the
+       projection". A caller reading one reading gets the chain SPELLED OUT --
+       what produced this text, in order, and what the weakest step in it
+       supports -- rather than having to know that `reading.text_source` is a
+       chain and how to walk it. `text_says` is composed from the chain by
+       `describeChain`, so it cannot describe a chain other than this one. */
+    const ts = this.#one(
+      `SELECT transcribed, terminal_step, engines, derivation_cap, steps
+         FROM reading_text_source WHERE capture_sha=?`, captureSha);
+    const chain = reading && reading.text_source !== undefined ? reading.text_source : null;
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#bundleRedactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
-             reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading };
+             reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading,
+             text_provenance: ts
+               ? { transcribed: !!ts.transcribed, terminal_step: ts.terminal_step,
+                   engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
+                   steps: ts.steps, chain, says: describeChain(chain) }
+               /* Not "false" and not an empty object: NOTHING WAS RECORDED, which
+                  is a third answer and the one this record is obliged to state. */
+               : { recorded: false,
+                   why: `this reading carries no text provenance, which is not the same as its `
+                      + `text not having been transcribed -- nobody recorded how it was produced` } };
+  }
+
+  /* CPDF-10: THE INDEX HALF. Which captured documents' text a machine produced,
+   * answerable as a QUERY rather than by parsing every reading. `transcribed`
+   * is TRUE for a text layer too -- a layer is somebody else's transcription
+   * (CPDF-9 measured ABBYY FineReader in 3 of 14 recent Legistar attachments),
+   * so filtering on `terminal_step` or `engines` is how a caller asks the
+   * narrower question about OCR specifically. */
+  transcribedDocuments({ terminalStep: step = null, transcribed = null,
+                         limit = null, viewer = null } = {}) {
+    const where = [], args = [];
+    if (transcribed !== null) { where.push(`transcribed=?`); args.push(transcribed ? 1 : 0); }
+    if (typeof step === "string" && step) { where.push(`terminal_step=?`); args.push(step); }
+    /* BOUNDED AT BIRTH (REC-60/REC-70's ratchet). This read enumerates one row
+       per captured document, which is a table that only grows, and shipping it
+       unbounded would have added a fortieth op to the bare roster in the very
+       item whose thesis is that the record must not claim more than it can
+       support. The pair is the plane's OWN spelling -- `limit` beside
+       `truncated` -- and the bound is asked for as `cap + 1` so `truncated` is a
+       MEASUREMENT of whether more exists rather than an inference from a full
+       page. */
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.TEXT_SOURCE_LIMIT_DEFAULT),
+                                     Store.TEXT_SOURCE_LIMIT_MAX));
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id, transcribed, terminal_step, engines, derivation_cap, steps
+         FROM reading_text_source${where.length ? ` WHERE ${where.join(" AND ")}` : ""}
+        ORDER BY bundle_id, capture_sha LIMIT ?`, ...args, cap + 1);
+    const rows = page.slice(0, cap);
+    const keep = this.#bundleRedactor(viewer);
+    return { ok: true, count: rows.length, limit: cap, truncated: page.length > cap,
+             kinds: Object.keys(STEP_KINDS),
+             documents: rows.map((r) => ({
+               capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
+               transcribed: !!r.transcribed, terminal_step: r.terminal_step,
+               engines: safeJson(r.engines) || [], derivation_cap: r.derivation_cap,
+               steps: r.steps })) };
   }
 
   /* The reverse index Step 4 builds on: every captured document whose reading
@@ -14127,8 +14329,17 @@ export class Store extends DurableObject {
        from the purge — D-113's exact failure, arriving through a merge rather
        than through forgetfulness. Both comment blocks are kept because both
        reasons are true, and the array below carries all four names. */
+    /* CPDF-10 / D-113: `reading_text_source` is DERIVED from the reading, and
+       `text_attestations` is FIRST-CLASS member testimony -- different kinds of
+       row, same purge obligation, and both carry bundle_id so both clear in
+       BOTH arms through this list. Leaving the projection would let a whole-store
+       purge report scope ALL while rows still said which documents in it were
+       OCR'd; leaving the attestations would leave a member's name standing
+       behind text nobody holds, which is the silent-leftover class pointed at
+       somebody's testimony. hygiene.test.mjs holds this list against schema.mjs. */
     const TABLES = ["files", "history", "manifest", "refs", "register", "leases",
-                    "readings", "reading_refs", "reading_ref_terms", "resolutions", "progression_instances",
+                    "readings", "reading_refs", "reading_ref_terms",
+                    "reading_text_source", "text_attestations", "resolutions", "progression_instances",
                     "progression_exceptions", "inquiry_basis", "inquiry_exclusions",
                     "inquiry_basis_versions", "inquiry_basis_version_legs",
                     "action_basis", "correspondence", "bias_statements", "bias_adoptions",
@@ -20407,6 +20618,13 @@ export class Store extends DurableObject {
      cannot replay its log whole through this op. No cursor is minted here —
      REC-55's declined-second-copy rule — and the honest bound is published
      instead of the complete answer being promised. */
+  /* CPDF-10: the transcription reads' page bound. ONE pair for BOTH reads
+     deliberately -- they are one surface asked at two grains, and two constants
+     would be two places a bound could drift. Sized against `AI_RUN_LOG`'s pair
+     rather than picked: a document's attestations and a store's transcribed
+     documents are both "enough to work with on a screen, far short of a dump". */
+  static TEXT_SOURCE_LIMIT_DEFAULT = 200;
+  static TEXT_SOURCE_LIMIT_MAX = 5000;
   static AI_RUN_LOG_LIMIT_DEFAULT = 200;
   static AI_RUN_LOG_LIMIT_MAX = 5000;
 
@@ -23033,6 +23251,28 @@ export class Store extends DurableObject {
            bundle back-reference is withheld rather than the answer refused. */
         reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
         readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
+        /* CPDF-10. Three arms, and the split is the item's own doctrine.
+           `textprovenance` READS which documents' text a machine produced — the
+           index half of "distinguishable in the projection, the index and an
+           export". `textattest` READS the attestations over one capture and
+           what a leg citing a given region may claim. `attesttext` is the WRITE,
+           and it is the only one of the three a machine credential cannot
+           reach — the control plane refuses it before it gets here (MEMBER_ONLY
+           in the OPS table), and `checkAttestation` refuses it again at the
+           store, because an act refusable at one door only is an act with one
+           door left open. */
+        textprovenance: () => this.transcribedDocuments({
+          terminalStep: url.searchParams.get("step"),
+          transcribed: url.searchParams.get("transcribed") == null ? null
+            : url.searchParams.get("transcribed") === "1",
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer") }),
+        textattest: () => this.attestationsFor(url.searchParams.get("sha256"),
+          url.searchParams.get("page") == null ? null
+            : { page: Number(url.searchParams.get("page")),
+                rect: safeJson(url.searchParams.get("rect")) },
+          url.searchParams.get("viewer"), url.searchParams.get("limit")),
+        attesttext: () => this.attestText(body || {}),
         /* REC-36: the same reverse question asked by NAME rather than by the
            source's own reference — section 8.1's grade-C tier. Entity-driven, so
            the registry's aliases do the matching; the viewer stamp is the same

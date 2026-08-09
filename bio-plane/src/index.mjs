@@ -62,6 +62,13 @@ import { captureSubresources, normalizeAddress, normalizeCitation } from "./subr
    formats.mjs and NO edit here — the D-70 test, and formats.test.mjs holds
    the evidence. */
 import { detectFormat, getFormat } from "./formats.mjs";
+/* CPDF-10: the transcription provenance CHAIN. Imported, never restated — the
+   rules about what a derivation may claim live in ONE module so the wire that
+   builds a chain and the act that attests to one cannot disagree about them.
+   This file supplies no fidelity letters of its own beyond the two measured
+   constants below, and holds no opinion about any engine. */
+import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
+         checkConfidence, applyConfidenceFloor } from "./textchain.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -779,6 +786,30 @@ const OPS = {
      holding a reference string and no entity still has only the first, and one
      answering on behalf of a subject wants the second. `readingref` is unchanged. */
   readingname:  { classes: ["admin", "member", "probe"],           mutating: false },
+  /* CPDF-10 — THE TRANSCRIPTION PROVENANCE SURFACE, and the three-way split is
+     the item's doctrine expressed as a capability boundary rather than as a
+     comment.
+
+     `textprovenance` and `textattest` are READS on the same terms every other
+     reading read is on: what a document's text was produced BY is a fact about
+     the record, and a view-only member weighing a case needs it precisely as a
+     contributor does — op=earnedbasis' reasoning, one axis over. A probe may
+     ask, because "is anything in this store OCR'd" is exactly the question an
+     operator should be able to answer without a session.
+
+     `attesttext` IS DIFFERENT IN KIND, and the difference is the whole item.
+     Attesting is a person saying they compared this text against the image of
+     the page — it is testimony, it carries their name for as long as the record
+     lasts, and there is no version of it a token can perform. So it is
+     `mutating: true` (SESSION_OPS therefore keeps a machine credential off the
+     session route) AND `checkAttestation` refuses a machine stamp at the store.
+     TWO FENCES ON PURPOSE: REC-45 measured that the gate accepted
+     `asserted_by: token:member` while eleven hand-typed copies of the same
+     question disagreed, so an act this consequential is refused at the door it
+     is asked at and again at the door it is written through. */
+  textprovenance: { classes: ["admin", "member", "probe"],         mutating: false },
+  textattest:   { classes: ["admin", "member", "probe"],           mutating: false },
+  attesttext:   { classes: ["admin", "member"],                    mutating: true  },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry
      are ONE construct). Members BUILD the registry: entitycreate registers a subject
@@ -1050,7 +1081,13 @@ const RETRIEVAL_READS = ["search", "searchfields", "searchindexcheck", "selectio
    REC-30 swept both into REC30_VIEWER_READS — their answers name the bundle a
    capture is filed in — and the sentence survived the sweep. All three are
    stamped, and REC-36's `readingname` is entity-driven besides. */
-const READING_READS = ["reading", "readingref", "readingname"];
+/* CPDF-10 adds the two transcription-provenance READS to this set rather than
+   listing them beside it, for the reason the block above gives: the member and
+   admin lists drifting apart is the defect this naming exists to prevent. The
+   WRITE (`attesttext`) is deliberately NOT here — it is a member act with its
+   own session route, and folding it into a read set would be exactly the
+   collapse the fence exists to stop. */
+const READING_READS = ["reading", "readingref", "readingname", "textprovenance", "textattest"];
 /* The selection-backed actions on a Project's citation edges. Named as a set
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
@@ -1280,6 +1317,13 @@ const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "pro
                              "proposedispose", "captureprogressions"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+                   /* CPDF-10: attesting that a transcription matches the image is a
+                      MEMBER act — a person's testimony, carrying their name for as
+                      long as the record lasts. It is a session op before it is
+                      anything else, on `aicredentialmint`'s reasoning below: the
+                      only route that produces a name the store will accept is a
+                      session, and the store refuses every other shape (C-35.10). */
+                   "attesttext",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1295,6 +1339,7 @@ const SESSION_OPS = {
                       and the store refuses everything else BY SHAPE (C-29.1). */
                    "aicredentialmint", "aicredentialrevoke"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+                   "attesttext",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1335,6 +1380,14 @@ const NEEDS = {
   linkproject:      "contribute",
   acquire:          "contribute",
   attest:           "contribute",
+  /* CPDF-10: NO FIFTH CAPABILITY TOKEN, on REC-13's reasoning below exactly.
+     Attesting that a transcription matches the image is a corpus write and
+     rides `contribute` like every other one. The thing that makes it different
+     from its siblings is not a permission — it is that a MACHINE cannot perform
+     it, and that is enforced where machine-ness is decided (the store's
+     `checkAttestation`, C-35.10), never by inventing a capability a group would
+     have to be told about. */
+  attesttext:       "contribute",
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -2140,7 +2193,205 @@ const captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 function needsTier2(text) {
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  return c.undetermined > c.chars;
+  if (!(c.undetermined > c.chars)) return false;
+  /* CPDF-10 — AND A SCAN DOES NOT ESCALATE TO TIER 2, because Tier 2 has
+     nothing to tell it. `no_text_layer` means the page declares no font and
+     draws an image: pdf.js would walk the same file and reach the same answer,
+     one cross-worker hop later. The predicate above only started firing for
+     this class when Tier 1 learned to NAME it (see pdfstructure.mjs) — before
+     that a scan produced zero markers and zero chars and escalated to nothing,
+     so this is not a narrowing of existing behaviour but a bound on new
+     behaviour, placed in the same turn that created it.
+
+     A MIXED DOCUMENT STILL ESCALATES, and that is the over-strictness this
+     guard is written to avoid: a report with scanned exhibits stapled to the
+     back carries `no_text_layer` markers AND `no_tounicode` ones, and Tier 2
+     genuinely helps with the second kind. So the test is "is EVERY marker a
+     scan marker", never "is ANY marker a scan marker". */
+  const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
+  if (marks.length && marks.every((m) => m && m.reason === "no_text_layer")) return false;
+  return true;
+}
+
+/* CPDF-10 — WHAT FIDELITY A TEXT LAYER SUPPORTS, and the answer is NULL:
+   UNDETERMINED, STATED. That is a decision rather than an omission, so it is
+   argued here.
+ *
+ * The tempting answer is a strong letter. Tier 1 decodes the real Legistar
+ * agenda at 99.9% (CPDF-5), so the DECODE is excellent — and the decode is not
+ * the question. Transcription fidelity asks whether the text matches what is
+ * ON THE PAGE, and a text layer is somebody else's transcription that we decode
+ * faithfully: `pdfstructure.mjs` reads it through the FILE'S OWN /ToUnicode
+ * map, so a perfect decode of a wrong layer is a perfect decode of a wrong
+ * layer. CPDF-9 MEASURED that this is not hypothetical — 3 of 14 recent
+ * Legistar attachments name ABBYY FineReader in their producer metadata, and
+ * those are the Clerk's CERTIFIED ENACTED RESOLUTIONS carrying garbled machine
+ * OCR overlays. The record has been reading those as authored text.
+ *
+ * So: no measurement exists for "a text layer's fidelity", because it is not
+ * one population — it is authored text and third-party OCR mixed together with
+ * no marker the plane currently reads. `null` is what that is, and undetermined
+ * is first-class here rather than a gap to be filled with a plausible letter.
+ * A letter invented here would be the record claiming more than it can support,
+ * one field wide, on every document in the store.
+ *
+ * WHAT WOULD MOVE IT: the producer-metadata read CPDF-9 recommended and this
+ * item did not build — see the DEBT row and the CONTENT-PDF delegation. With it,
+ * a layer whose producer names OCR software becomes `layer -> ocr(<product>)`
+ * with the product NAMED, and a layer with no such marker stays undetermined
+ * (never "authored" — an absent marker is an absent marker). */
+const LAYER_FIDELITY_CAP = null;
+const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription "
+                            + "(CPDF-9, MEASUREMENTS.md 2026-08-03)";
+
+/* CPDF-10 — THE TIER-3 PREDICATE, and it is deliberately NOT "did Tier 2 fail".
+ *
+ * A document Tier 2 could not decode and a document with NO TEXT TO DECODE are
+ * different findings, and only the second is what OCR is for. pdf.js reports
+ * the second as the `no_text_layer` marker (I2's Tier-2 vocabulary): a page it
+ * recovered nothing for, which is a scan. An encrypted document is NOT a Tier-3
+ * candidate however little text it yielded — running OCR over a page we were
+ * refused access to would transcribe whatever the viewer happened to render,
+ * and the honest answer there is the `encrypted` marker Tier 1 already names.
+ *
+ * READ FROM THE MARKER VOCABULARY, NOT FROM A CHAR COUNT. A char count cannot
+ * tell a scanned page from a blank one from an encrypted one, and CPDF-9
+ * measured that the distinction is structural: the image-only exhibit carried
+ * 0 fonts, which is a fact about the file rather than about how much text came
+ * out of it.
+ *
+ * WHAT THIS PREDICATE CANNOT SEE, stated because the next reader will need it:
+ * a MIXED document — a text-layer report with three scanned exhibits stapled
+ * to the back — has both kinds of page and answers TRUE here on the strength of
+ * the scanned ones. That is the intended answer (those pages want OCR) but it
+ * means "this document is a Tier-3 candidate" is never "this document is a
+ * scan". Per-page routing is CPDF-12's to make real, because it needs a
+ * producer that works a page at a time. */
+function needsTier3(text) {
+  const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
+  if (marks.some((m) => m && m.reason === "encrypted")) return false;
+  return marks.some((m) => m && m.reason === "no_text_layer");
+}
+
+/* ===================================================================== *
+ * CPDF-10 — THE SEAM. THIS IS THE CONTRACT CPDF-12's OCR MEMBER MUST MEET.
+ *
+ * The renderer and the engine are CPDF-12's and are being measured in
+ * parallel with this item. Rather than guess at their shape or build a
+ * second renderer to have something to test against, this item builds the
+ * CONSUMER side completely and states the producer side exactly — so the day
+ * the member answers, the only new code is the member.
+ *
+ * THE MEMBER ANSWERS `POST /transcribe` WITH:
+ *
+ *   { ok: true,
+ *     engine: "<name>", version: "<version>",     // REQUIRED, both
+ *     cap: "A"|"B"|"C"|"D",                       // REQUIRED — the MEASURED
+ *     measured_by: "<where the measurement lives>",//   fidelity, and where
+ *     confidence_floor: <0..1> | null,            // null = engine reports none
+ *     pages: [ { page:<0-based>,
+ *                regions: [ { text, source:{kind:"pdf-page",page,rect},
+ *                             confidence: "none" | {value,basis:"engine"} } ] } ] }
+ *
+ * FIVE THINGS THE MEMBER MUST NOT DO, each refused below rather than trusted:
+ *
+ *  1. It must not report a `cap` it did not measure. `measured_by` is required
+ *     and is a pointer to MEASUREMENTS.md, because a fidelity letter is a
+ *     measurement and this project's most-repeated finding is a hand-carried
+ *     number going stale in a file nobody re-measures.
+ *  2. It must not omit the anchor. A region with no `{page, rect}` is dropped,
+ *     because a transcription nobody can check against the pixels is exactly
+ *     what CPDF-10 refuses to put in the record.
+ *  3. It must not self-report confidence. `basis:"engine"` means a classic
+ *     decoder computed it; there is no basis a generative model can name, and
+ *     that is deliberate (DEC-35's forbidden pseudo-confidence).
+ *  4. It must not send a best guess for a region it could not read. It may send
+ *     a low confidence and let the floor discard it — which is what the floor
+ *     is for — but a region below the floor arrives here as text and LEAVES as
+ *     `undetermined` with the text dropped.
+ *  5. It must not assert. Fleet rule 2 (I6): the member writes nothing, holds
+ *     no STORE and no PUBLISHED binding, and answers this one question.
+ *
+ * WHAT THE PLANE GUARANTEES BACK: the member is called ONLY for a document
+ * `needsTier3` selected, is handed a capture sha and a store name and nothing
+ * else, and its answer is never trusted as text without passing through here.
+ *
+ * ON FAILURE THIS RETURNS A REASON, NOT A THROW. A member that answers badly
+ * must leave the document HONESTLY UNREAD (`ok:false` with a `why` the reading
+ * carries), never half-transcribed and never crashing an acquire — the same
+ * posture the Tier-2 escalation already takes one tier down.
+ * ===================================================================== */
+function ocrTextFromMember(res) {
+  const r = res && typeof res === "object" ? res : {};
+  if (r.ok !== true)
+    return { ok: false, why: `the OCR member declined to transcribe this document`
+                             + `${typeof r.reason === "string" ? ` (${r.reason})` : ""}` };
+  if (!(typeof r.engine === "string" && r.engine) || !(typeof r.version === "string" && r.version))
+    return { ok: false, why: `the OCR member did not name its engine and version, so nothing it `
+                             + `produced could be re-run or calibrated later` };
+  if (!(typeof r.cap === "string" && r.cap) || !(typeof r.measured_by === "string" && r.measured_by))
+    return { ok: false, why: `the OCR member reported no MEASURED fidelity for itself; a `
+                             + `transcription's ceiling is a measurement, never a default` };
+
+  /* The regions, walked page by page. A region with no checkable anchor is
+     DROPPED and counted rather than kept — dropping is the conservative
+     direction here, because the alternative is text in the record that nobody
+     can point at a page to verify. */
+  const pages = Array.isArray(r.pages) ? r.pages : [];
+  let anchorless = 0, kept = 0, floored = 0, undetermined = 0;
+  const outPages = [];
+  for (const p of pages) {
+    const pageNo = p && Number.isInteger(p.page) ? p.page : null;
+    if (pageNo == null) continue;
+    const anchored = [];
+    for (const region of (Array.isArray(p && p.regions) ? p.regions : [])) {
+      if (checkAnchor(region && region.source)) { anchorless++; continue; }
+      anchored.push(region);
+    }
+    /* Rule 4 — the floor, applied by textchain.mjs so this file holds no copy
+       of the discard rule. A null floor means the engine reports no confidence
+       at all, which is a stated first-class answer and NOT a reason to invent
+       a threshold: the engine's measured `cap` is what carries it. */
+    const f = applyConfidenceFloor(anchored,
+      typeof r.confidence_floor === "number" ? r.confidence_floor : null);
+    floored += f.floored; undetermined += f.undetermined;
+    kept += f.regions.filter((x) => x.text != null).length;
+    outPages.push({ page: pageNo, regions: f.regions,
+                    text: f.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
+                    undetermined: f.regions.filter((x) => x.undetermined)
+                      .map((x) => ({ page: pageNo, reason: "ocr_below_floor", font: null,
+                                     codes: null, count: 1, why: x.why })) });
+  }
+  if (!outPages.length)
+    return { ok: false, why: `the OCR member returned no page this record could anchor, so nothing `
+                             + `it produced can be checked against the document` };
+
+  /* The chain. `pixels` before `ocr` because that IS what happened and the
+     chain is a record of what happened — the page became pixels, and an engine
+     read them. Both steps carry the same measured cap; `appendStep` would
+     refuse the second if it claimed more, which is rule 2 doing its job on the
+     path a member's answer actually travels. */
+  let chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by }],
+                         { step: "ocr", engine: r.engine, version: r.version,
+                           cap: r.cap, measured_by: r.measured_by });
+  if (!Array.isArray(chain))
+    return { ok: false, why: `the OCR member's own provenance was refused: ${chain.detail}` };
+
+  /* The I2 text shape, unchanged — a Tier-3 producer emits what Tier 1 and
+     Tier 2 emit, so FRAMEWORK's reader consumes all three identically and this
+     item adds no fourth text shape (I2 1.1.0, and D-164's lesson). */
+  const text = {
+    document: outPages.map((p) => p.text).filter(Boolean).join("\n"),
+    pages: outPages.map((p) => ({ page: p.page, text: p.text, undetermined: p.undetermined })),
+    undetermined: outPages.flatMap((p) => p.undetermined),
+    counts: { chars: outPages.reduce((n, p) => n + p.text.length, 0), undetermined },
+    regions: outPages.flatMap((p) => p.regions),
+  };
+  const note = anchorless
+    ? `${anchorless} region(s) the OCR member returned carried no checkable image region and were `
+      + `dropped rather than recorded`
+    : null;
+  return { ok: true, text, chain, kept, floored, note };
 }
 
 export default {
@@ -4113,6 +4364,13 @@ export default {
            exists. OCR is NOT here (CPDF-10): a document with no text layer
            stays honestly unread. */
         let wired = null, wiredTier = null;
+        /* CPDF-10: the chain this text's provenance will be recorded as, built
+           up as the wire actually walks it rather than labelled at the end. It
+           starts empty and is null until a text surface answers, so a document
+           that never reached one carries NO chain rather than a chain claiming
+           a layer it does not have. `ocrNote` carries the Tier-3 finding for a
+           document that wanted OCR and could not have it. */
+        let chain = null, ocrNote = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -4146,8 +4404,57 @@ export default {
                   }
                 }
               }
+              /* CPDF-10 — TIER 3, AND WHAT IT DOES TODAY IS SAY SO.
+                 The document reached a text surface and that surface reports
+                 pages it recovered NOTHING for: a scan. This is the seam an OCR
+                 producer plugs into (CPDF-12's fleet member), and the binding
+                 does not exist yet — so the branch that would call it is
+                 present, narrow and UNTAKEN, while the branch that runs is the
+                 honest one: the document is NAMED as wanting OCR and is left
+                 unread rather than being quietly filed as an empty document.
+                 D-115's rule for an un-fleeted instance, one tier further on. */
+              if (i2text && needsTier3(i2text)) {
+                if (env.OCR_WORKER) {
+                  try {
+                    const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
+                      method: "POST", headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ capture_sha: sha, store: storeName }),
+                    });
+                    /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
+                       the fix for a real defect this suite caught: parsing the
+                       body of a 500 THROWS, so the catch below reported "could
+                       not be reached" for a member that answered perfectly well
+                       and answered an error. Two different findings — the member
+                       is down, and the member failed on this document — were
+                       collapsing into the first, which is the wrong one to
+                       report because only the second is about the document. */
+                    if (!r.ok) {
+                      ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
+                    } else {
+                      const built = ocrTextFromMember(await r.json());
+                      if (built.ok) {
+                        i2text = built.text; wiredTier = 3; chain = built.chain;
+                        ocrNote = built.note;
+                      } else ocrNote = built.why;
+                    }
+                  } catch {
+                    ocrNote = "the OCR member could not be reached, so this document stays unread";
+                  }
+                } else {
+                  ocrNote = "this document has no text layer to read and no OCR engine is installed "
+                          + "in this instance, so nothing is claimed about what it says";
+                }
+              }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
+              /* The chain, at last, and only if a text surface actually
+                 answered. Tier 3 already set its own above (it names the engine
+                 that produced it); anything else came out of the document's own
+                 text layer, which is what FW-15's `text_source: "layer"` token
+                 said and is now a chain step that can be extended. */
+              if (i2text && !chain)
+                chain = layerChain({ tier: wiredTier, container: fmt,
+                                     cap: LAYER_FIDELITY_CAP, measured_by: LAYER_FIDELITY_SOURCE });
             }
           } catch { /* a wire failure must not fail the capture: fall through to
                        the honest no-reading below */ }
@@ -4162,14 +4469,23 @@ export default {
             content_type: wtype.key, reader_version: wtype.version ?? null,
             read_from_text: true, found: entities.length > 0,
             entities, facts: wired.parse_error ? {} : (wfacts || {}), at: retrieved,
-            /* D-152's provenance rule, applied from day one: this text came out
-               of the document's own text LAYER (never OCR), by which tier, from
-               which container. Distinguishable everywhere the reading is shown. */
-            text_source: "layer", text_tier: wiredTier, text_container: fmt,
+            /* D-152's provenance rule, and CPDF-10's correction of how it was
+               carried. This was the STRING "layer" — right about the fact and
+               wrong about the shape, because the moment a second derivation
+               exists a single label cannot say which engine produced the text
+               or how many hands it passed through. It is now the CHAIN
+               `textchain.mjs` owns: an ordered list of steps, each naming what
+               performed it, each only able to weaken what it received. A text
+               layer is itself an unverified transcription (CPDF-9 measured
+               ABBYY FineReader in 3 of 14 recent Legistar attachments), so
+               `layer` is a derivation step like any other rather than the
+               absence of one. `text_tier`/`text_container` stay exactly as they
+               were — a consumer reading only those is unaffected (IC-39). */
+            text_source: chain, text_tier: wiredTier, text_container: fmt,
             basis: wired.parse_error
               ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
               : (entities.length
-                  ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} text-layer text (tier ${wiredTier}); ${wired.why}`
+                  ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}`
                   : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`),
           };
         } else if (wired) {
@@ -4178,8 +4494,15 @@ export default {
           reading = {
             content_type: docType.type.key, reader_version: docType.type.version ?? null,
             read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
-            text_source: "layer", text_tier: wiredTier, text_container: fmt,
-            basis: wired.why,
+            text_source: chain, text_tier: wiredTier, text_container: fmt,
+            /* CPDF-10: a Tier-3 candidate says WHY it is unread, and the two
+               reasons are different findings. `ocrNote` names the scan case —
+               there was nothing to decode and no engine to read it — where
+               `wired.why` names a decode that was attempted and failed. Reading
+               them as one would file a scanned budget book beside a broken font
+               map, and only one of those is waiting on a capability. */
+            basis: ocrNote ? `${ocrNote} (${wired.why})` : wired.why,
+            ...(ocrNote ? { tier3_candidate: true } : {}),
           };
         } else {
           reading = {
@@ -5277,7 +5600,13 @@ export default {
        nameless one still discloses that something mentioning their subject sits
        in a project they were not invited to. Fails closed in the store on an
        absent stamp, like every op in this list. */
-    const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname", "resolutions",
+    /* CPDF-10: both transcription reads name the bundle a capture is filed in,
+       so both take the same stamp for REC-30's reason exactly — the answer
+       would otherwise disclose that a document sits in a project the caller was
+       never invited to, by telling them what produced its text. `attesttext`
+       is NOT here: it is a WRITE and takes its own member route. */
+    const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
+                                "textprovenance", "textattest", "resolutions",
                                 "concerns", "connections", "instance", "exceptions", "thread",
                                 "discharge", "audit", "searchindexcheck", "projectownerarith",
                                 /* REC-14's read, swept at the merge: its bar report NAMES the

@@ -2808,3 +2808,71 @@ to disagree cheaply; this item files one instead, because three fields moved rat
 one of them is an ADDRESS. Reversing it is: drop `fields_of`/`read_back`, and put `version`,
 `grounds`, `legs` and `count` back on `name`, `declaredLabels`, `candidate.legs` and
 `legsIn.length` — the shape `suggest.control.mjs`'s (D-235a) and (D-235b) arms hold open.
+
+## IC-39 — CPDF-10: `reading.text_source` becomes a CHAIN, not a token
+
+- **Interface:** I2 (the content → framework structure contract) at the reading boundary — the
+  field `op=acquire` stamps on a capture's `reading`, which `op=promote` persists and
+  `op=reading` projects.
+- **Owner:** FRAMEWORK (dormant). **Producer:** CONTENT-PDF (this change).
+  **Consumers:** the `readings` projection, `op=reading`, an exported bundle's
+  `data/provenance.json`, and any surface rendering where a document's text came from.
+- **Status:** PROPOSED. **The version bump is CONDUCT's** (I2 is at 1.1.0).
+- **Raised by:** CPDF-10, 2026-08-08.
+
+### WHAT CHANGED
+
+`reading.text_source` was the STRING `"layer"` (FW-15, carrying D-152's provenance
+discriminator). It is now an ORDERED ARRAY of steps, each naming what performed it:
+
+```
+[ { step: "pixels", cap: "C", measured_by: "…" },
+  { step: "ocr", engine: "tesseract", version: "5.3.4-fast", cap: "C", measured_by: "…" } ]
+```
+
+`step` is one of `layer · pixels · ocr · ai · attested` (`textchain.mjs`'s `STEP_KINDS`, which is
+the only place the vocabulary lives). `text_tier` and `text_container` are **UNCHANGED** — a
+consumer reading only those is unaffected.
+
+### WHY IT COULD NOT STAY A TOKEN, and this is the substance rather than a preference
+
+A single label loses **which engine**, and an engine is what a calibration is OF (CPDF-13) and
+what a re-run would need. It also cannot express a SEQUENCE, and the sequence is where the danger
+is: CPDF-11 measured Moondream producing 16–20 minted digits per run in prose "structurally
+perfect and indistinguishable from a clean run". Once an AI clean-up step exists, `"ocr"` and
+`"ocr then rewritten by a model"` are the same string and the record cannot tell a reader which
+it holds.
+
+The chain also carries the rule that a token cannot: **every derivation step may only weaken the
+claim, never strengthen it**, enforced by `appendStep` rather than by convention.
+
+### THE CONSEQUENCE A CONSUMER MUST TAKE, and it is a real one
+
+**A TEXT LAYER IS NOW A DERIVATION STEP, so `transcribed` is TRUE for text-layer documents too.**
+That is not a widening for tidiness: `pdfstructure.mjs` decodes a layer through the FILE'S OWN
+`/ToUnicode` map, so we faithfully reproduce somebody else's transcription — and CPDF-9 measured
+that 3 of 14 recent Legistar attachments name ABBYY FineReader in their producer metadata, which
+means the Clerk's certified enacted resolutions carry machine OCR overlays the record has been
+reading as authored text. A consumer wanting "was this OCR'd BY US" must ask `terminal_step` or
+`engines`, not `transcribed`.
+
+**`cap` is `null` for a text layer**, and null means UNDETERMINED, STATED. No measurement exists
+for a text layer's fidelity because it is not one population. A consumer must not read null as
+"fine".
+
+### MIGRATION, and what it costs
+
+**Nothing in the repository reads `text_source` as a string** — measured, not assumed: the only
+producer was `index.mjs`'s acquire assembly (changed here) and the only assertion was one line in
+`reading-wire.test.mjs`, CORRECTED in the same turn with the reason at the site rather than
+exempted. Stored readings from before this change keep their string and are refused by
+`checkChain` rather than misread: `reading_text_source` writes no row for them, and an absent row
+reads as "provenance was never recorded", which is exactly what is true of them.
+
+### NEW OPS THAT COME WITH IT
+
+`op=textprovenance` (which documents' text a machine produced — the INDEX half),
+`op=textattest` (the attestations over a capture, and what a leg citing a region may claim), and
+`op=attesttext` (the member act). The first two are reads on `READING_READS`' terms; the third is
+`mutating: true`, carries `contribute`, and is refused to a machine credential at BOTH the
+control plane and the store (C-35.10).

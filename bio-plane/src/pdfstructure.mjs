@@ -1131,7 +1131,58 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   }
 
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+
+  /* CPDF-10 — TIER 1 NAMES THE IMAGE-ONLY PAGE, and this exists because the
+   * escalation that was supposed to name it CANNOT FIRE.
+   *
+   * MEASURED, not assumed. `needsTier2` escalates when undetermined REGIONS
+   * outnumber decoded CHARACTERS. A scanned page decodes to zero characters
+   * and produces zero markers — there is no font, so nothing ever reaches the
+   * decode path to fail — so the test is `0 > 0`, which is FALSE. **The
+   * image-only class, which is the entire reason OCR exists, was the one class
+   * that never escalated.** Tier 2's `no_text_layer` marker is real and is what
+   * `needsTier3` reads, and before this line nothing could ever produce it for
+   * a scan, because pdf.js was never asked.
+   *
+   * THE SIGNAL IS STRUCTURAL, WHICH IS WHY IT IS TRUSTWORTHY. CPDF-9 verified
+   * its scanned exhibit as image-only by the file's own structure — 4 pages, 0
+   * fonts — rather than by how little text came out. A page that declares NO
+   * font resource cannot bear text: that is a fact about the file, not a
+   * threshold on an output, and it does not go stale the way a character count
+   * would.
+   *
+   * AND A BLANK PAGE IS NOT A SCAN. Zero fonts alone would mark every empty
+   * page as wanting OCR, which would send an engine over a blank sheet and
+   * invite exactly the invention CPDF-9's own negative control exists to catch.
+   * So the second half is required: the page must DRAW AN IMAGE. Zero fonts and
+   * zero images is a blank page and this says NOTHING about it — an absence
+   * with nothing to report is not a finding, and inventing a marker for it
+   * would put a swarm of them through every document with a separator sheet.
+   *
+   * `no_text_layer` is I2's EXISTING vocabulary (the Tier-2 reason), used here
+   * by a different tier rather than minted afresh — a second spelling for one
+   * finding is D-164's lesson and this item is not going to repeat it. */
+  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {
+    undetermined.push({
+      page: pageIdx, reason: "no_text_layer", font: null, codes: "", count: 0,
+    });
+  }
   return { text, undetermined };
+}
+
+/** Does this page's resource dictionary declare an image XObject? The second
+ *  half of the image-only test above. Deliberately asks about DECLARED
+ *  resources rather than interpreting the content stream: a page that lists an
+ *  image and never paints it is vanishingly rare, while re-walking the content
+ *  stream to find a `Do` would be a second interpreter for one boolean. */
+function pageDrawsImage(doc, resources) {
+  const xo = resources ? doc.dictOf(resources.XObject) : null;
+  if (!xo) return false;
+  for (const name of Object.keys(xo)) {
+    const map = doc.dictOf(xo[name]);
+    if (map && nameOf(doc, map.Subtype) === "Image") return true;
+  }
+  return false;
 }
 
 /** Document text (Tier 1). Extends the I2 output; see the module header. */

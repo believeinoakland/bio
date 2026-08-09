@@ -303,7 +303,20 @@ t("WALK: op=readingname and op=tasks, the two the item named, are on the roster 
    answer is bounded only as a consequence. It carries `LIMIT ?` against
    `#MEANING_LIMIT_DEFAULT`/`_MAX`, the `named-cap` shape this walk has recognised
    since REC-57, so nothing about the detector had to move to admit it. */
-t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two the item named",
+/* CORRECTED 2026-08-08 (CPDF-10), not exempted, and 26 was the true measurement
+   on the day REC-66 wrote it. **26 -> 28, MEASURED by running the walk in this
+   worktree and taking what it PRINTED (it reported 28 against a pin of 26),
+   never by adding two to REC-66's figure** — which matters here more than
+   usual, because this pin's own recorded history is two items colliding on it
+   by arithmetic. The arrivals are `op=textprovenance` and `op=textattest`, and
+   they are the ORDINARY kind rather than a new one: both carry `LIMIT ?`
+   against a clamped `cap` drawn from named constants (`TEXT_SOURCE_LIMIT_DEFAULT`
+   /`_MAX`), which is the `named-cap` shape this walk has recognised since
+   REC-57, so nothing about the detector had to move to admit them. They were
+   BOUNDED AT BIRTH rather than shipped bare and bounded later — the ratchet in
+   `meaning-bounds.test.mjs` read 38 -> 40 on their first landing and is back at
+   38. Both are DRIVEN in `test/textchain.test.mjs`; see DRIVEN_ELSEWHERE. */
+t("WALK: the roster is TWENTY-EIGHT ops — the sweep is the item, not the two the item named",
 /* CORRECTED 2026-08-07 (PL-1), not exempted, and 18 was the true measurement on the day
    CONDUCT wrote it below. 18 -> 19 for ONE reason: `op=basisversions`, IS-1's read of an
    inquiry's basis VERSIONS, is a NEW capped read — the same kind of arrival PL-10 recorded,
@@ -371,7 +384,7 @@ t("WALK: the roster is TWENTY-FOUR ops — the sweep is the item, not the two th
    can produce a version over 500 legs — the WRITE cap is 120 — so the refusal
    would be a code nobody could drive, which PL-4 recorded as the reason to
    delete rather than ship one. The honest fact is published instead. */
-  OPS.size, 26);
+  OPS.size, 28);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -949,8 +962,21 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    descriptor — ask for a bite of one, then read the completeness flag — has
    nothing to ask for. Its bound guards the honesty of a derived pair rather than
    the size of a list, and its completeness signal is `legs_complete`. */
+/* CPDF-10 joins them with TWO ops and ONE reason for both. `op=textprovenance`
+   and `op=textattest` are ordinary capped reads and COULD sit in the loop; what
+   keeps them out is the FIXTURE. Their bites need a corpus this suite does not
+   have and would have to build from scratch — two promoted readings each
+   carrying a transcription chain, and two attestations over one capture, which
+   in turn needs an acquire through a stubbed OCR member. All of that already
+   exists in `test/textchain.test.mjs` for that item's own arms, and both bounds
+   are DRIVEN there in exactly this loop's shape: a bite of 1 against a corpus of
+   2, the answer's `limit` read back, `truncated` true on the bite and FALSE at
+   the default bound — so the flag is measured against the corpus rather than
+   read off a code path. Building a second corpus here would be two fixtures for
+   one fact, which is the arrangement this repository keeps paying for. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
-                                  "capturerequests", "capturerequestdrain", "versionstrength"]);
+                                  "capturerequests", "capturerequestdrain", "versionstrength",
+                                  "textprovenance", "textattest"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1071,6 +1097,18 @@ const answersByOp = new Map([
      re-driven safely; it is carried the same way as its neighbours so the
      roster reads as one list rather than as two conventions. */
   ["versionstrength", VS],
+  /* CPDF-10: driven HERE, plainly, for exactly the one thing this map is for —
+     the ENVELOPE SHAPE. The bite/`truncated` arms need a corpus of transcribed
+     documents and attestations, which lives in `test/textchain.test.mjs`; the
+     array-shape pin needs neither, because what it asks is whether the op
+     answers with a bare array, and that is a property of the RETURN and not of
+     how many rows are in it. Answering over this suite's store — which holds no
+     transcription at all — is therefore not a walk over an empty corpus
+     congratulating itself: it is the only corpus this particular pin needs, and
+     saying so is cheaper than building a second fixture that would prove
+     nothing extra. */
+  ["textprovenance", await GET("op=textprovenance&token=mem-r57&limit=1")],
+  ["textattest", await GET(`op=textattest&token=mem-r57&sha256=${"0".repeat(64)}&limit=1`)],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

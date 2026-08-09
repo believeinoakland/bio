@@ -198,6 +198,13 @@ const REGISTER_FLOOR = {
      counted, never incremented by hand. The cause is one new suite,
      `test/shadowed-refusals.test.mjs`, whose `NEGATIVE CONTROL:` declaration
      states eleven arms. Every one of those arms was RUN. */
+  /* CPDF-10, 2026-08-08: 570 -> 576 / 129 -> 130 / 130 -> 131, ALL THREE MOVED IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
+     PRINTED (`arms 576/570 · classified 130/129 · corpus 131/130 · GREW by 6`),
+     never by adding to the numbers above. One new suite (`textchain.test.mjs`)
+     whose declaration states six arms — the six negative-control arms driven by
+     `test/nc-cpdf10.mjs` — so `corpus` and `classified` each rise by one and
+     `arms` by six. Nothing FELL. */
   arms:       581,  // arms stated across the classified declarations
   classified: 130,  // declarations the detector could count arms in
   corpus:     131,  // suites the register reads

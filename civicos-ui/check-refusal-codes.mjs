@@ -254,16 +254,41 @@ const FLOOR = {
 
      `outcomeReturns`, `refusalsJudged` and `unclassifiedOutcomes` are NEW here
      and are explained at their own keys. */
-  families:     14,    // + ROUTE_MARK_CHECKS (REC-63);
+  /*
+     **MOVED BY CPDF-10, 2026-08-08, EVERY KEY BELOW FROM THE FIGURE THIS FILE
+     PRINTED ON A GREEN RUN IN THIS WORKTREE, never by adding to the number that
+     was here.** The arrival is ONE new DEC-49 family, `TEXT_CHAIN_CHECKS`
+     (C-35.1..11 — the transcription provenance chain's refusals), with FIVE new
+     narrowed REGIONS: `checkChain > is-text-chain-shape` (5 judged, 5 compared),
+     `appendStep > is-text-chain-monotone` (1/1), `checkConfidence >
+     is-text-region-confidence` (3/3), `checkAnchor > is-text-anchor` (4/4),
+     `checkAttestation > is-text-attestation` (6/6). Every region COMPARES every
+     code it judges, which is the property this file's arm C exists to check and
+     the reason none of these lands as a whole-function `where`.
+     THE ORIGINAL CPDF-10 DELEGATION SAID THESE WOULD BE LEFT FOR UI TO MOVE,
+     AND THAT WAS WRONG — stated here rather than quietly changed. The rule is to
+     move a floor you invalidate IN THE SAME TURN, from what the instrument
+     printed; the item could print the figures the moment its own run went green,
+     so leaving them would have shipped a harness whose floors sat 11 rows and 5
+     regions below the truth, which is exactly the slack this file's own header
+     argues a ratchet cannot carry.
+     `bodyLines` is DELIBERATELY NOT MOVED — it is this block's one non-ratcheted
+     figure by its own stated reason, and it FELL from 61 to 60 sites' worth of
+     body because five more `where`s are narrowed regions rather than whole
+     functions, which is the direction that file wants. `census` moves because
+     the new module mints codes; `unclassifiedOutcomes` is UNCHANGED at 3, and
+     none of the new sites is among them.
+   */
+  families:     15,    // + ROUTE_MARK_CHECKS (REC-63);
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
                        // Was 11 at PL-15, 8 at PL-4, 7 at PL-3, 6 pre-PL-3 while the floor said 5.
-  rows:        152,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
+  rows:        163,    // + C-33.30/31/32 (REC-76 — aiRunOpen's two codeless refusals and SET_MOVED).
                        // + C-34.1..4 (REC-63, the route marker door). + C-32.1..11 (REC-64, the machine fences) + C-33.1..28 (REC-64, the single-homed
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      412,    // distinct refusal codes the plane can mint, UNION of the matcher set.
+  census:      424,    // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
                        // (was 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        /* REC-64 MEASURED HOW MUCH SLACK IT TAKES TO TURN THIS CONTROL GREEN, and the
@@ -275,8 +300,8 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       206,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
-  governedSites: 61,   // spans named by a row's `where` — a function, or a region inside one.
+  reach:       217,    // codes a surface can receive (R1 + R2 + R3) (was 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+  governedSites: 66,   // spans named by a row's `where` — a function, or a region inside one.
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines:    60,    // total lines of governed span arm C actually reads. MEASURED far above this,
@@ -288,7 +313,7 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions:      48,    // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
+  regions:      53,    // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
                        // that could not be written until arm C could see a computed verdict).
                        // + REC-63's ONE (is-route-mark, judging 4 and comparing 4). + REC-64's THIRTY: eleven machine fences (is-machine-*) and nineteen act-shape
                        // spans (is-conclude-answer, is-move-resolution, is-correspond-entry,
@@ -302,7 +327,7 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1310,   /* MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
+  regionLines: 1407,   /* MOVED 1289 -> 1310 BY REC-76, 2026-08-08, from what this file PRINTED on a
                           green run of that worktree. The 21 are `is-selection-moved`'s own span and
                           nothing else — REC-76 opened no line inside another item's region. **NOTE FOR
                           THE INTEGRATOR: THIS FIGURE HAS MOVED AT INTEGRATION FOUR TIMES OUT OF FIVE
@@ -367,7 +392,7 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 122,   // refusal codes actually COMPARED against a family row — NOT the same as
+  codesChecked: 141,   // refusal codes actually COMPARED against a family row — NOT the same as
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
                        // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
@@ -409,7 +434,7 @@ const FLOOR = {
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 124,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
+  refusalsJudged: 143,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
                           successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
                           a walk that had lost every spelling but one would still have cleared. */
   vocabularies:  9,    // the plane's own code->text maps a surface renders verbatim (arm E).
