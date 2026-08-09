@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 6 (three stages) is armed on this file and is a DIFFERENT exposure from the
+   floors: a pin owed to an uncommitted file FAILS here and PASSES in the pre-M0-18 spelling.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.
@@ -60,9 +71,13 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+/* M0-18 — ONE mechanism, imported. This suite's exposure is NOT its siblings'
+   and the difference is argued in full at the pin roster walk in block 4. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
+const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 
@@ -649,9 +664,63 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
      sweep, found the only way it could be — by running it. A mention here is
      not a pin, and the walk now says so. */
   const SELF = "machine-fences.test.mjs";
-  const TESTS = readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f !== SELF)
-    .map((f) => readFileSync(join(DIR, f), "utf8"));
-  const pinned = (code) => TESTS.some((s) => s.includes(`"${code}"`));
+
+  /* ---- M0-18 · THIS WALK IS A DIFFERENT EXPOSURE FROM ITS SIX SIBLINGS, AND
+   * IT NEEDED A DIFFERENT ANSWER. STATED HERE RATHER THAN COLLAPSED INTO THEM.
+   *
+   * The six walks M0-18 guarded elsewhere in this battery all FLOOR on what they
+   * found, so a phantom could only push a floor UP and the fix was to compute the
+   * floor over `git ls-tree HEAD` while the sweep kept reading the whole tree.
+   * NOTHING HERE FLOORS ON THIS WALK. `methods` and `rows` come from
+   * `STORE_BARE`, a `readFileSync` of one named path, and no arrival can inflate
+   * those — the floor two blocks down is not this walk's, and the comment beside
+   * it saying "the corpus this is claimed over is floored above" was WRONG about
+   * WHICH corpus and is corrected below.
+   *
+   * WHAT THIS WALK DOES IS SATISFY A REQUIREMENT, WHICH FAILS IN THE GENEROUS
+   * DIRECTION. `pinned()` asks whether ANY suite in this directory quotes a
+   * refusal code, and the `unpinned` arm at the foot of this block demands the
+   * answer be EMPTY. A phantom `.mjs` deposited into `test/` — `refs/stash` is
+   * repository-wide across all sixty worktrees and `push -u` carries untracked
+   * files (D-238, measured) — can only ADD strings, so it can only SHRINK
+   * `unpinned`. A ratchet whose whole stated virtue is that it "cannot drift
+   * either way" could therefore be satisfied by a file no other checkout has.
+   * Blindness fails safe here (an empty walk pins nothing and `unpinned` grows,
+   * loudly); ARRIVAL fails generous, and generous is the direction this project
+   * treats as the serious one.
+   *
+   * SO `pinned()` ASKS ONLY THE COMMIT, AND THAT IS THE OPPOSITE NARROWING FROM
+   * THE SIX. There it would have hidden a finding; here it is what makes the
+   * finding visible, because a pin nobody has committed is a pin no other
+   * checkout can see — the repository is the channel.
+   *
+   * THE COST, STATED BEFORE IT IS PAID rather than discovered by whoever pays it:
+   * a worker who WRITES a pinning suite and has not committed it yet sees this
+   * arm go RED. `scripts/provenance.mjs` deliberately REPORTS rather than fails
+   * for exactly that reason, and this file departs from that provisional on one
+   * ground: the report-only argument is about an instrument that would red on ANY
+   * uncommitted suite, and this arm reds only when an uncommitted file is the
+   * SOLE pin for a shadowing identity refusal. That is a narrow, true and
+   * one-step-fixable state, and the failure NAMES the file and the code rather
+   * than saying the count moved. THE ALTERNATIVE, if that proves wrong in
+   * practice: assert on `unpinnedTree` and merely PRINT `unpinnedHead`. Reversing
+   * costs one line, and the two sets are computed separately here so that it is
+   * one line. */
+  const TEST_FILES = readdirSync(DIR).filter((f) => f.endsWith(".mjs") && f !== SELF);
+  const PROV = readGitProvenance(REPO);
+  const committed = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, join(DIR, f)));
+  const readOf = (f) => readFileSync(join(DIR, f), "utf8");
+  const TESTS = TEST_FILES.map(readOf);
+  const TESTS_HEAD = TEST_FILES.filter(committed).map(readOf);
+  const pinnedTree = (code) => TESTS.some((s) => s.includes(`"${code}"`));
+  const pinned = (code) => TESTS_HEAD.some((s) => s.includes(`"${code}"`));
+  /* SAY UNVERIFIED, NEVER CLEAN (D-233). When git cannot answer, `committed()`
+     says true for everything, the two rosters collapse, and this arm degrades to
+     exactly its pre-M0-18 behaviour — which is the honest degradation and is
+     asserted below rather than assumed. */
+  const PIN_HEAD_SAYS = PROV.inHead === null
+    ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so `pinned()` read the whole working tree and this is NOT a claim about any commit"
+    : `in the commit at HEAD (${PROV.headSha})`;
 
   const rows = [];
   for (const m of methods) {
@@ -662,14 +731,42 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
     }
     seq.forEach((s, i) => {
       if (!IDENTITY.test(m.body.slice(Math.max(0, s.at - 300), s.at))) return;
-      rows.push({ method: m.name, code: s.code, shadows: seq.length - 1 - i, pinned: pinned(s.code) });
+      rows.push({ method: m.name, code: s.code, shadows: seq.length - 1 - i,
+        pinned: pinned(s.code), pinnedTree: pinnedTree(s.code) });
     });
   }
   /* THE CORPUS IS FLOORED BEFORE ANY CLAIM IS MADE OVER IT. A walk that stopped
      yielding would otherwise report "nothing believed on half its evidence" and
-     read as good news — REC-70's blind ratchet, one instrument over. */
-  t("(the walk reached a real corpus: methods, and identity-flavoured refusals inside them)",
+     read as good news — REC-70's blind ratchet, one instrument over.
+     CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED, and the correction is about
+     WHICH corpus this arm floors: `methods` and `rows` are read out of
+     `STORE_BARE`, a `readFileSync` of ONE named path, so this line has never said
+     anything about the `readdirSync` of `test/` that feeds `pinned()`. The old
+     note at the `unpinned` arm claimed it did. The pin roster is floored
+     separately, immediately below, which is what that note was reaching for. */
+  t("(the walk reached a real corpus: methods, and identity-flavoured refusals inside them — read out of "
+  + "store.mjs by name, so this floor is NOT a statement about the test/ walk below it)",
     [methods.length >= 300, rows.length >= 90], [true, true]);
+  console.log(`  pin roster: ${TEST_FILES.length} suite(s) in test/ walked, ${TESTS_HEAD.length} of them `
+    + `${PIN_HEAD_SAYS} — \`pinned()\` reads THOSE`);
+  reportProvenance({
+    prov: PROV,
+    items: TEST_FILES.map((f) => ({ path: repoPath(REPO, join(DIR, f)), what: f,
+      counted: "read as a source of refusal-code pins" })),
+    instrument: "the pin roster walk",
+    corpus: `${TEST_FILES.length} suite(s) walked, ${TESTS_HEAD.length} of them in the commit`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "pinning suites", contaminated: TEST_FILES.length, reproducible: TESTS_HEAD.length, source: "suites" },
+    ],
+  });
+  /* AND THE PIN ROSTER REACHED SOMETHING. `pinned()` returning false for
+     everything makes `unpinned` GROW, which fails loudly — but it would fail
+     while naming eight codes rather than naming the blind walk, and the next
+     reader would go looking for the wrong defect. Floored so the blindness is
+     reported as blindness. */
+  t(`(and the PIN ROSTER reached a real corpus — a walk that read nothing would fail the arm below `
+  + `while naming codes instead of naming itself: ${TESTS_HEAD.length} suite(s) ${PIN_HEAD_SAYS})`,
+    TESTS_HEAD.length >= 50, true);
 
   const fences = rows.filter((r) => r.code.startsWith("MACHINE_CANNOT_"));
   t("the walk SEES the class it was built from — all twelve fences are identity guards it found",
@@ -680,6 +777,12 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
 
   const shadowing = rows.filter((r) => r.shadows >= 1 && !r.code.startsWith("MACHINE_CANNOT_"));
   const unpinned = [...new Set(shadowing.filter((r) => !r.pinned).map((r) => r.code))].sort();
+  /* M0-18: the same answer over the WHOLE working tree, kept so the DIFFERENCE
+     is nameable. A code in `pinnedOnlyByUncommitted` is one this checkout can
+     see pinned and no other checkout can — the phantom's signature, and the
+     thing the failure message must say instead of "a code went unpinned". */
+  const unpinnedTree = [...new Set(shadowing.filter((r) => !r.pinnedTree).map((r) => r.code))].sort();
+  const pinnedOnlyByUncommitted = unpinned.filter((c) => !unpinnedTree.includes(c));
   console.log(`  ${rows.length} identity-flavoured refusals across ${methods.length} methods; `
     + `${shadowing.length} of them shadow something and are NOT part of the twelve.`);
   console.log("  the ten deepest shadows outside the family, which is where this class lives next:");
@@ -706,14 +809,36 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
      THE EMPTY SET IS STILL A SET AND STILL FAILS IN BOTH DIRECTIONS. A ninth
      unpinned identity refusal appearing fails this arm; deleting REC-78's suite
      puts all eight back and fails it too, because `pinned()` reads `test/` and
-     nothing else. The corpus this is claimed over is floored above, so an empty
-     answer produced by a walk that went blind is caught before it gets here —
-     which is the one way an emptiness assertion could otherwise read as good
-     news. */
+     nothing else.
+
+     CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED, AND THE OLD NOTE HERE WAS
+     WRONG ABOUT WHICH CORPUS DEFENDED THIS ARM. It read: *"the corpus this is
+     claimed over is floored above, so an empty answer produced by a walk that
+     went blind is caught before it gets here."* The floor above is over
+     `methods` and `rows`, both read out of `store.mjs` BY NAME. The walk that
+     can go blind is the `readdirSync` of `test/` behind `pinned()`, and nothing
+     floored it. That floor now exists, immediately after the report — the note
+     was reaching for a defence that had not been built.
+
+     AND BLINDNESS WAS NEVER THIS ARM'S EXPOSURE ANYWAY. A pin roster that read
+     NOTHING makes `unpinned` GROW and fails loudly. What could pass quietly is
+     the opposite: an ARRIVAL. `pinned()` now asks `git ls-tree HEAD`, so a pin
+     living only in an uncommitted file no longer satisfies this set, and the
+     arm below names that case as itself rather than as a missing pin. The full
+     argument, its cost, and the one-line way to reverse it are at the pin roster
+     walk above. */
   t("the identity refusals that shadow something and that NO suite pins at all — MEASURED "
   + "2026-08-08 by REC-73, moved to EMPTY 2026-08-08 by REC-78 which pinned all eight, and this is "
-  + "a set rather than a count so it cannot drift either way",
+  + "a set rather than a count so it cannot drift either way. M0-18: a pin is a pin IN THE COMMIT, "
+  + `because a pin no other checkout can see is not one (${PIN_HEAD_SAYS})`,
     unpinned, []);
+  /* NAMED SEPARATELY so the two failures do not read alike. A code here is
+     pinned in this tree and in no commit — the arm above will already be red,
+     and this is the sentence that says WHY, so nobody goes looking for a missing
+     assertion that is sitting uncommitted in their own working directory. */
+  t("...and no code owes its pin to a file that is in no commit — a pin that arrived rather than being "
+  + "written here would satisfy the set above for free, which is D-238's payload in the generous direction",
+    pinnedOnlyByUncommitted, []);
 }
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);

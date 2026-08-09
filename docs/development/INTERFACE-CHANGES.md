@@ -2701,6 +2701,50 @@ CONSUMES `op=meaningrows`' existing `ids` restriction, which PL-9 already publis
 
 ---
 
+## IC-47 · I3: THE THREE RUN VERBS GAIN A REFUSAL CONDITION (C-22.8, project participation) AND AN ADDITIVE `projectGate` FIELD ON SUCCESS · PROPOSED 2026-08-09 (PL-18, enacting DEC-63) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the op contracts). **The op NAMES, ARGUMENTS and ANSWER SHAPES are unchanged.**
+  What changes is (a) WHICH CALLERS ARE REFUSED and (b) two additive fields.
+- **Proposer:** PL-18, 2026-08-09, worktree `agent-a4e2eff5ca09197e2`.
+- **Owner of the producer:** PLANE. **Consumers measured below.**
+
+### WHAT CHANGES
+
+1. **A NEW REFUSAL CONDITION on `op=airunopen`, `op=airuntick`, `op=airunclose`.** Bob ruled
+   2026-08-09 (DEC-63) that an investigation is started by ANY MEMBER OF THE PROJECT: the gate is
+   participation in the project the inquiry belongs to. A SESSION whose member has joined none of
+   the projects that draw on the run's context is now refused with **`code: "AI_RUN_NOT_PROJECT_MEMBER"`,
+   `check: "C-22.8"`**, its canned translation and a composed `detail`. `contribute` stays in `NEEDS`
+   as the FLOOR and refuses in its own separate words (`reason: "NOT_CAPABLE"`, carrying `needs`) —
+   **the two are deliberately NOT one refusal**, which is the item's whole content.
+2. **`projectGate` ON THE SUCCESS ANSWER of `airunopen` and `airuntick`** — `{ applied, ground, why,
+   projects }`. ADDITIVE, and it exists because DEC-17 says *"an inquiry outside any project has no
+   bar and inherits none"*: such a run is PERMITTED, and a permission nobody can see is
+   indistinguishable from a gate that never ran.
+3. **The refusal shapes reuse each op's OWN vocabulary** rather than introducing a fourth:
+   `started: false` at the open, `ticked: false` at the tick, `terminated: false`/`found: true` at
+   the close (`#aiRunTerminate`'s own shape).
+
+### MEASURED CONSUMER IMPACT
+
+**`agent-worker` — ZERO, and it is measured rather than assumed.** It is the only non-test consumer
+of these three ops (`src/index.mjs` calls `airuntick` and `airunclose`; `src/harness.mjs` declares
+all three). It authenticates with the **`ai` credential class**, which is a MACHINE credential:
+`index.mjs` computes `viaSession` false for every machine class, so `actor` is stamped EMPTY and the
+gate is NOT APPLIED — the ground `NO_MEMBER_BEHIND_CALLER`. **This is the same population the
+CAPABILITY floor already had** (`NEEDS` is enforced only `if (viaSession)`), so the gate is exactly
+as wide as the floor beneath it and no machine caller changes behaviour. Driven for a machine
+credential by ARM M of `bio-plane/test/airun-projectgate.test.mjs`; the `ai` class differs from it
+only in the `principal` stamp and not in `viaSession`. **The four fleet suites are green in the
+battery below and none moved.**
+
+**`civicos-ui` — NO CONSUMER TODAY, stated by the surface itself.** `app.html:16239`: *"`op=airunopen`
+has no UI consumer either, so this application never learns a…"*. The new code IS in the DEC-49
+guard's REACH count (218) because it is a family row; whether the surface should branch on it is a
+DELEGATION filed in `CLAIMS.md`, not an edit made here.
+
+**No schema change, no migration, no new op, no argument added or removed.**
+
 ## IC-41 · AN UNDECLARED CROSS-AREA COUPLING, NAMED BECAUSE IT BROKE: `bio-plane/test/airun.test.mjs` LIFTS `civicos-ui/app.html`'s RUNNING-SESSION RENDERERS BY FUNCTION NAME · PROPOSED 2026-08-08 (UI-38) — the RESOLUTION and any registration are CONDUCT's
 
 - **Interface:** **NONE — and that is the row.** `INTERFACES.md` registers I1–I8; not one of them

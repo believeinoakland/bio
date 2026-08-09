@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 1 and ARM 4 are armed on this file's harvest: a phantom is NAMED and does
+   not move the reproducible figure, and an uncommitted edit to a TRACKED file still counts.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* machinefences-dec49.test.mjs — REC-64 / DEC-49's ENACTMENT, pinned.
  *
  * WHAT THIS SUITE IS FOR, AND IT IS NOT "THE ROWS EXIST".
@@ -63,9 +74,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import * as CATALOGUE from "../checks/bio-checks.mjs";
 import { machineFences } from "../src/skillpack.mjs";
+/* M0-18 — ONE mechanism, imported. The reason ARM A1 needed it is at the walk. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, "..", "src");
+const REPO = path.join(HERE, "..", "..");            // bio-plane/test -> repo root
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -87,9 +101,40 @@ console.log("\nBLOCK A — the machine/member boundary, in words a member can re
      with its author at zero cost and this project has measured that five times
      — including a complete hand copy of 131 op names that PASSED. */
   const minted = new Set();
-  for (const f of fs.readdirSync(SRC).filter((f) => f.endsWith(".mjs")))
-    for (const m of fs.readFileSync(path.join(SRC, f), "utf8")
-                      .matchAll(/["'`](MACHINE_CANNOT_[A-Z0-9_]+)["'`]/g)) minted.add(m[1]);
+  /* M0-18: the walk keeps reading the WHOLE working tree, because a fence minted
+     in a file nobody has committed yet is a real fence and ARM A2 must still
+     demand a translation for it — that is the direction this suite must not
+     lose. `mintedRepro` is the same harvest over `git ls-tree HEAD` alone, and
+     it is what ARM A1's FLOOR is computed on: `refs/stash` is repository-wide
+     across all sixty worktrees, so an untracked `.mjs` beside `store.mjs` can
+     arrive from a tree that never wrote it (D-238), and an arrival can only push
+     a floor UP. */
+  const mintedRepro = new Set();
+  const srcFiles = fs.readdirSync(SRC).filter((f) => f.endsWith(".mjs"));
+  const PROV = readGitProvenance(REPO);
+  const inCommit = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, path.join(SRC, f)));
+  const perFile = {};
+  for (const f of srcFiles) {
+    const codes = [...fs.readFileSync(path.join(SRC, f), "utf8")
+      .matchAll(/["'`](MACHINE_CANNOT_[A-Z0-9_]+)["'`]/g)].map((m) => m[1]);
+    perFile[f] = codes.length;
+    for (const c of codes) { minted.add(c); if (inCommit(f)) mintedRepro.add(c); }
+  }
+  /* SAY UNVERIFIED, NEVER CLEAN (D-233) — in the assertion's prose, not only in
+     the report. */
+  const HEAD_SAYS = PROV.inHead === null
+    ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree harvest and is NOT a claim about any commit"
+    : `in the commit at HEAD (${PROV.headSha})`;
+  reportProvenance({
+    prov: PROV,
+    items: srcFiles.map((f) => ({ path: repoPath(REPO, path.join(SRC, f)), what: f,
+      counted: `${perFile[f]} fence literal(s)` })),
+    instrument: "ARM A1's fence harvest",
+    corpus: `${srcFiles.length} source file(s) in src/`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "distinct fence codes", contaminated: minted.size, reproducible: mintedRepro.size, source: "source files" },
+    ],
+  });
 
   const rows = new Map();          // code -> [family, ...]
   for (const [fam, table] of Object.entries(CATALOGUE)) {
@@ -102,9 +147,28 @@ console.log("\nBLOCK A — the machine/member boundary, in words a member can re
   }
   console.log(`  corpus: ${minted.size} fence code(s) minted in the plane; ${rows.size} carry a canned `
             + `translation across ${new Set([...rows.values()].flat()).size} family(ies)`);
+  console.log(`  corpus, REPRODUCIBLE: ${mintedRepro.size} of ${minted.size} fence code(s) are minted in files `
+            + `${HEAD_SAYS} — ARM A1's floor of 12 applies to THESE`);
 
-  t("ARM A1: the corpus is the TWELVE the plane actually mints — a walk that lost sight would "
-    + "report a smaller set and pass every arm below it", minted.size >= 12, true);
+  /* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED. The old arm floored
+     `minted.size` off a working-tree walk, so an untracked arrival raised the
+     number the floor is compared against — M0-15's phantom class, and the arm
+     whose whole subject is "a walk that lost sight would report a smaller set"
+     was the one that could be handed a LARGER one for free. ARM A2 below is
+     deliberately left over the CONTAMINATED `minted`, because a fence minted in
+     an uncommitted file still has to carry a translation and narrowing THAT
+     would be the hiding direction. */
+  t(`ARM A1: the corpus is the TWELVE the plane actually mints — a walk that lost sight would `
+    + `report a smaller set and pass every arm below it, floored over the codes another checkout `
+    + `REPRODUCES (${mintedRepro.size} of ${minted.size}, ${HEAD_SAYS})`, mintedRepro.size >= 12, true);
+
+  t("ARM A1b: the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never "
+    + "a silent third state, and under UNVERIFIED the two harvests COLLAPSE rather than the reproducible one "
+    + "quietly reading zero",
+    [PROV.inHead instanceof Set || PROV.inHead === null,
+     mintedRepro.size <= minted.size,
+     PROV.inHead === null ? mintedRepro.size === minted.size : true],
+    [true, true, true]);
 
   t("ARM A2: EVERY fence the plane can mint carries a canned translation. SK-1 measured eleven of "
     + "twelve carrying NONE; this is that measurement inverted and pinned",

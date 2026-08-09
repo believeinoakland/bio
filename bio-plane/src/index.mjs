@@ -1256,6 +1256,16 @@ const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
    same line one door over, and `taskenqueue` is not in OPS at all for the same
    reason `capturerequestdrain` is not in this list. */
 const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capturerequest"];
+/* PL-18 / DEC-63 — THE THREE RUN VERBS, AS THEIR OWN LIST, because Bob's
+   ruling is about exactly these three and not about the array above them.
+   `AI_RUN_ACTIONS` also carries `suggest` and `capturerequest`, which are acts
+   a run performs rather than the act of running, and neither is gated on
+   project participation: PL-3 and PL-4 settled their capabilities on their own
+   grounds and DEC-63 does not reach them. Writing the three as one named list
+   rather than as three literals at the stamp site is the same discipline
+   `QUEUE_ACTIONS` and `PROJECT_ACTIONS` keep — a fourth run verb should join
+   the gate by being added here, not by somebody remembering. */
+const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -1697,7 +1707,30 @@ const NEEDS = {
      The alternative — gate the open and leave the tick free — would mean a
      credential that may not start a run may still spend its budget and close
      it, which is the fence in the wrong place. The two READS are ungated by
-     capability and gated by VIEWER, like every other read here. */
+     capability and gated by VIEWER, like every other read here.
+
+     ***** PL-18 / DEC-63, 2026-08-09: THESE THREE VALUES ARE NOW A FLOOR AND
+     NO LONGER THE GATE, AND THE FLOOR IS THE SMALLER HALF. *****
+     IS-6 shipped `contribute` as a PROVISIONAL and asked Bob which capability a
+     run costs. He answered that it is not a capability question at all:
+     *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A PROJECT… the gate is
+     PROJECT MEMBERSHIP, not a capability tier — participation in the project
+     the inquiry belongs to is what licenses asking the system to look, and the
+     spend rides on membership the group already governs."*
+     So `contribute` STAYS HERE — unchanged, still enforced, and refusing in its
+     own words with `needs` on the answer — while the real gate is participation
+     in the project the run's context belongs to, checked in the store where the
+     citation graph and the participation rows are, and refused with its own
+     C-22.8 code and canned translation.
+     **THE TWO REFUSALS ARE DELIBERATELY NOT ONE.** *You are not in this
+     project* and *you lack contribute* are different facts about an account
+     with different remedies — an owner of that project invites you, or an
+     administrator grants a capability — and a single refusal covering both
+     would tell a member nothing they can act on.
+     The order is: this capability floor first (here, at the control plane),
+     then participation (in the store). A member who fails both is told about
+     the capability, because that is the refusal that fires first; neither
+     answer is ever both. */
   airunopen:        "contribute",
   airuntick:        "contribute",
   airunclose:       "contribute",
@@ -5921,6 +5954,43 @@ export default {
         viaSession ? `member:${sessMember}`
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
+       gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
+       can be started by ANY MEMBER OF THE PROJECT: the gate is participation in
+       the project the inquiry belongs to, with `contribute` (in NEEDS above)
+       kept as the FLOOR beneath it.
+       DELETED FIRST AND SET SECOND, the `ownerMemberId` discipline: a
+       caller-supplied `actor` would be a caller deciding whose membership is
+       checked, which is the whole gate handed to the person it gates.
+       A MACHINE CREDENTIAL STAMPS EMPTY rather than `class:<cls>` — the
+       QUEUE_ACTIONS precedent one stamp above — because participation is a
+       relationship between a PERSON and a project and a token class is not a
+       person. The store reads empty as *no participation to check* and does not
+       apply the gate, which keeps its population identical to the capability
+       floor's: `NEEDS` is enforced only `if (viaSession)` too. A fence wider
+       than the floor beneath it would refuse the daemon outright, and DEC-63
+       names the lever for the machine half explicitly and it is a different
+       one — *"any narrowing happens at the credential layer"*, IS-5's `ai`
+       credential scope.
+
+       ***** THE `delete` IS SCOPED TO THE THREE VERBS, AND IT IS SCOPED
+       BECAUSE AN UNSCOPED ONE BROKE `op=lease` — MEASURED, NOT REASONED. *****
+       `actor` IS NOT THIS ITEM'S PARAMETER NAME: `op=lease` has stamped its own
+       `actor` since REC-21's neighbourhood, forty lines above this. PL-18's
+       first draft deleted the key UNCONDITIONALLY, on the `ownerMemberId`
+       precedent — and `ownerMemberId` is a name only `promote` uses, which is
+       what makes that precedent safe and this copy of it wrong. The battery
+       caught it: `members.test.mjs`, *"session lease is stamped with the
+       member, not the claimed actor"*, one assertion, a lease arriving at the
+       store with its actor wiped. **A server-side stamp that clears a key it
+       does not own reaches every op that shares the name**, and the blast
+       radius of this class is the whole parameter namespace, not the op being
+       edited. Both halves now sit inside the guard, so nothing outside these
+       three verbs is touched. */
+    if (RUN_VERB_ACTIONS.includes(op)) {
+      inner.searchParams.delete("actor");
+      inner.searchParams.set("actor", viaSession ? sessMember : "");
+    }
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
      *

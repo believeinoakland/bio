@@ -5581,6 +5581,236 @@ address rather than through `hashchange`, and the substitution is labelled at th
 
 ---
 
+## M0-18 · the provenance floors in `bio-plane/`, 2026-08-09
+
+**Instruments:** `bio-plane/scripts/provenance.mjs` (via each suite), `npm run test:battery`,
+`node scripts/coverage.mjs --strict`, `node civicos-ui/test/run.mjs`,
+`bio-plane/test/provenance-floor.control.mjs`. **Tree:** `worktree-agent-a62aec7acd493144e`
+at `d579ae8`, a fast-forward to `main`.
+
+### The class, and what the sweep found
+
+A suite that reads its corpus off the WORKING TREE and then FLOORS on what it found. The
+brief named five instances plus one different exposure. **Measured, there are seven floors
+and one different exposure, and two of the floors the brief did not name.**
+
+| site | the floor | in the brief? |
+| --- | --- | --- |
+| `test/bounds.test.mjs` | `corpus > 200 files && > 5,000,000 chars` (whole repo) | yes |
+| `test/case-opened.test.mjs` | `corpus > 200 files && > 5,000,000 chars` (whole repo) | yes |
+| `test/identity-claims.test.mjs` | `files >= 24` **and `wide >= 80`** (`src/`+`checks/`) | partly — the second floor is at the same walk |
+| `test/machinefences-dec49.test.mjs` | `minted.size >= 12` (`src/`) | yes |
+| `test/planning-hygiene.test.mjs` | `found.length >= 2` (`docs/`) | yes |
+| `test/check-firing.test.mjs` | `estate.length >= 50` (7 roots) | **no** |
+| `scripts/op-claims.mjs` + `test/op-claims.test.mjs` | `files >= 300`, `chars >= 10,000,000`, `mentions >= 5000`, `names >= 150` | **no** |
+| `test/machine-fences.test.mjs` | *no floor* — the walk feeds `pinned()`, a SATISFACTION | yes, as the sixth |
+
+**`op-claims` is the one worth reading twice: the WALK and the FLOOR live in different
+files.** `hygiene.test.mjs`'s class census grades a file by whether IT contains a
+`readdirSync(`, so it named `scripts/op-claims.mjs` as merely *"reports a claim census"* and
+never enumerated `test/op-claims.test.mjs` at all. Four floors sat behind a walk the census
+had graded as harmless.
+
+### The figures, contaminated and reproducible, both printed at every site
+
+| site | contaminated | reproducible | floor moved? |
+| --- | --- | --- | --- |
+| bounds | 331 files / 12,355,924 chars | **331 / 12,355,924** | no |
+| case-opened | 331 files / 12,372,578 chars | **331 / 12,372,578** | no |
+| identity-claims | 27 files / 106 claim lines | **27 / 106** | no |
+| machinefences-dec49 | 12 fence codes | **12** | no |
+| planning-hygiene | 92 docs / 2 headings | **92 / 2** | no |
+| check-firing | **129 estate files** | **127** | no (floor 50, slack) |
+| op-claims | 456 files / 19,618,821 chars / 7,760 mentions / 204 names | **456 / 19,618,821 / 7,760 / 204** | no |
+| machine-fences (pin roster) | 193 suites | **193** | n/a |
+
+**NO FLOOR MOVED, and that is a measurement rather than nothing happening.** Six of the
+seven reproducible figures equalled their contaminated one on a clean tree, so there was
+nothing to move — which is what D-257 measured one estate over and is now measured twice.
+
+**THE SEVENTH DID NOT.** `check-firing.test.mjs`'s estate walk counted **129** files of
+which only **127** are in any commit: `agent-worker/.wrangler/cache/cf.json` and
+`pdf-worker/.wrangler/cache/cf.json`, wrangler's local cache, present only because a deploy
+ran on this machine. Not a stash phantom, and the same class — a printed corpus figure that
+no other checkout reproduces. The floor of 50 has enough slack that it did not move; the
+printed figure did.
+
+### `hygiene.test.mjs`'s class census — the matcher, measured before and after
+
+| | files matched |
+| --- | --- |
+| OLD (raw source, `readdirSync(` only) | 27 |
+| NEW (comment-blind, five primitives) | 27 |
+
+Same total, and **neither set is the other**: the widening ADDED
+`bio-plane/test/query-reach.report.mjs` (an `fs/promises` `readdir`, invisible to every
+previous run of this census) and the comment-blinding DROPPED
+`bio-plane/test/op-claims.test.mjs`, which had matched only on a *sentence describing the
+matcher*. Census GUARDED **3 → 11**; NAMED 18 → 16 (seven bio-plane entries removed as no
+longer applying, two added with their reasons).
+
+### `scripts/op-claims.mjs` and the dot-directory ruling
+
+`corpus()` descended into dot-directories where its two sibling whole-repo walks
+(`bounds`, `case-opened`) never would. **Measured cost of the new rule: ZERO tracked files.**
+The corpus holds 459 files on a tree with scratch present; exactly one tracked
+dot-DIRECTORY exists in this repository (`.claude/`, already skipped by name), and every
+other tracked dot-path is a FILE whose extension is not in `TEXT_EXT`. Corpus 459 → 456,
+the three lost being this item's own untracked scratch directory.
+
+### The gates
+
+| gate | result |
+| --- | --- |
+| `npm run test:battery` baseline | 139/139 green · **8,869** assertions · exit 0 |
+| `npm run test:battery` final | 139/139 green · **8,880** assertions · exit 0 |
+| per-suite attribution (re-run, never subtracted) | bounds +1, case-opened +1, check-firing +1, identity-claims +1, machine-fences +2, machinefences-dec49 +1, op-claims +2, planning-hygiene +2 = **+11**, and no other suite moved |
+
+**ONE OF THE ELEVEN IS NOT THIS ITEM'S GUARD AND IS ATTRIBUTED RATHER THAN ABSORBED.**
+`planning-hygiene` reads +2. An intermediate run measured it at +1; the second unit appeared
+when this item added the **D-265** row to `DEBT.md`, because that suite asserts one arm per
+open debt row. So: +1 from the provenance floor, +1 from a debt row this item wrote. Recorded
+because a delta nobody can account for is how a real one gets lost inside a plausible total.
+| `node scripts/coverage.mjs --strict` | exit **0**, read unpiped |
+| `node civicos-ui/test/run.mjs` (from repo root) | 42 harnesses, **all green**, exit 0 — but see below |
+| `node test/provenance-floor.control.mjs` | **58 of 58 as declared** |
+
+**THE UI HARNESS CAUGHT THIS ITEM, WHICH IS WHY WORKER.md SAYS TO RUN IT ANYWAY.** The first
+run was RED at 224/226: `civicos-ui/test/publishedcase.test.mjs` runs UI-40's consumer walk,
+which blanks COMMENTS and deliberately KEEPS STRINGS, and this item had written the field
+name `case` + `.` + `opened` as prose inside a STRING LITERAL in `test/case-opened.test.mjs`.
+The walk counted the sentence as a consumer of the very field that suite exists to prove
+nobody reads. **The walk was right and the prose was wrong**; it is reworded with the reason
+at the site, never exempted.
+
+## 2026-08-09 · PL-19 — DEC-65 shape (b): the single-part licence, measured at both sites
+
+Instrument: `bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict`,
+`bio-plane/test/dec65-single-part.control.mjs`, `civicos-ui/check-refusal-codes.mjs`, all run
+in worktree `agent-a875e2afd837947d7` at `7844e16`.
+
+### The battery
+
+Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT — the brief carried no figure, so there
+was nothing to agree or disagree with: **140 suites (136 plane + 4 fleet) · 140/140 green ·
+8,907 assertions · 135.9 s · exit 0.** The worktree arrived ONE MERGE BEHIND `main` (PL-17's)
+and WITHOUT `bio-plane/node_modules`; both were fixed before anything was measured.
+
+Final: **141/141 green · 8,953 assertions · 141.2 s · exit 0.** Delta **+46, attributed by
+DIFFING the two full runs PER SUITE and never by subtraction** — 135 of 139 shared suites
+byte-identical in count:
+
+| suite | before | after | why |
+| --- | --- | --- | --- |
+| `dec65-single-part.test.mjs` | (new) | 37 | this item's suite |
+| `hygiene.test.mjs` | 558 | 561 | its per-file walks gain rows for two new files |
+| `sufficiency-state.test.mjs` | 35 | 39 | §7's three superseded pins CORRECTED, one replaced by three |
+| `suggest.test.mjs` | 93 | 95 | CHECK 6's machine arm replaced by three, F10's count re-measured |
+
+### The floors, and one of them was already stale on arrival
+
+`REGISTER_FLOOR` **632 → 647 arms / 134 → 136 classified / 135 → 137 corpus**, all three in
+the same turn, from the figure a green `--strict` run PRINTED AS REPRODUCIBLE, read only
+after the new files were in a commit.
+
+**ONLY 7 OF THE 15 ARMS ARE THIS ITEM'S.** `main` at `8096452` was checked out into a scratch
+`git worktree` (never `git stash`) and `--strict` run there on a quiet tree with nothing
+uncommitted: **`arms 640/632 · classified 135/134 · corpus 136/135 · GREW by 8`**, provenance
+`146 of 146 discovered item(s) are in the commit at HEAD`, no contamination note. So the
+merged tree read **8 arms / 1 classified / 1 corpus above its own floor before PL-19 touched
+anything** — the sixth consecutive item to find a floor stale by measuring it. The cause is
+this block's oldest hazard in a subtler form: the VF-1/PL-17 collapse-to-one-key kept a
+figure true of one branch and never re-read it on the merge.
+
+`regionLines` **1407 → 1436** in `civicos-ui/check-refusal-codes.mjs`, and here the
+attribution is exact and the floor was NOT stale: `suggestVersion > is-suggest-checks` grew
+314L → 343L, and 1436 − 29 = 1407, the figure already in the file.
+
+### DEC-65's arithmetic argument, driven rather than restated
+
+The ruling rests on *with exactly one part there is no maximum to take*. Measured on the
+plane's own pair, through `op=suggest`, over the same single leg: a machine's single-part
+reading and a member's single-part reading both derive **`capture graded/B · connection
+unrated/null`** — identical. The state widens what the record can SAY and nothing about what
+it may CLAIM.
+
+### Three control arms that came back other than declared
+
+- **(2) the licence widened** — declared 1 failure, got 5. Widening the endpoint guard also
+  stops it refusing the zero-part and duplicate-label submissions, which then travel on to
+  `promote` and are refused there **in another family's words about a document the endpoint
+  had already composed**. The two sites are not redundant: the guard's job is to refuse the
+  ACT in the words of the act, the check's is to hold the BOUND at the document.
+- **(4) C-25.6's licence removed** — declared "the value is refused again"; it is not. With
+  `noClaim` false the machine arm asks only *non-blank and not a machine*, which the value
+  satisfies, so the patch returns C-25.6 to PL-17's inert state. **The check half's
+  contribution is the BOUND, not the admission** — the endpoint's stamp would land a
+  single-part reading either way.
+- **(5) PL-17's recorded WRONG FIX no longer works as a fix.** Adding `none:` to
+  `MACHINE_STAMP_PREFIXES` made `C-25.6` refuse the minted value while the check asked
+  `isMachineIdentity` directly. PL-19 asks `isSufficiencyUnclaimed`, and
+  `sufficiencyClaimState` tests the minted value BEFORE `isMachineIdentity` — so the value
+  is still admitted and only the identity pin falls. **PL-17's comment claims that arm
+  ordering is load-bearing; this is that claim measured against the exact patch it was
+  written to survive.** The one-line change is now purely a defect and buys nothing.
+
+### What the class sweep found, and what it could not see
+
+Over `checks/bio-checks.mjs` (528,453 chars) and `src/store.mjs` (1,511,107 chars), matching
+any statement that mentions an `asserted_by` within one statement of a judging predicate, on
+FLATTENED source: **4 sites — 3 in the catalog, 1 in the store.** One consumes the third
+state (C-25.6). **The declaration predicted ZERO in the store and was wrong**: the fourth
+site is the STAMP in `#suggestionPersisted`, which decides what goes INTO an `asserted_by`.
+**The matcher cannot see PL-3's endpoint guard at all** — that guard judges the SESSION and
+the PART COUNT and names no `asserted_by`, so it shares no shape with these sites. It is
+pinned structurally and DRIVEN through the op instead of being scored zero.
+## 2026-08-09 · PL-18 · TWO SWEEPS OVER THE PLANE, AND THE SECOND WAS EARNED BY A REGRESSION
+
+Instrument: two one-shot walks over `bio-plane/src/index.mjs` and `src/store.mjs`, run in
+worktree `agent-a4e2eff5ca09197e2` on a quiet tree. **Both are reported here rather than
+kept as suites, deliberately: neither answers a question that can go stale silently, and a
+new suite buys a ratchet three other items would then have to maintain.**
+
+### (1) WHICH ACTS CONSULT PROJECT PARTICIPATION AT ALL
+
+**Corpus: 74 ops in `NEEDS` · 184 routes in the Durable Object's dispatch table · 11
+consult participation · 56 do not · 7 UNCLASSIFIED AND NAMED** (`acquire`, `attest`,
+`capture`, `linkproject`, `monitor`, `promote`, `ratify` — each handled in `index.mjs`
+rather than through a named store method, so this walk cannot follow them and says so
+instead of scoring them zero).
+
+**The finding is the split, and it is sharper than the count.** Of the 11, EIGHT are the
+project ROSTER's own acts — invite, join, leave, remove, the three owner acts, fork. In
+other words, **before PL-18 participation was a fence over PARTICIPATION ITSELF and fenced
+no WORK anywhere in the plane.** The three that now do are DEC-63's run verbs. Every other
+corpus act — `cite`, `conclude`, `suggest`, the six version acts, `inquiryground`,
+`biasadopt` — is gated on a capability alone.
+
+**Reach, stated: the walk follows `this.#private(` calls TRANSITIVELY.** Its first shape
+read one level and **scored PL-18's own three verbs as ungated**, because their gate is
+reached through `#aiRunProjectGate`. A matcher that cannot see the fix it was written to
+check would report every properly-factored gate as absent, so the reach was INVERTED rather
+than taught the one name it was missing (REC-70's lesson). What it still cannot see:
+whether an op's subject is project-scoped at all (semantic), and `viewerPredicate` gating,
+which is a VISIBILITY fence and a different question from an authority one.
+
+### (2) SERVER-SIDE QUERY STAMPS THAT CAN COLLIDE — the sweep a regression earned
+
+PL-18 shipped an UNCONDITIONAL `inner.searchParams.delete("actor")` on the `ownerMemberId`
+precedent and **broke `op=lease`**, which has stamped its own `actor` since REC-21's
+neighbourhood. One assertion in `members.test.mjs` caught it. The precedent was safe and the
+copy of it was not, for a reason worth keeping: **`ownerMemberId` is a name only `promote`
+uses; `actor` is not.**
+
+**Corpus: 11 distinct query keys stamped server-side in `index.mjs` across 17 sites. FIVE
+keys are stamped from more than one site** — `actor`, `author`, `member`, `viewer`, `who`.
+**All of the other four are conditional SETs and none is a DELETE**, so the failure they
+could produce is an overwrite (loud, and caught by the op that loses its value) rather than
+a wipe. **After PL-18's fix there is no unconditional stamp of any kind in the file.**
+
+Cannot see: whether two sites naming one key are mutually exclusive by their conditions;
+keys stamped through a variable; and body-field deletions (`delete b.author` and its
+neighbours), which are the same class one layer over and were not walked.
 ## 2026-08-09 · PL-2 verification pass · one DEC-49 code, two conditions — the census
 
 **Instrument:** `bio-plane/test/dec49-onecode-twoconditions.sweep.mjs`, deliberately not a

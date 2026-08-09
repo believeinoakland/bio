@@ -279,6 +279,42 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
+  /* MOVED 2026-08-09 by PL-19 (DEC-65 shape (b)): 632 -> 647 / 134 -> 136 / 135 -> 137,
+     ALL THREE IN THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` RUN PRINTED AS REPRODUCIBLE (`arms 647/632 · classified 136/134 · corpus
+     137/135 · GREW by 15 arm(s)`), read only AFTER the new files were in a commit — the
+     pre-commit run reported these same numerals as CONTAMINATED, and a floor moved on
+     those is permanently too high. Never counted, never added to the numbers above.
+
+     **AND ONLY 7 OF THE 15 ARE THIS ITEM'S — THE FLOOR WAS ALREADY STALE ON ARRIVAL BY
+     8 ARMS / 1 CLASSIFIED / 1 CORPUS, WHICH IS RECORDED BECAUSE IT WAS MEASURED RATHER
+     THAN INFERRED.** `main` at `8096452` was checked out into a scratch `git worktree`
+     (never `git stash` — `refs/stash` is repository-wide across every checkout of this
+     clone) and `--strict` run there on a quiet tree with NOTHING uncommitted: it printed
+     `arms 640/632 · classified 135/134 · corpus 136/135 · GREW by 8`, with provenance
+     `146 of 146 discovered item(s) are in the commit at HEAD` and no contamination note
+     at all. So the merged tree read 8 arms above its own floor before PL-19 touched
+     anything — the collapse-to-one-key at the VF-1/PL-17 integration kept a figure true
+     of one branch and not of the merge, which is this block's oldest hazard arriving in
+     its subtler form: not a duplicate key, just a survivor that was never re-read.
+     THIS ITEM'S OWN 7 are one new suite, `test/dec65-single-part.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states SEVEN arms — a BASELINE, five break-it arms
+     and an OVER-STRICTNESS arm — so `corpus` and `classified` each rise by one and `arms`
+     by seven. Every one of those arms was RUN, through
+     `test/dec65-single-part.control.mjs`. Nothing FELL. */
+  /* PL-18, 2026-08-09 (worktree agent-a4e2eff5ca09197e2): 621 -> 631 / 133 -> 134 /
+     134 -> 135, ALL THREE MOVED IN THE SAME TURN and every one taken from the figure
+     THIS ITEM'S OWN GREEN RUN PRINTED (`arms 631/621 · classified 134/133 ·
+     corpus 135/134 · GREW by 10 arm(s)`), never by adding to the numbers above.
+     One new suite, `test/airun-projectgate.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states ten rows — the baseline plus the nine arms `test/nc-pl18.mjs`
+     drives — so `corpus` and `classified` each rise by one and `arms` by ten.
+     Nothing FELL. **THE FIGURES WERE READ AFTER THE SUITE WAS IN A COMMIT**, because
+     the register compares against the REPRODUCIBLE figure and an untracked suite is
+     not one: read before the commit, the same run printed the floors met EXACTLY with
+     nothing to collect, which is what an uncommitted suite looks like. */
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT to the merged tree's printed figures
+     after PL-18, PL-19, M0-18 and UI-44 (`GREW by 17 arm(s)`). */
   /* MOVED 654 -> 657, 2026-08-09, worktree agent-ae8e8c4d786783a6b (PL-2 verification
      pass), FROM THE FIGURE `--strict` PRINTED on a green run — `REGISTER FLOOR arms
      657/654 · GREW by 3 arm(s)` — and never by adding three to the number that was
@@ -289,9 +325,9 @@ const REGISTER_FLOOR = {
      being a measurement. ONE KEY SET, kept: WORKER.md records SIX keep-both merges that
      left duplicate `arms:` keys here, valid JavaScript where the last silently wins and
      once the last was the lowest. */
-  arms:       657,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  arms:       671,  // arms stated across the classified declarations
+  classified: 138,  // declarations the detector could count arms in
+  corpus:     139,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

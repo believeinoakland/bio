@@ -99,6 +99,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             index.mjs — it is now the same string rather than a proven-equal
             one. */
          isMachineIdentity, isMachineStamp,
+         /* PL-17 / PL-19 / DEC-65: the explicit "no independent-sufficiency
+            claim was made" value, IMPORTED from the one module that mints it so
+            the writer that stamps it and the check that reads it cannot drift
+            apart. `suggestVersion` stamps it under the single-part licence. */
+         SUFFICIENCY_UNCLAIMED,
          /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
@@ -215,7 +220,11 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             it wrong, and a hand copy of two words agrees with itself for free —
             which is the failure this repository has now measured six times. */
          RUN_CONTEXTS,
-         checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
+         checkObservation, checkCondition, checkBound, finishedBound,
+         /* PL-18: the project-membership gate, decided ONCE in `airun.mjs` for all
+            three run verbs rather than three times here — DEC-63's ruling that the
+            gate is participation and not a capability tier. */
+         projectGate } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -18986,12 +18995,19 @@ export class Store extends DurableObject {
 
     /* AND THE STRUCTURAL ASSERTION ONLY A MEMBER CAN MAKE. "These legs are
        enough on their own" is an authored judgment that makes a finding
-       STRONGER, and C-25.15 refuses it in a machine's name at the document gate.
+       STRONGER, and C-25.6 refuses it in a machine's name at the document gate.
        Here it is refused BEFORE the write, and `asserted_by` is STAMPED from the
        session rather than taken from the caller — a caller naming it would be a
        caller signing for somebody else. So the interactive mode (§10), running
        under a named member, may propose branches; the background job may not,
-       and its refusal says which act it is short of. */
+       and its refusal says which act it is short of.
+       THE C-NUMBER IN THIS BLOCK WAS WRONG UNTIL 2026-08-09 (PL-19). It read
+       C-25.15 in this comment and TWICE MORE in the refusal a caller reads.
+       C-25.15 is `VERSION_ORPHAN_ROW` — a row naming a version that is not
+       there — and is unrelated. The rule this guard stands in front of is C-25.6
+       / `VERSION_GROUND_UNASSERTED`. FL-3 found the same error in DEC-65's own
+       entry; it was corrected there and left here, where it was citing a member
+       at an unrelated rule. Corrected in the turn that changed the guard. */
     const who = String(args.author ?? "").trim();
     const groundsIn = Array.isArray(args.grounds) ? args.grounds : [];
     const declared = groundsIn.map((g) => str(g?.ground)).filter(Boolean);
@@ -19011,14 +19027,36 @@ export class Store extends DurableObject {
        carries is a claim only a member may sign. The interactive mode (§10)
        runs under a named member and can propose all five. */
     const needsPartition = legsIn.length > 0;
-    if ((declared.length || needsPartition) && (!who || isMachineIdentity(who)))
+    /* PL-19 / DEC-65 SHAPE (b) — THE SINGLE-PART LICENCE, AND THIS IS THE SITE
+       THAT FIRES FIRST. FL-3 measured that this arm refused on `legsIn.length >
+       0` — ANY leg at all, whatever the partition — so DEC-65's exemption
+       amended into C-25.6 alone would have landed, passed its own suite and
+       changed nothing a caller could reach. The two move together or neither
+       moves; that is the whole reason PL-19 is one item.
+       WHAT IS PERMITTED, AND NOTHING WIDER: a machine credential may now compose
+       a reading that declares EXACTLY ONE part. With one part there is no
+       maximum to take, so §12 derives the same conservative weakest-leg answer
+       either way and no member is credited with a structural claim they did not
+       make (DEC-65's arithmetic argument, and DEC-32's default is untouched).
+       TWO OR MORE PARTS IS STILL REFUSED, because there the maximum is live and
+       choosing which legs are separately sufficient is the authored act.
+       AN UNNAMED CREDENTIAL IS STILL REFUSED, separately from a machine one: the
+       licence is for the record saying `nobody claimed this` OUTRIGHT under a
+       named machine composer, never for the record not knowing who composed it.
+       DISTINCT, because a version does not earn the licence by declaring its one
+       part twice — and C-25.6 refuses the duplicate at the gate besides. */
+    const declaredParts = [...new Set(declared)];
+    const singlePart = declaredParts.length === 1 && declared.length === 1 && legsIn.length > 0;
+    if ((declared.length || needsPartition) && (!who || (isMachineIdentity(who) && !singlePart)))
       return remember(refusal("SUGGEST_UNWRITABLE_STATE",
         `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} `
         + `declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A `
         + `reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying `
         + `a part of an argument would carry the answer on its own is an authored judgment a named member `
-        + `signs for (C-25.15). A machine COMPOSES a reading and does not assert its structure — it may `
-        + `still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
+        + `signs for (C-25.6). A machine COMPOSES a reading and does not assert its structure — it may `
+        + `put everything it rests on into ONE part, where there is nothing to assert because there is no `
+        + `maximum to take, and it may still report that a level of the search is empty, which rests on `
+        + `nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }));
 
     /* CHECK 5 — NO BOILERPLATE. The placeholder defect at machine scale. Held to
@@ -19585,12 +19623,30 @@ export class Store extends DurableObject {
         level: opt(level), observed_at: opt(observed_at),
       },
       /* `asserted_by` is STAMPED from the session and written unconditionally,
-         so it is normalised unconditionally too — including the empty string a
-         machine-credential submission would carry, which the checks above refuse
-         before this is ever reached. */
+         so it is normalised unconditionally too — including the empty string an
+         unnamed submission would carry, which the checks above refuse before
+         this is ever reached.
+         PL-19 / DEC-65 — AND A MACHINE'S STAMP NEVER REACHES THIS FIELD. Under
+         the single-part licence a machine credential may now compose a reading
+         that carries a ground row, and the row is stamped with PL-17's explicit
+         no-claim value instead of the composer's machine identity. THAT
+         SUBSTITUTION IS THE ENTIRE POINT OF THE THIRD STATE: this field's
+         published meaning is *a member said this part is enough on its own*, so
+         `class:ai` standing in it would make the record claim something nobody
+         claimed — the overclaim class this project ranks worst, and worse than
+         the missing feature the exemption was reached for. The version's own
+         `author` still carries the machine identity, because WHO COMPOSED a
+         reading and WHO ASSERTED its structure are different facts and only the
+         second is a claim.
+         ASKED AS A PREDICATE, NOT MATCHED AS A LITERAL: `isMachineIdentity` is
+         the same one predicate the guard above and C-25.6 ask, so a new machine
+         spelling minted in the catalog reaches this stamp without this line
+         being edited. A blank author still stamps blank — `unstated` and
+         `unclaimed` are different findings and the guard refuses the blank. */
       grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
-        ground: fs(g.ground), asserted_by: fs(author ?? ""), at: fs(at),
-        statement: opt(g?.statement) })),
+        ground: fs(g.ground),
+        asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
+        at: fs(at), statement: opt(g?.statement) })),
       legs: (legs || []).map((l) => ({
         target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
         ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
@@ -20905,6 +20961,88 @@ export class Store extends DurableObject {
     });
   }
 
+  /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
+   *
+   * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
+   * PROJECT… the gate is PROJECT MEMBERSHIP, not a capability tier."* IS-6's
+   * provisional gated the three run verbs on `contribute` alone. That token
+   * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
+   * `NEEDS`, and it still refuses in its own words.
+   *
+   * THE DECISION IS NOT HERE. It is in `airun.mjs projectGate`, pure and shared
+   * by all three verbs. What lives here is the two DATABASE questions the pure
+   * function cannot ask: which projects hold this context, and which of those
+   * the account has joined.
+   */
+
+  /** WHICH PROJECTS HOLD THIS CONTEXT — the run's context resolved to the
+   *  projects whose participants may work on it.
+   *
+   *  A `project` context is its own project, and nothing else: a run opened
+   *  over a project is work in that project by definition.
+   *
+   *  An `inquiry` context is EVERY PROJECT THAT DRAWS ON IT, and it is a set
+   *  rather than a single id because `#moveVersionState` already states the
+   *  rule — *"an inquiry can sit beneath several projects and one team's
+   *  decision must never silently move another team's stance"*. Participation
+   *  in ANY ONE of them licenses asking the system to look at the question;
+   *  demanding participation in ALL of them would be a fence tighter than
+   *  DEC-63's rule, which says *a member of the project*, not *of every project*.
+   *
+   *  THE CITATION PREDICATE IS `#citesInto` AND NOT A SECOND QUERY. That helper
+   *  is the record's ONE answer to "who cites this, and is the citation live",
+   *  extracted precisely so retire's refusal and op=affordances' pre-flight
+   *  could not disagree. A raw `SELECT … FROM refs` here would have been a
+   *  third answer to the same question and would have counted SEVERED edges,
+   *  because the projection does not carry status: a project that WITHDREW from
+   *  a question would still have been licensing runs over it.
+   *
+   *  A context that is not a bundle at all yields an EMPTY set, which the gate
+   *  treats as projectless. That is the honest direction and it is not a hole:
+   *  a run's context is not required to be a bundle this store holds, and
+   *  refusing on a lookup that came back empty would be refusing on what cannot
+   *  be verified — a claim about the record made from a fact about our index. */
+  #runContextProjects(contextType, contextId) {
+    const id = contextId == null ? "" : String(contextId);
+    if (!id) return [];
+    if (String(contextType) === "project") {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+      return b && normalizeType(b.object_type) === "project" ? [id] : [];
+    }
+    return this.#citesInto(id).confirmed.filter((from) => {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
+      return !!b && normalizeType(b.object_type) === "project";
+    }).sort();
+  }
+
+  /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
+   *  object — `refusal` null or built, and a `ground` that is stated either way.
+   *
+   *  `#participation` is the record's existing membership predicate and is
+   *  CALLED rather than reimplemented, for the reason its own header gives: the
+   *  admin bypass came to sit on invite and remove with different shapes
+   *  because the test had two copies. */
+  #aiRunProjectGate({ actor, contextType, contextId }) {
+    const projects = this.#runContextProjects(contextType, contextId);
+    const who = actor == null ? "" : String(actor).trim();
+    const joined = who
+      ? projects.filter((p) => {
+          const part = this.#participation(p, who);
+          return !!part && part.state === "joined";
+        })
+      : [];
+    return projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
+  }
+
+  /** The gate's outcome as it travels on a SUCCESS answer. The refusal is
+   *  dropped (there is none) and the ground is kept, because DEC-17's
+   *  projectless permission is a fact about how the run was allowed to start
+   *  and a consumer that cannot see it cannot tell a permitted run from an
+   *  ungated one. Shaped in one place so all three verbs publish it alike. */
+  static #aiRunGateStated(g) {
+    return { projectGate: { applied: g.applied, ground: g.ground, why: g.why, projects: g.projects } };
+  }
+
   /** op=airunopen. Open a run over an inquiry or a project.
    *
    *  Every `conditions it was formed under` field §11 names is taken as given
@@ -20930,7 +21068,12 @@ export class Store extends DurableObject {
   aiRunOpen({ run, contextType, contextId, label = null, mode = null,
               principalPlane = null, principalClaude = null, principalClaudeRef = null,
               skillVersion = null, biasManifest = null, standardPair = null,
-              bounds = null, state = null, leaseMs = null, at = null } = {}) {
+              bounds = null, state = null, leaseMs = null, at = null,
+              /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
+                 `index.mjs` and empty for a machine credential. Never a
+                 caller's word — a principal a caller can name is not one, which
+                 is the rule the two `principal*` fields above already follow. */
+              actor = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = Store.#aiIso(nowMs);
     /* `started`, deliberately NOT `opened`. REC-58's consumer walk in
@@ -20960,6 +21103,32 @@ export class Store extends DurableObject {
                translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
                note: "a run needs an id and the context it runs in (an inquiry or a project): "
                    + "a run nothing is in the context of has nowhere to be visible" };
+    /* PL-18 / DEC-63 — THE GATE, AND IT RUNS BEFORE THE RUN'S OWN SHAPE IS
+       JUDGED. Placed here, immediately after the context is known and before
+       the principals and the skill version, on purpose: whether this account
+       may work on this question is a question about the CALLER, and answering
+       the shape questions first would tell somebody with no standing here
+       whether their skill version parses. Authority before shape is the
+       fail-closed order.
+
+       NO `DEC-49 REGION` MARKER HERE, AND THE ABSENCE IS DELIBERATE — it is a
+       correction this item's own guard run forced. The refusal is MINTED in
+       `airun.mjs projectGate`, whose row already claims it as a governed site;
+       this is a RELAY, exactly as the C-22.7 line four guards down relays
+       `skillpack.mjs`'s. A marker here would have declared a second governed
+       site for one refusal, and `check-refusal-codes.mjs` failed the harness by
+       name for precisely that: *a defence that is documented and not wired is
+       worse than a missing one.* The code stays a string literal where it is
+       written, which is the rule the marker exists to serve. */
+    const gate = this.#aiRunProjectGate({ actor, contextType, contextId });
+    if (!gate.permitted)
+      return { run, started: false,
+               code: gate.code, check: gate.check,
+               translation: gate.translation, detail: gate.detail,
+               note: "starting an investigation is licensed by PARTICIPATION IN THE PROJECT the "
+                   + "question belongs to (DEC-63, Bob 2026-08-09), and the contribute capability "
+                   + "is only the floor beneath that. These are two different facts about an "
+                   + "account and they are refused separately so each names its own remedy" };
     /* REC-64 — UI-38's §14a RIDER, DISCHARGED HERE AND NOT AT A SURFACE.
        §14a promises the running-session surface SAYS SO when the capability is
        unavailable, and IS-BUILD-PLAN's FL-6 row states the failure it is
@@ -21040,8 +21209,14 @@ export class Store extends DurableObject {
           b.unit == null ? null : String(b.unit));
       }
     });
+    /* PL-18: the gate's outcome travels on the SUCCESS answer too, and that is
+       the half DEC-17 makes necessary. A run over a projectless inquiry is
+       PERMITTED — *"an inquiry outside any project has no bar and inherits
+       none"* — and a permission nobody can see is indistinguishable from a gate
+       that never ran. Stating it is the same obligation as stating which
+       absence was found. */
     return { run, started: true, status: "running", ticks: 1, created: now,
-             expires: Store.#aiIso(nowMs + lease) };
+             expires: Store.#aiIso(nowMs + lease), ...Store.#aiRunGateStated(gate) };
   }
 
   /** op=airuntick. The heartbeat, the work list, and the log — one call.
@@ -21057,12 +21232,42 @@ export class Store extends DurableObject {
    *  refusal, following `saveCaptureSession`'s `{ saved: false }` precedent: it
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
-  aiRunTick({ run, state = null, consume = null, log = null, leaseMs = null, at = null } = {}) {
+  aiRunTick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
+              actor = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = Store.#aiIso(nowMs);
     const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
     if (!row) return { run: run || null, found: false,
       note: "no such run: it either never existed or was purged" };
+    /* PL-18 / DEC-63 — THE SAME GATE, AFTER THE RUN IS FOUND AND BEFORE
+       ANYTHING IS WRITTEN. Ordered this way deliberately: an unknown run is
+       answered as unknown to everybody, so the gate cannot be used to learn
+       which run ids exist. It reads the context OFF THE RUN ROW rather than
+       from the caller, because the caller does not name one here and a context
+       a caller could name would be a gate a caller could choose.
+
+       WHY THE TICK IS GATED AT ALL, which is IS-6's own argument for giving all
+       three verbs one capability: gating the open and leaving the tick free
+       would mean an account that may not START a run may still SPEND its budget
+       and drive it, which is the fence in the wrong place.
+
+       `ticked: false` IS DELIBERATELY THE FIRST BOOLEAN-SHAPED PROPERTY, ahead
+       of `found: true`, and it is not cosmetic. REC-76's arm C grades a return
+       by its FIRST boolean-shaped top-level property: a literal `true` there
+       declares a success and is NOT judged, so a refusal that leads with
+       `found: true` is invisible to the DEC-49 guard — which is precisely how
+       two codeless refusals sat unjudged in `aiRunOpen` until the classifier was
+       widened. The verdict of this return is that the tick did not happen.
+
+       A RELAY, not a governed site — see the note at `aiRunOpen`'s gate. */
+    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+    if (!gate.permitted)
+      return { run, ticked: false, found: true, status: row.status,
+               code: gate.code, check: gate.check,
+               translation: gate.translation, detail: gate.detail,
+               note: "continuing a run is licensed by PARTICIPATION IN THE PROJECT the run's question "
+                   + "belongs to (DEC-63), and the contribute capability is only the floor beneath "
+                   + "that. Nothing was appended and no budget was spent" };
     if (row.status !== "running")
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
@@ -21104,6 +21309,7 @@ export class Store extends DurableObject {
     const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
     return { run, found: true, ticked: true, ticks: after.ticks, status: after.status,
              expires: after.expires, appended, refused,
+             ...Store.#aiRunGateStated(gate),
              ...(ended ? { ended } : {}) };
   }
 
@@ -21111,8 +21317,41 @@ export class Store extends DurableObject {
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null } = {}) {
+  aiRunClose({ run, bound = null, condition = null, at = null, actor = null } = {}) {
     const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
+    /* PL-18 / DEC-63 — THE GATE, AND IT IS HERE RATHER THAN IN
+       `#aiRunTerminate` FOR A REASON WORTH STATING: that function is the ONE
+       exit and the REAPER goes through it too. A run killed mid-flight is
+       closed by the alarm, where no member is asking and no participation could
+       be checked; putting the gate on the shared exit would have made the gate
+       a fact about the clock. So the MEMBER'S door is gated and the machine's
+       exit is left alone — the two paths still terminate through one function,
+       which is what `airun.test.mjs` exists to hold.
+
+       An unknown run is left to `#aiRunTerminate`'s own not-found answer, the
+       same ordering the tick uses: the gate never tells a caller whether a run
+       id exists.
+
+       A RELAY, not a governed site — see the note at `aiRunOpen`'s gate. */
+    const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
+    if (row) {
+      const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+      if (!gate.permitted)
+        /* THE SHAPE IS `#aiRunTerminate`'S OWN — `found` / `terminated`, with
+           the refusal spread beside them — because this refusal comes out of
+           the same door as that function's four and a second vocabulary for one
+           op's failures is a second thing every consumer must learn. And
+           `terminated: false` leads, ahead of `found: true`, for the reason
+           stated on the tick's gate: the guard grades the FIRST boolean-shaped
+           property, and a refusal that leads with a literal `true` is a refusal
+           the guard reads as a success. */
+        return { run, terminated: false, found: true, ok: false,
+                 code: gate.code, check: gate.check,
+                 translation: gate.translation, detail: gate.detail,
+                 note: "closing a run is licensed by PARTICIPATION IN THE PROJECT the run's question "
+                     + "belongs to (DEC-63), and the contribute capability is only the floor beneath "
+                     + "that. The run is untouched and is still running" };
+    }
     return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
   }
 
@@ -24088,10 +24327,19 @@ export class Store extends DurableObject {
            decision (D-15's fail-closed, the same rule op=queue states). The two
            PRINCIPALS on the open are stamped server-side too, for the reason §14a
            gives — a principal a caller can name is not a principal. */
+        /* PL-18 / DEC-63: `actor` is the third server-side stamp on this
+           surface, beside `principal` on the open and `viewer` on the two
+           reads. It is read from the QUERY rather than from the body for
+           exactly the reason `principal` is — a body is the caller's, and a
+           gate that trusts the caller's word about who they are is not a
+           gate. Empty means no member is behind this call. */
         airunopen: () => this.aiRunOpen({ ...(body || {}),
-                                          principalPlane: url.searchParams.get("principal") }),
-        airuntick: () => this.aiRunTick(body || {}),
-        airunclose: () => this.aiRunClose(body || {}),
+                                          principalPlane: url.searchParams.get("principal"),
+                                          actor: url.searchParams.get("actor") }),
+        airuntick: () => this.aiRunTick({ ...(body || {}),
+                                          actor: url.searchParams.get("actor") }),
+        airunclose: () => this.aiRunClose({ ...(body || {}),
+                                            actor: url.searchParams.get("actor") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),

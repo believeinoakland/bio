@@ -289,3 +289,65 @@ suite pins that.
 **The seventh router.** `stanceRouteFromHash` is classified POST-AUTHENTICATION in
 `preauth-vocabulary.test.mjs` WALK 2, both halves pinned. That arm fired on this item's first run,
 which is the third consecutive time it has stopped a router arriving unclassified.
+
+## UI-44 — the connections sidebar (DEC-52 final). Appended 2026-08-09, NOT a rewrite: UI-43 and UI-45 are live in the same file
+
+**WHAT LANDED.** The connections sidebar on the running-session surface, as
+`IS-BUILD-PLAN.md` UI-44 scopes it and DEC-52 (final, 2026-08-07) governs it:
+connections the machine identifies land MACHINE-ATTRIBUTED and the sidebar is a
+VISIBILITY and BULK-REVIEW surface, **not a required approval gate**. It is a new
+region inside the existing `__AI_SESSION_*` block plus one expression in
+`aiSessionPanelHtml`; the paths and the line-level detail are in `CLAIMS.md`.
+
+**IT SHIPPED FIXTURE-VERIFIED, AND THAT IS THE FIRST THING THE NEXT SESSION MUST
+KNOW.** No op publishes a machine connection. The post-processing task scope that
+would produce one has no item and does not exist. What is verified is HOW THIS
+SURFACE TREATS a machine-attributed connection; what is NOT verified is that one
+exists to treat. The suite states it in its first paragraph, prints it in its
+FOOT on every run, and — the part that matters — **MEASURES it**: SECTION 0 reads
+`aiRunRead`'s own body out of `bio-plane/src/store.mjs` and fails the day the
+producer lands, so the caveat expires by itself instead of being inherited.
+
+**THREE THINGS THIS AREA SHOULD CARRY FORWARD.**
+
+- **A D-82 DRESS IS NOT ONE SENTENCE FOR EVERY DERIVED THING.** The proposal
+  badge says *nobody has yet decided this is worth pursuing… it changes nothing
+  until a person acts on it*. That is TRUE of a proposal and FALSE of a
+  connection the machine was licensed to rule on, which is in the record and
+  which the record already stands on. Reusing it would have been cheap and would
+  have made the surface lie in the safe-sounding direction. Two claims, two
+  sentences, one rule: say what the record actually did.
+- **ATTRIBUTION IS FOUND BY THE SHAPE OF A VALUE, NEVER BY A FIELD NAME OR A WORD
+  LIST.** The surface asks the same question REC-46 made the plane ask once: did
+  the CONTROL PLANE mint this identity. So a producer publishing the principal
+  under a key nobody anticipated, nested inside an array, is still attributed —
+  driven as the over-strictness arm. The two prefixes are the one thing copied
+  from the plane, and `MACHINE_STAMP_PREFIXES` is imported LIVE and compared, so
+  a third spelling fails the build here rather than un-attributing a machine.
+- **THE ANTI-GATE ARM IS AN EQUALITY, AND IT IS THE STRONGEST THING IN THE SUITE.**
+  Render with nothing selected and with everything selected; strip the selection
+  controls; every word about what each connection is and who made it must be
+  BYTE-IDENTICAL. A surface where review changed a connection's standing cannot
+  pass it. Under the superseded provisional that arm would have been the opposite
+  assertion — and it is corrected in place, with its date and its reversal
+  written out, rather than deleted.
+
+**ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.**
+`ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record
+did not publish*, over every function in the AI-session block. That is right
+about the RUN — IS-6 publishes its own vocabulary — and it is the WRONG RULE the
+moment the block hosts D-82's dress, which by definition says something the
+record cannot say about itself. Left standing it would have made delivering D-82
+fail the build. The replacement partitions by REGION MARKER rather than by a list
+of names, falls back to sweeping the WHOLE block when the marker is missing (a
+deleted marker fails loudly instead of widening the excuse silently), and requires
+the held-out region to be graded by this item's suite. Same correction ARM C2 took
+from UI-49, one arm over, and for the same reason.
+
+**TWO THINGS THIS ITEM DELIBERATELY DID NOT ADD, because both are traps this area
+keeps meeting.** No new ROUTER — the sidebar is reached at the `#session/<id>`
+address that already exists, so nothing new needed classifying by
+`preauth-vocabulary`. No new PLANE READ — the sidebar renders the run object
+`op=airun` already answered, so there is no explicit ask to state and no applied
+bound to report, and `bound-sweep`'s two walks see nothing new. Both were
+choices, not omissions.

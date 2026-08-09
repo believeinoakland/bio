@@ -658,7 +658,54 @@ console.log("\n--- ARM S · the sweep: every visible token is a published value 
   const blockM = /\/\*__AI_SESSION_START__\*\/([\s\S]*?)\/\*__AI_SESSION_END__\*\//.exec(app);
   ok("ARM S0: the AI_SESSION block markers were found", !!blockM);
   const block = blockM ? blockM[1] : "";
-  const stripped = block.replace(/\/\*[\s\S]*?\*\//g, "");
+  const strippedWhole = block.replace(/\/\*[\s\S]*?\*\//g, "");
+
+  /* ============================================================
+     ARM S IS CORRECTED IN PLACE 2026-08-09 (UI-44), WITH ITS REASON, AND IS
+     NOT EXEMPTED. IT WAS RIGHT WHEN WRITTEN AND IS THE WRONG RULE NOW.
+
+     What it asserted, over every function in the block: *the surface renders
+     nothing the record did not publish.* That is exactly right about the RUN,
+     and it is right for the reason UI-38/UI-47/UI-49 kept saying — IS-6
+     publishes the run's own vocabulary, its condition sentence and its bounds,
+     so a word this surface contributed about a RUN would be a word the record
+     could not stand behind.
+
+     UI-44 puts a SECOND SUBJECT in this block: the connections sidebar
+     (DEC-52, ruled final 2026-08-07). Its governing rule is D-82 — a
+     machine-identified connection must LOOK machine-identified — and D-82 is
+     satisfied only by saying something the record cannot say about itself. No
+     producer publishes a connection at all today, so there is no published
+     wording to render and there is nothing to render verbatim. **Left standing,
+     ARM S5 would have made delivering D-82 FAIL THE BUILD**, which is the
+     inversion `CLAUDE.md`'s correct-superseded-tests rule exists to prevent and
+     is the same correction ARM C2 took from UI-49 one arm over.
+
+     THE REPLACEMENT IS NARROWER AND STRUCTURAL RATHER THAN WEAKER.
+       - The partition is by REGION MARKER, never by a list of function names. A
+         function added to this block tomorrow is swept exactly as before; only
+         what sits between `__AI_CONNECTIONS_START__` and `__AI_CONNECTIONS_END__`
+         is judged by a different rule, and that region is a thing you have to
+         write on purpose.
+       - If the markers are ABSENT the corpus is the WHOLE block again, so a
+         deleted or renamed marker fails loudly instead of silently widening the
+         carve-out. ARM S7 asserts the region was actually found.
+       - ONE CONSEQUENCE, NAMED NOW RATHER THAN DISCOVERED LATER: the panel is
+         still swept, and the panel composes the sidebar. Today the sentinel run
+         carries no connections collection — no op publishes one — so the sidebar
+         contributes nothing to the sweep. **The day a producer lands, this arm
+         goes RED on `aiSessionPanelHtml`**, and that is the safe direction: it
+         forces the next session to re-take this partition against a world where
+         a connection is a published thing, instead of inheriting a decision made
+         when it was not.
+       - The carve-out is not a hole: ARM S8 requires the connections region to
+         be graded by `connections-sidebar.test.mjs`, which pins its two authored
+         sentences VERBATIM. That is STRICTER than this token sweep, which would
+         have accepted any rewording of them.
+     ============================================================ */
+  const CONN = /\/\*__AI_CONNECTIONS_START__\*\/([\s\S]*?)\/\*__AI_CONNECTIONS_END__\*\//.exec(block);
+  const connRegion = CONN ? CONN[1] : "";
+  const stripped = (CONN ? block.replace(CONN[0], "") : block).replace(/\/\*[\s\S]*?\*\//g, "");
 
   /* THE WALK — DISCOVERED, NEVER TYPED, AND CLASSIFIED BY DRIVING. UI-46
      measured that a walk matching a SPELLING goes blind the moment the spelling
@@ -666,7 +713,9 @@ console.log("\n--- ARM S · the sweep: every visible token is a published value 
      the corpus is every function DECLARED in the block, and what each one IS is
      decided by CALLING it and looking at what comes back. */
   const declared = [...stripped.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]);
-  console.log(`  ARM S corpus: ${stripped.length} chars of comment-stripped block, ${declared.length} functions declared — ${declared.join(", ")}`);
+  const connDeclared = [...connRegion.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]);
+  console.log(`  ARM S corpus: ${stripped.length} chars of comment-stripped RUN-RECORD block (of ${strippedWhole.length} whole), ${declared.length} functions declared — ${declared.join(", ")}`);
+  console.log(`  ARM S carve-out (UI-44): ${connRegion.length} chars of connections region held out, ${connDeclared.length} functions — ${connDeclared.join(", ") || "none"}`);
   ok(`ARM S1 (REACH): the walk found ${declared.length} functions in the block, floor 8 — a walk over nothing passes everything`,
      declared.length >= 8);
   /* RESOLVED FROM THE VM CONTEXT, NOT FROM THIS FILE'S EXPORT LIST. A top-level
@@ -753,6 +802,25 @@ console.log("\n--- ARM S · the sweep: every visible token is a published value 
     .filter(tk => !SENT.includes(tk) && !PUBLISHED_KEYS.has(tk.toLowerCase()));
   eq("ARM S6 (the sweep's own polarity): a planted word that the record did not publish IS caught by the same "
      + "classifier the real corpus went through", plantedStrays, ["an-invented-word"]);
+
+  /* ---- THE TWO ARMS THAT MAKE THE 2026-08-09 CORRECTION SOUND (UI-44) ----
+     A carve-out nobody checks is an exemption. These two are what stop it being
+     one, and they run on every pass rather than when somebody remembers. */
+  ok(`ARM S7 (UI-44, REACH ON THE CARVE-OUT): the connections region was FOUND and held out — ${connRegion.length} chars, `
+     + `${connDeclared.length} functions, floors 200 and 4. If the markers were ever deleted or renamed this arm goes RED and `
+     + `the whole block falls back under S5, which is the safe direction: a missing marker must never silently widen what is `
+     + `excused from the sweep`,
+     !!CONN && connRegion.length >= 200 && connDeclared.length >= 4);
+  /* AND IT IS GRADED SOMEWHERE STRICTER. S5 would accept ANY rewording of the
+     dress; the sidebar's own suite pins both sentences VERBATIM, so the words a
+     member reads about who acted cannot drift by one character without failing.
+     Asserted by READING that file rather than by trusting it exists. */
+  const CONN_SUITE = new URL("./connections-sidebar.test.mjs", import.meta.url);
+  const connSuite = fs.existsSync(CONN_SUITE) ? fs.readFileSync(CONN_SUITE, "utf8") : "";
+  const ungraded = connDeclared.filter(f => !connSuite.includes(f));
+  eq(`ARM S8 (UI-44): every function held out of S5 is NAMED by connections-sidebar.test.mjs, which grades it against `
+     + `D-82 and DEC-52-final rather than against the run's published vocabulary. A held-out function nobody grades is `
+     + `the exemption this correction refuses to be`, ungraded, []);
 }
 
 /* ============================================================

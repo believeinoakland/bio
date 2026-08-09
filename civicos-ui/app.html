@@ -94,6 +94,30 @@ html,body{margin:0;min-height:100vh}
    could carry a judgement the record did not make. */
 .ai-panel .ai-bound .ai-bound{flex-basis:100%;margin-left:14px;border-left:1px solid var(--rule);padding-left:8px}
 
+/* ---- the connections sidebar (UI-44, DEC-52 final) ----
+   STRUCTURE ONLY, and that is a doctrine constraint rather than a taste one.
+   Nothing here encodes a judgement: no colour that reads as good or bad, no
+   state that reads as pending, no emphasis that ranks one connection above
+   another. The ONE thing the styling is allowed to carry is the D-82
+   distinction — a connection the machine identified must be VISIBLY that — and
+   it carries it with a rule and a label rather than with a colour a member
+   would have to be told how to read. */
+.ai-conns{border:1px solid var(--rule);padding:10px;margin:10px 0}
+.ai-conns .ai-conns-head{font-size:13px;font-weight:600;margin-bottom:8px}
+.ai-conn{border-top:1px solid var(--rule);padding:8px 0;font-size:13px}
+.ai-conn:first-of-type{border-top:0}
+.ai-conn-sel{margin-right:8px}
+/* THE DERIVED DRESS (D-82). It is a LEFT RULE and a label, and it exists so a
+   machine-identified connection cannot be read as a member's judgement at a
+   glance. Removing this rule leaves the label, which is why the suite's D-82
+   arm reads the LABEL and not the class — a dress that could be undone by a
+   stylesheet is not a dress. */
+.ai-conn.ai-conn-machine{border-left:3px solid var(--signal);padding-left:8px}
+.ai-conn .ai-conn-dress{display:block;font-size:12.5px;color:var(--signal-dk);margin-bottom:4px}
+.ai-conn .ai-conn-who{font-family:var(--font-fact)}
+.ai-conns .ai-conns-review{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ai-conns .ai-conns-note{font-size:12.5px;color:var(--muted);margin-top:6px}
+
 /* ---- connect gate ---- */
 #gate{max-width:440px;margin:9vh auto;padding:0 24px}
 #gate .mark{font-family:var(--font-record);font-size:26px;font-weight:600;margin-bottom:6px}
@@ -2093,7 +2117,7 @@ const SURFACES = {
     kind: "ai-session",
     consumers: ["assistant", "investigative-session"],
     routes: ["hash:session"],
-    purpose: "One running AI session as it runs: that a job is running in this context, the bound it is running under, what it has consumed of that bound so far, and which account is paying. Clicking the indicator opens the live transcript, which is device-local (DEC-61) and therefore readable only on the device that ran it.",
+    purpose: "One running AI session as it runs: that a job is running in this context, the bound it is running under, what it has consumed of that bound so far, and which account is paying. Clicking the indicator opens the live transcript, which is device-local (DEC-61) and therefore readable only on the device that ran it. It also carries the connections the session found (DEC-52 final, UI-44): each one shown as the record holds it, a machine-identified connection visibly the machine's and naming the principal the record named, reviewable one at a time or as a set — visibility and review, never a gate, because a connection the machine was licensed to rule on is already in the record.",
     levels: [],
     acts: [],
     /* ~~NO OP IS NAMED, AND THE ABSENCE IS THE POINT.~~ **SUPERSEDED 2026-08-07
@@ -16606,8 +16630,286 @@ function aiSessionPanelHtml(session, transcript){
   if(!session) return "";
   const lines = Array.isArray(transcript) ? transcript : [];
   const body = lines.map(l=>`<div class="mono">${esc(typeof l==="string"?l:JSON.stringify(l))}</div>`).join("");
-  return `<div class="ai-panel">${aiSessionBlockHtml(session)}${body}</div>`;
+  /* UI-44: the connections sidebar hangs HERE and nowhere else. DEC-52's
+     mechanism puts it *"in a sidebar of the session"*, and §14a's running-session
+     surface is that session's surface — so the sidebar is a part of this panel
+     rather than a second surface, and `SURFACES["ai-session"].kind` keeps its
+     promise that there is exactly one surface of this kind. */
+  return `<div class="ai-panel">${aiSessionBlockHtml(session)}${aiConnectionsSidebarHtml(session)}${body}</div>`;
 }
+
+/*__AI_CONNECTIONS_START__*/
+/* ============================================================
+   THE CONNECTIONS SIDEBAR — UI-44, and its governing decision is DEC-52 as
+   FINALLY RULED on 2026-08-07.
+
+   ---- WHAT WAS RULED, AND WHAT IT REVERSED ----
+
+   Bob, 2026-08-07: *"allowing the machine to rule doesn't go against doctrine.
+   So it can rule."* A machine credential MAY declare a relation, resolve a
+   reference and thread a progression DIRECTLY INTO THE RECORD. The earlier
+   provisional — Bob's own 2026-08-06 mechanism, *identify -> present -> the
+   member approves, individually or in bulk*, read as making the sidebar's
+   approval the ACT OF RECORD — is **SUPERSEDED AS A GATE**. The sidebar remains
+   VISIBILITY and BULK REVIEW.
+
+   That reversal is the single most important thing about this file, because the
+   surface it produces is almost the same surface either way and the difference
+   is invisible unless it is said. Under the provisional, a connection on this
+   sidebar had NOT happened yet and the member's click is what made it real.
+   Under the ruling, a connection on this sidebar HAS happened, the record
+   already stands on it, and the member's review changes nothing about whether it
+   stands. **A surface that rendered the second as though it were the first would
+   be telling a member the record is waiting for them when it is not** — and it
+   would be doing so in the direction this project ranks worst, since a member
+   who believes nothing is in the record until they say so will not go looking
+   for what is already in it.
+
+   `docs/development/INVESTIGATIVE-SESSION.md` still carries the superseded
+   provisional in its own words at two sites (the `[BOB-4]` tier text, §14a and
+   the open-questions list). That is F9 in `FINDINGS-WORKPLAN.md`, it is a
+   design-doc correction that the plan places on W0's lanes rather than here, and
+   it is DELEGATED in `CLAIMS.md` rather than edited by this item.
+
+   ---- WHAT THE ATTRIBUTION IS FOR, AND IT IS THE WHOLE ITEM ----
+
+   D-82: machine work must LOOK DERIVED. DEC-52's ruling carries with it, from
+   standing doctrine, that the record NAMES the machine principal on every such
+   act (`token:<class>`, never a person's name) and that a machine-declared
+   statement is visibly machine-attributed. **A machine-identified connection
+   must never read as a member's judgement.** That is not a discount on the
+   connection — a machine's A-tier correspondence is exactly as strong as the
+   evidence makes it — it is the difference between two claims the record must
+   never let a reader confuse.
+
+   ---- HOW A MACHINE IS RECOGNISED HERE: BY SHAPE, NEVER BY A LIST ----
+
+   REC-46 measured that this plane once had THREE unrelated ways of asking "is
+   this a machine", and that a word list let `token:member` through the door that
+   refused `agent`. The fix there was ONE predicate over the CONTROL PLANE'S OWN
+   MINT PREFIXES, and this surface asks the same question the same way: a value
+   is a machine identity IF THE CONTROL PLANE MINTED IT, which is a property of
+   its shape. So this block holds no list of class words, no list of field names,
+   and no opinion about which key an identity arrives under — it walks what the
+   record published, at every depth, exactly as `aiSessionBlockHtml` does, and
+   recognises a mint wherever it stands.
+
+   THE TWO PREFIXES ARE THE ONE THING COPIED FROM THE PLANE, AND THE COPY IS
+   PINNED. A browser cannot import `bio-plane/checks/bio-checks.mjs`, so
+   `AI_CONNECTION_MINT_PREFIXES` is this file's copy of `MACHINE_STAMP_PREFIXES`
+   — and `connections-sidebar.test.mjs` imports that export LIVE and asserts the
+   two are the same set, so the control plane minting a third spelling FAILS THE
+   BUILD here rather than silently un-attributing a machine. That is the pattern
+   `ai-session-context.test.mjs` established for `RUN_STATUS`.
+
+   ---- TWO STATES, NOT THREE, AND THE SECOND ONE IS STATED RATHER THAN BLANK ----
+
+   A connection either carries a control-plane mint or it does not. It is
+   tempting to call the second case "a member declared it" — and this surface
+   MUST NOT, because it cannot see that. What it can see is that the record
+   published no machine identity on this row, and undetermined is first-class and
+   must be STATED (`CLAUDE.md`). Rendering nothing would be worse than either: an
+   undressed row reads as a member's by default, which is precisely the confusion
+   D-82 exists to prevent.
+
+   ---- FIXTURE-VERIFIED, AND SAYING SO IS PART OF SHIPPING IT ----
+
+   **NO OP PUBLISHES A MACHINE CONNECTION TODAY.** `op=airun` answers the run and
+   its conditions; the post-processing task scope that would produce live machine
+   connections HAS NO ITEM (`IS-BUILD-PLAN.md`'s own verdict, and `QUEUE.md`
+   records it as the one flagged follow-up). The plan's instruction is that UI-44
+   either waits for it or SHIPS FIXTURE-VERIFIED. This ships fixture-verified:
+   the renderers below are driven by this item's suite against fixtures, and what
+   is verified is HOW THIS SURFACE TREATS a machine-attributed connection, never
+   that one exists. Nothing here was built against a wire, and no plane read was
+   added — this sidebar renders the run object `aiSessionRead` already fetched.
+
+   `AI_CONNECTIONS_KEY` is the ONE field name this block knows, and it is the
+   seam, declared once for the same reason `aiSessionRead` is one function: when
+   the producer lands, one line changes and every renderer and every pin below
+   stays as it is. If the producer chooses a different key, THIS LINE is the
+   whole cost.
+   ============================================================ */
+const AI_CONNECTIONS_KEY = "connections";
+/* The control plane's own mint prefixes — `MACHINE_AUTHOR_PREFIX` and
+   `MACHINE_CLASS_PREFIX` in `bio-plane/checks/bio-checks.mjs`, pinned live by
+   this item's suite. Case-folded on comparison for the same reason the plane
+   folds: at a gate the value is hand-written and `Token:ai` is the same claim. */
+const AI_CONNECTION_MINT_PREFIXES = ["token:", "class:"];
+
+/* Every value on this connection that the CONTROL PLANE minted, VERBATIM and in
+   publication order, at every depth. Field-name-blind: an identity is found by
+   the shape of its value, so a producer that publishes the principal under a key
+   nobody here anticipated is still attributed. */
+function aiConnectionMachinePrincipals(conn){
+  const out = [];
+  const walk = (node) => {
+    if(!node || typeof node !== "object") return;
+    for(const v of Object.values(node)){
+      if(v && typeof v === "object"){ walk(v); continue; }
+      if(typeof v !== "string") continue;
+      const s = v.trim().toLowerCase();
+      if(s && AI_CONNECTION_MINT_PREFIXES.some(p => s.startsWith(p)) && !out.includes(v)) out.push(v);
+    }
+  };
+  walk(conn);
+  return out;
+}
+
+/* The whole attribution question, answered in one place so no renderer below
+   forms its own opinion. `machine` is true when the record named a machine on
+   this connection; `principals` are the record's own words for it. */
+function aiConnectionAttribution(conn){
+  const principals = aiConnectionMachinePrincipals(conn);
+  return { machine: principals.length > 0, principals };
+}
+
+/* THE DERIVED DRESS (D-82), AND IT IS THIS ITEM'S NEGATIVE CONTROL.
+
+   IT IS NOT THE PROPOSAL DRESS, and the difference is DEC-52's ruling rather
+   than a wording preference. `proposalDerivedBadgeHtml` tells a member *nobody
+   has yet decided this is worth pursuing… it decides nothing and changes nothing
+   until a person acts on it* — TRUE of a derived proposal, and FALSE of a
+   connection the machine was licensed to rule on, which is in the record and
+   which the record already stands on. Reusing that badge here would have been
+   the cheap move and it would have made this surface lie in the safe-sounding
+   direction. Two different claims, two different sentences, one rule: say what
+   the record actually did.
+
+   AND IT NAMES THE PRINCIPAL. DEC-55 det 4 / D-199.4: the record names the
+   machine principal, `token:<class>`, never a person's name. It is printed
+   verbatim, because the record's own word for who acted is the fact here. */
+function aiConnectionDressHtml(conn){
+  const att = aiConnectionAttribution(conn);
+  if(att.machine){
+    const who = att.principals.map(p => `<span class="ai-conn-who">${esc(p)}</span>`).join(" ");
+    return `<span class="ai-conn-dress">Identified by the machine and written into the record as the machine&rsquo;s: ${who}. `
+         + `No member judged it. It stands in the record now, and reviewing it here does not change whether it stands.</span>`;
+  }
+  return `<span class="ai-conn-dress">The record published no machine identity on this one, so this surface does not say who stated it. `
+         + `That is what it can see, not a judgement that a person did.</span>`;
+}
+
+/* ONE CONNECTION. The record's own published values through the panel's own
+   field-name-blind renderer, the dress above it, and a selection control that
+   carries NOTHING about the connection's standing.
+
+   `at` is a POSITION and is never rendered — it is the handle the selection
+   holds, exactly as `aiSessionPairsHtml` refuses to print an array index because
+   an index is this surface's arithmetic and not the record's word. What the
+   review motion carries is the record's own published objects, never a number
+   this file invented. */
+function aiConnectionCardHtml(conn, at, selected){
+  const att = aiConnectionAttribution(conn);
+  const on = !!selected;
+  return `<div class="ai-conn${att.machine ? " ai-conn-machine" : ""}">`
+       + `<label class="ai-conn-sel"><input type="checkbox"${on ? " checked" : ""} `
+       + `onchange="aiConnectionsSelectionToggle(${at}, this.checked)"> Review this one</label>`
+       + aiConnectionDressHtml(conn)
+       + aiSessionBlockHtml(conn)
+       + `</div>`;
+}
+
+/* THE SELECTION, and it is the only state this sidebar keeps. It is a set of
+   POSITIONS in the answer the record gave; it is never sent anywhere and it is
+   never rendered.
+
+   IT IS HELD WITH THE RUN IT BELONGS TO, and that is not tidiness. A position is
+   meaningless against a different answer, so a selection carried from one run to
+   the next would put a tick beside a connection nobody chose — the surface
+   asserting a member's choice they did not make, which is the same class as
+   asserting an attribution nobody made. `aiConnectionsSidebarHtml` drops it the
+   moment it renders a different run, so the reset is structural rather than a
+   call somebody has to remember. */
+let AI_CONNECTIONS_SELECTION = { run: "", at: [] };
+function aiConnectionsSelected(){ return AI_CONNECTIONS_SELECTION.at.slice(); }
+function aiConnectionsSelectionBind(runId){
+  const key = String(runId == null ? "" : runId);
+  if(AI_CONNECTIONS_SELECTION.run !== key) AI_CONNECTIONS_SELECTION = { run: key, at: [] };
+}
+function aiConnectionsSelectionToggle(at, on){
+  const k = Number(at);
+  if(!Number.isInteger(k)) return;
+  const had = AI_CONNECTIONS_SELECTION.at.includes(k);
+  if(on && !had) AI_CONNECTIONS_SELECTION.at.push(k);
+  if(!on && had) AI_CONNECTIONS_SELECTION.at = AI_CONNECTIONS_SELECTION.at.filter(x => x !== k);
+}
+
+/* BULK REVIEW IS THE SAME ACT OVER A SET, AND THAT IS DEC-52's OWN WORDS.
+
+   *"Bulk approval is not a weaker act than individual approval — it is the same
+   act over a set, and it exists for the same reason DEC-47's authorisation is
+   the inquiry rather than forty dialogs: a member forced to click forty times is
+   not exercising more judgement than one who reviews a list and approves it,
+   they are just being worn down."*
+
+   So this composes ONE motion naming EVERY selected connection. It does not
+   compose one motion per connection and it never has: N motions over N
+   connections is the forty-dialogs shape wearing a bulk control's clothes, and
+   this item's suite fails it by counting. The motion carries the record's own
+   published objects, so whatever a producer publishes travels whole. */
+function aiConnectionsReviewMotion(conns, selection){
+  const rows = Array.isArray(conns) ? conns : [];
+  const picked = (Array.isArray(selection) ? selection : [])
+    .filter(k => Number.isInteger(k) && k >= 0 && k < rows.length)
+    .sort((a, b) => a - b);
+  return { reviewed: picked.map(k => rows[k]) };
+}
+
+/* THE SIDEBAR. Every connection the record published for this run, in the order
+   it published them, with no cap of this surface's own — a display-side
+   hold-back would be a second bound standing beside the record's, and the
+   record's own `limit`/`truncated`, if a producer ever publishes them, render
+   through the panel's field-name-blind renderer with everything else.
+
+   NOTHING PUBLISHED RENDERS NOTHING, and there is no "no connections yet"
+   notice: that would be a claim about the record made by a surface that asked
+   nothing, which is the class UI-39 and UI-40 were raised to remove — and it
+   would be doubly wrong here, because no producer exists, so the absence says
+   nothing about any run. */
+function aiConnectionsSidebarHtml(session){
+  const rows = session && Array.isArray(session[AI_CONNECTIONS_KEY]) ? session[AI_CONNECTIONS_KEY] : [];
+  if(!rows.length) return "";
+  aiConnectionsSelectionBind(session.id);
+  const sel = aiConnectionsSelected();
+  const cards = rows.map((c, i) => aiConnectionCardHtml(c, i, sel.includes(i))).join("");
+  return `<div class="ai-conns">`
+       + `<div class="ai-conns-head">Connections found in this session</div>`
+       + cards
+       + `<div class="ai-conns-review">`
+       + `<button class="btn ghost" onclick="aiConnectionsReviewGo()">Review the ones I selected</button>`
+       + `</div>`
+       + `<div class="ai-conns-note" id="ai-conns-note"></div>`
+       + `</div>`;
+}
+
+/* THE COMMIT, AND IT WRITES NOTHING — SAID OUT LOUD RATHER THAN HIDDEN.
+
+   There is no plane op that records a member's review of a machine connection.
+   The `proposedispose` path one screen over took this same shape for the same
+   reason and states it the same way: the motion is composed in full, and absent
+   the op the commit SAYS SO and writes nothing. The alternative — a control that
+   looks like it recorded something — is the defect this project ranks worst.
+
+   THIS IS NOT A REFUSAL AND CARRIES NO DEC-49 CODE. Nothing was asked of the
+   plane, so no code exists to receive and none is invented. That is the same
+   answer, reached the same way, as the running-session block's device-holds-no-
+   transcript case.
+
+   AND IT IS NOT A GATE. It could not be one: the connections it names are
+   already in the record. This function makes no plane call at all, which the
+   suite asserts by reading this region's source — a sidebar that could write
+   would be the superseded provisional walking back in. */
+function aiConnectionsReviewGo(){
+  const el = (typeof $ === "function") ? $("#ai-conns-note") : null;
+  const n = aiConnectionsSelected().length;
+  if(!el) return n;
+  el.textContent = n
+    ? `Selected ${n} of the connections in this session. The record has nowhere to keep a review of a machine connection yet, so nothing was written — and nothing needed to be: these connections are already in the record.`
+    : `Nothing is selected, so there is nothing to review.`;
+  return n;
+}
+/*__AI_CONNECTIONS_END__*/
 
 let AI_SESSION_HASH_LOCK = false;
 /* ASYNC SINCE UI-47, because the read is now a read. `aiSessionRouteFromHash`

@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 8a/8b is armed on this file: a dot-directory of copied prose leaves this
+   suite GREEN under M0-18's rule and REDS it under the pre-M0-18 named list.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: (run 2026-08-08, m0-12-agent, M0-12) SIX arms, each RUN ALONE
    with the others held open, every edited file restored and verified by sha256 AND
    by `cmp` content compare, with every snapshot named uniquely by ARM as well as by
@@ -118,10 +129,61 @@ console.log(`  M0-12 CORPUS: ${result.files} files, ${result.chars} chars scanne
 console.log(`  M0-12 LEDGER: ${LEDGER.length} (file,name) registrations · `
   + `${LEDGER.reduce((a, e) => a + e.n, 0)} sites · ${PLANNED_OPS.length} PLANNED op name(s)`);
 
-t("the corpus is non-trivial — a walk over nothing reports its verdict triumphantly",
-  [result.files >= 300, result.chars >= 10_000_000], [true, true]);
-t("and it found a non-trivial population of op= mentions to check",
-  [result.mentions >= 5000, result.names.length >= 150], [true, true]);
+/* ---- M0-18 · THE FLOORS BELOW ARE THE REPRODUCIBLE FIGURES ------------------
+ *
+ * THE WALK IS IN `scripts/op-claims.mjs` AND THE FLOOR IS HERE, WHICH IS WHY
+ * `hygiene.test.mjs`'s class census never enumerated this exposure: that census
+ * grades a file by whether IT contains a `readdirSync(`, and this file performs
+ * no walk. The census named `scripts/op-claims.mjs` as "reports a claim census",
+ * which understated it — the walk feeds four floors, and they are here.
+ *
+ * `refs/stash` is repository-wide across all sixty worktrees of this repository
+ * and `git stash push -u` carries untracked files, so a phantom arrives from a
+ * tree that never wrote it (D-238) and can only push these floors UP. A floor
+ * moved to the figure a contaminated run PRINTED is permanently too high, fails
+ * every honest run afterwards, and gets switched off.
+ *
+ * THE SWEEP IS UNCHANGED AND STILL READS EVERY BYTE OF THE WORKING TREE. A
+ * sentence naming a non-existent op in a file nobody has committed is still a
+ * false claim and still a FINDING — the headline arms below are deliberately
+ * left over the whole corpus. Only the REACH FLOORS narrow.
+ *
+ * WHAT THIS DOES NOT CLOSE: provenance answers about a PATH. A tracked file
+ * whose CONTENT arrived from elsewhere counts toward the reproducible figure.
+ * This detects an ARRIVAL, not a MODIFICATION. */
+const HEAD_SAYS = result.prov.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so these are the whole working-tree figures and are NOT a claim about any commit"
+  : `in the commit at HEAD (${result.prov.headSha})`;
+console.log(`  M0-18 CORPUS, REPRODUCIBLE: ${result.filesRepro} of ${result.files} file(s), `
+  + `${result.charsRepro} of ${result.chars} chars, ${result.mentionsRepro} of ${result.mentions} mention(s) `
+  + `over ${result.namesRepro.length} of ${result.names.length} distinct name(s) are ${HEAD_SAYS} `
+  + `— the floors below apply to THESE`);
+console.log(`  M0-18 SKIPPED BY THE DOT-SEGMENT RULE: ${result.skipped.length} path(s) `
+  + `(${result.skipped.slice(0, 12).join(", ")}${result.skipped.length > 12 ? ", …" : ""}) `
+  + `— the ruling and what it costs are at the rule in scripts/op-claims.mjs`);
+
+/* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED. Both arms floored on figures
+   read off the working tree, where an untracked arrival raises them and nothing
+   said so. The questions are unchanged; the corpus they are asked about is now
+   the one another checkout at this HEAD reproduces. */
+t(`the corpus is non-trivial — a walk over nothing reports its verdict triumphantly — counted over the `
++ `files another checkout REPRODUCES (${result.filesRepro} file(s), ${result.charsRepro} chars, ${HEAD_SAYS})`,
+  [result.filesRepro >= 300, result.charsRepro >= 10_000_000], [true, true]);
+t(`and it found a non-trivial population of op= mentions to check, over that same reproducible corpus `
++ `(${result.mentionsRepro} mention(s), ${result.namesRepro.length} distinct name(s))`,
+  [result.mentionsRepro >= 5000, result.namesRepro.length >= 150], [true, true]);
+t("the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never a silent "
++ "third state, and under UNVERIFIED every pair of figures COLLAPSES rather than the reproducible one reading zero",
+  [result.prov.inHead instanceof Set || result.prov.inHead === null,
+   result.filesRepro <= result.files && result.mentionsRepro <= result.mentions,
+   result.prov.inHead === null
+     ? result.filesRepro === result.files && result.mentionsRepro === result.mentions : true],
+  [true, true, true]);
+/* THE DOT-SEGMENT RULE IS ENFORCED, NOT DESCRIBED. A rule stated in a comment
+   and enforced by nothing is the defect this project meets most often, so the
+   walk is asked directly whether it admitted anything under a dot. */
+t("no file under a dot path segment is in the corpus — the rule at the walk is DRIVEN rather than described",
+  corpus().files.filter((f) => f.rel.split("/").some((s) => s.startsWith("."))).map((f) => f.rel), []);
 t("BOTH generated embeds of the plane are excluded, each recognised STRUCTURALLY at "
 + "byte 0 and NEITHER by filename — a walk excluding only the warned-about one reads "
 + "the plane's own comments as a third party's claims about it",

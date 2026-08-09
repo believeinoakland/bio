@@ -1,3 +1,14 @@
+/* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
+   provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
+   — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
+   each armed ALONE with every other defence held open, every restore verified by sha256
+   AND by a full byte comparison against a UNIQUELY-NAMED per-arm pristine copy with the
+   byte count printed and floored. ARM 2a/2b is armed ON THIS FILE and is the decisive pair: with a phantom in
+   src/, a floor at the contaminated count FAILS here and PASSES in the pre-M0-18 spelling.
+   TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
+   THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
+   spelled an `op=` token that op-claims then read as a real claim. Recorded at their
+   sites in the control, not smoothed. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/identity-claims.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3, PL-4, PL-11, REC-73 precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad; every restore is verified BY sha256 AND BY `cmp` against a pristine per-arm copy named uniquely for its arm.
    AND THE FIRST THING THIS DECLARATION OWES IS THE REASON THE ORDINARY ARM IS WORTHLESS HERE: **REC-65's DIFF IS COMMENTS. A behavioural arm cannot fail no matter what this item writes** — delete every corrected sentence and all 124 suites stay green, which is exactly the property that let six false comments stand for months. So the arms below break the CLAIM ITSELF and the INSTRUMENT that reads it, and only arm (5) touches behaviour at all.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a8c89d200faa387fe, EACH ALONE with the others held open, BASELINE 31/0 RE-MEASURED BEFORE AND AFTER EVERY ARM, every restore verified by sha256 AND by `cmp` against a per-arm pristine copy. FOUR behaved as declared; ONE did not, and it is reported rather than smoothed. Figures below are MEASURED, not predicted.
@@ -51,9 +62,13 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { sweep, wideClaims } from "../scripts/identity-claims.mjs";
+/* M0-18 — ONE mechanism, imported. The reason this suite needed it is at the
+   wide-ledger walk in block 3. */
+import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", f);
+const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -256,12 +271,63 @@ for (const d of ["src", "checks"])
 const wide = wideClaims(files);
 const byFile = {};
 for (const w of wide) byFile[w.file] = (byFile[w.file] || 0) + 1;
+
+/* ---- M0-18 · THE FLOOR IS THE REPRODUCIBLE FIGURE, THE LEDGER IS NOT --------
+ * This walk read `src/` and `checks/` off the WORKING TREE and floored on both
+ * what it found and what it found IN what it found. `refs/stash` is
+ * repository-wide across all sixty worktrees and `git stash push -u` carries
+ * untracked files, so a phantom `.mjs` beside `store.mjs` was counted into
+ * `files` and its comment lines into `wide` — the two figures floored below
+ * (D-238, measured). An arrival can only push those floors UP, and a floor moved
+ * to a contaminated figure is permanently too high and gets switched off.
+ *
+ * THE LEDGER IS STILL REPORTED OVER THE WHOLE WORKING TREE. A member-actor claim
+ * written in a file nobody has committed yet is still a claim, and it still
+ * belongs in the printed ledger — that is the half that must not narrow. Only
+ * the two FLOORS narrow to `git ls-tree HEAD`. */
+const PROV = readGitProvenance(REPO);
+const relOf = ([rel]) => repoPath(REPO, SRC(rel));
+const inCommit = (row) => PROV.inHead === null ? true : PROV.inHead.has(relOf(row));
+const FILES_REPRO = files.filter(inCommit);
+const REPRO_NAMES = new Set(FILES_REPRO.map(([rel]) => rel));
+const wideRepro = wide.filter((w) => REPRO_NAMES.has(w.file));
+/* SAY UNVERIFIED, NEVER CLEAN (D-233) — in the assertion's own prose, not only
+   in the report. */
+const HEAD_SAYS = PROV.inHead === null
+  ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk and is NOT a claim about any commit"
+  : `in the commit at HEAD (${PROV.headSha})`;
+
 console.log(`  wide ledger: ${files.length} source files walked · ${wide.length} comment lines make a member-actor claim`);
 console.log(`    ${JSON.stringify(byFile)}`);
-t("(k) the wide walk reads the whole plane, not a fragment — corpus floored",
-  files.length >= 24, true);
-t("(k) and it finds the class it is looking for, floored as a DELTA rather than an absolute",
-  wide.length >= 80, true);
+console.log(`  wide ledger, REPRODUCIBLE: ${FILES_REPRO.length} of ${files.length} file(s) and ${wideRepro.length} `
+          + `of ${wide.length} claim line(s) are ${HEAD_SAYS} — floors 24 / 80 apply to THESE`);
+reportProvenance({
+  prov: PROV,
+  items: files.map((row) => ({ path: relOf(row), what: row[0],
+    counted: `${byFile[row[0]] || 0} member-actor claim line(s)` })),
+  instrument: "the wide-ledger walk",
+  corpus: `${files.length} source file(s) walked, ${FILES_REPRO.length} of them in the commit`,
+  totals: PROV.inHead === null ? [] : [
+    { label: "source files", contaminated: files.length, reproducible: FILES_REPRO.length, source: "files" },
+    { label: "claim lines", contaminated: wide.length, reproducible: wideRepro.length, source: "files" },
+  ],
+});
+
+/* CORRECTED 2026-08-09 BY M0-18, NEVER EXEMPTED: both floors were computed over
+   the working tree, where an untracked arrival raises them and nothing said so.
+   The questions are unchanged; the corpus they are asked about is now the one
+   another checkout at this HEAD reproduces. */
+t(`(k) the wide walk reads the whole plane, not a fragment — corpus floored over the files another `
++ `checkout REPRODUCES (${FILES_REPRO.length} of ${files.length}, ${HEAD_SAYS})`,
+  FILES_REPRO.length >= 24, true);
+t(`(k) and it finds the class it is looking for, floored as a DELTA rather than an absolute, over that `
++ `same reproducible corpus (${wideRepro.length} of ${wide.length} claim lines)`,
+  wideRepro.length >= 80, true);
+t("(k) the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never a "
++ "silent third state, and under UNVERIFIED both pairs of figures COLLAPSE rather than reading zero",
+  [PROV.inHead instanceof Set || PROV.inHead === null,
+   PROV.inHead === null ? FILES_REPRO.length === files.length && wideRepro.length === wide.length : true],
+  [true, true]);
 /* STATED RATHER THAN DISCOVERED: the wide ledger is REPORTED and never judged. It cannot
    tell which act a free-standing sentence governs, and guessing would be the over-strict
    direction. The judged corpus is block 1's stamp sites, where the act is unambiguous. */
