@@ -223,6 +223,22 @@ const REGISTER_FLOOR = {
      `test/owed-controls.test.mjs`, whose declaration states eleven arms — nine
      run by `test/owed-controls.control.mjs` plus the two over-strictness arms
      that live IN the suite. Nothing FELL. */
+  /* MOVED 2026-08-09 by PL-17 (DEC-65's third `asserted_by` state): 621 -> 629 /
+     133 -> 134 / 134 -> 135, ALL THREE IN THE SAME TURN and every one taken from
+     the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE
+     (`arms 629/621 · classified 134/133 · corpus 135/134 · GREW by 8 arm(s)`) —
+     read AFTER the new files were in a commit, so the figures are the
+     reproducible ones and not the contaminated ones the pre-commit run reported
+     under the same numerals. One new suite, `test/sufficiency-state.test.mjs`,
+     whose `NEGATIVE CONTROL:` declaration states EIGHT arms — a BASELINE, six
+     break-it arms and an OVER-STRICTNESS arm — so `corpus` and `classified` each
+     rise by one and `arms` by eight. Every one of those arms was RUN, through
+     `test/sufficiency-state.control.mjs`. Nothing FELL. */
+  /* COLLAPSED TO ONE KEY SET AT INTEGRATION 2026-08-09 by CONDUCT — the EIGHTH time
+     this block has carried duplicate keys out of a parallel merge. The mechanism this
+     time was CONDUCT's own: keeping BOTH movers' provenance comments (VF-1's and
+     PL-17's, each true of its own branch) dragged in the key line that follows each.
+     Keep every comment; keep ONE key set. Figures re-read from the merged green run. */
   arms:       632,  // arms stated across the classified declarations
   classified: 134,  // declarations the detector could count arms in
   corpus:     135,  // suites the register reads

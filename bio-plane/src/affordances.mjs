@@ -80,6 +80,11 @@ import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KIND
             or every surface showing version states holds a second copy of the
             rule — the drift class DEC-8 closed."* */
          VERSION_MACHINE, VERSION_REASON_REQUIRED,
+         /* PL-17 / DEC-65. The third `asserted_by` state and its texts, imported
+            from the one module that mints the value — a surface holding its own
+            copy of what "nobody claimed this" is called is the same drift every
+            import in this list exists to close. */
+         SUFFICIENCY_CLAIM_STATES,
          normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
@@ -588,6 +593,21 @@ export const VOCABULARIES = {
   rung_ladder: RUNG_LADDER,
   rung_correction_path: IRREVERSIBLE_CORRECTION_PATH,
   rung_absence_grounds: RUNG_ABSENCE_GROUNDS,
+  /* PL-17 / DEC-65 — THE THIRD `asserted_by` STATE, PUBLISHED WITH ITS WORDS.
+     Published for a reason this file can MEASURE rather than assert: today
+     `civicos-ui/app.html`'s grounding receipt renders `Asserted by
+     ${g.asserted_by}` VERBATIM, so the moment a field can hold anything but a
+     person's name, a surface with no vocabulary prints a machine word at a
+     member. That is the defect this whole file closes, arriving in a field
+     whose entire subject is not overclaiming.
+     A code->text map rather than a list, unlike every vocabulary above it,
+     because the states are not interchangeable words a surface picks between —
+     each one is a different thing the record is saying about who claimed what,
+     and the sentence IS the state's meaning. `sufficiencyClaimState()` in the
+     catalogue is what turns a stored value into one of these keys; a surface
+     that reads the field itself and matches on the literal has rebuilt the
+     predicate. Imported, never restated. */
+  sufficiency_claim_states: SUFFICIENCY_CLAIM_STATES,
 };
 
 

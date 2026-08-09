@@ -2876,3 +2876,55 @@ reads as "provenance was never recorded", which is exactly what is true of them.
 `op=attesttext` (the member act). The first two are reads on `READING_READS`' terms; the third is
 `mutating: true`, carries `contribute`, and is refused to a machine credential at BOTH the
 control plane and the store (C-35.10).
+
+---
+
+## IC-45 · I3: `op=affordances` publishes ONE ADDITIVE VOCABULARY — `sufficiency_claim_states`, the three states of a sufficiency `asserted_by` with the sentence a member reads instead of each · PROPOSED 2026-08-09 (PL-17, enacting DEC-65) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-41, four ids already held and
+stepped over). **AND THE TOOL WAS INVOKED TWICE BY THIS SESSION IN ERROR, so `IC-46` IS ALSO HELD
+BY THIS WORKTREE AND IS UNUSED** — named here rather than left as a silent gap, because an id that
+nobody can account for is exactly what the allocator exists to prevent.
+
+- **Interface:** I3 (the plane's op surface), **STABLE**.
+- **Proposer:** PL-17, 2026-08-09, enacting **DEC-65** (answered 2026-08-09 by session BOB under
+  Bob's standing delegation: *"the third `asserted_by` state minted FIRST"*).
+- **Owner to land it:** `RECORD` (landed here).
+
+### PROPOSED
+
+**WHAT MOVES.** One key on `op=affordances`' answer, and nothing else:
+
+| change | shape | kind |
+| --- | --- | --- |
+| `vocabularies` gains `sufficiency_claim_states` | `{ claimed, unclaimed, unstated, machine_stamped }` → a member-facing sentence each | **ADDITIVE key** |
+
+**No key is removed, no key is renamed, and no VALUE of an existing key moves.** Every other
+vocabulary this op publishes is unchanged, byte for byte.
+
+**WHY.** DEC-65 mints a third legal value for a sufficiency `asserted_by` — an explicit *no
+independent-sufficiency claim was made* — so the field can hold something that is neither a
+member's affirmative claim nor a silence. **A surface that renders that field verbatim would then
+print a machine word at a member**, and one already does: `civicos-ui/app.html`'s grounding receipt
+renders `Asserted by ${g.asserted_by}` directly. Publishing the states with their words is what
+stops every surface inventing its own name for a state the record now distinguishes — the DEC-8
+drift class `affordances.mjs` exists to close — and it is DEC-49's rule that a term a member meets
+carries the sentence they read instead of it.
+
+**CONSUMER IMPACT, MEASURED RATHER THAN ASSERTED.** `grep -rn "vocabularies" civicos-ui/` finds the
+consumers: `app.html` reads the whole `vocabularies` object into `ACT_SOURCE.vocab` and indexes it
+BY KEY, and three UI test fixtures build `vocabularies: {}` or a one-key object. **An additive key
+is read by none of them and breaks none of them — measured, not assumed: `node
+civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED, `0` before and after.**
+`civicos-ui/check-refusal-codes.mjs` arm E does NOT reach this vocabulary either, and that was
+measured rather than assumed — see the DELEGATION to UI in `CLAIMS.md`, which carries the figures
+and the reason adding the module to that walk would make the guard over-strict on correct code.
+
+**WHAT A CONSUMER SHOULD DO WITH IT, since a published vocabulary nobody renders is a promise
+nothing keeps:** read the field through the plane's `sufficiencyClaimState()` rather than matching
+the stored literal. A surface that keys on `none:independent-sufficiency` itself has rebuilt the
+predicate, and will be wrong the day a fourth state is minted.
+
+### RESPONSES
+
+_(awaiting: `UI`. `FRAMEWORK`, `CAPTURE`, `CONTENT-*` and `DIST` are not consumers of this key.)_

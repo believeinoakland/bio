@@ -4453,6 +4453,34 @@ enacted: 2026-08-09 · CONDUCT · **PARTLY, AND THE SEQUENCE IS THE RULING.** DE
   Until PL-17 lands, **(a) remains the running provisional**, exercised rather than merely surviving.
   reasoning now carried by: this entry; DEC-32 (the conservative default); `CLAIMS.md` (the delegation).
 
+**ENACTMENT, STEP ONE OF THREE — PL-17, 2026-08-09: THE THIRD STATE IS MINTED.** The ruling's
+  first clause is done and the other two are not, so this note says exactly what exists.
+  **MINTED:** `SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency'` in
+  `checks/bio-checks.mjs`, beside the REC-46 machine-identity predicates — the one leaf module
+  every consumer already imports, so the writer that will stamp it and the checks that will read
+  it cannot drift apart. With it: `sufficiencyClaimState()` (the field's three legal states, plus
+  the machine stamp both gates refuse), `isSufficiencyClaimed()` — **TRUE for a named member and
+  for NOTHING else, which is where DEC-32's *only ever reached by an affirmative, attributed act*
+  now lives in one place** — and `SUFFICIENCY_CLAIM_STATES`, the member-facing sentence for each,
+  published through `op=affordances` (IC-45) because a surface already renders this field verbatim.
+  **THE NAMESPACE IS DELIBERATELY NEITHER `token:` NOR `class:`:** those two mean *a machine did
+  this*, and this value means *nobody did*, which is the same distinction the identity block draws
+  when it refuses to call an ABSENT identity a machine one.
+  **WHAT IS NOT DONE, AND IT IS THE REST OF THE RULING.** `C-25.6`, `C-2.8` and PL-3's endpoint
+  guard are UNTOUCHED, per this entry's own sequencing. **So the state is INERT: nothing writes it
+  and no gate distinguishes it** — MEASURED at the check rather than assumed, the habit that caught
+  this entry's wrong C-number, and PINNED in `test/sufficiency-state.test.mjs` §7 with assertions
+  **written to FAIL when the next item wires it.** The next item CORRECTS them and says why the old
+  expectation was right when written; it does not exempt them.
+  **A DESIGN FINDING FOR THAT ITEM, from a control arm that came back other than declared:** adding
+  `none:` to `MACHINE_STAMP_PREFIXES` would make `C-25.6` refuse the new value **without one line
+  of `C-25.6` changing** — a fail-closed shape for one array entry. **It is the wrong one and is
+  recorded so it is not reached for:** it would make the record say a machine claimed this about a
+  value whose whole meaning is that nobody did.
+  **NO MIGRATION IS OWED.** There is no SQL column — the field lives in `bundle.md` frontmatter
+  only, and `schema.mjs` states at the `inquiry_basis` site why it is deliberately not projected.
+  Nothing writes the new value, and every stored row predating it carries a named member because
+  both gates refused anything else at the moment it was written.
 ### DEC-64 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
