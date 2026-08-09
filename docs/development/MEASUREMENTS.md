@@ -5578,3 +5578,196 @@ existence, so nothing here measures how they will render. It **cannot judge the 
 that `op=queue` files a lead under inquiry B's ancestors is PL-15's acceptance. And, as with every
 UI suite here, **the DOM stub fires no events**, so the stance router is driven directly at its
 address rather than through `hashchange`, and the substitution is labelled at the site.
+## 2026-08-09 · VF-5 — THE WHOLE FENCE, DRIVEN END TO END BEFORE CHECK DEPLOYS
+
+**Instrument:** `bio-plane/test/fence-e2e.test.mjs` (55 assertions, new) and its harness
+`bio-plane/test/fence-e2e.control.mjs` (7 arms, ALL RUN, 0 not as declared after two were corrected
+— see below). Everything is DRIVEN through the control plane against Miniflare; block 8 runs the
+REAL `agent-worker` module and the REAL plane as two workers in ONE Miniflare over a real service
+binding. **`bio-plane/src/**`, `bio-plane/checks/**` and `agent-worker/src/**` were NOT changed** —
+every finding here is a measurement, and the two that are defects are raised rather than patched.
+
+**THE SHAPE, and what it adds to REC-73/REC-78 rather than repeating.** Those two measured the
+IDENTITY layer, one verb at a time. This is one pass over THREE layers: identity
+(`versionaccept` / `versioncurrent` / `versionhide` / `publish`), capture-conduct
+(`op=acquire`'s capture-request arm), and credential-shape (`op=capturerequestdrain`). Payload rule
+taken from REC-78: flip only the condition the refusal itself names. Where the condition is the
+CALLER the payload is held and the caller varies, and the member arm succeeding is what makes
+"complete" measured; where it is not, the caller is held and the named condition is the only thing
+that moves.
+
+### The pass: 6 attempts, 6 named refusals — and DEC-49 on the wire holds for FIVE of them
+
+| # | act | op | refusal | C-number | layer | C-number + translation ON THE WIRE |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | accept | `versionaccept` | `MACHINE_CANNOT_MOVE_VERSION` | C-25.24 | identity | YES |
+| 2 | make-current | `versioncurrent` | `MACHINE_CANNOT_MOVE_VERSION` | C-25.24 | identity | YES |
+| 3 | hide | `versionhide` | `MACHINE_CANNOT_MOVE_VERSION` | C-25.24 | identity | YES |
+| 4 | publish | `publish` | `MACHINE_CANNOT_PUBLISH` | C-32.6 | identity | **NO** |
+| 5 | direct capture | `acquire` | `CAPTURE_NOT_DRAINING` | C-28.13 | capture-conduct | YES |
+| 6 | direct enqueue | `capturerequestdrain` | `AI_BEYOND_TASK_SCOPE` | C-29.6 | credential-shape | YES |
+
+**VF-5's accepts-when is "every refusal fires by C-number with its translation". It holds for five
+of six, and the sixth is NAMED rather than dropped** — an assertion written to the rule would have
+failed here and been "fixed" by deleting it, which is how a defect becomes a convention.
+
+### FINDING 1 — ELEVEN OF THE TWELVE MACHINE FENCES CANNOT BE EXPLAINED TO WHOEVER MEETS THEM (D-262)
+
+All twelve `MACHINE_CANNOT_*` fences were driven under a real `ai` credential. All twelve FIRE by
+name. All twelve HAVE a catalogued C-number and canned translation (REC-64 wrote them). **Exactly
+ONE puts them on the wire.**
+
+```
+explained on the wire: 1 of 12 — MACHINE_CANNOT_MOVE_VERSION
+MUTE on the wire:     11 of 12 — RELEASE, CONCLUDE, REOPEN, PUBLISH, MOVE_ACTION, CORRESPOND,
+                                 DIVIDE, GROUND, DECLARE, FORWARD, RESOLVE
+```
+
+The one that works is the one whose site refuses through a helper that reads the catalog row
+(`#moveVersionState`'s `refuse`), so this is a **convention eleven sites do not follow**, not eleven
+omissions. **NO INSTRUMENT SEES IT**: DEC-49's arm C grades the SITE against the CATALOG — a string
+literal at the site, a family row with a translation — and all twelve satisfy that. Nothing grades
+the RESPONSE, so the guard is green over a refusal whose meaning never leaves the plane. Raised as
+**D-262** and pinned as a SET, floor and ceiling, in block 10 with the date and reason at the site.
+
+**THE COUNTER-READING, RECORDED SO THE FINDING IS NOT LARGER THAN THE MEASUREMENT.** REC-64's
+`machinefences-dec49.test.mjs` block A already establishes that all twelve resolve to one canned
+translation from one family and that the DOCTRINE PACK renders all twelve — so a consumer that HOLDS
+the catalog can explain a bare `reason`. What is missing is narrower and is what DEC-8 rests on: the
+refusal itself does not carry the words, so a consumer that renders **what it received** has nothing
+to render. That is exactly `app.html`'s stated posture and exactly what the agent worker does, and
+the agent worker is the one component built deliberately not to hold a catalog.
+
+### FINDING 2 — `AI_BEYOND_TASK_SCOPE` HAS TWO PRODUCERS AND THE CODE DOES NOT SAY WHICH FIRED
+
+Control arm (3) removed the member-floor shape fence (`aiReachesAsMember` → true) and **attempt 6
+was still refused, with the same code**, by the declared-writes check directly behind it:
+`op=capturerequestdrain` is mutating and can never appear in any authorable scope, so both branches
+refuse it. That is D-229/D-230's shadow arriving at the CREDENTIAL layer — a refusal proved to FIRE
+and not proved to be WHAT FIRES. The suite now pins the branch by its `detail`, the only thing on
+the wire that distinguishes them. **The index's own claim that the floor is re-evaluated on every
+call so "an op that loses its member class tomorrow leaves every credential naming it refused
+today" is therefore unfalsifiable through the op surface**: no authorable scope can reach the
+branch in isolation. Stated, not fixed.
+
+### FINDING 3 — with the identity predicate removed, ALL FOUR identity acts go ALL THE WAY THROUGH
+
+Control arm (1), `isMachineStamp` → false, one edit, 34 pass / 20 fail. Read back from the record:
+
+- a machine **ACCEPTED** a reading (`state: accepted`)
+- a machine **MADE A PROJECT STAND ON** one (`current.version: "settled account"`, read through the
+  project's own document via `#currentVersionOf`, the same reader the act writes through)
+- a machine **HID** one (`hidden: true`)
+- a machine **PUBLISHED A CASE** (`current_state: published`)
+
+Not one fell to a payload complaint, because under these payloads there was none left to fall to.
+**Two of the four — make-current and hide — had never been driven this way by any suite:** REC-73
+pins `MACHINE_CANNOT_MOVE_VERSION` through `op=versionaccept` alone and the six version verbs share
+one code, so a fence proved on one verb of six was standing for all six. Attempts 5 and 6 stayed
+GREEN under the same edit, which is what makes the three layers three rather than one wearing three
+hats.
+
+### FL-3's stated gap: NARROWED, not closed
+
+FL-3 reported that its plane side is a MOCK reproduced from reading the source, so "both sides are
+separately green and NOTHING IN THIS ITEM PROVES THEY AGREE END TO END IN ONE PROCESS". Block 8 is
+that process: the real fleet member and the real plane, one Miniflare, one service binding.
+
+**CLOSED by it:** the member's `askPlane` URL (`http://plane/?op=…`) reaches the plane's real
+router; the plane's credential judgement is the one the member reports; and a DEC-49 refusal crosses
+the binding **VERBATIM** — `AI_CREDENTIAL_REVOKED`, its C-number and its canned translation arrive
+unchanged at the member's own surface, measured across a real hop rather than asserted on one side
+of it. The opposite polarity is driven too (a live, in-scope credential is ADMITTED through the same
+hop and the plane's own condition is what answers), and the credential VALUE appears nowhere in
+either answer.
+
+**NOT closed:** no model turn runs here and the harness's judgements are still caller-supplied, so
+this proves the JOIN and not that a whole CHECK run agrees end to end. That needs VF-4's live run in
+a scratch namespace, which is DS-4-gated and DIST's.
+
+### The controls, and TWO CAME BACK WRONG FIRST
+
+Seven arms, each armed ALONE with the others held open, every restore verified by sha256 AND by
+content against a **per-arm uniquely named** pristine copy with a byte count printed and a per-file
+floor guarded. Baseline 55/0 before each. **Every arm was RE-RUN WHOLE after this worktree was found 26 commits behind `main` and rebased onto it; all seven behaved as declared on BOTH bases and the figures above are the rebased tree's.**
+
+| arm | edit | measured | as declared |
+| --- | --- | --- | --- |
+| (0) | none — the BASELINE row | 55 / 0 | yes |
+| (1) | `isMachineStamp` → false | 35 / 20 | yes (see Finding 3) |
+| (2) | capture-conduct gate → `if (false)` | 50 / 5 | yes |
+| (3) | `aiReachesAsMember` → true | 53 / 2 | **wrong first — see Finding 2** |
+| (4) | agent-worker drops `plane: asked.body` | 54 / 1 | yes |
+| (5) | drop `hide` from the roster | 51 / 3 | **wrong first — killed the suite** |
+| (6) | version fence refuses EVERYONE (`if (true)`) | 51 / 4 | yes |
+
+**Arm (5) is the sharper of the two wrongs and it is an instrument finding, not a subject one.**
+Dropping the roster row did not FAIL the suite — it KILLED it. `attempt()` read `row.act` off an
+undefined row, the `TypeError` ended the module through no assertion at all, and stdout carried
+`1 pass` with every arm behind it unrun. **A harness reading a missing tally as `0` would have
+recorded "stayed GREEN over a shorter roster" — the exact failure the arm exists to catch, arriving
+inside the arm.** Caught only by the `-1` foot convention. `attempt()` is now null-tolerant on its
+own roster; this file's own rule, broken in this file, found by running the control.
+
+**Arm (6) is the over-strictness arm and it earns its place:** with the version fence widened to
+refuse everyone, the six machine attempts stay GREEN. An instrument watching only the refusals would
+have reported a fence that refuses correct work as fine.
+
+### What this pass CANNOT see, stated because the number is worth nothing without it
+
+- It says nothing about **live** behaviour. Everything is Miniflare; nothing was deployed and no
+  build was verified as serving. VF-4 is where that question lives.
+- Block 10's twelve are driven under SHORT payloads on purpose — the identity fence is the first
+  check in each method, so the refusal is independent of payload completeness. **That block
+  therefore says nothing about whether the fence is what refuses under a complete payload**; that
+  is REC-73's suite and is not restated here.
+- The three layers are the three VF-5 names. The plane has other fences; this pass does not claim
+  to have enumerated them, and the roster is a DECLARATION compared against what was driven rather
+  than a harvest of everything that could have been.
+
+### The numbers, and the worktree was 26 commits behind when they were first taken
+
+| | true baseline (`ae34ec8`, scratch checkout) | final (`84988bd`) |
+| --- | --- | --- |
+| battery | 142/142 green · 9,179 assertions | 143/143 green · 9,238 assertions |
+| `coverage.mjs --strict` | exit 0 | exit 0 |
+| `civicos-ui/test/run.mjs` | — | exit 0 |
+| `civicos-ui/check-refusal-codes.mjs` | — | exit 0 |
+
+**+59 attributed by DIFFING the two full runs, never by subtraction:** `fence-e2e` +55 (new),
+`hygiene` 561 → 564 (three per-suite loops over one new suite), `planning-hygiene` 294 → 295 (one
+new DEBT row). Nothing else moved. The true baseline was taken in a SEPARATE `git worktree` checkout
+at `origin/main` rather than by removing files from this one — WORKER.md's rule, and `git stash` was
+not used at any point.
+
+**A first baseline (138/138 · 8,827 at `65a2ea1`) was taken and then INVALIDATED:** a `git fetch`
+before the handoff found this worktree **26 commits behind `main`** (FL-4, FL-5, VF-1, PL-17,
+REC-69, D-255, D-257 had landed). The item was rebased and **everything was re-measured whole** —
+suite, all seven control arms, both batteries, coverage, the UI harnesses. Every control arm behaved
+as declared on both bases; the arm figures moved by exactly +1 pass because the suite gained one
+assertion in between.
+
+### FINDING 4 — THE FLEET FLOOR WAS ALREADY STALE ON `main`, AND VF-5 DID NOT INVALIDATE IT
+
+`FLEET_FLOOR` in `bio-plane/scripts/coverage.mjs` read `4 suite(s) / 35 arm(s)` against a real
+5 suites / 43 arms, printing `GREW by 8 arm(s)` on every run. **Measured at `ae34ec8` in the scratch
+checkout, before this item's suite existed**, so it is not this item's doing: FL-5 landed
+`agent-worker/test/fanout.test.mjs` and its arms, `REGISTER_FLOOR` was moved for that merge and the
+fleet half was not. **A floor with slack is not one**, so VF-5 moved it to the printed figures with
+the reason and the measurement at the site — the sixth consecutive item to find a hand-carried floor
+stale by measuring it. `REGISTER_FLOOR` moved 654 → 662 / 136 → 137 / 137 → 138 in the same turn,
+also from what the green run PRINTED as REPRODUCIBLE. Both now read exact, with no slack.
+
+### FINDING 5 — THE SHARED SCRATCHPAD IS NOT ISOLATED, MEASURED AGAIN AND CAUGHT MID-RUN
+
+WORKER.md carries this as a warning from two earlier workers. It is now a third measurement, and
+this time the file that was clobbered was an INSTRUMENT OUTPUT rather than a harness: a battery
+transcript written to the shared scratchpad was **truncated and being rewritten by another session's
+battery while this item was reading it**, alongside ~130 files from other sessions and eight
+concurrent `battery.mjs` processes that were not this item's. The reading taken from it was
+nevertheless correct — it was checked against the `provenance:` line naming this item's own commit,
+which is the only reason that could be established — and it was then **re-run with the transcript
+written inside this worktree and reproduced exactly (143/143 · 9,238 both times).** The lesson is
+narrower than "do not use the scratchpad": **a transcript with no provenance line in it cannot be
+attributed to the run that appears to have produced it**, and the battery's own provenance line is
+what made this recoverable rather than a silently wrong number.

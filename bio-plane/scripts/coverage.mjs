@@ -279,9 +279,18 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* VF-5, 2026-08-09: 654 -> 662 / 136 -> 137 / 137 -> 138, ALL THREE MOVED IN THE
+     SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict`
+     RUN PRINTED as REPRODUCIBLE (`arms 662/654 · classified 137/136 · corpus
+     138/137 · GREW by 8`), never by adding to the numbers above. One new suite,
+     `test/fence-e2e.test.mjs`, whose `NEGATIVE CONTROL:` declaration the detector
+     counts at eight arms — the seven arms (0)-(6) plus the summary line that
+     opens the block, which is the "largest single declaration" rule described
+     above reading one line more than the item states. EVERY ONE OF THE SEVEN WAS
+     RUN. Nothing FELL. */
+  arms:       662,  // arms stated across the classified declarations
+  classified: 137,  // declarations the detector could count arms in
+  corpus:     138,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -363,9 +372,21 @@ const FLEET_FLOOR = {
      `suites` is the fleet's REACH (pdf-worker: pdf-worker + pagepixels;
      agent-worker: agent-worker + harness), `arms` its tally: 7 + 7 + 12 + 9.
      Move both only UPWARD and only to a printed figure, and a fall needs its
-     reason AT THIS SITE. */
-  suites:     4,
-  arms:       35,
+     reason AT THIS SITE.
+     MOVED 2026-08-09 by VF-5: 4 -> 5 suites, 35 -> 43 arms, from the figure a
+     green `--strict` run PRINTED (`5/5 SUITES declaring a negative control · 43
+     arms · GREW by 8 arm(s)`). **THIS FLOOR WAS ALREADY STALE ON `origin/main`
+     AND VF-5 DID NOT INVALIDATE IT** — measured at `ae34ec8` in a scratch
+     checkout before this item's own suite existed, where it printed the same
+     `GREW by 8`. FL-5 landed `agent-worker/test/fanout.test.mjs` and its arms;
+     `REGISTER_FLOOR` above was moved for that merge and this one was not, so the
+     fleet half of the ratchet has been carrying eight arms of slack. **A floor
+     with slack is not one**, which is why VF-5 moved a figure it did not itself
+     invalidate rather than leaving it for the next reader to find again — the
+     sixth consecutive item to find a hand-carried floor stale by measuring it.
+     Named in the report so CONDUCT can re-read it on the merged tree. */
+  suites:     5,
+  arms:       43,
 };
 
 function discoverFleet() {
