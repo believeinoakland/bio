@@ -279,9 +279,27 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* MOVED 2026-08-09 by PL-20 (DEC-65's step three): 654 -> 661 / 136 -> 137 /
+     137 -> 138, ALL THREE IN THE SAME TURN and every one taken from the figure
+     THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE
+     (`arms 661/654 · classified 137/136 · corpus 138/137 · GREW by 7 arm(s)`),
+     read AFTER the new files were in a commit (eb3e1d4). One new suite,
+     `test/dec65-strength-reach.test.mjs`, whose `NEGATIVE CONTROL:` declaration
+     states SEVEN arms — a BASELINE, five break-it arms and an OVER-STRICTNESS
+     arm — so `corpus` and `classified` each rise by one and `arms` by seven.
+     Every one of the seven was RUN, through
+     `test/dec65-strength-reach.control.mjs`, and two of them came back other
+     than declared and are corrected at the arm. Nothing FELL.
+     AND THE FLOOR WAS **NOT** STALE ON ARRIVAL, WHICH IS THE OTHER FINDING AND IS
+     RECORDED BECAUSE IT BREAKS A STREAK: `main` at 1081a6a was checked out into a
+     scratch `git worktree` (never `git stash`) and `--strict` run on that quiet
+     tree printed `arms 654/654 · classified 136/136 · corpus 137/137` with no
+     slack and no contamination note. Six consecutive items had found this block
+     stale by measuring it; this one measured it and found it exactly right, so
+     the whole of the +7/+1/+1 above is this item's. */
+  arms:       661,  // arms stated across the classified declarations
+  classified: 137,  // declarations the detector could count arms in
+  corpus:     138,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -364,8 +382,20 @@ const FLEET_FLOOR = {
      agent-worker: agent-worker + harness), `arms` its tally: 7 + 7 + 12 + 9.
      Move both only UPWARD and only to a printed figure, and a fall needs its
      reason AT THIS SITE. */
-  suites:     4,
-  arms:       35,
+  /* MOVED 2026-08-09 by PL-20: 4 -> 5 suites / 35 -> 43 arms, from the figure a
+     green `--strict` run PRINTED (`5/5 SUITES declaring a negative control · 43
+     arms · GREW by 8 arm(s)`). **NONE OF IT IS PL-20's**, and that is stated
+     rather than absorbed: the item added no fleet suite and edited no fleet
+     file. The cause is `agent-worker/test/fanout.test.mjs`, a FIFTH fleet suite
+     declaring EIGHT arms, which landed without this ratchet being re-read — and
+     the same 4/35 slack is printed by a quiet `main` at 1081a6a in a scratch
+     worktree, so it predates this item rather than arriving with it. Closed here
+     because a floor with slack is not a ratchet, and named here because a figure
+     moved without attribution is how a ratchet quietly becomes a decoration.
+     DELEGATED to CONDUCT in `CLAIMS.md`: whoever owns `fanout.test.mjs` owes the
+     provenance line this comment is standing in for. */
+  suites:     5,
+  arms:       43,
 };
 
 function discoverFleet() {
