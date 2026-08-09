@@ -244,8 +244,22 @@ export const CONTROL_FLOW = {
     to:     ["collect", "close"],
   },
   collect: {
-    does:   "take each sub-session's REPORT (a citation, never documents — FL-5's contract)",
-    judged: null,
+    /* FL-5 / IS-9(a). The sub-session's return arrives HERE and is judged against
+       the REPORT contract before anything downstream can read it: a REPORT with a
+       citation, never documents, and the parent re-reads by address. The contract
+       itself is `subsession.mjs`, kept out of this table for the reason the table
+       exists — what the run does NEXT is a row, and what a return may CONTAIN is a
+       shape; putting the second inside the first would make neither exhaustible.
+
+       `judged` MOVED FROM null TO A JUDGEMENT AT FL-5, AND THAT IS A CORRECTION
+       RATHER THAN AN ADDITION. Before FL-5 the reports entered at `compose`, one
+       row too late: `compose` is where reports are INTERPRETED, so a return that
+       arrived there had already been read by the step that forms versions from it,
+       and the contract would have been enforced (if at all) after the harm. The
+       returns now arrive at the row that collects them and are validated there. */
+    does:   "take each sub-session's REPORT and hold it to the return contract "
+          + "(a citation, never documents — §14b.1); re-read each citation BY ADDRESS",
+    judged: "what each sub-session's REPORT says",
     logs:   true,
     to:     ["compose", "close"],
   },
@@ -431,8 +445,22 @@ export function nextStep(state) {
     case "fanout":
       return { step: "collect", why: `${LEVELS.length} sub-sessions spawned, one per level, in LEVELS order` };
 
-    case "collect":
-      return { step: "compose", why: `${(s.reports || []).length} REPORT(s) taken; no documents were returned` };
+    case "collect": {
+      /* THE SENTENCE NAMES BOTH NUMBERS, AND BEFORE FL-5 IT NAMED NEITHER. It
+         read "no documents were returned", which was a claim the run had no way
+         to have checked — exactly the shape §14b.4 calls a fence in a prose. What
+         it can honestly say is how many returns HONOURED the contract and how many
+         were REFUSED, because `subsession.mjs` decided each one. A refused return
+         is not an absence and never becomes one: the level it came from is
+         UNDETERMINED and stays stated. */
+      const refused = (s.reportsRefused || []).length;
+      return { step: "compose",
+               why: `${(s.reports || []).length} REPORT(s) honoured the return contract`
+                  + (refused
+                      ? `; ${refused} return(s) REFUSED — a sub-session that returns documents has `
+                        + `defeated the architecture, and those levels are UNDETERMINED, not empty`
+                      : "; none refused") };
+    }
 
     case "compose":
       /* THE ONLY EDGE OUT, and it is dedup. Even with nothing composed the run
