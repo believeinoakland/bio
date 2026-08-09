@@ -4381,6 +4381,15 @@ response: **KEEP (a) — a version names its pack, and a bare edition stays refu
 decided: 2026-08-09 · session BOB (delegated)
 reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §11/§14a (the run records its
   skill version); DEC-54 (the pin-the-version precedent).
+enacted: 2026-08-09 · CONDUCT · **NO CODE CHANGE, and that is the enactment rather than a shortfall.**
+  The ruling KEEPS (a), which is the shape SK-1 already shipped: `aiRunOpen` refuses a run that
+  cannot name its pack (C-22.7), refused where the two principals already are. The provisional and
+  the ruling are the same thing, so enacting it means CONFIRMING the shipped behaviour and closing
+  the question, not editing a file. The deliberate non-check is confirmed with it: any well-formed
+  pack is accepted, including one this repository never wrote, because pinning to the current pack
+  would destroy the distinguishability being bought. Recorded so a later reader does not "fix" it.
+  reasoning now carried by: this entry; `INVESTIGATIVE-SESSION.md` §11/§14a; DEC-54.
+
 ### DEC-65 · answered
 for: bob
 raised: 2026-08-08 · CONDUCT (from PL-3, which met the gap, refused by name rather than engineering around it, and recommended where the fix belongs)
@@ -4431,6 +4440,19 @@ response: **TAKE (b) AS AMENDED BY FL-3 — the exemption is built in the OWNING
 decided: 2026-08-09 · session BOB (delegated)
 reasoning recorded in: this entry (FL-3's measurements and disposition); DEC-32 (the
   conservative default); CLAIMS.md (the delegation).
+enacted: 2026-08-09 · CONDUCT · **PARTLY, AND THE SEQUENCE IS THE RULING.** DEC-65 takes (b) as
+  amended by FL-3, and its amendment is that the third `asserted_by` state is minted FIRST. That is
+  now **PL-17**, minted with `tools/mintid.mjs` and SPAWNED 2026-08-09 — an explicit "no
+  independent-sufficiency claim was made" value, so a machine's single-part row never wears the
+  published meaning "a member said this part is enough on its own".
+  DELIBERATELY NOT ENACTED YET, per the ruling's own order: `C-25.6` and PL-3's endpoint guard change
+  TOGETHER in the item owning those files (the DELEGATION is filed in `CLAIMS.md`), and PL-14
+  re-measures the strength pair over grounds after. FL-3 measured that PL-3's guard refuses on
+  `legsIn.length > 0` and therefore FIRES FIRST, so amending the check alone would land, pass its own
+  suite, and change no behaviour — which is why these are not being done in parallel.
+  Until PL-17 lands, **(a) remains the running provisional**, exercised rather than merely surviving.
+  reasoning now carried by: this entry; DEC-32 (the conservative default); `CLAIMS.md` (the delegation).
+
 ### DEC-64 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from UI-46, which shipped a provisional and asked)
@@ -4460,6 +4482,14 @@ response: **KEEP (a) — the bound is stated always.** Decided 2026-08-09 by ses
 decided: 2026-08-09 · session BOB (delegated)
 reasoning recorded in: this entry; REC-57/IC-23 (the bound discipline); DEC-56/57/58 (act
   and say what you could not establish).
+enacted: 2026-08-09 · CONDUCT · **NO CODE CHANGE.** The ruling KEEPS (a) — the bound is stated
+  always — which is what UI-46 shipped as its provisional, so the enactment is to confirm it and close
+  the question. The stated cost (a figure on the common path) is accepted as the cheaper harm, and the
+  wording lives in ONE shared function, so a future DEC-49-vocabulary pass moves both screens together.
+  Recorded because the tempting later "cleanup" is to state the bound only when it binds, and that
+  converts its absence into a claim nobody made.
+  reasoning now carried by: this entry; REC-57/IC-23 (the bound discipline); DEC-56/57/58.
+
 ### DEC-63 · answered
 for: bob
 raised: 2026-08-07 · CONDUCT (from IS-6, which shipped a provisional and asked)
@@ -4488,6 +4518,17 @@ response: **AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A PROJECT.** Bob, 2
 decided: 2026-08-09 · Bob, session BOB
 reasoning recorded in: this entry; INVESTIGATIVE-SESSION.md §3 (the run is launched against
   an inquiry in a project's context).
+enacted: 2026-08-09 · CONDUCT · **THIS ONE CHANGES SHIPPED BEHAVIOUR, so it becomes an item rather
+  than a confirmation.** The provisional was `contribute` on all three run verbs; the ruling is that the
+  gate is PROJECT MEMBERSHIP — participation in the project the inquiry belongs to — with `contribute`
+  kept only as the floor beneath it and any narrowing happening at the credential layer.
+  Queued as **PL-18** (minted with `tools/mintid.mjs`), runnable now: the three run verbs check project
+  participation, `contribute` stays as the floor, and the refusal NAMES which of the two it failed —
+  because "you are not in this project" and "you lack contribute" are different facts about a member and
+  a single refusal covering both tells them nothing they can act on.
+  The provisional keeps running until PL-18 lands. It is NARROWER than the ruling, so nothing is
+  permitted meanwhile that the ruling would forbid — the safe direction, and stated rather than assumed.
+  reasoning now carried by: this entry; `INVESTIGATIVE-SESSION.md` §3.
 
 ### DEC-62 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
