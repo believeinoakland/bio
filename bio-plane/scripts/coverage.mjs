@@ -256,6 +256,27 @@ const REGISTER_FLOOR = {
      from the figures a green `--strict` run PRINTED on the merged tree carrying VF-1,
      UI-42, PL-17, FL-4, D-257, FL-5 and D-255 (`GREW by 14 arm(s)`). Six of those seven
      moved this figure on their own branch and NOT ONE of their numbers is true here. */
+  /* MOVED 2026-08-09 by REC-69's REPLAY onto `main`: 621 -> 629 / 133 -> 134 /
+     134 -> 135, ALL THREE IN THE SAME TURN and every one taken from the figures a
+     green `--strict` run PRINTED on this tree (`arms 629/621 · classified 134/133
+     · corpus 135/134 · GREW by 8`), never by adding to the numbers above. The
+     corpus and classified rises are ONE new suite, `test/airuns.test.mjs`.
+     AND A PROPERTY OF THIS REGISTER, MEASURED HERE RATHER THAN ASSUMED, because
+     the +8 is smaller than the arms this item actually declared and a reader who
+     did the arithmetic would think a declaration had shrunk. This item added a
+     SECOND `NEGATIVE CONTROL:` paragraph to two suites that already had one —
+     three new arms in `run-conditions.test.mjs`, four in `airuns.test.mjs`, all
+     seven RUN through `test/nc-rec69-selects.mjs`. The detector records the block
+     STATING THE MOST ARMS and never the sum, which is right for the case it was
+     built for (M0-2's backfill left most suites stating ONE control twice) and
+     undercounts this one: `airuns.test.mjs` still reports its original block's 7
+     and the new block contributes 0, while `run-conditions.test.mjs` moved 5 -> 6
+     because the NEW block became the larger of the two. So `arms` is a floor on
+     ARMS STATED IN THE LARGEST SINGLE DECLARATION PER SUITE, not on arms stated —
+     which is safe, because the number is reported and never gated, and the floor
+     can still only fall if a declaration really shrinks. NAMED here rather than
+     silently absorbed, and DELEGATED to M0-14's area in CLAIMS.md: two DIFFERENT
+     controls in one suite is a shape the "never the sum" rule did not anticipate. */
   arms:       646,  // arms stated across the classified declarations
   classified: 135,  // declarations the detector could count arms in
   corpus:     136,  // suites the register reads

@@ -2975,3 +2975,106 @@ predicate, and will be wrong the day a fourth state is minted.
 ### RESPONSES
 
 _(awaiting: `UI`. `FRAMEWORK`, `CAPTURE`, `CONTENT-*` and `DIST` are not consumers of this key.)_
+
+---
+
+## IC-42 · I3: one NEW read op `op=airuns&contextType=&contextId=` — WHICH RUNS ARE IN THIS CONTEXT · PROPOSED 2026-08-08 (REC-69, UI-49's delegation), ADDITIVE
+
+**RENUMBERED from IC-35 to IC-42 by CONDUCT 2026-08-08** — REC-66 had taken IC-35 the same day for `op=connect`'s derivation bound, and it is already on `main`, so it keeps the number. REC-69's own note below is exactly right and is the reason this is a renumber rather than a reprimand: **IC-35 was MEASURED as the next free number over the real file** (the maximum allocated
+was IC-34) rather than assumed. Three items collided on an IC number earlier the same
+day; if CONDUCT renumbers this at integration, the report, the claim and
+`test/airuns.test.mjs`'s header all name IC-35 and that is recorded rather than silently
+corrected.
+
+### 1 · PROPOSED
+
+**WHAT CHANGES, AND IT IS PURELY ADDITIVE.** One new op, reachable by the `admin`,
+`member` and `probe` classes and non-mutating:
+
+    op=airuns&contextType=<inquiry|project>&contextId=<bundle id>[&limit=N]
+      ->  { ok: true,
+            context: { type, id },              // the caller's own words, normalised
+            runs: [ <op=airun's `session` block>, ... ],
+            count: <length of what was SENT>,
+            limit: <the cap AFTER clamping>,
+            truncated: <was anything cut> }
+
+Nothing existing moves. `op=airun`, `op=airunlog` and `op=airunspawn` keep their request
+shapes, their response shapes and their refusals byte for byte — asserted by a zero-delta
+battery, with `airun.test.mjs` unmoved at 103 assertions.
+
+**WHY IT IS OWED, AND IT IS A GAP RATHER THAN A GAIN.** `INVESTIGATIVE-SESSION.md` §14a:
+*"A background session runs in a CONTEXT and is associated with an inquiry or a project.
+Any window focused on any of those objects shows an animated indicator that a job is
+running."* UI-47 measured that the indicator had no call site at all. UI-49 built one —
+and measured, while building it, that **the plane could not be asked the question**:
+`op=airun`, `op=airunlog` and `op=airunspawn` are all keyed by RUN ID, `ai_runs` is
+queried by `run` at all 14 sites, and `op=airunopen` has no UI consumer, so the browser
+never learns a run id by opening one. UI-49's seam therefore feeds on the only source
+that existed — the run addresses THIS DEVICE has already opened — which is honest, is
+pinned, and **reaches only the member who already started the run on that machine. A
+second member's run in the same inquiry is invisible to them, and §14a's promise is about
+exactly that teammate.**
+
+**THE SHAPE IS NOT NEW, AND THAT IS THE POINT.** Every row is `op=airun`'s own `session`
+block, produced by calling `aiRunRead` per run rather than by a second composer, and the
+suite asserts the two answers are BYTE-IDENTICAL for the same run. §14a's surface renders
+a run through field-name-blind renderers, so "the same shape" is load-bearing rather than
+tidy — and a second composer would be a hand copy, which this repository has measured
+five times agrees with its author at zero cost.
+
+**ENVELOPED, per IC-25/IC-26/IC-27/IC-28/IC-29/IC-30.** `limit` is the bound APPLIED
+after clamping — never the number the caller asked for — and `truncated` is the
+completeness signal in the spelling its three siblings already use, rather than a fifth
+word beside the plane's four (REC-55's declined-second-copy rule). Both are published on
+the EMPTY answer too. The 200/1000 pair is `op=versionchain`'s, which `op=basisversions`
+already reused: this is the same KIND of read, a KEYED lookup whose answer is a list.
+`op=airunlog`'s 200/5000 is deliberately NOT borrowed — it bounds one run's observations,
+which grow per tick, and this bounds the runs in a context, which grow per investigation.
+
+**GATED, AND THE GATE IS THE FEATURE'S WHOLE SECURITY POSTURE.** `#bundleGate` on
+`context_id` — the same predicate compiled at the same one point (D-15) as its three
+siblings, with NO second predicate written. A run-id read is a poor leak (a caller must
+already hold the id); a context-keyed list takes an id a member can see on their own
+screen and answers with everything hanging off it. The posture is WITHHOLD THE ROW
+(REC-36), so a run over a project the viewer was never invited to is absent
+byte-identically to one that does not exist, and **no count of the withheld is
+published** — that count is the disclosure that somebody is investigating something you
+cannot see. **The bound is applied BEHIND the gate**, because a `truncated` computed over
+rows the viewer may not see would be that count arriving as a boolean.
+
+**RENUMBERED C-34 → C-36 on 2026-08-09 at this item's REPLAY onto `main`, with
+`node tools/mintid.mjs C` (floor C-35) rather than by reading the file and adding one.**
+REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is already on `main`, so it
+keeps the number. **REC-69 measured C-34 free when it looked and was right when it looked**
+— the same shape as this file's own IC-35 → IC-42 renumber above, and the same shape as the
+seven items that collided on an id in one day. **THE COLLISION WAS INVISIBLE TO THE BATTERY:
+139/139 green with two families claiming C-34.1-3, and only `node civicos-ui/test/run.mjs`
+caught it** — *"Two conditions behind one C-number are one condition as far as `op=audit`
+can see."* That is the fourth cross-item ratchet this pair fired and the reason the UI
+harness is run even by an item that opened no UI file.
+
+**THREE REFUSALS, C-36.1-3, in a new `AI_RUNS_CONTEXT_CHECKS` family**, each with a
+canned translation read from ONE row (DEC-49), each fired inside the
+`DEC-49 REGION is-airuns-context` span, each naming its code as a STRING LITERAL so the
+guard's arm C compares all three. What is refused is the malformed QUESTION — no kind, an
+unrecognised kind, no id — and never the invisible answer: a real context holding no
+visible runs answers an ordinary empty list.
+
+**ONE THING A CALLER MUST KNOW AND CANNOT INFER, stated rather than left to be
+discovered:** the WRITE is not fenced by the same vocabulary. `aiRunOpen` stores
+`contextType` verbatim, so a run may be opened on a kind this read refuses to be asked
+about. The read matches case-blind so the ordinary mismatch (`Inquiry` vs `inquiry`) does
+not manufacture a false "nothing is running", and the asymmetry is delegated rather than
+closed from inside a read's item.
+
+### 2 · RESPONSES
+
+*(CONDUCT's, per IC-1's precedent for dormant areas.)* **RECORD's own position: ADDITIVE
+and safe to accept.** No consumer exists to break — the op is new — and the one consumer
+that WILL exist, UI-49's seam, was built with this shape in mind: exactly one function
+changes on the surface.
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*

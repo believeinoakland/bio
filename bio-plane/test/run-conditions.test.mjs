@@ -7,6 +7,12 @@
    (5) POLARITY, on the branch that costs nothing to get wrong: accept a recorded bar that names NEITHER axis as a real bar (PL-4's class — a value that survives a falsiness guard while naming nothing reads as PRESENT and travels) -> **exit 1, 47 pass, 4 FAIL**: ARM A4, A7, A9 and C5. Five runs must produce five distinct answers; an arm set that matched everything would pass every line and mean nothing.
    ONE MORE RECEIPT, because it is the reason rule 2 of the harness exists. This control was once STOPPED FROM OUTSIDE mid-arm-1 while the suite it drives was hanging on an undisposed Miniflare; the `finally` never ran and `src/store.mjs` was left ARMED. The uniquely-named snapshot is what made the recovery provable — `cmp` against it, and the restored sha matched the `ARMED:` line's own before-hash. The harness now disarms on SIGINT/SIGTERM/SIGHUP and on an uncaught throw, and this suite disposes its Miniflare.
    ---------------------------------------------------------------------------
+   NEGATIVE CONTROL: (run 2026-08-09, rec69-replay, REC-69's REBASE ONTO `main`) THREE further arms covering ONLY what the replay added here — the FIFTH ROLE `SELECTS`, ARM W8's teeth, and the W8 GUARD. RUN through `node test/nc-rec69-selects.mjs` from bio-plane/ (the driver lives INSIDE this worktree), each armed ALONE, DECLARED before it ran, anchor-occurs-exactly-once and bytes-really-changed guarded, every restore verified by sha256 AND `cmp` against a per-arm uniquely-named pristine copy with a byte count and a minimum, opening AND closing baseline rows (54 pass, 0 fail at both ends). CLEAN TREE: 54 pass, 0 fail.
+   (1) A SELECTS READER STARTS PROJECTING A STORED COLUMN — `SELECT r.run FROM ai_runs r` -> `SELECT r.run, r.status FROM ai_runs r` in `aiRunsInContext` -> **exit 1, 53 pass, 1 FAIL**, ARM W8 naming `aiRunsInContext PROJECTS stored column status`, with W3/W3b correctly GREEN because the reader is still CLASSIFIED and it is the CODE that broke the role. **This is the arm that makes the exemption from ARM P1's matrix earned rather than granted.**
+   (2) A SELECTS READER STOPS DELEGATING — `this.aiRunRead({ run: r.run, viewer })` -> a name no publisher carries -> **exit 1, 53 pass, 1 FAIL**, ARM W8 naming `aiRunsInContext CALLS NO PUBLISHES reader`. Delegation is the whole basis of the exemption, so it is asserted rather than assumed.
+   (3) THE CLASSIFICATION IS REMOVED — delete `aiRunsInContext: "SELECTS"` from the ROLE table -> **exit 1, 52 pass, 2 FAIL**: ARM W3 naming `aiRunsInContext` (the EXACT failure of the 2026-08-08 backout, reproduced) and the ARM W8 GUARD (a corpus of zero SELECTS readers). **This is the arm answering "did minting a fifth role just make the ratchet's own failure go away".** It did not: W3 is unchanged and still total.
+   (7) OVER-STRICTNESS — rewrite the projection as the equally correct `SELECT DISTINCT r.run AS run FROM ai_runs r` -> **exit 0, 54 pass, 0 fail**, as declared. **AND ITS FIRST RUN CAME BACK WRONG, which is the most useful line in this block:** W8 stayed green exactly as it should, and **ARM W8b — the POLARITY GUARD — went RED**, because its first draft built its cases by string-replacing the LIVE segment and its anchor no longer matched, so its mutation silently produced a segment identical to its input. An arm that did not arm, inside the guard whose only job is to prove the arm arms; it had also been falling as collateral in arms (1) and (2). W8b now constructs SYNTHETIC segments this file owns, so it measures the reader and not the subject's spelling, and it carries its own over-strictness case. The figures above are the post-fix ones.
+   ---------------------------------------------------------------------------
    REC-74 — THE RUN'S THIRD CONDITION IS STORED AND WAS NEVER PUBLISHED, AND THE
    ITEM IS THE CLASS RATHER THAN THE FIELD.
    ---------------------------------------------------------------------------
@@ -152,11 +158,14 @@ const runReaders = (storeDecommented) => {
   let m;
   while ((m = re.exec(storeDecommented))) marks.push({ name: m[1], at: m.index });
   const hits = [];
+  const bodies = new Map();
   for (let i = 0; i < marks.length; i++) {
     const body = storeDecommented.slice(marks[i].at, i + 1 < marks.length ? marks[i + 1].at : storeDecommented.length);
-    if (/FROM\s+ai_runs/.test(body)) hits.push(marks[i].name);
+    if (/FROM\s+ai_runs/.test(body)) { hits.push(marks[i].name); bodies.set(marks[i].name, body); }
   }
-  return { methods: marks.length, readers: hits };
+  /* REC-69: the SEGMENTS are returned alongside the names, because ARM W8 judges
+     what a SELECTS reader's own statement PROJECTS and a name cannot carry that. */
+  return { methods: marks.length, readers: hits, bodies };
 };
 
 /* THE CLASSIFICATION, DECLARED — and it must be TOTAL over whatever the walk
@@ -173,11 +182,81 @@ const runReaders = (storeDecommented) => {
      AUTHORISES  — reads the row to decide whether a DIFFERENT act may proceed,
                    and publishes nothing of it. Echoing the caller's own `run`
                    argument back in a refusal is not publishing a stored fact.
-     HOUSEKEEPS  — the reaper and the purge. Clock and lifecycle; no facts. */
+     HOUSEKEEPS  — the reaper and the purge. Clock and lifecycle; no facts.
+     SELECTS     — MINTED 2026-08-09 by REC-69, and the minting is the judgement
+                   rather than a fifth box. See the block immediately below. */
+
+/* ========================================================================= *
+ *  SELECTS — WHY A FIFTH ROLE WAS MINTED RATHER THAN A FOURTEENTH READER
+ *  FORCED INTO ONE OF THE FOUR. REC-69, 2026-08-09, and this is the judgement
+ *  CONDUCT deliberately left open at the 2026-08-08 rebuild because getting it
+ *  wrong installs a FALSE ASSERTION ABOUT WHAT THE RECORD PUBLISHES.
+ * ========================================================================= *
+ *
+ *  THE READER. `aiRunsInContext` (`op=airuns`) answers WHICH RUNS ARE IN THIS
+ *  CONTEXT. Its statement over `ai_runs` is `SELECT r.run … WHERE
+ *  lower(r.context_type)=? AND r.context_id=? AND <gate> LIMIT ?` — it reads the
+ *  row to CHOOSE a set of ids and projects nothing else. Every fact a caller
+ *  then learns about each chosen run is composed by `aiRunRead`, CALLED PER ROW,
+ *  and `airuns.test.mjs` asserts each row BYTE-IDENTICAL to `op=airun`'s own
+ *  `session` block rather than as a list of key names.
+ *
+ *  WHY NOT `PUBLISHES`, and the argument is not that no run facts reach a member
+ *  through this op — THEY PLAINLY DO. It is that classifying it PUBLISHES obliges
+ *  it, through ARM P1, to declare a disposition for all twenty stored columns —
+ *  and every one of those twenty cells would be A COPY OF `aiRunRead`'s. That
+ *  copy would agree with its original FOR FREE, which this repository has now
+ *  measured six times as the shape of an assertion that proves nothing; and it
+ *  would be worse than merely free, because a SECOND declaration can DRIFT from
+ *  the reader it describes while the code cannot. The matrix would then read as
+ *  two independent judgements agreeing about what `op=airuns` publishes when
+ *  there is only ever one, made in one place. A table asserting more than it can
+ *  support about what the record publishes is exactly the defect this file's own
+ *  item exists to prevent.
+ *
+ *  WHY NOT `AUTHORISES`, which is the closest of the four and still wrong. Its
+ *  second clause fits — the method publishes no stored fact of its own — but its
+ *  FIRST clause is the definition: a reader that decides whether A DIFFERENT ACT
+ *  MAY PROCEED. No act is authorised here; a question is answered. Filing it
+ *  under AUTHORISES would make the role mean "reads and does not itself publish",
+ *  which is a much weaker claim than the one AUTHORISES currently makes about
+ *  `suggestVersion` and `captureRequest`, and weakening a role to admit a member
+ *  is how a classification stops classifying. `WRITES` and `HOUSEKEEPS` are not
+ *  arguable.
+ *
+ *  SO THE FOUR ROLES DID NOT NAME IT, AND THE HONEST ANSWER IS TO SAY SO:
+ *
+ *    SELECTS — a read whose answer is about WHICH RUNS, never about a run. It
+ *              reads the row to choose ids, DELEGATES every published fact about
+ *              each chosen run to a PUBLISHES reader by calling it, and its own
+ *              answer carries only facts about the ANSWER (`count`, `limit`,
+ *              `truncated`) and the QUESTION NORMALISED FROM THE CALLER'S OWN
+ *              INPUT (`context: {type, id}`) — not one value read off a stored
+ *              column. It owes no disposition row BECAUSE it composes none: the
+ *              dispositions governing what a member learns through it are the
+ *              delegate's, and they are the same ones BY CONSTRUCTION rather
+ *              than by a second declaration.
+ *
+ *  AND IT IS NOT BELIEVED ON THE STRENGTH OF ITS DEFINITION. A role that merely
+ *  asserted delegation would be this project's most-repeated defect — a mechanism
+ *  trusted because it exists. ARM W8 DRIVES it: a SELECTS reader whose statement
+ *  projects any stored column beyond the key, or which calls no PUBLISHES reader,
+ *  FAILS THERE. That arm is what makes the exemption from ARM P1 earned rather
+ *  than granted, and its polarity guard proves the reader can see the violation.
+ *
+ *  WHAT THIS DELIBERATELY DOES NOT DECIDE: whether the ENVELOPE fields a SELECTS
+ *  reader publishes are themselves owed a matrix. They are facts about the answer
+ *  and not about the row, so no stored column is at stake and ARM P1's subject —
+ *  the twenty columns — is untouched. If a SELECTS reader ever publishes a fact
+ *  computed FROM the rows it selected (a count of running jobs, a newest-first
+ *  timestamp), that is a different classification question and ARM W8 will not
+ *  catch it: it reads the SQL projection, not arithmetic over the page. STATED
+ *  here rather than left for somebody to discover. */
 const ROLE = {
   aiRunRead:          "PUBLISHES",
   aiRunSpawnPayload:  "PUBLISHES",
   aiRunLog:           "PUBLISHES",
+  aiRunsInContext:    "SELECTS",
   aiRunOpen:          "WRITES",
   aiRunTick:          "WRITES",
   "#aiRunTerminate":  "WRITES",
@@ -224,7 +303,18 @@ t("ARM W3: THE CLASSIFICATION IS TOTAL over what the walk found — a thirteenth
 t("ARM W3b: and the classification names nothing the walk did not find, so a method deleted from the "
 + "plane cannot keep a green cell alive in this table",
   Object.keys(ROLE).filter((r) => !WALK.readers.includes(r)), []);
-t("ARM W4: EXACTLY THREE readers publish about the row, and they are the three read ops",
+/* CORRECTED 2026-08-09 by REC-69, not exempted, and the old wording was true on
+   the day REC-74 wrote it. It read *"…and they are the THREE READ OPS"*. There
+   are now FOUR read ops on `ai_runs` — `op=airun`, `op=airunspawn`, `op=airunlog`
+   and `op=airuns` — and only three of them publish about the row. Left alone, the
+   sentence would have become the very thing this suite exists to catch: a pin
+   whose ASSERTION still passed while its CLAIM went false, so a reader would
+   learn from it that the plane has three read ops. The assertion itself is
+   unchanged and is now the stronger statement — a fourth read op arrived and the
+   publisher set did NOT grow, which is SELECTS being a real distinction rather
+   than a label. */
+t("ARM W4: EXACTLY THREE readers publish about the row, and a FOURTH read op arrived without joining "
++ "them — `op=airuns` reads the row to choose ids and delegates every published fact to `aiRunRead`",
   PUBLISHERS.slice().sort(), ["aiRunLog", "aiRunRead", "aiRunSpawnPayload"]);
 t("ARM W5: SEEK GUARD ON THE WALK — run over a source with the ai_runs reads removed it finds NONE, so "
 + "ARM W2's answer is the walk working rather than a regex that matches anything",
@@ -233,9 +323,88 @@ t("ARM W6: and no reader of `ai_runs` lives OUTSIDE store.mjs — the walk's bli
 + "file's header, and this is the arm that keeps it a blind spot rather than a hole",
   /FROM\s+ai_runs/.test(INDEX) || /FROM\s+ai_runs/.test(decomment(readFileSync(SRC("query.mjs"), "utf8"))),
   false);
-t("ARM W7: the three ops are DISPATCHED, so the readers this sweep judges are ones a caller can reach — "
+/* CORRECTED 2026-08-09 by REC-69 — `airuns:` joins the list for the same reason
+   the other three are on it. A judged reader nobody can route to proves nothing,
+   and SELECTS is a claim about an OP's answer rather than about a method. */
+t("ARM W7: the four ops are DISPATCHED, so the readers this sweep judges are ones a caller can reach — "
 + "a store-level sweep over a method no op routes to would prove nothing (D-43)",
-  ["airun:", "airunspawn:", "airunlog:"].filter((o) => !STORE.includes(o)), []);
+  ["airun:", "airunspawn:", "airunlog:", "airuns:"].filter((o) => !STORE.includes(o)), []);
+
+/* ========================================================================= W8
+ *  SELECTS, DRIVEN. The role above is an EXEMPTION FROM ARM P1's matrix, so it
+ *  has to be earned by the code rather than granted by the table. Two conditions,
+ *  both read off the reader's own segment:
+ *    (1) its statements over `ai_runs` PROJECT nothing but the key. A SELECTS
+ *        reader that started selecting `r.status` would be publishing a stored
+ *        fact under a role that says it does not, and the matrix would not be
+ *        watching it.
+ *    (2) it CALLS a reader classified PUBLISHES. Delegation is the whole basis of
+ *        the exemption; a SELECTS reader that composed its own rows would owe the
+ *        matrix twenty cells like anybody else.
+ *  Both are structural on purpose — the RUNTIME half is `airuns.test.mjs`'s
+ *  byte-identity arm against `op=airun`'s `session` block, which is the strongest
+ *  available form of "the same shape per row" and is driven through the ops. */
+const SELECTORS = WALK.readers.filter((r) => ROLE[r] === "SELECTS");
+/* The KEY is `run`, the row's own primary key and the argument the delegate is
+   called with. Naming it here rather than deriving it keeps the exemption narrow:
+   any OTHER stored column appearing in a projection is a violation. */
+const KEY_COLUMN = "run";
+const projectedColumns = (segment) =>
+  [...segment.matchAll(/SELECT\s+([\s\S]*?)\s+FROM\s+ai_runs/gi)]
+    .flatMap((m) => COLUMNS.filter((c) => new RegExp(`(?:^|[\\s,(]|\\w\\.)${c}\\b`).test(m[1])));
+const selectorViolations = SELECTORS.flatMap((name) => {
+  const seg = WALK.bodies.get(name) || "";
+  const projected = [...new Set(projectedColumns(seg))].filter((c) => c !== KEY_COLUMN);
+  const delegates = PUBLISHERS.filter((p) => new RegExp(`this\\.${p}\\s*\\(`).test(seg));
+  return [
+    ...projected.map((c) => `${name} PROJECTS stored column ${c}`),
+    ...(delegates.length ? [] : [`${name} CALLS NO PUBLISHES reader`]),
+  ];
+});
+console.log(`  ARM W8 corpus: ${SELECTORS.length} SELECTS reader(s) — ${SELECTORS.join(", ") || "NONE"}`
+          + `; each judged on its projection over ${COLUMNS.length} stored columns and on which of the `
+          + `${PUBLISHERS.length} publishers it calls`);
+t("ARM W8 GUARD: there IS at least one SELECTS reader — the exemption below is judged over a real "
++ "corpus rather than reported clean over an empty one",
+  SELECTORS.length >= 1, true);
+t("ARM W8: SELECTS IS EARNED, NOT GRANTED — every SELECTS reader projects nothing but the key from "
++ "`ai_runs` and delegates to a PUBLISHES reader. One that started selecting a stored column, or "
++ "composed its own rows, lands here BY NAME instead of quietly sitting outside ARM P1's matrix",
+  selectorViolations, []);
+/* ARM W8b, REWRITTEN 2026-08-09 IN THE TURN THAT WROTE IT, and the reason is a
+   control that came back WRONG rather than a preference — recorded here instead
+   of smoothed. The first draft built its polarity cases by STRING-REPLACING the
+   live segment (`SELECT r.run FROM ai_runs` -> `SELECT r.run, r.status …`). The
+   over-strictness arm then rewrote the real projection to the equally correct
+   `SELECT DISTINCT r.run AS run FROM ai_runs r` — W8 stayed GREEN, exactly as it
+   should — and W8b WENT RED, because its own anchor no longer matched and its
+   mutation silently produced a segment identical to the input. AN ARM THAT DID
+   NOT ARM, inside the guard whose entire job is to prove the arm arms. It also
+   fell as collateral in the two arms that DID work, for the same reason.
+   A polarity guard must not be coupled to the subject's spelling. These cases are
+   SYNTHETIC segments this file owns outright, so the guard measures the READER
+   and nothing else — and the third case is the guard's own over-strictness:
+   correct work must come back clean through the same reader. */
+t("ARM W8b: POLARITY, over segments this arm CONSTRUCTS rather than patches — the reader FINDS a "
++ "projected stored column, FINDS a missing delegation, and comes back clean on a correct one. W8's "
++ "empty list is therefore a measurement and not a matcher that never matches",
+  (() => {
+    const projects = "  ncSelectsProjecting(a) {\n"
+      + "    const page = this.#rows(`SELECT r.run, r.status FROM ai_runs r WHERE r.run = ?`, a);\n"
+      + "    return page.map((r) => this.aiRunRead({ run: r.run }));\n  }\n";
+    const undelegated = "  ncSelectsUndelegated(a) {\n"
+      + "    const page = this.#rows(`SELECT r.run FROM ai_runs r WHERE r.run = ?`, a);\n"
+      + "    return page.map((r) => ({ id: r.run }));\n  }\n";
+    const correct = "  ncSelectsCorrect(a) {\n"
+      + "    const page = this.#rows(`SELECT DISTINCT r.run AS run FROM ai_runs r WHERE r.run = ?`, a);\n"
+      + "    return page.map((r) => this.aiRunRead({ run: r.run }));\n  }\n";
+    const cols = (s) => [...new Set(projectedColumns(s))].filter((c) => c !== KEY_COLUMN);
+    const delegates = (s) => PUBLISHERS.some((p) => new RegExp(`this\\.${p}\\s*\\(`).test(s));
+    return [cols(projects), delegates(projects),
+            cols(undelegated), delegates(undelegated),
+            cols(correct), delegates(correct)];
+  })(),
+  [["status"], true, [], false, [], true]);
 
 /* ========================================================================= *
  *  THE RUNTIME. Everything below goes through the CONTROL PLANE.

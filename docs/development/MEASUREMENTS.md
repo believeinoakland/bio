@@ -5321,3 +5321,172 @@ refusal code is named anywhere in this item.
 **TWO SUITES REPORT `assertions unknown` IN EVERY RUN** — `bundle.test.mjs` and
 `livefire.test.mjs`. That is a missing tally, not a zero, and it is named here rather than
 folded into the totals above.
+---
+
+## 2026-08-08 · REC-69 · `op=airuns`, and FOUR figures measured rather than carried
+
+**Instrument: `bio-plane/scripts/battery.mjs`, `bio-plane/test/airuns.control.mjs`,
+`bio-plane/test/airuns.test.mjs`'s own index sweep, `civicos-ui/check-refusal-codes.mjs`.**
+
+**1 · THE BATTERY, ATTRIBUTED BY RE-RUNNING THE TRUE BASELINE IN THIS WORKTREE.**
+`124/124 green · 7,811 assertions` → `125/125 green · 7,864`. The brief carried ~7,815;
+**the measured figure is 7,811, and the item's brief was stale — the tenth consecutive
+item to find that by measuring.** The delta is `+53` and every unit of it is attributed:
+`airuns.test.mjs` NEW at 46, `bounds.test.mjs` 147 → 152 (the roster pin and the new op's
+four live arms), `hygiene.test.mjs` 504 → 507 (a per-file sweep, and this item adds files
+to `test/`). **120 counted suites moved by ZERO.** The baseline was produced by reverting
+the item's eight files to HEAD in this worktree and re-running, then restoring and
+verifying every restore by sha256 AND by `cmp` against uniquely-named pristine copies.
+
+**A MEASUREMENT HAZARD WORTH RECORDING, because it nearly produced a false number.** The
+first "after" run was written to a generically-named scratchpad file that ANOTHER
+concurrent checkout was also writing. The tail read `125/125 · 7,864` — the right answer
+by coincidence — while the file's body listed a suite this worktree does not have
+(`provenance-marker.test.mjs`), no `airuns.test.mjs`, and a RED `hygiene`. **A tally read
+from a file another process is writing is not a measurement of your tree**, and the only
+reason it was caught is that the per-suite attribution disagreed with the headline. Every
+figure here was re-produced with uniquely-named files.
+
+**2 · THE INDEX SWEEP — 11 ACCESS PATHS BUILT FOR A QUESTION NO OP ASKS.** REC-69's own
+shape, generalised and made mechanical: **79 indexes are declared in `schema.mjs`; 68
+have a statement in `store.mjs`/`query.mjs` filtering their leading column; 11 do not.**
+`ai_runs_context ON ai_runs(context_id)` was one of them — declared the day IS-6 landed,
+with nothing in the plane filtering `ai_runs` by `context_id` until this op. Three of the
+remaining eleven were read by hand rather than trusted to the regex:
+`links(source_bundle)` appears only in an INSERT's column list and one projected field;
+`tasks(assignee)` appears only as a field set to `null`; `inquiry_basis(grade_source)`
+appears only where a row is PROJECTED. **What the sweep can see: an index whose leading
+column no `WHERE`/`AND` clause names. What it CANNOT: an index reached only through a
+JOIN's ON clause, one filtered through a dynamically composed fragment, and — the big one
+— a missing question that nobody built an index for. It is a FLOOR on the class, never a
+census.** Ratcheted both ways in `airuns.test.mjs`.
+
+**3 · THE DEC-49 GUARD'S FLOORS, ALL MOVED FROM PRINTED FIGURES.** families 13 → 14, rows
+145 → 148, census 406 → 409, reach 200 → 203, governedSites 59 → 60, regions 46 → 47,
+regionLines 1263 → 1281, codesChecked 115 → 118, vocabularies 8 → 9, vocabularyTerms
+51 → 53. **The `reachGap` CEILING did NOT move and stands at 42** — three new codes
+arrived already translated, which is the property a new family owes. **`regionLines` is a
+property of the MERGED source**: several workers are in `store.mjs` concurrently, so if
+any lands a line inside one of the other 46 spans this figure must be re-read from a
+green run of the merged tree.
+
+**4 · THE CONTROL REGISTER, RAISED AND NOT MOVED.** `scripts/coverage.mjs --strict`
+prints `arms 481/471 · classified 121/119 · corpus 122/120`. **The floor was already 4
+arms behind on `main` before this item touched anything** (it read `475/471` on the
+untouched tree), and this item's one new suite takes it to 481. It is NOT edited here:
+`bio-plane/scripts/coverage.mjs` is M0-14's ground and two items moving one shared floor
+in parallel is the collision UI-48 and CPDF-9 each declined to cause. Raised for CONDUCT.
+
+---
+
+## 2026-08-09 · REC-69's REPLAY onto `main` — five figures re-measured rather than carried
+
+**Instruments:** `bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict` (run
+DIRECTLY, `$?` read UNPIPED), `bio-plane/test/airuns.test.mjs`'s own index sweep replayed over
+three git trees, `bio-plane/test/bounds.test.mjs`'s capped-op walk, `node civicos-ui/test/run.mjs`.
+Every figure below is what an instrument PRINTED on the tree named beside it.
+
+**BASELINE, MEASURED ON `main` (`ad87db7`) BEFORE ANYTHING WAS RESTORED — and the brief's figure
+was stale, as the practice predicts.** The QUEUE row records the 2026-08-08 rebuild at
+**129/129 green · 8,116 assertions**. `main` today measures **138/138 green · 8,827 assertions**;
+ten items landed in between. Trust the measurement, not the brief.
+
+**FINAL, ON THE REPLAYED TREE: 139/139 green · 8,887 assertions.** Delta **+1 suite, +60
+assertions**, ATTRIBUTED PER SUITE by re-running the true baseline and diffing the per-suite
+tallies — never by subtracting two headline totals. **Exactly four suites moved:**
+
+| suite | baseline | final | why |
+| --- | --- | --- | --- |
+| `airuns.test.mjs` | ABSENT | 49 | REC-69's own suite, plus three arms this replay added to its SWEEP |
+| `bounds.test.mjs` | 151 | 156 | REC-69's live arms for `op=airuns` on the capped-op roster |
+| `hygiene.test.mjs` | 553 | 556 | REC-69's new source arms |
+| `run-conditions.test.mjs` | 51 | 54 | this replay's ARM W8, W8 GUARD and W8b |
+
+**THE UNREAD-INDEX ROSTER: 11 → 13, AND IT WAS ATTRIBUTED BY REPLAYING THE SWEEP OVER THREE TREES
+RATHER THAN BY ADJUSTING A NUMBER.** 11 + 2 agreeing with 13 is a coincidence, not evidence.
+
+| tree | indexes declared | UNREAD |
+| --- | --- | --- |
+| REC-69's branch tip `2d9c57b` | 79 | **11** |
+| `main` `ad87db7`, without this item | 84 | **14** — and `ai_runs_context` is BACK on the list, which is this item's whole premise measured a second time |
+| the replayed tree | 84 | **13** |
+
+So 11 was true of a tree that no longer exists and 14 of one without `op=airuns`; neither is the
+merged figure. **The two arrivals, both LOOKED AT, per the roster's own rule that a rise needs
+somebody to have looked at the new one:**
+
+- **`provenance_route_marks(finding)` — A REAL INSTANCE.** `finding` is in no `WHERE` anywhere in
+  the plane; every reader takes the latest mark per bundle by `seq` and classifies in JS.
+  **THE QUESTION NO OP ASKS: "which documents carry a standing `LOOKED_INDETERMINATE` marker."**
+- **`reading_text_source(transcribed)` — NOT AN INSTANCE. IT IS THE SWEEP'S OWN DECLARED BLIND
+  SPOT FIRING.** `op=textprovenance` filters BOTH columns of that index, through a `WHERE`
+  composed at runtime — which the sweep's header names in advance as something it cannot see.
+  Measured three ways so the exculpation is evidence rather than an excuse: unread by this reader,
+  READ by a fragment-aware reader, and the op is dispatched. **The matcher was deliberately NOT
+  widened**: broadening it to match a bare `col=?` would also match an `UPDATE`'s `SET` clause and
+  would SHRINK this roster by hiding real gaps, which is the one direction a ratchet must never
+  move by accident.
+
+**THE CAPPED-OP ROSTER: 29, from what the walk PRINTED on the replayed tree.** REC-69 measured 26
+from a base of 25 in its own worktree; `main` independently reached 28 while REC-69 sat reverted.
+Both were true of trees that are not this one.
+
+**THE CONTROL REGISTER: `arms 629 · classified 134 · corpus 135`**, from a green `--strict` run,
+`$?` read UNPIPED as `0`. `REGISTER_FLOOR` moved 621/133/134 → **629/134/135 in the same turn**,
+and now sits EXACTLY at measured with no slack in any of the three. **AND THE +8 IS SMALLER THAN
+THE ARMS THIS ITEM DECLARED, which is a property of the register and not a shrinking declaration —
+see the DELEGATION in `CLAIMS.md`:** it records the block STATING THE MOST ARMS and never the sum,
+so a suite carrying TWO DIFFERENT controls reports only the larger. `airuns.test.mjs` reports 7 of
+its 11; `run-conditions.test.mjs` moved 5 → 6 because the new block became the larger and REC-74's
+five stopped being counted.
+
+**OPS 163/163 reached · CHECKS 219/219 named**, both 100%, so `op=airuns` and the C-34 family
+arrive already driven through the control plane.
+
+**UI harness: `node civicos-ui/test/run.mjs` from the repo root, exit 0 read UNPIPED.**
+
+**NEGATIVE CONTROLS: 7 arms, ALL RUN, `node bio-plane/test/nc-rec69-selects.mjs`, final exit 0,
+0 came back wrong, opening and closing baseline rows identical (54/0 and 49/0).** **ONE CAME BACK
+WRONG ON THE FIRST RUN and it is the most useful figure here:** the OVER-STRICTNESS arm rewrote the
+projection as the equally correct `SELECT DISTINCT r.run AS run FROM ai_runs r`; ARM W8 stayed
+GREEN as it should, and **ARM W8b — the POLARITY GUARD — went RED**, because it built its cases by
+string-replacing the LIVE segment and its anchor no longer matched, so its mutation silently
+produced a segment identical to its input. **An arm that did not arm, inside the guard whose only
+job is to prove the arm arms**, and it had been falling as collateral in the two arms that worked.
+W8b now constructs synthetic segments the suite owns outright.
+
+**A FOURTH CROSS-ITEM RATCHET, AND THE BATTERY CANNOT SEE IT.** `C-34.1-3` was claimed by
+BOTH `AI_RUNS_CONTEXT_CHECKS` (REC-69) and `ROUTE_MARK_CHECKS` (REC-63, already on `main`).
+**The battery ran 139/139 green at 8,887 assertions over that collision.** `node
+civicos-ui/test/run.mjs` failed it three times — *"Two conditions behind one C-number are one
+condition as far as `op=audit` can see"* — and it is the only instrument that did.
+REC-69's family renumbered to **C-36.1-3** with `node tools/mintid.mjs C` (floor C-35, MINTED
+not read-and-incremented); REC-63 keeps C-34 because it landed first. After the renumber:
+battery 139/139 at 8,887, UI harness exit 0.
+
+**THE FOUR RATCHETS THIS PAIR FIRES, since the 2026-08-08 backout listed two.** (1)
+`run-conditions.test.mjs` ARM W3 — answered by minting `SELECTS`. (2) `airuns.test.mjs`'s index
+roster — re-measured 11 → 13 with both arrivals looked at. (3) `op-claims.test.mjs`'s
+`PLANNED_OPS` expiry — M0-12 landed BETWEEN the two merge attempts. (4) the C-number collision
+above, which no plane suite can see. **A backout that lists the ratchets it failed is listing
+the ones that existed that day**, and the queue moves underneath it.
+
+**A FIFTH FINDING, AND IT IS ABOUT THE INTEGRATION RATHER THAN THE ITEM: THE 2026-08-08 MERGE
+DROPPED `civicos-ui/check-refusal-codes.mjs` ENTIRELY.** REC-69's branch changed 12 files
+(`git diff 722c37b 2d9c57b --stat`); the merge commit carried 11 (`git diff 7e5f9b0 e241672
+--stat`), and the missing one holds every DEC-49 floor the new C-family invalidated. **Nothing
+failed** — a dropped floor move goes SLACK, not red. Ten floors were sitting stale on the
+replayed tree with the battery green, `--strict` exit 0 and the UI harness exit 0:
+families 15→**16**, rows 163→**166**, census 424→**427**, reach 217→**220**, governedSites
+66→**67**, regions 53→**54**, regionLines 1407→**1425**, codesChecked 141→**144**,
+refusalsJudged 143→**146**, vocabularies 9→**10**, vocabularyTerms 56→**58**. All eleven moved
+in one turn from the figures the guard PRINTED; every one now sits EXACTLY at measured.
+`reachGap` 41/41 and `unclassifiedOutcomes` 3/3 did NOT move, correctly — REC-69's three codes
+arrive TRANSLATED, which is the property a new family owes rather than the number.
+**`regionLines` has now moved at integration five times out of six**, and neither prior number
+was ever true of this tree: REC-69's branch computed 1281 from a base of 1263 while `main`
+independently reached 1407 without it.
+
+**CHECKS 219 → 222 after the C-34→C-36 renumber.** The collision was not only ambiguous, it was
+UNDERCOUNTING the catalog by three: two families claiming one set of numbers are one set of
+checks as far as the register can see.
