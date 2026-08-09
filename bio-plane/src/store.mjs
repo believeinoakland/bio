@@ -204,7 +204,7 @@ import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MA
    re-derived here because the ordinary close and the reaper must compute the
    bound through ONE function — two paths that agree is the failure this
    repository has measured five times. */
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS,
          checkObservation, checkCondition, checkBound, finishedBound } from "./airun.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
@@ -20778,7 +20778,88 @@ export class Store extends DurableObject {
          LENS, and §11's whole reason for recording the conditions is that a
          version is only interpretable against them. */
       bias,
+      /* REC-74: AND THE THIRD CONDITION, WHICH WAS SILENT HERE UNTIL NOW.
+         §11's three are the manifest, the SKILL VERSION and the launching
+         project's declared STANDARD PAIR. Two of them were published — the
+         skill inside `principal`, the manifest as `bias` — and this one was
+         written by `aiRunOpen`, published by `aiRunSpawnPayload`, and read by
+         nobody here, so a member reading the run object could not see the bar
+         the run was working to. It sits beside `bias` for the same reason
+         `bias` sits beside `principal`: a bar is not an identity and not an
+         allowance, it is the standard the work was held to.
+
+         THE KEY IS ALWAYS PRESENT ON A FOUND RUN, and that is the whole
+         design. An absent key means the READER does not publish this fact;
+         `standard.in_force: false` with its `basis` and its `stated` sentence
+         means we looked and there was no bar. A consumer can tell those apart;
+         a null could not, which is why no null is published here. */
+      standard: this.#standardForRun(row),
     } };
+  }
+
+  /** REC-74: the run's BAR, computed ONCE, for the same reason `#biasForRun`
+   *  is — `aiRunSpawnPayload` publishes the same block, and "what bar was this
+   *  run formed under" is a question with one answer.
+   *
+   *  NEVER RECOMPUTED AND NEVER LOOKED UP. `aiRunOpen` stores what the launch
+   *  handed it and derives nothing; this reads that back and JUDGES it, which
+   *  is a different act from deriving one. In particular it does NOT go and ask
+   *  the project what its declared strength is today: DEC-17 puts the bar on
+   *  the project axis, and a read that substituted the project's CURRENT
+   *  declaration for the one the run was formed under would answer a different
+   *  question and look identical. (`bias` publishes both sides precisely
+   *  because it can COMPARE them; there is no comparison to make here until an
+   *  op publishes a project's declared pair, which none does today — stated as
+   *  a limit rather than papered over, and delegated.)
+   *
+   *  THE PAIR IS NEVER COMPOSED. DEC-21/DEC-44 refuse the composition four
+   *  ways: capture and connection range over two different populations and
+   *  nothing here averages, mixes or reduces them to one value. An axis the
+   *  recorded bar does not name is published as `null` BESIDE the one it does,
+   *  never filled in from its sibling.
+   *
+   *  Synchronous, deliberately: unlike the manifest there is no hash and no
+   *  second read, so making this async would buy a promise nobody awaits for. */
+  #standardForRun(row) {
+    const raw = row.standard_pair;
+    let parsed = null, unreadable = false;
+    if (raw != null && String(raw).trim() !== "") {
+      try { parsed = JSON.parse(String(raw)); }
+      catch { unreadable = true; }
+      /* An array or a scalar is not a pair. Judged rather than spread: a
+         `JSON.parse("7")` that reached the return would publish `pair: {}` and
+         read as a declared bar naming no axes, which is the shape below that
+         this branch exists to keep out of `recorded`. */
+      if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
+        parsed = null; unreadable = true;
+      }
+    }
+    /* PL-4's measurement, applied here: a value that survives a falsiness guard
+       while naming nothing reads as PRESENT and travels. A recorded object that
+       names neither axis is not a bar, and saying so is not strictness — it is
+       the difference between "the group set a standard" and "a field was
+       filled in". */
+    const axis = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+    const capture = parsed ? axis(parsed.capture) : null;
+    const connection = parsed ? axis(parsed.connection) : null;
+    const basis = unreadable ? "unreadable"
+      : parsed !== null ? (capture === null && connection === null ? "names-no-axis" : "recorded")
+      /* DEC-17, verbatim: *"An inquiry outside any project has no bar. The
+         declaration is a property of a project… and inheriting a bar from
+         somewhere else would invent one."* So the projectless run's absence is
+         STRUCTURAL and the projected run's is a fact about its formation, and
+         the two are different answers rather than one null. */
+      : row.context_type === "project" ? "none-recorded"
+      : "context-has-no-project";
+    return {
+      in_force: basis === "recorded",
+      basis,
+      /* The sentence travels WITH the answer, from the plane's own vocabulary,
+         so a surface renders what it RECEIVED rather than holding a copy of the
+         map (DEC-8, and `op=airunlog`'s own precedent one method down). */
+      stated: STANDARD_BASIS[basis],
+      pair: basis === "recorded" ? { capture, connection } : null,
+    };
   }
 
   /** PL-12: the run's bias block, computed ONCE. Read `aiRunRead`'s header for
@@ -20901,6 +20982,17 @@ export class Store extends DurableObject {
          reach, which is not the coupling §14 forbids. This is exactly why the
          two constructs had to be split before this fence could be drawn. */
       standard_pair: row.standard_pair,
+      /* REC-74: THE SAME BAR, JUDGED, FROM THE SAME FUNCTION `op=airun` USES.
+         `standard_pair` above is the column verbatim and is KEPT — `agent-worker`
+         builds against it and removing it is an interface change this item has
+         no mandate for — but verbatim is exactly what could not tell the two
+         absences apart: a caller receiving `standard_pair: null` cannot say
+         whether no bar was in force, whether the run has no project and could
+         not have one, or whether this reader simply does not publish the fact.
+         Two readers of one row must not disagree about which of its facts
+         exist, so both now answer from `#standardForRun` and neither computes
+         its own. */
+      standard: this.#standardForRun(row),
       budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
                                    consumed: b.consumed, unit: b.unit })),
     };

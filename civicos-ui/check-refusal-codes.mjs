@@ -412,8 +412,16 @@ const FLOOR = {
   refusalsJudged: 124,   /* REC-76 — the YIELD: outcomes graded as refusals rather than as declared
                           successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
                           a walk that had lost every spelling but one would still have cleared. */
-  vocabularies:  8,    // the plane's own code->text maps a surface renders verbatim (arm E)
-  vocabularyTerms: 51, // + PL-15's `out-of-inquiry-lead` FINDING slug. Terms across them. Read 40 over a tree carrying 50 for long enough that
+  vocabularies:  9,    // the plane's own code->text maps a surface renders verbatim (arm E).
+                       // WAS 8. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
+                       // run's declared standard pair can be known, each carrying the sentence a
+                       // member reads instead of the machine word. Moved IN THE SAME TURN from
+                       // the figure THIS FILE PRINTED on a green run (9/56), never by adding to
+                       // the number: five consecutive items found this block already stale by
+                       // measuring it, and REC-71 measured a floor with slack flipping a control
+                       // from RED to GREEN.
+  vocabularyTerms: 56, // WAS 51 (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
+                       // FINDING slug. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
                        // still have cleared 40.

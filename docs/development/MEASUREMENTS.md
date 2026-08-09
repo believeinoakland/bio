@@ -4958,3 +4958,63 @@ statement about today, not a property of the matcher. Three consumers were found
 - `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` read UNPIPED: **exit 0.**
 - Two suite headers found stale by measuring them: `ai-session-wire` says "Clean tree: 70" against a
   real 72; `airun.test.mjs` says "Clean tree: 101" against a real 103.
+## 2026-08-08 · REC-74 — THE RUN OBJECT'S STORED-VS-PUBLISHED MATRIX
+
+**Instrument:** `bio-plane/test/run-conditions.test.mjs`, ARM W and ARM P. The
+column corpus is parsed live out of `schema.mjs`'s one `CREATE TABLE IF NOT
+EXISTS ai_runs (...)` literal; the reader corpus is walked out of `store.mjs`
+after comments are stripped, by segmenting method signatures at two-space indent
+and testing each body for `FROM ai_runs`. Neither figure is typed. Re-run it
+rather than reasoning about it.
+
+| What | Measured | Date |
+| --- | --- | --- |
+| Columns `ai_runs` stores | **20** | 2026-08-08 |
+| Methods in `store.mjs` reading `ai_runs` | **12** of 336 methods scanned | 2026-08-08 |
+| Of those, methods that PUBLISH about the row | **3** — `aiRunRead`, `aiRunSpawnPayload`, `aiRunLog` | 2026-08-08 |
+| Corpus judged | **240** (method, column) pairs; **60** cells owed a declared disposition | 2026-08-08 |
+| Columns every publishing reader publishes | **1** — `run` | 2026-08-08 |
+| Columns some publish and some do not | **18** | 2026-08-08 |
+| Columns NO reader publishes | **1** — `state` | 2026-08-08 |
+
+**THE FIGURE THAT MATTERS IS THE 18.** Two readers of one row disagreeing about
+which of its facts exist was the defect REC-74 was routed for, and the missing
+standard pair was one instance of a pattern that covers nearly every column. The
+disagreements are now DECLARED, with a reason per cell, and the matrix is total
+in both directions: a column added to `ai_runs` tomorrow fails the suite, and a
+disposition naming a column the schema does not have fails it too.
+
+**AND THE 1 IS A SECOND INSTANCE, FOUND BY THE SWEEP AND NOT FIXED BY IT.**
+`ai_runs.state` is written by `aiRunOpen` and `aiRunTick` and published by no
+reader. `loadCaptureSession` — the model §11 says the run object extends — does
+publish its `state`, and `airun.test.mjs`'s ARM P resumes from the LOG. It is
+SCRATCH rather than a CONDITION, so REC-74's doctrine sentence does not bind it;
+the resumability question is delegated in `CLAIMS.md`.
+
+**WHAT THE MATCHER CANNOT SEE, measured rather than assumed.** It cannot see a
+read of `ai_runs` built by string concatenation, one inside a nested function
+expression assigned elsewhere, a reader outside `store.mjs` (ARM W6 asserts
+there is none today), or a column added by `#migrate` rather than by the CREATE
+TABLE literal. Its withholding check is two-layer and the second layer is not
+total: **21 of the withheld cells got a VALUE scan, 9 got the path check alone**
+(enum-like, short, or itself withheld by `op=airun` so there is no reference to
+scan for), and cells whose value is shared with a column the same reader does
+publish are UNRESOLVABLE by value and are counted separately. ARM P3 prints all
+three sets on every run.
+
+## 2026-08-08 · REC-74 — DEC-49 ARM E, AFTER `STANDARD_BASIS`
+
+Measured by `node civicos-ui/check-refusal-codes.mjs` on a green run, and the
+floors moved in the same turn from the figures it PRINTED.
+
+| What | Before | After | Date |
+| --- | --- | --- | --- |
+| Plane vocabularies arm E finds | 8 | **9** | 2026-08-08 |
+| Terms across them | 51 | **56** | 2026-08-08 |
+
+Every other floor was RE-MEASURED and is unchanged: census 405, families 11 /
+rows 105, REACH 191, ratchet ceiling 73, arm C 28 sites / 60 lines / 16 regions
+/ 953 region lines / 76 codes. **REC-74 mints no refusal and no C-number** — it
+publishes a condition and refuses nothing, which is why the refusal floors did
+not move and why its own over-strictness arm is that a projectless run READS
+CLEANLY.
