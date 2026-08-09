@@ -22,14 +22,6 @@
  * floored against the empty-string digest.  Run 2026-08-09, all eight AS DECLARED.
  * Figures are walkfloor pass/fail · hygiene pass/fail.
  *
- * THE ARMS ARE ENUMERATED RATHER THAN TABULATED, AND THAT IS NOT A STYLE CHOICE.
- * The first draft of this declaration was a column table, and `control-register.mjs`
- * read TWO arms out of it against a real eight — the D-233 under-count class, in
- * which `bias.test.mjs` stated thirteen arms in a grammar the detector could not
- * see and scored zero.  An under-declared arm count installs slack in the
- * `REGISTER_FLOOR` ratchet, which is the same payload D-238 is about.  Measured
- * with `countArms` directly before and after rewriting this block.
- *
  *   (1) baseline — NO EDIT AT ALL: 31/0 · 570/0, GREEN as declared.  The row that
  *       makes every other row interpretable.
  *   (2) hop — never seed a binding from an imported walk-derived export: 21/10 · 567/3.
@@ -46,6 +38,21 @@
  *       spelling the ratchet was not written against must PASS.
  *   (8) ratchet — a NEW consumer that floors and is NOT guarded: 31/0 · 569/1, and
  *       the failure NAMES the new file.
+ *
+ * THE ARMS ARE ENUMERATED, AND THEY SIT DIRECTLY UNDER THE MARKER'S OWN PARAGRAPH.
+ * NEITHER IS A STYLE CHOICE, AND BOTH WERE MEASURED RATHER THAN GUESSED.  This
+ * declaration was first written as a COLUMN TABLE and `control-register.mjs` read
+ * TWO arms out of it against a real eight — the D-233 under-count class, in which
+ * `bias.test.mjs` stated thirteen arms in a grammar the detector could not see and
+ * scored ZERO.  Rewriting it as an enumerated list fixed the count to 8 but put an
+ * explanatory paragraph BETWEEN the marker and the list, which ends a declaration
+ * under the register's paragraph rule: the suite then scored `arms: null` and
+ * dropped OUT of `classified` altogether (137 -> 136, arms 659 -> 657), and
+ * `--strict` exited 1.  An under-declared arm count installs slack in the
+ * `REGISTER_FLOOR` ratchet, which is D-238's payload; an unclassifiable one is
+ * worse, because the register can no longer see the suite at all.  BOTH STATES
+ * WERE OBSERVED IN THIS FILE IN ONE SITTING, and the order that works is: marker
+ * paragraph, then the list, then any prose.
  *
  * TWO ARMS CAME BACK OTHER THAN DECLARED ON THE FIRST RUN AND ARE RECORDED RATHER
  * THAN SMOOTHED: `baseline` and `overstrict` both read hygiene 569/1, and the
