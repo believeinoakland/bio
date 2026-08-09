@@ -125,6 +125,25 @@ and the conclusion was still wrong, because it priced only one side.** Measured 
   produces the same conflict as one branched level**, because the conflicting files are the
   ones every worker appends to regardless.
 
+**KEEP-BOTH ON PROSE IS SAFE AGAINST LOSS AND NOT AGAINST CONTRADICTION, AND THE
+DISTINCTION HAS TEETH. Measured 2026-08-08 on the very first merge pair of the rebuild.**
+The standing wording — *append-only prose, resolved mechanically, content never lost* — is
+true and is not the whole rule. Two branches did not APPEND two different rows; they each
+EDITED THE SAME THREE ROWS, and keep-both kept both versions. The result was `D-240`,
+`D-242` and `D-243` each appearing TWICE in `DEBT.md`, **one copy current and one stale, and
+in every pair one said `open` while the other said `closed`.** Nothing was lost; the file
+simply asserted a row's status and its contradiction, four lines apart.
+
+**It was caught by D-243's duplicate-id check in `plancheck`, which had landed ten minutes
+earlier in the merge immediately before** — before that instrument existed this would have
+been invisible, and the honest reading is that earlier keep-both merges were never verified
+against this failure rather than known to be free of it.
+
+**So: after any keep-both resolution, run `node tools/plancheck.mjs` BEFORE you commit the
+merge, and resolve a duplicated row by keeping the version from the branch that actually
+CLOSED or NARROWED it** — not the longer one, and never both. `git diff` will not help you;
+compare the STATUS field of each copy.
+
 **So the rule is: the moment a worker reports, SPAWN ITS REPLACEMENT BEFORE YOU MERGE
 ANYTHING.** Spawning is one tool call and costs seconds; integration costs twenty minutes.
 Doing the cheap thing first is free, and doing it second has now cost this project two
