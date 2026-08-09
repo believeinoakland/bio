@@ -2926,6 +2926,70 @@ control plane and the store (C-35.10).
 
 ---
 
+## IC-54 · I3: EVERY REFUSAL AT THE ADMISSION GATE NOW CARRIES A CODE, A C-NUMBER AND A CANNED TRANSLATION — four of them carried NO CODE AT ALL · PROPOSED 2026-08-09 (REC-79, enacting DEC-49) — the version bump and the RESOLUTION are CONDUCT's
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-46, seven ids already held and
+stepped over: 47–53).
+
+- **Interface:** I3 (the plane's op surface), **STABLE**.
+- **Proposer:** REC-79, 2026-08-09, enacting **DEC-49** and closing PL-18's finding.
+- **Owner to land it:** `RECORD` / `VERIFY` (landed here).
+
+### PROPOSED
+
+**WHAT MOVES.** Six refusals in `index.mjs`'s admission gate — the refusals every caller meets
+BEFORE their op runs — gain `reason`, `code`, `check` and `translation`. **Nothing is removed and
+nothing is renamed.**
+
+| refusal | before | after | kind |
+| --- | --- | --- | --- |
+| no credential (401) | `{ ok:false, error:"unauthenticated" }` | `+ reason:"NOT_AUTHENTICATED", code, check:"C-38.1", translation` | **ADDITIVE keys** |
+| wrong token class (403) | `{ ok:false, error:"forbidden for token class", op, cls }` | `+ reason:"CLASS_FORBIDDEN", C-38.2, translation` | **ADDITIVE keys** |
+| session on a machine-only op (403) | `{ ok:false, error:"this operation requires…", op }` | `+ reason:"MACHINE_CREDENTIAL_REQUIRED", C-38.3, translation` | **ADDITIVE keys** |
+| session on `op=export` (403) | `{ ok:false, reason:"ROOT_OF_TRUST_REQUIRED", op, detail }` | `+ code, check:"C-38.4", translation` | **ADDITIVE keys** |
+| capability gate (403) | `{ ok:false, reason:"NOT_CAPABLE", op, needs, held, detail }` | `+ code, check:"C-38.5", translation` | **ADDITIVE keys** |
+| out-of-namespace scope (403) | `{ ok:false, error:<sentence>, tokenClass }` | `+ reason:"SCOPE_REFUSED", C-38.6, translation` | **ADDITIVE keys** |
+
+**THE `error` FIELD OF ALL FOUR CODELESS REFUSALS IS KEPT BYTE-IDENTICAL.** That is the whole
+reason this is additive rather than breaking, and it is asserted in
+`bio-plane/test/admission-gate.test.mjs` so a later tidy-up cannot quietly turn it into a
+removal.
+
+**WHY.** DEC-49 requires every refusable condition to carry a code with a canned translation.
+**Four of these six carried no code at all** — a bare `error:` sentence with nothing a surface could
+key on. That made them invisible to DEC-49's guard AND absent from its census, because **a census of
+CODES cannot count a refusal that has none**: the gate every caller passes through, including every
+unauthenticated one, sat outside the rule governing everything behind it. It also closes PL-18's
+finding, where `civicos-ui/app.html` had invented capture-specific wording for the plane-wide
+`NOT_CAPABLE` — so a member refused for `create_projects` was told about contributing.
+
+**CONSUMER IMPACT, MEASURED RATHER THAN ASSERTED.**
+
+- **`bio-plane/test/**` — 52 assertions read these three sentences** (`"unauthenticated"` 31,
+  `"forbidden for token class"` 15, the machine-credential sentence 6). **NONE had to move**, because
+  the `error` field they read is unchanged byte for byte. Measured by running the whole battery, not
+  by reading the diff.
+- **`civicos-ui/**` — no consumer reads these strings as data.** The two matches are prose inside
+  suite headers. `node civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED: `0` before
+  and after.
+- **`newgroup/**` — the single match is a substring inside a bundled SQL literal in
+  `newgroup/src/release.mjs`, not a consumer of this shape.** Named rather than silently discounted.
+- **`civicos-ui/check-refusal-codes.mjs`** gains 5 codes in its census and 6 in its reach, and its
+  `reachGap` ceiling FALLS 41 → 40. Every floor it invalidates was moved in the same turn from the
+  figures it PRINTED.
+
+**WHAT A CONSUMER SHOULD DO WITH IT.** Key on `reason`/`code` and render `translation` VERBATIM —
+which is what DEC-49 licensed and what DEC-8 still requires (the code must be RECEIVED, never
+inferred). **Do not key on the `error` sentence**: it is kept for compatibility with what already
+reads it, and it is the field with no rule behind it. `app.html`'s `acquireWhy` now renders
+`a.translation` generally rather than per-code, so a surface adopting this needs no per-code edit.
+
+### RESPONSES
+
+_(awaiting: `UI`, `DIST`. `FRAMEWORK`, `CAPTURE` and `CONTENT-*` are not consumers of this shape.)_
+
+---
+
 ## IC-45 · I3: `op=affordances` publishes ONE ADDITIVE VOCABULARY — `sufficiency_claim_states`, the three states of a sufficiency `asserted_by` with the sentence a member reads instead of each · PROPOSED 2026-08-09 (PL-17, enacting DEC-65) — the version bump and the RESOLUTION are CONDUCT's
 
 **The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-41, four ids already held and

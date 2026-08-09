@@ -5576,3 +5576,119 @@ slug is the drift class DEC-8 closes, and the absence is asserted so it cannot g
 stated rule about the mute to the control beside it; the alternative (leave them, let the plane
 refuse) is the "gate that pressures somebody into finding a way around it" the record already rules
 against. Nothing here is a consequence Bob has not already ruled on.
+
+## CLAIM 2026-08-09 VERIFY (REC-79 — REC-64's remainder PARTITIONED, and the admission gate proved end to end)
+session: rec79-refusal-partition (worktree agent-a0bea725408eb06f8)
+opened: 2026-08-09T00:00:00Z
+paths: **`civicos-ui/check-refusal-codes.mjs` — named by ARM, never by file**: (1) `outcomeReturns`
+  widened to see a return that hands its outcome to a WRAPPER (`return json({ … }, 403)`), which is
+  the control plane's universal refusal spelling and which arm C has never been able to see;
+  (2) NEW **arm F**, the PARTITION of the untranslated census, with its own floors and its own
+  named-not-scored-zero residue; (3) the census NOTE's sentence, which claimed a property of 248
+  codes that is TRUE OF ONLY 207; (4) the `FLOOR`/`CEILING` tables — only the keys this item moved,
+  each to a figure a green run PRINTED. **NOT** arms A, B, D or E's logic, **NOT** `verdictOf`,
+  **NOT** `topLevelProps`, **NOT** `functionBody`, **NOT** `regionSpan`.
+  `bio-plane/checks/bio-checks.mjs` — **ONE NEW export, `ADMISSION_CHECKS`, appended; no existing
+  family, row, translation or `where` touched.**
+  `bio-plane/src/index.mjs` — **the ADMISSION GATE ONLY**, the span between the new
+  `DEC-49 REGION is-admission` markers: the four refusals there that carry NO CODE AT ALL gain one,
+  and the two that carry a code gain their canned translation on the wire. **The existing `error`
+  field of all four is kept BYTE-IDENTICAL** — the change is additive, which is why 28 suites that
+  assert on those sentences are undisturbed. **NOT** `NEEDS`, **NOT** `SESSION_OPS`, **NOT**
+  `scopeFor`, **NOT** the `OPS` table, **NOT** `aiTaskScope`/`aiScopeDeclaration`/`captureRequestArm`
+  (the three index.mjs sites another family already governs), **NOT** any other refusal in the file.
+  `civicos-ui/app.html` — **ONE BRANCH: `acquireWhy`'s `NOT_CAPABLE` line (3081) and nothing else in
+  that function or that file.** It is shared ground with UI-43/UI-45 and is claimed by SITE.
+  `civicos-ui/test/admission-translation.test.mjs` (NEW), `civicos-ui/test/refusal-partition.control.mjs`
+  (NEW — the control harness, deliberately not a `.test.mjs`).
+  `bio-plane/test/admission-gate.test.mjs` (NEW).
+  **TWO PATHS ADDED AFTER THE CLAIM WAS OPENED, BOTH REQUIRED BY THE CHANGE AND NEITHER FORESEEN —
+  named here rather than absorbed silently:**
+  (1) `civicos-ui/test/refusal-codes.test.mjs` — the guard's OWN fixture harness, two lines: the
+  fixture `FLOOR` gains `untranslated: 0` and the fixture `CEILING` gains `inheritedVerdicts: 0`.
+  **Required, not optional**: that file's own stated rule is that an ABSENT floor compares
+  `n < undefined` → false and therefore silently does not exist, so a new key omitted there is a
+  ratchet nobody is enforcing. No arm's logic touched.
+  (2) `bio-plane/test/verdict-reader.mjs` — **D-240's DELIBERATE COPY of the guard's verdict reader,
+  pinned BYTE-IDENTICAL by an arm in `meaning-bounds.test.mjs` and another in
+  `plane-envelope.test.mjs`.** Widening `outcomeReturns` in the guard turned both suites RED, which
+  is that pin doing exactly its job. The copy is propagated (not exempted), and `SHARED_FNS` grows
+  by the two new functions IN THE SAME TURN — because a mechanism that grows in one home and not in
+  the list has stopped being shared while the arm still reports green over what it remembers.
+  **NOT** either suite's arms, **NOT** `readerDrift`, **NOT** `DRIFT_MIN_CHARS`.
+  (3) `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY, the ONE key set, collapsed to one
+  and moved 654→659 / 136→137 / 137→138.** Moved from the figures a green `--strict` run PRINTED as
+  REPRODUCIBLE **after the commit**, never before: the pre-commit run printed those same three
+  numbers as CONTAMINATED and named the untracked new suite inflating them, so moving then would
+  have installed a floor no other checkout could reproduce (D-238). Nothing else in that file.
+  `docs/development/QUEUE.md` (this item's OWN row only), `docs/development/CLAIMS.md` (this entry),
+  `docs/development/MEASUREMENTS.md` (append), `docs/development/DEBT.md` (rows this item RAISES only),
+  `docs/development/INTERFACE-CHANGES.md` (this item's IC row only).
+  **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/airun.mjs`, **NOT** `skillpack.mjs`,
+  **NOT** `textchain.mjs`, **NOT** `newgroup/**`, **NOT** any other `.test.mjs`.
+scope: REC-64 landed DEC-49's enactment PARTLY and said plainly it could not close the class. This
+  item does NOT try to: it makes the remainder TRACTABLE by partitioning it by CAUSE, and proves the
+  shape on one family that is in reach of a real surface.
+numbers: **baseline MEASURED IN A SEPARATE WORKTREE AT THE BASE COMMIT, never by subtraction and
+  never by `git stash`: 142/142 suites green · 9,179 assertions · 134.9s · exit 0** at `1081a6a`.
+  Final: **143/143 green · 9,227 · exit 0**. **+48, ATTRIBUTED PER SUITE by diffing the two runs'
+  per-suite lines**: `admission-gate.test.mjs` +43 (NEW), `hygiene.test.mjs` +3 (it walks source
+  files and there are new ones), `planning-hygiene.test.mjs` +2 (it walks planning rows and there
+  are new ones). **EVERY OTHER SUITE AT ZERO DELTA.** `--strict` exit 0 unpiped; UI harness exit 0,
+  44 suites. **The brief quoted 428/248/180; this worktree measured 427/248/179** — internally
+  consistent, so the brief's census and translated figures were each one high.
+
+### DELEGATION 2026-08-09 VERIFY (REC-79) -> CONDUCT: **`origin/main` MOVED 33 COMMITS DURING THIS ITEM AND TOUCHED EVERY FILE IT DID — TWELVE FLOORS WILL COLLIDE AND NOT ONE CAN BE RESOLVED BY TAKING A SIDE**
+
+Measured at hand-off, not assumed: this worktree is based on `1081a6a`; `origin/main` is now
+`fc55b62`, **33 commits ahead**, and `git diff --stat` over the base shows it has changed
+`bio-checks.mjs`, `coverage.mjs`, `index.mjs`, `app.html` and **`check-refusal-codes.mjs` (112
+lines)** independently of this item.
+
+**EVERY FIGURE BELOW WAS MOVED BY BOTH SIDES FROM THE SAME BASE. A keep-mine resolution installs
+SLACK; a keep-theirs resolution goes RED. Both must be RE-READ FROM A GREEN RUN OF THE MERGED
+TREE** — which is the `regionLines` instruction this repository has now paid for four times,
+arriving on twelve floors at once instead of one.
+
+| floor / ceiling | base `1081a6a` | REC-79 | `origin/main` now |
+| --- | --- | --- | --- |
+| `families` | 16 | **17** | 16 |
+| `rows` | 166 | **172** | 168 |
+| `census` | 427 | **431** | 429 |
+| `reach` | 220 | **225** | 222 |
+| `governedSites` | 67 | **68** | 68 |
+| `regions` | 54 | **55** | 54 |
+| `regionLines` | 1425 | **1527** | 1454 |
+| `codesChecked` | 144 | **151** | 145 |
+| `outcomeReturns` | 70 | **79** | 74 |
+| `refusalsJudged` | 146 | **154** | 148 |
+| `vocabularies` | 10 | *(untouched)* 10 | **11** |
+| `vocabularyTerms` | 58 | *(untouched)* 58 | **61** |
+| CEILING `reachGap` | 41 | **40** | 41 |
+| CEILING `unclassifiedOutcomes` | 3 | **1** | 3 |
+| `REGISTER_FLOOR.arms` | 654 | **659** | **714** |
+| `REGISTER_FLOOR.classified` | 136 | **137** | **143** |
+| `REGISTER_FLOOR.corpus` | 137 | **138** | **144** |
+
+**FOUR OF THESE ARE SHARPER THAN THE REST AND ARE WHY THIS TABLE EXISTS:**
+
+1. **`unclassifiedOutcomes` 3 → 1 IS NOT A FIX AND MUST NOT BE READ AS ONE.** It fell because REC-79
+   RECLASSIFIED three outcomes into a new, separately-ceilinged `inheritedVerdicts` category. If
+   `main` has added an unclassified outcome, **the merged value is neither 1 nor 3** and taking
+   either is wrong in a different direction. `inheritedVerdicts` is a NEW key `main` does not have.
+2. **`vocabularies` and `vocabularyTerms` were NOT touched by this item.** `main`'s 11/61 must win.
+   A keep-both or keep-mine resolution silently installs 10/58 — **lower is SLACK, and slack is the
+   direction that goes green while an instrument has lost sight.**
+3. **`REGISTER_FLOOR` is the ONE-KEY-SET hazard the file's own header names**, and `main`'s newest
+   commit is literally *"conduct: repair coverage.mjs"*. **COLLAPSE TO ONE SET and re-read the
+   printed REPRODUCIBLE figures — after committing, never before**, which is the ordering this item
+   nearly got wrong and recorded at the site.
+4. **`regionLines` 1425 → 1527 is `is-admission`'s span in `index.mjs`**, one of the three contended
+   files. This item PREDICTS it will be wrong at integration and asks for the re-read explicitly.
+
+**AND ONE COUPLING THAT IS NOT A NUMBER.** `bio-plane/test/verdict-reader.mjs` is D-240's deliberate
+copy of the guard's verdict reader, pinned BYTE-IDENTICAL by arms in `meaning-bounds.test.mjs` AND
+`plane-envelope.test.mjs`. **REC-79 widened `outcomeReturns` and both suites went RED — the pin
+working exactly as designed.** If `main` has also touched either copy, they must be reconciled
+together and `SHARED_FNS` (which REC-79 grew by two) re-checked; a merge that fixes one home leaves
+the arm naming the other.

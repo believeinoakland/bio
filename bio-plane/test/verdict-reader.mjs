@@ -98,7 +98,11 @@ function matchBrace(text, open) {
   return -1;
 }
 
-/* RETURN POSITION, and the two forms the plane actually writes. */
+/* RETURN POSITION, and the THREE forms the plane actually writes — the third is
+   REC-79's WRAPPED form (`return json({ … }, 403)`), the control plane's
+   universal refusal spelling and one this reader was blind to. Kept byte-
+   identical with `civicos-ui/check-refusal-codes.mjs` by D-240's arm, which is
+   what caught this copy the moment the guard's moved. */
 function outcomeReturns(text) {
   const out = [];
   const seen = new Set();
@@ -113,6 +117,16 @@ function outcomeReturns(text) {
       if (/\s/.test(c)) continue;
       if (c === "(") { lead++; continue; }
       if (c === "{") { const e = matchBrace(text, i); if (e > 0) push(i, e); }
+      else {
+        /* THE WRAPPED FORM (REC-79) — see the header. A call in return position
+           is a transport; its FIRST argument, and only its first, is the
+           outcome. Anchored at `i` so it cannot drift past the call it read. */
+        const w = /^(?:new\s+)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\(\s*/.exec(text.slice(i, i + 120));
+        if (w) {
+          const argAt = i + w[0].length;
+          if (text[argAt] === "{") { const e = matchBrace(text, argAt); if (e > 0) push(argAt, e); }
+        }
+      }
       break;
     }
     /* the conditional form: `return cond ? { … } : { … }` — both branches are
@@ -139,8 +153,9 @@ function outcomeReturns(text) {
   return out.sort((a, b) => a[0] - b[0]);
 }
 
-/* The depth-0 `key: value` pairs of an object literal. */
-function topLevelProps(objText) {
+/* The depth-0 parts of an object literal. Split out of `topLevelProps` by
+   REC-79 so `topLevelSpreads` can read the same split. */
+function topLevelParts(objText) {
   const parts = [];
   let buf = "", depth = 0;
   for (let i = 1; i < objText.length - 1; i++) {
@@ -154,12 +169,29 @@ function topLevelProps(objText) {
     buf += c;
   }
   parts.push(buf);
+  return parts;
+}
+
+/* The depth-0 `key: value` pairs of an object literal. */
+function topLevelProps(objText) {
   const props = [];
-  for (const p of parts) {
+  for (const p of topLevelParts(objText)) {
     const m = /^\s*([A-Za-z_$][\w$]*)\s*:([\s\S]*)$/.exec(p);
     if (m) props.push({ key: m[1], value: m[2] });
   }
   return props;
+}
+
+/* THE SPREAD SOURCES of an object literal (REC-79) — an outcome whose verdict or
+   code is INHERITED rather than absent. See the guard's copy for why that is a
+   category and not a kind of "unclassified". */
+function topLevelSpreads(objText) {
+  const out = [];
+  for (const p of topLevelParts(objText)) {
+    const m = /^\s*\.\.\.\s*([A-Za-z_$][\w$]*)/.exec(p);
+    if (m) out.push(m[1]);
+  }
+  return out;
 }
 
 /* IS THIS VALUE BOOLEAN-SHAPED? */
@@ -205,7 +237,13 @@ function verdictOf(objText) {
  * A MISSING function is reported as a difference, never skipped. That is the
  * `e3b0c442…` lesson: a comparison over nothing agrees for free.
  * ------------------------------------------------------------------------ */
-const SHARED_FNS = ["skipString", "matchBrace", "outcomeReturns", "topLevelProps", "verdictKind", "verdictOf"];
+/* REC-79 added `topLevelParts` and `topLevelSpreads` to this list IN THE SAME
+   TURN as it added them to the guard. That is the point of D-240's arm: the list
+   is what makes "shared" a fact, so a mechanism that grows in one home and not
+   in the list has quietly stopped being shared while the arm still reports
+   green over the functions it does remember. */
+const SHARED_FNS = ["skipString", "matchBrace", "outcomeReturns", "topLevelParts", "topLevelProps",
+                    "topLevelSpreads", "verdictKind", "verdictOf"];
 /* The measured size of the six functions on the day this file landed. A floor,
    not a target: it may rise when REC-76's reader grows, and it exists so that a
    comparison of two EMPTY extractions cannot read as agreement. */
@@ -233,5 +271,5 @@ function readerDrift(guardSrc, thisSrc) {
   return { differing, chars, read, expected: SHARED_FNS.length, minChars: DRIFT_MIN_CHARS };
 }
 
-export { skipString, matchBrace, outcomeReturns, topLevelProps, verdictKind, verdictOf,
-         readerDrift, fnSource, SHARED_FNS, DRIFT_MIN_CHARS };
+export { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, topLevelSpreads,
+         verdictKind, verdictOf, readerDrift, fnSource, SHARED_FNS, DRIFT_MIN_CHARS };

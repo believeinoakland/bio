@@ -5578,3 +5578,91 @@ existence, so nothing here measures how they will render. It **cannot judge the 
 that `op=queue` files a lead under inquiry B's ancestors is PL-15's acceptance. And, as with every
 UI suite here, **the DOM stub fires no events**, so the stance router is driven directly at its
 address rather than through `hashchange`, and the substitution is labelled at the site.
+
+## 2026-08-09 · REC-79 — REC-64's REMAINDER PARTITIONED, AND THE CENSUS SENTENCE THAT WAS FALSE
+
+Instrument: `civicos-ui/check-refusal-codes.mjs` (arms A–F), run on a quiet tree in worktree
+`agent-a0bea725408eb06f8`, level with `origin/main` at `1081a6a`.
+
+### THE BRIEFED FIGURE WAS ONE OUT, AND THE SENTENCE AROUND IT WAS WRONG
+
+The brief quoted **428 codes / 248 untranslated / 180 translated**. This worktree MEASURED
+**427 / 248 / 179** on the same commit — internally consistent (427 − 248 = 179), so the brief's
+census and translated figures were each one high. That is the twelfth consecutive item to find a
+briefed figure stale by measuring it, and it is the small half of the finding.
+
+**THE LARGE HALF: the sentence printing that number was FALSE.** It read *"248 of 427 refusal codes
+the plane can mint have NO canned translation **and are NOT in reach of a surface today**"*.
+**Measured: 41 of the 248 ARE in reach** — and they are the exact set arm B names, by code, three
+lines above it, on every single run. One number carried two claims and the second was false for a
+sixth of it. Nobody had to be careless: the two claims were true together the day the sentence was
+written, and then drifted apart. **This is the "record claiming more than it can support" class,
+sitting inside the instrument whose job is to stop it.**
+
+### THE PARTITION (arm F) — 246 untranslated codes, by the DECISION each needs
+
+| partition | n | what it needs |
+| --- | --- | --- |
+| F1 UNREACHABLE (declared, REC-78's receipt) | 2 | a **DECISION**, not a sentence |
+| F2 CONSTRUCTED — not a code at all | 1 | the matcher corrected; the real codes are invisible |
+| F3 SUBSYSTEM-only module | 18 | a **DETERMINATION**: does it cross the wire? |
+| F4 MULTI-SITE (≥2 mint sites) | 93 | a **STRUCTURAL** change — a set-valued `where`, or one helper |
+| **F5 IN REACH, one site** | **6** | **a SENTENCE, now** |
+| F6 out of reach, one site | 126 | a sentence **when its surface exists** |
+
+Sums to 246 exactly, gated at zero. **The actionable translate-now slice is SIX codes, not 248** —
+`BAD_LOCATOR, GATE_REFUSED, NOT_AN_OWNER, NOT_CITABLE, NO_ATTESTATION, NO_SUCH_CAPTURE`. F4 at 93 is
+the largest single blocker in the whole remainder and **no amount of prose closes any of it**, which
+is REC-64's finding measured across the full census rather than across the reach.
+
+### THE CENSUS IS A FLOOR ON THE PLANE'S REFUSAL VOCABULARY, NOT A TOTAL
+
+Arm F's residue walk recovered **two real refusal codes that appear in NO matcher's yield**:
+
+- **`STORE_DID_NOT_ANSWER`** — held in the module constant `STORE_SILENT_REASON`, refused at
+  `index.mjs:2177/5442/5475`, reaching callers with HTTP 502.
+- **`BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD`** — held in a local lookup table `REASON` at
+  `store.mjs:4529`, refused as `reason: REASON[k] || "…"`.
+
+Both are D-236's class one shape further out. **Every figure in that file that divides by the census
+is dividing by a floor**, and the guard now says so on every run.
+
+### THE CONTROL PLANE HAD NEVER BEEN GOVERNED, AND THE INSTRUMENT IS WHY
+
+`index.mjs` answers callers with `return json({ ok:false, … }, 403)` — **77 refusals in that one
+shape, measured; 81 wrapped returns in total, and ZERO anywhere else in `bio-plane/src/`.** Arm C's
+outcome reader admitted only whitespace, `(` and `{` after `return`, so it stopped at the `j` of
+`json` and **could not see a single refusal in the control plane.** Three `index.mjs` sites were
+governed before this item; all three are helper functions returning plain objects.
+
+**It was found by trying to GOVERN a site, not by reading one.** A region placed over the admission
+gate resolved, was well-formed, was correctly nested, and reported `0 judged` — REC-71's wrong-span
+failure arriving through the reader instead of through the markers.
+
+### THE ADMISSION GATE: FOUR OF SIX REFUSALS CARRIED NO CODE AT ALL
+
+`"unauthenticated"`, `"forbidden for token class"`, `"this operation requires a machine credential…"`
+and the out-of-namespace scope refusal answered with a bare `error:` sentence. **A census of CODES
+cannot count a refusal that has none**, so the gate every caller passes through — including every
+unauthenticated one — was outside DEC-49 and invisible to its guard. Now C-38.1–.6, all six DRIVEN
+through the op (`admission-gate.test.mjs`, 43 assertions), with the four `error` sentences kept
+BYTE-IDENTICAL: **52 existing assertions read those strings and none had to move.**
+
+### TWO NUMBERS THAT WERE EACH DOING TWO JOBS
+
+- **`unclassifiedOutcomes` FELL 3 → 1 and NOTHING WAS FIXED.** Three of the three were never shapes
+  the walk failed to understand — they were verdicts **inherited from a spread**, which it
+  understands perfectly and cannot resolve until run time. Separated into `inheritedVerdicts`. The
+  same defect as the census sentence, arriving in the instrument's own tally.
+- **`reachGap` FELL 41 → 40 for an item that added a family of SIX.** Five of the six were codes
+  that did not exist to be counted and the sixth was the only one already in reach. **A ratchet
+  cannot see work that ENLARGES its subject**, which is the argument for arm F in one line.
+
+### WHAT THE WALK CANNOT SEE, STATED AND PRINTED EVERY RUN
+
+Per-site `detail` prose is **not walked at all** — UI-43 measured those far more numerous than the
+canned translations, and nothing here changes that. "In reach" means **a surface exists today**,
+never that a member could not otherwise meet the code. Whether a subsystem refusal crosses the wire
+is an **open question this walk does not answer** — that is the whole content of F3. And REC-78's
+two unreachable codes are **DECLARED with their receipt and labelled as declared**, because they
+were established by DRIVING four caller classes and no source-text walk may fake that.

@@ -279,9 +279,24 @@ const REGISTER_FLOOR = {
      controls in one suite is a shape the "never the sum" rule did not anticipate. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 646 -> 654 / 135 -> 136 / 136 -> 137,
      from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed. */
-  arms:       654,  // arms stated across the classified declarations
-  classified: 136,  // declarations the detector could count arms in
-  corpus:     137,  // suites the register reads
+  /* MOVED 2026-08-09 by REC-79 (654→659, 136→137, 137→138), from the figures a
+     green `--strict` run PRINTED as REPRODUCIBLE **at commit fc4cb21, AFTER the
+     commit and not before it**. That ordering is the whole of D-238 and it is
+     recorded because this item nearly got it wrong: the pre-commit run printed
+     `arms 659 · classified 137 · corpus 138` as CONTAMINATED, with 654/136/137
+     reproducible, and named `admission-gate.test.mjs` as the untracked suite
+     inflating them. Moving the floor to 659 at that moment would have installed
+     a figure no other checkout could reproduce — permanently too high, failing
+     every honest run, which is exactly how a ratchet gets switched off. The
+     suite was committed first, the register re-run, and the SAME figures came
+     back as reproducible with `149 of 149 discovered item(s) in the commit`.
+     The cause is one new suite, `test/admission-gate.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states five arms — all five RUN by
+     `civicos-ui/test/refusal-partition.control.mjs`, which is where this
+     family's controls live because four of its arms patch `civicos-ui` files. */
+  arms:       659,  // arms stated across the classified declarations
+  classified: 137,  // declarations the detector could count arms in
+  corpus:     138,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

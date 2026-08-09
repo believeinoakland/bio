@@ -3072,13 +3072,45 @@ function reviseText(text, who, now, note){
    A refusal by the host is the host's act and is named as one. */
 function acquireWhy(a){
   const why = (a && (a.reason || a.error)) || "unknown";
+  /* DEC-49 / REC-79 — THE PLANE'S CANNED TRANSLATION WINS, AND IT IS CHECKED
+     FIRST. DEC-49 licensed a surface to render an AUTHORED translation keyed on
+     a code the plane SENT; DEC-8 still forbids a surface COMPUTING a refusal.
+     Rendering `a.translation` verbatim satisfies both — it is the plane's own
+     sentence about its own act, received rather than inferred.
+
+     **THIS LINE REPLACES A REAL DEFECT AND THAT IS WHY IT IS FIRST.** Below,
+     this function used to answer `NOT_CAPABLE` with *"This credential cannot
+     write to the record. Capturing needs a member holding contribute."* But
+     `NOT_CAPABLE` is a PLANE-WIDE refusal minted for whatever capability the op
+     needed — `create_projects` and `publish` are not `contribute` — so a member
+     refused for creating a project was told about contributing, by a surface
+     that had invented capture-specific wording for a refusal that is not about
+     capture (found by PL-18). One surface inventing wording for a plane-wide
+     code is the drift DEC-49 exists to stop, and DEC-49's own argument against
+     option (b) was that thirteen surfaces would each do it.
+
+     IT IS GENERAL RATHER THAN A `NOT_CAPABLE` SPECIAL CASE, deliberately: the
+     next code that gains a canned translation must not need an edit here, or
+     this file grows a second copy of the catalogue one row at a time. The
+     hand-authored sentences below remain for the codes the plane has NOT yet
+     translated, and each becomes dead the day its code gets a row — which is
+     the direction this whole line of work is going. */
+  if(a && typeof a.translation === "string" && a.translation) return a.translation;
   if(why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not plain http, not an address on this machine, and not one carrying a username or password.";
   if(why === "NO_AUTHORITY") return "Say who issued the document. Who published it and who captured it are separate claims and the record names both.";
   if(why === "SOURCE_REFUSED") return `The site refused the request (${(a&&a.status)||"error"}). That is the site's act, not a fault in the record: the address may be wrong, the document may no longer be published there, or the host may refuse this fetcher. Nothing was written.`;
   if(why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
   if(why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
   if(why === "TOO_LARGE") return `That document is larger than this surface will capture, even in parts (${(a&&a.bytes)||"?"} bytes).`;
-  if(why === "NOT_CAPABLE") return "This credential cannot write to the record. Capturing needs a member holding contribute.";
+  /* THE FALLBACK, KEPT AND CORRECTED RATHER THAN DELETED (REC-79). A sovereign
+     instance running an older plane sends `NOT_CAPABLE` with no translation, and
+     UI-30's precedent is that a fallback beats a blank. But the sentence that
+     was here named CAPTURE and CONTRIBUTE for a refusal that is about neither in
+     general, so it is corrected to say only what this surface can actually know
+     from the code alone. Deleting it would have left those instances with
+     "The document could not be captured: NOT_CAPABLE" — the machine word DEC-49
+     exists to keep away from members. */
+  if(why === "NOT_CAPABLE") return "Your account does not hold the capability this needs. Capabilities are granted by an administrator.";
   return "The document could not be captured: " + why;
 }
 
