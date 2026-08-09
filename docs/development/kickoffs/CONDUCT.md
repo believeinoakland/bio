@@ -168,6 +168,35 @@ So the resolution splits in two, and the order matters:
 **A detector that keeps naming the same id after you have fixed it twice is not flaky — it
 is telling you your model of the conflict is wrong.**
 
+## BEFORE YOU SPAWN, CHECK FOR THE CONTENT. A LEDGER GREP RETURNING NOTHING IS NOT EVIDENCE.
+
+**Measured 2026-08-09: I spawned a worker onto PL-2, which had ALREADY LANDED — implementation
+`3ab1392`, merge `f86515d`, integration `b303cc8`, all ancestors of `origin/main` before the spawn.**
+
+The cause was one command. I ran `grep -c "PL-2\*\* —" QUEUE.md`, got **0**, and read that as *the item
+has not landed* rather than as *my matcher found nothing*. The pattern depends on an em-dash and an
+exact bold spelling in a 4,000-line prose file; it matched for other ids and not this one. **A grep's
+silence was treated as a measurement.** That is the same shape as inferring a merge from the absence
+of the word CONFLICT, and as a floor that never fails because it is slack — and it happened one hour
+after I wrote the content-check rule immediately below, which would have answered it outright:
+
+```
+git cat-file -e origin/main:<a file the item added>          # does its code exist?
+grep -c '<a symbol it added>' <a file it changed>            # does its symbol exist?
+```
+
+**So: before spawning, verify the item is NOT landed by looking for its CONTENT** — the op, the
+table, the suite, the export it was supposed to add. The queue row is bookkeeping and lags; the tree
+is the fact. This is the same asymmetry the `--is-ancestor` note below turns the other way.
+
+**What it cost, stated honestly, because the answer is not "nothing":** the worker measured the tree,
+found its brief stale, and turned the turn into independent verification — which found a real DEC-49
+defect (one code answering two conditions, telling a member who supplied a reason that they had not)
+and a three-layer control that **could no longer arm**, because a later item had landed a line between
+its anchor and the next. Both are worth having. **But that was the worker's recovery, not my
+scheduling**, and a brief that is wrong about the tree is a brief that can send someone to rebuild
+something that exists.
+
 ## AFTER EVERY MERGE, COMPARE THE FILE SET IT CARRIED AGAINST THE FILE SET THE BRANCH CHANGED.
 
 ```
