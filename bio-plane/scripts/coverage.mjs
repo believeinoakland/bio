@@ -324,9 +324,24 @@ const REGISTER_FLOOR = {
      opens the block, which is the "largest single declaration" rule described
      above reading one line more than the item states. EVERY ONE OF THE SEVEN WAS
      RUN. Nothing FELL. */
-  arms:       671,  // arms stated across the classified declarations
-  classified: 138,  // declarations the detector could count arms in
-  corpus:     139,  // suites the register reads
+  /* M0-21 / D-268, 2026-08-09: 654 -> 665 / 136 -> 137 / 137 -> 138, ALL THREE MOVED
+     IN THE SAME TURN and every one taken from the figure a green `--strict` run
+     PRINTED as REPRODUCIBLE (`arms 665/654 · classified 137/136 · corpus 138/137 ·
+     GREW by 11 arm(s)`, provenance `149 of 149 discovered item(s) are in the commit
+     at HEAD`) — read only AFTER the new files were in a commit, never by adding to
+     the numbers above. The cause is ONE new suite, `test/walkfloor.test.mjs`, whose
+     declaration enumerates EIGHT arms; every one of those arms was RUN, and the
+     remaining three are the arms M0-21 added to `hygiene.test.mjs`'s own
+     declaration for the cross-file block.
+     WORTH KNOWING BEFORE YOU MOVE THIS AGAIN, because it cost two runs here: that
+     suite's declaration was FIRST a column table, which this register read as TWO
+     arms (D-233's under-count class, and it would have installed slack); rewritten
+     as an enumerated list it read EIGHT, but with a paragraph between the marker
+     and the list it read NULL and the suite left `classified` entirely, taking
+     `--strict` to exit 1. Marker paragraph, then the list, then prose. */
+  arms:        671,
+  classified:  138,
+  corpus:      139,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -401,8 +416,6 @@ const NOT_A_FLEET_MEMBER = {
 };
 
 const FLEET_FLOOR = {
-  members:    2,   // pdf-worker (I6, CPDF-6) + agent-worker (I8, FL-2).
-  surfaceOps: 4,   // pdf-worker: structure, version (CPDF-9). agent-worker: run, version.
   /* VF-1, 2026-08-09, from the figures a green `--strict` run PRINTED once the
      fleet's controls were read at the SUITE grain — never counted by hand.
      `suites` is the fleet's REACH (pdf-worker: pdf-worker + pagepixels;
@@ -421,8 +434,10 @@ const FLEET_FLOOR = {
      invalidate rather than leaving it for the next reader to find again — the
      sixth consecutive item to find a hand-carried floor stale by measuring it.
      Named in the report so CONDUCT can re-read it on the merged tree. */
-  suites:     5,
-  arms:       43,
+  members:     2,
+  surfaceOps:  4,
+  suites:      5,
+  arms:        43,
 };
 
 function discoverFleet() {

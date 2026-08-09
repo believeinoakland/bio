@@ -6089,3 +6089,69 @@ written inside this worktree and reproduced exactly (143/143 · 9,238 both times
 narrower than "do not use the scratchpad": **a transcript with no provenance line in it cannot be
 attributed to the run that appears to have produced it**, and the battery's own provenance line is
 what made this recoverable rather than a silently wrong number.
+## 2026-08-09 — M0-21 / D-268: the walk census could not see a floor one import away
+
+**Instrument:** `bio-plane/scripts/walkfloor.mjs`, run as `node scripts/walkfloor.mjs` and driven
+by `test/walkfloor.test.mjs` (31 assertions) and `test/walkfloor.control.mjs` (8 arms).
+**Corpus, PRINTED every run:** 299 `.mjs` modules over `bio-plane/{scripts,test,src,checks,migrate}`
+and `civicos-ui/{.,test}` — deliberately the SAME roots M0-16's census reaches, so a difference
+between the two instruments is a finding about the estate rather than about the roots.
+
+### What the blindness cost, measured rather than reasoned about
+
+**17 walk modules** in the estate. M0-16's census enumerates walking FILES; this instrument follows
+the value. The gap between them is **8 cross-file floors** the census can see nothing of, in two
+files:
+
+| consumer | walk it floors on | floors | seen by the census? |
+|---|---|---|---|
+| `bio-plane/test/op-claims.test.mjs` | `bio-plane/scripts/op-claims.mjs` `corpus()` | **5** | **NO** — it contains no `readdirSync` at all |
+| `bio-plane/test/hygiene.test.mjs` | `bio-plane/scripts/walkfloor.mjs` | 3 | yes, but only because it walks for other reasons |
+
+**The five, and the fifth is the finding.** `files >= 300`, `chars >= 10_000_000`, `mentions >= 5000`,
+`names.length >= 150` — and **`attributions.length >= 4`**, which no census row, no sweep and no brief
+had ever named. The brief that raised this work predicted four; the instrument found five on its
+first real run.
+
+### The false-positive direction, which is what decides whether a check survives
+
+`bio-plane/test/op-claims.test.mjs` also carries **`LEDGER.length >= 20`** — a floor, on a value
+imported FROM THE SAME WALKING MODULE, in the SAME suite, twenty-two lines below one of the real
+ones. It is a static array. **A detector grading at file or module granularity reports it.** Measured
+by arming exactly that (`modulegrain` arm): grading at module granularity takes `hygiene.test.mjs`
+to 569 pass / 1 fail on the false-positive arm alone. Binding granularity is the difference between
+a check that gets read and a check that gets switched off, which is `VERIFICATION.md`'s own stated
+reason for not making `--strict` the gate yet.
+
+### Two first-draft bugs, both of which reported a PERFECTLY CLEAN ESTATE
+
+Recorded because they are the item's own defect met inside the item, and because a fixture-only
+suite would have agreed with both:
+
+1. **Destructured parameters read as a function body.** `braceBody` was called from the end of
+   `function NAME(`, so `sweep({ root = REPO })` had its PARAMETER OBJECT read as its body. `sweep`
+   never appeared to call `corpus()`, walk-derivation stopped one hop short, and the sweep reported
+   **CROSS-FILE FLOORS: 0** over an estate with five.
+2. **Imports read off source with string literals blanked.** `importsOf` and the `guarded` test both
+   ask about text that lives inside a string — an import specifier and the `provenance.mjs` path —
+   and both ran over the full strip. **Every file in the estate read as importing nothing and as
+   unguarded**, and the sweep again reported 0 while the flow stage, driven directly, found all five.
+
+Both are pinned as arms (`destructured`, `stringstrip`) and both take the suite to 21/10 and 20/11.
+
+### What the matcher cannot see, stated because a matcher that hides its blind spots is read as having none
+
+Re-export chains (`export * from`), flow through a data structure or a function parameter,
+`require()`/dynamic import, a walk passed as an argument, and **whether the directory walked is a
+repository directory or a `mkdtemp` sandbox** — the last being the same judgement M0-16's named list
+already carries by hand. Each is PINNED as a blind arm, so closing one fails this suite and forces
+the header to be corrected rather than left to go stale. **Unclassifiable comparisons are PRINTED as
+UNKNOWN and never scored zero**; the estate currently has 0 of them and 0 ceilings-at-zero.
+
+### Residual, carried rather than smoothed
+
+The five `op-claims.test.mjs` floors are **NAMED, not GUARDED**. By D-257's own ruling a walk that
+FLOORS should be guarded; the guard is D-257's two-line pattern. It is not done here because this
+item's claim does not name that suite and a sibling item was briefed to guard exactly these
+instances. The decision is visible at the site and in D-268 rather than silent, which is the whole
+difference between the named list and the blindness it replaces.

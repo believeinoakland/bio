@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN. (run 2026-08-08, M0-10/D-235) restore the shared literal to a scanned suite, putting `const ROOT = "/tmp/civicos-fixture";` back into migrate.test.mjs -> the containment arm FAILS naming the file and the path, 487 pass 1 fail ("no suite roots a filesystem ground at an absolute literal (1 found: [\"migrate.test.mjs: /tmp/civicos-fixture\"])"); restored byte-identical, verified by sha256 AND by cmp. (b) neuter the ground detector itself, so its pattern matches nothing -> the REACH arm fails ("the ground detector catches all 3 planted literals"), 487 pass 1 fail, WHILE the corpus arm above still passes over a clean estate — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (c) widen the detector to any quoted absolute literal, the over-strictness direction -> "and flags none of the 5 derived forms" FAILS and the corpus arm reports 687 false findings from URL pathnames, 486 pass 2 fail.
+/* NEGATIVE CONTROL: (run 2026-07-31) remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.) (run 2026-08-03, REC-27/D-137) remove the project_participants DELETEs from store.mjs's purge (both arms) -> 1 assertion fails naming it: "51 of 52 tables covered by purge or a stated exemption (uncovered: [\"project_participants\"])"; restored, 199 pass. (run 2026-08-04, M0-8/D-186) strip the `import "./sandbox.mjs"` line from a scanned suite (purge.test.mjs, temporarily) so it mints temp files with nothing owning them -> 1 assertion fails naming it ("purge.test.mjs imports test/sandbox.mjs"), 342 pass; restored byte-identical (sha256 f2ee2192…). The SUBJECT's own control is in scripts/battery.mjs, not here: comment out `process.on("exit", sweepSandbox)` in test/sandbox.mjs and the battery exits 1 with "LEAKING 84 miniflare sandbox(es) in 84 director(ies)" while all 95 suites still report green — which is the pre-fix state, and the reason the leak went unnoticed for weeks. (run 2026-08-04, REC-48) hand-type a capture grade letter back into any module of src/ — op=acquire's note, op=earnedbasis's ceiling sentence, or a new statement in a module nothing else guards -> the sweep FAILS naming the file, the line and the string, while the suite that OWNS that sentence stays green. The three arms are below IN THIS SAME DECLARATION, each RUN. (run 2026-08-08, M0-10/D-235) restore the shared literal to a scanned suite, putting `const ROOT = "/tmp/civicos-fixture";` back into migrate.test.mjs -> the containment arm FAILS naming the file and the path, 487 pass 1 fail ("no suite roots a filesystem ground at an absolute literal (1 found: [\"migrate.test.mjs: /tmp/civicos-fixture\"])"); restored byte-identical, verified by sha256 AND by cmp. (b) neuter the ground detector itself, so its pattern matches nothing -> the REACH arm fails ("the ground detector catches all 3 planted literals"), 487 pass 1 fail, WHILE the corpus arm above still passes over a clean estate — which is the whole reason the reach arm exists, since a detector that finds nothing passes everything. (c) widen the detector to any quoted absolute literal, the over-strictness direction -> "and flags none of the 5 derived forms" FAILS and the corpus arm reports 687 false findings from URL pathnames, 486 pass 2 fail. (run 2026-08-09, M0-21/D-268) THE CROSS-FILE WALK->FLOOR BLOCK AT THE FOOT OF THE CLASS CENSUS: its eight arms live in `test/walkfloor.control.mjs` and are re-run in one step with `node test/walkfloor.control.mjs [arm]`. The three that move THIS suite are (a) `hop` — stop seeding a binding from an imported walk-derived export -> 567 pass 3 fail, the split, the self-application and the guarded/named arms all falling together; (b) `modulegrain` — grade at MODULE granularity instead of BINDING granularity -> 569 pass 1 fail, the FALSE-POSITIVE arm alone, because `LEDGER.length >= 20` starts being reported and that is the shape which gets a check switched off; (c) `ratchet` — add a NEW consumer that floors on a walk one import away with no provenance guard -> 569 pass 1 fail NAMING the new file, which is the ratchet firing on a new instance rather than being believed on its existence. The OVER-STRICTNESS arm is `overstrict` (a new consumer that floors AND asks provenance.mjs) and it must stay GREEN at 570 pass 0 fail. **The BASELINE arm went RED on its first run and the failure was this item's own new suite, not the arm** — `walkfloor.test.mjs` minted temp directories without `import "./sandbox.mjs"` and the D-186 rule above caught it; without a baseline row that reading was not available.
    (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
    (run 2026-08-08, M0-14/D-233) SIX ARMS ON THE ARM MATCHER, DECLARED HERE AND RUN BY `test/register.control.mjs` — deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`suggest.control.mjs`'s precedent). Re-run in one step: `node test/register.control.mjs` from bio-plane/. Each arm is armed ALONE with the others held open, each DECLARES BEFORE IT RUNS what must fail AND what must not, and every restore is verified against a PRISTINE pre-arm copy by sha256 AND by content. Baseline at the moment they ran: `--strict` exit 0, 470 arms, 119 classified, corpus 120, 1 unclassified; this suite 503 pass. (1) THREE REAL ARMS DELETED — strip the ordinals from suggest.test.mjs's arms (6), (7) and (8) -> `--strict` EXITS 1, the REGISTER FLOOR fires at "467 arms stated, floor is 470", and suggest still declares a control with classified and corpus unmoved. (2) THE ARM THIS ITEM EXISTS FOR — rewrite capture.test.mjs's single transition in a marking the matcher was never taught (` ==> `) -> `--strict` EXITS 1 and NAMES capture.test.mjs as UNCLASSIFIED, unclassified 1 -> 2, and it is NOT scored zero and NOT reported as declaring no control. (2b) THE POSITIVE HALF, because naming alone would be a walk that never counts anything new — add two arms to capture.test.mjs as an ordinal list with NO arrow anywhere -> `--strict` STAYS exit 0 and the tally RISES 470 -> 472. (3) NEUTER THE WALK — make the ordinal matcher unmatchable in scripts/control-register.mjs -> this suite 499 pass, 4 FAIL naming the arrowless-corpus arm, the arrowless fixture, its delta and the max-not-sum arm; `--strict` EXITS 1 on the floor (416 arms, 117 classified) AND on newly-unclassified suites (strengthpair, suggest) — while the register still READS 120 suites, because a matcher narrowed to nothing must not report a triumphant figure over an empty corpus. (4) OVER-STRICTNESS — put prose into capture.test.mjs's declaration that MENTIONS an arm ("see (b) of the block...") without declaring one -> nothing fails and the tally does NOT move, 470 before and 470 after. (5) THE FLOOR HAS NO SLACK — remove EXACTLY ONE arm from strengthpair.test.mjs -> `--strict` EXITS 1 at 469 against a floor of 470. SIX ARMS RUN, ZERO behaved other than declared; all four touched files restored sha256 EQUAL and content IDENTICAL. THE SAME PROPERTY M0-9 RECORDED APPLIES HERE AND IS WHY THESE ARE DELTAS: writing this record into a declaration moves the total upward, so never compare an absolute total across two edits of the register's own text.
    (run 2026-08-08, REC-68) THE SCHEMA-COMMENT / VOCABULARY CORRESPONDENCE ARM, the rider D-228 came in with. It exists because CORRECTING the stale comment once is worth almost nothing: nothing stopped `inquiry_basis.grade_source` naming three sources while GRADE_SOURCES carried five, so nothing would stop the sixth. Armed ALONE, restored against a pristine pre-arm copy verified by sha256 AND `cmp`. (1) DROP A SOURCE FROM THE COMMENT — delete `| 'capture'` from schema.mjs's grade_source line -> this suite FAILS 2 naming it ("the comment names every grade source the catalogue carries" reports ["capture"], and the REACH delta reports 4 against 5); restored. (2) INVENT ONE — add `| 'guess'` -> FAILS 2 in the other direction, the invention arm reporting ["guess"], because a comment that can omit a value can also make one up. (3) NEUTER THE ARM — make the column matcher unmatchable -> the REACH delta FAILS at 0 against 5 rather than passing triumphantly over an empty list, which is the whole reason it is a delta. (4) THE `#migrate` TRAP, and it CAUGHT THE AUTHOR IN THE SAME TURN: put a semicolon back inside the comment -> FAILS naming it. This is not hypothetical — REC-68's own first draft of the comment contained `(REC-68);` and this arm is what found it, before `node --check` or the backtick scan could have.
@@ -86,6 +86,10 @@ import { readControl, CONTROL_MARKER, MARKER_PHRASE, MARKER_SEPARATORS,
    `coverage.mjs` actually ask. This file's three corpus walks discover over
    `test/`, a directory it does not control; see the block at the foot. */
 import { readGitProvenance, reportProvenance, stateOf, repoPath } from "../scripts/provenance.mjs";
+/* M0-21 / D-268: the census below grades a file by whether THAT FILE walks, so a
+   floor standing one import away from its walk is invisible to it. This module
+   answers the question by DATA FLOW instead. Imported, never restated. */
+import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -1841,6 +1845,109 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
     goneFromList, []);
+
+  /* ---- THE CROSS-FILE HALF, AND IT IS THE DETECTOR RATHER THAN AN INSTANCE ----
+   *
+   * M0-21 / D-268. EVERYTHING ABOVE GRADES A FILE BY WHETHER THAT FILE CONTAINS A
+   * `readdirSync(`. So when the WALK and the FLOOR live in different files, the
+   * census names the walking file and never enumerates the file carrying the
+   * floors behind it. The measured instance is `scripts/op-claims.mjs` (walks,
+   * NAMED above with the words "reports a claim census") and
+   * `test/op-claims.test.mjs`, which contains NO `readdirSync` at all, appears in
+   * no census row, and carries FIVE floors over what that walk found.
+   *
+   * WHY THIS IS A DIFFERENT KIND OF WORK FROM ADDING A ROW ABOVE. Guarding an
+   * instance protects one floor; closing the detector protects every future one.
+   * `scripts/walkfloor.mjs` asks the question the census could not: does a value
+   * produced by a WALK reach a COMPARISON, across a module boundary. Its header
+   * states in full what it can and cannot see; the short version is that it grades
+   * at BINDING granularity rather than file granularity, because the benign shape
+   * that kills a file-granularity detector is live one line away from the real one
+   * — `LEDGER.length >= 20` in the very same suite, imported from the very same
+   * walking module, and NOT walk-derived at all.
+   *
+   * A CHECK THAT CRIES WOLF GETS SWITCHED OFF. That is `VERIFICATION.md`'s own
+   * stated reason for not making `--strict` the gate yet, so the arms below assert
+   * the FALSE-POSITIVE direction as hard as the true-positive one. */
+  const wf = sweepWalkFloors({ repo: REPO });
+  const wfUnguarded = wf.sites.filter((s) => !s.guarded);
+
+  /* NAMED, exactly as above: a cross-file floor that somebody has read and decided
+     about. A NEW one fails by name, which is the outcome worth having. The entry
+     is the file, because the five sites in it are one decision and not five. */
+  const CROSS_FILE_NAMED = [
+    /* THE MEASURED INSTANCE D-268 WAS RAISED FOR, AND IT IS NAMED HERE RATHER THAN
+       GUARDED FOR A BOUNDARY REASON THAT IS WORTH STATING PLAINLY.
+       `test/op-claims.test.mjs` floors FIVE times on `scripts/op-claims.mjs`'s
+       whole-repository `corpus()`: `files >= 300`, `chars >= 10_000_000`,
+       `mentions >= 5000`, `names.length >= 150` (all four found by this detector on
+       its first real run) and `attributions.length >= 4` (a FIFTH that no census
+       row, and no brief, had ever named — it is what the detector bought).
+       By D-257's own ruling these should be GUARDED, not named: naming is
+       defensible for a walk that only REPORTS and much weaker for one whose count
+       feeds a ratchet, and all five feed ratchets. The guard is D-257's two-line
+       pattern — keep the sweep over the working tree so a finding in uncommitted
+       work is not hidden, and compute the FLOOR over `git ls-tree HEAD` alone.
+       IT IS NOT DONE HERE because this item's claim does not name that suite and a
+       sibling item was briefed to guard exactly these instances; doing it twice in
+       two worktrees is a merge conflict in a file neither of us owns. THE POINT OF
+       THE ENTRY IS THAT THE DECISION IS VISIBLE INSTEAD OF SILENT — which is the
+       whole difference between this list and the blindness it replaces. */
+    "bio-plane/test/op-claims.test.mjs",
+  ];
+  const wfNewly = wfUnguarded.map((s) => s.file)
+    .filter((f, i, a) => a.indexOf(f) === i && !CROSS_FILE_NAMED.includes(f)).sort();
+  const wfStale = CROSS_FILE_NAMED.filter((f) => !wfUnguarded.some((s) => s.file === f));
+
+  console.log(`  cross-file walk->floor: ${wf.corpus.length} module(s) read · ${wf.walkModules.length} walk module(s) ·`
+    + ` ${wf.sites.length} floor(s) whose value crosses a module boundary`
+    + ` (${wf.sites.filter((s) => s.guarded).length} GUARDED, ${wfUnguarded.length} named)`
+    + ` · ${wf.ceilings.length} ceiling-at-zero · ${wf.unknowns.length} UNCLASSIFIED · provenance ${wf.provenance}`);
+  for (const s of wf.sites) console.log(`    ${s.guarded ? "GUARDED " : "NAMED   "}${s.file}:${s.line}  ${s.expr}   <- ${s.from.join(", ")} [${s.state}]`);
+  /* PRINTED, NEVER SILENTLY SCORED ZERO. A comparison this matcher does not
+     understand is a thing it must NAME — that is WORKER.md's rule and it is the
+     difference between a narrowed unknown and a false clean. */
+  for (const u of wf.unknowns) console.log(`    UNCLASSIFIED ${u.file}:${u.line}  ${u.expr}  — ${u.why}`);
+
+  /* (1) REACH. A detector that reads nothing passes every absolute assertion, and
+     three walks in this repository reported a spotless verdict over an empty
+     corpus in one week. The corpus is PRINTED above and floored here. */
+  t(`the cross-file detector REACHES the estate rather than a corner of it (${wf.corpus.length} module(s), floor 200)`,
+    wf.corpus.length >= 200, true);
+  t(`and it resolved a non-trivial set of WALK modules to flow from (${wf.walkModules.length}, floor 8)`,
+    wf.walkModules.length >= 8, true);
+
+  /* (2) THE TRUE POSITIVE, PINNED AS A DELTA RATHER THAN A COUNT. The real
+     `op-claims` split must be FOUND. This is the arm that fails if the detector
+     ever stops seeing across a module boundary — which BOTH of its own first-draft
+     bugs did, each while reporting a clean estate. */
+  const opClaimsFloors = wf.sites.filter((s) => s.file === "bio-plane/test/op-claims.test.mjs");
+  t(`the REAL cross-file split is found: op-claims.test.mjs floors on op-claims.mjs's walk (${opClaimsFloors.length} site(s), floor 4)`,
+    [opClaimsFloors.length >= 4,
+     opClaimsFloors.every((s) => s.from.includes("bio-plane/scripts/op-claims.mjs"))],
+    [true, true]);
+
+  /* (3) THE FALSE-POSITIVE DIRECTION, ASSERTED OVER A REAL LINE AND NOT A FIXTURE.
+     `LEDGER` is a STATIC exported array imported FROM THE SAME WALKING MODULE by
+     THE SAME SUITE, and `LEDGER.length >= 20` is a floor on it. It is not
+     walk-derived, no phantom in any directory can move it, and a detector that
+     reports it is a detector somebody switches off. */
+  t("a floor on a STATIC export of a walking module is NOT reported (the `LEDGER.length >= 20` shape)",
+    wf.sites.some((s) => /LEDGER/.test(s.expr)), false);
+
+  /* (4) GUARDED OR NAMED — the ratchet. A new cross-file floor is a DECISION, not
+     a silence, exactly as a new walk is above. */
+  t(`every cross-file walk-derived floor is GUARDED or NAMED (${JSON.stringify(wfNewly)})`,
+    wfNewly, []);
+  t(`and the cross-file named list has not gone stale (${JSON.stringify(wfStale)})`,
+    wfStale, []);
+
+  /* (5) THE DETECTOR APPLIED TO ITSELF, which is the cheapest evidence available
+     that it reaches real code rather than only its own fixtures: THIS SUITE floors
+     on `walkfloor.mjs`'s walk, one import away, and must therefore appear in its
+     own output — as GUARDED, because this file asks `provenance.mjs`. */
+  t("the detector finds THIS suite's own cross-file floors on it, and reads them as GUARDED",
+    wf.sites.some((s) => s.file === "bio-plane/test/hygiene.test.mjs" && s.guarded), true);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);
