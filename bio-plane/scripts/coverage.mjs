@@ -239,6 +239,19 @@ const REGISTER_FLOOR = {
      time was CONDUCT's own: keeping BOTH movers' provenance comments (VF-1's and
      PL-17's, each true of its own branch) dragged in the key line that follows each.
      Keep every comment; keep ONE key set. Figures re-read from the merged green run. */
+  /* D-255, 2026-08-09: 621 -> 627, from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED (`arms 627/621 · classified 133/133 · corpus 134/134
+     · GREW by 6`), never by adding to the number above. `classified` and
+     `corpus` do NOT move: no suite was added, and the seven D-255 arms are
+     declared inside `query.test.mjs`'s EXISTING block.
+     SEVEN ARMS WERE DECLARED AND THE FIGURE ROSE BY SIX, WHICH IS ARITHMETIC
+     AND NOT A LOST ARM — checked rather than assumed, because "an arm that
+     scored zero" is exactly D-233's shape. `countArms` is
+     `max(transitions, enumerations)`; this suite's declaration had FIVE
+     transitions and SIX enumerated items, so its recorded figure was already
+     the ENUMERATION count. Adding seven transitions took transitions 5 -> 12,
+     which now wins the max, and 12 - 6 = 6. Every one of the seven arms RAN and
+     is stated with the counts it produced. */
   arms:       632,  // arms stated across the classified declarations
   classified: 134,  // declarations the detector could count arms in
   corpus:     135,  // suites the register reads
