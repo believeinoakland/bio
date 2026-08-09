@@ -737,7 +737,15 @@ const ACTS_AWAITING_SURFACE = [
      one row shorter and ARM A4d's floor moves UP by exactly one in the same
      commit, because a struck row moves its act from the register into the
      catalogue-outside-the-register that floor is measured over. */
-  { id: "versioncurrent",  published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-45 (W8) — IS-3 CURRENT as a project property", since: "2026-08-08" },
+  /* `versioncurrent` STOOD HERE AND WAS STRUCK 2026-08-09 BY UI-45, the second
+     row this drain has collected and the second to fire on the item's first run
+     before anything else was touched. The act is now hosted by
+     `SURFACES["inquiry-stance"]`, whose whole reason to be a separate surface is
+     that `op=basisversions` publishes `current` ONLY when a project is named
+     (§7 — a stance belongs to the project's relationship with a question, never
+     to the question), and the version-review surface names none. ARM A4d's and
+     ARM A4e's floors move UP by exactly one each in this same commit, and ARM
+     A3's by one for the placement. */
   /* CPDF-10. Registered as a DEBT rather than exempted, which is what this arm
      asked for by name. The act is `op=attesttext`: a member says they compared a
      capture's transcribed text against the IMAGE of the page, over a stated
@@ -835,8 +843,8 @@ await section("ARM A · acts come from the plane", () => {
      PRINTED on this tree rather than by adding one to the number in the file:
      the version-review surface hosts `versionhide`, so the registry describes
      one more placement and 18 had a placement of slack the moment it landed. */
-  ok(G.placements >= 19,
-     `ARM A3: ${G.placements} act placements are described, floor 19 (measured 2026-08-09 by UI-42; was 18, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  ok(G.placements >= 20,
+     `ARM A3: ${G.placements} act placements are described, floor 20 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED; was 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -890,11 +898,11 @@ await section("ARM A · acts come from the plane", () => {
      because a surface now hosts it. A register row being paid moves both, in
      opposite halves of the same partition, and 15 would have carried a whole
      act of slack in each. */
-  ok(G.baseline.length >= 16,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when the register still named versionhide). `
+  ok(G.baseline.length >= 17,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 17 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED, up from 16 when the register still named versioncurrent). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 16,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when no surface hosted versionhide). `
+  ok(G.hostedSet.size >= 17,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 17 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED, up from 16 when no surface hosted versioncurrent). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
@@ -939,7 +947,7 @@ await section("ARM D · declared reads are real and reached", () => {
      written. It is moved rather than noted because a floor with slack is not a
      ratchet, and this one would have sat green through the deletion of a fifth
      of the file's static op calls. */
-  ok(called.size >= 64, `ARM D1: ${called.size} ops are called statically from app.html, floor 64 (measured 2026-08-09 by UI-42; was 50 and thirteen low) — an empty call set would make D3 vacuous`);
+  ok(called.size >= 65, `ARM D1: ${called.size} ops are called statically from app.html, floor 65 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED — this item added exactly one, op=versioncurrent, and found NO slack; was 64 under UI-42, and 50 before that when it sat thirteen low) — an empty call set would make D3 vacuous`);
 
   let declared = 0;
   for(const [id, s] of Object.entries(SURFACES)){
@@ -956,7 +964,7 @@ await section("ARM D · declared reads are real and reached", () => {
   }
   /* MOVED 2026-08-09 (UI-42) FROM 30 TO 39, from the figure THIS ARM PRINTED —
      UI-42's surface declares two reads and the floor was already seven low. */
-  ok(declared >= 39, `ARM D5: ${declared} reads are described, floor 39 (measured 2026-08-09 by UI-42; was 30 and seven low)`);
+  ok(declared >= 41, `ARM D5: ${declared} reads are described, floor 41 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED — this item added exactly two, the inquiry-stance surface own reads, and found NO slack; was 39 under UI-42, and 30 before that when it sat seven low)`);
 });
 
 /* ================================================= RECIPES ARE DATA, VALIDATED */

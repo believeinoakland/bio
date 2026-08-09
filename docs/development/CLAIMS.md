@@ -5090,3 +5090,151 @@ ones the record already assigned to the surface: DEC-29(b) states in as many wor
 wording clause is a UI string"*, and DEC-32 clause 1 forbids the analyst's vocabulary while leaving
 the member-facing rendering to the surface — which is what UI-27's elicitation already established
 one construct over. Nothing here is a consequence Bob has not already ruled on.
+
+## CLAIM 2026-08-09 UI (UI-45 — notifications rendered)
+session: ui45-notifications (worktree agent-a4f9c3083de5f28e3)
+opened: 2026-08-09T00:00:00Z
+paths: **`civicos-ui/app.html` — named by SITE and by RENDERER, never by file** (it is shared ground
+  and UI-43 is live on it): (1) the NEW region between `/*__NOTIFICATIONS_START__*/` and
+  `/*__NOTIFICATIONS_END__*/`, appended after `__VERSION_REVIEW_END__` — every function in it is new
+  (`notifOptionsGrainHtml`, `notifBasisEntryHtml`, `notifDispositionKeyed`, `notifNoDispositionHtml`,
+  `notifRememberDisposition`, `notifDisposedHtml`, `notifClassLine`, `notifAbsenceHtml`, and the
+  `stance*` family) and nothing outside it moved into it; (2) FOUR named renderers INSIDE
+  `__QUEUE_START__`, and ONLY these — `queueEntryControlsHtml` (its FINDING branch gains the
+  dispositionable test), `queueItemHtml` (three call lines added, one existing call gated),
+  `queuePaint` (two call lines added, `PROPOSALS_LAST`'s filter narrowed); (3) ONE line inside
+  `doProposalDispose` recording the plane's disposition answer; (4) ONE key ADDED to `SURFACES`
+  inside `__SURFACES_START__`/`__SURFACES_END__` — `"inquiry-stance"`, no existing key touched;
+  (5) ONE line inside `boot()` — the route chain gains `&& !stanceRouteFromHash()` and nothing else.
+  **NOT** the CSS block, **NOT** `__CATALOG__`, **NOT** `__SEMANTICS__`, **NOT** `__VERSION_REVIEW__`
+  (UI-42's constants are CALLED, never edited), **NOT** `__ELICITATION__`, **NOT** any other marked
+  region, **NOT** any other function in `__QUEUE_START__`.
+  `civicos-ui/test/notifications.test.mjs` (NEW), `civicos-ui/test/notifications.control.mjs` (NEW).
+  `civicos-ui/test/surface-registry.test.mjs` — **the `versioncurrent` row STRUCK from
+  `ACTS_AWAITING_SURFACE` (ARM A4c's DRAIN requires it in the same commit), and FIVE floors moved
+  from the figures the arms PRINTED: ARM A3 19→20, A4d 16→17, A4e 16→17, D1 64→65, D5 39→41.**
+  No other arm touched.
+  `civicos-ui/test/preauth-vocabulary.test.mjs` — WALK 2's router census six → SEVEN and the new
+  router CLASSIFIED as post-authentication, with both halves of the classification pinned. That arm
+  exists to stop a new router arriving unclassified and it fired on the first run of this item; it
+  is CORRECTED, never exempted. No other arm touched.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not
+  rewritten — UI-43 is live), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/src/**` (READ ONLY — the suite IMPORTS `queuestate.mjs` rather than copying it),
+  **NOT** `bio-plane/checks/**`, **NOT** `bio-plane/test/**`, **NOT** `bio-plane/scripts/**`,
+  **NOT** `civicos-ui/tokens.css`, **NOT** `civicos-ui/check-*.mjs`, **NOT** `.gitignore` (UI-42's
+  `.ui*-harness/` pattern already covers this item's pen), **NOT** `docs/development/QUEUE.md`,
+  **NOT** `docs/development/IS-BUILD-PLAN.md`, **NOT** `docs/development/DECISIONS.md`,
+  **NOT** `docs/development/INTERFACES.md`, **NOT** `docs/development/INTERFACE-CHANGES.md`,
+  **NOT** `newgroup/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3 — `op=queue` (read), `op=proposedispose` (act, already reached by this
+  surface), `op=basisversions` (read, now WITH `project=`) and `op=versioncurrent` (the one act this
+  item newly hosts). Nothing is asked of the plane that it does not already publish and no shape is
+  changed, so **no IC row is owed**.
+interfaces owned: none.
+expected: IS-BUILD-PLAN UI-45, W8 slot B. The FINDING-class slugs surfaced from the plane's own
+  published wording; the out-of-inquiry lead with its `options[]`; suggestion kinds LOOK derived,
+  aggregate, and age rather than vanish (§6.4). Plus the `current`/project half UI-42 delegated, and
+  `versioncurrent`'s owed surface from `ACTS_AWAITING_SURFACE`.
+accepts-when: as IS-BUILD-PLAN UI-45. **UI harness baseline MEASURED IN THIS WORKTREE BEFORE ANY
+  EDIT, on a quiet tree, after `npm ci` in `bio-plane/`: 42 harnesses, exit 0 read UNPIPED.** Final:
+  **43 harnesses, exit 0 read UNPIPED**, the new suite at **67 assertions**. Battery and
+  `coverage.mjs --strict` re-run and reported. NEGATIVE CONTROLS RUN — `node
+  civicos-ui/test/notifications.control.mjs`, **12 arms, 12 as declared**, each armed ALONE with
+  every other defence held OPEN, two OVER-STRICTNESS arms GREEN, a BASELINE row GREEN, every restore
+  verified by sha256 AND by `cmp` against a per-arm pristine copy AND a pristine-of-record, the pen
+  kept INSIDE this worktree. No push, no merge.
+concurrency: checked over the whole file. The only other live claim naming `civicos-ui/**` is
+  **UI-42's** (`agent-a8c8ed9c32eb56980`), whose work is MERGED on main at `d579ae8` and whose own
+  DELEGATION addresses this item; its `__VERSION_REVIEW__` region is READ and CALLED here, never
+  edited. **UI-43 (the accept ceremony) runs concurrently and is NOT opened**: the four transition
+  acts (`versionaccept`/`reject`/`consider`/`revert`) stay on `ACTS_AWAITING_SURFACE` with UI-43's
+  name on them, untouched, and this item's `SURFACES` key and marked region are disjoint from
+  anything a ceremony would add. `bio-plane/**` is NOT claimed and NOT edited.
+released:
+
+### DELEGATION 2026-08-09 UI (UI-45) -> WHOEVER LANDS PL-13 (IS-3, CURRENT + the shared-inquiry slugs): **YOUR TWO SLUGS ARE ASSERTED ABSENT, SO THE DAY YOU MINT THEM THIS SUITE GOES RED ON PURPOSE**
+
+`IS-BUILD-PLAN.md`'s UI-45 row names `stance-changed-here-not-elsewhere` and
+`new-version-arrived-from-another-team` among the slugs to surface. **Neither exists.** They are
+PL-13's to mint, PL-13 has not landed, and `queuestate.mjs` names neither — which `store.mjs` says
+itself at `suggestVersion`'s header (*"the slug vocabulary, its subscriber and the shared-inquiry
+semantics are PL-13's and PL-4's, so this item writes the object and NOT the notification"*).
+
+**So this item did not render them, and that is the item's own negative control rather than a gap.**
+UI-45's declared NC is *render a slug with surface-authored wording → the published-words assertion
+fails*; authoring member-facing words for a slug the plane does not publish is exactly that defect,
+performed deliberately. `notifications.test.mjs` §0 therefore asserts both slugs are ABSENT from the
+IMPORTED catalogue, with the reason in the assertion text: **when PL-13 lands, that arm FAILS**, and
+the next session surfaces them instead of discovering the gap a wave later. An absence asserted is a
+gap with an alarm on it; an absence noted in a comment is a gap.
+
+**What you will find already built when you get here.** Nothing about the two new slugs needs a new
+renderer: the queue renders a FINDING from the producer's own `summary`, `detail` and `basis.detail`,
+so a new kind under an existing class arrives rendered. What you must check is the DISPOSITION half —
+`notifDispositionKeyed` asks whether the item's basis carries `progression_key` and `stage_key`,
+because that is what `op=proposedispose` is keyed on. **If your slugs are to be adoptable, deferrable
+or dismissable, the plane needs an identity the act can be keyed on and today it has exactly one.**
+That is a PLANE question, not a surface one, and it is the third instance of D-222's grain problem.
+
+### DELEGATION 2026-08-09 UI (UI-45) -> UI-43 (the accept ceremony) AND WHOEVER NEXT DRAWS A CONTROL ON A QUEUE ITEM: **THE DEFECT THIS ITEM FOUND IS A CLASS, AND IT WAS LIVE**
+
+PL-15's delegation states the rule for one control — *"DO NOT OFFER A MUTE ON IT … a surface that
+shows a mute control it cannot honour is worse than one that shows none"* — and the queue honoured
+that half correctly: `queueMutableKinds` filters to CONDITION, which is what `op=queuemute` accepts.
+
+**The same defect was live one control over and nobody had looked.** `queueEntryControlsHtml` drew
+Adopt / Defer / Dismiss on EVERY FINDING. `op=proposedispose` is keyed on
+(`progression_key`, `stage_key`) and refuses a pair that is not a real stage of a defined
+progression (`NO_SUCH_PROGRESSION` / `BAD_STAGE`), so on PL-15's out-of-inquiry lead — whose basis
+carries neither — **all three controls could only ever have been refused**, and the act dialog they
+fed was built from a `PROPOSALS_LAST` row carrying two nulls.
+
+**THE FIX IS A PROPERTY AND THAT IS THE POINT.** `notifDispositionKeyed(it)` asks the ITEM whether it
+carries the identity the act is keyed on. A list of kinds would have gone stale the day PL-13 mints
+its two — *invert, do not lengthen a list*. **The general rule for anyone adding a control to a queue
+item: ask what identity the act is keyed on and whether THIS item carries it. Do not ask what kind it
+is.** The queue's own item shape makes that answerable, and `notifications.control.mjs` arm 5 is the
+measurement that it bites: making the predicate answer true for everything restores the old surface
+exactly and takes five assertions down.
+
+### DELEGATION 2026-08-09 UI (UI-45) -> CONDUCT: **FIVE FLOORS MOVED, AND THIS TIME EVERY ONE OF THEM WAS EXACT — NO SLACK ANYWHERE**
+
+Moved from the figures the arms PRINTED (the arms were driven to fail on an absurd floor so they
+would print, then the file was restored and verified by `cmp` before the real figures were written),
+never by adding to the number in the file, and each with its reason at the site:
+
+| arm | was | now | why it moved |
+| --- | --- | --- | --- |
+| A3 (act placements) | 19 | 20 | this item hosts `versioncurrent` |
+| A4d (catalogue outside the register) | 16 | 17 | STRIKING the register row moves that act into this floor's corpus |
+| A4e (distinct hosted acts) | 16 | 17 | a surface now hosts it |
+| D1 (ops called statically from app.html) | 64 | 65 | this item added exactly ONE call, `op=versioncurrent` |
+| D5 (declared reads) | 39 | 41 | the `inquiry-stance` surface declares exactly TWO |
+
+**The reportable half is the opposite of UI-42's.** UI-42 found D1 and D5 carrying 13 and 7 of slack.
+**This item found NO slack in any of the five** — every figure sat exactly where UI-42 left it a day
+earlier, and every move is exactly the delta this item created. That is what a ratchet looks like
+when it has just been re-measured, and it is worth recording precisely because the alternative
+finding (more slack) would have been the interesting one and it is not what the instrument said.
+
+### DELEGATION 2026-08-09 UI (UI-45) -> CONDUCT: **THE DRAIN HAS NOW FIRED TWICE IN TWO DAYS, AND THE REMAINING VERSION ACTS ARE ALL UI-43's**
+
+`versionhide` was struck by UI-42 and `versioncurrent` by this item, each in the commit that hosted
+it. Both strikes were triggered by ARM A4c firing on the item's FIRST run, before anything else had
+been touched, naming the row and the item that owed it. **The mapping CONDUCT owns is carrying its
+own weight.** What remains on `ACTS_AWAITING_SURFACE` for the version machine is the four transition
+acts (`versionaccept`, `versionreject`, `versionconsider`, `versionrevert`), all four owed by
+**UI-43**, which is live now — so the register should empty of version acts entirely within this
+wave, and if it does not, ARM A4b's ceiling is the thing that will say so.
+
+### DECISIONS FOR BOB 2026-08-09 (UI-45): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. Two judgements were made and both are ones the
+record had already assigned to the surface. **(a) Not rendering PL-13's two slugs** is not a scope
+choice, it is what the item's own negative control requires — authoring words for an unpublished
+slug is the drift class DEC-8 closes, and the absence is asserted so it cannot go unnoticed.
+**(b) Withdrawing three controls from findings the disposition act cannot key** applies PL-15's own
+stated rule about the mute to the control beside it; the alternative (leave them, let the plane
+refuse) is the "gate that pressures somebody into finding a way around it" the record already rules
+against. Nothing here is a consequence Bob has not already ruled on.
