@@ -252,9 +252,13 @@ const REGISTER_FLOOR = {
      the ENUMERATION count. Adding seven transitions took transitions 5 -> 12,
      which now wins the max, and 12 - 6 = 6. Every one of the seven arms RAN and
      is stated with the counts it produced. */
-  arms:       632,  // arms stated across the classified declarations
-  classified: 134,  // declarations the detector could count arms in
-  corpus:     135,  // suites the register reads
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 632 -> 646 / 134 -> 135 / 135 -> 136,
+     from the figures a green `--strict` run PRINTED on the merged tree carrying VF-1,
+     UI-42, PL-17, FL-4, D-257, FL-5 and D-255 (`GREW by 14 arm(s)`). Six of those seven
+     moved this figure on their own branch and NOT ONE of their numbers is true here. */
+  arms:       646,  // arms stated across the classified declarations
+  classified: 135,  // declarations the detector could count arms in
+  corpus:     136,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

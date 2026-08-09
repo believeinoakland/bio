@@ -168,6 +168,39 @@ So the resolution splits in two, and the order matters:
 **A detector that keeps naming the same id after you have fixed it twice is not flaky — it
 is telling you your model of the conflict is wrong.**
 
+## AFTER EVERY MERGE, COMPARE THE FILE SET IT CARRIED AGAINST THE FILE SET THE BRANCH CHANGED.
+
+```
+comm -23 <(git diff --name-only <fork-point> <branch-tip> | sort) \
+         <(git diff --name-only HEAD^ HEAD | sort)
+```
+
+**Anything it prints is a file the merge DROPPED WHOLE.** Measured on 2026-08-08 and found
+days later by accident: REC-69's branch changed **12** files, my merge carried **11**, and the
+missing one was `civicos-ui/check-refusal-codes.mjs` holding **70 lines of floor moves**.
+
+**THE CAUSE WAS MY OWN RESOLUTION AND IT WAS A REASONED ONE.** That file conflicted in six
+hunks, all of them floor figures, and I took OURS on every hunk — with a stated plan to re-read
+the floors from the merged green run afterwards. Taking one side on EVERY hunk of a file is
+identical to discarding the branch's whole contribution to it: the file ends byte-equal to
+main, git records no change, and the merge diff simply does not mention it. My re-read then
+moved `REGISTER_FLOOR` in `coverage.mjs` and never touched that file's eleven floors at all.
+
+**NOTHING WENT RED, AND NOTHING COULD HAVE.** A dropped floor move goes SLACK, not broken.
+Eleven floors sat stale with the battery green, `--strict` at exit 0 and the UI harness at exit
+0. `--is-ancestor` passed. `git revert -m 1` could not remove what was never there.
+
+Two rules fall out, and the second is the general one:
+
+- **If you find yourself taking one side on every hunk of a file, stop.** That is not a
+  resolution, it is a deletion of that file's contribution, and it should be a deliberate
+  decision stated in the commit message — not the accumulated result of six hunk-by-hunk calls.
+- **A floor you promise to re-read later is a floor you have not moved.** Re-reading
+  `coverage.mjs`'s printed figures does not touch any OTHER file's floors, and a stale floor is
+  invisible by construction because slack never fails.
+
+Mechanising this is **M0-20**. Until it lands, run the command.
+
 ## `--is-ancestor` PROVES A MERGE HAPPENED. IT DOES NOT PROVE THE CONTENT SURVIVED.
 
 **Measured 2026-08-08, and it is the ancestry rule's own blind spot.** The rule
