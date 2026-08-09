@@ -168,6 +168,35 @@ So the resolution splits in two, and the order matters:
 **A detector that keeps naming the same id after you have fixed it twice is not flaky — it
 is telling you your model of the conflict is wrong.**
 
+## PLANCHECK GREEN IS NOT THE GATE. I PUSHED `main` RED BEHIND IT.
+
+**2026-08-09, and it is the previous CONDUCT's failure inverted.** That session pushed a
+conflict marker behind a green BATTERY, because the battery does not read
+`scripts/coverage.mjs`. I pushed a red BATTERY behind a green PLANCHECK, because plancheck
+does not run the battery. **Same shape, opposite instrument: one gate answered, and I read it
+as the gate.**
+
+The commit was documentation-only — a note recording a lesson — and that is precisely why I
+skipped the two minutes. **A docs-only commit is not a safe commit here**, because the
+planning surfaces ARE a corpus: `planning-hygiene` asserts per debt row, `mintid` reads its
+floors out of prose, `hygiene` walks the estate. Prose changes what the instruments measure.
+
+**And the content of that commit was the defect it described.** It recorded *a queue row
+without a register row beneath it drives the floor off prose* — and wrote the token
+`Spawned as D-277` into `QUEUE.md` with no `D-277` register row, driving D's floor to 277
+against a highest real allocation of 271. `mintid.test.mjs` went red on `main` and stayed
+red until a worker measured its own baseline, found it already failing, and reported it
+rather than assuming the tree was fine.
+
+**Two rules, and the second is the one I actually needed:**
+
+1. **Run the FULL gate before every push — battery, `--strict` unpiped, UI harness, plancheck
+   — including on docs-only commits.** There is no commit here small enough to skip it.
+2. **A lesson written down is not yet a habit.** I wrote this one, and then broke it inside
+   the same commit. Where a rule can be mechanised, mechanise it: `plancheck` already reads
+   the ledger, and an id with a queue row, no register row and no commit is a WARN it could
+   raise on its own.
+
 ## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
 
 **Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was
