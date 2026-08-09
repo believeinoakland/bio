@@ -239,9 +239,32 @@ const REGISTER_FLOOR = {
      time was CONDUCT's own: keeping BOTH movers' provenance comments (VF-1's and
      PL-17's, each true of its own branch) dragged in the key line that follows each.
      Keep every comment; keep ONE key set. Figures re-read from the merged green run. */
-  arms:       632,  // arms stated across the classified declarations
-  classified: 134,  // declarations the detector could count arms in
-  corpus:     135,  // suites the register reads
+  /* MOVED 2026-08-09 by PL-19 (DEC-65 shape (b)): 632 -> 647 / 134 -> 136 / 135 -> 137,
+     ALL THREE IN THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` RUN PRINTED AS REPRODUCIBLE (`arms 647/632 · classified 136/134 · corpus
+     137/135 · GREW by 15 arm(s)`), read only AFTER the new files were in a commit — the
+     pre-commit run reported these same numerals as CONTAMINATED, and a floor moved on
+     those is permanently too high. Never counted, never added to the numbers above.
+
+     **AND ONLY 7 OF THE 15 ARE THIS ITEM'S — THE FLOOR WAS ALREADY STALE ON ARRIVAL BY
+     8 ARMS / 1 CLASSIFIED / 1 CORPUS, WHICH IS RECORDED BECAUSE IT WAS MEASURED RATHER
+     THAN INFERRED.** `main` at `8096452` was checked out into a scratch `git worktree`
+     (never `git stash` — `refs/stash` is repository-wide across every checkout of this
+     clone) and `--strict` run there on a quiet tree with NOTHING uncommitted: it printed
+     `arms 640/632 · classified 135/134 · corpus 136/135 · GREW by 8`, with provenance
+     `146 of 146 discovered item(s) are in the commit at HEAD` and no contamination note
+     at all. So the merged tree read 8 arms above its own floor before PL-19 touched
+     anything — the collapse-to-one-key at the VF-1/PL-17 integration kept a figure true
+     of one branch and not of the merge, which is this block's oldest hazard arriving in
+     its subtler form: not a duplicate key, just a survivor that was never re-read.
+     THIS ITEM'S OWN 7 are one new suite, `test/dec65-single-part.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states SEVEN arms — a BASELINE, five break-it arms
+     and an OVER-STRICTNESS arm — so `corpus` and `classified` each rise by one and `arms`
+     by seven. Every one of those arms was RUN, through
+     `test/dec65-single-part.control.mjs`. Nothing FELL. */
+  arms:       647,  // arms stated across the classified declarations
+  classified: 136,  // declarations the detector could count arms in
+  corpus:     137,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

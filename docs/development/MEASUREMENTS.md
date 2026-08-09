@@ -5179,3 +5179,85 @@ returns early when the address already IS what is shown. **The DOM stub in every
 here fires no events, so no suite can reproduce the event**; the router is driven directly
 at the address rotation just wrote, which is what the event would do, and the substitution
 is labelled as one at the site and in the suite.
+
+## 2026-08-09 · PL-19 — DEC-65 shape (b): the single-part licence, measured at both sites
+
+Instrument: `bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict`,
+`bio-plane/test/dec65-single-part.control.mjs`, `civicos-ui/check-refusal-codes.mjs`, all run
+in worktree `agent-a875e2afd837947d7` at `7844e16`.
+
+### The battery
+
+Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT — the brief carried no figure, so there
+was nothing to agree or disagree with: **140 suites (136 plane + 4 fleet) · 140/140 green ·
+8,907 assertions · 135.9 s · exit 0.** The worktree arrived ONE MERGE BEHIND `main` (PL-17's)
+and WITHOUT `bio-plane/node_modules`; both were fixed before anything was measured.
+
+Final: **141/141 green · 8,953 assertions · 141.2 s · exit 0.** Delta **+46, attributed by
+DIFFING the two full runs PER SUITE and never by subtraction** — 135 of 139 shared suites
+byte-identical in count:
+
+| suite | before | after | why |
+| --- | --- | --- | --- |
+| `dec65-single-part.test.mjs` | (new) | 37 | this item's suite |
+| `hygiene.test.mjs` | 558 | 561 | its per-file walks gain rows for two new files |
+| `sufficiency-state.test.mjs` | 35 | 39 | §7's three superseded pins CORRECTED, one replaced by three |
+| `suggest.test.mjs` | 93 | 95 | CHECK 6's machine arm replaced by three, F10's count re-measured |
+
+### The floors, and one of them was already stale on arrival
+
+`REGISTER_FLOOR` **632 → 647 arms / 134 → 136 classified / 135 → 137 corpus**, all three in
+the same turn, from the figure a green `--strict` run PRINTED AS REPRODUCIBLE, read only
+after the new files were in a commit.
+
+**ONLY 7 OF THE 15 ARMS ARE THIS ITEM'S.** `main` at `8096452` was checked out into a scratch
+`git worktree` (never `git stash`) and `--strict` run there on a quiet tree with nothing
+uncommitted: **`arms 640/632 · classified 135/134 · corpus 136/135 · GREW by 8`**, provenance
+`146 of 146 discovered item(s) are in the commit at HEAD`, no contamination note. So the
+merged tree read **8 arms / 1 classified / 1 corpus above its own floor before PL-19 touched
+anything** — the sixth consecutive item to find a floor stale by measuring it. The cause is
+this block's oldest hazard in a subtler form: the VF-1/PL-17 collapse-to-one-key kept a
+figure true of one branch and never re-read it on the merge.
+
+`regionLines` **1407 → 1436** in `civicos-ui/check-refusal-codes.mjs`, and here the
+attribution is exact and the floor was NOT stale: `suggestVersion > is-suggest-checks` grew
+314L → 343L, and 1436 − 29 = 1407, the figure already in the file.
+
+### DEC-65's arithmetic argument, driven rather than restated
+
+The ruling rests on *with exactly one part there is no maximum to take*. Measured on the
+plane's own pair, through `op=suggest`, over the same single leg: a machine's single-part
+reading and a member's single-part reading both derive **`capture graded/B · connection
+unrated/null`** — identical. The state widens what the record can SAY and nothing about what
+it may CLAIM.
+
+### Three control arms that came back other than declared
+
+- **(2) the licence widened** — declared 1 failure, got 5. Widening the endpoint guard also
+  stops it refusing the zero-part and duplicate-label submissions, which then travel on to
+  `promote` and are refused there **in another family's words about a document the endpoint
+  had already composed**. The two sites are not redundant: the guard's job is to refuse the
+  ACT in the words of the act, the check's is to hold the BOUND at the document.
+- **(4) C-25.6's licence removed** — declared "the value is refused again"; it is not. With
+  `noClaim` false the machine arm asks only *non-blank and not a machine*, which the value
+  satisfies, so the patch returns C-25.6 to PL-17's inert state. **The check half's
+  contribution is the BOUND, not the admission** — the endpoint's stamp would land a
+  single-part reading either way.
+- **(5) PL-17's recorded WRONG FIX no longer works as a fix.** Adding `none:` to
+  `MACHINE_STAMP_PREFIXES` made `C-25.6` refuse the minted value while the check asked
+  `isMachineIdentity` directly. PL-19 asks `isSufficiencyUnclaimed`, and
+  `sufficiencyClaimState` tests the minted value BEFORE `isMachineIdentity` — so the value
+  is still admitted and only the identity pin falls. **PL-17's comment claims that arm
+  ordering is load-bearing; this is that claim measured against the exact patch it was
+  written to survive.** The one-line change is now purely a defect and buys nothing.
+
+### What the class sweep found, and what it could not see
+
+Over `checks/bio-checks.mjs` (528,453 chars) and `src/store.mjs` (1,511,107 chars), matching
+any statement that mentions an `asserted_by` within one statement of a judging predicate, on
+FLATTENED source: **4 sites — 3 in the catalog, 1 in the store.** One consumes the third
+state (C-25.6). **The declaration predicted ZERO in the store and was wrong**: the fourth
+site is the STAMP in `#suggestionPersisted`, which decides what goes INTO an `asserted_by`.
+**The matcher cannot see PL-3's endpoint guard at all** — that guard judges the SESSION and
+the PART COUNT and names no `asserted_by`, so it shares no shape with these sites. It is
+pinned structurally and DRIVEN through the op instead of being scored zero.
