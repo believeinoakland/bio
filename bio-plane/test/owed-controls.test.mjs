@@ -6,7 +6,8 @@
    (5) AN OWED CONTROL'S SUITE STOPS DECLARING. Hide the declaration in `bio-plane/test/strengthpair.test.mjs` -> `--strict` EXITS 1 twice over, at the register AND at owed control 3 naming PL-14 — the second is what says the ledger is pinned to that file rather than to a count.
    (6) THE LEDGER CANNOT BE TIDIED. Delete an OUTSTANDING row from `OWED_CONTROLS` -> `--strict` EXITS 1 on the pinned total of seven. Discharging a debt by deleting the row is the one failure a bare outstanding-count would have permitted.
    (7) OVER-STRICTNESS, and these must PASS rather than fail: (7a) a fleet declaration whose marker separator is an EM DASH rather than a colon; (7b) a fleet declaration that GREW by two arms; and (7c) a tree with no IS-BUILD-PLAN.md at all, where the ledger PRINTS and asserts nothing — that one is arm B6 IN this suite rather than in the harness, because it needs no source edit. A gate that fires on correct work in a spelling nobody anticipated is a defect in the gate.
-   ALL EIGHT ARMS RUN 2026-08-09 IN WORKTREE agent-a66f1cf86b51a86bd, each ALONE against a whole tree with the other defences held OPEN, each ARMING REPORTED (every patch matched exactly once), every restore sha256-EQUAL and `cmp`-IDENTICAL against a per-arm pristine copy with its byte count printed and a 2,000-byte minimum guarded. EVERY ONE BEHAVED AS DECLARED. MEASURED on the committed tree, as `EXIT · plane register · plane arms · fleet suites/declaring/arms`, against a BASELINE row that armed nothing (`0 · 135/135 · 631 · 4/4/35`): (1) `1 · 135/135 · 631 · 3/4/26` naming harness.test.mjs — THE PLANE'S FIGURES DID NOT MOVE, which is what says the hole was the fleet walk alone. (2) `1 · 135/135 · 631 · 4/4/34`, FLEET FLOOR on arms, control message silent. (3) `1 · 135/135 · 631 · 3/3/28` — note `3/3`, which without a suite floor reads GREENER than 4/4. (4) `1 · 134/134 · 622 · 4/4/35`, the ledger naming owed control 6 / PL-3 while the register's `No declared control` walk stayed SILENT, because a suite that is GONE declares nothing to nobody — the two instruments are not one thing measured twice. (5) `1 · 134/135 · 614 · 4/4/35`, both firing. (6) `1 · 135/135 · 631 · 4/4/35` on the pinned total, the outstanding CEILING silent (deleting a row LOWERS that count, which is exactly why the total is pinned at all). (7a) `0`, nothing moved. (7b) `0 · fleet 4/4/37`, the tally RISEN. THE PROPERTY M0-9 AND M0-14 BOTH RECORDED APPLIES HERE TOO: writing this record into a declaration moves the register's own total upward, so these are DELTAS against the baseline row and an absolute must never be compared across two edits of this text.
+   (8) THE CLASS SWEEP IS REPORTED AND NOT GATED, and the arm proves the second half rather than asserting it. Wire the sweep into `--strict` -> the run EXITS 1 over an HONEST tree, because 23 suites in `civicos-ui/test` and `newgroup/test` declare no control today. That is the whole argument for printing the figure instead of gating on it: those directories belong to other areas, and a gate that fails honest runs gets switched off.
+   ALL NINE ARMS RUN 2026-08-09 IN WORKTREE agent-a66f1cf86b51a86bd, each ALONE against a whole tree with the other defences held OPEN, each ARMING REPORTED (every patch matched exactly once), every restore sha256-EQUAL and `cmp`-IDENTICAL against a per-arm pristine copy with its byte count printed and a 2,000-byte minimum guarded. EVERY ONE BEHAVED AS DECLARED. MEASURED on the committed tree, as `EXIT · plane register · plane arms · fleet suites/declaring/arms`, against a BASELINE row that armed nothing (`0 · 135/135 · 631 · 4/4/35`): (1) `1 · 135/135 · 631 · 3/4/26` naming harness.test.mjs — THE PLANE'S FIGURES DID NOT MOVE, which is what says the hole was the fleet walk alone. (2) `1 · 135/135 · 631 · 4/4/34`, FLEET FLOOR on arms, control message silent. (3) `1 · 135/135 · 631 · 3/3/28` — note `3/3`, which without a suite floor reads GREENER than 4/4. (4) `1 · 134/134 · 622 · 4/4/35`, the ledger naming owed control 6 / PL-3 while the register's `No declared control` walk stayed SILENT, because a suite that is GONE declares nothing to nobody — the two instruments are not one thing measured twice. (5) `1 · 134/135 · 614 · 4/4/35`, both firing. (6) `1 · 135/135 · 631 · 4/4/35` on the pinned total, the outstanding CEILING silent (deleting a row LOWERS that count, which is exactly why the total is pinned at all). (7a) `0`, nothing moved. (7b) `0 · fleet 4/4/37`, the tally RISEN. (8) `1 · 135/135 · 631 · 4/4/35` — the sweep, gated, fails an honest tree. THE PROPERTY M0-9 AND M0-14 BOTH RECORDED APPLIES HERE TOO: writing this record into a declaration moves the register's own total upward, so these are DELTAS against the baseline row and an absolute must never be compared across two edits of this text.
    ONE ARM CAME BACK WRONG BEFORE ANY OF THIS AND IT IS THE FINDING WORTH CARRYING: the first version of arm (1) put the old `some()` rule back into `coverage.mjs` and this suite STAYED GREEN AT 36/0. The fix had left the member-level flag in place beside the new suite-level walk, so nothing read it any more — a second copy of a rule absorbing the control meant to prove the first, which is IS-6's C-22.4 arm at 98/98 one instrument over. The flag was DELETED rather than kept, and the arm was re-pointed at the rule that is actually load-bearing.
  * ========================================================================= */
 
@@ -130,6 +131,31 @@ if (fleetLine) {
    whole reason this row exists — the plane's register never read it. */
 t("A11 FL-3/IS-9's own suite is named in the fleet register",
   /^ {6}(?:\s*\d+ arms|UNCLASSIFIED|NO CONTROL) +harness\.test\.mjs$/m.test(realOut), true);
+
+/* THE CLASS SWEEP. The fleet hole's KIND is an instrument whose REACH is narrower
+   than the claim it prints, and asking where else that holds found two more
+   directories of suites no register reads. They are REPORTED and NOT GATED — they
+   belong to other areas — so what is asserted here is exactly that: named, with a
+   ratio, and NOT failing the run. */
+const sweep = [...realOut.matchAll(/^ {4}(\S+\/test) {2}(\d+)\/(\d+) declaring/gm)]
+  .map((m) => ({ dir: m[1], declaring: +m[2], total: +m[3] }));
+t("A12 the sweep names the suite directories no register reads",
+  sweep.map((s) => s.dir), ["civicos-ui/test", "newgroup/test"]);
+t("A12b and it prints a RATIO rather than a yes/no — a figure that can move",
+  sweep.every((s) => s.total > 0 && s.declaring <= s.total), true);
+/* A13 IS THE NON-VACUOUS HALF. There ARE undeclared suites in those directories
+   right now, and `--strict` must still pass: reporting is not gating, and a walk
+   that quietly became a gate would fail every honest run until another area did
+   work nobody asked it for. */
+const strictRun = spawnSync(process.execPath, ["scripts/coverage.mjs", "--strict"],
+  { cwd: join(DIR, ".."), encoding: "utf8", timeout: 120_000 });
+const strictOut = `${strictRun.stdout || ""}${strictRun.stderr || ""}`;
+const quietNamed = [...strictOut.matchAll(/^ {6}NO CONTROL \((\d+)\):/gm)].map((m) => +m[1]);
+t("A13 the sweep NAMES undeclared suites — the assertion is not passing over an empty list",
+  quietNamed.length > 0 && quietNamed.some((n) => n > 0), true);
+t("A13b and --strict still EXITS 0: this is reported, not gated", strictRun.status, 0);
+console.log(`corpus (A, sweep): ${sweep.map((s) => `${s.dir} ${s.declaring}/${s.total}`).join(" · ")}`
+  + ` · ${quietNamed.reduce((a, b) => a + b, 0)} suite(s) named as declaring no control`);
 
 /* ==================================================================== PART B
    THE REACH, DRIVEN THROUGH SCRATCH REPOSITORIES. */

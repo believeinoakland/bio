@@ -206,6 +206,25 @@ const hide = (src) => {
   console.log(`    RESULT: exit ${a.code} · fleet ${a.f.fleet} (baseline 4/4/35 — the tally must have RISEN)`);
 }
 
+/* (8) THE CLASS SWEEP IS REPORTED AND NOT GATED, and the arm proves the "not
+   gated" half rather than asserting it. Wire `otherDirs` into the strict tuple
+   and the run must FAIL — 23 suites in two other areas' directories declare no
+   control today, so a walk that quietly became a gate would fail every honest
+   run until another area did work nobody asked it for. */
+{
+  const a = arm({ id: "8", file: "bio-plane/scripts/coverage.mjs",
+    what: "the class sweep is wired into --strict, turning a report into a gate",
+    mustFail: "--strict EXIT 1 — which is why it is NOT wired in",
+    mustNot: "nothing else may change: this is one term added to one boolean",
+    patch: (src) => {
+      const anchor = "    || owedProblems.length\n";
+      return src.includes(anchor)
+        ? [src.replace(anchor, anchor + "    || otherDirs.some((d) => d.quiet.length)\n"), 1]
+        : [src, 0];
+    } });
+  console.log(`    RESULT: exit ${a.code === 1 ? "1 as declared — the sweep would fail an honest tree, which is the argument for reporting it" : `${a.code} — SURPRISING; the sweep may be looking at nothing`}`);
+}
+
 /* ---------------------------------------------------------------- the table */
 console.log(`\n${"=".repeat(78)}\nARM     EXIT   register     plane arms   fleet`);
 for (const r of rows)

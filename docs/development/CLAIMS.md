@@ -4974,3 +4974,31 @@ expected: IS-BUILD-PLAN VF-1 — the seven owed negative controls, PLACED on the
 accepts-when: as IS-BUILD-PLAN VF-1, with its `accepts-when` corrected in the same turn. Battery baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT at 138/138 / 8,827 (the brief carried no figure; VERIFICATION.md's register row said 128 of 128 · 542 arms against a real 134/621 — stale for the SIXTH time). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped, exit 0. NEGATIVE CONTROLS run and recorded in the suite's own `NEGATIVE CONTROL:` line. No push, no merge — CONDUCT integrates. QUEUE.md, DECISIONS.md, MEASUREMENTS.md, INTERFACES.md and DEBT.md are not written by this session.
 concurrency: checked over every unreleased block in this file — no live claim names `scripts/coverage.mjs`, and the two new test files did not exist. `agent-worker/**` and `pdf-worker/**` are READ and armed-then-restored by the control harness, never edited: every restore in that harness is verified by sha256 AND by `cmp` against a per-arm pristine copy with its byte count printed.
 released:
+
+### DELEGATION 2026-08-09 VERIFY (VF-1) -> UI, and a note for DIST: **22 UI SUITES DECLARE NO NEGATIVE CONTROL, AND UNTIL NOW NO INSTRUMENT SAID SO**
+
+VF-1's class sweep asked where else this repository holds a set of suites to a WEAKER rule than
+its siblings — the kind of defect the fleet hole was, not the instance. Measured 2026-08-09 and
+now PRINTED by `node bio-plane/scripts/coverage.mjs` on every run:
+
+    civicos-ui/test  19/41 declaring · 110 arms · 3 unclassified
+      NO CONTROL (22): act-attest · action-page · artifact-fetch · auth-surface · bias-vocabulary
+      · bound-sweep · capture-honesty · change-layers · cite-act · conclude-act · document-page
+      · finder · glossary-nav · header-facts · inquiry-page · intent-write · link-surface
+      · publication-entry · record-list · seals-backrestore · snapshot-render · surface-registry
+    newgroup/test    1/2 declaring · 3 arms   (NO CONTROL: embed.test.mjs — DIST's)
+
+**IT IS REPORTED AND DELIBERATELY NOT GATED, and the reason is measured rather than assumed:**
+arm (8) of `bio-plane/test/owed-controls.control.mjs` wires the sweep into `--strict` and the run
+EXITS 1 over an honest tree. A gate that fails honest runs gets switched off, and a fence tighter
+than its rule is an undeclared interface change wearing the costume of caution. **What VF-1 will
+not do is author 22 controls for another area's suites** — a control nobody ran is exactly the
+defect this item exists to defend against, so writing 22 declarations from outside would produce
+the appearance of coverage and none of it.
+
+**WHAT IS ASKED:** each UI suite states what to break in the surface it tests and what must then
+fail, and RUNS it. `civicos-ui/test/run.mjs` is not the battery, so nothing about this is
+mechanised for you today; the figure above is, and it moves when you move it.
+
+**NOT A DEBT ROW ON PURPOSE.** `DEBT.md` is not written by this session, and CONDUCT should decide
+whether this is one row or twenty-two. The measurement is the part that was missing.

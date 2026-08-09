@@ -213,15 +213,17 @@ const REGISTER_FLOOR = {
      the other's new suite, so 581 was true of neither tree, and the merged figure is
      higher than either. This is what "re-read it from a green run after every
      multi-item merge" is for. */
-  /* MOVED 2026-08-09 by VF-1: 621 -> 631 / 133 -> 134 / 134 -> 135, ALL THREE IN
+  /* MOVED 2026-08-09 by VF-1: 621 -> 632 / 133 -> 134 / 134 -> 135, ALL THREE IN
      THE SAME TURN and every one taken from the figure this item's own green
-     `--strict` run PRINTED as REPRODUCIBLE at commit a6b0956
-     (`arms 631/621 · classified 134/133 · corpus 135/134 · GREW by 10 arm(s)`),
-     never counted and never added to the numbers above. The cause is one new
-     suite, `test/owed-controls.test.mjs`, whose declaration states ten arms —
-     eight run by `test/owed-controls.control.mjs` plus the two over-strictness
-     arms that live IN the suite. Nothing FELL. */
-  arms:       631,  // arms stated across the classified declarations
+     `--strict` run PRINTED as REPRODUCIBLE, never counted and never added to the
+     numbers above (631 was read first, then 632 once the class-sweep arm was
+     written into the declaration — which is the register's own known property:
+     recording a control in prose moves the tally, so these are figures a run
+     printed and never deltas anybody computed). The cause is one new suite,
+     `test/owed-controls.test.mjs`, whose declaration states eleven arms — nine
+     run by `test/owed-controls.control.mjs` plus the two over-strictness arms
+     that live IN the suite. Nothing FELL. */
+  arms:       632,  // arms stated across the classified declarations
   classified: 134,  // declarations the detector could count arms in
   corpus:     135,  // suites the register reads
 };
@@ -413,6 +415,47 @@ if (fleetSuiteRows.length < FLEET_FLOOR.suites)
   fleetBelowFloor.push(`${fleetSuiteRows.length} fleet suite(s) read, floor is ${FLEET_FLOOR.suites}`);
 if (fleetArms < FLEET_FLOOR.arms)
   fleetBelowFloor.push(`${fleetArms} fleet control arm(s) stated, floor is ${FLEET_FLOOR.arms}`);
+
+/* ------------------------------- VF-1: the register's reach, stated in full */
+/* THE CLASS SWEEP THAT CAME OUT OF THE FLEET HOLE, and it is REPORTED rather
+ * than GATED, deliberately.
+ *
+ * The defect above was not "the fleet walk used `some`". The KIND is **an
+ * instrument whose REACH is narrower than the claim it prints** — a set of
+ * suites held to a weaker rule than its siblings, so a component can go quiet
+ * without moving a figure. Asking where else that is true found two more
+ * directories of suites that NO instrument in this repository holds to a
+ * declared control, and the numbers are printed here rather than written into a
+ * document, because a hand-carried figure goes stale silently and that is this
+ * project's most-repeated finding.
+ *
+ * WHY IT IS NOT A GATE. These suites belong to other areas (`civicos-ui` is UI's,
+ * `newgroup` is DIST's and is out of bounds without an explicit instruction).
+ * Turning their state into a `--strict` failure would fail every honest run until
+ * another area does work it has not been asked for, and a gate that fails honest
+ * runs gets switched off — VERIFICATION.md's own stated reason for what `--strict`
+ * does and does not enforce. A fence tighter than its rule is not a safer fence.
+ * So: MEASURED, NAMED, and put in front of whoever runs this, which is the loop
+ * the reader actually runs.
+ *
+ * WHAT THIS WALK CANNOT SEE, stated plainly: it reads `*.test.mjs` only, so a
+ * suite in another spelling is invisible to it, and it says nothing about whether
+ * a declared control was ever RUN — that is the owner's own measured figure and
+ * no matcher can supply it. */
+const OTHER_SUITE_DIRS = [
+  ["civicos-ui/test", "UI's harness suites — run by `node civicos-ui/test/run.mjs`, never by the battery"],
+  ["newgroup/test",   "the INSTALLER's suites — DIST's, out of bounds without an explicit instruction"],
+];
+const otherDirs = OTHER_SUITE_DIRS.map(([dir, why]) => {
+  let files = [];
+  try { files = readdirSync(join(REPO, dir)).filter((f) => f.endsWith(".test.mjs")).sort(); } catch { /* absent */ }
+  const rows = files.map((f) => ({ file: f, control: readControl(readText(join(REPO, dir, f))) }));
+  return { dir, why, total: files.length,
+    declaring: rows.filter((r) => r.control).length,
+    unclassified: rows.filter((r) => r.control && r.control.arms == null).length,
+    arms: rows.reduce((n, r) => n + (r.control && r.control.arms != null ? r.control.arms : 0), 0),
+    quiet: rows.filter((r) => !r.control).map((r) => r.file) };
+}).filter((d) => d.total > 0);
 
 /* ------------------------------------------------- VF-1: the owed controls */
 /* THE SEVEN OWED NEGATIVE CONTROLS (`INVESTIGATIVE-SESSION.md` §18, placed by
@@ -687,6 +730,23 @@ if (JSON_OUT) {
     console.log(`\n    (${r.n}) ${r.item}  ${r.state}${r.suite ? `  ${r.suite}` : ""}`);
     console.log(`         ${r.what}`);
     console.log(`         ${r.ran}`);
+  }
+
+  if (otherDirs.length) {
+    console.log(`\nSUITES NO REGISTER READS (VF-1's class sweep — REPORTED, NOT GATED)`);
+    console.log(`  The register's corpus is the plane's ${suites.length} suites; the fleet's ${fleetSuiteRows.length} are held to the`);
+    console.log(`  same rule one directory over. These are the rest of this repository's suites, and`);
+    console.log(`  NO instrument holds them to a declared negative control. Not gated because they`);
+    console.log(`  belong to other areas and a gate that fails honest runs gets switched off — but a`);
+    console.log(`  figure nobody prints is a figure nobody re-measures, which is how the fleet hole`);
+    console.log(`  survived. This walk reads *.test.mjs only, and says nothing about whether a`);
+    console.log(`  declared control was ever RUN.`);
+    for (const d of otherDirs) {
+      console.log(`\n    ${d.dir}  ${d.declaring}/${d.total} declaring · ${d.arms} arms`
+        + `${d.unclassified ? ` · ${d.unclassified} unclassified` : ""}`);
+      console.log(`      ${d.why}`);
+      if (d.quiet.length) console.log(`      NO CONTROL (${d.quiet.length}): ${d.quiet.join(", ")}`);
+    }
   }
 
   const accountedNote = Object.entries(NOT_A_FLEET_MEMBER)

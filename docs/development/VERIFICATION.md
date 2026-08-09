@@ -314,7 +314,28 @@ the four owners spell their reference to VF-1 four different ways, and grading o
 is REC-70's defect; the evidence an arm RAN stays the measured figure in the owner's own
 `NEGATIVE CONTROL:` line.
 
-The suite is `bio-plane/test/owed-controls.test.mjs`; its eight arms are declared there and
+**AND THE CLASS SWEEP FOUND THE REST OF THE ESTATE, which is a bigger number than the
+thing that started it.** The KIND of defect was never "`some` instead of `every`" — it is an
+instrument whose REACH is narrower than the claim it prints. Measured 2026-08-09 and now
+PRINTED by `coverage.mjs` on every run rather than written into this file, because a
+hand-carried figure goes stale silently:
+
+| directory | declaring a control | arms | read by a register? |
+| --- | --- | --- | --- |
+| `bio-plane/test` | 135 / 135 | 631 | yes — the register, floored |
+| `agent-worker/test` + `pdf-worker/test` | 4 / 4 | 35 | **as of VF-1**, floored |
+| `civicos-ui/test` | **19 / 41** | 110 | **no instrument at all** |
+| `newgroup/test` | **1 / 2** | 3 | **no instrument at all** |
+
+**The last two are REPORTED and deliberately NOT GATED, and the reason is measured rather
+than assumed:** arm (8) of the control harness wires the sweep into `--strict` and the run
+EXITS 1 over an honest tree. Those suites belong to UI and to DIST; a gate that fails honest
+runs gets switched off, and a fence tighter than its rule is an undeclared interface change
+wearing the costume of caution. Authoring 22 declarations from outside the area would produce
+the appearance of coverage and none of it — a control nobody ran being the exact defect this
+whole section is about. The DELEGATION is in `CLAIMS.md`, dated 2026-08-09.
+
+The suite is `bio-plane/test/owed-controls.test.mjs`; its nine arms are declared there and
 RUN by `bio-plane/test/owed-controls.control.mjs` (`node test/owed-controls.control.mjs`
 from `bio-plane/`).
 
