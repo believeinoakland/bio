@@ -764,30 +764,6 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "NOTE what is NOT here and never will be: the model's reasoning. DEC-61 puts the transcript "
       + "device-local with a TTL and out of the record store, so there is no transcript for any gate to "
       + "protect — the strongest form of this classification is that the material does not exist here.",
-    /* REC-69's read, classified by the item that adds it (2026-08-08,
-       rec69-agent). It is the FIRST `ai_runs` read keyed by the CONTEXT rather
-       than by the run, which inverts what the gate is protecting against, so
-       the classification is written out rather than inherited from its three
-       siblings above. */
-    airuns: "REC-69: the CONTEXT-KEYED run list, and it is the sharpest of this table's four run reads "
-      + "because it is the only one a caller can drive from an id they can already see. op=airun, "
-      + "op=airunlog and op=airunspawn all take a RUN ID — a caller must already hold the address, and "
-      + "UI-49 measured that the browser never learns one by opening a run — so their gate refuses a "
-      + "lookup somebody guessed. This one takes the INQUIRY OR PROJECT ID a member is looking at and "
-      + "answers with everything hanging off it, so a missing or wrong gate here would not leak one run, "
-      + "it would enumerate a group's whole line of investigation for anyone who could name the object. "
-      + "The gate is `#bundleGate` on `context_id`, THE SAME PREDICATE COMPILED AT THE SAME ONE POINT "
-      + "(D-15) as its three siblings — no second predicate is written, deliberately, because "
-      + "viewerPredicate's MACHINE alternation returns an unfiltered `1=1` and its DENY arm fails "
-      + "closed, and a hand-rolled gate getting either wrong is the difference between an outage and a "
-      + "leak. The posture is WITHHOLD THE ROW (REC-36), so a run over a project the viewer was never "
-      + "invited to is absent BYTE-IDENTICALLY to a run that does not exist, and NO COUNT of what was "
-      + "withheld is reported — op=backlinks' rule, and here the count is the disclosure that somebody "
-      + "is investigating something you cannot see. THE BOUND IS APPLIED AFTER THE GATE for the same "
-      + "reason: `truncated` computed over rows the viewer may not see would be that count arriving as "
-      + "a flag. It follows that a real context holding no visible runs answers an ordinary EMPTY LIST — "
-      + "'no runs here' and 'no runs you may see' are ONE answer by construction. What IS refused is "
-      + "the malformed QUESTION (C-34.1-3), never the invisible answer.",
     /* REC-34's read, classified by the item that adds it (2026-08-04,
        rec34-agent). op=reevaluations' posture is the model and both of the
        sweep's shapes appear here too, with one addition the earlier reads did

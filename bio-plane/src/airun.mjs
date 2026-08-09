@@ -203,37 +203,6 @@ export const STANDARD_BASIS = {
     "a bar was recorded for this run and cannot be read back",
 };
 
-/* REC-69 — WHAT A RUN CAN BE IN THE CONTEXT OF, and it is a vocabulary rather
-   than a pair of strings at a call site.
- *
- * §14a: *"A background session runs in a CONTEXT and is associated with an
- * inquiry or a project. Any window focused on any of those objects shows an
- * animated indicator that a job is running."* Two kinds, named by the design,
- * and until REC-69 the plane held the word nowhere — `aiRunOpen` stores
- * `String(contextType)` verbatim and `ai_runs.context_type` is a bare TEXT
- * column, so the two names existed only in prose and in whatever a caller
- * happened to type.
- *
- * IT IS A TEXT VOCABULARY, in RUN_BOUNDS' shape, for DEC-49's reason and not
- * for symmetry: `op=airuns` REFUSES a context kind outside it (C-34.2), and a
- * refusal that names the kinds it does hold must name them in words a member
- * reads rather than in the machine word they typed wrongly. The values are
- * therefore the sentence, and `civicos-ui/check-refusal-codes.mjs` arm E holds
- * every one of them to that (it harvests this module BY SHAPE, so this landed
- * inside that guard the moment it was written).
- *
- * WHAT THIS DELIBERATELY DOES NOT DO, stated here rather than discovered:
- * **`aiRunOpen` is NOT fenced by it.** The write still accepts any string, so a
- * run CAN be opened on a context kind this read will refuse to ask about. That
- * asymmetry is REAL and is REC-69's own finding rather than an oversight — the
- * open is PL-5's site and its refusals are C-22's family, and widening a write's
- * refusal set from inside a read's item is how one item's blast radius becomes
- * another item's red suite. It is DELEGATED with the measurement. */
-export const RUN_CONTEXTS = {
-  inquiry: "a question the group is working on, which any project may draw on",
-  project: "a body of work with its own members, its own bar and its own lens",
-};
-
 /* ------------------------------------------------------------------ refusals
 
    Each returns null when the subject is acceptable, or a REFUSAL object built
