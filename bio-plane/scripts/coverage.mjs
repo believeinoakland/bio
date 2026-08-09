@@ -191,9 +191,9 @@ const REGISTER_FLOOR = {
      UPWARD, and only to a figure a green run PRINTED. A floor that FALLS needs its reason
      at the site — one that falls because an instrument stopped double-counting is not
      slack; one that falls for any other reason is. */
-  arms:       576,  // arms stated across the classified declarations
-  classified: 129,  // declarations the detector could count arms in
-  corpus:     130,  // suites the register reads
+  arms:       581,  // arms stated across the classified declarations
+  classified: 130,  // declarations the detector could count arms in
+  corpus:     131,  // suites the register reads
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

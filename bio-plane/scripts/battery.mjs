@@ -103,6 +103,13 @@ import { dirname, join, relative } from "node:path";
    silence. Read that module's header for the mechanism, the four rules, and —
    the part a reader of a number needs — what the check cannot see. */
 import { readGitProvenance, reportProvenance } from "./provenance.mjs";
+/* D-237: the fenced count below answers "what did this run leave INSIDE the
+   $TMPDIR it owns". It is a true sentence about the fence and it was read as a
+   sentence about the estate for eight days, while 12 MB of DO and R2 SQLite sat
+   in /tmp/mfp. `residue.mjs` answers the other half — what is outside the fence,
+   and, separately and carefully, whose it is. Read its header for the three
+   strengths of evidence and for what it cannot see. */
+import { reportResidue, sampleHeld, scanShared, shallowNames, sharedTempRoots } from "./residue.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const filters = process.argv.slice(2).filter((a) => !a.startsWith("-"));
@@ -189,7 +196,25 @@ const ownerPid = (name) => {
 const alive = (pid) => {
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
 };
-/* An orphan is a directory no live process can still be using. */
+/* An orphan is a directory no live process can still be using.
+ *
+ * D-237 NAMES THIS AS A SECOND INSTANCE OF ITS OWN CLASS, at the site, because
+ * the sweep is fenced twice over and neither fence is stated in the number it
+ * prints. It looks only in the HOST `$TMPDIR`, and only at names starting with
+ * `bio-battery-` or one of the eleven hand-listed LEGACY prefixes. `/tmp/mfp`
+ * — 12 MB of Durable Object and R2 SQLite, accumulating for eight days — is in
+ * the wrong root AND matches no prefix, so `host orphans 58 -> 59` was as blind
+ * to it as `0 directories, 0 miniflare sandboxes` was. A hand-kept list of
+ * spellings goes stale the moment a twelfth is written (REC-70).
+ *
+ * IT IS NOT WIDENED, AND THAT IS DELIBERATE RATHER THAN LEFT UNDONE. This
+ * function DELETES. Widening a deleting sweep to names and roots it does not own
+ * is how a battery removes a directory belonging to some other tool, which is a
+ * worse defect than the one it would close, and a live sandbox WAS in flight
+ * during the manual cleanup that found D-186. So the sweep keeps its fence and
+ * `scripts/residue.mjs` REPORTS what the fence cannot reach — recognising the
+ * artifact by miniflare's own naming at any depth under any shared root, and
+ * never deleting a byte of it. Visible, not swept. */
 const orphans = () => {
   let names;
   try { names = readdirSync(TMP); } catch { return []; }
@@ -274,6 +299,30 @@ const residue = () => {
 };
 const residueBefore = residue();
 
+/* ---- D-237: the same two questions, asked OUTSIDE the fence -----------------
+ * The scan is bounded and measured (134 ms for /tmp, 170 ms for $TMPDIR at
+ * depth 4 on the development machine), so it runs TWICE — once here and once
+ * when the suites are done — and the pair is what makes "changed while this run
+ * ran" a statement rather than a guess. Per-suite resolution comes from the
+ * cheap name-only snapshot instead, because a deep scan per suite would cost
+ * 40 s on a 113 s run.
+ *
+ * `OWNED` and `LEGACY` are HANDED to the scanner rather than restated in it:
+ * this estate has measured five times what a second copy of a list costs. */
+const { roots: SHARED_ROOTS, overridden: ROOTS_OVERRIDDEN } = sharedTempRoots({ hostTmp: TMP });
+const scanOpts = { fence: RUN_TMP, ownedPrefix: OWNED, legacyPrefixes: LEGACY };
+const sharedBefore = scanShared(SHARED_ROOTS, scanOpts);
+let shallowBefore = shallowNames(SHARED_ROOTS, { fence: RUN_TMP });
+/* top -> { pid, example, suite }. Only ever written by the HELD arm, which is
+   the one attribution here that does not rest on a clock. */
+const heldOutside = new Map();
+let heldSamples = 0, heldAvailable = false;
+const heldSampledSuites = new Set();
+/* top -> the suite that was running when it appeared. The battery runs its
+   suites SEQUENTIALLY, which is the only reason this narrowing means anything —
+   it narrows a CANDIDATE and never promotes one. */
+const arrivalWindow = new Map();
+
 const planeSuites = readdirSync(join(ROOT, "test"))
   .filter((f) => f.endsWith(".test.mjs"))
   .filter((f) => filters.length === 0 || filters.some((x) => f.includes(x)))
@@ -335,20 +384,54 @@ const suites = [...planeSuites, ...fleetSuites];
 
 if (suites.length === 0) { console.error("no suites matched"); process.exit(1); }
 
-const run = ({ cwd, rel }) => new Promise((resolve) => {
+/* D-237's HELD arm. `lsof`, scoped to node and workerd, costs 17 ms (measured
+   against 118 ms unscoped) and yields BOTH the process tree and the open paths,
+   so one call answers "does any descendant of THIS battery have a path open
+   outside the fence". That pid chain is the only attribution here that is
+   conclusive; everything else the report prints is a candidate and says so.
+
+   SAMPLED TWICE PER SUITE, AT 60 ms AND 700 ms, and those numbers are measured
+   rather than picked. Suite durations across this battery run 32 ms to ~1.6 s
+   with a MEDIAN OF 505 ms: a first sample at 200 ms would never once look at 13
+   of the 133 suites, at 100 ms it misses 11, and at 60 ms it misses 10 — the
+   floor is the handful of suites that are simply shorter than an `lsof` call.
+   THE SUITES IT NEVER SAW ARE COUNTED AND REPORTED rather than left to be
+   assumed sampled, which is the whole lesson of this item: an arm that did not
+   look must not read as an arm that found nothing. */
+const takeHeldSample = (label) => {
+  if (!SHARED_ROOTS.length) return;
+  const s = sampleHeld({ roots: SHARED_ROOTS, fence: RUN_TMP });
+  heldSamples++;
+  heldSampledSuites.add(label);
+  if (!s.available) return;
+  heldAvailable = true;
+  for (const [top, info] of s.paths) if (!heldOutside.has(top)) heldOutside.set(top, { ...info, suite: label });
+};
+
+const run = ({ cwd, rel, label }) => new Promise((resolve) => {
   const started = Date.now();
   const child = spawn(process.execPath, [rel], {
     cwd,
     /* D-186: the suite's temp files land in THIS RUN's directory, whatever the
        suite believes about where temp goes. os.tmpdir() reads $TMPDIR on every
-       call, so this is the one place the choice can be made for all of them. */
+       call, so this is the one place the choice can be made for all of them.
+       D-237: "whatever the suite believes" is the claim that was too strong. A
+       suite naming an absolute path does not consult $TMPDIR at all, and two
+       did; the environment decides where `os.tmpdir()` points, not where a
+       string literal points. That is what the report below exists to see. */
     env: { ...process.env, TMPDIR: RUN_TMP },
   });
   let out = "";
+  let done = false;
+  const timers = [
+    setTimeout(() => { if (!done) takeHeldSample(label); }, 60),
+    setTimeout(() => { if (!done) takeHeldSample(label); }, 700),
+  ];
+  const finish = (r) => { done = true; for (const tm of timers) clearTimeout(tm); resolve(r); };
   child.stdout.on("data", (d) => { out += d; });
   child.stderr.on("data", (d) => { out += d; });
-  child.on("error", (e) => resolve({ code: -1, out: String(e), ms: Date.now() - started }));
-  child.on("close", (code) => resolve({ code, out, ms: Date.now() - started }));
+  child.on("error", (e) => finish({ code: -1, out: String(e), ms: Date.now() - started }));
+  child.on("close", (code) => finish({ code, out, ms: Date.now() - started }));
 });
 
 /* Assertion counts come from each suite's own tail line ("name: N pass, M fail"),
@@ -421,6 +504,15 @@ const results = [];
 for (const entry of suites) {
   const file = entry.label;
   const r = await run(entry);
+  /* D-237: name-only, one readdir per root. Anything that appeared while THIS
+     suite was the only one running is narrowed to it — a candidate with a name
+     attached, never a verdict. Whether it SURVIVES the run is decided later, by
+     the closing scan: residue is what is LEFT. */
+  {
+    const now = shallowNames(SHARED_ROOTS, { fence: RUN_TMP });
+    for (const top of now) if (!shallowBefore.has(top) && !arrivalWindow.has(top)) arrivalWindow.set(top, file);
+    shallowBefore = now;
+  }
   const t = tally(r.out);
   const skip = (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
   results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip,
@@ -533,9 +625,14 @@ if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")
 const residueAfter = residue();
 const leaking = residueAfter.instances > residueBefore.instances || residueAfter.dirs > residueBefore.dirs;
 const leakedAfter = orphans().length;
+/* D-237: the words `INSIDE $TMPDIR` are new and they are the whole item. This
+   sentence was true before and was READ as a sentence about the estate for eight
+   days, because a runner that says nothing about what it cannot attribute reads
+   as a runner that found nothing. The line below now says what it is measuring,
+   and the report after it measures the other half. */
 console.log(`temp: this run left ${residueAfter.dirs} director${residueAfter.dirs === 1 ? "y" : "ies"}`
   + ` holding ${residueAfter.instances} miniflare sandbox${residueAfter.instances === 1 ? "" : "es"}`
-  + ` (was ${residueBefore.dirs}/${residueBefore.instances} before the suites ran)`
+  + ` INSIDE $TMPDIR (was ${residueBefore.dirs}/${residueBefore.instances} before the suites ran)`
   + ` · host orphans ${leakedBefore} -> ${leakedAfter}`);
 if (leaking) {
   console.log(`  LEAKING ${residueAfter.instances - residueBefore.instances} miniflare sandbox(es) in`
@@ -543,12 +640,51 @@ if (leaking) {
   console.log(`  a suite left a sandbox behind — most likely one that mints temp files without`);
   console.log(`  importing test/sandbox.mjs, which hygiene.test.mjs names by file.`);
 } else if (leakedAfter > leakedBefore) {
-  /* Not ours: every child of this run wrote into RUN_TMP by environment, so a
-     rise in the HOST count while our own residue is clean is somebody else's
-     battery — another worktree without this fix. Say so; do not fail on it. */
-  console.log(`  note: host orphans rose by ${leakedAfter - leakedBefore} while this run leaked none —`);
-  console.log(`  another checkout without this fix is running a battery into the same $TMPDIR.`);
+  /* ---- D-237 CORRECTS THIS NOTE, AND THE CORRECTION IS THE ITEM IN MINIATURE.
+     It used to read "another checkout without this fix is running a battery into
+     the same $TMPDIR", full stop, and it reached that from a COUNT. The premise
+     was "every child of this run wrote into RUN_TMP by environment" — and that
+     premise is exactly what M0-10 disproved: `os.tmpdir()` obeys the
+     environment, a hardcoded absolute path does not, and two suites had one.
+     Crediting another process with residue on no evidence is the same defect as
+     blaming one, pointed the other way. So the note now says which arm it is
+     standing on, and says UNVERIFIED when that arm could not run. */
+  const heldMine = heldOutside.size;
+  console.log(`  note: host orphans rose by ${leakedAfter - leakedBefore} while this run left nothing`);
+  console.log(`  inside its own $TMPDIR. THE LIKELY READING is another checkout running a battery into`);
+  console.log(`  the same host temp directory — but that is a reading, not a measurement, and this run`);
+  if (!heldSamples || !heldAvailable)
+    console.log(`  could NOT check it: the HELD arm did not sample (see the report below). UNVERIFIED.`);
+  else if (heldMine)
+    console.log(`  DOES NOT support it: ${heldMine} path(s) outside the fence were held open by this run's`
+      + ` own processes. See the report below.`);
+  else
+    console.log(`  supports it: no descendant of this battery was caught holding any path outside the`
+      + ` fence, across every sample taken.`);
 }
+
+/* ---- D-237: WHAT IS OUTSIDE THE FENCE, AND WHOSE IT IS ----------------------
+ * Everything above this line is about `$TMPDIR`. The suites' residue there is
+ * attributable with certainty, because the runner sets the environment and
+ * `os.tmpdir()` reads it on every call. That certainty is exactly what stops at
+ * the fence: a suite naming an absolute path never consults `$TMPDIR`, two did,
+ * and the runner therefore reported `0 directories, 0 miniflare sandboxes` over
+ * 12 MB of Durable Object and R2 SQLite accumulating in /tmp/mfp since
+ * 2026-07-31. Not under-reported — UNREPORTED.
+ *
+ * The report below is the other half, and its whole difficulty is that the space
+ * it looks at belongs to everybody. It NEVER fails the run and it never says
+ * "this run" without a pid chain. `scripts/residue.mjs` states the three
+ * strengths of evidence and what it cannot see. */
+const sharedAfter = scanShared(SHARED_ROOTS, scanOpts);
+reportResidue({
+  roots: SHARED_ROOTS, overridden: ROOTS_OVERRIDDEN,
+  before: sharedBefore, after: sharedAfter,
+  held: heldOutside, heldAvailable: heldSamples > 0 && heldAvailable, heldSamples,
+  heldSuites: heldSampledSuites.size, suitesRun: results.length,
+  windows: arrivalWindow, runStartedMs: RUN_STARTED,
+  fenceLine: `The line above counts INSIDE $TMPDIR only (D-237).`,
+});
 console.log("");
 
 process.exit(Math.min(failed.length + (leaking ? 1 : 0), 125));
