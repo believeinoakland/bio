@@ -1353,7 +1353,8 @@ async function boot(){
      when it is not. */
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
-     && !versionReviewRouteFromHash()) go("queue", true);
+     && !versionReviewRouteFromHash()
+     && !acceptCeremonyRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2057,6 +2058,24 @@ const SURFACES = {
     levels: ["meaning"],
     acts: ["versionhide"],
     reads: ["basisversions", "affordances"],
+  },
+
+  /* ---- THE ACCEPT CEREMONY (UI-43) ----
+     The four member-side transitions over one reading, each owing §6 rule 4's
+     four beats: choose, see what would be refused BEFORE it runs, author the
+     reason, receipt. It is a place of its own rather than a control on the
+     review surface because it is a flow with a step the record cannot supply —
+     the member's affirmation, per set of reasons, that each carries the answer
+     on its own — and DEC-32 clause 4 makes that affirmation the thing that must
+     never happen by omission or by default.
+     `versioncurrent` is NOT here: what a project stands on is the project's own
+     dated declaration (§7) and it is UI-45's. `versionhide` is UI-42's. */
+  "accept-ceremony": {
+    routes: ["hash:accept"],
+    purpose: "One reading of one question's evidence, acted on: adopted, turned down, set aside with a reason, or put back where nobody had acted on it. The record is asked what the act would do before it is done; where the reading is filed as several sets of reasons each offered as carrying the answer on its own, the member says so about each set before the record is asked to put their name on it; and what the reading comes to is not asked for until after that.",
+    levels: ["meaning"],
+    acts: ["versionaccept", "versionreject", "versionconsider", "versionrevert"],
+    reads: ["basisversions", "affordances", "airun", "versionstrength"],
   },
 
   /* ---- THE ONCE-ONLY RUNNING-SESSION SURFACE (E10, absorbed into UI-38) ----
@@ -16194,6 +16213,35 @@ async function aiSessionRead(ctx){
   return (ans && ans.session) || null;
 }
 
+/* THE SECOND NAMED DOOR (UI-43), AND WHY IT IS A DOOR RATHER THAN A SECOND READ.
+   `ai-session-wire.test.mjs` ARM C1 asserts that `op=airun` is asked in exactly
+   one place in this file, and the reason is §14a's: how a RUNNING session is
+   shown to a member is designed ONCE, and a second screen asking the plane for a
+   run is a second AI-session surface growing where nobody looked. That rule is
+   right and this door does not weaken it — the read still happens here, once.
+
+   WHAT IT IS FOR. §11 records the CONDITIONS a run was formed under — the bias
+   manifest, the skill version, the launching project's declared bar — because
+   *"a version is only interpretable against them"*, and DEC-46 puts the lens
+   comparison IN the accept ceremony rather than in a notification. The ceremony
+   is therefore a legitimate second CONSUMER of a run's recorded conditions while
+   being no kind of running-session surface: it renders no status, no ticks, no
+   budget and no transcript, and it is looking at a run that has already produced
+   the thing in front of the member.
+
+   IT HANDS BACK DATA AND NO MARKUP, deliberately. A door returning HTML would be
+   this block rendering onto a screen its own suite never drives; a door returning
+   the record's own values leaves the rendering — and the sweep over it — with the
+   surface that owns the screen. `null` for a run this credential cannot open, by
+   the same collapse `aiSessionRead` makes: a run that does not exist and a run in
+   a context the caller was never invited to are one answer here on purpose. */
+async function aiSessionConditions(runId){
+  const s = await aiSessionRead({ session: runId });
+  if(!s) return null;
+  return { id: s.id, context: s.context, principal: s.principal,
+           bias: s.bias, standard: s.standard };
+}
+
 /* THE DEVICE-LOCAL TRANSCRIPT (DEC-61). Never the plane. */
 function aiSessionTranscript(id, store){
   const S = store || (typeof localStorage !== "undefined" ? localStorage : null);
@@ -16996,6 +17044,13 @@ function vrevVersionHtml(v, focusName){
     + (bound ? '<div class="teach" style="margin:6px 0 0">' + esc(bound) + '</div>' : "")
     + '<div class="subj-how">' + esc(vrevDecision(v)) + '</div>'
     + '<div class="subj-how">' + esc(vrevOrigin(v)) + '</div>'
+    /* UI-43's ONE LINE INSIDE UI-42's BLOCK, and it is named by site in the
+       claim rather than by reopening the region. A ceremony nothing links to is
+       a surface nobody can reach; this is the link and it is the whole edit.
+       It carries no act name and asks nothing — the ceremony's own page is where
+       an act is chosen, because choosing IS beat one. */
+    + '<div class="subj-how"><a onclick="acceptCeremonyOpen(' + esc(JSON.stringify(String(VREV.inquiry)))
+    + ',' + esc(JSON.stringify(String(v.name))) + ')">Act on this reading</a></div>'
     + '</div>';
 }
 
@@ -17177,6 +17232,692 @@ function versionReviewRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionReviewRouteFromHash(); }); }catch(_){}
 /*__VERSION_REVIEW_END__*/
+
+/*__ACCEPT_CEREMONY_START__*/
+/* ============================================================
+   UI-43 · THE ACCEPT CEREMONY — THE FOUR BEATS ON EVERY TRANSITION, AND THE
+   DERIVED FALSIFIER BACK IN PLAIN WORDS.
+
+   WHAT THIS SURFACE IS. UI-42 shows every reading the record holds of one
+   question and lets a member rotate between them. This is where one of them is
+   ACTED ON: adopted, turned down, set aside, or put back where nobody had acted
+   on it. `INVESTIGATIVE-SESSION.md` §6 rule 4 says the member-side transitions
+   are ACTS and owe the four beats — *"choose · see what will be refused BEFORE
+   it runs · author the reason · receipt"* — and PL-2 built all four into the
+   plane. This page is the member's half of them, in that order, on one page:
+
+     BEAT 1 — CHOOSE. The reading is named in the address and the ACT is chosen
+       here from what the plane published for this question. There is no default
+       act and no default reading; acting on the wrong one is worse than being
+       asked which was meant, which is the plane's own sentence for it.
+     BEAT 2 — SEE WHAT WILL BE REFUSED BEFORE IT RUNS. `preview=1` is a REAL
+       PARAMETER of all six acts: it runs every guard, writes nothing, and comes
+       back either with the refusal the act would return or with the move it
+       would make. It is the same code path up to the write, so this page
+       COMPOSES NO PREDICTION — it asks, and renders what came back. A pre-flight
+       this surface computed for itself is the one thing that can disagree with
+       the act it fronts (DEC-8).
+     BEAT 3 — AUTHOR THE REASON. Never prefilled, never derived, never carried
+       forward. And WHICH acts require one is not written here: the plane refuses
+       without it and the refusal says so, so the requirement is learned from the
+       record rather than held in a second copy that can drift.
+     BEAT 4 — RECEIPT. The act's own answer, rendered: what moved, from what to
+       what, by whom, at what instant. The plane also writes a Session Log entry
+       into the question's own document, so the act is IN THE RECORD and not only
+       in an HTTP response.
+
+   ---- THE KEYSTONE: WHAT MUST BE AFFIRMED BEFORE A MEMBER'S NAME LANDS
+
+   DEC-32 clause 4, and it is the anti-gaming keystone rather than a nicety:
+   *"THE DEFAULT IS AND … Independent sufficiency must be affirmatively claimed,
+   per branch. So strengthening a finding by repackaging requires an ACT that
+   carries the member's name; it can never happen by omission, by default, or by
+   a member simply not understanding the question."*
+
+   The arithmetic takes the MAXIMUM across sets of reasons that each carry the
+   answer on their own, and the MINIMUM within one set. So a reading filed as
+   several such sets claims more than the same reasons filed as one — and
+   accepting it is the act that puts a member's name over that claim.
+
+   SO THIS PAGE WILL NOT SEND AN ACCEPT OF A READING FILED AS MORE THAN ONE SUCH
+   SET UNTIL THE MEMBER HAS AFFIRMED EACH ONE, one control per set, none of them
+   prefilled and none of them defaulted. The control is absent, not disabled,
+   until they are all affirmed.
+
+   THE SCOPE OF THAT RULE IS THIS ITEM'S OWN JUDGEMENT AND IT IS WIDER THAN THE
+   ROW, WHICH IS RECORDED HERE RATHER THAN LEFT TO BE DISCOVERED. `IS-BUILD-PLAN`
+   asks for the affirmation *"before their name lands over machine-composed"*
+   composition. This page requires it on EVERY accept of a multi-set reading,
+   machine-composed or not, because clause 4's rule is about the ACT that carries
+   the member's name and `op=versionaccept` is that act either way. What differs
+   by composer is the SENTENCE, not the requirement: where a run composed the
+   reading the page says so and names the run, because a machine may compose an
+   account of the evidence and propose it and may never accept it (§4), so the
+   whole weight of that claim arrives at this control.
+
+   AND WHAT THE RECORD DOES NOT HOLD ABOUT IT, STATED PLAINLY RATHER THAN
+   IMPLIED. There is no field on any of the six acts for the affirmation itself:
+   what lands in the record is the acceptance — this member, this instant, this
+   reading, and the reading's own structure, which every reader can test against
+   its reasons (DEC-32 clause 7). The affirmation is a step of THIS CEREMONY and
+   the page says so in as many words. A DELEGATION is filed rather than a field
+   invented at the surface.
+
+   ---- D-195: THE DERIVED SHARED ORIGIN, AND WHY THIS PAGE SAYS IT DID NOT LOOK
+
+   D-195 is the research finding against DEC-32's own arithmetic: the MAXIMUM is
+   sound only if the sets really are separate, and two sets whose reasons trace
+   to one upstream source are not two. The plane BUILDS that derivation — CHECK 4
+   of `op=suggest` walks `register` and `captured_locators` to content-addressed
+   origins and refuses a machine composing at volume with
+   `SUGGEST_BRANCHES_NOT_INDEPENDENT`, whose own detail ends *"a named member may
+   still affirm they are genuinely separate at the accept ceremony; a machine
+   composing at volume may not."* This page is that ceremony.
+
+   **MEASURED AT THIS ITEM, NOT ASSUMED: `shared_origins` AND `origins_complete`
+   ARE PUBLISHED ON `op=suggest`'s ANSWER AT WRITE TIME AND ON NO READ.**
+   `op=basisversions` does not carry them and neither does `op=versionstrength`.
+   So a member accepting a reading the record already holds cannot be shown what
+   the plane found when it was written. D-129's whole rule applies: NOT FOUND and
+   DID NOT LOOK are different facts. This page therefore says it has not been
+   told, and never says nothing shared an origin. Inferring "clean" from the fact
+   that the reading exists — the write-time check would have refused a machine
+   otherwise — would be believing a mechanism on the strength of its existence,
+   which is this estate's most-met defect, and it would also be wrong for a
+   member-composed reading, which never met CHECK 4 at all.
+
+   ---- DEC-46: THE LENS DIFF, IN THE CEREMONY AND NEVER A TOAST
+
+   §11 records the conditions a run was formed under, and the bias manifest is
+   one of them, because *"a version is only interpretable against them"*. The
+   plane already computes the comparison in ONE function (`#biasForRun`) and
+   publishes it on `op=airun` as `bias.manifest` (as recorded), `bias.now` (as
+   the record stands, compiled through THIS reader's own gate) and `bias.moved`.
+
+   IT IS RENDERED IN THE FLOW, ABOVE THE CONTROL, and that placement is the
+   requirement rather than the styling: a lens that moved between composing and
+   accepting is a fact about what the member is about to put their name on, and a
+   notification is something you can miss and something that goes away. `moved`
+   is three-valued here and stays three-valued: true, false, and null where one
+   side has no hash to compare — an unknown that was rendered as "did not move"
+   would assert the lens had held.
+
+   THE HONEST BOUND ON THE COMPARISON, said on the page: `now` is what stands in
+   the RUN'S OWN CONTEXT as this credential can see it. No op publishes a lens
+   belonging to a member, so "the accepter's" is that and nothing stronger.
+
+   ---- REC-36: THE STRICTER WITHHOLDING, AND IT BITES ON ACCEPT ALONE
+
+   REC-36's posture is the strong one: *"the ROW withheld in SQL — a candidate a
+   member cannot open is not a candidate."* Applied here, the fact that bites is
+   this: a reading can carry a `run`, and that run can have been made in a
+   context this credential was never invited to. The record itself says the run
+   exists (the reading names it, and the reading is readable here), so asking for
+   it and being answered nothing is not an oracle — it is this page learning that
+   the account of the evidence in front of the member was composed somewhere they
+   cannot see.
+
+   WHEN THAT HAPPENS THE ACCEPT CONTROL IS ABSENT, and the other three are not.
+   That line is deliberate and is the whole judgement: accepting is the only one
+   of the four where a member's name lands OVER the evidence. Turning a reading
+   down, setting it aside and putting it back are decisions about what the record
+   SHOWS, and a member may make those about material they cannot fully see —
+   indeed turning down what you cannot check is the conservative act. Withholding
+   all four would be this surface refusing a member a capability the plane grants
+   them, on a rule nobody ruled.
+
+   ---- THE VOCABULARY BAN, AND THE ONE STRING THIS PAGE REFUSES TO RENDER
+
+   DEC-32 clause 1 / D-226: not one analyst word on any member-facing surface.
+   The two falsifier stems and the four state sentences are UI-42's constants and
+   are REUSED here rather than re-spelled — `version-review.test.mjs` already
+   pins them against UI-27's elicitation block and against the catalog's own
+   `VERSION_MACHINE.legal`, and a third spelling would be the defect.
+
+   **AND A STRING THIS ITEM MEASURED RATHER THAN INHERITED: `op=versionstrength`'s
+   SUCCESS ANSWER CARRIES THE FORBIDDEN VOCABULARY IN ITS OWN `detail`.**
+   `#axisResult` composes sentences of the form *"the STRONGEST of the N
+   independently sufficient grounds this conclusion rests on"*, so a surface that
+   rendered the plane's axis detail verbatim — the ordinary and correct instinct
+   everywhere else in this file — would break clause 1 in the plane's own words.
+   PL-14's delegation says this op's canned translations are held to the ban and
+   the suite asserts it of every one; that is true and it is about the REFUSALS.
+   The success path is a different string and nobody was checking it. So this
+   page renders the axis's STATE, its letter and the reason that sets it — facts
+   — and never the sentence, the fixture carries a detail containing the banned
+   words, and the sweep fails on any renderer that ever prints one. Raised as a
+   DELEGATION; it is the plane's string and not UI's to re-word.
+
+   ---- THE ORDERING RULE, MADE STRUCTURAL RATHER THAN VISUAL (DEC-32 clause 5)
+
+   *"THE STRUCTURE IS AUTHORED BEFORE THE STRENGTH IS SHOWN … a member shown the
+   grade first will reorganise legs against it."* At this altitude the structure
+   is already authored and frozen, and what is being authored is the AFFIRMATION.
+   So the arithmetic is not merely drawn lower down the page: `op=versionstrength`
+   IS NOT ASKED until the affirmation is complete, and where there is nothing to
+   affirm it is not asked until the member asks for it. A number that was fetched
+   and then not drawn is a number an extra code path can draw; one that was never
+   requested is not.
+
+   AND THE STATE SET IS NAMED RATHER THAN WIDENED. `op=versionstrength` defaults
+   to counting readings a member has ADOPTED, and that default is load-bearing:
+   passing every state to see more turns the record's own answer into a what-if
+   without saying so. This page asks for exactly the state the reading is in when
+   that is not the default, and renders the plane's own `filter` line verbatim —
+   which says on its face that it is a view the caller constructed.
+   ============================================================ */
+
+/* { inquiry, version, act, affirmed:{label:true}, reason, bound, versions[],
+     acts[], run, runAsked, strength, strengthAsked, preview, receipt,
+     refusal, refusalAct, err, busy } */
+let ACER = null;
+let ACER_HASH_LOCK = false;
+
+/* THE FOUR ACTS THIS SURFACE HOSTS, BY WIRE NAME ONLY. The label, the weight,
+   the need and the prompt all arrive on `op=affordances` and are rendered
+   unmodified (DEC-8) — there is no sentence here for any of them. `versionhide`
+   is UI-42's and `versioncurrent` is UI-45's; naming either here would make this
+   surface claim an act it does not carry. */
+const ACER_ACTS = ["versionaccept", "versionreject", "versionconsider", "versionrevert"];
+
+/* THE ONE ACT THE KEYSTONE GUARDS. Written as a constant and compared against,
+   rather than spelled inline at three sites, so the three cannot come apart. */
+const ACER_KEYSTONE_ACT = "versionaccept";
+
+/* D-129's rule, at this surface, in the one place it is needed. NOT FOUND and
+   DID NOT LOOK are different facts and only one of them licenses anything. */
+const ACER_ORIGINS_UNTOLD =
+  "The record does not tell this page what it found when this reading was written about whether these "
++ "sets of reasons rest on the same material further back. That is not the same as being told they do "
++ "not: nobody has looked on your behalf here, and this page says so rather than reading silence as an "
++ "all-clear.";
+
+/* THE SENTENCE THE AFFIRMATION IS, AND THE SENTENCE IT IS NOT. Both are facts
+   about what the record will and will not hold, which is what DEC-29(b)'s
+   wording clause requires of an offer one construct over. */
+const ACER_AFFIRM_OFFER =
+  "This reading is filed as more than one set of reasons, and each set is offered as carrying the answer "
++ "on its own. That is a stronger claim than the same reasons kept together, so this page asks you to say "
++ "it about each set before it will put your name on the reading.";
+const ACER_AFFIRM_LIMIT =
+  "What the record will hold is your acceptance — you, this instant, and this reading with the sets it "
++ "already carries. There is no field for the saying-so itself, so it is a step of this page rather than "
++ "a line in the record; what any reader can check afterwards is the reasons in each set.";
+
+/* THE ONE DOOR FOR THE READING, AND THIS ITEM DID NOT OPEN A SECOND.
+   `op=basisversions` is on the plane's unconditionally-capped roster, and UI-42
+   already states an explicit ask at `versionReviewRead` and says the bound the
+   record APPLIED. Asking it again from here would be a second call site with a
+   second ask to keep in step — the two-readers-of-one-row shape — so this
+   ceremony CALLS that function. The bound sentence travels with the answer and
+   is rendered here unchanged. */
+async function acerRead(inquiryId){ return versionReviewRead(inquiryId); }
+
+function acerList(){ return (ACER && Array.isArray(ACER.versions)) ? ACER.versions : []; }
+function acerVersion(){
+  if(!ACER) return null;
+  const n = String(ACER.version || "");
+  return acerList().find(v => v && String(v.name) === n) || null;
+}
+/* The sets of reasons, NAMED BY THEIR MEMBERS. UI-42's helpers, reused: the
+   record's filing label never leaves them, and reusing them is what keeps one
+   rule over the act, its elicitation and its review. */
+function acerSets(v){ return vrevSets(v); }
+function acerSetKeys(v){
+  const out = [];
+  for(const l of vrevLegs(v)){
+    const k = (typeof l.ground === "string" && l.ground.trim()) ? l.ground.trim() : "";
+    if(k && !out.includes(k)) out.push(k);
+  }
+  return out;
+}
+/* THE KEYSTONE'S TRIGGER, and it is a property of the READING rather than of who
+   composed it. Fewer than two sets and the arithmetic takes no maximum, so there
+   is nothing that could be claimed by filing. */
+function acerNeedsAffirmation(v, act){
+  return act === ACER_KEYSTONE_ACT && acerSetKeys(v).length >= 2;
+}
+/* AFFIRMED BY POSITION, NEVER BY THE RECORD'S OWN FILING LABEL, and the reason
+   is measured rather than stylistic: the label is member-authored, this page may
+   not print it (DEC-32 clause 1), and a control carrying it in an `onclick` puts
+   it in the served markup — which is not a tooltip and is not rendered, and is
+   still the label leaving this surface. The position is derived from the legs in
+   hand, so nothing about the record's naming reaches the page at all.
+   `accept-ceremony.test.mjs`'s sweep asserts the RAW markup and not only the
+   stripped text, which is how this was caught. */
+function acerAffirmedAll(v, act){
+  if(!acerNeedsAffirmation(v, act)) return true;
+  const done = (ACER && ACER.affirmed) ? ACER.affirmed : {};
+  return acerSetKeys(v).every((_, i) => done[i] === true);
+}
+
+/* WHO COMPOSED THIS READING, from the record's own two fields and nothing else.
+   A reading carrying no run was written by the member the record names. */
+function acerComposer(v){
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  const by = String((v && v.author) || "").trim();
+  if(!run)
+    return "Composed by " + (by || "somebody the record does not name") + ".";
+  return "Composed by a run of the assistant, working for "
+       + (by || "somebody the record does not name")
+       + ". A run may put an account of the evidence forward and may never adopt one.";
+}
+
+/* REC-36, AND IT IS A FACT ABOUT THE READER RATHER THAN ABOUT THE RUN. The
+   reading names its run; asking for that run and being answered nothing means
+   the run sits in a context this credential was never invited to. Returns the
+   sentence when it bites and "" when it does not, so a caller cannot mistake a
+   silent pass for a check that ran. */
+function acerBeyondGate(v){
+  if(!ACER || !ACER.runAsked) return "";
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  if(!run) return "";
+  if(ACER.run) return "";
+  return "This reading was composed by a run the record will not open for you. Whatever the run worked "
+       + "over, you cannot see it from here — so this page does not offer to put your name on this "
+       + "reading. You can still turn it down, set it aside, or put it back where nobody had acted on "
+       + "it: those say what the record SHOWS, and none of them stands over evidence you have not seen.";
+}
+/* AND THE SOFTER HALF OF THE SAME FACT: a run this credential CAN open, acting
+   for the organisation rather than for one member (D-199's principal, the value
+   the gate itself stamps). Named, never withheld — the member can see the
+   context, so there is nothing to hold back and everything to say. */
+function acerPrincipalLine(){
+  const s = ACER && ACER.run;
+  if(!s) return "";
+  const p = (s.principal && typeof s.principal === "object") ? s.principal : {};
+  const plane = String(p.plane || "").trim();
+  if(!plane) return "The record does not name what this run was acting as.";
+  return plane.indexOf("class:") === 0
+    ? "This run was acting for the group as a whole rather than for any one member."
+    : "This run was acting for one member of the group, and the record names them: " + plane + ".";
+}
+
+/* DEC-46's LENS DIFF, from the plane's own three-part answer and never composed
+   here. Three states and no fourth, because the third is the one that matters:
+   an unknown rendered as "it held" would assert something nobody established. */
+function acerLensHtml(){
+  const s = ACER && ACER.run;
+  if(!s) return "";
+  const b = (s.bias && typeof s.bias === "object") ? s.bias : null;
+  if(!b) return "";
+  if(b.in_force !== true)
+    return '<div class="card" style="margin:0 0 10px"><div class="kv"><span class="k">The lens it was composed under</span>'
+      + '<span class="v plain">' + esc(String(b.stated || "the record says nothing about it")) + '</span></div></div>';
+  const rec = (b.manifest && typeof b.manifest === "object") ? b.manifest : {};
+  const now = (b.now && typeof b.now === "object") ? b.now : {};
+  const verdict = b.moved === true
+    ? "IT HAS MOVED. What the record stands under now is not what this reading was composed under, so what "
+      + "the reading weighed and what you would be adopting it under are two different things."
+    : b.moved === false
+      ? "It has not moved. What this reading was composed under is what stands now."
+      : "It is not known whether it moved: one of the two sides has nothing to compare, and this page says "
+      + "that rather than reporting it as unchanged.";
+  return '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">The lens it was composed under</span><span class="v plain">' + esc(verdict) + '</span></div>'
+    + '<div class="subj-how">As recorded for the run: ' + esc(String(rec.statements_sha || "nothing recorded")) + '</div>'
+    + '<div class="subj-how">As the record stands now, in the run&rsquo;s own setting and as far as this credential can see it: '
+    + esc(now.in_force === true ? String(now.statements_sha || "recorded without anything to compare") : "nothing in force") + '</div>'
+    + '<div class="teach" style="margin:6px 0 0">This compares the run&rsquo;s own recorded lens against what stands now where the run was made. '
+    + 'It is not a comparison against a lens of your own: the record holds none for a member.</div>'
+    + '</div>';
+}
+
+/* THE FALSIFIER, BACK IN PLAIN WORDS — UI-42's two stems and its unstated
+   sentence, REUSED. Not re-spelled here: two copies of one member-facing
+   sentence is a drift hazard and a third would be the defect UI-42's delegation
+   named by this item's name. */
+function acerFalsifier(v){ return vrevComposition(v); }
+
+/* THE AFFIRMATION, ONE CONTROL PER SET, NOTHING PREFILLED. Each set is named by
+   the reasons in it and never by the label the record files it under. */
+function acerAffirmHtml(v){
+  if(!ACER || !acerNeedsAffirmation(v, ACER.act)) return "";
+  const keys = acerSetKeys(v);
+  const sets = acerSets(v);
+  const done = ACER.affirmed || {};
+  const rows = keys.map((k, i) => {
+    const names = (sets[i] || []).join(", ") || "nothing this answer carries";
+    return '<div class="card" style="margin:0 0 10px">'
+      + '<div class="kv"><span class="k">Carries the answer on its own</span><span class="v plain">'
+      + esc(names) + '</span></div>'
+      + (done[i] === true
+          ? '<div class="intent-ok">You have said these carry it on their own.</div>'
+          : '<button class="btn" onclick="acerAffirm(' + i + ')">'
+            + 'Yes &mdash; these carry the answer on their own</button>')
+      + '</div>';
+  }).join("");
+  return '<h2 class="sec">What you are being asked to say</h2>'
+    + '<p class="subj-note">' + esc(ACER_AFFIRM_OFFER) + '</p>'
+    + rows
+    + '<p class="teach">' + esc(ACER_AFFIRM_LIMIT) + '</p>';
+}
+
+/* BEAT 2's RENDERING. The plane answered; nothing here decided. */
+function acerPreviewHtml(){
+  const p = ACER && ACER.preview;
+  if(!p) return '<div class="empty">Ask the record what this act would do before you do it. '
+    + 'It runs every check and writes nothing.</div>';
+  if(p.ok === false) return acerRefusalHtml(p);
+  return '<div class="intent-ok">The record ran every check and wrote nothing. It would move this reading '
+    + (p.moves_state === false
+        ? 'without changing what state it is in'
+        : 'from ' + esc(String(p.from || "no recorded state")) + ' to ' + esc(String(p.to || "no recorded state")))
+    + ', and it says so having tried, not having predicted.</div>';
+}
+
+/* A REFUSAL IN THE PLANE'S OWN WORDS, AND BOTH OF THEM. DEC-49 gives every
+   refusable condition a CODE with a CANNED TRANSLATION, and the plane also sends
+   the detail written for this particular refusal. This surface renders the
+   canned translation and the detail, verbatim, and authors neither. It is a
+   local renderer rather than the shared one because the shared one drops
+   `translation` on the floor everywhere it is used — raised as a DELEGATION
+   rather than changed here, since every other surface consumes it. */
+function acerRefusalHtml(r){
+  if(!r) return "";
+  const t = String(r.translation || "").trim();
+  const d = String(r.detail || r.error || "").trim();
+  return '<div class="intent-ref">'
+    + (t ? '<div class="intent-ref-why">' + esc(t) + '</div>' : "")
+    + (d ? '<div class="subj-how">' + esc(d) + '</div>' : "")
+    + (!t && !d ? '<div class="intent-ref-why">The record refused this and said nothing further.</div>' : "")
+    + (r.reason ? '<div class="intent-ref-code mono">' + esc(String(r.reason)) + '</div>' : "")
+    + '</div>';
+}
+
+/* THE ARITHMETIC, LAST AND ONLY ON ASKING (DEC-32 clause 5). Two measurements
+   over two populations and there is no third figure here: the plane refuses to
+   compose them and a surface that averaged what the plane refused to average is
+   the same defect one layer out (DEC-44, and PL-14's own delegation).
+   THE PLANE'S `filter` LINE IS RENDERED VERBATIM AND IS NOT OPTIONAL — DEC-40:
+   a filtered rendering states its filter IN the artifact. */
+function acerAxisHtml(axis, a){
+  if(!a || typeof a !== "object") return "";
+  const w = (a.weakest && typeof a.weakest === "object") ? a.weakest : null;
+  return '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">' + esc(axis) + '</span><span class="v plain">'
+    + esc(String(a.state || "not stated")) + (a.grade ? " " + esc(String(a.grade)) : "") + '</span></div>'
+    + (w ? '<div class="subj-how">Set by ' + esc(String(w.target_id || "a reason the record does not name")) + '.</div>' : "")
+    + '</div>';
+}
+function acerStrengthHtml(v){
+  if(!ACER) return "";
+  if(!acerAffirmedAll(v, ACER.act)) return "";
+  if(!ACER.strengthAsked)
+    return '<h2 class="sec">What this reading comes to</h2>'
+      + '<p class="subj-note">Not asked for yet, and deliberately: the record is asked what this reading '
+      + 'comes to only after you have read what it rests on and said what you are saying about it.</p>'
+      + '<button class="btn" onclick="acerStrengthShow()">Ask the record what this reading comes to</button>';
+  const s = ACER.strength;
+  if(!s) return '<h2 class="sec">What this reading comes to</h2>'
+    + '<div class="empty">The record did not answer that here.</div>';
+  if(s.ok === false) return '<h2 class="sec">What this reading comes to</h2>' + acerRefusalHtml(s);
+  const pair = (s.pair && typeof s.pair === "object") ? s.pair : {};
+  return '<h2 class="sec">What this reading comes to</h2>'
+    + '<p class="count-line">' + esc(String(s.filter || "")) + '</p>'
+    + acerAxisHtml("How well the material behind it was captured", pair.capture)
+    + acerAxisHtml("How well it is connected to the question", pair.connection)
+    + (s.legs_complete === false
+        ? '<p class="teach">The record holds more reasons for this reading than this answer carried, so '
+          + 'everything above is over the ones that arrived.</p>'
+        : "")
+    + '<p class="teach">These are two measurements over two different things. The record refuses to reduce '
+    + 'them to one figure, and neither does this page.</p>';
+}
+
+function acerReceiptHtml(){
+  const r = ACER && ACER.receipt;
+  if(!r) return "";
+  return '<div class="intent-ok">The record recorded this. Reading <span class="mono">'
+    + esc(String(r.version || "")) + '</span> '
+    + (r.moves_state === false
+        ? 'was acted on without its state changing'
+        : 'moved from ' + esc(String(r.from || "no recorded state")) + ' to ' + esc(String(r.to || "no recorded state")))
+    + ', by ' + esc(String(r.author || "an unnamed member")) + ' on ' + esc(String(r.at || "an unrecorded date"))
+    + (r.reason ? '. Your reason was recorded with it: ' + esc(String(r.reason)) : '')
+    + '. The record also wrote this into the question&rsquo;s own document, so the act is in the record and '
+    + 'not only in this answer.</div>';
+}
+
+/* ------------------------------------------------------------- THE WHOLE PAGE */
+function acceptCeremonyHtml(){
+  if(!ACER) return "";
+  const crumb = recordCrumb(ACER.inquiry, " &rsaquo; acting on one reading");
+  if(ACER.err) return errPane(ACER.err, crumb);
+  if(ACER.refusal) return crumb + acerRefusalHtml(ACER.refusal);
+  if(ACER.busy && !acerVersion())
+    return crumb + '<div class="empty">Reading what the record holds for this question.</div>';
+  const v = acerVersion();
+  if(!v)
+    return crumb + '<div class="empty">No reading by that name answers here for this question. That is the '
+      + 'same answer the record gives for a reading it does not hold and for one this credential may not '
+      + 'see, and the two are the same answer on purpose.</div>';
+
+  const acts = (ACER.acts || []).filter(a => a && ACER_ACTS.includes(a.id));
+  const withheld = acerBeyondGate(v);
+  const chosen = ACER.act ? acts.find(a => a.id === ACER.act) : null;
+  /* Q12: a capability a member does not hold is ABSENT, never greyed — so the
+     chooser offers what the plane published and nothing else. The one act this
+     page holds back it holds back for REC-36's reason, and it SAYS so. */
+  const offerable = acts.filter(a => !(withheld && a.id === ACER_KEYSTONE_ACT));
+  const chooser = '<h2 class="sec">What you mean to do</h2>'
+    + (offerable.length
+        ? offerable.map(a =>
+            '<div class="card" style="margin:0 0 10px"><div class="kv"><span class="k">'
+            + esc(String(a.label || "")) + '</span><span class="v plain">'
+            + (ACER.act === a.id ? "chosen" : '<a onclick="acerChoose(' + esc(JSON.stringify(a.id)) + ')">choose this</a>')
+            + '</span></div>'
+            + (a.prompt ? '<div class="subj-how">' + esc(String(a.prompt)) + '</div>' : "")
+            + '</div>').join("")
+        : '<div class="empty">The record publishes nothing you may do to this reading from here.</div>')
+    + (withheld ? '<div class="teach">' + esc(withheld) + '</div>' : "");
+
+  const body = !chosen ? "" :
+      acerAffirmHtml(v)
+    + '<h2 class="sec">What would happen</h2>'
+    + '<button class="btn" onclick="acerPreview()">Ask the record what this would do</button>'
+    + acerPreviewHtml()
+    + '<h2 class="sec">Why</h2>'
+    + '<p class="subj-note">Nothing is filled in here and nothing is suggested. Where the record requires a '
+    + 'reason it refuses without one and says so in its own words, which you will have read above.</p>'
+    + '<textarea class="txt" id="acer-why" rows="3" onchange="acerReason(this.value)"></textarea>'
+    + (acerAffirmedAll(v, ACER.act)
+        ? '<div class="intent-pf"><button class="btn" onclick="acerSend()"' + (ACER.busy ? " disabled" : "") + '>'
+          + esc(String(chosen.label || "")) + '</button></div>'
+        : '<p class="subj-note">Say the above about each set of reasons and this page will offer the control.</p>')
+    + acerReceiptHtml()
+    + (ACER.refusalAct ? acerRefusalHtml(ACER.refusalAct) : "");
+
+  return crumb
+    + '<div class="trow"><h1 class="rec">Acting on one reading</h1></div>'
+    + '<p class="lede"><span class="mono">' + esc(ACER.inquiry) + '</span></p>'
+    + credentialSentence(PLANE.me)
+    + '<h2 class="sec">The reading in front of you</h2>'
+    + '<div class="card" style="margin:0 0 10px">'
+    +   '<div class="kv"><span class="k">Reading</span><span class="v plain mono">' + esc(String(v.name)) + '</span></div>'
+    +   '<div class="subj-how">' + esc(vrevText(v.description)) + '</div>'
+    +   '<div class="subj-how">Rests on: ' + esc(vrevLegList(v)) + '</div>'
+    +   (acerFalsifier(v) ? '<div class="subj-how">' + esc(acerFalsifier(v)) + '</div>' : "")
+    +   '<div class="subj-how">' + esc(vrevDecision(v)) + '</div>'
+    +   '<div class="subj-how">' + esc(acerComposer(v)) + '</div>'
+    +   (acerPrincipalLine() ? '<div class="subj-how">' + esc(acerPrincipalLine()) + '</div>' : "")
+    /* D-195, SAID ABOUT THE READING AND NOT ABOUT THE ACT. It is a fact about
+       what this page was told, so it is on the page from the moment the reading
+       is, and not only once an act has been chosen — which is where it sat until
+       this suite's own arm caught it reading as clean on arrival. */
+    +   (acerSetKeys(v).length >= 2
+          ? '<div class="teach" style="margin:6px 0 0">' + esc(ACER_ORIGINS_UNTOLD) + '</div>' : "")
+    + '</div>'
+    + (ACER.bound || "")
+    + acerLensHtml()
+    + chooser
+    + body
+    + acerStrengthHtml(v);
+}
+
+function acceptCeremonyPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = acceptCeremonyHtml();
+}
+
+/* BEAT 1 — CHOOSE. Choosing a different act clears everything downstream of it:
+   a preview taken for one act is not an answer about another, and an affirmation
+   is made about an acceptance. */
+function acerChoose(id){
+  if(!ACER) return;
+  const next = String(id == null ? "" : id);
+  if(!ACER_ACTS.includes(next)) return;
+  ACER.act = next; ACER.preview = null; ACER.receipt = null; ACER.refusalAct = null;
+  ACER.affirmed = {}; ACER.strength = null; ACER.strengthAsked = false;
+  acceptCeremonyPaint();
+}
+function acerAffirm(at){
+  if(!ACER) return;
+  const v = acerVersion();
+  const i = Number(at);
+  /* BOUNDED BY THE READING IN HAND. An affirmation about a set this reading does
+     not have is not an affirmation about anything, and admitting one would let
+     the count be satisfied by something that never appeared on the page. */
+  if(!v || !(i >= 0) || i >= acerSetKeys(v).length) return;
+  ACER.affirmed = { ...(ACER.affirmed || {}), [i]: true };
+  acceptCeremonyPaint();
+}
+function acerReason(v){ if(ACER) ACER.reason = String(v == null ? "" : v); }
+
+/* BEAT 2. `preview=1` is the plane's own parameter and this asks for it; nothing
+   here works out what would happen. */
+async function acerPreview(){
+  if(!ACER || ACER.busy || !ACER.act) return;
+  ACER.busy = true; ACER.preview = null; acceptCeremonyPaint();
+  const a = await actAsk(ACER.act, acerActParams(true));
+  ACER.preview = a.accepted ? (a.result || null) : (a.refusal || null);
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+/* ONE ARGUMENT BUILDER FOR THE PREVIEW AND THE ACT, so the two cannot come to
+   ask different things — which would make the pre-flight a prediction again. */
+function acerActParams(preview){
+  const why = String((ACER && ACER.reason) || "").trim();
+  return { target: ACER.inquiry, version: ACER.version,
+           ...(why ? { reason: why } : {}),
+           ...(preview ? { preview: "1" } : {}) };
+}
+/* BEAT 3 and BEAT 4. Sent, never pre-flighted a second time: whatever comes back
+   that is a refusal is rendered in the plane's own words, and the reading is
+   re-read afterwards so the page shows what the record holds rather than what
+   this function assumed it would hold. */
+async function acerSend(){
+  if(!ACER || ACER.busy || !ACER.act) return;
+  const v = acerVersion();
+  /* THE KEYSTONE, AND IT IS A GUARD AND NOT A LAYOUT DECISION. The control is
+     already absent until every set is affirmed; this is the second, independent
+     defence at the send, because a control merely not drawn is one another code
+     path can reach. */
+  if(v && !acerAffirmedAll(v, ACER.act)) return;
+  ACER.busy = true; ACER.receipt = null; ACER.refusalAct = null;
+  acceptCeremonyPaint();
+  const a = await actAsk(ACER.act, acerActParams(false));
+  if(a.accepted) ACER.receipt = a.result || null;
+  else ACER.refusalAct = a.refusal || null;
+  ACER.busy = false;
+  await acceptCeremonyLoad();
+}
+
+/* THE ARITHMETIC IS ASKED FOR HERE AND NOWHERE ELSE, and only from a control the
+   member reaches after the affirmation. The state set is NAMED when the reading
+   is not in the state the op counts by default, because widening silently is
+   what turns the record's own answer into a what-if nobody labelled. */
+async function acerStrengthShow(){
+  if(!ACER || ACER.busy) return;
+  const v = acerVersion();
+  if(!v || !acerAffirmedAll(v, ACER.act)) return;
+  ACER.busy = true; ACER.strengthAsked = true; ACER.strength = null;
+  acceptCeremonyPaint();
+  const st = String(v.state || "").trim();
+  const a = await actAsk("versionstrength",
+    { id: ACER.inquiry, version: String(v.name),
+      ...(st && st !== "accepted" ? { states: st } : {}) });
+  ACER.strength = a.accepted ? (a.result || null) : (a.refusal || null);
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+
+async function acceptCeremonyLoad(){
+  if(!ACER) return;
+  ACER.busy = true;
+  acceptCeremonyPaint();
+  const [read, actsR] = await Promise.all([
+    acerRead(ACER.inquiry).then(r => r || null, e => { ACER.err = e; return null; }),
+    actsFor(ACER.inquiry).then(r => r, () => ({ ok:false, acts:[] })),
+  ]);
+  const answer = read ? read.answer : null;
+  ACER.bound = read ? read.bound : "";
+  if(answer && answer.ok === false){ ACER.refusal = answer; ACER.versions = []; }
+  else if(answer){
+    ACER.refusal = null;
+    ACER.versions = Array.isArray(answer.versions)
+      ? answer.versions.filter(v => v && typeof v === "object") : [];
+  }
+  ACER.acts = (actsR && actsR.ok) ? actsR.acts : [];
+  /* THE RUN, THROUGH UI-38's ONE DOOR. Asked only where the reading names one,
+     so a member-composed reading costs no read and produces no sentence about a
+     run. `runAsked` is what lets every downstream sentence tell "we did not ask"
+     from "we asked and were answered nothing" — D-129 at this altitude.
+     THE DOOR IS `aiSessionConditions` AND NOT `aiSessionRead`, and the difference
+     is the containment `ai-session-wire.test.mjs` ARM C1/C2 hold: `op=airun` is
+     asked in exactly ONE place in this file, and this ceremony reaches a run's
+     recorded CONDITIONS through a named door that hands back the record's own
+     values and no markup. This page renders no status, no ticks, no budget and
+     no transcript — it is not a second running-session surface, and ARM C2 is
+     corrected to say which of those two things it is guarding. */
+  const v = acerVersion();
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  if(run){ ACER.run = await aiSessionConditions(run); ACER.runAsked = true; }
+  else { ACER.run = null; ACER.runAsked = false; }
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+
+async function acceptCeremonyOpen(inquiryId, versionName){
+  const id = String(inquiryId == null ? "" : inquiryId).trim();
+  const nm = String(versionName == null ? "" : versionName).trim();
+  if(!id || !nm) return;
+  ACER = { inquiry:id, version:nm, act:null, affirmed:{}, reason:"", bound:"",
+           versions:[], acts:[], run:null, runAsked:false, strength:null, strengthAsked:false,
+           preview:null, receipt:null, refusal:null, refusalAct:null, err:null, busy:true };
+  ACER_HASH_LOCK = true;
+  try{ location.hash = "#accept/" + id + "/" + nm; }catch(_){}
+  ACER_HASH_LOCK = false;
+  await acceptCeremonyLoad();
+}
+
+/* `#accept/<INQ-…>/<name>` is a real address and NAMES BOTH, because beat 1 says
+   there is no default reading. The act is NOT in the address: choosing it is
+   the beat, and an address that carried it would let a link decide what a member
+   meant to do. */
+function acceptCeremonyRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#accept\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/.exec(h);
+  if(!m) return false;
+  /* AN ADDRESS THAT ALREADY IS WHAT IS SHOWN NEEDS NO REOPEN, for UI-42's
+     measured reason one block up: a real browser fires `hashchange` AFTER the
+     address is written and after the lock is released, so reopening on that
+     event would rebuild `ACER` and throw away the affirmation the member just
+     made — which is the one piece of state on this page that cannot be
+     reconstructed from the record. THE HARNESS CANNOT SEE THIS: its DOM stub
+     fires no events at all, so `accept-ceremony.test.mjs` drives this router
+     DIRECTLY at the current address instead, and that is the honest substitute
+     rather than a reproduction of the event. */
+  const inq = m[1], name = m[2];
+  if(ACER && ACER.inquiry === inq && String(ACER.version || "") === name) return true;
+  acceptCeremonyOpen(inq, name);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!ACER_HASH_LOCK) acceptCeremonyRouteFromHash(); }); }catch(_){}
+/*__ACCEPT_CEREMONY_END__*/
+
 
 /* prefill the plane address for convenience when opened locally */
 try{ if(location.protocol==="file:") $("#g-base").value=""; }catch{}

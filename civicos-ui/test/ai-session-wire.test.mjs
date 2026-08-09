@@ -854,7 +854,40 @@ console.log("\n--- ARM C · nothing outside the block can render run data ---");
      them; what changes is that there is now a door at all, and it is named. A
      window reaching past it to `aiSessionPanelHtml` — the shape that would let
      run data onto a screen this sweep never drove — still fails. */
+  /* CORRECTED AGAIN 2026-08-09 (UI-43), NOT EXEMPTED, AND THE CORRECTION IS
+     ONE DOOR WIDE.
+
+     UI-43's accept ceremony is the FIRST legitimate consumer of a run that is
+     not a running-session surface. DEC-46 puts the LENS COMPARISON inside the
+     accept ceremony — *"never a toast"* — and §11's whole reason for recording
+     the conditions a run was formed under is that a version is only interpretable
+     against them. So a member about to put their name on a machine-composed
+     reading has to be shown the lens it was composed under, on the page where
+     they are deciding.
+
+     WHAT DID NOT MOVE, AND IT IS THE ARM THAT MATTERS: ARM C1 is untouched and
+     still green. `op=airun` is asked in exactly ONE place in this file. The
+     ceremony reaches the run through `aiSessionConditions`, declared inside this
+     block, which calls `aiSessionRead` here and hands back the record's own
+     values with NO MARKUP — so the second consumer cannot render a panel this
+     suite never drove, which is the concrete thing C2 exists to stop. The raw
+     renderers, `aiSessionRead` among them, stay forbidden outside.
+
+     WHY THE DOOR RETURNS DATA RATHER THAN HTML, stated because the opposite
+     instinct is the natural one everywhere else in this file: a door returning
+     markup would put this block's rendering onto a screen its own sweep does not
+     reach, and the containment would then be a name rather than a property. A
+     door returning values leaves the rendering — and the vocabulary sweep over
+     it — with the surface that owns the screen, which is where
+     `accept-ceremony.test.mjs` drives it.
+
+     THE RULE THIS ARM NOW STATES, and it is narrower than "no second consumer":
+     how a RUNNING session is shown is designed once (§14a), so nothing outside
+     this block may compose a run's status, ticks, budget or transcript; a run's
+     RECORDED CONDITIONS may be read by a surface that needs them, through a
+     named door, and exactly one op call still stands behind every one of them. */
   const DOOR = "aiSessionContextHtml";
+  const DATA_DOOR = "aiSessionConditions";
   /* CORRECTED 2026-08-08 (UI-38): the three field-named renderers this list
      carried are gone, collapsed into `aiSessionBlockHtml`. The containment claim
      is unchanged and the list is SHORTER because the block is, not because
@@ -877,6 +910,27 @@ console.log("\n--- ARM C · nothing outside the block can render run data ---");
      new RegExp(`\\b${DOOR}\\s*\\(`).test(outside));
   ok(`ARM C3b: and the door is DECLARED inside the block, so the composition it performs is swept with everything else`,
      new RegExp(`function\\s+${DOOR}\\s*\\(`).test(blockM[1]));
+  /* THE SECOND DOOR'S OWN THREE PINS (UI-43). C2 above lets it through by not
+     naming it; these are what stop that from being an omission. */
+  ok(`ARM C4 (UI-43): the data door '${DATA_DOOR}' is DECLARED inside the block, so the one op call still stands behind it`,
+     new RegExp(`function\\s+${DATA_DOOR}\\s*\\(`).test(blockM[1]));
+  ok(`ARM C4b (UI-43): and it IS called from outside — a door nothing reaches is the undelivered-promise shape ARM C3 exists for, one construct over`,
+     new RegExp(`\\b${DATA_DOOR}\\s*\\(`).test(outside));
+  /* AND THE POINT OF THE WHOLE CORRECTION, ASSERTED RATHER THAN DESCRIBED: the
+     door hands back VALUES. A door that composed markup would put this block's
+     rendering onto a screen this suite never drives, and the containment would
+     be a name instead of a property. Read over the door's own body, so a later
+     edit that starts returning HTML fails here. */
+  const doorBody = (() => {
+    const h = blockM[1].indexOf(`async function ${DATA_DOOR}(`);
+    if(h < 0) return "";
+    const end = blockM[1].indexOf("\n}", h);
+    return end < 0 ? "" : blockM[1].slice(h, end + 2);
+  })();
+  ok(`ARM C4c (UI-43): the data door's body was read and is the real function — ${doorBody.length} chars`,
+     doorBody.length > 100 && doorBody.includes("aiSessionRead"));
+  ok(`ARM C4d (UI-43): and it composes NO markup — no tag, no class attribute, nothing a screen could render straight`,
+     !/<[a-z]/i.test(doorBody) && !/class=/.test(doorBody));
 }
 
 /* ============================================================

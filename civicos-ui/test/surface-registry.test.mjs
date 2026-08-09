@@ -724,10 +724,19 @@ await section("ARM S · the sourcing", () => {
    fine. UI-42/UI-43/UI-45 should arrive against a MEASURED obligation instead
    of against somebody's memory. */
 const ACTS_AWAITING_SURFACE = [
-  { id: "versionaccept",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionreject",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionconsider", published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
-  { id: "versionrevert",   published_by: "PL-2 / IS-2 (W3)", owed_by: "UI-43 (W7) — the accept ceremony: the four beats on every transition", since: "2026-08-08" },
+  /* `versionaccept`, `versionreject`, `versionconsider` AND `versionrevert`
+     STOOD HERE AND WERE STRUCK 2026-08-09 BY UI-43, in the same commit that
+     surfaces them, which is what ARM A4c's DRAIN requires and what stops this
+     register being an exemption list with a date on it. All four are now hosted
+     by `SURFACES["accept-ceremony"]`, the ceremony that owes §6 rule 4's four
+     beats on every transition: the act is CHOSEN there (there is no default act
+     and no default reading), the plane is asked with `preview=1` what it would
+     do BEFORE it is done, the reason is authored and never prefilled, and the
+     receipt names what moved. ARM A3's floor moves UP by four (four act
+     placements), and ARM A4d/A4e's by four each, because striking a row moves
+     its act out of the register and into the catalogue those floors measure.
+     `versioncurrent` stays: what a project stands on is the project's own dated
+     declaration (§7) and it is UI-45's, not this ceremony's. */
   /* `versionhide` STOOD HERE AND WAS STRUCK 2026-08-09 BY UI-42, WHICH IS THE
      ROW THE DRAIN EXISTS FOR — and it fired on the first run of this item,
      naming the row and the item that owed it, before anything else was touched.
@@ -835,8 +844,8 @@ await section("ARM A · acts come from the plane", () => {
      PRINTED on this tree rather than by adding one to the number in the file:
      the version-review surface hosts `versionhide`, so the registry describes
      one more placement and 18 had a placement of slack the moment it landed. */
-  ok(G.placements >= 19,
-     `ARM A3: ${G.placements} act placements are described, floor 19 (measured 2026-08-09 by UI-42; was 18, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  ok(G.placements >= 23,
+     `ARM A3: ${G.placements} act placements are described, floor 23 (measured 2026-08-09 by UI-43, up from 19 when the four transition acts were still unhosted; UI-42 had it at 19, was 18, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -890,11 +899,11 @@ await section("ARM A · acts come from the plane", () => {
      because a surface now hosts it. A register row being paid moves both, in
      opposite halves of the same partition, and 15 would have carried a whole
      act of slack in each. */
-  ok(G.baseline.length >= 16,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when the register still named versionhide). `
+  ok(G.baseline.length >= 20,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 20 (measured 2026-08-09 by UI-43, up from 16 when the register still named the four transition acts; UI-42 moved it 15 -> 16 on versionhide). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 16,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 16 (measured 2026-08-09 by UI-42, up from 15 when no surface hosted versionhide). `
+  ok(G.hostedSet.size >= 20,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 20 (measured 2026-08-09 by UI-43, up from 16 when no surface hosted the four transition acts; UI-42 moved it 15 -> 16 on versionhide). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.

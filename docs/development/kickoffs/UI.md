@@ -232,3 +232,57 @@ here, because DEC-32 clause 5's ordering rule is that structure is read before s
 and a review surface that put a grade beside each alternative is the surface that invites choosing
 by the number. It also names no `project`, so it renders no `current` (§7: a stance is the
 project's, not the question's) — that half is UI-45's.
+
+## UI-43 landed 2026-08-09 — the accept ceremony (append, not a rewrite: other UI workers are live)
+
+**What exists now that did not.** A surface of its own, `SURFACES["accept-ceremony"]`, addressed
+`#accept/<INQ-…>/<name>`, living between `/*__ACCEPT_CEREMONY_START__*/` and
+`/*__ACCEPT_CEREMONY_END__*/` in `app.html`. It hosts the FOUR transition acts
+(`versionaccept` · `versionreject` · `versionconsider` · `versionrevert`), reads
+`op=basisversions` (through UI-42's `versionReviewRead`, not a second door), `op=affordances`,
+`op=airun` (through a named door inside UI-38's block) and `op=versionstrength`, and is driven by
+`civicos-ui/test/accept-ceremony.test.mjs` (90 assertions) with a nine-arm negative control plus a
+baseline row in `civicos-ui/test/accept-ceremony.control.mjs`.
+
+**Five things the next UI session should know before touching it.**
+
+1. **THE AFFIRMATION IS THE SURFACE'S OWN STEP AND THE RECORD HOLDS NO FIELD FOR IT.** DEC-32
+   clause 4 says independent sufficiency must be affirmatively claimed per set and can never happen
+   by omission; the act that carries the member's name is `op=versionaccept`, and none of the six
+   acts has a parameter for the saying-so. The page therefore requires it before it will send, and
+   SAYS on the page that what the record will hold is the acceptance. Do not invent a field at the
+   surface; the delegation asking the plane for one is in `CLAIMS.md`.
+2. **THE ORDERING RULE IS AT THE WIRE, NOT IN THE LAYOUT.** `op=versionstrength` is not ASKED until
+   the affirmation is complete and the member asks for it. A number fetched and then not drawn is a
+   number an extra code path can draw, and the control's ARM 4 breaks exactly that — it fails the
+   ordering arm while every affirmation arm stays green, which is what makes the two separable.
+3. **THE PLANE'S OWN AXIS SENTENCE MUST NOT BE RENDERED.** `#axisResult` composes success details of
+   the form *"the STRONGEST of the N independently sufficient grounds…"* — measured at this item,
+   3 of 3 detail expressions carry vocabulary DEC-32 clause 1 forbids. This surface renders the
+   axis's STATE, its letter and the reason that sets it, and never the sentence. The fixture sends a
+   detail carrying the banned words on every answer, so a renderer that ever prints one fails the
+   sweep. **AND THE SAME STRINGS ARE ALREADY BEING RENDERED ELSEWHERE** — `app.html:5902`, `:5919`,
+   `:5928` and `:7301` — which is a live finding this item raised and did not fix, because fixing it
+   is a choice between the plane re-wording and the surfaces losing real information.
+4. **THE AFFIRMATION IS KEYED BY POSITION, NEVER BY THE RECORD'S FILING LABEL.** The first version of
+   this surface put the label in an `onclick`: invisible to a member, and still the label leaving the
+   surface. Its own suite caught it because the sweep reads the RAW markup as well as the stripped
+   text. Keep both halves of that sweep.
+5. **`op=airun` IS STILL ASKED IN EXACTLY ONE PLACE.** `ai-session-wire.test.mjs` ARM C1 is untouched
+   and green. The ceremony reaches a run through `aiSessionConditions`, a SECOND named door declared
+   inside the running-session block that returns the record's own values and NO MARKUP — ARM C2 is
+   corrected in place with its reason and ARM C4a–d are new, pinning that the door exists, is
+   reached, is real, and composes nothing renderable.
+
+**What UI-45 inherits.** `versioncurrent` is the last row left on `ACTS_AWAITING_SURFACE` from the
+version family, and `surface-registry.test.mjs`'s ARM A4c will require it struck in the same commit
+that surfaces it. The two falsifier stems and the four state sentences are still UI-42's constants
+and are now reused by TWO surfaces; a third spelling would be the defect UI-42's delegation named.
+
+**What this surface does NOT do, stated so it is not read as a gap.** It shows no shared-origin
+finding, because no read op publishes one for a stored reading — it says it has not been told, which
+is a different fact from being told there is none (D-129). It compares the run's lens against what
+stands now IN THE RUN'S OWN SETTING, because the record holds no lens belonging to a member, and it
+says that on the page. And it holds back the ADOPT act alone when the run is beyond the reader's
+gate: turning a reading down or setting it aside says what the record SHOWS, and neither stands over
+evidence the member has not seen.

@@ -5179,3 +5179,52 @@ returns early when the address already IS what is shown. **The DOM stub in every
 here fires no events, so no suite can reproduce the event**; the router is driven directly
 at the address rotation just wrote, which is what the event would do, and the substitution
 is labelled as one at the site and in the suite.
+
+## 2026-08-09 · UI-43 — the plane's own strength sentences carry the vocabulary DEC-32 clause 1 forbids, and four surfaces already render them
+
+**Instrument:** a read-only walk over `bio-plane/checks/bio-checks.mjs` (every exported `*_CHECKS`
+family, which is the DEC-49 guard's own definition of a refusal family) and over
+`Store.#axisResult` / `Store.#groundResult` in `bio-plane/src/store.mjs`, matching the six spellings
+`elicitation.test.mjs` and `version-review.test.mjs` already ban, then a grep of
+`civicos-ui/app.html` for call sites rendering an axis's `detail`. Run 2026-08-09 on this worktree at
+`d579ae8` + this item.
+
+| population | n | carrying a forbidden word |
+| --- | --- | --- |
+| DEC-49 canned translations (15 families) | 163 rows | **1** — `MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND` |
+| `#axisResult` composed success `detail` | 3 expressions | **3** |
+| `#groundResult` composed `detail` | 0 | 0 (it composes none) |
+| `app.html` sites rendering an axis `detail` | 4 | **4** — `:5902`, `:5919`, `:5928`, `:7301` |
+
+**What this establishes.** PL-14's delegation says *"this op's canned translations are already held
+to [the ban] and the suite asserts it of every one"* — **true, and true of the REFUSALS.** The
+SUCCESS path is a different string and nobody was checking it: all three of `#axisResult`'s detail
+sentences carry the analyst's noun, and the one a graded multi-set axis produces reads *"the
+STRONGEST of the N independently sufficient grounds this conclusion rests on"*. The four `app.html`
+sites consume `op=inquirystrength`'s axis objects, which are the same `#axisResult` output — **so a
+member whose basis has been structured through UI-27's elicitation is already reading the vocabulary
+that elicitation exists to keep away from them.** UI-43's own surface renders the state, the letter
+and the reason that sets it, and never the sentence.
+
+**What the instrument CANNOT see, and it found itself wrong once:** a sentence a surface builds by
+joining plane values; a detail composed outside those two functions; the per-site refusal DETAILS
+(far more numerous than the 163 canned translations, and not walked here); and whether any given
+string ever reaches a member — reachability was asked separately, of `app.html` only. **Its first
+expression-boundary rule read 2 of the 3 detail expressions and the one it missed was the graded
+branch — the very case that bites** — because that sentence splits `independently ` from
+`sufficient grounds` across a concatenation and only the `\bground` spelling catches it. Corrected by
+counting `detail:` occurrences directly; recorded rather than smoothed.
+
+## 2026-08-09 · UI-43 — baselines and delta, measured in this worktree
+
+| instrument | baseline (before any edit) | final | note |
+| --- | --- | --- | --- |
+| `npm run test:battery` | 139/139 · 8,869 | see the claim's `released:` line | no `bio-plane/**` file is touched by this item |
+| `node scripts/coverage.mjs --strict` | exit 0 · REGISTER FLOOR arms 632/632 | exit 0 | |
+| `node civicos-ui/test/run.mjs` | 42 suites · exit 0 | 43 suites · exit 0 | `accept-ceremony` new at 90 |
+
+**The brief's inherited figure was stale and the measurement governs.** UI-42 reported 138/138 at
+8,827 from its own worktree hours earlier; today's `main` measures **139/139 at 8,869** before this
+item touches anything. That is the fifteenth-odd time a hand-carried battery figure has gone stale
+between one item and the next, and the practice that catches it — measure your own baseline, trust
+it over the brief, and report either way — is the only reason it is known.

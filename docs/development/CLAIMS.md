@@ -5090,3 +5090,213 @@ ones the record already assigned to the surface: DEC-29(b) states in as many wor
 wording clause is a UI string"*, and DEC-32 clause 1 forbids the analyst's vocabulary while leaving
 the member-facing rendering to the surface — which is what UI-27's elicitation already established
 one construct over. Nothing here is a consequence Bob has not already ruled on.
+
+## CLAIM 2026-08-09 UI (UI-43 — the accept ceremony)
+session: ui43-accept-ceremony (worktree agent-a9e7e017d06799858)
+opened: 2026-08-09T12:00:00Z
+paths: **`civicos-ui/app.html` — named by SITE, not by file** (shared ground; UI-42 landed in it
+  hours ago and other UI workers may be live): (1) the NEW region between
+  `/*__ACCEPT_CEREMONY_START__*/` and `/*__ACCEPT_CEREMONY_END__*/`, appended after
+  `__VERSION_REVIEW_END__` — every renderer in it is new and nothing outside it moved into it;
+  (2) ONE key ADDED to `SURFACES` inside `__SURFACES_START__`/`__SURFACES_END__` —
+  `"accept-ceremony"`, no existing key touched; (3) ONE line inside `boot()`'s route chain, which
+  gains `&& !acceptCeremonyRouteFromHash()` and nothing else; (4) **ONE LINE INSIDE UI-42's
+  `__VERSION_REVIEW__` REGION** — the single entry-point link in `vrevVersionHtml`, so the ceremony
+  is reachable from the surface that shows the readings. UI-42's claim above is `released:` (merged
+  on main at d579ae8) and its paths are therefore free; the site is named exactly rather than the
+  region being reopened. **NOT** the CSS block (this surface adds no class), **NOT** `__CATALOG__`,
+  **NOT** `__SEMANTICS__`, **NOT** `__ELICITATION__` (its two stems are IMPORTED by reuse, never
+  re-authored), **NOT** `__AI_SESSION__` (`aiSessionRead` is CALLED, never edited), **NOT** any
+  other marked region.
+  `civicos-ui/test/accept-ceremony.test.mjs` (NEW), `civicos-ui/test/accept-ceremony.control.mjs` (NEW).
+  `civicos-ui/test/surface-registry.test.mjs` — **the FOUR transition rows STRUCK from
+  `ACTS_AWAITING_SURFACE` (ARM A4c's DRAIN requires it in the same commit) and the floors ARM A3,
+  A4d and A4e moved from the figures the arms PRINT.** No other arm touched.
+  `civicos-ui/test/preauth-vocabulary.test.mjs` — WALK 2's router census six → SEVEN and the new
+  router CLASSIFIED as post-authentication, with both halves pinned. CORRECTED, never exempted.
+  **AMENDED MID-ITEM, 2026-08-09, and the amendment is a finding rather than a scope creep.** Two
+  paths this claim said it would NOT take were taken, because a fence fired that this item had to
+  answer rather than route around: (5) **ONE FUNCTION ADDED INSIDE `__AI_SESSION__`** —
+  `aiSessionConditions`, a second named door returning the record's own values and no markup, so
+  `op=airun` is still asked in exactly ONE place in `app.html` (`ai-session-wire.test.mjs` ARM C1,
+  untouched and green); and (6) `civicos-ui/test/ai-session-wire.test.mjs` — **ARM C2 CORRECTED IN
+  PLACE with its dated reason, never exempted**, plus four NEW arms (C4, C4b, C4c, C4d) pinning that
+  the door exists inside the block, is reached from outside it, is the real function, and composes no
+  markup. ARM C2 fired on the first run of this item against a ceremony calling `aiSessionRead`
+  directly, which is exactly what it is for; the correction narrows it from *no second consumer of a
+  run* to *nothing outside the block composes a run's status, ticks, budget or transcript*, which is
+  what §14a actually rules.
+  `.gitignore` is NOT touched (UI-42's `.ui*-harness/` pattern already covers this item's pens).
+  `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not
+  rewritten), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/src/**` (READ ONLY — driven and quoted, never edited), **NOT**
+  `bio-plane/checks/**` (read only; the suite IMPORTS `VERSION_MACHINE`), **NOT**
+  `bio-plane/test/**`, **NOT** `bio-plane/scripts/**`, **NOT** `civicos-ui/tokens.css`, **NOT**
+  `civicos-ui/check-*.mjs`, **NOT** `civicos-ui/test/version-review.*` (UI-42's, reused by CALL and
+  never edited), **NOT** `civicos-ui/test/bound-sweep.test.mjs`, **NOT** `docs/development/QUEUE.md`,
+  **NOT** `docs/development/IS-BUILD-PLAN.md`, **NOT** `docs/development/DECISIONS.md`, **NOT**
+  `docs/development/INTERFACES.md`, **NOT** `docs/development/INTERFACE-CHANGES.md`, **NOT**
+  `newgroup/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3 — reads `op=basisversions` (through UI-42's ONE door, no second call site),
+  `op=affordances`, `op=airun` (through UI-38's ONE door) and `op=versionstrength` (the one NEW call
+  site); acts `op=versionaccept`, `op=versionreject`, `op=versionconsider`, `op=versionrevert`, each
+  asked twice — once with `preview=1` and once for real. Nothing is asked of the plane that the plane
+  does not already publish and no shape is changed, so no IC row is owed.
+interfaces owned: none.
+expected: IS-BUILD-PLAN UI-43 (W7) — the accept ceremony. The four beats on every transition; the
+  derived falsifier back in plain words REUSING UI-42's two constants; per-branch
+  independent-sufficiency AFFIRMED before the member's name lands; D-195's derived shared origin
+  surfaced or STATED AS NOT PUBLISHED; DEC-46's lens diff IN the ceremony and never a toast;
+  REC-36's stricter withholding when a run composed beyond the accepter's gate.
+accepts-when: as IS-BUILD-PLAN UI-43. **Baselines MEASURED IN THIS WORKTREE BEFORE ANY EDIT and
+  trusted over the brief: battery 139/139 at 8,869 (the brief's inherited figure, 138/138 at 8,827,
+  is UI-42's own worktree figure and is stale by one suite and 42 assertions on today's main);
+  UI harness 42 suites, exit 0 read UNPIPED; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?`
+  unpiped, exit 0.** NEGATIVE CONTROLS run, each armed ALONE with every other defence held open,
+  every restore verified by sha256 AND `cmp` against per-arm pristine copies, the harness INSIDE
+  this worktree. No push, no merge — CONDUCT integrates.
+concurrency: checked over the whole file. The only claim naming `civicos-ui/**` above this one is
+  UI-42's, which is `released:` and merged on main at d579ae8; its region is not reopened and the one
+  line taken inside it is named by site. No live claim names `civicos-ui/test/surface-registry.test.mjs`
+  or `civicos-ui/test/preauth-vocabulary.test.mjs`. `bio-plane/**` is not claimed and not edited.
+released:
+
+### DELEGATION 2026-08-09 UI (UI-43) -> RECORD / WHOEVER OWNS `#axisResult`: **THE PLANE'S SUCCESS SENTENCE FOR A STRENGTH AXIS CARRIES THE VOCABULARY DEC-32 CLAUSE 1 FORBIDS, AND FOUR SURFACES ARE ALREADY RENDERING IT TO MEMBERS**
+
+**MEASURED at this item, not inferred — the figures and the instrument are in `MEASUREMENTS.md`
+under this date.** `Store.#axisResult` composes three success `detail` sentences and **all three**
+carry a word D-226 bans from any member-facing surface. The one a graded multi-set axis produces
+reads, in the plane's own words: *"the STRONGEST of the N independently sufficient grounds this
+conclusion rests on, which is …, and no stronger than the weakest capture WITHIN that ground."*
+
+- **IT IS NOT HYPOTHETICAL AND IT IS NOT UI-43's.** `civicos-ui/app.html:5902`, `:5919`, `:5928` and
+  `:7301` render an axis's `detail` verbatim today, off `op=inquirystrength`. Those renderers are
+  correct in every other respect — rendering the plane's own sentence is the DEC-8 instinct and is
+  right nearly everywhere — and they predate this item by many waves. **The leak fires exactly when
+  a member has structured their basis through UI-27's elicitation**, which is the flow built to keep
+  that vocabulary away from them.
+- **PL-14's DELEGATION IS TRUE AND NARROW, and that is worth saying plainly**: it states this op's
+  canned translations are held to the ban and the suite asserts it of every one. Measured: 163
+  canned translations across 15 families, **exactly one** carrying a forbidden word, and it is not
+  in the strength families. The REFUSALS were being checked. The SUCCESS path is a different string
+  and nothing was looking at it.
+- **UI-43 DID NOT FIX IT AND DID NOT RENDER IT.** Its own surface publishes the axis's state, its
+  letter and the reason that sets it, and its fixture sends a leaking `detail` on every answer so the
+  sweep fails on any renderer that ever prints one.
+- **WHY IT IS DELEGATED RATHER THAN DONE.** The fix is a choice with a consequence, not an edit: the
+  PLANE re-words the sentence (and every consumer keeps its information), or the SURFACES stop
+  rendering it (and members lose *which set set the grade*, which is real and is what DEC-32 clause 7
+  makes checkable by a reader). The first is `bio-plane/**` and not UI's; the second is a
+  member-facing capability being removed. **Recommendation: re-word in the plane**, because the
+  sentence's content is legitimate and only its nouns are forbidden, and because a surface-side
+  deletion would have to be repeated at every future consumer.
+- **Reversal cost:** low today — the sentences are already composed in ONE place per composer, so the
+  re-wording is two functions. It rises with every new consumer of a strength axis.
+
+### DELEGATION 2026-08-09 UI (UI-43) -> RECORD / PL-2's FAMILY: **THE ACCEPT CEREMONY'S AFFIRMATION HAS NOWHERE TO LAND IN THE RECORD, AND DEC-32 CLAUSE 4 IS THE REASON THAT MATTERS**
+
+DEC-32's anti-gaming keystone: *"Independent sufficiency must be affirmatively claimed, per branch.
+So strengthening a finding by repackaging requires an ACT that carries the member's name; it can
+never happen by omission, by default, or by a member simply not understanding the question."*
+`op=suggest`'s CHECK 4 refuses a machine composing sets that trace to one origin and its own detail
+ends *"a named member may still affirm they are genuinely separate at the accept ceremony."*
+
+**There is no parameter on any of the six version acts for that affirmation.** UI-43 requires it
+before it will send, states on the page that the affirmation is a step of the ceremony rather than a
+line in the record, and invents no field. That is the honest shape available to a surface, and it is
+weaker than the ruling asks for in one specific way: the record cannot later distinguish an accept
+made after affirming each set from one made by a surface that never asked.
+
+- **Provisional:** as shipped — the surface gates, the record holds the acceptance.
+- **Alternative:** `op=versionaccept` takes an affirmation naming the sets, refuses without it where
+  the reading declares more than one, and records it beside the state attribution.
+- **Recommendation:** the alternative, and DEC-32's own reasoning is why — the defence is *an ACT
+  that carries the member's name*, and an act whose record does not carry what was affirmed leaves
+  the reader (clause 7's final check) unable to tell the two cases apart.
+- **AND THE SECOND HALF, WHICH IS THE ONE UI CANNOT WORK AROUND AT ALL:** `shared_origins` and
+  `origins_complete` are computed by CHECK 4 and published **only on `op=suggest`'s write-time
+  answer**. Neither `op=basisversions` nor `op=versionstrength` republishes them, so the member at
+  the ceremony affirms independence against nothing the record will show them — which is the exact
+  opposite of the sentence at CHECK 4's own site (*"the derivation is … PUBLISHED on every version
+  that passes, so the member affirming independence at §12's accept ceremony is affirming it against
+  what the record can see"*). **That sentence is true of the write and false of the read.** UI-43
+  says so on the page rather than reading silence as an all-clear (D-129).
+- **Recommendation:** carry `shared_origins`/`origins_complete` onto the stored version and publish
+  them on `op=basisversions`. **Reversal cost:** additive, and nothing consumes their absence today.
+- **Cost of NOT doing it:** the one derivation D-195 exists to supply is invisible at the one moment
+  it was designed for.
+
+### DELEGATION 2026-08-09 UI (UI-43) -> UI / WHOEVER NEXT TOUCHES `actRefusalHtml`: **THE SHARED REFUSAL RENDERER DROPS THE DEC-49 CANNED TRANSLATION EVERYWHERE IT IS USED**
+
+`civicos-ui/app.html:5615`'s `actRefusalHtml` renders `r.detail || r.error` and the code, and never
+`r.translation`. Every refusal the plane sends carries both: the DEC-49 CANNED translation, which is
+the sentence a member gets for that condition wherever it fires, and the per-site detail, which is
+written about this particular refusal.
+
+- **This is NOT reported as a defect**, and the distinction is the point: `detail` IS the plane's own
+  words and is usually the more specific of the two, so a surface rendering it is honouring DEC-8.
+  What is lost is the family's stable sentence, which is the one a member could learn.
+- UI-43 wrote its own local renderer showing BOTH, verbatim, and authoring neither — and its ARM 6
+  breaks exactly the translation half, failing the canned-translation arm while the detail arm and
+  the code arm stay green, which is what makes the two separable.
+- **Not changed here** because `actRefusalHtml` reaches every act surface in the file and widening it
+  is a change to what a dozen screens say. **Recommendation:** render both there too, and measure
+  what moves; the local renderer in `__ACCEPT_CEREMONY__` is the shape.
+
+### DELEGATION 2026-08-09 UI (UI-43) -> CONDUCT: **THREE FLOORS MOVED IN `surface-registry.test.mjs`, ALL FROM THE FIGURES THE ARMS PRINTED, AND FOUR REGISTER ROWS STRUCK**
+
+`ACTS_AWAITING_SURFACE` loses `versionaccept`, `versionreject`, `versionconsider` and
+`versionrevert` in the same commit that surfaces them — ARM A4c's DRAIN requires that, and a register
+that only grows is an exemption list with a date on it. It stands at **two** rows now
+(`versioncurrent`, UI-45's; `attesttext`, CPDF-10's).
+
+| arm | was | now | why it moved |
+| --- | --- | --- | --- |
+| A3 (act placements) | 19 | **23** | this surface hosts four acts |
+| A4d (catalogue outside the register) | 16 | **20** | striking four rows moves four acts into this floor's corpus |
+| A4e (distinct hosted acts) | 16 | **20** | a surface now hosts them |
+
+**None of the three was slack** — each moved by exactly four and each was measured by raising it to
+an impossible figure and reading what the arm PRINTED, never by adding four to the number in the
+file. That is the opposite of what UI-42 found one day earlier, where two of its five floors were 13
+and 7 low; recorded because a run of measurements that keeps finding slack is a different fact from
+one that finds none, and both are worth having.
+
+### DECISIONS FOR BOB 2026-08-09 (UI-43): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. Two judgements this item made are recorded at
+their sites and in the report rather than returned to him, because both are ones the record already
+assigns: the affirmation is required on EVERY accept of a multi-set reading rather than only a
+machine-composed one, which is DEC-32 clause 4 read straight (the act that carries the member's name
+is the same act either way, and what differs by composer is the sentence); and REC-36's withholding
+bites on ACCEPT alone, because accepting is the only one of the four where a member's name lands over
+evidence they cannot see. The two consequences that ARE Bob's — whether the plane should record the
+affirmation, and whether the strength sentence should be re-worded or the surfaces should stop
+rendering it — are delegations above with their alternatives and reversal costs, for whoever schedules
+them; neither blocks anything today.
+
+### DELEGATION 2026-08-09 UI (UI-43) -> RECORD / WHOEVER OWNS `hygiene.test.mjs`'s CLASS CENSUS: **IT GRADES A FILE BY A TOKEN IN ITS COMMENTS, AND IT CAUGHT THIS ITEM'S OWN CORRECTION**
+
+**Not a complaint — the ratchet worked, twice, and the second firing is the finding.** UI-43's
+negative-control driver swept its per-arm pen by LISTING the directory. The class census in
+`bio-plane/test/hygiene.test.mjs` went red on the first full battery naming the file, exactly as it
+is designed to: *"a new one is a decision, not a silence."* The driver was corrected to delete the
+files it created BY NAME — which removes the walk and is strictly safer, since a listing sweep
+deletes whatever it finds — and the paragraph explaining the correction **re-armed the arm by
+spelling the token it had just removed.**
+
+- The census counts `readdirSync\s*\(` over the file's SOURCE, comments included. It has the same
+  shape as the guarded-detector this suite already corrected once for *"grading a file by a word in
+  its comments"* — that correction moved the GUARDED side onto the import statement and left the
+  WALKS side counting raw text.
+- **This is D-160's shape and WORKER.md's own receipt** — *a check that caught its own correction
+  because the correction quoted the token it was correcting* — arriving again, and the only cost was
+  a re-word.
+- **Recommendation:** count the walk token over COMMENT-STRIPPED source, the way this repository's
+  other source walks already do (`surface-registry.test.mjs`, `preauth-vocabulary.test.mjs` and
+  `bound-sweep.test.mjs` all strip first, and two of them were corrected into it by the identical
+  failure). The stripper exists and is driven.
+- **Reversal cost:** none; the arm gets strictly more accurate. **Cost of not doing it:** every
+  future session that removes a walk and says so in a comment pays the same fifteen minutes, and the
+  one who does not read the arm carefully instead names their file into `CLASS_NAMED_UNGUARDED` —
+  which would record a walk that is not there.

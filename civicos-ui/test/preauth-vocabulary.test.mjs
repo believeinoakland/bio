@@ -545,10 +545,31 @@ ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
    Asserted rather than asserted-by-comment: the two pins below check both halves
    of that classification for THIS router as well, so a later edit that hoists it
    above the gate fails HERE. */
-ok("WALK 2 REACH: the script declares exactly the six routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (a seventh must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 6
-   && ["actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
+/* CORRECTED A THIRD TIME 2026-08-09 BY UI-43, six -> SEVEN, and for the third
+   consecutive item the old assertion was RIGHT to fail rather than wrong to
+   exist: `acceptCeremonyRouteFromHash` arrived with the accept ceremony and this
+   arm stopped it arriving UNCLASSIFIED. Three catches in three items is what a
+   census arm is for, and it is worth saying plainly that none of the three was
+   caught by anything else. The classification, made against this walk's own rule
+   ("`boot()` cannot run without a credential, so the routers it asks are not
+   pre-authentication surfaces"):
+
+     `acceptCeremonyRouteFromHash` is POST-AUTHENTICATION. It is asked inside
+     `boot()`'s router chain and NOWHERE at the top level, so
+     `#accept/<INQ-…>/<name>` resolves for nobody holding nothing. The four ops
+     it reaches — `basisversions`, `affordances`, `airun`, `versionstrength` —
+     are all admin/member/probe, so there is no uncredentialed arm to reach and
+     it adds no member-facing pre-auth vocabulary. The four ACTS it hosts are
+     mutating and member-classed, which is a stronger form of the same fact.
+
+   Asserted rather than asserted-by-comment: the two pins below check both halves
+   for THIS router as well, so a later edit that hoists it above the gate fails
+   HERE and the surface is re-classified rather than drifting into the pre-auth
+   set unnoticed. */
+ok("WALK 2 REACH: the script declares exactly the seven routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (an eighth must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 7
+   && ["acceptCeremonyRouteFromHash","actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","versionReviewRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
   /* The running-session router is asked in boot()'s chain ... */
@@ -575,6 +596,19 @@ ok("WALK 2 REACH: the script declares exactly the six routers this walk has clas
      SCRIPT.indexOf("/*__VERSION_REVIEW_END__*/") > 0 && TAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #versions/<INQ-…> resolves for nobody holding nothing",
      !TAIL.includes("versionReviewRouteFromHash()"));
+  /* UI-43's router, the same two halves, and its own slice for the same reason:
+     the ceremony's `hashchange` registration sits inside ITS block, so the tail
+     that must stay clear of it starts at that block's END marker. Anchoring on
+     the version-review marker instead would have put the ceremony's own
+     registration inside the slice and turned this pin red for a reason that has
+     nothing to do with the gate. */
+  ok("WALK 2 CLASSIFICATION: acceptCeremonyRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("acceptCeremonyRouteFromHash()"));
+  const ACER_TAIL = SCRIPT.slice(SCRIPT.indexOf("/*__ACCEPT_CEREMONY_END__*/"));
+  ok("WALK 2 REACH: the accept-ceremony block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__ACCEPT_CEREMONY_END__*/") > 0 && ACER_TAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #accept/<INQ-…>/<name> resolves for nobody holding nothing",
+     !ACER_TAIL.includes("acceptCeremonyRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
