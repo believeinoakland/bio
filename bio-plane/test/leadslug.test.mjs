@@ -743,9 +743,19 @@ console.log("\n--- 9. over-strictness: correct work in spellings this item did n
   console.log("\n--- 9c. the schema traps, asserted over this column's own span ---");
   const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
   const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
+  /* CORRECTED 2026-08-09 BY FL-4, NOT EXEMPTED, and the reason the old one was
+     wrong is worth carrying because it is a class rather than a typo. It read
+     `/lead_inquiry\s+TEXT\s*$/m` — "TEXT and then END OF LINE" — which pinned
+     NULLABLE by way of the column being the LAST one in the table, since only a
+     last column has no trailing comma. FL-4 appended `run_woken_at` after it,
+     the comma appeared, and an arm about nullability failed over a fact about
+     ORDERING. The rule it means is what is asserted now: the declaration is
+     TEXT and carries neither `NOT NULL` nor a `DEFAULT`, which is true wherever
+     in the table it sits. */
+  const leadDecl = /^\s*lead_inquiry\s+([^\n]*)$/m.exec(body);
   t("the column is declared and is NULLABLE — a non-null default would invent an observation nobody "
   + "made, and on THIS column that would mint a notification out of a migration",
-    /lead_inquiry\s+TEXT\s*$/m.test(body), true);
+    [!!leadDecl, /^TEXT\s*,?\s*$/.test((leadDecl && leadDecl[1]) || "")], [true, true]);
   t("it is backfilled by #migrate's ADD COLUMN list, so a store migrated forward and a fresh install "
   + "present the same table", /\["capture_requests", "lead_inquiry", "TEXT"\]/.test(STORE_SRC), true);
   t("purge clears it in the per-bundle arm as well as the whole-store one — the column names a "
