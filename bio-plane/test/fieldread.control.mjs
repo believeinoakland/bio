@@ -1,7 +1,34 @@
-/* D-255 — IS A FIELD READ BY ANYBODY? THE INSTRUMENT, AND ITS NEGATIVE CONTROLS.
+/* D-255 / D-258 — IS A FIELD READ BY ANYBODY? THE INSTRUMENT, AND ITS CONTROLS.
  *
- *     cd bio-plane && node test/fieldread.control.mjs            (sweep + arms)
- *     cd bio-plane && node test/fieldread.control.mjs --sweep     (the sweep only)
+ *     cd bio-plane && node test/fieldread.control.mjs               (sweep + 12 arms)
+ *     cd bio-plane && node test/fieldread.control.mjs --sweep       (the node sweep only)
+ *     cd bio-plane && node test/fieldread.control.mjs --tripwire-sweep
+ *                                       (a VERDICT for every plan.meaning.* field)
+ *     …                                 --tripwire-sweep --tripwire-row=refs   (one row)
+ *     cd bio-plane && node test/fieldread.control.mjs --digest      (the answer digest)
+ *     …                                 --emit-armed=<field> / --restore  (diagnosis)
+ *
+ * WHAT D-258 ADDED, and every one of them is a lesson this file paid for rather
+ * than a tidy-up:
+ *   - A SECOND SUBJECT (`src/store.mjs`), because a field is BUILT in one file
+ *     and READ in another, and an arm that must inject or respell a read has to
+ *     reach the reader. Restores verify every subject, not the edited one.
+ *   - `--tripwire-sweep`: the node sweep ends in a CANDIDATE LIST, and a
+ *     candidate list is where D-255 nearly deleted five live fields. This gives
+ *     each candidate a verdict by driving it through the whole battery.
+ *   - `--digest`: D-255's "no answer moved" digest was a one-off that left
+ *     nothing re-runnable, so D-258 had to rebuild it. It is a mode now.
+ *   - A GUARD against snapshotting an ALREADY-ARMED tree. Interrupt a run
+ *     between arming and restoring and the next run took the armed file as
+ *     "pristine", overwrote the good snapshot, and reported
+ *     `sha256 EQUAL · cmp IDENTICAL` while restoring the instrument. Every check
+ *     passed while it happened; the equality was real and against the wrong file.
+ *   - RE-DRIVING each failing suite ALONE before counting it as a read. A red
+ *     battery is not evidence of a read: `plan.meaning.refs` — the field whose
+ *     whole disposition hung on the verdict — came back LIVE on its first pass
+ *     because `daemon-token.test.mjs` failed under six concurrent batteries, and
+ *     that suite passed 56/0 alone against the identical armed tree with the
+ *     tripwire never firing.
  *
  * DELIBERATELY NOT A `.test.mjs`: it EDITS `src/query.mjs` while it runs, so
  * `scripts/battery.mjs` must not discover it. `query.control.mjs`,
@@ -46,6 +73,14 @@
  * inside workerd and published by `op=meaningrows`. That is not a footnote about
  * the instrument; it is the single most important thing in this file, and ARM O2
  * exists so the next reader meets it as a measurement rather than as a caveat.
+ *
+ * WHAT D-258 THEN SETTLED, by driving all nine rows of `--tripwire-sweep`:
+ * `arm`, `table`, `grain`, `identity`, `limit` and `offset` are LIVE — the five
+ * D-255 could only assert are now MEASURED, plus `arm` — and `columns` and
+ * `refs` are DEAD. Both were deleted. After the deletion the node sweep reports
+ * 56 constructed fields and FIVE never-read candidates, every one of them a
+ * field this sweep has already proven LIVE in workerd; there is no candidate on
+ * this descriptor left undecided.
  *
  * THE TECHNIQUE GENERALISES AND THE SCOPE HERE DOES NOT. Any module pure enough
  * to run in node can be swept this way; the wrap sites below are hand-written
@@ -124,13 +159,14 @@ const uniq = (src, needle, label) => {
   return needle;
 };
 
-function instrument(src) {
+function instrument(src, probeText = PROBE) {
   let s = src;
   for (const [label, from, to] of WRAPS) s = s.replace(uniq(s, from, label), to);
   /* The helper goes in AFTER the last import, so it is defined before any call. */
   const anchor = uniq(s, `\n/* ---------------------------------------------------------------------------\n * Parser:`, "probe-anchor");
-  return s.replace(anchor, `\n${PROBE}${anchor}`);
+  return s.replace(anchor, `\n${probeText}${anchor}`);
 }
+
 
 /* ------------------------------------------------------------------- THE CORPUS
  * Printed, and floored. A totality assertion over an empty corpus has passed in
@@ -195,24 +231,127 @@ if (CHILD) {
   }
 }
 
+/* ------------------------------------------------- D-258: THE ANSWER DIGEST
+ * `cd bio-plane && node test/fieldread.control.mjs --digest`
+ *
+ * D-255 proved that deleting `atom.phrase` moved no answer with a digest over
+ * 360 compilations — and that digest was a ONE-OFF that left nothing behind, so
+ * D-258 could not re-run it and had to rebuild it. It is a MODE now. What goes
+ * into it is everything a caller can observe about a compiled plan that is not
+ * the field under test: the ranking expression, the terms, the warnings, the
+ * widenable flag, the PAGE statement's SQL and bound arguments, the MEANING
+ * statement's SQL and bound arguments (this is the half D-258 moves, so leaving
+ * it out would be grading the wrong thing), and the six meaning-descriptor
+ * fields `op=meaningrows` actually publishes.
+ *
+ * WHAT IT IS NOT. It cannot see a field that nothing reads — that is the whole
+ * premise of the item, and it is why the digest is EVIDENCE THAT NO ANSWER
+ * MOVED and never evidence that the field was dead. The tripwire arms are what
+ * establish the second, and confusing the two would be this item's own mistake. */
+if (process.argv.includes("--digest")) {
+  const Q = await import("../src/query.mjs");
+  const h = createHash("sha256");
+  let n = 0;
+  const qs = ["", "sewer", '"sewer fund"', "sewer*", "-sewer", "sewer OR water",
+              "(sewer OR water) AND fund", "has:leg", "leg:hunch", "leg:ground=*",
+              "resolves:>=B", "concerns:ENT-1", "type:inquiry -leg:hunch"];
+  for (const f of Object.keys(Q.FIELDS)) qs.push(`${f}:x`, `has:${f}`, `sort:${f}`);
+  const viewers = ["class:member", "member:m-1", "class:admin", null];
+  const opts = [{}, { limit: 5, offset: 2 },
+                ...Object.keys(Q.MEANING).map((m) => ({ rows: m, rowLimit: 5, rowOffset: 2 })),
+                ...Object.keys(Q.MEANING).map((m) => ({ rows: m, rowLimit: 99999 }))];
+  for (const q of qs) for (const viewer of viewers) for (const o of opts) {
+    const p = Q.compile({ q, viewer, ...o });
+    n++;
+    const page = (() => { try { return p.statements.page(); } catch (e) { return { err: String(e) }; } })();
+    const mean = (() => { try { return p.statements.meaning?.() ?? null; } catch (e) { return { err: String(e) }; } })();
+    const meanCount = (() => { try { return p.statements.meaning?.({ mode: "count" }) ?? null; } catch (e) { return { err: String(e) }; } })();
+    h.update(JSON.stringify([
+      p.match, p.terms, p.warnings, p.widenable, p.gate, p.limit, p.offset,
+      p.sort.field, p.sort.dir, p.facetFields, p.facetCols, p.restricted, p.meaningArms,
+      page, mean, meanCount,
+      /* THE SIX THE OP PUBLISHES, named one by one rather than by spreading the
+         descriptor — a spread would fold the two fields under test INTO the
+         digest and make it disagree for the one reason that is not an answer. */
+      p.meaning && [p.meaning.arm, p.meaning.table, p.meaning.grain,
+                    p.meaning.identity, p.meaning.limit, p.meaning.offset],
+    ]));
+  }
+  if (n < 300) { console.log(`!! DIGEST CORPUS FLOOR: ${n} compilations is too few`); process.exit(4); }
+  console.log(`ANSWER DIGEST over ${n} compilations (${qs.length} queries × ${viewers.length} viewers × ${opts.length} option sets): ${h.digest("hex")}`);
+  process.exit(0);
+}
+
 /* -------------------------------------------------------------- THE SWEEP RUN */
 const SUBJECT = "bio-plane/src/query.mjs";
+/* D-258 ADDS A SECOND SUBJECT, and the reason is what decides this whole class:
+   `query.mjs` is where a field is BUILT, `store.mjs` is where its only plausible
+   reader LIVES, and an arm that must inject a read in a spelling nobody
+   anticipated — or rewrite a genuine one — has to reach the reader's own file.
+   So the snapshot/restore machinery is per-FILE now, and EVERY restore verifies
+   EVERY subject by sha256 AND `cmp` AND byte count. A two-file arm that restored
+   only one of them would leave the tree dirty in precisely the way the old
+   single-file check could not see. */
+const READER = "bio-plane/src/store.mjs";
+const SUBJECTS = { query: { path: SUBJECT, floor: 20000 }, store: { path: READER, floor: 200000 } };
 if (!existsSync(SNAP)) mkdirSync(SNAP, { recursive: true });
 
-const pristineBuf = readFileSync(ROOT + SUBJECT);
-const pristineSha = sha(pristineBuf);
-writeFileSync(SNAP + `PRISTINE__query.mjs`, pristineBuf);
-console.log(`pristine  ${SUBJECT}  sha256 ${pristineSha.slice(0, 12)}…  ${pristineBuf.length} bytes`);
-if (pristineBuf.length < 20000) { console.log("!! PRISTINE IS IMPLAUSIBLY SMALL — refusing to run"); process.exit(2); }
+/* `--restore` IS HANDLED BEFORE THE GUARD BELOW, ON PURPOSE. The guard refuses
+   to run against an armed tree, and an armed tree is exactly the state in which
+   somebody needs `--restore` — a recovery path locked behind the check that
+   detects the thing it recovers from is not a recovery path. */
+if (process.argv.includes("--restore")) {
+  const snap = SNAP + "PRISTINE__query.mjs";
+  if (!existsSync(snap)) { console.log(`!! no snapshot at ${snap} — restore from git instead`); process.exit(2); }
+  const good = readFileSync(snap);
+  if (/__FIELDREAD_PROBE__|__FIELDREAD_TRIPWIRE__|D-25[58] TRIPWIRE/.test(good.toString("utf8"))) {
+    console.log(`!! THE SNAPSHOT ITSELF IS ARMED — restoring it would launder the instrument in. Use git.`);
+    process.exit(2);
+  }
+  writeFileSync(ROOT + SUBJECT, good);
+  console.log(`RESTORED ${SUBJECT} from snapshot · sha256 ${sha(readFileSync(ROOT + SUBJECT)).slice(0, 12)}… · ${readFileSync(ROOT + SUBJECT).length} bytes`);
+  process.exit(0);
+}
 
-const restore = (snapPath, label) => {
-  writeFileSync(ROOT + SUBJECT, readFileSync(snapPath));
-  const after = readFileSync(ROOT + SUBJECT);
-  const shaOk = sha(after) === pristineSha;
+/* THIS GUARD IS A DEFECT THIS HARNESS SHIPPED WITH, FOUND BY PAYING FOR IT
+   (D-258, 2026-08-09). The snapshot below runs unconditionally at startup, so a
+   run against a tree that is STILL ARMED — because an earlier run was
+   interrupted between arming and restoring — takes the ARMED file as "pristine",
+   overwrites the good snapshot with it, and then cheerfully reports
+   `RESTORE: sha256 EQUAL · cmp IDENTICAL` while restoring the instrument. Every
+   check in this file passed while it happened: the equality was real and it was
+   an equality against the wrong file, which is this project's oldest lesson in
+   the shape of a restore. The instrument leaves a marker in the file it edits,
+   so the cheap decisive test is to look for it. */
+for (const [key, s] of Object.entries(SUBJECTS)) {
+  s.buf = readFileSync(ROOT + s.path);
+  s.sha = sha(s.buf);
+  if (/__FIELDREAD_PROBE__|__FIELDREAD_TRIPWIRE__|D-25[58] TRIPWIRE/.test(s.buf.toString("utf8"))) {
+    console.log(`!! ${s.path} STILL CARRIES AN INSTRUMENT MARKER — this tree is ARMED, not pristine.`);
+    console.log(`!! Refusing to snapshot it. Restore it from ${SNAP} (or from git) and re-run.`);
+    process.exit(2);
+  }
+  writeFileSync(SNAP + `PRISTINE__${key}.mjs`, s.buf);
+  console.log(`pristine  ${s.path}  sha256 ${s.sha.slice(0, 12)}…  ${s.buf.length} bytes`);
+  if (s.buf.length < s.floor) { console.log(`!! PRISTINE ${key} IS IMPLAUSIBLY SMALL (floor ${s.floor}) — refusing to run`); process.exit(2); }
+}
+/* Kept under their old names so D-255's own arms below read exactly as they did. */
+const pristineBuf = SUBJECTS.query.buf, pristineSha = SUBJECTS.query.sha;
+
+const restoreOne = (key, snapPath, label) => {
+  const s = SUBJECTS[key];
+  writeFileSync(ROOT + s.path, readFileSync(snapPath));
+  const after = readFileSync(ROOT + s.path);
+  const shaOk = sha(after) === s.sha;
   let cmpOk = false;
-  try { execFileSync("cmp", [ROOT + SUBJECT, snapPath]); cmpOk = true; } catch { cmpOk = false; }
-  console.log(`RESTORE ${label}: sha256 ${shaOk ? "EQUAL" : "DIFFERENT"} · cmp ${cmpOk ? "IDENTICAL" : "DIFFERS"} · ${after.length} bytes`);
-  if (!shaOk || !cmpOk || after.length !== pristineBuf.length) { console.log("!! RESTORE FAILED"); process.exit(2); }
+  try { execFileSync("cmp", [ROOT + s.path, snapPath]); cmpOk = true; } catch { cmpOk = false; }
+  console.log(`RESTORE ${key} ${label}: sha256 ${shaOk ? "EQUAL" : "DIFFERENT"} · cmp ${cmpOk ? "IDENTICAL" : "DIFFERS"} · ${after.length} bytes`);
+  if (!shaOk || !cmpOk || after.length !== s.buf.length) { console.log("!! RESTORE FAILED"); process.exit(2); }
+};
+const restore = (snapPath, label) => restoreOne("query", snapPath, label);
+/* Restores EVERY subject from that run's own uniquely-named snapshots. */
+const restoreAll = (tag, label) => {
+  for (const key of Object.keys(SUBJECTS)) restoreOne(key, SNAP + `${tag}__${key}.mjs`, label);
 };
 
 const child = (mode, extra = {}) => {
@@ -298,20 +437,36 @@ const runBattery = () => {
 
 let armsRun = 0, wrong = 0;
 const ONLY = (process.argv.find((a) => a.startsWith("--arm=")) || "").slice(6);
-const arm = ({ id, what, mustFail, mustNotFail, edit, expectGreen, expectSuites, suite }) => {
+const arm = ({ id, what, mustFail, mustNotFail, edit, editStore, expectGreen, expectSuites, expectBeyond, suite }) => {
   if (ONLY && ONLY !== id) return;
   console.log(`\n================ ARM ${id} ================`);
   console.log(`WHAT:          ${what}`);
   console.log(`MUST FAIL:     ${mustFail}`);
   console.log(`MUST NOT FAIL: ${mustNotFail}`);
-  const before = readFileSync(ROOT + SUBJECT);
-  if (sha(before) !== pristineSha) { console.log("!! TREE IS NOT PRISTINE AT ARM START — aborting"); process.exit(2); }
-  const snapPath = SNAP + `${id}__query.mjs`;
-  writeFileSync(snapPath, before);
-  const armed = edit ? edit(before.toString("utf8")) : before.toString("utf8");
-  if (edit && armed === before.toString("utf8")) { console.log("!! ARM NEVER ARMED — the edit changed nothing"); wrong++; return; }
-  writeFileSync(ROOT + SUBJECT, armed);
-  console.log(`ARMED: ${before.length} -> ${Buffer.byteLength(armed)} bytes${edit ? "" : "  (BASELINE — nothing is broken in this arm, on purpose)"}`);
+  /* EVERY subject is checked pristine and snapshotted, whether this arm edits it
+     or not — a restore that verifies only the file an arm meant to touch cannot
+     see the file it touched by accident. */
+  const before0 = {};
+  for (const [key, s] of Object.entries(SUBJECTS)) {
+    const b = readFileSync(ROOT + s.path);
+    if (sha(b) !== s.sha) { console.log(`!! TREE IS NOT PRISTINE AT ARM START (${key}) — aborting`); process.exit(2); }
+    writeFileSync(SNAP + `${id}__${key}.mjs`, b);
+    before0[key] = b;
+  }
+  let armedAny = false;
+  for (const [key, fn] of [["query", edit], ["store", editStore]]) {
+    if (!fn) continue;
+    const from = before0[key].toString("utf8");
+    const to = fn(from);
+    if (to === from) {
+      console.log(`!! ARM NEVER ARMED (${key}) — the edit changed nothing`);
+      wrong++; restoreAll(id, `arm ${id} (never armed)`); return;
+    }
+    writeFileSync(ROOT + SUBJECTS[key].path, to);
+    console.log(`ARMED ${key}: ${before0[key].length} -> ${Buffer.byteLength(to)} bytes`);
+    armedAny = true;
+  }
+  if (!armedAny) console.log(`ARMED: nothing  (BASELINE — nothing is broken in this arm, on purpose)`);
   let green, line;
   if (suite) {
     const r = spawnSync(process.execPath, [`test/${suite}`], { cwd: ROOT + "bio-plane", encoding: "utf8" });
@@ -339,7 +494,35 @@ const arm = ({ id, what, mustFail, mustNotFail, edit, expectGreen, expectSuites,
       const ok = got === want;
       console.log(`  ${ok ? "AS DECLARED" : "*** NOT AS DECLARED — THIS IS A FINDING ***"}`);
       if (!ok) wrong++;
-      restore(snapPath, `arm ${id}`);
+      restoreAll(id, `arm ${id}`);
+      armsRun++;
+      return;
+    }
+    if (expectBeyond) {
+      /* THE SAME CORRECTION IN THE OTHER DIRECTION, and D-258 needed it. A
+         POSITIVE control for a field that must first be PUT BACK cannot declare
+         merely RED: this item's structural ratchet fires on the field's presence
+         alone, so RED is already guaranteed before the injected read does
+         anything, and the arm would pass while proving nothing. What it has to
+         show is a failure BEYOND the ratchet — and each such suite is re-driven
+         alone, because a battery under contention produces reds that are not
+         reads (measured here on `daemon-token.test.mjs`, 2026-08-09). */
+      const beyond = b.suitesFailed.filter((s) => !expectBeyond.includes(s));
+      console.log(line);
+      console.log(`  SUITES THAT FAILED: ${b.suitesFailed.join(", ") || "(none)"}`);
+      console.log(`  FREE (declared to fail on PRESENCE alone, so they prove nothing here): ${expectBeyond.join(", ")}`);
+      console.log(`  BEYOND THEM:        ${beyond.join(", ") || "(nothing)"}`);
+      const reproduced = [];
+      for (const s of beyond) {
+        const r = spawnSync(process.execPath, [`test/${s}`], { cwd: ROOT + "bio-plane", encoding: "utf8" });
+        if (r.status !== 0) reproduced.push(s);
+        console.log(`  re-driven ALONE: ${s.padEnd(30)} exit ${r.status} · ${r.status === 0 ? "DID NOT REPRODUCE — a flake, not a read" : "REPRODUCED"}`);
+      }
+      const ok = reproduced.length > 0;
+      console.log(`  DECLARED: at least one suite beyond the ratchet, REPRODUCED alone · ACTUAL ${reproduced.length}`);
+      console.log(`  ${ok ? "AS DECLARED" : "*** NOT AS DECLARED — THIS IS A FINDING ***"}`);
+      if (!ok) wrong++;
+      restoreAll(id, `arm ${id}`);
       armsRun++;
       return;
     }
@@ -347,7 +530,7 @@ const arm = ({ id, what, mustFail, mustNotFail, edit, expectGreen, expectSuites,
   console.log(line);
   console.log(`  DECLARED ${expectGreen ? "GREEN" : "RED"} · ACTUAL ${green ? "GREEN" : "RED"} · ${green === expectGreen ? "AS DECLARED" : "*** NOT AS DECLARED — THIS IS A FINDING ***"}`);
   if (green !== expectGreen) wrong++;
-  restore(snapPath, `arm ${id}`);
+  restoreAll(id, `arm ${id}`);
   armsRun++;
 };
 
@@ -370,10 +553,207 @@ const withPhrase = (s) =>
             `  const atom = { op: "text", column, value: v, phrase: quoted && /\\s/.test(v), prefix };`);
 const PHRASE_LIT = `phrase: quoted && /\\s/.test(v),`;
 
+/* D-258's two fields are GONE from the source for exactly the same reason, so
+   every arm about them PUTS THEM BACK FIRST — `withPhrase`'s pattern, and for
+   `withPhrase`'s reason. */
+const MEANING_ANCHOR = `      grain: MEANING[rowArm].rowGrain, identity: MEANING[rowArm].identity,\n`;
+const COLUMNS_LIT = `columns: MEANING[rowArm].row,`;
+const REFS_LIT = `refs: MEANING[rowArm].refs,`;
+const withMeaningFields = (s) =>
+  s.replace(uniq(s, MEANING_ANCHOR, "re-add columns/refs"),
+            MEANING_ANCHOR + `      ${COLUMNS_LIT} ${REFS_LIT}\n`);
+
+/* The store-side edits. `uniq` counts every one of these before it is used, so
+   an anchor that stops matching announces itself instead of arming nothing —
+   this project has an arm on its record that patched zero times and reported a
+   result anyway. */
+const injectRead = (field) => (s) => {
+  const at = uniq(s, `    const rows = this.#runQuery(plan.statements.meaning(), tally);`, `inject ${field}`);
+  const spelled = `"${field.slice(0, 3)}" + "${field.slice(3)}"`;
+  return s.replace(at, `    if (plan.meaning[${spelled}]) { /* D-258 arm: deliberately unanticipated spelling */ }\n${at}`);
+};
+const respellGrain = (s) =>
+  s.replace(uniq(s, `      grain: plan.meaning.grain, identity: plan.meaning.identity,`, "respell grain"),
+            `      grain: plan.meaning["gr" + "ain"], identity: plan.meaning.identity,`);
+
+/* ------------------------------------------- D-258: THE CLASS, WITH A VERDICT
+ * `cd bio-plane && node test/fieldread.control.mjs --tripwire-sweep`
+ *
+ * THE SWEEP ABOVE ENDS IN A CANDIDATE LIST, AND A CANDIDATE LIST IS WHERE D-255
+ * NEARLY DELETED FIVE LIVE FIELDS. Its own note says so: seven `plan.meaning.*`
+ * fields read 0 in node and five of them are read by `store.mjs` inside workerd.
+ * D-255 settled ONE of the seven by hand (ARM O2, `table`) and left the rest as a
+ * sentence. This mode settles EVERY one of them, by driving it: the field becomes
+ * a getter that THROWS on any read in any spelling, and the WHOLE battery decides.
+ *
+ * THE FIRST VERSION OF THIS MODE WAS THE WRONG INSTRUMENT AND IS RECORDED HERE
+ * RATHER THAN QUIETLY REPLACED. It aimed a generic recording Proxy at a field by
+ * NAME, which is more general and needs no per-field anchor. Its BASELINE row —
+ * the identical instrument aimed at a field that does not exist — came back
+ * failing `meaningread.test.mjs` as well as the expected ratchet, and the cause
+ * was not workerd and not the Proxy's behaviour: `meaningread.test.mjs:100` pins
+ * the LITERAL SOURCE TEXT `statements: { page, count, ids: idsStmt, … }` to one
+ * occurrence in `query.mjs`, and the Proxy wrap rewrites exactly that line. So
+ * the instrument perturbed a suite for a reason having nothing to do with reads.
+ * THAT MATTERED, AND NOT COSMETICALLY: the verdict was "fails more suites than
+ * the baseline did", and `meaningread.test.mjs` is also the suite that drives the
+ * reads of `grain` and `identity` — so a live, published field whose only reader
+ * is that suite would have been scored DEAD by a floor its own contamination
+ * hid it behind. That is the deletion this item exists to prevent, arrived at
+ * through the instrument instead of through the subject.
+ *
+ * THE MECHANISM IS THEREFORE D-255's `trip()` — a throwing GETTER, one field at
+ * a time — which changes no line any suite reads as text. It is less general and
+ * it is CORRECT, and that trade is the finding. The generality is bought back a
+ * different way: the row list below is derived from the descriptor's own fields,
+ * so a field added to the plan is a row here without editing this table.
+ *
+ * WHAT EACH ROW DECLARES, before it runs:
+ *   - BASELINE: a throwing getter for a field NOTHING can read, ADDED beside the
+ *     others and removing nothing. It IS a shape change, so it is declared to
+ *     fail EXACTLY the structural ratchet and nothing else. If it fails anything
+ *     more, the arming mechanism itself is not inert and every verdict below it
+ *     is void rather than merely surprising — which is precisely how the first
+ *     version of this mode was caught.
+ *   - A field already in the source: armed alone, nothing else changed, so the
+ *     descriptor's SHAPE is untouched and the ratchet cannot fire. Any failure is
+ *     therefore a READ. LIVE ⟺ something failed.
+ *   - `columns`/`refs`: these had to be PUT BACK first (`withPhrase`'s pattern),
+ *     which the structural ratchet in `query.test.mjs` sees as PRESENCE. So the
+ *     declaration for them is the exact set `[query.test.mjs]` — presence and
+ *     nothing more. DEAD ⟺ exactly that set. Declaring merely "RED" would be
+ *     satisfied by a field read in forty places, which is the opposite claim. */
+const TRIP_ROWS = [
+  { field: "__no_such_field__", add: true, declare: "DEAD" },
+  { field: "arm",      lit: `arm: rowArm,` ,                        declare: "LIVE" },
+  { field: "table",    lit: `table: MEANING[rowArm].table,`,        declare: "LIVE" },
+  { field: "grain",    lit: `grain: MEANING[rowArm].rowGrain,`,     declare: "LIVE" },
+  { field: "identity", lit: `identity: MEANING[rowArm].identity,`,  declare: "LIVE" },
+  { field: "limit",    lit: `limit: mLim,`,                         declare: "LIVE" },
+  { field: "offset",   lit: `offset: mOff,`,                        declare: "LIVE" },
+  { field: "columns",  lit: COLUMNS_LIT, readd: true,               declare: "DEAD" },
+  { field: "refs",     lit: REFS_LIT,    readd: true,               declare: "DEAD" },
+];
+/* The ONLY suite a re-added field may disturb: this item's own structural pin. */
+const RATCHET_SUITE = "query.test.mjs";
+
+/* Builds the armed source for one row. Every anchor goes through `uniq`. */
+const tripArm = (row) => (src) => {
+  const base = row.readd ? withMeaningFields(src) : src;
+  if (row.add) {
+    const a = uniq(base, `      arm: rowArm, table: MEANING[rowArm].table,\n`, "baseline getter");
+    return base.replace(a, a + `      get ${row.field}() { throw new Error("D-258 TRIPWIRE: plan.meaning.${row.field} WAS READ"); },\n`);
+  }
+  return trip("plan.meaning", row.field, row.lit)(base);
+};
+
+function tripwireSweep() {
+  console.log("\n========== TRIPWIRE SWEEP: a VERDICT per candidate, not a candidate list ==========");
+  console.log(`  ${TRIP_ROWS.length} rows, one WHOLE-BATTERY run each, each armed ALONE.`);
+  console.log(`  BASELINE ROW FIRST (plan.meaning.${TRIP_ROWS[0].field}); if it is not clean, nothing below stands.`);
+  const out = [];
+  let baselineClean = null;
+  /* `--tripwire-row=<field>` runs ONE row. Nine whole-battery passes is the
+     right instrument and the wrong debugging loop; a row that comes back
+     surprising has to be re-drivable on its own. */
+  const ONE = (process.argv.find((a) => a.startsWith("--tripwire-row=")) || "").slice(15);
+  for (const row of (ONE ? TRIP_ROWS.filter((r) => r.field === ONE) : TRIP_ROWS)) {
+    const target = `plan.meaning.${row.field}`;
+    const tag = "TS_" + row.field.replace(/[^a-z0-9]+/gi, "_");
+    for (const [key, s] of Object.entries(SUBJECTS)) {
+      const b = readFileSync(ROOT + s.path);
+      if (sha(b) !== s.sha) { console.log(`!! TREE NOT PRISTINE BEFORE ${target} (${key}) — aborting`); process.exit(2); }
+      writeFileSync(SNAP + `${tag}__${key}.mjs`, b);
+    }
+    const armed = tripArm(row)(pristineBuf.toString("utf8"));
+    if (armed === pristineBuf.toString("utf8")) { console.log(`!! ROW ${target} NEVER ARMED`); wrong++; continue; }
+    writeFileSync(ROOT + SUBJECT, armed);
+    const b = runBattery();
+    const got = b.suitesFailed;
+    console.log(`\n  ${target.padEnd(34)} ${b.green}/${b.suites} suites · ${b.assertions} assertions · exit ${b.code}`);
+    console.log(`      suites that failed: ${got.join(", ") || "(none)"}`);
+    /* WHICH ASSERTIONS, not only which suites — the first version of this mode
+       printed suite names alone and a surprising row could not be diagnosed
+       without another whole pass. */
+    for (const f of b.failed.slice(0, 4)) console.log(`      ${f.trim().slice(0, 150)}`);
+    /* A row that CHANGES THE SHAPE — the baseline getter, or the two fields put
+       back — is seen by this item's structural ratchet, which fires on PRESENCE
+       and cannot care whether anything reads. That suite is therefore permitted
+       for those rows and for no others, and the verdict is what happens BEYOND
+       it. Declaring merely "RED" would be satisfied by a field read in forty
+       places, which is the opposite of the claim (D-255's ARM D, corrected). */
+    const permitted = (row.readd || row.add) ? [RATCHET_SUITE] : [];
+    const beyond = got.filter((s) => !permitted.includes(s));
+    console.log(`      permitted without meaning a read: ${permitted.join(", ") || "(nothing — the shape is untouched in this row)"}`);
+    console.log(`      beyond that: ${beyond.join(", ") || "(nothing)"}`);
+    /* A RED BATTERY IS NOT BY ITSELF EVIDENCE OF A READ, AND THIS PROJECT PAID
+       FOR THAT SENTENCE HERE (D-258, 2026-08-09). The `refs` row — the field
+       whose whole disposition hangs on this verdict — came back LIVE on its
+       first run because `daemon-token.test.mjs` failed, and `daemon-token` had
+       nothing to do with `refs`: it is timing-sensitive, it took 4,760ms in that
+       pass with SIX concurrent batteries from other worktrees on the machine,
+       and driven alone against the identical armed tree it passed 56/0 with the
+       tripwire never firing. A whole-battery boolean cannot tell a read from a
+       flake, and under real contention flakes happen — so every suite that fails
+       BEYOND the permitted set is now RE-DRIVEN ALONE, and only a failure that
+       REPRODUCES counts toward LIVE. Cheap (one suite), and it is exactly the
+       procedure that resolved the original surprise, automated rather than
+       remembered. A red that does not reproduce is reported as what it is. */
+    const confirmed = [], flaked = [];
+    for (const s of beyond) {
+      const r = spawnSync(process.execPath, [`test/${s}`], { cwd: ROOT + "bio-plane", encoding: "utf8" });
+      (r.status === 0 ? flaked : confirmed).push(s);
+      console.log(`      re-driven ALONE: ${s.padEnd(30)} exit ${r.status} · ${r.status === 0 ? "DID NOT REPRODUCE — not a read" : "REPRODUCED"}`);
+    }
+    if (flaked.length) console.log(`      *** ${flaked.join(", ")} FAILED IN THE BATTERY AND PASSED ALONE — recorded as a flake, NOT counted as a read ***`);
+    const verdict = confirmed.length ? "LIVE" : "DEAD";
+    if (row.add) {
+      baselineClean = got.join(",") === RATCHET_SUITE;
+      console.log(`      CALIBRATION — declared to fail EXACTLY: ${RATCHET_SUITE} (presence, nothing else).`);
+      console.log(`      ${baselineClean ? "AS DECLARED — arming a field NOTHING can read disturbs only the ratchet, so the mechanism is inert and the verdicts below stand"
+                                         : "*** NOT AS DECLARED — THE MECHANISM IS NOT INERT; EVERY VERDICT BELOW IS VOID ***"}`);
+      if (!baselineClean) wrong++;
+    }
+    const okd = verdict === row.declare;
+    console.log(`      VERDICT: ${verdict}${verdict === "LIVE" ? " — something READS it" : " — nothing in the whole battery reads it"}` +
+                ` · declared ${row.declare} · ${okd ? "AS DECLARED" : "*** NOT AS DECLARED — THIS IS A FINDING ***"}`);
+    if (!okd) wrong++;
+    out.push([target, row.declare, verdict, got.join(" ")]);
+    restoreAll(tag, `tripwire ${target}`);
+  }
+  console.log(`\n  LIVE  : ${out.filter((r) => r[2] === "LIVE").map((r) => r[0]).join(", ") || "none"}`);
+  console.log(`  DEAD  : ${out.filter((r) => r[2] === "DEAD").map((r) => r[0]).join(", ") || "none"}`);
+  console.log(`  BASELINE ROW CLEAN: ${baselineClean === null ? "NOT RUN — the verdicts above are UNCALIBRATED" : baselineClean}`);
+  console.log(`  WHAT THIS CANNOT SEE, and it bounds every DEAD above: a reader no suite in the`);
+  console.log(`  battery drives. A DEAD verdict is a statement about the estate AS TESTED, not about`);
+  console.log(`  the universe — which is why the battery's own suite count is printed on every row.`);
+  console.log(`  It also reaches only fields on this ONE descriptor: the rows are hand-anchored to`);
+  console.log(`  \`compile()\`'s meaning block and nothing here reaches store.mjs's own constructions,`);
+  console.log(`  index.mjs, or the exported static registries.`);
+  armsRun += out.length;
+}
+
+/* `--emit-armed <target>` installs ONE tripwire row's exact armed file and stops,
+   so a row that comes back surprising can be reproduced against a single suite in
+   seconds instead of another whole-battery pass. It reuses the sweep's own code
+   path rather than reconstructing it — a debug aid that armed the file slightly
+   differently would diagnose a tree nobody ran. `--restore` puts it back. */
+const EMIT = (process.argv.find((a) => a.startsWith("--emit-armed=")) || "").slice(13);
+if (EMIT) {
+  const row = TRIP_ROWS.find((r) => r.field === EMIT);
+  if (!row) { console.log(`!! no tripwire row named ${EMIT}. Rows: ${TRIP_ROWS.map((r) => r.field).join(", ")}`); process.exit(3); }
+  writeFileSync(ROOT + SUBJECT, tripArm(row)(pristineBuf.toString("utf8")));
+  console.log(`ARMED FOR DIAGNOSIS: plan.meaning.${EMIT} — run one suite, then re-run with --restore`);
+  process.exit(0);
+}
+if (process.argv.includes("--restore")) { restoreOne("query", SNAP + "PRISTINE__query.mjs", "manual"); process.exit(0); }
+
 const SWEEP_ONLY = process.argv.includes("--sweep");
+const TRIPSWEEP = process.argv.includes("--tripwire-sweep");
 const dead = sweep();
 
-if (!SWEEP_ONLY) {
+if (TRIPSWEEP) tripwireSweep();
+else if (!SWEEP_ONLY) {
   arm({
     id: "BASE", expectGreen: true, edit: null,
     what: "BASELINE — the tree exactly as it stands, nothing armed",
@@ -434,11 +814,21 @@ if (!SWEEP_ONLY) {
   });
 
   arm({
-    id: "C", expectGreen: true,
-    what: "THE CLASS — arm the tripwire on `plan.meaning.columns`, the OTHER never-read field the sweep found, which this item deliberately did NOT delete",
-    mustFail: "nothing, which is what makes it the same class as `atom.phrase` rather than the same class as `plan.meaning.table` above",
-    mustNotFail: "any suite",
-    edit: trip("plan.meaning", "columns", `columns: MEANING[rowArm].row,`),
+    id: "C", expectSuites: ["query.test.mjs"],
+    /* CORRECTED BY D-258, NOT EXEMPTED, AND THE CORRECTION IS THE ITEM. When
+       D-255 wrote this arm, `columns` was still on the plan, so the arm could
+       aim at it directly and GREEN was the right declaration. D-258 DELETED it,
+       which broke this arm twice over: its anchor no longer occurs (`uniq` would
+       have exited 3 and taken the whole run with it — an arm that cannot arm is
+       worse than an arm that fails), and re-adding the field to aim at it is
+       seen by D-258's own structural ratchet. So the arm now puts the field back
+       first, exactly as the `phrase` arms do, and declares the exact SET of
+       suites permitted to fail instead of a boolean. The claim it makes is
+       unchanged and is still the one that matters: nothing READS `columns`. */
+    what: "THE CLASS — put `columns` back and arm the tripwire on it, the field D-255 found and deliberately did NOT delete, and D-258 did",
+    mustFail: "EXACTLY `query.test.mjs`, and in it exactly the three D-258 shape pins, which see PRESENCE. (DECLARED BY D-255 AS: nothing at all, GREEN — correct against the tree D-255 left, and wrong against this one.)",
+    mustNotFail: "any other suite — that is what makes it `atom.phrase`'s class rather than `plan.meaning.table`'s",
+    edit: (s) => trip("plan.meaning", "columns", COLUMNS_LIT)(withMeaningFields(s)),
   });
 
   arm({
@@ -453,14 +843,73 @@ if (!SWEEP_ONLY) {
     mustNotFail: "any other assertion in that suite — the compiled expression is identical either way, which is the reason the field was undetectable in the first place",
     edit: withPhrase,
   });
+
+  /* ================================ D-258 ================================
+   * FOUR ARMS, and between them they answer the two things the D-258 row said
+   * were still owed: `refs` had NO tripwire arm at all, and the reason five of
+   * seven sibling fields survived D-255 is that the sweep runs in node while the
+   * reader runs in workerd. R2 gives `refs` its arm. P2 and P3 prove the arm
+   * would have FIRED — for these exact two fields, in spellings nothing
+   * anticipated — so their greens are not free. O3 is the over-strictness arm
+   * and it is aimed at a READ rather than at a presence, which is where D-255's
+   * ARM D went wrong. C2 is the ratchet.
+   * ====================================================================== */
+
+  arm({
+    id: "R2", expectSuites: ["query.test.mjs"],
+    what: "THE ARM THE D-258 ROW SAYS IS MISSING — put `refs` back and arm the tripwire on it. Until this ran, `refs` rested on a read sweep and on somebody having read `store.mjs:1348-1354`, which is exactly the evidence that was NOT good enough for its five live siblings",
+    mustFail: "EXACTLY `query.test.mjs`, and in it exactly the three D-258 shape pins, which see the field's PRESENCE because this arm has to put it back. (DECLARED ON THE FIRST DRAFT AS: nothing at all, GREEN. That was wrong for the same reason D-255's ARM D was wrong — the ratchet this item ships fires on presence — and it is corrected into the exact SET rather than a boolean.)",
+    mustNotFail: "any other suite in the battery. If anything at all READS `plan.meaning.refs` — in node or in workerd, by spread, destructure, `in` or serialisation — some other suite goes red and D-258 must be closed as PUBLISH rather than DELETE",
+    edit: (s) => trip("plan.meaning", "refs", REFS_LIT)(withMeaningFields(s)),
+  });
+
+  arm({
+    id: "P2", expectBeyond: ["query.test.mjs"],
+    what: "POSITIVE CONTROL FOR THE COLUMNS VERDICT — tripwire `columns` AND inject a read of it inside `store.mjs`'s `meaningRows`, in workerd, spelled `plan.meaning[\"col\" + \"umns\"]`",
+    mustFail: "the battery. ARM C's green says nothing reads `columns`; this says the arm CAN see a read of `columns` where a reader would actually live, in a spelling no grep would find. Without it, ARM C's green is free",
+    mustNotFail: "nothing — this arm is about the instrument's reach, not about the subject",
+    edit: (s) => trip("plan.meaning", "columns", COLUMNS_LIT)(withMeaningFields(s)),
+    editStore: injectRead("columns"),
+  });
+
+  arm({
+    id: "P3", expectBeyond: ["query.test.mjs"],
+    what: "POSITIVE CONTROL FOR THE REFS VERDICT — the same for `refs`, spelled `plan.meaning[\"ref\" + \"s\"]` inside `meaningRows`",
+    mustFail: "the battery. `refs` is the WEAKER of D-258's two claims by its own row, so its green needs its own positive control rather than borrowing `columns`'",
+    mustNotFail: "nothing",
+    edit: (s) => trip("plan.meaning", "refs", REFS_LIT)(withMeaningFields(s)),
+    editStore: injectRead("refs"),
+  });
+
+  arm({
+    id: "O3", expectGreen: false,
+    what: "OVER-STRICTNESS, A GENUINE READ RESPELLED — take `plan.meaning.grain`, which IS read and IS published, rewrite `store.mjs`'s real read of it into `plan.meaning[\"gr\" + \"ain\"]`, and arm the tripwire on it",
+    mustFail: "the battery. THIS IS THE ARM THAT STOPS A LIVE FIELD BEING DELETED: a verdict mechanism that graded spellings would now see no read of `grain` anywhere and report it dead, and `grain` is published to every caller of op=meaningrows. It fires on the READ and not on the field's presence, which is the correction D-255's ARM D earned",
+    mustNotFail: "nothing. A green here would mean this item's whole method is blind to exactly the case it claims to cover, and the DELETE decision would have to be withdrawn",
+    edit: trip("plan.meaning", "grain", `grain: MEANING[rowArm].rowGrain,`),
+    editStore: respellGrain,
+  });
+
+  arm({
+    id: "C2", expectGreen: false, suite: "query.test.mjs",
+    what: "THE RATCHET — re-add `columns` and `refs` as ORDINARY fields, exactly as they stood before this item, and change nothing else",
+    mustFail: "`query.test.mjs`'s D-258 shape pin. A field with no consumer is invisible to every behavioural assertion there is — that is how these two survived PL-9, D-222 and D-255 — so a STRUCTURAL pin is the only thing that can see them come back",
+    mustNotFail: "any other assertion in that suite. The compiled statements are identical either way, which is the whole reason the fields were undetectable",
+    edit: withMeaningFields,
+  });
 }
 
 console.log(`\n================ RESULT ================`);
 console.log(`arms run ${armsRun} · not as declared ${wrong}`);
 console.log(`never-read constructed fields: ${dead.length ? dead.join(", ") : "NONE"}`);
-const finalBuf = readFileSync(ROOT + SUBJECT);
-const clean = sha(finalBuf) === pristineSha;
-console.log(`final tree: ${SUBJECT} sha256 ${sha(finalBuf).slice(0, 12)}… ${finalBuf.length} bytes · ${clean ? "PRISTINE" : "*** NOT PRISTINE ***"}`);
+/* EVERY subject, not just the one an arm meant to touch. */
+let clean = true;
+for (const [key, s] of Object.entries(SUBJECTS)) {
+  const finalBuf = readFileSync(ROOT + s.path);
+  const ok = sha(finalBuf) === s.sha;
+  clean &&= ok;
+  console.log(`final tree: ${s.path} sha256 ${sha(finalBuf).slice(0, 12)}… ${finalBuf.length} bytes · ${ok ? "PRISTINE" : "*** NOT PRISTINE ***"}`);
+}
 /* The snapshot directory is REMOVED on a clean run, and kept on a dirty one so
    the pristine copy is still there to restore from by hand. A harness that
    leaves untracked files under `test/` is one `.test.mjs` away from the hazard

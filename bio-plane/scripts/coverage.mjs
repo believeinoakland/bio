@@ -409,6 +409,13 @@ const REGISTER_FLOOR = {
      the largest single declaration, which that paragraph does not become. That
      was CHECKED rather than assumed, because +7 matching one suite exactly is
      the kind of arithmetic that hides a lost arm somewhere else. */
+     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed.
+     MOVED 2026-08-09 by D-258: 654 -> 659, from this run's printed `GREW by 5 arm(s)`
+     — the five arms D-258 added to `test/fieldread.control.mjs` (R2, P2, P3, O3, C2),
+     declared in `query.test.mjs`'s NEGATIVE CONTROL block. `classified` and `corpus`
+     do NOT move: no suite was added. ONE key set, deliberately — keep-both merges
+     have left duplicate `arms:` keys here six times, and once the last won and was
+     the lowest. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

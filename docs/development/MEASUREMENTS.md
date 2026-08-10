@@ -5207,6 +5207,162 @@ manifest's own `statements_sha` BYTES, which no spelling can dodge; and arm F4b 
 `fanout.control.mjs` exists solely to prove that replacement arm CAN fail — with the field added,
 the second witness removed and the driver made to fetch the composing half, the suite goes to
 **151 pass / 21 FAIL** and the value-level arms are among the failures.
+## 2026-08-09 · D-258 — DELETE OR PUBLISH, decided by measurement; and the class DECIDED rather than listed
+
+**Instrument:** `bio-plane/test/fieldread.control.mjs`, D-255's, EXTENDED — a second subject
+(`src/store.mjs`), a `--tripwire-sweep` that returns a VERDICT per field, a `--digest` mode, and
+`--emit-armed`/`--restore` for diagnosis. Run from `bio-plane/`.
+
+### The decision, and the fact it rests on
+
+`compile()`'s meaning descriptor carried eight fields; `op=meaningrows` reads six
+(`store.mjs:1348-1354` — the D-258 row cites `:1330-1336`, which the file has since moved past).
+`columns` and `refs` are **DELETED**, not published, and the reasoning is at the site.
+
+**What made it a real choice:** every sibling IS published, so "give them a reader" was live.
+**What decided it:** the fact those two carry is **already published, per arm, by
+`op=searchfields`** — `meaningVocabulary()` emits `rows: { grain, identity, columns, refs }` off
+the same registry. **Consumers of `op=meaningrows`, measured repo-wide:** `civicos-ui` **none**;
+`agent-worker/src/index.mjs` **one** call site reading `.reached` and `.rows` only. Publishing
+would have added two fields to an envelope no surface reads, for a consumer that does not exist —
+and `columns` restates the keys the rows already carry, where `grain`/`identity` say what a row
+MEANS and how it is ADDRESSED, which rows cannot say about themselves. **No IC row is owed: no
+published envelope changed**, pinned key-by-key through the op.
+
+### The class, DECIDED — nine whole-battery rows, each armed alone
+
+| target | declared | actual | suites failed |
+|---|---|---|---|
+| `__no_such_field__` (BASELINE) | DEAD, failing EXACTLY the ratchet | DEAD · 141/142 · 9,189 | `query.test.mjs` only |
+| `arm` | LIVE | LIVE · 140/142 · 9,149 | bounds, meaningread |
+| `table` | LIVE | LIVE · 140/142 · 9,149 | bounds, meaningread |
+| `grain` | LIVE | LIVE · 140/142 · 9,149 | bounds, meaningread |
+| `identity` | LIVE | LIVE · 140/142 · 9,149 | bounds, meaningread |
+| `limit` | LIVE | LIVE · 140/142 · 9,077 | bounds, meaningread |
+| `offset` | LIVE | LIVE · 140/142 · 9,149 | bounds, meaningread |
+| `columns` | DEAD | DEAD · 141/142 · 9,189 | ratchet only |
+| `refs` | DEAD | **LIVE on the first pass — WRONG, see below**; DEAD on two later passes | ratchet only |
+
+**The five fields D-255 could only ASSERT are live are now MEASURED live**, and there is no
+undecided candidate left on this descriptor: after the deletion the node sweep reports 56
+constructed fields and five never-read candidates, every one already proven LIVE in workerd.
+
+### Two instrument defects found before any subject defect
+
+**(i) THE FIRST TRIPWIRE MECHANISM WAS WRONG, and its own baseline row caught it.** It aimed a
+recording Proxy at a field by NAME — more general, no per-field anchor. Its BASELINE row, aimed at
+a field that does not exist, failed `meaningread.test.mjs`. The cause was not workerd and not the
+Proxy's behaviour: `meaningread.test.mjs:100` pins the LITERAL SOURCE TEXT
+`statements: { page, count, ids: idsStmt, … }` to one occurrence, and the Proxy wrap rewrites that
+exact line. **That was not cosmetic.** The verdict rule was "fails more suites than the baseline",
+and `meaningread.test.mjs` is also the suite that drives the reads of `grain` and `identity` — so a
+live, published field whose only reader is that suite would have been scored DEAD behind the
+instrument's own contamination. That is the deletion this item exists to prevent, reached through
+the instrument instead of the subject. The mechanism is D-255's throwing getter now: less general,
+correct, and the generality is bought back by deriving the row list from the descriptor.
+
+**(ii) A RED BATTERY IS NOT EVIDENCE OF A READ.** `plan.meaning.refs` — the field whose entire
+disposition hung on the verdict — came back **LIVE** on its first pass, because
+`daemon-token.test.mjs` failed. Driven alone against the identical armed tree that suite passed
+**56/0** with the tripwire never firing; a whole-battery re-run of the same arm was **141/142 with
+only the ratchet**; and a third pass through the corrected instrument was **141/142, nothing beyond
+the ratchet**. It is a timing-sensitive suite (4,760ms in that pass) and **six concurrent
+`battery.mjs` processes from other worktrees were running on the machine, observed with `ps`**. So
+every suite failing beyond the permitted set is now **RE-DRIVEN ALONE**, and only a failure that
+REPRODUCES counts toward LIVE. Had this not been checked, `refs` would have been reported live and
+D-258 closed the other way — on a flake.
+
+**(iii) AND A THIRD, IN THE HARNESS'S RESTORE PATH.** The pristine snapshot was taken
+unconditionally at startup, so a run against a tree still ARMED from an interrupted run took the
+**armed file as "pristine"**, overwrote the good snapshot with it, and reported
+`RESTORE: sha256 EQUAL · cmp IDENTICAL` **while restoring the instrument**. Every check in the file
+passed while it happened — the equality was real, and against the wrong file, which is this
+project's oldest lesson wearing a restore's clothes. Recovered from two independent per-row
+snapshots that agreed by `cmp`. There is now a marker guard that refuses to snapshot an armed tree,
+and `--restore` is handled BEFORE that guard, because a recovery path locked behind the check that
+detects the thing it recovers from is not a recovery path.
+
+### The twelve arms, all AS DECLARED
+
+Baseline for every one: **142/142 suites · 9,192 assertions** (the tree as this item leaves it,
+before the D-276 row).
+
+| arm | what was armed | declared | actual |
+|---|---|---|---|
+| BASE | nothing | GREEN | GREEN · 142/142 · 9,192 |
+| P | D-255's: `phrase` as a throwing getter + a read spelled `a["ph"+"rase"]` | RED | RED · exit 7 · 135/142 · 8,584 |
+| O1 | D-255's: the genuine read of `prefix` respelled | GREEN | GREEN · 142/142 · 9,192 |
+| O2 | D-255's: tripwire on `plan.meaning.table` | RED | RED · exit 2 · 140/142 · 9,149 |
+| D | D-255's: `phrase` restored as a throwing getter | EXACTLY `query.test.mjs` | AS DECLARED · 141/142 · 9,188 |
+| C | tripwire on `columns` — **CORRECTED by D-258, not exempted** | EXACTLY `query.test.mjs` | AS DECLARED · 141/142 · 9,189 |
+| R | D-255's ratchet: `phrase` as an ordinary field | RED | RED · `query.test.mjs` 128 pass, 4 fail |
+| **R2** | **`refs` put back + tripwire — the arm the D-258 row says was missing** | EXACTLY `query.test.mjs` | **AS DECLARED · 141/142 · 9,189** |
+| **P2** | tripwire on `columns` **+ a read injected into `store.mjs` as `plan.meaning["col"+"umns"]`** | ≥1 suite beyond the ratchet, REPRODUCED alone | **AS DECLARED · 2 (bounds, meaningread), both reproduced** |
+| **P3** | the same for `refs`, `plan.meaning["ref"+"s"]` | ≥1 suite beyond the ratchet, REPRODUCED alone | **AS DECLARED · 2, both reproduced** |
+| **O3** | **OVER-STRICTNESS:** `grain`'s GENUINE read in `store.mjs` respelled `plan.meaning["gr"+"ain"]`, tripwire armed | RED | **RED · exit 2 · 140/142 · 9,149** |
+| **C2** | the ratchet: `columns`/`refs` re-added as ordinary fields | RED | RED · `query.test.mjs` 129 pass, 3 fail |
+
+**ARM C WAS CORRECTED RATHER THAN EXEMPTED, and it would otherwise have taken the whole run
+down.** D-255 wrote it against a tree where `columns` still existed; this item deleted it, so its
+anchor occurs zero times and `uniq` exits 3 — **an arm that cannot arm is worse than one that
+fails.** It puts the field back first and declares the exact suite set.
+
+**WHY P2 AND P3 EXIST, and why `expectGreen: false` would not have done.** Both fields must be
+PUT BACK to be aimed at, and this item's ratchet fires on presence — so RED is guaranteed before
+the injected read does anything, and a boolean declaration would have passed while proving
+nothing. The declaration is "at least one suite BEYOND the ratchet, and it must reproduce alone."
+Same correction as D-255's ARM D, in the other direction.
+
+### Nothing an answer depends on moved
+
+`--digest` over **3,680 compilations** (115 queries × 4 viewers × 8 option sets — every field and
+every meaning arm, carrying `match`, `terms`, `warnings`, `widenable`, `gate`, the sort, the facet
+lists, the PAGE statement's SQL and args, **the MEANING statement's SQL and args in both modes**,
+and the six published descriptor fields named one by one rather than spread):
+**`66593efe4289784d…` before the deletion and `66593efe4289784d…` after it.**
+
+### What the sweep can and cannot see
+
+The node read-sweep sees every SPELLING, because it traps property reads — `a["x"+"y"]`, a
+destructure, a spread, an `in`, a `JSON.stringify`. It **cannot** see into workerd, which is what
+the tripwire is for; it grades only objects `query.mjs` CONSTRUCTS, not the exported registries;
+and a **DEAD verdict is a statement about the estate AS TESTED** — a reader no suite drives is
+indistinguishable from none, which is why every row prints the battery's suite count. Outside
+`query.mjs` a name-based scan cannot substitute even in principle: `key`, `row`, `type` and `col`
+collide with unrelated reads across 297 files.
+
+**A SELF-CITATION CAUGHT, and it would have read as a finding.** After this item's pins landed, the
+sweep reported `plan.meaning` under SHAPES ENUMERATED — which its own output says makes a
+never-read field "still OBSERVABLE, and its removal a shape change", i.e. an argument against the
+deletion. **It was this item's own ratchet citing itself.** Measured rather than argued: the sweep
+was re-run against the pre-item `query.test.mjs` and `plan.meaning` does NOT appear enumerated.
+Nothing but this item's own pin enumerates it, so the deletion was observable to nobody.
+
+### The one real consumer, and what asking it a question found — D-276
+
+Measuring who consumes `op=meaningrows` turned up a live defect in the only non-test caller, and it
+was **DRIVEN through the op rather than read**: `agent-worker` asks `rows: "legs"` at all three
+call sites and the compiler's arms are `leg`/`resolves`/`concerns`, so the plane answers
+`ok:false, reason: MEANING_ROWS_UNKNOWN_ARM, check: C-23.2`. The caller checks only transport
+`.reached`, computes `Array.isArray(got.rows) ? got.rows.length : 0`, and writes the run note
+**"0 meaning-grain row(s) queried"** — turning the one refusal built to stop a false sense of
+coverage into exactly that. Its own suite mocks the op as `{ ok:true, rows:[] }` for ANY argument,
+so the battery is green over a call that cannot succeed. Filed as **D-276**, delegated to FLEET.
+
+### Battery, attributed per suite
+
+Baseline measured in this worktree at `1081a6a` **before any edit**, `npm ci` run first because the
+worktree arrived without `bio-plane/node_modules`: **142/142 suites green · 9,179 assertions ·
+exit 0 · 137.9s**. (The brief carried D-255's 138/138 · 8,836 — **stale**; `main` advanced by four
+suites and 343 assertions.) Final: **142/142 · 9,193 · exit 0**. Delta **+14, attributed against a
+re-measured true baseline per suite**: `query.test.mjs` **125 → 132**, `meaningread.test.mjs`
+**106 → 112**, `planning-hygiene.test.mjs` **294 → 295** (the D-276 row). No other suite's file was
+touched. **`bundle.test.mjs` and `livefire.test.mjs` report `assertions unknown` in every run** —
+a missing tally, not a zero, named here rather than folded in. `daemon-token.test.mjs` prints
+`N passed, M failed`, which `battery.mjs`'s tally regex does not match either.
+
+---
+
 ## 2026-08-09 · D-255 — IS THIS FIELD READ BY ANYBODY? asked of the field itself, not of a grep
 
 **Instrument:** `bio-plane/test/fieldread.control.mjs`, run from `bio-plane/`. It transiently

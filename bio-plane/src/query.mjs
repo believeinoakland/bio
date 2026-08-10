@@ -1374,11 +1374,51 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     meaningArms: ctx.meaningArms,
     /* D-222 option C: the meaning-GRAIN shape's own plan, null when the caller
        asked for no rows. `limit` here is the cap this shape APPLIED after
-       clamping, which is what the op publishes — never the number asked for. */
+       clamping, which is what the op publishes — never the number asked for.
+       ------------------------------------------------------------------------
+       D-258: THESE SIX FIELDS ARE THE SIX `op=meaningrows` READS, AND THAT IS
+       NOW THE WHOLE LIST. `columns: MEANING[rowArm].row` and
+       `refs: MEANING[rowArm].refs` stood here until 2026-08-09 and NOTHING EVER
+       READ EITHER — D-255's class, one field along. The decision D-255 left open
+       was DELETE rather than give-them-a-reader, and the reason is a measurement
+       rather than a preference, so it is recorded here and not only in the row.
+
+       WHAT MADE IT A REAL CHOICE. Unlike `atom.phrase`, every sibling on this
+       descriptor IS published, so "add them to the op's envelope" was live —
+       a surface building a table over meaning rows genuinely wants to know which
+       columns a row carries and which of them name another bundle.
+
+       WHAT DECIDED IT. **That fact is ALREADY PUBLISHED, per arm, by
+       `op=searchfields`** — `meaningVocabulary()` above emits
+       `rows: { grain, identity, columns, refs }` from this same registry, and
+       `op=searchfields` is the vocabulary route a surface already composes from
+       (`civicos-ui` calls it; it calls `op=meaningrows` nowhere — measured
+       2026-08-09, zero non-test consumers). So publishing these two again in the
+       answer envelope would have added a SECOND spelling of a fact the plane
+       already answers, on behalf of a consumer that does not exist, and it would
+       have been worse than redundant: `columns` restates the keys the returned
+       rows already carry, whereas `grain` and `identity` say what a row MEANS
+       and how it is ADDRESSED — things the rows cannot say about themselves.
+       That is the line between a field a member can act on and a value published
+       because it had already been computed.
+
+       WHAT IT COSTS TO REVERSE, if a surface ever wants them in the answer
+       rather than in the vocabulary: these two lines back, and an IC row —
+       adding to a published envelope is an interface change. Deleting them
+       forecloses nothing, because the alternative's whole benefit is already
+       delivered by a different op that surfaces already use.
+
+       HOW IT WAS ESTABLISHED, because "nothing reads it" is the claim this
+       project has most often got wrong: NOT by grep. `test/fieldread.control.mjs
+       --tripwire-sweep` makes each field throw on any read in any spelling and
+       runs the WHOLE battery, which is what reaches `store.mjs` inside workerd
+       where a node sweep cannot see. Five of these fields' siblings read as
+       never-read in node and are LIVE. The pin that stops the two coming back is
+       structural (`Object.keys`) in `query.test.mjs`, because a field with no
+       consumer is invisible to every behavioural assertion there is. */
     meaning: rowArm ? {
       arm: rowArm, table: MEANING[rowArm].table,
       grain: MEANING[rowArm].rowGrain, identity: MEANING[rowArm].identity,
-      columns: MEANING[rowArm].row, refs: MEANING[rowArm].refs,
       limit: mLim, offset: mOff,
     } : null,
     facetFields: facetList,

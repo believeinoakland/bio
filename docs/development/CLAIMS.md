@@ -6893,3 +6893,135 @@ released:
   argument against a second copy: *a second copy of a rule absorbs the control that was meant to
   prove the first.* Its file is M0-21's and was not edited. Nothing is currently WRONG with the
   census; this is a consolidation, and it should be measured before and after rather than assumed.
+## CLAIM 2026-08-09 RECORD (D-258 — `plan.meaning.columns` and `plan.meaning.refs`: the delete-or-publish decision)
+session: d258-meaning-plan-fields (worktree agent-ae6d6208e9ce45be3)
+opened: 2026-08-09T00:00:00Z
+paths: **`bio-plane/src/query.mjs`** — the `meaning:` block of `compile()`'s returned plan ONLY:
+  the `columns:` and `refs:` properties removed, plus the comment at that site recording WHY the
+  decision was delete rather than publish. **NOTHING ELSE in the file is edited** — `MEANING`,
+  `meaningVocabulary`, the `meaning` statement builder (which reads `MEANING[rowArm].refs` and is
+  LIVE), `FIELDS`, `textAtom`, `ftsAtom`, `selector` and every other function are READ and DRIVEN,
+  never modified.
+  **`bio-plane/test/fieldread.control.mjs`** — D-255's instrument, EXTENDED, not rewritten: a
+  second SUBJECT file (`src/store.mjs`) added to the snapshot/restore machinery so an arm can
+  inject a read where the reader actually lives; a `--digest` mode (D-255's answer-determining
+  digest was a one-off that left nothing re-runnable); a `--tripwire-sweep` mode that DECIDES every
+  never-read candidate the node sweep reports instead of leaving it a candidate; and FOUR new arms
+  (R2, P2, O3, C2). D-255's own arms BASE/P/O1/O2/D/C/R are left exactly as they stand.
+  **`bio-plane/test/meaningread.test.mjs`** — ONE new block in section 13 (the through-the-op pins:
+  the `op=meaningrows` envelope's exact key set, and `op=searchfields` publishing `columns`/`refs`
+  per arm equal to the registry, which is the fact the decision rests on) plus this item's arms
+  named in the suite's existing `NEGATIVE CONTROL:` block. **`bio-plane/test/query.test.mjs`** —
+  ONE new structural pin block (`Object.keys(plan.meaning)`) plus this item's arms appended to the
+  suite's existing D-255 `NEGATIVE CONTROL:` block. No existing assertion in either suite is
+  altered or removed.
+  **`bio-plane/scripts/coverage.mjs`** — the `REGISTER_FLOOR` figures ONLY, moved from what a green
+  run PRINTED, ONE key set, if and only if a run prints a higher number.
+  `docs/development/DEBT.md` (the **D-258 disposition cell** ONLY, plus any row this sweep raises),
+  `docs/development/MEASUREMENTS.md` (APPEND), `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/src/store.mjs` (READ, and TRANSIENTLY armed by a control that restores it and
+  verifies the restore by sha256 AND `cmp` — the committed file is byte-identical to `main`'s),
+  **NOT** `bio-plane/src/index.mjs`, **NOT** `bio-plane/checks/**`, **NOT** `civicos-ui/**`,
+  **NOT** `docs/development/INTERFACE-CHANGES.md` (no envelope changes — see below),
+  **NOT** `newgroup/**`, **NOT** `release/**`, **NOT** `bio-plane/dist/**`.
+interfaces consumed: I3 — `op=meaningrows` (read) and `op=searchfields` (read), both DRIVEN, and
+  **no published envelope changes**, so **no IC row is owed**. The alternative disposition (publish
+  the two fields in `op=meaningrows`' envelope) WOULD have owed one; it was measured and rejected,
+  and the measurement is in the row.
+interfaces owned: none.
+expected: D-258 — decide delete-or-publish for `plan.meaning.columns` and `plan.meaning.refs`, with
+  a measurement behind the decision and the reasoning at the site; give `refs` the tripwire arm the
+  D-258 row says it lacks BEFORE acting on it; and sweep the class INVERTED rather than listed.
+released: 2026-08-09 — committed on branch `worktree-agent-ae6d6208e9ce45be3` at base `1081a6a`,
+  NOT pushed and NOT merged; CONDUCT integrates. **D-258 CLOSED: `plan.meaning.columns` and
+  `plan.meaning.refs` are DELETED, and the delete-or-publish decision the row left open was
+  DECIDED AS DELETE — with the reasoning at the site in `compile()`, not only in the row.**
+  **WHAT DECIDED IT IS A MEASUREMENT: the fact those two fields carry is ALREADY PUBLISHED, per
+  arm, by `op=searchfields`** (`meaningVocabulary()` emits `rows: { grain, identity, columns,
+  refs }` off the same registry, and that is the vocabulary route surfaces already compose from).
+  **MEASURED CONSUMERS of `op=meaningrows`, repo-wide: `civicos-ui` NONE; `agent-worker` ONE call
+  site reading `.reached` and `.rows` only.** Publishing would have added two fields to an envelope
+  no surface reads, for a consumer that does not exist — and `columns` merely restates the keys the
+  returned rows already carry, where `grain`/`identity` say what a row MEANS and how it is
+  ADDRESSED, which the rows cannot say about themselves. That is the row's own test for a field a
+  member can act on. **NO IC ROW IS OWED — no published envelope changed**, and that is pinned
+  key-by-key THROUGH THE OP rather than asserted; the publish alternative would have owed one, and
+  reversing costs two lines plus that row.
+  **BATTERY BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 142 suites · 142/142 green · 9,179
+  assertions · exit 0 · 137.9s** (`npm ci` run first — the worktree arrived without
+  `bio-plane/node_modules`). **THE BRIEF'S CARRIED FIGURE (138/138 · 8,836, D-255's) WAS STALE by
+  four suites and 343 assertions.** FINAL **142/142 · 9,193 · exit 0**, delta **+14 ATTRIBUTED PER
+  SUITE against a re-measured true baseline for each**: `query.test.mjs` 125 -> 132,
+  `meaningread.test.mjs` 106 -> 112, `planning-hygiene.test.mjs` 294 -> 295 (the D-276 row). No
+  other suite's file was touched. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read
+  UNPIPED. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED.
+  **`refs` GOT THE ARM THE ROW SAID IT LACKED, AND IT WAS NOT INHERITED — ARM R2**, with its own
+  positive control **ARM P3** (the tripwire on `refs` WITH a read injected into `store.mjs` spelled
+  `plan.meaning["ref"+"s"]`, which takes `bounds` and `meaningread` red and both REPRODUCE alone),
+  so R2's green is not free. **THE CLASS WAS DECIDED RATHER THAN LISTED:** `--tripwire-sweep` gives
+  EVERY field of the descriptor a verdict over a whole battery each — `arm`/`table`/`grain`/
+  `identity`/`limit`/`offset` **LIVE** (the five D-255 could only assert are now MEASURED),
+  `columns`/`refs` **DEAD** — with a BASELINE row aiming the identical mechanism at a field that
+  cannot exist. **TWELVE ARMS, ALL AS DECLARED**, each armed ALONE, restores verified by sha256 AND
+  `cmp` on BOTH subjects, tree PRISTINE at the end.
+  **THREE INSTRUMENT DEFECTS FOUND BEFORE ANY SUBJECT DEFECT, ALL RECORDED RATHER THAN SMOOTHED,
+  and two of them would have produced a WRONG DELETION:** (i) the first tripwire mechanism used a
+  recording Proxy whose BASELINE row failed `meaningread.test.mjs` — not workerd, but that suite
+  pinning the LITERAL SOURCE TEXT the Proxy wrap rewrites; since the same suite drives the reads of
+  `grain`/`identity`, a live published field could have been scored DEAD behind the instrument's own
+  contamination, so the mechanism was replaced with D-255's throwing getter. (ii) **`refs` came back
+  LIVE on its first whole-battery pass** because `daemon-token.test.mjs` failed under SIX concurrent
+  batteries from other worktrees; driven alone against the identical armed tree it passed 56/0 with
+  the tripwire NEVER FIRING, and two later passes were 141/142 with only the ratchet — **a red
+  battery is not evidence of a read**, so every failing suite is now RE-DRIVEN ALONE and only a
+  reproduced failure counts. Had that gone unchecked this row would have closed the other way, on a
+  flake. (iii) the harness snapshotted **an already-ARMED tree as "pristine"**, overwrote its own
+  good snapshot, and reported `sha256 EQUAL · cmp IDENTICAL` while restoring the instrument;
+  recovered from two independent per-row snapshots that agreed by `cmp`, and there is now a marker
+  guard, with `--restore` handled BEFORE it.
+  **A SELF-CITATION CAUGHT AND MEASURED AWAY:** after this item's pins landed the sweep reported
+  `plan.meaning` as ENUMERATED — which its own output says would make the removal a shape change,
+  i.e. an argument against the deletion. Re-running the sweep against the PRE-ITEM `query.test.mjs`
+  showed `plan.meaning` NOT enumerated: it was this item's own ratchet citing itself.
+  **Evidence no answer moved:** the answer-determining digest is `66593efe4289784d…` over 3,680
+  compilations, byte-identical either side — and it is a `--digest` MODE now, because D-255's was a
+  one-off that left nothing re-runnable. **D-255's ARM C was CORRECTED, not exempted** (its anchor
+  no longer occurs, so it would have exited 3 and taken the run down). **WHAT THIS COULD NOT SEE,
+  stated plainly:** a reader no suite in the battery drives — a DEAD verdict is about the estate AS
+  TESTED, not the universe; anything outside `query.mjs`; and a name-based scan cannot substitute
+  there even in principle (`key`, `row`, `type`, `col` collide across 297 files). **The sweep also
+  found a live defect in the one real consumer, DRIVEN through the op: D-276, delegated to FLEET.**
+  **CONCURRENCY OBSERVED DIRECTLY with `ps`:** four to six `npm run test:battery` processes from
+  other worktrees of this clone throughout. **Ids: `D-276` taken with `tools/mintid.mjs`; D-274 and
+  D-275 were minted by two exploratory invocations of the same tool and are UNUSED — gaps, which
+  the tool's own header says cost nothing, named here rather than left as a silent hole.**
+
+### DELEGATION 2026-08-09 RECORD (D-258) -> FLEET: **`agent-worker` ASKS `op=meaningrows` FOR AN ARM THAT DOES NOT EXIST, AND REPORTS THE REFUSAL AS AN EMPTY ANSWER (D-276)**
+
+Found while measuring who actually consumes `op=meaningrows` — the measurement D-258's
+delete-or-publish decision needed — and **DRIVEN through the real op rather than read**.
+`agent-worker/src/index.mjs` passes `rows: "legs"` at all three call sites (the `meaningRead`
+default at `:453`, `collect` at `:543`, `compose` at `:562`); the compiler's arms are `leg`,
+`resolves`, `concerns`. Against a live plane the op answers
+`ok:false, reason: MEANING_ROWS_UNKNOWN_ARM, check: C-23.2`, a refusal whose own translation says
+it exists so an answer from a different kind cannot *"look complete"*. **The caller never checks
+`ok`** — it tests `.reached` (transport), computes `Array.isArray(got.rows) ? got.rows.length : 0`,
+and writes the run note **`0 meaning-grain row(s) queried; no document was loaded`**, which lands
+in an AI run's observation entries and is therefore record. **Its own suite cannot see this:**
+`agent-worker/test/agent-worker.test.mjs:164` mocks the op as `{ ok:true, rows: [] }` for ANY
+`rows` argument, so the battery is green over a call that cannot succeed against a real plane.
+
+**NOT FIXED HERE, and the reason is boundaries rather than scope-avoidance:** `agent-worker/**` is
+FLEET's (FL-5's claim) and every act needed is inside it. Filed as **D-276** with its disposition.
+Closing it has three parts and the third is the one that matters: spell the arm `leg`; treat a
+refusal AS a refusal, because "the record was not asked" and "nothing was found" are different
+sentences and only one of them is true; and **make the mock refuse an unknown arm the way the plane
+does**, or the fix is invisible to the suite meant to hold it.
+
+### DECISIONS FOR BOB 2026-08-09 (D-258): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. The one determination this item carried —
+delete or publish — is exactly what the row delegated to whoever took it, and it is answered with a
+measurement rather than a preference: the fact is already published by `op=searchfields`, the op
+has zero surface consumers, and no published envelope moved. Reversing costs two lines and an IC
+row. Nothing here is a consequence Bob has not already ruled on.
