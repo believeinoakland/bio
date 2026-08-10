@@ -95,6 +95,22 @@ t("the family this item minted is REAL and carries every code the gates use — 
 t("every row carries a C-number and a canned translation long enough to be a sentence",
   CODES.filter((c) => !/^C-\d+\.\d+$/.test(String(ROWS[c].check || ""))
                    || typeof ROWS[c].translation !== "string" || ROWS[c].translation.length < 40), []);
+/* WHICH C-NUMBER SITS UNDER WHICH CODE, PINNED AS LITERALS. The four are written
+   out here rather than read back, and that is not the hand-copy shape: arm A of
+   the DEC-49 guard refuses a C-number claimed by TWO families, and nothing
+   refuses a SWAP WITHIN one — C-39.1 and C-39.2 exchanged between the two
+   session codes would leave every guard green while `op=audit` attributed each
+   refusal to the other one's check. It is also what makes these four numbers
+   NAMED to `scripts/coverage.mjs`, whose CHECKS arm reported C-39.2 and C-39.3
+   as *"never named by an assertion"* until this line existed — exercised only in
+   the direction that passes, which is the C-20.1 defect class exactly. */
+t("each C-number sits under the code it was minted for — a swap inside one family is invisible to "
++ "every other guard and would misattribute the check op=audit reports",
+  CODES.map((c) => `${c}=${ROWS[c].check}`),
+  ["REQUIRED_ARGUMENT_MISSING=C-39.4",
+   "SESSION_CANNOT_REACH_UNATTENDED_OP=C-39.1",
+   "SESSION_ROLE_CANNOT_REACH_OP=C-39.2",
+   "TOKEN_CLASS_CANNOT_REACH_OP=C-39.3"]);
 
 /* ====================================================================== 2
  * THE OPS — PARSED OUT OF THE PLANE'S OWN TABLE, FLOORED, PRINTED.
