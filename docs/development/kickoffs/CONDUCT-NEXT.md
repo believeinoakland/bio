@@ -1,240 +1,159 @@
-# CONDUCT — resume here. Written 2026-08-09 by the outgoing CONDUCT, which was asked whether it was still healthy enough to run and answered no.
+# CONDUCT — resume here. Written 2026-08-10 by the outgoing CONDUCT, which was asked whether it was still healthy enough to run.
 
-Read `kickoffs/CONDUCT.md` (the loop — it grew four new sections today, all of them
-paid for), then `ORCHESTRATION.md`'s "Concurrency", then `QUEUE.md`'s IS-WAVE row.
-This file is what those cannot tell you: the state, the four branches waiting, and an
-honest account of how the last session degraded so you can recognise it in yourself.
+**The answer was: the error tell says yes, the map tell says no — and the map tell wins.**
+That distinction is the most useful thing in this file, so it is first.
+
+Read `kickoffs/CONDUCT.md` (the loop), then `WORKER.md`, then `ORCHESTRATION.md`'s
+"Concurrency". Then `git fetch` and verify the state below yourself rather than believing it.
 
 ## State at handoff — GREEN and PUBLISHED
 
-`origin/main` = **`d6b3458`**. Battery **155/155 · 9,913 assertions**, `--strict` exit 0
-(read unpiped), UI harness exit 0, `plancheck` **0 fail / 0 warn**, working tree clean,
-local even with the remote. Zero workers running.
+`origin/main` = **`cc99ec1`**, verified by this session on the consolidated tree, not
+inherited from a note:
 
-Today moved it from 134/134 · 8,386. Roughly twenty-five items landed.
+- battery **157/157 · 9,841 assertions**
+- `node bio-plane/scripts/coverage.mjs --strict` **exit 0**, read UNPIPED
+- `node civicos-ui/test/run.mjs` **exit 0** from the repo root
+- `node tools/plancheck.mjs` **0 fail / 0 warn**
+- working tree clean, local even with the remote, **zero workers running**
 
-## FOUR BRANCHES ARE GREEN AND UNMERGED. TWO ARE DELICATE — DO NOT RUSH THEM.
+**ONE FIGURE MOVED AND IT IS FULLY ATTRIBUTED, because a figure that moves without an
+explanation is how this project loses things.** Assertions fell 9,950 → 9,841 across the
+same 157 suites. The whole −109 is **`planning-hygiene.test.mjs`, 315 → 206**, and
+**nothing else moved** — measured by differing two full runs, not by subtraction. The
+cause is benign: that suite asserts PER DEBT ROW, and the consolidation archived 110
+closed rows, so its corpus shrank.
+
+**But the finding underneath it is not benign and is owed as a question.** That tally has
+no floor — it fell by 109 and nothing failed. So it is *not a ratchet*: a row silently
+vanishing from `DEBT.md` would lower it with nothing to notice. That is the slack-never-
+fails shape, one instrument over. **Do not fix it by adding a floor without thinking** —
+a floor on a figure that legitimately falls whenever the corpus is consolidated would
+fire on the next honest roll. The honest instrument is probably a delta with the corpus
+size PRINTED, which is the shape M0-14 and D-265 both landed on.
+
+## WHY THIS SESSION HANDED OFF, because the reasoning is the point and not the verdict
+
+**The error tell, measured honestly, was PASSING.** Two mistakes in the whole session,
+and both landed inside instruments, which is the thing `CONDUCT-NEXT` teaches you to
+watch for:
+
+1. **I read `plancheck`'s exit status THROUGH A PIPE** and reported `EXIT=0` when it was
+   1 — the documented class (`cmd | tail` reports tail's status), committed inside the
+   gate itself. Caught by me on the next call and every gate after was read unpiped.
+2. **I left a `<<<<<<< HEAD` marker in `coverage.mjs`** while resolving the file whose own
+   rule is HAND-EDIT ONLY. Caught by `node --check` before it reached a commit.
+
+**Neither reached a commit, the rate did not rise through the session, and the class did
+not narrow** — which is the actual test, and by it I was fit. Everything pushed is green
+and was verified FROM THE REMOTE.
+
+**What made me hand off is a different tell, and it is worth naming because the existing
+account does not contain it: MY MAP WAS INVALIDATED WHOLESALE, MID-SESSION.** The corpus
+was consolidated while I ran — 7.35 MB → 3.56 MB, `QUEUE.md` 931 KB → 83 KB with a new
+`## CLOSED ITEMS` register I had never read, `DEBT.md` 110 rows lighter, `CLAIMS.md` 1.69
+MB → 26 KB, a new gate (`plancheck` fails on a stale `DECIDED.md`) and a new tool
+(`decided.mjs`) I had never run. **Every structural fact I was holding described a tree
+that no longer existed.** A session that briefs a worker from a stale map is the exact
+failure the last three CONDUCTs each paid for, and I would have spent my remaining
+context re-reading what you get for ~295k tokens on a clean start.
+
+**So the general rule, and it belongs beside the saturation rule rather than inside it:
+hand off when your MAP dies, not only when your JUDGEMENT does.** They are different
+failures with the same remedy, and the map one is easier to miss because nothing you do
+feels wrong.
+
+## What this session did, so you do not re-derive it
+
+**Four merges, each verified: `--is-ancestor`, then `mergecarry` (0 DROPPED on both
+merges that carried files), then `mintid --audit` (0 breaks).**
+
+- **D-267** (`0110ffe`) — the severance predicate the three reverse-edge readers share.
+- **UI-53** (`a7b027f`) — the four hand `BANNED` lists become consumers of one derived family.
+- **D-263** (`35bc9dc`) — REC-68's dropped provenance recovered, the pin's corpus walk guarded.
+- **D-264 CLOSED** — CPDF-9's dropped closure of D-232 restored VERBATIM from
+  `1c5d96a^2`. **The two row bodies were compared byte for byte FIRST**, so the restore
+  could not smuggle in a drifted body, and **the recovered sentence was re-checked against
+  a live run rather than trusted** (D-263's rule: restoring a false sentence is worse than
+  the gap). Both now live in `docs/archive/ledgers/DEBT-closed-2026-08.md`.
+- **`REGISTER_FLOOR` moved twice from PRINTED runs**, 771 → 782 → 792, hand-edited both
+  times, and **`VERIFICATION.md`'s register row moved twice with it** (135/632 → 152/792)
+  — the first time in nine consecutive items that anyone moved it.
+
+**THE HANDOFF I WAS GIVEN SAID FOUR BRANCHES WERE UNMERGED. THERE WERE SIX.** D-270 and
+D-263 were not named in it and both held content absent from `main` — checked with
+`git cat-file -e origin/main:<a file the item added>`, which answered ABSENT for each.
+**A handoff is a claim, not a measurement**, and that is the `--is-ancestor`/content
+asymmetry arriving in prose instead of in git. **Check this file the same way.**
+
+**Six queue statuses were stale and are corrected**, every one content-checked: PL-17,
+PL-18, PL-19, PL-20, D-269, D-271 all read `queued` or `running` with their work already
+on `main`. **PL-18 read `queued` outright** — the exact shape of a brief that sends a
+worker to rebuild something that exists.
+
+## THREE BRANCHES ARE GREEN AND UNMERGED. TWO ARE DELICATE.
 
 | branch | item | why it is still here |
 | --- | --- | --- |
-| `worktree-agent-a9e7e017d06799858` | **UI-43** | Collides with UI-45 inside `civicos-ui/app.html` across a **68,000-character** region. My hand resolution left the script unparseable at a `SURFACES` entry far from the blocks I joined. **Verify against `main`'s copy first so you know your checker is sound** — I did, and `main` parsed, so the break was mine. |
-| `worktree-agent-a61e489de171ae6c5` | **D-254** | Restructures `check-refusal-codes.mjs` into module-plus-script while REC-79's sweep re-floored the same file. **Structural collision, not a floor collision** — the per-object key dedupe does not fit it. |
-| `worktree-agent-ac6e765828bca8499` | **D-267** | Ordinary; floors only. |
-| `worktree-agent-a5a6c1d8ff9f6c282` | **UI-53** | Ordinary; touches no `app.html` span by design. |
+| `worktree-agent-aafee89563a3f2d42` | **D-270** | Ordinary. The session gate is TWO conditions and for five ops it was sending the wrong one. Touches `coverage.mjs` — expect a floor conflict and HAND-EDIT it. |
+| `worktree-agent-a9e7e017d06799858` | **UI-43** | DELICATE. Collides with UI-45 inside `civicos-ui/app.html` across ~68,000 chars, AND is coupled to D-271 — read the `INTEGRATION ORDER` note. D-271 is on `main` now, so the ceremony's one-line `affirmed` wiring and its two false sentences are owed IN THE SAME TURN. **Parse `main`'s `app.html` first so you know a failure is the merge and not your instrument.** |
+| `worktree-agent-a61e489de171ae6c5` | **D-254** | DELICATE. Restructures `check-refusal-codes.mjs` into module-plus-script; STRUCTURAL, not a floor collision. |
 
-**Merge D-267 and UI-53 first** — they are clean and they unblock rows other items need.
+**Safe to delete — landed by content, stale forks only:** `worktree-agent-a90a87bcb7f131e59`
+(REC-60) and `worktree-agent-adefd8db6571e8b30` (IS-6). Both look unmerged to
+`--is-ancestor` and both have their content on `main`.
 
-## THE SESSION-HEALTH ACCOUNT, because you will need it about yourself
+## FOUR WORKERS WERE SPAWNED AND THEN STOPPED. THE ROWS ARE ON `main`.
 
-I was asked whether I was still fit to run and the honest answer was no. **The tell was
-not that I made mistakes — it is that the mistakes converged on one class and landed
-inside the very work meant to prevent them.** Recognise this pattern early:
+I opened a wave on **D-280, D-282, D-265 and D-251**, wrote all four `QUEUE.md` rows
+BEFORE spawning, and then **Bob asked for a stable repo and I stopped all four ~25
+minutes in.** Each worktree is dirty with **ZERO commits**, so nothing is lost by
+removing them: `agent-af7765c3bfcacc67d`, `agent-a2db2aa4eae632eac`,
+`agent-a5fcc3c710d7c7e68`, `agent-a67b8573f18aa7277`.
 
-- **`coverage.mjs` broke FOUR times** under automated conflict resolution, **twice
-  silently** — once dropping `FLEET_FLOOR.arms` entirely, so the comparison read
-  `48 < undefined`, `--strict` stayed at exit 0, and a ratchet had simply stopped
-  existing. **Hand-edit that file. Do not automate it.**
-- **I pushed `main` RED behind a green `plancheck`** — the previous CONDUCT's failure
-  inverted (it pushed a marker behind a green battery). One gate answered, read as the
-  gate. **Run all four before every push, including on docs-only commits**, because the
-  planning surfaces ARE a corpus.
-- **The backtick trap bit three times** in one day despite being documented. Use `-F`.
-- **I spawned a worker onto already-landed work**, because a grep over prose returned 0
-  and I read that as *not landed* rather than *my matcher found nothing*.
-- **Six of eight spawned items had no queue row** — my own loop's step, skipped six
-  times in an afternoon.
-- **I briefed at least four workers against rows that existed only on unmerged
-  branches.** They measured, found the premise false, and worked around me.
-- **I wrote a rule and broke it inside the commit that recorded it.**
-- Finally: asked to fix the wait-loop deadlock, **the tool I wrote to replace
-  substring matching shipped two substring-matching bugs of its own**, and its first
-  suite tested the machine instead of the predicate — green alone, red in company.
+**The rows are the durable part and they are on `main` — re-spawn against them, they were
+written to be spawned from.** Two things they carry that you should not re-derive:
 
-**Every one of those was caught** — by a gate, by a worker, or by Bob — and repaired
-rather than hidden. Nothing durable was lost. But the rate rose through the day and the
-class narrowed, which is what saturation looks like from the inside: the rules stop
-loading even as you are writing them down.
+- **D-282 and D-265 both reach `test/hygiene.test.mjs`**, stated in their rows rather than
+  hidden. Measured evidence says that class of conflict costs one hand resolution.
+- **D-281 was deliberately NOT spawned and should still not be spawned inside a wave.**
+  Closing it needs one honest 8-battery run on a QUIET machine; a wave would measure the
+  wave. That is the instrument-answering-about-itself class, and it is the one thing on
+  the board that is scheduling-sensitive rather than dependency-sensitive.
 
-**So: when your corrections start landing in the same place as your errors, hand off.**
+## Owed, and none of it is blocked
 
-## What is owed, and none of it is blocked
+- **TWO UNDRAINED `BOB INBOX` ENTRIES** at the top of `QUEUE.md` — the `decided.mjs` gate
+  and the corpus consolidation. **Draining them is step 0 of your loop and I did not do
+  it**, deliberately: enacting an architectural change from a dead map is worse than
+  leaving it visible. **Do this first.**
+- **IC-39 through IC-57** — nineteen resolutions and version bumps, untouched. `CORPUS-
+  STUDY.md` deliberately did NOT roll `INTERFACE-CHANGES.md` so they stay visible.
+- **The four HELD claims in `CLAIMS.md`** (UI-42, REC-69's replay, REC-79, D-249), all
+  2026-08-09. **Releasing them is CONDUCT's call, which is why BOB left them** — and I
+  left them too rather than release four claims from a stale map. **All four items are
+  landed by content and I checked each**: `version-review.test.mjs`,
+  `refusal-partition.control.mjs`, `d249-port.control.mjs` present, and REC-69's replay
+  is real (`airuns.test.mjs` present, `RUN_CONTEXTS` at 3 sites in `store.mjs` — note the
+  loop's own text still describes REC-69 as reverted, which was true before the replay).
+- **D-248's six pre-existing id collisions.** `D-124`'s two rows are deliberately adjacent
+  in the live `DEBT.md` with a comment saying why — separating them made `mintid` read the
+  collision as resolved.
+- **13.6 MB of dead residue at `/tmp/mfp` and `/tmp/mfp-m0-10-arm`.** THREE sessions have
+  now failed to remove it; the sandbox refuses paths outside the working directory. It
+  needs someone who can reach outside, and that is the whole of it.
 
-- **D-264** — CPDF-9's closure of D-232 was dropped by a merge (M0-20 found it), so the
-  row still reads open and still claims the battery names it dark. **CONDUCT's.**
-- **The IC resolutions and version bumps: IC-39 through IC-57.** They have accumulated
-  all day. Each needs a RESOLUTION and a bump; several are filed PROPOSED with measured
-  consumer impact already in the row.
-- **D-248's six pre-existing id collisions** (D-121, D-124, IC-30, CPDF-9, FW-15,
-  M0-16). Three are `QUEUE.md` headings, so the renumber is CONDUCT's.
-- **`VERIFICATION.md`'s negative-control register row is stale for the NINTH
-  consecutive item.** It reads `135 of 135 · 632 arms`; a green `--strict` prints
-  **`148 of 148 · 771 arms`** plus the fleet's `5/5 · 48`. That row's own rule says the
-  INTEGRATOR moves it from a printed run, and workers raising it are doing right.
-- **13.6 MB of dead residue** at `/tmp/mfp` and `/tmp/mfp-m0-10-arm`, both from closed
-  defects. Two sessions have now failed to remove it — the sandbox refuses paths outside
-  the working directory. It needs someone who can reach outside.
+## One orchestration fact you will not find in the record
 
-## Owed to Bob — do not re-derive
+**For a stretch of 2026-08-10 another session was writing directly into the MAIN
+checkout** — it created `docs/DECIDED.md`, `tools/decided.mjs` and `CORPUS-STUDY.md`
+there and edited `CLAUDE.md` and `tools/plancheck.mjs`, then withdrew on its own. I never
+staged any of it and my commits contain only my merges' files. **But `plancheck` was
+briefly a MODIFIED INSTRUMENT while I was running it against my own merge**, and I did not
+notice until I looked at `git status` for another reason.
 
-**DEC-63/64/65/66 are all enacted.** Three ruled to KEEP what was already shipped, so
-their enactment is a recorded confirmation; DEC-63 changed behaviour and landed as PL-18.
-
-**One genuinely narrow decision is open, raised by D-266 and running under a stated
-provisional:** may one team's dismissal silence another team's notification about that
-other team's stance? `proposal_dispositions` is instance-wide by design (DEC-16) while a
-stance is expressly a project's own property (§7, D-216). **Provisional now: the act is
-NOT widened** — `available:false` with its reason, control withdrawn, nothing overclaims.
-D-266's recommendation is to widen it scoped to the project the finding is about, never
-instance-wide. Reversing costs nothing today and rises the moment a disposition is
-recorded for these kinds.
-
-**D-205 (rotate `BIO_ADMIN_TOKEN`) is Bob's alone** and is still open.
-
-## The practices that produced today's results
-
-Brief by pointing at `WORKER.md`; a spawn brief is the ITEM and nothing else. Two things
-earned their keep repeatedly:
-
-- **The pins that are written to FAIL WHEN THE DEFECT IS FIXED.** VF-5 pinned eleven mute
-  fences and wrote *the turn that fixes one of these fails this line and must move it* —
-  and D-262 was that turn. `refusal-wire`'s six-op pin failed in the GOOD direction when
-  REC-79 gave three of them codes. **Correct those, never exempt them**, and the
-  correction is where the reasoning gets recorded.
-- **Workers measuring their own baseline caught a stale brief on nearly every item**, and
-  one of them found `main` already red and said so rather than assuming its tree was
-  fine. That is how the red push was discovered.
-
-And the one to say out loud: **an instrument that answers about ITSELF reads as a
-measurement of something else.** That is the whole of today — a grep's silence, a green
-plancheck, a floor compared against `undefined`, and a wait whose predicate matched its
-own command line.
-
----
-
-# THE INITIAL PROMPT FOR THE NEXT CONDUCT — paste the block below the rule
-
-Written 2026-08-09 by the outgoing CONDUCT. Everything in it is verified against
-`origin/main` and against a green gate, not remembered. Paste from the rule down.
-
----
-
-You are the CONDUCT session for BIO/CivicOS — orchestration and integration. You own
-`main`, the work queue, and worker lifecycle. Working directory is
-`/Users/sparky/ClaudeCodeBIO/bio` (the session may start in the parent wrapper
-`ClaudeCodeBIO/`; the repo is `bio/`).
-
-**Persona is `bio`** — GitHub `biobobkrause`, Cloudflare account
-`20b533579290b9b93168345edd3b7f72`. **Never the `neo` persona**, which this machine
-defaults to. Credentials are in `.env` (gitignored). Read them from there, never print
-one — confirm a credential by USING it and reporting what the service said.
-
-**You are not DIST.** Do not cut releases, deploy, or touch `newgroup/**`, `release/**`,
-`deploy.mjs`, the plane version, or tags. Deploying the plane or the installer is Bob's.
-
-READ IN THIS ORDER, and trust `origin/main` over anything in this prompt:
-  `CLAUDE.md`
-  `docs/development/kickoffs/CONDUCT.md`          (your loop — five sections were added
-                                                   2026-08-08/09 and every one was paid for)
-  `docs/development/kickoffs/WORKER.md`           (the standing brief you point workers at)
-  `docs/development/kickoffs/CONDUCT-NEXT.md`     (START HERE — the state, the four
-                                                   branches, and the health account)
-  `docs/development/ORCHESTRATION.md`             ("Concurrency" — the budget and its rules)
-  `docs/development/QUEUE.md`                     (the IS-WAVE row is the wave position)
-Then `git fetch` and verify the state below yourself rather than believing it.
-
-**STATE AT HANDOFF.** `origin/main` is GREEN at `d6b3458`: battery **155/155 · 9,913**,
-`node scripts/coverage.mjs --strict` exit 0 read UNPIPED, `node civicos-ui/test/run.mjs`
-exit 0 from the repo root, `node tools/plancheck.mjs` 0 fail / 0 warn. Tree clean, local
-even with the remote, **zero workers running**.
-
-**YOUR FIRST TASK: four green branches are unmerged. Take the two clean ones first.**
-
-  `worktree-agent-ac6e765828bca8499`  D-267   clean — floors only
-  `worktree-agent-a5a6c1d8ff9f6c282`  UI-53   clean — touches no `app.html` span by design
-  `worktree-agent-a9e7e017d06799858`  UI-43   DELICATE — collides with UI-45 inside
-                                              `civicos-ui/app.html` across ~68,000 chars
-  `worktree-agent-a61e489de171ae6c5`  D-254   DELICATE — restructures
-                                              `check-refusal-codes.mjs` into
-                                              module-plus-script while REC-79 re-floored
-                                              the same file. STRUCTURAL, not a floor
-                                              collision; the key dedupe does not fit it
-
-For UI-43: **check `main`'s `app.html` with your parser before you start**, so you know a
-failure is the merge and not your instrument. The outgoing session's attempt left the
-script unparseable at a `SURFACES` entry far from the blocks it joined.
-
-**MERGE DISCIPLINE — every one of these was earned this week, most of them the hard way:**
-  - After EVERY merge assert `git merge-base --is-ancestor <branch> HEAD`. Never infer a
-    merge from the absence of the word CONFLICT.
-  - Then compare the file sets: `comm -23` the branch's changed files against the merge's.
-    A merge that drops a file WHOLE goes SLACK, not red — it happened, and eleven floors
-    sat stale behind it. `tools/mergecarry.mjs` gates this now.
-  - **`--is-ancestor` passes for a REVERTED merge.** For "is it in the tree", check the
-    CONTENT: `git cat-file -e origin/main:<a file the item added>`.
-  - **NEVER resolve a `.mjs` conflict mechanically.** Keep-both is safe on append-only
-    prose and produces invalid JavaScript on source.
-  - **Keep-both is safe against LOSS and not against CONTRADICTION.** Two branches that
-    EDIT the same row leave both versions — one current, one stale. Before comparing
-    statuses, ask whether the two rows are the same defect; if not it is an ID COLLISION
-    and the answer is a fresh minted id, never a deletion.
-  - **`bio-plane/scripts/coverage.mjs`: HAND-EDIT ONLY.** It broke four times in one day
-    under automated resolution, twice SILENTLY — once losing `FLEET_FLOOR.arms` entirely,
-    so the comparison read `48 < undefined` and a ratchet simply stopped existing. Keep
-    every comment, keep ONE key set PER OBJECT, then re-read the printed figures.
-  - **`regionLines` in `civicos-ui/check-refusal-codes.mjs` is a property of the MERGED
-    source** and has needed re-reading at integration six times.
-  - Pins written to FAIL WHEN A DEFECT IS FIXED are all over the estate now. When one
-    fires, **CORRECT it with a dated reason — never exempt it.** That correction is where
-    the reasoning gets recorded.
-
-**VERIFICATION IS NOT NEGOTIABLE AND DOES NOT GET BATCHED**: full battery, `node
-scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, `node
-civicos-ui/test/run.mjs` from the REPO ROOT, and `plancheck` — **before every push,
-including docs-only commits.** The planning surfaces ARE a corpus: `planning-hygiene`
-asserts per debt row, `mintid` reads floors out of prose, `hygiene` walks the estate.
-**A green plancheck is not the gate — `main` was pushed RED behind one.**
-
-**HOW TO RUN:**
-  - Budget is **EIGHT concurrent workers**, at most five touching
-    `store.mjs`/`bio-checks.mjs`/`index.mjs`. Read `ORCHESTRATION.md` for the live number.
-  - **SPAWN FIRST, THEN INTEGRATE.** Spawning is one tool call; an integration is 10-20
-    minutes during which a freed slot sits empty. The one legitimate exception is when the
-    only briefable items are rows that live on unmerged branches — then merging IS the
-    unblocking act, and say so.
-  - **WRITE THE QUEUE ROW BEFORE YOU SPAWN.** Six of eight items in one wave had none.
-    Nothing is work until it is in `QUEUE.md`, and an id in the ledger is not an item.
-  - **Check the TREE, not a ledger grep, before briefing.** A grep over prose returning 0
-    means your matcher found nothing, not that the item has not landed — that mistake sent
-    a worker to rebuild something that already existed.
-  - **Never brief against a row that lives only on an unmerged branch.** Land it first, or
-    paste its content and say plainly it is not on `main`.
-  - A spawn brief is the ITEM and nothing else — point workers at `WORKER.md`.
-  - Take every id with `node tools/mintid.mjs <NS>`, and brief workers to.
-  - Never brief a worker to `git stash`; `refs/stash` is repository-wide across ~100
-    worktrees. To wait for a quiet machine, workers run `node tools/waitquiet.mjs`.
-  - Use `-F` or a heredoc for commit messages. Backticks in `-m` are command-substituted
-    and silently delete words; it happened three times in one day.
-
-**OWED, none of it blocked:** D-264 (a merge dropped CPDF-9's closure of D-232, so that
-row still reads open); the IC resolutions and version bumps **IC-39 through IC-57**;
-D-248's six pre-existing id collisions (three are `QUEUE.md` headings, so the renumber is
-yours); and `VERIFICATION.md`'s negative-control register row, **stale for the ninth
-consecutive item** — it reads `135 of 135 · 632 arms` against a printed `148 of 148 · 771`
-plus the fleet's `5/5 · 48`. That row's own rule says the INTEGRATOR moves it from a
-printed run.
-
-**OWED TO BOB, do not re-derive:** DEC-63/64/65/66 are all enacted. **D-205 (rotate
-`BIO_ADMIN_TOKEN`) is his alone.** One narrow decision is open and running under a stated
-provisional — whether one team's dismissal may silence another team's notification about
-that other team's stance (D-266; the act is NOT widened meanwhile). Never block on him:
-ship a provisional and record it in `kickoffs/README.md`'s shape.
-
-**One housekeeping item two sessions have now failed to do:** 13.6 MB of dead residue at
-`/tmp/mfp` and `/tmp/mfp-m0-10-arm`, both from closed defects. The sandbox refuses paths
-outside the working directory, so it needs someone who can reach outside.
-
-**And the thing worth carrying above any of it:** an instrument that answers about ITSELF
-reads as a measurement of something else. That was the whole of 2026-08-09 — a grep's
-silence read as "not landed", a green plancheck read as the gate, a floor compared against
-`undefined` that could never fail, and a wait whose predicate matched its own command line.
-When your corrections start landing in the same place as your errors, hand off.
+**The lesson is not "one session per working tree", which the record already says. It is
+that a gate you did not write and did not check is a gate whose VERSION you are
+assuming** — and this project's whole posture is that an instrument answering about
+itself reads as a measurement of something else. If your tree is dirty in `tools/`, your
+gate results are dated to a build you cannot name.

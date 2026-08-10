@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-600 rulings across 61 documents.
+607 rulings across 63 documents.
 
 ## DEC-
 
@@ -1141,6 +1141,16 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1122`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1134`
+- `docs/DECIDED.md`. Regenerate it in any turn that rules on anything. ---  
+  `docs/development/kickoffs/BOB-NEXT.md:20`
+- Regenerate `docs/DECIDED.md` and re-run `node tools/mintid.mjs --list`** after each document.  
+  `docs/development/kickoffs/BOB-NEXT.md:72`
+- The DECIDED index **indexed its own output** and reported 997 rulings against 568 — an instrument answering about itself, in the tool written to relieve exactly that. - The generated index then **made an op claim it was only QUOTING**, and `op-claims` attributed it to the index rather than the source.  
+  `docs/development/kickoffs/BOB-NEXT.md:89`
+- Regenerate `docs/DECIDED.md` in any turn that rules on anything; plancheck gates it. - Hand architectural change over through the `BOB INBOX` at the top of `QUEUE.md`, append-only.  
+  `docs/development/kickoffs/BOB-NEXT.md:178`
+- NOTATION IS SETTLED: `classDiagram` for structure, `stateDiagram-v2` for lifecycle, edges labelled with the ACT.  
+  `docs/development/kickoffs/BOB-NEXT.md:181`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:81`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
@@ -1153,6 +1163,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
+- MB → 26 KB, a new gate (`plancheck` fails on a stale `DECIDED.md`) and a new tool (`decided.mjs`) I had never run.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:55`
+- — it created `docs/DECIDED.md`, `tools/decided.mjs` and `CORPUS-STUDY.md` there and edited `CLAUDE.md` and `tools/plancheck.mjs`, then withdrew on its own.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:149`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
