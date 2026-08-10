@@ -531,11 +531,12 @@ const REGISTER_FLOOR = {
      the new one and read as a no-op. Nothing FELL. `FLEET_FLOOR` unmoved at 5 suites /
      48 arms, and none owed: this item added no fleet member and no fleet suite. */
   /* MOVED 2026-08-10 by CONDUCT to the figure the FOUR-WAY MERGED GREEN RUN printed
-     (SK-2 + D-282 + D-251 + D-266), which is the only run in which these four items
-     exist together. ONE KEY SET, checked for duplicates before writing: the six
+     and again for the SK-3 + D-280 pair. Each move is taken from the run in which ALL
+     the items being merged exist together — never from a branch's own figure, because a
+     branch measured a tree that never shipped. ONE KEY SET, checked for duplicates before writing: the six
      historical keep-both merges that left a duplicate `arms:` here are why this
      comment exists, and why the previous value (801, SK-2's own) is REPLACED rather
-     than joined. Battery 161/161 · 10,021 assertions; `--strict` exit 0 read unpiped. */
+     than joined. Battery 163/163 · 10,086 assertions; `--strict` exit 0 read unpiped. */
   /* MOVED 2026-08-10 by SK-3: 813 -> 821 / 155 -> 156 / 156 -> 157, ALL THREE IN THE SAME
      TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS
      REPRODUCIBLE (`arms 821/813 · classified 156/155 · corpus 157/156 · GREW by 8 arm(s)`),
@@ -547,9 +548,9 @@ const REGISTER_FLOOR = {
      runs. Every one of those seven was RUN, and all seven came back as declared. Nothing FELL.
      Battery 162/162 · 10,054 assertions; `--strict` exit 0 read unpiped. As above, the
      previous value (813) is REPLACED and never joined. */
-  arms: 821,
-  classified: 156,
-  corpus: 157,
+  arms: 826,
+  classified: 157,
+  corpus: 158,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -3794,6 +3794,8 @@ outside `RECORD`'s own paths.
 
 ## IC-61 · I3: `op=strengthbarof` (and `op=publish`'s stamped `required` block) STOP COUNTING A CITING PROJECT THAT WITHDREW; `restson` gains an additive `status` per dependent · PROPOSED 2026-08-10 (D-280) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration, AND THE CONSEQUENCE IS ROUTED RATHER THAN ABSORBED.** The shape change is accepted on its measured impact — zero UI consumers today, so nothing is rendering the old answer and the change cannot surprise a surface. **But this IC's own sentence is the reason it is not merely accepted: it LOOSENS A PUBLICATION FENCE, and a fence that moves outward through a defect fix is the class `CLAUDE.md` names as Bob's** — *"Publishing would then be permitted for material we cannot attribute" is his call.* Attribution is untouched here and the bar is about required STRENGTH, so it is not that sentence; it is that SHAPE. Raised as **DEC-71**, running under the shipped fix as its provisional, because the defect being corrected points the same way: a withdrawn project was enforcing a requirement it no longer asserts.
+
 - **Interface:** I3 (plane → UI, the op contracts)
 - **Proposer:** RECORD, session `record-d280`, 2026-08-10, enacting `DEBT.md` D-280 site (a) and (b)/(d)
 - **Consumers to answer:** `UI` — and see MEASURED IMPACT: it has none today

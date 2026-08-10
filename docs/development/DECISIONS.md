@@ -134,6 +134,68 @@ reversal cost: **rises once read events exist**, and that asymmetry is the argum
 prior art: `node tools/decided.mjs` finds no ruling; a corpus grep finds none either. So this
   is genuinely open rather than re-asked.
 
+### DEC-71 · open
+raised: 2026-08-10 · CONDUCT (at D-280's integration — the worker filed IC-61 stating the
+  consequence in the open rather than letting it land quietly, and this entry is CONDUCT
+  routing it to the person whose call it is)
+for: bob
+question: **D-280 LOOSENS A PUBLICATION FENCE. Is that the right direction?** A citing
+  project whose reference edges are all `status: severed` no longer sets a required-strength
+  bar: a document whose only citer withdrew moves from `declared: true` to `declared: false`,
+  and one cited LIVE at B/B and SEVERED at A/A moves from A/A to B/B. **So material that was
+  refused publication yesterday may be publishable today.**
+why it is Bob's: `CLAUDE.md` names this exact class as his, in these words — *"Publishing
+  would then be permitted for material we cannot attribute" is his call.* This is not that
+  sentence (attribution is untouched; the bar is about required STRENGTH), but it is that
+  SHAPE: a fence moved outward, reached through a defect fix rather than through a decision
+  about publication.
+provisional: **the fix is SHIPPED and running**, because the defect it corrects is real and
+  points the same way: a project that withdrew was TIGHTENING a bar on a document it had
+  left, which is the record enforcing a requirement nobody currently asserts. Under this
+  record's own standard — derived things inform, authored acts bind — a withdrawn citer has
+  performed the authored act of leaving, and honouring its old bar makes the fence rest on
+  an assertion that has been retracted.
+alternative: keep counting severed citers for the BAR while excluding them everywhere else,
+  on the reasoning that a publication fence should ratchet only tighter and never looser
+  without an explicit decision. That is coherent and it is the conservative direction; it
+  costs one predicate call to restore.
+recommendation: **leave it as shipped.** A bar that rests on a retracted assertion is the
+  record claiming a requirement its own evidence no longer supports — the same overclaim
+  class as a chain nobody recorded, pointed at a fence instead of at a document. But the
+  DIRECTION is worth your eye rather than my preference, because a loosened publication fence
+  is not a thing to discover later in a release note.
+reversal cost: **low now, and it does not rise** — one predicate call at the driven site,
+  plus the arms that pin it. Nothing is written to the record either way, so no data has to
+  be migrated whichever direction this goes.
+prior art: `node tools/decided.mjs` finds no ruling on severed citers and publication bars;
+  IC-61 records the same consequence at the interface layer with measured consumer impact
+  (zero UI consumers today, so nothing is rendering the old answer).
+
+### DEC-70 · open
+raised: 2026-08-10 · CONDUCT (lifted from D-280's report — the worker raised it and did NOT
+  write here, correctly: this file names CONDUCT as sole writer of new entries)
+for: bob
+question: **Does SEVERING a basis leg discharge REC-17's re-evaluation obligation, or is that
+  obligation about what the record ONCE rested on?** D-280 fixed the severed-citer defect at
+  three sites and deliberately left `reevaluations` alone, because the two readings are both
+  coherent and the choice is doctrine rather than plumbing.
+why it is Bob's: it decides what a re-evaluation obligation IS. If severance discharges it,
+  the obligation tracks the record's CURRENT shape; if it does not, the obligation attaches to
+  what a case ever rested on and survives the withdrawal — which is much closer to D-79's
+  *age rather than vanish*, and to the reason a dismissed finding is not deleted.
+provisional: **unchanged — `reevaluations` still counts severed legs**, the conservative
+  direction, and the site is PINNED by an assertion so a later session must move a test rather
+  than drift into either answer.
+alternative: filter `reevaluations` through `#refEdgeSevered` exactly as sites (a) and (b)
+  now are, making the three consistent.
+recommendation: **leave it until you rule.** Consistency across the three sites is an
+  attractive argument and it is not a reason: the sites answer different questions, and
+  D-280's own (e) shows the same predicate giving the WRONG answer one site over — reading a
+  severed-only leg as `absent` would print *looked for and not there* about a document that
+  was there.
+reversal cost: one predicate call either way, plus its arms.
+prior art: `node tools/decided.mjs` returned nothing on this subject — a floor, not a ceiling.
+
 ### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)
 question: What should a ROOT OF TRUST be for a BIO group — who holds it, how does it
