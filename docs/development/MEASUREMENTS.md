@@ -7186,3 +7186,49 @@ floors and found FOUR ratchets where the dropped diff listed two.
 **Battery:** true baseline at `19745ad` **151/151 suites green · 9,688 assertions**; final
 **152/152 · 9,704**. Delta +16 attributed by DIFFING the two full runs, never by
 subtraction: the new suite 15, `hygiene.test.mjs` 591 -> 592.
+
+---
+
+## 2026-08-10, UI-54: what the Add surface withheld, and what enacting DEC-51 cost
+
+**THE DEFECT, MEASURED BEFORE IT WAS FIXED.** `op=acquire` publishes `note` on **every**
+answer it gives (`index.mjs`, beside `store` and `tokenClass`), and the value is
+`ACQUIRE_GRADE_NOTE`, composed by `acquireGradeNote(EARNED_CAPTURE_CEILING,
+UNREACHABLE_CAPTURE_GRADE)` in `bio-plane/src/affordances.mjs`. `addCapture` in
+`civicos-ui/app.html` read `acq.document` and `acq.snapshot` off that answer and returned
+**neither the note nor a reference to it** — so the field arrived on every member capture and
+was discarded at the one moment the member forms the belief about what the capture is worth.
+**Not one instrument in either tree could see it**: measured by UI-54's arm 1, in which the
+rendering drops a whole clause of the note and the ONLY thing that goes red is the assertion
+this item added.
+
+**THE HARNESS.** `node civicos-ui/test/run.mjs` from the repo root, exit read unpiped:
+**46 suites, exit 0**, before and after. `add-surface.test.mjs` **147 -> 167 assertions**,
+and the delta is attributed by RUNNING BOTH — the pre-change files restored from `HEAD`
+into place, run, and restored again with sha256 compared — never by subtraction. The 20:
+seventeen in the new §3a (DEC-51's enactment, driven through `addCapture`) and three in the
+sweep's new detector (C).
+
+**THE BATTERY IS UNTOUCHED AND THE REASON IS STRUCTURAL, NOT AN ASSERTION OF CARE.**
+`cd bio-plane && npm run test:battery` — **157/157 suites green · 9,844 assertions · 151.1s ·
+exit 0**. The diff contains **no path under `bio-plane/`**; the plane suites that read
+`civicos-ui/**` read it for its refusal vocabulary and its surface census, and this item adds
+no refusal, no op call, no router and no surface. `node bio-plane/scripts/coverage.mjs
+--strict` run DIRECTLY from `bio-plane/`, `$?` read with nothing piped after it: **exit 0**.
+`add-surface.test.mjs` moves from the coverage report's NO CONTROL list (22 UI suites) into
+the declaring set, because UI-54 gives it a driven control file.
+
+**THE THREE FIGURES THE SWEEP PRINTS, and one of them moved for a reason worth recording.**
+**67 -> 68 files walked** (the new control driver), 9 outside `test/` in both, and
+**3,422,821 -> 3,454,567 characters read** — the whole delta is this item's own three files.
+5 grade-bearing clauses -> 23 doctrine phrases, unchanged:
+**detector (B)'s subject is a function of the record's sentences and nothing this item wrote
+enters it**, which is the property that keeps the sweep from being a copy of the doctrine.
+
+**THE ONE THING THAT COST TIME AND IS NOT A CODE FACT.** A fresh worktree has **no
+`bio-plane/node_modules`**, and three UI suites (`ai-session-context`, `ai-session-wire`,
+`intent-write`) drive the REAL plane through miniflare rather than a mock. The first baseline
+run therefore read **43 pass / 3 fail, exit 1**, and the failure was the environment saying so
+in plain words rather than a defect. `npm ci` in `bio-plane/` fixes it in about three seconds.
+**A baseline measured before that install is a wrong number carrying full confidence** — worse
+than no baseline, because it makes a green final run look like an improvement.
