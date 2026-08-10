@@ -127,8 +127,20 @@ const ABSENT = null; /* a path with no blob at a commit. Distinct from "" and fr
 export const KNOWN_HISTORICAL_DROPS = [
   { merge: "e241672", path: "civicos-ui/check-refusal-codes.mjs",
     why: "REC-69, 2026-08-08. 70 lines of floor moves. THE ITEM THIS CHECK EXISTS FOR. "
-       + "The merge was later reverted with `git revert -m 1`, so the floors are not stale "
-       + "TODAY, but the drop is the receipt and stays here." },
+       + "The floors are NOT stale today — but CORRECTED 2026-08-09 (D-263) because the "
+       + "reason this row gave was already false when it was written, and a register that "
+       + "grades other people's stale sentences may not carry one. It said the merge `was "
+       + "later reverted with git revert -m 1, so the floors are not stale`. That revert "
+       + "(80473ea) was ITSELF reverted by the Reapply c8d25cb on 2026-08-09, so REC-69's "
+       + "code is in the tree and `it was reverted` is no longer true of anything. What "
+       + "actually makes the floors current is the REPLAY: bb7b026 (merged b376c9e) redid "
+       + "REC-69 onto main and re-derived these floors from a printed run, finding FOUR "
+       + "ratchets where the dropped diff had listed two — the repair went FURTHER than "
+       + "the drop. Later items then moved them well past REC-69's intended values. "
+       + "MEASURED 2026-08-09 on 19745ad, `node civicos-ui/test/run.mjs` exit 0 unpiped: "
+       + "census 429, reach 222, 16 families, 168 rows, 68 governed sites, against the "
+       + "dropped diff's 409/203/14/148/59 — every one superseded UPWARD. The drop is the "
+       + "receipt and stays here; only its consequence is closed." },
   { merge: "0ca7640", path: "docs/development/VERIFICATION.md",
     why: "REC-68/D-228, 2026-08-08. The merge message says it kept OURS because ours was the "
        + "later measurement — and the number was the cheap half. What went with it was REC-68's "
