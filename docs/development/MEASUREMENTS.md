@@ -7130,3 +7130,59 @@ emphasis. **Case-sensitivity is not sufficient**, which is one step past the les
 checkout at `19745ad`: `analystvocab.test.mjs` 105 → 107 and **no other suite moved**.
 `coverage.mjs --strict` exit 0 unpiped, REGISTER FLOOR unmoved at arms 731/731 · classified 145/145
 · corpus 146/146 (the register's corpus is the PLANE's suites; this item adds none).
+
+## 2026-08-09 — the negative-control register's DOUBLE MOVE, measured rather than believed (D-263)
+
+**Instrument:** `bio-plane/scripts/control-register.mjs` driven directly through
+`countArms` / `countTransitions` / `countEnumerations`, plus
+`node bio-plane/scripts/coverage.mjs --strict` for the estate figures. Tree `19745ad`
+plus this item. Every figure below is one an instrument PRINTED.
+
+**The claim under test**, recovered from `0ca7640^2` where REC-68 wrote it and merge
+`0ca7640` dropped it: *a declaration's arms tally moves TWICE in a turn that writes the
+control's RESULTS back into itself, so the figure must be read after the LAST edit.*
+
+| driven | arms | reading |
+| --- | --- | --- |
+| arrow-grammar declaration, no results | 2 | the two arms it states |
+| the same, results written in as `GREEN -> RED` | **4** | **RISES — the claim holds** |
+| enumerated declaration `(1)(2)(3)`, no results | 3 | three ordinals |
+| the same, results added as PROSE (no arrows) | **3** | **DOES NOT RISE** |
+| the same, results added as FOUR arrows | **4** | transitions 4 vs enumerations 3 |
+| `(1) one arm -> it fails. See a->b in the source.` | 1 | `a->b` is not an arm (over-strictness) |
+
+**SO REC-68'S FORM WAS TRUE BUT INCOMPLETE, AND THAT IS THE MEASUREMENT THAT MATTERED.**
+The count is `max(transitions, enumerations)`, so the rise is a property of ARROW-GRAMMAR
+declarations; an enumerated one absorbs prose results for free and moves only once the
+arrows OUTNUMBER the ordinals. Restoring the unconditional sentence would have been right
+most of the time, which is the worst way for a rule to be wrong.
+
+**AND IT IS NOT VACUOUS.** Corpus walked with a git-provenance guard, so only files in the
+commit are counted: **147 suite files, 146 with a countable declaration, 20 of those state
+their own RESULTS inside the declaration.** A mechanism true of nothing would have been a
+headline claim over an empty corpus, which has passed in this repository three times.
+
+**THE ESTATE FIGURES, and the row that quotes them is behind.** `--strict` PRINTED
+`147 of 147 suites declare one (100.0%) · 741 arms stated across 146 classified
+declaration(s) · fullest 47 (hygiene.test.mjs) · 1 UNCLASSIFIED`, and
+`FLEET 5/5 SUITES declaring a negative control · 43 arms`.
+`VERIFICATION.md`'s register row still reads `135 of 135 · 632 arms · 134 classified` plus
+`FLEET 4 of 4 · 35 arms` — **the NINTH consecutive item to find that row stale by measuring
+it. RAISED, NOT MOVED**, per the row's own rule that the integrator moves it once from a
+printed run of the merged tree. Both FLOORS are exact: `REGISTER_FLOOR` moved
+731/145/146 -> **741/146/147** from `arms 741/731 · classified 146/145 · corpus 147/146 ·
+GREW by 10 arm(s)`, read after the files were in a commit; `FLEET_FLOOR` unmoved at 5/43
+and none owed.
+
+**REC-69's DROPPED FLOORS, re-measured to settle whether the consequence is still live.**
+`node civicos-ui/test/run.mjs` at `19745ad`, exit 0 read unpiped: **census 429, reach 222,
+16 DEC-49 families, 168 rows, 68 governed sites.** The diff merge `e241672` dropped wanted
+**409 / 203 / 14 / 148 / 59**. Every one superseded UPWARD, so the consequence is CLOSED —
+**but not for the reason `KNOWN_HISTORICAL_DROPS` gave.** It credited a `git revert -m 1`;
+that revert (`80473ea`) was itself reverted by the Reapply `c8d25cb` on 2026-08-09. What
+actually closed it is REC-69's REPLAY (`bb7b026`, merged `b376c9e`), which re-derived the
+floors and found FOUR ratchets where the dropped diff listed two.
+
+**Battery:** true baseline at `19745ad` **151/151 suites green · 9,688 assertions**; final
+**152/152 · 9,704**. Delta +16 attributed by DIFFING the two full runs, never by
+subtraction: the new suite 15, `hygiene.test.mjs` 591 -> 592.

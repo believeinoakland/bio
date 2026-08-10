@@ -250,6 +250,63 @@ segment). The count is **max(transitions, enumerations), never the sum** — an 
 usually carries both, and summing credits it twice, which is `readControl`'s own
 never-the-sum rule one level down.
 
+<!-- D-263 PROVENANCE: THE DOUBLE MOVE. Recovered 2026-08-09 from `0ca7640^2`, the
+     REC-68 branch blob, and AMENDED rather than restored verbatim — see the last
+     paragraph of this block for why the original was right when it was written and
+     why putting it back unchanged would have been a second defect. Do not delete
+     this block without deleting its pin: `test/register-grammar.test.mjs`. -->
+
+**A DECLARATION'S TALLY MOVES TWICE IN A TURN THAT WRITES ITS RESULTS BACK INTO
+ITSELF, AND THE FIGURE MUST THEREFORE BE READ OFF THE INSTRUMENT AFTER THE *LAST*
+EDIT.** This follows from the grammar above rather than from anything special: a
+control's RESULT is naturally written as a transition — `GREEN -> RED`, `471 -> 482` —
+and a transition is exactly what the matcher counts. So a worker who adds arms,
+reads the printed figure, then records what those arms DID in the same declaration
+has invalidated the figure they just read. **DRIVEN 2026-08-09, not reasoned about**:
+a two-arm arrow declaration goes to **4** when its results are written in, and the
+estate's suites really do write results back — **measured 2026-08-09, 20 of the 146
+suites with a countable declaration state their own results inside it** — so this is a
+live property and not a curiosity. **That corpus count is a DATED MEASUREMENT and not
+a claim about today**; `test/register-grammar.test.mjs` PRINTS the live figure on every
+run, and the printed one is the authority. It is written that way deliberately: this
+whole block exists because a figure asserted in the present tense went false, and
+repeating that here would be the defect wearing the fix's clothes.
+
+**AND THE HALF THE ORIGINAL SENTENCE DID NOT STATE, which is why it is amended:
+the rise is NOT unconditional.** Because the count is `max`, a declaration counted by
+its ENUMERATIONS absorbs results for free — a three-ordinal declaration whose results
+are added as prose stays at **3**, and adding them in arrow grammar moves it only once
+the arrows OUTNUMBER the ordinals (measured: three ordinals + four arrow results -> 4,
+transitions 4 against enumerations 3). **So "writing results back raises the tally" is
+true of ARROW-GRAMMAR declarations and only sometimes true of enumerated ones.** A
+worker who takes the unconditional form on trust and skips the re-read will be right
+most of the time, which is the worst way for a rule to be wrong.
+
+**THE HISTORY, because it is the receipt and it is permanently true of its own tree.**
+The arms floor moved **471 -> 482 on 2026-08-08 by REC-68**, in the turn that
+invalidated it — four arms in `hygiene.test.mjs` for its schema-comment/vocabulary
+guard, three in `query.test.mjs` for D-228's controls — and it moved in TWO printed
+readings, `arms 478/471 · GREW by 7` and then `arms 482/478 · GREW by 4`, taken from
+what `coverage.mjs` PRINTED and never by adding to the number in the file.
+
+**WHY THIS IS HERE AND NOT IN THE ROW ABOVE, AND WHY IT IS NOT REC-68'S SENTENCE
+VERBATIM (D-263).** REC-68 wrote this as the tail of the register ROW, opening *"THE
+CURRENT PRINTED FIGURE IS `482 arms`"*; the merge `0ca7640` kept main's side of that
+row and the sentence landed in the merged tree nowhere. **It was RIGHT when it was
+written** — 482 was the printed figure of that tree, and the row was where the figure
+lived. It is wrong TODAY only because the figure moved: restoring it verbatim would
+have put `482` back into a file whose instrument prints a far larger number, trading a
+missing explanation for a false one, which this project rates as the worse of the two.
+So the perishable half — the current figure — stays in the row above where the
+integrator moves it, and the durable half — how the figure MOVES — is stated here
+beside the grammar it follows from, where no measurement can age it out.
+
+<!-- END D-263 PROVENANCE. The span is marked at BOTH ends on purpose, which is
+     DEC-49's own smallest-span rule applied to prose: the pin reads what is
+     between these two markers and nothing else, so it cannot pass by citing a
+     neighbouring paragraph the drop never touched. -->
+
+
 **The half that makes it safe, and it is the whole of D-233: a declaration carrying no
 marking of either kind is NOT a declaration of zero arms.** It is one the instrument
 **could not classify**, it reports `null` rather than `0`, and the register **NAMES it**.
