@@ -2293,6 +2293,54 @@ CREATE INDEX IF NOT EXISTS reading_text_source_bundle ON reading_text_source(bun
 CREATE INDEX IF NOT EXISTS reading_text_source_kind
   ON reading_text_source(transcribed, terminal_step);
 
+-- D-266 / IC-60: THE JUDGMENT-LAYER DISPOSITION, AND IT IS A SECOND TABLE
+-- RATHER THAN A WIDER PRIMARY KEY ON THE ONE ABOVE -- WHICH IS THE WHOLE ITEM.
+--
+-- A DISMISSAL IS SCOPED TO THE KEY'S OWN SUBJECT (the ruling, 2026-08-10, made
+-- by the repository rather than by Bob). DEC-16's instance-wide clearing is
+-- instance-wide BECAUSE ITS SUBJECT IS: a progression-stage finding is a fact
+-- about the SHARED record, so one act clearing it under every case is dedup and
+-- not judgment-suppression. A STANCE is expressly one project's own property
+-- (section 7, D-216), a dismissal is a judgment-layer act, and R5 makes forks at
+-- the judgment layer legitimate. So one team's dismissal of a stance-scoped
+-- finding governs THAT TEAM'S feed and nothing else -- exactly the boundary
+-- store.mjs #findingsStanceDiverged already enforces by refusing to offer
+-- op=versioncurrent across projects.
+--
+-- WIDENING proposal_dispositions' OWN KEY WOULD HAVE ERASED THAT DISTINCTION,
+-- and the distinction IS the item. Its key stays (progression_key, stage_key)
+-- and stays instance-wide; this table is where the OTHER subject lives. Nothing
+-- migrates: no disposition has ever been recorded for the stance-scoped kinds.
+--
+-- finding_id is the QUEUE ITEM'S OWN id, in the feed's own spelling
+-- (FINDING::kind::...), so the act and the feed name one identity written by two
+-- producers that never consult each other -- the same pin IC-53 put on the other
+-- shape one field over. kind is carried for reading, never keyed on: a list of
+-- slugs goes stale the wave a fourth non-derived finding is minted, and the
+-- property this act keys on is carrying no progression stage rather than being
+-- named in a list.
+--
+-- Member-authored state, like proposal_dispositions above, and cleared by the
+-- WHOLE-STORE arm of op=purge only (it has no bundle_id) -- the D-113
+-- silent-leftover, asserted against this file by hygiene.test.mjs.
+CREATE TABLE IF NOT EXISTS finding_dispositions (
+  project_id TEXT NOT NULL,
+  finding_id TEXT NOT NULL,
+  kind       TEXT,
+  state      TEXT NOT NULL,
+  reason     TEXT NOT NULL,
+  decided_by TEXT,
+  at         TEXT,
+  PRIMARY KEY (project_id, finding_id)
+);
+-- NO SECONDARY INDEX, AND THAT IS A MEASUREMENT RATHER THAN AN OVERSIGHT. Two were
+-- written here first -- on finding_id and on at, mirroring proposal_dispositions --
+-- and airuns.test.mjs's index-reader ratchet FAILED THE BUILD naming them, because
+-- nothing filters on either leading column: op=queue reads this table WHOLE, exactly
+-- as proposalsFeed reads the other one, and the upsert seeks the primary key. An index
+-- with no statement behind it is an access path built for a question no op asks, which
+-- is the finding that ratchet exists to hold. Add one WITH the statement that reads it.
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

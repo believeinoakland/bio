@@ -147,8 +147,13 @@ arm("1", "PUBLISH THE BLOCK AND PUT NOTHING IN IT. `disposedOut` is built over a
   + "blind to this — stated so the arm's own limit is on the record), the ageing arm, and "
   + "op=proposals' own dispositions[] arm, which keeps working and is exactly why this defect "
   + "survived: one feed had it right the whole time.",
-  [["store", `    const disposedOut = dispAll.slice(0, dispCap).map((d) => ({`,
-              `    const disposedOut = [].map((d) => ({`]],
+  /* CORRECTED 2026-08-10 by D-266's own widening (IC-60), never exempted. `disposedOut` used to
+     be `dispAll.slice(0, dispCap).map((d) => ({ … }))`; the map moved UP into `dispAll`'s own
+     construction when the project-scoped decisions joined the same list, so the old edit string
+     no longer occurs and `edit()` REFUSED TO ARM BLIND rather than arming nothing quietly. The
+     arm is unchanged in what it proves — the block is published, present and empty. */
+  [["store", `    const disposedOut = dispAll.slice(0, dispCap);`,
+              `    const disposedOut = [];`]],
   ["AND IT IS NOW SAID", "THE PUBLISHED IDENTITY IS THE ITEM'S OWN", "a RE-DECIDED finding keeps ONE published decision"],
   ["before any disposition, op=queue carries BOTH findings as open items",
    "the `disposed` block is PRESENT AND EMPTY",
@@ -166,7 +171,11 @@ arm("2", "KEY THE PUBLISHED DECISION ON THE ACT'S CIRCUMSTANCES RATHER THAN THE 
   + "DECLARED MUST FAIL: the published-identity arm. MUST NOT FAIL: the published-decision arm, "
   + "the personal-false arm and the detail arm — so the control distinguishes 'publishes "
   + "something' from 'publishes the identity', which a single arm could not.",
-  [["store", '      id: `FINDING::${d.key}`,', '      id: `FINDING::${d.decided_by}::${d.at}`,']],
+  /* CORRECTED 2026-08-10 by IC-60 with the arm's meaning untouched: the instance-wide row now
+     carries `scope` and `project` beside its id, so the anchor moved by two spaces and two
+     fields. `edit()` refusing to arm blind is what caught it. */
+  [["store", '        id: `FINDING::${d.key}`, scope: "instance", project: null,',
+             '        id: `FINDING::${d.decided_by}::${d.at}`, scope: "instance", project: null,']],
   ["THE PUBLISHED IDENTITY IS THE ITEM'S OWN"],
   ["AND IT IS NOW SAID",
    "the two ways this feed gets shorter SAY WHOSE ACT SHORTENED IT",

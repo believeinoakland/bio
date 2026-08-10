@@ -319,3 +319,83 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
   recommend platforms to ADOPTING GROUPS rather than describing our substrate.
   **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+
+---
+
+## CLAIM 2026-08-10 RECORD (D-266 — the WIDENED disposition key for STANCE-SCOPED kinds)
+session: d266-scope (worktree `agent-a3479876cd7e9561b`)
+opened: 2026-08-10T00:00:00Z
+paths:
+- `bio-plane/src/schema.mjs` — ONE new table, `finding_dispositions`, added BEFORE the
+  `host_governor` block. **`proposal_dispositions` IS NOT TOUCHED** — the shared-record
+  key stays `(progression_key, stage_key)` and stays instance-wide, which is the
+  distinction this item exists to draw.
+- `bio-plane/src/store.mjs` — named by FUNCTION, not by file (it is shared ground):
+  `#dispositionOf`, `proposeDispose`, the `disposed`/filter region inside `queueFeed`,
+  the whole-store arm of `purge` (D-113), and the one counts row that names
+  `proposal_dispositions`. **NOT** the link, capture, task or reachability functions
+  (CAPTURE's), **NOT** any producer body — the three stance-scoped producers are READ
+  and not edited.
+- `bio-plane/src/index.mjs` — the ONE `proposedispose` dispatch line, which gains the
+  two new arguments and the server-side stamp they need.
+- `bio-plane/test/d266scope.test.mjs` (NEW — both behaviours in ONE suite),
+  `bio-plane/test/d266scope.control.mjs` (NEW — the three arms; edits real sources, so
+  it is deliberately not a `.test.mjs` and the battery must not discover it).
+- `docs/development/CLAIMS.md` (this entry), `docs/development/INTERFACE-CHANGES.md`
+  (IC-60, appended), `docs/development/DEBT.md` (the D-266 row), 
+  `docs/development/MEASUREMENTS.md` (appended), `docs/development/kickoffs/RECORD.md`
+  (appended).
+- **NOT** `civicos-ui/**` (READ ONLY — measured for the IC and DELEGATED below),
+  **NOT** `newgroup/**`, **NOT** `agent-worker/**`, **NOT** `pdf-worker/**`,
+  **NOT** `docs/development/QUEUE.md`, **NOT** `docs/development/IS-BUILD-PLAN.md`.
+interfaces owned: I3 (the op contracts) and I5 (the store schema). **IC-60 is filed
+  before the build**, per the protocol.
+interfaces consumed: none.
+
+### DELEGATION 2026-08-10 RECORD (D-266) -> UI: **A STANCE-SCOPED FINDING IS NOW DISPOSITIONABLE, AND THE ACT TAKES A PROJECT THE PAGE DOES NOT YET SEND**
+
+**What changed (IC-60, I3):** `op=queue`'s per-item `disposition` block now answers
+`available: true` for the three FINDING kinds that carry no `(progression_key,
+stage_key)` pair — `out-of-inquiry-lead`, `stance-changed-here-not-elsewhere`,
+`new-version-arrived-from-another-team` — with `scope: "project"`, `key: null`,
+`finding: <the item's own id>`, `projects: [<the project homes>]` and
+`requires: ["project","finding"]`. `op=proposedispose` accepts that second key shape.
+
+**What this does to the deployed page, MEASURED and not guessed.**
+`notifDispositionKeyed` returns `d.available`, so the three controls will now be DRAWN on
+those items; `queueFindingKey(it)` composes the key from the item id and
+`doProposalDispose` sends `{key, to, reason}` with no `project`. The plane refuses
+`NO_PROJECT_SCOPE`, and `doProposalDispose` RENDERS that refusal (`PROP_ACT.refusal =
+out`) — so the member gets the record's own words naming what is missing, not a dead
+click. That is the honest interim and it is not the end state.
+
+**What is needed, and it is small:** read `it.disposition.requires`; when it names
+`project`, send `{ project: <one of it.disposition.projects>, finding:
+it.disposition.finding, to, reason }` instead of `{ key }`. **The project must be
+CHOSEN, never defaulted when there is more than one** — an act one team performs from a
+notification another team is also reading is the single shared stance §7 rejected,
+arriving through a button (D-222's grain problem, and the reason
+`#findingsStanceDiverged` refuses to offer `op=versioncurrent` across projects). Where
+`projects` holds exactly one id there is no choice to make and no invention in using it.
+
+**RECORD did not reach into `civicos-ui/**`** — it is read-only in this claim and was
+read only to MEASURE the impact above.
+
+**AMENDED 2026-08-10 (same session), because a claim that does not name what was really
+edited is not a claim.** Three paths beyond the list above were touched and each is
+licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME
+turn, yourself*:
+- `bio-plane/test/current.test.mjs` — FOUR superseded assertions in its §7 disposition
+  block, CORRECTED and never exempted, each with a comment saying why the old one was
+  right when written and what made it wrong. It required every item's `keyed_on` to be
+  the progression pair (true while one key shape existed), asserted that neither
+  stance-scoped kind was dispositionable (the ruling turned that over), and required a
+  composed `<a>::<b>` key on every dispositionable item (a project-scoped item's key is
+  deliberately null). 62 pass → 63 pass, 0 fail.
+- `bio-plane/test/d266.control.mjs` — TWO arm anchor strings, corrected in place with the
+  arms' meanings untouched. `edit()` REFUSED TO ARM BLIND rather than arming nothing
+  quietly, which is what caught them. All six arms re-run and all six as declared.
+- `bio-plane/src/index.mjs` — one clause added to the viewer-stamp condition, so
+  `op=proposedispose` receives the server-side `viewer` its project-scoped arm gates on.
+  Without it the act refused `NO_SUCH_PROJECT` for a real project, fail-closed and
+  correct, which is how the omission was found.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-613 rulings across 65 documents.
+615 rulings across 65 documents.
 
 ## DEC-
 
@@ -1075,6 +1075,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:55`
 - `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated). **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are dated records of what was measured…  
   `docs/development/CLAIMS.md:315`
+- **2026-08-10** — AMENDED 2026-08-10 (same session), because a claim that does not name what was really edited is not a claim.** Three paths beyond the list above were touched and each is licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME turn, yourself*:  
+  `docs/development/CLAIMS.md:384`
+- block, CORRECTED and never exempted, each with a comment saying why the old one was right when written and what made it wrong.  
+  `docs/development/CLAIMS.md:389`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

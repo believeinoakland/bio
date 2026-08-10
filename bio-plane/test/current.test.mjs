@@ -747,20 +747,51 @@ const beforeShaA = await shaOf(A);
   + "no surface has to reconstruct the key from field names it learned by reading producers "
   + "(the drift class DEC-8 closed)",
     ITEMS(q).length > 0 && ITEMS(q).every((i) => i.disposition && typeof i.disposition.available === "boolean"), true);
-  t("the key is published as a NAMED PAIR rather than left implicit, and it is the same pair "
-  + "op=proposedispose is keyed on",
-    ITEMS(q).length > 0 && ITEMS(q).every((i) => JSON.stringify(i.disposition?.keyed_on) === '["progression_key","stage_key"]'),
-    true);
+  /* CORRECTED 2026-08-10 BY D-266's WIDENING (IC-60), AND THE OLD ASSERTION IS
+     SAID TO BE WRONG RATHER THAN EXEMPTED. It required EVERY item's `keyed_on`
+     to be the progression pair, which was true when exactly one key shape
+     existed and became false the moment a second one did. THE RULE IT WAS
+     REACHING FOR IS THE ONE THAT SURVIVES: the key is a NAMED SHAPE and never
+     left implicit, and it AGREES WITH THE ITEM'S OWN `scope` — which is a
+     stronger pin than the old literal, because it fails if a producer ever
+     publishes one scope's name over the other's key. */
+  const KEY_SHAPES = { instance: '["progression_key","stage_key"]', project: '["project","finding"]' };
+  t("the key is published as a NAMED SHAPE rather than left implicit, and the shape AGREES with the "
+  + "scope the same item publishes — the two-shape successor to the single-pair pin, and it fails "
+  + "on a producer that names one scope while publishing the other's key",
+    ITEMS(q).length > 0 && ITEMS(q).every((i) => {
+      const d = i.disposition || {};
+      const want = d.scope === null || d.scope === undefined
+        ? KEY_SHAPES.instance : KEY_SHAPES[d.scope];
+      return want !== undefined && JSON.stringify(d.keyed_on) === want;
+    }), true);
   const mine = ITEMS(q).filter((i) =>
     i.kind === "stance-changed-here-not-elsewhere" || i.kind === "new-version-arrived-from-another-team");
-  t("NEITHER of this item's two kinds is dispositionable, and the record SAYS SO rather than "
-  + "letting a member find out at the click — they are about a question and a reading, not about "
-  + "a progression stage",
-    [mine.length > 0, mine.every((i) => i.disposition.available === false),
-     [...new Set(mine.map((i) => i.disposition.reason))]],
-    [true, true, ["no_disposition_identity"]]);
-  t("and the refusal to advertise POINTS AT THE OPEN QUESTION rather than pretending the shape is "
-  + "settled — widening the act is D-222's grain problem and is open as D-266",
+  /* CORRECTED 2026-08-10, AND THIS IS THE ASSERTION THE RULING TURNED OVER.
+     It used to read *NEITHER of this item's two kinds is dispositionable*, with
+     `available: false` and `reason: "no_disposition_identity"`, and it was RIGHT
+     while the act had one key shape: a finding carrying no progression stage had
+     no identity to be recorded against. D-266's 2026-08-10 scoping ruling gave
+     it one — a dismissal is scoped to THE KEY'S OWN SUBJECT, and the subject of
+     a stance-scoped finding is one project's own property (§7/D-216, R5). So
+     both kinds ARE dispositionable now, at PROJECT scope, and the thing that
+     must not drift is that the act is scoped rather than merely available. */
+  t("BOTH of this item's two kinds are dispositionable AT PROJECT SCOPE — the act is keyed on "
+  + "(project, finding) because a stance is one project's own property, and the item names the "
+  + "projects whose feed a decision would govern",
+    [mine.length > 0,
+     mine.every((i) => i.disposition.available === true),
+     [...new Set(mine.map((i) => i.disposition.scope))],
+     mine.every((i) => Array.isArray(i.disposition.projects) && i.disposition.projects.length > 0)],
+    [true, true, ["project"], true]);
+  t("and `key` is NULL while `available` is TRUE, which is the honest answer and not an omission: "
+  + "the ACTING project is the member's to name, and `requires` says so on the item",
+    [mine.every((i) => i.disposition.key === null),
+     mine.every((i) => JSON.stringify(i.disposition.requires) === '["project","finding"]'),
+     mine.every((i) => i.disposition.finding === i.id)],
+    [true, true, true]);
+  t("and the publication POINTS AT THE RULING rather than at an open question — D-266's scoping "
+  + "ruling is MADE, so the sentence names the boundary instead of promising one",
     mine.every((i) => /D-266/.test(S(i.disposition.detail) || "")), true);
   /* THE OTHER TWO CLASSES ARE ASSERTED STRUCTURALLY, AND WHY IS SAID PLAINLY
      RATHER THAN LEFT TO BE NOTICED — this is the part of the block that could
@@ -849,14 +880,25 @@ const beforeShaA = await shaOf(A);
      asserting over a stale feed is an arm asserting over the wrong corpus. */
   const q2 = await queue();
   const dispositionable = ITEMS(q2).filter((i) => i.disposition?.available === true);
+  /* CORRECTED 2026-08-10 (IC-60). The final clause used to require a composed
+     `<a>::<b>` key on EVERY dispositionable item, which was true when the only
+     dispositionable item was an instance-wide one and became false when a
+     project-scoped item — whose `key` is deliberately NULL, because the acting
+     project is the member's to name — became dispositionable too. The arm's JOB
+     is unchanged and is why it survives rather than being deleted: it stops the
+     whole publication from being trivially false. It now asks the key-shape
+     question OF THE SCOPE THAT HAS A KEY, and asks the project-scoped items for
+     the thing THEY must carry instead. */
+  const instanceScoped = dispositionable.filter((i) => i.disposition.scope === "instance");
   t("OVER-STRICTNESS — an item that DOES carry the pair still advertises the act, with the KEY the "
   + "act accepts. This is the arm that stops the whole publication from being trivially false: "
   + "without it every `available` in this suite could be `false` and nothing would fail",
     [dispositionable.length > 0,
      [...new Set(dispositionable.map((i) => i.class))],
      [...new Set(dispositionable.map((i) => i.disposition.op))],
-     dispositionable.every((i) => /^[^:]+::.+$/.test(S(i.disposition.key) || ""))],
-    [true, ["FINDING"], ["proposedispose"], true]);
+     instanceScoped.length > 0,
+     instanceScoped.every((i) => /^[^:]+::.+$/.test(S(i.disposition.key) || ""))],
+    [true, ["FINDING"], ["proposedispose"], true, true]);
   const byKey = dispositionable.find((i) => i.disposition.key === "pl13-flow::filed");
   const drivenReal = await POST(`op=proposedispose&token=${RUTH}`,
     { key: byKey ? byKey.disposition.key : "NO-SUCH-ITEM", to: "dismissed",

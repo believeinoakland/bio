@@ -6178,6 +6178,14 @@ export default {
            the caller was never invited to must be absent exactly as one that was
            never made. */
         || op === "capturerequests"
+        /* D-266 / IC-60: the disposition act's SECOND key shape names a PROJECT — the team
+           whose feed the decision governs — so it takes the same fail-closed stamp for the
+           same reason every op above does. A project the caller was never invited to must
+           refuse EXACTLY as one that does not exist, or the act becomes a way to learn that
+           a project exists by trying to record a judgment under it (REC-25/REC-30's leak
+           arriving at a WRITE rather than a read). The instance-wide shape names no project
+           and is unaffected: it reaches the same store method and never consults the stamp. */
+        || op === "proposedispose"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.

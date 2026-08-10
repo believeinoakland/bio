@@ -13298,6 +13298,29 @@ export class Store extends DurableObject {
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
 
+  /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
+   *
+   *  **A DISMISSAL IS SCOPED TO THE KEY'S OWN SUBJECT** (the ruling, 2026-08-10,
+   *  and like this row's first ruling it was not Bob's because the repository
+   *  already answered it). DEC-16's instance-wide clearing is instance-wide
+   *  BECAUSE ITS SUBJECT IS: a progression-stage finding is a fact about the
+   *  SHARED record, so one act clearing it under every case is DEDUP and not
+   *  judgment-suppression. A stance is expressly one project's own property (§7,
+   *  D-216), a dismissal is a judgment-layer act, and R5 makes forks at the
+   *  judgment layer legitimate — so one team's dismissal of a stance-scoped
+   *  finding governs THAT TEAM'S feed and nothing else. That is exactly the
+   *  boundary `#findingsStanceDiverged` already enforces by refusing to offer
+   *  `op=versioncurrent` across projects, so the two rules never pointed opposite
+   *  ways: THEY SCOPE BY SUBJECT.
+   *
+   *  **THE OTHER KEY WAS DELIBERATELY NOT WIDENED WHILE THIS ONE LANDED**, and
+   *  that restraint IS the item rather than caution about it. Widening
+   *  `proposal_dispositions`' own primary key to carry a project would have made
+   *  a shared-record finding per-project too — erasing the distinction this
+   *  whole item exists to draw, in the one edit that would have looked like
+   *  finishing the job. */
+  static QUEUE_DISPOSITION_KEY_SCOPED = ["project", "finding"];
+
   /** Does THIS item carry the identity the disposition act is keyed on?
    *
    *  Reads `subject` first and `basis` second because that is the order the
@@ -13311,49 +13334,97 @@ export class Store extends DurableObject {
    *  is the difference between a claim about the act and a measurement of it. */
   #dispositionOf(item) {
     const KEYED_ON = Store.QUEUE_DISPOSITION_KEY;
+    const SCOPED_ON = Store.QUEUE_DISPOSITION_KEY_SCOPED;
     const pick = (o, k) => (o && typeof o === "object" && typeof o[k] === "string"
                             && o[k].trim() ? o[k].trim() : null);
     const pk = pick(item.subject, "progression_key") || pick(item.basis, "progression_key");
     const sk = pick(item.subject, "stage_key") || pick(item.basis, "stage_key");
     if (item.class === "OBLIGATION")
-      return { available: false, op: null, keyed_on: KEYED_ON, key: null,
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
                instead: "taskresolve",
                detail: "an OBLIGATION is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
                      + "is not a narrower version of that act, it is a different one." };
     if (item.class === "CONDITION")
-      return { available: false, op: null, keyed_on: KEYED_ON, key: null,
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
                instead: "queuemute",
                detail: "a CONDITION is a fact about our own machinery, and the only thing a member "
                      + "does to it is acknowledge or MUTE it — personally, with the condition "
                      + "persisting and every other member still seeing it." };
     if (pk && sk)
-      return { available: true, op: "proposedispose", keyed_on: KEYED_ON,
+      return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,
                key: `${pk}::${sk}`, progression_key: pk, stage_key: sk,
                detail: "this finding carries the identity the disposition act is keyed on, so Adopt, "
                      + "Defer and Dismiss are acts a member can actually complete. The act still "
                      + "checks the pair against the definition tables (NO_SUCH_PROGRESSION, "
                      + "BAD_STAGE) — this says the item has an identity, not that the identity is "
-                     + "valid, and those are different claims." };
-    return { available: false, op: null, keyed_on: KEYED_ON, key: null,
-             reason: "no_disposition_identity",
-             instead: null,
-             detail: "op=proposedispose is keyed on a defined progression's real stage, and this "
-                   + "finding carries no such pair — it is about a document, a question or a "
-                   + "reading rather than about a progression stage. Offering Adopt, Defer or "
-                   + "Dismiss on it would offer an act that could only ever be refused, so the "
-                   + "record says so here instead of letting a surface find out at the click. "
-                   + "WHAT DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ IS NOT OPEN "
-                   + "AND IS NOT WHY THIS SAYS NO: a disposition is keyed on the finding's "
-                   + "STABLE IDENTITY, it stands until it is re-triaged whether or not the fact "
-                   + "still fires, and it AGES the finding out of the open list instead of "
-                   + "deleting it (D-79, and op=proposedispose says so at its own site). The two "
-                   + "kinds that ARE dispositionable are themselves recomputed on every read, so "
-                   + "being derived is not what withholds the act — carrying no identity the act "
-                   + "is keyed on is. What is open as D-266 is the WIDENING: a second key shape, "
-                   + "and whether one team may set aside a finding about another team's stance." };
+                     + "valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS "
+                     + "A CLAIM ABOUT THE SUBJECT, NOT A DEFAULT (D-266, DEC-16): a progression "
+                     + "stage is a fact about the SHARED record, so one act clears this finding "
+                     + "under every case it appears in, which is dedup rather than one team "
+                     + "silencing another." };
+    /* ==================================================================== D-266
+     * THE PROJECT-SCOPED HALF, AND IT IS A PROPERTY RATHER THAN A LIST OF SLUGS.
+     *
+     * The test is the one UI-45 wrote and PL-13 kept: ask whether THIS item
+     * carries the identity the instance-wide act is keyed on, never what kind it
+     * is. A finding that carries the pair is a fact about the shared record. A
+     * finding that carries NONE is a fact at the JUDGMENT layer — about a
+     * document, a question, or what one team stands on — and §7 makes that one
+     * project's own property. So it is dispositionable, and the act is keyed on
+     * (project, finding) rather than being refused for want of an identity.
+     *
+     * WHY `key` IS NULL WHILE `available` IS TRUE, and it is the honest answer
+     * rather than an omission: the ACTING PROJECT is the member's to name. This
+     * item may be filed under several, and a plane that picked one would be
+     * choosing which team's judgment the act records — the single shared stance
+     * §7 rejected, arriving through a defaulted parameter. `projects` enumerates
+     * the candidates and `requires` says what the caller must send.
+     *
+     * A FINDING FILED UNDER NO PROJECT AT ALL IS A THIRD ANSWER AND IS SAID AS
+     * ONE. There is nothing for the dismissal to be scoped TO, so the act is
+     * unavailable for a reason that names the missing scope rather than the
+     * missing identity — a member reading `no_disposition_identity` there would
+     * be told something that is no longer true.
+     * ==================================================================== */
+    const homes = (item.case && Array.isArray(item.case.ancestors) ? item.case.ancestors : [])
+      .filter((a) => a && a.type === "project" && typeof a.id === "string" && a.id.trim())
+      .map((a) => a.id.trim())
+      .sort();
+    const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
+    if (homes.length === 0 || !fid)
+      return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
+               finding: fid, projects: [],
+               reason: "no_project_scope",
+               instead: null,
+               detail: "this finding carries no progression stage, so a disposition of it is a "
+                     + "JUDGMENT-LAYER act and is scoped to one project's feed (D-266, §7/D-216, "
+                     + "R5) — and this item is filed under no project this viewer can see, so "
+                     + "there is nothing for the decision to be recorded under. That is a bound on "
+                     + "the SCOPE and not on the finding's identity: nothing here says the act is "
+                     + "meaningless, only that this read found no team whose feed it would govern. "
+                     + "WHAT DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ IS NOT OPEN: a "
+                     + "disposition is keyed on the finding's STABLE IDENTITY, it stands until it "
+                     + "is re-triaged whether or not the fact still fires, and it AGES the finding "
+                     + "out of the open list instead of deleting it (D-79)." };
+    return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
+             key: null, finding: fid, projects: homes, requires: ["project", "finding"],
+             detail: "this finding carries no progression stage, and that is what makes its "
+                   + "disposition a JUDGMENT-LAYER act rather than a fact about the shared record "
+                   + "(D-266's scoping ruling, 2026-08-10: a dismissal is scoped to the key's own "
+                   + "subject). "
+                   + "A stance is expressly one project's own property (§7, D-216) and R5 makes "
+                   + "forks at the judgment layer legitimate, so ONE TEAM'S DISMISSAL GOVERNS THAT "
+                   + "TEAM'S FEED AND NOTHING ELSE — the same boundary this feed already enforces "
+                   + "by refusing to offer op=versioncurrent across projects. `key` is null "
+                   + "DELIBERATELY: the acting project is yours to name, and a plane that defaulted "
+                   + "one where this item has several homes would be choosing whose judgment the "
+                   + "record carries. Send `project` (one of `projects`) and `finding` beside your "
+                   + "disposition and reason. The decision AGES this finding out of your team's "
+                   + "open list and stands until it is re-triaged (D-79) — it deletes nothing, and "
+                   + "it moves no other team's feed by even one item." };
   }
 
   /** The four generators, in catalogue order, and the ONE place a CONDITION
@@ -13638,6 +13709,87 @@ export class Store extends DurableObject {
       it.disposition = this.#dispositionOf(it);
     }
 
+    /* ============ D-266 / IC-60 · THE JUDGMENT-LAYER AGEING, PER PROJECT ======
+     *
+     * **ONE TEAM'S DISMISSAL GOVERNS THAT TEAM'S FEED AND NOTHING ELSE**, which
+     * is the whole of the 2026-08-10 scoping ruling made operational. The
+     * contrast one block down is deliberate and the two say so about each other:
+     * a MUTE is personal and changes nobody else's feed; an INSTANCE-WIDE
+     * disposition is a record act that clears the finding under every case it
+     * appears in (DEC-16); a PROJECT-SCOPED disposition is a record act too —
+     * authored, attributed, dated, and visible to that project's every member —
+     * that clears the finding under ONE project and leaves every other project's
+     * feed untouched by an item.
+     *
+     * IT RUNS AFTER THE MINT AND BEFORE THE MUTE, and the order is the argument.
+     * After the mint, because it reads `disposition.scope`, which the mint is the
+     * one place to compute. Before the mute, because a RECORD ACT is applied
+     * before a PREFERENCE: a member's own mute must never be able to change
+     * whether their team's decision was applied, only whether they are shown the
+     * result.
+     *
+     * A PARTIALLY-DISPOSED ITEM STAYS AND SAYS SO. An item filed under two teams
+     * where one has dismissed it is still a live finding for the other, so it
+     * remains in the feed with the deciding team removed from its homes and the
+     * removal DECLARED on `case.disposed_by` — never silently, which is the rule
+     * `#findingsVersionFromAnotherTeam` already keeps for its own `excluded`
+     * home. The item leaves the open list only when EVERY project home has
+     * decided, and it is reported in `disposed` either way: an aged finding must
+     * not read like an absent one (D-79), and that obligation does not weaken
+     * because the ageing is now per-team.
+     * ===================================================================== */
+    const scopedRows = this.#rows(
+      `SELECT project_id, finding_id, kind, state, reason, decided_by, at FROM finding_dispositions`);
+    const scopedByFinding = new Map();
+    for (const d of scopedRows) {
+      let m = scopedByFinding.get(d.finding_id);
+      if (!m) { m = new Map(); scopedByFinding.set(d.finding_id, m); }
+      m.set(d.project_id, d);
+    }
+    const scopedDisposed = [];
+    if (scopedByFinding.size > 0) {
+      const surviving = [];
+      for (const it of items) {
+        const dsp = it.disposition;
+        const byProject = dsp && dsp.scope === "project" && dsp.available === true
+          ? scopedByFinding.get(it.id) : null;
+        if (!byProject) { surviving.push(it); continue; }
+        const homes = Array.isArray(dsp.projects) ? dsp.projects : [];
+        const decided = homes.filter((p) => byProject.has(p));
+        if (decided.length === 0) { surviving.push(it); continue; }
+        for (const p of decided) {
+          const d = byProject.get(p);
+          scopedDisposed.push({
+            /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling — the
+               same pin IC-53 put on the other key shape, and the reason a
+               surface can tie a decision to the thing it removed without
+               rebuilding an identity out of columns. */
+            id: it.id, scope: "project", project: p, finding: d.finding_id,
+            key: `${p}::${d.finding_id}`, kind: d.kind ?? it.kind ?? null,
+            state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+          });
+        }
+        if (decided.length === homes.length) continue;   // every team decided: it leaves the open list
+        const kept = (it.case && Array.isArray(it.case.ancestors) ? it.case.ancestors : [])
+          .filter((a) => !(a && a.type === "project" && decided.includes(a.id)));
+        it.case = {
+          ...it.case, ancestors: kept,
+          ungrouped: it.case.state === "determined" && kept.length === 0,
+          disposed_by: decided.map((p) => ({ id: p, reason: "disposed_by_that_project",
+            detail: "this team decided this finding at the judgment layer, so it is no longer in "
+                  + "their open list. It is still live for the teams named above, and their feed "
+                  + "was not touched by that act (D-266, §7/D-216). Stated rather than performed "
+                  + "silently: a home set that is quietly shorter is indistinguishable from nobody "
+                  + "caring (DEC-16)." })),
+        };
+        it.disposition = { ...dsp, projects: homes.filter((p) => !decided.includes(p)),
+                           disposed_by: decided };
+        surviving.push(it);
+      }
+      items.length = 0;
+      items.push(...surviving);
+    }
+
     /* ------------------------------------------- REC-21 · the PERSONAL half
        MOVED BELOW THE MINT BY PL-15 (it used to run above it), and the reason
        is at the mint: an item a member had muted was suppressed BEFORE the
@@ -13729,16 +13881,26 @@ export class Store extends DurableObject {
      * RECORD ACT carrying its author and reason and clears the finding under
      * every case it appears in. */
     const dispCap = Store.QUEUE_DISPOSED_MAX;
-    const dispAll = Array.isArray(feed.dispositions) ? feed.dispositions : [];
-    const disposedOut = dispAll.slice(0, dispCap).map((d) => ({
-      /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
-         surface ties a decision to the thing it removed without rebuilding
-         the identity from two columns — the drift class IC-53 closed one
-         field over. */
-      id: `FINDING::${d.key}`,
-      key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
-      state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
-    }));
+    /* D-266 / IC-60. ONE LIST, TWO SCOPES, AND `scope` SAYS WHICH — never two
+       arrays. What a member wants from this block is *what did I set aside and
+       why*, which is one question; splitting it by the act's key shape would
+       make a surface join two lists to answer it and would put the plane's
+       internal distinction where a reader has to care about it. What the reader
+       DOES have to be able to tell is whose feed each decision governs, and
+       `scope` (with `project` beside it) says exactly that on every row. */
+    const dispAll = [
+      ...(Array.isArray(feed.dispositions) ? feed.dispositions : []).map((d) => ({
+        /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
+           surface ties a decision to the thing it removed without rebuilding
+           the identity from two columns — the drift class IC-53 closed one
+           field over. */
+        id: `FINDING::${d.key}`, scope: "instance", project: null,
+        key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
+        state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+      })),
+      ...scopedDisposed,
+    ];
+    const disposedOut = dispAll.slice(0, dispCap);
     return {
       ok: true, member: me, items: out,
       /* REC-57: `truncated` was already here and is UNTOUCHED — this op is the
@@ -13783,15 +13945,20 @@ export class Store extends DurableObject {
         bound: dispCap,
         truncated: dispAll.length > disposedOut.length,
         detail: "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) "
-              + "carrying its author and their reason, and it did so for everybody rather than for the "
-              + "member reading this — the opposite of the block above. It has NOT left the record: the "
-              + "decision is keyed on the finding's own identity, the same id the open feed mints for "
-              + "it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is "
-              + "NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op "
-              + "that answers that. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that "
-              + "this plane cannot say; and it is not a statement about findings in general, because "
-              + "only a finding carrying a defined progression's real stage can be dispositioned at all "
-              + "today — every item publishes its own answer to that on `disposition` (D-266).",
+              + "carrying its author and their reason — never by a preference, which is the block "
+              + "above. It has NOT left the record: the decision is keyed on the finding's own "
+              + "identity, the same id the open feed mints for it, and it stands until it is "
+              + "RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not "
+              + "matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE "
+              + "FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): "
+              + "`scope: instance` cleared this finding for EVERYBODY, because a progression-stage "
+              + "finding is a fact about the shared record and one act clearing it under every case is "
+              + "dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a "
+              + "stance is one project's own property (§7, D-216) and R5 makes forks at the judgment "
+              + "layer legitimate.** So `personal: false` means no member's preference did this, and "
+              + "it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND "
+              + "HOLDS NONE, never that this plane cannot say; and which act any given finding is "
+              + "open to is published on the item's own `disposition`, never inferred from its kind.",
       },
       /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
          closed, because closing it needs an identity this record does not
@@ -14088,19 +14255,71 @@ export class Store extends DurableObject {
      member's decision to set aside the record's question is itself accountable, in their own words.
      The deciding member is STAMPED server-side by index.mjs (decidedBy); a caller-supplied value is
      overwritten there, and a blank one is refused here (NO_DECIDER) so a bypass fails closed. */
-  proposeDispose({ progressionKey, stageKey, key, to, state, reason, decidedBy = null } = {}) {
+  /* D-266 / IC-60 — THE SECOND KEY SHAPE, AND WHY ONE OP RATHER THAN TWO.
+     Deferring and dismissing are ONE act with one vocabulary, one required reason and one
+     server-stamped decider; what differs between the two shapes is the SUBJECT the decision is a
+     fact about, and a second op would be a second place to state one act (D-21/DEC-8) whose two
+     copies would drift the first time the vocabulary moved. So the shape is chosen by which
+     identity the caller sends:
+
+       { key | progressionKey+stageKey }  -> proposal_dispositions, INSTANCE-WIDE (DEC-16).
+       { project, finding }               -> finding_dispositions,  ONE PROJECT'S FEED (§7/D-216/R5).
+
+     THE SECOND ARM VALIDATES THE PROJECT AND DELIBERATELY NOT THE FINDING'S HOMES. Checking that
+     this finding is filed under that project would mean RE-DERIVING the item here from its id —
+     a second implementation of an identity `queueFeed` already mints, which is exactly the drift
+     class IC-53 closed one field over. The row is the acting team's own record of a judgment; a
+     row naming a project the finding never reaches simply never matches, and harms nothing. What
+     IS checked is that the project is a real project bundle THIS VIEWER CAN SEE, so a caller
+     cannot write a decision under a team it was never invited to. */
+  proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
+                   to, state, reason, decidedBy = null, viewer = null } = {}) {
+    const proj = typeof project === "string" ? project.trim() : "";
+    const find = typeof finding === "string" ? finding.trim() : "";
+    /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
+       A caller that names either half of the project-scoped identity is performing that act, and
+       the missing half is refused BY NAME rather than being silently re-read as the other one. */
+    const scoped = !!(proj || find);
     /* the proposal identity is (progression_key, stage_key). UI-5 sends the aggregation key it
        already holds ("progression::stage"); the pair may also be passed explicitly. */
     let pk = typeof progressionKey === "string" ? progressionKey.trim() : "";
     let sk = typeof stageKey === "string" ? stageKey.trim() : "";
-    if ((!pk || !sk) && typeof key === "string" && key.includes("::")) {
+    if (!scoped && (!pk || !sk) && typeof key === "string" && key.includes("::")) {
       const i = key.indexOf("::");
       if (!pk) pk = key.slice(0, i).trim();
       if (!sk) sk = key.slice(i + 2).trim();
     }
-    if (!pk) return { ok: false, reason: "NO_KEY",
+    if (scoped && !find) return { ok: false, reason: "NO_FINDING", project: proj,
+      detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id "
+            + "(op=queue publishes it as disposition.finding). A project with no finding names a "
+            + "team and no decision." };
+    if (scoped && !proj) return { ok: false, reason: "NO_PROJECT_SCOPE", finding: find,
+      detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
+            + "and that act is scoped to ONE project's feed (D-266: a stance is expressly one "
+            + "project's own property, §7/D-216, and R5 makes forks at the judgment layer "
+            + "legitimate). Name the project you are acting for — op=queue publishes the candidates "
+            + "as disposition.projects. It is not defaulted even when there is only one, because a "
+            + "plane choosing whose judgment the record carries is the single shared stance §7 "
+            + "rejected, arriving through a defaulted parameter." };
+    /* THE BRIDGE FOR A SURFACE BUILT BEFORE IC-60, AND IT NAMES THE FIX RATHER THAN THE SYMPTOM.
+       A page that learned this act before the second shape existed composes `key` from the queue
+       item's own id, so a stance-scoped finding arrives here as key='<kind>::<rest>'. Read as the
+       old shape that is NO_SUCH_PROGRESSION — true, useless, and it tells a member to define a
+       progression that has nothing to do with what they clicked. The catalogue already knows the
+       first segment is a FINDING kind, so this says what is actually missing. It infers NOTHING
+       about which project: it refuses, and names the two arguments to send. */
+    if (!scoped && pk && classOfKind(pk) === "FINDING")
+      return { ok: false, reason: "NO_PROJECT_SCOPE",
+               finding: `FINDING::${pk}::${sk}`, kind: pk,
+               requires: ["project", "finding"],
+               detail: `'${pk}' is a FINDING kind rather than a progression, so this is the `
+                     + "project-scoped disposition and it needs the project you are acting for. "
+                     + "Send `project` (one of op=queue's disposition.projects for this item) and "
+                     + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
+                     + "and no team's feed moved." };
+    if (!scoped && !pk) return { ok: false, reason: "NO_KEY",
       detail: "a proposal disposition names its progression (progressionKey, or key='progression::stage')" };
-    if (!sk) return { ok: false, reason: "NO_STAGE",
+    if (!scoped && !sk) return { ok: false, reason: "NO_STAGE",
       detail: "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')" };
     /* deferred (parked, returnable) or dismissed (declined). Both age the proposal out of the open
        feed. Elevating/adopting is a DIFFERENT act (op=promote authors a focus) and is not a
@@ -14126,6 +14345,49 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_DECIDER",
                detail: "a disposition is recorded under the deciding member, stamped from the session. An "
                      + "unnamed decider cannot age the record's question." };
+    /* ================================================ D-266 · THE JUDGMENT-LAYER ARM
+       Everything above is SHARED and is reached by both shapes on purpose: the vocabulary, the
+       required reason, its grammar bound and the server-stamped decider are properties of the ACT
+       and not of the subject, so a second spelling of any of them would be a second rule to keep
+       in step. Only the identity differs, and only the identity is checked apart.
+
+       THE PROJECT MUST BE A PROJECT THIS VIEWER CAN SEE. `viewerPredicate` is the ONE compilation
+       point (D-15) and it fails CLOSED, so an absent or unrecognised viewer records nothing rather
+       than recording under everything. The type test goes through `normalizeType` for the reason
+       every other type consultation does — a legacy spelling is the same object.
+
+       AND IT UPSERTS ON (project_id, finding_id), WHICH IS D-79's TEETH AT THE JUDGMENT LAYER: a
+       team that re-triages a decision it already took keeps ONE row, re-triageable, never a second.
+       The finding is AGED out of that team's open list and is deleted from nothing. */
+    if (scoped) {
+      const gate = viewerPredicate(viewer);
+      const row = this.#one(
+        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+        proj, ...gate.args);
+      if (!row || normalizeType(row.object_type) !== "project")
+        return { ok: false, reason: "NO_SUCH_PROJECT", project: proj, finding: find,
+                 detail: "the project a judgment-layer disposition is scoped to must be a PROJECT "
+                       + "bundle this viewer can see. Absent and invisible answer identically here "
+                       + "and that is deliberate (REC-25): a refusal that told them apart would "
+                       + "disclose the existence of a project the caller was not invited to." };
+      const atS = new Date().toISOString();
+      const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
+      this.sql.exec(
+        `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
+         VALUES (?,?,?,?,?,?,?)
+         ON CONFLICT(project_id,finding_id) DO UPDATE SET
+           kind=excluded.kind, state=excluded.state, reason=excluded.reason,
+           decided_by=excluded.decided_by, at=excluded.at`,
+        proj, find.slice(0, 400), kd, st, why.slice(0, Store.EDGE_REASON_MAX), by.slice(0, 200), atS);
+      return { ok: true, scope: "project", project: proj, finding: find.slice(0, 400),
+               key: `${proj}::${find.slice(0, 400)}`, kind: kd,
+               to: st, state: st, reason: why, decided_by: by, at: atS, bundle: null,
+               detail: "recorded for THIS project and for no other. One team's dismissal of a "
+                     + "judgment-layer finding governs that team's feed and nothing else (D-266, "
+                     + "§7/D-216, R5) — no other project's queue moved by an item, and the finding "
+                     + "itself is aged rather than deleted (D-79): it stands until it is "
+                     + "re-triaged, whether or not the underlying fact still fires." };
+    }
     /* the proposal's identity must be REAL: a defined progression and a stage that belongs to it.
        A proposal only ever exists for a defined progression's real stage (proposalsFeed derives it
        from progression_instances → stages), so this catches a typo'd or invented key rather than
@@ -14239,6 +14501,12 @@ export class Store extends DurableObject {
          PROVE it cleared the aged decisions (D-113) and an operator can see how many of the
          record's own questions a member has deferred or dismissed. */
       proposalDispositions: n("proposal_dispositions"),
+      /* D-266 / IC-60: the JUDGMENT-LAYER dispositions, counted APART from the instance-wide ones
+         above and never folded into them. One number for both would report a member's decisions as
+         a single quantity while the two govern different sets of feeds — and it is precisely the
+         distinction this item exists to draw, so the count that proves the purge took them must
+         not be the one place it is lost. */
+      findingDispositions: n("finding_dispositions"),
       /* REC-27 / D-137: the participation graph and the pending owner-governance
          votes, reported so a purge can PROVE it took them (both are keyed on
          project_id, a bundle id, and were the silent-leftover the D-113 check
@@ -15604,6 +15872,15 @@ export class Store extends DurableObject {
            Cleared here in the whole-store arm only; a per-bundle purge leaves it (no bundle_id).
            hygiene.test.mjs asserts this list against schema.mjs. */
         this.sql.exec(`DELETE FROM proposal_dispositions`);
+        /* D-266 / IC-60. The JUDGMENT-LAYER dispositions, cleared for exactly the reason the
+           instance-wide ones above are and by the same arm: member-authored decisions, no
+           bundle_id, so a per-bundle purge leaves them and a whole-store purge that reported
+           scope ALL while leaving them standing is the D-113 silent-leftover — a scratch reset
+           after which one project's feed is still quietly one finding shorter, with the row that
+           did it invisible. A SECOND TABLE MEANS A SECOND DELETE: adding the key shape without
+           adding this line is precisely the way this class recurs. hygiene.test.mjs asserts this
+           list against schema.mjs. */
+        this.sql.exec(`DELETE FROM finding_dispositions`);
         /* REC-21 / D-113. Members' mutes and snoozes are keyed on a case id — a
            bundle id — so a whole-store purge that reported scope ALL while
            leaving them standing is the silent-leftover exactly: the corpus is
@@ -25268,8 +25545,14 @@ export class Store extends DurableObject {
         /* REC-7: op=proposedispose, record a member's DEFER/DISMISS of a derived proposal WITHOUT
            minting a bundle (D-79 — declining is not authoring). Writes one disposition row keyed by
            (progression_key, stage_key); op=proposals then ages that proposal out of the open feed.
-           decidedBy is stamped server-side at index.mjs, like every other authorship. */
-        proposedispose: () => this.proposeDispose(body || {}),
+           decidedBy is stamped server-side at index.mjs, like every other authorship.
+           D-266 / IC-60: it now takes a SECOND key shape — { project, finding } — writing to
+           `finding_dispositions` and ageing that finding out of ONE project's queue and no other's.
+           `viewer` is taken from the control plane's server-side stamp and NEVER from the body, for
+           the reason op=queuemute states two entries up: a caller who could name its own viewer
+           could record a judgment under a team it was never invited to. */
+        proposedispose: () => this.proposeDispose({ ...(body || {}),
+                                                    viewer: url.searchParams.get("viewer") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),

@@ -3576,3 +3576,105 @@ in. The delegation names the two functions.
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's, IC-42's and IC-53's precedent.)*
+
+---
+
+## IC-60 · I3 + I5: `op=proposedispose` GAINS A SECOND KEY SHAPE — `(project, finding)` — FOR THE STANCE-SCOPED FINDING KINDS, and `op=queue`'s per-item `disposition` block gains `scope` / `finding` / `projects` / `requires` · PROPOSED 2026-08-10 (D-266, enacting the 2026-08-10 scoping ruling) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**The interfaces:** I3 (the control plane) and I5 (the store schema). **The ops:**
+`op=proposedispose` (a second accepted key shape) and `op=queue` (four additive fields
+inside the per-item `disposition` object IC-53 introduced). **Nothing is removed,
+renamed, reordered or re-typed. The instance-wide key shape is UNCHANGED and the
+instance-wide behaviour is UNCHANGED.**
+
+**THE RULING THIS ENACTS, and it was not Bob's because the repository already answered
+it (D-266's row, 2026-08-10): A DISMISSAL IS SCOPED TO THE KEY'S OWN SUBJECT.** DEC-16's
+instance-wide clearing is instance-wide *because its subject is* — a progression-stage
+finding is a fact about the SHARED record, so one act clearing it everywhere is dedup and
+not judgment-suppression. A stance is expressly one project's own property (§7, D-216), a
+dismissal is a judgment-layer act, and R5 makes forks at the judgment layer legitimate —
+so **one team's dismissal of a stance-scoped finding governs THAT TEAM'S feed and nothing
+else**, which is exactly the boundary `#findingsStanceDiverged` already enforces by
+refusing to offer `op=versioncurrent` across projects.
+
+### The change, in two halves
+
+**(a) `op=proposedispose` — a SECOND key shape, chosen by which one the caller sends.**
+
+```
+# UNCHANGED — the shared record. One act, every case, instance-wide (DEC-16).
+{ key: "<progression>::<stage>" | progressionKey + stageKey, to, reason }
+    -> proposal_dispositions  PRIMARY KEY (progression_key, stage_key)
+
+# NEW — the judgment layer. One team's feed and nobody else's (§7 / D-216 / R5).
+{ project: "<PROJ bundle id>", finding: "<the item's own id>", to, reason }
+    -> finding_dispositions   PRIMARY KEY (project_id, finding_id)
+```
+
+New refusal codes, all fail-closed and all naming what is missing:
+`NO_PROJECT_SCOPE` (a stance-scoped finding named with no project),
+`NO_SUCH_PROJECT` (the project is not a project bundle this viewer can see),
+`NO_FINDING` (a project named with no finding). `NOT_A_DISPOSITION`, `NO_REASON`,
+`BAD_REASON` and `NO_DECIDER` apply to BOTH shapes, unchanged and re-used rather than
+re-spelled.
+
+**(b) `op=queue`'s per-item `disposition` (IC-53) gains FOUR fields.** `available`,
+`op`, `keyed_on`, `key`, `reason`, `instead` and `detail` keep their names, their types
+and — for the two shared-record kinds — their exact values.
+
+```
+disposition: {
+  available: true,
+  op:        "proposedispose",
+  scope:     "instance" | "project",   // NEW. WHICH SUBJECT the act's key is about
+  keyed_on:  ["progression_key","stage_key"] | ["project","finding"],
+  key:       "<prog>::<stage>" | null, // null when the ACTING project is the caller's to name
+  finding:   "<the item's own id>",    // NEW. present on the project-scoped shape
+  projects:  [ "<PROJ id>", … ],       // NEW. the project homes this act may be recorded under
+  requires:  ["project","finding"],    // NEW. what the caller must send beyond to+reason
+  detail:    "<sentence>"
+}
+```
+
+**WHICH KINDS MOVE, AND IT IS A PROPERTY RATHER THAN A LIST OF SLUGS** — the lesson
+UI-45 wrote and PL-13 kept: a FINDING that carries the `(progression_key, stage_key)`
+pair is instance-wide; a FINDING that carries none is project-scoped, keyed on the
+project homes it is filed under. Today that property selects exactly the three kinds
+D-266's row names — PL-15's `out-of-inquiry-lead` and PL-13's
+`stance-changed-here-not-elsewhere` and `new-version-arrived-from-another-team` — and a
+fourth non-derived finding minted next wave is covered without this contract moving
+again. A project-scoped finding filed under NO project home at all reports
+`available: false` with `reason: "no_project_scope"`, which is an honest third answer and
+not a silent no.
+
+**WHAT THE FEED DOES WITH IT.** A project-scoped disposition removes the disposing
+project from that item's `case.ancestors` and declares the removal; the item leaves the
+open list only when EVERY project home has disposed it, and it is then reported in the
+envelope's `disposed` block (IC-57) with its project. A shared-record disposition is
+untouched: one act, every case, instance-wide.
+
+**NOTHING TO MIGRATE IN THE STORE, which is why this is cheap now and would not be
+later.** `finding_dispositions` is a NEW table; `proposal_dispositions` is not altered,
+so no row moves and no `#migrate` step is owed. **No disposition has ever been recorded
+for these kinds** — the row says so and the table's emptiness is the proof.
+
+### MEASURED CONSUMER IMPACT
+
+Measured 2026-08-10 over `civicos-ui/**`, `agent-worker/**`, `pdf-worker/**`,
+`docprofile/**`, `newgroup/**` and `tools/**` by grep, not by recall.
+
+| consumer | reads | impact |
+| --- | --- | --- |
+| `civicos-ui/app.html` | 11 `proposedispose` sites; `notifDispositionKeyed` reads `disposition.available`; `queueFindingKey` composes the key from the ITEM ID; `doProposalDispose` sends `{key,to,reason}` | **THE ONE LIVE IMPACT, and it is stated rather than discovered.** When `available` turns `true` for a stance-scoped item the deployed page draws Adopt / Defer / Dismiss and sends `key` with **no `project`** — so the act is REFUSED `NO_PROJECT_SCOPE`. The dialog RENDERS the plane's refusal (`PROP_ACT.refusal = out`, measured at `app.html`'s `doProposalDispose`), so a member sees the record's own words naming exactly what is missing rather than a dead click. **DELEGATED to UI in `CLAIMS.md`**: read `disposition.requires` / `disposition.projects` and send `project` + `finding`. |
+| `civicos-ui/test/notifications.test.mjs` (7), `act-proposal.test.mjs` (10), `notifications.control.mjs` (2), `conclude-act.test.mjs` (1) | hand-built page-local fixtures | **ZERO assertions move.** Measured: the `LEAD(...)` fixture carries **no `disposition` field at all**, so `notifDispositionKeyed` takes its NAMED fallback and still answers `false`; and its `CASE_B` homes are of type `inquiry`, so it would answer `false` under the new rule too. The suites are surface tests over literals, not over a plane answer. |
+| `agent-worker/**`, `pdf-worker/**`, `docprofile/**`, `tools/**` | — | **NOT-AFFECTED.** No reference to `proposedispose` or to a `disposition` field anywhere in any of them. |
+| `newgroup/**` | `src/release.mjs` / `dist/newgroup.bundled.mjs` contain the string | **NOT a consumer.** They are an EMBEDDED SNAPSHOT of the plane's own source in the installer artifact, regenerated by DIST at release. Named so a later reader does not read the grep hit as a contract dependency. |
+
+**Consumers to answer:** `UI` (the one live impact above). **Producers affected:** none
+outside `RECORD`'s own paths.
+
+### 2 · RESPONSES
+
+*(awaiting)*
