@@ -175,6 +175,10 @@ returning a question to him. Applied:
 
 Only **D-205** (rotate `BIO_ADMIN_TOKEN`) remains genuinely Bob's — it needs his hands.
 
+_(drained by CONDUCT 2026-08-10 — the three work items and the D-266 scheduling, **enacted as ITEMS and not as a note**, which is the only form of drain this channel accepts. Work item 1 → **VF-6** in the M0 background lane (DEC-53's accepts-without-reading rate; the item's first obligation is to state what its proxy CANNOT see, because a proxy presented as the thing itself is this record's overclaim class arriving in an instrument). Work item 2 → **UI-54** (DEC-51: the note rendered WHOLE at the moment of capture, co-attestation clause included — the split is the defect, not the caution; UI-32's grade-letter removal stands). Work item 3 → **DIST-4** (DEC-43's (b), placed in DIST and therefore NOT CONDUCT's to run; the ruling's order — report, then DIST-2, then one cycle, then a count that is zero or a remainder KNOWINGLY ACCEPTED — is carried onto the row and is not CONDUCT's to compress). D-266's widening → **its own RECORD row**, narrow: the stance-scoped key carries the project identity, the shared-record key stays instance-wide, and widening both would erase the distinction the item exists to draw. **D-205 is Bob's and needs his hands — it is NOT enqueued**, and it is now closed: rotated and verified in both directions at `ad7d210`, which landed while this entry was still sitting undrained.
+
+**TWO STRUCTURAL FAULTS FOUND WHILE DRAINING, both repaired in this turn, both recorded on the CLASS rather than the instance.** (1) **`cc99ec1`'s closed-item roll deleted five AREA headings** — `RECORD`, `CONTENT-PDF`, `FRAMEWORK`, `CONTENT-HTML`, `DIST`, `UI`, eleven headings down to six — because every item beneath them happened to be closed. No item was lost and no status moved; **what was lost was which area each surviving open item belongs to, and therefore which areas hold the two slots.** A bulk move keyed on ITEM status silently deletes any SECTION whose items are all closed, and a section is not an item. Restored verbatim from `c7fc5c3`, with the RECORD paragraph's fourth-stale `store.mjs` line count replaced by the command that measures it. (2) **The 2026-08-07 drain promised "one pointer row per wave slot" for `IS-BUILD-PLAN.md` and never wrote one** — no `PL-`/`FL-`/`SK-`/`VF-`/`DS-` row has ever existed in this file. **The plan was built anyway, off the plan document directly**, so the queue's silence was not an idle plan but an unrecorded one, which is strictly worse: it reads identically to nothing having happened. Repaired with the measured `## IS BUILD PLAN — STATUS` section — **34 rows landed, 3 satisfied before scheduling, 9 left, and the critical path is DIST's** — plus the SKILL track seeded DORMANT for promotion when a slot frees. **The 2026-08-05 drain wrote this exact lesson down after this exact failure, and it happened again two days later: a note is not an item.** No entries outstanding.)_
+
 **2026-08-10 · BOB · A SURGICAL GATE PROFILE EXISTS: `node tools/gates.mjs`.** Bob asked
 why a docs-only change costs ~25 minutes of gates. The tool measures the diff: entirely
 prose under `docs/` → the doc-facing suites (derived at run time by grepping `test/` for
@@ -330,6 +334,43 @@ accepts-when: a fixture PDF whose `/Info` names an OCR product reads `layer -> o
 NEGATIVE CONTROL: run and recorded, armed ALONE — (1) remove the `/Info` read and the named-engine arm must fail; (2) **the arm this item exists for: make the classification able to STRENGTHEN — let an absent marker read as "authored" — and an assertion must fail naming it**; (3) an over-strictness arm: a producer string in a spelling you did not anticipate must leave the layer `undetermined` rather than crash or guess.
 added: 2026-08-10 · CONDUCT (CPDF-9's third amendment to DEC-4; the highest-value unbuilt half of CPDF-10)
 
+### VF-6 · queued
+milestone: M0 (background lane, holds no slot) — **a VERIFY-track instrument, run out of band the way COFF-6 and CPDF-9 were**
+interface: none — it measures, it does not publish a shape
+depends-on: none
+scope: **DEC-53's WATCH NUMBER, and the reason it is an item rather than a note is that the ruling CARRIED it forward rather than dropping it.** DEC-53 was answered 2026-08-10 by resting on DEC-52 ("the machine may rule" — a member accepting a ranked, honestly-graded candidate is strictly WEAKER than what DEC-52 already licenses), so the cap-at-C alternative is closed. **What the answer explicitly did NOT close is its own recommendation's caveat: *"the number to watch is how often a member accepts without reading, and nobody is measuring that today."*** That sentence is the entire item. **MEASURE, DO NOT ASSUME:** the accepts-without-reading rate on machine-composed resolution candidates, with its date and instrument, into `MEASUREMENTS.md`. **DECIDE THE INSTRUMENT HONESTLY AND SAY WHAT IT CANNOT SEE** — "read" is not directly observable, so the item's first obligation is to state what the proxy actually measures (time-to-accept? whether the candidate's detail was ever expanded? acceptance of a candidate whose `grade_if_resolved` is null?) and what it would MISS, rather than shipping a number whose meaning nobody stated. **A proxy presented as the thing itself is this record's own overclaim class arriving in an instrument** — the same failure as a self-reported confidence thresholded as calibrated (CPDF-10's forbidden pseudo-confidence), one altitude up. A stated `undetermined` is a legitimate result here and must be first-class: if the surfaces cannot distinguish read from unread, that ABSENCE is the finding and is worth more than a fabricated rate.
+accepts-when: a `MEASUREMENTS.md` row, dated, naming the instrument and what it CANNOT observe, carrying either the rate or a stated `undetermined` with the reason; the figure derived from recorded acts rather than from a hand count.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) **the arm this item exists for: state the proxy AS the quantity ("members accept without reading N% of the time") and the instrument's own honesty assertion must fail naming the proxy** — the number's caveat is load-bearing and travels with it or the number is worse than nothing; (2) feed the instrument a fixture where no read/unread signal exists at all and it must answer `undetermined`, never zero — an absent signal and a measured zero are different facts and must not read alike.
+added: 2026-08-10 · CONDUCT (draining the 2026-08-10 BOB INBOX entry, work item 1; DEC-53's carried watch item, decided the same day)
+
+
+## RECORD — ACTIVE (re-promoted 2026-08-05; the 2026-08-01 handover order is fully DRAINED and the area now runs D-200)
+
+**HEADING RESTORED 2026-08-10 by CONDUCT — it was DELETED, with four others, by the
+closed-item roll at `cc99ec1`.** The roll moved 195 done/superseded items out correctly and
+took five AREA headings with them (`RECORD`, `CONTENT-PDF`, `FRAMEWORK`, `CONTENT-HTML`,
+`DIST`, `UI` — 11 headings down to 6), because every item under those headings happened to
+be closed. **No item was lost and no status changed; what was lost was which AREA each
+surviving open item belongs to and which areas hold the two slots** — so `REC-69` and
+`REC-15` read as M0 lane items, `DIST-2`/`DIST-3`/`UI-53` read as CAPTURE items, and the
+queue could not answer "what is active" at all. Restored verbatim from `c7fc5c3`, the
+commit before the roll. **The lesson is the roll's, not the roller's: a bulk move keyed on
+ITEM status silently deletes any SECTION whose items are all closed, and a section is not
+an item.** Recorded on the class rather than the instance.
+
+Owns the store core and retrieval (`PARALLELISM.md`). Claim it in `CLAIMS.md` before
+editing; **`store.mjs` needs `grep -a`, and its size is MEASURED not quoted** — `wc -l <
+bio-plane/src/store.mjs` reads **25,861 (2026-08-10)**. The verbatim restore of this
+paragraph carried "16,287 lines (MEASURED 2026-08-04)", which was the FOURTH stale instance
+of this figure and is exactly what `CLAUDE.md`'s own trap entry now forbids quoting — so the
+number is replaced by the command that produces it, and the date stands as a reading rather
+than a fact. CAPTURE holds the link/capture/task/reachability functions, so name paths
+precisely.
+
+The 2026-08-01 handover run order (REC-10 → REC-19 → REC-11 → REC-13 → REC-12 → REC-14) is
+DONE, and the area drained on 2026-08-04 — UI took the freed slot. It is re-promoted
+2026-08-05 because **D-200 is RECORD ground and had no owner**: ten live bundles claim a
+provenance route they cannot show, which is live record state no other area can touch.
 
 ### REC-69 · **STILL NOT MERGED — MERGED AND BACKED OUT 2026-08-08, and the reason is a real one**
 
@@ -374,6 +415,15 @@ depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green — **measure your own baseline and trust it over this brief** — any delta ATTRIBUTED per suite; with runs listed for an inquiry and for a project, **a run in ANOTHER context absent from both**, an uninvited member's answer WITHHOLDING the row entirely rather than redacting it (REC-36's rule), and the bound published; the IC filed; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0, the new op carrying a control-plane assertion in the same turn. NEGATIVE CONTROLS run and recorded — (1) drop the context filter and a foreign run appears, FAILING by name; (2) drop the gate and an uninvited member reaches a row, FAILING; (3) redact instead of withhold → FAILS; (4) answer a bare collection → the ZERO-bare-array pin FAILS naming the op; (5) polarity checked.
 added: 2026-08-07 · CONDUCT (UI-49's delegation; §14a's promise reaches only the device that already holds the address)
 
+### D-266 · queued
+milestone: M9
+interface: I3 — the disposition key shape moves for stance-scoped kinds; file the IC with measured consumer impact before building
+depends-on: none — both rulings the widening waits on are MADE (2026-08-09 doctrine, 2026-08-10 scoping)
+scope: **`DEBT.md`'s D-266 row is the authority, and what remains is NARROW: the widened disposition key for STANCE-SCOPED kinds, carrying the PROJECT IDENTITY.** Both rulings the row waited on are made, and **neither was Bob's, because the repository already answered both** — (i) 2026-08-09: a disposition is a fact about the subject's STABLE IDENTITY, not about the inputs; it stands until re-triaged; it AGES the finding and never deletes it (D-79, and `proposeDispose`'s own header says so at the site); (ii) 2026-08-10: **a dismissal is scoped to THE KEY'S OWN SUBJECT.** DEC-16's instance-wide clearing is instance-wide *because its subject is* — a progression-stage finding is a fact about the SHARED record, so one act clearing it everywhere is dedup, not judgment-suppression. A stance is expressly one project's own property (§7, D-216), a dismissal is a judgment-layer act, and R5 makes forks at the judgment layer legitimate — **so one team's dismissal of a stance-scoped finding governs THAT TEAM'S feed and nothing else**, exactly the boundary `#findingsStanceDiverged` already enforces by refusing to offer `op=versioncurrent` across projects. The two rules never pointed opposite ways; they scope by subject. **NOTHING TO MIGRATE, WHICH IS WHY THIS IS CHEAP NOW AND WILL NOT BE LATER:** no disposition has ever been recorded for these kinds. The three kinds carrying no `(progression_key, stage_key)` pair are PL-15's `out-of-inquiry-lead` and PL-13's two shared-inquiry slugs. **DO NOT WIDEN THE INSTANCE-WIDE KIND'S KEY WHILE YOU ARE IN THERE** — the shared-record kinds stay instance-wide by the same ruling that scopes the others per-project, and widening both would erase the distinction this item exists to draw.
+accepts-when: a stance-scoped finding dismissed in project A **still fires for project B**, driven through the control plane, while a shared-record (progression-stage) finding dismissed anywhere clears everywhere — the two behaviours asserted in the SAME suite so the distinction is pinned rather than implied; the IC filed with measured consumer impact; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) **the arm this item exists for: key the stance-scoped disposition instance-wide and project B's finding must vanish, FAILING by name** — one team silencing another team's notification about that other team's own stance is the defect the scoping ruling forbids; (2) scope the shared-record kind per-project and the dedup assertion must fail (DEC-16's own reason, in the opposite direction); (3) an over-strictness arm — a re-triage must still be able to change a standing disposition, since D-79 ages findings and never freezes them.
+added: 2026-08-10 · CONDUCT (draining the 2026-08-10 BOB INBOX entry — "the widening itself is CONDUCT's to schedule"; both rulings made, the row narrowed rather than closed)
+
 ### REC-15 · blocked
 milestone: M10
 scope: **`op=publishpreflight` — the ceremony's ordering argument in one op. DEFERRED by DEC-33** (Bob, 2026-08-03: the publication ceremony process is deferred; publication runs through the operator for now). Trigger: Bob reopens the case-making thread. Recorded for when it wakes, so the deferral loses nothing: base scope as `BUILD-ORDER.md` §2 (REC-15) with `RECONCILED.md` §3.2's C-4 correction (`NO_SIGNERS` is INSTANCE-WIDE — the refusal detail must never say "for you", D-57); **DEC-15** — refuse `UNCLEARED_HUNCH` naming every hunch leg, in the same list as `NO_SIGNERS`, before any signature exists; **DEC-20** — only a hunch blocks publication on bias grounds; ordinary bias is DISCLOSED (the manifest SHOWN in the artifact, not merely cited) and refused on nothing; **DEC-17** — refuse `BELOW_PROJECT_STRENGTH` naming the axis; **D-158** bounds the per-member signing-key pre-flight (a signer row for a never-enrolled member reads `active` and is refused by ratify — fix at `signerAdd` write, assert the other view); §4 Q11 measured YES — `op=signerlist` + `op=whoami` make the per-member pre-flight computable client-side, an ADDITION to instance-wide `NO_SIGNERS`, not a replacement, until D-158 closes.
@@ -381,6 +431,11 @@ behind-interface: I3
 depends-on: REC-14
 accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and `BELOW_PROJECT_STRENGTH` naming the axis, each BEFORE any signature exists, writing nothing; negative control — attach per-member wording to the instance-wide `NO_SIGNERS` and the suite fails; clear a hunch and the refusal disappears without any other state change.
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+
+## CONTENT-PDF — DORMANT, restructured by the topology decision.
+CPDF-7 runs OUT OF BAND (measurement-only, holds no slot) and should run early: it
+decides whether the pdf-worker path is central or marginal. *(Heading restored 2026-08-10
+by CONDUCT — see the note under RECORD.)*
 
 ### CPDF-3 · blocked
 milestone: M2
@@ -449,6 +504,133 @@ added: 2026-08-04 · BOB (as CPDF-12; RENUMBERED CPDF-13 by CONDUCT at drain —
 CAP-3 runs OUT OF BAND: it touches only CAPTURE's own paths and contends with neither
 active area. CAP-4 is decided and queued behind it.
 
+## FRAMEWORK — DORMANT (FW-15 landed 2026-08-03; FW-13/FW-14 wait on REC-11/REC-19 — the slot returned to RECORD)
+*(Heading restored 2026-08-10 by CONDUCT — see the note under RECORD. Every FW item is
+closed and sits in the register below; the area's DORMANCY REASON is the thing that was
+lost, and it is why the heading is worth restoring with no items under it.)*
+
+## CONTENT-HTML — DORMANT
+Not yet carvable; see `kickoffs/CONTENT-HTML.md`. D-64 waits on the rendered-capture
+path, NOT on a doctrine ruling: D-55's doctrine was ruled by Bob (third-party script
+output is attributed to that party) and its SHAPE is decided provisionally in
+`MILESTONES.md` under M2 — attribute by ORIGIN via `rendered_origins[]`, not by region,
+which needs no new reference granularity. Scope this area against that shape when a
+slot frees. *(Heading restored 2026-08-10 by CONDUCT.)*
+
+## IS BUILD PLAN — STATUS, MEASURED 2026-08-10. **NINE ROWS REMAIN OF FORTY-THREE, AND THREE OF THEM ARE CONDUCT'S.**
+
+**This section exists because the plan's status was UNREADABLE and its absence was
+mistaken for its emptiness.** `IS-BUILD-PLAN.md` (2026-08-07) holds the scope for six
+tracks; the 2026-08-07 drain deliberately did NOT copy it here ("a notification, not a
+second copy") and promised **one pointer row per wave slot** instead. **Those pointer rows
+were never written** — no `PL-`, `FL-`, `SK-`, `VF-` or `DS-` row has ever existed in this
+file, so by this project's own rule (*"the check is the ITEM, not the note"* — the lesson
+recorded in the 2026-08-05 drain, on this exact failure, twice) the whole plan read as
+undrained. **It was not.** Workers built it anyway, off the plan document directly, and the
+queue simply never learned.
+
+**SO THE STATUS IS MEASURED FROM `main`, NOT FROM THIS FILE, and that is the only honest
+source available** — `git log --oneline main` matched against the plan's row ids. **LANDED
+ON MAIN (34 rows):** PL-1, PL-2, PL-2v, PL-3, PL-4, PL-8 … PL-15, PL-17 … PL-20; FL-1 …
+FL-5; SK-1; VF-1, VF-2, VF-3, VF-5; UI-38, UI-42 … UI-45. **SATISFIED BEFORE SCHEDULING
+(3):** PL-5 (landed as IS-6), PL-6 (REC-59), PL-7 (REC-60) — the plan says so on its own
+rows. **WHAT IS LEFT IS NINE:**
+
+**THE ID COLUMN IS DELIBERATELY NOT FIRST, AND THE REASON IS A REAL CONSTRAINT RATHER THAN
+A LAYOUT PREFERENCE.** `mintid`'s two allocation-site shapes are `### <ID> ·` (a QUEUE.md
+item heading) and `| <ID> |` (a track table row in `IS-BUILD-PLAN.md`) — **so writing these
+ids in either shape here would ALLOCATE them a second time**, and `plancheck` failed exactly
+that way on this section's first draft. That failure is correct and worth keeping: **the
+plan OWNS these ids and this file TRACKS them**, and two files opening one id is the
+mirror-and-drift class the 2026-08-07 drain refused when it declined to transcribe the plan.
+Leading with the owner keeps this a reference. **Do not "fix" it by bolding the ids to slip
+past the matcher** — that dodges the detector without removing the second authority, which
+is the defect wearing a disguise.
+
+| who | row | what | blocked on |
+| --- | --- | --- | --- |
+| **CONDUCT** | SK-2 | the investigative skill — composition judgement, description standard, search-completeness discipline (**the model never decides when the loop stops**) | **nothing — SK-1 is landed. This is the top of the plan's remaining work.** |
+| **CONDUCT** | SK-3 | the PRACTICE-SURVEY prohibition set, verbatim in the skill; PL-3's boilerplate check is the code half of the fifth | SK-2 |
+| **CONDUCT** | SK-4 | CHECK deploys first; investigate-fresh enables only after CHECK's first live run is verified | SK-2/SK-3 in practice; its named deps FL-3 and VF-5 are **both landed** |
+| RECORD | PL-16 | the published case (IS-8, M10) | **Bob** — DEC-33 deferred the publication ceremony and PL-16 depends on it. Not schedulable, and not CONDUCT's to unblock |
+| **DIST** | DS-1 | D-115 — the installer installs the FLEET | FL-2 (landed) |
+| **DIST** | DS-2 | D-116 — version authority spans the fleet | DS-1 |
+| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | DS-1 |
+| **DIST** | DS-4 | the gated deploy, then hand to VF-4 | DS-1, DS-2, FL-2 |
+| FLEET | FL-6 | the Claude-account cascade at runtime | **DS-3** |
+| VERIFY | VF-4 | live verification in scratch — a full CHECK run against a concluded inquiry | **SK-4 and DS-4** |
+
+**THE CRITICAL PATH IS DIST'S, NOT CONDUCT'S, AND THAT IS THE ONE THING WORTH CARRYING OUT
+OF THIS TABLE.** Four of the nine are `DS-` rows, and DIST runs as its own session
+(`kickoffs/DIST-NEXT.md`) — CONDUCT cuts no releases and touches no installer path. The
+last two live rows (FL-6, VF-4) each wait on a DS row, so **the plan cannot finish through
+CONDUCT alone no matter how the slots rotate.** CONDUCT's entire remaining share is the
+SKILL track, and it is unblocked today.
+
+**SK-2 IS NOT PROMOTED IN THIS TURN, AND THE REASON IS THE SLOT RULE RATHER THAN A
+JUDGEMENT ABOUT PRIORITY.** Both slots are held: RECORD (REC-69, green on its own branch
+and **still not merged**) and UI (UI-53, running). An area is promoted when a slot frees;
+SKILL is seeded DORMANT below so the promotion is one act rather than a re-derivation.
+**Activating SKILL and writing `kickoffs/SKILL.md` are ONE act** (`plancheck` fails an
+ACTIVE area with no kickoff) — do not split them.
+
+## SKILL — DORMANT (seeded 2026-08-10; promote when a slot frees. **`kickoffs/SKILL.md` is written AT ACTIVATION, in the same act.**)
+
+The doctrine and judgement layer of `IS-BUILD-PLAN.md`, **constrained to what a skill may
+legitimately hold — which is never a gate.** It owns skill/doctrine text and no plane
+paths, so it contends with neither RECORD nor UI: this is the one plan track that can take
+a slot without a claim collision on `store.mjs`.
+
+**THE TRACK'S GOVERNING CONSTRAINT, carried here because it is what a worker would
+otherwise get wrong: a fence in a prompt is not a fence.** Loop bounds, fan-out and gates
+all live in FL-3's deterministic control-flow table — **code, never skill** (§14b.4). Every
+row below is checked against that, and SK-3's negative control is built to PROVE the fence
+is code by showing the skill-only path would have passed what PL-3's C-number refuses.
+
+**STATUS ROWS, NOT ITEM HEADINGS, AND THE CONSTRAINT IS THE SAME ONE THE PLAN-STATUS
+SECTION RECORDS:** `IS-BUILD-PLAN.md` ALLOCATES `SK-2`/`SK-3`/`SK-4` as track table rows,
+so opening a `### SK-n ·` heading here would allocate each id a SECOND time — `plancheck`
+fails it, correctly, and the failure is the repository refusing to hold two authorities for
+one id. **So the plan holds the SCOPE and this section holds the STATUS, the dependency and
+the promotion order**, which is precisely what the 2026-08-07 drain meant by "a pointer row
+per wave slot" and what it never actually wrote. Read the scope from the plan's own row; do
+not transcribe it back here, because a copy starts rotting the day it is made.
+
+| state | row | depends-on | the one thing a worker would otherwise get wrong |
+| --- | --- | --- | --- |
+| **queued — top of the track** | SK-2 | none; SK-1 landed | **grades are COMPOSED, never MINTED**, and **the model NEVER decides when the loop stops** (TREC 2011, +95/−87) — it decides what to SEARCH. Four-level search states WHICH absence per level: *no meaning derived*, *nothing extracted*, *no document*, *nobody looked* are four different facts and must not read alike. Bias minimisation sits ON TOP of the fence, never instead of it (§14). |
+| queued | SK-3 | SK-2 | The five PRACTICE-SURVEY prohibitions go in **VERBATIM**. The sharp one: **no generated justification anywhere** — a generated justification is a fabricated attribution — and **the ONE permitted auto-composition is assembling the member's OWN prior words**. `PL-3`'s landed boilerplate check is the CODE half of the fifth. |
+| queued | SK-4 | FL-3 and VF-5 — **both landed**; SK-2/SK-3 in practice, since the skill must exist to be gated | CHECK deploys FIRST (§2, SWEEP §4b.7): the record read adversarially against an EXISTING conclusion, aimed at self-directed overclaiming — the primary threat model. **The gate is a ROW IN FL-3's TABLE and is code; SK-4 RECORDS the sequencing and must not re-implement it.** Investigate-fresh enables only after CHECK's first live run is verified, which is VF-4, which waits on DS-4. |
+
+**ACCEPTANCE AND NEGATIVE CONTROLS COME FROM THE PLAN'S OWN ROWS** — each carries an
+`accepts-when` that is a checkable fact and an `NC`. The track's three NCs are worth naming
+here because they are what makes the track's constraint enforceable rather than hoped for:
+a skill edit that moves loop termination into model judgement must FAIL the
+deterministic-table review criterion (SK-2); **a placeholder-text description submitted
+through PL-3 must be refused BY C-NUMBER while the skill-only path would have passed it**,
+and that asymmetry IS the proof the fence is code (SK-3); and an investigate-mode launch
+attempted before CHECK's verification is recorded must be REFUSED by the deployment gate
+(SK-4).
+
+seeded: 2026-08-10 · CONDUCT — the plan's remaining CONDUCT track, written into the queue it
+was never written into. **Not promoted in this turn:** both slots are held (RECORD's REC-69
+still unmerged, UI-53 running), and an area is promoted when a slot frees. Promotion and
+`kickoffs/SKILL.md` are ONE act.
+
+
+## DIST — ACTIVE (promoted 2026-08-04: DIST-2 and DIST-3 both landed on it from DEC-37/DEC-42; DIST-1 done 2026-08-04; the backlog — D-115/116/107/54 and the MONITOR_TOKEN follow-on behind DEC-37/REC-33 — waits for the next activation)
+Batches releases from a green `main`; the deploy step is gated to Bob. New standing
+work from the topology decision: D-115 (the installer installs ONE Worker and the
+topology now has a fleet), D-116 (version authority must span the fleet, or D-106's
+drift class returns multiplied), D-107 (no scripted installer deploy with read-back),
+D-54 (the installer does not detect the Workers plan). Activate when a fleet member is
+close to shipping, and not after it ships. NEW 2026-08-04: the REC-26 delegation (CLAIMS.md) — uploadInstall AND uploadUpdate meta.bindings gain { type: service, name: SELF, service: slug } so archive-monitor and monitor-cadence arm on deployed instances; a scoped MONITOR_TOKEN is the better credential than the ADMIN_TOKEN fallback. *(Heading restored 2026-08-10 by CONDUCT.)*
+
+**DIST RUNS AS ITS OWN SESSION** (`kickoffs/DIST-NEXT.md`, handover 2026-08-04). CONDUCT
+does not cut releases, deploy, or touch `newgroup/**`, `release/**`, `deploy.mjs`, the
+plane version or tags. **The build plan's whole DS track (DS-1..DS-4) is DIST's lane, not
+CONDUCT's** — recorded on the plan-status row below so nobody schedules it here.
+
 ### DIST-2 · queued
 milestone: M1
 scope: **The installer binds DAEMON_TOKEN (REC-33's follow-on).** newgroup generates a DAEMON_TOKEN and binds it in BOTH uploadInstall and uploadUpdate (the SELF-binding precedent DIST-1 established; the update path so already-installed instances receive it). DIST-1's constraint is now satisfied in this direction — the plane classifies the class (REC-33 landed) BEFORE the installer binds it. The ADMIN_TOKEN fallback stays until DEC-43 rules on its retirement. NO DEPLOY: land tested code; the install/update run is gated to Bob.
@@ -465,6 +647,24 @@ depends-on: none
 accepts-when: the installer suite green with a Free-plan account refused BY NAME before anything is created and a Paid one proceeding, the plan established by provoking the platform not by reading a field; negative control — accept the Free answer and the suite names the half-installed instance.
 added: 2026-08-04 · CONDUCT (DEC-42's item 1)
 
+### DIST-4 · queued
+milestone: M7
+scope: **DEC-43's (b) — THE FLEET-VISIBILITY REPORT, and it is the PRECONDITION of the fallback's retirement, not a companion to it.** Bob ruled (b) then (a), 2026-08-10: `#monitorToken()`'s ADMIN_TOKEN fallback is a silent, permanent licence for root-of-trust monitoring — an instance that never binds DAEMON_TOKEN keeps spending ADMIN_TOKEN forever **and nothing reports it except an operator reading `op=selftest`**. Build the report that makes the gap A NUMBER RATHER THAN A HOPE: which instances still monitor on the fallback, readable without an operator opening each one. **THE ORDER IS THE RULING AND IS NOT CONDUCT'S TO COMPRESS** — the fallback stays until (1) DIST-2 has landed, (2) one update cycle has passed, and (3) the measured count is zero **or its remainder is KNOWINGLY ACCEPTED**, which is a stated act and not a silence. Removing it before the fleet is visible re-inerts monitoring on every instance that missed the update — **DIST-1's own constraint arriving from the other side**, which is precisely the failure that constraint exists to prevent. D-116's neighbourhood: version authority across the fleet and credential posture across the fleet are the same visibility problem wearing two hats; if the report can answer both at one call, say so and do it once. **NO TOKEN VALUE IN THE REPORT, EVER** — the answer names WHICH CREDENTIAL CLASS an instance runs on, never the credential (`tokens.mjs`'s publication-revokes rule is the floor, and a report is a publication).
+behind-interface: I4 — if the answer is published through a plane op rather than a DIST-side read, file the IC before building
+depends-on: DIST-2 (the report measures who received the DAEMON_TOKEN binding, so the binding must exist to be measured)
+accepts-when: the report answers, for a set of fixture instances, which run on DAEMON_TOKEN and which on the ADMIN_TOKEN fallback, with the count stated; the answer is derived from what each instance REPORTS rather than from what the installer intended to bind (**an intent is not a measurement** — the same rule that makes `deploy.mjs` read the bytes back from the account instead of trusting the upload); no token value appears anywhere in the output.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) **the arm this item exists for: an instance that never bound DAEMON_TOKEN must appear in the report BY NAME — a fallback instance that reads as clean is the exact silence DEC-43 was raised about**; (2) derive the answer from the installer's intended bindings instead of the instance's own report and the intent-is-not-a-measurement assertion must fail; (3) put a token VALUE in the output and the `tokens.mjs` denylist arm must fail.
+added: 2026-08-10 · CONDUCT (draining the 2026-08-10 BOB INBOX entry, work item 3; DEC-43 decided the same day. **Placed in DIST and therefore NOT CONDUCT's to run** — the report is fleet/instance ground and DIST is its own session.)
+
+
+## UI — ACTIVE (promoted 2026-08-04 into the slot RECORD freed as it drained; UI-10 first — every other UI item depends on it)
+`civicos-ui/**`; the member surfaces of M8, per `UI-PLAN.md` and the interaction
+constructs **v0.2** (`BIO_Interaction_Constructs_v0_1.md` — the count came down to TWO
+constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 build-order:
+**the queue FIRST**). NOTE: this supersedes the earlier drained-inbox note's v0.1
+`T→J→B(+S)→P→A` order — MILESTONES M8 already carries v0.2, so the queue-first order governs.
+The display half of D-82 (`surfaced_by`) and the FW-4→UI already-held delegation are later
+UI items, not UI-1. *(Heading restored 2026-08-10 by CONDUCT — see the note under RECORD.)*
 
 ### UI-53 · running
 milestone: M8
@@ -473,6 +673,15 @@ behind-interface: I3
 depends-on: none (D-269 is landed on `main`)
 accepts-when: `node civicos-ui/test/run.mjs` from the **REPO ROOT**, exit read **UNPIPED**, 0; `cd bio-plane && npm run test:battery` green with any delta **attributed per suite by re-running the true baseline, never by subtraction** — **measure your own baseline and trust it over this brief**; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0; `node tools/plancheck.mjs` clean but for UNPUSHED. **The census of ban instruments must NOT be spelling-keyed** — a grep over prose is a hint, not a consumer census, and D-269's own consumer grep under-reported inside the item written to fix it. NEGATIVE CONTROLS run and recorded, each armed ALONE with the others held open, **including an OVER-STRICTNESS arm in which the banned words in a code COMMENT, an internal IDENTIFIER and a FIXTURE ID must all stay GREEN** — the ban is on what a member READS, and a fence tighter than its rule is an undeclared interface change wearing the costume of caution.
 added: 2026-08-09 · UI-53 (D-269's delegation to UI; the row is written by the item because CONDUCT had not minted one)
+
+### UI-54 · queued
+milestone: M8
+scope: **DEC-51's enactment — `op=acquire`'s grade note is RENDERED, WHOLE, AT THE MOMENT OF CAPTURE.** Bob's ruling, 2026-08-10: DEC-39 already settles the substance — the plane owns the fence wording and PUBLISHES IT WITH THE ACT, and the act here is the capture itself, so a surface that RECEIVES the record's own account and DISCARDS it withholds at exactly the moment the member forms the belief. Measured today: `addCapture` receives `acquireGradeNote` on every member capture and drops it, so a member's only account of what a capture is worth arrives on the document page afterwards. **WHOLE, NOT SPLIT, and the ruling is explicit about why:** DEC-39's three-part shape was deliberate, UI-28 measured that the parts reassemble character-for-character, and **the clause describing co-attestation — an act unavailable at this surface — is exactly the sentence that stops a member reaching for co-attestation to solve a problem it does not address.** So the co-attestation clause SHIPS; removing it is the defect, not the caution. **VERBATIM, under DEC-49's translation discipline: lift what the plane published, author no member-facing word** — the UI-39/UI-40 pattern (a falsehood deleted without writing a new one; the plane's accounts rendered with no fallback). **UI-32's removal of the COMPUTED GRADE LETTER from that surface STANDS and is not reopened** — this item renders the plane's SENTENCE, never a letter the surface derived.
+behind-interface: I3 — consumption only; the note is already published, so no IC is owed unless the shape moves
+depends-on: none — `acquireGradeNote` is landed and already reaches `addCapture`
+accepts-when: `node civicos-ui/test/run.mjs` from the **REPO ROOT**, exit read **UNPIPED**, 0; the capture surface renders the received note string-for-string against the plane's own export (not against a harness literal — **a hand copy agrees at zero cost and this project has measured that five times on five subjects**, so the assertion must read the plane's value); `cd bio-plane && npm run test:battery` green with any delta attributed per suite; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) **the arm this item exists for: drop the co-attestation clause and an assertion must fail naming DEC-51's whole-not-split ruling** — a rendering that is merely "most of the note" is the split Bob refused; (2) repoint the harness at a hand-typed copy of the note and the drift assertion must fail (the zero-cost-agreement class); (3) an over-strictness arm — re-introducing a surface-computed grade LETTER must fail, because UI-32's removal stands.
+added: 2026-08-10 · CONDUCT (draining the 2026-08-10 BOB INBOX entry, work item 2; DEC-51 decided the same day)
 
 ### UI-17 · blocked
 milestone: M10

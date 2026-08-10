@@ -546,6 +546,18 @@ response: **(b) THEN (a), AS RECOMMENDED — and the sequencing makes it tactica
   knowingly accepted.
 decided: 2026-08-10 · session BOB, from standing doctrine, under the standing delegation.
   The fleet-visibility work item is handed to CONDUCT through the BOB INBOX.
+enacted: 2026-08-10 · CONDUCT — **DIST-4 queued**, and placed in DIST rather than in CONDUCT's
+  own lane because the report is fleet/instance ground and DIST runs as its own session. The
+  ruling's ORDER is carried onto the row as the row's own constraint and is explicitly not
+  CONDUCT's to compress: the fallback stays until DIST-2 has landed, one update cycle has
+  passed, and the measured count is zero **or its remainder is KNOWINGLY ACCEPTED** — a stated
+  act, never a silence. The row's first negative control is the one this decision was raised
+  about: a fallback-running instance that reads as clean. Two constraints added at enactment
+  that the response implies rather than states — the answer must derive from what each instance
+  REPORTS rather than from what the installer intended to bind (an intent is not a measurement,
+  the same rule that makes `deploy.mjs` read the bytes back), and no token VALUE may appear in
+  the output, since `tokens.mjs`'s publication-revokes rule makes a report a publication.
+  Reasoning in this entry and QUEUE.md (DIST-4).
 
 ### DEC-53 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-40's report)
@@ -596,6 +608,17 @@ decided: 2026-08-10 · session BOB, resting on DEC-52 (Bob, 2026-08-07) — reco
   **WATCH ITEM carried, not dropped:** the number to watch remains how often a member
   accepts without reading; nobody measures it today. Named in the BOB INBOX so measurement
   is scheduled deliberately rather than remembered.
+enacted: 2026-08-10 · CONDUCT — **VF-6 queued** in the M0 background lane, out of band the way
+  COFF-6 and CPDF-9 ran, since a measurement holds no slot. The carried watch item is the whole
+  of it: *the number to watch is how often a member accepts without reading, and nobody is
+  measuring that today.* **One obligation added at enactment, because without it the item would
+  produce its own failure mode:** "read" is not directly observable, so the item must STATE what
+  its proxy measures and what it would MISS before shipping a figure — a proxy presented as the
+  thing itself is this record's overclaim class arriving in an instrument, the same defect as a
+  self-reported confidence thresholded as calibrated, one altitude up. A stated `undetermined`
+  is a legitimate result and is pinned as one: if the surfaces cannot distinguish read from
+  unread, that ABSENCE is the finding, and an absent signal must never read as a measured zero.
+  Reasoning in this entry and QUEUE.md (VF-6).
 
 ### DEC-51 · answered
 raised: 2026-08-04 · CONDUCT (lifted from UI-32's report, on REC-48's own written instruction)
@@ -637,6 +660,19 @@ response: **RENDER IT — WHOLE — AT THE MOMENT OF CAPTURE.** DEC-39 already r
 decided: 2026-08-10 · session BOB, resting on DEC-39 (Bob, 2026-08-04) and DEC-49's
   translation discipline, under the standing delegation. The one surface change is handed
   to CONDUCT through the BOB INBOX.
+enacted: 2026-08-10 · CONDUCT — **UI-54 queued.** The row carries the ruling's two load-bearing
+  halves rather than only its verdict: the note is rendered AT THE MOMENT OF CAPTURE (DEC-39's
+  publish-the-fence-with-the-act, and the act here is the capture itself), and it is rendered
+  **WHOLE — the co-attestation clause SHIPS.** The row states why, because that clause is what a
+  tidying worker would strip as irrelevant to a surface that cannot offer the act: it is exactly
+  the sentence that stops a member reaching for co-attestation to solve a problem it does not
+  address, and UI-28 measured that the three parts reassemble character-for-character. Its first
+  negative control is therefore the dropped clause — a rendering that is merely *most* of the
+  note is the split Bob refused. VERBATIM under DEC-49, asserted against the plane's own export
+  and never a harness literal (a hand copy agrees at zero cost; this project has measured that
+  five times on five subjects). **UI-32's removal of the surface-COMPUTED grade letter stands
+  and is pinned as an over-strictness arm** — this item renders the plane's sentence, never a
+  letter the surface derived. Reasoning in this entry and QUEUE.md (UI-54).
 
 ### DEC-50 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-45's report; **renumbered TWICE** — first from a colliding DEC-46, then from a colliding DEC-47, both allocated by the BOB session within hours. The BOB entries keep both numbers; this one moves, because the architect's numbers are the ones other documents will already be citing)
@@ -672,6 +708,15 @@ response: **THE SHIPPED REFUSAL STANDS.** DEC-32's containment already answers i
 decided: 2026-08-10 · session BOB, resting on DEC-32 (Bob's ruled arithmetic and
   containment), under the standing delegation. Nothing to enact; the suites already pin
   the refusal.
+enacted: 2026-08-10 · CONDUCT — **NO CHANGE, and the no-change is the enactment.** The shipped
+  refusal stands: `op=cite` against a GROUPED question stays refused, and the route through
+  REC-45's attributed act (ungroup with a reason → cite → regroup) stays the only way a
+  structured basis grows. No queue item is owed, no code moves, and the suites that pin the
+  refusal are unchanged — **so the thing this line exists to prevent is a later session reading
+  an unenacted ruling as unfinished work and "fixing" it by relaxing the predicate.** It is not
+  unfinished. Recorded here rather than left to inference because a decided-and-not-enacted
+  entry is indistinguishable, from outside, from one nobody got to. Reasoning in this entry and
+  DEBT.md is not involved; the doctrine is DEC-32's containment, quoted in this entry's response.
 
 ### DEC-48 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-44's report)
@@ -701,4 +746,15 @@ response: **AS RECOMMENDED — no container until a group asks.** The corpus alr
   op=publishedcase answers honestly for a non-case bundle.
 decided: 2026-08-10 · session BOB, applying Bob's own stated capability doctrine, under the
   standing delegation. Nothing to enact; the shipped behaviour stands.
+enacted: 2026-08-10 · CONDUCT — **NO CHANGE, and the no-change is the enactment.** No container
+  for a non-case ratification, and none is built until a group asks — `CLAUDE.md`'s capability
+  doctrine (*a capability that does not serve the path is not obviously worth building*), and
+  DEC-34's header rules are written for a CASE, so a document container kept as a side effect
+  of a shape that turned out to be wrong would be an artifact whose rules nobody thought
+  through. Nothing is lost meanwhile and that is checkable rather than asserted: the bytes stay
+  answerable BY HASH, and `op=publishedcase` still answers honestly for such a bundle as what it
+  is (`caseId: null`, no scope, no completeness). **No queue item is owed** — recorded explicitly
+  so the absence of one is not later read as an oversight. The reversal cost stays low by
+  construction: this is a capability to ADD when a group asks, never one to unwind. Reasoning in
+  this entry.
 
