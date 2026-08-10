@@ -10,6 +10,10 @@
    (7) THE DISPOSITION PUBLICATION IS A MEASUREMENT OF THE ACT. In #dispositionOf make the final return `available: true, op: "proposedispose"` -> the plane now advertises an act on items that carry no key. MUST FAIL: §7's undispositionable arms AND the DRIVEN arm that takes the published key to the real op. MUST NOT FAIL: the two proposal kinds, which were already true — so the arm proves the publication is not merely always-true.
    (8) OVER-STRICTNESS, and these PASS rather than fail: a project that does NOT cite the question is never named in anybody's divergence; two projects standing on the SAME reading produce silence rather than an item; a legacy `focus`/`problem`-typed shared question still diverges (the MAP RULE, so a spelling this item did not anticipate is not refused); an ordinary progression proposal keeps BOTH its disposition controls and its successful op=proposedispose; and `out-of-inquiry-lead` is unaffected in every respect. A fence that refuses correct work is a defect in the fence.
    (9) BASELINE. Every arm restored, suite re-run, full green — the row that distinguishes six-arms-broken from six-arms-working.
+   D-266's ARMS ALSO REACH THIS SUITE, and they are DECLARED HERE rather than only where they are driven, because a reader breaking §5 in a year needs to find them from the assertion they broke. RUN 2026-08-09 (d266-disposition) by `test/d266.control.mjs`, which arms `src/store.mjs` alone and runs BOTH this suite and `proposedispose.test.mjs` on every arm. BASELINE this suite 62/0.
+   (D-266.4) THROW AWAY THE UNATTRIBUTABLE COUNT at #findingsVersionFromAnotherTeam's return (`out.unattributed = 0`) -> **this suite 61/1**, the counted-silence arm failing, `proposedispose.test.mjs` 27/0 and untouched. MUST NOT FAIL: the run-less arm and the two-items arm — the ITEMS are unaffected, which is precisely the state this half of D-266 found: a correct silence indistinguishable from having nothing to be silent about.
+   (D-266.5) COUNT ONE BRANCH OF THE SILENCE AND NOT THE OTHER — the `!from` increment removed, so a reading carried by a run working under a project that does not draw on this question stops being counted and the answer reads 1 where the truth is 2 -> **61/1**. This is why §5 asserts an EXACT figure: "at least one" would have passed over it, and the fixture for that branch (RUN_C / V4) did not exist before D-266 wrote it.
+   (D-266.6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of being spread straight into `items` -> **62/0, GREEN**, which is the receipt that this suite's producer-wiring arm now asks its PROPERTY rather than pinning one of the two spellings the language offers. It used to pin the spelling, and D-266's own correct wiring failed it.
  * ========================================================================= */
 /* IS-BUILD-PLAN PL-13 / IS-3 — **CURRENT AS A PROJECT PROPERTY**, and the two
  * shared-inquiry FINDING slugs that the per-project answer makes necessary.
@@ -262,7 +266,17 @@ const FOC = "FOCUS-2026-4000-legacy";
 /* THE RUNS. Real `ai_runs` rows opened through the real op, each with a real
    PROJECT context — because the source team of a version is read from
    `ai_runs.context`, never inferred from who authored it. */
-const RUN_A = "AIRUN-2026-4000-oversight", RUN_B = "AIRUN-2026-4000-budget";
+/* RUN_C ADDED 2026-08-09 by D-266. Its context is a REAL project that does not
+   draw on this question at all, which is the OTHER way a reading can arrive
+   unattributable: not "no run" (V3) but "a run whose context is nothing this
+   read has named". The producer treats the two identically and must — telling
+   them apart would mean projecting a stored column of `ai_runs`, which REC-74's
+   declared role for this reader forbids — so both are counted and neither is
+   attributed. Before this fixture existed the second branch was implemented and
+   REACHED BY NOTHING, which is the shape this project calls an arm that never
+   armed. */
+const RUN_A = "AIRUN-2026-4000-oversight", RUN_B = "AIRUN-2026-4000-budget",
+      RUN_C = "AIRUN-2026-4000-unrelated";
 const openRun = async (run, ctx) => {
   const r = await POST(`op=airunopen&token=${RUTH}`, {
     run, contextType: "project", contextId: ctx,
@@ -285,6 +299,13 @@ const V2 = { name: "the audit alone", run: RUN_B, at: "2026-07-04T00:00:00Z",
 const V3 = { name: "composed by hand", run: undefined, at: "2026-07-05T00:00:00Z",
   description: "A third reading a member wrote without any run behind it at all.",
   grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
+/* D-266. A FOURTH reading, carried by a real run whose context is a real project
+   that does not draw on this question. It mints no item for the same reason V3
+   does not — the source team is a run's stored context or it is nothing — and it
+   is the fixture the second unattributable branch never had. */
+const V4 = { name: "read under an unrelated project", run: RUN_C, at: "2026-07-06T00:00:00Z",
+  description: "A fourth reading proposed by a run working somewhere else entirely.",
+  grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
 
 /* PROJECTS FIRST: the run's context must exist before a run can name it. */
 await mustPromote(A, projectMd(A, { title: "Oversight", cites: [INQ, FOC] }), "project");
@@ -293,7 +314,8 @@ await mustPromote(C, projectMd(C, { title: "Unrelated" }), "project");
 await mustPromote(SEV, projectMd(SEV, { title: "Withdrawn", severed: [INQ] }), "project");
 await openRun(RUN_A, A);
 await openRun(RUN_B, B);
-await mustPromote(INQ, inquiryMd(INQ, { versions: [V1, V2, V3], basis: [LEDGER, MINUTES] }), "inquiry");
+await openRun(RUN_C, C);
+await mustPromote(INQ, inquiryMd(INQ, { versions: [V1, V2, V3, V4], basis: [LEDGER, MINUTES] }), "inquiry");
 await mustPromote(FOC, inquiryMd(FOC, { type: "focus", schema: "focus@1",
   versions: [{ ...V1, name: "legacy reading" }] }), "focus");
 
@@ -378,12 +400,35 @@ const accept = async (version, target = INQ) =>
   /* BOTH PRODUCERS EXIST IN SOURCE AND ARE WIRED INTO THE FEED. A slug with no
      generator is a word, and this project has already shipped one of those
      (`runtime-ceiling-reached`, IS-9(d)). */
+  /* CORRECTED 2026-08-09 by D-266, never exempted, and the correction is the
+     point rather than the housekeeping: THE ORIGINAL PINNED A SPELLING AND NOT
+     THE PROPERTY IT WAS PROTECTING. Its last two arms required the literal
+     `items.push(...this.#findingsX(` — one of several correct ways to wire a
+     producer into the FINDING half. D-266 needed the second producer's ANSWER
+     held in a local, because it now carries a count of the readings the read
+     could not attribute and that fact has NO ITEM to sit on. So the call became
+     `const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
+     items.push(...fromAnotherTeam);` — a wiring that is correct in every respect
+     this assertion exists to defend — and the check went red. A fence tighter
+     than its rule is not a safer fence.
+     THE PROPERTY, asked instead of the spelling: the producer is CALLED with
+     the feed's own `(viewer, now)`, and what it RETURNS is spread into `items`
+     — directly, or through the local it was assigned to. Two structural forms
+     because the language has two, not a list of spellings that goes stale the
+     next time a producer needs to carry something home. */
+  const wiredIntoItems = (name) => {
+    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now\\)`).test(STORE_SRC);
+    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(STORE_SRC);
+    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(STORE_SRC);
+    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(STORE_SRC));
+    return call && (direct || viaLocal);
+  };
   t("both slugs have a NAMED PRODUCER wired into queueFeed's FINDING half — a kind with no "
   + "generator is a word, and this record has shipped one of those before",
     [/#findingsStanceDiverged\s*\(viewer, now\)/.test(STORE_SRC),
      /#findingsVersionFromAnotherTeam\s*\(viewer, now\)/.test(STORE_SRC),
-     /items\.push\(\.\.\.this\.#findingsStanceDiverged/.test(STORE_SRC),
-     /items\.push\(\.\.\.this\.#findingsVersionFromAnotherTeam/.test(STORE_SRC)],
+     wiredIntoItems("findingsStanceDiverged"),
+     wiredIntoItems("findingsVersionFromAnotherTeam")],
     [true, true, true, true]);
 }
 
@@ -487,15 +532,22 @@ const beforeShaA = await shaOf(A);
   t("no VERSION moved when the stance did — a stance is NOT a state. The two accepted readings are "
   + "still accepted and the untouched one is still suggested: op=versioncurrent moves a pointer in "
   + "ONE project's own bytes and nothing on the shared question at all",
+    /* CORRECTED 2026-08-09 by D-266: the FIXTURE grew a fourth reading (V4, carried by a run
+       working under a project that does not draw on this question), so the expected list grew
+       with it. Nothing this assertion is about changed — it is still "no version moved when the
+       stance did", still asserted over every reading the question holds. */
     (vs?.versions || []).map((v) => [v.name, v.state]),
-    [["opening account", "accepted"], ["the audit alone", "accepted"], ["composed by hand", "suggested"]]);
+    [["opening account", "accepted"], ["the audit alone", "accepted"], ["composed by hand", "suggested"],
+     ["read under an unrelated project", "suggested"]]);
   t("and both projects still see the IDENTICAL, NON-EMPTY version set after the divergence — the "
   + "non-empty guard is the evidence, because D-216's own control arm 3 showed 'both see the same "
   + "set' passing over an EMPTY list",
     [(vs?.versions || []).length,
      JSON.stringify((await versionsOf(INQ, `&project=${A}`))?.versions?.map(v => v.name))
        === JSON.stringify((await versionsOf(INQ, `&project=${B}`))?.versions?.map(v => v.name))],
-    [3, true]);
+    /* CORRECTED 2026-08-09 by D-266 with the list above and for the same reason: FOUR readings
+       now, and the non-empty guard this arm exists for is unweakened by the change. */
+    [4, true]);
 }
 
 /* ====================================================================== 4
@@ -612,6 +664,42 @@ const beforeShaA = await shaOf(A);
     [/D-266/.test(S(it[0]?.basis?.team_attribution?.detail) || ""),
      itemsOf(await queue(), "new-version-arrived-from-another-team")
        .some((i) => i.basis?.version === "composed by hand")], [true, false]);
+  /* ADDED 2026-08-09 by D-266, extending this section rather than replacing any
+     of it. The arm above proves the SILENCE is correct — a reading whose team
+     this record cannot read mints no item, because attributing one would be the
+     record claiming more than it can support. What it could not prove, because
+     the plane did not say it, is that the silence is DISTINGUISHABLE FROM AN
+     ABSENCE. Until now a member reading this feed could not tell *no reading
+     arrived from another team* from *readings arrived and nobody can say whose
+     they are*, and those are different facts about the world. The count is on
+     the feed's envelope now; the ATTRIBUTION still is not, and must not be. */
+  {
+    const q = await queue();
+    t("D-266 — THE SILENCE IS COUNTED, AND BOTH WAYS OF BEING UNATTRIBUTABLE ARE IN THE COUNT: V3, "
+    + "composed by hand with no run at all, and V4, carried by a run whose context is a project "
+    + "that does not draw on this question. TWO, not one — an exact figure rather than 'at least "
+    + "one', because a count that only ever had to be non-zero would have passed over a producer "
+    + "that found the first and dropped the second. Neither reading is named, attributed or guessed "
+    + "at; what the feed publishes is HOW MANY it could not attribute and WHICH QUESTION to go and "
+    + "look at. Absence at one level is not evidence of absence at the next",
+      [Number(q.unattributed_readings?.count),
+       (q.unattributed_readings?.inquiries || []).includes(INQ),
+       JSON.stringify(q.unattributed_readings || {}).includes("composed by hand"),
+       JSON.stringify(q.unattributed_readings || {}).includes("unrelated project")],
+      [2, true, false, false]);
+    t("D-266 — and the count did NOT come at the price of an invented item: V4 mints nothing, "
+    + "exactly as V3 does, so counting the silence has not turned into announcing a team. This is "
+    + "the arm that stops the fix from becoming the defect it was avoiding",
+      itemsOf(q, "new-version-arrived-from-another-team")
+        .filter((i) => i.basis?.inquiry === INQ)
+        .map((i) => i.basis?.version).sort(),
+      ["opening account", "the audit alone"]);
+    t("and the answer says WHY it cannot tell one kind of unattributable reading from another, "
+    + "rather than leaving a reader to assume the distinction was made — projecting a stored "
+    + "column of `ai_runs` is what telling them apart would take, and REC-74's declared role for "
+    + "this reader forbids it",
+      /REC-74/.test(S(q.unattributed_readings?.detail) || ""), true);
+  }
 }
 
 /* ====================================================================== 6

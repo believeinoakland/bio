@@ -28,3 +28,9 @@
 # `.ui…` so an existing line would cover it is the kind of small dishonesty that
 # makes the next reader mistrust the whole file.
 .pl13-harness/
+# D-266's pen, and its BASELINE CAPTURES too. Same rule, same reason for its own
+# line rather than a widened `.pl*` glob. This item's driver arms `store.mjs` and
+# restores from here, and the same directory holds the three instrument outputs
+# the item quotes as its baseline — kept inside the worktree so no other session's
+# battery can overwrite the figures this one reports.
+.d266-harness/

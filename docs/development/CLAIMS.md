@@ -6746,3 +6746,184 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+---
+
+## CLAIM 2026-08-09 RECORD (D-266 — what DECLINING means for a finding recomputed on every read)
+session: d266-disposition (worktree-agent-a6db8a28ca10a37e0)
+opened: 2026-08-09T00:00:00Z
+paths: **named by SPAN and by METHOD, never by file** — `bio-plane/src/store.mjs` is shared ground.
+  `bio-plane/src/store.mjs`: (1) ONE new static constant, `QUEUE_DISPOSED_MAX`, placed with the
+  other queue bounds; (2) the `#dispositionOf` `no_disposition_identity` branch's `detail` STRING —
+  the ruling stated where the act's key is stated, and **the string keeps naming D-266**, which
+  `current.test.mjs` asserts; (3) TWO new blocks on `queueFeed`'s RETURN ENVELOPE (`disposed`,
+  `unattributed_readings`) plus the few lines above the `return` that compute them — **no item is
+  added, removed or reordered, no producer's item shape changes, the DEC-49 region's markers are
+  untouched and no refusal code is minted**; (4) inside `#findingsVersionFromAnotherTeam`, a COUNT
+  of the readings this read could not attribute, carried out on the returned array the way
+  `#projectsDrawingOn` already carries `truncated`/`bound` — **no item's shape changes and no
+  stored column of `ai_runs` is projected** (REC-74's role is untouched).
+  **NOT** `proposeDispose`, **NOT** `proposalsFeed`, **NOT** `#dispositionOf`'s three other
+  branches, **NOT** `queueMute`/`queueSnooze`, **NOT** `#queueAncestors`/`#queueAncestorEdges`,
+  **NOT** `#findingsStanceDiverged`, **NOT** `#findingsOutOfInquiryLead`, **NOT** `promote`,
+  **NOT** `purge`, **NOT** any schema table — **this item adds NO table and NO migration**, which
+  is the item's own finding rather than an omission.
+  `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/src/queuestate.mjs`,
+  `bio-plane/checks/bio-checks.mjs` — **NOT OPENED.**
+  `bio-plane/test/proposedispose.test.mjs` — **EXTENDED, never exempted**: a new section driving
+  `op=queue` beside the `op=proposals` reads this suite already performs, and its NEGATIVE CONTROL
+  line rewritten to carry this item's arms beside REC-7's two.
+  `bio-plane/test/current.test.mjs` — **§5 EXTENDED by TWO assertions** with the dated reason in
+  the assertion text; no existing assertion weakened or removed.
+  `bio-plane/test/d266.control.mjs` (NEW — the negative-control driver, deliberately NOT a
+  `.test.mjs` because it EDITS REAL SOURCES while it runs and the battery must not discover it).
+  `.gitignore` — ONE pattern, `.d266-harness/`.
+  `docs/development/DEBT.md` (**D-266's row only**), `docs/development/INTERFACE-CHANGES.md`
+  (ONE new row, **IC-57**), `docs/development/CLAIMS.md` (this entry and its delegations),
+  `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `civicos-ui/**` (READ ONLY — UI-43 is live on `app.html` and this item files a DELEGATION
+  instead of touching it; the plane change is additive so the surface keeps working unchanged),
+  **NOT** `bio-plane/scripts/**` unless a printed floor moves, **NOT** `QUEUE.md`,
+  **NOT** `IS-BUILD-PLAN.md`, **NOT** `DECISIONS.md`, **NOT** `INTERFACES.md`, **NOT** `MILESTONES.md`,
+  **NOT** `newgroup/**`, **NOT** `pdf-worker/**`, **NOT** `agent-worker/**`, **NOT** `release/**`.
+interfaces consumed: I3 (`op=queue`, `op=proposals`, `op=proposedispose` — all READ or DRIVEN).
+interfaces owned: none. **TWO ADDITIVE BLOCKS on `op=queue`'s ENVELOPE are registered as IC-57**
+  with measured consumer impact.
+expected: `DEBT.md`'s D-266 row, raised by PL-13 at its own landing and handed over by UI-45. The
+  item's FIRST deliverable is whether the doctrine question is Bob's or this session's.
+accepts-when: **BASELINE MEASURED IN THIS WORKTREE ON A QUIET TREE BEFORE ANY EDIT, and it
+  CORRECTS the last figure in the record: battery 151 suites (146 plane · 5 fleet) · 151/151 green
+  · 9,688 assertions; `coverage.mjs --strict` run DIRECTLY with `$?` UNPIPED, exit 0 (OPS 163/163,
+  CHECKS 224/224, REGISTER FLOOR arms 731 / classified 145 / corpus 146); UI harness 44, exit 0
+  UNPIPED.** PL-13's claim recorded 142 suites / 9,179 assertions on 2026-08-09 — nine suites and
+  509 assertions stale by this morning, which is why the figure is re-measured rather than quoted.
+  Delta ATTRIBUTED PER SUITE by re-running the true baseline, never by subtraction. Negative
+  controls RUN, each armed ALONE with every other defence held OPEN, declared before arming,
+  restores verified by sha256 AND by `cmp` against per-arm pristine copies, pen INSIDE this
+  worktree. An OVER-STRICTNESS arm included. No push, no merge.
+concurrency: checked over the whole file. **PL-13's claim (`agent-a5e5b5027dcedb11c`) is MERGED on
+  `main` at `19745ad`** and its `released:` line is blank — the stale-but-landed shape UI-50 and
+  PL-13 both recorded; the two spans this item touches inside its work (`#dispositionOf`'s detail
+  string, `#findingsVersionFromAnotherTeam`'s loop) are that item's and are extended here with the
+  reason at the site. **UI-43 is live on `civicos-ui/app.html` and this item does NOT open it** —
+  the surface question goes out as a DELEGATION. No live claim names `proposedispose.test.mjs`,
+  `bio-plane/test/d266.control.mjs`, or `queueFeed`'s return envelope.
+released:
+
+### DELEGATION 2026-08-09 RECORD (D-266) -> UI (whoever next opens `civicos-ui/app.html`'s `__NOTIFICATIONS__` region): **YOUR PAGE-LOCAL SHADOW OF THE DISPOSITIONS CAN NOW READ THE RECORD, AND IT SHOULD**
+
+UI-45 found the right defect and built the only fix available at the time. `notifDisposedHtml`
+renders under the queue from `NOTIF_DISPOSED`, a **module-level `Map` filled by
+`notifRememberDisposition` from `op=proposedispose`'s own answer** — so the notice is correct, and
+it lasts exactly as long as the tab. **A reload empties it, and a second member never had it.** The
+comment at the site says why it exists and it is right: *a member deferred or dismissed a finding,
+read a receipt inside a dialog, closed it, and the item was simply gone from the queue with nothing
+on the screen saying where it went.*
+
+**The plane now publishes the fact, so the shadow can become a read.** `op=queue`'s envelope carries
+`disposed: { personal: false, findings: [ { id, key, progression_key, stage_key, state, reason,
+decided_by, at } ], count, recorded, bound, truncated, detail }` — registered as **IC-57**,
+additive, and every word in it is the record's rather than the page's. The `id` on each row is the
+**item id the open feed mints for that finding** (`FINDING::<progression>::<stage>`), so a row ties
+to the thing it removed without the surface rebuilding the key from two columns.
+
+- **Keep `NOTIF_DISPOSED` as the named fallback**, exactly as `notifDispositionKeyed` keeps its
+  basis-shape read: a plane built before this publishes no such block, and a surface that withdrew
+  the notice there would be worse than the one you have.
+- **`personal: false` is the field that lets you word it correctly.** `mute` says
+  `personal: true` on the same envelope and the two sentences are different: a mute changed nobody
+  else's feed, a disposition cleared the finding for everybody. The plane's `detail` says both.
+- **DO NOT render `disposed.count === 0` as "nothing was set aside" without the rest of it.** The
+  block is present-and-empty on purpose, and its own sentence says why an empty list is not a
+  statement about findings in general: only a finding carrying a defined progression's real stage
+  can be dispositioned at all today, and each item publishes its own answer on `disposition`.
+- **`unattributed_readings` is on the same envelope and is a different kind of fact** — how many
+  readings of a shared question this read could not attribute to a team, and which questions to go
+  and look at. It names no reading and implies no author, and DEC-32's ban on AND/OR and
+  ground-partition vocabulary applies to whatever words you give it: the plane's own sentence is
+  written to be renderable as-is.
+
+**AND THIS CLOSES UI-14's RESIDUE, which you should know is what it is rather than discovering it.**
+UI-14 deleted `renderProposals` / `proposalGapHtml` / `loadProposals` on 2026-08-04 with the right
+reason, stated at the site: *op=proposals is no longer read by any surface: op=queue carries the
+same derivation as FINDING items … a second read of the same finding through a second op is exactly
+the "two surfaces answering one question" this item removes.* **The premise was true of the ITEMS
+and false of the ENVELOPE** — `op=queue` carried the derivation and not the ageing — so the one fact
+only `op=proposals` published stopped reaching any surface, and UI-45 rebuilt it locally four days
+later because the record was no longer offering it. **The consolidation stands and should**; the
+envelope now carries what it was missing.
+
+**`app.html` is NOT touched by this item and that is deliberate** — UI-43 is live in it. Nothing
+breaks meanwhile: the surface renders exactly as it does today.
+
+### DELEGATION 2026-08-09 RECORD (D-266) -> WHOEVER OWNS THE QUEUE'S OBLIGATION HALF: **THE CLASS THIS ITEM CLOSED HAS ONE MORE LIVE INSTANCE, AND IT IS YOURS RATHER THAN MINE**
+
+The class: **a place where `op=queue`'s answer is quietly shorter than what the record holds, with
+nothing in the answer saying so.** Swept over the 14 methods reachable from `queueFeed`. Two were
+undeclared and both are closed here. Nine are deliberate closures that say so at their own site —
+including three that a sweep could easily have miscounted as defects (`elsewhere.length === 0` is
+convergence, `drawing.length < 2` is a question nobody shares, the viewer gate is REC-30 withholding
+WHOLE and is asserted rather than assumed).
+
+**The one that is live and NOT closed here:** `queueFeed` drops a task on
+`if (!this.#queueEventLive(row)) continue;`. An OBLIGATION leaves every list when it is RESOLVED —
+that is DEC-16 working — but **the feed says nothing about having dropped it**, so on the queue a
+resolved obligation and one that never existed read identically. That is the same shape as the
+disposition gap this item just closed, one class over.
+
+**It is weaker than the one I fixed, and the difference is why I did not simply extend the block.**
+The resolution lives on the task row and `op=tasks` publishes it — **and the surface already calls
+`op=tasks` beside `op=queue`**, so the fact is reachable to the reader who wants it. The disposition
+gap was worse precisely because nothing called `op=proposals`, which is why `app.html` grew a
+page-local shadow instead. Extending `disposed` to cover resolutions would also be wrong in shape:
+a disposition is authored on a finding's identity and a resolution is record state on a routed task,
+and one block claiming both would flatten D-125's boundary rather than publish it.
+
+**If you take it**, the shape that fits is a third envelope block beside `mute` and `disposed`, with
+its own sentence, and `personal: false` again. `Store.QUEUE_DISPOSED_MAX` is the bound to copy.
+
+### DECISIONS FOR BOB 2026-08-09 (D-266): **ONE, AND IT IS MUCH NARROWER THAN THE ROW THAT RAISED IT**
+
+Measured against `kickoffs/README.md`'s three tests. **The question D-266 was raised for — what
+DECLINING means for a finding recomputed on every read — is NOT here, because the repository
+already answered it and test 1 says that makes it mine.** The evidence is in D-266's own row and at
+three code sites: D-79's *age rather than vanish*, `proposeDispose`'s *the disposition is a standing
+decision keyed by identity … it does NOT require a gap to currently fire*, and `proposalsFeed`
+returning the decision *independent of whether the underlying gap still fires* — plus the
+measurement that made it answerable, which is that **the two kinds that ARE dispositionable today
+are themselves recomputed on every read.** Being derived was never what withheld the act. It is
+decided, implemented, and driven.
+
+**What IS Bob's is one scoping ruling that the widening cannot be built without.**
+
+**MAY ONE TEAM'S DISMISSAL SILENCE ANOTHER TEAM'S NOTIFICATION ABOUT THAT OTHER TEAM'S STANCE?**
+
+- **What is running provisionally.** The disposition act is NOT widened. `op=proposedispose` stays
+  keyed on a defined progression's real stage; the three finding kinds that carry no such identity
+  publish `disposition.available: false` with the reason and the surface withdraws the control. A
+  member is never offered an act that would be refused, and nothing overclaims.
+- **Why it is ambiguous, and the two rules are both this project's.** `proposal_dispositions` is
+  INSTANCE-WIDE by design: DEC-16 makes a disposition a RECORD act keyed on the EVENT, so one act
+  clears the finding under every case it appears in. That is right for the record's own question
+  about a progression stage, which belongs to nobody in particular. **But a stance is expressly a
+  project's OWN property** (§7, D-216, measured by driving it), and the producer of
+  `stance-changed-here-not-elsewhere` already refuses to offer the stance-moving act as an option
+  on the item, in terms: *an act one team performs from a notification another team is reading is
+  the single shared stance §7 rejected, arriving through a button.* A dismissal is not an authoring
+  act — but it does take the notification out of the other team's queue. The record settles neither
+  rule against the other.
+- **The alternative.** Widen the act to take the item's own published identity, with the disposition
+  SCOPED to the project the finding is about, using the same relatedness predicate `versionAct`
+  already uses to refuse `VERSION_CURRENT_UNRELATED`. That creates a third scope beside "personal
+  mute" and "instance-wide record act".
+- **Recommendation: widen it, scoped to the project the finding is about — not instance-wide.**
+  Every item already publishes a stable identity, the ruling above says what a dismissal means, and
+  the missing act is one the record itself names as missing on two of the three producers
+  (`options_grain.missing` reads `stance` and `inquiry`). What I would not do is widen at the
+  instance-wide scope, because that lets one project close another project's question about its own
+  stance — the failure §7 was chosen to prevent.
+- **What reversing it costs: NOTHING TODAY, and it rises the moment the first one is recorded.** No
+  disposition has ever been recorded for any of these three kinds, so there is nothing to migrate
+  whichever way this goes. Once one exists, a disposition keyed at one scope cannot be re-scoped
+  without deciding, row by row, whose decision it was — which is `proposal_dispositions`' own
+  stranding hazard, named by PL-15 and still true.

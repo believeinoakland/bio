@@ -3319,3 +3319,91 @@ green. UI-43 is live on `app.html` and this touches one function body inside UI-
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's and IC-42's precedent.)*
+
+---
+
+## IC-57 · I3: `op=queue`'s ENVELOPE gains TWO ADDITIVE BLOCKS — `disposed` (the aged decisions) and `unattributed_readings` (the counted silence) · PROPOSED 2026-08-09 (D-266) — the version bump and the RESOLUTION are CONDUCT's
+
+### 1 · PROPOSED
+
+**The interface:** I3, the control plane. **The op:** `op=queue`. **The change: TWO new
+objects on the ANSWER'S ENVELOPE, beside `mute` and `counts`. Nothing is removed,
+renamed, reordered or re-typed, and NO ITEM'S SHAPE CHANGES AT ALL.**
+
+```
+disposed: {
+  personal:  false,                  // ALWAYS false: a disposition is a record act, not a preference
+  findings:  [ { id, key, progression_key, stage_key,
+                 state, reason, decided_by, at } ],
+  count:     <published>,            // how many are in `findings`
+  recorded:  <held>,                 // how many the read knows of
+  bound:     64,                     // QUEUE_DISPOSED_MAX
+  truncated: boolean,
+  detail:    "<sentence>"
+}
+unattributed_readings: {
+  count:      <n>,                   // readings of a shared question this read could not attribute
+  inquiries:  [ "<bundle_id>", … ],  // which questions to go and look at. NO reading is named
+  detail:     "<sentence>"
+}
+```
+
+**WHY THE FIRST ONE, and it is a LIVE defect rather than an enrichment.** `proposalsFeed`
+has always kept both halves of D-79 — a disposed proposal leaves `proposals[]` and is
+RETURNED in `dispositions[]`, because *a finding that disappears is indistinguishable from
+one that was never made*. **`op=queue` read that feed, inherited the AGEING, and published
+none of the ageing.** So on the one feed a member opens by habit, a finding they had
+dismissed simply stopped being in the answer, with nothing anywhere saying so —
+indistinguishable from a finding the record never derived. That is the sparse-level
+failure `CLAUDE.md` makes a first-class obligation, pointed at the queue.
+
+**The surface had already noticed and had done the only thing it could.**
+`civicos-ui/app.html`'s `notifRememberDisposition` / `notifDisposedHtml` keep a
+**page-local `Map` of the dispositions THAT PAGE performed** and render them under the
+queue. It is honest and it is a second place a fact is stated (D-21 / DEC-8) which
+survives **neither a reload nor a second member**. The record holds the fact; this op now
+publishes it.
+
+**WHY THE SECOND ONE.** D-266 folds in a smaller gap:
+`#findingsVersionFromAnotherTeam` mints NOTHING for a reading of a shared question whose
+authoring team the record cannot read — composed by hand, or by a run whose context is not
+one of the projects named. **That silence is correct and does not change here**: the source
+team is a run's stored context or it is nothing, and guessing one would manufacture the
+connection the notification claims attention for. What changes is that a member can now
+tell *no reading arrived from another team* from *readings arrived and this record cannot
+say whose they are*. **The count is published; the attribution still is not**, and the
+answer says why the two ways of being unattributable are not told apart (it would take
+projecting a stored column of `ai_runs`, which REC-74's declared role for that reader
+forbids).
+
+**WHAT NEITHER BLOCK DOES.** No new op, no new refusal code, no table, no migration, no
+change to `proposeDispose`, and **no claim about whether a disposed finding's underlying
+gap still fires** — the decision stands until it is re-triaged either way (D-79), and
+`op=proposals` is named in the answer as the op that answers that question.
+
+**MEASURED CONSUMER IMPACT — ZERO CONSUMERS TO MIGRATE, and the near-collision is named
+rather than left to be met.** Checked over `civicos-ui/**`, `agent-worker/**`,
+`pdf-worker/**` and `newgroup/**`: nothing reads `op=queue`'s answer for either name.
+**`app.html` line 9948 does read `res.disposed`, and it is a DIFFERENT OP** — `op=dispose`'s
+receipt, where `disposed` is an ARRAY of bundle ids. The two never meet (one is a bundle
+act's answer, the other is the queue's envelope) but a future helper written across both
+would meet them, so it is on the record here. The four `NOTIF_DISPOSED` references in
+`app.html` are the page-local shadow described above; they keep working untouched and are
+now replaceable by a read, which is filed as a DELEGATION to UI rather than done here —
+**UI-43 is live on that file.**
+
+**Additive, so nothing that reads `op=queue` today can break**: a consumer that ignores
+both blocks sees the answer it saw yesterday, item for item.
+
+### 2 · RESPONSES
+
+*(D-266's own position, for the area it can answer for.)* **RECORD: ADDITIVE and safe** —
+no item shape changes, and the two blocks are derived from a read `queueFeed` already
+performs. **UI: NOT-AFFECTED IN THE BREAKING SENSE and NOT MIGRATED HERE, deliberately.**
+The surface renders correctly today from its page-local shadow; replacing that shadow with
+the published block is a real improvement and it is UI's to make, in a file UI-43 is live
+in. The delegation names the two functions.
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's, IC-42's and IC-53's precedent.)*
