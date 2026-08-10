@@ -390,9 +390,9 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms: 738,
-  classified: 146,
-  corpus: 147,
+  arms: 748,
+  classified: 147,
+  corpus: 148,
   /* MOVED 2026-08-09 by D-277: 731 -> 738 / 145 -> 146 / 146 -> 147, ALL THREE IN
      THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
      `--strict` RUN PRINTED as REPRODUCIBLE (`arms 738/731 · classified 146/145 ·
@@ -409,13 +409,6 @@ const REGISTER_FLOOR = {
      the largest single declaration, which that paragraph does not become. That
      was CHECKED rather than assumed, because +7 matching one suite exactly is
      the kind of arithmetic that hides a lost arm somewhere else. */
-     from the merged tree's printed `GREW by 8 arm(s)` once REC-69 landed.
-     MOVED 2026-08-09 by D-258: 654 -> 659, from this run's printed `GREW by 5 arm(s)`
-     — the five arms D-258 added to `test/fieldread.control.mjs` (R2, P2, P3, O3, C2),
-     declared in `query.test.mjs`'s NEGATIVE CONTROL block. `classified` and `corpus`
-     do NOT move: no suite was added. ONE key set, deliberately — keep-both merges
-     have left duplicate `arms:` keys here six times, and once the last won and was
-     the lowest. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -511,27 +504,12 @@ const FLEET_FLOOR = {
   members: 2,
   surfaceOps: 4,
   suites: 5,
-     Named in the report so CONDUCT can re-read it on the merged tree.
-     MOVED 2026-08-09 by D-276 (FLEET): 43 -> 48 arms, from the figure a green
-     `--strict` run PRINTED in worktree agent-a76b49f4f882535a0 at base `8b60106`
-     (`48 arms · floor … 43 arm(s) · GREW by 5 arm(s)`) — never by adding five to
-     the number in the file. The five are D1-D5 in
-     `agent-worker/test/agent-worker.control.mjs`, declared in
-     `agent-worker/test/agent-worker.test.mjs`'s own NEGATIVE CONTROL block.
-     `members`, `surfaceOps` and `suites` are UNMOVED and were not invalidated:
-     no member, no surface op and no suite was added — D-276's new file
-     `agent-worker/test/plane-meaning.mjs` is a shared FIXTURE and not a
-     `.test.mjs`, so the fleet's suite count is still 5. ONE key set.
-     AND THE FIRST DRAFT OF THAT MOVE WOULD HAVE BEEN 50, WHICH IS RECORDED
-     BECAUSE IT IS A PROPERTY OF THE COUNTER RATHER THAN OF THE ARMS. D-276's
-     arms drive all three of `agent-worker`'s suites, so its first pass added a
-     sentence to the OTHER two suites' declarations pointing at them by label.
-     `readControl` read those CROSS-REFERENCES AS ARMS and the tally went to 50
-     — five real arms counted three times over, which would have put five arms of
-     phantom slack into a ratchet. The pointers were reworded to name no label,
-     the tally returned to 48, and the floor is 48. A cross-suite arm must be
-     enumerated in exactly ONE declaration. */
-  arms: 48,
+  /* RESTORED AT INTEGRATION 2026-08-09 by CONDUCT. This key was DROPPED by my own
+     conflict resolution on the D-277 merge, and the loss was SILENT: with no `arms`
+     the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
+     exit 0 while the fleet-arms ratchet had stopped existing. A ratchet that cannot
+     fail is a decoration. Set to the figure a green run PRINTED on the merged tree. */
+  arms:        48,
 };
 
 function discoverFleet() {

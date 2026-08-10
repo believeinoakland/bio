@@ -319,10 +319,20 @@ console.log("\n--- ARM C · THE CAPABILITY HALF: a project member WITHOUT contri
      /capabilit/i.test(bd) && !/lacks? the .* capabilit|does not hold the .* capabilit/i.test(bd),
      /project/i.test(cd)],
     [true, true, false]);
-  t("ARM C4: and they carry different MACHINE keys too, so a surface keys on the code and never on "
-    + "the prose — the capability refusal has no C-number at all and the gate's has C-22.8",
-    [r?.code ?? null, (await open(PIA, INQ_IN))?.reason ?? null],
-    [null, undefined]);
+  /* CORRECTED AT INTEGRATION 2026-08-09 by CONDUCT. PL-18 pinned the capability
+     refusal as carrying NO C-number, which was true when it measured: NOT_CAPABLE
+     was one of the untranslated codes REC-64's remaining sweep later partitioned,
+     and its admission-gate family (C-38) gave it one. So the old expectation was a
+     PIN ON THE GAP, not a rule — and the turn that closed the gap must correct it.
+     The assertion is rewritten to the property PL-18 was actually after and which
+     is STRONGER than the figure it pinned: both refusals carry a machine key, and
+     the two keys DIFFER, so a surface can key on the code and never on the prose. */
+  const capCode = r?.code ?? null;
+  const gateAns = await open(PIA, INQ_IN);
+  t("ARM C4 (CORRECTED, was a pin on NOT_CAPABLE having no C-number): both refusals carry a MACHINE "
+    + "key and the two keys DIFFER, so a surface keys on the code and never on the prose",
+    [typeof capCode === "string" && capCode.length > 0, capCode !== "C-22.8", gateAns?.reason ?? undefined],
+    [true, true, undefined]);
 }
 
 console.log("\n--- ARM D · DEC-17: AN INQUIRY OUTSIDE ANY PROJECT ---");

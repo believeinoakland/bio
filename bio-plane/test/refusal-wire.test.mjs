@@ -546,7 +546,16 @@ for (const n of NO_CODE) console.log(`      no-code  op=${n.op} (${n.who}) keys:
 t("the ops answering a caller with NO code at all are NAMED — D-270, raised by this item and not "
 + "fixed by it, because giving the session gate a code is an interface decision and not a translation",
   [...new Set(NO_CODE.map((n) => n.op))].sort(),
-  ["capture", "monitor", "pdfstructure", "provenancechain", "provenanceroute", "taskdrain"]);
+  /* STRUCK AT INTEGRATION 2026-08-09 by CONDUCT, WITH THE REASON, exactly as the
+     comment above requires: `provenancechain`, `provenanceroute` and `taskdrain`
+     were the SESSION-GATE three, and REC-64's remaining sweep gave that gate a code
+     in its admission-gate family (C-38) — so they answer a code now and this line
+     failed in the GOOD direction. That is the pin working as designed: it was
+     written to fail when one of the six was fixed, not only when a seventh arrived.
+     THREE REMAIN, and they are the other kind D-270 names: ops refusing a MISSING
+     ARGUMENT with a bare `error` string. Giving those a code is still an interface
+     decision rather than a translation, so D-270 stays open on a smaller corpus. */
+  ["capture", "monitor", "pdfstructure"]);
 console.log(`    BODIES THIS WALK COULD NOT CLASSIFY: ${NOT_CLASSIFIED.length}`);
 for (const n of NOT_CLASSIFIED.slice(0, 20)) console.log(`      unclassified  op=${n.op} (${n.who}) — ${n.why}`);
 /* The census is REPORTED and NOT GATED, deliberately: gating it would fail this
