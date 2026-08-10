@@ -38,6 +38,7 @@
    (F8) SUB-SESSIONS SHARE NO STATE. Hand every level the same contract object -> the per-level and no-shared-identity arms must FAIL; the return contract must HOLD.
    (F9) OVER-STRICTNESS, nothing broken, and these must PASS.
    FULL PER-ARM DETAIL AND THE MEASURED FIGURES ARE IN `test/fanout.control.mjs`'s own header.
+   D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. The one that concerns this file is the world-as-it-shipped arm: with a fixture that says yes to everything, every BEHAVIOURAL assertion here passes over a call the real plane refuses, and the only thing that sees it is the single assertion here that reads the plane's registry instead of the mock. This suite's baseline moved 172 to 175 with D-276.
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
@@ -54,6 +55,12 @@ import {
   FOUND_STATES, LOOKED_STATES,
   spawnContract, spawnContracts, checkReport, takeReports, citedAddresses,
 } from "../src/subsession.mjs";
+/* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
+   registry and refusal catalog. This suite's own mock used to answer
+   `{ ok: true, rows: [] }` for any argument, which is why its 172 assertions
+   were green over a call the real plane refuses. */
+import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARM } from "../src/harness.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -501,8 +508,7 @@ export default {
       return Response.json({ ok: true, result: { half, payload } });
     }
 
-    if (op === "meaningrows")
-      return Response.json({ ok: true, result: { rows: [], limit: 50, truncated: false, total: 0 } });
+    ${meaningRowsBranch("[]")}
 
     if (op === "basisversions")
       return Response.json({ ok: true, result: { versions: [], limit: 50, truncated: false } });
@@ -577,7 +583,21 @@ console.log("\n--- B2 · THE PARENT RE-READS BY ADDRESS (§14b.1), observed at t
   const mf = newMf();
   const out = await (await runOp(mf, { ...base,
     judgements: [{ targets: [] }, { reports: goodReturns }, { candidates: [] }, {}] })).json();
+  /* D-276 SHARPENED THIS ARM RATHER THAN ADDING ONE BESIDE IT. `citations_reread`
+     used to climb once per address REGARDLESS of what the plane answered, so it
+     counted CALLS MADE and was published as READS DONE — and every one of those
+     calls was in fact refused `MEANING_ROWS_UNKNOWN_ARM`, because the member
+     asked for an arm the record does not hold. This assertion was passing over
+     three refusals. It counts answered reads now, and the mock can refuse
+     (`plane-meaning.mjs`), so a wrong arm takes it to 0. */
   t("three distinct addresses were cited and three were re-read", out.citations_reread, 3);
+  t("D-276: those three were ANSWERED, not merely attempted — no re-read was refused",
+    (out.refusals || []).filter((r) => r && r.at === "meaningrows"), []);
+  t("...and the observation entry says so in the record's own words, all three of three",
+    /3 of 3 citation\(s\) re-read BY ADDRESS/.test(
+      out.trace?.find((x) => x.step === "collect")?.note ?? ""), true);
+  t("...and the arm it asked at is one the PLANE's compiler holds",
+    MEANING_ARMS.includes(String(MEANING_ARM).trim().toLowerCase()), true);
   const st = await mockState(mf);
   const reads = st.log.filter((l) => l.op === "meaningrows" && Array.isArray(l.body?.ids));
   t("each re-read reached the plane as an `ids` restriction on PL-9's own read",

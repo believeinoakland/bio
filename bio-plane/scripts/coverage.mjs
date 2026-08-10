@@ -511,6 +511,27 @@ const FLEET_FLOOR = {
   members: 2,
   surfaceOps: 4,
   suites: 5,
+     Named in the report so CONDUCT can re-read it on the merged tree.
+     MOVED 2026-08-09 by D-276 (FLEET): 43 -> 48 arms, from the figure a green
+     `--strict` run PRINTED in worktree agent-a76b49f4f882535a0 at base `8b60106`
+     (`48 arms · floor … 43 arm(s) · GREW by 5 arm(s)`) — never by adding five to
+     the number in the file. The five are D1-D5 in
+     `agent-worker/test/agent-worker.control.mjs`, declared in
+     `agent-worker/test/agent-worker.test.mjs`'s own NEGATIVE CONTROL block.
+     `members`, `surfaceOps` and `suites` are UNMOVED and were not invalidated:
+     no member, no surface op and no suite was added — D-276's new file
+     `agent-worker/test/plane-meaning.mjs` is a shared FIXTURE and not a
+     `.test.mjs`, so the fleet's suite count is still 5. ONE key set.
+     AND THE FIRST DRAFT OF THAT MOVE WOULD HAVE BEEN 50, WHICH IS RECORDED
+     BECAUSE IT IS A PROPERTY OF THE COUNTER RATHER THAN OF THE ARMS. D-276's
+     arms drive all three of `agent-worker`'s suites, so its first pass added a
+     sentence to the OTHER two suites' declarations pointing at them by label.
+     `readControl` read those CROSS-REFERENCES AS ARMS and the tally went to 50
+     — five real arms counted three times over, which would have put five arms of
+     phantom slack into a ratchet. The pointers were reworded to name no label,
+     the tally returned to 48, and the floor is 48. A cross-suite arm must be
+     enumerated in exactly ONE declaration. */
+  arms: 48,
 };
 
 function discoverFleet() {

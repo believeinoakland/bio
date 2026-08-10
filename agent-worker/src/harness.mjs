@@ -211,6 +211,39 @@ export const PLANE_OPS = {
   airunclose:     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
 };
 
+/** THE MEANING ARM THIS MEMBER READS AT — D-276, AND IT IS A DECLARATION RATHER
+ *  THAN A DEFAULT, BECAUSE THE PLANE REFUSES DEFAULTS.
+ *
+ *  `op=meaningrows` will not choose an arm for a caller. C-23.1's own words:
+ *  *"Each reads a different table and answers a different question, so there is
+ *  no default that would not be answering something you did not ask."* The
+ *  member's meaning reader used to carry `rows = "legs"` as a DEFAULT PARAMETER,
+ *  which put that choice back exactly where the plane had refused to leave it —
+ *  and put it there in a spelling the record does not hold.
+ *
+ *  WHY `leg`, AND IT WAS ESTABLISHED BY DRIVING THE REAL PLANE RATHER THAN
+ *  ASSUMED. The compiler holds THREE arms resolving to TWO tables: `leg` reads
+ *  `inquiry_basis`, one row per LEG of an inquiry's basis, while `resolves` and
+ *  `concerns` BOTH read `resolutions` and project the identical row — they
+ *  differ only in which bare word their BUNDLE-grain selector takes, which is a
+ *  distinction in the `q` language and not in what `rows=` returns. A resolution
+ *  is a reference in a capture resolving to a registered subject: the reading
+ *  half's grain, and not what this member does. THIS RUN FORMS VERSIONS OF A
+ *  BASIS — its context is an inquiry, `dedup` reads `op=basisversions`, `submit`
+ *  writes through `op=suggest`. The legs ARE what it composes against.
+ *
+ *  IT LIVES HERE, BESIDE `PLANE_OPS`, AND NOT IN THE WORKER: a named export of a
+ *  STRING from a Worker entry module is refused by workerd at startup
+ *  (*"Incorrect type for map entry … not of type 'function or ExportedHandler'"*
+ *  — measured), so a constant the suite must import cannot sit there. This is
+ *  the file that already declares what this member may name at the plane, which
+ *  is where a declaration of HOW it names it belongs.
+ *
+ *  THE VALUE THAT WAS HERE — `"legs"`, plural — IS AN ARM THE PLANE DOES NOT
+ *  HOLD. Every call carrying it was refused `MEANING_ROWS_UNKNOWN_ARM` (C-23.2)
+ *  and the refusal was written into an observation entry as a zero. */
+export const MEANING_ARM = "leg";
+
 /* ---------------------------------------------------------------- THE TABLE
  *
  * `to` is the COMPLETE set of steps a row may move to, and `nextStep` is held to
