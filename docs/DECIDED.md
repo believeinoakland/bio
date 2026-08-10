@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-618 rulings across 65 documents.
+619 rulings across 65 documents.
 
 ## DEC-
 
@@ -523,7 +523,7 @@ authority is the file named, never this one.
 - **REC-16** — — author-scoped (any `contribute` holder, act attributed) is SETTLED, not provisional.  
   `docs/archive/ledgers/QUEUE-2026-08.md:856`
 - **REC-16** · 2026-08-04 — attest act through REC-16's prompt mechanism, imported from where the rule is enforced, the drafted wording verbatim — CORRECTED 2026-08-04 at REC-43's landing: this line first said "Bob's sentence verbatim", which this entry's own words contradict.  
-  `docs/development/DECISIONS.md:552`
+  `docs/development/DECISIONS.md:567`
 - **REC-19** · 2026-08-01 — reasoning recorded in: docs/architecture/BIO_Interaction_Constructs_v0_1.md, "RULED 2026-08-01: the pre-flight is plane-sourced — publication by default, dry-run when the refusal needs unseen state", inside the ACT ladder where the defining property is stated. for CONDUCT to enact: nothing new in the queue — REC-19…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:475`
 - **REC-21** — ane/test/queue.test.mjs (ONLY: the HOLE-1 pin that asserts no CONDITION item and an empty-of-nothing classes_deferred — CORRECTED with a dated comment, never exempted), bio-plane/test/queue-state.test.mjs (ONLY: the head-comment statement that CONDITION has no producer, and the two live-item clauses that can now…  
@@ -1093,10 +1093,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLIENT-RENDERED.md:32`
 - RULED: third-party output is attributed to the third party Bob's ruling puts the question the right way round.  
   `docs/development/CLIENT-RENDERED.md:115`
+- approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected, not merely unmeasurable.  
+  `docs/development/DECISIONS.md:138`
 - CONCEDED — semantically each ground IS a claim: the same proposition asserted on a distinct basis.** What the grounds shape refuses is not claim-plurality; it is separate OBJECT IDENTITY for each claim inside the finding.  
-  `docs/development/DECISIONS.md:288`
+  `docs/development/DECISIONS.md:303`
 - **2026-08-03** — RULED IN PART 2026-08-03 by Bob — THE ARITHMETIC IS SETTLED: *"The simple truth is that sometimes the weakest is the claim's strength, and other times it's not.  
-  `docs/development/DECISIONS.md:306`
+  `docs/development/DECISIONS.md:321`
 - **2026-07-30** — RULED by Bob, 2026-07-30: `index` versus `record` changes monitoring's BEHAVIOUR, not just which normalisation rules apply. A Legistar calendar changing is the calendar working.  
   `docs/development/DOCUMENT-PROFILES.md:144`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The layers run in this order because each is cheap relative to the next and each can settle the question outright. `docprofile/pipeline.mjs` is the driver and every result carries a `trail` recording where the reasoning stopped, because a verdict whose depth is invisible cannot be audited.  
