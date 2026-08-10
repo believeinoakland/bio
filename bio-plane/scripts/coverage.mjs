@@ -481,9 +481,18 @@ const REGISTER_FLOOR = {
      and D-266. Taking the branch's 737 would LOWER a ratchet, which is the
      silent-slack failure this file exists to prevent, so the higher figures
      stand here and the merged tree's own printed run moves them below. */
-  arms: 771,
-  classified: 148,
-  corpus: 149,
+  /* MOVED AT INTEGRATION 2026-08-10 by CONDUCT: 771 -> 782 / 148 -> 150 / 149 -> 151,
+     read off what the MERGED tree's own green `--strict` run PRINTED — `REGISTER
+     FLOOR arms 782/771 · classified 150/148 · corpus 151/149 · GREW by 11 arm(s)`,
+     provenance `162 of 162 discovered item(s) are in the commit at HEAD (0110ffe)`
+     — never by adding the branch's claimed +6 to the number above. **The branch
+     measured +6 and the merged tree prints +11, and that difference is the reason
+     this figure is read rather than computed:** D-267's own baseline was 731 and
+     `main`'s was 771, so the arithmetic of two independently-correct deltas is not
+     the merged total. Figures read AFTER the suites were in a commit. Nothing FELL. */
+  arms: 782,
+  classified: 150,
+  corpus: 151,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

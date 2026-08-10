@@ -656,7 +656,9 @@ scope: **THE POINTER ROW for the IS build, because `IS-BUILD-PLAN.md` is the aut
 
 **PRIOR POSITION (2026-08-08, earlier in the day): battery 112/112 at 6,746, UI harness exit 0 at 40 suites, `--strict` exit 0 with 143 ops and 93 checks all named, plancheck 0/0. PL-2 LANDED with UI-52.** W1 slot A was PL-7 (landed as REC-60) and slot B was PL-5 (landed as IS-6), so the two items CONDUCT ran before the plan arrived closed its first working wave. **PL-6 was already satisfied by REC-59.**
 
-**CURRENT WAVE — W2: slot A (PL-8) HAS LANDED; slot B is next.** ~~slot A **PL-8** (D-222 option A, the set-algebra arm; discharges D-223, so hunch debt becomes enumerable at inquiry grain — and hunch debt is publication-DISQUALIFYING, which is why D-223 was the sharpest single instance of the missing query surface). ~~ Slot B **PL-1** (basis versions — the spine) is the next item, and PL-12 (D-84, the bias object) goes to the first free slot. **Per the wave rule slot A did NOT idle: it pulled PL-9 forward, and PL-9 has LANDED. PL-10 has LANDED too. Slot A's column now reaches PL-11 (the `ai` class), which needs PL-4 first — so the next slot-A item is **PL-4** (`capture_requests` + the drain, carrying DEC-47's conduct at ONE enforcement point). Slot B has never run: **PL-1 (basis versions, the spine) is still the next item there.**
+**WAVE POSITION 2026-08-10, MEASURED AGAINST THE TREE AND NOT AGAINST THIS ROW: THE PLAN IS DRAINED TO W9.** Every PL, FL, SK, VF and UI row `IS-BUILD-PLAN.md` schedules is landed BY CONTENT — checked one file at a time (`fence.test.mjs`, `fence-e2e.test.mjs`, `scheduler.test.mjs`, `fanout.test.mjs`, `publishedcase.test.mjs`, `version-review.test.mjs`, `notifications.test.mjs`, `skillpack.mjs`), never by reading a status field. **Only PL-16 (W9, the published case) and its UI half remain unmeasured here.** The forward work is now the DEBT residue those items raised, which is what the 2026-08-10 wave below spawns against. **Everything from the paragraph below down to the wave rule is SUPERSEDED HISTORY, kept because a wave position deleted is a wave position nobody can audit** — and it was stale by seven waves when this correction was written, which is the receipt for checking the tree.
+
+~~**CURRENT WAVE — W2: slot A (PL-8) HAS LANDED; slot B is next.**~~ ~~slot A **PL-8** (D-222 option A, the set-algebra arm; discharges D-223, so hunch debt becomes enumerable at inquiry grain — and hunch debt is publication-DISQUALIFYING, which is why D-223 was the sharpest single instance of the missing query surface). ~~ Slot B **PL-1** (basis versions — the spine) is the next item, and PL-12 (D-84, the bias object) goes to the first free slot. **Per the wave rule slot A did NOT idle: it pulled PL-9 forward, and PL-9 has LANDED. PL-10 has LANDED too. Slot A's column now reaches PL-11 (the `ai` class), which needs PL-4 first — so the next slot-A item is **PL-4** (`capture_requests` + the drain, carrying DEC-47's conduct at ONE enforcement point). Slot B has never run: **PL-1 (basis versions, the spine) is still the next item there.**
 
 **SLOT-FREE LANES RUNNING BESIDE THEM (W0's, and two are PRECONDITIONS the plan front-loads deliberately because each reshapes an item BEFORE its wave):** **FL-1** — the D-218 probe into `MEASUREMENTS.md`, sizing whether a fleet-member Worker can hold a whole run inside the paid CPU ceiling, which fixes FL-3's shape; **the D-216 model check**, which decides whether PL-13 is even the right item (sharing is the `refs` edge, else cloning is the honest answer — a checkable fact, to be recorded either way); **VF-2**, the DEC-49 guard (an untranslated code fails the harness), which every fence the IS build adds then inherits; and **SK-1**'s doctrine authoring. Also this wave: **D-224 measured** — `connections`' k(k−1)/2 growth, cheap and measurement-only, **before anyone trusts REC-60's newly capped read at scale.**
 
@@ -670,12 +672,12 @@ depends-on: none
 accepts-when: not a build item. It is CORRECT while the wave position it states matches `IS-BUILD-PLAN.md`'s table and the items it names are the ones actually running; CONDUCT updates it at every wave boundary and it is checked at every handover.
 added: 2026-08-07 · CONDUCT (enacting the confirmed plan; a pointer, deliberately not a transcription)
 
-### PL-19 · running (spawned 2026-08-09) — LANDED on branch, integrated 7c94b43
+### PL-19 · done — merged 2026-08-09 at 7c94b43 (status corrected 2026-08-10 by CONDUCT: it read `running` with no worker alive)
 milestone: M9 · interface: I3 (a refusal's condition narrows; no op contract moves) · depends-on: PL-17 (done)
 scope: **DEC-65's step TWO — `C-25.6` and PL-3's endpoint guard change TOGETHER.** FL-3 measured that the guard refuses on `legsIn.length > 0` — any leg at all — **so it FIRES FIRST and amending the check alone would land, pass its own suite, and change no behaviour.** That is the whole reason the two are one item; its control arm (1) is the receipt (revert the guard, leave the check wired, and the feature is completely unreachable).
 landed: merged 2026-08-09 at 7c94b43. **It found the WRONG C-NUMBER STILL LIVE IN THE PLANE** — FL-3 corrected DEC-65's entry, but PL-3's guard still cited `C-25.15` (`VERSION_ORPHAN_ROW`) in its comment and TWICE in a refusal a caller reads, so a member hitting it was sent to an unrelated rule.
 
-### PL-20 · running (spawned 2026-08-09) — LANDED on branch, awaiting integration
+### PL-20 · done — integrated 2026-08-09 (status corrected 2026-08-10 by CONDUCT: `worktree-agent-a04afa9454cdf0bc2` is an ancestor of `origin/main` and its content is in the tree)
 milestone: M9 · interface: none · depends-on: PL-19
 scope: **DEC-65's step THREE — re-measure the strength pair over GROUNDS**, which PL-19 explicitly did not do and delegated with what it already knew.
 landed: green on `worktree-agent-a04afa9454cdf0bc2`. **ANSWER: `#strengthWalk` never reads `asserted_by`**, computed as the transitive callee closure (8 functions over 406 methods + 109 catalog functions) rather than listed, so the new state cannot move a pair and **DEC-65's licence closes at the arithmetic.** **AT INTEGRATION: three §4 assertions are deliberately pinned `PINNED DEFECT (correct at integration)` and are written to FAIL now that PL-19 is on `main` — CORRECT them to the refusal with a dated reason, never exempt.**
@@ -690,7 +692,7 @@ milestone: M0 (background lane) · interface: none · depends-on: none
 scope: **Detect a merge that silently drops a file whole** — CONDUCT's 2026-08-08 merge of REC-69 carried 11 files where the branch changed 12, losing 70 lines of floor moves, and NOTHING went red because a dropped floor goes SLACK.
 landed: green on `worktree-agent-aad02e8ce9832de00`. `tools/mergecarry.mjs` + a `plancheck` gate, chosen over the battery because the battery would be a no-op in ~85 of ~86 worktrees. **182 merges audited over all of `origin/main`: 3 dropped, 0 false positives over seven benign classes each DRIVEN through a real `git merge`.** **Two more instances found already on `main`, one with a LIVE consequence — see D-264.**
 
-### D-269 · running (spawned 2026-08-09)
+### D-269 · done (status corrected 2026-08-10 by CONDUCT: `DEBT.md`'s D-269 row reads CLOSED 2026-08-09 — the PLANE was re-worded, not the surfaces silenced. UI-53 is its delegation and is the branch still to land)
 milestone: M9 · interface: possibly I3 (the plane's SUCCESS wording) · depends-on: none
 scope: **The vocabulary DEC-32 clause 1 forbids is being rendered to MEMBERS right now.** UI-43 measured it: 3 of 3 of `#axisResult`'s detail sentences on `op=versionstrength`'s SUCCESS answer, 1 of 163 canned translations, and **`civicos-ui/app.html` already renders them at four live sites off `op=inquirystrength`** — firing exactly when a member has used UI-27's elicitation. **The CHOICE is the item: re-word the plane, or stop rendering and lose real information a member is using.** UI-43 declined to pick, correctly — it is a judgement about what a member sees.
 accepts-when: the choice made and argued from measurement with its reversal cost; an IC row with measured consumer impact if the plane's wording moves; the matcher INVERTED — UI-43's first read **2 of 3** and missed the graded branch, the case that bites, because that sentence splits across a boundary.
@@ -723,7 +725,7 @@ not merge D-271 and leave the ceremony as it stands.** Filed as IC-52's sequenci
   and took `--strict` to exit 1. **Spawned as D-277**; it is the fourth outing of that class
   and the first on a GATE.
 
-### D-271 · running (spawned 2026-08-09)
+### D-271 · done (status corrected 2026-08-10 by CONDUCT, content-checked rather than believed: `store.mjs` carries `affirmed` at 22 sites and `C-25.33` is in the catalog)
 milestone: M9 · interface: possibly I3 · depends-on: none
 scope: **Two record-truth defects found by UI-43.** (1) **The affirmation has nowhere to land** — DEC-32 clause 4 requires each set be affirmed before a multi-set reading is accepted, and no version act has a field for it, so a ceremony the record cannot record. (2) **`shared_origins` is published on `op=suggest`'s WRITE and on no READ**, so CHECK 4's own sentence — *"published on every version that passes, so the member affirming at the accept ceremony is affirming against what the record can see"* — is **true of the write and false of the read.** A check describing a guarantee it does not provide, with the accept ceremony built on top of it.
 accepts-when: both halves measured FROM THE PLANE rather than inherited from the surface; if the fix corrects the CHECK's sentence rather than the code that is legitimate and is a correction with the reason in a comment, never an exemption.
@@ -754,7 +756,79 @@ one-sided pricing `kickoffs/CONDUCT.md` records the previous CONDUCT making four
 ephemeral worker costs nothing; an idle SLOT costs the session.
 
 
-### PL-17 · running (spawned 2026-08-09)
+### WAVE SPAWNED 2026-08-10 — FOUR WORKERS, and every row below existed before its worker did
+
+**The handoff said FOUR branches were unmerged. There were SIX**, and the two it did not name
+carried real content absent from `main` — D-270 (`test/d270-reach.test.mjs`, 458 lines) and
+D-263 (`test/register-grammar.test.mjs`). Both were checked for CONTENT rather than for the
+word "merged": `git cat-file -e origin/main:<a file the item added>` answered ABSENT for each.
+**A handoff is a claim, not a measurement**, and this is the `--is-ancestor`/content asymmetry
+arriving in prose instead of in git.
+
+**Also corrected here rather than left to rot:** PL-17, PL-18, PL-19, PL-20, D-269 and D-271
+all read `queued` or `running` while their work is on `main`. Content-checked, one by one —
+`airun.mjs` carries DEC-63's gate, `store.mjs` carries `affirmed` at 22 sites, `C-25.33` is in
+the catalog. **A status field nobody re-reads goes stale exactly the way a hand-carried number
+does**, and this file is the one every other session reads to learn what is running.
+
+**Why these four, and why not more:** the IS build plan is drained to W9 — every PL, FL, SK, VF
+and UI row it schedules is landed by content (checked: `fence.test.mjs`, `scheduler.test.mjs`,
+`fanout.test.mjs`, `publishedcase.test.mjs`, `version-review.test.mjs`, `notifications.test.mjs`
+all present). **The forward work is now the DEBT residue those items raised**, and the four
+below are the rows whose paths are DISJOINT. **D-281 is deliberately NOT spawned:** closing it
+needs one honest 8-battery run on a QUIET machine, and a wave is the opposite of that — it
+would measure this wave rather than the ceiling, which is the instrument-answering-about-itself
+class this project keeps paying for.
+
+| item | what it is | area | paths |
+| --- | --- | --- | --- |
+| **D-280** | six reverse-edge reads derive membership from a projection that dropped `status`; one is DRIVEN (`op=strengthbarof` lets a project that WITHDREW still set the publication bar) | RECORD | `store.mjs` — the one contended file in this wave |
+| **D-282** | a suite failing with a large enough dump loses its own tally, because `process.exit()` discards unflushed PIPE writes. 102,105 bytes of tail measured discarded | M0 lane | `t()`, `scripts/battery.mjs` |
+| **D-265** | the walk census grades the file the walk is IN, and a walk's floor can live in a different file | M0 lane | `test/hygiene.test.mjs`, `scripts/op-claims.mjs` |
+| **D-251** | a text layer's fidelity is unmeasured and the one cheap read that narrows it is unbuilt — 3 of 14 Legistar attachments name ABBYY in `/Info` | CONTENT-PDF (promoted) | `pdfstructure.mjs`, I2 |
+
+**D-282 and D-265 both reach `test/hygiene.test.mjs` and that is stated rather than hidden** —
+D-282's fix is in the dump and the spawn's stdio, D-265's is in the census. Measured evidence
+says this class of conflict costs one hand resolution, not a slot.
+
+### D-280 · queued
+milestone: M9
+interface: possibly I3 — `op=strengthbarof`'s answer changes for a withdrawn citer; if the published shape moves, file the IC
+depends-on: none — D-267 landed (merge above) and its `#refEdgeSevered` predicate is the thing to reuse
+scope: **`DEBT.md`'s D-280 row is the authority and it is on `main`; do not re-derive its corpus.** It printed the census (15 reverse-edge reads over `refs`/`inquiry_basis`, 6 confirming, 9 not) and named each of the six by method with its reach. **The strongest is `#requiredStrengthFor` and it is DRIVEN**: a project whose only citing relation is `status: severed` still answers `declared: true` and sets the publication bar on a document it left. **Take the DRIVEN one first** — it is the live harm and the others are graded by reach beneath it. **`#leadBasisAbsence` is named UNDETERMINED in the row rather than scored, and it must stay a judgement you ARGUE, not one you inherit.** Reuse D-267's ONE severance predicate; a second implementation is the shape that has already absorbed a control here. **Severance narrows only on a positive recorded withdrawal** — unreadable is live, unrecorded is live, an unrecognised `status:` spelling is live — because a fence tighter than its rule drops homes nobody gave up.
+accepts-when: the driven site refuses to count a severed citer, driven THROUGH `op=strengthbarof` and not asserted at the store; each remaining site of the six either fixed or NAMED with the reason it is not; `cd bio-plane && npm run test:battery` green — **measure your own baseline and trust it over this row**, any delta attributed per suite by RE-RUNNING the true baseline; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` exit read unpiped from the repo root.
+NEGATIVE CONTROL: run and recorded, each arm armed ALONE, restores verified by sha256 AND content, the harness INSIDE your own worktree — (1) revert the confirmation at the driven site and the bar arm must fail naming it; (2) **an OVER-STRICTNESS arm that is the point of this item**: a citing project with NO recorded status, and one with a `status:` spelling you did not anticipate, must both still read as LIVE homes; (3) neuter the corpus walk you use and its reach must fail as a DELTA with the corpus size PRINTED.
+added: 2026-08-10 · CONDUCT (D-267's sweep residue, routed at D-267's integration rather than left in the debt file)
+
+### D-282 · queued
+milestone: M0 (background lane, holds no slot)
+interface: none — test estate; it changes no plane behaviour
+depends-on: none
+scope: **`DEBT.md`'s D-282 row is the authority.** The mechanism is measured and reproduced: `hygiene.test.mjs` ends `process.exit()`, and when stdout is a PIPE those writes are asynchronous, so `process.exit` returns to the OS unflushed. **191,434 bytes reached a FILE and 89,329 reached a PIPE in the same run — 102,105 bytes of TAIL discarded, and the tail is where the tally lives.** `scripts/battery.mjs:413` spawns EVERY suite with default stdio, which is a pipe. **`maxBuffer` was tested and killed as a hypothesis; do not re-run that experiment.** The amplifier is `t()`: D-237 caps the failure LABEL at 8 entries and then prints `want … got …` with the FULL array, so the cap defends nothing at the only moment it matters. **THE THRESHOLD AND THE HISTORICAL REACH ARE BOTH UNDETERMINED and the row says so — narrowing either is worth more than a tidy fix, and "unknown" stays stated if you cannot narrow it.**
+accepts-when: a deliberately-flooding suite reports its TALLY through a pipe, asserted; the `got` dump capped the way its label already is, or suites flush before exiting, with the choice ARGUED; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) restore the unflushed exit and the flooding-suite arm must FAIL, which is the arm proving the fix is what carries the tally; (2) an OVER-STRICTNESS arm: a genuinely large but READABLE failure must not have its useful diagnosis truncated by your cap — a fix that makes every failure unreadable is the opposite defect; (3) D-93's original shape re-run and still green, so the two are independent rather than one thing measured twice.
+added: 2026-08-10 · CONDUCT (D-249's control arm caught ITSELF; the arm was right while the harness was wrong)
+
+### D-265 · queued
+milestone: M0 (background lane, holds no slot)
+interface: none
+depends-on: none
+scope: **`DEBT.md`'s D-265 row is the authority.** `hygiene.test.mjs`'s walk census grades the file the walk is IN, so `scripts/op-claims.mjs` walked the whole repository and `test/op-claims.test.mjs` floored on four figures derived from that walk — and the census never enumerated the second at all, because it contains no `readdirSync(`. **Both instances are already GUARDED, so this row is about the DETECTOR and not a live exposure; a fix that only closes the instance closes nothing.** The row names two shapes and prefers the second: extend the census to a second question (does this file import an identifier from a walking module, and does a floor here derive from it), or **make the exported walks themselves carry the classification so a floor computed from an unguarded corpus is impossible to WRITE rather than merely detectable.** That is REC-70's inversion — *a list of spellings goes stale silently the moment a fourth is written* — and it is the reason to prefer it.
+accepts-when: a file that floors on an imported walk is either GUARDED or NAMED, never silently graded harmless; **the census's REACH asserted as a DELTA with the corpus size PRINTED**; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) write a NEW file that imports a walk and floors on it, in a spelling you did not anticipate, and the census must either GUARD it or NAME it — never score it clean, which is the arm this item exists for; (2) neuter the census and its reach must fail as a DELTA with the corpus size printed; (3) an over-strictness arm — a file that merely imports a walking module without flooring on it must NOT be failed.
+added: 2026-08-10 · CONDUCT (M0-18's residual, routed here rather than left sitting)
+
+### D-251 · queued
+milestone: M2 — **CONTENT-PDF is PROMOTED for this item** (it has been DORMANT since 2026-08-03; activation order is CONDUCT's, ruled 2026-07-31)
+interface: I2 — a `producer` field on the text shape is ADDITIVE; file the IC row with measured consumer impact
+depends-on: none — CPDF-9 and CPDF-10 both landed and their measurements are the ground
+scope: **`DEBT.md`'s D-251 row is the authority, and CPDF-9's measurement is the reason it is not theory: 3 of 14 recent Legistar attachments name ABBYY FineReader in their producer metadata — the Clerk's CERTIFIED ENACTED RESOLUTIONS carrying garbled OCR overlays the record has been reading as authored text.** Build the trailer's `/Info` `Producer`/`Creator` read in `pdfstructure.mjs` (measured: zero matches for `Producer` in that file today), carry it as a `producer` field on I2's text shape, and compose the chain step from it in `index.mjs`'s acquire assembly. **THE DESIGN IS THE DEFAULT AND NOT THE TABLE:** a layer whose producer names OCR software becomes `layer -> ocr(<product>)` with the product NAMED; a layer with no such marker stays **`undetermined`, NEVER "authored"** — an absent marker is an absent marker. **The classification may only ever make the claim WEAKER.** That is `CLAUDE.md`'s *undetermined is first-class and must be STATED* on one field, and a lookup table of product names would be the record claiming more than it can support one field wide on every document in the store.
+accepts-when: a fixture PDF whose `/Info` names an OCR product reads `layer -> ocr(<product>)` with the product named, driven through the acquire op and not asserted at the parser; a fixture with NO marker reads `undetermined` and never "authored"; the IC row filed with measured consumer impact; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) remove the `/Info` read and the named-engine arm must fail; (2) **the arm this item exists for: make the classification able to STRENGTHEN — let an absent marker read as "authored" — and an assertion must fail naming it**; (3) an over-strictness arm: a producer string in a spelling you did not anticipate must leave the layer `undetermined` rather than crash or guess.
+added: 2026-08-10 · CONDUCT (CPDF-9's third amendment to DEC-4; the highest-value unbuilt half of CPDF-10)
+
+
+### PL-17 · done (status corrected 2026-08-10 by CONDUCT: PL-19 depends-on it and records it `done`, and PL-19 itself merged at 7c94b43)
 milestone: M9
 interface: I5 (a new value in an existing field — additive; the shape is not reshaped)
 depends-on: none — PL-1 landed and this extends its field
@@ -763,7 +837,7 @@ NOT in scope, per DEC-65's sequencing: `C-25.6` and PL-3's endpoint guard, which
 accepts-when: the third state exists and is reachable; a machine's single-part row carries it rather than a member's meaning; the battery is green; `node scripts/coverage.mjs --strict` exit 0 read unpiped; the worker states whether existing rows need a migration.
 NEGATIVE CONTROL: declared and RUN by the worker; it must include an over-strictness arm — a genuine member claim in a spelling not anticipated must still read as a member claim.
 
-### PL-18 · queued
+### PL-18 · done (status corrected 2026-08-10 by CONDUCT, content-checked: `airun.mjs` carries DEC-63's gate at four sites and `index.mjs` names the three run verbs as their own list. **It read `queued` while its work was on `main` — the exact shape of a brief that would have sent a worker to rebuild something that exists.**)
 milestone: M9
 interface: I3 (a refusal's condition changes; the op contracts do not)
 depends-on: none — runnable now
