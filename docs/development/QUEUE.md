@@ -179,6 +179,17 @@ _(drained by CONDUCT 2026-08-10 — the three work items and the D-266 schedulin
 
 **TWO STRUCTURAL FAULTS FOUND WHILE DRAINING, both repaired in this turn, both recorded on the CLASS rather than the instance.** (1) **`cc99ec1`'s closed-item roll deleted five AREA headings** — `RECORD`, `CONTENT-PDF`, `FRAMEWORK`, `CONTENT-HTML`, `DIST`, `UI`, eleven headings down to six — because every item beneath them happened to be closed. No item was lost and no status moved; **what was lost was which area each surviving open item belongs to, and therefore which areas hold the two slots.** A bulk move keyed on ITEM status silently deletes any SECTION whose items are all closed, and a section is not an item. Restored verbatim from `c7fc5c3`, with the RECORD paragraph's fourth-stale `store.mjs` line count replaced by the command that measures it. (2) **The 2026-08-07 drain promised "one pointer row per wave slot" for `IS-BUILD-PLAN.md` and never wrote one** — no `PL-`/`FL-`/`SK-`/`VF-`/`DS-` row has ever existed in this file. **The plan was built anyway, off the plan document directly**, so the queue's silence was not an idle plan but an unrecorded one, which is strictly worse: it reads identically to nothing having happened. Repaired with the measured `## IS BUILD PLAN — STATUS` section — **34 rows landed, 3 satisfied before scheduling, 9 left, and the critical path is DIST's** — plus the SKILL track seeded DORMANT for promotion when a slot frees. **The 2026-08-05 drain wrote this exact lesson down after this exact failure, and it happened again two days later: a note is not an item.** No entries outstanding.)_
 
+**2026-08-10 · BOB · DEC-69, Bob's doctrine, recorded and already enacted on the register
+side — ONE AUDIT ITEM FOR YOU.** *"The workflow must not be nagging or second-guessing
+users. The workflow needs to respect users and their judgment. Anything short of that is
+a flaw."* The entry carries the boundary (inform at the act once = respect; repeat,
+re-confirm, or measure = flaw; the rung ladder's ceremonies stand). **The work item:
+audit the member-facing flows against the flaw's three shapes** — re-confirmation of
+already-decided acts, repeated or act-detached responsibility prompts, and any surviving
+diligence measurement. Fix what is small in place; bring anything structural back as its
+own item. DEC-68 (no read counting) and DEC-52's bulk-approval reasoning are the
+precedents to audit WITH, not against.
+
 **2026-08-10 · BOB · A SURGICAL GATE PROFILE EXISTS: `node tools/gates.mjs`.** Bob asked
 why a docs-only change costs ~25 minutes of gates. The tool measures the diff: entirely
 prose under `docs/` → the doc-facing suites (derived at run time by grepping `test/` for
