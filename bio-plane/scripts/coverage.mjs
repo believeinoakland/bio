@@ -347,9 +347,20 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
-  classified:  145,
-  corpus:      146,
+  /* MOVED 2026-08-09 by D-270 (worktree agent-aafee89563a3f2d42): 731 -> 738 /
+     145 -> 146 / 146 -> 147, ALL THREE IN THE SAME TURN and every one taken from
+     the figure this item's own green `--strict` run PRINTED as REPRODUCIBLE
+     (`arms 738/731 · classified 146/145 · corpus (suites read) 147/146 · GREW by
+     7 arm(s)`, with `provenance: 158 of 158 discovered item(s) are in the commit
+     at HEAD`), never counted and never added to the numbers above. ONE new suite,
+     `test/d270-reach.test.mjs`, whose declaration states SEVEN arms — driven by
+     `test/d270-reach.control.mjs`, all seven RUN and all seven as declared on the
+     third run. So `corpus` and `classified` each rise by one and `arms` by seven.
+     NOTHING FELL. ONE KEY SET — if you are resolving a conflict here, COLLAPSE TO
+     ONE SET and re-read the printed figures. */
+  arms:        738,
+  classified:  146,
+  corpus:      147,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
