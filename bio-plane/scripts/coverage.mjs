@@ -390,9 +390,11 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms: 748,
-  classified: 147,
-  corpus: 148,
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 748 -> 771 / 147 -> 148 / 148 -> 149,
+     from the merged tree's printed `GREW by 23 arm(s)` after D-271, D-252, D-249 and D-266. */
+  arms: 771,
+  classified: 148,
+  corpus: 149,
   /* MOVED 2026-08-09 by D-277: 731 -> 738 / 145 -> 146 / 146 -> 147, ALL THREE IN
      THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
      `--strict` RUN PRINTED as REPRODUCIBLE (`arms 738/731 · classified 146/145 ·
