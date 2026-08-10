@@ -296,6 +296,7 @@ stated rather than tidied. No other session held these paths.
 ## CLAIM 2026-08-10 BOB (Bob's instruction — remove the retired substrate from the architecture record)
 session: bob-drive-removal (worktree `bio-worktrees/BOB`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 (landed as 62e6328 on main; all four gates green)
 paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md`,
   `docs/architecture/BIO_State_Rules_Consistency_v1_5.md`,
