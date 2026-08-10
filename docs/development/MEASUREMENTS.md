@@ -7662,8 +7662,13 @@ as a fact, because this figure has been wrong in the record four times: `wc -l <
 ## 2026-08-10 · D-280 / IC-61 — a project that withdrew was still setting the publication bar (RECORD, worktree-agent-aa5a5b887286869b2)
 
 **Instrument:** `bio-plane/test/d280-strengthbar.test.mjs` (29 assertions, driven through
-`op=strengthbarof`, `op=strengthbar`, `op=backlinks`, `op=promote`, `op=taskdrain` and
-`op=taskenqueue`); `bio-plane/test/d280-strengthbar.control.mjs` (6 arms). Battery
+`op=strengthbarof`, `op=strengthbar`, `op=backlinks`, `op=promote` and `op=taskdrain`,
+plus the DO-internal `taskEnqueue()` path — **first written here in the `op=` form, which
+`op-claims.test.mjs` failed at integration because NO op reaches that path: it is DO-internal,
+and the check's own message says so.**
+The ratchet is right and the prose was wrong; corrected rather than the check relaxed, since
+a planning document naming an op that does not exist is how a later session goes looking for
+a surface nobody built); `bio-plane/test/d280-strengthbar.control.mjs` (6 arms). Battery
 `npm run test:battery`; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read
 UNPIPED; `node civicos-ui/test/run.mjs` likewise.
 
