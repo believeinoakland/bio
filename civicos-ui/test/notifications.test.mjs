@@ -70,6 +70,10 @@
  */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite
+   CONSUMES it, rather than hand-writing a rival copy. See
+   `analyst-vocabulary.mjs` for what it is derived from and what it cannot see. */
+import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
 import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
          classOfKind } from "../../bio-plane/src/queuestate.mjs";
 
@@ -715,28 +719,31 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
      spelling, and both surfaces render ALL/ANY instead. `ground` and
      `partition` are not case-sensitive — neither has an innocent reading on a
      member-facing screen here. */
-  const BANNED = [
-    [/\bground partition\b/i, "ground partition"],
-    [/\bpartition\b/i, "partition"],
-    [/\bdisjunction\b/i, "disjunction"],
-    [/\bOR-branch\b/, "OR-branch"],
-    [/(^|[^A-Za-z])AND\/OR([^A-Za-z]|$)/, "AND/OR"],
-  ];
+  /* CORRECTED 2026-08-09 (UI-53), never exempted. The case-sensitivity reasoning
+     above is RIGHT and is preserved — it is now stated once, in
+     `analyst-vocabulary.mjs`, and carries `sufficiency-state.test.mjs`'s measured
+     receipt for it. WHAT WAS WRONG IS THE COVERAGE: this list was the ODD ONE OUT
+     of four in this directory. It carried no bare `ground`, no `branch`, no
+     standalone `AND`/`OR` and no `(and|or)-related`, all of which the other three
+     carried — and like all four it had no `independently sufficient`, the phrase
+     that was actually reaching members (D-269). Consuming the derived family
+     STRICTLY WIDENS what this sweep sees; nothing it caught before is lost. */
+  console.log("  " + reachLine());
   ok("§6 REACH: the sweep has a corpus — " + PHASES.length + " phases were kept, floor 11 "
      + "(a sweep over nothing reports clean)", PHASES.length >= 11);
   ok("§6 INSTRUMENT: the fixture really does carry the banned words, so a surface that printed the "
      + "record's own labels would be caught here rather than passing for free",
-     BANNED.some(([re]) => re.test(LEAKY_LABEL)));
+     analystHits(LEAKY_LABEL).length > 0);
   const hits = [];
   for(const [where, html] of PHASES){
     const text = String(html || "").replace(/<[^>]*>/g, " ");
-    for(const [re, word] of BANNED) if(re.test(text)) hits.push(where + " → " + word);
+    for(const h of analystHits(text)) hits.push(where + " → " + h.token);
   }
   ok("§6 NOT ONE ANALYST WORD ON ANY SURFACE THIS ITEM RENDERS, across all " + PHASES.length
      + " phases — found [" + hits.join(" | ") + "]", hits.length === 0);
   ok("§6 INSTRUMENT: and the sweep is not simply answering clean — planting the label into a phase is caught",
      (() => { const t = "some text " + LEAKY_LABEL + " more";
-              return BANNED.some(([re]) => re.test(t)); })());
+              return analystHits(t).length > 0; })());
 }
 
 /* ============================== FOOT ============================== */

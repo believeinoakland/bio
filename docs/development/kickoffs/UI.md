@@ -351,3 +351,52 @@ address that already exists, so nothing new needed classifying by
 `op=airun` already answered, so there is no explicit ask to state and no applied
 bound to report, and `bound-sweep`'s two walks see nothing new. Both were
 choices, not omissions.
+
+## UI-53 — the four `BANNED` lists became CONSUMERS of one derived family (2026-08-09)
+
+**D-269's delegation to UI, and the standing rule it leaves behind: THERE IS ONE DEFINITION OF
+DEC-32 CLAUSE 1'S BAN IN THIS DIRECTORY, and it is `civicos-ui/test/analyst-vocabulary.mjs`.** If
+you are writing a sweep that asserts the analyst's vocabulary reaches no member, **import it. Do not
+write a list.** `analyst-vocabulary.test.mjs` ARM C is a census over every `.mjs` here and it FAILS
+on a new private ban pattern — the control arm `2-a-hand-list-comes-back` proves it, because a
+fourth list coming back silently is exactly how this defect happened.
+
+**WHY, in one line each, so the next UI worker does not re-derive it:**
+
+- **Four lists existed, not the three D-269 reported, and no two agreed.** The fourth
+  (`connections-sidebar.test.mjs`) was a COPY of `elicitation.test.mjs` made to give the ban "ONE
+  spelling in this directory" — **copying a list to unify a rule makes another list.** It was
+  missed because the census was keyed on the phrase rather than on the subject.
+- **NOT ONE of the four carried `independently sufficient`**, the phrase that was being rendered to
+  members off `#axisResult` and frozen into signed `bundle.md` frontmatter. It is now enforced at
+  all four sites, as is `conjunct`, which no list carried either.
+- **The family is DERIVED, not typed:** the atoms are parsed from DEC-32 clause 1's own sentence in
+  `DECISIONS.md`, closed over by stem prefix so every spelling of a named construct is caught
+  unlisted, plus a **ceilinged, printed RESIDUE** for terms no closure can reach — each one asserted
+  at run time to occur in DEC-32's entry. **A residue term that is not in the ruling fails the
+  suite**, which is what keeps it from decaying back into a hand list.
+
+**THE ONE THING THAT WILL BITE YOU, and it is measured:** **the bare capitalised connective is NOT
+banned, deliberately.** Three of the four lists banned `/\b(AND|OR)\b/`; the moment all four
+consumed one family it fired on `notifications.test.mjs`'s own correct prose, *"LOOKED FOR AND NOT
+THERE"* — ordinary English capitalised for emphasis. Case-sensitivity is not enough. The connective
+is banned AS VOCABULARY (compounded, paired, behind a determiner, naming the relationship). **If you
+find yourself widening it back to the bare token, run
+`node civicos-ui/test/analyst-vocabulary.control.mjs` first** — arms 5a/5b/5c are the over-strictness
+arms and they exist to stop that.
+
+**WHAT THE FAMILY CANNOT SEE, stated because a clean sweep otherwise reads as more than it is:** a
+genuinely novel term for the construct sharing no stem with a clause-1 atom and not in the residue.
+**There is no automatic tier for it and the reason is measured**: D-269's open *machine-side minus
+member-side* derivation is sound over 30 machine-composed sentences with opaque values, but over a
+rendered UI surface it measures **208 words** including `example`, `correct`, `safe` and `bob`.
+**The open tier belongs to the plane suite's narrow corpus; this family belongs to the broad one.**
+
+**KEPT AND NAMED RATHER THAN FOLDED IN** — three sites the census surfaces that are NOT rivals:
+`capture-honesty.test.mjs`'s `JARGON` (Bob's plain-language ruling, a different question),
+`publishedcase.test.mjs` (DEC-32's falsifier clause, no ban list), and
+`version-review.control.mjs` (the negative-control DRIVER that plants a leak to prove a consumer's
+sweep can fail — it must keep naming the ban rather than importing it).
+
+**NO SURFACE CHANGED.** `civicos-ui/app.html` is not edited by this item and not claimed — the
+module only READS its two marked member-facing blocks. UI harness 44 → 45 suites, exit 0.

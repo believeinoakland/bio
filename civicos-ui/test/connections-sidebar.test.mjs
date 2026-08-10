@@ -100,6 +100,10 @@
 import fs from "fs";
 import vm from "vm";
 import { appScript } from "./extract.mjs";
+/* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite
+   CONSUMES it, rather than hand-writing a rival copy. See
+   `analyst-vocabulary.mjs` for what it is derived from and what it cannot see. */
+import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
 /* LIVE-IMPORTED, NEVER RETYPED. The control plane's own mint prefixes. A browser
    cannot import this module, so `app.html` holds a copy — and this import is
    what makes the copy safe: mint a third spelling in the plane and this suite
@@ -495,19 +499,22 @@ section("SECTION 5 · the selection belongs to the run it was made on", () => {
 
 /* ============================================================
    SECTION 6 · DEC-32 CLAUSE 1 / D-226 — THE ANALYST'S VOCABULARY REACHES NO
-   MEMBER. The patterns are `elicitation.test.mjs`'s, deliberately, so the ban
-   has ONE spelling in this directory and a second surface is judged by the same
-   rule rather than by a copy of it.
+   MEMBER.
+
+   CORRECTED 2026-08-09 (UI-53), never exempted, and the correction is aimed at
+   this comment as much as at the code. It said the patterns were
+   `elicitation.test.mjs`'s "so the ban has ONE spelling in this directory" — and
+   THAT WAS ALREADY FALSE WHEN IT WAS WRITTEN. Copying one list made a FOURTH
+   list, not one rule: this copy added `partition` (which the file it copied does
+   not have) and `notifications.test.mjs` disagreed with both. Copying is how a
+   directory ends up with four instruments that each read as coverage. The ban now
+   has one DEFINITION rather than one spelling — derived from DEC-32 clause 1's
+   own sentence in `analyst-vocabulary.mjs` — and this sweep consumes it. NOTHING
+   ELSE IN THIS SECTION MOVED: the seven surfaces, the reach floor and the
+   polarity witness are the same bytes.
    ============================================================ */
 section("SECTION 6 · no analyst vocabulary on any surface this item renders", () => {
-  const BANNED = [
-    [/\bground/i,             "the analyst's noun for a set of reasons"],
-    [/\bdisjunct/i,           "the analyst's word for the relationship"],
-    [/\bbranch/i,             "the analyst's word for one of them"],
-    [/\b(AND|OR)\b/,          "the connective, as vocabulary"],
-    [/\b(and|or)-related\b/i, "the relationship, named"],
-    [/\bpartition/i,          "DEC-32's banned noun, named by D-226"],
-  ];
+  console.log("  " + reachLine());
   const SURF = [
     ["the sidebar, nothing selected", render(SESSION_A)],
     ["one machine connection", U.aiConnectionCardHtml(CONN_MACHINE, 0, false)],
@@ -520,7 +527,7 @@ section("SECTION 6 · no analyst vocabulary on any surface this item renders", (
   const hits = [];
   for(const [where, h] of SURF){
     const t = text(h);
-    for(const [re, what] of BANNED) if(re.test(t)) hits.push(`${where}: ${what} — ${(re.exec(t)||[])[0]}`);
+    for(const h of analystHits(t)) hits.push(`${where}: ${h.token} — ${h.why}`);
   }
   console.log(`  ARM V corpus: ${SURF.length} rendered surfaces, ${SURF.reduce((a,[,h])=>a+String(h).length,0)} chars`);
   ok(`ARM V0 (REACH): ${SURF.length} surfaces were swept and every one is non-empty, floor 6 — a sweep over nothing `
@@ -528,7 +535,7 @@ section("SECTION 6 · no analyst vocabulary on any surface this item renders", (
   eq("ARM V1: not one analyst word reaches a member on any surface this item renders: " + (hits.join(" | ") || "clean"),
      hits, []);
   ok("ARM V2 (POLARITY): the same matcher catches a planted hit, so V1 is a measurement rather than a silence",
-     BANNED.some(([re]) => re.test("the ground partition of this OR-related set")));
+     analystHits("the ground partition of this OR-related set").length > 0);
 });
 
 /* ============================================================

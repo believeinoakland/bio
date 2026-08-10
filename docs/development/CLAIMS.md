@@ -6746,3 +6746,124 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+## CLAIM 2026-08-09 UI (UI-53 — the four hand `BANNED` lists become CONSUMERS of one derived family)
+session: ui53-analyst-vocabulary (worktree agent-a5a6c1d8ff9f6c282)
+opened: 2026-08-09T00:00:00Z
+paths: **`civicos-ui/test/` BY SPAN AND NOT BY FILE**, because four of the five files below are
+  another item's live claim and only their vocabulary-sweep block is opened.
+  **`civicos-ui/test/analyst-vocabulary.mjs`** (NEW — the ONE derived family, deliberately NOT a
+  `.test.mjs` so `civicos-ui/test/run.mjs`'s discovery does not run a module with no assertions).
+  **`civicos-ui/test/analyst-vocabulary.test.mjs`** (NEW — this item's suite, which proves the
+  family rather than describing it) and **`civicos-ui/test/analyst-vocabulary.control.mjs`** (NEW —
+  the negative-control driver, deliberately not a `.test.mjs` because it EDITS REAL SOURCES).
+  **`civicos-ui/test/elicitation.test.mjs`** — ONLY the `const BANNED = [` block of section 9 and
+  the two assertions reading it. **`civicos-ui/test/notifications.test.mjs`** — ONLY the
+  `const BANNED = [` block of section 6 and the three assertions reading it.
+  **`civicos-ui/test/version-review.test.mjs`** — ONLY the `const BANNED = [` block of section 8 and
+  the two assertions reading it. **`civicos-ui/test/connections-sidebar.test.mjs`** — ONLY the
+  `const BANNED = [` block of SECTION 6 and the two assertions reading it. **In all four, the
+  SURROUNDING corpus, fixtures, phases, `strip`/`text` helpers, polarity witnesses and every other
+  section are BYTE-UNTOUCHED**; the block is replaced by an import and nothing else moves.
+  `docs/development/QUEUE.md` (the UI-53 row, NEW — written by this item because none existed),
+  `docs/development/DEBT.md` (the D-285 row, NEW — id MINTED with `tools/mintid.mjs D`, which
+  stepped over SEVEN ids already held; the read-the-file-and-add-one convention would have
+  collided), `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/CLAIMS.md` (this entry and its DELEGATIONS),
+  `docs/development/kickoffs/UI.md` (APPENDED, never rewritten).
+  **`civicos-ui/app.html` IS NOT EDITED AND IS NOT CLAIMED.** The module READS its two marked
+  member-facing blocks; reading is not editing, and this item therefore takes NO span in the file
+  UI-43/UI-44/UI-45 are unmerged against.
+  **ONE PATH OUTSIDE UI'S GROUND IS OPENED AND IT IS DECLARED RATHER THAN DISCOVERED AT
+  INTEGRATION: `bio-plane/test/analystvocab.test.mjs`, ARM L AND ITS HEADER PARAGRAPH ONLY.**
+  D-269's ARM L pins that the hand lists still exist; this item removes them, so **the arm went RED
+  exactly as it was built to** — that is the pin working, and CLAUDE.md's rule is *correct
+  superseded tests, never exempt them*. Corrected in place with a dated reason at the site, plus
+  ONE import line. Its SIX control arms, its seed array, its lexicons, its corpus, its classifier
+  and every other section are BYTE-UNTOUCHED, and `bio-plane/test/analystvocab.control.mjs` is not
+  opened at all (checked: it references neither ARM L nor the hand lists). Nothing else in
+  `bio-plane/**` is touched.
+  **THE CONTROL DRIVER MUTATES AND RESTORES `docs/development/DECISIONS.md`** (arm 1's subject is
+  that the family is read from the ruling). It is restored and verified by sha256 AND `cmp` against
+  two independent pristine copies with a byte count floored; declared here because a driver that
+  edits a shared planning surface should never be discovered by somebody else's diff.
+concurrency: checked over every unreleased block in this file. **FOUR live claims name files this
+  item opens** — the 2026-08-04 UI claim (`elicitation.test.mjs`, its author), **UI-45**
+  (`notifications.test.mjs`), **UI-44** (`connections-sidebar.test.mjs`, its author) and **PL-13**
+  (`notifications.test.mjs` §0's ABSENT arm). **NONE of them names a vocabulary-sweep block**: UI-45
+  and PL-13 both name §0's absent-slug arm, UI-44 names its renderers and its own new suite's other
+  sections. UI-42's claim on `version-review.test.mjs` is RELEASED. This claim is therefore
+  BLOCK-GRAINED and names the single block it opens in each. `civicos-ui/app.html` is NOT opened.
+expected: **UI-53 — D-269's delegation to UI.** Make the hand lists consumers of one derived family
+  rather than rivals to it. **REC-71's rule applies: invert, do not lengthen.** A list asking a
+  genuinely different question is a FINDING to be kept and named, not folded in for tidiness.
+accepts-when: **Baselines MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief.**
+  `node civicos-ui/test/run.mjs` from the REPO ROOT with `$?` read unpiped; full
+  `npm run test:battery` with the delta ATTRIBUTED per suite by re-running the true baseline;
+  `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped; `node tools/plancheck.mjs` clean
+  but for UNPUSHED. Control arms RUN, each armed ALONE, **including an OVER-STRICTNESS arm in which
+  the banned words in a code COMMENT, an internal IDENTIFIER and a FIXTURE ID all stay GREEN.**
+  No push, no merge — CONDUCT integrates.
+released:
+
+### DELEGATION 2026-08-09 UI-53 -> WHOEVER OWNS `bio-plane/test/analystvocab.test.mjs` (D-269's ground): **ITS SEED FLOOR IS NOT THE UNION IT SAYS IT IS, AND THE TWO FAMILIES ARE NOW CROSS-CHECKED RATHER THAN MERGED**
+
+D-269's suite says the seeds are *"the union of all three"* hand lists. **MEASURED at UI-53: they
+are not, in two ways, and neither is fixed here because the array is D-269's ground.**
+
+- **THE SEEDS CARRY NO STANDALONE CONNECTIVE.** Three of the four hand lists carried
+  `/\b(AND|OR)\b/`; `SEEDS` carries `AND/OR` and `OR-branch` but not the bare token. Nor can the
+  DERIVED family reach it: `machineLexicon()` drops words of two letters or fewer, so `or` is not
+  machine-side at all.
+- **AND NO LIST CARRIED `conjunct`**, which is DEC-32's own word for the other relationship.
+
+**WHY THIS IS NOT SIMPLY A GAP TO CLOSE, and it is the more useful half of the finding:** UI-53
+tried the bare token across all four consumers and **IT FIRED ON CORRECT MEMBER-FACING PROSE** —
+`notifications.test.mjs` renders *"LOOKED FOR AND NOT THERE"*, ordinary English capitalised for
+emphasis. Case-sensitivity is not enough, which is one step past the lesson
+`sufficiency-state.test.mjs` already records. **So the connective is now banned AS VOCABULARY**
+(compounded, paired, behind a determiner, or naming the relationship) and not as a token — and
+`notifications.test.mjs` OMITTING it reads as the correct judgement rather than the gap D-269's
+delegation took it for. **Whoever next owns `SEEDS` should decide whether to adopt that shape or
+state why the plane's narrow corpus wants the blunter one; both are defensible and the difference
+is the corpus, not the rule.**
+
+**WHAT UI-53 DID INSTEAD OF EDITING THE ARRAY:** ARM L now DRIVES the cross-check — the UI family
+must catch every seed, over nine witnesses — so the two guards are allies rather than rivals
+without either becoming the other. **The seeds stay on purpose:** they are checked BEFORE the
+member-side skip and the UI family has no member-side skip at all, so they guard different corpora
+and neither subsumes the other. Merging them would have lost that.
+
+### DELEGATION 2026-08-09 UI-53 -> WHOEVER OWNS `bio-plane/test/sufficiency-state.test.mjs`: **A FIFTH BAN INSTRUMENT EXISTS, IT IS ON THE PLANE'S GROUND, AND IT IS THE SOURCE OF THE RULE UI-53 ADOPTED**
+
+D-269's delegation named three hand lists; **the census at UI-53 found FOUR in `civicos-ui/test/`
+and a FIFTH in `bio-plane/test/sufficiency-state.test.mjs`** (`BANNED_OPERATOR` + `BANNED_TERM`),
+which no spelling-keyed grep for `const BANNED = [` can see. **It is NOT a rival and was NOT
+touched.** It asks this question over the PLANE's published state text, and its comment carries the
+measurement UI-53's connective rule is built on: written as one case-insensitive alternation it
+fired on correct text, so the operator is capitalised-only and the nouns are not. **What is owed is
+a decision, not an edit:** either it consumes the derived family too — the import crosses estates
+cleanly, ARM L already proves it does — or it states at the site that a plane-side published-string
+guard is deliberately independent. Doing nothing is a legitimate answer; leaving it unstated while
+four other sites now share one definition is not.
+
+### DELEGATION 2026-08-09 UI-53 -> CONDUCT: **D-269's DELEGATION SAID THREE HAND LISTS AND THERE WERE FOUR — THE MISS IS THE RECEIPT, NOT THE EMBARRASSMENT**
+
+`connections-sidebar.test.mjs` (UI-44) carried a fourth, and **its own comment claimed the patterns
+were copied from `elicitation.test.mjs` "so the ban has ONE spelling in this directory"** — already
+false when written, because `notifications.test.mjs` disagreed with the list it was copied from.
+**Copying a list to unify a rule MAKES ANOTHER LIST.** D-269 missed it because its census was keyed
+on the phrase its own delegation used; UI-53 found it because the census was keyed on the RULING
+and on the SHAPE of a ban pattern, by two independent detectors. **This is the third time in this
+area that a spelling-keyed walk under-reported inside the item written to fix spelling-keyed
+walks.** The correction is at the site in `analystvocab.test.mjs`'s header and pinned by ARM C.
+
+### DECISIONS FOR BOB 2026-08-09 (UI-53): **NONE**
+
+Measured against `kickoffs/README.md`'s three tests. The one genuine judgement — **whether to ban
+the bare capitalised connective, which three of four lists did and which fires on correct member
+prose** — is answered by the record rather than by Bob: DEC-32 clause 1 bans a VOCABULARY, WORKER.md
+says *a fence tighter than its rule is not a safer fence*, and `sufficiency-state.test.mjs` has
+already paid for the over-strict version of exactly this pattern. Narrowing it is applying the rules
+the repo already carries, and the control's three over-strictness arms make the narrowing
+falsifiable rather than asserted.
