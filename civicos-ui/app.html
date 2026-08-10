@@ -371,6 +371,11 @@ h2.sec{font-family:var(--font-record);font-size:17px;font-weight:600;margin:26px
 .q-mute{font-size:12.5px;color:var(--muted);margin:0 0 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .q-mute-what{flex:1;min-width:220px;line-height:1.45}
 .q-mute-err{width:100%;color:var(--signal-dk)}
+/* UI-55: the per-kind mute row. Same weight as the whole-set control beside it —
+   neither mode is styled as the recommended one, because the ruling this row
+   enacts is about which mode the MEMBER picks, not which one we prefer. */
+.q-mute-each{width:100%;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.q-mute-eachcap{font-family:var(--font-fact);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .q-notice{font-size:13px;color:var(--ink);background:#e2ede3;border:1px solid #8fb79a;border-radius:var(--r-2);padding:10px 12px;margin:0 0 12px;line-height:1.5}
 
 /* the fence band, with the printer's double rule */
@@ -11037,22 +11042,59 @@ function queueMutableKinds(items){
   return [...new Set((items||[]).filter(it => it.class === "CONDITION")
                                 .map(it => it.kind).filter(Boolean))].sort();
 }
+/* UI-55 / DEC-69 AS AMENDED — BOTH MODES, AND NEITHER FORCED.
+   Bob, 2026-08-10: *"they shouldn't be forced to make decisions in bulk. But they
+   should be enabled to when appropriate."* The operative word is FORCED and it cuts
+   both ways, so a surface offering ONLY the whole set is the same flaw as one
+   offering only forty clicks.
+
+   THIS CONTROL WAS THE BULK-ONLY HALF, AND IT IS THE ONE THIS AUDIT WAS MOST LIKELY
+   TO MISS. One button muted EVERY condition kind on the case; `queueMuteCase`
+   recomputed the whole set at click time, so a member who wanted to stop hearing
+   about one kind had no way to say so and had to give up all of them. The set was
+   NAMED to the member — which is informing at the act, once, and is why this read
+   as respectful — but naming a set is not offering a choice within it.
+
+   NO PLANE CHANGE WAS NEEDED AND THAT IS THE MEASUREMENT, NOT AN ASSUMPTION:
+   `op=queuemute` already takes `kinds` as an ARBITRARY SUBSET, validates each one
+   by class, and UNIONS on repeat (`store.mjs#queueMute`) — so one kind was always
+   one parameter away. Nothing here loops: a per-kind mute is ONE call carrying ONE
+   kind, and the whole-set control is ONE call carrying the set. N motions over N
+   kinds would be the forty-dialogs shape wearing a bulk control's clothes, which
+   `aiConnectionsReviewMotion` names one screen over.
+
+   THE PER-KIND ROW IS DRAWN ONLY WHERE THE TWO MODES DIFFER. With a single mutable
+   kind the whole-set control ALREADY mutes exactly that kind, so a second control
+   beside it would be one more thing to read for no extra judgement — which is the
+   noise this same ruling forbids. Enabling both modes is the requirement; drawing
+   two controls that do the same thing is not.
+
+   AND THE KIND IS NOT RE-VALIDATED HERE. A kind that is no longer mutable goes to
+   the plane and the plane refuses it in its own words, rendered through
+   `queueReason` — the rule this block already followed for an OBLIGATION kind
+   (above), and the reason a surface does not compose a refusal it was not given. */
 function queueMuteHtml(group){
   if(!(PLANE.me && PLANE.me.session)) return "";
   const kinds = queueMutableKinds(group.items);
   if(!kinds.length) return "";
+  const each = kinds.length > 1
+    ? `<div class="q-mute-each"><span class="q-mute-eachcap">Or just one of them</span>${
+        kinds.map(k=>`<button class="tbtn q-mutebtn1" data-mute1="${esc(group.id)}" data-mutekind="${esc(k)}">Mute ${esc(k)}</button>`).join("")
+      }</div>`
+    : "";
   return `<div class="q-mute">
     <button class="tbtn q-mutebtn" data-mute="${esc(group.id)}">Mute conditions on this case</button>
     <span class="q-mute-what">It reaches condition kinds only, and only for you: ${kinds.map(k=>`<span class="mono">${esc(k)}</span>`).join(", ")}. Muting changes nothing about the record and nothing for anybody else, and an obligation on this case still reaches you — an obligation leaves every list only when it is resolved.</span>
+    ${each}
     <div class="q-mute-err" data-muteerr="${esc(group.id)}"></div>
   </div>`;
 }
-async function queueMuteCase(caseId){
+async function queueMuteCase(caseId, kind){
   if(QUEUE_BUSY) return; QUEUE_BUSY = true;
   const host = document.querySelector(`[data-muteerr="${caseId}"]`);
   try{
     const g = (QUEUE_GROUPS||[]).find(x => x.id === caseId);
-    const kinds = queueMutableKinds(g ? g.items : []);
+    const kinds = kind ? [kind] : queueMutableKinds(g ? g.items : []);
     const res = await recPostR("queuemute", { case: caseId, kinds });
     if(res && res.ok === false){ if(host) host.textContent = queueReason(res); return; }
     await queueRun(["queue"]);
@@ -11274,6 +11316,10 @@ function queueWire(){
   document.querySelectorAll("#q [data-fwd]").forEach(b=>b.onclick=()=>openForward(b.dataset.fwd));
   document.querySelectorAll("#q [data-retry]").forEach(b=>b.onclick=()=>queueRetry(b.dataset.retry));
   document.querySelectorAll("#q [data-mute]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute));
+  /* UI-55: the SINGLE-kind path, wired beside the whole-set one. Two attributes
+     rather than one overloaded attribute, so a per-kind button cannot be picked up
+     by the whole-set selector above and silently mute everything. */
+  document.querySelectorAll("#q [data-mute1]").forEach(b=>b.onclick=()=>queueMuteCase(b.dataset.mute1, b.dataset.mutekind));
 }
 /*__QUEUE_END__*/
 

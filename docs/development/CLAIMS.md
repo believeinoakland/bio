@@ -852,3 +852,27 @@ is right and correct the header comment that promises otherwise. **Either answer
 is not fine is the current state, where the comment and the code disagree and the code
 misattributes.** ARM D5 pins BOTH facts and will go RED on the fix, which is deliberate — the
 arm is to be updated in the same commit as the correction, and the finding then closes.
+## CLAIM 2026-08-10 UI (UI-55 — DEC-69's enacted audit: the sweep for nagging, second-guessing and forced modes)
+session: ui55-member-respect (worktree `agent-a7b57b507f367abe3`)
+opened: 2026-08-10T00:00:00Z
+paths: `civicos-ui/test/member-respect.test.mjs` (NEW — the sweep),
+  `civicos-ui/test/member-respect.control.mjs` (NEW — the three-arm negative-control driver).
+  **`civicos-ui/app.html` — named by SITE, not by file** (it is shared ground and other UI
+  workers may be live). The sweep READS the whole file and, at the time of claiming, writes
+  to NO region of it; if a finding is corrected in place the region is named in an AMENDMENT
+  block below rather than by widening this line. **NOT** `__CATALOG__`, **NOT** `__SEMANTICS__`,
+  **NOT** `__DOCPROFILE__`, **NOT** `__SURFACES_START__`/`__SURFACES_END__`, **NOT**
+  `__VERSION_REVIEW_*__`, **NOT** `__NOTIFICATIONS_*__`, **NOT** `__AI_SESSION_*__`, **NOT**
+  `__AI_CONNECTIONS_*__`, **NOT** `__ELICITATION__`, **NOT** the Add region UI-54 landed in
+  (`renderAdd`, `addCaptureNote`, `addCapture`, `addGo`) — that region's grade note is one of
+  the three things this item's over-strictness arm exists to keep GREEN, so it is read and
+  never written.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not
+  rewritten — other UI workers are live), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `bio-plane/**` (READ ONLY — `RUNGS`, `RUNG_ABSENT` and `RUNG_LADDER` are IMPORTED
+  live from `bio-plane/src/affordances.mjs` and the op table is parsed from
+  `bio-plane/src/index.mjs`, exactly as `surface-registry.test.mjs` already does; nothing
+  under `bio-plane/` is written). **NOT** `docs/development/DECISIONS.md` (CONDUCT is its sole
+  writer — DEC-69 is READ, at run time, as this sweep's authority).
+  **NOT** any existing suite under `civicos-ui/test/` — no arm, floor or census in another
+  worker's file is moved by this item.

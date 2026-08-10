@@ -458,3 +458,74 @@ new and no IC is owed on I3. No edit anywhere under `bio-plane/**`.
 no `bio-plane/node_modules`, and three UI suites drive the REAL plane through miniflare. The
 harness reads 43/3 exit 1 until `npm ci` is run in `bio-plane/`. Measure your baseline AFTER
 that install; see `MEASUREMENTS.md`, "2026-08-10, UI-54".
+
+---
+
+## UI-55 — DEC-69 ENACTED: the standing sweep for nagging, second-guessing and FORCED modes (2026-08-10, worktree `agent-a7b57b507f367abe3`)
+
+**APPENDED, NOT A REWRITE — other UI workers may be live in `app.html`.**
+
+**WHAT LANDED.** `civicos-ui/test/member-respect.test.mjs` (NEW, 428 assertions) and
+`civicos-ui/test/member-respect.control.mjs` (NEW, six arms). ONE correction in
+`app.html`, in the REC-21/C-3 mute block only: `queueMuteHtml`, `queueMuteCase`,
+`queueWire`, plus two CSS rules. Nothing under `bio-plane/**`.
+
+**SIX THINGS THE NEXT UI SESSION SHOULD KNOW BEFORE TOUCHING ANY OF IT.**
+
+1. **THE SCOPE BOUNDARY IS AN ARM THAT RUNS EVERY TIME, NOT A CONTROL RUN ONCE.**
+   DEC-69 protects three things BY NUMBER — DEC-39's fence, DEC-51's grade note,
+   DEC-49's refusal reason — and **ARM P asserts all three PRESENT on every run**, so
+   a future tidy that strips one fails the very suite that would otherwise report the
+   tidy as a success. The cut that makes it decidable is the ruling's own: **the
+   record's voice is PLANE-SOURCED and a nag is AUTHORED HERE.** ARM P proves none of
+   the three is a literal in `app.html` rather than assuming it.
+2. **THE AMENDMENT CUTS BOTH WAYS AND THE BULK-ONLY HALF IS THE ONE THIS AUDIT
+   NEARLY MISSED.** The queue's mute was ONE control that muted EVERY condition kind
+   on a case; a member who wanted to stop hearing about one kind had to give up all
+   of them. It read as respectful because it NAMED the set to the member — **naming a
+   set is not offering a choice within it.** `op=queuemute` already accepted an
+   arbitrary subset, so the fix was one parameter and no plane delegation. **If you
+   find a surface that only offers the whole set, measure the op before assuming the
+   plane is the blocker.**
+3. **TWO SETS OF DECISIONS ARE CARRIED, NOT CLEAN, and the carry is SELF-EXPIRING.**
+   `op=resolve` (one `captureSha`) and `op=proposedispose` / `op=taskresolve` /
+   `op=taskforward` (one key each) give the member N identical buttons and no bulk
+   path. A client-side loop is NOT the fix — N motions over N items is the
+   forty-dialogs shape wearing a bulk control's clothes. **ARM 4d re-measures each
+   carried op's signature against `store.mjs` every run**, so the day one accepts a
+   set the arm goes RED and the mode gets built. Do not "fix" that failure by
+   deleting the row; it is the alarm. UI-44's SECTION 0 is the precedent.
+4. **ARM 4 PARTITIONS BY REGISTER BECAUSE NO STATIC WALK CAN DO IT, AND THE REGISTER
+   IS SWEPT IN BOTH DIRECTIONS.** Whether a repeated control is a SET OF DECISIONS
+   (forty candidates, each decided independently) or a CHOOSER FOR ONE DECISION (four
+   owners, one removed) is not readable from source — both compile to
+   `list.map(control)`. So every site must be classified, **a site in neither register
+   fails by name**, and **a register row naming a host that no longer renders a
+   control fails too**. The second half is not decoration: it caught eight speculative
+   rows on this item's own first build.
+5. **THE INSTRUMENT WAS WRONG TWICE, CONFIDENTLY, AND BOTH ARE NOW ARMS.** A
+   JavaScript deriver run over `app.html` starts in the `<style>` blocks, where an
+   apostrophe in a CSS comment opens a string that never closes and **every block
+   comment after it lands in the member-facing prose corpus** — ARM 2 reported a
+   phrase at a line that is plainly inside a comment, which is how it was found.
+   Separately, a single-slot string mode let a nested backtick close its parent and
+   the longest "function body" measured **92,964 chars** against a real 13,117. **If
+   you write a walk over this file, isolate the `<script>` first and use a mode
+   stack.** ARM I1b / I2 / I4 / I6 are those regressions kept as assertions.
+6. **THIS SUITE IS A CONSUMER OF UI-53's BAN FAMILY, and it became one because
+   UI-53's census called it a RIVAL on its first run.** It reads the broadest
+   member-facing prose corpus in this directory, so it is a ban site whether it wants
+   to be or not. **Import the family; do not write a list, and do not stop citing
+   DEC-32 to slip the census.**
+
+**WHAT THIS ITEM DELIBERATELY DID NOT DO.** No new SURFACE and no new ROUTER, so
+nothing arrived unclassified in `preauth-vocabulary.test.mjs` WALK 2 or
+`surface-registry.test.mjs` ARM A4c — both untouched, both green. No new PLANE READ.
+No edit to another suite's arms or floors. **And no prose was deleted anywhere**: the
+one clause the sweep found at the boundary (`elicPaint`'s persuasion tail about
+reading being easier than writing) is CARRIED for a ruling rather than removed by a
+worker, because deleting the record's own voice in this ruling's name is the failure
+the ruling itself warns about.
+
+**ENVIRONMENT.** `npm ci` in `bio-plane/` BEFORE measuring anything. Baseline after
+the install: 46 suites, 0 FAIL, exit 0. After this item: 47 suites, 0 FAIL, exit 0.
