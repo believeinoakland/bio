@@ -10,6 +10,36 @@ practices live here; a spawn brief is now the ITEM and nothing else.
 **If your brief contradicts this file, your brief wins** — it knows your item. If your
 brief is silent, this file governs.
 
+## NEVER WAIT ON A PREDICATE THAT MATCHES YOUR OWN COMMAND LINE
+
+**Measured 2026-08-09: three worker shells sat in this loop until Bob noticed them, with nothing
+running.**
+
+```
+until ! pgrep -f "scripts/battery.mjs"; do sleep 10; done      # DEADLOCKS. ALWAYS.
+```
+
+**`pgrep -f` matches the full command line — and the waiter's own command line contains the
+string it is searching for.** So the loop finds itself, waits, finds itself, forever. Three of
+them also matched each other, which makes the count look like real work. **There was no battery:
+`workerd` was at zero and no node process was running one.** They had been spinning for hours
+after their item had already reported and merged.
+
+It is the same shape as every instrument defect this file warns about — a check that answers
+about itself and reads as a measurement of something else.
+
+**Instead:**
+
+- **Match something you cannot be.** `pgrep -f 'node .*scripts/battery.mjs'` excludes the shell,
+  or watch for `workerd`, which is what a battery actually spawns and no waiter is.
+- **Better: do not poll a process at all.** Run the battery in the foreground and read its exit
+  status, or have it write a sentinel file and wait on the FILE.
+- **Always bound the wait.** A loop with no iteration cap cannot report that it gave up, and a
+  wait that cannot fail is indistinguishable from one that never finished.
+- **Prove your predicate is FALSE before you rely on it being TRUE.** Run it once with nothing
+  running: if it still matches, it will never release you. That is the negative control for a
+  wait, and it costs one command.
+
 ## Your environment
 
 - Your worktree may arrive **without `bio-plane/node_modules`**. If a battery reports ~14
