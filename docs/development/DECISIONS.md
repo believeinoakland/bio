@@ -96,6 +96,46 @@ unrecorded, which is what happened here.
 > (`civicos-ui/test/analyst-vocabulary.mjs` derives the banned-vocabulary atoms from
 > DEC-32's own sentence, anchored by DEC-33's heading).
 
+### DEC-69 · answered
+raised: 2026-08-10 · session BOB, recording a ruling Bob made in conversation — the
+  register's founding rule (DEC-62's own precedent): a Bob ruling lives HERE, not in a
+  transcript.
+for: bob (his own ruling, recorded)
+question: How far may the workflow go in reminding members of their responsibilities in
+  the investigation process before it stops respecting them?
+response: **THE WORKFLOW MUST NOT NAG OR SECOND-GUESS MEMBERS. RESPECT FOR MEMBERS AND
+  THEIR JUDGMENT IS A REQUIREMENT, AND ANYTHING SHORT OF IT IS A FLAW.** Bob, 2026-08-10,
+  verbatim: *"There's a point after which the workflow isn't properly respecting group
+  members. Yeah, it's important that users understand their responsibilities in the
+  investigation process. But to be (really) clear, the workflow must not be nagging or
+  second-guessing users. The workflow needs to respect users and their judgment. Anything
+  short of that is a flaw."*
+  **The boundary, worked with him and consistent with what the register already holds:**
+  - **INFORMING AT THE ACT, ONCE, IS RESPECT** — the fence sentence that states what an
+    act means (DEC-39), the grade note at capture (DEC-51), a refusal's honest reason
+    (DEC-49). Members understanding their responsibilities is served by the record
+    stating what an act IS, at the act, one time.
+  - **REPEATING, RE-CONFIRMING, OR MEASURING is the flaw** — asking a member to affirm
+    what they already decided, "are you sure" on acts the rung ladder classes as
+    reversible or reasoned, responsibility reminders detached from any act, and grading
+    or counting a member's attention (DEC-68: the approval IS the act).
+  - **THE RUNG LADDER'S CEREMONIES ARE NOT SECOND-GUESSING** — a terminal, attested or
+    irreversible act carries deliberate weight because of what the ACT is, not because
+    the member is doubted. The ladder stays as designed; nothing below those rungs
+    earns ceremony.
+  - **Bulk approval is the same act over a set** (DEC-52, Bob 2026-08-06) — forcing
+    per-item clicks where a member has reviewed a list is the wear-them-down shape of
+    this same flaw.
+  - The failure asymmetry ("when uncertain, be noisy") is a rule about the RECORD'S OWN
+    CLAIMS, and licenses no noise directed at members.
+decided: 2026-08-10 · Bob
+enacted: 2026-08-10 · session BOB, same turn — the doctrine is recorded here and the
+  audit it implies is handed to CONDUCT through the BOB INBOX (QUEUE.md): sweep the
+  member-facing flows for the flaw's three shapes (re-confirmation of decided acts,
+  repeated or act-detached responsibility prompts, and any surviving diligence
+  measurement), each finding corrected or brought back as its own item. Reasoning in
+  this entry.
+
 ### DEC-68 · answered
 raised: 2026-08-10 · CONDUCT (lifted from VF-6's report at integration — the worker raised it
   rather than writing here, correctly: this file names CONDUCT as the sole writer of new
