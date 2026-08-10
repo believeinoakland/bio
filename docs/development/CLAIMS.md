@@ -680,3 +680,40 @@ paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures O
   the first claim is taken at all: leaving it would install slack in a ratchet whose whole
   purpose is to have none. SK-2's amendment one entry up is the precedent and the shape.
 ---
+
+## DELEGATION 2026-08-10 SKILL -> UI (two landed prohibitions aim at the SURFACE and no plane check can reach them)
+raised by: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`), while landing SK-3's
+prohibition set. **This is a NOTICE that two rules now exist and are unenforced where they
+actually bite — not a request for work in this sprint, and not a blocker for anything.**
+
+**MEASURED, not suspected.** Of SK-3's five prohibitions, two have residues that NO CHECK IN
+THE PLANE CAN EVER REACH, because both are facts about a RENDERING and the plane cannot see
+one. Both are stated in the landed doctrine's `does_not_reach` field and printed by
+`skillprohibitions.test.mjs` every run, so they are published rather than implied:
+
+- **`no-connection-density-ranking`** — *"No connection-density or centrality ranking, and no
+  graph view that rewards it"* (PRACTICE-SURVEY "deliberately violate" 4). **`enforced_by` is
+  EMPTY and the suite asserts that it is the only one of the five that is.** Nothing in this
+  plane computes a degree, a centrality or a density over the record's edges — no op, no
+  field, no answer — so there is nothing to refuse yet and the prohibition says exactly that.
+  **It becomes breakable the day a surface ranks or draws anything by connectedness**, and on
+  that day the fence belongs beside the ranking rather than in a doctrine file. The survey's
+  own reason is worth carrying: *"Connectedness is a property of the drawing, not evidence."*
+- **`machine-proposed-is-never-a-connection`** — *"Machine-proposed connections are never
+  presented as connections"*, whose stated ground is **D-82**, RULED BY BOB 2026-07-30: *"the
+  appearance of an assistant-surfaced focus should communicate that it is one."* The plane
+  holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as
+  something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own
+  answer are unreachable to a machine). **The DRESS half is entirely UI's and is enforced by
+  nothing** — whether a `suggested` version renders differently from an accepted one is not a
+  fact any plane check can observe.
+
+**What is needed, and it is UI's call rather than this area's:** decide whether either wants a
+surface-side assertion (`civicos-ui/test/**` already runs a harness that could hold one), and
+if so where. Either answer is fine; what is not fine is a prohibition that reads as enforced
+because it sits beside four that are — which is why `does_not_reach` is a REQUIRED field on
+every prohibition and why the instruction-only tally is printed rather than implied.
+
+**Nothing is blocked on this.** SK-3 landed with both residues named, and
+`connections-sidebar.test.mjs` is already green in UI's harness — this delegation says only
+that neither prohibition is holding it there.
