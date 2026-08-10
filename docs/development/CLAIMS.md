@@ -319,3 +319,26 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
   recommend platforms to ADOPTING GROUPS rather than describing our substrate.
   **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+
+## CLAIM 2026-08-10 M0 (VF-6 — DEC-53's accepts-without-reading rate; a VERIFY-track instrument, holds no slot)
+session: vf6-accepts-without-reading (worktree `agent-a21bd2b090855f8ad`)
+opened: 2026-08-10T00:00:00Z
+paths: `bio-plane/test/accepts-without-reading.measure.mjs` (NEW — the instrument. Named
+  `.measure.mjs` on `connections-growth.measure.mjs`'s precedent so `scripts/battery.mjs`,
+  which discovers `*.test.mjs`, does NOT run it: it drives two whole stores and it is an
+  instrument rather than a suite),
+  `bio-plane/test/accepts-without-reading.control.mjs` (NEW — the control driver, which arms
+  each negative-control arm ALONE against the instrument and prints the baseline beside it.
+  Deliberately NOT a `.test.mjs`, on `d249-port.control.mjs`/`d266.control.mjs`'s precedent,
+  so this item adds NO suite and `classified`/`corpus` do not move),
+  `docs/development/MEASUREMENTS.md` (APPENDED — one dated entry at the end; nothing edited
+  in place, it is an append-only ledger),
+  `docs/development/CLAIMS.md` (this entry).
+  **NOT** `bio-plane/src/**` (READ ONLY — this item measures the record, it does not change
+  what the record records; if the finding is that a signal is missing, BUILDING that signal is
+  a separate item for RECORD to own and is NOT folded in here).
+  **NOT** `docs/development/QUEUE.md` and **NOT** `docs/development/IS-BUILD-PLAN.md` — CONDUCT's
+  ground; the row's status move is CONDUCT's at integration, not this worker's.
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `bio-plane/scripts/**` (no floor is
+  moved by hand here — the printed figures are reported and the integrator moves what a merged
+  green run prints).

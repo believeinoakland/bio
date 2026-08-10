@@ -7186,3 +7186,160 @@ floors and found FOUR ratchets where the dropped diff listed two.
 **Battery:** true baseline at `19745ad` **151/151 suites green · 9,688 assertions**; final
 **152/152 · 9,704**. Delta +16 attributed by DIFFING the two full runs, never by
 subtraction: the new suite 15, `hygiene.test.mjs` 591 -> 592.
+
+## 2026-08-10 · VF-6 — DEC-53's ACCEPTS-WITHOUT-READING RATE: **`undetermined`, and that is the finding**
+
+**THE ANSWER IS `undetermined`. NOT ZERO, NOT LOW, NOT SMALL — `undetermined`.**
+
+| What | Measured | How | Date |
+| --- | --- | --- | --- |
+| accepts-without-reading rate, on machine-composed resolution candidates | **`undetermined`** — all 4 candidate proxies probed against the record, all 4 ABSENT | `bio-plane/test/accepts-without-reading.measure.mjs`, run directly; controls `bio-plane/test/accepts-without-reading.control.mjs` (exit 0, 3 arms each armed ALONE) | 2026-08-10 |
+
+**WHAT THE INSTRUMENT MEASURES, AND IT IS NOT READING.** "Read" is not directly
+observable by any record — nothing in this plane, and nothing in any plane, observes a
+member's eyes. Every candidate quantity is a PROXY. This instrument does not measure
+reading; it measures **whether the record retains any signal a proxy could be built
+on**, and it answers that by driving the plane rather than by reading its source.
+
+**THE DECISIVE EXPERIMENT, DRIVEN.** Two whole stores from a byte-identical fixture,
+diverging in exactly one call:
+
+- **STORE R · READ THEN ACCEPT** — the member calls `op=readingname` (the
+  machine-composed candidate list), is offered 1 candidate carrying
+  `grade_if_resolved: "A"`, and accepts it with `op=resolve`.
+- **STORE B · ACCEPT BLIND** — the member calls `op=resolve` on the same capture and
+  the same reference, having **never called `op=readingname` at all**. No list was
+  composed, so nothing could have been read.
+
+These are the two ends of DEC-53's quantity: a maximally-read accept and a
+definitionally-unread one. **The recorded acts came back IDENTICAL** — same
+`capture_sha`, `bundle_id`, `ref`, `entity_id`, `grade: "A"`, `established: true`,
+`method`, `basis`, `raised_from: null`, `resolved_by: "nora"`. The only differing field
+is `at`, a wall-clock stamp taken inside `#upsertResolution`, which differs between any
+two runs by construction and is reported separately rather than quietly dropped.
+
+**So the rate is not measurable from this record at any sample size.** That is a fact
+about the record, established by driving it — not a shortfall of effort, and not a
+number too small to see.
+
+### THE PROXY CENSUS — the four proxies DEC-53's enactment named, each PROBED
+
+| # | Proxy | Signal | Why |
+| --- | --- | --- | --- |
+| P1 | time-to-accept | **ABSENT** | `op=readingname` is `mutating: false` in `index.mjs`'s OPS table and writes no row. The two stores prove it by driving. There is no read event to subtract the accept from, so no interval exists. The harness's own stopwatch read **1 ms** — that figure is the OBSERVER's and is not in the record; quoting it as the record's would be inventing an instrument out of the observer. |
+| P2 | whether the candidate's `detail` was ever expanded | **ABSENT** | No op writes one. `resolutions` carries `capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at` — and nothing about what was on the member's screen. The candidate's `detail` sentence is composed on the READ and never stored. |
+| P3 | acceptance of a candidate whose `grade_if_resolved` is null | **ABSENT, and STRUCTURALLY so** | DRIVEN: a member accepted a `name_in_label` candidate offered with `grade_if_resolved: null`, and **no resolution row was written for that subject**. `op=resolve` re-runs the recogniser and mints what the recogniser mints, so accepting a null-graded candidate writes NOTHING. **The act that would be the signal is the one act that leaves no trace.** Counting rows would count exactly zero however many members did it — which is precisely the absent-signal-reading-as-zero trap, arriving structurally rather than through a coding error. |
+| P4 | inter-act gap between one member's consecutive accepts | **ABSENT, for a different reason** | The FIELDS exist — `at` and `resolved_by` are both on the row and both server-stamped — so this is the one proxy not structurally blocked, and the difference matters. `at` is stamped at WRITE time, so it dates the accept and not the reading: a gap between two writes is a gap between two writes. It would also need a population, and there are **0 live member accept acts** on this machine. |
+
+### WHAT THIS INSTRUMENT CANNOT SEE — stated, and PRINTED on every run so the figure never travels without it
+
+1. **It cannot see reading.** It sees recorded ACTS. Every claim is about what the
+   record retained, never about what a member did with their attention.
+2. **It cannot see out-of-band reading.** A member who read the source document last
+   week and accepts today is, to every surface here, indistinguishable from one who
+   accepted blind — and is the better informed of the two. **Every proxy above is wrong
+   in that direction**, which is the direction that manufactures a scandal.
+3. **It has no population.** 0 live member accept acts exist on this machine, so even a
+   working proxy would have n = 0 to average over. A rate quoted off driven fixtures
+   would be a statement about the fixtures.
+4. **It cannot see the surface.** Whether `civicos-ui/app.html` renders a candidate's
+   `detail` inline or behind a disclosure is a property of a page this instrument never
+   loads. (Read, not measured: `loadResolveCandidates()` composes `how(d)` into the
+   candidate button inline — but that is a source reading and is labelled as one.)
+5. **Miniflare on a laptop.** Any duration here is an order-of-magnitude reading, never
+   a latency budget — `connections-growth.measure.mjs`'s bound, unchanged.
+
+### `undetermined` IS THE RESULT, AND IT IS NOT ZERO
+
+`CLAUDE.md`: undetermined is first-class and must be STATED. An ABSENT signal and a
+MEASURED ZERO are different facts about the world, and this instrument refuses to let
+them print alike — the same rule `store.mjs` enforces one construct over, where
+`NEVER_LOOKED` and `LOOKED_INDETERMINATE` are distinct route findings for exactly this
+reason. `0%` would assert that members were observed and none accepted unread. **Nothing
+here observed that.**
+
+### THE THREE NEGATIVE CONTROL ARMS, each armed ALONE — `node test/accepts-without-reading.control.mjs`, **exit 0**
+
+Baseline unarmed: **7 pass, 0 fail · answer `undetermined`**.
+
+| Arm | Armed alone | Result |
+| --- | --- | --- |
+| **(1) `proxy-as-quantity`** — THE ARM THIS ITEM EXISTS FOR | states the proxy AS the quantity (`"Members accept without reading 0% of the time."`), proxy unnamed and the blind-spot clause dropped | **5 pass, 2 fail, exit 1.** `HONESTY` fires and its failure NAMES the substituted proxy: *"a figure is stated with NO PROXY NAMED. The quantity actually available here is 'time-to-accept' — a PROXY for reading, never reading itself, which no record observes."* The dropped caveat is raised as its own second defect. |
+| **(2) `absence-as-zero`** | the baseline fixture (which is a fixture with **no read/unread signal at all**, because that is what this record is) published as `0%` | **6 pass, 1 fail, exit 1, answer `0%`.** `ABSENCE` fires: *"an ABSENT signal and a MEASURED ZERO are different facts about the world."* The census still reads ABSENT under this arm — the arm moved the PUBLICATION, not the measurement, so it isolates the defect it names. |
+| **(3) `vacuity`** — over-strictness | hardwires the answer to `undetermined` regardless of the census | **6 pass, 1 fail, exit 1.** `VACUITY` fires: an instrument that answers `undetermined` whatever it is fed has measured nothing. **The armed ANSWER is indistinguishable from the baseline's** — which is exactly why this arm had to exist: the answer cannot tell a measured `undetermined` from a hardwired one, and only this control can. |
+
+Plus a guard on the arms themselves: an unknown `--arm=` name is REFUSED (exit 2), so a
+typo cannot produce a baseline run masquerading as an armed one.
+
+**A FINDING THE CONTROL PRODUCED THAT THE AUTHOR DID NOT PREDICT, recorded rather than
+smoothed.** Arm (1) fails **two** checks, not one. `sentence()` is the single
+composition point for both the undetermined path and the rate path, so stating the proxy
+as the quantity also makes the RATE path compose a sentence its own honesty check
+rejects — which `vacuity()` catches, because it composes the rate sentence and re-runs
+`honesty()` on it. The cascade is correct and is the stronger result: the overclaim is
+caught on the path the instrument would publish **today** and on the path it would
+publish **the day a signal exists**. Reporting one failure would have under-counted what
+the control saw.
+
+### WHAT WAS NOT BUILT, AND WHY IT IS NOT FOLDED IN
+
+**Making the signal exist is a different item and is NOT this one.** VF-6 is READ ONLY on
+`bio-plane/src/**`: it measures the record, it does not change what the record records.
+The cheapest thing that would make P1 real is a recorded read event for `op=readingname`
+carrying the member and the time — which is a new write on a currently non-mutating op,
+a doctrine question about surveilling members' reads, and RECORD's ground rather than a
+measurement worker's. **DEC-53's watch item is now measured and its answer is that the
+watch cannot be kept with today's surfaces.** Whether to build the surface that would
+let it be kept is raised, not decided here.
+
+### BASELINE, MEASURED IN THIS WORKTREE BEFORE ANY EDIT — and it DISAGREED with the brief
+
+The worktree had **no `node_modules`**: the first battery run read **28/157 suites green
+· 2,233 assertions**, with 129 suites failing `ERR_MODULE_NOT_FOUND: miniflare` and both
+fleet members DARK. That is an environment fact, not a regression, and it is recorded
+because a worker who took a briefed figure on trust would have attributed the gap to
+their own change. After `npm ci`, the true baseline is **157/157 suites green · 9,844
+assertions passing · 154.0s**, exit 0; `node scripts/coverage.mjs --strict` exit 0 at
+`arms 792/792 · classified 151/151 · corpus (suites read) 152/152`, `FLEET 5/5 · 48
+arms`.
+
+**NO FLOOR IS MOVED BY THIS ITEM AND NO SUITE IS ADDED.** The instrument is
+`*.measure.mjs` (`connections-growth.measure.mjs`'s precedent — `scripts/battery.mjs`
+discovers `*.test.mjs` and must not run a two-store instrument) and the driver is
+`*.control.mjs` (`d249-port.control.mjs` / `d266.control.mjs`'s precedent), so
+`classified` and `corpus` do not move and that is the expected shape rather than an
+oversight.
+
+### THE FOUR GATES AT `e4f64e0` (`node tools/gates.mjs --explain` → change class **FULL**)
+
+**THE SHA THE GATES RAN AT IS `e4f64e0`, AND THE BRANCH TIP IS `3c5cbbf`** — said rather
+than quietly renumbered, because a gate figure relabelled with a sha it was not read at
+is a stale number wearing a fresh one, which is the exact class `CLAUDE.md`'s trap entry
+forbids. The two trees differ by `git diff --stat e4f64e0 3c5cbbf` = **`MEASUREMENTS.md`
+only, +26 lines** — this gate section itself. No source file, no test file and no other
+document moved between them, so every figure below was read against the code that is on
+the tip.
+
+| Gate | Figure | Exit | vs baseline |
+| --- | --- | --- | --- |
+| `npm run test:battery` | **157/157 suites green · 9,844 assertions passing · 159.7s**; fleet 2 members, 2 actually RAN; provenance 159 of 159 in the commit at HEAD | **0** | IDENTICAL (157/157 · 9,844 at 154.0s). **Delta ZERO, and that is the predicted shape** — this item adds no suite. |
+| `node scripts/coverage.mjs --strict` (run DIRECTLY, `$?` read UNPIPED) | `REGISTER FLOOR arms 792/792 · classified 151/151 · corpus (suites read) 152/152`; `FLEET 5/5 · 48 arms`; OPS 163/163; CHECKS 228/228; provenance 163 of 163 in the commit at HEAD (`e4f64e0`) | **0** | IDENTICAL in every figure. |
+| `node civicos-ui/test/run.mjs` (unpiped) | all harnesses green; census 228 in reach, 175 plane rows | **0** | unchanged — this item touches no UI path |
+| `node tools/plancheck.mjs` | **1 fail, 0 warn** | **1** | see below |
+
+**PLANCHECK'S SINGLE FAILURE IS THE `UNPUSHED` CHECK FIRING ON THIS WORKER'S OWN
+COMMIT, AND IT IS NOT FIXABLE BY THIS WORKER** — stated rather than smoothed. The check
+compares `origin/main..HEAD` and this branch is 1 ahead by exactly the VF-6 commit; a
+measurement worker commits on its worktree branch and does NOT push to `main` or merge,
+because CONDUCT integrates. Attribution verified rather than assumed: `git rev-list
+--count origin/main..HEAD` = **1**, and `HEAD~1` (`87278a2`) is an ancestor of
+`origin/main` (`13ee946`). Every other plancheck line is clean — 0 open decisions, 0
+awaiting enactment, decided index current, 0 DROPPED merge carries, all 16 id namespaces
+registered.
+
+**AND A WORDING DEFECT IN THAT CHECK, recorded on the CLASS rather than the instance.**
+`tools/plancheck.mjs:110` prints *"N commit(s) on local main are not on origin/main"*
+while the comparison two lines above it is `origin/main..HEAD` — so every worktree
+worker, none of whom are on `main`, reads a message naming a branch they are not on.
+The check is right and the sentence is wrong. Not fixed here: `tools/` is outside this
+item's claim.
