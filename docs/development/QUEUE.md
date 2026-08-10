@@ -307,7 +307,8 @@ accepts-when: the driven site refuses to count a severed citer, driven THROUGH `
 NEGATIVE CONTROL: run and recorded, each arm armed ALONE, restores verified by sha256 AND content, the harness INSIDE your own worktree — (1) revert the confirmation at the driven site and the bar arm must fail naming it; (2) **an OVER-STRICTNESS arm that is the point of this item**: a citing project with NO recorded status, and one with a `status:` spelling you did not anticipate, must both still read as LIVE homes; (3) neuter the corpus walk you use and its reach must fail as a DELTA with the corpus size PRINTED.
 added: 2026-08-10 · CONDUCT (D-267's sweep residue, routed at D-267's integration rather than left in the debt file)
 
-### D-282 · queued
+### D-282 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` IS ONLY TRUE WHILE A WORKER IS ALIVE, and this month it was false four times** (PL-18, PL-19, UI-53, REC-69 — every one with its work already on `main`). **Verify before you believe it:** `git log --oneline main | grep -i 'D-282'` and `git merge-base --is-ancestor <branch> main`. A row that explains why it is not done is not evidence that it is not done.
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
 depends-on: none
@@ -325,7 +326,8 @@ accepts-when: a file that floors on an imported walk is either GUARDED or NAMED,
 NEGATIVE CONTROL: run and recorded, armed ALONE — (1) write a NEW file that imports a walk and floors on it, in a spelling you did not anticipate, and the census must either GUARD it or NAME it — never score it clean, which is the arm this item exists for; (2) neuter the census and its reach must fail as a DELTA with the corpus size printed; (3) an over-strictness arm — a file that merely imports a walking module without flooring on it must NOT be failed.
 added: 2026-08-10 · CONDUCT (M0-18's residual, routed here rather than left sitting)
 
-### D-251 · queued
+### D-251 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` IS ONLY TRUE WHILE A WORKER IS ALIVE, and this month it was false four times** (PL-18, PL-19, UI-53, REC-69 — every one with its work already on `main`). **Verify before you believe it:** `git log --oneline main | grep -i 'D-251'` and `git merge-base --is-ancestor <branch> main`. A row that explains why it is not done is not evidence that it is not done.
 milestone: M2 — **CONTENT-PDF is PROMOTED for this item** (it has been DORMANT since 2026-08-03; activation order is CONDUCT's, ruled 2026-07-31)
 interface: I2 — a `producer` field on the text shape is ADDITIVE; file the IC row with measured consumer impact
 depends-on: none — CPDF-9 and CPDF-10 both landed and their measurements are the ground
@@ -334,7 +336,8 @@ accepts-when: a fixture PDF whose `/Info` names an OCR product reads `layer -> o
 NEGATIVE CONTROL: run and recorded, armed ALONE — (1) remove the `/Info` read and the named-engine arm must fail; (2) **the arm this item exists for: make the classification able to STRENGTHEN — let an absent marker read as "authored" — and an assertion must fail naming it**; (3) an over-strictness arm: a producer string in a spelling you did not anticipate must leave the layer `undetermined` rather than crash or guess.
 added: 2026-08-10 · CONDUCT (CPDF-9's third amendment to DEC-4; the highest-value unbuilt half of CPDF-10)
 
-### VF-6 · queued
+### VF-6 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` IS ONLY TRUE WHILE A WORKER IS ALIVE, and this month it was false four times** (PL-18, PL-19, UI-53, REC-69 — every one with its work already on `main`). **Verify before you believe it:** `git log --oneline main | grep -i 'VF-6'` and `git merge-base --is-ancestor <branch> main`. A row that explains why it is not done is not evidence that it is not done.
 milestone: M0 (background lane, holds no slot) — **a VERIFY-track instrument, run out of band the way COFF-6 and CPDF-9 were**
 interface: none — it measures, it does not publish a shape
 depends-on: none
@@ -446,7 +449,8 @@ depends-on: none
 accepts-when: `cd bio-plane && npm run test:battery` green — **measure your own baseline and trust it over this brief** — any delta ATTRIBUTED per suite; with runs listed for an inquiry and for a project, **a run in ANOTHER context absent from both**, an uninvited member's answer WITHHOLDING the row entirely rather than redacting it (REC-36's rule), and the bound published; the IC filed; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0, the new op carrying a control-plane assertion in the same turn. NEGATIVE CONTROLS run and recorded — (1) drop the context filter and a foreign run appears, FAILING by name; (2) drop the gate and an uninvited member reaches a row, FAILING; (3) redact instead of withhold → FAILS; (4) answer a bare collection → the ZERO-bare-array pin FAILS naming the op; (5) polarity checked.
 added: 2026-08-07 · CONDUCT (UI-49's delegation; §14a's promise reaches only the device that already holds the address)
 
-### D-266 · queued
+### D-266 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` IS ONLY TRUE WHILE A WORKER IS ALIVE, and this month it was false four times** (PL-18, PL-19, UI-53, REC-69 — every one with its work already on `main`). **Verify before you believe it:** `git log --oneline main | grep -i 'D-266'` and `git merge-base --is-ancestor <branch> main`. A row that explains why it is not done is not evidence that it is not done.
 milestone: M9
 interface: I3 — the disposition key shape moves for stance-scoped kinds; file the IC with measured consumer impact before building
 depends-on: none — both rulings the widening waits on are MADE (2026-08-09 doctrine, 2026-08-10 scoping)
@@ -639,7 +643,7 @@ not transcribe it back here, because a copy starts rotting the day it is made.
 
 | state | row | depends-on | the one thing a worker would otherwise get wrong |
 | --- | --- | --- | --- |
-| **queued — top of the track** | SK-2 | none; SK-1 landed | **grades are COMPOSED, never MINTED**, and **the model NEVER decides when the loop stops** (TREC 2011, +95/−87) — it decides what to SEARCH. Four-level search states WHICH absence per level: *no meaning derived*, *nothing extracted*, *no document*, *nobody looked* are four different facts and must not read alike. Bias minimisation sits ON TOP of the fence, never instead of it (§14). |
+| **RUNNING — spawned 2026-08-10** | SK-2 | none; SK-1 landed | **grades are COMPOSED, never MINTED**, and **the model NEVER decides when the loop stops** (TREC 2011, +95/−87) — it decides what to SEARCH. Four-level search states WHICH absence per level: *no meaning derived*, *nothing extracted*, *no document*, *nobody looked* are four different facts and must not read alike. Bias minimisation sits ON TOP of the fence, never instead of it (§14). |
 | queued | SK-3 | SK-2 | The five PRACTICE-SURVEY prohibitions go in **VERBATIM**. The sharp one: **no generated justification anywhere** — a generated justification is a fabricated attribution — and **the ONE permitted auto-composition is assembling the member's OWN prior words**. `PL-3`'s landed boilerplate check is the CODE half of the fifth. |
 | queued | SK-4 | FL-3 and VF-5 — **both landed**; SK-2/SK-3 in practice, since the skill must exist to be gated | CHECK deploys FIRST (§2, SWEEP §4b.7): the record read adversarially against an EXISTING conclusion, aimed at self-directed overclaiming — the primary threat model. **The gate is a ROW IN FL-3's TABLE and is code; SK-4 RECORDS the sequencing and must not re-implement it.** Investigate-fresh enables only after CHECK's first live run is verified, which is VF-4, which waits on DS-4. |
 
@@ -652,6 +656,14 @@ through PL-3 must be refused BY C-NUMBER while the skill-only path would have pa
 and that asymmetry IS the proof the fence is code (SK-3); and an investigate-mode launch
 attempted before CHECK's verification is recorded must be REFUSED by the deployment gate
 (SK-4).
+
+**SPAWNED 2026-08-10: SK-2 is live.** SK-3 and SK-4 are NOT spawned beside it and that is the
+plan's own constraint rather than a capacity limit — **SK-3 depends on SK-2 and SK-4 depends on
+SK-2/SK-3 in practice, so the SKILL track is STRICTLY SERIAL.** Four slots were available and
+the plan could fill only one of them; the rest went to unblocked non-plan work chosen for
+NON-CONTENTION (UI on `civicos-ui/**`, CONTENT-PDF on the acquire assembly with its region named
+in the claim, and two lane items that hold no slot). Spawning SK-3 now would have it build
+against a skill that does not exist yet.
 
 activated: 2026-08-10 · CONDUCT — the plan's remaining CONDUCT track, written into the queue
 it was never written into and promoted in the same turn once the slot state was MEASURED
@@ -717,7 +729,8 @@ accepts-when: `node civicos-ui/test/run.mjs` from the **REPO ROOT**, exit read *
 added: 2026-08-09 · UI-53 (D-269's delegation to UI; the row is written by the item because CONDUCT had not minted one)
 landed: `ac1c7d4`, merged at `a7b027f` on `main`. **STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since. This is the third instance of the class this month (PL-18 read `queued` and PL-19 read `running`, both corrected 2026-08-10, both with their work already merged), and the queue's own note on PL-18 says what it costs: *the exact shape of a brief that would have sent a worker to rebuild something that exists.* **The UI slot this item was holding is therefore FREE, which is what let SKILL be promoted in the same turn.**
 
-### UI-54 · queued
+### UI-54 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` IS ONLY TRUE WHILE A WORKER IS ALIVE, and this month it was false four times** (PL-18, PL-19, UI-53, REC-69 — every one with its work already on `main`). **Verify before you believe it:** `git log --oneline main | grep -i 'UI-54'` and `git merge-base --is-ancestor <branch> main`. A row that explains why it is not done is not evidence that it is not done.
 milestone: M8
 scope: **DEC-51's enactment — `op=acquire`'s grade note is RENDERED, WHOLE, AT THE MOMENT OF CAPTURE.** Bob's ruling, 2026-08-10: DEC-39 already settles the substance — the plane owns the fence wording and PUBLISHES IT WITH THE ACT, and the act here is the capture itself, so a surface that RECEIVES the record's own account and DISCARDS it withholds at exactly the moment the member forms the belief. Measured today: `addCapture` receives `acquireGradeNote` on every member capture and drops it, so a member's only account of what a capture is worth arrives on the document page afterwards. **WHOLE, NOT SPLIT, and the ruling is explicit about why:** DEC-39's three-part shape was deliberate, UI-28 measured that the parts reassemble character-for-character, and **the clause describing co-attestation — an act unavailable at this surface — is exactly the sentence that stops a member reaching for co-attestation to solve a problem it does not address.** So the co-attestation clause SHIPS; removing it is the defect, not the caution. **VERBATIM, under DEC-49's translation discipline: lift what the plane published, author no member-facing word** — the UI-39/UI-40 pattern (a falsehood deleted without writing a new one; the plane's accounts rendered with no fallback). **UI-32's removal of the COMPUTED GRADE LETTER from that surface STANDS and is not reopened** — this item renders the plane's SENTENCE, never a letter the surface derived.
 behind-interface: I3 — consumption only; the note is already published, so no IC is owed unless the shape moves
