@@ -372,7 +372,38 @@ DONE, and the area drained on 2026-08-04 — UI took the freed slot. It is re-pr
 2026-08-05 because **D-200 is RECORD ground and had no owner**: ten live bundles claim a
 provenance route they cannot show, which is live record state no other area can touch.
 
-### REC-69 · **STILL NOT MERGED — MERGED AND BACKED OUT 2026-08-08, and the reason is a real one**
+### REC-69 · done
+
+**CLOSED 2026-08-10 by CONDUCT, BY THE CHECK THIS ROW ITSELF NAMED.** The row read *STILL NOT
+MERGED* and instructed: *"Mark it `done` when the merge is verified with `git merge-base
+--is-ancestor`."* That check now PASSES for both branches — `worktree-agent-a5723f4c87dfd5bd0`
+(`2d9c57b`, the original) and `worktree-agent-a7e307e5502e319c0` (`bb7b026`, the replay) are
+both ancestors of `main`. **The replay landed at `b376c9e`**, with the register floor moved
+after it at `ae34ec8`.
+
+**THE TWO RATCHETS THIS ROW EXISTED FOR WERE BOTH ANSWERED, and the answer is worth keeping.**
+`run-conditions.test.mjs` ARM W3 fired because `aiRuns` was a thirteenth reader with no ROLE
+entry — resolved by MINTING A FIFTH ROLE, `SELECTS`, rather than forcing a bad fit
+(`CLAIMS.md`, DECISION 2026-08-09 RECORD). Not `PUBLISHES`, because every run fact it returns
+is composed by `aiRunRead` and asserted byte-identical to `op=airun`'s own block — twenty
+disposition cells that are each a COPY, and **a copy agrees with its original for free while a
+second declaration can drift from the reader it describes.** Not `AUTHORISES`, because no act
+is authorised and filing it there would weaken what that role currently claims. The role is
+EARNED: ARM W8 fails a SELECTS reader that projects a stored column beyond the key or calls no
+PUBLISHES reader, ARM W8 GUARD fails over an empty SELECTS corpus, and ARM W8b proves the
+reader can see both violations. `airuns.test.mjs`'s unqueried-index roster was re-measured
+11 → 13 with both arrivals named, per its own rule that the list may not shrink without the
+figure moving.
+
+**STATUS WAS STALE FOR TWO DAYS AND THIS IS THE FOURTH INSTANCE THIS MONTH** (PL-18 `queued`,
+PL-19 `running`, UI-53 `running`, now REC-69 `NOT MERGED` — every one of them with its work on
+`main`). This one cost the most: it held RECORD's slot, and the reason it was believed is that
+the row argued its case at length and persuasively. **A row that explains WHY it is not done is
+not evidence that it is not done** — the row named the one-line command that settles it, and
+nobody ran it. **One STATED-AND-NOT-DECIDED question is carried forward rather than closed with
+the item:** whether a SELECTS reader publishing a fact COMPUTED FROM the rows it selected (a
+count, a newest timestamp) is still SELECTS. ARM W8 reads the SQL projection, not arithmetic
+over the page, and would not catch it. It is named at the site and is not a defect today.
 
 **The branch `worktree-agent-a5723f4c87dfd5bd0` (`2d9c57b`) is GREEN ON ITSELF and is NOT
 defective.** It was merged at the rebuild integration, its four source conflicts hand-resolved
