@@ -38,3 +38,5 @@
 # the item quotes as its baseline — kept inside the worktree so no other session's
 # battery can overwrite the figures this one reports.
 .d266-harness/
+# D-267's pen, named for its item for the same reason PL-13's is.
+.d267-harness/

@@ -7473,3 +7473,19 @@ decided, implemented, and driven.
   whichever way this goes. Once one exists, a disposition keyed at one scope cannot be re-scoped
   without deciding, row by row, whose decision it was — which is `proposal_dispositions`' own
   stranding hazard, named by PL-15 and still true.
+
+## CLAIM 2026-08-09 RECORD (D-267)
+session: worktree-agent-ac6e765828bca8499
+opened: 2026-08-09T00:00:00Z
+paths: `#refEdgeSevered`/`#citesInto`/`#restsOnLive`/`#queueAncestorEdges` in bio-plane/src/store.mjs, bio-plane/test/severedhomes.test.mjs, bio-plane/test/severedhomes.control.mjs, the three D-267 pins in bio-plane/test/current.test.mjs, the D-267 row in docs/development/DEBT.md
+interfaces consumed: none
+interfaces owned: none
+expected: D-267 — the queue's ancestor walk is blind to `status: severed`. The fix is ONE severance predicate the three existing readers share, consumed by the walk rather than restated in it; no `refs` column is added, so no interface changes. Correcting PL-13's three pins that recorded the defective homes, and sweeping the other `refs` readers for the class.
+also touched: the REGISTER_FLOOR block in bio-plane/scripts/coverage.mjs (moved 731/145/146 -> 737/146/147 from this item's own printed green run, read AFTER the commit so the phantom figure was not the one used), and the `.d267-harness/` line in .gitignore.
+released: 2026-08-09 — landed. The sweep's residue is D-280 (six reverse-edge reads that do not confirm, corpus printed, one driven, none fixed).
+
+### DELEGATION 2026-08-09 D-267 -> CONDUCT: **THE REGISTER FLOOR, AND THE ONE THING TO RE-READ AT INTEGRATION**
+
+- **The floor was moved to 737 / 146 / 147** from `arms 737/731 · classified 146/145 · corpus 147/146 · GREW by 6 arm(s)`, printed by a green `--strict` run **after** the commit. The first read of the same run reported 737 as CONTAMINATED against a reproducible 731 because the new suite was still uncommitted; that figure was NOT used. **Re-read it on the merged tree** — a class-membership count and a register figure are properties of the MERGED source, and this one has moved at integration repeatedly.
+- **No DEC-49 floor, no refusal code, no governed region touched.** This item mints no code and adds no `_CHECKS` export.
+- **`derivation-bounds.test.mjs`'s ceiling of 30 is UNMOVED and was measured, not assumed** — but the reason is a limitation of that instrument and is reported rather than relied on: its `scans()` reader matches `#rows(` **only**, so a per-row `#one(` inside a loop over an unbounded scan is invisible to it. `#queueAncestorEdges` now performs exactly that (one document read per candidate edge) and does NOT join the class by that matcher's lights. `#citesInto` has had the same shape all along, so this is not a new blind spot — it is one worth naming.

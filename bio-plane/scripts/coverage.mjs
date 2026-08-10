@@ -392,9 +392,6 @@ const REGISTER_FLOOR = {
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 748 -> 771 / 147 -> 148 / 148 -> 149,
      from the merged tree's printed `GREW by 23 arm(s)` after D-271, D-252, D-249 and D-266. */
-  arms: 771,
-  classified: 148,
-  corpus: 149,
   /* MOVED 2026-08-09 by D-277: 731 -> 738 / 145 -> 146 / 146 -> 147, ALL THREE IN
      THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
      `--strict` RUN PRINTED as REPRODUCIBLE (`arms 738/731 · classified 146/145 ·
@@ -463,6 +460,30 @@ const REGISTER_FLOOR = {
      the three happened to match anyway. All nine arms were RUN and all nine came back as
      declared; the floor moves to what the instrument PRINTED, which is the rule, and the
      under-count is D-233's class reporting fewer arms than were driven. */
+  /* MOVED 2026-08-09 by D-267: 731 -> 737 / 145 -> 146 / 146 -> 147, ALL THREE IN
+     THE SAME TURN and every one read off the figure this item's own green
+     `--strict` run PRINTED as REPRODUCIBLE (`arms 737/731 · classified 146/145 ·
+     corpus 147/146 · GREW by 6 arm(s)`) — never counted and never added to the
+     numbers above. The cause is one new suite, `test/severedhomes.test.mjs`,
+     whose `NEGATIVE CONTROL:` declaration states six arms (A, B, C, C2, D, E),
+     every one of them RUN by `test/severedhomes.control.mjs` with the baseline
+     row beside them. THE FIGURE WAS READ TWICE AND ONLY THE SECOND WAS USED: the
+     first run reported the CONTAMINATED 737 against a reproducible 731, because
+     the suite was still uncommitted — which is exactly the phantom D-238 names,
+     and moving to it then would have made this floor permanently too high. It was
+     re-read after the commit. Nothing FELL. */
+  /* MERGE RESOLUTION 2026-08-10 by CONDUCT, HAND-EDITED (this object is never
+     resolved mechanically — it broke four times in one day that way, twice
+     silently, once losing `FLEET_FLOOR.arms` so the comparison read `48 <
+     undefined`). BOTH sides' comments are kept and there is exactly ONE key set.
+     D-267 branched from 731/145/146 and moved its own floor to 737/146/147;
+     `main` had meanwhile ratcheted to 771/148/149 through D-271, D-252, D-249
+     and D-266. Taking the branch's 737 would LOWER a ratchet, which is the
+     silent-slack failure this file exists to prevent, so the higher figures
+     stand here and the merged tree's own printed run moves them below. */
+  arms: 771,
+  classified: 148,
+  corpus: 149,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -561,15 +561,23 @@ const beforeShaA = await shaOf(A);
   + "nagging a team about an act it has not taken",
     it.map((i) => [i.class, i.subject?.id, i.subject?.version]),
     [["FINDING", A, "opening account"]]);
+  /* CORRECTED 2026-08-09 (D-267 CLOSED), and the correction is the point of having pinned it.
+     THE OLD ASSERTION WANTED `[A, B, SEV]` AND IT WAS RIGHT TO — it recorded what
+     `#queueAncestorEdges` actually answered, not what it should, so the day the walk changed it
+     went red and named itself. What was wrong was the WALK: both `refs` and `inquiry_basis` are
+     projections of `references[]` that DROP `status`, so a project that authored
+     `status: severed` kept its row and stayed a home. It is fixed where PL-13 said it belonged —
+     at the walk, through `#refEdgeSevered`, the one predicate `#citesInto` and `#restsOnLive`
+     already read — and NOT in this producer, so this arm still measures the producer's homes
+     rather than a filter it applied to itself. SEV now leaves for the same reason it was never
+     in `drawing_projects` two arms below: it withdrew. */
   t("and it is filed under BOTH projects drawing on the question — an item only the diverging team "
-  + "could see would tell the one team that already knows. **AND THE WITHDRAWN PROJECT IS A HOME "
-  + "TOO, WHICH IS A DEFECT THIS ITEM FOUND AND DELIBERATELY DID NOT FIX HERE**: "
-  + "#queueAncestorEdges walks `refs kind='cites'` and is BLIND to `status: severed`, so a project "
-  + "that withdrew from a question remains a home for every item filed under it — class-wide, "
-  + "identical for out-of-inquiry-lead, and NOT this producer's to filter, because one producer "
-  + "correcting the homes rule would be a second implementation of it. Asserted as the walk "
-  + "ACTUALLY answers and raised as D-267, never smoothed into the shape the arm expected",
-    (it[0]?.case?.ancestors || []).map((a) => a.id).sort(), [A, B, SEV].sort());
+  + "could see would tell the one team that already knows. **AND THE WITHDRAWN PROJECT IS NO LONGER "
+  + "A HOME (D-267, closed 2026-08-09)**: the ancestor walk confirms every candidate edge against "
+  + "the citing document's own frontmatter, so a project that severed its citation stops being a "
+  + "home for the questions it withdrew from — the feed and `versionAct`'s VERSION_CURRENT_UNRELATED "
+  + "now agree about who is in this conversation, which is the disagreement D-267 was raised for",
+    (it[0]?.case?.ancestors || []).map((a) => a.id).sort(), [A, B].sort());
   t("`elsewhere` is ENUMERATED and never summarised to a count: it names B and says B stands on "
   + "NOTHING, which is a different fact from B standing on a different reading",
     (it[0]?.basis?.elsewhere || []).map((e) => [e.project, e.version, e.state]),
@@ -641,17 +649,29 @@ const beforeShaA = await shaOf(A);
   + "the item says so rather than leaving a reader to assume it",
     it.map((i) => [i.basis?.team_attribution?.state, i.basis?.team_attribution?.via]),
     [["determined", "ai_runs.context"], ["determined", "ai_runs.context"]]);
+  /* CORRECTED 2026-08-09 (D-267 CLOSED). Was `[B, SEV]`, pinned as the severed-blind walk
+     answered. The walk now confirms each candidate edge against the citing document, so the
+     withdrawn project is gone and what remains is this arm's actual subject: the AUTHORING team
+     is excluded. Nothing about the exclusion rule changed — the arm below still finds A named in
+     `case.excluded` with its reason, which is what distinguishes this correction from the homes
+     set merely getting shorter. */
   t("A's reading is NOT filed under A: telling a team a reading 'arrived from another team' when "
-  + "they authored it is a false sentence, not merely noise. (SEV is still a home — the severed-"
-  + "blind ancestor walk, D-267, asserted as it answers rather than as it should)",
-    (it[0]?.case?.ancestors || []).map((a) => a.id).sort(), [B, SEV].sort());
+  + "they authored it is a false sentence, not merely noise. (SEV is no longer a home either — "
+  + "D-267 closed 2026-08-09, and a withdrawn project is not told what arrived on a question it "
+  + "left)",
+    (it[0]?.case?.ancestors || []).map((a) => a.id).sort(), [B]);
   t("and the removal is DECLARED on the item rather than performed quietly — a home set that is "
   + "silently shorter is indistinguishable from nobody caring (DEC-16)",
     (it[0]?.case?.excluded || []).map((e) => [e.id, e.reason]), [[A, "authored_here"]]);
+  /* CORRECTED 2026-08-09 (D-267 CLOSED). Was `[A, SEV]` for the same reason as the arm above.
+     The EXCLUDED half is untouched and that is deliberate: `excluded` is the producer's DECLARED
+     removal (DEC-16 — a silently shorter home set is indistinguishable from nobody caring), while
+     a severed edge never enters the walk at all, so it is not something this producer removed and
+     must not be reported as one. The two mechanisms stay visibly separate here. */
   t("the mirror holds for B's reading, which is what makes the exclusion a RULE rather than one "
   + "project's special case",
     [(it[1]?.case?.ancestors || []).map((a) => a.id).sort(), (it[1]?.case?.excluded || []).map((e) => e.id)],
-    [[A, SEV].sort(), [B]]);
+    [[A], [B]]);
   t("the AGE is the version's own authored instant, and the item states nothing about the stance "
   + "having moved — a reading ARRIVING is not a reading being adopted",
     [it[0]?.age?.state, it[0]?.age?.since, /is not a reading being adopted/.test(S(it[0]?.detail) || "")],
