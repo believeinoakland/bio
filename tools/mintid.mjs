@@ -127,7 +127,7 @@
  * a gap can always be traced to the allocation that made it.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, rmSync, statSync } from "node:fs";
 import { hostname } from "node:os";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, isAbsolute } from "node:path";
@@ -176,6 +176,7 @@ export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
  * row.  Never write an id-shaped example in a file that is a corpus.)
  */
 const QUEUE_CORPUS = [
+  "docs/archive/",                 /* see expandCorpus: a floor may never fall because a doc moved */
   "docs/development/QUEUE.md",
   "docs/development/MILESTONES.md",
   "docs/development/IS-BUILD-PLAN.md",
@@ -225,20 +226,20 @@ export const NAMESPACES = {
 
   /* (ii) prose-referenced */
   D: { kind: "prose", what: "debt rows",
-       corpus: ["docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/CLAIMS.md"], ceiling: 9999,
+       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/CLAIMS.md"], ceiling: 9999,
        /* an allocation is a table ROW opening the id; a number in a sentence is not */
        allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true },
   DEC: { kind: "prose", what: "decisions",
-         corpus: ["docs/development/DECISIONS.md", "docs/development/QUEUE.md"], ceiling: 9999,
+         corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md"], ceiling: 9999,
          allocPattern: () => /^###\s+DEC-(\d+)\s+·/gm, allocIsUnique: true },
   IC: { kind: "prose", what: "interface-change entries",
-        corpus: ["docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md"], ceiling: 9999,
+        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md"], ceiling: 9999,
         /* `## IC-n ·` opens the entry; the `### IC-n · RESPONSES / RESOLUTION /
            CONFIRM` blocks beneath it are that entry's own sub-sections and are not
            allocations — measured: IC-2 carries four of them. */
         allocPattern: () => /^##\s+IC-(\d+)\s+·/gm, allocIsUnique: true },
   M: { kind: "prose", what: "measurement entries",
-       corpus: ["docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md"], ceiling: 999 },
+       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md"], ceiling: 999 },
        /* NO ALLOCATION PATTERN, DELIBERATELY, AND THE REASON IS A FINDING RATHER THAN
           A SHRUG. `MEASUREMENTS.md` allocates nothing at a recognisable site: its
           4,000+ lines are dated prose and its single `### M-4` heading is a sentence
@@ -281,6 +282,47 @@ export const NAMESPACES = {
        allocPattern: (ns) => new RegExp(`^##\\s+${ns}(\\d+)\\s+—`, "gm"), allocIsUnique: true },
 };
 
+/* ------------------------------------------------------------------ the corpus
+
+   A CORPUS ENTRY ENDING IN `/` IS A DIRECTORY AND EXPANDS TO EVERY `.md` BENEATH
+   IT, and the only such entry today is `docs/archive/`.
+
+   ADDED 2026-08-10 because the corpus consolidation would otherwise have handed
+   out an id already in use, silently, on the next fresh clone.  The mechanism is
+   exactly the one this file's own header describes and is worth restating at the
+   site: the floor counts a MENTION, and the ledger above it is deliberately NOT
+   COMMITTED (a committed ledger races), so a fresh clone re-derives its floor
+   from the corpus alone.  MOVE PROSE THAT NAMES A HIGH ID OUT OF THE CORPUS AND
+   THE FLOOR FALLS WITH IT.  `CLAIMS.md` carries 2,150 of `D`'s 2,150 references
+   between it and `DEBT.md`; `PLAN.md` is in the queue corpus and is closed
+   history.  Both are archive candidates, and archiving either without this would
+   lower a floor that only a collision would reveal.
+
+   A DIRECTORY RATHER THAN A LIST OF MOVED PATHS, deliberately: a list is a thing
+   a future session must remember to update, and this repository's most-repeated
+   finding is that a hand-kept list falls behind silently — the purge table three
+   releases behind, the `npm test` chain of 38 against 41.  A directory cannot
+   fall behind, because the act of archiving IS the act of registering. */
+
+function expandCorpus(corpus, repo) {
+  const out = [];
+  for (const rel of corpus) {
+    if (!rel.endsWith("/")) { out.push(rel); continue; }
+    const base = isAbsolute(rel) ? rel : join(repo, rel);
+    const walk = (d) => {
+      let names; try { names = readdirSync(d); } catch { return; }
+      for (const n of names.sort()) {
+        const p = join(d, n);
+        let st; try { st = statSync(p); } catch { continue; }
+        if (st.isDirectory()) walk(p);
+        else if (n.endsWith(".md")) out.push(p);
+      }
+    };
+    walk(base);
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ the floor */
 
 /** The highest id already allocated in this namespace's own corpus, plus every
@@ -298,7 +340,7 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
   let allocFloor = spec.allocPattern ? 0 : null;
   const discarded = [];
   const missing = [];
-  for (const rel of spec.corpus) {
+  for (const rel of expandCorpus(spec.corpus, repo)) {
     const p = isAbsolute(rel) ? rel : join(repo, rel);
     let src;
     try { src = readFileSync(p, "utf8"); } catch { missing.push(rel); continue; }
