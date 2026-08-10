@@ -11,6 +11,29 @@
 
 Working Document, v1.5, July 2026
 
+> # ⚠ THE STORE THIS DOCUMENT DESCRIBES IS NOT THE STORE THAT WAS BUILT
+>
+> **Banner added 2026-08-10 (session BOB).** Section 1's store layout is **folders on
+> Google Drive**, one root per type, each bundle a folder of files with a `history/`
+> subfolder and a pending-package queue. **The built store is SQLite inside a Cloudflare
+> Durable Object**, with captured bytes in R2. There are no folders, no `.pending` files
+> and no promotion queue.
+>
+> **What survived the substrate change is most of this document**, and it is why the
+> specification is still consulted constantly: the canonical ID grammar and substrate
+> independence, the state/record split, the accretive store with gated deletion, the
+> per-type schemas and their state machines, the typed reference model with cascade
+> semantics, multi-writer coherence, the invariant set, the violation-to-repair mapping,
+> and the Mechanical Verification Law. Those are implemented in `bio-plane/src/schema.mjs`,
+> `store.mjs` and `checks/bio-checks.mjs`.
+>
+> **Read Sections 1, 2.4 and 2.6 as HISTORY** — layout, convergent promotion and the
+> pending queue are Drive mechanics. Everything from Section 3 on is about SHAPE and
+> RULES, which transferred.
+>
+> Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane
+> state is the system. For what has been ruled since, `node tools/decided.mjs "<subject>"`.
+
 ## 0. Status and scope
 
 This is the companion specification that

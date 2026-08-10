@@ -1,3 +1,19 @@
+> # ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE.
+>
+> **Banner added 2026-08-10 (session BOB), moving into this file what
+> `architecture/README.md` has said since July** — a reader who opens this document
+> directly, or greps into the middle of it, currently gets no warning at all.
+>
+> **`BIO_Membership_Architecture_v2.md` is the specification the build works from.**
+> v2 carries a change table at its head listing every difference.
+>
+> **The two documents state OPPOSITE rules in at least one place.** §7.7 here gives
+> administrators the authority to remove a project participant; v2 gives it to project
+> owners. Acting on this file's version would be a real access-control defect.
+>
+> Kept for the record because supersession is never silent and the history of what was
+> once decided is worth as much as the record of what replaced it.
+
 # BIO Membership Architecture
 
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly

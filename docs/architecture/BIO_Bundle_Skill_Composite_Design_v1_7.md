@@ -11,6 +11,21 @@
 
 Working Document, v1.7, July 2026
 
+> # ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT
+>
+> **Banner added 2026-08-10 (session BOB), moving into this file what
+> `architecture/README.md` has said about it since July and no reader of this document
+> alone could see.**
+>
+> The RUNTIME here — an Apps Script accelerator assembling per-mode skill products and
+> draining a pending-package queue — was replaced by the Cloudflare plane. **The BUNDLE
+> FORMAT, the promotion semantics, and the C-series check catalog this document
+> specifies are what the plane implements and must continue to satisfy.**
+>
+> **Read it for the format and the checks, not for the runtime.** The catalog itself is
+> live at `bio-plane/checks/bio-checks.mjs`, hash-verified, and the gate RUNS it rather
+> than reimplementing it.
+
 ## 0. Purpose and governing documents
 
 This document is the design for the composite bundle skill: the single

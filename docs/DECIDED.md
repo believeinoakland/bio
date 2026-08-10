@@ -15,7 +15,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-594 rulings across 56 documents.
+597 rulings across 58 documents.
 
 ## DEC-
 
@@ -56,7 +56,7 @@ authority is the file named, never this one.
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1369`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
-  `docs/architecture/BIO_Case_Making_v0_1.md:848`
+  `docs/architecture/BIO_Case_Making_v0_1.md:861`
 - **DEC-19** · 2026-08-02 — CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be reversible to correct mistakes. (Though there may be a record of the attestation and reversal in the record.)"*  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:392`
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
@@ -70,13 +70,13 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:413`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1489`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1512`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
-  `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1797`
+  `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1823`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/development/DECISIONS.md:3226`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:915`
+  `docs/architecture/BIO_Case_Making_v0_1.md:928`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:146`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
@@ -452,7 +452,7 @@ authority is the file named, never this one.
 - **C-2.8** — ONE INSTRUMENT COMMENT CORRECTED MID-BUILD AND REPORTED: REACH C2's comment claimed it read the removed shapes out of the raw source when the code uses hand-written specimens — an instrument OVERCLAIMING WHAT IT DOES, the same defect one altitude up, now saying what the code does and pointing at arm (b) for the…  
   `docs/development/QUEUE.md:2439`
 - **C-6.3** · 2026-08-01 — CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:441`
+  `docs/architecture/BIO_Case_Making_v0_1.md:454`
 - **C-7.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-7.1 `proves()` block replaced by a pointer, the retirement block widened to be keyed by retired id, the header's SUPERSEDED note and `NEGATIVE CONTROL:` line extended).  
   `docs/development/CLAIMS.md:4096`
 - **C-7.1** · 2026-08-08 — C-7.1 RETIRED — AND IT CORRECTED CONDUCT'S OWN QUEUE ROW, WHICH IS THE MOST VALUABLE THING IN THE ITEM.  
@@ -848,14 +848,18 @@ Settled in prose without an id allocated. Cite them by file and line.
   `CLAUDE.md:144`
 - `docs/DECIDED.md` is that index, 161 KB against the corpus's 7.4 MB.  
   `CLAUDE.md:156`
+- **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
+  `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md:14`
+- **2026-08-10** — STATUS CORRECTED 2026-08-10 (session BOB).  
+  `docs/architecture/BIO_Case_Making_v0_1.md:7`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric This section originally read "the administrator archetype inverts the threat model" and treated an adversarial default as the given.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:107`
+  `docs/architecture/BIO_Case_Making_v0_1.md:120`
 - The god-object risk, WITHDRAWN as stated and narrowed to what is real Bob: *"changing its name as it evolves doesn't make it god-like."* Correct, and the risk as I wrote it was over-weighted.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:392`
+  `docs/architecture/BIO_Case_Making_v0_1.md:405`
 - **2026-08-01** — RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes, `case` once published.** Same object, different phases, different names. **This session's determination on how that is expressed**, since a phase called  
-  `docs/architecture/BIO_Case_Making_v0_1.md:407`
+  `docs/architecture/BIO_Case_Making_v0_1.md:420`
 - RULED by Bob: the lifecycle must include dividing into 2 or more.** Composition came free with recursion; division does not, and working through it produces four things. **1.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:432`
+  `docs/architecture/BIO_Case_Making_v0_1.md:445`
 - §12.1 is CORRECTED — a member-scoped aspiration is not a declared bias — and §13 integrates the doctrine properly.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:32`
 - **2026-07-30** — RULED by Bob, 2026-07-30. **BIO exists to support members in all aspects of case development.** Every construct in this document is instrumental to that and none is an end in itself. A capture nobody can build a case on is waste, however faithfully it was hashed.  
@@ -878,6 +882,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:189`
 - authority determination on an undetermined capture (the RULED case) · "you owe an endorsement" on a pending consensus · an expertise confirmation awaiting an administrator · a ratification request · a review of an assistant-surfaced focus · a temporal expectation that has come due · a re-run owed after a lens change.  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:284`
+- **2026-08-10** — ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE. > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said since July** — a reader who opens this document  
+  `docs/architecture/BIO_Membership_Architecture_v1.md:1`
 - BIO_Membership_Architecture_v1 — SUPERSEDED by v2, July 26, 2026.** Kept for the record and must not be worked from.  
   `docs/architecture/README.md:60`
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant. What survives of it, and where the answers actually live:  

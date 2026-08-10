@@ -13,6 +13,32 @@
 interruption, concurrency, and index-integrity models; manifest
 contract; promotion gate posture)*
 
+> # ⚠ THE RUNTIME THIS DOCUMENT DESCRIBES NO LONGER EXISTS
+>
+> **Banner added 2026-08-10 (session BOB).** This document specifies **Google Drive
+> folders as the bundle substrate and Google Apps Script as the constrained-endpoint
+> runtime**, with live-fire dates through July 2026. **The built system is a Cloudflare
+> Worker plus a Durable Object with SQLite, and R2 for captured bytes**, installed into
+> a group's own Cloudflare account by `newgroup`. There is no Drive, no Apps Script,
+> no accelerator, and no promotion queue.
+>
+> **The substrate was replaced and the DOCTRINE was kept**, which is why this document
+> is still here and still worth reading. What it argues — canonical identity and
+> substrate independence, the accretive store with cascading deletion, source-grounding
+> rather than self-containment, no transitive trust, the two evaluation functions, the
+> Session abstraction and the moving capability cap, the two secret tiers, and above all
+> the **Mechanical Verification Law** — is what the plane implements today.
+>
+> **Read Sections 8.4, 9, and 10.4 through 10.11 as HISTORY.** They describe Apps Script
+> endpoint admission, OAuth grants, six-minute execution walls, LockService claims, Drive
+> sequence collisions and a Netlify-hosted PWA. The reasoning in them was paid for in
+> production and several of its conclusions carried over to the Worker; the mechanisms
+> did not.
+>
+> **Where this document and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the
+> dataplane state is the system and this is the argument that produced it.** For what has
+> been ruled since, `node tools/decided.mjs "<subject>"`.
+
 # 0. Purpose, status, and how to read this
 
 This document records the architecture decisions for the Believe in

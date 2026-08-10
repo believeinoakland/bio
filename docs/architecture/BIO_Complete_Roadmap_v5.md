@@ -7,6 +7,24 @@
 > `problem@1`, `problems/`, `problem.md`) remain valid aliases in existing
 > append-only history and in code until the rename arc lands.
 
+> # ⚠ THE MISSION IS CURRENT; THE IMPLEMENTATION ROADMAP IS HISTORY
+>
+> **Banner added 2026-08-10 (session BOB).** This is the **mission of record** and the
+> place to start if you are new: the origin in the sewer-fund investigation, the four
+> core values, the eight operational principles, the fifteen design requirements, the
+> eight-skill architecture, the trust hierarchy and the seven-category UX. All of that
+> is current doctrine.
+>
+> **Sections 13, 14 and 15 are not.** The phase plan, its week estimates, the
+> time-sensitive campaign items and the pending-questions list describe a build that has
+> since happened on a different substrate — a Cloudflare Worker with a Durable Object,
+> not the platform assumed here. `docs/development/MILESTONES.md` is the live capability
+> ladder and `docs/development/QUEUE.md` is what is runnable now.
+>
+> The construct named **Focus** here has since collapsed with `finding` and `case` into
+> one recursive object, the **INQUIRY** (`BIO_Case_Making_v0_1.md`, ruled by Bob
+> 2026-08-01). For what has been ruled since, `node tools/decided.mjs "<subject>"`.
+
 # Civic Operating System
 
 ## Complete Roadmap and Architecture Document

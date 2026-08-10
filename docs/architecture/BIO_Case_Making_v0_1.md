@@ -1,11 +1,24 @@
 # Case-making: the design pass
 
-**IN PROGRESS.** Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed.
-This is a RECORD OF THE PASS, not a finished design: Bob's framing as he gives it, and
-the observations and questions it raises. Nothing here is settled unless it says so.
+**A RECORD OF THE PASS.** Opened 2026-08-01 (session BOB) as the D-127 design pass Bob
+directed: his framing as he gives it, and the observations and questions it raised.
+Nothing here is settled unless it says so.
 
-Do not build from this file yet. Its output will reshape `MILESTONES.md` — case-making
-is not a rung appended after the substrate, it is what the other eight rungs serve.
+> **STATUS CORRECTED 2026-08-10 (session BOB). This header read "IN PROGRESS — do not
+> build from this file yet", and that instruction is now false and misleading.** The
+> collapse it works out — focus, finding and case as one recursive INQUIRY — **HAS
+> SHIPPED**: `inquiry`, `conclude`, `citeinquiry`, `inquiryground` and `inquirystrength`
+> all exist in the plane with their own suites. A reader taking the old line at face
+> value would conclude the built system's central object was still speculative.
+>
+> **What is authoritative is no longer this file.** It is the plane, and the rulings the
+> pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions — which live in
+> `docs/development/DECISIONS.md` and are indexed by `node tools/decided.mjs`. Read this
+> for WHY the collapse happened and what it had to preserve; read the record for what is
+> true today.
+>
+> Not edited otherwise: a pass is a record of what it concluded, and correcting its body
+> in place would hide that the reasoning arrived in this order.
 
 ## The frame, in Bob's words
 
