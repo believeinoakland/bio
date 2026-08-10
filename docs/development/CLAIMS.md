@@ -6861,3 +6861,35 @@ copy of the guard's verdict reader, pinned BYTE-IDENTICAL by arms in `meaning-bo
 working exactly as designed.** If `main` has also touched either copy, they must be reconciled
 together and `SHARED_FNS` (which REC-79 grew by two) re-checked; a merge that fixes one home leaves
 the arm naming the other.
+
+---
+
+## CLAIM 2026-08-09 VERIFICATION (D-277)
+session: worktree-agent-a44fc12233348817a
+opened: 2026-08-09T00:00:00Z
+paths: bio-plane/scripts/declared-source.mjs, bio-plane/scripts/coverage.mjs, bio-plane/test/declared-corpus.test.mjs, bio-plane/test/declared-corpus.control.mjs, bio-plane/test/check-firing.test.mjs, bio-plane/test/coverage-provenance.test.mjs, docs/development/DEBT.md
+interfaces consumed: none
+interfaces owned: none
+expected: THE CATALOG HARVEST READS PROSE AS DECLARATION, AND IT IS ON A GATE. `scripts/coverage.mjs` built the check catalog by matching an id shape over the RAW source of `checks/bio-checks.mjs`, comments included, so an ordinary explanatory comment naming a numeral became a catalogued check that no assertion names and took `--strict` to exit 1. Reproduced here before anything was changed. The fix INVERTS the corpus — declared CODE rather than raw text — rather than lengthening a list of places to skip, and the same rule is applied to the credit side and to the op-reach matcher, which had the identical shape in the generous direction.
+released:
+
+### DELEGATION 2026-08-09 VERIFICATION (D-277) -> M0's area: **TWO HAND-KEPT COPIES OF ONE INSTRUMENT'S DEPENDENCY LIST, AND A THIRD COPY OF THE COMMENT-STRIPPING RULE**
+
+- **`test/coverage-provenance.test.mjs` and `test/owed-controls.test.mjs` EACH carry their own
+  `REAL = [...]` list of the modules to copy into a scratch repository before running the real
+  `scripts/coverage.mjs`.** D-277 added one module to the instrument and had to add TWO names to
+  BOTH lists; missing either produces `ERR_MODULE_NOT_FOUND` inside the scratch tree and a wall of
+  failures (measured: 19 in one suite, 11 in the other) whose cause is entirely in the harness and
+  looks nothing like a missing dependency. **A list of a module's imports, kept by hand, in two
+  places, is exactly the shape this estate keeps finding stale.** The principled version reads the
+  instrument's own `import` statements — `scripts/walkfloor.mjs` already exports `importsOf`, over
+  `stripComments`, and would answer it transitively. NOT DONE HERE, deliberately: it is a change to
+  two suites' harnesses that belongs with whoever owns the register, and D-277's own arms would not
+  have proven it.
+- **`test/hygiene.test.mjs`'s walk census carries a THIRD, regex-based comment stripper** (its local
+  `codeOnly`, two chained `replace()` calls) beside `walkfloor.mjs`'s real lexer, which D-277 now
+  imports as the estate's one implementation. It is weaker on the same inputs — a `//` inside a
+  string literal, an opener inside a string — and `coverage.mjs`'s own fleet-register note is the
+  argument against a second copy: *a second copy of a rule absorbs the control that was meant to
+  prove the first.* Its file is M0-21's and was not edited. Nothing is currently WRONG with the
+  census; this is a consolidation, and it should be measured before and after rather than assumed.

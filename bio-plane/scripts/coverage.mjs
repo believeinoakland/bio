@@ -46,6 +46,14 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { readControl } from "./control-register.mjs";
+/* D-277: THE CORPUS IS DECLARED CODE, NOT RAW SOURCE. Read that module's header
+   before changing anything about how a check id is harvested or credited — the
+   rule it carries is an INVERSION (a declaration is something the program says)
+   and not a list of prose spellings to skip, and the reason is that this
+   instrument GATES. Until 2026-08-09 an ordinary explanatory comment in the
+   catalogue naming a numeral put that numeral IN the catalog, where nothing
+   named it, and `--strict` exited 1 on a complete family. */
+import { codeOnly, declaredCheckIds, proseOnlyCheckIds, namesCheckId } from "./declared-source.mjs";
 /* M0-16 / D-238: THIS INSTRUMENT DISCOVERS OVER THREE DIRECTORIES IT DOES NOT
    CONTROL, AND UNTIL NOW REPORTED NUMBERS FROM ALL THREE WITHOUT SAYING SO.
    `test/` (the suites and therefore the whole negative-control register),
@@ -101,8 +109,23 @@ function opTable(src) {
 }
 
 const OPS = opTable(indexSrc);
-const CHECKS = [...new Set([...checksSrc.matchAll(/C-\d+\.\d+/g)].map((m) => m[0]))]
-  .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+/* D-277. The catalog is what the catalogue DECLARES, and a comment declares
+   nothing. `CHECKS_IN_PROSE` is the excluded set and is PRINTED on every run:
+   narrowing a corpus without naming what was dropped trades a loud error for a
+   quiet one, and a REAL check that somehow exists only in prose must be visible
+   rather than silently uncatalogued. */
+const CHECKS = declaredCheckIds(checksSrc);
+const CHECKS_IN_PROSE = proseOnlyCheckIds(checksSrc);
+/* THE REACH GUARD, and it is the first thing to suspect if this instrument ever
+   goes quiet. A scanner that misclassified the whole file would blank everything
+   and report a beautiful 100% over an EMPTY catalog — this project has caught a
+   headline assertion passing over an empty corpus three times. Tree-independent
+   on purpose (two suites drive this script inside throwaway repositories whose
+   catalogs hold one check), so it asks the only question that is true of every
+   tree: the raw text holds ids and the code holds none. The REPOSITORY's own
+   numeric floor is `test/declared-corpus.test.mjs`'s, where a repository-specific
+   figure belongs. */
+const catalogWentBlind = CHECKS.length === 0 && CHECKS_IN_PROSE.length > 0;
 
 const suites = readdirSync(join(ROOT, "test"))
   .filter((f) => f.endsWith(".test.mjs")).sort();
@@ -113,7 +136,18 @@ const suites = readdirSync(join(ROOT, "test"))
 
 /* ------------------------------------------------------------- measurement */
 
-const battery = suites.map((f) => ({ file: f, src: readFileSync(join(ROOT, "test", f), "utf8") }));
+/* D-277: `code` is the suite with its prose blanked, and it is what every CREDIT
+   below is computed over. The catalog side was the reported defect; the credit
+   side is the SAME defect pointing the other way and it was live — three
+   catalogued checks were credited as "named by an assertion" on the strength of
+   a sentence in a test's comments, and one of them ONLY on a sentence. A check
+   whose coverage is prose is the C-20.1 class this section exists to refuse:
+   clean because it was not looking. `src` is kept beside it because two
+   questions here are legitimately about the RAW file. */
+const battery = suites.map((f) => {
+  const src = readFileSync(join(ROOT, "test", f), "utf8");
+  return { file: f, src, code: codeOnly(src) };
+});
 
 /* A call-shaped occurrence, not a mention. `index.mjs` resolves the op as
    `searchParams.get("op") || path.slice(1)`, so `/api/?op=cite` and a bare
@@ -132,19 +166,22 @@ const called = (op, src) =>
    that uses both routes is credited to the worker for every op it names. Stated
    here rather than smoothed over: an over-credited coverage figure is the kind of
    equality that costs nothing to produce. */
+/* D-277: over `s.code`, not `s.src`. A suite that MENTIONS an op in a sentence
+   has not called it, and credit for a call is the generous direction — the one
+   direction this instrument exists to refuse. MEASURED on this battery the day
+   the rule changed: 0 of 163 ops were credited by a comment alone and NOT ONE
+   op's level moved, so this closes a hazard rather than correcting a figure, and
+   it is recorded that way rather than as a fix that found something. */
 const opRows = [...OPS.entries()].map(([op, meta]) => {
-  const hits = battery.filter((s) => called(op, s.src));
+  const hits = battery.filter((s) => called(op, s.code));
   const level = hits.length === 0 ? "unreached"
-    : hits.some((s) => /dispatchFetch/.test(s.src)) ? "control-plane"
+    : hits.some((s) => /dispatchFetch/.test(s.code)) ? "control-plane"
     : "durable-object-only";
   return { op, ...meta, level, suites: hits.map((s) => s.file) };
 });
 
-const allText = battery.map((s) => s.src).join("\n");
-const checkRows = CHECKS.map((c) => ({
-  check: c,
-  named: new RegExp(c.replace(".", "\\.")).test(allText),
-}));
+const allText = battery.map((s) => s.code).join("\n");
+const checkRows = CHECKS.map((c) => ({ check: c, named: namesCheckId(c, allText) }));
 
 /* M0-9: the whole file, the whole block, every arm — see control-register.mjs.
    M0-14 / D-233: `arms` is now `null` for a declaration the detector could not
@@ -152,6 +189,12 @@ const checkRows = CHECKS.map((c) => ({
    from a real zero, which is exactly how four suites declaring 48 arms between
    them read as declaring none for four consecutive re-measurements of this row.
    Zero is a measurement; null is the absence of one, and they are named apart. */
+/* D-277 note, so the next reader does not "fix" this one too: `readControl`
+   takes the RAW source and MUST. A negative-control declaration LIVES IN A
+   COMMENT by design — that is the whole shape of the register — so here reading
+   prose is the deliberate closure and not the defect. The rule is not "never
+   read comments"; it is "read comments where the DECLARATION is a comment, and
+   code where the declaration is code". */
 const controlRows = battery.map(({ file, src }) => {
   const c = readControl(src);
   return { suite: file, control: c ? c.text : null, arms: c ? c.arms : null,
@@ -347,9 +390,25 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms: 731,
-  classified: 145,
-  corpus: 146,
+  arms: 738,
+  classified: 146,
+  corpus: 147,
+  /* MOVED 2026-08-09 by D-277: 731 -> 738 / 145 -> 146 / 146 -> 147, ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` RUN PRINTED as REPRODUCIBLE (`arms 738/731 · classified 146/145 ·
+     corpus 147/146 · GREW by 7 arm(s)`, provenance `158 of 158 discovered item(s)
+     are in the commit at HEAD`) — read only AFTER the new files were in a commit,
+     never by adding to the numbers above. The cause is ONE new suite,
+     `test/declared-corpus.test.mjs`, whose `NEGATIVE CONTROL:` declaration
+     enumerates SEVEN arms — a BASELINE, four break-it arms and TWO
+     over-strictness arms — every one of them RUN through
+     `test/declared-corpus.control.mjs`, and every one of them re-run a second
+     time against the OLD rules to show it BITES. Nothing FELL, and
+     `check-firing.test.mjs`'s own declaration did not move: it gained a
+     paragraph recording three added proofs, and the register counts the arms of
+     the largest single declaration, which that paragraph does not become. That
+     was CHECKED rather than assumed, because +7 matching one suite exactly is
+     the kind of arithmetic that hides a lost arm somewhere else. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -768,6 +827,27 @@ if (JSON_OUT) {
   console.log(`  violation, so it is exercised only in the direction that passes. That is the`);
   console.log(`  C-20.1 defect class exactly: the audit was clean because it was not looking.`);
   if (unnamed.length) console.log(`\n    ${unnamed.map((r) => r.check).join(" ")}`);
+  /* D-277: THE CORPUS AND THE EXCLUDED SET, BOTH PRINTED. The catalog is what the
+     catalogue's CODE declares; an id that appears only in its PROSE is named here
+     rather than dropped in silence, because a narrowed corpus nobody prints is the
+     mirror image of the defect this replaced. Every id on this line is a comment
+     doing its job — a rule being explained, a numeral recorded as deliberately
+     unallocated, a foreign namespace's id that merely ends in this shape. If a
+     REAL check ever appears here, that is the finding. */
+  console.log(`\n  CORPUS  ${CHECKS.length} id(s) DECLARED in checks/bio-checks.mjs's code`
+    + ` · ${CHECKS_IN_PROSE.length} more appear only in its PROSE and are NOT catalogued`);
+  if (CHECKS_IN_PROSE.length) console.log(`    prose only: ${CHECKS_IN_PROSE.join(" ")}`);
+  console.log(`  Until 2026-08-09 the catalog was harvested from RAW SOURCE, comments included, so an`);
+  console.log(`  ordinary explanatory comment naming a numeral became a check nothing named and took`);
+  console.log(`  --strict to exit 1 on a complete family. A gate that fails honest runs gets switched`);
+  console.log(`  off. The corpus is now DECLARED CODE — see scripts/declared-source.mjs for the rule,`);
+  console.log(`  for what its scanner cannot see, and for why this is an inversion rather than a list`);
+  console.log(`  of prose spellings to skip. The credit side reads code too: three of these checks`);
+  console.log(`  were credited as "named" by a SENTENCE in a suite's comments, one of them ONLY by a`);
+  console.log(`  sentence, and a matcher with no word boundary credited a check because its SIBLING`);
+  console.log(`  was named — a one-digit member matching inside its own family's tenth. Both are the`);
+  console.log(`  generous direction and both are closed. NO REAL ID IS SPELLED IN THIS FILE'S PROSE,`);
+  console.log(`  deliberately: an explanation of a corpus rule is itself corpus to somebody's matcher.`);
 
   console.log(`\nNEGATIVE CONTROLS  ${controlRows.length - uncontrolled.length} of ${controlRows.length} suites declare one `
     + `(${pct(controlRows.length - uncontrolled.length, controlRows.length)}%) · `
@@ -957,6 +1037,12 @@ if (newlyUnclassified.length)
     + `\n  arrow per arm, or a parenthesised ordinal per arm, in the paragraph the marker opens — or add`
     + `\n  the suite to REGISTER_UNCLASSIFIED with the reason it cannot be counted.`);
 
+if (catalogWentBlind)
+  console.error(`\nCATALOG: the check catalog is EMPTY while checks/bio-checks.mjs's text still holds`
+    + `\n  ${CHECKS_IN_PROSE.length} id(s). The scanner in scripts/declared-source.mjs has gone blind and this instrument is`
+    + `\n  now reporting 100% of nothing — the emptiest possible green, and a shape this project has`
+    + `\n  caught passing three times. Do not move a floor from any figure in this run.`);
+
 if (owedProblems.length)
   console.error(`\nOWED CONTROLS: ${owedProblems.join("; ")}. VF-1's ledger no longer matches the tree. An owed`
     + `\n  control whose suite went missing, or whose suite stopped declaring, is one nobody can re-run`
@@ -964,6 +1050,7 @@ if (owedProblems.length)
     + `\n  arithmetic. Move the pins only in the turn that PLACES and RUNS the arm.`);
 
 if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
+    || catalogWentBlind
     || registerBelowFloor.length || newlyUnclassified.length
     || fleetUnreached.length
     || fleetSuitesUndeclared.length || fleetSuitesUnclassified.length
