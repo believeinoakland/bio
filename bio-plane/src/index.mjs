@@ -2437,6 +2437,61 @@ const LAYER_FIDELITY_CAP = null;
 const LAYER_FIDELITY_SOURCE = "unmeasured: a text layer is itself an unverified transcription "
                             + "(CPDF-9, MEASUREMENTS.md 2026-08-03)";
 
+/* D-251 — AND NOW THE FILE ITSELF SAYS WHO MADE THAT LAYER, ON THE DOCUMENTS
+ * THE RECORD ALREADY HOLDS.
+ *
+ * The paragraph above ends "WHAT WOULD MOVE IT: the producer-metadata read
+ * CPDF-9 recommended and this item did not build." This is that read, arriving
+ * at the one place a chain is composed. `pdfstructure.mjs` does the reading and
+ * owns the whole argument for why it is a DETECTOR rather than a lookup table;
+ * this file composes what it found into a step and holds no opinion about any
+ * engine, exactly as `textchain.mjs` holds none.
+ *
+ * WHAT CHANGES AND WHAT CANNOT. A layer whose /Info names OCR software gains a
+ * SECOND step — `layer -> ocr(<product>)`, the product named from the document's
+ * own bytes — and a layer with no such marker is untouched: one `layer` step,
+ * byte-identical to what every chain carried before this existed. The
+ * composition below can only ever APPEND, through `appendStep`, which is the
+ * function that already refuses a step claiming a stronger cap than the chain it
+ * extends. There is no path here that removes a step, replaces a chain, or
+ * raises a cap, so the classification cannot strengthen a claim even by mistake.
+ *
+ * THE NAMED ENGINE'S CAP IS NULL, and that is not an oversight to be filled in
+ * later by whoever ships a number. It is somebody ELSE'S engine, run at a
+ * quality nobody here measured, on documents nobody here re-ran: CPDF-9 read
+ * `2022 NOV 23 AM 9* 59 p|{ £0OFFICE OF THE CITY CLERK` off one of these layers.
+ * `null` is UNDETERMINED, STATED. What the chain gained is not a letter — it is
+ * the ENGINE'S NAME, which is what a calibration is OF (CPDF-13) and what a
+ * reader would need to re-run the claim. */
+const NAMED_ENGINE_CAP = null;
+const NAMED_ENGINE_SOURCE = "unmeasured: the engine is NAMED by the document's own /Info producer "
+                          + "metadata (D-251; CPDF-9, MEASUREMENTS.md 2026-08-03), and no "
+                          + "calibration of it exists here (CPDF-13)";
+
+/* The chain a document's own text layer produces, EXTENDED by what the file
+   says made it. `layerChain` remains the only builder; this adds the one step
+   D-251 discovered and returns the base chain unchanged for every document
+   that has no marker — including a text shape from a producer that emits no
+   `producer` field at all (an office container, a Tier-2 answer), which is an
+   ABSENCE and reads as one. A refused append (it cannot happen with a null cap,
+   and is checked rather than assumed) keeps the base chain. */
+function layerChainFor(i2text, { tier, container }) {
+  const base = layerChain({ tier, container,
+                            cap: LAYER_FIDELITY_CAP, measured_by: LAYER_FIDELITY_SOURCE });
+  const p = i2text && i2text.producer;
+  if (!p || p.determination !== "ocr") return base;
+  const engine = p.ocr && typeof p.ocr.engine === "string" ? p.ocr.engine.trim() : "";
+  /* A determination of `ocr` that names no product would be rule 1's collapse
+     arriving one level down — "ocr" as a label. `checkChain` refuses it; this
+     keeps the honest base chain rather than handing it a refusal to store. */
+  if (!engine) return base;
+  const ext = appendStep(base, {
+    step: "ocr", engine, version: null, field: p.ocr.field, marker: p.ocr.marker,
+    cap: NAMED_ENGINE_CAP, measured_by: NAMED_ENGINE_SOURCE,
+  });
+  return Array.isArray(ext) ? ext : base;
+}
+
 /* CPDF-10 — THE TIER-3 PREDICATE, and it is deliberately NOT "did Tier 2 fail".
  *
  * A document Tier 2 could not decode and a document with NO TEXT TO DECODE are
@@ -4799,7 +4854,21 @@ export default {
                         body: JSON.stringify({ capture_sha: sha, store: storeName }),
                       });
                       const t2 = await r.json();
-                      if (r.ok && t2 && t2.ok && t2.text) { i2text = t2.text; wiredTier = 2; }
+                      if (r.ok && t2 && t2.ok && t2.text) {
+                        /* D-251: WHO MADE THE LAYER IS A FACT ABOUT THE FILE,
+                           NOT ABOUT THE TIER THAT READ IT. The member decodes
+                           the same bytes with pdf.js and returns the I2 text
+                           shape without a `producer` field, so handing its
+                           answer through unchanged would DROP the marker on
+                           exactly the documents most likely to carry one — a
+                           scanned certified resolution is the class that both
+                           escalates and names ABBYY. Carried forward from the
+                           Tier-1 read, never re-derived, and only when the
+                           member did not supply one of its own. */
+                        i2text = (st.text && st.text.producer && !t2.text.producer)
+                          ? { ...t2.text, producer: st.text.producer } : t2.text;
+                        wiredTier = 2;
+                      }
                     } catch { /* member unavailable: Tier 1's honest answer stands */ }
                   }
                 }
@@ -4868,8 +4937,12 @@ export default {
                           const parts = [];
                           if (layerPages.length)
                             parts.push({ pages: layerPages,
-                              chain: layerChain({ tier: baseTier, container: fmt,
-                                cap: LAYER_FIDELITY_CAP, measured_by: LAYER_FIDELITY_SOURCE }) });
+                              /* D-251: the layer PART of a mixed document is
+                                 still a text layer somebody made, and the file
+                                 says who. `baseText` is the pre-merge shape, so
+                                 the marker is read off the document rather than
+                                 off the OCR member's answer. */
+                              chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
                           if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
                           /* ONE part gives that part's chain back unscoped, so a
                              wholly-scanned document records exactly what it
@@ -4900,10 +4973,14 @@ export default {
                  answered. Tier 3 already set its own above (it names the engine
                  that produced it); anything else came out of the document's own
                  text layer, which is what FW-15's `text_source: "layer"` token
-                 said and is now a chain step that can be extended. */
+                 said and is now a chain step that can be extended — and D-251
+                 is the first thing that extends it: a layer whose /Info names
+                 OCR software records
+                 `layer -> ocr(<product>)` here, with the product named, while a
+                 layer with no marker records exactly the one step it always
+                 did. */
               if (i2text && !chain)
-                chain = layerChain({ tier: wiredTier, container: fmt,
-                                     cap: LAYER_FIDELITY_CAP, measured_by: LAYER_FIDELITY_SOURCE });
+                chain = layerChainFor(i2text, { tier: wiredTier, container: fmt });
             }
           } catch { /* a wire failure must not fail the capture: fall through to
                        the honest no-reading below */ }

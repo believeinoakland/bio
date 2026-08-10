@@ -499,7 +499,7 @@ authority is the file named, never this one.
 ## REC-
 
 - **REC-3** · 2026-07-31 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
-  `docs/development/INTERFACES.md:468`
+  `docs/development/INTERFACES.md:478`
 - **REC-8** · 2026-07-31 — PARTLY SETTLED 2026-07-31 (REC-8, Step 7): the TEMPORAL half is built and the mechanism is decided — an `overdue-scan` consumer on REC-1's reconciling DO alarm detects an overdue required successor (derived on read against an injectable clock, no stored flag), surfacing an `overdue_successor` proposal.  
   `docs/development/DEBT.md:71`
 - **REC-11** — her than minting a second constant; (2) ONE `strength:` line in the DO dispatch map beside `basis:`/`restson:`; (3) the CORRECTED comment on #weakerGrade (RECONCILED §1.1 R1-m — the old comment named the two-axis substitution R2 forbids as a design INTENT), with #weakerGrade itself unchanged and deliberately unused…  
@@ -582,6 +582,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:2027`
 - **REC-49** — REC-49's four on the surface: (p) the pair read back out of the container manifest -> 194/196, 2 FAIL, both of them in the awaiting window while every complete case stays green; (q) UI-29's sentence restored -> 194/196 — AND THIS ARM CORRECTED THE FIXTURE: it first fired ZERO, because an assertion that a sentence…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1565`
+- **REC-49** — CORRECTED IN PLACE BEFORE ANYONE READ IT, and the correction is left visible rather than the paragraph rewritten, because the mistake is the more useful half.** This block first claimed the battery *"reports 124 FAILED suites and EXITS 0"* — the same class of defect as REC-49's false `exit 0`, raised as a delegation.  
+  `docs/development/CLAIMS.md:363`
 - **REC-52** · 2026-08-04 — THE FIX WAS DECIDED AGAINST THE ITEM'S OWN LEANING, on evidence: `apiQ` could not be made to throw, because §7a spreads a DO result into `{ok:true}` at HTTP 200 without checking it, so there is no `ok:false` to throw on - the motivating case would have sailed past.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1869`
 - **REC-52** — `bio-plane/test/plane-envelope.test.mjs` — REC-52's own suite: its `UNCONVERTED` set updated as the sites leave it, its two HELD-OPEN relation pins (i) and (ii) CORRECTED AT THE SITE with a dated reason and never deleted, and detector B widened to the two fallback shapes this block used that it could not see.  

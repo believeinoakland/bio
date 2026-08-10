@@ -7542,3 +7542,84 @@ because the map DERIVES those keys from that same object and both sides move tog
 That is the equality-that-costs-nothing shape found inside an instrument rather than in a
 subject. ARM E3, which pins the four facts to the order `CLAUDE.md` names them in, is the
 only arm that catches it.
+---
+
+## 2026-08-10 — D-251: WHO MADE THE TEXT LAYER, MEASURED ON THE LIVE RECORD
+
+**Instrument.** `bio-plane/src/pdfstructure.mjs`'s `/Info` read and
+`classifyProducer` at commit-time on branch `worktree-agent-a9a385fb87482fe28`,
+run over bytes fetched from `webapi.legistar.com/v1/oakland` on 2026-08-10 by an
+out-of-band node script. **The three subject documents were found by
+`MatterEnactmentNumber`, not by `MatterName`** — `MatterName` is null on all
+three, which is why the obvious filter finds nothing and is recorded so the next
+session does not re-discover it.
+
+**THE SUBJECT: the three attachments CPDF-9 measured on 2026-08-03** — Oakland's
+enacted certified resolutions, the ones carrying an ABBYY OCR overlay the record
+has been reading as authored text.
+
+| Document | matter / file | bytes · sha256 (16) | `/Info Creator` | determination | chain now |
+| --- | --- | --- | --- | --- | --- |
+| `89484 CMS` | 33867 · 22-0949 | 114,592 · `f0e55eae78348645` | `ABBYY FineReader Engine 11` | **ocr** | `layer -> ocr(ABBYY FineReader Engine 11)` |
+| `89498 CMS` | 33745 · 22-0826 | 44,376 · `1b43b316854ce47c` | `ABBYY FineReader Engine 11` | **ocr** | `layer -> ocr(ABBYY FineReader Engine 11)` |
+| `89518 CMS` | 33791 · 22-0872 | 125,353 · `8196d34e4a7c6a87` | `ABBYY FineReader Engine 11` | **ocr** | `layer -> ocr(ABBYY FineReader Engine 11)` |
+
+In every one the marker is in **`/Creator`** and `/Producer` is **absent** — which
+is why reading only `/Producer`, the field the shorthand names first, would have
+found NOTHING on all three. The layer text confirms these are the same documents
+CPDF-9 read: `89518 CMS`'s decoded layer still begins
+`APPROVED AS TO FORM AND LEGALITY 2022 NOV 23 AM 9* 59 p|{ £0 OFFICE OF THE CITY
+CLERK`, the garbled stamp transcription quoted in the 2026-08-03 entry, and
+`89484 CMS`'s begins `2022 DEC 12 Ml KM 3 fit FO ' of ™ EO o F a T SS YCLERK JltV
+ATTMNEY ’ S office`.
+
+**THE CONTROL, and it is the half that matters: ZERO FALSE POSITIVES.** The same
+three matters carry **8 other attachments**, read in the same pass:
+
+| Producer / Creator seen | count | determination |
+| --- | --- | --- |
+| `Acrobat Distiller 10.1.16 (Windows)` (with Word / PScript5 / Aspose creators) | 3 | undetermined |
+| `Microsoft® Word for Microsoft 365` | 1 | undetermined |
+| `macOS … Quartz PDFContext` / Word | 1 | undetermined |
+| no readable `/Info` — ENCRYPTED | 3 | undetermined, **naming `encrypted`** |
+
+Not one authoring string was matched, and the three encrypted documents were
+NAMED rather than matched against ciphertext (their `/Info` strings are
+ciphertext under the Standard Security Handler, so a match there would be a match
+against noise). **11 of 11 non-subject attachments correct.**
+
+**WHAT IT COST TO READ.** `/Info` is one dictionary lookup off a document the
+extractor has already parsed — the trailer read adds no fetch, no stream decode
+and no page walk. The whole battery moved **154.7s -> 161.4s**, which is one new
+miniflare suite's worth of sandboxes and not the read.
+
+**GATES, this branch.** BASELINE (before any edit, after `npm ci` in the
+worktree): battery **157/157 suites green · 9,844 assertions · 154.7s**;
+`coverage.mjs --strict` **exit 0**, OPS 163/163 reached, CHECKS 228/228 named,
+NEGATIVE CONTROLS 152 of 152 · 792 arms; `civicos-ui/test/run.mjs` **exit 0**.
+FINAL: battery **158/158 suites green · 9,915 assertions · 161.4s**, exit 0 read
+UNPIPED; `coverage.mjs --strict` **exit 0** read UNPIPED, OPS **163/163**
+unchanged (no op was added), CHECKS **228/228** unchanged (no refusal code was
+added), NEGATIVE CONTROLS **153 of 153 · 795 arms**; UI **exit 0** read UNPIPED.
+
+**The +71 assertions are DIFFED between two full runs, never subtracted:**
+`producer-provenance.test.mjs` **58** (new) · `pdfstructure.test.mjs` **84 -> 94**
+· `hygiene.test.mjs` **607 -> 610** (its per-suite walks each gained one row for
+the new suite — the census noticing the file, which is what it is for).
+
+**A FINDING ABOUT THE HARNESS — AND ITS OWN CORRECTION, kept because the
+correction is the more useful half.** A fresh worktree has **no
+`bio-plane/node_modules`**, and the battery's first run there reported **28/157
+suites green, 124 FAILED — every failure `Cannot find package 'miniflare'`**.
+This entry first recorded "AND STILL EXITED 0" and routed it as a delegation
+about `battery.mjs`. **That was WRONG.** The baseline was run as
+`npm run test:battery > file; echo "EXIT=$?"`, and the status reported for a
+compound command is the LAST command's — `echo`'s — which is always 0. Measured
+directly afterwards on this same branch: a run with ONE failing suite wrote
+`EXIT=1` into its own log while the same harness announced "exit code 0".
+**The runner is fine; the instrument could not see the number it was reporting** —
+`CLAUDE.md`'s `cmd | tail` trap arriving through `cmd; echo` instead of a pipe,
+which is a second spelling worth writing down. What remains true and is all that
+is claimed: a fresh worktree needs `npm ci` in `bio-plane/`, and nothing in the
+loop a session actually runs says so. Routed as a small DELEGATION in
+`CLAIMS.md`, no longer as an exit-status defect.

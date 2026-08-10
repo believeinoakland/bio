@@ -422,6 +422,16 @@ Tier-1 in-plane text extraction (CPDF-4, commit 314f4b7) adds ONE top-level fiel
 - `text.pages[]` — one entry per page in order: `{ page:<0-based>, text, undetermined:[Marker,...] }`.
 - `text.undetermined[]` — all per-region markers, flattened.
 - `text.counts` — `{ chars, undetermined }`.
+- `text.producer` — **WHO MADE THE TEXT LAYER (D-251, IC-58 PROPOSED 2026-08-10, ADDITIVE)**,
+  read from the trailer's `/Info`: `{ producer, creator, determination:"ocr"|"undetermined",
+  ocr:{engine,field,marker}|null, why }`. **`determination` has exactly two values and
+  "authored" is not one of them, and cannot become one** — a producer string can establish that
+  OCR software touched a layer; an ABSENT marker establishes nothing about authorship, so the
+  classification may only ever make the claim WEAKER. When it is `"ocr"` the reading boundary's
+  `text_source` chain carries a second step, `layer -> ocr(<product>)`, with the product named
+  from the FILE'S OWN BYTES and `cap: null` — the engine is NAMED, not measured. A producer that
+  emits no `producer` key at all (an office container, the Tier-2 member's own answer) is an
+  ABSENCE and reads as one.
 
 A `Marker` names the cause per region — never mojibake: `{ page, reason, font, codes, count }`,
 where `reason` ∈ { `no_tounicode`, `cid_font_no_tounicode`, `unmapped_code`,

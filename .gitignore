@@ -28,6 +28,10 @@
 # `.ui…` so an existing line would cover it is the kind of small dishonesty that
 # makes the next reader mistrust the whole file.
 .pl13-harness/
+# D-251's pen, same rule and named for its item for the same reason: an
+# interrupted control run must not leave a copy of `pdfstructure.mjs` sitting
+# untracked where the next walk can enrol it as a source file.
+.d251-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.
