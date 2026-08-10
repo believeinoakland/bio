@@ -714,6 +714,31 @@ scope: **Two record-truth defects found by UI-43.** (1) **The affirmation has no
 accepts-when: both halves measured FROM THE PLANE rather than inherited from the surface; if the fix corrects the CHECK's sentence rather than the code that is legitimate and is a correction with the reason in a comment, never an exemption.
 
 
+### WAVE SPAWNED 2026-08-09 — EIGHT WORKERS, and the rows are written BEFORE they report
+
+**The rule I broke six times earlier today, applied: a spawn brief is not a queue row.** Each
+row below existed before its worker did. Seven of the eight already carry a `DEBT.md` register
+row and were briefed against it; **UI-53 is new and carries both.** Every id came from
+`tools/mintid.mjs`, and every brief was checked against the TREE rather than against a ledger
+grep — the other thing that cost a worker today.
+
+| item | what it is | ground |
+| --- | --- | --- |
+| **D-267** | the queue's ancestor walk is blind to `status: severed`, so a project that WITHDREW from a question stays a home for it. The fix belongs where the homes rule lives, not in the consumer — the plane has the opposite rule one op over. PL-13's assertions pin the DEFECT and must be CORRECTED when it is fixed | plane |
+| **D-270** | six ops answer with NO refusal code at all — the session gate plus three bare-`error` argument refusals. D-262's decoration means a minted code is explained for free; whether the gate SHOULD carry one is a DEC-37/DEC-52 interface decision | plane |
+| **D-254** | `check-refusal-codes.mjs` has no exports and works at top level ending in `process.exit`, so importing it runs the whole DEC-49 guard and kills the process. Must stay a working SCRIPT with the exit status the gate reads — breaking that turns a gate into a decoration | VERIFY |
+| **D-249** | no suite pins a port, measured by D-237 at exactly one site. **Either answer closes it**: pin it so a leak FAILS, or measure that nothing here can leak one and close the row. The load-attributed socket errors seen all day are the live question | VERIFY |
+| **D-252** | Tier-3 routing is per DOCUMENT and the thing it routes is per PAGE, so a good text layer would be REPLACED by an OCR pass at cap C. Untaken today, live the moment the member exists. I2's `text.pages[]` already has the grain — a MERGE RULE, and every derivation step may only WEAKEN | CONTENT-PDF |
+| **UI-53** | D-269's delegation: **three hand-written BANNED lists, no two agreeing, none of which would have caught the phrase that was reaching members and being frozen into signed bytes.** Make them consumers of D-269's one DERIVED family; a list that asks a different question is kept and NAMED, not folded in | UI |
+| **D-263** | a merge silently dropped REC-68's `VERIFICATION.md` provenance sentence. Restore what was written, not a paraphrase — **and ask whether it is still TRUE**, because restoring a false sentence is worse than the gap. Then sweep the OTHER consequences of M0-20's three dropped merges, which nobody has measured | VERIFY |
+| **D-266** | what DECLINING means for a finding RECOMPUTED ON EVERY READ. Its first deliverable is whether it is the worker's or Bob's. A dismissal with no anchor either becomes a fact about the INPUTS, decays silently, or must be re-derived — **and the wrong one lets a member believe they closed something that quietly reopens** | RECORD |
+
+**Why eight when six branches are queued to merge:** because spawning costs seconds and does not
+spend integration time, and I had reasoned my way to the opposite conclusion — the same
+one-sided pricing `kickoffs/CONDUCT.md` records the previous CONDUCT making four times. An idle
+ephemeral worker costs nothing; an idle SLOT costs the session.
+
+
 ### PL-17 · running (spawned 2026-08-09)
 milestone: M9
 interface: I5 (a new value in an existing field — additive; the shape is not reshaped)
