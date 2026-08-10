@@ -107,8 +107,16 @@ if (!LOCAL_ONLY) {
   if (head && remote && head !== remote) {
     const ahead = sh("git rev-list --count origin/main..HEAD");
     if (ahead && +ahead > 0) {
-      fail(`UNPUSHED — ${ahead} commit(s) on local main are not on origin/main. Verify from\n`
-         + `        the REMOTE, never from your own tree: a local commit is not a published one.`);
+      /* "on local main" was a LIE to every worktree worker, and VF-6 reported it rather
+         than working around it: the comparison is `origin/main..HEAD`, so it fires on
+         whatever branch HEAD is on — which for a spawned worker is never main. A gate
+         that misnames the reader's own branch teaches them to distrust the gate. The
+         branch is now READ rather than assumed. */
+      const branch = sh("git rev-parse --abbrev-ref HEAD") || "HEAD";
+      fail(`UNPUSHED — ${ahead} commit(s) on ${branch} are not on origin/main. Verify from\n`
+         + `        the REMOTE, never from your own tree: a local commit is not a published one.\n`
+         + `        (On a worker's own branch this is EXPECTED — workers commit and CONDUCT\n`
+         + `        integrates. It is a failure on main and a note anywhere else.)`);
     } else {
       warn(`local main is behind origin/main — fetch and rebase before writing.`);
     }

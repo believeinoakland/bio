@@ -323,6 +323,7 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
 ## CLAIM 2026-08-10 M0 (VF-6 — DEC-53's accepts-without-reading rate; a VERIFY-track instrument, holds no slot)
 session: vf6-accepts-without-reading (worktree `agent-a21bd2b090855f8ad`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main`; battery 157/157 · 9,844, `--strict` exit 0 unpiped, three negative-control arms run and recorded.
 paths: `bio-plane/test/accepts-without-reading.measure.mjs` (NEW — the instrument. Named
   `.measure.mjs` on `connections-growth.measure.mjs`'s precedent so `scripts/battery.mjs`,
   which discovers `*.test.mjs`, does NOT run it: it drives two whole stores and it is an

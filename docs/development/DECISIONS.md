@@ -96,6 +96,44 @@ unrecorded, which is what happened here.
 > (`civicos-ui/test/analyst-vocabulary.mjs` derives the banned-vocabulary atoms from
 > DEC-32's own sentence, anchored by DEC-33's heading).
 
+### DEC-68 · open
+raised: 2026-08-10 · CONDUCT (lifted from VF-6's report at integration — the worker raised it
+  rather than writing here, correctly: this file names CONDUCT as the sole writer of new
+  entries, and the worker's brief said otherwise. **The brief was wrong and the worker was
+  right to treat it as a pointer rather than an authority.**)
+for: bob
+question: **Should the record retain a READ EVENT for `op=readingname`, so DEC-53's watch
+  item can be kept at all?** VF-6 measured the accepts-without-reading rate and the answer
+  is a stated `undetermined` — not because the instrument is weak, but because the quantity
+  is not in the record. All four candidate proxies were probed and all four are ABSENT:
+  `op=readingname` is `mutating: false` and writes no row, so there is no read event to
+  subtract from; detail-expanded is never stored; `at` dates the accept and not the reading;
+  and the sharpest one, accepting a null-`grade_if_resolved` candidate, **writes nothing at
+  all — so the act that would BE the signal is the one act that leaves no trace**, and
+  counting rows returns exactly zero however many members do it. Keeping DEC-53's watch
+  number therefore requires a new write on a deliberately non-mutating op.
+why it is Bob's: **logging what a member LOOKED AT is a doctrine question about surveilling
+  members, not a schema convenience.** DEC-53's concern was the record overclaiming through
+  convenience; answering it with a member-reading log would trade one doctrine risk for a
+  larger one, and that trade is not measurement's to make.
+provisional: **nothing is recorded and nothing is blocked.** VF-6's answer is `undetermined`
+  and is PUBLISHED as such in `MEASUREMENTS.md` with what the instrument cannot observe stated
+  beside it. The watch item stays open and unmeasurable rather than being quietly dropped.
+alternative: leave it unmeasurable and close DEC-53's watch item as UNKEEPABLE, which is
+  honest and costs nothing — as against building read retention and getting the number.
+recommendation: **do not build it on measurement's say-so.** VF-6's own report names the
+  asymmetry that matters: the instrument cannot see out-of-band reading, so a member who read
+  the source last week is indistinguishable from one who accepted blind — **every available
+  proxy is wrong in the direction that manufactures a scandal.** A number built on read
+  retention would be both invasive AND biased toward the alarming answer, which is the worst
+  of the four possible outcomes. If the watch item matters enough to pay for, the honest
+  instrument is asking members, not logging them.
+reversal cost: **rises once read events exist**, and that asymmetry is the argument for
+  deciding before building rather than after: deleting a retained-reads table is a different
+  act, with different obligations to members, from never having kept one.
+prior art: `node tools/decided.mjs` finds no ruling; a corpus grep finds none either. So this
+  is genuinely open rather than re-asked.
+
 ### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)
 question: What should a ROOT OF TRUST be for a BIO group — who holds it, how does it
