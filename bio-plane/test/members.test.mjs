@@ -245,10 +245,36 @@ console.log("\n--- a session cites, and the record says who did it ---");
 }
 
 console.log("\n--- what a session may never do ---");
-t("session cannot purge", (await GET(`op=purge&confirm=bio&${S}`)).error, "this operation requires a machine credential, not a signed-in session");
-t("session cannot livefire", (await GET(`op=livefire&${S}`)).error, "this operation requires a machine credential, not a signed-in session");
-t("member session cannot manage the roster", (await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" })).error, "this operation requires a machine credential, not a signed-in session");
-t("member session cannot register keys", (await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" })).error, "this operation requires a machine credential, not a signed-in session");
+/* D-270 CORRECTS FOUR OF THESE RATHER THAN EXEMPTING THEM, and two of the four
+   were asserting something that was not true.
+   These four lines asserted ONE sentence for FOUR ops, and D-270 measured that
+   the plane was answering TWO different conditions with it: `purge` and
+   `livefire` are on the UNATTENDED path (no signed-in session of any role
+   reaches them, and the sentence is true), while `memberadd` and `signeradd`
+   are reached perfectly well from an ADMINISTRATOR's session — so for those two
+   *"requires a machine credential"* was FALSE, and this suite pinned the false
+   sentence in place for as long as it has existed. They now carry
+   `SESSION_ROLE_CANNOT_REACH_OP` and say what is actually the matter.
+   The `error` string is asserted BESIDE the code rather than replaced by it:
+   `error` is what thirty `reason || error` reads in `civicos-ui/app.html`
+   consume, so the pair is what a caller receives. `test/d270-reach.test.mjs`
+   grades the whole split by op name; these four are the reachability pins that
+   were here first and stay where a reader of this suite will find them. */
+{
+  const pg = await GET(`op=purge&confirm=bio&${S}`);
+  t("session cannot purge", [pg.reason, pg.error],
+    ["SESSION_CANNOT_REACH_UNATTENDED_OP", "this operation requires a machine credential, not a signed-in session"]);
+  const lf = await GET(`op=livefire&${S}`);
+  t("session cannot livefire", [lf.reason, lf.error],
+    ["SESSION_CANNOT_REACH_UNATTENDED_OP", "this operation requires a machine credential, not a signed-in session"]);
+  const ma = await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" });
+  t("member session cannot manage the roster — and the reason is the session's ROLE, not the "
+  + "credential: an administrator's session does exactly this, four lines below", [ma.reason, ma.error],
+    ["SESSION_ROLE_CANNOT_REACH_OP", "this operation is reserved to an administrator of this group"]);
+  const sa = await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" });
+  t("member session cannot register keys — same condition, same corrected sentence", [sa.reason, sa.error],
+    ["SESSION_ROLE_CANNOT_REACH_OP", "this operation is reserved to an administrator of this group"]);
+}
 
 /* op=signerlist is the READ over the signer roster and, before this, no suite
    reached it through the control plane — a real caller's only route (D-43). The
@@ -266,7 +292,15 @@ t("admin logs in", alg.result.ok, true);
 const A = "token=" + alg.result.token;
 const add2 = await POST(`op=memberadd&${A}`, { memberId: "meilan", cover: "Meilan" });
 t("admin session invites a member", add2.result.ok, true);
-t("admin session still cannot purge", (await GET(`op=purge&confirm=bio&${A}`)).error, "this operation requires a machine credential, not a signed-in session");
+/* D-270: the SAME code an ordinary member gets, and that equality is the point —
+   `purge` is on the unattended path, so "not you" is not the reason and an
+   administrator is refused for exactly the reason a member is. Contrast
+   `memberadd` two lines above, which this same session PERFORMS. */
+{
+  const pgA = await GET(`op=purge&confirm=bio&${A}`);
+  t("admin session still cannot purge", [pgA.reason, pgA.error],
+    ["SESSION_CANNOT_REACH_UNATTENDED_OP", "this operation requires a machine credential, not a signed-in session"]);
+}
 
 console.log("\n--- revocation closes every door ---");
 /* Revocation is demonstrated on an ORDINARY member. Ruth is an administrator

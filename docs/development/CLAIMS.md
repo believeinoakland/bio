@@ -6746,3 +6746,14 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+### CLAIM 2026-08-09 · D-270 (worktree-agent-aafee89563a3f2d42)
+
+Paths: `bio-plane/checks/bio-checks.mjs` (append ONE family), `bio-plane/src/index.mjs`
+(three new named gate/argument functions + their five call sites),
+`bio-plane/test/refusal-wire.test.mjs` (the D-270 pin, struck WITH its reason),
+`bio-plane/test/members.test.mjs` (four superseded assertions, CORRECTED not exempted),
+`bio-plane/test/d270-reach.test.mjs` + `d270-reach.control.mjs` (new),
+`civicos-ui/check-refusal-codes.mjs` (FLOORS ONLY, moved from printed figures),
+`docs/development/DEBT.md` (D-270's row), `docs/development/INTERFACE-CHANGES.md` (the IC row),
+`docs/development/MEASUREMENTS.md`.

@@ -8733,3 +8733,103 @@ export const TEXT_CHAIN_CHECKS = {
       + 'report is exactly what this record will not do on your behalf.',
   },
 };
+
+/* ============================================================================
+ * CONTROL_PLANE_REFUSAL_CHECKS — D-270. THE REFUSALS THE CONTROL PLANE MAKES
+ * BEFORE THE OP RUNS, which until now carried NO CODE AT ALL.
+ *
+ * D-262's sweep found these by driving the wire: a refusal with no code is one
+ * layer further out than REC-64/REC-79's census (a code with no translation).
+ * It cannot be translated, cannot be pinned by a suite, and cannot be told apart
+ * by a caller from any other refusal that op might make.
+ *
+ * **THE INTERFACE DECISION D-262 DEFERRED, TAKEN ON A MEASUREMENT RATHER THAN ON
+ * SYMMETRY.** D-270's row asks whether the session gate's one sentence — *"this
+ * operation requires a machine credential, not a signed-in session"* — is one
+ * condition or two, and calls it a DEC-37/DEC-52 doctrine question. Driven
+ * against this tree (`test/d270-reach.test.mjs`, every op in the OPS table under
+ * an ordinary MEMBER session and under an ADMIN session):
+ *
+ *   - 11 ops answer BOTH sessions with it. No signed-in person of any role
+ *     reaches them: they are the UNATTENDED PATH, which is the class DEC-37
+ *     minted `DAEMON_TOKEN` for — *"the class is the PATH, not the verb."*
+ *   - 5 ops (`governorconfig memberadd memberset signeradd signerset`) answer a
+ *     MEMBER session with it and are PERFORMED for an ADMIN session. **For those
+ *     five the sentence is FALSE.** A signed-in session reaches them perfectly
+ *     well; this one's ROLE does not.
+ *
+ * So it is two conditions, and the plane was answering both with one sentence
+ * that is true of only one. That is the same defect `export` already had its own
+ * answer for (`ROOT_OF_TRUST_REQUIRED`, whose site comment says the generic
+ * message is *"true and misleading"*) — fixed there for one op while five
+ * siblings kept the wrong sentence, because nothing could see it.
+ *
+ * DEC-52 IS WHY THIS IS NOT A MACHINE/MEMBER BOUNDARY AT ALL. Bob ruled
+ * 2026-08-07 that *"allowing the machine to rule doesn't go against doctrine"* —
+ * a machine credential may perform constitutive acts. So none of these three
+ * codes may say a machine is MORE trusted or a person LESS: what they say is
+ * which CREDENTIAL a verb is addressed to, which is DEC-37's containment
+ * argument (least privilege on the path a credential lives longest) and not a
+ * statement about who is entitled to act.
+ *
+ * THE FOURTH ROW IS THE OTHER KIND D-270 NAMED and needs no doctrine: three ops
+ * refuse a missing argument with a bare `error` string. ONE code with the
+ * argument in `detail`, not three near-identical rows — `AI_BEYOND_TASK_SCOPE`
+ * is the standing precedent for one code whose producers are told apart by
+ * `detail`, and it composes: the next op that needs an argument reuses this
+ * rather than minting a fifth.
+ *
+ * WHAT THIS FAMILY DELIBERATELY DOES NOT COVER, stated so the next reader does
+ * not mistake the boundary for an oversight — codeless refusals measured on this
+ * tree and NOT coded here, each needing its own determination rather than
+ * symmetry: `unauthenticated` (401, pre-identity), `unknown op` (400), the
+ * method complaints (405), the capability complaints (503 `R2 is not
+ * configured`), and the PRE-AUTHENTICATION public surfaces (`verify`,
+ * `publishedbytes`, `publishedcase`, `knock`, `bootstrap`), which no credential
+ * reaches at all. Raised with the figures as **D-278**.
+ * ========================================================================== */
+export const CONTROL_PLANE_REFUSAL_CHECKS = {
+  /* THE 11. Measured: `adminendorse adminremove capturerequestdrain cpuprobe
+     livefire membercaps provenancechain provenanceroute purge reproject
+     taskdrain` — refused for a member session AND an admin session alike. */
+  SESSION_CANNOT_REACH_UNATTENDED_OP: {
+    check: 'C-39.1',
+    where: 'src/index.mjs sessionOpGate > is-session-op-gate',
+    translation: 'This operation is not one a person drives from a browser at all. It belongs to the '
+      + 'unattended side of this instance — the scheduled and machine-driven work — and it answers '
+      + 'only to a credential held by the hosting account, never to a signed-in session. That is a '
+      + 'containment choice rather than a judgement about you: no amount of standing in this group '
+      + 'turns a session into that credential.',
+  },
+  /* THE 5, and the reason this row exists rather than one code for sixteen: for
+     these the old sentence was not merely coarse, it was WRONG. */
+  SESSION_ROLE_CANNOT_REACH_OP: {
+    check: 'C-39.2',
+    where: 'src/index.mjs sessionOpGate > is-session-op-gate',
+    translation: 'A signed-in session does reach this operation — yours does not, because it is '
+      + 'reserved to an administrator of this group. Somebody who already administers this instance '
+      + 'can do it from their own browser, so the remedy is asking one of them rather than finding a '
+      + 'different credential.',
+  },
+  /* Measured member-facing on this tree: an ordinary member session meets it on
+     `registeraudit` and `capturerequestdraining`. It is the third distinct
+     answer the plane was giving codelessly, and D-270's row names it in words —
+     *"your credential does not reach this verb"*. */
+  TOKEN_CLASS_CANNOT_REACH_OP: {
+    check: 'C-39.3',
+    where: 'src/index.mjs tokenClassGate > is-token-class-gate',
+    translation: 'The credential this request arrived with is a real one on this instance, and this '
+      + 'particular operation is not addressed to credentials of its kind. Nothing here is broken and '
+      + 'nothing was refused about who you are: what a given kind of credential may ask for is written '
+      + 'into the instance, and this sits outside that list.',
+  },
+  /* `capture` and `pdfstructure` want a sha256; `monitor` wants a bundleId. ONE
+     condition, told apart by `detail`. */
+  REQUIRED_ARGUMENT_MISSING: {
+    check: 'C-39.4',
+    where: 'src/index.mjs requiredArgument > is-required-argument',
+    translation: 'The request left out something this operation cannot proceed without, or gave it in '
+      + 'a shape that is not the one it takes. The accompanying detail names which one and what it '
+      + 'should look like; nothing was written and nothing was changed.',
+  },
+};

@@ -33,6 +33,12 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             the store because the OPS table below is the only thing that knows
             what an op is or which classes may call it. */
          AI_CREDENTIAL_CHECKS,
+         /* D-270: the three control-plane gates' rows. Named rather than reached
+            through the namespace below, because these are used AS VALUES at the
+            three governed sites — `dec49Attach` decorates a code it finds, and
+            these sites carry the row themselves so the code is a STRING LITERAL
+            the DEC-49 guard's arm C can COMPARE. */
+         CONTROL_PLANE_REFUSAL_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
@@ -2073,6 +2079,149 @@ function aiTaskScope(cred, op, spec) {
   return { ok: true, viewer: cred.principal };
 }
 
+/* =========================================================================
+ * D-270 — THE THREE CONTROL-PLANE GATES THAT REFUSED WITH NO CODE AT ALL.
+ *
+ * Each is ITS OWN NAMED FUNCTION rather than an inline block in the fetch
+ * handler, and that is REC-71's rule paid at allocation time exactly as
+ * `aiScopeDeclaration`'s header states it: a DEC-49 `where` resolves a span BY
+ * FUNCTION NAME, and PL-4 shipped one pointing at `acquire` — a name that does
+ * not exist, because the op lives inside `fetch` — so nothing was checking that
+ * site at all. A gate left inline in `fetch` is a gate no `where` can name.
+ *
+ * THE SPLIT BETWEEN THE FIRST TWO IS A MEASUREMENT, NOT A TASTE. See
+ * `CONTROL_PLANE_REFUSAL_CHECKS`'s header for the figures and the DEC-37/DEC-52
+ * reasoning; the short of it is that 11 ops refuse EVERY session and 5 refuse
+ * only a non-administrator's, and for those 5 the single sentence this gate used
+ * to give — *"this operation requires a machine credential"* — is FALSE.
+ * ======================================================================= */
+
+/* THE SESSION GATE. A browser signed in with a password holds a session token,
+ * not a machine credential; `SESSION_OPS` is what says which MUTATING ops that
+ * session may drive, per role.
+ *
+ * `error` IS KEPT ALONGSIDE THE CODE and that is deliberate rather than
+ * timidity: every consumer of this refusal reads `reason || error` or
+ * `error || reason` (30 such reads measured in `civicos-ui/app.html`), so
+ * ADDING the code moves nobody, while REMOVING the string would. For the eleven
+ * it is the byte-identical legacy sentence. For the five it is a NEW one,
+ * because the legacy sentence was not coarse there — it was wrong, and a
+ * consumer switching on the old string for those five was switching on a false
+ * statement. IC-55 carries that half.
+ */
+function sessionOpGate(kind, op, spec, method) {
+  const refusal = (code, detail, error, extra) => {
+    const row = CONTROL_PLANE_REFUSAL_CHECKS[code];
+    return { error: { ok: false, reason: code, code, check: row.check, translation: row.translation,
+                      detail, error, op, ...(extra || {}) } };
+  };
+  /* `capture` is nominally mutating because of its PUT path; its GET is a read
+     and is treated as one. Computed OUTSIDE the region on purpose, so the
+     admission returned at the foot is not read as a refusal site. */
+  const admitted = !spec.mutating
+                || (op === "capture" && method === "GET")
+                || SESSION_OPS[kind].has(op);
+
+  /* DEC-49 REGION is-session-op-gate
+   *
+   * THE SPAN `SESSION_ROLE_CANNOT_REACH_OP` and `SESSION_CANNOT_REACH_UNATTENDED_OP`
+   * name (REC-71). A REGION and not the whole function, so the admission either
+   * side of it is not conscripted into this family. Helper `refusal`, and every
+   * code a STRING LITERAL at its site so arm C of the DEC-49 guard can COMPARE
+   * it rather than read past a variable — one code in a variable shipped
+   * `translation: undefined` to a member.
+   *
+   * THE ORDER IS THE HONESTY. Ask the ADMIN list first: if any session role
+   * reaches this verb then the refusal is about THIS session's role, and saying
+   * "you need a machine credential" would send a member looking for a
+   * credential that is not the answer. Only when no role reaches it is the verb
+   * genuinely on the unattended path. */
+  if (!admitted) {
+    if (SESSION_OPS.admin.has(op))
+      return refusal("SESSION_ROLE_CANNOT_REACH_OP",
+        `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an `
+        + `administrator's. This session's role is '${kind}'. An administrator of this group can `
+        + `perform it from their own browser — this is section 4's role boundary, not a credential `
+        + `boundary, and the plane said otherwise until D-270 measured the difference.`,
+        "this operation is reserved to an administrator of this group",
+        { role: kind });
+    return refusal("SESSION_CANNOT_REACH_UNATTENDED_OP",
+      `'${String(op).slice(0, 60)}' is on the UNATTENDED path — the class DEC-37 minted DAEMON_TOKEN `
+      + `for, where "the class is the PATH, not the verb". No signed-in session of any role reaches `
+      + `it, including the founder's; it answers to a credential held in the hosting account. Nothing `
+      + `here says a machine is trusted more than a person (DEC-52 rules the opposite): it says which `
+      + `credential this verb is addressed to.`,
+      /* THE LEGACY SENTENCE, BYTE-IDENTICAL. It is TRUE of these eleven, and
+         keeping it is what makes the code purely additive for them. */
+      "this operation requires a machine credential, not a signed-in session");
+  }
+  /* END DEC-49 REGION is-session-op-gate */
+
+  return { ok: true };
+}
+
+/* THE CLASS GATE, one layer past the session gate: a MACHINE credential whose
+ * class the OPS row does not admit. Measured member-facing too — an ordinary
+ * member session meets it on `registeraudit` and `capturerequestdraining`,
+ * because the session gate covers only MUTATING ops and these are reads.
+ *
+ * NOT the same condition as either session code, and that is why it is a third
+ * row rather than a reuse: this one is about the KIND of credential, the other
+ * two about a session's ROLE and about the verb's PATH. A caller that cannot
+ * tell the three apart cannot tell "ask an administrator" from "this is not for
+ * a browser" from "this token class is not addressed here". */
+function tokenClassGate(cls, op, spec) {
+  const refusal = (code, detail, error, extra) => {
+    const row = CONTROL_PLANE_REFUSAL_CHECKS[code];
+    return { error: { ok: false, reason: code, code, check: row.check, translation: row.translation,
+                      detail, error, op, ...(extra || {}) } };
+  };
+  const admitted = Array.isArray(spec.classes) && spec.classes.includes(cls);
+
+  /* DEC-49 REGION is-token-class-gate
+   * THE SPAN `TOKEN_CLASS_CANNOT_REACH_OP` names. Code a STRING LITERAL. */
+  if (!admitted)
+    return refusal("TOKEN_CLASS_CANNOT_REACH_OP",
+      `'${String(op).slice(0, 60)}' admits ${Array.isArray(spec.classes) && spec.classes.length
+        ? spec.classes.join(", ") : "(no class named in its OPS row)"}, and this request arrived as `
+      + `'${String(cls).slice(0, 30)}'. The class ACL is the OPS table, which is the instance's own `
+      + `declaration of what each kind of credential may ask for.`,
+      /* the legacy sentence, byte-identical: it is true, and keeping it makes
+         this code additive for every consumer already reading `error`. */
+      "forbidden for token class",
+      { cls });
+  /* END DEC-49 REGION is-token-class-gate */
+
+  return { ok: true };
+}
+
+/* THE ARGUMENT COMPLAINT. ONE code for the whole condition with the argument in
+ * `detail`, rather than a row per op: `AI_BEYOND_TASK_SCOPE` is the standing
+ * precedent for one code whose two producers are told apart by `detail`, and
+ * `refusal-wire.test.mjs` already pins that pair for exactly this reason.
+ *
+ * A HELPER RATHER THAN THREE EDITED SITES, and the reason is the `where` field:
+ * a DEC-49 row holds ONE `where` naming the SMALLEST SPAN, so a code minted at
+ * three sites in `fetch` could not honestly name one (the guard's own arm-C note
+ * calls that the MULTI-SITE class, 93 codes of it). Minting it in one governed
+ * function is what makes the row true. */
+function requiredArgument(op, argument, shape, error) {
+  const refusal = (code, detail, said, extra) => {
+    const row = CONTROL_PLANE_REFUSAL_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             detail, error: said, op, ...(extra || {}) };
+  };
+  /* DEC-49 REGION is-required-argument
+   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL.
+   * `error` is passed in BYTE-IDENTICAL from the site rather than rebuilt here,
+   * so all three legacy sentences survive the change unaltered and no consumer
+   * reading `error` moves at all — the code is purely additive for them. */
+  return refusal("REQUIRED_ARGUMENT_MISSING",
+    `op=${op} needs ${argument} in the shape ${shape}, and the request did not carry one.`,
+    error, { argument, shape });
+  /* END DEC-49 REGION is-required-argument */
+}
+
 const json = (o, status = 200) =>
   new Response(JSON.stringify(dec49Attach(o), null, 1), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
@@ -3072,9 +3221,18 @@ export default {
                     + "the founder's own browser too, which is the one place in this system where being "
                     + "the founder is not enough. The published record needs no credential at all: see "
                     + "op=publishedmanifest." }, 403);
-          if (spec.mutating && !(op === "capture" && req.method === "GET")
-              && !SESSION_OPS[kind].has(op))
-            return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
+          /* D-270: the gate is a NAMED FUNCTION now, so a DEC-49 `where` can
+             point at it. It answers TWO different conditions where this line
+             answered one, and for five ops the one it answered was false. */
+          const gated = sessionOpGate(kind, op, spec, req.method);
+          /* THE LITERAL `ok: false` AT THE CALL SITE IS LOAD-BEARING and is not
+             belt-and-braces: `plane-envelope.test.mjs`'s detector A reads the
+             FIRST BOOLEAN-SHAPED property of the object handed to `json()`, and
+             a bare `json(gated.error, 403)` is a VARIABLE it cannot classify —
+             which would have raised its NAMED-and-ceilinged residual instead of
+             lowering it. Caught by that suite on this change's first battery
+             run. Same at the two sites below. */
+          if (gated.error) return json({ ok: false, ...gated.error }, 403);
           cls = kind;
           sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
           sessRights = sess;
@@ -3094,8 +3252,11 @@ export default {
     if (cls === "ai") {
       const scoped = aiTaskScope(aiCred, op, spec);
       if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
-    } else if (!spec.classes.includes(cls)) {
-      return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+    } else {
+      /* D-270: a NAMED function for the same reason as the session gate — a
+         `where` cannot name a block inside `fetch`. */
+      const classed = tokenClassGate(cls, op, spec);
+      if (classed.error) return json({ ok: false, ...classed.error }, 403);
     }
 
     /* Section 8.1: the ROOT OF TRUST, and not in-app administrator status.
@@ -3586,7 +3747,8 @@ export default {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "capture requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument("capture", "sha256", "<64 lowercase hex>",
+          "capture requires sha256=<64 lowercase hex>") }, 400);
       const key = captureKey(storeName, sha);
       if (req.method === "PUT" || req.method === "POST") {
         const body = new Uint8Array(await req.arrayBuffer());
@@ -3625,7 +3787,8 @@ export default {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument("pdfstructure", "sha256", "<64 lowercase hex>",
+          "pdfstructure requires sha256=<64 lowercase hex>") }, 400);
       const obj = await env.CAPTURES.get(captureKey(storeName, sha));
       if (!obj)
         return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
@@ -4956,7 +5119,8 @@ export default {
       const body = await req.json().catch(() => null);
       const bundleId = body?.bundleId;
       if (typeof bundleId !== "string" || !bundleId)
-        return json({ ok: false, error: "monitor needs a bundleId" }, 400);
+        return json({ ok: false, ...requiredArgument("monitor", "bundleId", "a non-empty string in the POST body",
+          "monitor needs a bundleId") }, 400);
 
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
       /* REC-25: the store's image read fails closed without a viewer. The

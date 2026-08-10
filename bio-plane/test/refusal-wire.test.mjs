@@ -529,24 +529,32 @@ console.log(`    REFUSALS CARRYING NO CODE AT ALL: ${NO_CODE.length}`);
 for (const n of NO_CODE) console.log(`      no-code  op=${n.op} (${n.who}) keys: ${n.keys.join(",")}`
                                    + (n.said ? `  said: "${n.said}"` : ""));
 /* THE RESIDUE, PINNED AS A SET AND NOT A COUNT — D-270's subject, RAISED by this
-   item and deliberately NOT fixed here.
-   These refusals carry no code of any kind, so DEC-49 cannot reach them at all:
-   they are not "a code with no translation" (REC-64's sweep) but "a refusal with
-   no code", one layer further out. TWO KINDS, both QUOTED in the lines printed
-   above rather than described, because the words are the finding: (1) the
-   SESSION GATE — `{ok:false, error:"this operation requires a machine
-   credential, not a signed-in session", op}` — which is what a signed-in member
-   meets on every unattended verb; and (2) three ops refusing a missing argument
-   with a bare `error` string (`"capture requires sha256=<64 lowercase hex>"` and
-   its two siblings).
-   A SET rather than a count, so it fails in BOTH directions: a new codeless
-   refusal fails this line and must be looked at, and one of these being given a
-   code fails it too and must be struck WITH its reason. That is what stops a
-   known gap from becoming a permanent one. */
-t("the ops answering a caller with NO code at all are NAMED — D-270, raised by this item and not "
-+ "fixed by it, because giving the session gate a code is an interface decision and not a translation",
-  [...new Set(NO_CODE.map((n) => n.op))].sort(),
-  ["capture", "monitor", "pdfstructure", "provenancechain", "provenanceroute", "taskdrain"]);
+   item and NOW CLOSED. **THE SIX ARE STRUCK, AND THE REASON IS HERE RATHER THAN
+   IN A COMMIT MESSAGE, because that is the condition this pin was written under:
+   "one of these six gaining a code fails it too and must be struck WITH its
+   reason."** This is that turn.
+   What the six were: (1) the SESSION GATE — `{ok:false, error:"this operation
+   requires a machine credential, not a signed-in session", op}` — which a
+   signed-in member met on every unattended verb; and (2) three ops refusing a
+   missing argument with a bare `error` string.
+   WHAT CLOSED THEM, and it is NOT what this item predicted. D-270's row expected
+   one code for the gate. Driven under a MEMBER session and an ADMIN session, the
+   gate turned out to answer TWO conditions with one sentence: 11 ops refuse
+   every role (the unattended path, DEC-37's daemon class) and 5 are performed
+   for an administrator — **so for those five the sentence was FALSE**, and one
+   code would have made a wrong answer permanent under a translation. They carry
+   `SESSION_CANNOT_REACH_UNATTENDED_OP` and `SESSION_ROLE_CANNOT_REACH_OP`; the
+   three argument sites carry `REQUIRED_ARGUMENT_MISSING` with the argument in
+   `detail`. A THIRD codeless gate this suite could not see (`forbidden for token
+   class`, reached only by ops with no `member` class, which this drive filters
+   out) carries `TOKEN_CLASS_CANNOT_REACH_OP`. IC-55, C-39.1–C-39.4.
+   THE PIN STAYS, AND ITS EXPECTED VALUE IS NOW EMPTY. It is still a SET and
+   still fails in both directions: a NEW codeless refusal fails this line and
+   must be looked at. `test/d270-reach.test.mjs` is the instrument that grades
+   WHICH of the codes a caller gets, over a wider op corpus than this drive. */
+t("NO op answers a caller with a refusal carrying no code at all — D-270's residue, raised by this "
++ "item and closed by it; still a SET so a new codeless refusal fails here rather than accumulating",
+  [...new Set(NO_CODE.map((n) => n.op))].sort(), []);
 console.log(`    BODIES THIS WALK COULD NOT CLASSIFY: ${NOT_CLASSIFIED.length}`);
 for (const n of NOT_CLASSIFIED.slice(0, 20)) console.log(`      unclassified  op=${n.op} (${n.who}) — ${n.why}`);
 /* The census is REPORTED and NOT GATED, deliberately: gating it would fail this

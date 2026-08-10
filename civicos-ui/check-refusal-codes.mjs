@@ -345,7 +345,17 @@ const FLOOR = {
      MERGED tree carrying REC-69, PL-18 and PL-19. Each of those measured its own branch
      and NONE of their numbers is true here — the whole reason this block is re-read at
      integration rather than trusted from a report. */
-  families: 16,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+  families: 17,    /* MOVED 16 -> 17, 2026-08-09, worktree agent-aafee89563a3f2d42 (D-270), from
+                          this file's OWN PRINTED figure on a green run of this worktree (`arm A: 17
+                          DEC-49 families … 172 rows — floor 16/168 · GREW by 4 row(s)`), never by
+                          adding one to the number that was here. + CONTROL_PLANE_REFUSAL_CHECKS
+                          (C-39 — the three control-plane gates that refused with NO CODE AT ALL).
+                          NO PRE-EXISTING SLACK FOUND in this figure or in `rows`, `census`, `reach`,
+                          `governedSites`, `regions`, `regionLines`, `codesChecked` or
+                          `refusalsJudged`: every one sat EXACTLY at the value the run printed before
+                          this item's four rows landed, which is the sixth item running for which
+                          that has been true. */
+                   // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
                        // + ROUTE_MARK_CHECKS (REC-63);
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
@@ -355,7 +365,14 @@ const FLOOR = {
                           for everybody else's walk unless it is moved in the same turn"*. It is
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
-  rows:        168,    /* MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
+  rows:        172,    /* MOVED 168 -> 172, 2026-08-09, worktree agent-aafee89563a3f2d42 (D-270),
+                          READ OFF THIS FILE'S OWN PRINTED FIGURE on a green run of this worktree
+                          (`arm A: … 172 rows — floor 16/168 · GREW by 4 row(s) since the floor was
+                          set`). + C-39.1..4 in the NEW `CONTROL_PLANE_REFUSAL_CHECKS`, so `families`
+                          moves in the same turn — SK-1's rule that a family is a floor which buys
+                          slack for everybody else's walk unless it is moved with it.
+                          PRIOR ENTRY, kept for the receipt:
+                          MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
                           THIS FILE'S OWN GREEN RUN ON THE MERGED TREE (`arm A: … 168 rows — floor
                           16/167 · GREW by 1 row(s) since the floor was set`) and never by adding one
                           to the number that was here. **THE FIRST FIGURE THIS ITEM WROTE WAS
@@ -375,7 +392,13 @@ const FLOOR = {
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      429,    /* MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
+  census:      433,    /* MOVED 429 -> 433, 2026-08-09, agent-aafee89563a3f2d42 (D-270), from the
+                          figure this file PRINTED on a green run of this worktree (`walk: UNION (the
+                          census) 433 codes over 26 files … floor 429`). The four are C-39's codes,
+                          each minted as a STRING LITERAL through a `refusal` helper — so they arrive
+                          via matcher M5 rather than M1, which is the shape arm C can COMPARE.
+                          PRIOR ENTRY, kept for the receipt:
+                          MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
                           file PRINTED on a green run of the MERGED tree (`walk: UNION (the census)
                           429 codes over 26 files … floor 428`); the pre-merge read of 427 -> 428 was
                           superseded by main moving under the item, and is re-read rather than kept. One code, `VERSION_REASON_MALFORMED`, minted at the
@@ -397,7 +420,15 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       222,    /* MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
+  reach:       226,    /* MOVED 222 -> 226, 2026-08-09, agent-aafee89563a3f2d42 (D-270), from this
+                          file's own PRINTED figure on a green run of this worktree (`arm B: REACH
+                          226 codes — R1 family rows 172 … floor 222 · GREW by 4`). The four arrive
+                          TRANSLATED, so `reachGap` below does NOT move and is deliberately left at
+                          41: a ceiling nudged for bookkeeping stops being a measurement of the gap
+                          it names (REC-63's rule). Confirmed on this tree: 41 of 226, sitting
+                          exactly at the ceiling.
+                          PRIOR ENTRY, kept for the receipt:
+                          MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
                           green run of the MERGED tree (`arm B: REACH 222 codes — R1 family rows 168
                           … floor 221 · GREW by 1`); the pre-merge read of 220 -> 221 was superseded
                           by main moving under the item, and is re-read rather than kept. The new code arrives TRANSLATED, so `reachGap` below does NOT move
@@ -408,7 +439,15 @@ const FLOOR = {
                        // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
                        // move, which is the property a new family owes rather than the number itself.
                        // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
-  governedSites: 68,   // spans named by a row's `where` — a function, or a region inside one.
+  governedSites: 71,   // spans named by a row's `where` — a function, or a region inside one.
+                       /* MOVED 68 -> 71, 2026-08-09, agent-aafee89563a3f2d42 (D-270), from the
+                          PRINTED figure (`arm C: 71 governed sites … 14 whole function(s), 57
+                          narrowed REGION(s)`). The three are `sessionOpGate > is-session-op-gate`,
+                          `tokenClassGate > is-token-class-gate` and `requiredArgument >
+                          is-required-argument` — all THREE new NAMED FUNCTIONS in `src/index.mjs`,
+                          extracted out of the `fetch` handler for REC-71's reason and PL-4's
+                          receipt: a `where` resolves a span BY FUNCTION NAME, so a gate left inline
+                          in `fetch` is a gate no row can name and nothing checks. */
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines: 60,    // total lines of governed span arm C actually reads. MEASURED far above this,
@@ -420,7 +459,14 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions: 54,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+  regions: 57,    /* MOVED 54 -> 57, 2026-08-09, agent-aafee89563a3f2d42 (D-270), from the PRINTED
+                       figure (`57 narrowed REGION(s) (1492 lines inside them, 57 marker pair(s) in
+                       the plane, all claimed)`). + D-270's THREE: `is-session-op-gate` (2 judged,
+                       2 COMPARED), `is-token-class-gate` (1/1), `is-required-argument` (1/1). Each
+                       helper `refusal` sits ABOVE its marker so every call inside the span names
+                       its code as a STRING LITERAL — which is what makes arm C bite here, and is
+                       the property one shipped `translation: undefined` for lacking. */
+                  // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
                        // its `refusal` helper sits ABOVE the marker so every call inside the span
                        // names its code as a STRING LITERAL, which is what makes arm C bite here).
                        // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
@@ -437,7 +483,21 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1454,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+  regionLines: 1492,   /* MOVED 1454 -> 1492 BY D-270, 2026-08-09, worktree agent-aafee89563a3f2d42,
+                          from what this file PRINTED on a green run of this worktree — never by
+                          adding 38 to the number that was here. THE 38 ARE ALL MINE AND THE
+                          ATTRIBUTION IS EXACT: they are three NEW spans and nothing else —
+                          `is-session-op-gate` 21L + `is-token-class-gate` 12L +
+                          `is-required-argument` 5L = 38, and D-270 opened no line inside any of the
+                          other 54 spans. Checked against the printed per-site figures rather than
+                          inferred from the total.
+                          **NOTE FOR THE INTEGRATOR, and this figure's standing property: A REGION'S
+                          LINE COUNT IS A PROPERTY OF THE MERGED SOURCE and it has now moved at
+                          integration five times out of six.** RE-READ this from a green run of the
+                          merged tree rather than trusting this number, and if you meet a conflict
+                          here KEEP BOTH COMMENTS AND ONE KEY.
+                          PRIOR ENTRY, kept as the receipt for how this figure moves:
+                          MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
                           OF THE MERGED TREE and not taken from REC-69's branch — which is the whole
                           instruction the two prior entries below leave, honoured here rather than
                           quoted. The 18 are `is-airuns-context`'s own span and nothing else: the
@@ -530,7 +590,11 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 145,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+  codesChecked: 149,   /* MOVED 145 -> 149, 2026-08-09, agent-aafee89563a3f2d42 (D-270), from the
+                          PRINTED figure (`152 refusals judged and 149 code(s) actually COMPARED
+                          against a row`). +4: every one of C-39.1..4 is COMPARED, none merely read
+                          — which is what this key ratchets and `bodyLines` deliberately does not. */
+                       // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
                        // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
@@ -572,7 +636,15 @@ const FLOOR = {
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 148,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+  refusalsJudged: 152,   /* MOVED 148 -> 152 by D-270, 2026-08-09, agent-aafee89563a3f2d42, from the
+                          PRINTED figure on a green run of this worktree. The four are C-39.1..4,
+                          every one reached through the `refusal("CODE")` helper matcher.
+                          **`outcomeReturns` does NOT move and that is the two figures being separate
+                          doing its job:** D-270's three regions contain no return-position object
+                          literal at all — each `refusal` arrow sits ABOVE its marker, deliberately,
+                          so the code inside the span is a STRING LITERAL rather than a variable.
+                          PRIOR ENTRY:
+                          +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
                           printed figure on a green run of the merged tree. `outcomeReturns` does NOT
                           move: the three refusals are all return positions inside ONE outcome the
                           walk already counted, which is what the two figures being separate is for.

@@ -3319,3 +3319,84 @@ green. UI-43 is live on `app.html` and this touches one function body inside UI-
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's and IC-42's precedent.)*
+
+## IC-55 · I3: the three control-plane gates gain DEC-49 codes, and the session gate SPLITS INTO TWO — for five ops the sentence it was sending was FALSE · PROPOSED 2026-08-09 (D-270, taking the interface decision D-262 deferred) — MOSTLY ADDITIVE, ONE SENTENCE CHANGES
+
+**The number was MINTED** with `node tools/mintid.mjs IC` (floor IC-53, one id already held and
+stepped over, so IC-54 belongs to another worktree). The four C-numbers are `C-39.1..4`, from one
+`node tools/mintid.mjs C` (floor C-36, two held and stepped over).
+
+### 1 · PROPOSED
+
+**INTERFACE: I3, the op contracts. THE CHANGE, in two halves that must not be read as one.**
+
+**(a) ADDITIVE — three codeless refusals gain a DEC-49 code and its row.** These answers previously
+carried `{ ok: false, error: "<sentence>", … }` and nothing else; they now carry `reason`, `code`,
+`check`, `translation`, `detail` **beside an unchanged `error`**:
+
+| condition | code | `error` |
+| --- | --- | --- |
+| a mutating op no signed-in session of any role reaches | `SESSION_CANNOT_REACH_UNATTENDED_OP` (C-39.1) | **byte-identical** — *"this operation requires a machine credential, not a signed-in session"* |
+| a credential class the op's `OPS` row does not admit | `TOKEN_CLASS_CANNOT_REACH_OP` (C-39.3) | **byte-identical** — *"forbidden for token class"* |
+| a required argument missing or malformed (`capture`, `pdfstructure`, `monitor`) | `REQUIRED_ARGUMENT_MISSING` (C-39.4) | **byte-identical at all three sites**, each passed in from its own site rather than rebuilt from a template |
+
+**(b) THE ONE BREAKING HALF, and it is a CORRECTION rather than a redesign.** Five ops —
+`governorconfig`, `memberadd`, `memberset`, `signeradd`, `signerset` — answered a member session
+with *"this operation requires a machine credential, not a signed-in session"*. **That sentence is
+FALSE for those five.** An ADMINISTRATOR's session performs every one of them, measured by driving
+both session kinds against every op in the `OPS` table (`bio-plane/test/d270-reach.test.mjs`). They
+now answer `SESSION_ROLE_CANNOT_REACH_OP` (C-39.2) with
+`error: "this operation is reserved to an administrator of this group"`.
+
+**WHY THE SPLIT IS TWO CODES AND NOT ONE.** D-270's row deferred this as a DEC-37/DEC-52 doctrine
+question. The measurement answers it: **11 ops refuse EVERY session** (`adminendorse adminremove
+capturerequestdrain cpuprobe livefire membercaps provenancechain provenanceroute purge reproject
+taskdrain`) — the UNATTENDED PATH, the class DEC-37 minted `DAEMON_TOKEN` for, *"the class is the
+PATH, not the verb"* — and **5 refuse only a non-administrator's**. One code would have made a wrong
+answer permanent under a canned translation, which is worse than the bare string it replaced.
+**DEC-52 constrains the wording and is honoured explicitly:** Bob ruled 2026-08-07 that the machine
+may rule, so none of the three codes says a machine is trusted more than a person; what they say is
+which CREDENTIAL a verb is addressed to. The suite asserts that in words rather than leaving it to
+review.
+
+**WHAT IT IS NOT.** No field is removed or re-typed. No success answer changes. No HTTP status moves
+(403 / 403 / 400 as before). `error` survives at every site, byte-identical at three of the four.
+
+**MEASURED CONSUMER IMPACT — a measurement over the tree, not a survey.**
+
+- **`civicos-ui/app.html`** — **31 reads of `.error`, of which 15 are explicit `reason || error` or
+  `error || reason` disjunctions**; every one of the 31 is a disjunction, so a refusal gaining
+  `reason` moves none of them and a refusal keeping `error` moves none either. **ZERO occurrences of
+  the literal old sentence**, so nothing in the surface switches on the string half (b) changes.
+  `node civicos-ui/test/run.mjs` from the repo root: exit **0**.
+- **`agent-worker/src/**`** — **ZERO occurrences** of any of the four sentences. It passes a plane
+  refusal through unchanged by design, and now passes three more codes through. Fleet suites green.
+- **`newgroup`** — no source consumer. The only textual hit is `newgroup/src/release.mjs`, which
+  CARRIES the plane bundle as an artifact and does not read the field; DIST regenerates it.
+- **`pdf-worker`** — no occurrence.
+- **The battery** — the only suite asserting the old sentence was `bio-plane/test/members.test.mjs`,
+  five assertions. **Two were pinning the FALSE sentence in place** (`memberadd`, `signeradd`) and
+  are CORRECTED with the reason in a comment beside them, never exempted; the other three now assert
+  the code BESIDE the unchanged sentence.
+- **The DEC-49 guard** — passes, and every floor it invalidated was moved in the same turn from the
+  figures the guard PRINTED: families 16→17, rows 168→172, census 429→433, reach 222→226,
+  governedSites 68→71, regions 54→57, regionLines 1454→1492, codesChecked 145→149,
+  refusalsJudged 148→152. **`reachGap` is unmoved at 41** — the four codes arrive TRANSLATED, so the
+  gap they would otherwise widen does not move (REC-63's rule). **NO PRE-EXISTING SLACK was found in
+  any of them**, which is the sixth item running for which that has been true.
+
+**THE ONE THING A CONSUMER MUST KNOW AND CANNOT INFER:** a consumer that today shows a member the
+`error` string for `governorconfig`/`memberadd`/`memberset`/`signeradd`/`signerset` has been showing
+them a false statement, and after this it shows a true one. If any consumer BRANCHED on that string
+it was branching on a wrong fact; none in this repository does, measured above. New code should
+switch on `reason`/`code` and render `translation`, which is what DEC-49 licenses.
+
+### 2 · RESPONSES
+
+*(To be answered by the consumer areas. RECORD's own position: **ACCEPT.** Half (a) can only add
+keys. Half (b) replaces a sentence that was untrue with one that is, on five ops, with no consumer
+in the repository switching on either.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's, IC-42's and IC-48's precedent.)*

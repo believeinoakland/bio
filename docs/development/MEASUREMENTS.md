@@ -6543,3 +6543,103 @@ this fixture emits neither class, and `queue-state.test.mjs` is the suite that d
 real. Reaching `taskenqueue` directly (it is deliberately not an op) via
 `mf.getDurableObjectNamespace("STORE")` **HUNG this harness past 300 seconds** rather than
 failing, which is recorded because a hang reads as a slow test.
+
+## 2026-08-09 · D-270 — THE SESSION GATE IS TWO CONDITIONS, AND FOR FIVE OPS IT WAS SENDING THE WRONG ONE
+
+**Instrument:** `bio-plane/test/d270-reach.test.mjs` (new), driving the plane under miniflare —
+every op in `index.mjs`'s own `OPS` table that carries a class list, with an EMPTY payload, under an
+ordinary MEMBER session and under a real ADMIN session. Op corpus parsed out of the source and
+floored; catalogue family imported rather than hand-copied. Worktree `agent-aafee89563a3f2d42`,
+baseline `19745ad`.
+
+**Corpus, printed on every run:** 163 op rows parsed · 153 carry a class list and are driven ·
+**306 calls · 207 refusal envelopes**.
+
+### The split, and it is the finding
+
+| | ops | measured |
+| --- | --- | --- |
+| refused for BOTH a member and an admin session | **11** | `adminendorse adminremove capturerequestdrain cpuprobe livefire membercaps provenancechain provenanceroute purge reproject taskdrain` |
+| refused for a MEMBER session, PERFORMED for an ADMIN session | **5** | `governorconfig memberadd memberset signeradd signerset` |
+| refused for an ADMIN session only | **0** | — |
+
+The plane answered all sixteen with one sentence: *"this operation requires a machine credential,
+not a signed-in session"*. **It is false for the five.** The eleven are the UNATTENDED PATH — the
+class DEC-37 minted `DAEMON_TOKEN` for, *"the class is the PATH, not the verb"* — and no session of
+any role reaches them, the founder's included.
+
+**THE MEASUREMENT WAS WRONG TWICE BEFORE IT WAS RIGHT, and both errors are the same shape — a
+corpus that structurally could not contain the answer.** (1) The first harness drove only ops
+carrying the `member` class and measured a split of **0**; the session gate is checked BEFORE
+`spec.classes.includes(cls)`, so admin-only ops like `memberadd` were never in the corpus. (2) The
+second used Ruth — enrolled with `role: "admin"` — as the admin arm and measured **0** again: `kind`
+is `sess.role === "admin" ? "admin" : "member"`, and Ruth holds `member:ruth`. An admin session
+comes from `op=claim` + `op=login` with `role: "admin"`. **Neither zero had anything to do with the
+plane.** The suite now carries an ARM-IS-REAL assertion (the admin arm must PERFORM an act the
+member arm is refused) and control arm (f) re-arms mistake (2) deliberately.
+
+### The codeless class, swept
+
+**29 sites return `{ ok: false, error: "<sentence>" }` with no code of any kind** — 27 in
+`src/index.mjs`, 2 in `src/store.mjs`. D-270's row named six ops; **the sweep found a seventh
+condition its instrument could not see**: `forbidden for token class` is codeless and MEMBER-FACING
+(an ordinary member session meets it on `registeraudit` and `capturerequestdraining`), invisible to
+`refusal-wire.test.mjs` because that drive filters to member-CLASS ops while these are reads outside
+that class. Four conditions were coded (C-39.1..4); the rest are **D-278**, grouped by the
+determination each needs rather than coded for symmetry: `unauthenticated` (pre-identity, and REC-64
+ruled its sibling's deliberate ambiguity should be KEPT), the five pre-authentication public
+surfaces, the method complaints, the capability complaints, and `unknown op` — which has a live
+consumer (`civicos-ui/app.html` tests `/unknown op/i` against `e.error` in two places to detect an
+older plane).
+
+### Consumer impact, measured rather than surveyed
+
+- `civicos-ui/app.html`: **31 reads of `.error`, 15 of them explicit `reason || error` disjunctions;
+  every one of the 31 is a disjunction. ZERO occurrences of the literal old sentence.**
+- `agent-worker/src/**`, `pdf-worker/**`: **zero occurrences** of any of the four sentences.
+- `newgroup`: no source consumer (the only hit is `src/release.mjs`, which CARRIES the plane bundle).
+- Suites: `bio-plane/test/members.test.mjs`, five assertions on the old sentence — **two of them
+  were pinning the FALSE sentence in place** and are corrected with the reason beside them.
+
+### Figures
+
+- Battery **152/152 suites green, 9724 assertions** (baseline on this tree at `19745ad`:
+  151/151, 9688). Delta attributed per suite by re-running, never by subtraction:
+  `d270-reach.test.mjs` +34 (new), `members.test.mjs` 93→93 (five assertions became four blocks of
+  paired assertions), `refusal-wire.test.mjs` 23→23, `plane-envelope.test.mjs` 60→60.
+- DEC-49 guard: exit **0**. Floors moved in the same turn from the figures it PRINTED — families
+  16→17, rows 168→172, census 429→433, reach 222→226, governedSites 68→71, regions 54→57,
+  regionLines 1454→1492, codesChecked 145→149, refusalsJudged 148→152. **`outcomeReturns` does NOT
+  move** (the three new regions contain no return-position object literal — each `refusal` helper
+  sits above its marker so the code inside the span is a string literal), and **`reachGap` does not
+  move either**, at 41: the four codes arrive translated. **No pre-existing slack in any of them.**
+- Three new governed regions: `is-session-op-gate` 21L (2 judged, 2 COMPARED), `is-token-class-gate`
+  12L (1/1), `is-required-argument` 5L (1/1) — **38 region lines, all three attributable to this
+  item and to no other span.**
+
+### What the instrument CANNOT see, stated
+
+An empty payload only provokes refusals that sit above the payload complaints. The five
+pre-authentication surfaces are reached with no credential and are NAMED on every run rather than
+assumed absent. Refusals returned as raw bytes/HTML rather than through `json()` are outside the
+walk. It is not a live probe: a green harness is not a serving build (D-108).
+
+### Two control arms found this item's own instrument wrong
+
+Recorded rather than smoothed, per the arms' own rule. **(g)** was RED against a declared GREEN
+because the grader required BOTH `reason` and `code` — a field-name requirement DEC-49 does not
+make, and one `refusal-wire.test.mjs` deliberately ships against. The grader moved; the arm stood.
+**(c)** was GREEN against a declared RED **twice**: first because this family's sites READ the
+catalogue at runtime, so a site/catalogue divergence is structurally impossible and the arm could
+never have been honoured (which also means the translation equality *agrees with itself for free* —
+content assertions were added and the arm re-declared onto them); then because the re-declared patch
+replaced only the first line of a five-line `+` concatenation and therefore **did not arm**. Third
+run: **all seven as declared** — a GREEN 34/0 · b RED 27/7 · c RED 32/2 · d RED 29/5 · e RED 2/1 ·
+f RED 32/2 · g GREEN 34/0.
+
+**And one assertion caught its own correction.** The DEC-52 wording arm first scanned both the
+translation and `detail` for `/trusted more|less trusted/` and went RED — because `detail` says, in
+as many words, *"Nothing here says a machine is trusted more than a person (DEC-52 rules the
+opposite)"*. WORKER.md names that receipt; it arrived inside the item that quotes it. Narrowed to
+the sentence a member actually reads, with the positive half asserted separately so the narrowing
+does not merely buy a green.
