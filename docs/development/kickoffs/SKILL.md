@@ -88,3 +88,58 @@ Raise a DELEGATION in `CLAIMS.md` for anything outside your paths — do not rea
 another area's ground. Genuine doctrine questions go to `DECISIONS.md` **after**
 `decided.mjs` says the corpus has not already answered them; most of them have. Nothing
 here is a reason to stop: state the provisional you are running under and keep going.
+
+## SK-2 — LANDED 2026-08-10. What SK-3 starts from.
+
+Read the plan row for scope; this records only what EXISTS now, so SK-3 does not re-derive it.
+
+**The doctrine lives in `bio-plane/src/skilldoctrine.mjs`**, a SIBLING of SK-1's pack rather
+than a section of it. SK-1's deliverable is SOURCING (every vocabulary driven or imported);
+SK-2's is DOCTRINE (authored prose held to a different defence). Two deliverables, two
+suites, and `skillpack.mjs` composes them: `disclosedLayers()` spreads `judgementLayers()`
+in, so a layer added in the doctrine module reaches the pack — and the pack's VERSION —
+without an edit in the pack.
+
+**The shape SK-3 should extend rather than reinvent.** A clause is
+`{ id, area, judges, decides, defers, enforced_by, unenforced_because, why }`:
+
+- `judges` names rows of §14b.4's table RIGHT column, `defers` names rows of its LEFT
+  column, and both columns are **PARSED OUT OF `INVESTIGATIVE-SESSION.md`** by
+  `skilldoctrine.test.mjs`. The skill's authority is exactly the right column — measured,
+  in both directions, so a clause claiming ground the design did not grant fails (ARM B1)
+  and a deterministic row no clause hands back fails (ARM B2).
+- `decides` is SCANNED by `controlFlowAuthority()` for control-flow authority — a bound, a
+  termination condition, or a decision about either. `defers` is NOT scanned, deliberately:
+  that is where a deferred subject is legitimately named.
+- **`enforced_by` holds C-numbers read off catalogue rows BY KEY, so no number is typed**
+  (the one exception is `C-2.8`, which has no keyed row because the hunch arms push it at
+  the call site; it is named as the exception and pinned by ARM D4).
+- **A clause with no code behind it must carry `unenforced_because`** and the suite PRINTS
+  how many clauses are instruction-only. **Measured at SK-2: 3 of 10.** That number is how
+  much of this skill a careless model could ignore, published rather than implied — keep it
+  published when you add clauses.
+
+**Three things SK-3 can reuse directly.** `controlFlowAuthority` (exported); the table
+parser and the doc-pin normaliser in the suite; and `skilldoctrine.control.mjs`, whose arm
+shape (`mustFail` / `mustNotFail` fragments, restore verified by content AND sha256) is
+where SK-3's own control belongs.
+
+**Two things SK-2 did NOT do, stated rather than left to be discovered.**
+
+1. **The recipe layer is still declared EMPTY.** SK-1 wrote "SK-2's to fill"; SK-2 did not
+   fill it, and the reason is unchanged and is now written into `skillpack.mjs`'s header: a
+   recipe is worth carrying only if a step naming a surface that does not exist FAILS THE
+   BUILD, and no plane op publishes the surface registry. It waits on a published registry,
+   which is an interface item and not a skill one.
+2. **The second half of SK-2's accepts-when is not checkable yet and is not pretended to
+   be.** The row asks that *"a sampled run's descriptions name their ungraded legs"*; there
+   is no run to sample until VF-4. The suite asserts the description STANDARD and the code
+   that refuses a boilerplate description, prints that limit in BLOCK G every run, and
+   claims nothing about any run's output. The plan already records this as becoming
+   checkable at VF-4.
+
+**One DELEGATION is open and SK-3 will meet it too:** the four levels are spelled two ways —
+`OBSERVATION_LEVELS` has `document`, `SUGGEST_LEVELS` has `documents` — so a run writes one
+into its log and the other into its `level-empty` suggestion. `reportsAs()` bridges them by
+derivation and ARM E7 holds the bridge in both directions. The rosters are `airun.mjs` and
+`bio-checks.mjs`, both outside this area. See `CLAIMS.md`.

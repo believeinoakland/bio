@@ -516,9 +516,23 @@ const REGISTER_FLOOR = {
      the merged +10 happen to agree, which they did NOT at the D-267 merge an hour
      earlier — and that is the reason this figure is still read rather than trusted:
      agreement is a coincidence of two baselines, not a property of the arithmetic. */
-  arms: 792,
-  classified: 151,
-  corpus: 152,
+  /* MOVED 2026-08-10 by SK-2: 792 -> 801 / 151 -> 152 / 152 -> 153, ALL THREE IN THE
+     SAME TURN and every one taken from the figure this item's own green `--strict` run
+     PRINTED **after its files were in a commit** — `REGISTER FLOOR arms 801/792 ·
+     classified 152/151 · corpus 153/152 · GREW by 9 arm(s)`, provenance `164 of 164
+     discovered item(s) are in the commit at HEAD (e1f497f)`. Never counted and never
+     added to the numbers above. One new suite, `test/skilldoctrine.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states NINE arms; all nine were RUN from
+     `test/skilldoctrine.control.mjs` and the measured results are in the declaration.
+     THE ORDER MATTERS AND IS WHY THIS MOVED IN A SECOND COMMIT: read before the commit,
+     the same run PRINTED `arms 792/792 · corpus 152/152` and named the suite as NOT IN
+     ANY COMMIT — the reproducible figure excludes an untracked file by design (D-238),
+     so moving the floor from a pre-commit run would have installed the OLD number as
+     the new one and read as a no-op. Nothing FELL. `FLEET_FLOOR` unmoved at 5 suites /
+     48 arms, and none owed: this item added no fleet member and no fleet suite. */
+  arms: 801,
+  classified: 152,
+  corpus: 153,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

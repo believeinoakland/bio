@@ -104,7 +104,16 @@
  *     BUILD. The surface registry is `civicos-ui`'s and no plane op publishes
  *     it, so a recipe authored HERE could not be validated here. The layer is
  *     therefore declared, empty, and its emptiness is PUBLISHED in the pack —
- *     an honest absence, never a silent omission, and SK-2's to fill.
+ *     an honest absence, never a silent omission.
+ *     **STILL EMPTY AFTER SK-2, AND THE REASON IS UNCHANGED RATHER THAN
+ *     FORGOTTEN.** SK-1 wrote "SK-2's to fill"; SK-2 landed its five JUDGEMENT
+ *     layers (`skilldoctrine.mjs`) and did not fill this one, because the
+ *     blocker is not authorship — it is validation. A recipe is worth having
+ *     only if a step naming a surface that does not exist FAILS THE BUILD, the
+ *     surface registry is `civicos-ui`'s, and no plane op publishes it. Writing
+ *     unvalidated recipes here would buy the appearance of a layer and none of
+ *     the property that makes one worth carrying. It waits on a published
+ *     surface registry, and that is an interface item, not a skill one.
  *   - **THE MACHINE FENCE IS WIDER THAN ITS CANNED WORDS.** The boundary layer
  *     renders the fences that carry a DEC-49 canned translation. The plane can
  *     mint machine refusals that carry none; this pack names none of them and
@@ -122,6 +131,15 @@
 
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
          AI_RUN_CHECKS } from "./airun.mjs";
+/* SK-2, LANDED 2026-08-10. The investigative skill's JUDGEMENT layers, authored
+   in their own module and merged into the disclosed half below. They are a
+   sibling rather than a section of this file for one reason worth stating: this
+   file's deliverable is SOURCING — every vocabulary driven or imported — and
+   SK-2's deliverable is DOCTRINE, which is authored prose held to a different
+   defence (each sentence pinned to the document it is quoted from, and a
+   source-scan proving it holds no control-flow authority). Two deliverables with
+   two suites, and the pack composes them. */
+import { judgementLayers } from "./skilldoctrine.mjs";
 
 /* WHAT THE PACK IS AND WHICH EDITION OF ITS DOCTRINE THIS IS.
    The edition is the AUTHORED half of the version and moves with a release; the
@@ -192,7 +210,12 @@ export const SOURCING = {
   vocabularies:   "driven",     /* op=affordances .vocabularies */
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
-  recipes:        "absent",     /* declared, empty, and SK-2's — see the header */
+  recipes:        "absent",     /* STILL absent, and the reason is unchanged — see the header */
+  /* SK-2's five layers. `authored` throughout, and the label is the honest one:
+     they are doctrine somebody wrote. Their vocabularies are imported and their
+     quoted sentences are pinned to the documents they come from, which is the
+     drift defence — the sourcing label is not. */
+  judgement:      "authored",   /* skilldoctrine.mjs — SK-2 */
 };
 
 /* ------------------------------------------------------------ the harvests */
@@ -348,6 +371,13 @@ export function renderPack(published, catalogue) {
  *  scheduler can read rather than a sentence a model must interpret. */
 export function disclosedLayers({ vocabularies, catalog, captureActs } = {}, catalogue) {
   return {
+    /* SK-2's judgement layers first, so `disclosable` lists what the run is
+       INSTRUCTED BY before what it is given to work with. Spread from one
+       function rather than restated here: `skilldoctrine.mjs` decides what its
+       layers are and this file never holds a second list of them, so a layer
+       added there arrives in the pack — and in the pack's version — without an
+       edit here. */
+    ...judgementLayers(),
     vocabularies: {
       load_when: "the run composes a version, or renders any closed set to a member",
       sourcing: SOURCING.vocabularies,
@@ -379,7 +409,9 @@ export function disclosedLayers({ vocabularies, catalog, captureActs } = {}, cat
       absent_because: "a recipe is DATA whose every step names a surface id and an act, and it is "
         + "worth having only if a step naming a surface that does not exist FAILS THE BUILD. The "
         + "surface registry is the interface's and no plane op publishes it, so a recipe authored "
-        + "here could not be validated here. SK-2 owns this layer.",
+        + "here could not be validated here. SK-2 landed the judgement layers and left this one "
+        + "empty for that reason rather than for want of an author: it waits on a published "
+        + "surface registry.",
     },
   };
 }
