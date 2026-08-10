@@ -286,6 +286,14 @@ measured state. The short version:
 
 ## Traps that have already cost time
 
+- **BUILD A COMMIT MESSAGE WITH A HEREDOC (`git commit -F -`), NEVER WITH `printf`.**
+  Backticks in `-m` are command-substituted and silently delete words (three times in
+  one day, 2026-08-08). `printf` fails the same way one character over: a literal `%`
+  is a FORMAT DIRECTIVE, so a message containing `1%.` aborts printf mid-string and
+  the commit lands **truncated at that point with exit 0** — the push succeeds and
+  nothing reports it (2026-08-10, this file's own handoff commit). Same class, same
+  cost, and the heredoc is immune to both.
+
 - **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
   `hygiene.test.mjs` asserts the literal ends on a `);`.
 - **No backticks inside the schema or setup template literals.** A balanced
