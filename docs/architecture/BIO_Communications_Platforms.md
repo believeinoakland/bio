@@ -118,24 +118,23 @@ This is where groups host their published analyses, evidence packages,
 and other work products. The requirement is persistent, linkable,
 version-controlled file hosting that anyone can access.
 
-**Default Recommendation: Google Drive (Shared Folders)**
+**Default Recommendation: an accessible shared-folder service**
 
-Google Drive is the most accessible option for non-technical
-participants. Nearly everyone already has a Google account. It supports
-all file types (spreadsheets, PDFs, documents, images). Version history
-is built in, providing an automatic audit trail. Folders can be
-organized by group, area of government, and date. A standardized
-metadata form (Google Doc or Google Form) accompanies each published
-work product.
+The default is whatever mainstream shared-folder service the group's
+members already use: near-zero onboarding cost, support for all file
+types (spreadsheets, PDFs, documents, images), built-in version history
+providing an automatic audit trail, and folders organized by group, area
+of government, and date. A standardized metadata form accompanies each
+published work product.
 
-**Limitation:** Google controls the infrastructure. Google could
+**Limitation:** the vendor controls the infrastructure and could
 theoretically restrict access to a shared folder. Groups hosting
 sensitive work products (particularly evidence packages related to
 active legal matters) should maintain copies on at least one additional
 platform.
 
-**Cost:** Free (15 GB per Google account; additional storage is
-\$1.99/month for 100 GB).
+**Cost:** free at typical volumes on every mainstream service; paid
+tiers are a few dollars a month.
 
 **Advanced Option: Open Science Framework (OSF)**
 
@@ -154,8 +153,8 @@ infrastructure, OSF is the stronger choice.
 
 **Limitation:** OSF was designed for academic researchers. The interface
 is functional but unfamiliar to non-academic users. It is not
-technically difficult, but the learning curve is slightly steeper than
-Google Drive.
+technically difficult, but the learning curve is slightly steeper than a
+mainstream shared-folder service.
 
 **Cost:** Free. Operated by the nonprofit Center for Open Science.
 
@@ -196,7 +195,7 @@ onramps so that a newly formed group (or an individual working alone)
 can get operational immediately. A \"Getting Started\" page should offer
 one-click or near-one-click pathways: \"Join the discussion\" (link to
 Discourse forum), \"Set up a workspace\" (instructions for creating a
-shared Google Drive folder with the standard naming convention),
+shared folder workspace with the standard naming convention),
 \"Communicate securely\" (link to download Signal with setup guidance),
 \"Publish your first work product\" (link to the metadata template and
 submission form).
@@ -219,7 +218,7 @@ more dynamic site is needed, basic hosting is \$5-20/month.
 
   **Signal**                 Group internal Free           Full        High       High             Internal default
 
-  **Google Drive**           Work product   Free           Moderate    High       Moderate         Default hosting
+  **Shared-folder service**  Work product   Free           Moderate    High       Moderate         Default hosting
                              hosting                                                               
 
   **OSF (osf.io)**           Work product   Free           Full export Moderate   High             Advanced option
@@ -242,9 +241,10 @@ forum data is exportable and can be redeployed on a new server.
 website, social media, and direct media engagement. The subreddit is a
 convenience, not a necessity.
 
-**If Google restricts a group\'s Drive:** Work products also exist on
-other platforms (OSF, group websites) and in other groups\' accepted
-bodies of work. No single hosting platform contains the complete corpus.
+**If a hosting vendor restricts a group\'s folders:** Work products also
+exist on other platforms (OSF, group websites) and in other groups\'
+accepted bodies of work. No single hosting platform contains the
+complete corpus.
 
 **If believeinoakland.org is taken down:** The directory data exists in
 downloadable structured format. Any group can republish it. The
@@ -315,8 +315,8 @@ government, methodology discussion, and escalation tracking.
 **3.** Create r/BelieveInOakland as the public-facing Reddit presence.
 
 **4.** Create a \"Getting Started\" page on the website with default
-onramps for new groups: join the forum, set up a Google Drive workspace,
-download Signal, access the metadata template.
+onramps for new groups: join the forum, set up a shared-folder
+workspace, download Signal, access the metadata template.
 
 **5.** Develop the metadata template and submission form for the work
 product directory.

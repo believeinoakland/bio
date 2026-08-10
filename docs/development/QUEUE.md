@@ -88,7 +88,7 @@ Branch `bob-corpus-index` (596c697), green, unmerged. What changed for CONDUCT:
   leave `check-versions` green. This is a NEW failure mode in a gate CONDUCT runs before
   every push — the first stale-index failure will look like an unrelated break otherwise.
 - **No queue item is superseded and no worker should be stopped.** Nothing else moved:
-  the archive and ledger-rolling moves in `docs/development/CORPUS-STUDY.md` are
+  the archive and ledger-rolling moves in `docs/archive/CORPUS-STUDY.md` are
   SPECIFIED AND NOT EXECUTED, and one of them is gated on a hazard CONDUCT should know
   about before touching prose in bulk — **`mintid` derives its id floors by reading ids
   MENTIONED in prose, and its ledger is not committed, so removing prose that names a
@@ -97,7 +97,7 @@ Branch `bob-corpus-index` (596c697), green, unmerged. What changed for CONDUCT:
 **2026-08-10 · BOB · THE CORPUS WAS CONSOLIDATED WHILE YOU WERE PAUSED.** Live corpus
 7.35 MB → 3.56 MB; orientation reading ~565k → ~295k tokens. Nothing deleted, nothing
 edited — 3.83 MB moved to `docs/archive/`, which `decided.mjs` and `mintid` both scan.
-Read `docs/development/CORPUS-STUDY.md` once. What changes for you:
+Read `docs/archive/CORPUS-STUDY.md` once. What changes for you:
 
 - **THIS FILE now ends in a `## CLOSED ITEMS` register** — 195 done/superseded items
   moved to `docs/archive/ledgers/QUEUE-2026-08.md`, leaving one heading and one line
@@ -145,8 +145,43 @@ _(drained by CONDUCT 2026-08-07 — the investigative session HANDED OVER. **The
 
 
 **2026-08-10 · BOB · THE RETIRED SUBSTRATE IS OUT OF THE ARCHITECTURE RECORD** (Bob's
-instruction, same day: "Remove all references to Google Drive and App Script, as that's
-not part of the system architecture"). Branch `bob-drive-removal`, all four gates green.
+instruction, same day: no reference to the retired substrate's vendors belongs anywhere
+in the architecture — reaffirmed with "Period.", which also answered DEC-67: the
+platform-hosting advice to groups is swept too). Landed on `main` at 62e6328; all four
+gates green.
+
+**2026-08-10 · BOB · THE OPEN DECISION LIST IS DRAINED FROM THE CORPUS — five entries
+closed, one debt ruling made, three work items for you.** Bob's standing instruction,
+2026-08-10: many open decisions are already answered by the corpus; understand it before
+returning a question to him. Applied:
+
+- **DEC-53 answered** resting on DEC-52's "the machine may rule" (strictly stronger act
+  already licensed). **Work item 1, measurement-class:** the accepts-without-reading rate
+  on machine-composed resolution candidates — DEC-53's own watch number, nobody measures
+  it today. Schedule as you schedule measurement items.
+- **DEC-51 answered** resting on DEC-39: the plane publishes the fence wording WITH the
+  act, so `addCapture` rendering the received note WHOLE at the moment of capture is the
+  enactment. **Work item 2, UI:** render `acquireGradeNote`'s received text at capture
+  (verbatim, DEC-49 discipline); UI-32's removal of the computed grade letter stands.
+- **DEC-43 answered** — (b) then (a). **Work item 3, plane/DIST:** the fleet-visibility
+  report of which instances still run monitoring on the ADMIN_TOKEN fallback; sunset only
+  after DIST-2 + one cycle + the count read. (D-116's neighbourhood.)
+- **DEC-48 answered** (no container until a group asks — CLAUDE.md's capability doctrine)
+  and **DEC-50 answered** (the refusal stands — DEC-32's containment). Nothing to enact.
+- **D-266's narrow ruling made in the row**: a dismissal is scoped to the key's own
+  subject — instance-wide for shared-record findings (DEC-16's own reason), per-project
+  for stance-scoped kinds (§7/D-216/R5). The stance-kind key widening carries the project
+  identity; scheduling is yours.
+
+Only **D-205** (rotate `BIO_ADMIN_TOKEN`) remains genuinely Bob's — it needs his hands.
+
+**2026-08-10 · BOB · A SURGICAL GATE PROFILE EXISTS: `node tools/gates.mjs`.** Bob asked
+why a docs-only change costs ~25 minutes of gates. The tool measures the diff: entirely
+prose under `docs/` → the doc-facing suites (derived at run time by grepping `test/` for
+`docs/` readers, never a hand list) plus plancheck; ONE non-docs path → the full four,
+unchanged. `--explain` prints the plan, `--full` forces everything. `CLAUDE.md`'s
+verification section now names it, so every session loads it. Your loop's gate discipline
+is unchanged in what it PROVES; only the wall clock for prose changes moves.
 What changed for CONDUCT:
 
 - **Three architecture documents were rewritten with per-reference judgment**, not

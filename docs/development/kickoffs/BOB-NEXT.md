@@ -11,7 +11,7 @@ tools/plancheck.mjs` **0 fail / 0 warn**. Working tree clean, local even with th
 
 **The corpus was consolidated today.** Live corpus 7.35 MB → 3.56 MB; the reading a
 kickoff demands ~565k → ~295k tokens; 3.83 MB moved to `docs/archive/` with nothing
-deleted and nothing edited. `docs/development/CORPUS-STUDY.md` is the study, the plan,
+deleted and nothing edited. `docs/archive/CORPUS-STUDY.md` is the study, the plan,
 what was done, and what was deliberately not. **Read it once before touching the corpus.**
 
 **New in the loop, and it is the thing that answers "why do sessions re-ask settled
@@ -21,70 +21,34 @@ questions":** `node tools/decided.mjs "<subject>"` indexes all 600 rulings in th
 
 ---
 
-## THE TASK WAITING — **DONE 2026-08-10 by the incoming BOB, branch `bob-drive-removal`.**
+## THE TASK THAT WAS WAITING — DONE 2026-08-10 by the incoming BOB
 
-The scope below was executed as written: the three documents rewritten with
-per-reference judgment, the retired runtime's own sections moved verbatim to
-`docs/archive/architecture/` (indexed in `docs/archive/README.md`), the localized
-references rewritten in place, the ledgers and the R9 platform advice untouched —
-the latter raised as **DEC-67 (open)** rather than folded in. `mintid` floors measured
-identical before and after; `DECIDED.md` regenerated; all four gates green; handed to
-CONDUCT through the BOB INBOX. The scope is kept below as the record of what was asked.
+**Bob's instruction: the retired substrate (a hosted document-store plus its scripted
+endpoint runtime, gone since July 2026) leaves the architecture record. Executed and
+landed on `main` (62e6328), and extended the same day on his reaffirmation ("Period."):
+the platform-hosting advice to adopting groups was swept too (DEC-67, answered).**
 
-**Bob, 2026-08-10: "Remove all references to Google Drive and App Script, as that's not
-part of the system architecture."**
+What was done, where to read it:
 
-He is right and the references are wrong: the built system is a Cloudflare Worker plus a
-Durable Object with SQLite and R2. **I banner-corrected six documents earlier the same
-day rather than removing the text, and his instruction supersedes that** — the banners
-should come out with the text they warn about.
+- Three architecture documents rewritten with per-reference judgment; the retired
+  runtime's own sections moved VERBATIM to `docs/archive/architecture/` (two files,
+  indexed in `docs/archive/README.md`). Localized references in a dozen further live
+  documents rewritten in place. The platform advice in `BIO_Communications_Platforms.md`,
+  `BIO_Complete_Roadmap_v5.md` §Function 2 and `BIO_Design_Requirements_v2.md` R9
+  restated vendor-neutrally.
+- **The append-only ledgers were NOT edited** — their rows are dated records of what was
+  measured and decided on that runtime, and a ledger is not architecture. The archive
+  keeps every moved byte. `mintid` floors measured identical before and after.
+- The doctrine that outlived the runtime stays live, stated by PROPERTY rather than
+  vendor: the constrained-endpoint admission criteria, the interruption model, the
+  full-id-is-the-identity rule, the store-enforces-its-own-guarantees rule, the
+  one-check-codebase law and its embedded-gate transport.
 
-**DO NOT TREAT THIS AS A FIND-AND-REPLACE. It is a rewrite of three documents, and the
-judgment is per-reference: does the reasoning around this reference survive the substrate
-change, or does it go with it?** ~170 references, measured 2026-08-10:
-
-| document | refs | what it needs |
-| --- | ---: | --- |
-| `BIO_Technical_Architecture_Decisions_v10.md` | 63 across **14 sections** | the heavy one. §0's v4–v10 revision log is almost entirely Apps Script deployment history; §9's stack table names Drive and Apps Script as the substrate; **§10.4 is 250 lines that exist to bound a runtime that is gone**; §10.7–10.11 (interruption, daemon concurrency, index integrity, manifest contract, promotion gate) are all models OF that runtime |
-| `BIO_Bundle_Skill_Composite_Design_v1_7.md` | 43 | the document IS the Apps Script accelerator's composite skill. `architecture/README.md` calls it "superseded implementation, inherited format" — **the FORMAT, the promotion semantics and the C-series catalog are what the plane implements and must survive** |
-| `BIO_State_Rules_Consistency_v1_5.md` | 15 | §1 (folders per type), §2.4 (convergent promotion) and §2.6 (the pending queue) are Drive mechanics. **Everything from §3 on is shape and rules and transferred intact** |
-| eleven others | 1–3 each | localized: `BIO_Complete_Roadmap_v5`, `BIO_Intake_Doctrine_v1_1`, `BIO_Functional_Architecture_v3`, `BIO_Membership_Architecture_v1/v2`, `BIO_Case_Making_v0_1`, `architecture/README.md`, `MILESTONES.md`, `VERIFICATION.md`, `UI-PLAN.md`, `LINK-FIDELITY.md`, `ARCHIVE-FALLBACK.md`, `kickoffs/WORKER.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `SOURCE-ACCESS.md`, `CIVICOS_UI_STATE.md` |
-
-**WHAT MUST NOT BE TOUCHED, and both are measured rather than assumed:**
-
-- **The ledgers.** `MEASUREMENTS.md` (11), `DECISIONS.md` (6), `DEBT.md` (3),
-  `INTERFACE-CHANGES.md` (1) and the archived `CLAIMS`. These are dated append-only
-  records of what was measured and decided ON that runtime. Editing them rewrites
-  history, which is the one thing this record refuses. **Bob's instruction is about the
-  ARCHITECTURE, and a ledger is not architecture.**
-- **`BIO_Communications_Platforms.md` (7) and `BIO_Design_Requirements_v2.md` R9 (1).**
-  Verified 2026-08-10: **these are not our substrate.** They recommend Google Drive to
-  ADOPTING GROUPS as a place to host THEIR work products, under R9 ("multiple platforms,
-  no single platform essential"). Removing them changes what BIO recommends to groups,
-  which is a different doctrine change from the one Bob asked for. **Raise it as a
-  decision item; do not fold it in.**
-- **`docs/archive/**`.** Archived documents are records of what they concluded and are
-  never corrected in place.
-
-**Method, and each clause was paid for today:**
-
-1. **Per section, decide what the section is FOR.** A section bounding Apps Script
-   endpoint admission goes. A section whose subject is a DOCTRINE the runtime happened to
-   illustrate — store-authoritative invocation, the two secret tiers, "absence is
-   information, failure is not permission", manifest-last durability — keeps the doctrine
-   and loses the runtime. **`§10.4`'s six admission criteria and the doorbell-not-delivery
-   principle are the plane's own boundary today; do not delete them with the Apps Script
-   they were written about.**
-2. **`node tools/decided.mjs` over anything you are about to cut.** If a ruling lives in
-   the text you are removing, the ruling must land somewhere live first.
-3. **Regenerate `docs/DECIDED.md` and re-run `node tools/mintid.mjs --list`** after each
-   document. Removing prose that names a high id LOWERS a floor unless the text moved to
-   `docs/archive/` — which is in every prose corpus for exactly this reason.
-4. **All four gates before every push, including docs-only commits.** `op-claims` sweeps
-   the planning surfaces; it fired four times today on document edits alone.
-5. **Never write an id-shaped or `op=`-shaped example in a file that is a corpus.** It
-   cost this session two separate failures, the second inside the paragraph describing
-   the first.
+**The standing rule this leaves behind: the retired substrate's vendor names do not
+appear in live surfaces.** Dated ledger rows, measurement literals (a recorded
+user-agent string), code literals the plane still excludes by name, and the archive are
+the four licensed exceptions — each is a record or a mechanism, not a description of the
+architecture.
 
 ---
 
@@ -136,7 +100,7 @@ clipboard route `CLAUDE.md` defines.
 - `MEASUREMENTS.md` and `DECISIONS.md` were not rolled.
 - Four HELD claims dated 2026-08-09 remain in `CLAIMS.md` and look stale. **Releasing
   another session's claim is CONDUCT's, not housekeeping.**
-- ~~The Google Drive / Apps Script removal above~~ — done, see above.
+- ~~The substrate-removal task above~~ — done, see above.
 
 ---
 
@@ -160,7 +124,7 @@ READ IN THIS ORDER, and trust `origin/main` over anything in this prompt:
   `CLAUDE.md`
   `docs/development/kickoffs/BOB.md`            (the role, and the closing protocol)
   `docs/development/kickoffs/BOB-NEXT.md`       (START HERE — state, the task, the health account)
-  `docs/development/CORPUS-STUDY.md`            (what the corpus is, and what was done to it)
+  `docs/archive/CORPUS-STUDY.md`            (what the corpus is, and what was done to it)
 Then `git fetch` and verify the state yourself rather than believing it.
 
 **BEFORE RAISING ANY QUESTION**, run `node tools/decided.mjs "<subject>"`. 600 rulings are
@@ -172,8 +136,8 @@ to Bob in one line each. There are SIX — DEC-43, 48, 50, 51, 53, 67 — plus D
 unnumbered ruling and D-205, which is his alone. Do not re-argue them; surface and
 recommend. DEC-53's revisit trigger has FIRED; it goes first.
 
-**The Google Drive / Apps Script removal is DONE** (2026-08-10, branch
-`bob-drive-removal`; scope and outcome recorded above). **YOUR FIRST WORKING MOVE:
+**The substrate-removal task is DONE** (2026-08-10, landed on `main` at 62e6328;
+scope and outcome recorded above). **YOUR FIRST WORKING MOVE:
 work the open decision list with Bob** — DEC-53's fired trigger first, then DEC-67
 (raised by the removal), then the 2026-08-04 four — and take his focus from there.
 
@@ -181,9 +145,10 @@ MECHANICS, unchanged and binding:
   - Decisions that are genuinely Bob's only — doctrine, his risk, effects on people
     outside the project. Resolve everything the repo answers. **Tactical calls are yours;
     never block on him, and never report tactical STATE.**
-  - Run all four gates before every push, including docs-only commits: the battery,
-    `node bio-plane/scripts/coverage.mjs --strict` read UNPIPED, `node
-    civicos-ui/test/run.mjs` from the repo root, and `node tools/plancheck.mjs`.
+  - Gate every push with `node tools/gates.mjs` — it measures the diff and runs the
+    profile the change class owes: docs-only prose runs the doc-facing suites plus
+    plancheck; anything else runs the full four (battery, `coverage.mjs --strict`
+    read UNPIPED, `civicos-ui/test/run.mjs`, plancheck).
   - Regenerate `docs/DECIDED.md` in any turn that rules on anything; plancheck gates it.
   - Hand architectural change over through the `BOB INBOX` at the top of `QUEUE.md`,
     append-only. Correct any kickoff your change supersedes in the same turn.

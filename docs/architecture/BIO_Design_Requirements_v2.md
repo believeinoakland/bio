@@ -180,9 +180,10 @@ Public-facing channels (a subreddit, social media) serve outreach and
 recruitment. Groups communicate internally through whatever platforms
 they choose (Signal is recommended for encrypted communication). Work
 products are hosted by individual groups on platforms of their choosing
-(Google Drive is the default recommendation for accessibility; the Open
-Science Framework at osf.io is recommended for groups wanting formal
-version control and reproducibility infrastructure). Any hosting
+(an accessible mainstream shared-folder service is the default
+recommendation; the Open Science Framework at osf.io is recommended for
+groups wanting formal version control and reproducibility
+infrastructure). Any hosting
 platform is acceptable provided the work product is publicly accessible
 via a stable URL.
 

@@ -476,8 +476,9 @@ export const LEDGER = [
     why: "a CAPTURE queue row naming a DO path as an op. DELEGATED to CONDUCT/CAPTURE." },
   { file: "docs/development/kickoffs/CAPTURE.md", name: "recordsourceoutcome", n: 1, kind: "DO-PATH",
     why: "the area kickoff naming a DO path as an op. DELEGATED to CAPTURE." },
-  { file: "docs/development/DECISIONS.md", name: "import", n: 1, kind: "NEVER",
-    why: "DEC prose whose subject is that IMPORT DOES NOT EXIST. The name must stay absent." },
+  { file: "docs/archive/ledgers/DECISIONS-2026-08.md", name: "import", n: 1, kind: "NEVER",
+    why: "DEC prose whose subject is that IMPORT DOES NOT EXIST. The name must stay absent."
+       + " Entry followed its DEC into the 2026-08-10 ledger roll." },
   { file: "docs/archive/research/COMPLETENESS-AUDIT.md", name: "import", n: 1, kind: "NEVER",
     why: "the audit's finding that no import op exists. Must stay absent." },
   { file: "docs/archive/research/COMPLETENESS-AUDIT.md", name: "restore", n: 1, kind: "NEVER",

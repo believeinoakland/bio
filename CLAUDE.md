@@ -167,7 +167,7 @@ than being deleted.
 > required reading list, so it read some and the rest of the record was invisible
 > to it. `CLAIMS.md` alone was 1.7 MB of released claims. The consolidation that
 > followed took the orientation set to **~295 k** and the live corpus from 7.35 MB
-> to 3.56 MB, with 3.83 MB archived rather than deleted. `docs/development/CORPUS-STUDY.md`
+> to 3.56 MB, with 3.83 MB archived rather than deleted. `docs/archive/CORPUS-STUDY.md`
 > carries the study and what remains undone.
 
 **Before making a change another session must know about, read
@@ -244,7 +244,15 @@ tested code and ask DIST. See `docs/development/kickoffs/DIST.md` for the gate.
 ## Verification discipline, in order
 
 `docs/development/VERIFICATION.md` is the full process, the coverage floor and the
-measured state. The short version:
+measured state. **Pick the profile by MEASURING the change, not by judgment:**
+
+    node tools/gates.mjs
+
+It classifies the diff. A change that is entirely prose under `docs/` runs the
+doc-facing suites (derived fresh by grepping `test/` for `docs/` readers — never a
+hand list) plus `plancheck`, minutes instead of the ~25 the full set costs. ONE
+non-docs path in the diff and it runs the full four gates. `--explain` prints the
+plan without running; `--full` forces everything. The full set, when it is owed:
 
 1. `cd bio-plane && npm run test:battery` — EVERY suite, all of them reported. Not just
    the suite you touched. As of M0-4 `npm test` runs the same discovering runner (it no

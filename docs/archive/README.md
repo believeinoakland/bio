@@ -84,6 +84,12 @@ substrate and is a different doctrine question.
 
 ### `ledgers/` — closed operational history, rolled 2026-08-10
 
+**`DECISIONS-2026-08.md` joined the rolls on 2026-08-10 (second pass, same day):** 57
+answered/enacted entries, 383 KB — rolled once the open list hit zero, because the live
+file's job is the open list and its settled history had become 93% of its bytes. The live
+file keeps the rules, deferred entries, entries whose enactment CONDUCT still owes, and
+the byte-read entries (DEC-39, DEC-32/DEC-33).
+
 Rolled out of the live ledgers, unedited, because those files had grown past what a
 session could read. **In every case the live file keeps its rules and everything still
 open**, and the split was verified LOSSLESS — every block present exactly once across

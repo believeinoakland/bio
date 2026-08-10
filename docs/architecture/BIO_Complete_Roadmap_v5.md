@@ -456,10 +456,10 @@ forum.believeinoakland.org (primary operational hub). Reddit subreddit
 for public outreach (secondary). Groups choose their own internal
 communication tools (Signal recommended).
 
-**Function 2: Work product hosting.** Google Drive (default, most
-accessible). Open Science Framework/osf.io (advanced, formal version
-control). Any platform acceptable if work product is publicly accessible
-via stable URL.
+**Function 2: Work product hosting.** An accessible shared-folder
+service (default). Open Science Framework/osf.io (advanced, formal
+version control). Any platform acceptable if work product is publicly
+accessible via stable URL.
 
 **Function 3: Directory and gateway.** believeinoakland.org serves as
 searchable directory of all published work products, starter kit
