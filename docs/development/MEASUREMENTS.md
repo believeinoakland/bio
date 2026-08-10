@@ -7843,3 +7843,75 @@ control arms.
 a fact, because this figure has been wrong in the record four times:
 `wc -l < bio-plane/src/store.mjs`. **SK-3 edited none of it** — the two lines the control
 harness touches in it are armed and restored inside one worktree.
+
+## 2026-08-10, UI-55 — DEC-69's audit: what the member-facing sweep actually measured
+
+**Instrument:** `civicos-ui/test/member-respect.test.mjs`, a structural walk over
+`civicos-ui/app.html`'s single `<script>` region, with `RUNGS` / `RUNG_ABSENT` /
+`RUNG_LADDER` / `ATTEST_FENCE` / `ACQUIRE_GRADE_NOTE` IMPORTED live from
+`bio-plane/src/affordances.mjs`, the `OPS` table parsed from `bio-plane/src/index.mjs`,
+and DEC-69's own entry read at run time out of `DECISIONS.md`.
+
+**THE CENSUS, AS A FIGURE WITH ITS REACH — never asserted as complete.**
+
+| figure | value |
+| --- | --- |
+| member-facing ACT SITES in `app.html` | **40** |
+| distinct MUTATING ops those sites reach | **31** of the plane's **85** |
+| plane mutating ops reached by NO act site here | **54** |
+| function bodies walked | **641** |
+| characters of member-facing code read | **647,585** (the `<script>` region; the file is 1,164,492 bytes) |
+| repeated-control sites enumerated | **41** (WALK A 30 · WALK B 20 · union 41) |
+| checkbox/radio controls classified | **23** — 5 item selectors, 18 payload choices, **0** pure affirmations |
+| assertions | **428**, 0 fail, exit 0 unpiped |
+
+> **Three of the figures above were WRONG in this row's first draft and were caught by
+> re-reading them off the run rather than off the draft: 86 mutating ops (85), 55
+> unreached (54), 632 bodies (641), and a code size carried as "~1.03 M" that was the
+> whole FILE rather than the script region.** Recorded because this project's
+> most-repeated finding is a hand-carried number nobody re-measures, and a
+> measurements row is the last place it should happen. **Every figure here is printed
+> by the suite on every run**, so the next reader can re-derive rather than trust.
+
+**The four things the figure does NOT see, stated because a clean sweep otherwise
+reads as more than it is:** (1) one file only; (2) named `function` declarations
+only — an act committed from an arrow const or an object method is not an act site
+to this walk; (3) literal op names through nine known transports only; (4) the 55
+unreached mutating ops are a fact about this walk as much as about the surface.
+
+**TWO INSTRUMENT DEFECTS WERE MEASURED RATHER THAN ASSUMED AWAY, and both are kept
+as arms because both produced a confidently wrong number first.**
+
+- **A JAVASCRIPT DERIVER RUN OVER AN HTML FILE STARTS IN THE CSS.** The first build
+  walked all 18,165 lines; an apostrophe inside a `<style>` comment opened a string
+  that never closed, and **every block comment after it survived into the
+  member-facing prose corpus** — which ARM 2 then reported as a responsibility
+  prompt at line 1125, a line that is plainly inside a comment. The script region is
+  now isolated first, with everything outside it blanked to spaces of equal length
+  so line numbers still name the real line. ARM I1b is that regression.
+- **NESTED TEMPLATE LITERALS AND A REGEX CARRYING A QUOTE.** A single-slot string
+  mode let an inner backtick close an outer template literal: the longest "function
+  body" measured **92,964 characters**. `const REL_RULE = /["\\\r\n]/` did the same
+  through its double quote. With a mode STACK and a regex-position test the longest
+  real body is **13,117** (`openBundle`). ARM I2/I4/I6 pin all three.
+
+**AND A WALK DEPTH THAT WAS MEASURED, NOT CHOSEN.** WALK B follows a map into the
+functions it calls. At ONE hop it still missed `queueEntryControlsHtml` — the file's
+heaviest per-item act set, three controls on every queue FINDING — because the queue
+does `feed.map(queueItemHtml)` and the act renderer is one call further down, and
+because `.map(fn)` passes a REFERENCE so a walk keyed on `name(` never sees hop one
+at all. At TWO hops, with identifiers rather than call sites at hop one, it is
+reached. **Three hops is not followed and that is stated rather than left to be
+discovered.**
+
+**THE NEGATIVE CONTROL FOUND TWO REAL GAPS IN THE SWEEP, which is what it is for.**
+`${attestFenceHtml()}` occurs three times in `app.html`, so a bare `String.replace`
+armed the FIRST — outside `openAttestDialog` — and the sweep stayed green, correctly,
+over a dialog nothing had touched. **An arm that reports a green sweep while arming
+the wrong site is indistinguishable from a sweep that does not work.** The second gap
+was an assertion message that named the mechanism only in prose, so a failing run did
+not print the token a session would grep for.
+
+**Baseline discipline.** `npm ci` in `bio-plane/` FIRST: the fresh worktree had no
+`bio-plane/node_modules`, and the UI harness reads a false red without it. Baseline
+measured AFTER the install: 46 suites, 0 FAIL, exit 0.
