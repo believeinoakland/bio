@@ -3383,3 +3383,73 @@ green. UI-43 is live on `app.html` and this touches one function body inside UI-
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's and IC-42's precedent.)*
+
+## IC-52 · I3: `op=versionaccept` GAINS AN `affirmed` ARGUMENT AND A REFUSAL (C-25.33); `op=versionstrength` AND `op=basisversions` EACH GAIN ONE ADDITIVE FIELD · PROPOSED 2026-08-09 (D-271, enacting DEC-32 clause 4 and completing D-195) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the op contracts). No op is added or removed and no existing field
+  changes shape or meaning. What changes is (a) ONE new argument, (b) ONE new refusal
+  condition on ONE of the six version acts, and (c) TWO additive published fields.
+- **Proposer:** D-271, 2026-08-09, worktree `agent-a8660daae0e0fa392`.
+- **Owner of the producer:** PLANE. **Consumers measured below, including one that is
+  UNMERGED and is the reason this row matters today.**
+
+### WHAT CHANGES
+
+1. **`op=versionaccept` TAKES `affirmed`** — the separately sufficient parts the member
+   affirms would each carry the answer on their own. Array or comma-separated string, in
+   the body or the query string. The other five version acts are UNCHANGED and do not read it.
+2. **A NEW REFUSAL, `VERSION_AFFIRMATION_INCOMPLETE` / `C-25.33`**, on `op=versionaccept`
+   ALONE and **only where the reading declares MORE THAN ONE part.** It fires when the
+   naming is absent, partial, or names a part the reading does not rest on. DEC-32 clause 4:
+   independent sufficiency *"can never happen by omission, by default, or by a member simply
+   not understanding the question."*
+3. **`op=basisversions` publishes `affirmed`** per version — the part names, or `null`.
+   `null` means NOBODY WAS ASKED and is load-bearing: it is what every version accepted
+   before this existed reads, and it is a different fact from an affirmation naming nothing,
+   which the act cannot write.
+4. **`op=versionstrength` publishes `independence`** — `{ checked, parts, shared[], complete,
+   limit }`, **recomputed at read time** through the same `#independenceOf` that CHECK 4
+   refuses on. This is D-195's derivation arriving on a READ for the first time.
+5. **NO published field is removed.** `shared_origins`/`origins_complete` stay on
+   `op=suggest`'s answer with their values unchanged, even though this item MEASURED them to
+   be constants on the pass path. Removing them would break consumers for no gain; the
+   comment at the site now says what they do and do not carry.
+6. **Schema:** ONE additive nullable column, `inquiry_basis_versions.affirmed_parts`, through
+   `#migrate`'s existing additive-column list. No table, no backfill — backfilling any value
+   would manufacture the affirmation the clause requires be affirmatively claimed.
+
+### MEASURED CONSUMER IMPACT
+
+**THE FENCE IS EXACTLY AS WIDE AS ITS RULE, AND THAT IS THE MEASUREMENT THAT MATTERS.**
+The refusal fires only on readings declaring more than one separately sufficient part.
+**Every accept in the battery today is of a single-part reading**, so the whole existing
+corpus is unaffected — measured by running it: `versionstate.test.mjs` went 71 → 83
+assertions with zero pre-existing arms moving, and the over-strictness arm (a one-part
+reading accepting with no affirmation at all) is in the suite for exactly this reason.
+
+**`civicos-ui/app.html` on `main` — ZERO.** Six call sites of `op=basisversions`, none of
+`op=versionstrength`, none of `op=versionaccept`. Both new published fields are additive and
+no renderer enumerates keys.
+
+**`agent-worker` — ZERO, and structurally so.** One non-test consumer:
+`src/index.mjs:586` reads `op=basisversions` for DEDUP. The field is additive. It cannot be
+affected by the refusal at all: it authenticates with a MACHINE credential and
+`MACHINE_CANNOT_MOVE_VERSION` (C-25.24) already refuses every version act to machines, which
+is §4's rule and not this item's.
+
+**`newgroup` — ZERO.** No reference to any of the three ops.
+
+**UI-43's ACCEPT CEREMONY — THE ONE REAL CONSUMER, AND IT IS UNMERGED.** Measured against
+`worktree-agent-a9e7e017d06799858` at `fd1e2ae`, which is NOT on `main`: that surface calls
+`op=versionaccept` at one site and `op=versionstrength` at four. **It already gates on the
+affirmation and already holds the value** — its ceremony state carries `affirmed:{label:true}` —
+and its own comment says *"there is no field on any of the six acts for the affirmation itself."*
+**There now is.** The coupling is therefore ONE LINE (send what it already has), not a redesign,
+and the two items were designed against the same clause from opposite sides. **CONDUCT MUST
+SEQUENCE THESE:** if this lands and UI-43's ceremony merges unchanged, its accept of a
+multi-part reading will be refused by C-25.33 — correctly, but the surface will not have sent
+what it is holding. `op=versionstrength`'s new `independence` also replaces the sentence UI-43
+had to put on the page saying the derivation was NOT PUBLISHED; that sentence is now false and
+is UI's to correct, not this item's.
+
+**Nothing else in the plane reads these three ops.**

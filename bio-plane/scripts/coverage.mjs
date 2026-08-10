@@ -409,6 +409,23 @@ const REGISTER_FLOOR = {
      the largest single declaration, which that paragraph does not become. That
      was CHECKED rather than assumed, because +7 matching one suite exactly is
      the kind of arithmetic that hides a lost arm somewhere else. */
+  /* MOVED 2026-08-09 by D-271 (the affirmation, and the derivation on the read):
+     671 -> 678 / 138 -> 139 / 139 -> 140, ALL THREE IN THE SAME TURN and every one
+     taken from the figures THIS ITEM'S OWN GREEN `--strict` RUN PRINTED
+     (`arms 678/671 · classified 139/138 · corpus 140/139 · GREW by 7 arm(s)`),
+     never by adding to the numbers above. ONE new suite,
+     `test/independence.test.mjs`, whose `NEGATIVE CONTROL:` declaration states
+     SEVEN arms — a BASELINE, five break-it arms and an OVER-STRICTNESS arm — so
+     `corpus` and `classified` each rise by one and `arms` by seven. **Every one of
+     those seven was RUN**, through `test/independence.control.mjs`, and two of the
+     seven had their DECLARATION corrected afterwards because the arm disagreed with
+     it. Nothing FELL.
+     **FIGURES READ AFTER THE SUITE WAS IN A COMMIT**, and this item paid the note
+     four comments up rather than merely reading it: the pre-commit run printed the
+     floors met EXACTLY (`671/671 · 138/138 · 139/139`) with nothing to collect,
+     which is indistinguishable from a clean tree and is what an untracked suite
+     looks like to this register. Had the floor been moved from that run, it would
+     have been moved to the number already in the file. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -509,7 +526,7 @@ const FLEET_FLOOR = {
      the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
      exit 0 while the fleet-arms ratchet had stopped existing. A ratchet that cannot
      fail is a decoration. Set to the figure a green run PRINTED on the merged tree. */
-  arms:        48,
+  arms: 48,
 };
 
 function discoverFleet() {

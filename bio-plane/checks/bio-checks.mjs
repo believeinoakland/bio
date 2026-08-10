@@ -6588,6 +6588,34 @@ export const VERSION_ACT_CHECKS = {
       + 'Acting on a reading edits the record the reading lives in, and a half-written record is '
       + 'worse than an unchanged one.',
   },
+  /* D-271 — DEC-32 RULE 4's ANTI-GAMING KEYSTONE, ENACTED AT THE ONE ACT THAT
+     CASHES IT IN.
+     THE NUMBER BETWEEN C-25.31 AND THIS ROW IS DELIBERATELY SKIPPED, and it is
+     NOT SPELLED HERE ON PURPOSE — it is held by a concurrent unmerged item (PL-2's
+     verification pass), which measured it free when it looked, and stepping over
+     an id somebody holds is cheaper than the collision seven items paid for in one
+     day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
+     `scripts/coverage.mjs` builds the catalogue with
+     `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
+     included, so a number named in prose becomes a check `--strict` then demands
+     an assertion for. Measured at this item: the catalogue read 225 where the
+     rows are 224, and `--strict` EXITED 1 naming a check nobody had written.
+     Same class as the census that graded a file by a token in its comments, in a
+     second instrument and this one GATED — delegated with the receipt rather than
+     fixed here, because the harvest regex is not this item's span.
+     THE TRANSLATION REUSES THE RECORD'S EXISTING MEMBER-FACING PHRASE — "would
+     carry the answer on its own", already the wording in BASIS_VERSION_CHECKS —
+     rather than authoring a third spelling of it. DEC-32 clause 1 and D-226 ban
+     the analyst's vocabulary from any member-facing string, and a second sentence
+     saying the same thing differently is the drift D-226 is about. */
+  VERSION_AFFIRMATION_INCOMPLETE: {
+    check: 'C-25.33',
+    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    translation: 'Accepting this reading claims that each of the parts it rests on would carry the '
+      + 'answer on its own. That is a claim only a named member can make, and it is made part by '
+      + 'part rather than assumed from silence, so every part has to be named before this reading '
+      + 'becomes what the record stands on.',
+  },
 };
 /* The two ways a composition can compose, and DEC-32's own words for them. NOT a
    surface vocabulary: DEC-32's elicitation clause 1 bans "ground partition" and

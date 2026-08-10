@@ -6860,3 +6860,117 @@ refusal is shaped, and NOT enough to say anything about the rows a populated rec
 against a MOCK for everything except the meaning arm, so this measurement says the member's
 `rows=` argument is one the plane accepts and says nothing about its other nine calls' arguments.
 And the run half is FL-6's: `turns_run: 0`, so no model-produced argument was measured at all.
+
+## 2026-08-09 · D-271 — the check that described a guarantee it did not provide, measured by driving it
+
+Instrument: `bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict`,
+`node civicos-ui/test/run.mjs`, `bio-plane/test/independence.control.mjs`, and a throwaway probe
+driving `op=suggest`/`op=basisversions`/`op=versionstrength`/`op=versionaccept` through Miniflare.
+All run in worktree `agent-a8660daae0e0fa392` at `3ec96ff`, which was already level with `main`.
+
+### The two halves UI-43 reported, verified from the plane
+
+**BOTH CONFIRMED, and one is NARROWER in the brief than it is in fact.** Driven, not read:
+
+| driven case | `shared_origins` | `origins_complete` |
+|---|---|---|
+| a reading declaring ONE part (the origin walk NEVER RUNS) | `[]` | `true` |
+| a reading declaring TWO parts, genuinely separate (walked) | `[]` | `true` |
+| a reading declaring TWO parts sharing an upstream address | *refused, never lands* | — |
+
+So on `op=suggest`'s pass path the derivation is a **CONSTANT**, byte-identical across a reading
+that was walked and one that was not — because CHECK 4 refuses every other outcome several screens
+up. `[]` was therefore conflating *looked and found nothing* with *there was nothing to look for*,
+which is D-129 at the field grain, and `suggest.test.mjs`'s own arm asserted the opposite in its
+label **over a fixture that declares one part**. The arm's VALUES were always right; only its claim
+about their meaning was wrong, so nothing could ever have gone red. Corrected in place.
+
+**And no read published it at all.** Key sets taken off the wire before any change:
+`op=basisversions` per version — `name description relationship grounds state derived_from hidden
+claim run author at moved regroup composition leg_count legs_complete legs`; `op=versionstrength` —
+`ok inquiry version version_state state_set what_if filter depth_bound pair ungraded hunches graded
+grades_from subject_entity subject_known legs_read legs_complete hidden derived_from`. Neither
+carried `shared_origins` or `origins_complete`. `op=versionaccept` accepted an `affirmed` argument
+silently and echoed nothing: `#versionArgs` honoured six caller parameters and none of them was one.
+
+### The fact the fix exists for
+
+`op=versionstrength`'s `independence` is RECOMPUTED rather than replayed. Driven end to end: a
+two-part reading landed clean (`shared: []`), a locator was then recorded tying both parts' captures
+to one upstream address — provenance the write could not have seen — and the same read answered
+`shared: [{a:"the ledger route", b:"the minutes route", through:["address:https://example.gov/one-upstream-source.pdf"]}]`.
+**No write-time snapshot can carry that**, which is why the recommendation to persist the write's
+verdict was not taken.
+
+### Battery
+
+Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief, which carried no
+figure: **144 suites (139 plane + 5 fleet) · 144/144 green · 9,286 assertions · 137.7 s · exit 0.**
+UI-43's entry records 139/139 at 8,869 from its own worktree; `main` has moved by five suites and
+417 assertions since, so that figure is stale rather than wrong.
+
+Final: **145 suites (140 plane + 5 fleet) · 145/145 green · 9,316 assertions · 135.6 s · exit 0.**
+Delta **+30, attributed PER SUITE by diffing the two full runs and never by subtraction** — and the
+diff is why this table is right: subtracting would have credited the whole +30 to the two suites
+this item meant to change, and **three of the five movers are instruments reacting to the item
+rather than assertions it wrote.**
+
+| suite | baseline | final | why |
+|---|---|---|---|
+| `versionstate.test.mjs` | 72 | **83** | +11: block 10b's eleven arms. The C-25.33 drive line adds a code to an existing floor rather than an assertion |
+| `independence.test.mjs` | — | **14** | NEW, this item's suite |
+| `hygiene.test.mjs` | 567 | **570** | **+3, not the +1 predicted** — its per-suite walks are per-file, so one new suite adds three arms across three different walks |
+| `suggest.test.mjs` | 95 | **96** | one arm corrected in place, one added beside it |
+| `planning-hygiene.test.mjs` | 296 | **297** | **+1, and NOT predicted at all** — it walks the planning surface, so the new `D-271` row in `DEBT.md` is itself an assertion |
+| every other suite (140) | — | — | **unchanged, byte-identical across the two runs** |
+
+**Two instruments caught this item mid-flight and both are recorded rather than smoothed:**
+`versionstate.test.mjs`'s DRIVEN-SET-EQUALS-REGISTRY floor went red the moment a code was added and
+not driven — which is the floor doing exactly what it is for — and `hygiene.test.mjs` refused the
+new suite for ending `if (fail) process.exit(1)` instead of `process.exit(fail ? 1 : 0)`, a spelling
+whose green is the ABSENCE of an exit.
+
+### Coverage
+
+`node scripts/coverage.mjs --strict` run DIRECTLY, `$?` read UNPIPED.
+Baseline: **OPS 163/163 reached · CHECKS 223/223 named · REGISTER FLOOR arms 671/671 · classified
+138/138 · corpus 139/139 · exit 0.**
+Final: **OPS 163/163 reached (no op added) · CHECKS 224/224 named · corpus 140 · exit 0.**
+
+**AND THE FINDING THE INSTRUMENT PAID FOR ITSELF WITH.** On the first strict run after the check was
+added, the catalogue read **225 with 2 never named** — one of them a check that does not exist.
+`coverage.mjs:104` harvests the catalogue as `matchAll(/C-\d+\.\d+/g)` over the RAW source of
+`bio-checks.mjs`, comments included, so a numeral this item NAMED IN A COMMENT (explaining which id
+it was stepping over, because that id is held by an unmerged item) was allocated as a check and
+`--strict` then demanded an assertion for it. Re-wording the comment returned the count to 224.
+**Second instrument in two days with this defect** — UI-43 reported the same shape in
+`hygiene.test.mjs`'s class census — and this one is GATED. Delegated, not fixed: the regex is not
+this item's span.
+
+### Negative control
+
+`node test/independence.control.mjs`, seven arms, each armed ALONE against a whole tree with every
+other defence held OPEN, every restore verified by sha256 AND by content against a per-arm
+uniquely-named pristine copy with the byte count printed and a 100,000-byte minimum guarded.
+`src/store.mjs` restored byte-identically after every arm (1,572,642 bytes, sha
+`1c32ec62a17ca327…`). **Opening and closing baselines AGREE at 14/0.**
+
+| arm | declared | actual | verdict |
+|---|---|---|---|
+| 0 BASELINE | nothing fails | 14 pass / 0 fail | as declared |
+| 1 drop the publication | A1 A2 A3 A4 A5 B1 B3 B4 C1 fail; B2 C2 D1 green | 5/9, exactly those | **as declared** |
+| 2 replay the write | B3 + A1 A2 A3 A5 B1 | 7/7 — A1 A2 A3 A5 B3 B4 C1 | **DECLARATION WRONG BOTH WAYS** |
+| 3 collapse `checked` | A2 A3 | 12/2, exactly those | as declared |
+| 4 collapse `complete` | A3 alone | 13/1, exactly that | as declared |
+| 5 break the one implementation | C1 + B2 D1 | 11/3, exactly those | as declared |
+| 6 OVER-STRICTNESS | B1 | 5/9 — B1 plus the FIXTURE arm and seven others | **DECLARATION UNDERSTATED** |
+
+**Arm 2 is the reportable one and is a finding about the ARM, not the subject.** It predicted ARM B1
+would fail; **B1 stayed GREEN**, because the frozen literal happens to carry `shared: []` and
+`checked: true` — precisely what B1 asserts. A surprising green, recorded rather than smoothed. It
+also missed B4 and C1: freezing the value removes the second CALL SITE, so the structural
+one-implementation pin fires from an angle the declaration had not considered.
+
+**Arm 6 understated in the sharper direction:** with the walk reporting a shared origin between any
+two parts, the write gate refuses the correct submission the fixture is built on, so the FIXTURE arm
+itself fails. A fence that wide does not merely mis-report — it makes correct work unwritable.

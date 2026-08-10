@@ -28,3 +28,7 @@
 # `.ui…` so an existing line would cover it is the kind of small dishonesty that
 # makes the next reader mistrust the whole file.
 .pl13-harness/
+# D-271's pen. Named for the item rather than the area because the item is a
+# plane item; the `.ui*` spelling above is an accident of which area needed a
+# pen first, not a rule about who may have one.
+.d271-harness/

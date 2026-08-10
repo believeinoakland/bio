@@ -1838,6 +1838,23 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_versions (
   state_by      TEXT,             -- the NAMED MEMBER who moved it. Never a machine identity
   state_at      TEXT,
   state_reason  TEXT,             -- REQUIRED entering considering or rejected (section 6 rule 4)
+  -- D-271 / DEC-32 clause 4: WHAT THE ACCEPTING MEMBER AFFIRMED, not merely THAT
+  -- they affirmed. The ruling's anti-gaming keystone is that independent
+  -- sufficiency must be affirmatively claimed PER PART, so strengthening a
+  -- finding by repackaging costs an act carrying a member's name and can never
+  -- happen by omission or by default. A boolean here would record a signature on
+  -- a blank page: a later reader could not tell an affirmation that covered the
+  -- whole reading from one that covered a single part, which is the distinction
+  -- clause 7 makes them responsible for checking. So this holds the PART NAMES,
+  -- tab-separated, exactly as the member sent them and in the record's own order.
+  -- NULL on every version nobody has accepted and on every accept of a reading
+  -- declaring one part, where there is nothing to affirm independence BETWEEN --
+  -- and NULL is the honest answer in both cases rather than an empty string that
+  -- would read as an affirmation naming nothing.
+  -- OUTSIDE THE FROZEN COMPOSITION, exactly as state and state_by are, and for
+  -- the same reason: it is something that happened TO a version, not anything the
+  -- version SAYS, and freezing it would freeze the accept shut.
+  affirmed_parts TEXT,
   derived_from  TEXT,             -- the version NAME this was derived from. NULL = composed fresh (section 6 rule 3a)
   hidden        INTEGER NOT NULL DEFAULT 0,  -- the PRUNE flag. Hiding is not deleting: the row stays and stays queryable
   -- PL-3 / IS-4: WHICH OF SECTION 9'S FIVE KINDS this version is, when a run
