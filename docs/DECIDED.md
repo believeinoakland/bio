@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-618 rulings across 65 documents.
+622 rulings across 65 documents.
 
 ## DEC-
 
@@ -368,6 +368,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:7344`
 - **D-271** · 2026-08-09 — The CHECK's sentence is CORRECTED at its site with the measurement, never exempted.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:117`
+- **D-280** · 2026-08-09 — The arm's shape is deliberately unchanged otherwise — still the first citing project only, still falling through to the RULED admin fallback.  
+  `docs/development/DEBT.md:236`
 - **D-282** · 2026-08-09 — THE THRESHOLD THIS ROW NAMED UNDETERMINED IS NOW BISECTED, AND THE ROW'S MODEL OF IT WAS TOO SIMPLE — CORRECTED HERE.** For a SINGLE write it is the pipe buffer exactly: 65,573 bytes survive and 65,580 do not, and every partial arrival observed is an exact multiple of **65,536**.  
   `docs/development/DEBT.md:235`
 - **D-285** · 2026-08-09 — when the lists moved — the pin working — and was CORRECTED, never exempted, with a dated reason and a DRIVEN cross-check proving the UI family catches every seed.  
@@ -1085,6 +1087,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:627`
 - block, CORRECTED and never exempted, each with a comment saying why the old one was right when written and what made it wrong.  
   `docs/development/CLAIMS.md:632`
+- AMENDED at the close, because a claim that does not name what was really edited is not a claim.** Two further paths were touched and both are licensed by `ORCHESTRATION.md` rule 6 — *correct what your change superseded, in the SAME turn, yourself*: - `bio-plane/test/severedhomes.test.mjs` — **ONE superseded…  
+  `docs/development/CLAIMS.md:673`
+- pin, CORRECTED from `[1, 3]` to `[1, 6]` and never exempted**, with a paragraph at the assertion saying why the old one was right when written and what made it wrong.  
+  `docs/development/CLAIMS.md:677`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1135,6 +1141,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:2268`
 - `reading-wire.test.mjs`, CORRECTED in the same turn with the reason at the site rather than exempted.  
   `docs/development/INTERFACE-CHANGES.md:2958`
+- project, then to the RULED group-admin fallback, then to `unassigned`.  
+  `docs/development/INTERFACE-CHANGES.md:3836`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  

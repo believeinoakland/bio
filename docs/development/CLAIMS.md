@@ -642,3 +642,56 @@ turn, yourself*:
   `op=proposedispose` receives the server-side `viewer` its project-scoped arm gates on.
   Without it the act refused `NO_SUCH_PROJECT` for a real project, fail-closed and
   correct, which is how the omission was found.
+
+## CLAIM 2026-08-10 RECORD (D-280 — a project that WITHDREW still sets the publication bar)
+session: record-d280 (worktree `agent-aa5a5b887286869b2`, branch `worktree-agent-aa5a5b887286869b2`)
+opened: 2026-08-10T00:00:00Z
+released:
+paths:
+- `bio-plane/src/store.mjs` — **NAMED BY REGION, NOT BY FILE.** Three regions only, and each is
+  a handful of lines: (1) `#requiredStrengthFor`'s candidate loop — the `SELECT r.bundle_id FROM
+  refs r JOIN bundles b …` and the per-project accumulate, which gains D-267's `#refEdgeSevered`
+  confirmation; (2) `#routeTask`'s `cite` arm — the single `SELECT r.bundle_id AS project_id …
+  ORDER BY r.bundle_id` and the `if (cite)` block beneath it, same confirmation; (3) `restingOn`'s
+  one `SELECT … FROM inquiry_basis WHERE target_id=?` read, which gains an additive `status` field
+  the way `backlinks` already carries one. **Nothing else in the file is claimed** — in particular
+  `#refEdgeSevered` itself is READ AND CONSUMED UNCHANGED, which is the whole point of the item.
+- `bio-plane/test/d280-strengthbar.test.mjs` (new) — the driven suite.
+- `bio-plane/test/d280-strengthbar.control.mjs` (new) — the negative-control harness. Deliberately
+  NOT a `.test.mjs`: it edits real sources while it runs and the battery must not discover it
+  (`severedhomes.control.mjs`'s precedent). It lives INSIDE this worktree and never in the shared
+  scratchpad (PL-10).
+- `docs/development/DEBT.md` — the D-280 row's disposition only.
+- `docs/development/MEASUREMENTS.md` — append only.
+- `docs/development/INTERFACE-CHANGES.md` — one IC row, if the measurement owes one.
+- `docs/development/kickoffs/RECORD.md` — this area's kickoff, rewritten at the close of the turn.
+
+NOT claimed and NOT touched: `civicos-ui/**`, `newgroup/**`, `docs/development/QUEUE.md`,
+`docs/development/IS-BUILD-PLAN.md`, `docs/development/DECISIONS.md` (CONDUCT is its sole writer —
+anything ruled here is raised in the report instead).
+
+**AMENDED at the close, because a claim that does not name what was really edited is not a claim.**
+Two further paths were touched and both are licensed by `ORCHESTRATION.md` rule 6 — *correct what
+your change superseded, in the SAME turn, yourself*:
+- `bio-plane/test/severedhomes.test.mjs` — **ONE superseded assertion, D-267's structural caller
+  pin, CORRECTED from `[1, 3]` to `[1, 6]` and never exempted**, with a paragraph at the assertion
+  saying why the old one was right when written and what made it wrong. It is an EXACT count on
+  purpose and was deliberately not relaxed to a floor: it is the only instrument in this estate
+  that can see a reader of the severance rule appear or disappear, and three of this item's control
+  arms proved it by bringing it down when they deleted a call site. 13 pass → 14 pass, 0 fail.
+- `bio-plane/test/derivation-bounds.test.mjs` — **REC-66's class RATCHET moved 30 → 31, both halves
+  together and the arrival NAMED**, which is what the pin's own text demands ("a bare count is
+  satisfied by ANY ten"). The new member is `#routeTask` and it is MEASURED, not guessed: the walk
+  was re-derived over `git show HEAD:bio-plane/src/store.mjs` and over the working tree and `comm`
+  reports exactly one arrival and no departure — `restingOn` did not join and `#requiredStrengthFor`
+  was already a member. The argument for why it is not a regression is written at the constant. 41
+  pass / 1 FAIL → 42 pass, 0 fail. **This ratchet caught the change without anybody looking for it**,
+  which is the second time in two RECORD items that a ratchet and not a review found the thing.
+- `.gitignore` — one entry, `.d280-harness/`, this item's control pen. Kept inside the worktree
+  (PL-10) and ignored so an interrupted driver cannot leave an untracked file that becomes somebody
+  else's corpus (M0-15).
+
+**AND `hygiene.test.mjs` CAUGHT THE SECOND ONE**, also without being asked: the new suite did not
+`await mf.dispose()`, so it leaked its workerd process. Fixed in the suite, outside its `try` so a
+thrown suite still releases it. 623 pass / 1 FAIL → 624 pass, 0 fail. Neither of these two was found
+by reading the diff.

@@ -44,3 +44,7 @@
 .d266-harness/
 # D-267's pen, named for its item for the same reason PL-13's is.
 .d267-harness/
+# D-280's pen, named for its item for the same reason D-267's and PL-13's are.
+# An interrupted driver must not leave an untracked file that becomes somebody
+# else's corpus (M0-15: `git stash -u` is repository-wide, not per-worktree).
+.d280-harness/

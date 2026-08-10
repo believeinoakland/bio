@@ -416,11 +416,23 @@ t("NOT WALKED IS NOT DELETED: `op=backlinks` still names the withdrawn project a
    defect D-267 IS. So the call sites are counted off the source. */
 const defs = (STORE_SRC.match(/#refEdgeSevered\s*\(citingId/g) || []).length;
 const calls = (STORE_SRC.match(/this\.#refEdgeSevered\(/g) || []).length;
-t("STRUCTURAL: the severance rule has ONE definition and THREE callers — `#citesInto`, "
-+ "`#restsOnLive` and `#queueAncestorEdges`. D-267 exists because the rule had four inline "
-+ "implementations and a fifth reader that did not know it existed, and NO behavioural arm can see "
-+ "a faithful copy",
-  [defs, calls], [1, 3]);
+/* CORRECTED 2026-08-10 BY D-280, AND THE OLD ASSERTION IS SAID TO BE WRONG
+   RATHER THAN EXEMPTED. It read `[1, 3]`. It was RIGHT when written — three was
+   every reader of the rule the day D-267 landed — and it became wrong the
+   moment D-280 closed three more sites of the same class off the SAME
+   predicate: `#requiredStrengthFor` (the publication bar), `#routeTask` (whose
+   owner an obligation is addressed to) and `restingOn` (the projection read
+   back). **THIS ARM FIRING IS THE ARM WORKING.** It is the one instrument in
+   this estate that notices a new reader of the severance rule, so a session
+   that adds a seventh must come here, read this paragraph, and say in it which
+   site it added and why — which is the whole reason the count is EXACT and not
+   a floor. Raising it silently, or relaxing it to `>=`, would retire the only
+   tripwire D-267 left behind. */
+t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `#citesInto`, "
++ "`#restsOnLive`, `#queueAncestorEdges`, and D-280's three: `#requiredStrengthFor`, `#routeTask` "
++ "and `restingOn`. D-267 exists because the rule had four inline implementations and a fifth "
++ "reader that did not know it existed, and NO behavioural arm can see a faithful copy",
+  [defs, calls], [1, 6]);
 t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either projection — both "
 + "edge kinds go through `consider`, so a future edge kind added to this method inherits the "
 + "confirmation instead of quietly reopening the defect",

@@ -5797,12 +5797,40 @@ export class Store extends DurableObject {
     const rank = (g) => BASIS_GRADES.indexOf(g);
     const strictest = { capture: null, connection: null };
     const projects = [];
+    /* D-280: THE CANDIDATE'S EDGES, GATHERED PER CITER BEFORE ANY IS JUDGED.
+       `refs` is keyed (bundle_id, target_id, kind), so ONE citer may hold
+       SEVERAL rows against one target and the withdrawal question is asked per
+       EDGE — which means the rows have to be grouped before it can be asked at
+       all. A Map preserves first-seen order, which is the order `projects` was
+       reported in before this, and it de-duplicates a citer that reaches the
+       target twice: that id used to be interpolated into `detail` twice. */
+    const edges = new Map();
     for (const r of this.#rows(
-      `SELECT r.bundle_id FROM refs r JOIN bundles b ON b.bundle_id=r.bundle_id
+      `SELECT r.bundle_id, r.kind FROM refs r JOIN bundles b ON b.bundle_id=r.bundle_id
        WHERE r.target_id=?`, bundleId)) {
-      const pb = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, r.bundle_id);
+      if (!edges.has(r.bundle_id)) edges.set(r.bundle_id, []);
+      edges.get(r.bundle_id).push(r.kind);
+    }
+    for (const [citerId, kinds] of edges) {
+      const pb = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, citerId);
       if (!pb || normalizeType(pb.object_type) !== "project") continue;
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
+      /* D-280: A PROJECT THAT WITHDREW DOES NOT SET THE BAR ON THE DOCUMENT IT
+         LEFT. DEC-17 makes the bar "the group's own declaration about its own
+         work"; `status: severed` is the recorded decision to stop drawing on
+         the question, and a declaration nobody stands behind any more is not
+         one. The rule is D-267's ONE predicate, CONSUMED and not restated — a
+         second implementation of the homes rule is this repository's
+         most-repeated defect and has already absorbed a control here.
+         ANY LIVE EDGE KEEPS THE CITER, which is the conservative direction and
+         the same OR `#queueAncestorEdges` takes: withdrawing a `relates_to` is
+         not withdrawing a citation. `kind` of '' means the entry authored no
+         `rel`, so the predicate is asked WITHOUT a relation constraint rather
+         than against a spelling the document never wrote — and severance still
+         narrows only on a POSITIVE recorded withdrawal, so an unreadable citer,
+         an absent `status:` and a spelling the catalog does not write all stay
+         LIVE. A fence tighter than its rule drops a bar somebody still means. */
+      if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, citerId);
       if (!md || md.content === null) continue;
       const pfm = parseFrontmatter(md.content).data || {};
       const rq = pfm.required_strength;
@@ -5813,7 +5841,7 @@ export class Store extends DurableObject {
         named = true;
         if (strictest[axis] === null || rank(rq[axis]) < rank(strictest[axis])) strictest[axis] = rq[axis];
       }
-      if (named) projects.push(r.bundle_id);
+      if (named) projects.push(citerId);
     }
     if (projects.length)
       return { declared: true, source: "project", projects,
@@ -14608,9 +14636,21 @@ export class Store extends DurableObject {
      for an INQ- target alike, because a leg to an inquiry is the same edge. */
   restingOn(targetId) {
     if (!targetId) return { ok: false, reason: "NO_ID", detail: "restson requires ?id=" };
+    /* D-280, site (d) — `#restsOnLive`'s UNCONFIRMED TWIN. `inquiry_basis` is a
+       projection of `references[]` that drops the STATUS, so this read could
+       not tell a leg somebody still rests on from one they recorded the
+       decision to withdraw. IT PUBLISHES THE STATUS RATHER THAN FILTERING ON
+       IT, which is `op=backlinks`' posture and deliberately NOT `#restsOnLive`'s:
+       this is the projection read back — "which inquiries name this document as
+       a leg" — and a withdrawn leg is a fact the record keeps. Dropping rows
+       here would make a READ disagree with the table it reads, and a caller
+       that wants the live set has `#restsOnLive`'s ops. Additive: no row and no
+       field is removed (IC-61). */
     const dependents = this.#rows(
       `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
-       FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId);
+       FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId)
+      .map((d) => ({ ...d,
+        status: this.#refEdgeSevered(d.bundle_id, targetId) ? "severed" : "confirmed" }));
     return { ok: true, targetId, dependents };
   }
 
@@ -23889,13 +23929,30 @@ export class Store extends DurableObject {
       const o = ownerOf(bundleId);
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
     }
-    const cite = this.#one(
-      `SELECT r.bundle_id AS project_id FROM refs r
+    /* D-280, site (b), and it is D-267's own harm one op over: `refs` carries
+       the RELATION and DROPS the STATUS, so the project this arm hands the
+       obligation to may be one that WITHDREW from the bundle it is being made
+       responsible for. Same ONE predicate as the bar read and the homes walk.
+       THE ARM'S OWN SHAPE IS PRESERVED DELIBERATELY: it took the FIRST citing
+       project by id and, if that project had no active owner, fell straight
+       through to the admin fallback rather than trying the second. That is
+       still what happens — the only change is that a WITHDRAWN citer is not
+       the one considered. Falling through costs a task a step down a chain
+       that already existed and ends at `unassigned`, which is visible and
+       routable by hand; addressing it to someone who left is not. */
+    const citeEdges = new Map();
+    for (const r of this.#rows(
+      `SELECT r.bundle_id AS project_id, r.kind FROM refs r
          JOIN bundles pb ON pb.bundle_id = r.bundle_id AND pb.object_type = 'project'
-        WHERE r.target_id = ? ORDER BY r.bundle_id`, bundleId);
+        WHERE r.target_id = ? ORDER BY r.bundle_id`, bundleId)) {
+      if (!citeEdges.has(r.project_id)) citeEdges.set(r.project_id, []);
+      citeEdges.get(r.project_id).push(r.kind);
+    }
+    const cite = [...citeEdges].find(([pid, kinds]) =>
+      !kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null)));
     if (cite) {
-      const o = ownerOf(cite.project_id);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite.project_id}, which cites this bundle` };
+      const o = ownerOf(cite[0]);
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this bundle` };
     }
     const adm = this.#one(
       `SELECT member_id FROM members WHERE role = 'admin' AND status = 'active' ORDER BY created, member_id LIMIT 1`);

@@ -150,3 +150,56 @@ which is the argument for keeping them: `airuns.test.mjs`'s index-reader ratchet
 the build naming two indexes added on the new table that no statement filters on, and
 `hygiene.test.mjs` caught the new suite exiting on `process.exit(1)` under a conditional
 instead of on its own result.
+
+## Appended 2026-08-10 by the D-280 worker (worktree-agent-aa5a5b887286869b2)
+
+Appended rather than rewriting this file, for the same reason the D-266 note above
+gives: other RECORD workers may be live and this turn closed one narrow item.
+
+**THERE IS ONE SEVERANCE PREDICATE IN `store.mjs` AND YOU MUST CONSUME IT, NOT COPY
+IT.** `#refEdgeSevered(citingId, targetId, rel = null)` is D-267's, and D-280 took it
+from three callers to six (`#citesInto`, `#restsOnLive`, `#queueAncestorEdges`,
+`#requiredStrengthFor`, `#routeTask`, `restingOn`). **`severedhomes.test.mjs` pins that
+count EXACTLY** — if you add a seventh reader, that assertion fails and you are meant to
+come and say which site you added and why. Do not relax it to a floor: it is the only
+instrument here that can see a reader of the rule appear or disappear, and no
+behavioural arm anywhere can see a faithful inline copy of a rule.
+
+**THE CLASS, so you can recognise a seventh instance:** `refs` and `inquiry_basis` are
+both projections of a document's `references[]`, written in `promote`'s transaction, and
+both carry the RELATION while DROPPING the STATUS. **Any read that answers "who points at
+me" out of either table, without going back to the citing document, is blind to
+withdrawal.** D-280's row printed the whole census; do not re-derive it.
+
+**SEVERANCE NARROWS ONLY ON A POSITIVE RECORDED WITHDRAWAL, AND THAT IS A RULE AND NOT A
+DEFAULT.** Unreadable is LIVE. No `status:` key is LIVE. A spelling the catalog does not
+write (`Severed`, `severed `) is LIVE. **A fence tighter than its rule silently drops a
+home, a bar or an obligation nobody gave up — the same overclaim class pointing the other
+way**, and it is why every item in this family carries a dedicated over-strictness control
+arm rather than reading over-strictness off the headline. Three of D-280's six arms exist
+only for that direction.
+
+**ANY LIVE EDGE KEEPS THE CITER.** `refs` is keyed `(bundle_id, target_id, kind)`, so one
+citer can hold several rows against one target. Withdrawing a `relates_to` is not
+withdrawing a citation, so the question is asked PER EDGE and the citer is dropped only
+when EVERY edge is severed. `kind` of `''` means the entry authored no `rel`, and the
+predicate is then asked with no relation constraint rather than against a spelling the
+document never wrote.
+
+**THREE THINGS THIS TURN PAID FOR.**
+
+1. **`refs` HAS A SECOND WRITER.** Besides `promote`'s projection of `references[]`, the
+   link projector inserts `kind='links_to'` rows with NO frontmatter entry behind them.
+   That is why D-280 did NOT add the `kind` filter its own row named as part of the
+   defect: narrowing by relation would drop bars the record currently honours, on edges
+   with no author's decision in them. It is a separate ruling and is stated as one.
+2. **OWNERSHIP ON A MACHINE-PROMOTED PROJECT IS REACHABLE AFTER ALL.** D-280's row
+   recorded `#routeTask` as un-driven because 7.1 gives ownership to the promoting
+   MEMBER and these fixtures promote with a machine credential. The Durable Object's own
+   `projectclaimowner` surface does it in one call (`projects.test.mjs`'s precedent), and
+   that is what made the site drivable. If a row says a site cannot be driven, try the DO
+   surface before believing it.
+3. **A CONTROL ARM THAT DELETES A CALL SITE CANNOT LEAVE THE STRUCTURAL PIN GREEN.**
+   Three of D-280's arms declared exactly that and all three came back NOT AS DECLARED on
+   the first run. **The arms were right and the declarations were wrong**, and they were
+   corrected and the correction recorded rather than the paragraph being rewritten.
