@@ -536,9 +536,20 @@ const REGISTER_FLOOR = {
      historical keep-both merges that left a duplicate `arms:` here are why this
      comment exists, and why the previous value (801, SK-2's own) is REPLACED rather
      than joined. Battery 161/161 · 10,021 assertions; `--strict` exit 0 read unpiped. */
-  arms: 813,
-  classified: 155,
-  corpus: 156,
+  /* MOVED 2026-08-10 by SK-3: 813 -> 821 / 155 -> 156 / 156 -> 157, ALL THREE IN THE SAME
+     TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS
+     REPRODUCIBLE (`arms 821/813 · classified 156/155 · corpus 157/156 · GREW by 8 arm(s)`),
+     read AFTER the new files were in a commit — `496fe8c`, with the run's own provenance line
+     reporting 168 of 168 discovered items in it — so these are the reproducible figures and
+     not the contaminated ones a pre-commit run reports under the same numerals. The cause is
+     ONE new suite, `test/skillprohibitions.test.mjs`, whose declaration states eight numbered
+     items: a BASELINE plus the seven negative-control arms `test/skillprohibitions.control.mjs`
+     runs. Every one of those seven was RUN, and all seven came back as declared. Nothing FELL.
+     Battery 162/162 · 10,054 assertions; `--strict` exit 0 read unpiped. As above, the
+     previous value (813) is REPLACED and never joined. */
+  arms: 821,
+  classified: 156,
+  corpus: 157,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

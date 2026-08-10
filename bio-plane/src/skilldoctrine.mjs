@@ -80,7 +80,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES,
          AI_RUN_CHECKS } from "./airun.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS, MACHINE_FENCE_CHECKS,
          EARNED_GRADE_SOURCES, VERSION_STRENGTH_INERT_SOURCES,
-         BASIS_ROLES } from "../checks/bio-checks.mjs";
+         BASIS_ROLES, VERSION_STRENGTH_CHECKS,
+         BASIS_VERSION_CHECKS } from "../checks/bio-checks.mjs";
 
 export const JUDGEMENT_ID = "investigative-judgement";
 export const JUDGEMENT_EDITION = "1";
@@ -230,6 +231,11 @@ const C = {
   cannot_conclude:      MACHINE_FENCE_CHECKS.MACHINE_CANNOT_CONCLUDE.check,
   cannot_ground:        MACHINE_FENCE_CHECKS.MACHINE_CANNOT_GROUND.check,
   skill_version:        AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.check,
+  /* SK-3's additions, read by KEY exactly as SK-2's are. */
+  cannot_publish:       MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check,
+  ground_unasserted:    BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED.check,
+  strength_composed:    VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_COMPOSED.check,
+  strength_unfiltered:  VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED.check,
 };
 
 /* THE ONE C-NUMBER WRITTEN OUT, AND IT IS WRITTEN OUT BECAUSE IT HAS NO ROW TO
@@ -437,6 +443,237 @@ export const CLAUSES = [
 ];
 
 /* =========================================================================
+ * SK-3 — THE PRACTICE-SURVEY PROHIBITION SET, VERBATIM
+ *
+ * `IS-BUILD-PLAN.md` SK-3; `PRACTICE-SURVEY.md`'s DELIBERATELY VIOLATE list and
+ * its §1 collision; `docs/archive/IS-SWEEP-2026-08-07.md` §3;
+ * `INVESTIGATIVE-SESSION.md` §14b.4 (*"The skill's own prohibition set comes
+ * from the practice survey and is not restated by each build session"*) and
+ * §14b.5's boilerplate bullet.
+ *
+ * FIVE PROHIBITIONS AND ONE PERMISSION, AND THE PERMISSION IS NOT A SIXTH RULE.
+ * The survey found exactly one auto-composition in its whole corpus that this
+ * project could take unchanged, and it is the CARVE-OUT to the first
+ * prohibition rather than an item beside it: assembling a member's own prior
+ * words generates nothing, so it is not an attribution at all.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY "VERBATIM" IS A MEASUREMENT HERE AND NOT AN INSTRUCTION TO THE AUTHOR
+ * ---------------------------------------------------------------------------
+ *
+ * The plan row's accepts-when is *"the five prohibitions present verbatim"*, and
+ * a session cannot verify its own copying by re-reading it — that is the hand-
+ * copy failure SK-1 measured and `CLAUDE.md` records as this project's most
+ * repeated finding. So each prohibition's `text` and `because` are SPANS OF
+ * `PRACTICE-SURVEY.md` (or, for the fifth, of the design document), and
+ * `test/skillprohibitions.test.mjs` looks each one up in the file it came from
+ * through SK-1's normaliser. A word changed here fails; a prohibition dropped
+ * from the survey fails; a paraphrase fails.
+ *
+ * AND EACH IS PINNED TWICE, TO TWO DOCUMENTS THAT PHRASE IT DIFFERENTLY.
+ * `also_named_in` is the DESIGN document's own shorter restatement of the same
+ * rule. One pin proves the sentence was copied; two prove the SET is the set
+ * both documents carry, so a prohibition quietly dropped from either surface
+ * fails here rather than in a review nobody re-runs.
+ *
+ * ---------------------------------------------------------------------------
+ * A PROHIBITION IS STILL SKILL TEXT, SO IT STILL HOLDS NO GATE
+ * ---------------------------------------------------------------------------
+ *
+ * §14b.4 does not exempt a prohibition from the area's governing constraint. A
+ * sentence saying "never do X" that a model can ignore refuses nothing, so every
+ * field below is scanned by `controlFlowAuthority` — the SAME exported function
+ * SK-2 built, never a second scanner — and each prohibition names the C-numbers
+ * that actually refuse, read off catalogue rows BY KEY.
+ *
+ * THE FIFTH PROHIBITION'S CODE HALF IS ALREADY LANDED AND THIS FILE ADDS NONE.
+ * `PL-3` built `SUGGEST_BOILERPLATE` / `C-27.12` and the single `isBoilerplate`
+ * predicate behind it. A second check here would be a second implementation of
+ * one rule — the shape IS-6's C-22.4 control measured, where either copy
+ * absorbed the control and the suite stayed green at 98 of 98. SK-3 cites the
+ * row by key and writes no predicate.
+ *
+ * ---------------------------------------------------------------------------
+ * `does_not_reach` IS REQUIRED ON EVERY PROHIBITION, INCLUDING THE ENFORCED ONES
+ * ---------------------------------------------------------------------------
+ *
+ * SK-2's rule was that a clause with NO code says so. That is not enough here,
+ * because all five of these are enforced PARTIALLY and a partial fence read as a
+ * whole one is the more dangerous error: `isBoilerplate` states its own limit at
+ * its own site (*"a machine that writes 'the relevant department' gets past every
+ * rule below"*), and a prohibition citing it must state the same limit rather
+ * than inheriting its authority. So every prohibition carries BOTH what the code
+ * refuses and what it does not reach, and the suite prints the residue every run.
+ * ========================================================================= */
+
+/** Where the prohibitions were copied FROM. Repo-relative, `TABLE_SOURCE`'s shape. */
+export const SURVEY_SOURCE = "docs/development/PRACTICE-SURVEY.md";
+/** And where the design document restates the same set in its own words. */
+export const DESIGN_SOURCE = TABLE_SOURCE;
+
+/** The design document's sentence that makes this set the SKILL's rather than
+ *  each build session's, quoted and pinned. It is why the list lives in one
+ *  place: a set restated per session is a set that drifts per session, which is
+ *  the defect this whole file is shaped around. */
+export const PROHIBITION_SET_IS_STANDING =
+  "The skill's own prohibition set comes from the practice survey and is not restated by each "
+  + "build session";
+
+export const PROHIBITIONS = [
+  {
+    id: "no-generated-justification",
+    /* PRACTICE-SURVEY "DELIBERATELY VIOLATE" 2 — THE SHARP ONE. */
+    text: "No generated justification, reason, template or suggested wording anywhere",
+    because:
+      "A justification is read later as that member's own act; a generated one is a fabricated "
+      + "attribution.",
+    source: SURVEY_SOURCE,
+    also_named_in: "no generated justification anywhere",
+    in_practice:
+      "The run's own account of its own proposal is its own words and is attributed to the run — "
+      + "that is the description a version carries, and writing it is required. What is forbidden is "
+      + "producing the words a MEMBER will be recorded as having said: a reason for a disposition, a "
+      + "justification for a lens, a suggested wording for a field somebody else signs. Where such a "
+      + "field is wanted and no member has written it, the field is left empty and the emptiness is "
+      + "reported, because undetermined is first-class and must be stated.",
+    enforced_by: [C.cannot_conclude, C.cannot_publish, C.cannot_ground,
+                  C.ground_unasserted, C.hunch_needs_author, C.unwritable_state],
+    does_not_reach:
+      "prose. Nothing refuses a well-formed sentence in a field an automated caller IS allowed to "
+      + "fill, and nothing could — a check that judged whether wording was generated would be a "
+      + "claim to a competence no check here has. What the fences above do is narrower and is worth "
+      + "stating exactly: the ACTS that carry a member's justification are unreachable to an "
+      + "automated credential, so there is no field on those acts for a generated sentence to land "
+      + "in. The residue is the fields a run may legitimately write, and this prohibition is "
+      + "instruction over them.",
+  },
+  {
+    id: "no-single-confidence-score",
+    /* PRACTICE-SURVEY "DELIBERATELY VIOLATE" 3. */
+    text: "No single confidence score",
+    because:
+      "Strength is weakest-link over graded legs, and an undetermined leg must remain visible as "
+      + "undetermined rather than being smoothed into a number.",
+    source: SURVEY_SOURCE,
+    also_named_in: "no single confidence score",
+    in_practice:
+      "Report what the record computed, in the shape the record computes it: a pair, per axis, over "
+      + "the declared partition, with the ungraded legs named beside it. Never one figure, never a "
+      + "percentage, and never a word standing in for one. An ungraded leg is inert and NAMED, which "
+      + "is the opposite of averaged.",
+    enforced_by: [C.strength_composed, C.strength_unfiltered],
+    does_not_reach:
+      "a number written into PROSE. The refusal above is on the record's own strength answer, which "
+      + "may not report one overall figure for a question and may not omit which readings it "
+      + "counted. A description that says 'about eighty per cent confident' is a sentence, and the "
+      + "boilerplate fence is the only check that reads a description at all.",
+  },
+  {
+    id: "no-connection-density-ranking",
+    /* PRACTICE-SURVEY "DELIBERATELY VIOLATE" 4. */
+    text: "No connection-density or centrality ranking, and no graph view that rewards it",
+    because:
+      "Connectedness is a property of the drawing, not evidence. Where BIO must draw edges, the "
+      + "grade travels with the edge and an ungraded edge renders as undetermined, not as a thinner "
+      + "line that reads as weaker-but-real.",
+    source: SURVEY_SOURCE,
+    also_named_in: "no connection-density ranking",
+    in_practice:
+      "Do not order anything by how many edges touch it, and do not offer how-connected as a reason "
+      + "for looking at something. A subject worth searching is worth searching because of what the "
+      + "record says about it, and the reason is written down.",
+    enforced_by: [],
+    unenforced_because:
+      "there is nothing to refuse yet, and saying so is more honest than citing a fence that would "
+      + "fire on something else. Nothing in this plane computes a degree, a centrality or a density "
+      + "over the record's edges — there is no such op, no such field and no such answer — so this "
+      + "prohibition is a standing bound on what may be BUILT rather than a rule a run can break "
+      + "today. It becomes enforceable the day a surface ranks anything, and on that day the fence "
+      + "belongs beside the ranking and not here.",
+    does_not_reach:
+      "anything at all, which is exactly what makes it worth publishing rather than assuming: this "
+      + "is the one prohibition in the set with no code behind it, and a reader must not take the "
+      + "other four's C-numbers as covering it.",
+  },
+  {
+    id: "machine-proposed-is-never-a-connection",
+    /* PRACTICE-SURVEY "DELIBERATELY VIOLATE" 5. */
+    text: "Machine-proposed connections are never presented as connections",
+    because:
+      "D-82: a derived thing must LOOK derived, because what the member needs to know is that "
+      + "nobody has judged it yet.",
+    source: SURVEY_SOURCE,
+    also_named_in: "machine-proposed connections never presented as connections",
+    in_practice:
+      "Everything this run puts forward is a lead for a named member to judge, and it says so in its "
+      + "own words rather than relying on where it is rendered. A candidate is described as a "
+      + "candidate; a match is described as a name that matched; nothing is written in the voice the "
+      + "record uses for what a member has already accepted.",
+    enforced_by: [C.unwritable_state, C.cannot_conclude, C.cannot_ground],
+    does_not_reach:
+      "the DRESS. Whether a surface renders a suggested version differently from an accepted one is "
+      + "a fact about the surface, and no check in the plane can see a rendering. What the plane "
+      + "does hold is the STATE — a suggestion may only ever arrive as something put forward, and "
+      + "the acts that would make it the record's own answer are unreachable from here. D-82's "
+      + "requirement that the appearance communicate it is the surfaces' obligation and is stated "
+      + "here as one this text cannot meet.",
+  },
+  {
+    id: "no-boilerplate-to-clear-a-gate",
+    /* §14b.5, and the one prohibition whose source is the DESIGN document rather
+       than the survey: the survey's own falsification note predicted it (*"if the
+       first published case's exclusion statement is empty or boilerplate across
+       several cases … the gate is doing nothing"*) and the design turned it into
+       a pre-write check. Its code half is PL-3's and is LANDED. */
+    text: "nothing in it is boilerplate",
+    because:
+      "a version whose description or reason field is placeholder text is not proposed. The "
+      + "placeholder defect is already measured at human speed (counterparty: to be named satisfying "
+      + "a non-empty check, PROCESS-INVENTORY); an AI filling required fields to clear a gate is the "
+      + "same defect at machine scale",
+    source: DESIGN_SOURCE,
+    also_named_in: "nothing in it is boilerplate",
+    in_practice:
+      "A required field is filled with an account of something or it is not filled. Where there is "
+      + "nothing to say, say that there is nothing to say and why — a stated absence is a fact "
+      + "another member can act on, and a token whose only job is to be non-empty reads to them as "
+      + "something somebody wrote.",
+    enforced_by: [C.boilerplate],
+    does_not_reach:
+      "prose that is empty without being a token. The predicate behind the C-number states this "
+      + "limit at its own site and this prohibition inherits it rather than improving on it: a "
+      + "machine writing 'the relevant department' gets past every form in the roster. What the "
+      + "check DOES catch is the machine-scale shape — a required field carrying a placeholder — and "
+      + "it is matched against the whole field rather than as a substring, so a real sentence that "
+      + "quotes a placeholder is not refused.",
+  },
+];
+
+/** THE ONE PERMITTED AUTO-COMPOSITION. Not a sixth prohibition and not a
+ *  softening of the first: the survey's §1 collision is precise about why this
+ *  one shape is takeable unchanged, and the reason is the whole line the first
+ *  prohibition draws. Quoted and pinned like everything above. */
+export const PERMITTED_AUTO_COMPOSITION = {
+  id: "assemble-the-members-own-prior-words",
+  text: "Assembling a member's OWN prior annotations into a note",
+  permitted_because: "Permitted precisely because it generates no new words.",
+  the_line: "it assembles the member's OWN prior words and never generates new ones",
+  and_the_other_side:
+    "Assembling what a member already wrote is not attribution; drafting a justification for them is.",
+  source: SURVEY_SOURCE,
+  also_named_in: "the one permitted auto-composition is assembling the member's OWN prior words",
+  in_practice:
+    "Where a member's own words already exist in the record, they may be gathered, ordered and "
+    + "shown with what each one came from. Nothing may be added between them, nothing smoothed, and "
+    + "the assembly names whose words these are and where each was written.",
+  /* THE BOUNDARY IS WHAT MAKES THE PERMISSION SAFE, so it is carried with it
+     rather than left to be inferred from the prohibition it sits under. */
+  stops_at:
+    "the first new word. A connective sentence written to make the excerpts read well is generated "
+    + "wording, and it is the first prohibition's subject however small it is.",
+};
+
+/* =========================================================================
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
  * ========================================================================= */
 
@@ -600,6 +837,30 @@ export function judgementLayers() {
       load_when: "the run reports that a level is empty, or reads an empty answer from one",
       sourcing: "authored",
       body: { clauses: byArea("absence"), by_level: absenceByLevel() },
+    },
+    /* SK-3. RESIDENT-ADJACENT BY ITS `load_when` RATHER THAN BY A NEW MECHANISM:
+       the prohibitions bear on everything a run writes, so the work that loads
+       them is "anything a member will read", and the layer says so instead of
+       naming one step. The pack's own split (§14b.1) is between what must be
+       held from the first token and what is fetched; this is fetched, and a run
+       that composes without fetching it is a run whose output the boilerplate
+       fence and the machine fences still refuse — which is the point. */
+    prohibitions: {
+      load_when: "the run writes anything a member will read, or is tempted to fill a field it "
+        + "cannot fill honestly",
+      sourcing: "authored",
+      body: {
+        prohibitions: PROHIBITIONS,
+        permitted_auto_composition: PERMITTED_AUTO_COMPOSITION,
+        standing: PROHIBITION_SET_IS_STANDING,
+        copied_from: SURVEY_SOURCE,
+        restated_in: DESIGN_SOURCE,
+        note: "these are PROHIBITIONS and they are INSTRUCTION. Each names the C-numbers that "
+          + "actually refuse and, separately, what those C-numbers do NOT reach — a prohibition "
+          + "reading as a fence when it is a sentence is the defect §14b.4 names, and a partially "
+          + "enforced one reading as a fully enforced one is the same defect wearing a citation. "
+          + "One of the five has no code behind it at all and says so.",
+      },
     },
     judgement_boundary: {
       load_when: "always available on request: what this skill decides and what it never decides",

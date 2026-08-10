@@ -7769,3 +7769,77 @@ item exists to avoid. It is a separate ruling and is stated as one rather than a
   rule is that a floor moves only to the reproducible figures. That is CONDUCT's to move at
   integration, from a run that sees the commit.
 - `node civicos-ui/test/run.mjs` **exit 0, read UNPIPED** — all harnesses green.
+## 2026-08-10 · SK-3 — the PRACTICE-SURVEY prohibition set, and what the fence is actually worth
+
+Instruments: `bio-plane/scripts/battery.mjs`, `bio-plane/scripts/coverage.mjs --strict` (run
+directly, `$?` read with nothing piped after it), `bio-plane/test/skillprohibitions.control.mjs`.
+Worktree `agent-ab590a192167d2ca3`, from `main` at `d3fd7bf`.
+
+**BASELINE, MEASURED AFTER `npm ci` AND BEFORE ANY EDIT: 161/161 suites green · 10,021
+assertions · 162.2 s · coverage `--strict` exit 0.** Recorded because the brief that opened
+this session predicted a 28/161 catastrophe from a missing install and the trap is now in
+`CLAUDE.md`; the install was run first and the baseline was whole. Three workers have paid
+for this on one day and none of them were wrong about what they saw.
+
+**THE INSTRUCTION-ONLY FRACTION OF THE INVESTIGATIVE SKILL, WHICH IS THE FIGURE THIS AREA
+EXISTS TO KEEP HONEST.** SK-2 published 3 of 10 clauses. SK-3 adds five prohibitions, of
+which **1 is instruction-only** — the connection-density one, and it carries no C-number
+because nothing in this plane computes a degree or a centrality for a fence to sit on.
+**The skill as a whole: 4 of 15 doctrine items carry no code at all.** Printed by
+`skillprohibitions.test.mjs` on every run, together with the residue each of the other 11
+states — because **all five prohibitions are enforced PARTIALLY**, and a partial fence read
+as a whole one is a worse error than an unenforced rule read as unenforced.
+
+**THE ASYMMETRY, MEASURED RATHER THAN ARGUED.** The same description down two paths:
+
+| input | `op=suggest` (PL-3's endpoint) | the skill-only path |
+| --- | --- | --- |
+| a placeholder description | **refused** — `SUGGEST_BOILERPLATE` / `C-27.12`, `fields: ["description"]` | no verdict |
+| a real description | **lands**, state `suggested`, carrying its run | no verdict |
+
+The code path DISCRIMINATES; the skill path is CONSTANT. That is the row's *"the fence is
+code, not instruction"* stated as a measurement instead of an assertion — an arm showing only
+the refusal would not have shown the op discriminates rather than refusing everything, and an
+arm showing only the skill's silence would have proved nothing at all.
+
+**And the control confirms it from the other side.** `skillprohibitions.control.mjs` arm (1)
+neuters `isBoilerplate` and changes NOT ONE WORD of the skill: **28 pass, 2 fail — only the
+two arms that read the CODE — while ELEVEN NAMED SKILL-SIDE ARMS ALL STAYED GREEN.** The
+prohibition is still present, still verbatim, still cites C-27.12, and still refuses nothing.
+Arm (2) breaks the same fence at the CALL SITE instead of the predicate: **29/1, ARM D1 alone,
+ARM D4 correctly absorbed** — a check and its call site fail differently and only the op sees
+the second.
+
+**Seven arms run, 0 wrong.** Baseline 30/0. (1) 28/2 · (2) 29/1 · (3) 26/4 · (4) 29/1 ·
+(5) 29/1 · (6) 29/1 · (7) 29/1. Every restore verified by content AND by sha256.
+
+**ONE ARM CAME BACK WITH MORE FAILURES THAN DECLARED, AND IT IS THE FINDING OF THIS ITEM
+RATHER THAN A CORRECTION TO IT.** Arm (3) drops a prohibition; the declaration named three
+assertions and the run measured four. The fourth (ARM A4) is a second independent hold on the
+set's size that the declaration had not noticed — kept and recorded. More importantly, arm (3)
+is what exposed **ARM A5 AS BLIND BY CONSTRUCTION IN ITS FIRST FORM**: written as *"every
+prohibition's design-restatement appears in the design document"*, its expected set was
+derived from the very array under test, so dropping a prohibition dropped its own expectation
+and both sides moved together. **This is the second time in two items in this area that a
+control found an assertion whose expectation was computed from its own subject** — SK-2's arm
+(5) found the first, one file over. The repair was to PARSE the design document's own
+semicolon-delimited list and make the DOCUMENT the expectation.
+
+**Battery with SK-3: 162/162 suites green · 10,054 assertions · 163.3 s** (baseline
+161/161 · 10,021 · 160.1 s). **THE DELTA WAS ATTRIBUTED BY RE-RUNNING THE WHOLE BASELINE AND
+DIFFING PER SUITE, NEVER BY SUBTRACTION** — the working tree was stashed back to `d3fd7bf`,
+the battery re-run, and the two per-suite tables compared. Exactly two rows moved:
+**`skillprohibitions.test.mjs` +30 (new)** and **`hygiene.test.mjs` 621 → 624**, whose own
+per-suite arms see one more suite. **Nothing else moved at all** — in particular
+`skilldoctrine.test.mjs` held at 43/43 with the doctrine module extended, and
+`declared-corpus.test.mjs` at 33. The +3 in `hygiene` is the reason this was measured rather
+than reasoned about: subtraction would have credited it to the new suite.
+
+**Coverage `--strict`: exit 0**, read with nothing piped after it. `REGISTER_FLOOR` moved
+UPWARD to the triple the green run PRINTED as reproducible, one new suite declaring seven
+control arms.
+
+**`store.mjs` line count, measured this turn: 26,144.** Quoted with the command rather than as
+a fact, because this figure has been wrong in the record four times:
+`wc -l < bio-plane/src/store.mjs`. **SK-3 edited none of it** — the two lines the control
+harness touches in it are armed and restored inside one worktree.

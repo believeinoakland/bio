@@ -695,3 +695,78 @@ your change superseded, in the SAME turn, yourself*:
 `await mf.dispose()`, so it leaked its workerd process. Fixed in the suite, outside its `try` so a
 thrown suite still releases it. 623 pass / 1 FAIL → 624 pass, 0 fail. Neither of these two was found
 by reading the diff.
+---
+
+## CLAIM 2026-08-10 SKILL (SK-3 — the PRACTICE-SURVEY prohibition set, in the skill VERBATIM)
+session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`, branch
+  `worktree-agent-ab590a192167d2ca3`)
+opened: 2026-08-10T00:00:00Z
+paths: `bio-plane/src/skilldoctrine.mjs` (SK-2's judgement layer, this area's — SK-3 ADDS
+  `PROHIBITIONS`, `PERMITTED_AUTO_COMPOSITION` and one further disclosed layer, and REUSES
+  the exported `controlFlowAuthority` rather than writing a second scanner),
+  `bio-plane/test/skillprohibitions.test.mjs` (NEW), `bio-plane/test/skillprohibitions.control.mjs`
+  (NEW — the negative-control harness, deliberately not a `.test.mjs` so the battery does
+  not collect a file that edits real sources while it runs),
+  `docs/development/CLAIMS.md` (this entry), `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/kickoffs/SKILL.md` (appended — what SK-4 starts from).
+  **NOT** `bio-plane/checks/**` — **and this is the item's whole point rather than a
+  boundary observance**: the fifth prohibition's CODE half is `PL-3`'s landed
+  `SUGGEST_BOILERPLATE` / `C-27.12`, and SK-3 CITES it by catalogue KEY and adds no second
+  check and no second predicate. **NOT** `bio-plane/src/**` beyond the one doctrine module
+  — in particular NOT `store.mjs`, NOT `index.mjs`, NOT `airun.mjs`. **NOT**
+  `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's), **NOT** `docs/development/IS-BUILD-PLAN.md`.
+  The control harness TRANSIENTLY edits `checks/bio-checks.mjs` and `src/store.mjs` and
+  restores both, verified by content AND by sha256 — SK-2's arm (8) is the precedent. A
+  transient armed edit inside one worktree is not a claim on the path.
+
+
+## CLAIM 2026-08-10 SKILL (SK-3 — AMENDMENT: the coverage register's floor)
+session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`)
+opened: 2026-08-10T00:00:00Z
+Appended rather than edited into the claim above, per this file's append-only rule.
+paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
+  UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-3's suite was
+  in a commit (813/155/156 -> 821/156/157). Nothing else in that file, and `FLEET_FLOOR`
+  unmoved at 2 members / 4 ops / 5 suites / 48 arms. This is the ratchet the file's own
+  comment instructs the item that grows the register to move, and the reason a path outside
+  the first claim is taken at all: leaving it would install slack in a ratchet whose whole
+  purpose is to have none. SK-2's amendment one entry up is the precedent and the shape.
+---
+
+## DELEGATION 2026-08-10 SKILL -> UI (two landed prohibitions aim at the SURFACE and no plane check can reach them)
+raised by: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`), while landing SK-3's
+prohibition set. **This is a NOTICE that two rules now exist and are unenforced where they
+actually bite — not a request for work in this sprint, and not a blocker for anything.**
+
+**MEASURED, not suspected.** Of SK-3's five prohibitions, two have residues that NO CHECK IN
+THE PLANE CAN EVER REACH, because both are facts about a RENDERING and the plane cannot see
+one. Both are stated in the landed doctrine's `does_not_reach` field and printed by
+`skillprohibitions.test.mjs` every run, so they are published rather than implied:
+
+- **`no-connection-density-ranking`** — *"No connection-density or centrality ranking, and no
+  graph view that rewards it"* (PRACTICE-SURVEY "deliberately violate" 4). **`enforced_by` is
+  EMPTY and the suite asserts that it is the only one of the five that is.** Nothing in this
+  plane computes a degree, a centrality or a density over the record's edges — no op, no
+  field, no answer — so there is nothing to refuse yet and the prohibition says exactly that.
+  **It becomes breakable the day a surface ranks or draws anything by connectedness**, and on
+  that day the fence belongs beside the ranking rather than in a doctrine file. The survey's
+  own reason is worth carrying: *"Connectedness is a property of the drawing, not evidence."*
+- **`machine-proposed-is-never-a-connection`** — *"Machine-proposed connections are never
+  presented as connections"*, whose stated ground is **D-82**, RULED BY BOB 2026-07-30: *"the
+  appearance of an assistant-surfaced focus should communicate that it is one."* The plane
+  holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as
+  something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own
+  answer are unreachable to a machine). **The DRESS half is entirely UI's and is enforced by
+  nothing** — whether a `suggested` version renders differently from an accepted one is not a
+  fact any plane check can observe.
+
+**What is needed, and it is UI's call rather than this area's:** decide whether either wants a
+surface-side assertion (`civicos-ui/test/**` already runs a harness that could hold one), and
+if so where. Either answer is fine; what is not fine is a prohibition that reads as enforced
+because it sits beside four that are — which is why `does_not_reach` is a REQUIRED field on
+every prohibition and why the instruction-only tally is printed rather than implied.
+
+**Nothing is blocked on this.** SK-3 landed with both residues named, and
+`connections-sidebar.test.mjs` is already green in UI's harness — this delegation says only
+that neither prohibition is holding it there.
