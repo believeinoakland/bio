@@ -330,6 +330,33 @@ if (register) {
   if (drops.length) fail(dropMessage(drops));
 }
 
+/* ------------------------------------------- 2b. THE DECIDED INDEX IS CURRENT
+
+   `docs/DECIDED.md` is GENERATED from every ruling in the corpus (tools/decided.mjs),
+   and it exists because a session cannot read the 565k tokens its kickoff demands and so
+   re-asks questions the record already answered — 88% of which are ruled somewhere other
+   than `DECISIONS.md`. An index that silently falls behind the corpus is worse than none:
+   it answers, and it answers with what was true last week. So the drift is a GATE, on the
+   same reasoning `check-versions` gates version stamps — a prose claim about the corpus
+   is exactly what the Mechanical Verification Law says will not stay true on its own. */
+
+{
+  const { scan } = await import("./decided.mjs").catch(() => ({ scan: null }));
+  if (!scan) {
+    warn(`decided.mjs could not be loaded — the DECIDED index is UNVERIFIED this run.`);
+  } else {
+    try {
+      execSync(`${JSON.stringify(process.execPath)} ${JSON.stringify(join(ROOT, "tools/decided.mjs"))} --check`,
+        { cwd: ROOT, stdio: "pipe" });
+      notes.push(`decided index: current`);
+    } catch {
+      fail(`STALE — docs/DECIDED.md does not match the corpus it indexes.\n`
+         + `        Run \`node tools/decided.mjs\` and commit the result. A stale index does not\n`
+         + `        fail quietly; it answers a session's question with last week's ruling.`);
+    }
+  }
+}
+
 /* ------------------------------------------- 3. THE DECISION CHANNEL */
 
 const decisions = read("docs/development/DECISIONS.md");

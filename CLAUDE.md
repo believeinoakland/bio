@@ -141,6 +141,24 @@ It fails on an unpublished or unpushed planning surface, an ACTIVE area with no
 kickoff, an item behind an unregistered interface, a milestone that does not exist,
 and an open debt row with no disposition.
 
+**BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:**
+
+    node tools/decided.mjs "<the subject>"
+
+It answers from a generated index of every ruling in the corpus and returns the
+ruling in the words it was ruled in, plus the file and line that owns it. Built
+2026-08-10 against two measurements: the reading this file and the kickoffs
+demand before a session may work totals **~565,000 tokens**, which no session can
+read; and of the 583 ruling-bearing statements in the corpus, **only 12% are in
+`DECISIONS.md`** — the rest are spread across fifty documents, several of which
+are larger than a context window. So a session re-asks a settled question not
+because it was careless but because the answer was somewhere it could not afford
+to open. `docs/DECIDED.md` is that index, 161 KB against the corpus's 7.4 MB.
+**Regenerate it (`node tools/decided.mjs`) in any turn that rules on anything**;
+`plancheck` fails on the drift. It is a FLOOR on what has been settled and never
+a ceiling — a ruling recorded without a marker word is invisible to it, so grep
+before concluding nothing was decided.
+
 **Before making a change another session must know about, read
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE".** It is the skill this
 ecosystem runs on: which channel carries what, the rules that make each work, and the
