@@ -193,7 +193,7 @@ authority is the file named, never this one.
 - **DEC-65** — THE C-NUMBER IN DEC-65 IS WRONG AND IS CORRECTED IN THE ENTRY.** The rule requiring a named MEMBER to assert every declared part is **C-25.6 / `VERSION_GROUND_UNASSERTED`** (`checks/bio-checks.mjs:5802`), not C-25.15 — which is `VERSION_ORPHAN_ROW`, an unrelated rule about a row naming a version that is not there.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3112`
 - **DEC-69** · 2026-08-10 — AMENDED the same day, and the amendment is the harder half: the operative word is FORCED, and it CUTS BOTH WAYS** — *"they shouldn't be forced to make decisions in bulk.  
-  `docs/development/QUEUE.md:760`
+  `docs/development/QUEUE.md:780`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -503,7 +503,7 @@ authority is the file named, never this one.
 - **C-27** — Plus roster/ratchet/pin rows in whichever of `bio-plane/test/{bounds,meaning-bounds,capability,gate-reads,hygiene,versions,conformance}.test.mjs` the change makes owed, each CORRECTED with a dated reason and never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2641`
 - **C-27.13** · 2026-07-30 — , RULED BY BOB 2026-07-30: *"the appearance of an assistant-surfaced focus should communicate that it is one."* The plane holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own  
-  `docs/development/CLAIMS.md:756`
+  `docs/development/CLAIMS.md:762`
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 ## REC-
@@ -595,7 +595,7 @@ authority is the file named, never this one.
 - **REC-49** — REC-49's four on the surface: (p) the pair read back out of the container manifest -> 194/196, 2 FAIL, both of them in the awaiting window while every complete case stays green; (q) UI-29's sentence restored -> 194/196 — AND THIS ARM CORRECTED THE FIXTURE: it first fired ZERO, because an assertion that a sentence…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1565`
 - **REC-49** — CORRECTED IN PLACE BEFORE ANYONE READ IT, and the correction is left visible rather than the paragraph rewritten, because the mistake is the more useful half.** This block first claimed the battery *"reports 124 FAILED suites and EXITS 0"* — the same class of defect as REC-49's false `exit 0`, raised as a delegation.  
-  `docs/development/CLAIMS.md:542`
+  `docs/development/CLAIMS.md:545`
 - **REC-52** · 2026-08-04 — THE FIX WAS DECIDED AGAINST THE ITEM'S OWN LEANING, on evidence: `apiQ` could not be made to throw, because §7a spreads a DO result into `{ok:true}` at HTTP 200 without checking it, so there is no `ok:false` to throw on - the motivating case would have sailed past.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1869`
 - **REC-52** — `bio-plane/test/plane-envelope.test.mjs` — REC-52's own suite: its `UNCONVERTED` set updated as the sites leave it, its two HELD-OPEN relation pins (i) and (ii) CORRECTED AT THE SITE with a dated reason and never deleted, and detector B widened to the two fallback shapes this block used that it could not see.  
@@ -827,7 +827,7 @@ authority is the file named, never this one.
 - **PL-18** · 2026-08-09 — CORRECTED 2026-08-09 by PL-18, which MEASURED it: FALSE on the axis the ruling is about.** `contribute` alone permitted a `contribute`-holder OUTSIDE the project, which the ruling forbids.  
   `docs/archive/ledgers/QUEUE-2026-08.md:622`
 - **PL-18** · 2026-08-10 — STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since.  
-  `docs/development/QUEUE.md:745`
+  `docs/development/QUEUE.md:766`
 - **PL-18** · 2026-08-09 — SUPERSEDED READINGS OF THE ROW ABOVE, moved out of the table 2026-08-09 by CONDUCT.** PL-18 found this metric occupying **THREE table rows** with three different figures, newest first — so the table asserted its own value three times and a reader had no way to tell which was current.  
   `docs/development/VERIFICATION.md:56`
 - **PL-19** · 2026-08-09 — STEP TWO IS UNMERGED AND IT CLOSES A LIVE OVERCLAIM, AND WHEN IT LANDS THREE OF MY ASSERTIONS MUST BE CORRECTED** **PL-19 (`7844e16`, `4b3f7a7` on `worktree-agent-a875e2afd837947d7`) IS NOT IN `main`** — measured with `git branch -a --contains`, not assumed.  
@@ -1094,13 +1094,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated). **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are dated records of what was measured…  
   `docs/development/CLAIMS.md:315`
 - **2026-08-10** — AMENDED 2026-08-10 (same session), because a claim that does not name what was really edited is not a claim.** Three paths beyond the list above were touched and each is licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME turn, yourself*:  
-  `docs/development/CLAIMS.md:627`
+  `docs/development/CLAIMS.md:631`
 - block, CORRECTED and never exempted, each with a comment saying why the old one was right when written and what made it wrong.  
-  `docs/development/CLAIMS.md:632`
+  `docs/development/CLAIMS.md:636`
 - AMENDED at the close, because a claim that does not name what was really edited is not a claim.** Two further paths were touched and both are licensed by `ORCHESTRATION.md` rule 6 — *correct what your change superseded, in the SAME turn, yourself*: - `bio-plane/test/severedhomes.test.mjs` — **ONE superseded…  
-  `docs/development/CLAIMS.md:673`
-- pin, CORRECTED from `[1, 3]` to `[1, 6]` and never exempted**, with a paragraph at the assertion saying why the old one was right when written and what made it wrong.  
   `docs/development/CLAIMS.md:677`
+- pin, CORRECTED from `[1, 3]` to `[1, 6]` and never exempted**, with a paragraph at the assertion saying why the old one was right when written and what made it wrong.  
+  `docs/development/CLAIMS.md:681`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1254,7 +1254,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - One STATED-AND-NOT-DECIDED question is carried forward rather than closed with the item:** whether a SELECTS reader publishing a fact COMPUTED FROM the rows it selected (a count, a newest timestamp) is still SELECTS.  
   `docs/development/QUEUE.md:421`
 - **2026-07-31** — CAPTURE-SCALING.md item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics.  
-  `docs/development/QUEUE.md:1176`
+  `docs/development/QUEUE.md:1197`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:178`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

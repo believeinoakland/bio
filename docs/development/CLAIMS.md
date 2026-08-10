@@ -404,6 +404,7 @@ interfaces owned: none.
 ## CLAIM 2026-08-10 M0 (D-282 — a flooding suite loses its tally through a pipe)
 session: d282-tally-through-pipe (worktree `agent-a12f0d082be9568ec`)
 opened: 2026-08-10T17:10:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths:
 - `bio-plane/test/stdio.mjs` — NEW, the fix: stdout/stderr made synchronous before a suite writes
 - `bio-plane/test/tally-through-pipe.test.mjs` — NEW, the assertion (discovered by the battery)
@@ -433,6 +434,7 @@ import it delivered all of it, every run.
 ## CLAIM 2026-08-10 SKILL (SK-2 — the investigative skill: composition judgement, description standard, search-completeness discipline)
 session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths: `bio-plane/src/skilldoctrine.mjs` (NEW — SK-2's judgement layer, a sibling of the
   SK-1 pack rather than an edit inside the plane's own code), `bio-plane/src/skillpack.mjs`
   (SK-1's pack, which this area owns per `kickoffs/SKILL.md` — the ONLY change is that
@@ -492,6 +494,7 @@ INTERFACE change (`agent-worker` builds against the spawn payload) rather than a
 ## CLAIM 2026-08-10 SKILL (SK-2 — AMENDMENT: the coverage register's floor)
 session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 Appended rather than edited into the claim above, per this file's append-only rule.
 paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
   UPWARD to the triple a green `--strict` run PRINTED once SK-2's suite was in a commit
@@ -568,6 +571,7 @@ reader runs is not a mechanism.**
 ## CLAIM 2026-08-10 RECORD (D-266 — the WIDENED disposition key for STANCE-SCOPED kinds)
 session: d266-scope (worktree `agent-a3479876cd7e9561b`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths:
 - `bio-plane/src/schema.mjs` — ONE new table, `finding_dispositions`, added BEFORE the
   `host_governor` block. **`proposal_dispositions` IS NOT TOUCHED** — the shared-record
@@ -701,6 +705,7 @@ by reading the diff.
 session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`, branch
   `worktree-agent-ab590a192167d2ca3`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths: `bio-plane/src/skilldoctrine.mjs` (SK-2's judgement layer, this area's — SK-3 ADDS
   `PROHIBITIONS`, `PERMITTED_AUTO_COMPOSITION` and one further disclosed layer, and REUSES
   the exported `controlFlowAuthority` rather than writing a second scanner),
@@ -724,6 +729,7 @@ paths: `bio-plane/src/skilldoctrine.mjs` (SK-2's judgement layer, this area's �
 ## CLAIM 2026-08-10 SKILL (SK-3 — AMENDMENT: the coverage register's floor)
 session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 Appended rather than edited into the claim above, per this file's append-only rule.
 paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
   UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-3's suite was
@@ -777,6 +783,7 @@ that neither prohibition is holding it there.
 session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`, branch
   `worktree-agent-a02138ebf5b27a79b`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths: `bio-plane/src/skilldoctrine.mjs` (SK-2/SK-3's doctrine module, this area's — SK-4
   ADDS `DEPLOYMENT_SEQUENCE` and one further disclosed layer, and REUSES the exported
   `controlFlowAuthority` rather than writing a second scanner),
@@ -803,6 +810,7 @@ paths: `bio-plane/src/skilldoctrine.mjs` (SK-2/SK-3's doctrine module, this area
 ## CLAIM 2026-08-10 SKILL (SK-4 — AMENDMENT: the coverage register's floor)
 session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 Appended rather than edited into the claim above, per this file's append-only rule.
 paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
   UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-4's suite was in
@@ -855,6 +863,7 @@ arm is to be updated in the same commit as the correction, and the finding then 
 ## CLAIM 2026-08-10 UI (UI-55 — DEC-69's enacted audit: the sweep for nagging, second-guessing and forced modes)
 session: ui55-member-respect (worktree `agent-a7b57b507f367abe3`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by CONDUCT at integration — merged to `main` and verified on the MERGED tree, not on the branch's own: battery 164/164 · 10,115 assertions, `coverage --strict` exit 0 read unpiped, register floor 833/158/159. The holding session is complete.
 paths: `civicos-ui/test/member-respect.test.mjs` (NEW — the sweep),
   `civicos-ui/test/member-respect.control.mjs` (NEW — the three-arm negative-control driver).
   **`civicos-ui/app.html` — named by SITE, not by file** (it is shared ground and other UI
