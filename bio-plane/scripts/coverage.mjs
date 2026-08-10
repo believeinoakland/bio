@@ -347,7 +347,19 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
+  /* MOVED 2026-08-09 by D-249: 731 -> 735, from the figure a green `--strict` run
+     PRINTED (`arms 735/731 · classified 145/145 · corpus 146/146 · GREW by 4
+     arm(s)`) — never by adding 4 to the number above. `classified` and `corpus`
+     do NOT move and that is the expected shape rather than an oversight: this
+     item adds no `.test.mjs`. Its five control arms live in
+     `test/d249-port.control.mjs`, which is deliberately NOT a suite because it
+     EDITS REAL SOURCES, so the register sees them only through the arms stated
+     in `hygiene.test.mjs`'s existing declaration. THE REGISTER COUNTS FOUR WHERE
+     THE ITEM DECLARES FIVE, and that difference is recorded rather than
+     smoothed: the figure the floor moves to is the one the instrument PRINTED,
+     and the arm count in a declaration is a function of its own prose (M0-9's
+     property) — so never compare this total across two edits of that text. */
+  arms:        735,
   classified:  145,
   corpus:      146,
 };

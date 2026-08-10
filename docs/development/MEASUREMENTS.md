@@ -6543,3 +6543,52 @@ this fixture emits neither class, and `queue-state.test.mjs` is the suite that d
 real. Reaching `taskenqueue` directly (it is deliberately not an op) via
 `mf.getDurableObjectNamespace("STORE")` **HUNG this harness past 300 seconds** rather than
 failing, which is recorded because a hang reads as a slow test.
+
+## 2026-08-09 · D-249 — WHAT THIS ESTATE ACTUALLY BINDS, AND WHAT THE PORT RANGE COSTS
+
+**Instrument:** `bio-plane/test/d249-port.probe.mjs` (arms `sockets`, `concurrent`,
+`census`, `pressure`, `headroom`, `reuse`). Machine: darwin 25.5.0, node v26.5.0,
+miniflare 4.20260722.0. **These are MACHINE figures, not plane figures.**
+
+| What | Measured | How | Date |
+| --- | --- | --- | --- |
+| Suites pinning a port, in SOURCE | **0** (corpus 151 `*.test.mjs`) | `hygiene.test.mjs` PORT_PIN over `test/` | 2026-08-09 |
+| Non-suite sites pinning a port | **1** — `migrate/local-plane.mjs:10` (`port: 8787`) | grep over the seven roots D-249 named | 2026-08-09 |
+| Suites constructing a Miniflare | **131** of 151 | probe arm `census` | 2026-08-09 |
+| Ports a real suite listens on | **3 per run, ZERO repeated across 3 runs** (60239/60254/60306, 60323/60396/60440, 60473/60573/60733) | probe arm `sockets`, `lsof` over the pid chain | 2026-08-09 |
+| Who binds them | **node AND workerd** — the entry socket is workerd's, a child process | probe arm `sockets` | 2026-08-09 |
+| 8 concurrent copies of one suite | **8 of 8 exit 0 on ONE signature (18/0)**, no EADDRINUSE | probe arm `concurrent` | 2026-08-09 |
+| Ephemeral port range | **49152–65535 = 16,384 ports** | `sysctl net.inet.ip.portrange` | 2026-08-09 |
+| TIME_WAIT duration | **2 × msl = 30 s** (`net.inet.tcp.msl` = 15000 ms) | `sysctl` | 2026-08-09 |
+| Ephemeral exhaustion reachable? | **YES — `EADDRNOTAVAIL` at 14,459 simultaneous loopback connections** | probe arm `headroom` (DESTRUCTIVE) | 2026-08-09 |
+| Does TIME_WAIT consume the pool? | **YES — 0 of 400 TIME_WAIT ports re-handed-out while 3,000 were allocated** | probe arm `reuse` | 2026-08-09 |
+| Peak TIME_WAIT with 4 concurrent batteries | **6,895 = 42.1% of the range** | probe arm `pressure`, 240 s window | 2026-08-09 |
+| Peak TIME_WAIT with 3 concurrent batteries | **6,565 = 40.1% of the range** | probe arm `pressure`, 120 s window | 2026-08-09 |
+| TIME_WAIT with 0 batteries running | **458–2,955 (2.8%–18%)** | probe arm `pressure` | 2026-08-09 |
+
+**THE TWO FINDINGS POINT OPPOSITE WAYS AND MUST NOT BE COLLAPSED.**
+
+1. **D-249's own hypothesis is EMPTY.** Nothing in the battery pins a port, in source
+   OR at runtime, and eight concurrent copies of one suite do not collide. The
+   dependency that does the binding — miniflare — asks the kernel for an ephemeral
+   port, and that was MEASURED rather than read out of its documentation, which
+   would have been its claim and not ours. D-249 is closed on that measurement.
+2. **A DIFFERENT port hazard is real, and it is D-281.** The range is finite,
+   exhaustible, and TIME_WAIT holds ports out of it for 30 s. Consumption tracks the
+   number of concurrent batteries. **Extrapolating 4 batteries to the stated ceiling
+   of 8 lands at 119%–174% of the range, and AN EXTRAPOLATION IS NOT A MEASUREMENT** —
+   eight batteries were never run at once, so exhaustion under the real ceiling is
+   NARROWED, not established.
+
+**ATTRIBUTION, stated because the opposite error is the one D-237 recorded.** A socket
+in TIME_WAIT has **no owning pid**, so none of the pressure figures is attributable to
+any single run. Every row was taken with the concurrent battery count recorded beside
+it, and that is CORRELATION. Three to four other worktrees' batteries were measurably
+running throughout.
+
+**WHAT WAS DELIBERATELY NOT MEASURED, and the reason is itself evidence.** The obvious
+confirmation — re-run the `headroom` ramp at high ambient TIME_WAIT and show headroom
+fall by the difference — was NOT taken, because the ramp exhausts the machine's
+ephemeral range and would have inflicted `EADDRNOTAVAIL` on four other worktrees'
+suites and corrupted their baselines. The instrument IS the hazard. The `reuse` arm
+proves the same property with 400 sockets instead of 16,000.

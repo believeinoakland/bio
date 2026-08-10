@@ -6746,3 +6746,14 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+## CLAIM 2026-08-09 M0 (D-249)
+
+- `bio-plane/test/hygiene.test.mjs` — the PORT half of the ground check, beside M0-10's `GROUND` regex
+- `bio-plane/test/d249-port.probe.mjs` — NEW, the runtime probe (not discovered by the battery)
+- `bio-plane/test/d249-port.control.mjs` — NEW, the five negative-control arms (edits real sources; not discovered)
+- `docs/development/DEBT.md` — D-249's row (closing), D-281 and D-282 (new)
+- `docs/development/MEASUREMENTS.md` — the port figures
+
+Recorded AFTER the first edits rather than before, which is the wrong order and is
+stated rather than tidied. No other session held these paths.
