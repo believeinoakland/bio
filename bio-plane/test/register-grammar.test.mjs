@@ -65,6 +65,14 @@ import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { countArms, countTransitions, countEnumerations, readControl }
   from "../scripts/control-register.mjs";
+/* GUARDED, NOT NAMED (D-238's class, and hygiene's walk census caught this suite
+   on its first full battery before anyone read the diff — the ratchet working).
+   A5 walks `test/`, a directory this suite does not control, and PRINTS A CENSUS.
+   That is exactly the exposure the guarded walks carry: a phantom suite deposited
+   beside it inflates a figure, and this item's whole subject is figures that can
+   be trusted. So the corpus is counted over the files that are IN THE COMMIT, and
+   anything off-commit is NAMED rather than silently counted. */
+import { readGitProvenance, classifyDiscovered, repoPath } from "../scripts/provenance.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "../..");
@@ -121,18 +129,31 @@ t("A4 an arrow without whitespace on both sides is NOT an arm",
    estate ever wrote its results into its own declaration, all of Part A would be
    true of nothing — a headline claim over an empty corpus, which has passed in
    this repository three separate times. */
-const suiteFiles = readdirSync(join(DIR)).filter((f) => f.endsWith(".test.mjs")).sort();
-let readable = 0, statingResults = 0;
+const suiteFiles = readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
+const prov = readGitProvenance(REPO);
+const disc = classifyDiscovered(prov,
+  suiteFiles.map((f) => ({ path: repoPath(REPO, join(DIR, f)), what: "suite", counted: true })));
+const inCommit = new Set(disc.inCommit);
+
+let readable = 0, statingResults = 0, offCommit = 0;
 for (const f of suiteFiles) {
+  /* RULE 2's third state is honoured: when git cannot answer, `verified` is
+     false and NOTHING is treated as committed — the figure is reported
+     UNVERIFIED rather than silently taken from the working tree. */
+  if (disc.verified && !inCommit.has(repoPath(REPO, join(DIR, f)))) { offCommit++; continue; }
   const d = readControl(readFileSync(join(DIR, f), "utf8"));
   if (!d || d.arms == null) continue;
   readable++;
   if (/\b(RESULTS?|came back|as declared|ACTUAL)\b/.test(d.text)) statingResults++;
 }
-console.log(`corpus (A): ${suiteFiles.length} suite file(s) · ${readable} with a countable `
-  + `declaration · ${statingResults} of those state their RESULTS in the declaration itself`);
+console.log(`corpus (A): ${suiteFiles.length} suite file(s) walked · provenance `
+  + `${disc.verified ? `VERIFIED at ${disc.headSha}` : "UNVERIFIED (git could not answer)"} · `
+  + `${offCommit} NOT in the commit and therefore NOT counted`
+  + `${disc.off.length ? ` [${disc.off.map((r) => `${r.path} ${r.state}`).join(", ")}]` : ""} · `
+  + `${readable} counted with a countable declaration · ${statingResults} of those state `
+  + `their RESULTS in the declaration itself`);
 t("A5 the corpus is non-empty and the mechanism is live in it, not merely possible",
-  [readable > 100, statingResults > 0], [true, true]);
+  [disc.verified, readable > 100, statingResults > 0], [true, true, true]);
 
 /* ==================================================================== PART B
    THE PROSE, HELD TO THE BRANCH BLOB. This is the drop-detecting half. */

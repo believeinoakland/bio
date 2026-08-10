@@ -347,9 +347,22 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
-  classified:  145,
-  corpus:      146,
+  /* MOVED 2026-08-09 by D-263: 731 -> 741 / 145 -> 146 / 146 -> 147, ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED AS REPRODUCIBLE (`arms 741/731 · classified 146/145 ·
+     corpus 147/146 · GREW by 10 arm(s)`) — read AFTER the new files were in a
+     commit, so these are the reproducible figures and not the contaminated ones a
+     pre-commit run reports under the same numerals. One new suite,
+     `test/register-grammar.test.mjs`, whose declaration states TEN arms: seven
+     control arms plus the three surprises written back into it. Nothing FELL.
+     AND IT IS THE ITEM'S OWN SUBJECT: this figure was read TWICE, because writing
+     the control's RESULTS into its declaration raised the tally again — which is
+     exactly the double move REC-68 recorded, that merge `0ca7640` dropped, and
+     that D-263 recovered into VERIFICATION.md's register section. The number here
+     is the one printed after the LAST edit. */
+  arms:        741,
+  classified:  146,
+  corpus:      147,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -6746,3 +6746,170 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+### CLAIM 2026-08-09 INTEGRITY · d263-agent — **D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED**
+
+item: D-263 (existing row, raised by M0-20). Merge `0ca7640` kept main's side of one
+`VERIFICATION.md` row and dropped REC-68's rewrite of it. Nothing went red.
+
+paths: `docs/development/VERIFICATION.md` — **ONE INSERTED SPAN ONLY** (`D-263 PROVENANCE`
+… `END D-263 PROVENANCE`), placed in the register-grammar section. **NO EXISTING ROW
+EDITED AND NO FIGURE IN THE TABLE MOVED** — see "raised, not moved" below.
+`bio-plane/test/register-grammar.test.mjs` (NEW — the pin).
+`bio-plane/test/register-grammar.control.mjs` (NEW — its negative-control driver,
+deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs).
+`bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, **ONE KEY SET; if this
+conflicts at integration COLLAPSE TO ONE and re-read the printed figures**.
+`tools/mergecarry.mjs` — the `why` string of ONE `KNOWN_HISTORICAL_DROPS` row.
+`docs/development/DEBT.md` — D-263's disposition ONLY, this item's own row.
+`docs/development/MEASUREMENTS.md` (APPEND), `docs/development/CLAIMS.md` (this entry).
+**NOT** `bio-plane/src/**`, **NOT** `bio-plane/checks/**`, **NOT** `civicos-ui/**`,
+**NOT** `newgroup/**`, **NOT** `pdf-worker/**`, **NOT** `QUEUE.md` (CONDUCT's), and
+**NOT D-232's row** — that is D-264's and CONDUCT's, and a worker restoring another
+item's closure claim is the wrong shape.
+
+**ESTABLISHED BEFORE RESTORING ANYTHING.** The text was recovered from
+`0ca7640^2:docs/development/VERIFICATION.md`, the branch blob, never paraphrased. What
+was actually lost is NARROWER than "the sentence": the merge message promised the
+number's provenance survived in `coverage.mjs`'s movers list, **and it did — `REC-68 482`
+is there.** What went missing was only the EXPLANATION OF THE DOUBLE MOVE, which is
+exactly what D-263's row says and is worth confirming rather than assuming.
+
+**AND IT IS AMENDED RATHER THAN RESTORED, WHICH IS THE ITEM.** REC-68's sentence opened
+*"THE CURRENT PRINTED FIGURE IS `482 arms`"* — true of its tree, false of this one, where
+`--strict` prints 741. Restoring it verbatim would have put a confident wrong number back
+into the file, which this project rates worse than the gap. The perishable half therefore
+stays in the register ROW where the integrator moves it; the durable half is stated beside
+the grammar it follows from, where no measurement can age it out.
+
+**THE MECHANISM WAS DRIVEN AND REC-68'S FORM TURNED OUT INCOMPLETE.** Writing a control's
+RESULTS into its own declaration raises the tally because a result is naturally written as
+a transition and transitions are what the matcher counts. But the count is
+`max(transitions, enumerations)`, so an ENUMERATED declaration absorbs prose results for
+free — measured `3 -> 3` — and moves only once the arrows OUTNUMBER the ordinals
+(3 ordinals + 4 arrow results -> 4, transitions 4 against enumerations 3). **REC-68's
+unconditional form is true of arrow-grammar declarations and only sometimes true of
+enumerated ones.** A worker taking it on trust would be right most of the time, which is
+the worst way for a rule to be wrong. That boundary is the amendment.
+
+**THE CLASS SWEEP — M0-20 MEASURED FILE SETS; THIS MEASURED THE CONSEQUENCES.** All three
+drops walked, with what each consequence is TODAY:
+
+- `0ca7640` / `VERIFICATION.md` — **the one repaired here.**
+- `1c5d96a` / `DEBT.md` (CPDF-9) — **STILL STANDING, CONFIRMED not assumed.** D-232 still
+  reads *"the battery names it dark on every run until it is done"* while the battery
+  prints `2 member(s) actually RAN` and no `DARK:`. **DELIBERATELY LEFT** — D-264's, and
+  CONDUCT's.
+- `e241672` / `check-refusal-codes.mjs` (REC-69) — **the consequence is CLOSED, but the
+  register's stated REASON for that was already false, and it is corrected.** The row said
+  the floors are current because the merge *"was later reverted with `git revert -m 1`"*.
+  **That revert (`80473ea`) was ITSELF reverted by the Reapply `c8d25cb` on 2026-08-09**,
+  so REC-69's code is in the tree and "it was reverted" is true of nothing. What actually
+  makes the floors current is the REPLAY `bb7b026` (merged `b376c9e`), which re-derived
+  them and **found FOUR ratchets where the dropped diff listed two — the repair went
+  FURTHER than the drop.** MEASURED at `19745ad`, UI harness exit 0 unpiped: census 429,
+  reach 222, 16 families, 168 rows, 68 governed sites, against the dropped diff's
+  409 / 203 / 14 / 148 / 59 — **every one superseded UPWARD.** A register that grades other
+  people's stale sentences may not carry one, so the `why` is corrected with its date and
+  its measurement at the site.
+- The fourth finding in the same run, judged and dismissed: `mergecarry`'s
+  `WARN goneOnMain 2950e7b bio-plane/test/focus.test.mjs`. **Not a live consequence** —
+  the path was deleted by `23f4270` (REC-10) long before, it is not a rename, and a
+  modify/delete conflict is a decision somebody made rather than one that happened to them.
+
+**WHAT THE SWEEP COULD NOT SEE, and it is the honest limit.** `mergecarry` sees WHOLE
+FILES and nothing smaller, so a merge that carried a file while keeping main's side on
+some of its HUNKS raises no candidate and is invisible to this walk too — that residual is
+the instrument's own stated limit and this item did not narrow it. And **consequence-
+tracking is mechanised nowhere**: these three were walked BY HAND. Nothing grades whether a
+drop's consequence is still live, which is precisely why D-264 is a debt row and not a
+register entry.
+
+**RAISED, NOT MOVED — the register row is stale, for the NINTH consecutive item.** The row
+reads `135 of 135 · 632 arms across 134 classified` **PLUS THE FLEET'S 4 of 4 suites ·
+35 arms**. A green `--strict` run on this tree PRINTS
+**`147 of 147 suites declare one (100.0%) · 741 arms stated across 146 classified
+declaration(s) · fullest 47 (hygiene.test.mjs) · 1 UNCLASSIFIED`** and
+**`FLEET 5/5 SUITES declaring a negative control · 43 arms`**. **NOT EDITED, deliberately**,
+on the row's own stated rule that a hand-carried prose figure is moved by the INTEGRATOR,
+once, from a printed run of the merged tree — the same call VF-1, UI-48, CPDF-9, M0-11,
+REC-65, M-4 and REC-67 each made. **Both FLOORS are EXACT with no slack on this tree**
+(`REGISTER_FLOOR` 741/146/147 after this item's move, `FLEET_FLOOR` 5/43 untouched), so it
+is only the PROSE that is behind — which is the row's own subject, again.
+
+**A SECOND THING RAISED AND NOT TOUCHED.** The two SUPERSEDED READINGS below that row are
+near-duplicates: both open `120 of 120 — REMEASURED 2026-08-08 by M0-14` and repeat the
+same four sentences, the second differing only by carrying M0-15's `122 of 122 · 486`.
+Neither is FALSE, so this is not a defect — but PL-18 collapsed three rows for exactly this
+reason and the list has re-grown the shape one level down. VERIFY's call or the
+integrator's, not mine, and it is named rather than left to be rediscovered.
+
+interfaces consumed: none changed. `scripts/control-register.mjs` and
+`scripts/provenance.mjs` are IMPORTED and DRIVEN, never edited.
+interfaces owned: none. No op, no refusal code, no DEC-49 region — `regionLines` and every
+DEC-49 floor were left alone and none was owed, because no `src/` or `checks/` file moved.
+
+**THE RATCHET CAUGHT THIS ITEM'S OWN WORK, WHICH IS IT WORKING.** `hygiene.test.mjs`'s walk
+census named `register-grammar.test.mjs` on its first full battery, before anyone read the
+diff — the suite walks `test/` and PRINTS a census, which is D-238's exposure exactly. It is
+**GUARDED, not NAMED**: the corpus is counted over files that are in the commit, off-commit
+files are NAMED and not counted, and git failing to answer reports UNVERIFIED rather than
+being folded into a working-tree count.
+
+numbers: worktree arrived level with `origin/main` at `19745ad`, **without
+`bio-plane/node_modules`** (`npm ci`, exit 0 read unpiped). **TRUE BASELINE measured in this
+checkout DETACHED at `19745ad`, everything committed, never `git stash` (whose ref is
+repository-wide): 151/151 suites green · 9,688 assertions.** FINAL: **152/152 · 9,704**.
+Delta **+16, ATTRIBUTED BY DIFFING THE TWO FULL RUNS** and never by subtraction:
+`register-grammar.test.mjs` ABSENT -> 15 (new), `hygiene.test.mjs` 591 -> 592 (its walk
+census reading one more GUARDED walk). **148 of 150 parsed suites IDENTICAL**, and the
+per-suite pass totals reconcile to the headline EXACTLY (9,688 / 9,704), which is what says
+the parse covered the estate rather than a corner of it.
+`node scripts/coverage.mjs --strict` run DIRECTLY, `$?` UNPIPED, **exit 0**.
+`node civicos-ui/test/run.mjs` from the REPO ROOT, exit unpiped, **0**.
+`node tools/plancheck.mjs` **clean but for UNPUSHED** — and that finding names the shared
+local `main`, which is 5 merges ahead of `origin/main` and is not this item's.
+
+floors: **`REGISTER_FLOOR` 731 -> 741 / 145 -> 146 / 146 -> 147**, all three in the same
+turn, every one from what a green `--strict` run PRINTED AS REPRODUCIBLE
+(`arms 741/731 · classified 146/145 · corpus 147/146 · GREW by 10 arm(s)`) — read AFTER the
+files were in a commit, so these are the reproducible figures and not the contaminated ones
+a pre-commit run reports under the same numerals. **READ TWICE, because writing the
+control's RESULTS into its declaration raised the tally again: this item's own subject,
+applied to itself.** ONE KEY SET verified by grep. Nothing FELL. `FLEET_FLOOR` untouched and
+none owed.
+
+controls: **7 arms in `test/register-grammar.control.mjs`, ALL ARMED AND RUN, each armed
+ALONE with the others held open, DECLARED BEFORE ARMING, restores verified by sha256 AND by
+CONTENT against per-arm uniquely-named pristine copies under a byte floor with the count
+printed and guarded against the empty-string digest, a BASELINE arm included, an
+OVER-STRICTNESS arm included, and a missing tally reported as `-1` rather than `0`. Final
+7/7 AS DECLARED — but THREE came back wrong first and all three are recorded at the site
+rather than smoothed:**
+
+- **arm (1) NOT AS DECLARED — and the code was right, MY DECLARATION was wrong.** A4 and A5
+  were declared to stay GREEN and both went RED. A4's fixture states ONE ordinal, so
+  `countEnumerations` refuses it and its count comes ENTIRELY from the arrow — it is an
+  arrow arm wearing an over-strictness label; and A5's corpus is arrow-marked almost
+  throughout. The declaration was CORRECTED at the arm with that reason. Nothing exempted.
+- **arm (4) REFUSED TO ARM** (`anchor matched 2 times, need 1`). The refuse-to-arm guard
+  working, and it is what led to the next finding being visible at all.
+- **arm (4) then STAYED GREEN while declared to FAIL, and that was a REAL HOLE IN THE PIN.**
+  B3c read the receipts anywhere in the block, and `471 -> 482` appears twice — once
+  ILLUSTRATING the transition grammar, once in the HISTORY — so falsifying the history left
+  the illustration to satisfy the arm. **An arm passing for a reason it was not written for
+  is the exact class this suite exists to catch, arriving inside the suite.** B3c is now
+  scoped to the history paragraph and the arm fails as declared.
+
+what could NOT be done, stated plainly: **nothing was deployed and no live probe was made** —
+not this item's, and it touches no op. **A separate scratch `git worktree` for the baseline
+was REFUSED by the environment**, so the true baseline was taken by DETACHING this checkout
+at `19745ad` with everything committed; that is equivalent for a battery run, but it is not
+the instrument VF-5 used and it is said rather than glossed. **The pin cannot tell a
+faithful rewording from a subtly weakened one** — B2 asks that both halves of the claim are
+PRESENT, not that they are well argued. **And it reads ONE block**: a second copy of this
+explanation elsewhere in the file would go unnoticed, which is why the anchor is asserted
+EXACTLY once rather than at least once.
+
+released: 2026-08-09 — committed on branch `worktree-agent-af008198118b41483`, **NOT pushed
+and NOT merged**; CONDUCT integrates. `git stash` was NOT used at any point.
