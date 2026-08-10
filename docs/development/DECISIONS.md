@@ -126,6 +126,17 @@ response: **THE WORKFLOW MUST NOT NAG OR SECOND-GUESS MEMBERS. RESPECT FOR MEMBE
   - **Bulk approval is the same act over a set** (DEC-52, Bob 2026-08-06) — forcing
     per-item clicks where a member has reviewed a list is the wear-them-down shape of
     this same flaw.
+  **AMENDED 2026-08-10, same day, Bob — THE OPERATIVE WORD IN THE DEC-52 QUOTE IS
+  "FORCED", AND IT CUTS BOTH WAYS.** Verbatim: *"a user needs to understand their
+  responsibilities, but the system needs to provide the proper opportunities for the
+  user to execute on their judgment correctly and efficiently. No, they shouldn't be
+  forced to make decisions in bulk. But they should be enabled to when appropriate."*
+  So the rule is about COMPULSION, not about which mode is better: wherever a set of
+  decisions arises, the member is ENABLED to act singly or in bulk and is FORCED into
+  neither. A surface that only offers bulk is the same flaw as one that only offers
+  forty clicks — both take the mode of judgment out of the member's hands. DEC-52's
+  sidebar mechanism already carries this shape ("approve them individually and in
+  bulk"); this amendment makes it doctrine rather than a feature of one surface.
   - The failure asymmetry ("when uncertain, be noisy") is a rule about the RECORD'S OWN
     CLAIMS, and licenses no noise directed at members.
 decided: 2026-08-10 · Bob
