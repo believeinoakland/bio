@@ -530,9 +530,15 @@ const REGISTER_FLOOR = {
      so moving the floor from a pre-commit run would have installed the OLD number as
      the new one and read as a no-op. Nothing FELL. `FLEET_FLOOR` unmoved at 5 suites /
      48 arms, and none owed: this item added no fleet member and no fleet suite. */
-  arms: 801,
-  classified: 152,
-  corpus: 153,
+  /* MOVED 2026-08-10 by CONDUCT to the figure the FOUR-WAY MERGED GREEN RUN printed
+     (SK-2 + D-282 + D-251 + D-266), which is the only run in which these four items
+     exist together. ONE KEY SET, checked for duplicates before writing: the six
+     historical keep-both merges that left a duplicate `arms:` here are why this
+     comment exists, and why the previous value (801, SK-2's own) is REPLACED rather
+     than joined. Battery 161/161 · 10,021 assertions; `--strict` exit 0 read unpiped. */
+  arms: 813,
+  classified: 155,
+  corpus: 156,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

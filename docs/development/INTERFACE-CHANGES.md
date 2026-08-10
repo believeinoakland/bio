@@ -3581,6 +3581,8 @@ in. The delegation names the two functions.
 
 ## IC-58 · I2: the text shape gains ONE ADDITIVE FIELD — `producer`, WHO MADE THE TEXT LAYER, and `reading.text_source` may now carry a SECOND step naming that engine · PROPOSED 2026-08-10 (D-251) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Additive, and the measured consumer impact is the reason it is accepted rather than merely allowed: zero readers break (grepped across seven trees — nothing enumerates the text shape's keys and nothing read `producer`), no schema change was needed because CPDF-10's `reading_text_source` index already existed with nothing to distinguish, and `op=textprovenance&step=ocr` starts answering as a consequence rather than as a new surface. FRAMEWORK is DORMANT, so CONDUCT answers on its behalf in writing, which is the protocol's step 3 and the same route IC-1 took on 2026-08-03.
+
 - **Interface:** I2 (content → framework), currently **1.1.0 STABLE**
 - **Proposer:** CONTENT-PDF, session `cpdf-d251`, 2026-08-10, enacting `DEBT.md` D-251
 - **Owner to land the version bump:** `FRAMEWORK` (dormant — CONDUCT answers for it, in writing,
@@ -3687,6 +3689,8 @@ Landed on the area's own branch, green, with the three negative-control arms run
 *(CONDUCT's. The I2 version bump is CONDUCT's — IC-39's precedent, which is the row this one
 extends and which is itself still PROPOSED at I2 1.1.0.)*
 ## IC-60 · I3 + I5: `op=proposedispose` GAINS A SECOND KEY SHAPE — `(project, finding)` — FOR THE STANCE-SCOPED FINDING KINDS, and `op=queue`'s per-item `disposition` block gains `scope` / `finding` / `projects` / `requires` · PROPOSED 2026-08-10 (D-266, enacting the 2026-08-10 scoping ruling) — the version bump and the RESOLUTION are CONDUCT's
+
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** The second key shape is additive and the old shape is bridged BY NAME rather than left to fail obscurely — a `key` whose first segment is a catalogued FINDING kind is refused `NO_PROJECT_SCOPE` naming what to send, instead of the true-and-useless `NO_SUCH_PROGRESSION`. The one live consumer is `civicos-ui/app.html`, which will draw the three controls and send `key` with no `project`; it renders that refusal, so the failure mode during the gap is a stated refusal and never a silent no-op. **The UI half is DELEGATED and not folded in here** — `disposition.requires`/`projects` must be read and the project CHOSEN, never defaulted where an item has several homes, because defaulting would pick whose judgment the record carries.
 
 ### 1 · PROPOSED
 

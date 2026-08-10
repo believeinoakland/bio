@@ -37,6 +37,7 @@
  * the figures are in the control file's header.
  */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
