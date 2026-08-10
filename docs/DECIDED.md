@@ -15,7 +15,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-588 rulings across 56 documents.
+594 rulings across 56 documents.
 
 ## DEC-
 
@@ -363,6 +363,8 @@ authority is the file named, never this one.
   `docs/development/MEASUREMENTS.md:5210`
 - **D-258** — CORRECTED by D-258, not exempted** | EXACTLY `query.test.mjs` | AS DECLARED · 141/142 · 9,189 | | R | D-255's ratchet: `phrase` as an ordinary field | RED | RED · `query.test.mjs` 128 pass, 4 fail | | **R2** | **`refs` put back + tripwire — the arm the D-258 row says was missing** | EXACTLY `query.test.mjs` | **AS…  
   `docs/development/MEASUREMENTS.md:5297`
+- **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
+  `docs/development/CLAIMS.md:7614`
 - **D-271** · 2026-08-09 — The CHECK's sentence is CORRECTED at its site with the measurement, never exempted.  
   `docs/development/DEBT.md:331`
 - **D-285** · 2026-08-09 — when the lists moved — the pin working — and was CORRECTED, never exempted, with a dated reason and a DRIVEN cross-check proving the UI family catches every seed.  
@@ -617,6 +619,12 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:630`
 - **REC-65** · 2026-08-07 — The earlier provisional — sidebar approval as the act of record — is SUPERSEDED as a GATE; the sidebar remains visibility and bulk review.  
   `docs/development/DECISIONS.md:3429`
+- **REC-68** — AND IT IS AMENDED RATHER THAN RESTORED, WHICH IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"* — true of its tree, false of this one, where `--strict` prints 741.  
+  `docs/development/CLAIMS.md:7642`
+- **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
+  `docs/development/DEBT.md:321`
+- **REC-68** — REC-68 branch blob, and AMENDED rather than restored verbatim — see the last paragraph of this block for why the original was right when it was written and why putting it back unchanged would have been a second defect.  
+  `docs/development/VERIFICATION.md:254`
 - **REC-69** — `op=airunlog` DECIDED as a SEPARATE surface**, reasoning at the site in decision order: §14a's click opens the TRANSCRIPT and `airun.mjs` states the log is NOT a transcript; the two answer different questions for different readers; the log publishes FOUR vocabularies precisely so its reader holds no copy — a…  
   `docs/development/QUEUE.md:2107`
 - **REC-70** — CORRECTED 16 → 17 with a dated reason, never exempted**.  
@@ -825,6 +833,8 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:272`
 - **M0-13** · 2026-08-08 — Landed 2026-08-08, and it SETTLED the question M0-13 named and could not answer.** `migrate.test.mjs` **rooted its whole fixture tree at the literal `/tmp/civicos-fixture` — OUTSIDE the `$TMPDIR` `sandbox.mjs` owns — and WIPED it at entry and at exit.** Two concurrent copies of the SAME SUITE destroyed each other:…  
   `docs/development/QUEUE.md:633`
+- **M0-14** · 2026-08-08 — The two SUPERSEDED READINGS below that row are near-duplicates: both open `120 of 120 — REMEASURED 2026-08-08 by M0-14` and repeat the same four sentences, the second differing only by carrying M0-15's `122 of 122 · 486`.  
+  `docs/development/CLAIMS.md:7704`
 - **M0-14** — M0-14 CORRECTED THE TALLY ITSELF, AND THE WAY IT WAS FOUND IS THE POINT.** M0-13 predicted the register would move **388 → 390** for two arms it had just added, and **it did not move at all.** Four of 120 suites scored ZERO while declaring 48 arms between them, a fifth scored **1 against a real 10**, and nothing…  
   `docs/development/VERIFICATION.md:219`
 - **M0-15** · 2026-08-08 — RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15) **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is shared by every worktree in this repository (the row above), so `git stash pop` is a  
@@ -978,6 +988,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:7153`
 - — ONE arm CORRECTED IN PLACE with a dated reason (its label asserted a distinction its own fixture disproves) plus ONE new arm beside it.  
   `docs/development/CLAIMS.md:7155`
+- The declaration was CORRECTED at the arm with that reason.  
+  `docs/development/CLAIMS.md:7758`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
