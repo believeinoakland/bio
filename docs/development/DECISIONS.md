@@ -710,7 +710,13 @@ enacted: 2026-08-10 · CONDUCT — **UI-54 queued.** The row carries the ruling'
   and never a harness literal (a hand copy agrees at zero cost; this project has measured that
   five times on five subjects). **UI-32's removal of the surface-COMPUTED grade letter stands
   and is pinned as an over-strictness arm** — this item renders the plane's sentence, never a
-  letter the surface derived. Reasoning in this entry and QUEUE.md (UI-54).
+  letter the surface derived. Reasoning in this entry and QUEUE.md (UI-54). **LANDED 2026-08-10 at
+  `a63c1b5`**, merged on `main`: the note renders at the moment of capture and the
+  CO-ATTESTATION CLAUSE SHIPS, asserted three ways — present by name, per-clause, and
+  string-for-string against the plane's own recomposed export. **The whole-not-split arm is
+  the one this ruling turns on, and armed alone it goes RED while NOTHING ELSE in either tree
+  notices** — which is exactly what earns the assertion, since a rendering that is merely most
+  of the note would otherwise ship green. UI-32's grade-letter removal is unmoved and pinned.
 
 ### DEC-50 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-45's report; **renumbered TWICE** — first from a colliding DEC-46, then from a colliding DEC-47, both allocated by the BOB session within hours. The BOB entries keep both numbers; this one moves, because the architect's numbers are the ones other documents will already be citing)

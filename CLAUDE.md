@@ -302,6 +302,17 @@ plan without running; `--full` forces everything. The full set, when it is owed:
   nothing reports it (2026-08-10, this file's own handoff commit). Same class, same
   cost, and the heredoc is immune to both.
 
+- **A FRESH WORKTREE HAS NO `bio-plane/node_modules`, AND A BASELINE MEASURED BEFORE
+  `npm ci` IS A WRONG NUMBER CARRYING FULL CONFIDENCE.** Two workers hit this
+  independently on 2026-08-10 and both reported it rather than working around it: one
+  read `28/157 green` with 129 suites failing `ERR_MODULE_NOT_FOUND: miniflare`, the
+  other `43 pass / 3 fail, exit 1` on the UI harness, whose suites drive the real plane
+  through miniflare. The true baseline in both cases was green. **This is worse than an
+  ordinary flake because it looks exactly like the damage your own change did** — the
+  standing instruction to measure your own baseline and trust it over the brief points
+  the wrong way here unless you install first. Run `npm ci` in `bio-plane/` before you
+  measure anything in a new worktree.
+
 - **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
   `hygiene.test.mjs` asserts the literal ends on a `);`.
 - **No backticks inside the schema or setup template literals.** A balanced
