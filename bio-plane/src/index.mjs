@@ -33,6 +33,11 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             the store because the OPS table below is the only thing that knows
             what an op is or which classes may call it. */
          AI_CREDENTIAL_CHECKS,
+         /* REC-79 / C-38: the ADMISSION GATE's DEC-49 rows — every refusal a
+            caller meets before their op runs. Four of the six carried no code at
+            all until REC-79, so the gate every caller passes through was outside
+            the rule governing everything behind it. */
+         ADMISSION_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
@@ -2334,6 +2339,27 @@ async function captureRequestArm(env, storeName, body, cls) {
 const storeSilent = (op) =>
   json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
 
+/* THE ADMISSION GATE'S DEC-49 FIELDS, read from the ONE row (REC-79 / C-38).
+ *
+ * Spread into the refusal beside a `reason` that is a STRING LITERAL at its
+ * site, which is DEC-49's rule and is what lets arm C of the guard COMPARE the
+ * code rather than read past a variable.
+ *
+ * IT THROWS RATHER THAN RETURNING A PARTIAL ROW, and that is the whole reason it
+ * is a function. DEC-49 exists because a refusal once shipped
+ * `translation: undefined` to a member — a machine word where a sentence was
+ * promised — and it shipped that way because the code was in a variable and the
+ * lookup silently missed. A throw here is a 500 in a test, which is loud; a
+ * missing sentence is silent and reaches a person. `admission-gate.test.mjs`
+ * drives this branch. */
+const admissionRow = (code) => {
+  const row = ADMISSION_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`admissionRow: ${code} has no ADMISSION_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
    object rather than a Response, so it has no way to refuse on its own behalf.
    Rather than let it fabricate a rendering from an answer it never got, it
@@ -3041,6 +3067,39 @@ export default {
        to be someone else. Everything outside SESSION_OPS, purge above all,
        still requires a machine credential. capture is nominally mutating
        because of its PUT path; its GET is a read and is treated as one. */
+
+    /* DEC-49 REGION is-admission
+     *
+     * THE ADMISSION GATE (REC-79 / C-38) — every refusal a caller meets BEFORE
+     * their op runs, and the first thing anybody, signed in or not, ever meets.
+     *
+     * FOUR OF THE SIX REFUSALS IN HERE CARRIED NO CODE AT ALL until this region
+     * was drawn. They answered with a bare `error:` sentence and nothing a
+     * surface could key on, which made them invisible to DEC-49's guard and
+     * absent from its 427-code census — a census of CODES cannot count a refusal
+     * that has none. They were found by GOVERNING the site rather than reading
+     * it: the guard's outcome reader could not see `return json({ … }, 403)` at
+     * all, so this region reported nothing to judge until that was widened.
+     *
+     * Every code below is a STRING LITERAL at its site, and `admissionRow` reads
+     * the C-number and the canned translation from the ONE row, so the
+     * `translation: undefined` DEC-49 was written to prevent cannot be spelled
+     * here — the helper throws instead.
+     *
+     * THE SPAN, and why it starts where it does. It opens at the session-token
+     * lookup and closes after the scope refusal, because that is the whole of
+     * "may this caller act at all"; the op's own work begins below. Both markers
+     * sit at the SAME brace depth on purpose (REC-71's wrong-span failure).
+     *
+     * WHAT IS IN THE SPAN AND DELIBERATELY NOT GOVERNED, stated rather than left
+     * for the next reader to wonder about: `return storeSilent("session")`. It
+     * is not an admission refusal — it is the plane declining to make ANY claim
+     * about who somebody is when the store could not be reached (REC-52), which
+     * is a fact about the instance and not about the caller. It carries its own
+     * code, `STORE_DID_NOT_ANSWER`, held in a CONSTANT rather than written as a
+     * literal — so no source-text matcher sees it and it is not in the census at
+     * all. REC-79 names that rather than fixing it; it is D-236's class, one
+     * layer out, and it belongs to the partition arm's own residue. */
     if (!cls) {
       const t = url.searchParams.get("token");
       if (t && /^[0-9a-f]{64}$/.test(t)) {
@@ -3065,16 +3124,21 @@ export default {
              required is the ADMIN_TOKEN-class credential specifically, and for a
              security-critical op the caller deserves the actual rule. */
           if (op === "export")
-            return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", op,
+            return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
               detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
                     + "signed-in session, and not in-app administrator status. A session is derived from a "
                     + "password; the root of trust is the token held in the hosting account. This refuses "
                     + "the founder's own browser too, which is the one place in this system where being "
                     + "the founder is not enough. The published record needs no credential at all: see "
                     + "op=publishedmanifest." }, 403);
+          /* `error` IS KEPT BYTE-IDENTICAL and the code is added beside it
+             (REC-79). 28 suites assert on these sentences; a rule this project
+             adopted late has to be arrivable at without breaking what already
+             reads the old shape, so C-38 is ADDITIVE on the wire. IC-REC-79. */
           if (spec.mutating && !(op === "capture" && req.method === "GET")
               && !SESSION_OPS[kind].has(op))
-            return json({ ok: false, error: "this operation requires a machine credential, not a signed-in session", op }, 403);
+            return json({ ok: false, reason: "MACHINE_CREDENTIAL_REQUIRED", ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
+              error: "this operation requires a machine credential, not a signed-in session", op }, 403);
           cls = kind;
           sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
           sessRights = sess;
@@ -3082,7 +3146,8 @@ export default {
         }
       }
     }
-    if (!cls) return json({ ok: false, error: "unauthenticated" }, 401);
+    if (!cls) return json({ ok: false, reason: "NOT_AUTHENTICATED", ...admissionRow("NOT_AUTHENTICATED"),
+      error: "unauthenticated" }, 401);
     /* PL-11 / D-199 (1): CLASS PLUS SCOPE, and for THIS class the scope is the
        whole of it. The `ai` class is admitted by `aiTaskScope` and never by
        appearing in a row of the OPS table — no row names it, which is asserted
@@ -3095,7 +3160,8 @@ export default {
       const scoped = aiTaskScope(aiCred, op, spec);
       if (scoped.error) return json({ ok: false, ...scoped.error, op, cls }, 403);
     } else if (!spec.classes.includes(cls)) {
-      return json({ ok: false, error: "forbidden for token class", op, cls }, 403);
+      return json({ ok: false, reason: "CLASS_FORBIDDEN", ...admissionRow("CLASS_FORBIDDEN"),
+        error: "forbidden for token class", op, cls }, 403);
     }
 
     /* Section 8.1: the ROOT OF TRUST, and not in-app administrator status.
@@ -3111,7 +3177,7 @@ export default {
      * password, and it refuses the founder's own signed-in browser, which is the
      * one place in this system where being the founder is not enough. */
     if (op === "export" && viaSession)
-      return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", op,
+      return json({ ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
         detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
               + "signed-in session, and not in-app administrator status. A session is derived from a "
               + "password; the root of trust is the token held in the hosting account. The published "
@@ -3125,13 +3191,16 @@ export default {
       sessCaps = new Set(sessRights.capabilities || []);
       const needs = NEEDS[op];
       if (needs && !(op === "capture" && req.method === "GET") && !sessCaps.has(needs))
-        return json({ ok: false, reason: "NOT_CAPABLE", op, needs, held: [...sessCaps].sort(),
+        return json({ ok: false, reason: "NOT_CAPABLE", ...admissionRow("NOT_CAPABLE"),
+          op, needs, held: [...sessCaps].sort(),
           detail: `this account does not hold the ${needs} capability. Capabilities are set by an `
                 + `administrator, so ask one to grant it rather than looking for another route.` }, 403);
     }
 
     const scope = scopeFor(cls, url);
-    if (scope.error) return json({ ok: false, error: scope.error, tokenClass: cls }, 403);
+    if (scope.error) return json({ ok: false, reason: "SCOPE_REFUSED", ...admissionRow("SCOPE_REFUSED"),
+      error: scope.error, tokenClass: cls }, 403);
+    /* END DEC-49 REGION is-admission */
     const storeName = scope.name;
 
     /* D-9. The register audit finishes HERE and not in the Durable Object,
@@ -6158,8 +6227,25 @@ export default {
         if (viaSession) { b.author = sessMember; b.actorMemberId = sessMember; }
         else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
+          /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
+             THAN HIDING IT.** C-38.5's `where` names the admission region above;
+             this condition is the same refusal minted a second time, here,
+             because it depends on the PAYLOAD (is this bundle a project?) and
+             not on the op, so the op-level `NEEDS` table cannot express it.
+             A DEC-49 row holds ONE `where` and one code may not hold two rows,
+             so this `where` cannot name both spans — which is exactly the
+             MULTI-SITE class REC-79's partition arm measures at 96 codes and
+             deliberately does NOT close, because the fix is a set-valued `where`
+             or a consolidating helper and neither is a translation.
+             WHAT IS CLOSED HERE: the member gets the sentence either way. The
+             canned translation is read from the same one row, so the two sites
+             cannot drift into two wordings for one condition — and
+             `admission-gate.test.mjs` drives BOTH through the op and asserts
+             they carry the SAME translation, so this comment is not the only
+             thing holding it. */
           if (!sessCaps.has("create_projects"))
-            return json({ ok: false, reason: "NOT_CAPABLE", op, needs: "create_projects",
+            return json({ ok: false, reason: "NOT_CAPABLE", ...admissionRow("NOT_CAPABLE"),
+              op, needs: "create_projects",
               held: [...sessCaps].sort(),
               detail: "creating a project needs the create-projects capability. This account may still "
                     + "contribute to projects it has been invited to, if it holds contribute." }, 403);

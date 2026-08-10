@@ -347,9 +347,9 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
-  classified:  145,
-  corpus:      146,
+  arms: 731,
+  classified: 145,
+  corpus: 146,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -442,10 +442,9 @@ const FLEET_FLOOR = {
      invalidate rather than leaving it for the next reader to find again — the
      sixth consecutive item to find a hand-carried floor stale by measuring it.
      Named in the report so CONDUCT can re-read it on the merged tree. */
-  members:     2,
-  surfaceOps:  4,
-  suites:      5,
-  arms:        43,
+  members: 2,
+  surfaceOps: 4,
+  suites: 5,
 };
 
 function discoverFleet() {

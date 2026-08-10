@@ -311,9 +311,22 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        default tree's two governed functions hand back THREE outcomes, all three
        refusals, none of them unclassifiable. */
     outcomeReturns: 3, refusalsJudged: 3,
+    /* REC-79's one, STATED for the same reason as REC-71's and REC-76's above.
+       THE DEFAULT FIXTURE TREE IS FULLY TRANSLATED — that is its whole point —
+       so arm F's subject is legitimately EMPTY here and the floor is 0. This is
+       the one floor whose fixture value differs in KIND from the real tree's,
+       and it is worth the sentence: on the real plane an empty partition means
+       the walk went blind, and on the conformant fixture it means the fixture is
+       conformant. Arm F's own comment records that a hard zero-check was tried
+       first and failed exactly this arm. */
+    untranslated: 0,
   }, over.floor || {}))};`);
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
-    { reachGap: 0, unclassifiedOutcomes: 0 }, over.ceiling || {}))};`);
+    /* `inheritedVerdicts: 0` (REC-79) is STATED rather than omitted: an absent
+       ceiling compares `n > undefined` -> false and never fails, so leaving it
+       out would be a ceiling that silently does not exist — the generous
+       direction this file exists to refuse. The default tree spreads nothing. */
+    { reachGap: 0, unclassifiedOutcomes: 0, inheritedVerdicts: 0 }, over.ceiling || {}))};`);
   guard = guard.replace(/PART_REASON: "src\/subresources\.mjs"/, `PART_REASON: "src/parts.mjs"`);
   guard = guard.replace(/const VOCABULARY_MODULES = new Map\(Object\.entries\(\{[\s\S]*?\n\}\)\);/,
     `const VOCABULARY_MODULES = new Map(Object.entries({ "src/vocab.mjs": "the fixture's vocabularies" }));`);

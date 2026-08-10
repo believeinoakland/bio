@@ -345,7 +345,21 @@ const FLOOR = {
      MERGED tree carrying REC-69, PL-18 and PL-19. Each of those measured its own branch
      and NONE of their numbers is true here — the whole reason this block is re-read at
      integration rather than trusted from a report. */
-  families: 16,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+  /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT to the figures the guard PRINTED on the
+     MERGED tree. REC-64's sweep predicted its own `regionLines` would be wrong here and it
+     was — it measured 1527, the merge reads 1556. Thirteen floors collided and NOT ONE was
+     resolvable by taking a side, which is what that item said when it filed the delegation. */
+  families: 17,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+  /* ================================================================== *
+   * TEN FLOORS AND ONE CEILING MOVED IN ONE TURN, 2026-08-09 by REC-79, EVERY
+   * ONE FROM THE FIGURE THIS GUARD PRINTED ON A GREEN RUN of its own worktree.
+   * They moved because `ADMISSION_CHECKS` (C-38) landed — the control plane's
+   * admission gate, six refusals, FOUR OF WHICH HAD NO CODE AT ALL — and
+   * because the outcome reader was widened to see `return json({ … }, 403)`.
+   * Every figure below is this item's OWN delta and nothing else: measured on a
+   * quiet tree, with the baseline re-run rather than subtracted from.
+   * ================================================================== */
+                       // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
                        // + ROUTE_MARK_CHECKS (REC-63);
                        // + MACHINE_FENCE_CHECKS + ACT_SHAPE_CHECKS (REC-64); + QUEUE_MINT_CHECKS (PL-15);
                        // + AI_CREDENTIAL_CHECKS (PL-11) + VERSION_STRENGTH_CHECKS (PL-14).
@@ -355,7 +369,7 @@ const FLOOR = {
                           for everybody else's walk unless it is moved in the same turn"*. It is
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
-  rows:        168,    /* MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
+  rows: 174,    /* MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
                           THIS FILE'S OWN GREEN RUN ON THE MERGED TREE (`arm A: … 168 rows — floor
                           16/167 · GREW by 1 row(s) since the floor was set`) and never by adding one
                           to the number that was here. **THE FIRST FIGURE THIS ITEM WROTE WAS
@@ -375,7 +389,7 @@ const FLOOR = {
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census:      429,    /* MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
+  census: 433,    /* MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
                           file PRINTED on a green run of the MERGED tree (`walk: UNION (the census)
                           429 codes over 26 files … floor 428`); the pre-merge read of 427 -> 428 was
                           superseded by main moving under the item, and is re-read rather than kept. One code, `VERSION_REASON_MALFORMED`, minted at the
@@ -383,6 +397,11 @@ const FLOOR = {
                           a reason nobody gave. */
                        // distinct refusal codes the plane can mint, UNION of the matcher set.
                        // A plain `reason: "CODE"` grep answers fewer; the set finds the rest.
+                       // REC-79: +4, and the FOUR ARE THE POINT. NOT_AUTHENTICATED, CLASS_FORBIDDEN,
+                       // MACHINE_CREDENTIAL_REQUIRED and SCOPE_REFUSED are not new refusals — they are
+                       // refusals that have always fired at the admission gate and carried NO CODE, so
+                       // no census could count them. **THE CENSUS IS A FLOOR ON THE PLANE'S REFUSAL
+                       // VOCABULARY AND NOT A TOTAL**, and it took giving four of them codes to see it.
                        // (was 424 pre-REC-69, 410 pre-REC-76, 406 pre-REC-63, 405, 402, 393, 383 at PL-4, 371 at PL-3, 341 at PL-12, 330, 311 pre-PL-1)
                        // REC-69: +3 (C-36.1..3), MOVED FROM THE PRINTED FIGURE and set EQUAL to it,
                        // for the reason the paragraph below gives in a number: SIX of slack blinds the
@@ -397,7 +416,7 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach:       222,    /* MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
+  reach: 227,    /* MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
                           green run of the MERGED tree (`arm B: REACH 222 codes — R1 family rows 168
                           … floor 221 · GREW by 1`); the pre-merge read of 220 -> 221 was superseded
                           by main moving under the item, and is re-read rather than kept. The new code arrives TRANSLATED, so `reachGap` below does NOT move
@@ -405,11 +424,19 @@ const FLOOR = {
                           stops being a measurement of the gap it names (REC-63's rule). Confirmed on
                           this tree: 41 of 221, sitting exactly at the ceiling. */
                        // codes a surface can receive (R1 + R2 + R3) (was 217 pre-REC-69, 204 pre-REC-76, 200 pre-REC-63, 191, 187, 178, 168, 157, 127, 116, 98)
+                       // REC-79: +5, all six C-38 rows arriving TRANSLATED and NOT_CAPABLE already
+                       // being in reach — so the gap CEILING falls by one rather than the five.
                        // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
                        // move, which is the property a new family owes rather than the number itself.
                        // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
-  governedSites: 68,   // spans named by a row's `where` — a function, or a region inside one.
+  governedSites: 69,   // spans named by a row's `where` — a function, or a region inside one.
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
+                       // + REC-79's `fetch > is-admission` — THE FIRST GOVERNED SITE IN THE CONTROL
+                       //   PLANE'S REQUEST PATH. Three index.mjs sites were governed before it, all
+                       //   of them helper functions returning plain objects; nothing had ever
+                       //   governed a `return json(…)` refusal because arm C could not see one.
+                       // + REC-69's `aiRunsInContext > is-airuns-context`.
+                       // (was 66 pre-REC-69, 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
   surfaceTables: 1,    // PART_REASON
   bodyLines: 60,    // total lines of governed span arm C actually reads. MEASURED far above this,
                        // and DELIBERATELY NOT RATCHETED TO IT — the one figure here that is not.
@@ -420,7 +447,10 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions: 54,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+  regions: 55,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+                       // eight judged refusals — `ROOT_OF_TRUST_REQUIRED` fires at two conditions
+                       // inside the one span, which is what a region `where` can honestly hold).
+                       // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
                        // its `refusal` helper sits ABOVE the marker so every call inside the span
                        // names its code as a STRING LITERAL, which is what makes arm C bite here).
                        // + REC-76's ONE (is-selection-moved, judging 1 and comparing 2 — the region
@@ -437,7 +467,15 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1454,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+  regionLines: 1556,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+                          nothing else. **CONDUCT MUST RE-READ THIS FROM A GREEN RUN OF THE MERGED
+                          TREE RATHER THAN TRUST THIS NUMBER** — it is a property of the MERGED source
+                          and it has moved at integration FOUR times, most recently when REC-75 landed
+                          inside two `suggestVersion` regions during REC-64's integration and left this
+                          figure 43 low. REC-79's region is in `index.mjs`, which is one of the three
+                          contended files, so the risk is live rather than theoretical.
+
+                          MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
                           OF THE MERGED TREE and not taken from REC-69's branch — which is the whole
                           instruction the two prior entries below leave, honoured here rather than
                           quoted. The 18 are `is-airuns-context`'s own span and nothing else: the
@@ -530,8 +568,17 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 145,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+  codesChecked: 152,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
+                       // minted at two conditions in the span). Every code there is a STRING LITERAL
+                       // at its site precisely so this number can move; `admissionRow` supplies the
+                       // C-number and the sentence, and it THROWS rather than returning a partial row.
+                       // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+                       // ABOVE the marker and every call inside it names its code as a STRING LITERAL,
+                       // which is the convention the note below says is what makes arm C bite.
+                       // refusal codes actually COMPARED against a family row — NOT the same as
+                       // refusals JUDGED, and not the same as lines read. Was 141 pre-REC-69,
+                       // 119 pre-REC-76 (and 118 on
                        // the same tree once the double-count above was removed), 76, 58, 46, 30, 11.
                        /* REC-64 MEASURED THE DELEGATION REC-71 LEFT HERE, AND THE ANSWER IS BOTH
                           BETTER AND WORSE THAN THE TREND PREDICTED. REC-71 measured 7 of 13 governed
@@ -565,14 +612,25 @@ const FLOOR = {
                        // thirteen governed sites once read 776 lines and checked zero — arm C's
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
-  outcomeReturns: 74,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+  outcomeReturns: 83,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+                          separating: EIGHT are `is-admission`'s own outcomes, and ONE is a return the
+                          walk could never see before — `suggestVersion > is-suggest-write`'s
+                          `return remember({ ...promoted, … })`, at a site that has been governed since
+                          REC-75 and was reporting one judged refusal where there were two. A corpus
+                          floor that grows when a READER gains sight is the direction this figure
+                          exists to make visible.
+
+                          REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
                           literals across the governed spans. Set from what the guard PRINTED on
                           a green run of this worktree. It is floored SEPARATELY from
                           `refusalsJudged` because the two fail for different reasons — the
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 148,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+  refusalsJudged: 156,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+                          2026-08-09, from the printed figure on a green run.
+
+                          +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
                           printed figure on a green run of the merged tree. `outcomeReturns` does NOT
                           move: the three refusals are all return positions inside ONE outcome the
                           walk already counted, which is what the two figures being separate is for.
@@ -587,7 +645,17 @@ const FLOOR = {
                        // the number: five consecutive items found this block already stale by
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
-  vocabularyTerms: 61, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
+  vocabularyTerms: 63, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
+  untranslated: 246,   /* REC-79 — the size of arm F's SUBJECT: census codes with no canned
+                          translation. A FLOOR and not a ceiling, which reads backwards until you see
+                          what it defends: the partition is only meaningful if it is partitioning the
+                          real remainder, and a walk that lost sight of half the census would produce
+                          a small, tidy, WRONG partition that summed perfectly. The ceiling that stops
+                          this number growing is `reachGap` plus the census floor above; this one stops
+                          it SHRINKING for the wrong reason. Set from the figure printed on a green run
+                          (248 before C-38 translated NOT_CAPABLE and added five coded refusals that
+                          had none, which is a net -2 on a subject that GREW by four). */
+                       // WAS 56, and 51 before that (+5, STANDARD_BASIS's five terms). + PL-15's `out-of-inquiry-lead`
                        // FINDING slug. Read 40 over a tree carrying 50 for long enough that
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
@@ -600,6 +668,15 @@ const FLOOR = {
    arrive without a translation. Measured 2026-08-07 by this file. */
 const CEILING = {
   reachGap: 41,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
+
+                          FELL 41 -> 40 AT REC-79, and the SIZE of that fall is the honest headline
+                          rather than the fall itself: an item that added a whole family of six moved
+                          this by ONE, because five of the six were codes that did not exist to be
+                          counted and the sixth (`NOT_CAPABLE`) was the only one already in reach.
+                          **A ratchet cannot see work that ENLARGES the subject**, and REC-79's arm F
+                          exists because of exactly that blindness.
+
+                          FELL 73 -> 42 at
                           REC-64, the enactment itself: 31 codes inside the reach gained a canned
                           translation in one item. Was 74 before PL-15, which took it to 73 by giving
                           `NO_CLASS` its first translation.
@@ -629,10 +706,36 @@ const CEILING = {
                           So this ceiling does NOT fall to zero by continuing REC-64's method, and
                           saying so here is the point: a ratchet whose next move is unavailable reads
                           as neglect unless the reason is written where the number is. */
-  unclassifiedOutcomes: 3, /* REC-76 — return-position outcomes at a governed site carrying NO
+  unclassifiedOutcomes: 1, /* REC-76 — return-position outcomes at a governed site carrying NO
                           verdict this walk can read. NAMED every run and ceilinged: a new one is
                           a new place a codeless refusal could hide, so it FAILS here rather than
-                          being scored zero. Set from what the guard PRINTED on a green run. */
+                          being scored zero. Set from what the guard PRINTED on a green run.
+
+                          **FELL 3 -> 1 at REC-79, AND THE REASON IS AT THE SITE BECAUSE A FALLING
+                          FLOOR NEEDS ONE.** It did NOT fall because anything was fixed: it fell
+                          because THREE of the three were never "shapes the walk does not
+                          understand" at all — they were outcomes whose verdict is INHERITED FROM A
+                          SPREAD, which the walk understands perfectly and cannot resolve until run
+                          time. They moved to `inheritedVerdicts` below. One number was doing two
+                          jobs, which is precisely what REC-79 found the census gap doing to 248
+                          codes, arriving here in the instrument's own tally. The one that remains
+                          (`store.mjs:8828`) is a genuine unread shape. */
+  inheritedVerdicts: 4, /* REC-79 — return-position outcomes whose verdict comes from a spread
+                          (`{ ...promoted, … }`). NAMED every run. Not gated at zero because three
+                          are deliberate and correct: promote's own refusal handed back unwrapped
+                          rather than restated. Set from what this guard PRINTED on a green run.
+                          ONE OF THE FOUR WAS INVISIBLE UNTIL REC-79 WIDENED THE OUTCOME READER —
+                          `suggestVersion > is-suggest-write` returns `remember({ ...promoted, … })`,
+                          a WRAPPED return, and the reader stopped at the wrapper's name.
+
+                          THE FOURTH IS REC-79'S OWN AND IT IS SET AT 4 RATHER THAN 3 KNOWINGLY.
+                          `is-admission` passes `aiTaskScope`'s refusal straight through
+                          (`{ ok: false, ...scoped.error, op, cls }`) — an explicit verdict with an
+                          INHERITED CODE, from a refusal `aiTaskScope > is-ai-task-scope` already
+                          governs, rows and translations and all. Restating that code here would be a
+                          second copy of the thing DEC-49 exists to keep singular. So the ceiling is
+                          set at the measured 4 and the pass-through is NAMED every run rather than
+                          made invisible by a literal nobody needed. */
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
@@ -1085,6 +1188,7 @@ function armC(rows) {
   let regionsResolved = 0, regionLines = 0, codesChecked = 0;
   let outcomeReturnsRead = 0, successesSeen = 0;
   const unclassified = [];
+  const inherited = [];       // REC-79 — verdict inherited from a spread. A category, not a bin.
   const perSite = [];
   for (const [key, site] of sites) {
     const full = path.join(PLANE, site.file);
@@ -1134,6 +1238,16 @@ function armC(rows) {
          zero: a shape scored zero is indistinguishable from a site with nothing
          to judge, which is the whole of D-236. */
       if (!v) {
+        /* (1a) THE VERDICT IS INHERITED FROM A SPREAD (REC-79) — a shape this
+           walk understands completely and cannot resolve statically. Its own
+           category, its own ceiling, NOT the unclassified bin. See
+           `topLevelSpreads` for why the two must not be one number. */
+        const sp = topLevelSpreads(stmt);
+        if (sp.length) {
+          inherited.push(`${site.file}:${line} (${site.fn}${at_}) VERDICT from \`...${sp.join("`, `...")}\``
+                       + ` ${JSON.stringify(stmt.replace(/\s+/g, " ").slice(0, 70))}`);
+          continue;
+        }
         unclassified.push(`${site.file}:${line} (${site.fn}${at_}) ${JSON.stringify(stmt.replace(/\s+/g, " ").slice(0, 90))}`);
         continue;
       }
@@ -1159,6 +1273,22 @@ function armC(rows) {
          (`ok: !stopped`), which refuses on at least one path and owes a code on
          that path. */
       refusalsJudged++;
+      /* THE CODE, LIKE THE VERDICT, CAN BE INHERITED FROM A SPREAD (REC-79).
+         `return json({ ok: false, ...scoped.error, op, cls }, 403)` in the
+         admission gate declares its verdict outright and takes its CODE from a
+         refusal another governed region already built — `aiTaskScope`'s, rows
+         and translations and all. Demanding a literal code on top of that would
+         force a second copy of the code the spread already carries, which is a
+         fence tighter than its rule and would push the plane toward exactly the
+         duplicated wording DEC-49 forbids. So it is NAMED and COUNTED with the
+         inherited-verdict outcomes rather than failed — same principle, same
+         ceiling: what is inherited is visible, not absent. */
+      const spreadHere = (!named.length && !viaVar) ? topLevelSpreads(stmt) : [];
+      if (spreadHere.length) {
+        inherited.push(`${site.file}:${line} (${site.fn}${at_}) CODE from \`...${spreadHere.join("`, `...")}\``
+                     + ` ${JSON.stringify(stmt.replace(/\s+/g, " ").slice(0, 70))}`);
+        continue;
+      }
       if (!named.length && !viaVar)
         FAIL(`${site.file}:${line} (in ${site.fn}${at_}) returns a CODELESS REFUSAL — an outcome whose verdict `
            + `\`${v.key}\` is ${v.kind === "false" ? "`false`" : "computed, so it refuses on at least one path"}, `
@@ -1299,10 +1429,27 @@ function armC(rows) {
      + `· ${perSite.join(" · ")} · floors ${FLOOR.governedSites} sites / ${FLOOR.bodyLines} lines / `
      + `${FLOOR.regions} regions / ${FLOOR.regionLines} region lines / ${FLOOR.codesChecked} codes checked`);
   NOTE(`arm C: THE OUTCOME WALK — ${outcomeReturnsRead} return-position outcome(s) read, graded `
-     + `${refusalsJudged} REFUSAL(s) / ${successesSeen} declared SUCCESS(es) / ${unclassified.length} `
+     + `${refusalsJudged} REFUSAL(s) / ${successesSeen} declared SUCCESS(es) / ${inherited.length} `
+     + `INHERITED-verdict / ${unclassified.length} `
      + `unclassified, by verdict rather than by spelling · floors ${FLOOR.outcomeReturns} corpus / `
      + `${FLOOR.refusalsJudged} refusals`
      + `${outcomeReturnsRead > FLOOR.outcomeReturns ? ` · corpus GREW by ${outcomeReturnsRead - FLOOR.outcomeReturns}` : ""}`);
+
+  /* THE INHERITED-VERDICT CEILING (REC-79). Named every run for the same reason
+     the unclassified ones are: a spread that starts carrying a refusal nobody
+     coded must be VISIBLE, not absent. It is ceilinged rather than gated at zero
+     because three of these are deliberate — promote's refusal handed back
+     unwrapped — and a gate above the current state gets switched off. */
+  if (inherited.length > CEILING.inheritedVerdicts)
+    FAIL(`${inherited.length} return-position outcome(s) at governed sites take their verdict from a `
+       + `SPREAD; the ceiling is ${CEILING.inheritedVerdicts} and it may only ever move DOWN. The `
+       + `${inherited.length - CEILING.inheritedVerdicts} beyond it are new. An inherited verdict is not `
+       + `a shape this walk failed to understand — it is one it cannot resolve until run time — so a new `
+       + `one is a new place a refusal can pass through ungraded. They are: ${inherited.join(" · ")}`);
+  if (inherited.length)
+    NOTE(`arm C: INHERITED VERDICT — ${inherited.length} of ${outcomeReturnsRead} return-position outcome(s) `
+       + `take their verdict (and their code) from a spread and are NAMED rather than scored zero `
+       + `(ceiling ${CEILING.inheritedVerdicts}, may only fall): ${inherited.join(" · ")}`);
 }
 
 /* WHICH FILES CAN HOLD A REGION MARKER. The plane's sources and its check
@@ -1436,9 +1583,40 @@ function matchBrace(text, open) {
   return -1;
 }
 
-/* RETURN POSITION, and the two forms the plane actually writes:
- *   return { … }            — including `return (\n  { … })`
+/* RETURN POSITION, and the three forms the plane actually writes:
+ *   return { … }                  — including `return (\n  { … })`
  *   return cond ? { … } : { … }   — both branches are outcomes
+ *   return WRAPPER({ … }, 403)    — the outcome handed to a TRANSPORT
+ *
+ * THE THIRD FORM IS REC-79's, AND ITS ABSENCE WAS A BLIND SPOT THE SIZE OF THE
+ * CONTROL PLANE. `src/index.mjs` answers every caller with
+ * `return json({ ok: false, … }, 403)` — 77 refusals in that one shape,
+ * MEASURED — and this reader stopped at the `j` of `json`, because the scan
+ * below admitted only whitespace, `(` and `{` before breaking. So arm C could
+ * not see a single refusal in the control plane, and no `where` could ever have
+ * governed one: a region placed over the admission gate would have resolved,
+ * been well-formed, been correctly nested, and reported `0 judged` — which is
+ * the WRONG SPAN failure this file's own region rules exist to catch, arriving
+ * through the reader instead of through the markers. It was found the way this
+ * project keeps finding these: by trying to govern a real site and watching the
+ * instrument report nothing to govern.
+ *
+ * THE RULE INVERTS RATHER THAN NAMING `json` (REC-70's lesson, and D-236's).
+ * A wrapper in return position is a TRANSPORT, not a consumer: whatever object
+ * it is handed is still the outcome the function hands back. So the rule is
+ * positional — **the FIRST ARGUMENT of a call in return position, when that
+ * argument is an object literal** — and it holds for `json(…)`, for
+ * `Response.json(…)`, for `new Response(…)` and for the fourth wrapper nobody
+ * has written yet. Naming `json` would have gone stale the moment a second
+ * transport was written, which is exactly how a list of spellings fails.
+ *
+ * AND IT DOES NOT WIDEN THE DETAIL-OBJECT EXCLUSION BELOW, which is the
+ * over-strictness this reader was measured into. `refusal("CODE", detail, { … })`
+ * is untouched because its first argument is a STRING, not an object literal;
+ * only argument ONE is ever read, so a detail object in argument two or three
+ * stays outside the corpus exactly as before. MEASURED: widening this reader
+ * moved the unclassified count not at all and added no site to the existing 67.
+ *
  * An object literal handed to a HELPER (`refusal("CODE", detail, { … })`) is an
  * ARGUMENT and not an outcome; it is deliberately outside this corpus, because
  * grading detail objects is exactly the over-strictness that would flood the
@@ -1467,6 +1645,16 @@ function outcomeReturns(text) {
       if (/\s/.test(c)) continue;
       if (c === "(") { lead++; continue; }
       if (c === "{") { const e = matchBrace(text, i); if (e > 0) push(i, e); }
+      else {
+        /* THE WRAPPED FORM (REC-79) — see the header. A call in return position
+           is a transport; its FIRST argument, and only its first, is the
+           outcome. Anchored at `i` so it cannot drift past the call it read. */
+        const w = /^(?:new\s+)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\(\s*/.exec(text.slice(i, i + 120));
+        if (w) {
+          const argAt = i + w[0].length;
+          if (text[argAt] === "{") { const e = matchBrace(text, argAt); if (e > 0) push(argAt, e); }
+        }
+      }
       break;
     }
     /* the conditional form: `return cond ? { … } : { … }` — both branches are
@@ -1497,7 +1685,7 @@ function outcomeReturns(text) {
  * and line comments are skipped, so a `,` or a `:` inside a member-facing
  * sentence — and this plane's refusals are full of them — does not split a
  * property. */
-function topLevelProps(objText) {
+function topLevelParts(objText) {
   const parts = [];
   let buf = "", depth = 0;
   for (let i = 1; i < objText.length - 1; i++) {
@@ -1511,12 +1699,48 @@ function topLevelProps(objText) {
     buf += c;
   }
   parts.push(buf);
+  return parts;
+}
+
+function topLevelProps(objText) {
   const props = [];
-  for (const p of parts) {
+  for (const p of topLevelParts(objText)) {
     const m = /^\s*([A-Za-z_$][\w$]*)\s*:([\s\S]*)$/.exec(p);
     if (m) props.push({ key: m[1], value: m[2] });
   }
   return props;
+}
+
+/* THE SPREAD SOURCES of an object literal — `{ ...promoted, code: … }` (REC-79).
+ *
+ * WHY THIS IS A CATEGORY AND NOT A KIND OF "UNCLASSIFIED", and the distinction
+ * is this item's whole thesis applied to its own instrument. `unclassified`
+ * means THE WALK DOES NOT UNDERSTAND THIS SHAPE — a new spelling, a new place a
+ * codeless refusal could hide, and rightly a ceiling that may only fall. An
+ * outcome that spreads a value is a shape the walk understands PERFECTLY: its
+ * verdict is INHERITED from a value that does not exist until run time. Those
+ * are two different facts about the walk and lumping them together makes the
+ * ceiling mean two things at once — which is exactly what this item found the
+ * census doing to 248 codes.
+ *
+ * SO THEY ARE SEPARATED, and separating them LOWERED the unclassified ceiling
+ * from 3 to 1 rather than raising anything: three of the four were spreads.
+ *
+ * AND THEY ARE DELIBERATELY NOT SUBJECTED TO THE CODELESS TEST. `#moveVersionState`
+ * returns `{ ...promoted, act, target, version }` — promote's own refusal, code
+ * and all, handed back unwrapped and on purpose, because re-stating promote's
+ * rules there is the second implementation §14b.4 forbids. Demanding a LITERAL
+ * code on top of an inherited one would be a fence tighter than its rule: it
+ * would force a second copy of the very code the spread already carries. What
+ * they get instead is to be NAMED and COUNTED every run, so a spread that starts
+ * hiding a refusal nobody coded is visible rather than absent. */
+function topLevelSpreads(objText) {
+  const out = [];
+  for (const p of topLevelParts(objText)) {
+    const m = /^\s*\.\.\.\s*([A-Za-z_$][\w$]*)/.exec(p);
+    if (m) out.push(m[1]);
+  }
+  return out;
 }
 
 /* IS THIS VALUE BOOLEAN-SHAPED? The two literals, or an expression whose DEPTH-0
@@ -1698,6 +1922,213 @@ function armD() {
 }
 
 /* ============================================================
+   ARM F — THE PARTITION (REC-79)
+   ============================================================ */
+
+/* **THE 248 ARE NOT ONE THING, AND COUNTING THEM AS ONE IS WHY THE REMAINDER
+ * READ AS A SWAMP.** This arm is REC-79's whole subject.
+ *
+ * -------------------------------------------------- WHAT WAS WRONG WITH "248"
+ *
+ * The census NOTE at the foot of this file said, in one sentence, that 248
+ * codes "have NO canned translation and are NOT in reach of a surface today".
+ * **MEASURED: 41 of those 248 WERE in reach** — they are the very set arm B
+ * names, by code, three lines earlier, on every single run. One number was
+ * carrying two claims and the second was false for a sixth of it. That is the
+ * shape of defect this repository ranks above a missing feature: **a record
+ * claiming more than it can support**, sitting inside the instrument whose job
+ * is to stop exactly that. The sentence is corrected at the site; this arm is
+ * what makes it impossible to write again, because the partition has to add up.
+ *
+ * ------------------------------------------- WHY PARTITION AND NOT TRANSLATE
+ *
+ * REC-64 enacted DEC-49 partly and said plainly it could not close the class.
+ * The honest reason is in this arm's numbers: the remainder is FOUR different
+ * defects wearing one total, and only one of them is answered by writing a
+ * sentence. **An unreachable code needs a DECISION, not prose.** A code minted
+ * at fifteen sites needs a `where` that can name a set, not prose. A code in a
+ * module that may never cross the wire needs somebody to establish whether it
+ * does. Handing the next item "248 untranslated codes" hands it a swamp;
+ * handing it these partitions hands it a slice.
+ *
+ * THE PARTITIONS ARE ORDERED BY THE DECISION THEY NEED, and every code lands in
+ * exactly ONE — first match wins — so the parts sum to the whole and a code
+ * cannot be quietly counted twice. The sum is ASSERTED, not assumed.
+ *
+ * ----------------------------------- WHAT THIS ARM CANNOT SEE, STATED PLAINLY
+ *
+ * This is a source-text walk and it is wrong in both directions. Both are
+ * PRINTED rather than described, because a limitation in a comment is not a
+ * measurement.
+ *
+ *  (a) IT COUNTS THINGS THAT ARE NOT CODES. `index.mjs` mints
+ *      `reason: "SIG_" + sv.reason` — the literal is a PREFIX, and the census
+ *      records `SIG_` as though it were a code while the real `SIG_*` codes are
+ *      invisible. Detected and reported as CONSTRUCTED, not silently left in.
+ *  (b) IT MISSES CODES HELD IN CONSTANTS. `storeSilent` refuses with
+ *      `STORE_DID_NOT_ANSWER`, held in a module constant and referenced by name.
+ *      **It is not in the 431-code census at all.** This arm resolves that one
+ *      shape — `reason: IDENT` where IDENT is a `const IDENT = "CODE"` — and
+ *      reports what it recovers, so the census can be read as a FLOOR on the
+ *      plane's refusal vocabulary rather than mistaken for a total.
+ *  (c) IT CANNOT SEE PER-SITE `detail` PROSE AT ALL, and UI-43 measured that
+ *      those are far more numerous than the canned translations and have never
+ *      been walked. Nothing here changes that; it is named so the next reader
+ *      can tell a clean result from a walk looking in the wrong place.
+ *  (d) REACHABILITY HERE IS THIS FILE'S R1/R2/R3 AND NOTHING MORE. "In reach"
+ *      means a family row holds it, or `app.html` names it, or a harness mock
+ *      sends it. It is a fact about what SURFACES EXIST TODAY, not about what a
+ *      member could ever meet. A code can be perfectly reachable by a member
+ *      through an op and sit in the out-of-reach partition because nobody has
+ *      built the screen yet. That is why that partition's disposition is "when
+ *      its surface exists" and not "never".
+ *  (e) IT DOES NOT KNOW WHETHER A REFUSAL CROSSES THE WIRE. That is the whole
+ *      content of the SUBSYSTEM partition, and it is stated as an open question
+ *      rather than answered by guessing.
+ *
+ * TWO CODES ARE MEASURED UNREACHABLE THROUGH THEIR OWN OP and this arm does NOT
+ * try to rediscover that from source, because it cannot: REC-78 established it
+ * by DRIVING all four machine classes (`NO_AUTHOR`, whose op is not in
+ * `SESSION_OPS`) and by exhausting the ceremony (`EDITION_NOT_INCREMENTED`).
+ * They are DECLARED below with their receipt, and labelled as declared. A
+ * measurement that cost something to produce is not one this walk may fake. */
+
+/* Modules that never answer a caller directly — the format readers, the
+   signature and timestamp verifiers, the setup writer. Read from the plane's
+   own directory MINUS the two request-path modules, so a new subsystem file
+   joins this partition the day it lands instead of the release after somebody
+   remembers to list it. THAT DIRECTION IS DELIBERATE: an unlisted new module
+   would otherwise fall into a partition claiming its codes are member-facing,
+   which is the direction that overclaims. */
+const REQUEST_PATH = new Set(["index.mjs", "store.mjs"]);
+
+/* REC-78, 2026-08-08, MEASURED BY DRIVING and recorded in MEASUREMENTS.md. Not
+   derivable from source text, so declared here with its receipt and printed as
+   DECLARED every run — never presented as something this walk established. */
+const DECLARED_UNREACHABLE = new Map([
+  ["NO_AUTHOR", "REC-78: op=provenancechain is not in SESSION_OPS, and every machine class arrives "
+              + "stamped token:<class> — driven at all four caller classes, not one reaches it."],
+  ["EDITION_NOT_INCREMENTED", "REC-78: the edition never regresses and never leaves a hole, so the "
+              + "only route is an edition authored into the ratified bytes below the highest published."],
+]);
+
+function armF(census, translated, reach) {
+  /* PER-CODE SITES, at LINE granularity over the same matcher set the census
+     uses. One walk, one vocabulary — a second, narrower matcher here would make
+     the partition disagree with the census it partitions. */
+  const sites = new Map();          // code -> [{file, line, text}]
+  const constants = new Map();      // IDENT -> ["CODE", …]  (a string constant, or a lookup table)
+  const byIdent = new Map();        // IDENT -> [{file, line}]  (`reason: IDENT` sites)
+  for (const f of fs.readdirSync(PLANE_SRC).filter(x => x.endsWith(".mjs"))) {
+    const src = fs.readFileSync(path.join(PLANE_SRC, f), "utf8");
+    for (const m of src.matchAll(/\bconst\s+([A-Z][A-Z0-9_]{2,})\s*=\s*"([A-Z][A-Z0-9_]{2,})"/g))
+      constants.set(m[1], [m[2]]);
+    /* AND THE LOOKUP-TABLE SPELLING, which is the same defect one shape over and
+       was found by this arm's own residue reporting `REASON (unresolved)`:
+       `const REASON = { bias_acknowledgement: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" }`,
+       refused as `reason: REASON[k] || "…"`. The code is real, reaches a caller,
+       and appears in NO matcher's yield. A residue that says "unresolved" is
+       already better than silence; one that says WHICH code is better still. */
+    for (const m of src.matchAll(/\bconst\s+([A-Z][A-Z0-9_]{2,})\s*=\s*\{([^{}]{0,600})\}/g)) {
+      const vals = [...m[2].matchAll(/"([A-Z][A-Z0-9_]{2,})"/g)].map(x => x[1]);
+      if (vals.length && !constants.has(m[1])) constants.set(m[1], vals);
+    }
+    src.split("\n").forEach((L, i) => {
+      const found = new Set();
+      for (const fn of Object.values(MATCHERS)) for (const c of fn(L)) found.add(c);
+      for (const c of found) {
+        if (!sites.has(c)) sites.set(c, []);
+        sites.get(c).push({ file: f, line: i + 1, text: L });
+      }
+      for (const m of L.matchAll(/\breason\s*[:=]\s*([A-Z][A-Z0-9_]{2,})\b/g)) {
+        if (!byIdent.has(m[1])) byIdent.set(m[1], []);
+        byIdent.get(m[1]).push({ file: f, line: i + 1 });
+      }
+    });
+  }
+
+  const untranslated = [...census.union].filter(c => !translated.has(c)).sort();
+  /* THE EMPTY-CORPUS DEFENCE IS THE FLOOR AND NOT A HARD ZERO CHECK, and the
+     difference was measured rather than reasoned: a hard `if (!untranslated.length)`
+     FAILED THE GUARD'S OWN CONFORMANT FIXTURE, where every code being translated
+     is the SUCCESS condition. An instrument that cannot express "this subject is
+     legitimately finished" would have made its own suite unwritable — and on the
+     real tree the floor says the same thing far more precisely, because 0 < 246
+     fails just as loudly as 0 < 1 while ALSO catching a walk that lost half. */
+  if (untranslated.length < FLOOR.untranslated)
+    FAIL(`arm F has ${untranslated.length} untranslated code(s) to partition, floor is `
+       + `${FLOOR.untranslated}. A partition of nothing sums correctly and proves nothing — this is the `
+       + `empty-corpus failure this project has measured passing a headline assertion three times. `
+       + `Either the sweep closed ${FLOOR.untranslated - untranslated.length} codes, in which case move `
+       + `this floor in the same turn from the printed figure, or the walk lost sight of them.`);
+
+  /* A LITERAL THAT IS A PREFIX IS NOT A CODE. `reason: "SIG_" + sv.reason` —
+     detected structurally (the literal is immediately followed by a `+`), never
+     by naming `SIG_`. */
+  const isConstructed = (c) => (sites.get(c) || []).length > 0
+    && (sites.get(c) || []).every(s => new RegExp(`"${c}"\\s*\\+`).test(s.text));
+
+  const P = new Map();
+  const put = (k, c) => { if (!P.has(k)) P.set(k, []); P.get(k).push(c); };
+  for (const c of untranslated) {
+    const at = sites.get(c) || [];
+    const files = new Set(at.map(s => s.file));
+    if (DECLARED_UNREACHABLE.has(c))                     put("F1 UNREACHABLE — needs a DECISION, not a sentence", c);
+    else if (isConstructed(c))                           put("F2 CONSTRUCTED — not a code; the real ones are invisible", c);
+    else if (at.length && ![...files].some(f => REQUEST_PATH.has(f)))
+                                                         put("F3 SUBSYSTEM — needs a DETERMINATION: does it cross the wire?", c);
+    else if (at.length >= 2)                             put("F4 MULTI-SITE — needs a STRUCTURAL change, not a sentence", c);
+    else if (reach.has(c))                               put("F5 IN REACH, one site — needs a SENTENCE, now", c);
+    else                                                 put("F6 out of reach, one site — needs a sentence WHEN its surface exists", c);
+  }
+
+  /* THE PARTITION MUST ADD UP, and this is the arm that says so. A partition
+     whose parts do not sum to its whole is the same defect as the census
+     sentence this arm was written to correct: a number that has stopped
+     describing its subject. Gated at zero, never ratcheted. */
+  const summed = [...P.values()].reduce((n, v) => n + v.length, 0);
+  if (summed !== untranslated.length)
+    FAIL(`arm F's partitions sum to ${summed} but there are ${untranslated.length} untranslated codes. `
+       + `A code has landed in two partitions or in none, so the parts no longer describe the whole — `
+       + `which is precisely the defect this arm exists to have caught.`);
+  for (const k of [...P.keys()].sort())
+    NOTE(`arm F: ${k.padEnd(66)} ${String(P.get(k).length).padStart(3)} — ${P.get(k).join(", ")}`);
+  NOTE(`arm F: THE PARTITION of ${untranslated.length} untranslated code(s) over a census of `
+     + `${census.union.size}, in ${P.size} partitions ordered BY THE DECISION EACH NEEDS, summing exactly `
+     + `(gated at zero). ${[...P.keys()].sort().map(k => `${k.slice(0, 2)}=${P.get(k).length}`).join(" ")} · `
+     + `floor ${FLOOR.untranslated}`);
+  for (const [c, why] of DECLARED_UNREACHABLE)
+    NOTE(`arm F: DECLARED unreachable (NOT established by this walk) — ${c}: ${why}`);
+
+  /* THE RESIDUE: codes this walk knows it cannot see. Printed, never scored
+     zero — a thing the matcher does not understand must be NAMED. */
+  const hidden = [];
+  const recovered = new Set();
+  for (const [ident, where] of byIdent) {
+    if (census.union.has(ident)) continue;              // it is a code in its own right
+    const resolved = constants.get(ident) || null;
+    const missing = (resolved || []).filter(c => !census.union.has(c));
+    for (const c of missing) recovered.add(c);
+    hidden.push(`${ident}${resolved ? ` -> ${resolved.map(c => `"${c}"`).join("/")}` : " (UNRESOLVED — this walk "
+              + "cannot say what code this refusal sends)"} at `
+              + where.slice(0, 3).map(w => `${w.file}:${w.line}`).join(", ")
+              + (resolved ? (missing.length ? ` [${missing.length} NOT IN THE CENSUS]` : " [already in the census]") : ""));
+  }
+  if (hidden.length)
+    NOTE(`arm F: RESIDUE — ${hidden.length} refusal(s) name their code through a CONSTANT or a LOOKUP `
+       + `TABLE, which no source-text matcher in this file can see; ${recovered.size} real code(s) recovered `
+       + `that the census does NOT contain (${[...recovered].sort().join(", ") || "none"}). **SO THE CENSUS IS `
+       + `A FLOOR ON THE PLANE'S REFUSAL VOCABULARY AND NOT A TOTAL**, and that sentence is this arm's most `
+       + `important output: every figure in this file that divides by the census is dividing by a floor. `
+       + `${hidden.join(" · ")}`);
+  NOTE(`arm F: WHAT THIS ARM CANNOT SEE (stated every run, not only in the header): per-site \`detail\` `
+     + `prose is NOT walked at all and UI-43 measured it far more numerous than the canned translations; `
+     + `"in reach" means a surface EXISTS today, never that a member could not otherwise meet the code; `
+     + `and whether a subsystem refusal crosses the wire is an open question this walk does not answer.`);
+  return { untranslated, P };
+}
+
+/* ============================================================
    ARM E — THE PLANE'S OWN VOCABULARY TEXTS
    ============================================================ */
 
@@ -1803,11 +2234,25 @@ await armE();
 
 /* THE CENSUS GAP — reported, not gated, and the reason is in the header. This
    is the number REC-64's sweep closes, and it is stated exactly rather than
-   estimated, because an unmeasured answer is not a result. */
+   estimated, because an unmeasured answer is not a result.
+
+   **THE SENTENCE BELOW WAS WRONG UNTIL REC-79 AND THE CORRECTION IS THE POINT.**
+   It read: *"N of M refusal codes the plane can mint have NO canned translation
+   AND ARE NOT IN REACH of a surface today."* Both halves were joined by an
+   `and`, and the second half was false for 41 of the 248 — the exact set arm B
+   names by code three lines above it, every run. One number carried two claims;
+   nobody had to be careless for it to go wrong, because the two claims were true
+   together on the day it was written and then drifted apart. It now states the
+   ONE thing it measures, and the reach split is quoted from arm B rather than
+   re-derived, so the two cannot disagree again. Arm F is the partition. */
 const ungoverned = [...census.union].filter(c => !translated.has(c)).sort();
+const ungovernedInReach = ungoverned.filter(c => reach.has(c));
 NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of ${census.union.size} refusal codes `
-   + `the plane can mint have NO canned translation and are NOT in reach of a surface today. That is REC-64's `
-   + `remaining sweep. ${census.union.size - ungoverned.length} are translated.`);
+   + `the plane can mint have NO canned translation. ${ungovernedInReach.length} of those ARE in reach of a `
+   + `surface today (arm B's ratchet, named above) and ${ungoverned.length - ungovernedInReach.length} are not — `
+   + `**two different defects, and arm F partitions them by the decision each needs.** `
+   + `${census.union.size - ungoverned.length} are translated.`);
+armF(census, translated, reach);
 
 for (const n of notes) console.log("  " + n);
 if (fails.length) {

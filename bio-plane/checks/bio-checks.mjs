@@ -8733,3 +8733,120 @@ export const TEXT_CHAIN_CHECKS = {
       + 'report is exactly what this record will not do on your behalf.',
   },
 };
+
+/* ============================================================================
+ * C-38 · THE ADMISSION GATE — every refusal a caller meets BEFORE their op runs.
+ * ============================================================================
+ *
+ * REC-79, 2026-08-09, and it is DEC-49's rule arriving at the one place every
+ * single caller passes through.
+ *
+ * **FOUR OF THE SIX REFUSALS IN THIS GATE CARRIED NO CODE AT ALL** — they
+ * answered with a bare `error:` sentence and nothing a surface could key on.
+ * They were invisible to DEC-49's guard, invisible to its 427-code census, and
+ * invisible to the sweep that produced the "248 untranslated" figure, because a
+ * census of CODES cannot count a refusal that has none. So the gate the whole
+ * system starts at was outside the rule that governs everything behind it.
+ *
+ * THEY WERE FOUND BY TRYING TO GOVERN THE SITE, not by reading it. A region
+ * placed here reported nothing to judge, because `civicos-ui/check-refusal-codes.mjs`
+ * could not see `return json({ … }, 403)` — the control plane's universal
+ * refusal spelling, 77 of them in `index.mjs` alone. REC-79 widened that reader
+ * first; the four codeless refusals fell out of the guard the moment it could
+ * see them. **A mechanism believed on the strength of its existence rather than
+ * its behaviour is the defect this project meets most**, and the DEC-49 guard
+ * had never once been pointed at the control plane.
+ *
+ * WHY THIS FAMILY AND NOT ANOTHER, since REC-79 was explicitly told not to try
+ * to translate 248 codes. It is the family most in reach of a real surface: not
+ * "a surface could render this one day" but "every caller, signed in or not,
+ * meets one of these before anything else can happen". `NOT_CAPABLE` is already
+ * being rendered today — and rendered WRONG (see its row).
+ *
+ * ADDITIVE ON THE WIRE, DELIBERATELY. The `error` field of all four codeless
+ * refusals is kept BYTE-IDENTICAL; the code, the C-number and the canned
+ * translation are added beside it. 28 suites assert on those sentences and none
+ * of them had to move, which is the point: a rule this project adopted late must
+ * be arrivable at without breaking what already reads the old shape. IC-REC-79
+ * registers the addition.
+ *
+ * ONE NAMING NOTE, WRITTEN BECAUSE THE NEXT READER WILL WONDER.
+ * `MACHINE_CREDENTIAL_REQUIRED` is NOT a machine fence and the doctrine pack
+ * must never render it as one: `skillpack.mjs` harvests on the prefix
+ * `MACHINE_CANNOT_`, which this does not match. It is named for what it
+ * requires, not for what it forbids. If anyone ever shortens that prefix to
+ * `MACHINE_`, this row is what will break, and this sentence is where they
+ * should find out. */
+export const ADMISSION_CHECKS = {
+  /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
+     do rather than what happened, because a person reading this has not yet done
+     anything wrong — they have simply not said who they are. */
+  NOT_AUTHENTICATED: {
+    check: 'C-38.1',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'Nothing in this request said who you are. Sign in, or send a credential this '
+      + 'instance issued, and try again.',
+  },
+  /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
+     sentence: this is not a rung on a ladder the caller can climb. A credential
+     is issued for a purpose and this is not that purpose, so the honest advice
+     is to use the right one rather than to ask for this one to be widened. */
+  CLASS_FORBIDDEN: {
+    check: 'C-38.2',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'The credential you sent is not one this operation accepts. Credentials here are '
+      + 'issued for a particular purpose, and widening this one is not the way through: use the '
+      + 'credential meant for this work.',
+  },
+  /* The mirror of the row above, and it exists separately because the two are
+     opposite facts about the caller. This one is a PERSON asking for something
+     only an unattended writer does; the row above is a credential of the wrong
+     kind entirely. One refusal covering both would tell neither caller anything
+     they could act on — DEC-49's own argument, and PL-18's. */
+  MACHINE_CREDENTIAL_REQUIRED: {
+    check: 'C-38.3',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'This operation is performed by an unattended writer, not by a person at a '
+      + 'browser. A signed-in session cannot do it; it needs a machine credential an administrator '
+      + 'has issued.',
+  },
+  /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
+     ENOUGH, and the translation says so, because a member refused here will
+     otherwise read it as a bug in their own permissions. The security property
+     is the point and a person who cannot get in deserves to know it is
+     deliberate. */
+  ROOT_OF_TRUST_REQUIRED: {
+    check: 'C-38.4',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'This needs the administrator token itself, not a signed-in session — and that '
+      + 'includes the founder\'s own browser. A session is derived from a password; the root of '
+      + 'trust is the token held in the hosting account. The published record needs no credential '
+      + 'at all.',
+  },
+  /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
+     `civicos-ui/app.html` hand-authored a sentence for this code:
+     *"This credential cannot write to the record. Capturing needs a member
+     holding contribute."* But this refusal is PLANE-WIDE — it is minted for
+     whatever capability the op needed, and `create_projects` and `publish` are
+     not `contribute`. So a surface had invented capture-specific wording for a
+     refusal that is not about capture, and a member denied for `create_projects`
+     was told about contributing. **That is precisely the drift a canned
+     translation exists to stop** (found by PL-18; DEC-49's own argument for
+     option (b) is that thirteen surfaces would otherwise each invent wording).
+     The sentence here names no capability, because the plane already sends the
+     one that was needed in `needs` and the surface renders that. */
+  NOT_CAPABLE: {
+    check: 'C-38.5',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'Your account does not hold the capability this needs. Capabilities are granted '
+      + 'by an administrator, so ask one rather than looking for another route to the same thing.',
+  },
+  /* A credential that MAY act, but not HERE. Distinct from every row above,
+     which are all about whether the caller may act at all. */
+  SCOPE_REFUSED: {
+    check: 'C-38.6',
+    where: 'src/index.mjs fetch > is-admission',
+    translation: 'That credential is allowed to act, but not on the part of the record this '
+      + 'request named. It is confined to its own namespace and this request reached outside it.',
+  },
+};
