@@ -642,3 +642,27 @@ turn, yourself*:
   `op=proposedispose` receives the server-side `viewer` its project-scoped arm gates on.
   Without it the act refused `NO_SUCH_PROJECT` for a real project, fail-closed and
   correct, which is how the omission was found.
+---
+
+## CLAIM 2026-08-10 SKILL (SK-3 — the PRACTICE-SURVEY prohibition set, in the skill VERBATIM)
+session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`, branch
+  `worktree-agent-ab590a192167d2ca3`)
+opened: 2026-08-10T00:00:00Z
+paths: `bio-plane/src/skilldoctrine.mjs` (SK-2's judgement layer, this area's — SK-3 ADDS
+  `PROHIBITIONS`, `PERMITTED_AUTO_COMPOSITION` and one further disclosed layer, and REUSES
+  the exported `controlFlowAuthority` rather than writing a second scanner),
+  `bio-plane/test/skillprohibitions.test.mjs` (NEW), `bio-plane/test/skillprohibitions.control.mjs`
+  (NEW — the negative-control harness, deliberately not a `.test.mjs` so the battery does
+  not collect a file that edits real sources while it runs),
+  `docs/development/CLAIMS.md` (this entry), `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/kickoffs/SKILL.md` (appended — what SK-4 starts from).
+  **NOT** `bio-plane/checks/**` — **and this is the item's whole point rather than a
+  boundary observance**: the fifth prohibition's CODE half is `PL-3`'s landed
+  `SUGGEST_BOILERPLATE` / `C-27.12`, and SK-3 CITES it by catalogue KEY and adds no second
+  check and no second predicate. **NOT** `bio-plane/src/**` beyond the one doctrine module
+  — in particular NOT `store.mjs`, NOT `index.mjs`, NOT `airun.mjs`. **NOT**
+  `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's), **NOT** `docs/development/IS-BUILD-PLAN.md`.
+  The control harness TRANSIENTLY edits `checks/bio-checks.mjs` and `src/store.mjs` and
+  restores both, verified by content AND by sha256 — SK-2's arm (8) is the precedent. A
+  transient armed edit inside one worktree is not a claim on the path.
