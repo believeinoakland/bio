@@ -347,9 +347,21 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
-  classified:  145,
-  corpus:      146,
+  /* MOVED 2026-08-09 by D-267: 731 -> 737 / 145 -> 146 / 146 -> 147, ALL THREE IN
+     THE SAME TURN and every one read off the figure this item's own green
+     `--strict` run PRINTED as REPRODUCIBLE (`arms 737/731 · classified 146/145 ·
+     corpus 147/146 · GREW by 6 arm(s)`) — never counted and never added to the
+     numbers above. The cause is one new suite, `test/severedhomes.test.mjs`,
+     whose `NEGATIVE CONTROL:` declaration states six arms (A, B, C, C2, D, E),
+     every one of them RUN by `test/severedhomes.control.mjs` with the baseline
+     row beside them. THE FIGURE WAS READ TWICE AND ONLY THE SECOND WAS USED: the
+     first run reported the CONTAMINATED 737 against a reproducible 731, because
+     the suite was still uncommitted — which is exactly the phantom D-238 names,
+     and moving to it then would have made this floor permanently too high. It was
+     re-read after the commit. Nothing FELL. */
+  arms:        737,
+  classified:  146,
+  corpus:      147,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
