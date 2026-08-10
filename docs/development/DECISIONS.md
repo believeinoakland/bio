@@ -237,6 +237,26 @@ prior art: `node tools/decided.mjs` finds no ruling on severed citers and public
   IC-61 records the same consequence at the interface layer with measured consumer impact
   (zero UI consumers today, so nothing is rendering the old answer).
 
+**INPUT ADDED 2026-08-10 · session BOB, from Bob — A CLARIFICATION OF WHAT THE BAR IS,
+recorded so this entry cannot be read as a per-document evidence gate.** Bob, verbatim:
+*"Yes, every project has a standard of evidence. But that standard doesn't require that
+every piece of evidence must meet that standard. Rather, it means that the overall
+findings in that project must meet the standard — even if some evidence cited is below
+the necessary grade. … While the draft agenda may not meet the grade to contribute
+conclusively to the findings, it can still be included in the report because it really
+was in the draft agenda that really was found on the city website, even if it wasn't in
+the final version nor meeting minutes. The citation doesn't have to be severed."*
+Verified against the shipped machinery, which already implements this: the bar is
+declared per CASE by citing projects and compared at publication against the finding's
+DERIVED strength (DEC-32's arithmetic — strongest branch governs across OR), so a weak
+corroborating leg never drags a finding below the bar and never needs severing; the
+axes stay separate (the draft agenda is STRONG on capture and weak on connection, and
+the record states both). **Consequence for this entry:** since weak evidence never
+requires severance, a severed citation means a project genuinely LEFT — which narrows
+the question to its clean form (does a departed project's declared bar still govern?)
+and strengthens the shipped direction, because the leftover bar cannot be defended as
+protecting evidence quality.
+
 ### DEC-70 · open
 raised: 2026-08-10 · CONDUCT (lifted from D-280's report — the worker raised it and did NOT
   write here, correctly: this file names CONDUCT as sole writer of new entries)
