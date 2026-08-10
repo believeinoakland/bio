@@ -96,7 +96,7 @@ unrecorded, which is what happened here.
 > (`civicos-ui/test/analyst-vocabulary.mjs` derives the banned-vocabulary atoms from
 > DEC-32's own sentence, anchored by DEC-33's heading).
 
-### DEC-68 · open
+### DEC-68 · answered
 raised: 2026-08-10 · CONDUCT (lifted from VF-6's report at integration — the worker raised it
   rather than writing here, correctly: this file names CONDUCT as the sole writer of new
   entries, and the worker's brief said otherwise. **The brief was wrong and the worker was
@@ -133,6 +133,21 @@ reversal cost: **rises once read events exist**, and that asymmetry is the argum
   act, with different obligations to members, from never having kept one.
 prior art: `node tools/decided.mjs` finds no ruling; a corpus grep finds none either. So this
   is genuinely open rather than re-asked.
+response: **NO — AND THE PREMISE FALLS WITH IT.** Bob, 2026-08-10: *"Why do we want to count
+  the number of times that a user approves a candidate? If the user approves it, then it's
+  approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected,
+  not merely unmeasurable. The reasoning, worked with him: the count guarded against member
+  approval becoming a laundering formality over machine composition — a boundary DEC-52's
+  ruling dissolved (a machine act stands attributed AS machine; a member act binds AS the
+  member's), and counting attention here would be the record's one anomaly, since no other
+  member act (citing, ratifying) is graded on diligence. Authored acts bind; the approval IS
+  the act.
+decided: 2026-08-10 · Bob
+enacted: 2026-08-10 · session BOB, same turn — nothing to build and nothing to remove:
+  `op=readingname` stays non-mutating by design, VF-6's published `undetermined` in
+  `MEASUREMENTS.md` stands as the honest record of what was probed, and DEC-53's watch
+  item (carried in the 2026-08-10 BOB INBOX entry) is closed as withdrawn. Reasoning in
+  this entry.
 
 ### DEC-71 · open
 raised: 2026-08-10 · CONDUCT (at D-280's integration — the worker filed IC-61 stating the
