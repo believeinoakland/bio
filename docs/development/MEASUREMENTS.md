@@ -7312,6 +7312,14 @@ oversight.
 
 ### THE FOUR GATES AT `e4f64e0` (`node tools/gates.mjs --explain` → change class **FULL**)
 
+**THE SHA THE GATES RAN AT IS `e4f64e0`, AND THE BRANCH TIP IS `3c5cbbf`** — said rather
+than quietly renumbered, because a gate figure relabelled with a sha it was not read at
+is a stale number wearing a fresh one, which is the exact class `CLAUDE.md`'s trap entry
+forbids. The two trees differ by `git diff --stat e4f64e0 3c5cbbf` = **`MEASUREMENTS.md`
+only, +26 lines** — this gate section itself. No source file, no test file and no other
+document moved between them, so every figure below was read against the code that is on
+the tip.
+
 | Gate | Figure | Exit | vs baseline |
 | --- | --- | --- | --- |
 | `npm run test:battery` | **157/157 suites green · 9,844 assertions passing · 159.7s**; fleet 2 members, 2 actually RAN; provenance 159 of 159 in the commit at HEAD | **0** | IDENTICAL (157/157 · 9,844 at 154.0s). **Delta ZERO, and that is the predicted shape** — this item adds no suite. |
