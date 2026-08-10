@@ -548,9 +548,23 @@ const REGISTER_FLOOR = {
      runs. Every one of those seven was RUN, and all seven came back as declared. Nothing FELL.
      Battery 162/162 · 10,054 assertions; `--strict` exit 0 read unpiped. As above, the
      previous value (813) is REPLACED and never joined. */
-  arms: 826,
-  classified: 157,
-  corpus: 158,
+  /* MOVED 2026-08-10 by SK-4: 826 -> 833 / 157 -> 158 / 158 -> 159, ALL THREE IN THE SAME
+     TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN PRINTED AS
+     REPRODUCIBLE (`arms 833/826 · classified 158/157 · corpus 159/158 · GREW by 7 arm(s)`),
+     read AFTER the new files were in a commit — `f4483e6`. The PRE-COMMIT run of the same
+     tree printed the identical numerals as CONTAMINATED beside a reproducible 826/157/158 and
+     named the untracked suite, which is D-238's mechanism working: moving the floor from that
+     run would have installed the OLD number as the new one and read as a no-op. The cause is
+     ONE new suite, `test/skillsequencing.test.mjs`, whose declaration states seven numbered
+     items: a BASELINE plus the six negative-control arms `test/skillsequencing.control.mjs`
+     runs. Every one of those six was RUN and all six came back as declared. Nothing FELL, and
+     `FLEET_FLOOR` is unmoved at 2 members / 4 ops / 5 suites / 48 arms — this item added no
+     fleet member and no fleet suite, and touched no file under `agent-worker/`. ONE KEY SET,
+     checked for duplicates before writing; the previous value (826) is REPLACED, never joined.
+     Battery 164/164 · 10,115 assertions; `--strict` exit 0 read unpiped. */
+  arms: 833,
+  classified: 158,
+  corpus: 159,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

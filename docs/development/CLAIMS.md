@@ -800,6 +800,23 @@ paths: `bio-plane/src/skilldoctrine.mjs` (SK-2/SK-3's doctrine module, this area
 
 ---
 
+## CLAIM 2026-08-10 SKILL (SK-4 — AMENDMENT: the coverage register's floor)
+session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`)
+opened: 2026-08-10T00:00:00Z
+Appended rather than edited into the claim above, per this file's append-only rule.
+paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
+  UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-4's suite was in
+  a commit (`f4483e6`): 826/157/158 -> 833/158/159. Nothing else in that file, and
+  `FLEET_FLOOR` unmoved at 2 members / 4 ops / 5 suites / 48 arms. **The block was checked for
+  a duplicate `arms:` key before writing** — the documented hazard that has bitten six times,
+  where the LAST key silently wins and once the last was the LOWEST; the two `arms:` keys in
+  the file are `REGISTER_FLOOR`'s (line 565) and `FLEET_FLOOR`'s (line 668), and the previous
+  value is REPLACED rather than joined. This is the ratchet the file's own comment instructs
+  the item that grows the register to move. SK-2's and SK-3's amendments are the precedent and
+  the shape.
+
+---
+
 ## DELEGATION 2026-08-10 SKILL -> FLEET (the mode gate's refusal is recorded under a word that says a member did it)
 raised by: sk4-check-first (worktree `agent-a02138ebf5b27a79b`), while landing SK-4's
 deployment record. **This is a NOTICE of a MEASURED misattribution in FL-3's landed gate — not
