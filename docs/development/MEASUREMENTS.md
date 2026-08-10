@@ -7186,3 +7186,64 @@ floors and found FOUR ratchets where the dropped diff listed two.
 **Battery:** true baseline at `19745ad` **151/151 suites green · 9,688 assertions**; final
 **152/152 · 9,704**. Delta +16 attributed by DIFFING the two full runs, never by
 subtraction: the new suite 15, `hygiene.test.mjs` 591 -> 592.
+
+## SK-2 — the investigative skill (2026-08-10, worktree `agent-ab0c5fdce6f2627dc`)
+
+**Battery.** True baseline measured in THIS worktree before any edit, at `87278a2`:
+**157/157 suites green · 9,844 assertions · 154.2s.** Final: **158/158 · 9,891 · 180.4s.**
+**Delta +47, attributed by DIFFING the two full runs per suite and never by subtraction:**
+the new suite `skilldoctrine.test.mjs` **43**, and `hygiene.test.mjs` **607 -> 611** — four
+arms, one per src-tree detector, because `src/` gained a file and every hygiene detector
+plants its control per file. No other suite moved.
+
+**A worktree note worth keeping, because it cost the first battery run.** A fresh worktree
+has no `bio-plane/node_modules`, and the battery then reports **28/157 green · 2,233
+assertions** with 124 suites failing `ERR_MODULE_NOT_FOUND: miniflare` — a figure that
+looks like a catastrophic regression and is a missing install. `npm ci` in `bio-plane/`
+fixes it. **Measure the baseline in the worktree you will measure the result in**, or the
+delta is between two different machines.
+
+**Coverage, `node scripts/coverage.mjs --strict` run directly with `$?` read UNPIPED: exit 0.**
+Printed: `NEGATIVE CONTROLS 153 of 153 suites declare one (100.0%) · 801 arms stated across
+152 classified declaration(s) · fullest 51 (hygiene.test.mjs) · 1 UNCLASSIFIED`;
+`FLEET 2 members beside the plane · 4/4 surface ops reached · 5/5 SUITES declaring a
+negative control · 48 arms`. The register's REPRODUCIBLE figures (tracked suites only)
+**moved 792/151/152 -> 801/152/153** once SK-2's suite was in a commit, and
+`REGISTER_FLOOR` was moved to exactly that printed triple. `FLEET_FLOOR` unmoved at
+5 suites / 48 arms and none owed.
+
+**The pack's two layers, re-measured, and REC-64's delegation DISCHARGED.** SK-1 measured
+resident 9,294 bytes / disclosed 9,064 and had to withdraw `skillpack.test.mjs` ARM G1's
+strict byte inequality, leaving a note to re-assert it "when SK-2 fills the recipes". At
+SK-2: **resident 9,814 bytes, disclosed 27,361 — 2.8x**, and the inequality is asserted
+again. **It was restored on a different ground than that note anticipated and the
+difference is recorded rather than glossed:** SK-2 did NOT fill the recipe layer (its
+blocker — no plane op publishes the surface registry, so a recipe authored here could not
+be validated here — is unchanged), it added five JUDGEMENT layers. Resident grew 520 bytes,
+all of it the five new names in `disclosable`.
+
+**The skill's own instruction-only fraction, published because it is the honest measure of
+how much of a skill a careless model could ignore: 3 of 10 clauses** carry no C-number and
+say so (`what-to-search-never-when-to-stop`, `where-it-stopped-and-why`,
+`bias-minimisation-on-top-of-the-fence`). The other seven cite **11 distinct C-numbers**,
+all of which resolve in the check catalogue. `skilldoctrine.test.mjs` prints both figures
+every run.
+
+**Two vocabularies for the four levels, and one of them matches no document.**
+`OBSERVATION_LEVELS` (airun.mjs, the observation log's) spells the third level `document`;
+`SUGGEST_LEVELS` (bio-checks.mjs, what `kind=level-empty` is refused against) spells it
+`documents`, so a run writes one into its log and the other into its suggestion. The design
+prose and `CLAUDE.md` both say `documents` — `INVESTIGATIVE-SESSION.md:453` and `:769`,
+`STORE-AS-CACHE.md:586`, `CLAUDE.md:84` — so the singular is the outlier. `decided.mjs`
+returns no ruling either way. DELEGATED in `CLAIMS.md`; SK-2 bridges the two by derivation
+meanwhile and asserts the bridge in both directions.
+
+**Negative controls: 9 arms run, 0 wrong** (`test/skilldoctrine.control.mjs`), clean tree
+43 pass / 0 fail. The one worth carrying out of the harness: **arm (5) proved one of this
+suite's own assertions blind by construction.** Reordering `OBSERVATION_LEVELS` in
+`airun.mjs` silently rewrites the escalation chain the doctrine points down, and ARM E1 —
+which compares the absence map's keys to `OBSERVATION_LEVELS`' keys — cannot see it,
+because the map DERIVES those keys from that same object and both sides move together.
+That is the equality-that-costs-nothing shape found inside an instrument rather than in a
+subject. ARM E3, which pins the four facts to the order `CLAUDE.md` names them in, is the
+only arm that catches it.

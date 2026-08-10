@@ -546,13 +546,27 @@ const run = async () => {
      the disclosed layers hold.** A pack that had collapsed into one layer fails
      this; a pack whose disclosed side is merely smaller today does not.
      RE-ASSERT THE STRICT INEQUALITY WHEN SK-2 LANDS THE RECIPES — routed in
-     CLAIMS.md as REC-64's delegation, with these two numbers. */
+     CLAIMS.md as REC-64's delegation, with these two numbers.
+
+     **RE-ASSERTED 2026-08-10 BY SK-2, AND ON A DIFFERENT GROUND THAN THE NOTE
+     ABOVE ANTICIPATED, which is stated rather than quietly satisfied.** SK-2 did
+     NOT fill the recipe layer — that blocker is unchanged and is now written out
+     in `skillpack.mjs`'s header: a recipe is only worth carrying if a step
+     naming a surface that does not exist FAILS THE BUILD, and no plane op
+     publishes the surface registry. What SK-2 landed instead is FIVE judgement
+     layers (`skilldoctrine.mjs`), all of them disclosed, and they restore the
+     property the byte comparison was standing in for: the run holds the doctrine
+     it is instructed by on request rather than from its first token. Measured at
+     SK-2: resident 9,814 bytes (up 520, all of it `disclosable`'s five new
+     names), disclosed 27,361 bytes — 2.8x. The inequality is asserted again
+     because it means something again, and REC-64's delegation is DISCHARGED. */
   const disclosedBodies = JSON.stringify(Object.values(pack.disclosed).map((l) => l.body));
-  t("ARM G1: the split BUYS something — there is a real deferred layer, and the resident layer is "
-    + "not carrying its bodies. (The byte inequality this arm used to assert inverted at REC-64 and "
-    + "the reason is at the comment: the boundary gained eleven fence sentences while the recipe "
-    + "layer is still declared EMPTY. Re-assert it when SK-2 fills the recipes.)",
-    [disclosedBytes > 0,
+  t("ARM G1: the split BUYS something, and the DISCLOSED half is the larger one — a run holds the "
+    + "doctrine it is instructed by on request rather than from its first token. (This arm's strict "
+    + "inequality inverted at REC-64 when the boundary gained eleven fence sentences, and is "
+    + "re-asserted at SK-2, which added five judgement layers. The recipe layer is still EMPTY and "
+    + "the reason is in skillpack.mjs's header.)",
+    [disclosedBytes > residentBytes,
      Object.keys(pack.disclosed).length > 0,
      JSON.stringify(pack.resident).includes(disclosedBodies.slice(2, 60)) === false],
     [true, true, true]);

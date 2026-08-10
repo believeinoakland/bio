@@ -319,3 +319,76 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
   recommend platforms to ADOPTING GROUPS rather than describing our substrate.
   **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+
+---
+
+
+## CLAIM 2026-08-10 SKILL (SK-2 — the investigative skill: composition judgement, description standard, search-completeness discipline)
+session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
+opened: 2026-08-10T00:00:00Z
+paths: `bio-plane/src/skilldoctrine.mjs` (NEW — SK-2's judgement layer, a sibling of the
+  SK-1 pack rather than an edit inside the plane's own code), `bio-plane/src/skillpack.mjs`
+  (SK-1's pack, which this area owns per `kickoffs/SKILL.md` — the ONLY change is that
+  `disclosedLayers()` merges SK-2's layers in and the header records it),
+  `bio-plane/test/skilldoctrine.test.mjs` (NEW), `bio-plane/test/skilldoctrine.control.mjs`
+  (NEW — the negative-control harness, not discovered by the battery),
+  `bio-plane/test/skillpack.test.mjs` (SK-1's suite, this area's: ARM G1's byte inequality
+  is the one arm re-judged, per the re-assert-when-SK-2-lands note REC-64 left in it),
+  `docs/development/CLAIMS.md` (this entry and the delegation below),
+  `docs/development/MEASUREMENTS.md` (appended), `docs/development/kickoffs/SKILL.md`
+  (appended — the SK-2 row's outcome, so SK-3 starts from what landed).
+  **NOT** `bio-plane/src/**` beyond the two files named above — in particular NOT
+  `airun.mjs`, NOT `store.mjs`, NOT `index.mjs`. **NOT** `bio-plane/checks/**` (a
+  prohibition's CODE half is a C-number and belongs to the plane; SK-2 CITES C-numbers and
+  adds none). **NOT** `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT**
+  `docs/development/QUEUE.md` (CONDUCT's), **NOT** `docs/development/IS-BUILD-PLAN.md`.
+
+
+## DELEGATION 2026-08-10 SKILL -> RECORD (the four levels are spelled two ways, and a run has to write both)
+raised by: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`), while wiring SK-2's
+four-level absence discipline onto the vocabularies that already exist.
+
+**MEASURED, not suspected.** The plane holds TWO closed vocabularies for the same four
+levels and they disagree on one member:
+
+- `src/airun.mjs OBSERVATION_LEVELS` — `meaning`, `content`, **`document`**, `internet`.
+  This is what the observation log is written in (§11, D-129).
+- `checks/bio-checks.mjs SUGGEST_LEVELS` — `meaning`, `content`, **`documents`**, `internet`.
+  This is what `kind=level-empty` is REFUSED against (`store.mjs` ~20015 refuses a
+  `level` outside it), so it is what a suggestion must carry.
+
+So one run reporting one absence at one level writes `document` into its log and
+`documents` into its suggestion, and nothing anywhere says they are the same level.
+**Which of the two is the outlier is also measured rather than guessed:** the design prose
+and `CLAUDE.md` both say `documents` — `INVESTIGATIVE-SESSION.md:453` and `:769`,
+`STORE-AS-CACHE.md:586`, `CLAUDE.md:84` — so `airun.mjs`'s singular is the one member that
+matches no document. `decided.mjs` has no ruling on it either way. §9's
+`level-empty` kind exists precisely so that *"a run that honestly found nothing supportable
+is distinguishable from a run that emitted nothing"* — an absence that cannot be joined
+across the two surfaces weakens exactly that.
+
+**What SK-2 did meanwhile, so this is not a stopped session:** `skilldoctrine.mjs` BRIDGES
+them rather than picking one. Each level's entry derives its reporting spelling from
+`SUGGEST_LEVELS` (`s === key || s === key + "s"`) instead of typing either, and
+`skilldoctrine.test.mjs` ARM C6 asserts the bridge covers every member of BOTH vocabularies
+— so if the two are ever unified the arm still passes, and if a fifth level appears in
+either it fails naming the level.
+
+**What is needed, and it is RECORD's or the plane's call, not this area's:** decide whether
+the two vocabularies converge (one spelling, one export, the other importing it) or stay
+deliberately distinct with the mapping held in one named place. Either is fine; what is not
+fine is two rosters with no stated relationship. The paths are `bio-plane/src/airun.mjs`
+and `bio-plane/checks/bio-checks.mjs`, both outside SKILL's claim, and a convergence is an
+INTERFACE change (`agent-worker` builds against the spawn payload) rather than a rename.
+
+
+## CLAIM 2026-08-10 SKILL (SK-2 — AMENDMENT: the coverage register's floor)
+session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
+opened: 2026-08-10T00:00:00Z
+Appended rather than edited into the claim above, per this file's append-only rule.
+paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
+  UPWARD to the triple a green `--strict` run PRINTED once SK-2's suite was in a commit
+  (792/151/152 -> 801/152/153). Nothing else in that file, and `FLEET_FLOOR` unmoved at
+  5 suites / 48 arms. This is the ratchet the file's own comment instructs the item that
+  grows the register to move, and it is the reason a path outside the first claim is taken
+  at all: leaving it would install slack in a ratchet whose whole purpose is to have none.
