@@ -11,6 +11,22 @@ session). CONDUCT executes; DIST runs its own lane as a separate session. Every 
 promised "by name" below is a C-number in `bio-checks.mjs` with a DEC-49 error code and
 canned translation, allocated at build — no item ships a fence as prose.
 
+> **THIS DOCUMENT CARRIES NO STATUS, AND THAT IS DELIBERATE — BUT IT COST SOMETHING BEFORE
+> IT WAS SAID OUT LOUD (added 2026-08-10 by CONDUCT).** The per-item format below has no
+> `status:` or `landed:` field, and there is exactly one `landed:` marker in the whole file.
+> So this document cannot answer *is it done?* — and until 2026-08-10 neither could
+> `QUEUE.md`, because the 2026-08-07 drain promised a pointer row per wave slot and never
+> wrote one. **For three days neither authority could say what was built, while 34 of these
+> 43 rows were in fact merged to `main`.** The queue's silence read as an idle plan; it was
+> an unrecorded one.
+>
+> **STATUS LIVES IN `QUEUE.md`'s `## IS BUILD PLAN — STATUS` SECTION AND NOWHERE ELSE.** It
+> is measured against `main` rather than asserted, and it names what is left, who owns it
+> and what blocks it. **Do not add a status column here** — this file OWNS the ids and the
+> scope, that file OWNS the status, and two files carrying status is the mirror-and-drift
+> class this plan's own drain note refused when it declined to be transcribed. One
+> authority per fact; a pointer, never a copy.
+
 Format per item: id · scope · interface (I1–I7) · depends-on · accepts-when (a runnable
 command or checkable fact) · NC (the negative control, run and recorded in the suite's
 `NEGATIVE CONTROL:` line). Standing gate on every item: `cd bio-plane && npm run

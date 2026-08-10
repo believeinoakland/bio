@@ -44,6 +44,7 @@ those workers are drawn from — an area is a queue, not a standing agent.
 | `UI` | `civicos-ui/**`, `docs/development/UI-PLAN.md` | `kickoffs/UI.md` |
 | `DIST` | **cuts all plane releases** · `newgroup/**`, `release/**`, `scripts/deploy.mjs`, versions and tags | `kickoffs/DIST.md` |
 | `FRAMEWORK` | `docprofile/**`, `docs/architecture/BIO_Content_Framework_*`, `docs/architecture/CONSTRUCTS.md`, `docs/development/DOCUMENT-PROFILES.md` | `kickoffs/FRAMEWORK.md` |
+| `SKILL` | **ACTIVE, new 2026-08-10** · the doctrine and judgement layer of `IS-BUILD-PLAN.md` (SK-2/SK-3/SK-4) · the skill/doctrine pack SK-1 landed, its versioned successors and their tests · **owns no plane path and no interface, and may never hold a GATE** — loop bounds, fan-out and the investigate-mode gate all live in FL-3's landed control-flow table (§14b.4). This is the one plan track that takes a slot without contending for `store.mjs` | `kickoffs/SKILL.md` |
 
 **A WORKER is not an AREA.** As of 2026-07-31 the topology includes single-purpose
 Workers beside the plane (`pdf-worker` first). A fleet member is one area's CODE and

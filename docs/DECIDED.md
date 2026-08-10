@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-610 rulings across 64 documents.
+612 rulings across 65 documents.
 
 ## DEC-
 
@@ -173,7 +173,7 @@ authority is the file named, never this one.
 - **DEC-55** — The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate; the sidebar remains a visibility and bulk-review surface, not a required approval. **What the ruling carries with it, from standing doctrine:** the record names the machine principal on every such act (DEC-55 det 4 / D-199.4 —…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2865`
 - **DEC-55.5** · 2026-08-09 — CORRECTED 2026-08-09 by VF-1 and the correction is the item's own subject.** This cell used to read `node bio-plane/scripts/control-register.mjs`, which is a MODULE with no entry point: it runs, prints nothing, and exits 0 over any tree whatsoever — an acceptance that could never fail, which is the shape of every…  
-  `docs/development/IS-BUILD-PLAN.md:85`
+  `docs/development/IS-BUILD-PLAN.md:101`
 - **DEC-60** — THE JUDGEMENT, since it is a real one: the format rule STAYS and the fixtures are CORRECTED.** `<pack>@<edition>` is load-bearing rather than aesthetic — the investigative session and the assistant pilot are **siblings with two doctrine packs writing one `ai_runs.skill_version` column** (`ASSISTANT-PILOT.md` §4's…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2835`
 - **DEC-60** · 2026-08-07 — limit 2 (may not add unstated propositions) is SUPERSEDED for the investigative session by DEC-60, which licenses claim formulation as suggestions; it STANDS for the assistant pilot.  
@@ -405,9 +405,9 @@ authority is the file named, never this one.
 - **IC-24** — IC-24 walked PROPOSED → RESPONSES → ACCEPTED → CHANGING → CHANGED → SETTLED, append-only, CONDUCT answering for three dormant areas.  
   `docs/archive/ledgers/QUEUE-2026-08.md:189`
 - **IC-24** — `INTERFACES.md` (I1–I7 all registered), `INTERFACE-CHANGES.md` (IC-24 SETTLED), `DEBT.md` D-84/164/190/195/199/213–226, `DECISIONS.md` (DEC-32/34/40/43/44/46/47/49/ 52/54/55/59/60/61/62 read in full at their final states), `QUEUE.md` (REC-59..65, IS-1..IS-9, UI-38..41), `CLAUDE.md`, `PARALLELISM.md`,…  
-  `docs/development/IS-BUILD-PLAN.md:275`
+  `docs/development/IS-BUILD-PLAN.md:291`
 - **IC-24** — IC-24 SETTLED, pin at ZERO) — row and W1 corrected; the plan had scheduled landed work. 3.  
-  `docs/development/IS-BUILD-PLAN.md:315`
+  `docs/development/IS-BUILD-PLAN.md:331`
 - **IC-25** · 2026-08-07 — IC-25 taken to SETTLED by CONDUCT as MAJOR** (the worker correctly left the version to CONDUCT): the shape change is additive but the BEHAVIOUR change is a break, and unlike IC-20/22/24 the impact is not nil — it is measured, live and in front of a member.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2152`
 - **IC-26** · 2026-08-07 — IC-26 taken to SETTLED by CONDUCT as ADDITIVE; I3 10.0.0 -> 10.1.0.** **CONDUCT VERIFIED THE CORRECTION THIS ITEM MADE TO PL-8's HEADER rather than taking it on report**: `#writeReadings` carries no `object_type` gate in its body and its call site is unconditional, so a project bundle CAN carry resolution rows and…  
@@ -609,7 +609,7 @@ authority is the file named, never this one.
 - **REC-59** — The stale pin is CORRECTED with a dated reason, and `op=projection`'s `&id=` call is **CLASSIFIED, not exempted**, asserted against `store.mjs`.  
   `docs/archive/ledgers/QUEUE-2026-08.md:1701`
 - **REC-59** · 2026-08-07 — (confirmed 2026-08-07: QUEUE marks REC-59 done, IC-24 SETTLED, I3 at 9.0.0; the pin now reads **ZERO** bare-array capped ops, driven off the roster — `bounds.test.mjs:515`).  
-  `docs/development/IS-BUILD-PLAN.md:39`
+  `docs/development/IS-BUILD-PLAN.md:55`
 - **REC-60** · 2026-08-07 — ← REC-60 (IC-25 SETTLED, I3 10.0.0). The plan was written before it landed. - **PL-5** ← IS-6. Battery 107/107 at 6,164; OPS 131 → 136 all reached, CHECKS 53 → 59 all named. - **PL-8** ← landed 2026-08-07 (worker b42f87b). **D-223 DISCHARGED and DEMONSTRATED rather than asserted**: `leg:hunch` ∪ `type:inquiry…  
   `docs/archive/ledgers/QUEUE-2026-08.md:359`
 - **REC-60** · 2026-08-07 — plied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-60, D-225)  
@@ -787,7 +787,7 @@ authority is the file named, never this one.
 - **PL-4** — THREE OTHER SUITES, EACH CORRECTED AND NEVER EXEMPTED, each with a comment at the site saying why the old one was right when written:** `bio-plane/test/airun.test.mjs` (ARM S1's registry delta 9→10, plus ONE new arm S3c pinning that the wake was APPENDED after the drain); `bio-plane/test/leadslug.test.mjs` (its…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5077`
 - **PL-5** · 2026-08-09 — TWO FIGURES IN THIS ROW WERE STALE AND ARE CORRECTED FROM MEASUREMENT (2026-08-09, FL-4):** the registry is at `store.mjs:1778` and not `:1452` (`store.mjs` is 23,971 lines, not the ~16,300 this plan was written against), and the entry is the **TENTH** consumer and not the eighth — PL-5's `ai-run-reap` was the…  
-  `docs/development/IS-BUILD-PLAN.md:58`
+  `docs/development/IS-BUILD-PLAN.md:74`
 - **PL-8** — — PL-8's TWO D-228 pins ONLY, CORRECTED (never exempted) with a dated reason; no other assertion in that suite is touched.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4395`
 - **PL-8** · 2026-08-07 — PL-8's two pins CORRECTED with dated reasons, never exempted.  
@@ -808,6 +808,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DECISIONS-2026-08.md:4010`
 - **PL-18** · 2026-08-09 — CORRECTED 2026-08-09 by PL-18, which MEASURED it: FALSE on the axis the ruling is about.** `contribute` alone permitted a `contribute`-holder OUTSIDE the project, which the ruling forbids.  
   `docs/archive/ledgers/QUEUE-2026-08.md:622`
+- **PL-18** · 2026-08-10 — STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since.  
+  `docs/development/QUEUE.md:687`
 - **PL-18** · 2026-08-09 — SUPERSEDED READINGS OF THE ROW ABOVE, moved out of the table 2026-08-09 by CONDUCT.** PL-18 found this metric occupying **THREE table rows** with three different figures, newest first — so the table asserted its own value three times and a reader had no way to tell which was current.  
   `docs/development/VERIFICATION.md:56`
 - **PL-19** · 2026-08-09 — STEP TWO IS UNMERGED AND IT CLOSES A LIVE OVERCLAIM, AND WHEN IT LANDS THREE OF MY ASSERTIONS MUST BE CORRECTED** **PL-19 (`7844e16`, `4b3f7a7` on `worktree-agent-a875e2afd837947d7`) IS NOT IN `main`** — measured with `git branch -a --contains`, not assumed.  
@@ -1070,9 +1072,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - RULINGS SETTLED THIS SESSION, do not re-ask.  
   `docs/development/CIVICOS_UI_STATE.md:700`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  
-  `docs/development/CLAIMS.md:54`
+  `docs/development/CLAIMS.md:55`
 - `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated). **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are dated records of what was measured…  
-  `docs/development/CLAIMS.md:311`
+  `docs/development/CLAIMS.md:315`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1175,6 +1177,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
+- `PRACTICE-SURVEY.md` itself, and `DECIDED.md` for anything already ruled. ## The one thing that makes this area different, and it is not a style note  
+  `docs/development/kickoffs/SKILL.md:14`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.** `ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record did not publish*, over every function in the AI-session block.  
   `docs/development/kickoffs/UI.md:335`
 - **2026-07-28** — RULED by Bob, 2026-07-28: source addresses are NOT exempt from the canonical-identity rule.  
@@ -1218,7 +1222,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - `docs/DECIDED.md` regenerated. - **No queue item is superseded and no worker should be stopped.** The one kickoff this supersedes is BOB's own (`BOB-NEXT.md`), corrected in the same turn.  
   `docs/development/QUEUE.md:204`
 - **2026-07-31** — CAPTURE-SCALING.md item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics.  
-  `docs/development/QUEUE.md:1094`
+  `docs/development/QUEUE.md:1106`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:178`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

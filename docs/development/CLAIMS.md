@@ -33,6 +33,7 @@ The format is the one `PARALLELISM.md` fixes:
 ## CLAIM 2026-08-09 UI (UI-42 — version review: rotation and diff)
 session: ui42-version-review (worktree agent-a8c8ed9c32eb56980)
 opened: 2026-08-09T00:00:00Z
+released: 2026-08-10 by CONDUCT as STALE, with evidence rather than by assumption — **UI-42's work is ON `main`** and the holding session is gone (no live worker; the worktree is one of ~120 dead checkouts under `.claude/worktrees/`). Named by Bob's 2026-08-10 inbox entry as one of four held claims that *"look stale — releasing them is yours, not housekeeping"*, and released on that instruction. A claim reserves paths BETWEEN checkouts, so a dead session holding `civicos-ui/app.html` by site blocks every later UI worker for nothing.
 paths: **`civicos-ui/app.html` — named by SITE, not by file** (it is shared ground and other UI
   workers may be live): (1) the NEW region between `/*__VERSION_REVIEW_START__*/` and
   `/*__VERSION_REVIEW_END__*/`, appended after `__AI_SESSION_END__` — every renderer in it is new
@@ -121,6 +122,7 @@ one construct over. Nothing here is a consequence Bob has not already ruled on.
 ## CLAIM 2026-08-09 RECORD (REC-69 · THE REPLAY ONTO `main`)
 session: worker-rec69-replay (worktree agent-a7e307e5502e319c0)
 opened: 2026-08-09T00:00:00Z
+released: 2026-08-10 by CONDUCT as STALE — **and this one is released with its work NOT MERGED, which is stated rather than smoothed.** The branch `worktree-agent-a5723f4c87dfd5bd0` (`2d9c57b`) is green on itself and the replay branch is `agent-a7e307e5502e319c0`; neither is on `main`, and REC-69 stays OPEN and stays the top of RECORD's queue. What is released is the PATH RESERVATION, not the item: the holding session is dead, and a dead session's claim on `run-conditions.test.mjs`, `airuns.test.mjs`, `bounds.test.mjs`, `op-claims.mjs` and `coverage.mjs` blocks every other item that touches the test estate while protecting nothing. **The item's open question is unchanged and is NOT CONDUCT's to answer:** whether `aiRuns` is `PUBLISHES` or something the four roles do not yet name is a judgement about what the record publishes, it is RECORD's call, and guessing it to get a green push is the overclaim this project refuses.
 paths: **the REPLAY of the reverted merge** (`git revert` of `80473ea`, which restores `e241672`'s hand-resolution work), plus FOUR files opened to answer the two cross-item ratchets and a third nobody listed: `bio-plane/test/run-conditions.test.mjs` (the `ROLE` table gains ONE entry and a fifth role; ARM W4 and ARM W7's WORDING corrected with dated reasons; ARMs W8 / W8 GUARD / W8b added; a second `NEGATIVE CONTROL:` paragraph — **no runtime block, no fixture and no other arm touched**), `bio-plane/test/airuns.test.mjs` (the SWEEP's ceiling/floor re-measured 11 → 13, both arrivals named, three arms added, a second `NEGATIVE CONTROL:` paragraph — **REC-69's own runtime sections A–R untouched**), `bio-plane/test/bounds.test.mjs` (the capped-op roster pin re-measured to 29 and ONE stale WORD corrected), `bio-plane/scripts/op-claims.mjs` (**ONE `PLANNED_OPS` row removed — `airuns`, whose own expiry rule fired**), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR`, all three keys, ONE key set), `bio-plane/test/nc-rec69-selects.mjs` (new — the replay's control driver, inside this worktree). **NOT** `bio-plane/src/**` beyond what the revert-of-the-revert restores byte-for-byte, **NOT** `docs/development/QUEUE.md`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
 interfaces consumed: I3 (IC-42, already filed by REC-69 and already renumbered by CONDUCT; **IC-42 measured FREE on `main`, whose maximum is IC-41**)
 interfaces owned: none
@@ -164,6 +166,7 @@ MEASURED, not inferred, with two `git diff --stat`s:
 ## CLAIM 2026-08-09 VERIFY (REC-79 — REC-64's remainder PARTITIONED, and the admission gate proved end to end)
 session: rec79-refusal-partition (worktree agent-a0bea725408eb06f8)
 opened: 2026-08-09T00:00:00Z
+released: 2026-08-10 by CONDUCT as STALE — **REC-79's work is ON `main`** (`4df1cd0`, and the queue's register carries it `done`) and the holding session is gone. Same instruction and same reasoning as the UI-42 release above.
 paths: **`civicos-ui/check-refusal-codes.mjs` — named by ARM, never by file**: (1) `outcomeReturns`
   widened to see a return that hands its outcome to a WRAPPER (`return json({ … }, 403)`), which is
   the control plane's universal refusal spelling and which arm C has never been able to see;
@@ -280,6 +283,7 @@ the arm naming the other.
 ---
 
 ## CLAIM 2026-08-09 M0 (D-249)
+released: 2026-08-10 by CONDUCT as STALE — **D-249's work is ON `main`** (`5edc051`, merged at `00090a2` and again in the `5263088` integration) and the holding session is gone. Same instruction and same reasoning as the UI-42 release above. **This block carries no `session:` or `opened:` line** — it opens straight into its path list, which is why the first release pass anchored on `opened:` and landed the line in the NEXT claim instead. Corrected here; the shape is noted so the next reader does not repeat it.
 
 - `bio-plane/test/hygiene.test.mjs` — the PORT half of the ground check, beside M0-10's `GROUND` regex
 - `bio-plane/test/d249-port.probe.mjs` — NEW, the runtime probe (not discovered by the battery)

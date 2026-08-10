@@ -567,14 +567,24 @@ last two live rows (FL-6, VF-4) each wait on a DS row, so **the plan cannot fini
 CONDUCT alone no matter how the slots rotate.** CONDUCT's entire remaining share is the
 SKILL track, and it is unblocked today.
 
-**SK-2 IS NOT PROMOTED IN THIS TURN, AND THE REASON IS THE SLOT RULE RATHER THAN A
-JUDGEMENT ABOUT PRIORITY.** Both slots are held: RECORD (REC-69, green on its own branch
-and **still not merged**) and UI (UI-53, running). An area is promoted when a slot frees;
-SKILL is seeded DORMANT below so the promotion is one act rather than a re-derivation.
-**Activating SKILL and writing `kickoffs/SKILL.md` are ONE act** (`plancheck` fails an
-ACTIVE area with no kickoff) — do not split them.
+**SKILL IS PROMOTED AND SK-2 IS THE NEXT SPAWN.** The first pass of this section said both
+slots were held and seeded SKILL dormant; **that was read off the queue's own stale status
+and was wrong.** Measured instead: zero live workers, four claims held by dead sessions
+(all four released this turn), ~120 abandoned worktrees, and **UI-53 marked `running` with
+its work on `main` since `a7b027f`.** The UI slot was free. Slots are now RECORD (REC-69,
+genuinely open and blocked on a judgement that is RECORD's, not the scheduler's) and SKILL.
+`kickoffs/SKILL.md` was written in the same act, as `plancheck` requires.
 
-## SKILL — DORMANT (seeded 2026-08-10; promote when a slot frees. **`kickoffs/SKILL.md` is written AT ACTIVATION, in the same act.**)
+**THE CORRECTION IS LEFT VISIBLE RATHER THAN TIDIED, because it is the finding:** a stale
+`running` did not just mis-describe the board, it produced a wrong scheduling decision
+inside the very turn that was repairing the board. That is the third instance this month
+(PL-18, PL-19, UI-53) and the first where the cost was immediate.
+
+## SKILL — ACTIVE (promoted 2026-08-10 by CONDUCT into the slot UI-53 freed; `kickoffs/SKILL.md` written in the SAME ACT, per the rule `plancheck` enforces)
+
+**PROMOTED THE SAME DAY IT WAS SEEDED, and the reason is a MEASUREMENT rather than a change of mind.** It was seeded DORMANT earlier in this turn on the reading that both slots were held. That reading was wrong and the queue's own status was why: **UI-53 read `running` with no worker alive** — its work has been on `main` since `a7b027f`, its holding session is gone, and its claim was one of four released as stale in this same turn. Measured, not assumed: zero live workers, four claims held by dead sessions, ~120 abandoned worktrees under `.claude/worktrees/`. **So the UI slot was never occupied; it only looked occupied**, which is the third instance this month of a stale status costing a scheduling decision (PL-18, PL-19, now UI-53). Slots now: **RECORD (REC-69, genuinely open) and SKILL.**
+
+**REC-69 HOLDS RECORD'S SLOT AND IS BLOCKED ON A JUDGEMENT THAT IS NOT CONDUCT'S.** Its branch is green on itself and unmerged; what stops it is whether `aiRuns` is `PUBLISHES` or something the four roles do not yet name — a judgement about what the record publishes, which is RECORD's call. **Guessing it to get a green push is the overclaiming this project refuses**, so it stays open rather than being closed by the scheduler. Its stale path reservation was released; the item was not.
 
 The doctrine and judgement layer of `IS-BUILD-PLAN.md`, **constrained to what a skill may
 legitimately hold — which is never a gate.** It owns skill/doctrine text and no plane
@@ -612,10 +622,11 @@ and that asymmetry IS the proof the fence is code (SK-3); and an investigate-mod
 attempted before CHECK's verification is recorded must be REFUSED by the deployment gate
 (SK-4).
 
-seeded: 2026-08-10 · CONDUCT — the plan's remaining CONDUCT track, written into the queue it
-was never written into. **Not promoted in this turn:** both slots are held (RECORD's REC-69
-still unmerged, UI-53 running), and an area is promoted when a slot frees. Promotion and
-`kickoffs/SKILL.md` are ONE act.
+activated: 2026-08-10 · CONDUCT — the plan's remaining CONDUCT track, written into the queue
+it was never written into and promoted in the same turn once the slot state was MEASURED
+rather than read off stale statuses. `kickoffs/SKILL.md` written in the same act, and the
+thread registered in `kickoffs/README.md` so its owned paths are defined. **SK-2 is the
+next item to spawn** — it is the top of the track, SK-1 is landed, and nothing blocks it.
 
 
 ## DIST — ACTIVE (promoted 2026-08-04: DIST-2 and DIST-3 both landed on it from DEC-37/DEC-42; DIST-1 done 2026-08-04; the backlog — D-115/116/107/54 and the MONITOR_TOKEN follow-on behind DEC-37/REC-33 — waits for the next activation)
@@ -666,13 +677,14 @@ constructs + a weight ladder + the TASK/QUEUE attention layer; MILESTONES M8 bui
 The display half of D-82 (`surfaced_by`) and the FW-4→UI already-held delegation are later
 UI items, not UI-1. *(Heading restored 2026-08-10 by CONDUCT — see the note under RECORD.)*
 
-### UI-53 · running
+### UI-53 · done
 milestone: M8
 scope: **THE HAND-WRITTEN `BANNED` LISTS IN `civicos-ui/test/` BECOME CONSUMERS OF ONE DERIVED FAMILY (D-269's delegation to UI).** D-269 measured that the hand lists **do not agree with each other and that NONE would have caught `independently sufficient`** — the phrase that was being rendered to members off `#axisResult` and frozen into signed `bundle.md` frontmatter. **Several disagreeing lists are worse than one, because each reads as coverage.** D-269 built the derived answer on the plane side (`bio-plane/test/analystvocab.test.mjs`: machine-side words MINUS member-side words, with the hand lists' union as a seed floor checked BEFORE the member-side skip) and deliberately did NOT impose it on UI's ground — widening a landed guard from the item that merely bumped into it is the mistake **REC-71** exists to correct. **So the rule here is INVERT, DO NOT LENGTHEN: a list of spellings goes stale the moment a fourth is written**, and the fix is one derivation with the sweeps as consumers, not a longer list in more places. **A list that turns out to be asking a genuinely DIFFERENT question is a FINDING — keep it, named, rather than folding it in for tidiness.**
 behind-interface: I3
 depends-on: none (D-269 is landed on `main`)
 accepts-when: `node civicos-ui/test/run.mjs` from the **REPO ROOT**, exit read **UNPIPED**, 0; `cd bio-plane && npm run test:battery` green with any delta **attributed per suite by re-running the true baseline, never by subtraction** — **measure your own baseline and trust it over this brief**; `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` unpiped, exit 0; `node tools/plancheck.mjs` clean but for UNPUSHED. **The census of ban instruments must NOT be spelling-keyed** — a grep over prose is a hint, not a consumer census, and D-269's own consumer grep under-reported inside the item written to fix it. NEGATIVE CONTROLS run and recorded, each armed ALONE with the others held open, **including an OVER-STRICTNESS arm in which the banned words in a code COMMENT, an internal IDENTIFIER and a FIXTURE ID must all stay GREEN** — the ban is on what a member READS, and a fence tighter than its rule is an undeclared interface change wearing the costume of caution.
 added: 2026-08-09 · UI-53 (D-269's delegation to UI; the row is written by the item because CONDUCT had not minted one)
+landed: `ac1c7d4`, merged at `a7b027f` on `main`. **STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since. This is the third instance of the class this month (PL-18 read `queued` and PL-19 read `running`, both corrected 2026-08-10, both with their work already merged), and the queue's own note on PL-18 says what it costs: *the exact shape of a brief that would have sent a worker to rebuild something that exists.* **The UI slot this item was holding is therefore FREE, which is what let SKILL be promoted in the same turn.**
 
 ### UI-54 · queued
 milestone: M8
