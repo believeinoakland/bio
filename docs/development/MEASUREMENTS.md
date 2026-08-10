@@ -7085,3 +7085,48 @@ row and `op=tasks`, which the same surface already calls, publishes it, whereas 
 and NOT fixed:** `#projectsDrawingOn` drops a citing project whose `bundle.md` cannot be read, with
 no declaration — a can't-happen for a promoted bundle, inside PL-13's span, named here so it is not
 found twice.
+
+## 2026-08-09 · UI-53 — the DEC-32 clause 1 ban instruments, censused by subject rather than by spelling
+
+**Instrument:** `civicos-ui/test/analyst-vocabulary.test.mjs` ARM C, two independent detectors over
+every `.mjs` in `civicos-ui/test/` (53 modules walked, all 53 in the commit at HEAD `19745ad`,
+classified by `bio-plane/scripts/provenance.mjs`) — detector 1 keyed on the RULING (`DEC-32`),
+detector 2 on the SHAPE of a ban pattern (a regex literal naming the construct). Both detectors'
+polarity is DRIVEN against the four hand lists' real opening patterns as they stood on `main`.
+
+| what | D-269 reported | UI-53 measured |
+| --- | --- | --- |
+| hand-written `BANNED` lists in `civicos-ui/test/` | **3** | **4** (`connections-sidebar.test.mjs` is the fourth) |
+| ban instruments for this ruling repo-wide | 3 + the derived suite | **4 + 1 on the plane** (`sufficiency-state.test.mjs`) + the derived suite |
+| lists carrying `independently sufficient` | 0 of 3 | **0 of 4** — confirmed |
+| lists carrying `partition` | not stated | **3 of 4** |
+| lists carrying `conjunct` | not stated | **0 of 4** |
+| candidate ban sites found by the subject-keyed census | — | **6** (4 consumers, 2 NAMED as different questions) |
+
+**Why the counts differ, and it is the point:** D-269's census was keyed on the phrase its own
+delegation used. A grep over prose is a hint, not a consumer census.
+
+**THE DERIVED FAMILY, measured on this tree:** 4 atoms parsed from DEC-32 clause 1's own sentence
+(`AND / OR / disjunction / grounds`) · 2 noun stems (`disjun`, `ground`) reaching **8** distinct
+spellings actually present in the derivation and the ruling · **4** residue terms, every one
+asserted to occur in DEC-32's entry · **11** patterns total.
+
+**WHY THE OPEN "MACHINE-SIDE MINUS MEMBER-SIDE" TIER IS NOT USED OVER A RENDERED UI CORPUS —
+measured, not assumed.** D-269's derivation is sound over ITS corpus (30 sentences composed by one
+function, every record value a neutral placeholder). Run over whole rendered surfaces the same
+derivation measures **208 words**, and a co-occurrence-filtered variant **243** — both containing
+`example`, `correct`, `present`, `share`, `safe`, `bob`, `berkeley`, `newsroom`. Banning those on a
+member-facing surface is a fence far tighter than its rule. **The open tier belongs to the narrow
+corpus and the prohibition tier to the broad one; that boundary is a finding, not a gap.**
+
+**OVER-STRICTNESS, MEASURED RATHER THAN REASONED:** three of the four hand lists carried a bare
+`/\b(AND|OR)\b/`. The moment all four consumed one family it FIRED ON CORRECT MEMBER-FACING PROSE —
+`notifications.test.mjs` renders *"LOOKED FOR AND NOT THERE"*, ordinary English capitalised for
+emphasis. **Case-sensitivity is not sufficient**, which is one step past the lesson
+`bio-plane/test/sufficiency-state.test.mjs` records at its own site.
+
+**Totals.** UI harness 44 → **45** suites, exit 0 unpiped. Plane battery **151/151 green, 9688 →
+9690 assertions**, the delta attributed per suite by re-running the true baseline in a scratch
+checkout at `19745ad`: `analystvocab.test.mjs` 105 → 107 and **no other suite moved**.
+`coverage.mjs --strict` exit 0 unpiped, REGISTER FLOOR unmoved at arms 731/731 · classified 145/145
+· corpus 146/146 (the register's corpus is the PLANE's suites; this item adds none).

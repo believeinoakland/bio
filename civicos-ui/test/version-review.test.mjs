@@ -68,6 +68,10 @@
  */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite
+   CONSUMES it, rather than hand-writing a rival copy. See
+   `analyst-vocabulary.mjs` for what it is derived from and what it cannot see. */
+import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
 import { VERSION_MACHINE } from "../../bio-plane/checks/bio-checks.mjs";
 
 let n = 0; const fails = [];
@@ -632,20 +636,20 @@ ok("the record's OWN bound is still stated separately from the display's — the
    files one of its sets under a label containing THREE of these words, so a
    surface that printed the record's own labels fails here naming the phase and
    the word. */
+/* CORRECTED 2026-08-09 (UI-53), never exempted. The comment above said "ONE rule
+   judges the act, its elicitation and its review" — and that was FALSE when it
+   was written: `elicitation.test.mjs` had no `partition`, `notifications.test.mjs`
+   had neither `ground` nor `branch` nor the standalone connective, and NOT ONE of
+   the four lists in this directory carried `independently sufficient`, which is
+   the phrase that was reaching members (D-269). It is one rule now, derived from
+   DEC-32 clause 1 in `analyst-vocabulary.mjs`. The corpus, the phases, the
+   character floor and the wire-name arm are BYTE-UNCHANGED. */
 {
-  const BANNED = [
-    [/\bground/i,             "the analyst's noun for a set of reasons"],
-    [/\bpartition/i,          "the analyst's noun for how they are divided"],
-    [/\bdisjunct/i,           "the analyst's word for the relationship"],
-    [/\bbranch/i,             "the analyst's word for one of them"],
-    [/\b(AND|OR)\b/,          "the connective, as vocabulary"],
-    [/\b(and|or)-related\b/i, "the relationship, named"],
-  ];
+  console.log("  " + reachLine());
   const hits = [];
   for(const [where, html] of PHASES){
     const t = strip(html);
-    for(const [re, what] of BANNED)
-      if(re.test(t)) hits.push(`${where}: ${what} — ${(re.exec(t)||[])[0]}`);
+    for(const h of analystHits(t)) hits.push(`${where}: ${h.token} — ${h.why}`);
   }
   ok("not one analyst word reaches the member on any surface this flow renders: " + (hits.join(" | ") || "clean"),
      hits.length === 0);
@@ -656,7 +660,7 @@ ok("the record's OWN bound is still stated separately from the display's — the
   /* THE INSTRUMENT'S OWN POLARITY. A sweep that cannot fail passes everything,
      and this estate has measured three walks that were green over nothing. */
   ok("INSTRUMENT: the sweep DOES fire on a phase carrying a banned word",
-     BANNED.some(([re]) => re.test(strip("<p>" + LEAKY_LABEL + "</p>"))));
+     analystHits(strip("<p>" + LEAKY_LABEL + "</p>")).length > 0);
   /* THE WIRE NAME IS NOT A SURFACE — the ops are reached by their published ids
      and no id is ever printed. */
   ok("the ops this surface reaches are never rendered to the member",

@@ -45,6 +45,13 @@
  */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+/* UI-53: the DEC-32 clause 1 ban family is DERIVED IN ONE PLACE and this suite
+   CONSUMES it. It used to hand-write its own `BANNED` list here; four such lists
+   existed in this directory, no two agreed, and NOT ONE carried `independently
+   sufficient` — the phrase that was actually reaching members. See
+   `analyst-vocabulary.mjs` for what the family is derived from and what it
+   cannot see. */
+import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
 /* THE PUBLISHED PROMPT, IMPORTED AND NEVER TRANSCRIBED. `op=affordances` sends
    the act's own wording (DEC-29(b), REC-16's mechanism) and this surface renders
    it verbatim; a suite that typed its own copy would be asserting that the
@@ -416,24 +423,34 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
    sweep runs over everything this flow rendered in every phase above, and it is
    the item's acceptance clause rather than a spot check. The patterns are the
    ones REC-45 holds its own published prompt and label to, so the act and its
-   surface are judged by one rule. */
+   surface are judged by one rule.
+
+   CORRECTED 2026-08-09 (UI-53), never exempted, and the old list was not merely
+   shorter — IT WAS WRONG ABOUT ITS OWN SCOPE. It carried five patterns and the
+   comment above claimed the act and its surface were judged by ONE rule, but
+   THREE other suites in this directory carried their own lists and NO TWO
+   AGREED: this one had no `partition` (three others did) and, like all four, no
+   `independently sufficient` — the phrase `Store.#axisResult` was rendering to
+   members and freezing into signed `bundle.md` frontmatter (D-269). The rule is
+   now literally one rule: `analyst-vocabulary.mjs` derives it from DEC-32 clause
+   1's own sentence and this sweep consumes it. NOTHING ELSE IN THIS SECTION
+   MOVED — same corpus, same phases, same wire-name arm. */
 {
-  const BANNED = [
-    [/\bground/i,          "the analyst's noun for a set of reasons"],
-    [/\bdisjunct/i,        "the analyst's word for the relationship"],
-    [/\bbranch/i,          "the analyst's word for one of them"],
-    [/\b(AND|OR)\b/,       "the connective, as vocabulary"],
-    [/\b(and|or)-related\b/i, "the relationship, named"],
-  ];
+  console.log("  " + reachLine());
   const hits = [];
   for(const [where, html] of SURFACES){
     const t = strip(html);
-    for(const [re, what] of BANNED) if(re.test(t)) hits.push(`${where}: ${what} — ${(re.exec(t)||[])[0]}`);
+    for(const h of analystHits(t)) hits.push(`${where}: ${h.token} — ${h.why}`);
   }
   ok("not one analyst word reaches the member on any surface this flow renders: " + (hits.join(" | ") || "clean"),
      hits.length === 0);
   ok("and the sweep actually saw the whole flow rather than one phase of it",
      SURFACES.length >= 8 && SURFACES.every(([, h]) => String(h).length > 0));
+  /* POLARITY, ADDED BY UI-53 — this suite had NONE. Three of the four sweeps
+     carried a planted witness and this one did not, so a family that silently
+     matched nothing would have read exactly like a clean surface here. */
+  ok("INSTRUMENT: the derived family DOES fire on a planted analyst sentence, so the arm above is a measurement rather than a silence",
+     analystHits("the ground partition of this OR-related set is independently sufficient").length > 0);
   /* THE WIRE NAME IS NOT A SURFACE, and the distinction is the ruling's own:
      the act is reached by its published id and that id is never printed. */
   ok("the act's wire name is used to reach it and is never rendered to the member",

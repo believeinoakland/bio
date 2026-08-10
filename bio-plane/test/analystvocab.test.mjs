@@ -29,11 +29,23 @@
  * ============================================================================
  * WHY THIS IS NOT A LIST OF SPELLINGS, AND WHAT IT IS INSTEAD
  * ============================================================================
- * There are already THREE separate hand-written BANNED lists in this repository
+ * There were FOUR separate hand-written BANNED lists in this repository and NO
+ * TWO OF THEM AGREED. That is the failure mode WORKER.md names: *a list of
+ * spellings goes stale the moment a fourth is written*. None of them would have
+ * caught `independently sufficient`.
+ *
+ * CORRECTED 2026-08-09 (UI-53): this paragraph said THREE
  * (`civicos-ui/test/elicitation.test.mjs`, `notifications.test.mjs`,
- * `version-review.test.mjs`) and NO TWO OF THEM AGREE. That is the failure mode
- * WORKER.md names: *a list of spellings goes stale the moment a fourth is
- * written*. None of the three would have caught `independently sufficient`.
+ * `version-review.test.mjs`). There was a FOURTH in `connections-sidebar.test.mjs`
+ * — whose own comment claimed the ban had "ONE spelling in this directory",
+ * already false, because `notifications.test.mjs` disagreed with the list it was
+ * copied from. **This item's census was keyed on the phrase its own delegation
+ * used and so under-reported by one**, which is the receipt for *a grep over
+ * prose is a hint, not a consumer census*.
+ *
+ * ALL FOUR ARE NOW CONSUMERS of one derived family
+ * (`civicos-ui/test/analyst-vocabulary.mjs`, UI-53 — derived from DEC-32 clause
+ * 1's own sentence). ARM L below drives the cross-check both ways.
  *
  * SO THE FAMILY IS DERIVED, NOT LISTED. The question asked is not *"is this
  * word on a list?"* but *"is this a word the MACHINE uses to explain itself,
@@ -131,6 +143,9 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+/* UI-53: the UI estate's ONE derived ban family, imported so ARM L can DRIVE the
+   cross-check rather than compare regex source text. */
+import { analystHits as uiAnalystHits } from "../../civicos-ui/test/analyst-vocabulary.mjs";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const STORE = ROOT + "src/store.mjs";
@@ -645,18 +660,63 @@ section("§5 SURFACE", () => {
 /* ==================================================================== *
  * §6 · THE HAND LISTS — the seeds really are the union already enforced.
  * ==================================================================== */
+/* CORRECTED 2026-08-09 (UI-53), NEVER EXEMPTED, AND THE OLD ARM WAS RIGHT — IT
+   CAUGHT ITS OWN SUPERSESSION. It read: *"all 3 hand-written BANNED lists are
+   still where this suite says they are … if one moves, the seed floor's
+   provenance is stale."* UI-53 moved all of them, so it went RED exactly as
+   designed, and that is the pin working rather than failing.
+
+   TWO THINGS IT SAID WERE ALREADY WRONG WHEN IT WAS WRITTEN, both measured at
+   UI-53 and both recorded here rather than quietly fixed:
+     (1) THERE WERE FOUR HAND LISTS, NOT THREE. `connections-sidebar.test.mjs`
+         (UI-44) carried a fourth. D-269's census was keyed on the phrase its own
+         delegation used, so it under-reported — *a grep over prose is a hint, not
+         a consumer census*, which is the trap this item's brief named and which
+         bit here inside the item written to fix it.
+     (2) THE SEED FLOOR WAS NOT THE UNION IT CLAIMED TO BE. Three of the four
+         lists carried a standalone `/\b(AND|OR)\b/` that no SEED carries, and no
+         list carried `conjunct`. "The union of all three" was a description of
+         intent, not of the array.
+
+   WHAT IT ASSERTS NOW: the four sites are CONSUMERS of the one derived family in
+   `civicos-ui/test/analyst-vocabulary.mjs`, they keep no private list beside it,
+   and — the part that makes the two families allies rather than rivals — THE UI
+   FAMILY CATCHES EVERY SEED THIS SUITE ENFORCES, driven by witnesses rather than
+   by comparing regex source. The seeds stay: they are checked BEFORE the
+   member-side skip and the UI family has no member-side skip at all, so the two
+   guard different corpora and neither subsumes the other. */
 section("ARM L", () => {
-  const files = ["elicitation.test.mjs", "notifications.test.mjs", "version-review.test.mjs"];
-  let found = 0;
+  const files = ["elicitation.test.mjs", "notifications.test.mjs",
+                 "version-review.test.mjs", "connections-sidebar.test.mjs"];
+  let consumes = 0, privateList = [];
   for (const f of files) {
     let t = "";
     try { t = readFileSync(UITEST + f, "utf8"); } catch (_) { }
-    if (/const BANNED = \[/.test(t)) found++;
+    if (/from "\.\/analyst-vocabulary\.mjs"/.test(t)) consumes++;
+    if (/const BANNED = \[/.test(t.replace(/\/\*[\s\S]*?\*\//g, " "))) privateList.push(f);
   }
-  ok(`ARM L: all ${files.length} hand-written BANNED lists are still where this suite says they are (found ${found}) — if one moves, the seed floor's provenance is stale`,
-     found === files.length);
-  ok("ARM L: and NONE of them would have caught D-269's phrase, which is the argument for deriving the family rather than listing it",
-     !files.some((f) => { try { return /independently sufficient/i.test(readFileSync(UITEST + f, "utf8").split("const BANNED = [")[1] || ""); } catch (_) { return false; } }));
+  ok(`ARM L: all ${files.length} former hand-list sites are CONSUMERS of the one derived family (found ${consumes}) — including \`connections-sidebar.test.mjs\`, the FOURTH list this arm used to say did not exist`,
+     consumes === files.length);
+  ok(`ARM L: and none of them keeps a private BANNED list beside it — found [${privateList.join(", ")}]`,
+     privateList.length === 0);
+  /* THE ANTI-RIVALRY CHECK, DRIVEN. Comparing regex source would be a
+     spelling-keyed check of a spelling-keyed problem and would agree for free. */
+  const SEED_WITNESSES = [
+    "the ground this rests on", "a disjunct basis", "the conjunctive reading",
+    "a labelled partition of the legs", "the OR branch",
+    "the 2 independently sufficient sets", "the AND/OR relationship",
+    "these are and-related legs", "the OR-branch beside it",
+  ];
+  const missed = [];
+  for (const w of SEED_WITNESSES) {
+    const mineFires = SEEDS.some(([re]) => re.test(w));
+    const uiFires = uiAnalystHits(w).length > 0;
+    if (mineFires && !uiFires) missed.push(w);
+  }
+  ok(`ARM L: the UI family catches every SEED this suite enforces, over ${SEED_WITNESSES.length} driven witnesses — the two guards are allies, not rivals. MISSED [${missed.join(" | ")}]`,
+     missed.length === 0);
+  ok("ARM L: and the UI family catches D-269's phrase, which is what the seed floor was standing in for until UI-53 landed",
+     uiAnalystHits("the 2 independently sufficient sets").length > 0);
 });
 
 /* ============================== FOOT ==============================
