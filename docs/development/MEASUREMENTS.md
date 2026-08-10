@@ -7658,3 +7658,109 @@ anchor strings were corrected: baseline `proposedispose 27/0 · current 63/0`, a
 
 **`store.mjs` line count, measured this turn: 26,144.** Quoted with the command rather than
 as a fact, because this figure has been wrong in the record four times: `wc -l < bio-plane/src/store.mjs`.
+
+## 2026-08-10 · D-280 / IC-61 — a project that withdrew was still setting the publication bar (RECORD, worktree-agent-aa5a5b887286869b2)
+
+**Instrument:** `bio-plane/test/d280-strengthbar.test.mjs` (29 assertions, driven through
+`op=strengthbarof`, `op=strengthbar`, `op=backlinks`, `op=promote`, `op=taskdrain` and
+`op=taskenqueue`); `bio-plane/test/d280-strengthbar.control.mjs` (6 arms). Battery
+`npm run test:battery`; `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read
+UNPIPED; `node civicos-ui/test/run.mjs` likewise.
+
+### THE BASELINE, MEASURED IN THIS WORKTREE AFTER `npm ci` AND BEFORE ANY EDIT
+
+**161/161 suites green · 10,021 assertions · 163.3 s · exit 0.** `npm ci` was run FIRST,
+per `CLAUDE.md`'s trap: a fresh worktree has no `bio-plane/node_modules` and the battery
+then reads ~28/161 with ~129 `ERR_MODULE_NOT_FOUND: miniflare` failures, which looks
+exactly like a catastrophic regression. `wc -l < bio-plane/src/store.mjs` = **26,144**
+before the change, **26,201** after (the file's own trap line says measure it rather than
+quote it; the last figure recorded anywhere was 21,248 on 2026-08-08).
+
+### AFTER, AND THE DELTA ATTRIBUTED PER SUITE BY DIFFING TWO FULL RUNS
+
+**162/162 suites green · 10,053 assertions · 161.3 s · exit 0.** Delta **+1 suite, +32
+assertions**, and every one of the 32 is attributed rather than assumed — the two run logs
+were reduced to `suite → assertions` and joined:
+
+| suite | before | after | why |
+| --- | --- | --- | --- |
+| `d280-strengthbar.test.mjs` | — | 29 | new |
+| `hygiene.test.mjs` | 621 | 624 | **exactly three per-suite censuses gain a row for any new suite** — disposes its Miniflare instances, exits deterministically, imports `test/sandbox.mjs`. Confirmed by grepping hygiene's own output for the new suite's name, not inferred from the arithmetic |
+| every other suite | — | unchanged | including `severedhomes.test.mjs` at 14, whose corrected assertion changed a WANTED VALUE and not a count |
+
+### WHAT THE DEFECT ACTUALLY WAS, MEASURED THROUGH THE OP
+
+`op=strengthbarof` on a document whose only citing project authored `status: severed`
+answered `declared: true, source: "project", projects: ["PROJ-…-withdrawn"]`. `refs` is a
+projection of `references[]` that carries the RELATION and DROPS the STATUS, so the
+withdrawal was invisible to the read. It now answers `declared: false, source: "none"` and
+prints the standing sentence *"An absent bar is not a bar of zero… this case makes no claim
+to have cleared any standard"*, so a fence that loosened SAYS that it loosened. The
+withdrawn project's id appears nowhere in the answer — asserted, because REC-30's leak
+shape is the id arriving through the `detail` prose after being dropped from `projects`.
+
+**The sharpest single figure:** a document cited LIVE at B/B and SEVERED at A/A now answers
+**B/B**. `A` is stricter than `B` (`BASIS_GRADES` is strongest-first), so before the change a
+project that had withdrawn was TIGHTENING the bar on a document it had left.
+
+### THE NEGATIVE CONTROLS — 6 arms, 0 NOT AS DECLARED, 0 restore failures, driver exit 0
+
+Each armed ALONE, `src/store.mjs` (1,653,120 bytes) restored after every arm and verified by
+sha256, by CONTENT, and by `cmp` twice (per-arm pristine AND pristine-of-record). Pen inside
+this worktree (`.d280-harness/`), never a shared scratchpad (PL-10). Two suites driven, not
+one, because the predicate is shared with D-267.
+
+| arm | what it does | d280 | severedhomes |
+| --- | --- | --- | --- |
+| (A) | the driven site's confirmation deleted — the defect itself | 22/7 | 13/1 |
+| (B) | `#routeTask`'s confirmation deleted | 26/3 | 13/1 |
+| (C) | **over-strictness:** ANY severed edge withdraws a citer instead of ALL | 28/1 | **14/0** |
+| (C2) | **over-strictness:** an ABSENT status defaults to severed, and the value is normalised | 26/3 | 13/1 |
+| (D) | `restingOn`'s status read deleted | 27/2 | 13/1 |
+| (E) | a FAITHFUL inline copy of the rule | 27/2 | 13/1 |
+
+**(C) is the only arm that leaves D-267's suite wholly green, and its single failure is the
+over-strictness arm with the HEADLINE STILL PASSING** — which is the entire argument for a
+separate over-strictness arm: a fence tighter than its rule still refuses the case it was
+built for, so over-strictness cannot be read off the headline. **(E) fails only STRUCTURAL
+arms and not one behavioural arm anywhere**, which is the point D-267 was raised on.
+
+**THREE DECLARATIONS CAME BACK WRONG ON THE FIRST RUN AND THE ARMS WERE RIGHT.** (A), (B)
+and (D) each delete a call site and each had declared `severedhomes.test.mjs` wholly green —
+impossible, because D-267's caller pin counts EXACTLY and this item corrected it from three
+to six. Corrected, and the correction recorded in the driver's header rather than the
+paragraph being rewritten.
+
+### TWO RATCHETS CAUGHT THIS CHANGE, AND NEITHER WAS A REVIEW
+
+1. **`derivation-bounds.test.mjs`** (REC-66's class ceiling) failed at 31 of 30. The arrival
+   was MEASURED and not guessed: the same walk was re-derived over
+   `git show HEAD:bio-plane/src/store.mjs` and over the working tree, and `comm` reports
+   **exactly one arrival, `#routeTask`, and no departure**. `restingOn` did NOT join, and
+   **`#requiredStrengthFor` was already a member** — worth knowing, because the naive reading
+   is that all three new per-row reads join. Both halves of the ratchet moved to 31 together
+   with the arrival named, REC-63's precedent. The scan is `WHERE r.target_id = ?` over
+   `refs_target`, bounded by the fan-in of ONE document; the loop is a `find` that stops at
+   the first live citer, so with no withdrawals it performs exactly the one document read the
+   old `#one` shape did.
+2. **`hygiene.test.mjs`** failed because the new suite never called `await mf.dispose()`.
+
+### WHAT WAS DELIBERATELY NOT DONE
+
+The missing `kind` filter — named in D-280's own row as part of site (a)'s defect — is NOT
+added. `refs` has a SECOND writer: the link projector inserts `kind='links_to'` rows with no
+frontmatter entry behind them. Narrowing by relation would drop bars the record currently
+honours, on edges carrying no author's decision, which is the over-strictness failure this
+item exists to avoid. It is a separate ruling and is stated as one rather than absorbed.
+
+### THE GATES
+
+- `node tools/gates.mjs --explain` → change class **FULL** (non-docs paths in the diff).
+- Battery **162/162 · 10,053 · exit 0**.
+- `node scripts/coverage.mjs --strict` **exit 0, read UNPIPED** — OPS **163/163** reached
+  through the control plane, CHECKS **228/228** named, both UNCHANGED because this item adds
+  no op and no refusal code. Register floor NOT MOVED: the run that produced arms 818 /
+  classified 156 / corpus 157 was CONTAMINATED by this item's own untracked suite, and D-238's
+  rule is that a floor moves only to the reproducible figures. That is CONDUCT's to move at
+  integration, from a run that sees the commit.
+- `node civicos-ui/test/run.mjs` **exit 0, read UNPIPED** — all harnesses green.

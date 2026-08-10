@@ -388,9 +388,35 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    is precisely the distinction REC-66 established when it proved that capping the answer
    would leave the scan in place. Whether it needs its own bound is REC-66's question one
    op later, and it is delegated rather than answered here. */
-const CLASS_MEASURED_2026_08_08 = 30;
+/* MOVED 30 → 31 ON 2026-08-10 BY D-280, AND THE ARRIVAL IS NAMED BECAUSE THE PIN
+   ABOVE SAYS A BARE COUNT IS SATISFIED BY ANY SET. **THE NEW MEMBER IS
+   `#routeTask`, MEASURED AND NOT GUESSED**: the roster was re-derived over
+   `git show HEAD:bio-plane/src/store.mjs` and over the working tree by this same
+   walk, and `comm` reports exactly one arrival and no departure. `restingOn` and
+   `#requiredStrengthFor` also changed in that item and neither moved the class —
+   `#requiredStrengthFor` was ALREADY a member, which is worth knowing.
+
+   WHY IT QUALIFIES: it stopped reading one row with `#one` and now reads the
+   citing-project rows for the target and asks, per row, whether that citer
+   WITHDREW (D-267's `#refEdgeSevered`, which must read the citing document —
+   `refs` carries the relation and drops the status, so the question cannot be
+   asked in SQL). That is a derivation walking a scan, which is exactly REC-66's
+   distinction and exactly why capping an answer would not have helped.
+
+   WHY IT IS NOT A REGRESSION, AND IT IS NOT LICENSED AS ONE. Two bounds, and
+   the second is the one that matters: the scan is `WHERE r.target_id = ?` over
+   the `refs_target` index, so it is bounded by the FAN-IN OF ONE DOCUMENT and
+   never by the corpus; and the loop is a `find` that STOPS AT THE FIRST LIVE
+   CITER, so in the ordinary case — no withdrawals — it performs exactly the one
+   document read the old `#one` shape performed. The extra work is bounded by the
+   number of consecutively-withdrawn citers ahead of a live one. No literal bound
+   was invented at the call site, because this file's own REC-66 arm is that a
+   bound belongs to the plane and not to the caller. Whether this read wants a
+   real bound is REC-66's question one method later, and it is DELEGATED rather
+   than answered here. */
+const CLASS_MEASURED_2026_08_08 = 31;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
