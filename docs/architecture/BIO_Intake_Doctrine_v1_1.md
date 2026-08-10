@@ -227,7 +227,7 @@ layer:
 
 -   **Grade B, fetched content.** The document bytes as fetched by a
     > capable surface, hashed at receipt, with locator and instant. What
-    > the chat surface and the Apps Script fetch layer produce.
+    > the chat surface and the mechanical fetch layer produce.
     > Sufficient for internal work and for verified state; the gap to
     > Grade A is recorded in Provenance Notes, never papered over.
 
@@ -586,7 +586,7 @@ of dispositioned material makes the answer real.
 
 # 9. Creation authority boundaries (added v1.1)
 
-Made concrete by the admission of creation-by-packaging (accelerator
+Made concrete by the admission of creation-by-packaging (the endpoint at
 0.10.2). The daemon creates Information bundles from named standing
 intent only, always at collected, never anything else and never higher.
 Sessions create Focus and Project bundles through

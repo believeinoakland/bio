@@ -409,8 +409,8 @@ except 7.13, which waits on member deactivation vacating nothing.
 
 **7.11 IS NARROW ON PURPOSE.** The section is titled deactivation and
 reactivation and says only owners may do THOSE. It does not say only owners may
-move a project's lifecycle, and reading it broadly would stop the accelerator
-advancing a project from `forming` to `investigating`, which is ordinary record
+move a project's lifecycle, and reading it broadly would stop a mechanical
+writer advancing a project from `forming` to `investigating`, which is ordinary record
 work gated by `contribute` like every other write. Exactly two transitions are
 owner-only: entering `closed` with a `closed_reason` of `abandoned`, and `closed`
 back to `investigating`. Both were already legal in the check catalog and nothing
@@ -1220,11 +1220,11 @@ defect is visible, and the page avoids backslash escapes entirely.
 
 ## Consistency audit, July 24, 2026
 
-Run after the doctrine corpus and the Apps Script promotion service were both
+Run after the doctrine corpus and the retired promotion service were both
 brought into the repository, comparing the documents, the authoritative check
 catalog, and the shipped plane against each other. The catalog is
 `bio-plane/checks/bio-checks.mjs`, version 1.16.4, hash-verified against the
-constant the accelerator pinned beside it.
+constant that service pinned beside it.
 
 **Finding 1: the plane's intake UI creates bundles the catalog would refuse.**
 Severity: real defect, shipped in 0.4.0 and 0.4.1.
@@ -1383,13 +1383,14 @@ retrieval arc.
 ## The source of record, verified live today
 
 FROZEN SNAPSHOT as of July 24, 2026, no longer of record. The former source
-lived in Google Drive under `CivicOS`
-(ID `1xBxJIjOCHShLqoo5fJx-Aevlu2397GuU`): `information/` (28 bundles),
+lived in the retired substrate's `CivicOS` folder tree — **decommissioned
+July 27, 2026, folders and deployment both deleted**, per
+`docs/archive/apps-script-README.md`: `information/` (28 bundles),
 `problems/` (1, state elevated), `projects/` (1, state forming),
 `actions/` (0), and `index/` holding `index.json` (registry v0.12.10, all
 30 bundles with locator, state, and live bundle.md sha256) plus
-`invocations.jsonl`. The accelerator daemon remains live during
-development; the CivicOS zip Bob downloads is the migration snapshot. Canonical IDs
+`invocations.jsonl`. **That daemon ran through the migration and is now gone**;
+the CivicOS zip Bob downloaded is the migration snapshot and is what survives. Canonical IDs
 include the slug, so the repeated numeric prefixes at 0100 and 0106 are
 distinct IDs, not collisions.
 
@@ -1397,7 +1398,7 @@ Nothing in the store is in a ratified state: the whole migration lands in
 the working corpus, and bio-published starts empty until the first real
 ratification on the new plane. `INFO-2026-5460-member-release-key-registry`
 (verified, July 22) must arrive intact; signature enforcement depends on
-it. 0098 (accelerator selftest) and 0120 (D5 acceptance test) are test
+it. 0098 (the retired plane's selftest) and 0120 (D5 acceptance test) are test
 material; they migrate anyway and can be deleted later through the normal
 path.
 
@@ -1559,10 +1560,10 @@ into the newgroup Worker, after the repo is live.
 biosmoke5.believeinoakland.workers.dev is THE development instance. All
 development, including the trial migration of the real record, runs
 against it. It will be wiped and a fresh production instance installed
-once the workflow is ready for real work. Until then, the Google Drive
-CivicOS store remains the permanent record of authority and the Apps
-Script daemon keeps running; nothing on the Drive side is decommissioned
-during development.
+once the workflow is ready for real work. **The retired store held the record
+of authority through the migration and was decommissioned July 27, 2026**
+(`docs/archive/apps-script-README.md`); what survives of it is the migration
+snapshot, and the plane is the only thing running.
 
 Installer hardened this session (tree 0.3.6, wizard 67 assertions green,
 by Bob's direction that the installer must do everything because real BIO
@@ -1649,8 +1650,8 @@ Production cutover (later, once the workflow is ready):
    point, since nothing needed lives there.
 10. Zone move still waits on the Network Solutions registrar transfer.
 
-The daemon is never repointed at the plane; its Apps Script substrate
-assumptions do not carry. Its plane-native replacement is future work in
+The retired daemon was never repointed at the plane; its substrate
+assumptions did not carry. Its plane-native replacement is future work in
 the retrieval-and-beyond arc, before production cutover.
 
 ## Live findings on the Cloudflare side, from this morning, unchanged

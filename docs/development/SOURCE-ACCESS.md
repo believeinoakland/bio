@@ -75,13 +75,13 @@ Three independent clients reached the same host while the plane could not, and
 all three were dismissed as network effects at the time:
 
 - **Bob's browser**, 2026-07-30, residential address, 200.
-- **The Apps Script data plane**, 2026-07-19, Google egress, retrieved five
+- **The retired data plane**, 2026-07-19, its host's egress, retrieved five
   documents including deep PDF paths. Its agent is a self-declared bot with a
   version and a contact URL, structurally the same shape as ours now.
 - **The Internet Archive**, per its own CDX index, 200s across the host
   throughout 2026.
 
-The Apps Script row is the one that should have broken the network theory
+That row is the one that should have broken the network theory
 earlier: `UrlFetchApp` is not a browser by any measure and it was admitted.
 
 ## What is in front of the site

@@ -292,3 +292,25 @@ stated rather than tidied. No other session held these paths.
 
 ---
 
+
+## CLAIM 2026-08-10 BOB (Bob's instruction — remove the retired substrate from the architecture record)
+session: bob-drive-removal (worktree `bio-worktrees/BOB`)
+opened: 2026-08-10T00:00:00Z
+paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
+  `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md`,
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md`,
+  `docs/architecture/README.md`, `docs/architecture/BIO_Complete_Roadmap_v5.md`,
+  `docs/architecture/BIO_Intake_Doctrine_v1_1.md`,
+  `docs/development/SOURCE-ACCESS.md`, `docs/development/CONFORMANCE-AND-INTAKE-ARC.md`,
+  `docs/development/ARCHIVE-FALLBACK.md`, `docs/development/CIVICOS_UI_STATE.md`,
+  `docs/development/MILESTONES.md` (the one localized reference only),
+  `docs/SESSION-KICKOFF.md`, `docs/BIO_DATAPLANE_STATE.md`,
+  `docs/archive/architecture/**` (NEW — where the retired runtime's own sections land),
+  `docs/archive/README.md` (the index row for them),
+  `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated).
+  **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended
+  entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are
+  dated records of what was measured and decided ON that runtime and are not architecture.
+  **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
+  recommend platforms to ADOPTING GROUPS rather than describing our substrate.
+  **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.

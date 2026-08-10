@@ -17,14 +17,21 @@ Working Document, v1.7, July 2026
 > `architecture/README.md` has said about it since July and no reader of this document
 > alone could see.**
 >
-> The RUNTIME here — an Apps Script accelerator assembling per-mode skill products and
-> draining a pending-package queue — was replaced by the Cloudflare plane. **The BUNDLE
-> FORMAT, the promotion semantics, and the C-series check catalog this document
+> The RUNTIME here — a per-group starter-kit endpoint assembling per-mode skill products
+> and draining a pending-package queue — was replaced by the Cloudflare plane. **The
+> BUNDLE FORMAT, the promotion semantics, and the C-series check catalog this document
 > specifies are what the plane implements and must continue to satisfy.**
 >
 > **Read it for the format and the checks, not for the runtime.** The catalog itself is
 > live at `bio-plane/checks/bio-checks.mjs`, hash-verified, and the gate RUNS it rather
 > than reimplementing it.
+>
+> **Amended 2026-08-10 on Bob's instruction that the retired substrate leave the
+> architecture record.** The revision log, the component inventory of a source tree that
+> no longer exists, and the retired endpoint's own build record moved verbatim to
+> `docs/archive/architecture/BIO_Bundle_Skill_Composite_Design_v1_7-retired-runtime.md`.
+> Everything the plane must still satisfy stayed, named by its ROLE rather than by the
+> runtime that first played it.
 
 ## 0. Purpose and governing documents
 
@@ -49,94 +56,14 @@ Pipeline Framework README (v4.34), studied July 2026. Design lessons
 adopted from them are cited inline; deviations are recorded in Section
 10.
 
-**Revision note (v1.7).** Minted July 20, 2026 at bio-bundle rev 0.1.48
-(bio-checks 1.9.0, accelerator 0.10.2, client 0.7.0), folding the M2'
-daemon build and live fire, which this document predated entirely at
-v1.6. (a) Section 9's one-codebase contract extends from two call sites
-to three: the embedded gate propagates checks.js byte-verbatim into
-promotion-service.gs at build time (assemble.py embed-gate,
-hash-verified at compile, verdict-parity asserted by conformance on
-every build over both PASS and FAIL fixtures), retiring v1.6's
-accelerator caveat; the daemon gates its own packages at packaging, and
-per the July 20 operator decision (Tech Arch v10 Section 10.11) the
-promoter additionally gates non-mechanical manifests, implementation at
-accelerator 0.10.3. (b) Section 8 records the daemon as a third
-packaging surface, a mechanical writer under the I-20 field-set fence,
-and defines skill_version as the writer's component version (the daemon
-writes the accelerator version; a session or the client writes the
-composite), matching all existing records. (c) Section 2's inventory
-gains the M2' build-emergent components: the daemon operation cores in
-promotion-service.gs, accelerator/test/daemon-conformance.mjs (85
-assertions including the interruption-recovery and cascade-ordering
-sections, count verified against an actual run), the client's
-daemon-view.js with its battery, and the intake battery;
-accelerator/postpkg.py (the packaged POST-with-sha-verification write
-helper) is recorded as a planned component entering at the next
-composite bump. (d) The check codebase stands at bio-checks 1.9.0 with
-the C-18 family and C-20.1. Companion references update to State Rules
-v1.5, Tech Arch v10, and BIO_Intake_Doctrine v1.0, which joined the
-document set after v1.6.
-
-**Revision note (v1.6).** Two ratifications from the Phase 1 client
-ladder (bio-bundle rev 0.1.20 through 0.1.29). (a) The Section 9
-one-codebase contract extends to the divergence-ladder classifier:
-classifyDivergence lives in bio-checks as the single implementation of
-the spec Section 5.5 rung semantics, called by the gate's C-17.2 and by
-every promoter that classifies (the client promoter today); no promoter
-carries its own. (b) Section 8 records the client as a second packaging
-surface: the PWA writes gate-passed packages through the admitted
-endpoint slate with the manifest strictly last, carrying author (the
-pwa-client caller class) and skill_version (the client version) so store
-provenance names the producing surface, with Edit provenance-gated to
-dockets freshly synced from the live endpoint. Companion references
-update to State Rules v1.4 and Tech Arch v9.
-
-**Revision note (v1.5).** The build order of Section 11 has been
-executed in full (July 10-11, 2026, bio-bundle 0.1.0, bio-checks 1.3.1);
-Section 11 now records outcomes and the remaining operator items. The
-component inventory gains the build-emergent components:
-core/promote-reference.js (axiomatic; the executable statement of the
-spec 2.4 convergent algorithm, the conformance target for the client and
-accelerator implementations), accelerator/test/conformance.mjs (the
-algorithm-identity harness: it executes the actual .gs source under node
-and asserts byte-identical bundle trees against the reference; it is the
-rebuild-together rule's enforcement mechanism), accelerator/DEPLOY.md
-(the Product D one-step group-setup guide), derivatives/product-c.js
-(the Product C profile emitter), and assemble.py's extract-runner
-subcommand (the Product B round-trip operation). Determinism is a hard
-assembly rule: products carry no timestamps or environment data, and
-assemble.py --verify proves byte-for-byte reproducibility on demand.
-Check C-16.5 added (stale advisory claims and presence markers surfaced
-with deletion as the repair; info severity, never load-bearing,
-completing the nothing-lies-around commitment of v1.2).
-Requirements-traceability audit recorded: sixteen of seventeen
-invariants carry executable checks; I-10's age check is deferred pending
-a spec v1.2 decision (below); I-17's disjointness auto-classification
-awaits the client ladder. Spec v1.2 candidates queued for ratification:
-reeval_pending becoming {flag, since, source} (unblocks C-10's age
-check), and Section 2 anatomy listing the transient advisory files
-(PROMOTING-*.json, PRESENCE-*.json).
-
-**Revision note (v1.4).** Multi-writer editing coherence resolved
-(optimistic, base-stamped, three-rung divergence ladder; spec Section
-5.5). The accelerator became dual-mode: time trigger plus a web endpoint
-bound to trigger-only semantics as a hard rule. The spec amendments
-carried by earlier revisions were published in spec v1.1.
-
-**Revision note (v1.3).** Promotion concurrency designed in:
-convergence, not exclusion (deterministic naming, commit-point write
-order, idempotent consumption, advisory claim). The accelerator reframed
-from optional extension to standard off-kernel component. Accretive-add
-identity made collision-resistant.
-
-**Revision note (v1.2).** The pending-package mechanism elevated to a
-first-class queue with a defined lifecycle. A dedicated watcher process
-rejected for the kernel. Checks-module durability made explicit:
-designed to run unmodified for years, schema evolution the only planned
-change vector, additive by construction.
-
-**Revision note (v1.1).** Check codebase changed to plain JavaScript
-with JSDoc annotations. Chat mode changed to packaging-only.
+**Revision history, v1.1 through v1.7 — moved to the archive 2026-08-10.** Seven
+revision notes tracked this design against a build that no longer exists: component
+inventories, product assemblies, deployment states and their version stamps. **The
+contracts they ratified are live below** — the one-codebase law and its extension to
+three call sites, the divergence-ladder classifier as a single implementation, the daemon
+as a mechanical writer under the field-set fence, and `skill_version` as the writer's own
+component version. The build history is verbatim in
+`docs/archive/architecture/BIO_Bundle_Skill_Composite_Design_v1_7-retired-runtime.md`.
 
 ## 1. Requirements the design must satisfy
 
@@ -172,11 +99,13 @@ Collected from the governing documents:
     > derivatives for agents; on-disk working copies with range reads
     > (Tech Arch Section 10.3).
 
--   **Substrate reality.** Drive is the default substrate with git/OSF
-    > mirrors; substrate locators never link objects; there is no server
-    > and no locking primitive, so promotion safety comes from
-    > convergence and write coherence from base stamps (spec Sections
-    > 2.4 and 5.5).
+-   **Substrate reality.** The substrate is a folder store the group
+    > itself controls, with git/OSF mirrors; substrate locators never
+    > link objects; **the design assumes no server and no locking
+    > primitive**, so promotion safety comes from convergence and write
+    > coherence from base stamps (spec Sections 2.4 and 5.5). A
+    > substrate that later offers more does not retire the guarantee —
+    > it makes it cheaper to keep.
 
 -   **Constrained repair.** The skill executes only sanctioned repairs
     > from the spec's violation-to-repair table, never free edits (spec
@@ -203,7 +132,7 @@ ledger
 │ └── promote-reference.js axiomatic executable statement of the
 convergent promotion
 
-│ algorithm (spec 2.4); conformance target for client + accelerator
+│ algorithm (spec 2.4); conformance target for every implementation
 
 ├── types/
 
@@ -254,22 +183,21 @@ resolution
 │ └── CHECKS.md human-readable catalog; versioning rules; fixture
 registry
 
-├── accelerator/
+├── endpoint/ Product D: the starter-kit endpoint — pure convergent core
 
-│ ├── promotion-service.gs Product D: pure convergent core + thin Apps
-Script bindings;
+│ plus thin runtime bindings; scheduled trigger plus a
 
-│ │ time trigger + trigger-only doGet; strict pre-work token check;
+│ trigger-only web entry point; strict pre-work token check;
 
-│ │ invocation log at index/invocations.jsonl
+│ an invocation log at index/invocations.jsonl; a one-step
 
-│ ├── DEPLOY.md one-step group deployment; token distribution and
-rotation
+│ group deployment guide; and a conformance harness that
 
-│ └── test/conformance.mjs executes the .gs source under node; asserts
-byte-identical
+│ executes the DEPLOYED source and asserts byte-identical
 
-│ end states vs promote-reference.js; structural endpoint greps
+│ end states against promote-reference.js. Its own build
+
+│ record is in the archive.
 
 ├── derivatives/
 
@@ -303,7 +231,7 @@ full pipeline as real,
 Measured sizes at 0.1.0: core 14.2KB, agent brief 5.2KB (37%), type
 schemas 2.7-7.1KB, operations 1.2-1.8KB, checks module \~40KB of
 JavaScript (executed, never loaded into context), consolidated \~100KB
-(chat-mode flat-rate physics), accelerator 274 lines of Apps Script.
+(chat-mode flat-rate physics).
 
 ## 3. Component taxonomy
 
@@ -315,10 +243,10 @@ axiomatic component changes, every derivative of it must be updated in
 the same session, and every product embedding it must be rebuilt.
 
 Axiomatic: core/bio-bundle-core.md, core/promote-reference.js, all four
-types/*.md, all four operations/*.md, checks/bio-checks/, CHECKS.md,
-accelerator/promotion-service.gs, accelerator/DEPLOY.md. Build tooling
-(assemble.py, derivatives/product-c.js,
-accelerator/test/conformance.mjs) is axiomatic in the same sense: edited
+types/*.md, all four operations/*.md, checks/bio-checks/, CHECKS.md, and
+the endpoint's source and deployment guide. Build tooling (the
+assembler, the profile emitter, the conformance harness) is axiomatic in
+the same sense: edited
 directly, versioned with the components whose contracts it enforces.
 
 Derivatives: bio-bundle-agent-brief.md (parent:
@@ -334,10 +262,10 @@ The State Rules spec is upstream of all of these. The update protocol is
 three-tiered: spec first, then axiomatic components, then derivatives
 and product rebuilds, all in one session. The convergent promotion
 algorithm exists in three implementations (the core's prose plus
-promote-reference.js, the client's promotion path, the accelerator's
-promoteBundleCore\_); the spec is its authoritative statement,
-promote-reference.js is its executable statement, and conformance.mjs
-binds the accelerator to it byte-for-byte. Any algorithm change updates
+promote-reference.js, the client's promotion path, and the endpoint's
+promotion core); the spec is its authoritative statement,
+promote-reference.js is its executable statement, and the conformance
+harness binds every other implementation to it byte-for-byte. Any algorithm change updates
 all three and re-runs conformance in the same session.
 
 ## 4. The core component
@@ -471,7 +399,7 @@ loads the core plus exactly the listed components.
   -----------------------------------------------------------------------
 
 The checks module is never loaded into context in any row; it is
-executed. The accelerator is never loaded in any row; it is deployed
+executed. The endpoint is never loaded in any row; it is deployed
 infrastructure.
 
 ## 7. Products, one per execution surface
@@ -514,11 +442,12 @@ with the gate CLI and the promoter listed as execute-only paths.
 Hard-fails on an unknown type or a missing store root. This emitter is
 the file the Tech Arch's headless-dispatch endpoint candidate will call.
 
-**Product D: starter-kit accelerator**
-(accelerator/promotion-service.gs + DEPLOY.md). Dual-mode, off-kernel,
-deployed in one guided step. Its promotion core is bound to the
-reference implementation by test/conformance.mjs, which runs the actual
-.gs source under node and asserts byte-identical bundle trees,
+**Product D: the starter-kit endpoint** (its source plus a deployment
+guide). Dual-mode, off-kernel, deployed in one guided step. Its
+promotion core is bound to the reference implementation by a conformance
+harness, and **the binding rule is the one that matters and is
+substrate-free: the harness executes the DEPLOYED source itself, not a
+port of it**, asserting byte-identical bundle trees,
 convergence on re-run and on cross-implementation interleaving,
 refusal-without-touching on divergence and hash mismatch, and the
 structural endpoint guarantees (no content ingestion path, no eval,
@@ -530,15 +459,15 @@ affected products in the same session, bumps COMPOSITE_VERSION, and
 re-verifies reproducibility. A checks change rebuilds Product B
 (embedded runner) and re-runs the extraction round trip. A
 promotion-algorithm change updates the core prose, promote-reference.js,
-and the accelerator together, and re-runs conformance.mjs. Nothing
+and the endpoint together, and re-runs conformance. Nothing
 scrapes component footers for versions; consumers read the marker line.
 
-## 8. Write-delivery paths, the queue, concurrency, and the accelerator
+## 8. Write-delivery paths, the queue, concurrency, and the endpoint
 
 **The capability boundary that shapes this section.** Promotion is
-snapshot-then-replace, and the Drive connector available to a chat
-session can create files and copy files but cannot update, rename, or
-move. In-place replacement is structurally impossible from chat mode,
+snapshot-then-replace, and the substrate connector available to a chat
+session could create files and copy files but could not update, rename,
+or move. In-place replacement is structurally impossible from chat mode,
 which is exactly why the Alpha Pipeline needed a server-side watcher.
 BIO assigns promotion only to actors that can perform it and gives chat
 mode a packaging role. Beyond the capability gap, Alpha production
@@ -589,7 +518,7 @@ which is what makes the recorded base trustworthy.
 
 **The daemon (a third packaging surface, added v1.7).** The M2' daemon
 writes through the same queue under the same protocol from inside the
-accelerator itself: first-capture creations and change-detection updates
+endpoint itself: first-capture creations and change-detection updates
 land as gate-passed packages (the embedded gate, Section 9), files first
 and manifest strictly last, promoted by the same convergent algorithm in
 the same or a subsequent execution. The daemon is a mechanical writer
@@ -598,7 +527,7 @@ mechanical and an operation name, its diffs stay within the operation's
 declared field set, and C-20.1 audits every mechanical promotion after
 the fact from the history record. skill_version semantics, settled v1.7
 for every packaging surface: the field carries the writer's component
-version, so the daemon writes the accelerator version while a session or
+version, so the daemon writes the endpoint's version while a session or
 the client writes the composite, and a consumer reading skill_version
 knows which writer's contract to interpret the package under; all
 records produced to date conform without amendment. The manifest's
@@ -644,26 +573,25 @@ automatic merge remain a sync-engine concern; a sync engine would
 replace the mechanics of the ladder's lower rungs, never the policy of
 adjudication.
 
-**The accelerator: standard equipment, dual-mode, off-kernel.**
-promotion-service.gs is a Google Apps Script deployed per group during
-setup. It exposes one implementation of the convergent algorithm through
-two entry points: the time-driven trigger (ambient latency; the queue
-drains within minutes regardless of anyone opening a client) and the
-web-app endpoint (doGet, invocable by plain URL fetch; a packaging
-session pings it and promotion completes in seconds). The endpoint is
-bound by the trigger-only hard rule and the Tech Arch v6 Section 10.4
-token discipline: strict pre-work verification of per-caller-class
-bearer tokens from Script Properties, a bundle selector validated
-against the ID grammar as the only other parameter, the invocation log
-at index/invocations.jsonl as the OP8 sensor, and no gate run, because
-the accelerator never judges content. The off-kernel discipline is
-unchanged and non-negotiable: idempotent (conformance-proven), never
-load-bearing (the checker's pending and staleness findings persist
-regardless), gracefully degrading (a dead accelerator leaves behavior
-identical to a group that never deployed one). Belt and suspenders is
-the default posture: client-as-watcher supplies the guarantee, the
-accelerator supplies the latency, and the convergent algorithm is what
-lets all of them run without coordination.
+**The endpoint: standard equipment, dual-mode, off-kernel.** The
+starter-kit endpoint is deployed per group during setup. It exposes one
+implementation of the convergent algorithm through two entry points: a
+scheduled trigger (ambient latency; the queue drains within minutes
+regardless of anyone opening a client) and a web entry point (invocable
+by plain URL fetch; a packaging session pings it and promotion completes
+in seconds). It is bound by the trigger-only hard rule and the Tech Arch
+Section 10.4 token discipline: strict pre-work verification of
+per-caller-class bearer tokens held in server-side configuration, a
+bundle selector validated against the ID grammar as the only other
+parameter, the invocation log at index/invocations.jsonl as the OP8
+sensor, and no gate run, because **the endpoint never judges content.**
+The off-kernel discipline is unchanged and non-negotiable: idempotent
+(conformance-proven), never load-bearing (the checker's pending and
+staleness findings persist regardless), gracefully degrading (a dead
+endpoint leaves behavior identical to a group that never deployed one).
+Belt and suspenders is the default posture: client-as-watcher supplies
+the guarantee, the endpoint supplies the latency, and the convergent
+algorithm is what lets all of them run without coordination.
 
 In every mode and path, the on-disk (or in-sandbox) working copies are
 the source of truth at write time; the skill never re-reads the bundle
@@ -674,8 +602,8 @@ rationale, transfer verbatim from Alpha production experience.
 
 The Mechanical Verification Law requires one check implementation at
 every judging call site: the skill's pre-write gate, the PWA's scan-time
-consistency checker, and (since M2', through the embedded gate) the
-accelerator. The Alpha precedent (Python bundle_check.py) cannot satisfy
+consistency checker, and (through the embedded gate) the endpoint. The
+Alpha precedent (Python bundle_check.py) cannot satisfy
 this for BIO, because the second call site is a browser.
 
 **Decision: the checks are plain JavaScript (ES modules) with JSDoc type
@@ -725,26 +653,28 @@ time, round-trip-verified. The restricted-grammar frontmatter parser is
 implemented in the module against the spec's deliberately limited
 grammar rather than pulling in a general YAML library, and it
 specifically detects the buried-top-level-key failure mode. Checks are
-versioned against schema stamps per spec Section 8.4. The accelerator
-cannot import the module (Apps Script is its own runtime), so the module
-comes to it: assemble.py embed-gate writes checks.js byte-verbatim into
-promotion-service.gs as a generated region carrying the source, its
-SHA-256, and its version; the runtime wrapper hash-verifies before
+versioned against schema stamps per spec Section 8.4. **Where a call
+site cannot IMPORT the module — a runtime with its own module system —
+the module comes to it rather than being ported into it:** the build
+writes checks.js byte-verbatim into that runtime's source as a generated
+region carrying the source, its SHA-256, and its version; the runtime
+wrapper hash-verifies before
 compiling, strips module syntax deterministically, and compiles once,
 with check-versions asserting the region's hash and round trip on every
 build and conformance asserting gate-verdict parity against the real ES
 module under V8 over shared fixtures, both PASS and FAIL. The daemon
 gates its own packages at packaging through this embedded gate, and per
 the July 20 operator decision the promoter gates non-mechanical
-manifests at promotion (implementation at accelerator 0.10.3). One
-codebase, three call sites: the session gate, the client checker, and
-the accelerator.
+manifests at promotion. One codebase, three call sites: the session
+gate, the client checker, and the endpoint. **A ported check is a second
+codebase wearing the first one's name**, which is why the transport is a
+hash-verified copy of the exact bytes and never a reimplementation.
 
 **The classifier joins the one-codebase contract (added v1.6).**
 classifyDivergence lives in this module and is the single implementation
 of the spec Section 5.5 rung semantics: the gate's C-17.2 calls it to
 classify divergent pending packages, and every promoter that classifies
-(the client promoter, and the accelerator through the embedded module)
+(the client promoter, and the endpoint through the embedded module)
 calls the same function before applying or refusing. A promoter
 implementation never carries its own classifier. Without this rule, gate
 classification and promoter behavior could diverge, which is exactly the
@@ -774,7 +704,7 @@ a file drop plus a matrix row, with code changes only when the schema or
 checks change).
 
 Deviations, each ratified upstream or in this document's revision notes:
-no kernel watcher, with the accelerator admitted as standard off-kernel
+no kernel watcher, with the endpoint admitted as standard off-kernel
 dual-mode equipment (idempotent, non-load-bearing, gracefully degrading;
 web endpoint bound to trigger-only semantics, general RPC prohibited);
 promotion concurrency handled by convergence rather than exclusion;
@@ -835,8 +765,8 @@ README build-state ledger carries the per-step detail; the outcomes:
     > four types plus negatives; a headless-style write performed
     > through the brief's protocol.
 
--   **Accelerator.** Conformance proven by executing the actual .gs
-    > source under node: byte-identical bundle trees versus the
+-   **The endpoint.** Conformance proven by executing the actual
+    > deployed source under node: byte-identical bundle trees versus the
     > reference, convergence under re-run and cross-implementation
     > interleaving, refusal-without-touching on divergence and hash
     > mismatch, structural endpoint guarantees grep-proven.
@@ -850,12 +780,12 @@ Post-build, an end-to-end three-mode chain was exercised on real store
 data: a chat-protocol session addressed a pending annotation, gated
 in-session via the Product B extracted runner, and emitted a create-only
 pending package; the endpoint's actual doGet rejected an invalid token
-and a malformed selector under stubs; the accelerator core promoted the
+and a malformed selector under stubs; the endpoint core promoted the
 package; and the post-promotion gate plus the append-only guards passed,
 with the nested annotation snapshot correctly archived.
 
 **Remaining operator items** (outside this environment's reach): deploy
-the accelerator per DEPLOY.md and live-fire the endpoint against a
+the endpoint per its deployment guide and live-fire it against a
 scratch package; install Product B into a claude.ai project and run one
 real chat packaging session; install Product A into Claude Code or
 Cowork and run one real agentic session; run Product C through an actual

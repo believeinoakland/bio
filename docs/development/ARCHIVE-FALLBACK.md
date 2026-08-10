@@ -209,7 +209,7 @@ so the premise was wrong, and one draft asserted that a public body is blocking
 archival crawlers when the situation is more specific than that. Revisit once the
 allowlist question with the City is settled.
 
-Note for whoever picks this up: the Apps Script captures of 2026-07-19 each carry
+Note for whoever picks this up: the retired plane's captures of 2026-07-19 each carry
 a `save-page-now` attestation attempt and **every one failed**, four with HTTP 302
 and one with 520. Save Page Now was already part of the strategy and was already
 not working.

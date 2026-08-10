@@ -143,6 +143,29 @@ _(drained by CONDUCT 2026-08-07 — the investigative session HANDED OVER. **The
 
 ---
 
+
+**2026-08-10 · BOB · THE RETIRED SUBSTRATE IS OUT OF THE ARCHITECTURE RECORD** (Bob's
+instruction, same day: "Remove all references to Google Drive and App Script, as that's
+not part of the system architecture"). Branch `bob-drive-removal`, all four gates green.
+What changed for CONDUCT:
+
+- **Three architecture documents were rewritten with per-reference judgment**, not
+  find-and-replace: `BIO_Technical_Architecture_Decisions_v10.md` (revision log v5–v10,
+  §8.4, §9's substrate rows, §10.4's registry and posture, §10.7–10.11 restated as
+  rules), `BIO_Bundle_Skill_Composite_Design_v1_7.md` (revision log, inventory, §7–§9),
+  `BIO_State_Rules_Consistency_v1_5.md` (banner and localized references). The retired
+  runtime's own sections moved VERBATIM to `docs/archive/architecture/` (two files,
+  indexed in `docs/archive/README.md`); the doctrine stayed, stated by property rather
+  than vendor. Localized references in eleven further documents were rewritten in place.
+- **The append-only ledgers were NOT touched** — their retired-runtime rows are dated
+  records, not architecture. `BIO_Communications_Platforms.md` and R9's platform advice
+  to adopting groups were also NOT touched; that is **DEC-67 (open)**, raised rather than
+  folded in.
+- **`mintid` floors were measured identical before and after** across all namespaces
+  (the archive is in every corpus). `docs/DECIDED.md` regenerated.
+- **No queue item is superseded and no worker should be stopped.** The one kickoff this
+  supersedes is BOB's own (`BOB-NEXT.md`), corrected in the same turn.
+
 ## SESSION HANDOVER 2026-08-04 (CONDUCT → next CONDUCT; DIST splits off)
 
 The CONDUCT session of 2026-08-04 ended when remote access was lost. **The resume prompt is

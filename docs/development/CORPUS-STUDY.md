@@ -183,6 +183,15 @@ July 2026, with no marker saying the runtime underneath it is gone.
 This is the corpus's largest correctness defect and it is a one-line fix per document.
 It is not a consolidation; it is a repair, and it should happen first.
 
+> **SUPERSEDED 2026-08-10, the same day, by Bob's instruction: "Remove all references to
+> Google Drive and App Script, as that's not part of the system architecture."** Move 1's
+> banners were the cheap repair; his instruction is the real one, and the banners came out
+> with the text they warned about. The retired runtime's own sections moved verbatim to
+> `docs/archive/architecture/`, the doctrine around them was restated in terms of the
+> property rather than the vendor, and the append-only ledgers were left exactly as they
+> are — a ledger is a dated record of what was measured on that runtime, and it is not
+> architecture. **The paragraph above stands as the finding that produced both moves.**
+
 ---
 
 # PART 2 · WHAT WAS MEASURED

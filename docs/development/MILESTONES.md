@@ -759,7 +759,7 @@ milestone claims them:
   shape was open, and the shape is decided provisionally under M2 above.
 - **D-45** unbacked register entry at promote, **D-38** the citation ceiling — settled
   by decision, default is to leave them.
-- **D-56** CPU headroom, **D-70** the third axis, **D-100** the Apps Script lesson —
+- **D-56** CPU headroom, **D-70** the third axis, **D-100** the retired plane's egress lesson —
   watch items with no task attached, deliberately.
 - **D-111** the Wayback rate ceilings — not measurable by us without imposing a cost
   on strangers, which is a standing position rather than an omission.

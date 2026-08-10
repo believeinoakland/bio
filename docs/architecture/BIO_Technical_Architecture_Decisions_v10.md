@@ -13,14 +13,14 @@
 interruption, concurrency, and index-integrity models; manifest
 contract; promotion gate posture)*
 
-> # ⚠ THE RUNTIME THIS DOCUMENT DESCRIBES NO LONGER EXISTS
+> # ⚠ THIS IS THE ARGUMENT, NOT THE SYSTEM
 >
-> **Banner added 2026-08-10 (session BOB).** This document specifies **Google Drive
-> folders as the bundle substrate and Google Apps Script as the constrained-endpoint
-> runtime**, with live-fire dates through July 2026. **The built system is a Cloudflare
-> Worker plus a Durable Object with SQLite, and R2 for captured bytes**, installed into
-> a group's own Cloudflare account by `newgroup`. There is no Drive, no Apps Script,
-> no accelerator, and no promotion queue.
+> **Status note, 2026-08-10 (session BOB), rewritten the same day when the retired
+> substrate was removed from the text on Bob's instruction.** This document was written
+> against a hosted document-store substrate with a per-group scripted endpoint runtime,
+> retired July 2026. **The built system is a Cloudflare Worker plus a Durable Object with
+> SQLite, and R2 for captured bytes**, installed into a group's own Cloudflare account by
+> `newgroup`. There is no accelerator and no promotion queue.
 >
 > **The substrate was replaced and the DOCTRINE was kept**, which is why this document
 > is still here and still worth reading. What it argues — canonical identity and
@@ -29,11 +29,12 @@ contract; promotion gate posture)*
 > Session abstraction and the moving capability cap, the two secret tiers, and above all
 > the **Mechanical Verification Law** — is what the plane implements today.
 >
-> **Read Sections 8.4, 9, and 10.4 through 10.11 as HISTORY.** They describe Apps Script
-> endpoint admission, OAuth grants, six-minute execution walls, LockService claims, Drive
-> sequence collisions and a Netlify-hosted PWA. The reasoning in them was paid for in
-> production and several of its conclusions carried over to the Worker; the mechanisms
-> did not.
+> **The sections whose SUBJECT was the retired runtime have been moved out**, verbatim and
+> unedited, to `docs/archive/architecture/BIO_Technical_Architecture_Decisions_v10-retired-runtime.md`:
+> the v5–v10 revision log, the Phase 1 client as built, and the endpoint registry with its
+> deployment posture. What stayed is the reasoning that outlived them, stated in terms of
+> the property rather than the vendor. **Where a decision below is expressed as a general
+> rule, it is live; where it named a mechanism, the mechanism is in the archive.**
 >
 > **Where this document and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the
 > dataplane state is the system and this is the argument that produced it.** For what has
@@ -71,132 +72,23 @@ distribution container are governed by BIO_Intake_Doctrine (v1.0,
 ratified July 18, 2026), which joined the document set after v9 of this
 document.
 
-**Revision note (v10).** Supersedes v9. Ratifies the P2 M2' daemon
-completion state at bio-bundle rev 0.1.48 (accelerator 0.10.2,
-bio-checks 1.9.0, client 0.7.0), folding the M2' daemon admission slate,
-the July 19 live-fire findings, and the operator decisions of July 20.
-(a) Section 10.4's registry flips monitor-tick, sweep, and
-deadline-recheck (duescan) from candidate to deployed, each live-fire
-verified in production on July 19, 2026, and admits member
-creation-by-packaging as a write-package capability extension per its
-admission note (endpoint-admission-m2b-member-creation.md), deployed at
-accelerator 0.10.2. (b) New Sections 10.7 through 10.9 record the
-operational models the live fire validated: the interruption model
-(manifest-last durability, cascade-before-change ordering, self-expiring
-claims, recovery by inflight completion), daemon concurrency
-(claim-serialized creation-capable operations, sequence uniqueness
-deliberately not an invariant), and fail-closed index integrity (missing
-versus failure, degraded-index behavior). (c) New Section 10.10 states
-the manifest contract: created is real UTC, author names the deciding
-member on authority-bearing writes, and skill_version is the writer's
-component version. (d) New Section 10.11 records the promotion gate
-posture decided July 20 on the operator's word: the embedded gate runs
-at promotion for non-mechanical manifests, implementation queued at
-accelerator 0.10.3. (e) Section 7 gains 7.6 (the gathering contract:
-locators as ordered fallbacks, one document per request, unknown cadence
-defaulting to monthly) and 7.7 (attestation in production: SPN anonymous
-mode, the RFC 3161 freetsa fallback with digicert failures recorded, the
-CA caveat, and the coming M3' asymmetry for unfetchable member-submitted
-documents). (f) Section 7.1 records the proven mechanical source
-classes: Socrata full-file exports and Granicus Legistar REST. (g)
-Section 10.4's deployment posture gains the OAuth deployment discipline
-by reference to DEPLOY-P2M2.md Section 2a. Companion references update
-to include BIO_Intake_Doctrine v1.0.
-
-**Revision note (v9).** Supersedes v8. Ratifies the Phase 1 completion
-state at bio-bundle rev 0.1.29. (a) Section 10.4's registry folds in the
-two Phase 1 admission drafts, the client caller-class slate (list, read,
-write-package; drafted July 16) and reindex (drafted July 17); all four
-operations are admitted and deployed, live-fire verified through the
-July 17-18 deployment trip including the operator's end-to-end write,
-and both draft files are superseded by this folding. The status
-operation's bundle-selector probe, added during the M4 live-fire
-postmortem, is recorded. (b) Section 8 gains 8.4, ratifying the Phase 1
-client's settled decisions from the client's decision record
-(CLIENT.md): in-repo placement importing bio-checks by relative path,
-the two-table mirror schema, and Netlify hosting. (c) Section 10 gains
-10.6, recording the VERSIONS.json tree-coherence discipline (adopted at
-rev 0.1.16) as a decision. (d) The v8 browser-reachability finding is
-upgraded from verified-in-browser to live-verified: the client's
-live-fire sync, write, and reindex all ride native /exec CORS within
-simple-request rules. (e) The registry's candidate list gains two named
-candidates with recorded trigger conditions, batched multi-file read and
-read-class log batching; the routine candidate list otherwise stands
-empty, with the monitor tick and sweeps pending their Phase 2 consuming
-components and headless dispatch pending Section 12. Companion
-references update to State Rules v1.4 and Bundle Skill Composite Design
-v1.6.
-
-**Revision note (v8).** Supersedes v7. Records two operational findings
-from the July 11 accelerator deployment and conformance work, both
-binding on Section 10.4's deployment posture. (a) URL capture: inside
-the Apps Script editor, getService().getUrl() returns the head
-deployment's /dev URL, which demands Google sign-in and which no AI
-session can invoke; setup therefore resolves the published /exec URL by
-strict precedence (an explicit proxy URL, then the WEBAPP_EXEC_URL
-script property the operator sets from Manage deployments, then the
-service URL only when it already ends in /exec) and never writes a /dev
-URL into any caller credential block; code changes republish as a new
-version on the existing deployment, which keeps the URL stable. (b)
-Browser reachability: /exec responses carry Access-Control-Allow-Origin:
-\* on both the 302 redirect and the final hop, so simple cross-origin
-GETs succeed natively from any browser origin, while preflighted
-requests fail on a 405 OPTIONS response; callers must stay within
-simple-request rules (plain fetch, every parameter in the query string,
-no custom headers), which the endpoint contract already enforces.
-Verified in a live browser on July 11. This closes the Phase 1
-reachability question and covers natively the CORS role once assigned to
-the discarded proxy worker.
-
-**Revision note (v7).** Supersedes v6. Ratifies two decisions carried in
-prototype as pending. (a) Section 10.4's endpoint registry is updated to
-record the operations admitted and exercised during the July 10-11
-deployment: the promotion endpoint (drains the queue), the status
-operation (read-only health: version, configuration, trigger state,
-queue depth), and the selftest operation (packages and promotes one
-update in a single designated scratch bundle from standing intent,
-hash-verifying the result). All three were live-fire verified against
-the deployed CivicOS accelerator. A development-only companion (a
-deletable second script file granting path-addressed read/write/delete
-plus trash and trigger-tick, guarded by a dead-man expiry and reported
-by the status operation's devMode flag) is recorded as an explicitly
-temporary, non-production capability, not a registry member. (b) Section
-10.5 is added, ratifying the two-tier secret-management scheme. The
-permitted-use question (Section 12) remains genuinely open, as it turns
-on Anthropic's external subscription terms rather than any BIO decision;
-the headless-dispatch endpoint candidate stays blocked on it.
-
-**Revision note (v6).** Supersedes v5. Section 10.4's deployment posture
-gains the invocation-token discipline: endpoints deploy with "anyone"
-access so AI sessions can invoke by plain fetch, layered with
-per-caller-class bearer tokens that are honestly scoped as a
-quota-and-attribution mechanism, never a security boundary (integrity
-rests on store-authoritative semantics and cannot be strengthened by
-identifying callers). Verification is strict rather than lazy (the check
-is free, the work costs quota, and rejection is safe because endpoints
-are non-load-bearing); replay defense is deliberately omitted
-(idempotence makes replays no-ops); tokens live in Script Properties and
-caller-side config, never in the mirrorable store; and every invocation
-is logged to a non-authoritative operational log whose anomalies the
-checker surfaces as findings, per Operational Principle 8.
-
-**Revision note (v5).** Superseded v4. Added Section 10.4, recognizing
-constrained endpoints as a capability class available throughout the
-workflow: server-side Apps Script endpoints under store-authoritative
-invocation semantics, admitted individually through a closed registry,
-overcoming connector capability limits without reopening the no-backend
-boundary. The promotion endpoint (Bundle Skill Composite Design v1.4,
-Product D) is the registry's first admitted member. Section 12's
-permitted-use question gained the headless-dispatch endpoint dependency.
-Companion references updated to State Rules v1.1 and the Bundle Skill
-Composite Design.
+**Revision history, v5 through v10 — moved to the archive 2026-08-10.** Six revision
+notes recorded the retired runtime's deployment history: endpoint admissions and their
+live-fire dates, an invocation-token discipline, a URL-capture and browser-reachability
+finding, a deployment-authorization discipline, and the operational models the July 2026 live
+fire validated. **The models themselves are live below** — the interruption model (10.7),
+concurrency (10.8), fail-closed index integrity (10.9), the manifest contract (10.10) and
+the promotion gate posture (10.11), each stated as the rule rather than as the mechanism
+that first proved it. The deployment history that produced them is verbatim in
+`docs/archive/architecture/BIO_Technical_Architecture_Decisions_v10-retired-runtime.md`.
+The one revision note that recorded DESIGN rather than deployment is kept in full:
 
 **Revision note (v4).** Superseded v3. Recorded the July 2026
 design-session decisions, made with the Alpha Pipeline bundle skill
 studied as prior art: (a) flat per-type store layout with
 reference-based linking and no containment nesting (Section 3); (b)
-references are canonical bundle IDs, never substrate locators such as
-Drive file IDs (Section 3); (c) lifecycle state lives in frontmatter
+references are canonical bundle IDs, never substrate locators such as a
+host's own file ids (Section 3); (c) lifecycle state lives in frontmatter
 only, with no folder moves (Section 3); (d) frontmatter is a universal
 core plus a per-type extension, mirroring the composite skill's
 core-plus-schemas structure (Section 3); (e) Annotations are persisted
@@ -350,7 +242,8 @@ different types plus subfolders. The pattern is adapted from a prior
 production project; BIO's schemas differ, but the structural machinery
 transfers.
 
--   A bundle is a folder (Google Drive by default; see Section 9). It
+-   A bundle is a folder in whatever substrate holds the store (Section
+    > 9). It
     > holds JSON where structure matters and other formats where
     > human-readability or rendering matters: .md for narrative, .svg
     > for diagrams, and others.
@@ -381,9 +274,9 @@ annotations, and distribution snapshots.
 **Canonical identity and substrate independence (decided July 2026).**
 Every bundle carries an immutable, self-assigned, human-legible
 canonical ID that is also its folder name. All references between
-objects use canonical IDs. No Drive file ID, URL, or path ever appears
-as a link between objects; substrate locators would die on the first
-mirror to git or OSF (R9, R14). The per-group derived index maps
+objects use canonical IDs. **No substrate locator — a host's file id, a
+URL, a path — ever appears as a link between objects**; substrate
+locators would die on the first mirror to git or OSF (R9, R14). The per-group derived index maps
 canonical IDs to current substrate locators and is regenerable by scan,
 never authoritative. The ID grammar and naming rules are specified in
 the State Rules spec.
@@ -837,8 +730,8 @@ anonymous mode (the SPN2 S3 key pair is a standing Tier B operator item;
 anonymous mode is working and recorded per capture, with the http 302
 confirmation and the archive locator entering the register). Trusted
 timestamps are RFC 3161: timestamp.digicert.com is the configured
-primary and has failed silently from the Apps Script runtime on every
-attempt; the freetsa.org fallback engages and carries every token issued
+primary and failed silently on every attempt from the runtime that first
+ran this; the freetsa.org fallback engages and carries every token issued
 to date, with the failure recorded per capture in attestation_attempts.
 This concentration in a single fallback authority is a recorded exposure
 to watch, and the CA caveat stands: freetsa's certificate chain is
@@ -981,56 +874,37 @@ focusing is a first-class act. Extensibility is an invariant kernel plus
 {skill, surface, artifact type} extensions in three kinds, with external
 integrations always optional, per-group, and replaceable.
 
-## 8.4 The Phase 1 client, as built (added v9)
+## 8.4 What the first client established (added v9, rewritten 2026-08-10)
 
-The Phase 1 PWA shipped all six ladder rungs (client 0.6.2; the decision
-record is bio-bundle/client/CLIENT.md, which this section ratifies).
-Three architectural decisions:
+The Phase 1 client has been replaced by `civicos-ui`, and everything in this section that
+was a BUILD — its static host, its local table shapes, the endpoint slate it synced
+against — went with the runtime it talked to. That text is verbatim in
+`docs/archive/architecture/BIO_Technical_Architecture_Decisions_v10-retired-runtime.md`.
+**Two of its three decisions were laws rather than choices, and both still hold:**
 
--   **Repo shape.** The client lives at bio-bundle/client/, a sibling of
-    > checks/ and accelerator/, importing bio-checks source directly by
-    > relative path. No copied checks artifact exists anywhere: a copy
-    > is a second codebase the moment the original moves, and the client
-    > scan must byte-match the gate, so the one-check-codebase law
-    > decided this. VERSIONS.json carries a client entry asserted by
-    > check-versions.
+-   **One check codebase, never a copy.** The client imported the check
+    > source directly rather than carrying a built artifact, because a
+    > copy is a second codebase the moment the original moves and the
+    > client scan must byte-match the gate. This is the Mechanical
+    > Verification Law (Section 10.2) applied to the client, and it is
+    > why no copied checks artifact exists anywhere in the tree.
 
--   **Local schema.** Two Dexie tables, decided against actual consumers
-    > rather than speculation: bundles (primary key id, indexed by root)
-    > holds the parsed render model; files (compound key bundleId plus
-    > path) holds the byte-faithful string mirror, whose one indexed
-    > read reconstructs exactly the file map the gate's collector feeds
-    > checkBundle, so the browser scan and the node gate consume
-    > identical input. The store stays authoritative; both tables
-    > rebuild from ingest at any time and the app tolerates their
-    > absence.
+-   **The scan and the gate consume identical input.** The client's local
+    > mirror is shaped by what the gate's collector feeds the check
+    > entry point, not by what is convenient to render, so the browser
+    > scan and the server-side gate cannot disagree about what they read.
+    > The mirror is derived and rebuildable at any time; the store stays
+    > authoritative and the app tolerates the mirror's absence.
 
--   **Hosting.** Netlify, from the three acceptable static hosts of
-    > Section 9, chosen for lowest operator friction; the build uses a
-    > relative base so the bundle is statically hostable and mirrorable
-    > from any path. Freely reversible; nothing downstream depends on
-    > it.
+**And one honest-null rule, which is doctrine rather than client detail.** A writer that
+cannot see the substrate writes the substrate locator as null rather than guessing at it.
+Locators never link objects (Section 3), so a null locator costs nothing and an invented
+one is a claim nobody can check.
 
-As built, the client carries: folder and zip ingestion; the docket and
-bundle detail; the consistency sidebar running checkBundle itself
-through three adapters (WebCrypto hashing, a Set-based reference
-resolver, character-identical report formatting); the live mirror over
-the Section 10.4 endpoint slate with client-side hash verification that
-aborts loudly on mismatch; the gated Editor, whose Submit enables only
-on a local gate PASS and whose Edit is offered only on a docket freshly
-synced from the live endpoint (demo, local, and mirror-restored stores
-are read-only by construction); the client promoter, byte-identical to
-the reference implementation and carrying the I-17 divergence ladder;
-and local index regeneration with substrate locators honestly null,
-since the browser never touches Drive.
-
-**Decision.** The Phase 1 client's three architectural choices, in-repo
-placement importing bio-checks by relative path, the two-table mirror
-schema reconstructing the gate's exact input, and Netlify hosting, are
-ratified as recorded in CLIENT.md. The client is a caller class of the
-Section 10.4 registry and a packaging-mode writer under the Design
-document's write protocol; it holds no Drive credential and nothing in
-it is load-bearing to kernel correctness.
+**Decision.** A client is a caller class of the constrained-endpoint discipline (Section
+10.4) and a packaging-mode writer under the Design document's write protocol; it holds no
+substrate credential and nothing in it is load-bearing to kernel correctness. Its check
+code is the gate's code, not a copy of it.
 
 # 9. Technology stack
 
@@ -1080,23 +954,23 @@ code surface is thin. The calls, optimized for bus-factor:
                                       (browser import). Decided in Bundle
                                       Skill Composite Design Section 9.
 
-  Bundle substrate                    Google Drive folders
-                                      (multi-format), with git or OSF as
-                                      mirror/resilience alternates. Not
-                                      Google Sheets, and not Sheets as
-                                      any central surface. Substrate
-                                      locators never link objects
-                                      (Section 3).
+  Bundle substrate                    A multi-format folder store the
+                                      group itself controls, with git or
+                                      OSF as mirror/resilience
+                                      alternates. Never a spreadsheet,
+                                      and no substrate as any central
+                                      surface. Substrate locators never
+                                      link objects (Section 3). What is
+                                      deployed today is recorded in
+                                      BIO_DATAPLANE_STATE, not here.
 
-  Hosting / ops                       A static host (Cloudflare Pages,
-                                      Netlify, or GitHub Pages), git for
-                                      versioning and the mirrorable
-                                      directory, and a skill-assembler.
+  Hosting / ops                       A static host, git for versioning
+                                      and the mirrorable directory, and a
+                                      skill-assembler.
 
-  Constrained endpoints               Google Apps Script, per group,
-                                      under Section 10.4's admission
-                                      criteria only. Off-kernel, never
-                                      load-bearing.
+  Constrained endpoints               Per group, under Section 10.4's
+                                      admission criteria only.
+                                      Off-kernel, never load-bearing.
 
   Backend                             None. Constrained endpoints are not
                                       a backend (Section 10.4); the
@@ -1109,9 +983,9 @@ code surface is thin. The calls, optimized for bus-factor:
 **Decision.** TypeScript for what the app does (React + Vite client,
 TypeScript Agent SDK), Python for what touches data, Markdown for what
 the AI does, dependency-free JavaScript for what must run identically
-everywhere for years. Drive folders as the bundle substrate; static
-hosting; git; constrained Apps Script endpoints under the Section 10.4
-discipline; no backend.
+everywhere for years. A group-controlled folder store as the bundle
+substrate; static hosting; git; constrained endpoints under the Section
+10.4 discipline; no backend.
 
 # 10. Decentralized continuity, integrity, and resource discipline
 
@@ -1199,13 +1073,14 @@ the moving capability cap.
 
 ## 10.4 Constrained endpoints (added v5)
 
-Since the design assumes Google Drive as the default substrate, Google
-Apps Script is always available alongside it: server-side execution
-hosted by Google, no machine to operate, with full Drive capability
-including the update, rename, and move operations the chat-mode Drive
-connector lacks. This subsection recognizes that capability as an
-architectural class, available throughout the workflow, and binds it so
-it can never erode into a backend.
+A constrained endpoint is server-side execution the group does not have
+to operate: reachable by a plain URL fetch, hosted alongside the store,
+and able to perform the file mechanics a chat-mode connector cannot.
+This subsection recognizes that capability as an architectural class,
+available throughout the workflow, and binds it so it can never erode
+into a backend. **It is the plane's own boundary today** — the criteria
+below are what an operation must satisfy to exist at all, whatever runs
+it.
 
 **The defining property: store-authoritative invocation.** A constrained
 endpoint takes no authoritative input from its caller. Everything it
@@ -1257,11 +1132,11 @@ all of the following hold:
     > no-backend boundary applies.
 
 **Deployment posture and invocation tokens (revised v6, extended v8).**
-Endpoints are per-group Apps Script web apps and/or time-driven
-triggers, deployed from starter-kit source in a guided setup step.
-Web-app access is deployed as "anyone," because AI-accessibility is the
-point: chat and agentic sessions invoke by plain URL fetch and cannot
-perform Google sign-in. Layered on top is a lightweight bearer-token
+Endpoints are per-group web apps and/or scheduled triggers, deployed
+from starter-kit source in a guided setup step. Access is open at the
+transport, because AI-accessibility is the point: chat and agentic
+sessions invoke by plain URL fetch and cannot perform an interactive
+sign-in. Layered on top is a lightweight bearer-token
 discipline, honestly scoped: the token is a quota-and-attribution
 mechanism, never a security boundary, because integrity rests entirely
 on store-authoritative semantics and cannot be strengthened by
@@ -1271,8 +1146,9 @@ doorbell-ringer, nothing more.
 
 -   **Token mechanics.** Each group generates random per-caller-class
     > tokens at setup (client, chat session, agentic session,
-    > accelerator-internal). The endpoint verifies with a single string
-    > comparison against Script Properties and rejects non-matching
+    > endpoint-internal). The endpoint verifies with a single string
+    > comparison against server-side configuration and rejects
+    > non-matching
     > calls before performing any work. Per-member tokens are
     > deliberately not used; the group shares its infrastructure, and
     > class-level attribution answers the questions that matter at
@@ -1295,16 +1171,16 @@ doorbell-ringer, nothing more.
 -   **Secrecy class and rotation.** Tokens travel as GET parameters and
     > share the URL's secrecy class; both can surface in logs and shared
     > prompts. The token's operational value over the URL alone is
-    > rotation: a token rotates by editing Script Properties and
-    > redistributing caller config, without redeploying the web app and
-    > breaking its URL. Rotate both on suspected leak; stakes stay low
+    > rotation: a token rotates by editing server-side configuration
+    > and redistributing caller config, without redeploying the endpoint
+    > and breaking its URL. Rotate both on suspected leak; stakes stay low
     > because the worst unauthorized outcome remains triggering
     > legitimate work or burning quota.
 
 -   **Tokens never live in the store.** The store is designed to be
     > mirrored, forked, and distributed; a secret written into it is a
-    > secret published. Tokens live in Script Properties server-side and
-    > in each caller's local configuration (client settings, project
+    > secret published. Tokens live in server-side configuration and in
+    > each caller's local configuration (client settings, project
     > knowledge, skill package config) caller-side.
 
 -   **Invocation log.** The endpoint appends every call (timestamp,
@@ -1316,145 +1192,67 @@ doorbell-ringer, nothing more.
     > pressure is evidence, and the log is where it gets documented,
     > turning the endpoint's exposure into a sensor.
 
--   **URL capture (added v8).** The editor's getService().getUrl()
-    > returns the head /dev URL, sign-in walled and unusable by AI
-    > callers. Setup resolves the published /exec URL by strict
-    > precedence: an explicit proxy URL, then the WEBAPP_EXEC_URL script
-    > property set once from Manage deployments, then the service URL
-    > only when it already ends in /exec. A /dev URL is never written
-    > into any caller credential block, and republishing is a new
-    > version on the existing deployment, which keeps the URL stable.
-
--   **Browser reachability (added v8).** /exec responses carry
-    > Access-Control-Allow-Origin: \* on both the redirect and final
-    > hops, so simple cross-origin GETs work natively from any browser
-    > origin; preflighted requests fail on a 405 OPTIONS response.
-    > Callers stay within simple-request rules: plain fetch, every
-    > parameter in the query string, no custom headers. Verified in a
-    > live browser on July 11, and live-verified in use during the Phase
-    > 1 deployment trip (July 17-18): the client's sync, package writes,
-    > and reindex all ride native /exec CORS within simple-request
-    > rules. This constrains the PWA client invocation shape and covers
-    > the CORS role once assigned to the discarded proxy worker.
+**Two transport findings from the retired runtime — a sign-in-walled
+editor URL and a preflight that failed while simple cross-origin GETs
+succeeded — cost real time and are verbatim in the archive.** What
+generalizes: **the caller shape is part of the endpoint contract.** If
+callers must stay inside a restricted request shape for the transport to
+work at all, that restriction is specified with the endpoint rather than
+discovered by whoever writes the next caller.
 
 Endpoint code follows the axiomatic-component discipline: versioned with
 the components that share its algorithms, rebuilt together with them.
 
-**The registry (updated v10).** Admitted and deployed, ten operations,
-each live-fire verified against the deployed CivicOS accelerator: (1)
-the promotion endpoint, which drains the pending-package queue via the
-convergent promotion algorithm (Bundle Skill Composite Design, Product
-D); (2) the status operation, read-only, returning script version,
-configured state, trigger installation, and pending-queue depth, bounded
-to information any group member may see, extended during the M4
-live-fire postmortem with an optional bundle selector returning a
-locate-only probe (roots seen, read-side and write-side resolution
-results, no write verbs); (3) the selftest operation, which packages and
-promotes one update in the single designated scratch bundle
-INFO-2026-0098-accelerator-selftest entirely from server-side standing
-intent and hash-verifies its own result, bounded to that one bundle; (4)
-list, which enumerates bundle IDs grouped by type root, or one bundle's
-file listing as relative path, size, and modified time, cheap metadata
-only, no content reads and no server-side hashing, read-only by
-construction with selectors validated against the ID grammar and listing
-rooted inside the type roots so the credential sibling folder is
-unreachable; (5) read, which returns one store file's content as a plain
-UTF-8 JSON string with its sha256 and an encoding field, a deliberate
-divergence from the dev companion's base64 shape because the store is
-text-only by construction and base64 inflates the compressed wire by
-roughly half while breaking symmetry with the text/plain write path;
-read serves live files, \_history, and pending files alike, since the
-client checker needs pending visibility and read exposure of pending
-content is no wider than of live content; the admission records honestly
-that a leaked client token grants read access to the store, acceptable
-only because the store is designed to mirror, fork, and distribute and
-the two-tier secret rule of Section 10.5 keeps every secret out of it;
-(6) write-package, the client-to-queue transport: one text/plain POST
-per file with selectors in the query string, package files first and
-PENDING_PROMOTION.json strictly last, mirroring the commit-point write
-order so a partial delivery is an inert set of .pending files surfaced
-as orphaned-pending findings; the load-bearing constraint is that the
-endpoint accepts writes to pending paths only (names ending .pending
-plus the literal manifest name, inside the selected bundle) and rejects
-every other path naming the constraint, which preserves promotion as the
-sole writer of live state; the endpoint parses nothing and judges
-nothing, a byte pipe to a constrained path; amended at accelerator
-0.10.2 with member creation-by-packaging
-(endpoint-admission-m2b-member-creation.md, live-fire verified July 19,
-2026 through the first production Focus and Project bundles):
-writePendingText creates an absent bundle folder under its type root for
-pending-path writes, with the id grammar holding at the POST boundary,
-nothing going live without gating and promotion, orphans remaining
-C-16.4 findings, and a threat delta of nil, since a leaked write token
-trades queue litter for folder litter, the same cleanup class; (7)
-reindex, which regenerates index/index.json by scan with zero caller
-inputs, the store-authoritative criterion in its strongest form, its
-writer confined by construction to exactly that one path and its output
-deterministic at fixed time so racing invocations converge
-byte-identically; (8) monitor-tick, which runs the Section 7.4
-change-detection duties on due gathering requests and monitored bundles
-as a mechanical writer under the Section 10.8 claim discipline:
-first-capture creation at collected with the intake register, ring-once
-hash dedup as corroboration, change detection under the declared field
-set with an accretive register entry and change record, the one-hop
-set-but-never-clear cascade, the 72-hour removal confirmation window,
-and the Section 7.7 co-attestations, admitted per the ratified daemon
-slate (endpoint-admission-m2-daemon-slate.md) and live-fire verified in
-production July 19, 2026, including the unattended completion of the
-Legistar chain after session close; (9) sweep, built to its admission
-and deployed inert at budget zero with no ratified sweeps, its recorded
-no-op live-fire verified the same day, creation-only at collected behind
-the ratification fence when a sweep is ever ratified; and (10)
-deadline-recheck (duescan), whose clock pending-to-overdue flip is the
-single legal mutation and whose due slate was live-fire verified against
-the open gathering requests. Operations 4 through 6 were ratified from
-the client caller-class admission slate and operation 7 from the reindex
-admission draft, both superseded by the v9 folding; operations 8 through
-10 were ratified from the M2' daemon slate as amended at operator
-review, superseded by this folding. Live-fire record: promotion, status,
-and selftest on July 10-11, 2026; list, read, write-package, and reindex
-through the Phase 1 deployment trip of July 17-18, 2026; monitor-tick,
-sweep, deadline-recheck, and creation-by-packaging through the July 19,
-2026 production live fire at accelerator 0.10.0 through 0.10.2, whose
-findings are recorded in Sections 10.7 through 10.9. The registry is
-enforced as a closed whitelist checked before dispatch; an unknown
-operation is rejected naming the valid set. The development-only
-companion (promotion-service-dev.gs) remains recorded as explicitly
-non-production and outside the registry, dead-man expired after
-2026-08-31, deleted before production deployment, with devMode false
-verified in production. Candidates: batched multi-file read and
-read-class log batching keep their recorded trigger conditions from v9
-(admitted only if measured sync latency or per-call log cost at
-production volume demands them; until a trigger fires, each stands as a
-recorded decision not to admit). Candidate class requiring extra
-admissions: headless dispatch (reads a standing goal from the store and
-initiates a budgeted headless session); it additionally requires a
-budget guard recorded in store policy and inherits the permitted-use
-open question of Section 12, and until it resolves, unattended discovery
-beyond store-named sources stays out of scope.
+**The registry.** The registry is closed, versioned, and enforced as a whitelist checked
+before dispatch; an unknown operation is rejected naming the valid set. Each member is
+specified and admitted individually against the six criteria above — an admission is a
+written document, not a code review — and a rejected candidate stays on the record as a
+recorded decision NOT to admit, with the condition that would reopen it. **The retired
+runtime's registry of ten operations, with each one's admission reasoning, its bounds, and
+its live-fire record, is verbatim in the archive**, and it is worth reading as worked
+examples of the criteria rather than as a description of anything running.
 
-**OAuth deployment discipline (added v10).** A paste alone never widens
-the project's OAuth grant, and the first revision to call a new Google
-service will refuse at runtime with a healthy-looking deployment. The
-discipline, learned in the July 19 live fire and recorded operationally
-in DEPLOY-P2M2.md Section 2a, which this document incorporates by
-reference: pin the full scope inventory explicitly in the
-appsscript.json manifest rather than trusting auto-detection to
-re-prompt; when no consent dialog appears after a manifest change, the
-stored grant is stale-broken and must be revoked at the account's
-connections page and re-granted, which touches neither code, deployment,
-URL, nor token; and diagnostic probe functions must not end in an
-underscore, which the editor's Run dropdown hides. The slate's failure
-posture is part of the architecture: an unauthorized fetch layer refuses
-per locator, records the refusals honestly, writes nothing, and leaves
-the due condition standing, so authorization failure is visible and
-recoverable rather than silent.
+Three of its admissions generalize past the runtime and are stated here as rules:
+
+-   **Read exposure is admitted honestly or not at all.** The read
+    > operation's admission records plainly that a leaked caller token
+    > grants read access to the store, acceptable only because the store
+    > is designed to mirror, fork and distribute and because the two
+    > secret tiers of Section 10.5 keep every secret out of it. An
+    > admission that cannot state its own worst case has not been made.
+
+-   **A write endpoint that judges nothing must be constrained by PATH.**
+    > The client-to-queue transport accepts writes only to pending paths
+    > and rejects every other path naming the constraint, which is what
+    > preserves promotion as the sole writer of live state. The endpoint
+    > parses nothing and judges nothing; it is a byte pipe to a
+    > constrained path, and the constraint is the whole of its safety.
+
+-   **Zero caller inputs is the store-authoritative criterion in its
+    > strongest form.** The index regeneration operation takes no
+    > selector at all, writes exactly one path by construction, and is
+    > deterministic at fixed time, so racing invocations converge
+    > byte-identically. Where an operation can be written that way, it
+    > should be.
+
+**A candidate class that remains unadmitted, and the reason stands.** Headless dispatch —
+reading a standing goal from the store and initiating a budgeted session — additionally
+requires a budget guard recorded in store policy and inherits the permitted-use question
+of Section 12. **Until that resolves, unattended discovery beyond store-named sources
+stays out of scope**, which is the same fence DEC-47 reaches from the other side.
+
+**Failure posture is part of the architecture.** An operation that loses its authorization
+to reach the outside world refuses per locator, records the refusals honestly, writes
+nothing, and leaves the due condition standing — so an authorization failure is visible
+and recoverable rather than silent. This is Section 10.9's rule (absence is information,
+failure is not permission) applied at the outward boundary, and it is why a deployment can
+look healthy while its fetch layer refuses everything.
 
 **Decision.** Constrained endpoints are a recognized capability class:
-per-group Apps Script endpoints under store-authoritative invocation
-semantics, admitted individually through a closed registry against six
-criteria, always off-kernel and never load-bearing. Deployment is
-"anyone" access for AI invocability, layered with strict-checked
+per-group endpoints under store-authoritative invocation semantics,
+admitted individually through a closed registry against six criteria,
+always off-kernel and never load-bearing. Deployment is open at the
+transport for AI invocability, layered with strict-checked
 per-caller-class bearer tokens scoped to quota defense and attribution,
 with no replay machinery (idempotence makes it unnecessary), tokens kept
 out of the mirrorable store, and a logged invocation trail whose
@@ -1490,9 +1288,9 @@ tokens quota-and-attribution markers rather than integrity boundaries:
 the worst outcome of a leaked Tier A token is quota burn or the
 triggering of promotions that were going to happen regardless. Tier A
 tokens are generated server-side at setup (no human types them, no AI
-composes them), stored in Script Properties and in caller-side config
-that lives outside the mirrorable store, and rotated per class without
-changing any URL.
+composes them), stored in server-side configuration and in caller-side
+config that lives outside the mirrorable store, and rotated per class
+without changing any URL.
 
 **Tier B, true secrets.** Anything whose exposure carries real stakes,
 future third-party API keys, credentials for communication surfaces, any
@@ -1509,10 +1307,10 @@ holding the means to do harm with it.
 
 The two tiers share one rule: no secret of either tier is ever written
 into the store. The store is the thing that replicates; a secret placed
-in it is a published secret. The accelerator's four promotion tokens are
-the only secrets the system owns today; the Tier B interface is the
-standing contract for every credential the deferred surfaces will
-introduce.
+in it is a published secret. The Tier B interface is the standing
+contract for every credential the deferred surfaces will introduce, and
+it is written before those surfaces arrive precisely so that no surface
+ever has to invent its own way of holding one.
 
 **Decision.** Two secret tiers. Tier A capability strings are AI-visible
 by design, generated server-side, kept out of the store, safe because
@@ -1528,7 +1326,7 @@ audit found every mechanically asserted version stamp in the tree true
 and every prose-only stamp drifted. VERSIONS.json at the repo root is
 the single source of truth for every machine-stamped version: the
 composite (which is also the repo revision; the two namespaces merged at
-0.1.16), bio-checks, the accelerator, and the client. The assembler
+0.1.16) and every component the tree builds. The assembler
 reads the composite from the file, and a check-versions pass, run
 standalone and automatically before every build and verification,
 asserts that every echo of a version number elsewhere in the tree agrees
@@ -1553,13 +1351,14 @@ applied to the tree's own metadata.
 
 ## 10.7 The interruption model (added v10)
 
-The Apps Script platform can terminate an execution mid-routine at its
-six-minute wall or otherwise, with no catch and no finally running.
-Every off-kernel component therefore treats interruption as an ordinary
-event and relies on write ordering, never on end-of-routine cleanup.
-Four rules, all validated live and unscripted on July 19, 2026, when the
-doorbell tick hit the wall after packaging two of four captures and the
-system recovered without loss or duplication:
+**Every execution platform worth using will terminate a routine
+mid-flight** — at a wall-clock or CPU limit, on an eviction, on a
+deploy — with no catch and no finally running. Every off-kernel
+component therefore treats interruption as an ordinary event and relies
+on WRITE ORDERING, never on end-of-routine cleanup. Four rules, all
+validated live and unscripted on July 19, 2026, when a tick hit the wall
+after packaging two of four captures and the system recovered without
+loss or duplication:
 
 -   **Manifest-last is the durable marker.** Package files are written
     > first and PENDING_PROMOTION.json strictly last, so an incomplete
@@ -1579,8 +1378,9 @@ system recovered without loss or duplication:
     > Set-but-never-clear cascade flags make the re-run harmless.
 
 -   **Self-expiring claims.** Advisory claims (the promoter's and the
-    > daemon's) carry their timestamps and expire at 7 minutes against
-    > the 6-minute wall, so a claim held by a killed execution releases
+    > daemon's) carry their timestamps and expire on a timeout set past
+    > the platform's own execution wall, so a claim held by a killed
+    > execution releases
     > itself; stale claims are C-16.5 findings whose repair is deletion.
     > No claim depends on its holder surviving to release it.
 
@@ -1604,29 +1404,27 @@ invocations, and the queue sweep overlap freely. Two decisions govern.
 
 **Creation-capable operations are claim-serialized.** An overlapping
 doorbell and trigger double-created bundles for dynamic-content locators
-in the July 19 live fire; since accelerator 0.10.1, every
+in the July 19 live fire; since the fix that followed it, every
 creation-capable operation first acquires a self-expiring daemon claim
-inside a brief LockService critical section. The losing execution
+inside a brief critical section. The losing execution
 records a yielded no-op and the trigger retries; the claim expires per
 Section 10.7 if its holder is killed. Read-only operations are never
 serialized.
 
-**Sequence uniqueness is deliberately not an invariant.** Drive offers
-no atomic counter, so two executions indexing the store mid-flight can
-allocate the same sequence number; the full bundle id (type, year,
-sequence, slug) is the identity, the sequence is a hint, and no
-invariant claims sequence uniqueness. The production store carries the
-worked example: two deliberate collision pairs (sequence 0100 from the
-launch race, sequence 0106 from the pre-0.10.1 concurrency window),
-different slugs, different folder names, no collision in identity, all
-four bundles gated and promoted. Claim serialization has since made
-recurrence unlikely; the tolerance remains the rule because the
-substrate cannot promise more.
+**The full id is the identity; a hint field carries no invariant.** The retired
+substrate offered no atomic counter, so two executions indexing the store mid-flight could
+allocate the same sequence number inside an id. The rule adopted then, and it is the
+general one: the WHOLE id is the identity, a component of it that exists to make the id
+legible is a hint, and no invariant is claimed for a hint. **A substrate that CAN promise
+uniqueness does not retroactively make that promise part of the identity** — it removes a
+class of collision, which is worth having and is not the same thing. The worked example
+that earned the rule, two deliberate collision pairs promoted and gated without any
+collision in identity, is in the archive with the runtime that produced it.
 
 **Decision.** Creation-capable daemon operations serialize on a
-self-expiring claim acquired under LockService; sequence uniqueness is a
-non-invariant by design, with the full id as the identity and the two
-recorded collision pairs standing as the worked example.
+self-expiring claim acquired inside a critical section; a legibility
+component of an id is a hint and carries no uniqueness invariant, the
+full id being the identity.
 
 ## 10.9 Index integrity: fail-closed (added v10)
 
@@ -1634,8 +1432,8 @@ The index is derived, regenerable, and never authoritative (Section
 10.4, reindex), but the daemon's dedup guards read it, and a silently
 degraded index turns those guards into no-ops: a transient register-read
 failure in the July 19 live fire let a trigger tick re-create a
-byte-identical capture. Since accelerator 0.10.1, index construction
-distinguishes missing from failure: the adapter returns null for genuine
+byte-identical capture. Index construction therefore distinguishes
+missing from failure: the adapter returns null for genuine
 absence and throws for transient failure, and a missing-shaped throw is
 treated as absence. A construction that counts any genuine failure
 produces a degraded index, and a degraded index fails closed: no
@@ -1669,8 +1467,8 @@ them as architecture.
     > enforceable and the state history honest about who decided.
 
 -   **skill_version is the writer's component version.** The daemon
-    > writes its accelerator version; a session or the client writes the
-    > composite. Both practices predate this definition and both conform
+    > writes its own component version; a session or the client writes
+    > the composite. Both practices predate this definition and both conform
     > to it: the field names the version of the component that produced
     > the write, so a consumer reading skill_version knows which
     > writer's contract to interpret the package under. Existing records
@@ -1682,28 +1480,28 @@ version in skill_version.
 
 ## 10.11 Promotion gate posture (added v10)
 
-Through accelerator 0.10.2 the embedded gate runs only for
-daemon-authored packages at packaging; the promoter hash-verifies every
-package against its manifest but assumes non-mechanical payloads were
-gated by their producing surface. With creation-by-packaging admitted,
-an ungated malformed member package can reach live state, and the
-store's integrity guarantee is weaker than this document implies.
-Decided July 20, 2026 on the operator's word: the embedded gate is wired
-into promotion for non-mechanical manifests. The gate already lives in
-the endpoint through the Section 10.4 embed mechanism; the cost is
-promotion latency, which is tolerable; and the client-side gate remains
-the first line per the Mechanical Verification Law, with the
-promotion-time gate as the store's own enforcement rather than a
-substitute for producer discipline. Mechanical manifests remain gated at
-packaging, where the daemon already runs the same embedded gate.
-Implementation is queued at accelerator 0.10.3 with battery coverage for
-creation-by-packaging riding the same change; until that paste lands,
-this section is the recorded decision and the deployment lag is stated
-here rather than papered over.
+**The producing surface's gate is the first line and never the store's only one.** The
+posture that preceded this section ran the embedded gate for mechanically authored
+packages at packaging, and assumed non-mechanical payloads had been gated by whatever
+surface produced them; the promoter hash-verified every package against its manifest and
+judged nothing else. **Once a member surface could create by packaging, an ungated
+malformed package could reach live state, and the store's integrity guarantee was weaker
+than this document implied.** Decided July 20, 2026 on the operator's word: the store runs
+the gate itself at promotion for non-mechanical manifests. The cost is promotion latency,
+which is tolerable; the client-side gate remains the first line under the Mechanical
+Verification Law, with the promotion-time gate as the store's OWN enforcement rather than
+a substitute for producer discipline. Mechanically authored packages stay gated at
+packaging, where their writer already runs the same check set.
 
-**Decision.** The promotion gate runs server-side for non-mechanical
-manifests, implementation at accelerator 0.10.3; daemon packages stay
-gated at packaging; the client-side gate remains the first line.
+**The general rule, and it is the one to carry:** a guarantee the store states must be
+enforced by something the store controls. Trusting a producer is a policy about producers,
+not a property of the store, and the difference only becomes visible when a new kind of
+producer appears.
+
+**Decision.** The promotion gate runs store-side for non-mechanical
+manifests; mechanically authored packages stay gated at packaging; the
+client-side gate remains the first line, and no guarantee the store
+states rests on producer discipline alone.
 
 # 11. Recommended prototype sequence (sewer fund strawman)
 

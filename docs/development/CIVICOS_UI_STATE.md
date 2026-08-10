@@ -218,7 +218,7 @@ asserted: legibility was the fix, and an authorised one-off impersonation test
 proved unnecessary because the honest string works identically.
 
 WHY IT TOOK THREE SESSIONS. Every client that succeeded (Bob's browser, the
-deleted Apps Script plane on 2026-07-19, the Internet Archive) had BOTH a
+deleted predecessor plane on 2026-07-19, the Internet Archive) had BOTH a
 reputable network AND a legible agent, while the plane had neither, so the two
 variables were perfectly confounded and both competing theories fit all the
 evidence. Nothing settles that except varying one alone. Recorded as D-100: two

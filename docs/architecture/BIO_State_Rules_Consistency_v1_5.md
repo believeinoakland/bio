@@ -13,11 +13,12 @@ Working Document, v1.5, July 2026
 
 > # ⚠ THE STORE THIS DOCUMENT DESCRIBES IS NOT THE STORE THAT WAS BUILT
 >
-> **Banner added 2026-08-10 (session BOB).** Section 1's store layout is **folders on
-> Google Drive**, one root per type, each bundle a folder of files with a `history/`
-> subfolder and a pending-package queue. **The built store is SQLite inside a Cloudflare
-> Durable Object**, with captured bytes in R2. There are no folders, no `.pending` files
-> and no promotion queue.
+> **Banner added 2026-08-10 (session BOB), amended the same day when the retired
+> substrate was removed from the text on Bob's instruction.** Section 1's store layout is
+> **a folder tree on a hosted document store**, one root per type, each bundle a folder of
+> files with a `history/` subfolder and a pending-package queue. **The built store is
+> SQLite inside a Cloudflare Durable Object**, with captured bytes in R2. There are no
+> folders, no `.pending` files and no promotion queue.
 >
 > **What survived the substrate change is most of this document**, and it is why the
 > specification is still consulted constantly: the canonical ID grammar and substrate
@@ -28,8 +29,8 @@ Working Document, v1.5, July 2026
 > `store.mjs` and `checks/bio-checks.mjs`.
 >
 > **Read Sections 1, 2.4 and 2.6 as HISTORY** — layout, convergent promotion and the
-> pending queue are Drive mechanics. Everything from Section 3 on is about SHAPE and
-> RULES, which transferred.
+> pending queue are mechanics of the retired substrate. Everything from Section 3 on is
+> about SHAPE and RULES, which transferred.
 >
 > Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane
 > state is the system. For what has been ruled since, `node tools/decided.mjs "<subject>"`.
@@ -66,11 +67,11 @@ contract). Section 2.6 gains the creation-base clarification (the
 empty-string hash as the recorded form of no-prior-version), exercised
 in production by daemon and member creations alike. Section 8's
 check-catalog record updates from bio-checks 1.7.0 to 1.9.0 and its
-call-site sentence is corrected: the embedded gate makes the accelerator
-a third call site of the one check codebase, and the accelerator's
+call-site sentence is corrected: the embedded gate makes the endpoint a
+third call site of the one check codebase, and the endpoint's
 non-judging caveat is retired by the July 20 operator decision wiring
-the gate into promotion for non-mechanical manifests (Tech Arch v10
-Section 10.11; implementation at accelerator 0.10.3). The
+the gate into promotion for non-mechanical manifests (Tech Arch Section
+10.11). The
 verified-requires-Grade-B-or-better floor (a natural C-18.2) remains
 recorded and deliberately not entered, awaiting the work that makes it
 exercisable. No existing invariant's meaning changes.
@@ -93,7 +94,7 @@ and a tail anchor over divergent live content. (c) The disjoint-auto
 history-entry shape is specified: base plus applied_over plus rung,
 which is the mechanical form of I-17's both-bases requirement.
 
-**Revision note (v1.3).** One refinement from the July 11 accelerator
+**Revision note (v1.3).** One refinement from the July 11 endpoint
 conformance run. An unreadable PENDING_PROMOTION.json is discarded by
 the promoter rather than preserved: substrate writes are atomic, so
 unparsable means permanently corrupt; the corrupt manifest holds nothing
@@ -141,7 +142,7 @@ Decisions ratified in the July 2026 design sessions and embedded here:
     > is used only for exclusively owned material with no independent
     > lifecycle.
 
--   References are canonical bundle IDs, never Drive file IDs or any
+-   References are canonical bundle IDs, never a host's file ids or any
     > substrate locator. The per-group derived index maps canonical IDs
     > to substrate locators and is regenerable by scan.
 
@@ -179,8 +180,8 @@ Decisions ratified in the July 2026 design sessions and embedded here:
 
 ### 1.1 Root layout
 
-A group's store is one folder tree on the bundle substrate (Google Drive
-by default; git or OSF as mirrors):
+A group's store is one folder tree on the bundle substrate (a folder
+store the group controls; git or OSF as mirrors):
 
 /BIO//
 
@@ -338,7 +339,7 @@ preserved in \_history/ and the new files become live. There is no
 watcher and no server, and the substrate offers no mutual exclusion (no
 compare-and-swap, no exclusive create; duplicate filenames are
 permitted, so a lock file does not lock). Multiple actors, a client on
-open, an agentic session on bootstrap, an accelerator on schedule or on
+open, an agentic session on bootstrap, the endpoint on schedule or on
 demand, may therefore race on the same promotion, and the specification
 makes the race harmless rather than pretending to prevent it. Promotion
 is convergent: every promoter starts from the same hash-verified input
@@ -913,7 +914,7 @@ on the Focus. initiates lives on the Project.
 
 ### 5.3 Substrate independence
 
-No Drive file ID, URL-to-substrate, or path appears in any reference or
+No substrate file id, URL-to-substrate, or path appears in any reference or
 any bundle content as a link between objects. External-world locators (a
 city URL, a statute citation) appear only inside Information source
 blocks, where they denote the outside source itself. The index
@@ -1147,7 +1148,7 @@ empty-string SHA, or no prior snapshot exists) lands at collected and
 never higher. An undeclared operation name on a mechanical promotion is
 itself a violation. The declared field sets are the registry's tables,
 living in the check codebase as MECHANICAL_FIELD_SETS (exported and
-shared, through the embedded gate, with the accelerator daemon: one
+shared, through the embedded gate, with the endpoint daemon: one
 codebase) and amended only by revision, never by code change:
 monitor-tick may change source_status, monitoring.last_checked, the
 reeval_pending record fields, and last_updated; sweep is creation-only
@@ -1433,15 +1434,15 @@ mechanical check run against the written artifact does. Therefore:
 
 -   The client-side consistency checker runs the same check
     > implementations at scan time across the whole store, and the
-    > accelerator carries the same codebase through the embedded gate
+    > endpoint carries the same codebase through the embedded gate
     > (build-time byte-verbatim propagation, hash-verified at compile,
     > verdict-parity asserted by conformance on every build). One check
     > codebase, three call sites: the session gate, the client checker,
-    > and the accelerator. Divergence among them is itself a defect. The
+    > and the endpoint. Divergence among them is itself a defect. The
     > daemon gates its own packages at packaging; per the July 20
     > operator decision (Tech Arch v10 Section 10.11), the promoter
     > additionally runs the gate on non-mechanical manifests,
-    > implementation at accelerator 0.10.3, so the store enforces its
+    > so the store enforces its
     > own contract rather than assuming producer discipline.
 
 -   Checks are versioned with the schema stamps: a check enforces a rule
@@ -1481,7 +1482,7 @@ obligations are:
 
 For the avoidance of archaeology later: BIO drops the server-side
 watcher (promotion is performed by any capable actor via one convergent
-algorithm, with accelerators as standard off-kernel equipment), the
+algorithm, with the endpoint as standard off-kernel equipment), the
 Ledger (replaced by the regenerable index), lifecycle folder moves
 (state is frontmatter-only), the exclusive session lock (write coherence
 is optimistic and base-stamped, with advisory claims and presence

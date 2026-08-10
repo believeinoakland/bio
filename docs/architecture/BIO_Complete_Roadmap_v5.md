@@ -62,7 +62,7 @@ governance line) and the production store itself.
 
 Status as of July 20, 2026: the composite bundle skill is built and in
 production (bio-bundle rev 0.1.48; bio-checks 1.9.0 with twenty
-invariant families under the Mechanical Verification Law; accelerator
+invariant families under the Mechanical Verification Law; endpoint
 0.10.2 deployed with the M2' daemon live-fire verified; PWA client 0.7.0
 at milestone M6, Netlify deployment pending). The production store
 carries 25 information bundles (9 released to verified under I-18 member

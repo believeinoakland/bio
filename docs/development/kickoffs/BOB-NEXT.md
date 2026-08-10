@@ -21,7 +21,15 @@ questions":** `node tools/decided.mjs "<subject>"` indexes all 600 rulings in th
 
 ---
 
-## THE TASK WAITING, and it is Bob's instruction, scoped but NOT started
+## THE TASK WAITING — **DONE 2026-08-10 by the incoming BOB, branch `bob-drive-removal`.**
+
+The scope below was executed as written: the three documents rewritten with
+per-reference judgment, the retired runtime's own sections moved verbatim to
+`docs/archive/architecture/` (indexed in `docs/archive/README.md`), the localized
+references rewritten in place, the ledgers and the R9 platform advice untouched —
+the latter raised as **DEC-67 (open)** rather than folded in. `mintid` floors measured
+identical before and after; `DECIDED.md` regenerated; all four gates green; handed to
+CONDUCT through the BOB INBOX. The scope is kept below as the record of what was asked.
 
 **Bob, 2026-08-10: "Remove all references to Google Drive and App Script, as that's not
 part of the system architecture."**
@@ -128,7 +136,7 @@ clipboard route `CLAUDE.md` defines.
 - `MEASUREMENTS.md` and `DECISIONS.md` were not rolled.
 - Four HELD claims dated 2026-08-09 remain in `CLAIMS.md` and look stale. **Releasing
   another session's claim is CONDUCT's, not housekeeping.**
-- The Google Drive / Apps Script removal above. Scoped, not started.
+- ~~The Google Drive / Apps Script removal above~~ — done, see above.
 
 ---
 
@@ -160,13 +168,14 @@ indexed and only 12% are in `DECISIONS.md`. It is a floor on what has been settl
 a ceiling.
 
 **YOUR FIRST JOB IS THE STANDING ONE:** read `DECISIONS.md` and surface every `open` entry
-to Bob in one line each. There are FIVE — DEC-43, 48, 50, 51, 53 — plus D-266's unnumbered
-ruling and D-205, which is his alone. Do not re-argue them; surface and recommend.
+to Bob in one line each. There are SIX — DEC-43, 48, 50, 51, 53, 67 — plus D-266's
+unnumbered ruling and D-205, which is his alone. Do not re-argue them; surface and
+recommend. DEC-53's revisit trigger has FIRED; it goes first.
 
-**YOUR FIRST WORKING MOVE: the Google Drive / Apps Script removal**, scoped in
-`BOB-NEXT.md` above. Read that scope before opening a file — it is a rewrite of three
-documents with per-reference judgment, and it names what must NOT be touched (the
-append-only ledgers, and the R9 platform advice to groups, which is not our substrate).
+**The Google Drive / Apps Script removal is DONE** (2026-08-10, branch
+`bob-drive-removal`; scope and outcome recorded above). **YOUR FIRST WORKING MOVE:
+work the open decision list with Bob** — DEC-53's fired trigger first, then DEC-67
+(raised by the removal), then the 2026-08-04 four — and take his focus from there.
 
 MECHANICS, unchanged and binding:
   - Decisions that are genuinely Bob's only — doctrine, his risk, effects on people

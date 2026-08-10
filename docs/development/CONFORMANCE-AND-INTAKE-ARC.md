@@ -2,7 +2,7 @@
 
 **Written July 24, 2026.** The work plan for making the Cloudflare plane a
 conformant, complete, performant storage and transport plane, and for rebuilding
-on it the acquisition tooling that the Apps Script accelerator carried.
+on it the acquisition tooling that the retired plane carried.
 
 This document exists because two things became measurable on the same day. The
 check catalog is now in the repository (`bio-plane/checks/bio-checks.mjs`,
@@ -57,7 +57,7 @@ moves: the bundle format is authoritative and the projection must never bend it.
 
 The catalog is a pure function over an injected filesystem. Its five seams are
 the entire porting surface: `files`, `sha256`, `sha512`, `resolveTarget`, and
-`releaseRegistry`. Nothing about it is Apps Script specific except the
+`releaseRegistry`. Nothing about it is specific to the retired runtime except the
 hand-rolled SHA-256 and Ed25519, which exist only because that runtime had no
 crypto; the plane has WebCrypto and should inject platform primitives at those
 seams rather than carry the portable versions.
@@ -74,7 +74,7 @@ the intake UI's output passes on creation rather than after repair.
 
 ## 3. The acquisition tooling to rebuild
 
-This is the substance of what the accelerator did and the plane does not. The
+This is the substance of what the retired plane did and this one does not. The
 architecture already specifies all of it, so none of this is design work; it is
 implementation against a written contract.
 
@@ -102,7 +102,7 @@ material has a chain that a URL does not.
 `{service, attempted, ok}`, and the doctrine's requirement is honesty rather
 than success: a failed attempt is recorded with its reason, never omitted.
 C-18.4 warns when crucial-criticality material carries neither a co-archive nor
-a timestamp. The accelerator used Save Page Now plus RFC 3161; the plane needs
+a timestamp. The retired plane used Save Page Now plus RFC 3161; this one needs
 the same two paths, and the SPN2 credentials it used are being revoked, so this
 is new credential work rather than a lift.
 
@@ -161,7 +161,7 @@ and the number worth having is the one that includes it.
 5. Co-attestation, with new credentials.
 6. Monitoring as mechanical writers inside the C-20.1 envelope.
 7. The 5,000 and 20,000 bundle benchmark, with the full gate in the path.
-8. Delete the Apps Script source and deployment; revoke its credentials.
+8. Delete the retired runtime's source and deployment; revoke its credentials.
 
 Steps 1 through 3 are conformance and are not optional. Steps 4 through 6 are
 the acquisition tooling. Step 7 is the number that tells us whether the design

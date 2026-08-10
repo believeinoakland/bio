@@ -344,7 +344,7 @@ Recorded deliberately, because the risk in ending a long session is
 undocumented context rather than unfinished code.
 
 - **The catalog is the authority and the plane RUNS it.** `bio-plane/checks/`
-  is 1.16.6 and diverges from the 1.16.4 the retired Apps Script pinned by
+  is 1.16.6 and diverges from the 1.16.4 the retired plane pinned by
   two changes, both recorded in that directory's README with reasoning. Never
   reimplement a check: the three-implementation conformance requirement is
   satisfied by three callers of the same bytes, and a rewrite is a fourth

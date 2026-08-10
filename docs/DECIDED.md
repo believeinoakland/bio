@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-608 rulings across 63 documents.
+612 rulings across 63 documents.
 
 ## DEC-
 
@@ -71,9 +71,9 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:413`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1512`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1513`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
-  `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1823`
+  `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1621`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/development/DECISIONS.md:3226`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
@@ -111,7 +111,7 @@ authority is the file named, never this one.
 - **DEC-34** · 2026-08-07 — — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved. | **NC: DEC-44's** — publish a case of two findings with…  
   `docs/development/INVESTIGATIVE-SESSION.md:1160`
 - **DEC-35** · 2026-08-04 — PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path is the DEFAULT and its engine is now TESSERACT AS A FLEET MEMBER pending CPDF-12's deployed probe (DEC-42: Moondream returned NO-GO on coordinates;…  
-  `docs/development/QUEUE.md:339`
+  `docs/development/QUEUE.md:362`
 - **DEC-36** · 2026-08-04 — RULED 2026-08-04 (DEC-36): an INVISIBLE ancestor in the set is stated as an incompleteness and disclosed as nothing else.** D-15 §7.9 ("not its existence") and the truncation-honesty rule above pointed opposite ways on one bit, and Bob reconciled them BY SCOPE rather than one overriding the other: **D-15 governs…  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:162`
 - **DEC-37** — — the class's totality assertion CORRECTED with a dated reason (SWEEP §4b(1) is the DECISION DEC-37 required), never exempted.  
@@ -381,7 +381,7 @@ authority is the file named, never this one.
 - **IC-1** · 2026-08-08 — RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-08 **RESPONSES.** CONDUCT answered for the consuming areas (the IC-1 precedent).  
   `docs/development/INTERFACE-CHANGES.md:1916`
 - **IC-1** — IC-1 AS AMENDED (incl. `doc-para`) is RESOLVED — CONDUCT answered AGREE on dormant FRAMEWORK's behalf in writing, `INTERFACE-CHANGES.md` (protocol step 3). The dangling CPDF-10 dependency is fixed in place: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, now  
-  `docs/development/QUEUE.md:195`
+  `docs/development/QUEUE.md:218`
 - **IC-2** — nd:"doc-para", ref, para, run}) with wrappers byte-identical to linkWrapper; tracked changes carry author, date and the SUPERSEDED WORDING (excluded from text — the document as served — held attributed in the envelope); comments with author/date; unreadable parts stated ({part, why}), never invented.…  
   `docs/archive/ledgers/QUEUE-2026-08.md:1352`
 - **IC-12** — nforces it, never copied), bio-plane/test/citeinquiry.test.mjs (NEW — this item's suite), bio-plane/test/cite.test.mjs (CORRECTED, never exempted, with dated comments where its NOT_A_PROJECT fixture predates the widening), bio-plane/test/affordances.test.mjs + bio-plane/test/conclude.test.mjs +…  
@@ -759,7 +759,7 @@ authority is the file named, never this one.
 - **CPDF-2** — CPDF-2 is SUPERSEDED** by Bob's function-specific Worker topology (I6).  
   `docs/development/QUEUE.md:23`
 - **CPDF-9** · 2026-08-03 — The page-to-pixels rendering path BOB flagged as the other candidate reading is real but is DECIDED by CPDF-9's placement measurement — an external-service placement needs no renderer; an in-plane or fleet placement does — so the renderer item is named when that recommendation lands, not pre-built.)  
-  `docs/development/QUEUE.md:341`
+  `docs/development/QUEUE.md:364`
 - **CPDF-10** · 2026-08-03 — VERDICTS: bundle 6.05 MB raw / 2.72 MB gz → IN-PLANE RULED OUT (92.3% of budget) and PDF-WORKER RULED OUT (~155 KB over the 3 MB gz limit); CPU one 300-dpi page ≈ 17–54M ref-iterations vs the ~40–42M kill window (at the ceiling's order; node proxy — the authoritative number needs a deployed wasm probe).  
   `docs/archive/ledgers/QUEUE-2026-08.md:1250`
 - **CPDF-12** · 2026-08-04 — no page-shaped artifact is produced there is SUPERSEDED and its suite corrected, never exempted. enacted: 2026-08-04 · CONDUCT — SEQUENCED WITH CPDF-12 rather than beside it (both want page-shaped output from workerd; two renderers would repeat D-164): CPDF-12's scope gains the real layout.note join — a server-side…  
@@ -886,7 +886,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BIO_Membership_Architecture_v1 — SUPERSEDED by v2, July 26, 2026.** Kept for the record and must not be worked from.  
   `docs/architecture/README.md:60`
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant. What survives of it, and where the answers actually live:  
-  `docs/architecture/README.md:101`
+  `docs/architecture/README.md:102`
 - answerable from rulings already recorded, and are now DECIDED by session BOB: - **(1) The capture-request door → the `capture_requests` table, drained by the daemon.** The POLICY was already Bob's own ruling — *"capturing a document is something the daemon  
   `docs/archive/IS-SWEEP-2026-08-07.md:372`
 - was WITHDRAWN on Bob's four corrections (kept visible in the entry — read it before reasoning about AI architecture).  
@@ -1019,6 +1019,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CIVICOS_UI_STATE.md:700`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  
   `docs/development/CLAIMS.md:54`
+- `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated). **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are dated records of what was measured…  
+  `docs/development/CLAIMS.md:310`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1031,12 +1033,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CORPUS-STUDY.md:24`
 - `docs/DECIDED.md` making a wrong-level op claim it was merely QUOTING; and found a truncated op name — a claim about an op that has never existed, manufactured by my own summary cutting a real op name mid-token.  
   `docs/development/CORPUS-STUDY.md:58`
+- **2026-08-10** — SUPERSEDED 2026-08-10, the same day, by Bob's instruction: "Remove all references to > Google Drive and App Script, as that's not part of the system architecture."** Move 1's > banners were the cheap repair; his instruction is the real one, and the banners came out > with the text they warned about.  
+  `docs/development/CORPUS-STUDY.md:186`
 - a `RULED` / `DECIDED` / `AMENDED` / `CORRECTED` / `OVERTURNED` marker.  
-  `docs/development/CORPUS-STUDY.md:227`
+  `docs/development/CORPUS-STUDY.md:236`
 - file, `docs/DECIDED.md`** — one line per ruling: the id, the date, the ruling in the words it was ruled in, and `file:line`.  
-  `docs/development/CORPUS-STUDY.md:274`
+  `docs/development/CORPUS-STUDY.md:283`
 - Drift check for `plancheck`: regenerate and fail if the committed `DECIDED.md` differs from the generated one, exactly as `check-versions` treats version stamps. ## Move 1 · Repair the substrate discontinuity — ~30 lines changed  
-  `docs/development/CORPUS-STUDY.md:296`
+  `docs/development/CORPUS-STUDY.md:305`
 - **2026-08-02** — AMENDED 2026-08-02 by Bob, and it widens the item in three ways: *"It's my sense that the ability to extract text from imaged PDFs will be a very important capability that the workflow must have in order to be effective.  
   `docs/development/DECISIONS.md:265`
 - **2026-08-02** — AMENDED AGAIN 2026-08-02. Bob: *"The sequence pixels → ocr → ai is only part of the chain. A member can attest that the transcription is accurate. That can be sufficient to raise the grade to the same level as text. Right?"* **RIGHT — and the question exposes a defect in the model it was asked about, which is worth  
@@ -1143,14 +1147,16 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1134`
 - `docs/DECIDED.md`. Regenerate it in any turn that rules on anything. ---  
   `docs/development/kickoffs/BOB-NEXT.md:20`
+- identical before and after; `DECIDED.md` regenerated; all four gates green; handed to CONDUCT through the BOB INBOX.  
+  `docs/development/kickoffs/BOB-NEXT.md:31`
 - Regenerate `docs/DECIDED.md` and re-run `node tools/mintid.mjs --list`** after each document.  
-  `docs/development/kickoffs/BOB-NEXT.md:72`
+  `docs/development/kickoffs/BOB-NEXT.md:80`
 - The DECIDED index **indexed its own output** and reported 997 rulings against 568 — an instrument answering about itself, in the tool written to relieve exactly that. - The generated index then **made an op claim it was only QUOTING**, and `op-claims` attributed it to the index rather than the source.  
-  `docs/development/kickoffs/BOB-NEXT.md:89`
+  `docs/development/kickoffs/BOB-NEXT.md:97`
 - Regenerate `docs/DECIDED.md` in any turn that rules on anything; plancheck gates it. - Hand architectural change over through the `BOB INBOX` at the top of `QUEUE.md`, append-only.  
-  `docs/development/kickoffs/BOB-NEXT.md:178`
+  `docs/development/kickoffs/BOB-NEXT.md:187`
 - NOTATION IS SETTLED: `classDiagram` for structure, `stateDiagram-v2` for lifecycle, edges labelled with the ACT.  
-  `docs/development/kickoffs/BOB-NEXT.md:181`
+  `docs/development/kickoffs/BOB-NEXT.md:190`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:81`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
@@ -1213,8 +1219,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/QUEUE.md:86`
 - a stale `docs/DECIDED.md`. Any turn that rules on anything runs `node tools/decided.mjs` and commits the result. - No queue item is superseded and no worker should be stopped.  
   `docs/development/QUEUE.md:114`
+- `docs/DECIDED.md` regenerated. - **No queue item is superseded and no worker should be stopped.** The one kickoff this supersedes is BOB's own (`BOB-NEXT.md`), corrected in the same turn.  
+  `docs/development/QUEUE.md:165`
 - **2026-07-31** — CAPTURE-SCALING.md item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics.  
-  `docs/development/QUEUE.md:827`
+  `docs/development/QUEUE.md:850`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:178`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

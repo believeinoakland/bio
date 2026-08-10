@@ -32,7 +32,7 @@ BIO_Functional_Architecture. Specified by Bob Krause in session, July 24,
 in BIO_Technical_Architecture_Decisions v10 Section 10 (token mechanics),
 which states that "per-member tokens are deliberately not used; the group
 shares its infrastructure." That decision was made when every caller was a
-script, a chat session, or the accelerator daemon. It did not contemplate
+script, a chat session, or the endpoint daemon. It did not contemplate
 members holding browsers. Where this document and that decision disagree,
 this document governs, and the earlier text should be annotated rather than
 silently left standing.

@@ -4644,6 +4644,34 @@ enacted: 2026-08-09 · CONDUCT · **THIS ONE CHANGES SHIPPED BEHAVIOUR, so it be
   measured, in the same breath as telling workers to measure.
   reasoning now carried by: this entry; `INVESTIGATIVE-SESSION.md` §3.
 
+### DEC-67 · open
+raised: 2026-08-10 · session BOB (found while executing Bob's instruction to remove the
+  retired substrate from the architecture record)
+for: bob
+question: Does "remove all references to Google Drive and App Script" extend to the
+  PLATFORM ADVICE the record gives ADOPTING GROUPS? `BIO_Communications_Platforms.md`
+  recommends Google Drive shared folders as the default place a group hosts its own
+  work products, and `BIO_Design_Requirements_v2.md` R9 names it as the accessibility
+  default — under R9's own rule that multiple platforms serve and no single platform is
+  essential. These references are NOT our substrate: they describe what a group might use
+  for material outside the record, and the removal instruction was about the system
+  architecture, which these are not.
+why it is Bob's: changing what BIO recommends to groups is doctrine with effects on
+  people outside the project — a group that took the recommendation holds work products
+  where the record said to put them. It is a different decision from the substrate
+  removal, which is why it was not folded in.
+provisional: both documents keep their platform advice unchanged. The substrate removal
+  (enacted this turn) touched neither.
+alternative: sweep the advice too — replace the named platform with a neutral
+  "accessible shared folder store" phrasing, keeping R9's multiple-platforms rule intact.
+  Costs nothing structurally; changes a recommendation groups may already have followed.
+recommendation: keep the advice as written. R9's doctrine is already platform-plural and
+  names the failure mode ("if Google restricts a group's Drive…"); the recommendation is
+  honest about the dependency and the record does not run on it. Revisit only if the
+  advice itself goes stale as platforms change, which the document's own status line
+  already provides for.
+reversal cost: nil — a wording change in two documents, no code, no data.
+
 ### DEC-62 · answered
 raised: raised retroactively 2026-08-07 by session BOB because the ruling existed only in a
   design document (INVESTIGATIVE-SESSION.md) — the register's founding rule is that a Bob

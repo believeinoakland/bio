@@ -35,7 +35,7 @@ resolution; the functional analysis itself is unchanged.
 
 **Annotation (v3, July 20, 2026), two additions to the annotation
 layer.** First, the Monitoring Skill's mechanical duties are realized:
-the M2' daemon (accelerator 0.10.2, live-fire verified in production
+the M2' daemon (live-fire verified in production
 July 19, 2026) runs source change detection, deadline and recheck
 sweeps, first-capture creation from named standing intent, and
 co-attestation as constrained-endpoint operations under Tech Arch v10

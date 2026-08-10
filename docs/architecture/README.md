@@ -75,12 +75,13 @@ in the corpus; sessions consult it constantly.
 escalation ladder that decides who does the work (daemon, session, human),
 and the handling of lawful-but-confidential discoveries.
 
-**BIO_Bundle_Skill_Composite_Design_v1_7** — the design of the Apps Script
-bundle skill. **Status: superseded implementation, inherited format.** The
-Cloudflare plane replaced this runtime, but the bundle format, the
-promotion semantics, and the C-series check catalog it describes are what
-the plane implements and must continue to satisfy. Read it for the format
-and the checks, not for the runtime.
+**BIO_Bundle_Skill_Composite_Design_v1_7** — the design of the bundle skill
+that was the store's single write authority. **Status: superseded
+implementation, inherited format.** The Cloudflare plane replaced that
+runtime, but the bundle format, the promotion semantics, and the C-series
+check catalog it describes are what the plane implements and must continue
+to satisfy. Read it for the format and the checks, not for the runtime; the
+retired runtime's own build record is in `docs/archive/architecture/`.
 
 **BIO_Communications_Platforms** — the analysis behind platform selection
 for group and inter-group communication. **Status: operational selection,

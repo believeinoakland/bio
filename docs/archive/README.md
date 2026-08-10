@@ -54,6 +54,34 @@ source of Bob's published review).
 | `kickoffs/CONDUCT-BOOTSTRAP.md` | the first CONDUCT bootstrap, superseded by `kickoffs/CONDUCT.md` |
 | `apps-script-README.md` | the Apps Script accelerator's notes. **That runtime no longer exists** — the plane is a Cloudflare Worker |
 
+### `architecture/` — the retired runtime's own sections, moved 2026-08-10
+
+**Bob, 2026-08-10: "Remove all references to Google Drive and App Script, as that's not
+part of the system architecture."** He is right and the references were wrong: the built
+system is a Cloudflare Worker plus a Durable Object with SQLite and R2. The removal was
+not a find-and-replace — it was a per-reference judgment about whether the reasoning
+around a reference survived the substrate change or went with it. **What survived stayed
+in the live document, stated in terms of the PROPERTY rather than the vendor. What is
+here is what the retired runtime was**, verbatim and unedited.
+
+| file | what it holds |
+| --- | --- |
+| `BIO_Technical_Architecture_Decisions_v10-retired-runtime.md` | the v5–v10 revision log, the first client as built, three technology-stack rows, the transport findings, the registry of ten endpoint operations with their admission reasoning, the sequence-uniqueness non-invariant, and the promotion gate's deployment lag |
+| `BIO_Bundle_Skill_Composite_Design_v1_7-retired-runtime.md` | the v1.1–v1.7 revision log, the endpoint's subtree in the component inventory, and the measured component sizes at 0.1.0 |
+
+**Read the registry admissions.** They are the clearest worked examples in the record of
+what the constrained-endpoint criteria actually demand of an operation — including an
+admission that states its own worst case in plain words, which is the standard the live
+Section 10.4 now holds every admission to.
+
+**Two things were deliberately NOT touched, and both were measured rather than assumed.**
+The append-only ledgers keep every retired-runtime row they carry: those are dated records
+of what was measured and decided ON that runtime, and editing them rewrites history, which
+is the one thing this record refuses. And `BIO_Communications_Platforms.md` with
+`BIO_Design_Requirements_v2.md`'s R9 keep their platform recommendations to ADOPTING
+GROUPS — those name a place a group might host its own work products, which is not our
+substrate and is a different doctrine question.
+
 ### `ledgers/` — closed operational history, rolled 2026-08-10
 
 Rolled out of the live ledgers, unedited, because those files had grown past what a

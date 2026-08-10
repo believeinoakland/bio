@@ -237,7 +237,7 @@ RESOLVED, against the earlier framing here. The worry was that idempotence
 "only holds if every writer honours it", which was pessimism about an open
 world that this system does not have. The writer set is closed and known, and
 the three-implementation conformance requirement already exists precisely to
-keep the reference implementation, the accelerator, and the client promoter in
+keep the reference implementation, the endpoint, and the client promoter in
 agreement. Idempotence therefore belongs IN THE CONFORMANCE SUITE, where a
 writer that forgets it fails a test, rather than in a rule every writer must
 remember. Per the standing lesson, the assertion runs both ways: a writer must
