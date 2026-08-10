@@ -10,6 +10,65 @@ executed it should be archived, not maintained.
 
 ---
 
+## WHAT WAS DONE, 2026-08-10 — and what deliberately was not
+
+| | before | after |
+| --- | ---: | ---: |
+| the live corpus (`docs/development` + `docs/architecture`) | 7.35 MB | **3.56 MB** |
+| what a session must read to orient | ~565 k tokens | **~295 k tokens** |
+| `CLAIMS.md` | 1.69 MB | 26 KB |
+| `QUEUE.md` | 931 KB | 83 KB |
+| `DEBT.md` | 532 KB | 315 KB |
+| archived rather than deleted | — | 3.83 MB, indexed and searchable |
+
+**Move 0 — `tools/decided.mjs` and `docs/DECIDED.md`.** 597 rulings, 167 KB, generated,
+gated by `plancheck`, wired into `CLAUDE.md`. **This is the move that answers the
+complaint**; the rest only reduce the volume it works over.
+
+**Move 1 — six architecture documents banner-corrected**, including two that were
+actively misleading rather than merely stale (Membership v1's superseded status existed
+only in another file while its §7.7 contradicts v2 on access control; Case-Making said
+"do not build from this file yet" about a collapse that has shipped).
+
+**Move 2 — 21 closed passes and dead handovers archived**, 1.09 MB.
+
+**Move 3 — three ledgers rolled**, 2.4 MB, every split verified lossless before writing.
+
+### Not done, and each for a stated reason
+
+- **`INTERFACE-CHANGES.md` is NOT rolled.** It reads 49-of-52 resolved and it is not:
+  IC-39 through IC-57 are resolutions CONDUCT still OWES. Rolling them would hide
+  outstanding work behind a tidy file. **This is a correction to this document's own
+  earlier plan, which said to archive 49 of them.**
+- **`DECISIONS.md` stays whole** — 65 entries is not a volume problem, and the file is
+  the record of what was asked as much as what was answered.
+- **`MEASUREMENTS.md` stays whole** — deciding which superseded runs may go requires
+  knowing which figures documents still cite, and that was not measured.
+- **Four stale-looking HELD claims were left alone.** All four are 2026-08-09 and look
+  stale under `PARALLELISM.md`, but releasing another session's claim is CONDUCT's call,
+  not a housekeeping act.
+- **`D-124`'s two rows were reunited in the live file after the roll split them.** It is
+  a registered pre-existing id collision; separating the pair made `mintid` read it as
+  resolved. A defect made invisible by relocating half of it is the laundering shape this
+  record refuses, so both rows stay together until the renumber happens.
+
+### What the instruments caught, because none of it was found by reading
+
+`op-claims` found its ledger drifted three separate times as documents moved; found
+`docs/DECIDED.md` making a wrong-level op claim it was merely QUOTING; and found a
+truncated op name — a claim about an op that has never existed, manufactured by my own
+summary cutting a real op name mid-token. `mintid` found the D-124 split. `plancheck`
+found the index stale on its first real run. **Every defect in this consolidation was
+found by a gate, not by review**, which is the argument for the gates rather than for
+the care.
+
+*(And once more in this very paragraph: naming the truncated op literally made THIS
+document assert it, and `op-claims` failed the battery on it. `mintid`'s header carries
+the general rule — **never write an id-shaped example in a file that is a corpus** — and
+it holds one namespace over.)*
+
+---
+
 # PART 1 · THE STUDY
 
 ## 1.1 The corpus is four bodies of writing, not one

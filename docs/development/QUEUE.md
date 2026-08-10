@@ -94,6 +94,27 @@ Branch `bob-corpus-index` (596c697), green, unmerged. What changed for CONDUCT:
   MENTIONED in prose, and its ledger is not committed, so removing prose that names a
   high id LOWERS the floor and a fresh clone re-issues an id already in use.**
 
+**2026-08-10 · BOB · THE CORPUS WAS CONSOLIDATED WHILE YOU WERE PAUSED.** Live corpus
+7.35 MB → 3.56 MB; orientation reading ~565k → ~295k tokens. Nothing deleted, nothing
+edited — 3.83 MB moved to `docs/archive/`, which `decided.mjs` and `mintid` both scan.
+Read `docs/development/CORPUS-STUDY.md` once. What changes for you:
+
+- **THIS FILE now ends in a `## CLOSED ITEMS` register** — 195 done/superseded items
+  moved to `docs/archive/ledgers/QUEUE-2026-08.md`, leaving one heading and one line
+  each. **Do not delete those headings**: `planning-hygiene` builds its queue-id set
+  from them and checks every `QUEUED <ID>` reference in the corpus against it, and
+  `mintid` reads floors from the same prose.
+- **`CLAIMS.md` is 26 KB** (217 released claims archived). Four HELD claims from
+  2026-08-09 remain and look stale — **releasing them is yours, not housekeeping.**
+- **`DEBT.md` keeps every open row**; 110 closed rows archived. `D-124`'s two rows are
+  deliberately together in the live file with a comment saying why — it is a registered
+  collision and splitting it made `mintid` read it as resolved.
+- **`INTERFACE-CHANGES.md` was NOT touched**, because IC-39 through IC-57 are
+  resolutions you still owe, not closed history. Still owed and unchanged.
+- **`plancheck` has one new failure mode:** a stale `docs/DECIDED.md`. Any turn that
+  rules on anything runs `node tools/decided.mjs` and commits the result.
+- No queue item is superseded and no worker should be stopped.
+
 An entry names: what changed, which queue items it affects, and whether any in-flight
 work is superseded. It does NOT decide worker lifecycle — stopping a running worker is
 CONDUCT's call.

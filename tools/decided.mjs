@@ -10,19 +10,21 @@
  *     may work total ~565,000 TOKENS.  A session cannot read its own required
  *     reading list.  It reads some of it, and the rest of the record is invisible
  *     to it.
- *   - 585 statements in the corpus carry a RULED / DECIDED / AMENDED / CORRECTED /
- *     OVERTURNED marker.  **ONLY 12% ARE IN `DECISIONS.md`** — 154 are inside
- *     `CLAIMS.md` (1.7 MB, which does not fit in a context window), 79 in
- *     `QUEUE.md`, 31 in `INTERFACE-CHANGES.md`, and the rest are scattered across
- *     fifty documents.
+ *   - 598 statements in the corpus carry a RULED / DECIDED / AMENDED / CORRECTED /
+ *     OVERTURNED marker.  **ONLY 12% ARE IN `DECISIONS.md`** — the rest were
+ *     scattered across fifty documents, 154 of them inside `CLAIMS.md`, which was
+ *     1.7 MB and did not fit in a context window at all.
  *
  * So a session re-asks a settled question not because it is careless but because
  * the answer is in a file it cannot afford to open.  Making the corpus SMALLER
  * does not fix that: after every archive move those rulings are still spread
  * across fifty documents.  What fixes it is being able to ASK.
  *
- * This emits 585 rulings as 161 KB — 40k tokens against the corpus's 1,950k, one
- * forty-eighth — and answers a phrase query in one call.
+ * This emits 598 rulings as 167 KB and answers a phrase query in one call.  The
+ * consolidation of 2026-08-10 that followed took the live corpus from 7.35 MB to
+ * 3.56 MB — but note which of the two actually fixes the complaint: SHRINKING the
+ * corpus does not make a ruling findable, because the rulings that remain are
+ * still spread over fifty documents.  Only asking does.
  *
  * ------------------------------------------------------------------ the rules
  *

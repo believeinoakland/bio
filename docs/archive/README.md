@@ -54,6 +54,30 @@ source of Bob's published review).
 | `kickoffs/CONDUCT-BOOTSTRAP.md` | the first CONDUCT bootstrap, superseded by `kickoffs/CONDUCT.md` |
 | `apps-script-README.md` | the Apps Script accelerator's notes. **That runtime no longer exists** — the plane is a Cloudflare Worker |
 
+### `ledgers/` — closed operational history, rolled 2026-08-10
+
+Rolled out of the live ledgers, unedited, because those files had grown past what a
+session could read. **In every case the live file keeps its rules and everything still
+open**, and the split was verified LOSSLESS — every block present exactly once across
+the pair — before either file was written.
+
+| file | what moved | the live file went from |
+| --- | --- | --- |
+| `CLAIMS-2026-08.md` | 217 released claims | 1.69 MB → 26 KB |
+| `QUEUE-2026-08.md` | 195 `done`/`superseded` items | 931 KB → 83 KB |
+| `DEBT-closed-2026-08.md` | 110 rows whose status is not `open` | 532 KB → ~315 KB |
+
+**`QUEUE.md` keeps a one-line register of every closed id, and that is not cosmetic:**
+`planning-hygiene` builds its queue-id set from this file's `### <ID> · <state>` headings
+and checks every `QUEUED <ID>` cross-reference in the corpus against it, and `mintid`
+reads its floors from the same prose.
+
+**`INTERFACE-CHANGES.md` was NOT rolled**, and the reason is worth keeping: it looks 49-of-52
+resolved, and it is not. IC-39 through IC-57 read `PROPOSED … the version bump and the
+RESOLUTION are CONDUCT's` — **resolutions still OWED**, not closed history. Rolling them
+would have hidden outstanding work behind a tidy file. `DECISIONS.md` and the open half
+of `DEBT.md` stay whole for the same kind of reason.
+
 ## Adding to the archive
 
 Move the file with `git mv`, add a row above saying what it was and why it closed, and

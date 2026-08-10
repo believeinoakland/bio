@@ -145,19 +145,30 @@ and an open debt row with no disposition.
 
     node tools/decided.mjs "<the subject>"
 
-It answers from a generated index of every ruling in the corpus and returns the
-ruling in the words it was ruled in, plus the file and line that owns it. Built
-2026-08-10 against two measurements: the reading this file and the kickoffs
-demand before a session may work totals **~565,000 tokens**, which no session can
-read; and of the 583 ruling-bearing statements in the corpus, **only 12% are in
-`DECISIONS.md`** — the rest are spread across fifty documents, several of which
-are larger than a context window. So a session re-asks a settled question not
-because it was careless but because the answer was somewhere it could not afford
-to open. `docs/DECIDED.md` is that index, 161 KB against the corpus's 7.4 MB.
-**Regenerate it (`node tools/decided.mjs`) in any turn that rules on anything**;
+It answers from a generated index of every ruling in the corpus — 598 of them,
+167 KB — returning the ruling in the words it was ruled in, plus the file and
+line that owns it. **Only 12% of those rulings are in `DECISIONS.md`**; the rest
+are spread across fifty documents, several of which are larger than a context
+window. So a session re-asks a settled question not because it was careless but
+because the answer was somewhere it could not afford to open.
+
+**Regenerate it (`node tools/decided.mjs`) in any turn that rules on anything** —
 `plancheck` fails on the drift. It is a FLOOR on what has been settled and never
-a ceiling — a ruling recorded without a marker word is invisible to it, so grep
+a ceiling: a ruling recorded without a marker word is invisible to it, so grep
 before concluding nothing was decided.
+
+**It scans `docs/archive/**`**, which is what makes archiving a closed document
+safe rather than lossy, and why the archive is where finished work goes rather
+than being deleted.
+
+> **The measurements that produced this, 2026-08-10, kept because they are the
+> argument.** The reading this file and the kickoffs demanded before a session
+> could work totalled **~565,000 tokens** — no session could read its own
+> required reading list, so it read some and the rest of the record was invisible
+> to it. `CLAIMS.md` alone was 1.7 MB of released claims. The consolidation that
+> followed took the orientation set to **~295 k** and the live corpus from 7.35 MB
+> to 3.56 MB, with 3.83 MB archived rather than deleted. `docs/development/CORPUS-STUDY.md`
+> carries the study and what remains undone.
 
 **Before making a change another session must know about, read
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE".** It is the skill this
