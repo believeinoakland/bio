@@ -6746,3 +6746,12 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+## CLAIM 2026-08-09 RECORD (D-267)
+session: worktree-agent-ac6e765828bca8499
+opened: 2026-08-09T00:00:00Z
+paths: `#refEdgeSevered`/`#citesInto`/`#restsOnLive`/`#queueAncestorEdges` in bio-plane/src/store.mjs, bio-plane/test/severedhomes.test.mjs, bio-plane/test/severedhomes.control.mjs, the three D-267 pins in bio-plane/test/current.test.mjs, the D-267 row in docs/development/DEBT.md
+interfaces consumed: none
+interfaces owned: none
+expected: D-267 — the queue's ancestor walk is blind to `status: severed`. The fix is ONE severance predicate the three existing readers share, consumed by the walk rather than restated in it; no `refs` column is added, so no interface changes. Correcting PL-13's three pins that recorded the defective homes, and sweeping the other `refs` readers for the class.
+released:

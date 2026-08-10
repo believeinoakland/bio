@@ -28,3 +28,5 @@
 # `.ui…` so an existing line would cover it is the kind of small dishonesty that
 # makes the next reader mistrust the whole file.
 .pl13-harness/
+# D-267's pen, named for its item for the same reason PL-13's is.
+.d267-harness/

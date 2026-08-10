@@ -2962,6 +2962,47 @@ export class Store extends DurableObject {
       .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role, state: l.state }));
   }
 
+  /* D-267: THE ONE SEVERANCE CONFIRMATION. Is the edge from `citingId` to
+   * `targetId` recorded as WITHDRAWN in the citing document's own frontmatter?
+   *
+   * IT EXISTS BECAUSE THE RULE HAD FOUR IMPLEMENTATIONS AND A FIFTH READER THAT
+   * DID NOT KNOW THE RULE EXISTED. Every projection this store keeps of
+   * `references[]` — `refs` and `inquiry_basis` alike — carries the RELATION and
+   * DROPS the STATUS, so a severed edge leaves a row in both tables and the only
+   * place the withdrawal is recorded is the document. Four readers already knew
+   * that and each re-derived it inline (#citesInto, #restsOnLive, backlinks,
+   * #projectsDrawingOn / versionAct's VERSION_CURRENT_UNRELATED pair);
+   * #queueAncestorEdges did not, and every producer whose homes come from
+   * #queueAncestors inherited the blindness — a project that WITHDREW from a
+   * question stayed a home for every item filed under it. The fix is not a fifth
+   * copy of the predicate at the walk: it is ONE predicate the readers share, so
+   * the answer cannot drift between the feed that routes a question's
+   * notifications and the act that refuses to move a withdrawn project's stance.
+   *
+   * TWO CONSERVATIVE ARMS, and both mean LIVE. A citing document that cannot be
+   * READ counts as live, which was retire's behaviour before it was anybody's
+   * rule. A document that records NO ENTRY for this target — or records it in a
+   * spelling this predicate does not recognise — counts as live too, because
+   * severance is a POSITIVE recorded decision and inferring one from a shape we
+   * failed to parse would drop a home nobody withdrew from. Severance therefore
+   * only ever narrows on evidence, never on absence.
+   *
+   * `rel` NARROWS OR IT IS NULL, and the two callers differ on purpose.
+   * #citesInto asks about the `cites` relation specifically. #restsOnLive asks
+   * about the target with no relation constraint, because a basis leg IS a
+   * reference entry (C-6.3 as REC-11 rewrote it) and the leg does not restate
+   * the rel. Both spellings were already in the source; this parameterises the
+   * difference rather than inventing a third answer. */
+  #refEdgeSevered(citingId, targetId, rel = null) {
+    const md = this.#one(
+      `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, citingId);
+    if (!md || md.content === null) return false;   // unreadable is LIVE
+    const refs = parseFrontmatter(md.content).data?.references;
+    const entry = (Array.isArray(refs) ? refs : [])
+      .find((x) => x && x.target === targetId && (rel === null || x.rel === rel));
+    return !!entry && entry.status === "severed";   // unrecorded is LIVE
+  }
+
   /* THE ONE live-cites predicate (REC-19). Who cites INTO a bundle, partitioned
    * by edge status. `refs` is the projection of the citing documents'
    * frontmatter, rewritten on every promotion, so a severed edge still has a
@@ -2972,18 +3013,15 @@ export class Store extends DurableObject {
    *
    * Extracted from retire's CITED guard so that guard and op=affordances'
    * publication run the SAME predicate: a pre-flight that could disagree with
-   * the refusal it fronts would be the drift DEC-8 forbids, wearing our colors. */
+   * the refusal it fronts would be the drift DEC-8 forbids, wearing our colors.
+   *
+   * D-267: the status read itself now goes through #refEdgeSevered, unchanged in
+   * behaviour and no longer this method's private knowledge — the queue's
+   * ancestor walk needed the same answer and was giving a different one. */
   #citesInto(id) {
     const confirmed = [], severed = [];
-    for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id)) {
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
-      if (!md || md.content === null) { confirmed.push(r.bundle_id); continue; }
-      const refs = parseFrontmatter(md.content).data?.references;
-      const entry = (Array.isArray(refs) ? refs : [])
-        .find((x) => x && x.rel === "cites" && x.target === id);
-      if (!entry || entry.status !== "severed") confirmed.push(r.bundle_id);
-      else severed.push(r.bundle_id);
-    }
+    for (const r of this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, id))
+      (this.#refEdgeSevered(r.bundle_id, id, "cites") ? severed : confirmed).push(r.bundle_id);
     return { confirmed: confirmed.sort(), severed: severed.sort() };
   }
 
@@ -3020,12 +3058,10 @@ export class Store extends DurableObject {
       const leg = { bundle_id: r.bundle_id, ord: r.ord, role: r.role || null,
                     state: r.current_state };
       if (r.current_state === "divided") continue;
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, r.bundle_id);
-      if (md && md.content !== null) {
-        const refs = parseFrontmatter(md.content).data?.references;
-        const entry = (Array.isArray(refs) ? refs : []).find((x) => x && x.target === id);
-        if (entry && entry.status === "severed") { severed.push(leg); continue; }
-      }
+      /* D-267: the same one severance confirmation #citesInto and the queue's
+         ancestor walk read, with NO relation constraint — a basis leg is a
+         reference entry and the leg does not restate the rel. */
+      if (this.#refEdgeSevered(r.bundle_id, id)) { severed.push(leg); continue; }
       /* FROZEN vs WORKING, and the split is the D-5 refinement this item makes
          (reported to CONDUCT rather than buried): a `published` dependent's
          basis is inside a SIGNED EDITION and cannot be edited at all, so it can
@@ -11853,16 +11889,47 @@ export class Store extends DurableObject {
    *  — the reverse index restingOn() already reads. `refs` with rel `cites`
    *  carries "this bundle CITES that target", which is how a project holds the
    *  documents and questions it is working on. Both are read at their target
-   *  index, so a step is two indexed lookups and not a scan. */
+   *  index, so a step is two indexed lookups and not a scan.
+   *
+   *  D-267 — A WITHDRAWN EDGE IS NOT A STEP, AND THE RULE IS CONSUMED RATHER
+   *  THAN RESTATED. Both tables are PROJECTIONS of `references[]` and both DROP
+   *  `status`, so a project that recorded `status: severed` still has its row in
+   *  each — and this walk, reading the tables alone, kept it as a home for every
+   *  item filed under the question it withdrew from. The plane already held the
+   *  opposite rule one op over (`versionAct` refuses `VERSION_CURRENT_UNRELATED`
+   *  for exactly that project, and `#projectsDrawingOn` reproduces it so the feed
+   *  and the act agree about who is in the conversation), so the defect was never
+   *  an undecided question. It is fixed HERE, at the walk, rather than in any one
+   *  producer: a producer filtering its own homes would be a second
+   *  implementation of the homes rule, which is the shape this repository has
+   *  already lost a control to. The narrowing is `#refEdgeSevered`, the single
+   *  predicate `#citesInto` and `#restsOnLive` also read, and BOTH edge kinds are
+   *  confirmed — the basis half had the identical blindness and nothing had
+   *  named it.
+   *
+   *  AN EDGE SURVIVES IF ANY OF ITS SPELLINGS IS LIVE. One document may reach one
+   *  ancestor as a basis leg AND as a citation; withdrawing one of those is not
+   *  withdrawing the other, so the confirmations are OR-ed and the home stays
+   *  while any live edge remains. With `#refEdgeSevered`'s own two conservative
+   *  arms — unreadable is live, unrecorded is live — the walk can only ever drop
+   *  a home on a POSITIVE recorded withdrawal, never on a shape it failed to
+   *  parse.
+   *
+   *  THE COST IS ONE DOCUMENT READ PER CANDIDATE EDGE, which is the price D-267
+   *  costed against the alternative: teaching `refs` a `status` column would
+   *  change a projection twelve readers and an export manifest build against,
+   *  for a fact only the document can be authoritative about anyway (D-21). */
   #queueAncestorEdges(nodeId) {
-    const up = new Set();
+    const up = new Map();
+    const consider = (id, rel) =>
+      up.set(id, (up.get(id) || false) || !this.#refEdgeSevered(id, nodeId, rel));
     for (const r of this.#rows(
       `SELECT DISTINCT bundle_id FROM inquiry_basis WHERE target_id=?`, nodeId))
-      up.add(r.bundle_id);
+      consider(r.bundle_id, null);
     for (const r of this.#rows(
       `SELECT DISTINCT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, nodeId))
-      up.add(r.bundle_id);
-    return [...up].sort();
+      consider(r.bundle_id, "cites");
+    return [...up.entries()].filter(([, live]) => live).map(([id]) => id).sort();
   }
 
   /** DEC-16's EVERY-ANCESTOR walk, bounded, viewer-gated, and honest about both
