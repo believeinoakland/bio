@@ -567,7 +567,9 @@ output is attributed to that party) and its SHAPE is decided provisionally in
 which needs no new reference granularity. Scope this area against that shape when a
 slot frees. *(Heading restored 2026-08-10 by CONDUCT.)*
 
-## IS BUILD PLAN — STATUS, MEASURED 2026-08-10. **NINE ROWS REMAIN OF FORTY-THREE, AND THREE OF THEM ARE CONDUCT'S.**
+## IS BUILD PLAN — STATUS, RE-MEASURED 2026-08-10 AFTER THE SKILL TRACK LANDED. **SIX ROWS REMAIN OF FORTY-THREE, AND NONE OF THEM IS CONDUCT'S.**
+
+**UPDATED IN THE SAME TURN THE SK ROWS MERGED, DELIBERATELY.** This section exists because the plan's status was unreadable for three days; leaving it stale after closing the rows it tracks would be that failure recommitted by the person who diagnosed it. Read it as of `2cd9cb6`.
 
 **This section exists because the plan's status was UNREADABLE and its absence was
 mistaken for its emptiness.** `IS-BUILD-PLAN.md` (2026-08-07) holds the scope for six
@@ -599,9 +601,9 @@ is the defect wearing a disguise.
 
 | who | row | what | blocked on |
 | --- | --- | --- | --- |
-| **CONDUCT** | SK-2 | the investigative skill — composition judgement, description standard, search-completeness discipline (**the model never decides when the loop stops**) | **nothing — SK-1 is landed. This is the top of the plan's remaining work.** |
-| **CONDUCT** | SK-3 | the PRACTICE-SURVEY prohibition set, verbatim in the skill; PL-3's boilerplate check is the code half of the fifth | SK-2 |
-| **CONDUCT** | SK-4 | CHECK deploys first; investigate-fresh enables only after CHECK's first live run is verified | SK-2/SK-3 in practice; its named deps FL-3 and VF-5 are **both landed** |
+| ~~CONDUCT~~ **DONE** | SK-2 | the investigative skill — §14b.4's table parsed out of the design, authority held to its right column in both directions | **landed `e1f497f`, merged 2026-08-10** |
+| ~~CONDUCT~~ **DONE** | SK-3 | the prohibition set — verbatim as a LOOKUP against its source documents, not as a discipline | **landed `496fe8c`, merged 2026-08-10** |
+| ~~CONDUCT~~ **DONE** | SK-4 | CHECK deploys first — the sequencing RECORDED, FL-3's gate dereferenced rather than re-implemented | **landed `f4483e6`, merged 2026-08-10. Its LIVE half is VF-4's and is not reached — printed by the suite every run, never simulated.** |
 | RECORD | PL-16 | the published case (IS-8, M10) | **Bob** — DEC-33 deferred the publication ceremony and PL-16 depends on it. Not schedulable, and not CONDUCT's to unblock |
 | **DIST** | DS-1 | D-115 — the installer installs the FLEET | FL-2 (landed) |
 | **DIST** | DS-2 | D-116 — version authority spans the fleet | DS-1 |
