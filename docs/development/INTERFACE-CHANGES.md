@@ -3576,3 +3576,113 @@ in. The delegation names the two functions.
 ### 3 · RESOLUTION
 
 *(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's, IC-42's and IC-53's precedent.)*
+
+---
+
+## IC-58 · I2: the text shape gains ONE ADDITIVE FIELD — `producer`, WHO MADE THE TEXT LAYER, and `reading.text_source` may now carry a SECOND step naming that engine · PROPOSED 2026-08-10 (D-251) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (content → framework), currently **1.1.0 STABLE**
+- **Proposer:** CONTENT-PDF, session `cpdf-d251`, 2026-08-10, enacting `DEBT.md` D-251
+- **Owner to land the version bump:** `FRAMEWORK` (dormant — CONDUCT answers for it, in writing,
+  per the protocol's step 3)
+- **Consumers to answer:** `FRAMEWORK` (owner and consumer); and in practice the surfaces that
+  read a reading's provenance — the `readings` projection, `op=reading`, `op=textprovenance`,
+  `op=textattest`, and an exported bundle's `data/provenance.json`
+- **Producers affected:** `CONTENT-PDF` (this change), `CONTENT-OFFICE` (NOT-AFFECTED by
+  construction — see MIGRATION), `CONTENT-HTML` (dormant)
+- **Status:** PROPOSED, and **ADDITIVE**
+
+### WHAT CHANGED
+
+**One optional field on I2's text shape**, emitted by `extractPdfStructure`'s `text`:
+
+```
+text.producer = {
+  producer:      <string>|null,       // the trailer's /Info /Producer, verbatim
+  creator:       <string>|null,       // the trailer's /Info /Creator, verbatim
+  determination: "ocr" | "undetermined",
+  ocr:           { engine, field, marker } | null,
+  why:           "no_producer_metadata" | "no_ocr_marker_in_producer_metadata"
+                 | "encrypted" | "info_unreadable" | null
+}
+```
+
+**And one consequence at the reading boundary, inside the shape IC-39 already
+established**: when `determination` is `"ocr"`, `reading.text_source` — already a CHAIN since
+IC-39 — carries a SECOND step, so the provenance reads `layer -> ocr(<product>)`:
+
+```
+[ { step: "layer", tier: 1, container: "pdf", cap: null, measured_by: "…" },
+  { step: "ocr", engine: "ABBYY FineReader Engine 11", version: null,
+    field: "creator", marker: "abbyy", cap: null, measured_by: "…" } ]
+```
+
+`text_tier` and `text_container` are **UNCHANGED**. A document with no marker carries the ONE
+`layer` step it has always carried, byte for byte.
+
+### WHY THE DEFAULT IS THE DESIGN, AND WHY THERE IS NO "authored"
+
+**`determination` has exactly two values and "authored" is not one of them.** It cannot become
+one: `PRODUCER_DETERMINATIONS` is a frozen array and the suite asserts its membership by name.
+That is the whole item rather than a detail of it. A producer string can establish that OCR
+software touched the layer; **nothing in an ABSENT marker can establish that a human typed the
+text** — a file may carry no `/Info`, may have been re-saved by a tool that overwrote it, or may
+name a product nobody has heard of. So the classification may only ever make the claim WEAKER,
+and it is built so that it structurally cannot do otherwise: the composition in `index.mjs` only
+ever APPENDS through `appendStep` (the function that already refuses a step claiming a stronger
+cap), and the marker table is a DETECTOR whose absence of a hit is the status quo ante.
+
+**The named engine's `cap` is `null` — UNDETERMINED, STATED.** It is somebody else's engine, run
+at a quality nobody here measured. What the chain gained is not a letter; it is the ENGINE'S
+NAME, which is what a calibration is OF (CPDF-13) and what a reader would need to re-run the
+claim. **A consumer must not read that null as "fine"**, which is IC-39's existing clause and is
+restated here because a second null now appears on a second step.
+
+### MEASURED CONSUMER IMPACT
+
+**Measured, not estimated, and it has three parts.**
+
+**(a) ZERO STORED READINGS CHANGE, and zero readers break.** `text.producer` is a NEW key on an
+object every existing consumer reads by key: grepped across `bio-plane/src`, `bio-plane/test`,
+`civicos-ui`, `pdf-worker`, `agent-worker`, `docprofile` and `newgroup`, **no reader enumerates
+the text shape's keys and none reads `producer`** — the only consumer of the whole object is
+`docprofile`'s `readText`, which takes `document`/`pages`/`undetermined`. A `text` from an office
+container or from the Tier-2 member simply has no `producer` key, and an absent key reads as an
+absence, which is what it is.
+
+**(b) THE CHAIN LENGTHENS FOR ONE CLASS, AND THE INDEX THAT WAS BUILT FOR IT STARTS ANSWERING.**
+`reading_text_source` already carries `terminal_step` and an `engines` JSON array, and is indexed
+on `(transcribed, terminal_step)` — CPDF-10 built that index and until now it had nothing to
+distinguish, because every PDF's terminal step was `layer` and every `engines` array was empty.
+**`op=textprovenance&step=ocr` answered NOTHING for a store holding machine-transcribed certified
+resolutions.** It now returns them, naming the engine. **No schema change is required and none was
+made** — the column existed and was empty. This is asserted through the op in
+`producer-provenance.test.mjs`, not argued here.
+
+**(c) ON THE LIVE RECORD, MEASURED THE SAME DAY** (MEASUREMENTS.md 2026-08-10): the three
+attachments CPDF-9 named — Oakland's enacted certified resolutions **89484, 89498 and 89518
+CMS** — were re-fetched from Legistar and read by this extractor. All three now read
+`layer -> ocr(ABBYY FineReader Engine 11)`. **The other 8 attachments on those same three
+matters** (Acrobat Distiller, Word for Office 365, Quartz PDFContext, PScript5, Aspose, and three
+encrypted reports) **all read `undetermined` — zero false positives**, and the encrypted ones name
+`encrypted` rather than being matched against ciphertext.
+
+### WHAT A CONSUMER MUST DO
+
+**Nothing, to keep working.** To BENEFIT: ask `terminal_step`/`engines` (or the chain's steps)
+rather than treating "this document has a text layer" as one population — it never was one, and
+IC-39 already said so. `derivationCap` is unchanged and still answers `null` for these documents,
+because naming the engine did not measure it.
+
+### 1 · PROPOSED — 2026-08-10, CONTENT-PDF
+
+Landed on the area's own branch, green, with the three negative-control arms run and recorded.
+
+### 2 · RESPONSES
+
+*(FRAMEWORK is dormant. CONDUCT answers on its behalf, in writing, naming that it did so.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I2 version bump is CONDUCT's — IC-39's precedent, which is the row this one
+extends and which is itself still PROPOSED at I2 1.1.0.)*

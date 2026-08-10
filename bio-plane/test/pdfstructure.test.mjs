@@ -21,6 +21,15 @@
  *   - a CID font with NO /ToUnicode                 -> undetermined NAMING the font
  *   - a code absent from the CMap                   -> unmapped_code, never guessed
  *
+ * D-251 fixtures cover the /Info read at the parser, and specifically the half
+ * the acquire-driven suite cannot reach:
+ *   - a classic `trailer << … /Info N 0 R >>`     -> the product NAMED
+ *   - an xref STREAM with no `trailer` keyword    -> still found (the Legistar shape)
+ *   - an incremental update whose re-save dropped the marker -> undetermined,
+ *     never the earlier marker and never "authored"
+ *   - /Info compressed inside a FlateDecode /ObjStm -> read, not silently absent
+ *   - a dangling /Info reference                  -> falls back, never invents
+ *
  * Structural guards on top of the fixtures:
  *   - PARITY: every wrapper this module emits is byte-identical to what
  *     subresources.mjs's `linkWrapper` produces, so the two link systems cannot
@@ -461,6 +470,114 @@ console.log("\n--- a normal (unencrypted) PDF is NOT flagged encrypted ---");
   const out = await extractPdfStructure(bytes);
   t("no encrypted note on a plain document", out.notes.includes("encrypted"), false);
   t("no encrypted marker", out.text.undetermined.some((u) => u.reason === "encrypted"), false);
+}
+
+/* ------------------------------------------------------------------ *
+ * D-251 — the /Info READ itself, at the parser, where the two TRAILER SHAPES
+ * live. The acquire-driven evidence is `producer-provenance.test.mjs`; what is
+ * asserted here is the half that suite's fixtures cannot reach — an xref-STREAM
+ * PDF (the shape Legistar and OpenGov actually serve, which has no `trailer`
+ * keyword at all), an incremental update, and metadata compressed into an
+ * object stream. A parser that only read the classic trailer would pass every
+ * arm of the other suite and be blind to the entire class this item is about.
+ * ------------------------------------------------------------------ */
+/* The ocr block, read defensively: when no marker is found there is none, and
+   an assertion that THROWS reading it reports "the suite crashed" where the
+   finding is "no engine was named". The control's first arm removes exactly
+   that read and must come back as a want/got. */
+const ocrOf = (out) => (out.text && out.text.producer && out.text.producer.ocr) || {};
+console.log("\n--- D-251: /Info is read from BOTH trailer shapes, and the last one wins ---");
+{
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 4, body: "<< /Producer (ABBYY FineReader Engine 11) >>" },
+  ], "trailer\n<< /Root 1 0 R /Info 4 0 R >>\n");
+  const out = await extractPdfStructure(bytes);
+  t("classic trailer: the product is NAMED", ocrOf(out).engine, "ABBYY FineReader Engine 11");
+  t("and the determination is ocr", out.text.producer.determination, "ocr");
+}
+{
+  /* An xref STREAM PDF: no `trailer` keyword anywhere, /Info on the /Type /XRef
+     stream dict. This is the modern shape and the one the measured corpus is. */
+  const xrefData = Buffer.from([0, 0, 0, 0]);
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 4, body: "<< /Creator (ABBYY FineReader Engine 11) /Producer (PDFWriter) >>" },
+    { num: 5, head: `<< /Type /XRef /Root 1 0 R /Info 4 0 R /W [1 2 1] /Size 6 /Length ${xrefData.length} >>`,
+      stream: xrefData },
+  ]);
+  const out = await extractPdfStructure(bytes);
+  t("xref-stream PDF (no `trailer` keyword at all): /Info is still found",
+    out.text.producer.determination, "ocr");
+  t("naming the engine from the field that carried it",
+    [ocrOf(out).engine, ocrOf(out).field],
+    ["ABBYY FineReader Engine 11", "creator"]);
+}
+{
+  /* Incremental update: the document was OCR'd and then re-saved by a writer
+     that overwrote its metadata. The LAST trailer is what the file now says,
+     and the honest answer is `undetermined` — NOT the earlier marker, and not
+     "authored" either. Overwriting is exactly the case the design's "an absent
+     marker is an absent marker" clause is written for. */
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 4, body: "<< /Producer (ABBYY FineReader Engine 11) >>" },
+    { num: 5, body: "<< /Producer (Adobe PDF Library 15.0) >>" },
+  ], "trailer\n<< /Root 1 0 R /Info 4 0 R >>\ntrailer\n<< /Root 1 0 R /Info 5 0 R >>\n");
+  const out = await extractPdfStructure(bytes);
+  t("an incremental update's LAST trailer wins", out.text.producer.producer, "Adobe PDF Library 15.0");
+  t("and a re-save that dropped the marker reads undetermined, never authored",
+    out.text.producer.determination, "undetermined");
+}
+{
+  /* /Info compressed into an object stream — legal since PDF 1.5 and invisible
+     to any reader that only scans the raw bytes. */
+  const infoBody = "<< /Producer (Tesseract 5.3.4) >>";
+  const header = "9 0";
+  const inner = header + "\n" + infoBody;
+  const first = Buffer.byteLength(header + "\n", "latin1");
+  const compressed = deflateSync(Buffer.from(inner, "latin1"));
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 21, head: `<< /Type /ObjStm /N 1 /First ${first} /Length ${compressed.length} /Filter /FlateDecode >>`,
+      stream: compressed },
+  ], "trailer\n<< /Root 1 0 R /Info 9 0 R >>\n");
+  const out = await extractPdfStructure(bytes);
+  t("an /Info living inside a FlateDecode /ObjStm is read, not silently absent",
+    [out.text.producer.determination, ocrOf(out).engine], ["ocr", "Tesseract 5.3.4"]);
+}
+{
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+  ]);
+  const out = await extractPdfStructure(bytes);
+  t("no /Info at all: undetermined, NAMED as which absence it is",
+    [out.text.producer.determination, out.text.producer.why], ["undetermined", "no_producer_metadata"]);
+  t("and nothing is invented for it",
+    [out.text.producer.producer, out.text.producer.creator, out.text.producer.ocr], [null, null, null]);
+}
+{
+  /* A dangling /Info reference is an ABSENCE and must fall back rather than
+     shadow a readable earlier candidate. */
+  const bytes = pdf([
+    CATALOG(1, "2 0 R"),
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>" },
+    { num: 4, body: "<< /Producer (OmniPage Ultimate 19) >>" },
+  ], "trailer\n<< /Root 1 0 R /Info 4 0 R >>\ntrailer\n<< /Root 1 0 R /Info 77 0 R >>\n");
+  const out = await extractPdfStructure(bytes);
+  t("a dangling /Info reference falls back to the readable candidate instead of reporting no metadata",
+    ocrOf(out).engine, "OmniPage Ultimate 19");
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);

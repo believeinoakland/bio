@@ -33,6 +33,14 @@
  * (`unpdf`/pdf.js, for the residue Tier 1 cannot decode) is a separate fleet
  * Worker (I6, CPDF-6) and does not live here.
  *
+ * AND WHO MADE THAT LAYER (D-251). The text shape carries a `producer` field
+ * read from the trailer's /Info: a layer whose producer NAMES OCR software is
+ * recorded as such WITH THE PRODUCT NAMED, and a layer with no such marker
+ * stays `undetermined` — never "authored", because an absent marker is an
+ * absent marker. The classification may only ever make the claim WEAKER. See
+ * the D-251 block below for the whole argument; it is the reason this is a
+ * DETECTOR and not a lookup table of product names.
+ *
  * No DOM, no Worker bindings, no bundled dependency. FlateDecode is the native
  * DecompressionStream("deflate"). The parser is LENIENT by design: rather than
  * trust a possibly-broken xref, it brute-force scans every `N G obj` in the
@@ -527,6 +535,47 @@ export class PdfDoc {
     }
     return (this._encrypted = enc);
   }
+
+  /** The document information dictionary — the trailer's `/Info` (D-251).
+   *
+   *  TWO SHAPES, because the corpus has both and reading only one would make a
+   *  whole class of document silently metadata-less. A classic PDF carries
+   *  `trailer << … /Info N 0 R >>`; a modern xref-STREAM PDF (what Legistar and
+   *  OpenGov serve, and the class this item was raised about) has no `trailer`
+   *  keyword at all and carries `/Info` on its `/Type /XRef` stream dict.
+   *
+   *  THE LAST ONE IN THE FILE WINS, which is incremental-update semantics
+   *  without parsing an xref — the same reasoning `scanTopLevel` already runs
+   *  on, so a document that was re-saved reports the metadata it was re-saved
+   *  WITH rather than the metadata it was born with.
+   *
+   *  Returns the resolved dict map, or null. Cached; call after
+   *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
+  infoDict() {
+    if (this._info !== undefined) return this._info;
+    const cands = [];
+    const re = /\btrailer\b/g;
+    let m;
+    while ((m = re.exec(this.s))) {
+      const r = parseValueSafe(this.s, m.index + 7);
+      const map = r && r.value && r.value.t === "dict" ? r.value.map : null;
+      if (map && map.Info && map.Info.t === "ref") cands.push([m.index, map.Info]);
+    }
+    for (const v of this.objects.values()) {
+      if (!v || v.t !== "stream") continue;
+      const type = v.dict.Type;
+      if (!(type && type.t === "name" && type.v === "XRef")) continue;
+      if (v.dict.Info && v.dict.Info.t === "ref") cands.push([v.start, v.dict.Info]);
+    }
+    cands.sort((a, b) => a[0] - b[0]);
+    for (let i = cands.length - 1; i >= 0; i--) {
+      const map = this.dictOf(cands[i][1]);
+      /* A dangling /Info reference is an ABSENCE, so fall back to the previous
+         candidate rather than reporting "no metadata" for a file that has some. */
+      if (map) return (this._info = map);
+    }
+    return (this._info = null);
+  }
 }
 
 function numberVal(v) {
@@ -535,6 +584,130 @@ function numberVal(v) {
 /** A defensive re-parse entry point kept separate so scanTopLevel stays simple. */
 function parseValueSafe(s, pos) {
   try { return parseValue(null, s, pos); } catch { return null; }
+}
+
+/* ------------------------------------------------------------------ *
+ * D-251 — WHO MADE THIS TEXT LAYER, AND THE ONE DIRECTION THE ANSWER
+ * IS ALLOWED TO TRAVEL
+ * ------------------------------------------------------------------ *
+ *
+ * A text layer is somebody else's transcription that we decode faithfully
+ * through the FILE'S OWN /ToUnicode map, so a perfect decode of a wrong layer
+ * is a perfect decode of a wrong layer (CPDF-10). CPDF-9 MEASURED that this is
+ * not hypothetical: 3 of 14 recent Legistar attachments name
+ * `Creator: ABBYY FineReader Engine 11`, and those three are exactly the City
+ * Clerk's ENACTED CERTIFIED RESOLUTIONS (89484, 89498, 89518 CMS) — 300-dpi
+ * JBIG2 scans under a machine OCR overlay whose garbage the record has been
+ * reading as authored text (MEASUREMENTS.md 2026-08-03 §5).
+ *
+ * THE DESIGN IS THE DEFAULT, NOT THE TABLE, and that sentence is the whole
+ * item. What follows is a DETECTOR, not a classifier of documents:
+ *
+ *   - A producer string that names OCR software makes the layer's provenance
+ *     `ocr` with the PRODUCT NAMED — and the name comes from THE DOCUMENT'S
+ *     OWN BYTES, never from the table below. The table decides only whether a
+ *     marker is PRESENT; the record then says what the file said.
+ *   - Everything else stays `undetermined`. NEVER "authored". An absent marker
+ *     is an absent marker: a file may carry no /Info at all, may have been
+ *     re-saved by a tool that overwrote the metadata, or may name a product
+ *     nobody here has heard of. None of those is evidence that a human typed
+ *     the text.
+ *   - So THE CLASSIFICATION MAY ONLY EVER MAKE THE CLAIM WEAKER. There is no
+ *     value in `PRODUCER_DETERMINATIONS` that strengthens anything, and the
+ *     chain composed in `index.mjs` can only ever APPEND a step to the `layer`
+ *     step that was already there. That is `CLAUDE.md`'s *undetermined is
+ *     first-class and must be STATED*, on one field — and it is why a lookup
+ *     table answering in BOTH directions would be the record claiming more
+ *     than it can support one field wide on every document in the store.
+ *
+ * WHAT THIS CANNOT SEE, stated rather than left to be discovered. XMP
+ * (`CreatorTool`) is NOT read here: CPDF-9's wider 19-document sweep found it
+ * never disagreed with /Info, so a second reader buys nothing today and would
+ * put one fact in two places. A wholly image-only scan may carry no metadata
+ * at all and is caught structurally instead — zero fonts plus a drawn image is
+ * the `no_text_layer` marker (CPDF-5), which is why detection is TWO cheap
+ * reads that compose rather than one that has to be complete. And an OCR tool
+ * that overwrites /Info with its own PDF-writer name is invisible to this and
+ * stays `undetermined`, which is the honest answer rather than a missed
+ * detection dressed up as a clean one.
+ */
+
+/** The two values this may ever answer, and there is deliberately no third.
+ *  "authored" IS NOT A MEMBER AND MUST NEVER BECOME ONE — a marker's absence
+ *  cannot establish authorship, and a vocabulary that could say so is a
+ *  vocabulary that can STRENGTHEN a claim. `producer-provenance.test.mjs`
+ *  asserts this array by name for exactly that reason. */
+export const PRODUCER_DETERMINATIONS = Object.freeze(["ocr", "undetermined"]);
+
+/** The markers. Every row is a product whose named function IS optical
+ *  character recognition, so naming it in producer metadata cannot mean
+ *  anything else. This list is allowed to be INCOMPLETE and says so: a name it
+ *  does not carry leaves the layer `undetermined`, which is exactly the answer
+ *  the record gave before this existed. Adding a row can only ever move a
+ *  document from `undetermined` to a NAMED engine — never the other way. */
+export const OCR_PRODUCER_MARKERS = Object.freeze([
+  /* MEASURED IN THE LIVE RECORD — the reason this item exists (CPDF-9). Both
+     spellings are carried because the vendor ships the engine under several
+     product names and a second row costs nothing. */
+  Object.freeze({ marker: "abbyy", re: /\babbyy\b/i }),
+  Object.freeze({ marker: "finereader", re: /\bfine\s?reader\b/i }),
+  /* Engines that do nothing else. */
+  Object.freeze({ marker: "tesseract", re: /\btesseract\b/i }),
+  Object.freeze({ marker: "omnipage", re: /\bomnipage\b/i }),
+  Object.freeze({ marker: "readiris", re: /\breadiris\b/i }),
+  Object.freeze({ marker: "ocrmypdf", re: /\bocrmypdf\b/i }),
+  Object.freeze({ marker: "acrobat-capture", re: /\bacrobat\s+capture\b/i }),
+  /* A producer that says OCR ABOUT ITSELF. Anchored on non-alphanumerics so an
+     unrelated word that merely contains the letters does not fire. */
+  Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i }),
+]);
+
+/** Classify a document's producer metadata. PURE — no PDF, no I/O — so the rule
+ *  can be driven directly and the `/Info` read can fail independently of it.
+ *
+ *  `unreadable` is a NAMED cause for metadata that exists and cannot be
+ *  trusted. Encryption is the live case: /Info's strings are ciphertext under
+ *  the Standard Security Handler, and matching a marker against ciphertext is
+ *  matching against noise — an outcome that costs nothing to produce is not
+ *  evidence (CLAUDE.md). It classifies NOTHING and publishes NOTHING. */
+export function classifyProducer({ producer = null, creator = null, unreadable = null } = {}) {
+  const clean = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  if (unreadable)
+    return Object.freeze({ producer: null, creator: null, determination: "undetermined",
+                           ocr: null, why: String(unreadable) });
+  const p = clean(producer), c = clean(creator);
+  /* /Producer first, then /Creator. The order decides only which field is NAMED
+     when both carry a marker; either one firing is the same finding. */
+  for (const [field, value] of [["producer", p], ["creator", c]]) {
+    if (!value) continue;
+    for (const m of OCR_PRODUCER_MARKERS) {
+      if (!m.re.test(value)) continue;
+      /* THE PRODUCT IS NAMED FROM THE DOCUMENT, NOT FROM THE TABLE. `marker`
+         records which row fired, so a false positive is traceable to the row
+         that caused it rather than to "the detector". */
+      return Object.freeze({ producer: p, creator: c, determination: "ocr", why: null,
+        ocr: Object.freeze({ engine: value, field, marker: m.marker }) });
+    }
+  }
+  return Object.freeze({ producer: p, creator: c, determination: "undetermined", ocr: null,
+    why: (p || c) ? "no_ocr_marker_in_producer_metadata" : "no_producer_metadata" });
+}
+
+/** Read `/Info` off a parsed document and classify it. NEVER THROWS: a metadata
+ *  read that fails is an ABSENCE (`info_unreadable`), never a lost document —
+ *  the same leniency every other read in this module has. */
+export function readProducer(doc) {
+  if (doc.isEncrypted()) return classifyProducer({ unreadable: "encrypted" });
+  try {
+    const info = doc.infoDict();
+    if (!info) return classifyProducer({});
+    /* A /Producer that is not a STRING — a number, a name, a dangling
+       reference — is ABSENT, not guessed at. */
+    const str = (k) => { const v = doc.resolve(info[k]); return v && v.t === "str" ? v.v : null; };
+    return classifyProducer({ producer: str("Producer"), creator: str("Creator") });
+  } catch {
+    return classifyProducer({ unreadable: "info_unreadable" });
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -1187,6 +1360,13 @@ function pageDrawsImage(doc, resources) {
 
 /** Document text (Tier 1). Extends the I2 output; see the module header. */
 async function extractText(doc, pageOrder) {
+  /* D-251: WHO MADE THIS LAYER. Read ONCE, from the file's own /Info, and
+     carried on the text shape rather than on the document — because the claim
+     it bounds is a claim about the TEXT, and a consumer holding the text is the
+     one that must not read it as authored. It rides the encrypted early return
+     too: that path yields no text and still has something true to say about
+     what could not be read. */
+  const producer = readProducer(doc);
   // Encrypted: Tier 1 cannot decode ciphertext content streams, so it decodes
   // NOTHING. Say so with ONE document-level marker naming the cause, rather than
   // attempting every page and emitting a swarm of undecodable notes (CPDF-5).
@@ -1194,7 +1374,8 @@ async function extractText(doc, pageOrder) {
   if (doc.isEncrypted()) {
     doc.note("encrypted");
     const marker = { page: null, reason: "encrypted", font: null, codes: "", count: 0 };
-    return { document: "", pages: [], undetermined: [marker], counts: { chars: 0, undetermined: 1 } };
+    return { document: "", pages: [], undetermined: [marker],
+             counts: { chars: 0, undetermined: 1 }, producer };
   }
   const fontCache = new Map();
   const pages = [];
@@ -1218,6 +1399,7 @@ async function extractText(doc, pageOrder) {
     pages,
     undetermined: allUndetermined,
     counts: { chars: document.length, undetermined: allUndetermined.length },
+    producer,
   };
 }
 
@@ -1232,10 +1414,16 @@ async function extractText(doc, pageOrder) {
  * @returns {Promise<object>} the container-agnostic structure object; see the
  *          module header and the returned `container`/`links` shape. Carries a
  *          `text` field (Tier 1, CPDF-4): { document, pages:[{page,text,
- *          undetermined:[…]}], undetermined:[…], counts:{chars,undetermined} },
- *          where each undetermined marker names the cause (the font) rather than
- *          guessing an undecodable run into text. This is the producer side of
- *          the proposed I2 (structure -> framework).
+ *          undetermined:[…]}], undetermined:[…], counts:{chars,undetermined},
+ *          producer:{…} }, where each undetermined marker names the cause (the
+ *          font) rather than guessing an undecodable run into text. This is the
+ *          producer side of the proposed I2 (structure -> framework).
+ *
+ *          `text.producer` (D-251, IC-58) is WHO MADE THE TEXT LAYER, read from
+ *          the trailer's /Info: `{producer, creator, determination:"ocr"|
+ *          "undetermined", ocr:{engine,field,marker}|null, why}`. There is no
+ *          "authored" determination and there must never be one — see the D-251
+ *          block above.
  */
 export async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {

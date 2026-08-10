@@ -319,3 +319,68 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
   recommend platforms to ADOPTING GROUPS rather than describing our substrate.
   **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+
+---
+
+## CLAIM 2026-08-10 CONTENT-PDF (D-251 — who made this text layer, read from the file's own `/Info`)
+session: cpdf-d251 (worktree `agent-a9a385fb87482fe28`, branch `worktree-agent-a9a385fb87482fe28`)
+opened: 2026-08-10T00:00:00Z
+released:
+paths:
+- `bio-plane/src/pdfstructure.mjs` — CONTENT-PDF's own path (kickoff `CONTENT-PDF.md`). The
+  `/Info` read, the OCR-marker DETECTOR, and `classifyProducer`.
+- `bio-plane/src/index.mjs` — **NAMED BY REGION, NOT BY FILE, because a RECORD worker is live
+  on this file's op surface and `store.mjs` for a different item, and two claims that read as
+  overlapping is exactly what `PARALLELISM.md`'s mechanism exists to prevent.** What is claimed
+  here is ONLY: (1) the CPDF-10 constant block that already carries `LAYER_FIDELITY_CAP` /
+  `LAYER_FIDELITY_SOURCE`, which gains two siblings and one function beside it; (2) inside
+  `op=acquire`'s READING ASSEMBLY, the three lines that BUILD A TEXT CHAIN — the Tier-2
+  hand-off's `i2text = t2.text`, the D-252 mixed-document `layerChain({…})` call for
+  `layerPages`, and the terminal `if (i2text && !chain) chain = layerChain({…})`. **NOT** the op
+  dispatch table, **NOT** any `if (op === …)` arm, **NOT** the capture/governor/subresource path,
+  **NOT** the schema, **NOT** `store.mjs` (READ ONLY — measured 25,861 lines, `grep -a` only).
+- `bio-plane/test/pdfstructure.test.mjs` — CONTENT-PDF's own battery (parser-level arms).
+- `bio-plane/test/producer-provenance.test.mjs` (NEW) — the arm that drives it THROUGH
+  `op=acquire`, because a store-level or parser-level pass is not evidence a caller can reach
+  the feature (`op=invitelook` shipped with a ReferenceError while 1276 assertions passed).
+- `bio-plane/test/producer-provenance.control.mjs` (NEW) — the three negative-control arms.
+- `.gitignore` — ONE pattern (`.d251-control-pristine/`), appended to the block that already
+  documents negative-control pens. No existing pattern touched.
+- `docs/development/INTERFACE-CHANGES.md` (APPENDED — the IC row), `docs/development/DEBT.md`
+  (APPENDED / this row's disposition), `docs/development/MEASUREMENTS.md` (APPENDED),
+  `docs/development/INTERFACES.md` (the I2 text-extension paragraph only),
+  `docs/development/kickoffs/CONTENT-PDF.md` (APPENDED — other content workers may be live),
+  `docs/development/CLAIMS.md` (this entry).
+- **NOT** `docs/development/QUEUE.md` (CONDUCT is its sole writer), **NOT** `pdf-worker/**`,
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `bio-plane/src/textchain.mjs`
+  (READ ONLY — the chain rules are IMPORTED and this item adds no rule to them).
+interfaces consumed: I1 (bytes), I6 (read only — the Tier-2 hand-off is not changed in shape).
+interfaces owned: I2 producer side — **one ADDITIVE field, `text.producer`.** IC row filed with
+  measured consumer impact; the version bump and the RESOLUTION are CONDUCT's.
+
+### DELEGATION 2026-08-10 CONTENT-PDF (D-251) -> M0: **A FRESH WORKTREE HAS NO `bio-plane/node_modules`, AND 124 PLANE SUITES FAIL WITH ONE CAUSE**
+
+**CORRECTED IN PLACE BEFORE ANYONE READ IT, and the correction is left visible rather than the
+paragraph rewritten, because the mistake is the more useful half.** This block first claimed the
+battery *"reports 124 FAILED suites and EXITS 0"* — the same class of defect as REC-49's false
+`exit 0`, raised as a delegation. **That claim was WRONG, and it was wrong because of my own
+harness rather than the runner's.** The baseline was run as
+`npm run test:battery > file; echo "EXIT=$?"`, and the status reported back for a compound
+command is the LAST command's — `echo`'s — which is always 0. Measured directly afterwards on
+this same branch: a run with ONE failing suite wrote **`EXIT=1`** into its own log while the
+harness still announced "exit code 0". **The battery's exit status is fine. My instrument was
+the thing that could not see it**, which is precisely the `cmd | tail` failure CLAUDE.md already
+records, arriving through `cmd; echo` instead of through a pipe.
+
+**What IS true, and is all that is left of it.** A fresh worktree has no
+`bio-plane/node_modules`, and `npm run test:battery` there reports **`28/157 suites green · 5
+skipped · 2233 assertions passing`** with **124 plane suites under `FAILED:`**, every one
+`Cannot find package 'miniflare'`. The transcript is correct, complete, and names the cause on
+every line. The true exit status of THAT run was never measured and is not claimed here.
+
+**What closing it takes, and it is small:** nothing tells a session working in a fresh worktree
+to run `npm ci` in `bio-plane/` first — not `CLAUDE.md`'s verification section, not
+`VERIFICATION.md`, not `gates.mjs`. One line in the loop the reader actually runs (a
+`gates.mjs` pre-flight that says so, or better, that runs it) turns a 124-line wall of identical
+failures into a setup step. **A hint would be enough; a mechanism that is not in the loop the
+reader runs is not a mechanism.**

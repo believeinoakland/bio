@@ -311,3 +311,54 @@ The fetch/governor/subresource/archive path and the HTML link graph (CAPTURE,
 behind I1); content identity, intent, and bias (FRAMEWORK); `docprofile/**`
 (FRAMEWORK); the op dispatch and schema in `index.mjs`/`schema.mjs` (CAPTURE).
 Reading any of them is expected; changing them is a DELEGATION.
+
+## What D-251 landed (2026-08-10): the file now says who made its text layer
+
+**`bio-plane/src/pdfstructure.mjs` reads the trailer's `/Info` and carries the answer as
+`text.producer` on I2's text shape; `index.mjs`'s acquire assembly composes it into the
+CPDF-10 chain as `layer -> ocr(<product>)`.** This is the half CPDF-10 named and did not
+build, and it is the highest-value thing this area had unbuilt: it converts an undetermined
+cap into a NAMED engine on documents the record already holds.
+
+Five things worth knowing before touching it:
+
+- **THE DESIGN IS THE DEFAULT, NOT THE TABLE, and the table is one-directional.**
+  `PRODUCER_DETERMINATIONS` is `["ocr", "undetermined"]`, frozen, and **"authored" is not a
+  member and must never become one.** A producer string can establish that OCR software
+  touched a layer; an ABSENT marker establishes nothing about authorship. So the
+  classification may only ever make the claim WEAKER — structurally, not by convention: the
+  composition only ever APPENDS through `appendStep`, and `OCR_PRODUCER_MARKERS` is a
+  DETECTOR whose miss is the status quo ante. **Adding a marker row is cheap and safe;
+  adding a determination is not, and there is no reason to.**
+- **THE PRODUCT IS NAMED FROM THE DOCUMENT, NEVER FROM THE TABLE.** The table decides only
+  whether a marker is PRESENT; `engine` is the file's own `/Info` string, trimmed. `marker`
+  records which row fired so a false positive is traceable to a row rather than to "the
+  detector".
+- **BOTH `/Producer` AND `/Creator`, AND BOTH TRAILER SHAPES — and each half was load-bearing
+  when measured.** On all three live subject documents the marker is in `/Creator` and
+  `/Producer` is ABSENT, so reading only `/Producer` would have found nothing. And the class
+  this item is about is served as an xref STREAM with no `trailer` keyword at all, so
+  `infoDict()` reads the `/Type /XRef` dict too, plus an `/Info` compressed into an `/ObjStm`.
+  The parser-level arms for those live in `pdfstructure.test.mjs`; the acquire-driven evidence
+  is `producer-provenance.test.mjs`.
+- **THE NAMED ENGINE'S `cap` IS `null` AND THAT IS THE POINT.** It is somebody else's engine,
+  run at a quality nobody here measured. What the chain gained is the ENGINE'S NAME — what a
+  calibration is OF (CPDF-13) and what a re-run would need. Do not fill that null in with a
+  plausible letter; CPDF-13 is where a measured one comes from.
+- **`op=textprovenance&step=ocr` started answering, and no schema changed.**
+  `reading_text_source` already had `terminal_step` and `engines` and an index on them;
+  CPDF-10 built that index and it had nothing to distinguish until now. Asserted through the
+  op, not argued.
+
+**What it still cannot see, named rather than left to be found:** XMP `CreatorTool` is not
+read (CPDF-9 measured it never disagreeing with `/Info`, so a second reader would put one fact
+in two places); a wholly image-only scan may carry no metadata at all and is caught
+structurally instead (`no_text_layer`, CPDF-5) — **detection is TWO cheap reads that compose,
+which is why neither has to be complete**; and an OCR tool that overwrites `/Info` with its own
+PDF-writer name stays `undetermined`, which is the honest answer rather than a missed detection
+dressed up as a clean one.
+
+**No decision item.** Every question this item raised was one this area was better placed to
+decide than Bob, and they are decided in the code with the reasoning at the site: the
+vocabulary has two values, the marker table is one-directional, the cap stays null, and the
+engine is named from the document. An empty list is a real answer (`kickoffs/README.md`).
