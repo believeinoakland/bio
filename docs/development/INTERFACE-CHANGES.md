@@ -2968,6 +2968,42 @@ reads as "provenance was never recorded", which is exactly what is true of them.
 `mutating: true`, carries `contribute`, and is refused to a machine credential at BOTH the
 control plane and the store (C-35.10).
 
+### AMENDED 2026-08-09 (D-252) — A DERIVATION STEP MAY NAME THE PAGES IT COVERS
+
+**Amended in place rather than raised as a second IC**, because this row is still `PROPOSED`, its
+producer is this same area, and the shape it describes has never been released: splitting one
+unreleased shape across two rows would make a consumer read both to learn what one field is.
+
+**WHAT IS ADDED.** One OPTIONAL field on a DERIVATION step:
+
+```
+{ step: "ocr", engine: "…", version: "…", cap: "C", measured_by: "…",
+  extent: { kind: "pages", pages: [1, 2, 3] } }        // 0-based, ABSENT = the whole document
+```
+
+**ABSENT means the whole document**, so every chain the shape above describes means exactly what it
+meant. The field appears only on a MIXED document — one whose pages have different provenance, a
+text-layer report with scanned exhibits stapled to the back — where the chain is the concatenation
+of its parts and the alternative was to pick one part's chain and let it stand for pages it did not
+describe. An extent this record cannot parse covers NOTHING (`extentCovers`' own direction, applied
+to the other half of the module).
+
+**THE CONSEQUENCE A CONSUMER MUST TAKE, and it is the reason this is an amendment and not a note:
+`derivation_cap` is `null` — UNDETERMINED — for a mixed document, even though one of its parts
+carries a measured letter.** A text layer's fidelity is `null` and an OCR pass is a measured `C`;
+letting the `C` stand for the document would RESOLVE THAT NULL INTO A LETTER for pages nobody
+measured, and `gradeCeiling` reads the two differently — null as *"undetermined, which is a
+statement, not a permission"*, a letter as permission up to it. A consumer that needs a usable
+answer asks per page: `derivationCap(chain, {page})`, which `op=textattest` already does with the
+target a leg cites, and which answers `C` for the OCR'd exhibit and `null` for the text-layer
+report.
+
+**MEASURED CONSUMER IMPACT: ZERO EXISTING RECORDS.** A multi-part chain can only be produced by the
+Tier-3 branch, which requires an `OCR_WORKER` binding that exists in no configuration in this
+repository (grepped: the only occurrences are the wire's own call and one test stub), so no stored
+reading anywhere carries an `extent` or a mixed cap. `text_tier` and `text_container` are still
+UNCHANGED — and what that now costs is written down rather than left to be discovered: **D-284**.
+
 ---
 
 ## IC-45 · I3: `op=affordances` publishes ONE ADDITIVE VOCABULARY — `sufficiency_claim_states`, the three states of a sufficiency `asserted_by` with the sentence a member reads instead of each · PROPOSED 2026-08-09 (PL-17, enacting DEC-65) — the version bump and the RESOLUTION are CONDUCT's

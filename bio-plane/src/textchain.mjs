@@ -159,6 +159,141 @@ export const CONFIDENCE_BASES = { engine: 1, none: 1 };
 /** The extent kinds an attestation may be scoped to, narrowest first. */
 export const EXTENT_KINDS = { region: 1, page: 1, document: 1 };
 
+/* ===================================================================== *
+ * D-252 — A DERIVATION HAS AN EXTENT TOO, AND IT IS THE MIRROR OF THE ONE
+ * ATTESTATION ALREADY CARRIES.
+ * ===================================================================== *
+ *
+ * CPDF-10 built this module for a document with ONE provenance: every step
+ * derived every character. A MIXED document breaks that assumption and it is an
+ * ordinary Council packet shape — a text-layer report with three scanned
+ * exhibits stapled to the back. Its pages have DIFFERENT provenance: some came
+ * out of the file's own text layer, some out of an OCR engine. Neither chain is
+ * the document's chain, and picking either one is the record claiming something
+ * about pages it did not describe.
+ *
+ * SO A DERIVATION STEP MAY NAME WHAT IT COVERS. `step.extent` is
+ * `{ kind: "pages", pages: [<0-based>, ...] }`, and three cases are distinct:
+ *
+ *   ABSENT      — the step derived the whole document. Every chain written
+ *                 before this rule existed is this case, which is why the field
+ *                 is absent rather than defaulted to something: an unscoped
+ *                 chain means exactly what it always meant.
+ *   PAGES       — the step derived those pages and NOTHING ELSE.
+ *   UNREADABLE  — an extent this module cannot parse covers NOTHING, and the
+ *                 document's cap becomes undetermined. That direction is
+ *                 `extentCovers`' own (an unreadable extent must never silently
+ *                 read as "all of it"), applied to the other half of the module.
+ *
+ * AND THE RULE THAT MATTERS IS ABOUT THE CAP, NOT ABOUT THE TEXT. A mixed
+ * document's derivation cap is the weakest over its PARTS, and a part with no
+ * measured cap makes the whole UNDETERMINED — because there is then a stretch of
+ * this document's text that nothing measured bounds.
+ *
+ * That last sentence is the whole reason this exists, so it is worth being
+ * explicit about the mistake it refuses. A text layer's fidelity is `null`:
+ * UNDETERMINED, STATED (CPDF-10's finding — a layer is authored text and
+ * third-party OCR mixed together, ABBYY FineReader in 3 of 14 recent Legistar
+ * attachments, and nobody has separated them). An OCR pass is a measured `C`.
+ * If a mixed document's cap came out `C`, that null would have been quietly
+ * RESOLVED INTO A LETTER for the layer pages — and downstream that is not a
+ * cosmetic difference: `gradeCeiling` reads a null cap as "undetermined, which
+ * is a statement, not a permission" and a `C` as permission up to C. The merge
+ * would have handed a leg citing an unmeasured text layer a ceiling nobody
+ * measured. `null` is not a weaker letter. It is the absence of one, and it
+ * stays that way.
+ *
+ * NOTE THE ASYMMETRY WITH "A STEP WITH NO CAP NEITHER RAISES NOR LOWERS", which
+ * is the landed rule for an UNSCOPED step and is not disturbed here. An unscoped
+ * unmeasured step sits in sequence over text another step DID measure, so that
+ * measurement still bounds it. A SCOPED unmeasured step covers text no other
+ * step measured at all. Sequence and partition are different questions and this
+ * module now asks them separately. */
+
+/** What a derivation step covers: the string "all", the string "unreadable", or
+ *  an array of 0-based page numbers. Never throws and never guesses. */
+function extentOf(step) {
+  const e = step.extent;
+  if (e == null) return "all";
+  if (e && typeof e === "object" && !Array.isArray(e) && e.kind === "pages"
+      && Array.isArray(e.pages) && e.pages.length
+      && e.pages.every((p) => Number.isInteger(p) && p >= 0))
+    return e.pages;
+  return "unreadable";
+}
+
+/** "page 3" / "pages 0-2" / "pages 0-1, 4" — contiguous runs collapsed, because
+ *  a scanned exhibit is a RUN of pages and a chain sentence listing forty of
+ *  them individually is one nobody reads. */
+function pageList(pages) {
+  const runs = [];
+  for (const p of pages) {
+    const last = runs[runs.length - 1];
+    if (last && p === last[1] + 1) last[1] = p; else runs.push([p, p]);
+  }
+  return `${pages.length === 1 ? "page" : "pages"} `
+       + runs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(", ");
+}
+
+/** Does this step cover this page? An unscoped step covers every page; an
+ *  unreadable extent covers none. Exported because the wire and the suite both
+ *  need to ask it, and a second implementation of it would be D-164's lesson. */
+export function stepCovers(step, page) {
+  if (!step || typeof step !== "object") return false;
+  const ext = extentOf(step);
+  if (ext === "all") return true;
+  if (ext === "unreadable") return false;
+  return Number.isInteger(page) && ext.includes(page);
+}
+
+/** Build a document's chain from the chains of its PARTS.
+ *
+ *  `parts` is `[{ chain, pages }]` — one entry per stretch of the document with
+ *  its own provenance. Each part's chain is stamped with the pages it covers and
+ *  the parts are CONCATENATED — deliberately not appended through `appendStep`,
+ *  because rule 2's monotone comparison is about a step extending what it
+ *  RECEIVED, and one part did not receive the other. Rule 2 still holds WITHIN
+ *  each part: every part arrives here already built by `appendStep`.
+ *
+ *  THE FUNCTION IS TOTAL, and the two degenerate cases are the point rather than
+ *  defensive padding, because they are the cases that occur:
+ *
+ *    NO parts  -> `null`. No text surface answered, so there is no chain to
+ *                 record — which is a different fact from an empty chain and is
+ *                 what the wire already carries for a document it never read.
+ *    ONE part  -> that part's chain, UNSCOPED and unchanged. A document with one
+ *                 provenance is not a mixed document, and scoping its only chain
+ *                 to "all its pages" would dress a whole document as a partition
+ *                 and quietly change what every chain written before D-252 says.
+ *                 This is why a wholly-scanned document and a wholly-text-layer
+ *                 one record exactly what they recorded before this rule existed.
+ *
+ *  A refusal from `checkChain` is returned as-is, so a malformed part cannot
+ *  become half a chain. */
+export function mergedChain(parts) {
+  if (!Array.isArray(parts) || parts.length === 0) return null;
+  if (parts.length === 1) {
+    const bad = checkChain(parts[0] && parts[0].chain);
+    return bad || parts[0].chain;
+  }
+  const out = [];
+  for (const part of parts) {
+    const bad = checkChain(part && part.chain);
+    if (bad) return bad;
+    const pages = Array.isArray(part.pages)
+      ? [...new Set(part.pages.filter((p) => Number.isInteger(p) && p >= 0))].sort((a, b) => a - b)
+      : [];
+    for (const step of part.chain) {
+      /* A VERIFICATION step is copied through UNSCOPED. Attestation carries its
+         own extent, checked by `extentCovers`, and stamping a second one on it
+         would give one fact two homes that can disagree. */
+      out.push(STEP_KINDS[step.step].role === "derivation"
+        ? { ...step, extent: { kind: "pages", pages } } : { ...step });
+    }
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ *
  * Refusals — DEC-49. One row per condition in TEXT_CHAIN_CHECKS, the code a
  * STRING LITERAL at its site, so the guard can see it.
@@ -276,13 +411,53 @@ export function layerChain({ tier = null, container = null, cap = null, measured
  *
  *  A verification step is skipped deliberately and that is rule 2 holding: see
  *  the header. `gradeCeiling` is where an attestation is allowed to matter. */
-export function derivationCap(chain) {
+export function derivationCap(chain, target = null) {
   if (checkChain(chain)) return null;
-  let cap = null;
+  const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
+  const measured = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
+  let cap = null, unreadable = false;
+  /* D-252: the parts, collected by the pages they cover. A document whose steps
+     are all unscoped has none of these and takes the original path exactly. */
+  const parts = new Map();
   for (const step of chain) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
-    if (step.cap == null || rank(step.cap) == null) continue;
-    cap = cap == null ? step.cap : weaker(cap, step.cap);
+    const ext = extentOf(step);
+    if (ext === "unreadable") { unreadable = true; continue; }
+    if (page != null) {
+      /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
+         the read a basis leg citing that page needs, and the reason a mixed
+         document is still usable: the OCR'd exhibit answers C and the text-layer
+         report answers undetermined, each about itself. */
+      if (ext !== "all" && !ext.includes(page)) continue;
+      const m = measured(step);
+      if (m) cap = cap == null ? m : weaker(cap, m);
+      continue;
+    }
+    if (ext === "all") {
+      const m = measured(step);
+      if (m) cap = cap == null ? m : weaker(cap, m);
+      continue;
+    }
+    /* WITHIN a part the steps are sequential, so the landed rule holds
+       unchanged: an unmeasured step neither raises nor lowers, and the part's
+       cap is the weakest MEASURED step in it. A part with no measured step at
+       all is the undetermined one. */
+    const key = ext.join(",");
+    const m = measured(step);
+    if (!parts.has(key)) parts.set(key, null);
+    if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
+  }
+  /* An extent this module could not read covers nothing it can name, so it could
+     be covering the page in hand or a stretch of the document nothing else
+     measured. Either way the answer is UNDETERMINED, stated. */
+  if (unreadable) return null;
+  if (page != null) return cap;
+  /* THE MIXED DOCUMENT'S CAP: the weakest over the parts, and a part with NO
+     measured cap makes the whole undetermined — see the header. This is the step
+     that refuses to resolve a text layer's `null` into an OCR pass's letter. */
+  for (const partCap of parts.values()) {
+    if (partCap == null) return null;
+    cap = cap == null ? partCap : weaker(cap, partCap);
   }
   return cap;
 }
@@ -312,7 +487,16 @@ export function describeChain(chain) {
     const base = STEP_KINDS[s.step].label;
     const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""})` : "";
     const by = s.step === "attested" && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
-    return base + who + by;
+    /* D-252: a SCOPED step says which pages it covers, and it has to. Without
+       it a mixed document's chain reads as a sequence — "the text layer was
+       turned into pixels and OCR'd" — which is not what happened to any page
+       in it. An unscoped step says nothing extra, so every sentence written
+       before this rule is the sentence it was. */
+    const ext = extentOf(s);
+    const over = STEP_KINDS[s.step].role === "derivation" && ext !== "all"
+      ? (ext === "unreadable" ? " (over an extent this record cannot read)" : ` (${pageList(ext)})`)
+      : "";
+    return base + who + by + over;
   }).join(" -> ");
 }
 
@@ -534,11 +718,18 @@ export function gradeCeiling(chain, target, attestations = []) {
              by: covering.map((a) => a.member),
              why: `a member checked this text against the image over the extent it cites` };
   }
-  const cap = derivationCap(chain);
+  /* D-252: the cap is asked ABOUT THE TARGET, not about the document. On an
+     unscoped chain that is the same question and the same answer. On a MIXED
+     document it is the difference between a leg citing the OCR'd exhibit (the
+     engine's measured letter) and a leg citing the text-layer report
+     (undetermined) — and answering either one with the document's cap would
+     hand one of them a ceiling nobody measured for it. */
+  const cap = derivationCap(chain, target);
   return { ceiling: cap, determinant: "derivation", by: [],
            why: cap == null
-             ? `no step in this text's provenance carries a measured fidelity, so what it may `
-               + `support is undetermined — which is a statement, not a permission`
+             ? `no step in this text's provenance carries a measured fidelity${
+                 target && Number.isInteger(target.page) ? ` for page ${target.page}` : ""
+               }, so what it may support is undetermined — which is a statement, not a permission`
              : `bounded by the weakest step that produced it (${describeChain(chain)})` };
 }
 

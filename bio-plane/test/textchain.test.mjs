@@ -40,8 +40,17 @@
  * NEGATIVE CONTROL: see the `NEGATIVE CONTROL:` line below — five arms, each
  * armed ALONE with the others held open, and every one RUN with its result
  * recorded (including the two that came back other than declared).
+ *
+ * D-252 (2026-08-09) ADDED THE MIXED DOCUMENT, and with it the second thing a
+ * document's provenance can be. Everything above this line describes a document
+ * with ONE provenance; the section at the FOOT of this file describes one whose
+ * pages have two, which is an ordinary Council packet and was not in any
+ * measured corpus (CPDF-9's exhibit was wholly image-only). The over-strictness
+ * claim is that a one-provenance document comes out of the wire exactly as it
+ * did before — so every arm above is that claim's assertion, and none of them
+ * was changed to accommodate the new ones.
  */
-/* NEGATIVE CONTROL: RUN IT WITH `node test/nc-cpdf10.mjs` — the driver is committed beside this suite, it arms each arm ALONE with the others held open, it declares before each what MUST and MUST NOT fail, and it verifies every restore by sha256 AND by byte comparison against a per-arm pristine copy with the byte count printed and a minimum guarded. SIX ARMS, ALL RUN 2026-08-08 against a BASELINE row of 148/0/foot-reached: (a) `appendStep`'s monotone comparison -> `if (false)` = 3 fail. (b) `undeterminedRegion` keeps the text = 2 fail. (c) `checkConfidence`'s basis test -> `if (false)` = 5 fail. (d) `checkAttestation`'s `isMachineIdentity` arm -> `if (false)` = 8 fail. (e) `extentCovers` returns TRUE for an unknown extent kind = 1 fail. (f) `pdfstructure.mjs` stops naming the image-only page -> `if (false)` = 27 fail (every Tier-3 arm, which is the state this item found the plane in). Each restored byte-identical, sha256 verified, 0 surprises on the final run. **AND THE FIRST RUN OF ARM (f) FOUND A DEFECT IN THIS SUITE RATHER THAN IN ITS SUBJECT**: it reported `pass=-1 fail=-1 foot=false` — a TypeError on `text_source[1].engine` ENDED THE MODULE through no assertion at all. That is fixed by the null-tolerant `steps`/`step` readers below, and it is the reason the driver reports a missing tally as -1 and reads the FOOT line rather than trusting a count. */
+/* NEGATIVE CONTROL: RUN IT WITH `node test/nc-cpdf10.mjs` — the driver is committed beside this suite, it arms each arm ALONE with the others held open, it declares before each what MUST and MUST NOT fail, and it verifies every restore by sha256 AND by byte comparison against a per-arm pristine copy with the byte count printed and a minimum guarded. SIX ARMS, ALL RUN 2026-08-08 against a BASELINE row of 148/0/foot-reached: (a) `appendStep`'s monotone comparison -> `if (false)` = 3 fail. (b) `undeterminedRegion` keeps the text = 2 fail. (c) `checkConfidence`'s basis test -> `if (false)` = 5 fail. (d) `checkAttestation`'s `isMachineIdentity` arm -> `if (false)` = 8 fail. (e) `extentCovers` returns TRUE for an unknown extent kind = 1 fail. (f) `pdfstructure.mjs` stops naming the image-only page -> `if (false)` = 27 fail (every Tier-3 arm, which is the state this item found the plane in). Each restored byte-identical, sha256 verified, 0 surprises on the final run. **AND THE FIRST RUN OF ARM (f) FOUND A DEFECT IN THIS SUITE RATHER THAN IN ITS SUBJECT**: it reported `pass=-1 fail=-1 foot=false` — a TypeError on `text_source[1].engine` ENDED THE MODULE through no assertion at all. That is fixed by the null-tolerant `steps`/`step` readers below, and it is the reason the driver reports a missing tally as -1 and reads the FOOT line rather than trusting a count. **D-252 ADDED FIVE ARMS (g,h,i,j,k), ALL RUN 2026-08-09 against a BASELINE row of 191/0/foot-reached, ELEVEN ARMS TOTAL, 0 SURPRISES, every restore sha256-MATCH and cmp-IDENTICAL with byte counts printed:** (g) the merge goes back to WHOLESALE (`i2text = built.text`, the defect itself) = 11 fail, and THE HEADLINE FAILS FIRST — the text-layer page's own references are gone, which is D-252 driven rather than described. (h) the per-page eligibility test collapses to `if (!target)` = 4 fail (the over-reaching member now overwrites a good page). (i) `derivationCap` stops letting an unmeasured PART make the document undetermined = 3 fail — the doctrine pin, and the arm that drives the null-resolved-into-a-letter. (j) `mergedChain` stops SCOPING its steps = 8 fail. (k) an UNREADABLE extent reads as "all of it" = 1 fail. **AND ONE FINDING ABOUT THE DESIGN RATHER THAN THE ARMS, recorded because it is what the controls actually established: the merge's two conditions — the page is MARKED, and the page has NO TEXT — are individually redundant for every input Tier 1 can produce, because Tier 1 emits `no_text_layer` only for a page whose text is empty, so marked and empty are the same set. Arming either one alone therefore fails NOTHING and the second is unfalsifiable through the op. They are armed TOGETHER as (h) for that reason. The redundancy is deliberate defence in depth (condition 1 is a producer's claim about its output; condition 2 is a fact about the text in hand, and only the second still holds if a future tier's marker vocabulary means something else) and is stated here rather than dressed up as two arms that pass for free.** */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -51,6 +60,7 @@ import {
   layerChain, appendStep, checkChain, derivationCap, describeChain, isTranscribed,
   terminalStep, checkConfidence, applyConfidenceFloor, checkAnchor, checkAttestation,
   extentCovers, gradeCeiling, captureBound, weaker, STEP_KINDS, CONFIDENCE_BASES,
+  mergedChain, stepCovers,
 } from "../src/textchain.mjs";
 import { TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 
@@ -126,6 +136,45 @@ function scanPdf(pages = 1) {
   return pdf(objs);
 }
 
+/* D-252 — THE MIXED DOCUMENT, and it is the shape this whole item is about: a
+   text-layer report (page 0) with a scanned exhibit stapled to the back (page
+   1). An ordinary Council packet, and the class CPDF-9's measured corpus did not
+   contain — its exhibit was wholly image-only, so nothing before this fixture
+   had ever put a good page and a bad page through the wire together.
+
+   Page 0 is `textPdf`'s page exactly (identity CMap, decodes byte-for-byte);
+   page 1 is `scanPdf`'s page exactly (no font resource, one full-page DCTDecode
+   image). Neither half is new: what is new is that they are in one file, which
+   is the entire finding. */
+function mixedPdf(lines) {
+  const content = "BT /F1 10 Tf " + lines.map((l, i) =>
+    (i ? "0 -12 Td " : "") + `(${l}) Tj `).join("") + "ET";
+  const cbuf = Buffer.from(content, "latin1");
+  const cmap = `/CIDInit /ProcSet findresource begin 12 dict begin begincmap
+/CMapName /Adobe-Identity-UCS def
+1 begincodespacerange
+<20> <7e>
+endcodespacerange
+1 beginbfrange
+<20> <7e> <0020>
+endbfrange
+endcmap CMapName currentdict /CMap defineresource pop end end`;
+  const mbuf = Buffer.from(cmap, "latin1");
+  const img = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46]);
+  const scanContent = Buffer.from("q 612 0 0 792 0 0 cm /Im0 Do Q", "latin1");
+  return pdf([
+    { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>" },
+    { num: 4, head: `<< /Length ${cbuf.length} >>`, stream: cbuf },
+    { num: 5, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 6 0 R >>" },
+    { num: 6, head: `<< /Length ${mbuf.length} >>`, stream: mbuf },
+    { num: 7, body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 100 0 R >> >> /Contents 8 0 R >>" },
+    { num: 8, head: `<< /Length ${scanContent.length} >>`, stream: scanContent },
+    { num: 100, head: `<< /Type /XObject /Subtype /Image /Width 2550 /Height 3300 /Filter /DCTDecode /Length ${img.length} >>`, stream: img },
+  ]);
+}
+
 /* A BLANK page: no font AND no image. The over-strictness control — it must NOT
    be routed to OCR, because sending an engine over a blank sheet is exactly the
    invitation to invention CPDF-9's own blank-page control was written for. */
@@ -147,6 +196,10 @@ const agendaLines = (n1, n2, n3) => [
   "Open Forum", "Adjournment",
 ];
 const LAYER = textPdf(agendaLines("26-7701", "26-7702", "26-7703"));
+/* The mixed document's GOOD page carries its own three references. If any of
+   them stops being findable after an OCR pass, a text layer was replaced —
+   which is D-252 exactly, and is what the negative control arms. */
+const MIXED = mixedPdf(agendaLines("26-7601", "26-7602", "26-7603"));
 
 /* ===================================================================== *
  * THE STUB OCR MEMBER. It is CPDF-12's contract and nothing more: it answers
@@ -164,15 +217,33 @@ const goodAnswer = () => ({
 });
 let SCRIPT = goodAnswer();
 
+/* D-252 — the member's answer for the MIXED document's SCANNED page (page 1),
+   carrying references that are NOT on the good page, so "did the text layer
+   survive" and "did the OCR text arrive" are two separately observable facts
+   rather than one. */
+const SCAN_TEXT = agendaLines("26-7901", "26-7902", "26-7903");
+const ocrPage = (page, lines) => ({ page, regions: lines.map((line, i) =>
+  region(line, page, [72, 700 - i * 12, 540, 712 - i * 12], { value: 0.97, basis: "engine" })) });
+const mixedAnswer = (pages = [ocrPage(1, SCAN_TEXT)]) => ({
+  ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C",
+  measured_by: "MEASUREMENTS.md 2026-08-03 (CPDF-9)", confidence_floor: 0.6, pages,
+});
+
+/* WHAT THE WIRE ASKED FOR, recorded rather than assumed. The page list is the
+   cost half of D-252 and a request field nobody looks at is a field nobody can
+   say arrived. */
+let ASKED = null;
+
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   serviceBindings: {
-    OCR_WORKER(request) {
+    async OCR_WORKER(request) {
       if (new URL(request.url).pathname !== "/transcribe")
         return new Response("no", { status: 404 });
+      ASKED = await request.json().catch(() => null);
       if (SCRIPT === "http-500") return new Response("boom", { status: 500 });
       return Response.json(SCRIPT);
     },
@@ -186,6 +257,7 @@ const mf = new Miniflare({
     if (u.pathname === "/scan.pdf") return bin(SCAN);
     if (u.pathname === "/layer.pdf") return bin(LAYER);
     if (u.pathname === "/blank.pdf") return bin(BLANK);
+    if (u.pathname === "/mixed.pdf") return bin(MIXED);
     return new Response("unscripted", { status: 500 });
   },
 });
@@ -208,6 +280,7 @@ const mfBare = new Miniflare({
     if (u.pathname === "/scan.pdf") return bin(SCAN);
     if (u.pathname === "/layer.pdf") return bin(LAYER);
     if (u.pathname === "/blank.pdf") return bin(BLANK);
+    if (u.pathname === "/mixed.pdf") return bin(MIXED);
     return new Response("unscripted", { status: 500 });
   },
 });
@@ -630,6 +703,155 @@ t("the transcription projection went with the bundle", afterPurge.count, 0);
 const attAfter = (await api(`op=textattest&token=mem-cpdf10&sha256=${ocr.capture.sha256}`)).result;
 t("and so did the attestation — a member's name must not stand behind text nobody holds",
   attAfter.count, 0);
+
+/* ===================================================================== *
+ * D-252 — THE MIXED DOCUMENT: AN OCR PASS MAY FILL A PAGE, NEVER REPLACE ONE.
+ *
+ * Placed at the FOOT of this suite on purpose: every arm above describes a
+ * document with ONE provenance, and this section adds the second. Nothing above
+ * it is disturbed, which is itself the over-strictness claim — a document with
+ * one provenance must come out of this wire exactly as it did before D-252, and
+ * every arm above is the assertion that it does.
+ * ===================================================================== */
+console.log("\n--- D-252: THE UNFLEETED MIXED DOCUMENT STILL READS, AND SAYS WHAT IT COULD NOT READ ---");
+const mixedBare = await acquireBare("/mixed.pdf");
+t("the mixed document READS — its text layer was never in doubt", mixedBare.reading.found, true);
+t("and it is NAMED a Tier-3 candidate even though it read, which is the whole point: a document "
+  + "that read is still allowed to have pages it could not read",
+  mixedBare.reading.tier3_candidate, true);
+t("the basis says so in the reading a member actually gets",
+  /no OCR engine is installed/.test(mixedBare.reading.basis ?? ""), true);
+t("and its chain is the text layer's, unscoped — no engine ran, so nothing partitions it",
+  steps(mixedBare.reading), ["layer"]);
+
+console.log("\n--- D-252: THE MERGE — THE GOOD PAGE KEEPS ITS OWN TEXT ---");
+SCRIPT = mixedAnswer();
+ASKED = null;
+const mixed = await acquire("/mixed.pdf?v=merge");
+const mixedText = (mixed.reading.entities || []).map((e) => e.ref || e.value || e.id || JSON.stringify(e));
+t("THE HEADLINE: the text-layer page's own references SURVIVED the OCR pass",
+  ["26-7601", "26-7602", "26-7603"].every((r) => mixedText.some((x) => String(x).includes(r))), true);
+t("and the scanned page's transcribed references arrived beside them, not instead of them",
+  ["26-7901", "26-7902", "26-7903"].every((r) => mixedText.some((x) => String(x).includes(r))), true);
+t("the wire asked the member for the SCANNED page and no other — the cost half, driven",
+  ASKED && ASKED.pages, [1]);
+t("it reached tier 3", mixed.reading.text_tier, 3);
+t("the chain names BOTH provenances, in the order the document holds them",
+  steps(mixed.reading), ["layer", "pixels", "ocr"]);
+t("each derivation step naming the pages it covers, so nobody reads the chain as a sequence "
+  + "that turned a text layer into pixels",
+  [step(mixed.reading, 0).extent, step(mixed.reading, 1).extent, step(mixed.reading, 2).extent],
+  [{ kind: "pages", pages: [0] }, { kind: "pages", pages: [1] }, { kind: "pages", pages: [1] }]);
+t("and the sentence a member reads says which pages, not just which steps",
+  /own text layer \(page 0\).*optical character recognition \(tesseract 5\.3\.4-fast\) \(page 1\)/
+    .test(describeChain(mixed.reading.text_source)), true);
+t("the basis states what the merge did, in the record's own words",
+  /transcribed by the OCR member and merged/.test(mixed.reading.basis ?? ""), true);
+
+console.log("\n--- D-252: AND THE `null` IS NOT RESOLVED INTO A LETTER ---");
+const bMixed = await promoteDoc(mixed);
+t("the mixed document promoted", bMixed.promoted, true);
+const projMixed = (await api(`op=reading&token=mem-cpdf10&sha256=${mixed.capture.sha256}`)).result;
+t("THE DOCTRINE PIN: a mixed document's derivation cap is UNDETERMINED, not the engine's C — "
+  + "one part of this text rests on a layer nobody measured, and a letter here would have "
+  + "handed a leg citing it a ceiling nobody measured",
+  projMixed.text_provenance?.derivation_cap, null);
+t("the engine is still NAMED, because verification supersedes as grade determinant, never as record",
+  projMixed.text_provenance?.engines, ["tesseract"]);
+t("and the record still knows a machine touched it last", projMixed.text_provenance?.transcribed, true);
+const capPage1 = (await api(`op=textattest&token=mem-cpdf10&sha256=${mixed.capture.sha256}&page=1&rect=${encodeURIComponent("[72,600,540,720]")}`)).result;
+t("a leg citing the SCANNED page takes the engine's measured letter — the cap is undetermined "
+  + "for the document, not for the page the engine actually read",
+  [capPage1.ceiling?.ceiling, capPage1.ceiling?.determinant], ["C", "derivation"]);
+const capPage0 = (await api(`op=textattest&token=mem-cpdf10&sha256=${mixed.capture.sha256}&page=0&rect=${encodeURIComponent("[72,600,540,720]")}`)).result;
+t("and a leg citing the TEXT-LAYER page takes undetermined, which is a statement and not a permission",
+  [capPage0.ceiling?.ceiling, capPage0.ceiling?.determinant], [null, "derivation"]);
+t("said in words, naming the page it is about",
+  /undetermined — which is a statement, not a permission/.test(capPage0.ceiling?.why ?? ""), true);
+
+console.log("\n--- D-252: A MEMBER'S ANSWER FOR A PAGE IT WAS NOT ASKED ABOUT IS DROPPED ---");
+/* THE OVER-REACHING MEMBER, and this is the arm that makes the guarantee
+   unconditional rather than dependent on the member having read its request:
+   page 0 has a perfectly good text layer and the member answers for it anyway. */
+SCRIPT = mixedAnswer([ocrPage(0, agendaLines("26-9001", "26-9002", "26-9003")), ocrPage(1, SCAN_TEXT)]);
+const over = await acquire("/mixed.pdf?v=overreach");
+const overText = (over.reading.entities || []).map((e) => e.ref || e.value || e.id || JSON.stringify(e));
+t("the good page's own text SURVIVED a member that tried to overwrite it",
+  ["26-7601", "26-7602", "26-7603"].every((r) => overText.some((x) => String(x).includes(r))), true);
+t("and the member's transcription of that page reached the record NOWHERE",
+  overText.some((x) => String(x).includes("26-900")), false);
+t("while its answer for the page it WAS asked about was still merged",
+  overText.some((x) => String(x).includes("26-7901")), true);
+t("and the record says the answer was dropped rather than silently ignoring it",
+  /not pages it was asked about, and were dropped/.test(over.reading.basis ?? ""), true);
+t("the chain still partitions the document truthfully", steps(over.reading), ["layer", "pixels", "ocr"]);
+
+console.log("\n--- D-252: A SELECTED PAGE NOBODY TRANSCRIBED STAYS HONESTLY UNREAD ---");
+SCRIPT = mixedAnswer([]);
+const none = await acquire("/mixed.pdf?v=noanswer");
+t("with no page anchored the member's answer is refused whole, and the layer text stands",
+  none.reading.found, true);
+t("the scanned page is still named as unread rather than becoming an empty page",
+  /no page this record could anchor/.test(none.reading.basis ?? ""), true);
+t("and no engine appears in a chain that produced nothing", steps(none.reading), ["layer"]);
+
+console.log("\n--- D-252: OVER-STRICTNESS — ONE PROVENANCE IS NOT A PARTITION ---");
+/* The wholly-scanned document, re-driven HERE against the same rules the mixed
+   one meets, because "nothing above broke" and "this specific thing did not
+   change" are different claims and only the second is evidence. */
+SCRIPT = goodAnswer();
+const stillWhole = await acquire("/scan.pdf?v=d252");
+t("a wholly-scanned document's chain is NOT scoped — a document with one provenance records "
+  + "exactly what it recorded before D-252",
+  [step(stillWhole.reading, 0).extent, step(stillWhole.reading, 1).extent], [undefined, undefined]);
+t("and its cap is the engine's measured letter, undisturbed",
+  derivationCap(stillWhole.reading.text_source), "C");
+t("a wholly-text-layer document is likewise unscoped and undetermined",
+  [step(layer.reading, 0).extent, derivationCap(layer.reading.text_source)], [undefined, null]);
+
+console.log("\n--- D-252: THE RULES THEMSELVES ---");
+const LC = layerChain({ tier: 1, container: "pdf", cap: null, measured_by: "unmeasured" });
+const OC = [{ step: "pixels", cap: "C", measured_by: "m" },
+            { step: "ocr", engine: "tesseract", version: "5", cap: "C", measured_by: "m" }];
+t("ONE part gives that part's chain back UNCHANGED, byte for byte",
+  mergedChain([{ chain: OC, pages: [0, 1] }]), OC);
+t("NO parts gives no chain at all — a different fact from an empty one",
+  mergedChain([]), null);
+t("a malformed part is refused rather than becoming half a chain",
+  mergedChain([{ chain: "layer", pages: [0] }, { chain: OC, pages: [1] }])?.code, "TEXT_CHAIN_COLLAPSED");
+const MC = mergedChain([{ chain: LC, pages: [0] }, { chain: OC, pages: [1] }]);
+t("a mixed chain's document cap is undetermined", derivationCap(MC), null);
+t("its measured part answers for itself", derivationCap(MC, { page: 1 }), "C");
+t("and its unmeasured part answers undetermined", derivationCap(MC, { page: 0 }), null);
+t("a part with no measured step at all makes the document undetermined even beside a measured one",
+  derivationCap(mergedChain([{ chain: [{ step: "ai", engine: "x", version: "1" }], pages: [0] },
+                             { chain: OC, pages: [1] }])), null);
+t("two MEASURED parts give the weakest of them, computed and not declared",
+  derivationCap(mergedChain([
+    { chain: [{ step: "ocr", engine: "a", version: "1", cap: "D" }], pages: [0] },
+    { chain: OC, pages: [1] }])), "D");
+t("an extent this module cannot read covers NOTHING, and the cap goes undetermined rather than "
+  + "silently reading as all of it",
+  derivationCap([{ step: "ocr", engine: "e", version: "1", cap: "C", extent: { kind: "lines" } }]), null);
+t("stepCovers agrees with the extent it was given", [
+  stepCovers({ step: "ocr", extent: { kind: "pages", pages: [1, 3] } }, 3),
+  stepCovers({ step: "ocr", extent: { kind: "pages", pages: [1, 3] } }, 2),
+  stepCovers({ step: "layer" }, 7),
+], [true, false, true]);
+/* OVER-STRICTNESS: the shape this item did not write. An unscoped chain asked
+   about a PAGE must answer exactly what it answers about the document — the
+   page question is new and must not have quietly narrowed the old one. */
+t("OVER-STRICTNESS: an unscoped chain answers a page question exactly as it answers the "
+  + "document question",
+  [derivationCap(OC, { page: 5 }), derivationCap(OC), derivationCap(OC, { page: 0 })], ["C", "C", "C"]);
+t("OVER-STRICTNESS: a scoped chain in a spelling with extra fields and unsorted pages still "
+  + "covers what it says it covers",
+  derivationCap([{ step: "ocr", engine: "e", version: "1", cap: "B", dpi: 300,
+                   extent: { kind: "pages", pages: [9, 2], note: "hand-written" } }], { page: 9 }), "B");
+t("and the pages a chain sentence names are collapsed into runs, not listed one by one",
+  describeChain([{ step: "ocr", engine: "e", version: "1",
+                   extent: { kind: "pages", pages: [0, 1, 2, 5] } }]),
+  "optical character recognition (e 1) (pages 0-2, 5)");
 
 reachedFoot = true;
 await mf.dispose();

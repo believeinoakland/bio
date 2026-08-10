@@ -76,7 +76,7 @@ import { detectFormat, getFormat } from "./formats.mjs";
    This file supplies no fidelity letters of its own beyond the two measured
    constants below, and holds no opinion about any engine. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
-         checkConfidence, applyConfidenceFloor } from "./textchain.mjs";
+         checkConfidence, applyConfidenceFloor, mergedChain } from "./textchain.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -2440,6 +2440,170 @@ function needsTier3(text) {
   return marks.some((m) => m && m.reason === "no_text_layer");
 }
 
+/* D-252 — WHICH PAGES WANT OCR, WHICH IS THE QUESTION `needsTier3` DOES NOT ASK.
+ *
+ * The routing predicate above is per DOCUMENT and the thing it routes is per
+ * PAGE. That was stated at the predicate by CPDF-10 and left open because the
+ * producer did not exist; this is the half that can be built without one,
+ * because it reads only the marker vocabulary the plane already emits.
+ *
+ * `needsTier3` IS DELIBERATELY UNCHANGED. It would have been tidy to define it
+ * as "this list is non-empty", and it would have been a silent behaviour change:
+ * a `no_text_layer` marker that names NO page still selects the document (the
+ * document wants OCR) but contributes no page here, so the two answers can
+ * legitimately differ and the routing question must keep the answer it had.
+ * MEASURED rather than assumed: both producers of this marker name the page
+ * (`pdfstructure.mjs` emits `page: pageIdx`, `pdf-worker/src/index.mjs` emits
+ * `page: i`), so the pageless case is defensive today — and the merge below is
+ * built so that it stays SAFE rather than merely unlikely.
+ *
+ * The encrypted rule is the document-level one on purpose and is not softened
+ * to a page: Tier 1 decodes NOTHING from an encrypted file and says so with one
+ * document-level marker, so there is no per-page finding to have. Running an
+ * engine over pages we were refused access to is what the rule above refuses,
+ * and it refuses it for the whole document. */
+function tier3Pages(text) {
+  const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
+  if (marks.some((m) => m && m.reason === "encrypted")) return [];
+  const pages = [];
+  for (const m of marks) {
+    if (!m || m.reason !== "no_text_layer") continue;
+    if (!Number.isInteger(m.page) || m.page < 0) continue;
+    if (!pages.includes(m.page)) pages.push(m.page);
+  }
+  return pages.sort((a, b) => a - b);
+}
+
+/* ===================================================================== *
+ * D-252 — THE MERGE. AN OCR PASS MAY FILL A PAGE. IT MAY NEVER REPLACE ONE.
+ * ===================================================================== *
+ *
+ * The defect this closes, stated as it was handed forward: a MIXED document — a
+ * text-layer report with three scanned exhibits stapled to the back, an ordinary
+ * Council packet shape — answers TRUE at `needsTier3` on the strength of the
+ * scanned pages, and the wire then assigned `i2text = built.text` WHOLESALE. So
+ * a perfectly good text layer would have been thrown away and replaced by an OCR
+ * pass at cap `C`. Harmless while the branch was untaken; a live defect the
+ * moment a member exists.
+ *
+ * I2's text shape already has the right grain (`pages[]`), so this is a MERGE
+ * RULE and not a new structure — CPDF-10's reading of it, and it held.
+ *
+ * TWO CONDITIONS, AND A PAGE IS FILLED ONLY IF BOTH HOLD:
+ *
+ *   1. THE PAGE WAS SELECTED. It carries the `no_text_layer` marker — the
+ *      structural signal, read from the marker vocabulary rather than from a
+ *      character count, exactly as the routing predicate reads it.
+ *   2. THE PAGE HAS NOTHING TO LOSE. Its base text is empty.
+ *
+ * The second is not redundant and it is the one that makes the guarantee
+ * UNCONDITIONAL. Condition 1 is a claim by a producer about its own output;
+ * condition 2 is a fact about the text in hand. With both, this function CANNOT
+ * degrade a page that carries text, whatever a marker says, whatever a member
+ * returns, and whatever a future tier's marker vocabulary comes to mean. A
+ * guarantee that rests on another component's correctness is the class of
+ * mechanism this project meets most often and believes least.
+ *
+ * A MEMBER'S ANSWER FOR A PAGE IT WAS NOT ASKED ABOUT IS DROPPED AND COUNTED,
+ * never merged. The page list travels in the request as a HINT and the answer is
+ * checked against it here, because a hint the consumer trusts is not a hint —
+ * it is a contract enforced at the wrong end.
+ *
+ * A SELECTED PAGE THE MEMBER DID NOT ANSWER FOR KEEPS ITS MARKER. It stays
+ * honestly unread rather than becoming an empty page, which is the same rule one
+ * tier up: an absence with nothing to report is not a finding, but an absence
+ * something WAS expected for is.
+ *
+ * WHAT THIS FUNCTION WILL NOT DO, and it is the case that would otherwise be
+ * silent: if the base text has no usable `pages[]` grain, there is no way to
+ * tell which text would be replaced, so the OCR answer is taken ONLY when the
+ * base holds no text at all (nothing can be lost — the wholly-image-only class
+ * CPDF-9 measured, and the only class any of this has ever run on). Otherwise
+ * the answer is REFUSED with a reason and the base text stands. Refusing a
+ * transcription costs a document that stays unread; accepting it costs a
+ * document whose good text was overwritten by a weaker one, and only the second
+ * makes the record claim more than it can support. */
+function mergeTier3Text(base, ocr, eligible) {
+  const basePages = (base && Array.isArray(base.pages)) ? base.pages : [];
+  const usable = basePages.filter((p) => p && Number.isInteger(p.page));
+  const ocrPages = (ocr && Array.isArray(ocr.pages)) ? ocr.pages : [];
+  const wanted = new Set(eligible);
+
+  if (!usable.length) {
+    const baseChars = (base && base.counts && Number.isFinite(base.counts.chars))
+      ? base.counts.chars
+      : (typeof (base && base.document) === "string" ? base.document.length : 0);
+    if (baseChars > 0)
+      return { ok: false, filled: [], refused: [], unanswered: [],
+               why: `this document's text could not be merged page by page (the tier that read it `
+                  + `reported no per-page text), and it already holds ${baseChars} decoded `
+                  + `character(s), so an OCR pass was refused rather than allowed to replace text `
+                  + `that may be better than it` };
+    /* Nothing to lose: the wholly-unread document. This is the path every
+       Tier-3 document has taken to date and it is unchanged. */
+    return { ok: true, text: ocr, filled: ocrPages.map((p) => p.page).filter(Number.isInteger),
+             refused: [], unanswered: [], wholesale: true };
+  }
+
+  const byPage = new Map();
+  const refused = [];
+  for (const p of ocrPages) {
+    if (!p || !Number.isInteger(p.page)) continue;
+    const target = usable.find((b) => b.page === p.page);
+    const empty = target && !(typeof target.text === "string" && target.text.length);
+    if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }
+    byPage.set(p.page, p);
+  }
+
+  const filled = [], pages = [], undetermined = [];
+  for (const b of usable) {
+    const got = byPage.get(b.page);
+    if (got) {
+      filled.push(b.page);
+      pages.push({ page: b.page, text: typeof got.text === "string" ? got.text : "",
+                   undetermined: Array.isArray(got.undetermined) ? got.undetermined : [] });
+    } else {
+      pages.push(b);
+    }
+    for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
+  }
+  const unanswered = eligible.filter((p) => !filled.includes(p));
+  const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
+  /* The regions ride along for the pages that were filled, and ONLY those: a
+     region is an anchor into an image of a page, and a page nobody transcribed
+     has none. */
+  const regions = (ocr && Array.isArray(ocr.regions))
+    ? ocr.regions.filter((r) => r && r.source && filled.includes(r.source.page)) : [];
+  const text = { ...base, document, pages, undetermined,
+                 counts: { chars: document.length, undetermined: undetermined.length } };
+  if (regions.length) text.regions = regions;
+  return { ok: true, text, filled, refused, unanswered, wholesale: false };
+}
+
+/* D-252 — WHAT THE MERGE DID, IN THE RECORD'S OWN SENTENCE.
+ *
+ * Three findings, and they are three because collapsing them loses the one a
+ * reader needs: pages that WERE transcribed, pages that wanted OCR and did not
+ * get it (still unread — an expected absence IS a finding), and pages a member
+ * answered for that it was not asked about (dropped, and evidence about the
+ * member rather than about the document). `null` when there is nothing to say,
+ * so a clean wholesale transcription reads exactly as it read before. */
+function tier3Note(m, memberNote) {
+  const say = [];
+  if (!m.wholesale && m.filled.length)
+    say.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into `
+           + `this document's own text; the ${m.filled.length === 1 ? "page" : "pages"} that already `
+           + `had text kept it`);
+  if (m.unanswered.length)
+    say.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay `
+           + `honestly unread`);
+  if (m.refused.length)
+    say.push(`${m.refused.length} page(s) the OCR member returned were not pages it was asked `
+           + `about, and were dropped rather than allowed to overwrite text this document already had`);
+  if (memberNote) say.push(memberNote);
+  return say.length ? say.join("; ") : null;
+}
+
 /* ===================================================================== *
  * CPDF-10 — THE SEAM. THIS IS THE CONTRACT CPDF-12's OCR MEMBER MUST MEET.
  *
@@ -4581,11 +4745,23 @@ export default {
                  unread rather than being quietly filed as an empty document.
                  D-115's rule for an un-fleeted instance, one tier further on. */
               if (i2text && needsTier3(i2text)) {
+                /* D-252: WHICH pages, established before the member is called
+                   and kept for the merge. The list travels in the request so a
+                   member need not transcribe pages that already have text — the
+                   cost half — and it is checked again on the way back, because
+                   the correctness half cannot rest on the member having read it.
+                   `baseTier` is remembered here because `wiredTier` becomes 3
+                   below and the text-layer part of a MIXED document still came
+                   through the tier it came through. */
+                const wantPages = tier3Pages(i2text);
+                const baseTier = wiredTier;
+                const baseText = i2text;
                 if (env.OCR_WORKER) {
                   try {
                     const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
                       method: "POST", headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ capture_sha: sha, store: storeName }),
+                      body: JSON.stringify({ capture_sha: sha, store: storeName,
+                                             pages: wantPages }),
                     });
                     /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
                        the fix for a real defect this suite caught: parsing the
@@ -4600,8 +4776,45 @@ export default {
                     } else {
                       const built = ocrTextFromMember(await r.json());
                       if (built.ok) {
-                        i2text = built.text; wiredTier = 3; chain = built.chain;
-                        ocrNote = built.note;
+                        /* D-252 — PAGE-WISE, NEVER WHOLESALE. This line was
+                           `i2text = built.text`, which threw away a text layer
+                           the moment one scanned exhibit was stapled to the
+                           back of a report. */
+                        const m = mergeTier3Text(baseText, built.text, wantPages);
+                        if (!m.ok) ocrNote = m.why;
+                        else {
+                          i2text = m.text;
+                          /* The pages that kept their own text: what is LEFT of
+                             the base after the fill, computed FROM THE TEXT
+                             rather than from the page list, so a page carrying
+                             text is in this part whether or not anything
+                             predicted it would be. A selected page nobody
+                             transcribed carries no text and therefore belongs to
+                             neither part — it has no provenance to record,
+                             because nothing produced anything for it. */
+                          const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
+                            .filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page)
+                                        && typeof p.text === "string" && p.text.length)
+                            .map((p) => p.page);
+                          const parts = [];
+                          if (layerPages.length)
+                            parts.push({ pages: layerPages,
+                              chain: layerChain({ tier: baseTier, container: fmt,
+                                cap: LAYER_FIDELITY_CAP, measured_by: LAYER_FIDELITY_SOURCE }) });
+                          if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
+                          /* ONE part gives that part's chain back unscoped, so a
+                             wholly-scanned document records exactly what it
+                             recorded before D-252; TWO give the scoped, mixed
+                             chain whose derivation cap is UNDETERMINED rather
+                             than the engine's letter. */
+                          const merged = mergedChain(parts);
+                          /* A refusal from the chain builder records NO chain
+                             rather than filing merged text under one part's
+                             provenance. */
+                          chain = Array.isArray(merged) ? merged : null;
+                          if (m.filled.length) wiredTier = 3;
+                          ocrNote = tier3Note(m, built.note);
+                        }
                       } else ocrNote = built.why;
                     }
                   } catch {
@@ -4649,11 +4862,20 @@ export default {
                absence of one. `text_tier`/`text_container` stay exactly as they
                were — a consumer reading only those is unaffected (IC-39). */
             text_source: chain, text_tier: wiredTier, text_container: fmt,
-            basis: wired.parse_error
+            basis: (wired.parse_error
               ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
               : (entities.length
                   ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}`
-                  : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`),
+                  : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`))
+              /* D-252: A DOCUMENT THAT READ IS STILL ALLOWED TO HAVE PAGES IT
+                 COULD NOT READ, and until now only the FAILED branch carried
+                 that sentence. A mixed document — a report with scanned exhibits
+                 — reads perfectly well off its text layer and reached here with
+                 `ocrNote` computed and then dropped on the floor, so the record
+                 said nothing at all about the exhibits. Same class as the merge
+                 above: the document-level answer stood in for a per-page fact. */
+              + (ocrNote ? ` — ${ocrNote}` : ""),
+            ...(ocrNote ? { tier3_candidate: true } : {}),
           };
         } else if (wired) {
           /* text-undetermined: a FAILED reading, recorded as such — the tier

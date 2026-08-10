@@ -347,7 +347,14 @@ const REGISTER_FLOOR = {
      PL-2's verification landed. */
   /* MOVED AT INTEGRATION 2026-08-09 by CONDUCT: 714 -> 731 / 143 -> 145 / 144 -> 146,
      from the merged tree's printed `GREW by 17 arm(s)` after D-262 and PL-13. */
-  arms:        731,
+  /* D-252, 2026-08-09: 731 -> 736, from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED (`arms 736/731 · classified 145/145 · corpus 146/146
+     · GREW by 5 arm(s)`), never by adding five to the number above. NO NEW
+     SUITE, so `classified` and `corpus` do not move and are left exactly as they
+     were: the five arms are (g)-(k), added to `textchain.test.mjs`'s existing
+     declaration and driven by `test/nc-cpdf10.mjs`, which now runs eleven. Every
+     one of the five was RUN, alone, with the others held open. Nothing FELL. */
+  arms:        736,
   classified:  145,
   corpus:      146,
 };
