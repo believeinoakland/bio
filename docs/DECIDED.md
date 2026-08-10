@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-614 rulings across 65 documents.
+617 rulings across 65 documents.
 
 ## DEC-
 
@@ -583,7 +583,7 @@ authority is the file named, never this one.
 - **REC-49** — REC-49's four on the surface: (p) the pair read back out of the container manifest -> 194/196, 2 FAIL, both of them in the awaiting window while every complete case stays green; (q) UI-29's sentence restored -> 194/196 — AND THIS ARM CORRECTED THE FIXTURE: it first fired ZERO, because an assertion that a sentence…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1565`
 - **REC-49** — CORRECTED IN PLACE BEFORE ANYONE READ IT, and the correction is left visible rather than the paragraph rewritten, because the mistake is the more useful half.** This block first claimed the battery *"reports 124 FAILED suites and EXITS 0"* — the same class of defect as REC-49's false `exit 0`, raised as a delegation.  
-  `docs/development/CLAIMS.md:363`
+  `docs/development/CLAIMS.md:542`
 - **REC-52** · 2026-08-04 — THE FIX WAS DECIDED AGAINST THE ITEM'S OWN LEANING, on evidence: `apiQ` could not be made to throw, because §7a spreads a DO result into `{ok:true}` at HTTP 200 without checking it, so there is no `ok:false` to throw on - the motivating case would have sailed past.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1869`
 - **REC-52** — `bio-plane/test/plane-envelope.test.mjs` — REC-52's own suite: its `UNCONVERTED` set updated as the sites leave it, its two HELD-OPEN relation pins (i) and (ii) CORRECTED AT THE SITE with a dated reason and never deleted, and detector B widened to the two fallback shapes this block used that it could not see.  
@@ -1079,6 +1079,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:55`
 - `docs/development/kickoffs/BOB-NEXT.md` (this session's own kickoff), `docs/DECIDED.md` (regenerated). **NOT** the append-only ledgers — `MEASUREMENTS.md`, `DECISIONS.md` (except an appended entry), `DEBT.md` (append only), `INTERFACE-CHANGES.md` — whose retired-runtime rows are dated records of what was measured…  
   `docs/development/CLAIMS.md:315`
+- **2026-08-10** — AMENDED 2026-08-10 (same session), because a claim that does not name what was really edited is not a claim.** Three paths beyond the list above were touched and each is licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME turn, yourself*:  
+  `docs/development/CLAIMS.md:627`
+- block, CORRECTED and never exempted, each with a comment saying why the old one was right when written and what made it wrong.  
+  `docs/development/CLAIMS.md:632`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

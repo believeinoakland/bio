@@ -103,3 +103,50 @@ after. Two sessions sharing a scratch namespace destroy each other's probes.
 `kickoffs/README.md` defines — read its three tests first. Activation order,
 sequencing, mechanism and scoping are NOT his; decide them, record the reasoning, and
 report in a line. An empty list is a real answer and is the common one.
+
+## Appended 2026-08-10 by the D-266 worker (worktree-agent-a3479876cd7e9561b)
+
+Appended rather than rewriting this file, because other RECORD workers may be live and
+this turn closed one narrow item rather than the area's account of itself.
+
+**THE DISPOSITION ACT NOW HAS TWO KEY SHAPES AND THE DIFFERENCE IS DOCTRINE, NOT
+PLUMBING (D-266, IC-60).** Before you touch either, read the ruling: **a dismissal is
+scoped to the KEY'S OWN SUBJECT.**
+
+- `proposal_dispositions`, keyed `(progression_key, stage_key)`, is **INSTANCE-WIDE** —
+  one act clears the finding under every case it appears in. That is DEC-16, and it is
+  DEDUP, because a progression-stage finding is a fact about the SHARED record.
+- `finding_dispositions`, keyed `(project_id, finding_id)`, is **ONE PROJECT'S FEED** —
+  a stance is expressly one project's own property (§7, D-216), a dismissal is a
+  judgment-layer act, and R5 makes forks at the judgment layer legitimate.
+
+**DO NOT COLLAPSE THEM.** Widening either key to look like the other erases the
+distinction the item exists to draw, and it is the edit that will look like finishing
+the job. `test/d266scope.test.mjs` asserts BOTH behaviours in ONE suite for exactly that
+reason: a distinction asserted in two suites is not asserted, because two suites can
+each go green while the behaviours have quietly become one.
+
+**WHICH KINDS ARE WHICH IS A PROPERTY, NEVER A LIST OF SLUGS.** A FINDING carrying the
+`(progression_key, stage_key)` pair is instance-wide; one carrying none is
+project-scoped. Add a fifth finding kind and it is covered without this contract moving.
+
+**THREE THINGS THIS TURN PAID FOR, so the next session does not.**
+
+1. **The instance-wide ageing lives UPSTREAM of the mint**, in `proposalsFeed`'s own
+   disposition filter — not in `queueFeed`. So re-scoping what `#dispositionOf`
+   PUBLISHES changes what a surface is told and NOT what the feed does. A control arm
+   that armed only the mint came back green and that is how this was measured.
+2. **A freeze is SILENT AT THE ACT.** `ON CONFLICT … DO NOTHING` returns `ok: true`
+   exactly as an UPSERT does, so a negative control declared against the act's RETURN
+   goes green over a plane that tells a member their re-triage landed and keeps the old
+   decision. Declare re-triage arms against the FEED.
+3. **`op=proposedispose` now takes the server-side `viewer` stamp** (`index.mjs`'s
+   viewer-stamp condition). Its project-scoped arm gates the named project through
+   `viewerPredicate`, which fails CLOSED — so an op added to that arm without being
+   added to the stamp list refuses `NO_SUCH_PROJECT` for a perfectly real project.
+
+**AND TWO OF THIS ITEM'S OWN DEFECTS WERE CAUGHT BY RATCHETS RATHER THAN BY REVIEW,**
+which is the argument for keeping them: `airuns.test.mjs`'s index-reader ratchet failed
+the build naming two indexes added on the new table that no statement filters on, and
+`hygiene.test.mjs` caught the new suite exiting on `process.exit(1)` under a conditional
+instead of on its own result.

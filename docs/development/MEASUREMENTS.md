@@ -7623,3 +7623,38 @@ which is a second spelling worth writing down. What remains true and is all that
 is claimed: a fresh worktree needs `npm ci` in `bio-plane/`, and nothing in the
 loop a session actually runs says so. Routed as a small DELEGATION in
 `CLAIMS.md`, no longer as an exit-status defect.
+## 2026-08-10 · D-266 / IC-60 — the widened disposition key (RECORD, worktree-agent-a3479876cd7e9561b)
+
+**Instruments:** `cd bio-plane && npm run test:battery`; `node scripts/coverage.mjs --strict`
+run DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs` from the repo root,
+exit read unpiped; `node test/d266scope.control.mjs` and `node test/d266.control.mjs`.
+
+**Battery:** **158/158 suites green · 9,886 assertions · 165.8 s.** The runner's own
+provenance arm reports **9,848 of those from suites that are in the commit at `87278a2`**
+and NAMES the untracked one (`d266scope.test.mjs`, 38) — D-238's rule working, and the
+reason the two figures are both quoted rather than one. Delta attributed per suite by
+re-running, never by subtraction: **`d266scope.test.mjs` +38 (new)**, **`current.test.mjs`
+62 → 63** (four superseded assertions corrected, one of them split in two), **`hygiene.test.mjs`
+609 → 610** (its own suite-count arm sees one more suite). Nothing else moved.
+
+**Coverage `--strict`: exit 0**, read with nothing piped after it. **163 ops declared ·
+163 reached through the control plane (100.0%) · 0 unreached**; **228 checks in the catalog ·
+228 named by an assertion (100.0%)**; fleet 2 members · 4/4 surface ops · 5/5 suites
+declaring a control · 48 arms. **`op=proposedispose`'s SECOND key shape is credited on the
+control-plane surface** because the new suite drives the literal `op=proposedispose` through
+`dispatchFetch` and never at the store — D-43, and the `op=invitelook` lesson.
+
+**UI harness: exit 0**, all harnesses green, 46 suites re-run under the probe, 3,569 op
+answers across 72 distinct ops. **Nothing in `civicos-ui/**` was edited** — it is read-only
+in this claim and was read only to MEASURE IC-60's consumer impact.
+
+**Negative controls, each armed ALONE with the others held open.**
+`d266scope.control.mjs` baseline `d266scope 38/0 · current 63/0`: arm 1 (key the
+stance-scoped disposition instance-wide) → **27/11 · 63/0**; arm 2 (scope the shared-record
+kind per-project, both halves) → **34/4 · 61/2**; arm 3 (freeze the decision) → **36/2 ·
+63/0**. All three AS DECLARED. `d266.control.mjs`'s six earlier arms re-run after two of its
+anchor strings were corrected: baseline `proposedispose 27/0 · current 63/0`, arms measured
+**24/3, 26/1, 21/6, 27/0+62/1, 27/0+62/1, GREEN** — all six still as declared.
+
+**`store.mjs` line count, measured this turn: 26,144.** Quoted with the command rather than
+as a fact, because this figure has been wrong in the record four times: `wc -l < bio-plane/src/store.mjs`.
