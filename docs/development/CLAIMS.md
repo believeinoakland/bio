@@ -770,3 +770,85 @@ every prohibition and why the instruction-only tally is printed rather than impl
 **Nothing is blocked on this.** SK-3 landed with both residues named, and
 `connections-sidebar.test.mjs` is already green in UI's harness — this delegation says only
 that neither prohibition is holding it there.
+
+---
+
+## CLAIM 2026-08-10 SKILL (SK-4 — CHECK deploys first: the sequencing RECORDED, the gate CITED)
+session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`, branch
+  `worktree-agent-a02138ebf5b27a79b`)
+opened: 2026-08-10T00:00:00Z
+paths: `bio-plane/src/skilldoctrine.mjs` (SK-2/SK-3's doctrine module, this area's — SK-4
+  ADDS `DEPLOYMENT_SEQUENCE` and one further disclosed layer, and REUSES the exported
+  `controlFlowAuthority` rather than writing a second scanner),
+  `bio-plane/test/skillsequencing.test.mjs` (NEW),
+  `bio-plane/test/skillsequencing.control.mjs` (NEW — the negative-control harness,
+  deliberately not a `.test.mjs` so the battery does not collect a file that edits real
+  sources while it runs), `docs/development/CLAIMS.md` (this entry),
+  `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/kickoffs/SKILL.md` (appended — what closes the track).
+  **NOT** `agent-worker/**` — **and this is the item's whole point rather than a boundary
+  observance**: the investigate-mode gate is FL-3's LANDED `gate-mode` row in
+  `agent-worker/src/harness.mjs`, and SK-4 CITES it BY ADDRESS and re-implements nothing.
+  The doctrine module holds no mode flag, no gate and no second table, and BLOCK C measures
+  that over its code half with the estate's own lexer. **NOT** `bio-plane/checks/**`,
+  **NOT** `bio-plane/src/**` beyond the one doctrine module, **NOT** `civicos-ui/**`,
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `docs/development/IS-BUILD-PLAN.md`.
+  The control harness TRANSIENTLY edits `src/skilldoctrine.mjs` and
+  `agent-worker/src/harness.mjs` and restores both, verified by content AND by sha256 —
+  SK-2's arm (8) and SK-3's arm (1) are the precedent. A transient armed edit inside one
+  worktree is not a claim on the path.
+
+---
+
+## CLAIM 2026-08-10 SKILL (SK-4 — AMENDMENT: the coverage register's floor)
+session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`)
+opened: 2026-08-10T00:00:00Z
+Appended rather than edited into the claim above, per this file's append-only rule.
+paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
+  UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-4's suite was in
+  a commit (`f4483e6`): 826/157/158 -> 833/158/159. Nothing else in that file, and
+  `FLEET_FLOOR` unmoved at 2 members / 4 ops / 5 suites / 48 arms. **The block was checked for
+  a duplicate `arms:` key before writing** — the documented hazard that has bitten six times,
+  where the LAST key silently wins and once the last was the LOWEST; the two `arms:` keys in
+  the file are `REGISTER_FLOOR`'s (line 565) and `FLEET_FLOOR`'s (line 668), and the previous
+  value is REPLACED rather than joined. This is the ratchet the file's own comment instructs
+  the item that grows the register to move. SK-2's and SK-3's amendments are the precedent and
+  the shape.
+
+---
+
+## DELEGATION 2026-08-10 SKILL -> FLEET (the mode gate's refusal is recorded under a word that says a member did it)
+raised by: sk4-check-first (worktree `agent-a02138ebf5b27a79b`), while landing SK-4's
+deployment record. **This is a NOTICE of a MEASURED misattribution in FL-3's landed gate — not
+a request for work in this sprint, and not a blocker for anything. SK-4 changed nothing in
+`agent-worker/**` and is not asking to.**
+
+**MEASURED, not suspected, and asserted in `test/skillsequencing.test.mjs` ARM D5 so it cannot
+quietly rot.** Driving FL-3's own `nextStep({ step: "gate-mode", mode: "investigate" })`:
+
+- the run closes with **`bound: "cancelled"`**, and the plane's own vocabulary
+  (`bio-plane/src/airun.mjs` `RUN_ENDINGS`) defines `cancelled` as **"a member stopped it"**.
+  **A member did not.** The gate refused a mode that is not deployed, which is a different fact
+  about the record from a member cancelling a run — and `RUN_ENDINGS`' own header is explicit
+  about why the two are kept apart: *"'the member asked for it to stop' and 'the budget ran
+  out' are different facts, and collapsing them would put this item on the wrong side of its
+  own doctrine two lines after stating it."* The same argument reaches this third case.
+- **`mode-not-deployed`, which `harness.mjs`'s own header says a refused run "terminates on",
+  is in NEITHER `RUN_ENDINGS` NOR `RUN_BOUNDS`.** It appears exactly once in the whole
+  repository — in that comment. So the file documents a terminator the record has no word for
+  and the code does not produce.
+
+**Why it matters here rather than being a tidy-up.** SK-4's whole subject is that a deployment
+gate refusing an investigate-mode launch must be legible AFTERWARDS. A run stopped by the gate
+and a run stopped by a member are currently indistinguishable in the field that says why it
+stopped — and the first is a fact about our sequencing while the second is a fact about a
+person. This repository ranks a record that claims more than it can support as the worst defect
+class; a refusal attributed to a member nobody can name is that shape, small.
+
+**What is needed, and it is FLEET's call rather than this area's:** either add an ending to the
+plane's `RUN_ENDINGS` vocabulary (which is `bio-plane/src/airun.mjs`, RECORD's path, so it is a
+two-area change and probably an IC) and have `gate-mode` return it, or decide that `cancelled`
+is right and correct the header comment that promises otherwise. **Either answer is fine; what
+is not fine is the current state, where the comment and the code disagree and the code
+misattributes.** ARM D5 pins BOTH facts and will go RED on the fix, which is deliberate — the
+arm is to be updated in the same commit as the correction, and the finding then closes.
