@@ -188,7 +188,10 @@ audit the member-facing flows against the flaw's three shapes** — re-confirmat
 already-decided acts, repeated or act-detached responsibility prompts, and any surviving
 diligence measurement. Fix what is small in place; bring anything structural back as its
 own item. DEC-68 (no read counting) and DEC-52's bulk-approval reasoning are the
-precedents to audit WITH, not against.
+precedents to audit WITH, not against. **Amended same day: the operative word is FORCED,
+both ways — wherever a set of decisions arises, check the member is ENABLED to act singly
+or in bulk and FORCED into neither. A bulk-only surface is the same flaw as a
+per-item-only one.**
 
 **2026-08-10 · BOB · A SURGICAL GATE PROFILE EXISTS: `node tools/gates.mjs`.** Bob asked
 why a docs-only change costs ~25 minutes of gates. The tool measures the diff: entirely
