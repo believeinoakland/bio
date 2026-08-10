@@ -64,9 +64,22 @@ watch for:
 2. **I left a `<<<<<<< HEAD` marker in `coverage.mjs`** while resolving the file whose own
    rule is HAND-EDIT ONLY. Caught by `node --check` before it reached a commit.
 
-**Neither reached a commit, the rate did not rise through the session, and the class did
-not narrow** — which is the actual test, and by it I was fit. Everything pushed is green
-and was verified FROM THE REMOTE.
+**AMENDED AFTER THE FACT, BECAUSE THE CLASS DID EVENTUALLY NARROW AND THE HONEST ACCOUNT
+IS THE ONE WRITTEN LAST.** Two more followed, and they are ONE class: **a hand-rolled check
+of mine returning a FALSE NEGATIVE, inside the act of verification.** I ran `plancheck` from
+`bio-plane/` and read `MODULE_NOT_FOUND` as a gate failure; then I wrote a shell loop to test
+whether three branches were on the remote, mis-quoted it, and it answered NOT ON REMOTE for
+three branches that `git ls-remote` shows are all there at the right shas. **Both were FALSE
+REDS, which is the safe direction — but the direction is luck, not design, and the same bug
+class in the other direction is a false green.** Four mistakes: two false greens caught by
+instruments, two false reds from instruments I wrote myself in the moment.
+
+**THAT IS THE CONVERGENCE TELL, and it is the reason to stop rather than the map alone:
+my last two errors were both my own ad-hoc verification lying to me.** `WORKER.md` already
+carries the general form — *if you ever write a wait of your own, its negative control is one
+command: run the predicate once with nothing running* — and I wrote two predicates and ran
+the control on neither. **Nothing reached a commit and everything pushed is green and was
+verified FROM THE REMOTE**, but do not read the clean result as a clean process.
 
 **What made me hand off is a different tell, and it is worth naming because the existing
 account does not contain it: MY MAP WAS INVALIDATED WHOLESALE, MID-SESSION.** The corpus
@@ -119,6 +132,14 @@ worker to rebuild something that exists.
 | `worktree-agent-a9e7e017d06799858` | **UI-43** | DELICATE. Collides with UI-45 inside `civicos-ui/app.html` across ~68,000 chars, AND is coupled to D-271 — read the `INTEGRATION ORDER` note. D-271 is on `main` now, so the ceremony's one-line `affirmed` wiring and its two false sentences are owed IN THE SAME TURN. **Parse `main`'s `app.html` first so you know a failure is the merge and not your instrument.** |
 | `worktree-agent-a61e489de171ae6c5` | **D-254** | DELICATE. Restructures `check-refusal-codes.mjs` into module-plus-script; STRUCTURAL, not a floor collision. |
 
+**ALL THREE ARE NOW ON THE REMOTE** (`git ls-remote --heads origin 'worktree-agent-*'`),
+pushed by session BOB as BACKUPS and verified by sha: D-254 `9e24ef6`, UI-43 `9706d19`,
+D-270 `484ed35`. **They are not merge requests and nothing about the order above changes.**
+Before this they existed on ONE MACHINE ONLY — see **D-288**, which is the general defect:
+137 local worker branches, zero on the remote, so this project's own channel rule was false
+for every worker's output between reporting and merging. **Do not read the other 134 as
+backed up.**
+
 **Safe to delete — landed by content, stale forks only:** `worktree-agent-a90a87bcb7f131e59`
 (REC-60) and `worktree-agent-adefd8db6571e8b30` (IS-6). Both look unmerged to
 `--is-ancestor` and both have their content on `main`.
@@ -159,6 +180,8 @@ written to be spawned from.** Two things they carry that you should not re-deriv
 - **D-248's six pre-existing id collisions.** `D-124`'s two rows are deliberately adjacent
   in the live `DEBT.md` with a comment saying why — separating them made `mintid` read the
   collision as resolved.
+- **D-288** — worker output lives on local-only branches. **Its fix is a DECISION between
+  three shapes and it is not a worker's**; the row states all three with their costs.
 - **D-286** — the UI harness's unseeded fixture, above. **D-287 is a GAP I created** by
   running `mintid D` twice; it is recorded as its own row rather than left to be found,
   because a silent gap and a lost row look identical and this ledger exists so they do not.
