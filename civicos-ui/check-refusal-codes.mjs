@@ -125,17 +125,26 @@ const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
 const TESTDIR = path.join(HERE, "test");
 const REPO = path.join(HERE, "..");
-const PROV = readGitProvenance(REPO);
+/* READ ON FIRST USE, NOT ON LOAD (D-254). `readGitProvenance` SHELLS OUT TO
+   GIT, and a `const PROV = readGitProvenance(REPO)` at module scope spends that
+   subprocess the moment anything IMPORTS this file — including a test that only
+   wants the verdict reader below. "Importable without DOING anything" is the
+   whole shape of D-254, and a lazy read is what makes it true here rather than
+   nearly true: the entry-point guard at the foot of this file stops the ARMS
+   from running on import, and this stops the git call from running on import.
+   Memoised, so the guard still asks git exactly ONCE per run. */
+let _prov = null;
+const prov = () => (_prov ??= readGitProvenance(REPO));
 /* True for everything when git cannot answer — which is UNVERIFIED, printed as
    UNVERIFIED by `reportProvenance`, and never reported as clean (D-233). */
-const inCommit = abs => PROV.inHead === null || PROV.inHead.has(repoPath(REPO, abs));
+const inCommit = abs => prov().inHead === null || prov().inHead.has(repoPath(REPO, abs));
 /* SAY UNVERIFIED, NEVER CLEAN (provenance.mjs rule 4), and it binds this file's
    own NOTEs as well as the report: a line reading "in the commit at HEAD
    (unverified)" claims the commit in the same breath as admitting it could not
    look, which is D-233. Found by D-257's control ARM 3. */
-const HEAD_SAYS = PROV.inHead === null
+const headSays = () => prov().inHead === null
   ? "UNVERIFIED — git could not answer `ls-tree HEAD`, so this is the whole working-tree walk"
-  : `in the commit at HEAD (${PROV.headSha})`;
+  : `in the commit at HEAD (${prov().headSha})`;
 
 const fails = [];
 const notes = [];
@@ -961,7 +970,7 @@ function armB(rows, census, surfaceTables) {
      the corpus is owed all of it (M0-16 rule 3: print the reproducible total
      beside the contaminated one, at the place the figure is quoted). */
   reportProvenance({
-    prov: PROV,
+    prov: prov(),
     items: [
       ...fs.readdirSync(PLANE_SRC).filter(f => f.endsWith(".mjs"))
         .map(f => ({ path: repoPath(REPO, path.join(PLANE_SRC, f)), what: `src/${f}`,
@@ -975,7 +984,7 @@ function armB(rows, census, surfaceTables) {
     instrument: "this guard's census and reach walks",
     corpus: `bio-plane/src/: ${census.files} file(s), ${census.filesRepro} in the commit`
       + ` · civicos-ui/test/: ${suites.length} suite(s)`,
-    totals: PROV.inHead === null ? [] : [
+    totals: prov().inHead === null ? [] : [
       { label: "census codes", contaminated: census.union.size, reproducible: census.unionRepro.size, source: "plane sources" },
       { label: "codes in reach", contaminated: reach.size, reproducible: reachRepro.size, source: "sources and suites" },
     ],
@@ -990,7 +999,7 @@ function armB(rows, census, surfaceTables) {
 
   NOTE(`arm B: REACH ${reach.size} codes — R1 family rows ${R1.size}, R2 named by app.html ${R2.size}, `
      + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · `
-     + `${reachRepro.size} of them ${HEAD_SAYS}, which is the figure `
+     + `${reachRepro.size} of them ${headSays()}, which is the figure `
      + `floored and the one a floor may be moved to · floor ${FLOOR.reach}`
      + `${reachRepro.size > FLOOR.reach ? ` · GREW by ${reachRepro.size - FLOOR.reach}` : ""}`);
   NOTE(`arm B: enacted perimeter ${perimeter.size} codes, ALL translated, gated at zero — `
@@ -1776,45 +1785,118 @@ async function armE() {
      + `· ${seen.join(" ")} · floors ${FLOOR.vocabularies}/${FLOOR.vocabularyTerms}`);
 }
 
-/* ============================================================ */
+/* ============================================================
+   THE RUN — AND IT IS BEHIND AN ENTRY-POINT CHECK (D-254).
 
-const families = await dec49Families();
-for (const [, table] of families) for (const c of Object.keys(table)) FAMILY_CODES.add(c);
+   THE DEFECT THIS SHAPE CLOSES, stated because it cost another item a
+   byte-identical copy of six functions. Everything below used to be at MODULE
+   SCOPE, ending in `process.exit`. So this file could not be IMPORTED: loading
+   it ran the whole DEC-49 guard — the census walk, all five arms, a `git
+   ls-tree HEAD` — as a side effect of the `import` statement, and then KILLED
+   THE LOADING PROCESS. D-240 needed the verdict reader below in two
+   `bio-plane/test/` instruments, could not import it, and copied it instead
+   (`bio-plane/test/verdict-reader.mjs`, held falsifiable by `readerDrift()`).
 
-const census = planeCensus();
-for (const [name, set] of Object.entries(census.yields))
-  NOTE(`walk: ${name.padEnd(20)} ${String(set.size).padStart(4)} codes`);
-NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src`
-   + ` · ${census.unionRepro.size} of them from the ${census.filesRepro} file(s) ${HEAD_SAYS} · floor ${FLOOR.census}`);
-/* THE FLOOR IS COMPARED AGAINST THE REPRODUCIBLE CENSUS (D-257), and that is the
-   figure to move this table to. A floor moved to a contaminated run's number is
-   permanently too high — the payload D-238 names. */
-if (census.unionRepro.size < FLOOR.census)
-  FAIL(`the plane census is ${census.unionRepro.size} refusal codes that are in the commit at HEAD `
-     + `(${census.union.size} over the working tree), floor is ${FLOOR.census}. The WALK lost `
-     + `sight — read the per-matcher line above to see which spelling stopped yielding. This is REC-70's `
-     + `failure exactly, and a ceiling alone would have stayed green through it.`);
+   A MODULE SHOULD BE IMPORTABLE WITHOUT DOING ANYTHING. This file is now BOTH:
+   run it as a script and it walks the plane and exits 1 on a failure, exactly
+   as `test/run.mjs` and every gate that reads its status require; import it and
+   you get the six reader functions and NOTHING RUNS.
 
-const surfaceTables = armD();
-const rows = armA(families);
-const { reach, translated, gap } = armB(rows, census, surfaceTables);
-armC(rows);
-await armE();
+   **THE EXIT STATUS IS THE POINT OF THE SCRIPT HALF, so do not "tidy" it into
+   a return value.** `civicos-ui/test/run.mjs` runs this file with
+   `execFileSync(..., {stdio:"inherit"})` and lets the throw propagate;
+   `plancheck` and the UI harness read that status. A run that reported its
+   failures on stdout and exited 0 would turn this gate into a decoration,
+   which is worse than the defect it guards.
+   ============================================================ */
 
-/* THE CENSUS GAP — reported, not gated, and the reason is in the header. This
-   is the number REC-64's sweep closes, and it is stated exactly rather than
-   estimated, because an unmeasured answer is not a result. */
-const ungoverned = [...census.union].filter(c => !translated.has(c)).sort();
-NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of ${census.union.size} refusal codes `
-   + `the plane can mint have NO canned translation and are NOT in reach of a surface today. That is REC-64's `
-   + `remaining sweep. ${census.union.size - ungoverned.length} are translated.`);
+async function main() {
+  const families = await dec49Families();
+  for (const [, table] of families) for (const c of Object.keys(table)) FAMILY_CODES.add(c);
 
-for (const n of notes) console.log("  " + n);
-if (fails.length) {
-  for (const f of fails) console.error("FAIL: " + f);
-  console.error(`check-refusal-codes: ${fails.length} failure${fails.length === 1 ? "" : "s"} — DEC-49's guard is `
-    + `not optional: an untranslated code must FAIL THE HARNESS rather than reach a member.`);
-  process.exit(1);
+  const census = planeCensus();
+  for (const [name, set] of Object.entries(census.yields))
+    NOTE(`walk: ${name.padEnd(20)} ${String(set.size).padStart(4)} codes`);
+  NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padStart(4)} codes over ${census.files} files in bio-plane/src`
+     + ` · ${census.unionRepro.size} of them from the ${census.filesRepro} file(s) ${headSays()} · floor ${FLOOR.census}`);
+  /* THE FLOOR IS COMPARED AGAINST THE REPRODUCIBLE CENSUS (D-257), and that is the
+     figure to move this table to. A floor moved to a contaminated run's number is
+     permanently too high — the payload D-238 names. */
+  if (census.unionRepro.size < FLOOR.census)
+    FAIL(`the plane census is ${census.unionRepro.size} refusal codes that are in the commit at HEAD `
+       + `(${census.union.size} over the working tree), floor is ${FLOOR.census}. The WALK lost `
+       + `sight — read the per-matcher line above to see which spelling stopped yielding. This is REC-70's `
+       + `failure exactly, and a ceiling alone would have stayed green through it.`);
+
+  const surfaceTables = armD();
+  const rows = armA(families);
+  const { reach, translated, gap } = armB(rows, census, surfaceTables);
+  armC(rows);
+  await armE();
+
+  /* THE CENSUS GAP — reported, not gated, and the reason is in the header. This
+     is the number REC-64's sweep closes, and it is stated exactly rather than
+     estimated, because an unmeasured answer is not a result. */
+  const ungoverned = [...census.union].filter(c => !translated.has(c)).sort();
+  NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of ${census.union.size} refusal codes `
+     + `the plane can mint have NO canned translation and are NOT in reach of a surface today. That is REC-64's `
+     + `remaining sweep. ${census.union.size - ungoverned.length} are translated.`);
+
+  for (const n of notes) console.log("  " + n);
+  if (fails.length) {
+    for (const f of fails) console.error("FAIL: " + f);
+    console.error(`check-refusal-codes: ${fails.length} failure${fails.length === 1 ? "" : "s"} — DEC-49's guard is `
+      + `not optional: an untranslated code must FAIL THE HARNESS rather than reach a member.`);
+    process.exit(1);
+  }
+  console.log(`check-refusal-codes: every code a surface can receive carries a canned translation `
+    + `(${reach.size} in reach, ${rows.length} plane rows, ${surfaceTables.length} surface table(s) proved total)`);
 }
-console.log(`check-refusal-codes: every code a surface can receive carries a canned translation `
-  + `(${reach.size} in reach, ${rows.length} plane rows, ${surfaceTables.length} surface table(s) proved total)`);
+
+/* WAS THIS FILE INVOKED, OR MERELY LOADED?
+ *
+ * `process.argv[1]` is the script node was asked to run; `import.meta.url` is
+ * this module. They are the same file only when this file IS the entry point.
+ *
+ * RESOLVED WITH `realpathSync` ON BOTH SIDES, and WHICH HALF OF THAT IS
+ * LOAD-BEARING WAS MEASURED RATHER THAN ASSUMED — the first draft of this
+ * comment had it wrong. Node hands `process.argv[1]` over ALREADY ABSOLUTE AND
+ * NORMALISED, so the three spellings this guard is actually invoked by are
+ * string-identical to `fileURLToPath(import.meta.url)` and a `===` would have
+ * served: measured 2026-08-09, `node <abs>` (what `test/run.mjs` passes, its
+ * `new URL("../check-refusal-codes.mjs", …).pathname` having already collapsed
+ * the `..`), `node .d254-show-argv.mjs` from the repo root (RELATIVE), and
+ * `node ./civicos-ui/../.d254-show-argv.mjs` (an unnormalised `..`) — all three
+ * `stringEqual: true`.
+ *
+ * **THE ONE THAT BREAKS A STRING COMPARE IS A SYMLINK, and it is measured too:**
+ * invoked through a link, `argv[1]` is the LINK's path while `import.meta.url`
+ * is the TARGET's, so `===` reads false, `path.resolve` reads false, and only
+ * `realpathSync` reads true. That is not hypothetical here — macOS `/tmp` is a
+ * symlink to `/private/tmp`, which is where this project's scratch harnesses
+ * live, and every checkout of this repository is a `git worktree`.
+ *
+ * The consequence of getting it wrong is the reason it is spelled this way: a
+ * comparison that reads false does not ERROR, it silently RUNS NOTHING — the
+ * guard would print nothing, exit 0, and every gate reading that status would
+ * go green over a check that never ran. **A gate that cannot fail is worse than
+ * no gate.** `test/refusal-codes.test.mjs` ARM 1 is the layer that catches it:
+ * it requires the guard's summary SENTENCE in the output, not merely exit 0. */
+const SELF = fileURLToPath(import.meta.url);
+const real = p => { try { return fs.realpathSync(p); } catch { return path.resolve(p); } };
+const INVOKED_AS_SCRIPT = !!process.argv[1] && real(process.argv[1]) === real(SELF);
+
+if (INVOKED_AS_SCRIPT) await main();
+
+/* THE EXPORTS ARE THE MEASURED DEMAND, NOT EVERYTHING THIS FILE HAS.
+ * These six are REC-76's verdict reader — the mechanism D-240 needed in
+ * `meaning-bounds.test.mjs` and `plane-envelope.test.mjs` and had to copy. They
+ * are exported HERE, at their author's home, so the copy in
+ * `bio-plane/test/verdict-reader.mjs` can become an import and be deleted;
+ * until that lands (it is one edit in each of three files in PLANE-TEST's area,
+ * delegated in CLAIMS.md — NOT the "one line" D-254's row estimates), the
+ * `readerDrift()` pin keeps the two copies byte-identical and this export list
+ * changes nothing about it: the six declarations above are untouched.
+ * `main` is exported so a caller can RUN the guard deliberately rather than by
+ * accident, which is the distinction this whole block exists to draw. */
+export { skipString, matchBrace, outcomeReturns, topLevelProps, verdictKind, verdictOf, main };

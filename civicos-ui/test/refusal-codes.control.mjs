@@ -27,6 +27,28 @@
  * exact substring it removed, present again — and the RE-RUN says the subject
  * is green again. A hash alone would be satisfied by a file swapped for another
  * copy of itself by a process that never performed the restore.
+ *
+ * ---------------------------------------------------------------------------
+ * 2026-08-09 (D-254) — THE ARMS (p1)…(p7) BELOW COVER THE GUARD'S SHAPE rather
+ * than its judgement: it is now a MODULE as well as a SCRIPT, and both halves
+ * are driven. **Running this file end to end also found two of its own arms had
+ * stopped running on `main`, and both are corrected at their sites rather than
+ * exempted:**
+ *
+ *   - (n2) anchored on `refusalsJudged: 124` / `codesChecked: 122`, which are
+ *     FLOOR FIGURES. They moved to 148/145, the anchor stopped matching, and
+ *     `arm()` threw — correctly. But a throw ABORTS this file, so **(n3), (n4),
+ *     (n5) and (n6) had not run at all for as long as that was true.** Those
+ *     three edits now anchor on the KEY (`/^  refusalsJudged: \d+,/m`), which is
+ *     what the arm always meant.
+ *   - (e) required the sentence `the plane census is N refusal codes, floor
+ *     is …`. D-257 reworded it to print the reproducible census beside the
+ *     working-tree one, so **(e) had been RED over a guard doing exactly what
+ *     (e) asks** — verified on a pristine checkout of `19745ad` before anything
+ *     here was changed.
+ *
+ * Both are the same class as D-254 itself: an instrument that stopped doing its
+ * job while continuing to look like one.
  */
 import fs from "fs";
 import path from "path";
@@ -57,6 +79,9 @@ const guard  = () => run(F.guard);
 /* `test/run.mjs` runs the whole UI harness; the (c) arm needs its exit status
    and nothing else, and it is the only arm that pays for the full pass. */
 const runner = () => run(F.runner);
+/* D-254 (p4) needs the guard's OWN SUITE rather than the whole harness: ARM 1
+   there is the layer that notices a guard which stopped running. */
+const suite  = () => run(path.join(HERE, "refusal-codes.test.mjs"));
 
 let failures = 0;
 function report(name, ok, detail) {
@@ -89,15 +114,30 @@ function arm(name, spec, runIt, expect) {
      VF-2's own first run, by a different mechanism.
 
      The `includes` check now runs against the RUNNING text too, so an edit whose
-     anchor was consumed by an earlier edit throws instead of passing silently. */
+     anchor was consumed by an earlier edit throws instead of passing silently.
+
+     `from` MAY BE A REGEXP, and that is a CORRECTION too (D-254, 2026-08-09 —
+     corrected, never exempted). Arm (n2) anchored on `  refusalsJudged: 124,`
+     and `  codesChecked: 122,`, which are FLOOR FIGURES: they moved to 148 and
+     145 as the plane grew, the anchors stopped matching, and this function did
+     exactly what it promises — it THREW. **But it throws, so the control ABORTS
+     THERE, and arms (n3), (n4), (n5) and (n6) have not run on `main` since the
+     floors moved.** A loud abort is the right behaviour for an anchor that has
+     genuinely moved; it is the wrong price for an anchor that was never meant
+     to name a number in the first place. Anchoring those three on
+     `/^  refusalsJudged: \d+,/m` says what the arm actually means — *whatever
+     this floor is, relax it* — and cannot go stale on the next floor move.
+     Use NON-GLOBAL regexes: `.test` on a `/g` regex is stateful. */
+  const has = (t, from) => from instanceof RegExp ? from.test(t) : t.includes(from);
+  const show = from => from instanceof RegExp ? String(from) : JSON.stringify(from.slice(0, 90));
   const working = new Map();
   for (const e of edits) {
     const t = working.has(e.file) ? working.get(e.file) : before.get(e.file).text;
-    if (!t.includes(e.from))
+    if (!has(t, e.from))
       throw new Error(`${name}: the text this control removes is not in ${path.basename(e.file)} — the `
         + `subject moved, or an earlier edit in this same arm already consumed it. A control that cannot `
         + `find what it breaks proves nothing and MUST NOT pass silently. Looked for: `
-        + `${JSON.stringify(e.from.slice(0, 90))}`);
+        + `${show(e.from)}`);
     working.set(e.file, t.replace(e.from, e.to));
   }
   for (const [file, text] of working) fs.writeFileSync(file, text);
@@ -120,7 +160,7 @@ function arm(name, spec, runIt, expect) {
     const b = before.get(e.file);
     report(`${name} — ${path.basename(e.file)} restored BY HASH`, sha(e.file) === b.hash, `sha differs`);
     report(`${name} — ${path.basename(e.file)} restored BY CONTENT (the removed text is present again)`,
-      fs.readFileSync(e.file, "utf8").includes(e.from),
+      has(fs.readFileSync(e.file, "utf8"), e.from),
       `the bytes hash the same but the substring this control removed is absent — establish which file you are looking at`);
   }
   for (const f of aside) {
@@ -227,7 +267,20 @@ arm("(e)", [{
   to: `  'M2 reason:<expr>':  src => {
     const out = new Set(); if (out) return out;`,
 }], guard, r => ({
-  ok: r.exit === 1 && /the plane census is \d+ refusal codes, floor is/.test(r.out)
+  /* THE EXPECTATION WAS STALE, NOT THE ARM (D-254, 2026-08-09 — corrected,
+     never exempted). It read `/the plane census is \d+ refusal codes, floor
+     is/`, and D-257 REWORDED that sentence: the guard now prints the
+     REPRODUCIBLE census beside the working-tree one — "the plane census is 424
+     refusal codes that are in the commit at HEAD (424 over the working tree),
+     floor is 429" — so the comma the regex needed is gone. **The arm has been
+     RED on `main` ever since, over a guard that was behaving exactly as this
+     arm requires**: measured 2026-08-09 on a pristine checkout of `19745ad`,
+     the guard exits 1, the census falls 429 -> 424 and the per-matcher line
+     reads `M2 reason:<expr>  0 codes`. Anchored now on the two claims that
+     matter and not on the punctuation between them. */
+  ok: r.exit === 1
+      && /the plane census is \d+ refusal codes/.test(r.out)
+      && /floor is \d+\. The WALK lost/.test(r.out)
       && /M2 reason:<expr>\s+0 codes/.test(r.out),
   what: "the guard exits 1 on the CENSUS FLOOR with M2 printed at 0 codes",
 }));
@@ -405,9 +458,17 @@ arm("(n2)", [
   if (bound === "__rec76_control__") return { started: false, detail: "a refusal nobody gave a code" };`,
   },
   { file: F.guard, from: `    if (kind) return { key: p.key, kind };`, to: `    if (kind && p.key === "ok") return { key: p.key, kind };` },
-  { file: F.guard, from: `  refusalsJudged: 124,`, to: `  refusalsJudged: 0,` },
-  { file: F.guard, from: `  codesChecked: 122,`, to: `  codesChecked: 0,` },
-  { file: F.guard, from: `  unclassifiedOutcomes: 3,`, to: `  unclassifiedOutcomes: 999,` },
+  /* ANCHORED ON THE KEY, NOT ON THE NUMBER (D-254, 2026-08-09 — corrected,
+     never exempted). These read `refusalsJudged: 124` and `codesChecked: 122`
+     when they were written and both figures have since moved (148 and 145),
+     so this arm THREW and the control ABORTED HERE — (n3)…(n6) had not run on
+     `main` for as long as that was true. What the arm means is *whatever these
+     floors are, relax them for this one emulation*, and that is now what it
+     says. The trailing per-key comments survive: `.replace` only consumes the
+     matched span, which ends at the comma. */
+  { file: F.guard, from: /^  refusalsJudged: \d+,/m, to: `  refusalsJudged: 0,` },
+  { file: F.guard, from: /^  codesChecked: \d+,/m, to: `  codesChecked: 0,` },
+  { file: F.guard, from: /^  unclassifiedOutcomes: \d+,/m, to: `  unclassifiedOutcomes: 999,` },
 ], guard, r => ({
   ok: r.exit === 0,
   what: "the guard exits 0 — a CODELESS refusal sits at a governed site and the one-vocabulary "
@@ -482,6 +543,157 @@ arm("(n6)", [{
   what: "the guard exits 1 on the CORPUS floor, and the printed line shows the corpus at 0 rather than "
       + "leaving a reader to infer that a green run meant anything",
 }));
+
+/* ================================================================ D-254
+   THE ENTRY-POINT CHECK — IS THIS FILE IMPORTABLE, AND DOES THE SCRIPT HALF
+   STILL BITE?
+
+   D-254 moved the guard's run behind `if (INVOKED_AS_SCRIPT) await main()`.
+   That change has two directions and BOTH have to be driven, because each one
+   alone is satisfiable by a broken file: a guard that never runs is importable,
+   and a guard that always runs is a gate. The arms below are:
+
+     (p1) BASELINE — importing the guard runs NOTHING and the importer keeps its
+          own exit status. Without this row, (p2)'s red and a six-arms-broken
+          harness look identical.
+     (p2) THE DEFECT RE-ARMED — the entry-point check removed, restoring the
+          pre-D-254 shape. DECLARED: MUST show that importing runs the whole
+          guard and takes the loading process's exit status away from it. This
+          is the arm that proves the fix is what removed the hazard, rather than
+          the hazard having never been there.
+     (p3) THE SCRIPT HALF STILL BITES — a codeless refusal at a governed site,
+          the guard run AS A SCRIPT. DECLARED: MUST FAIL, exit 1, naming the
+          site. **If this ever passes, the entry-point check has turned a gate
+          into a decoration**, which is worse than the defect it guards.
+     (p4) THE CHECK NEUTERED — `INVOKED_AS_SCRIPT` forced false WITH a codeless
+          refusal in the tree. DECLARED: the guard MUST go silently green (that
+          is the hazard, stated), AND `refusal-codes.test.mjs` MUST catch it,
+          because ARM 1 requires the guard's summary SENTENCE and not merely
+          exit 0. An unrun guard prints nothing, so ARM 1 is the layer.
+     (p7) THE PIN ITSELF — the entry-point check removed, and `refusal-codes.
+          test.mjs` ARM 11 must FIRE. A control proves a property once, on the
+          day somebody runs it; ARM 11 is the same property in the UI harness,
+          which every worker's gate runs. This arm is what says ARM 11 is not
+          decorative.
+     (p5) OVER-STRICTNESS — the guard invoked through a SYMLINK, which is the
+          one spelling where `argv[1]` and `import.meta.url` genuinely differ
+          (measured: `===` and `path.resolve` both read false, `realpathSync`
+          reads true). DECLARED: MUST STILL RUN and MUST STILL FAIL the tree —
+          correct work in a spelling nobody anticipated may not be waved
+          through, and may not be silently skipped either.
+   ================================================================ */
+
+const CODELESS = {
+  file: F.airun,
+  from: `export function checkBound(bound) {`,
+  to: `export function checkBound(bound) {
+  if (bound === "__d254_control__") return { ok: false, detail: "a refusal nobody gave a code" };`,
+};
+const ENTRY_LINE = `if (INVOKED_AS_SCRIPT) await main();`;
+
+/* Import the guard from a child process that then exits 7. If loading the
+   module runs the guard, the guard's own `process.exit` fires first and 7 never
+   happens; if loading is inert, 7 is what comes back. The sentinel is checked
+   as well as the status, because "exit 7" with no sentinel would mean the
+   child died some other way. */
+const importProbe = () => {
+  const code = `const m = await import(${JSON.stringify("file://" + F.guard)});`
+    + `console.log("D254-SENTINEL exports=" + Object.keys(m).sort().join(","));`
+    + `process.exit(7);`;
+  try { const out = execFileSync("node", ["--input-type=module", "-e", code], { stdio: "pipe" });
+        return { exit: 0, out: String(out) }; }
+  catch (e) { return { exit: e.status ?? -1, out: String(e.stdout || "") + String(e.stderr || "") }; }
+};
+
+console.log("\n(p1) BASELINE — importing the guard is INERT");
+const inert = importProbe();
+report("(p1) the importer keeps its own exit status (7), so nothing in the guard called process.exit",
+  inert.exit === 7, `exit ${inert.exit}\n${inert.out.slice(-500)}`);
+report("(p1) the importer reached its own code and got the six reader functions",
+  /D254-SENTINEL exports=.*verdictOf/.test(inert.out) && /skipString/.test(inert.out),
+  `sentinel absent or exports missing:\n${inert.out.slice(-500)}`);
+report("(p1) and loading printed NONE of the guard's own output",
+  !/check-refusal-codes: every code a surface/.test(inert.out) && !/UNION \(the census\)/.test(inert.out),
+  `the guard's output appeared on an IMPORT:\n${inert.out.slice(-500)}`);
+
+/* (p2) IS TWO ARMS BECAUSE THE FIRST DRAFT WAS ONE, AND IT CAME BACK WRONG.
+   IT WAS DECLARED AS: with the entry-point check removed, importing the guard
+   runs it AND the importer never reaches its own exit (7). **It came back
+   `exit 7` WITH the guard's full output above the sentinel** — and that is a
+   fact about the defect, not a fault in the fix. The pre-D-254 file has NO
+   `process.exit(0)`: on a GREEN tree `main()` simply falls off the end, so the
+   importing process survives — having silently spent a census walk, five arms
+   and a `git ls-tree` inside itself. The KILL only arrives when the guard has
+   something to report, which is **exactly the tree state a test most needs to
+   run on**. So the hazard is split and both halves are declared:
+     (p2a) importing RUNS the guard — on any tree;
+     (p2b) importing KILLS the loader — on a tree the guard fails.
+   Recorded rather than smoothed: a surprising green is a finding about the arm. */
+console.log("\n(p2a) THE DEFECT RE-ARMED — the entry-point check removed (the pre-D-254 shape)");
+arm("(p2a)", [{ file: F.guard, from: ENTRY_LINE, to: `await main();` }], importProbe, r => ({
+  ok: /check-refusal-codes: every code a surface/.test(r.out) && /UNION \(the census\)/.test(r.out),
+  what: "merely IMPORTING the guard runs the whole DEC-49 walk — census, five arms and a git call — "
+      + "inside the importing process, which is why D-240 could not import the verdict reader",
+}));
+
+console.log("\n(p2b) …AND ON A TREE THE GUARD FAILS, IMPORTING KILLS THE LOADER");
+arm("(p2b)", [CODELESS, { file: F.guard, from: ENTRY_LINE, to: `await main();` }], importProbe, r => ({
+  ok: r.exit === 1 && !/D254-SENTINEL/.test(r.out),
+  what: `the importer is killed by the guard's own process.exit — it exits ${r.exit} rather than its own 7 `
+      + `and NEVER REACHES ITS OWN CODE (no sentinel). A test that imported this file for one function `
+      + `would have died here, reporting the guard's exit status as its own`,
+}));
+
+console.log("\n(p3) THE SCRIPT HALF STILL BITES — a codeless refusal, the guard run as a script");
+arm("(p3)", [CODELESS], guard, r => ({
+  ok: r.exit === 1 && /src\/airun\.mjs:\d+ \(in checkBound\) returns a CODELESS REFUSAL/.test(r.out),
+  what: "the guard exits 1 naming the site — the entry-point check did NOT turn the gate into a decoration",
+}));
+
+console.log("\n(p4) THE CHECK NEUTERED — the guard goes silently green, and its SUITE is what catches that");
+arm("(p4)", [CODELESS, { file: F.guard, from: ENTRY_LINE, to: `if (false) await main();` }],
+  () => {
+    /* `exit`/`out` are carried on the RESULT because `arm`'s failure detail
+       reads `result.out.slice(-700)` EAGERLY — an arm whose runner returns a
+       different shape crashes the control on its way to reporting a PASS. */
+    const g = guard(), s = suite();
+    return { exit: g.exit, out: `[guard exit ${g.exit}] ${g.out}\n[suite exit ${s.exit}] ${s.out.slice(-400)}`, g, s };
+  }, r => ({
+    ok: r.g.exit === 0 && !/check-refusal-codes:/.test(r.g.out) && r.s.exit === 1,
+    what: `the neutered guard exits 0 printing nothing (guard exit ${r.g.exit}, ${r.g.out.trim().length} chars), `
+        + `and refusal-codes.test.mjs exits ${r.s.exit} — ARM 1 asks for the guard's SENTENCE, so a gate that `
+        + `silently stopped running cannot pass as a gate that passed`,
+  }));
+
+console.log("\n(p5) OVER-STRICTNESS — invoked through a SYMLINK, the guard must still run and still bite");
+arm("(p5)", [CODELESS], () => {
+  /* The link has to sit BESIDE the guard: this file resolves `../bio-plane`
+     from its own location, and `import.meta.url` is the RESOLVED target, so a
+     link in `civicos-ui/` gives the guard the same HERE it always had. It is a
+     dotfile and it is removed in a `finally`, because an untracked `*.mjs`
+     under a walked directory is D-238's payload (a phantom file raising a
+     corpus somebody then floors to). */
+  const link = path.join(UI, ".d254-entrypoint-link.mjs");
+  try { fs.rmSync(link, { force: true }); fs.symlinkSync("check-refusal-codes.mjs", link); return run(link); }
+  finally { fs.rmSync(link, { force: true }); }
+}, r => ({
+  ok: r.exit === 1 && /src\/airun\.mjs:\d+ \(in checkBound\) returns a CODELESS REFUSAL/.test(r.out),
+  what: "a spelling where argv[1] is the LINK and import.meta.url is the TARGET still counts as being "
+      + "INVOKED — a string compare would have exited 0 in silence here",
+}));
+
+console.log("\n(p7) THE PIN ITSELF — remove the entry-point check and ARM 11 of the SUITE must fire");
+arm("(p7)", [{ file: F.guard, from: ENTRY_LINE, to: `await main();` }], suite, r => ({
+  ok: r.exit === 1 && /ARM 11/.test(r.out),
+  what: "refusal-codes.test.mjs exits 1 NAMING ARM 11 — the property is pinned in the loop the reader "
+      + "actually runs, not only in this control, which nothing runs automatically",
+}));
+
+console.log("\n(p6) BASELINE AGAIN — the import is inert once more, after five arms edited this file");
+const inert2 = importProbe();
+report("(p6) importing is inert again (exit 7, sentinel present, no guard output)",
+  inert2.exit === 7 && /D254-SENTINEL/.test(inert2.out) && !/UNION \(the census\)/.test(inert2.out),
+  `exit ${inert2.exit}\n${inert2.out.slice(-500)}`);
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");

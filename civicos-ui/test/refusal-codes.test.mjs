@@ -1059,6 +1059,43 @@ withTree({ mutateGuard: g => g.replace("function outcomeReturns(text) {", "funct
     /THE CORPUS COLLAPSED/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 11 — THE GUARD IS A MODULE AS WELL AS A SCRIPT (D-254).
+
+   **THIS ARM IS HERE AND NOT ONLY IN `refusal-codes.control.mjs` BECAUSE THE
+   CONTROL IS NOT IN THE LOOP THE READER RUNS.** The control is destructive and
+   deliberately outside the battery, so a property proved only there is proved
+   once, by whoever ran it, on the day they ran it. This file runs in the UI
+   harness on every worker's gate, so this is where "importing the guard does
+   nothing" becomes a mechanism rather than a claim.
+
+   WHAT IT PINS, in both directions:
+     - LOADING IS INERT. The child imports the guard and exits 7. If the guard
+       ran on load it would print its census walk; if it FAILED on load it would
+       take the exit status with it and 7 would never arrive.
+     - THE DOOR IS OPEN. The six functions REC-76's verdict reader is made of
+       are actually exported. D-240 needed exactly these and had to copy them
+       into `bio-plane/test/verdict-reader.mjs`; the export list is what lets
+       that copy become an import, and a suite that only checked inertness
+       would go green over a file that exports nothing at all.
+   ============================================================ */
+console.log("\n--- ARM 11 · the guard IMPORTS without running, and offers the verdict reader (D-254) ---");
+{
+  const probe = `const m = await import(${JSON.stringify("file://" + GUARD)});`
+    + `console.log("D254-IMPORT " + Object.keys(m).sort().join(","));`
+    + `process.exit(7);`;
+  let exit = 0, out = "";
+  try { out = String(execFileSync("node", ["--input-type=module", "-e", probe], { stdio: "pipe" })); }
+  catch (e) { exit = e.status === undefined ? -1 : e.status; out = String(e.stdout || "") + String(e.stderr || ""); }
+  t("ARM 11: importing the guard leaves the importer's own exit status (7) alone", exit, 7);
+  t("ARM 11: and the importer reached its own code", /D254-IMPORT /.test(out), true);
+  t("ARM 11: loading printed NONE of the guard's output — no census walk, no summary line",
+    /UNION \(the census\)|check-refusal-codes: every code/.test(out), false);
+  for (const fn of ["skipString", "matchBrace", "outcomeReturns", "topLevelProps", "verdictKind", "verdictOf"])
+    t(`ARM 11: \`${fn}\` is exported, so the copy in bio-plane/test/verdict-reader.mjs can become an import`,
+      new RegExp(`\\b${fn}\\b`).test(out), true);
+}
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1087,5 +1124,8 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `whose invisibility cost a translation), a SUCCESS in an unanticipated spelling is NOT graded a refusal `
   + `(10d), an outcome the walk cannot classify is NAMED rather than scored zero (10e), a declared success `
   + `carrying a refusal code FAILS as a contradiction (10f), and a neutered return reader fires the CORPUS `
-  + `floor rather than reporting green over nothing (10g)`);
+  + `floor rather than reporting green over nothing (10g). AND D-254's ARM 11 pins the guard's SHAPE rather `
+  + `than its judgement: importing it runs NOTHING and leaves the importer's exit status alone, while the `
+  + `six functions REC-76's verdict reader is made of ARE exported — the two halves of "a module should be `
+  + `importable without doing anything", each of which a broken file satisfies alone`);
 if (bad) process.exit(1);

@@ -6543,3 +6543,75 @@ this fixture emits neither class, and `queue-state.test.mjs` is the suite that d
 real. Reaching `taskenqueue` directly (it is deliberately not an op) via
 `mf.getDurableObjectNamespace("STORE")` **HUNG this harness past 300 seconds** rather than
 failing, which is recorded because a hang reads as a slow test.
+
+## 2026-08-09 — MODULES THAT DO WORK AT IMPORT TIME AND EXIT FROM MODULE SCOPE (D-254)
+
+**Instrument:** a purpose-built scan run from the repo root over every `.mjs`/`.js` outside
+`node_modules`, `.git` and `.claude`, in worktree `agent-a61e489de171ae6c5` at `19745ad`. It is a
+character scan with a frame stack: each `{` is labelled a FUNCTION body, a BLOCK or an OBJECT literal
+from the text in front of it, so a `process.exit` can be judged by whether it is reachable from MODULE
+SCOPE rather than merely by brace depth. Not committed — it is a measuring instrument, and its figures
+are here.
+
+| | |
+| --- | --- |
+| corpus | **366** files |
+| scored | **364** |
+| UNPARSED, named rather than scored zero | **2** — `bio-plane/test/plane-envelope.test.mjs`, `bio-plane/test/publishedcase.test.mjs` |
+| run work on load (module-scope statement, side-effecting initialiser, or exit) | **315** |
+| **exit from MODULE SCOPE** (loading the file can kill the loading process) | **246** |
+| …of those, also EXPORT something or are IMPORTED | **16** (all `*.test.mjs`/`*.control.mjs`; nothing imports them today — latent) |
+| …of those, no exports but already REFERENCED BY PATH elsewhere | **68** |
+| duplicated top-level function NAMES with a module-scope-exiting home | **44** |
+| …of those, a genuinely SHARED MECHANISM rather than a same-name helper | **1** — REC-76's six-function verdict reader |
+
+**THE CLASS IS ESTATE-WIDE AND IS NOT 246 DEFECTS.** A script that exits is a script; that is the
+whole point of a script. The class BITES where a file that cannot be imported holds a mechanism
+somebody else needs, and by that test there is exactly ONE live instance — the one D-240 paid for with
+a byte-identical copy, and the one D-254 closed. The most-referenced unimportable instruments are
+`bio-plane/scripts/coverage.mjs` (6 referrers), `civicos-ui/check-refusal-codes.mjs` (6),
+`bio-plane/test/hygiene.test.mjs` (5), `bio-plane/scripts/battery.mjs` (4),
+`civicos-ui/check-mock-envelope.mjs` (4), `civicos-ui/test/run.mjs` (4) — every one of those references
+is `execFileSync`/`readFileSync` by path, which is a *use* rather than a *load*, and none of them has
+cost anybody a copy.
+
+**WHAT THE MATCHER CANNOT SEE:** a mechanism copied under a different NAME or as a `const` arrow (only
+`function NAME(` is harvested); a transitive import-time effect; `process.exitCode = 1`, which does not
+kill a loader and is deliberately excluded; a dynamic `import(variable)`; and how EXPENSIVE any of the
+import-time work is, only that it happens.
+
+**TWO CORRECTIONS TO THE INSTRUMENT, both findings rather than tidying.** A per-line depth scan left
+**41 of 366 files UNPARSED**, every one carrying a template literal that spans lines — the fix was to
+carry scan state across lines, and 41 fell to 2. And a line-level exit test reported
+`bio-plane/test/sandbox.mjs` — **imported by 141 suites** — as exiting from module scope; its
+`process.exit` is inside `process.on(sig, () => { … })`, an arrow that opens and closes on ONE LINE, so
+the line begins at module scope while the call does not. **A false positive on the most-imported file
+in the estate would have been the sweep's headline.**
+
+### The behaviour that was fixed, measured in both directions
+
+`civicos-ui/check-refusal-codes.mjs`, before: importing it ran the whole DEC-49 guard — census walk,
+five arms, a `git ls-tree HEAD` — inside the importing process. Whether it also KILLED the importer
+depended on the tree: the file has no `process.exit(0)`, so on a GREEN tree `main` fell off the end and
+the importer survived; **on a tree the guard FAILS, the importer is killed and never reaches its own
+code** — which is the state a test most needs to run in. Measured as control arms (p2a)/(p2b): with the
+entry-point check removed, an importer that prints a sentinel and exits 7 gets `exit 7 WITH the guard's
+full output` on a green tree, and `exit 1, no sentinel` on a tree carrying one codeless refusal.
+After: import completes in **3 ms**, prints nothing, and the importer keeps its own exit status.
+
+### Two of the guard's own control arms had stopped running on `main`
+
+Measured on a PRISTINE checkout of `19745ad` (a scratch `git worktree`, since `git stash` is
+repository-wide here), before anything in this item was changed:
+
+- **`refusal-codes.control.mjs` arm (n2) THREW and the control ABORTED**, so arms (n3), (n4), (n5) and
+  (n6) were not running at all. Its anchors `refusalsJudged: 124` and `codesChecked: 122` are FLOOR
+  FIGURES that had moved to 148 and 145. `arm()` was right to throw; the anchors were wrong to name a
+  number. Now anchored on the key (`/^  refusalsJudged: \d+,/m`).
+- **Arm (e) was RED over a guard doing exactly what (e) asks.** It required the sentence `the plane
+  census is N refusal codes, floor is …`; D-257 reworded it to print the reproducible census beside the
+  working-tree one. Verified on the pristine tree: the guard exits 1, the census falls 429 → 424 and
+  the per-matcher line reads `M2 reason:<expr>  0 codes`.
+
+Both are the same class as D-254 itself — an instrument that had stopped doing its job while continuing
+to look like one. With both corrected the control runs to its own FOOT: **101 checks, 0 failed, exit 0.**

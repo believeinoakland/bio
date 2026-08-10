@@ -6746,3 +6746,114 @@ as a silent addition — the third time that ratchet has done its job.
   ten declared arms, UNTRACKED at the time of the run. Moving the floor to a counted-but-not-yet-
   committed figure is precisely the phantom-suite hazard `coverage.mjs`'s own block warns about, so
   the number is reported for the merged run rather than written here.
+
+## CLAIM 2026-08-09 VERIFY (D-254 — the DEC-49 guard becomes importable)
+session: d254-entry-point (worktree agent-a61e489de171ae6c5)
+opened: 2026-08-09T00:00:00Z
+paths: **`civicos-ui/check-refusal-codes.mjs` — BY SPAN, AND EXPLICITLY NOT THE FLOOR BLOCK.** Three
+spans only: (a) the provenance read at the head (`const PROV = readGitProvenance(REPO)` becomes a
+memoised `prov()`, and `HEAD_SAYS` a `headSays()`, because that constant SHELLS OUT TO GIT the moment
+anything imports the file); (b) the module-scope run block at the foot, moved inside `async function
+main()` behind an `INVOKED_AS_SCRIPT` check, with its `process.exit(1)` kept EXACTLY where it was;
+(c) one appended `export { … }` naming REC-76's six reader functions and `main`. **NOT `FLOOR`, NOT
+`CEILING`, NOT a single numeral in either** — this item invalidates no figure and moves none, and the
+guard's output is BYTE-IDENTICAL before and after (`diff` of a full run, 0 lines). **NOT the six
+function declarations** — `readerDrift()` compares those bytes against `bio-plane/test/verdict-reader.mjs`
+and they are untouched, so the pin stays green. **`civicos-ui/test/refusal-codes.test.mjs`** — ONE new
+ARM 11 appended before ARM 8, plus its clause in the closing summary. **`civicos-ui/test/refusal-codes.control.mjs`**
+— arms (p1)…(p7) appended, `arm()`'s `from` may now be a RegExp, and TWO PRE-EXISTING STALE ARMS
+CORRECTED at their sites (see below). **`docs/development/DEBT.md`** — the D-254 row only.
+**`docs/development/MEASUREMENTS.md`**, **`docs/development/CLAIMS.md`** — this entry and its delegation.
+**NOT `bio-plane/**` — not one file**, which is why the second half of D-254 is delegated rather than done.
+interfaces consumed: none. interfaces owned: none. No op is added, removed or reshaped; no IC row is owed.
+expected: D-254, raised by D-240. The row is the authority and the row's central figure was wrong;
+what was measured instead is in the row and in MEASUREMENTS.md.
+accepts-when: **BASELINE MEASURED IN THIS WORKTREE BEFORE ANY EDIT and trusted over the brief** —
+`151/151 suites green · 9,688 assertions` at `19745ad`, `git status --short` empty, `bio-plane/node_modules`
+ABSENT on arrival (`npm ci`, exit 0). The brief's "main moved ~45 commits today" was true of main and
+not of this worktree: it arrived LEVEL with `origin/main`, 0 ahead and 0 behind. FINAL: battery
+**151/151 · 9,688** (identical — this item adds no plane assertion), `node scripts/coverage.mjs --strict`
+run DIRECTLY with `$?` read UNPIPED **exit 0**, `node civicos-ui/test/run.mjs` from the REPO ROOT
+**exit 0**, `node civicos-ui/check-refusal-codes.mjs` **exit 0** with output byte-identical to baseline,
+`node tools/plancheck.mjs` clean but for UNPUSHED. `refusal-codes.test.mjs` 80 → **89 assertions**
+(ARM 11's nine). `refusal-codes.control.mjs` **101 arms/checks, 0 FAILED, exit 0** — and it reaches its
+own FOOT for the first time since the floors moved past its (n2) anchor.
+concurrency: checked over the whole file before opening anything. No live claim names
+`civicos-ui/check-refusal-codes.mjs`; every block naming it is `released:`. **REC-64's sweep is
+UNMERGED and changes this file substantially — this item was written to be disjoint from it:** it adds
+no arm, touches no matcher, no `where`, no region and no floor, and its three spans are the file's head,
+its foot and one appended export block.
+released: 2026-08-09 — committed on `worktree-agent-a61e489de171ae6c5`, **NOT pushed and NOT merged**;
+CONDUCT integrates.
+
+**THE ROW SAID "ONE LINE IN VERIFY'S FILE". IT IS NOT ONE LINE AND IT IS NOT ONLY VERIFY'S FILE, and
+both halves of that were measured rather than argued.** The structural half is bigger than the row
+thinks (the git call at module scope is a second import-time effect nobody had named, and the six
+declarations are 164 lines); the single-homing half **cannot be done inside `civicos-ui/` at any size**,
+because `readerDrift()` extracts those six functions from BOTH files and BOTH suites assert it — the
+moment either copy stops carrying them as top-level declarations, `meaning-bounds.test.mjs` and
+`plane-envelope.test.mjs` go red. That is the pin working exactly as designed, and it is also why the
+delete is a THREE-FILE turn in PLANE-TEST's area rather than a line in mine.
+
+**WHAT THE CLASS SWEEP FOUND, AND WHAT IT CANNOT SEE.** Corpus **366 `.mjs`/`.js` files** (whole repo,
+`node_modules`/`.git`/`.claude` excluded), **364 scored**, **2 UNPARSED AND NAMED** rather than scored
+zero (`bio-plane/test/plane-envelope.test.mjs`, `bio-plane/test/publishedcase.test.mjs`). **246 files
+exit from MODULE SCOPE** — so the class is estate-wide and is NOT 246 defects: a script that exits is a
+script. The defect is the intersection with a door: **16 files exit from module scope AND export
+something** (every one a `*.test.mjs`/`*.control.mjs` exporting helpers that nothing currently imports —
+LATENT, not live), and **68 more are already REFERENCED BY PATH by another file** — `bio-plane/scripts/coverage.mjs`
+(6 referrers), `civicos-ui/check-refusal-codes.mjs` (6), `bio-plane/test/hygiene.test.mjs` (5),
+`bio-plane/scripts/battery.mjs` (4), `civicos-ui/check-mock-envelope.mjs` (4), `civicos-ui/test/run.mjs` (4).
+**Only ONE instance has actually cost anybody a copy, and that is the one this item fixed** — measured by
+asking which top-level function NAME is defined in more than one file where a home exits from module
+scope: 44 such names, of which 43 are same-name-different-mechanism helpers (`runSuite`, `mockFetch`,
+`makeCtx`, `restore`, `patch` — the control and UI-suite idioms) and exactly one set is a SHARED
+MECHANISM: `skipString`/`matchBrace`/`outcomeReturns`/`topLevelProps`/`verdictKind`/`verdictOf`,
+REC-76's reader, in `check-refusal-codes.mjs` and `verdict-reader.mjs`. **`check-mock-envelope.mjs` and
+`check-semantics.mjs` were both checked BY NAME and are NOT the same shape: neither holds a mechanism
+any other file has duplicated, so they are deliberate scripts and are left alone** — the sweep's job was
+to tell those apart from a module that merely grew one, and it did.
+**WHAT THE MATCHER CANNOT SEE, and it is load-bearing:** a mechanism copied under a DIFFERENT NAME or
+as a `const` arrow (both invisible — only `function NAME(` is harvested); a transitive import-time
+effect (work done by a module this file imports); `process.exitCode = 1`, which does NOT kill a loader
+and is deliberately not counted as an exit; a dynamic `import(variable)`; and it says nothing about how
+EXPENSIVE the import-time work is, only that it happens. It also required TWO corrections of its own,
+both recorded because they are findings about the instrument: a per-line scan left **41 files UNPARSED**
+(every one with a multi-line template literal), and a line-level exit test scored `bio-plane/test/sandbox.mjs`
+— **imported by 141 suites** — as exiting from module scope, when its `process.exit` is inside an arrow
+that opens and closes on one line. **A false positive on the most-imported file in the estate would have
+been the headline.**
+
+**AND `skipString` HAS A THIRD HOME THAT IS NOT A THIRD COPY.** `bio-plane/test/repair-reachability.test.mjs`
+defines a `skipString` the drift pin does not cover — and it is NOT REC-76's: it returns the index AFTER
+the closing quote where REC-76's returns the index OF it. Same name, different contract, correct in both
+places. Named here so the next reader of the drift pin does not go looking for a leak.
+
+### DELEGATION 2026-08-09 VERIFY (D-254) -> PLANE-TEST (D-240's owner): **THE DOOR IS OPEN — THE DELETE IS YOURS, AND IT IS THREE FILES IN ONE TURN**
+
+`civicos-ui/check-refusal-codes.mjs` now **exports** `skipString`, `matchBrace`, `outcomeReturns`,
+`topLevelProps`, `verdictKind`, `verdictOf` and `main`, and **importing it runs nothing and exits
+nothing** — the run is behind an entry-point check and the `git ls-tree` read is lazy. The hazard D-240
+recorded as its reason for copying ("importing it would run the whole DEC-49 guard as a side effect of
+loading a test") **no longer exists**, and it is pinned in the loop you run: ARM 11 of
+`civicos-ui/test/refusal-codes.test.mjs` fails the UI harness if the entry-point check is removed or an
+export disappears, and arm (p7) of `refusal-codes.control.mjs` drives ARM 11 itself.
+
+**WHAT IS LEFT, and it is one turn touching three files, all yours:** `bio-plane/test/verdict-reader.mjs`
+imports the six from `../../civicos-ui/check-refusal-codes.mjs` and deletes its own copies (keeping
+`readerDrift`/`fnSource`/`SHARED_FNS` or retiring them with it); `meaning-bounds.test.mjs` and
+`plane-envelope.test.mjs` turn their `D-240 (a)` drift arms into an IMPORT-IDENTITY assertion. **Do it
+in ONE turn**: `readerDrift()` reports a MISSING function as a difference, so the moment either copy
+stops carrying the six as top-level declarations, both suites go red naming them. That is the pin doing
+its job, and it is exactly why this half could not be done from `civicos-ui/`.
+
+**D-240'S OWN ADVICE POINTED THE OTHER WAY AND ITS STATED REASON IS GONE.** It says *"Do not do the
+reverse (move the reader into `civicos-ui/`): `bio-plane/test/` files may not import from `civicos-ui/`
+without the same top-level-execution hazard reappearing in the other direction."* That was right when
+written. The hazard was the top-level execution, not the direction, and it is closed — while the
+direction D-240 recommends (the guard importing from `bio-plane/test/`) costs `refusal-codes.test.mjs`
+a second file to copy into its synthetic fixture tree, which the reverse does not. **The choice is
+yours and either now works; the reason for the prohibition is what changed.** Note that four
+`bio-plane/test/` files already reach into `civicos-ui/check-refusal-codes.mjs` by path today
+(`meaning-bounds`, `plane-envelope`, `nc-rec64`, and the mergecarry suites read it in prose), so the
+coupling exists already and only its mechanism is in question.
