@@ -76,6 +76,44 @@ const ARMS = [
     mustFail: "the scoping arms — an unknown extent kind now covers everything",
     mustNotFail: "the chain arms, the confidence arms, the machine-credential arm" },
 
+  /* ---- D-252's arms. Each one drives THE REPLACEMENT IT PREVENTS: a mixed
+     document whose good page comes back with its text degraded. ---- */
+
+  { name: "g. D-252: the merge goes back to WHOLESALE (`i2text = built.text`, the defect)",
+    file: "src/index.mjs",
+    from: `                        const m = mergeTier3Text(baseText, built.text, wantPages);`,
+    to:   `                        const m = { ok: true, text: built.text, filled: wantPages, refused: [], unanswered: [], wholesale: true };`,
+    mustFail: "the D-252 merge arms — the text-layer page's own references are GONE, replaced by an OCR pass at cap C, which is the defect this item closes",
+    mustNotFail: "every arm about a document with ONE provenance: the wholly-scanned document, the text-layer document, the refusal arms, the attestation arms" },
+
+  { name: "h. D-252: the per-page eligibility test (a page may be FILLED, never REPLACED)",
+    file: "src/index.mjs",
+    from: `    if (!target || !wanted.has(p.page) || !empty) { refused.push(p.page); continue; }`,
+    to:   `    if (!target) { refused.push(p.page); continue; }`,
+    mustFail: "the OVER-REACHING MEMBER arms — a member answering for a page it was not asked about now overwrites that page's good text",
+    mustNotFail: "the ordinary merge arms (the member answers only for the page it was asked about, so eligibility never has to catch anything)" },
+
+  { name: "i. D-252: an unmeasured PART stops making the document undetermined (the null->letter resolution)",
+    file: "src/textchain.mjs",
+    from: `    if (partCap == null) return null;`,
+    to:   `    if (false) return null;`,
+    mustFail: "THE DOCTRINE PIN — a mixed document's cap resolves to the engine's C, handing a leg citing an unmeasured text layer a ceiling nobody measured",
+    mustNotFail: "the per-page cap arms (each part still answers for itself), the unscoped arms, every rule-2 arm" },
+
+  { name: "j. D-252: mergedChain stops SCOPING the steps it merges",
+    file: "src/textchain.mjs",
+    from: `      out.push(STEP_KINDS[step.step].role === "derivation"\n        ? { ...step, extent: { kind: "pages", pages } } : { ...step });`,
+    to:   `      out.push({ ...step });`,
+    mustFail: "the extent arms, the chain-sentence arm, the doctrine pin and the per-page cap arms — an unscoped mixed chain reads as a sequence and answers C for the whole document",
+    mustNotFail: "the merge arms about TEXT (the good page's text still survives — the chain and the text are separate guarantees, which is why they are separate arms)" },
+
+  { name: "k. D-252: an UNREADABLE extent reads as 'all of it' instead of covering nothing",
+    file: "src/textchain.mjs",
+    from: `  return "unreadable";`,
+    to:   `  return "all";`,
+    mustFail: "the unreadable-extent arm — a cap scoped to something this module cannot parse now bounds the whole document",
+    mustNotFail: "the mixed-document arms (their extents parse), the unscoped arms" },
+
   { name: "f. Tier 1 stops NAMING the image-only page (pdfstructure's marker)",
     file: "src/pdfstructure.mjs",
     from: `  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {`,

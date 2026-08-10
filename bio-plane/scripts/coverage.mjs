@@ -426,6 +426,13 @@ const REGISTER_FLOOR = {
      which is indistinguishable from a clean tree and is what an untracked suite
      looks like to this register. Had the floor been moved from that run, it would
      have been moved to the number already in the file. */
+  /* D-252, 2026-08-09: 731 -> 736, from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED (`arms 736/731 · classified 145/145 · corpus 146/146
+     · GREW by 5 arm(s)`), never by adding five to the number above. NO NEW
+     SUITE, so `classified` and `corpus` do not move and are left exactly as they
+     were: the five arms are (g)-(k), added to `textchain.test.mjs`'s existing
+     declaration and driven by `test/nc-cpdf10.mjs`, which now runs eleven. Every
+     one of the five was RUN, alone, with the others held open. Nothing FELL. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
