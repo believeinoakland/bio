@@ -181,7 +181,9 @@ const QUEUE_CORPUS = [
   "docs/development/MILESTONES.md",
   "docs/development/IS-BUILD-PLAN.md",
   "docs/development/UI-PLAN.md",
-  "docs/development/PLAN.md",
+  /* `PLAN.md` was here and is now `docs/archive/PLAN.md`, reached by the directory
+     entry above. Removed rather than repointed: a second path to a file the
+     directory already yields is a place for the two to disagree later. */
 ];
 
 /* A QUEUE ITEM'S ALLOCATION SITE, AND THERE ARE EXACTLY TWO SHAPES — MEASURED, not

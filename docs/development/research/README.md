@@ -1,6 +1,17 @@
 # The case-making research study — what to read, and in what order
 
-Sixteen files, ~1.1 MB, produced by thirteen passes between 2026-08-01 and 2026-08-02.
+Thirteen passes between 2026-08-01 and 2026-08-02, ~1.1 MB.
+
+> **MOVED 2026-08-10: the closed passes now live in `docs/archive/research/`**, with
+> `docs/archive/README.md` saying what each was and why it closed. Four files stayed
+> here because they are still live: **`RECONCILED.md`** (the design), this reading
+> guide, **`DATA-MODEL.md`** (cited by six code sites as the model's source) and
+> **`review-document.html`** (the source of Bob's published review). The reading order
+> below is unchanged; the paths for the archived files gained an `archive/`.
+>
+> Nothing was edited in the move. To find a ruling made in any of them without opening
+> them, `node tools/decided.mjs "<subject>"` — it scans the archive by construction.
+
 This file exists because the directory does not explain itself: four of the passes are
 SUPERSEDED, three were written in parallel by sessions that could not read each other, and
 a reader who opens one at random will read text that has since been overturned.
