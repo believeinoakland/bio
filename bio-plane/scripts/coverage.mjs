@@ -508,9 +508,17 @@ const REGISTER_FLOOR = {
      `main` stood at 782/150/151 after D-267. The branch's figure is LOWER and taking
      it would lower a ratchet, so main's stands here and the merged tree's own printed
      run moves it in the next commit. */
-  arms: 782,
-  classified: 150,
-  corpus: 151,
+  /* MOVED AT INTEGRATION 2026-08-10 by CONDUCT: 782 -> 792 / 150 -> 151 / 151 -> 152,
+     read off what the MERGED tree's own green `--strict` run PRINTED — `REGISTER FLOOR
+     arms 792/782 · classified 151/150 · corpus 152/151 · GREW by 10 arm(s)`, provenance
+     `163 of 163 discovered item(s) are in the commit at HEAD (35bc9dc)`. One new suite,
+     `test/register-grammar.test.mjs`, declaring ten arms. Here the branch's own +10 and
+     the merged +10 happen to agree, which they did NOT at the D-267 merge an hour
+     earlier — and that is the reason this figure is still read rather than trusted:
+     agreement is a coincidence of two baselines, not a property of the arithmetic. */
+  arms: 792,
+  classified: 151,
+  corpus: 152,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
