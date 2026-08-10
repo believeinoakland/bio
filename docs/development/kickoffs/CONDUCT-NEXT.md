@@ -6,6 +6,34 @@ That distinction is the most useful thing in this file, so it is first.
 Read `kickoffs/CONDUCT.md` (the loop), then `WORKER.md`, then `ORCHESTRATION.md`'s
 "Concurrency". Then `git fetch` and verify the state below yourself rather than believing it.
 
+> ## THE MAP MOVED AFTER THIS FILE WAS WRITTEN — addendum, 2026-08-10, session BOB
+>
+> Everything below this box is the outgoing CONDUCT's account and stands as written;
+> a full BOB session ran after it. What changed, so you verify against `ad7d210` (or
+> later), not `cc99ec1`:
+>
+> - **The BOB INBOX now holds FIVE undrained entries, not two** — the two below, plus:
+>   the retired-substrate removal (Bob's instruction, enacted, DEC-67 answered), the
+>   decision register drained from the corpus (**five entries decided and awaiting YOUR
+>   enactment** — plancheck's warn names them — plus **three work items**: the
+>   accepts-without-reading measurement, the DEC-51 capture-note render, the DEC-43
+>   fleet-visibility report), and `tools/gates.mjs`. **Draining is still step 0.**
+> - **Your gate discipline has a surgical profile: `node tools/gates.mjs`.** It measures
+>   the diff; docs-only prose runs the doc-facing suites plus `plancheck --local`
+>   (~20 seconds), one non-docs path runs the full four unchanged. `CLAUDE.md` carries it.
+> - **`DECISIONS.md` was rolled** — 55 settled entries to
+>   `docs/archive/ledgers/DECISIONS-2026-08.md`; the live file is the open list plus
+>   three byte-read pins (DEC-39 for `affordances.test.mjs`, DEC-32/33 for the UI
+>   vocabulary derivation). **Do not archive those three.**
+> - **`CORPUS-STUDY.md` lives at `docs/archive/CORPUS-STUDY.md`** now; its consolidation
+>   is executed and superseded in part (the banners came out with the substrate text).
+> - **D-205 is CLOSED** — `BIO_ADMIN_TOKEN` rotated by Bob and verified in both
+>   directions. The generalisable half stays open in the row.
+> - The expected battery figures moved with the DECISIONS roll and the sweep; measure
+>   your own baseline as always. The `/tmp/mfp` residue below REMAINS — a fourth
+>   attempt (sandbox-escape `rm`) was declined; it still needs a hand outside the
+>   sandbox.
+
 ## State at handoff — GREEN and PUBLISHED
 
 **Verified by this session on the consolidated tree at `cc99ec1` AND re-verified at
