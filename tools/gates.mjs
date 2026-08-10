@@ -22,7 +22,8 @@
  *      behind the directory — so the set is grepped fresh from test/ on every
  *      run, and the suites named are printed so the selection is auditable.
  *
- *   3. plancheck ALWAYS runs. It is the gate that exists for prose.
+ *   3. plancheck ALWAYS runs (as --local mid-turn; the bare run is owed after
+ *      the push — publication is the handoff gate's half).
  *
  * Usage:
  *   node tools/gates.mjs            classify the change, run the right profile
@@ -118,7 +119,11 @@ if (cls === "FULL") {
   for (const f of uiDoc)
     green = run(`ui (doc-facing) ${f}`, "node", [join("civicos-ui/test", f)]) && green;
 }
-green = run("plancheck", "node", ["tools/plancheck.mjs"]) && green;
+// --local skips the publication checks: gates runs MID-TURN, before commit+push,
+// and a dirty planning surface is the expected state then. The bare plancheck is
+// still owed AFTER the push — it is the handoff gate, not this one.
+green = run("plancheck --local", "node", ["tools/plancheck.mjs", "--local"]) && green;
 
 console.log(`\ngates: ${green ? "GREEN" : "RED"} · class ${cls}`);
+if (green) console.log("gates: after you push, run `node tools/plancheck.mjs` bare — the publication half runs there.");
 process.exit(green ? 0 : 1);
