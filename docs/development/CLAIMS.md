@@ -343,3 +343,59 @@ paths: `bio-plane/test/accepts-without-reading.measure.mjs` (NEW — the instrum
   **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `bio-plane/scripts/**` (no floor is
   moved by hand here — the printed figures are reported and the integrator moves what a merged
   green run prints).
+---
+
+## CLAIM 2026-08-10 UI (UI-54 — DEC-51: `op=acquire`'s grade note rendered WHOLE at the moment of capture)
+session: ui54-capture-note (worktree `agent-afd442fede94e63fe`)
+opened: 2026-08-10T00:00:00Z
+released: 2026-08-10 by the holding session at its own close, **with the work COMMITTED on the
+  branch `worktree-agent-afd442fede94e63fe` and NOT YET ON `main`** — stated rather than
+  smoothed, because a released claim says the paths are free and does not say the change has
+  landed. All four gates are green on that commit (UI harness 46 suites exit 0; battery 157/157,
+  9,844 assertions, exit 0; `coverage.mjs --strict` exit 0 read unpiped; `plancheck` clean but
+  for UNPUSHED, which is not this session's to clear). Pushing and merging are CONDUCT's. The
+  claim is released rather than left held because the four claims before it were all released by
+  CONDUCT as stale, and a dead session holding `civicos-ui/app.html` by site blocks every later
+  UI worker for nothing.
+paths: **`civicos-ui/app.html` — named by SITE, not by file** (it is shared ground and other UI
+  workers may be live). Four sites, all inside the UNMARKED Add-surface region (no `__…_START__`
+  marker covers it), and nothing else in the file moves:
+  (1) `renderAdd` — ONE line added to the rendered form, `<div id="a-note"></div>`, immediately
+      after the existing `<div id="a-prog"></div>`. No existing markup touched;
+  (2) `addCaptureNote` — a NEW function declared immediately after `addErr`, together with the
+      comment block that carries DEC-51's reasoning;
+  (3) `addCapture` — ONE call added, `addCaptureNote(acq.note)`, on the line after the
+      `if(!acq.document) return …` guard, so the note is rendered the moment the plane answers
+      with a document. Nothing else in the continuation loop moves;
+  (4) `addGo` — TWO calls added that CLEAR the holder on the paths where the surface itself says
+      nothing was added (the reset beside `HELD_BOUNDED`/`CHANGED_FROM`, and the `!r.ok` branch)
+      plus the already-held branch.
+  **NOT** `ADD_CAPTURE_TEACH` and **NOT** `addValidate` — UI-32's removal of the surface-computed
+  grade LETTER stands and is not reopened; both keep their current wording exactly.
+  **NOT** the CSS block (the holder reuses the existing `teach` class), **NOT** `__CATALOG__`,
+  **NOT** `__SEMANTICS__`, **NOT** `__SURFACES__` (no new surface and no new router), **NOT**
+  `__DOCPROFILE__`, **NOT** `__VERSION_REVIEW__`, **NOT** `__NOTIFICATIONS__`, **NOT**
+  `__AI_SESSION__`/`__AI_CONNECTIONS__`, **NOT** `__PUBLISHED_CASE__`, **NOT** any other
+  marked region.
+  `civicos-ui/test/add-surface.test.mjs` — a NEW section 3a and a THIRD detector in the existing
+  sweep block. It is this surface's capture-doctrine suite and already imports
+  `ACQUIRE_GRADE_NOTE`, so the assertion is added where the instruments live rather than in a
+  second file that would need its own copy of them. No existing arm weakened; the sweep's floors
+  are moved only where the arms PRINTED a new figure.
+  `civicos-ui/test/add-surface.control.mjs` (NEW) — the three negative-control arms, each armed
+  ALONE and restored byte-identically with sha256 compared.
+  `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not
+  rewritten — other UI workers may be live), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `docs/development/QUEUE.md` and **NOT** `docs/development/DECISIONS.md` — CONDUCT is
+  sole writer of both (`ORCHESTRATION.md`, "the channels"), so UI-54's `landed:` line and any
+  addition to DEC-51's `enacted:` line are CONDUCT's at integration and are reported to it rather
+  than written here.
+  **NOT** `bio-plane/src/**` (READ ONLY — the note is already published and its shape does not
+  move, so no IC is owed), **NOT** `bio-plane/checks/**` (read only — the suite IMPORTS
+  `EARNED_CAPTURE_CEILING`/`UNREACHABLE_CAPTURE_GRADE` rather than copying them), **NOT**
+  `bio-plane/test/**`, **NOT** `civicos-ui/tokens.css`, **NOT** `civicos-ui/check-*.mjs`,
+  **NOT** `newgroup/**`, **NOT** `agent-worker/**`.
+interfaces consumed: I3 — `op=acquire` (read only). The `note` field is already published on every
+  answer; nothing is asked of the plane that it does not already send and no shape changes, so no
+  IC row is owed.
+interfaces owned: none.

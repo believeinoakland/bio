@@ -400,3 +400,61 @@ sweep can fail — it must keep naming the ban rather than importing it).
 
 **NO SURFACE CHANGED.** `civicos-ui/app.html` is not edited by this item and not claimed — the
 module only READS its two marked member-facing blocks. UI harness 44 → 45 suites, exit 0.
+
+---
+
+## UI-54 — DEC-51 ENACTED: `op=acquire`'s grade note is RENDERED, WHOLE, AT THE MOMENT OF CAPTURE (2026-08-10, worktree `agent-afd442fede94e63fe`)
+
+**APPENDED, NOT A REWRITE — other UI workers may be live in `app.html`.**
+
+**WHAT LANDED.** `addCapture` had been receiving `note` on every `op=acquire` answer and
+throwing it away. It now calls **`addCaptureNote(acq.note)`** the moment the plane answers with
+a document — before the completeness branch, on every tick of the continuation — and the new
+renderer puts the record's own sentence into a new `<div id="a-note">` in the Add form. Four
+sites in `app.html` (`renderAdd`, `addCaptureNote`, `addCapture`, `addGo`), all inside the
+UNMARKED Add region; `civicos-ui/test/add-surface.test.mjs` §3a and a third sweep detector;
+`civicos-ui/test/add-surface.control.mjs` (NEW) driving five arms.
+
+**FIVE THINGS THE NEXT UI SESSION SHOULD KNOW BEFORE TOUCHING ANY OF IT.**
+
+1. **THE CO-ATTESTATION CLAUSE SHIPS, AND REMOVING IT IS THE DEFECT RATHER THAN THE CAUTION.**
+   The note's last clause describes an act this surface does not offer and cannot offer, so
+   stripping it is the tidy any careful reader reaches for. DEC-51 refuses that split by name:
+   DEC-39's three-part shape was deliberate, UI-28 measured the parts reassemble
+   character-for-character, and that clause is exactly the sentence that stops a member reaching
+   for co-attestation to solve a problem it does not address. **A rendering that is merely MOST
+   of the note is the split Bob refused.** Arm 1 of the control is that edit, and the ONLY thing
+   in either tree that goes red under it is §3a — which is why the assertion exists.
+2. **UI-32 IS NOT REOPENED, AND THE TWO RULES LIVE ONE LINE APART.** This surface still states
+   no grade letter IT derived — `ADD_CAPTURE_TEACH` and `addValidate` are untouched and keep
+   their exact wording — and it now withholds nothing the PLANE published about a capture that
+   has actually happened. The difference is the whole of both. §3a's UI-32 assertion is ordered
+   BEFORE the string-for-string equality deliberately: the suite is fail-fast, so a surface that
+   computes a letter must trip the assertion that NAMES UI-32 rather than the one that would
+   report the wrong reason. Do not reorder them.
+3. **NOTHING HERE IS AUTHORED, AND THERE IS NO FALLBACK.** `addCaptureNote` escapes the string
+   and renders it; no heading is composed for it, no gloss, no re-wording. A plane that publishes
+   no note — or a blank one — leaves the holder EMPTY. That is UI-39's rule and UI-40's, and both
+   shapes are asserted rather than assumed.
+4. **DETECTOR (C) IS NEW IN THE SWEEP AND IT CLOSES A STRUCTURAL HOLE, NOT AN OVERSIGHT.**
+   Detectors (A) and (B) both judge the remainder after `minusPublications` — they must, or they
+   fire on the record's own correct page (UI-28) — so an EXACT copy of a publication is invisible
+   to both. (C) reads each file's WORD STREAM and fails on a whole publication reproduced
+   verbatim, which is what sees a copy split across a `"…" + "…"` concatenation. **If you need
+   the record's sentence in a suite, IMPORT it.** Arm 2 is a hand copy with the same characters;
+   every behavioural assertion stays green under it, and only (C) can tell.
+5. **THE CONTROL DRIVER HOLDS NO COPY OF THE RECORD'S WORDS, ON PURPOSE.** It imports
+   `ACQUIRE_GRADE_NOTE` and `EARNED_CAPTURE_CEILING` and serialises them into its patches. A
+   driver that typed the note out to plant it would BE the copy, in the tree its own detector
+   guards, and (C) would red the suite until somebody weakened it.
+
+**WHAT THIS ITEM DELIBERATELY DID NOT ADD.** No new SURFACE and no new ROUTER, so nothing
+arrived unclassified in `preauth-vocabulary.test.mjs` WALK 2 or `surface-registry.test.mjs`
+ARM A4c — both were left untouched and both stayed green. No new PLANE READ: the note rides on
+the `op=acquire` answer the surface already asks for, so `bound-sweep`'s two walks see nothing
+new and no IC is owed on I3. No edit anywhere under `bio-plane/**`.
+
+**ENVIRONMENT, because it will cost the next session an hour otherwise.** A fresh worktree has
+no `bio-plane/node_modules`, and three UI suites drive the REAL plane through miniflare. The
+harness reads 43/3 exit 1 until `npm ci` is run in `bio-plane/`. Measure your baseline AFTER
+that install; see `MEASUREMENTS.md`, "2026-08-10, UI-54".

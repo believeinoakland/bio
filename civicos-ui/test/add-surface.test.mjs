@@ -30,8 +30,19 @@
  *      is enforced tree-wide by THE SWEEP at the foot of this file, whose
  *      detectors are composed from the enforced rule and the published
  *      sentences so that this suite spells no grade letter of its own either.
+ *   6. AND YET THE RECORD'S OWN SENTENCE ABOUT THIS CAPTURE REACHES THE MEMBER,
+ *      WHOLE, AT THE MOMENT OF CAPTURE (UI-54, 2026-08-10, enacting DEC-51).
+ *      Assertion 5 and assertion 6 are not in tension and the difference is the
+ *      whole of both: this surface states no grade IT derived about a capture
+ *      that has not happened, and it withholds nothing the PLANE published about
+ *      one that has. `addCapture` received `note` on every answer and discarded
+ *      it, so the member's only account of capture strength arrived afterwards
+ *      on the document page. §3a holds the enactment, including that the
+ *      CO-ATTESTATION clause ships — the clause a tidying edit removes, because
+ *      the act is unavailable here, and the one sentence that stops a member
+ *      reaching for co-attestation to solve a problem it does not address.
  *
- * NEGATIVE CONTROL: eleven, six RUN 2026-08-04 (UI-15) and five more RUN 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions).
+ * NEGATIVE CONTROL: sixteen. Eleven RUN BY HAND — six 2026-08-04 (UI-15) and five 2026-08-04 (UI-32), each arm mutating ONE file, restored byte-identical afterwards with sha256 compared, and re-run against the FINAL files (144 assertions at the time; 167 now). FIVE MORE, UI-54's, are DRIVEN and re-runnable in one step: `node civicos-ui/test/add-surface.control.mjs` — arms (1)(2)(3) declared RED and (3b)(4) declared GREEN, all five AS DECLARED on 2026-08-10, both watched files restored byte-identical by sha256 AND `cmp` against two independent pristine copies. The arms and their measured outcomes are written out in that file's header; they are NOT duplicated here, because two accounts of one run is the drift this suite's own subject is about.
  *
  *  (a) THE ITEM'S OWN CONTROL. Delete the `const ADD_TICKS = 8;` declaration in
  *      civicos-ui/app.html (beside `ADD_BUSY`, ~:9411) -> `ReferenceError:
@@ -132,7 +143,11 @@ import { checkBundle } from "../../bio-plane/checks/bio-checks.mjs";
    actually says. Everything below is a FUNCTION of these four values, so this
    file spells no grade letter of its own anywhere. */
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../bio-plane/checks/bio-checks.mjs";
-import { ATTEST_FENCE, ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/affordances.mjs";
+/* `acquireGradeNote` — the COMPOSER, not just the composed string — is imported
+   for UI-54's §3a: the note under test has to be provably a function of the
+   enforced ceiling, and the only way to say that without typing the sentence out
+   is to recompose it here from the two exported letters and compare. */
+import { ATTEST_FENCE, ACQUIRE_GRADE_NOTE, acquireGradeNote } from "../../bio-plane/src/affordances.mjs";
 import { fileURLToPath } from "url";
 /* D-257 — the doctrine sweep at the foot of this file walks the working tree and
    FLOORS on what it found. The one provenance mechanism is imported rather than
@@ -430,6 +445,146 @@ ok("choosing to write nothing does NOT return a capture", nothing.ok === false);
 ok("and nothing is carried forward to be written", nothing.doc === undefined);
 ok("and the member is told nothing was written and nothing lost",
    /Nothing was written/.test(nothing.why) && /nothing was lost/i.test(nothing.why));
+
+/* ---- 3a. DEC-51 — op=acquire's NOTE, RENDERED WHOLE AT THE MOMENT OF CAPTURE
+   (UI-54, 2026-08-10) --------------------------------------------------------
+
+   WHAT THIS SECTION IS FOR. `addCapture` received `note` on every answer the
+   plane gave it and dropped it on the floor, so the record's own account of what
+   a capture is worth reached a member only afterwards, on the document page.
+   DEC-51 ruled that it is rendered at the moment of capture, and rendered WHOLE.
+   These assertions are the enactment's teeth.
+
+   THE THREE THINGS BEING HELD, and each one is a defect that has actually
+   happened in this tree rather than a hypothetical:
+
+   (1) WHOLE, NOT SPLIT. The note's last clause describes CO-ATTESTATION, an act
+       this surface does not offer, so stripping it is the tidy any careful
+       reader would reach for — and DEC-51 names it the defect rather than the
+       caution. DEC-39's three-part shape was deliberate, UI-28 measured that the
+       parts reassemble character-for-character, and that clause is exactly the
+       sentence that stops a member reaching for co-attestation to solve a
+       problem it does not address. So the clause is asserted BY NAME, derived
+       rather than typed, and every assertion that can fail on a partial
+       rendering says DEC-51 in its own label.
+
+   (2) IT IS THE PLANE'S STRING, NOT A COPY THAT AGREES WITH IT. Two copies of a
+       sentence agree at zero cost forever, including on the day the enforced
+       rule moves out from under both — this project has measured that on five
+       subjects. So the expectation here is the EXPORT, the export is recomposed
+       from the two enforced letters before it is trusted, and detector (C) in
+       the sweep at the foot of this file fails the day anybody writes the words
+       down in this package, harness included.
+
+   (3) NO FALLBACK, AND NO WORD OF OURS. A plane that publishes no note leaves
+       the holder EMPTY. The surface never fills the gap with a sentence of its
+       own and never substitutes the OTHER publication — `ATTEST_FENCE` is a
+       different act speaking to a different reader (REC-48's rule), and it is
+       asserted absent here rather than assumed absent. */
+{
+  const NOTE = ACQUIRE_GRADE_NOTE;
+  /* The holder is reached through the SAME seam the surface reaches it through
+     — `document.querySelector` — so an assertion cannot pass against an element
+     the surface never had. */
+  const noteHolder = () => ctx.document.querySelector("#a-note");
+  const flat = s => String(s).replace(/\s+/g, " ").trim();
+  const NOTE_FLAT = flat(NOTE);
+  ok("INSTRUMENT: the note under test is COMPOSED from the enforced ceiling, so it is the plane's "
+     + "sentence and not a copy that happens to agree with it today",
+     NOTE === acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE)
+     && NOTE_FLAT.includes("Grade " + EARNED_CAPTURE_CEILING)
+     && NOTE_FLAT.includes("Grade " + UNREACHABLE_CAPTURE_GRADE));
+  /* THE CLAUSES ARE DERIVED, NEVER LISTED. The co-attestation clause is the one
+     that carries the ceiling letter BARE — the plane composes it as
+     "…raises ${ceiling} toward…" with no `Grade` word — which is precisely why
+     detector (A) cannot see it and why UI-32 needed detector (B) at all. */
+  const CLAUSES = NOTE_FLAT.split(/(?<=\.)\s+/).filter(Boolean);
+  const BARE = CLAUSES.filter(c => !LETTER_RE().test(c));
+  ok(`INSTRUMENT: the note is ${CLAUSES.length} clauses and exactly one of them carries the `
+     + `ceiling letter with no Grade word — that is the co-attestation clause, derived not listed`,
+     CLAUSES.length >= 3 && BARE.length === 1
+     && new RegExp("\\b" + EARNED_CAPTURE_CEILING + "\\b").test(BARE[0]));
+  const CO_ATTESTATION_CLAUSE = BARE[0];
+
+  /* Drive the real path. The plane answers COMPLETE, so this is the ordinary
+     capture a member makes, not the ceiling case — that one is driven below. */
+  ctx.recPost = async (op) => {
+    if (op !== "acquire") return { ok: true, result: {} };
+    return { document: document_, snapshot: null, note: NOTE };
+  };
+  /* A member who can write, because a credential that gets no form gets no
+     holder either and the absence would then prove nothing. Section 4 sets the
+     credential it needs for itself, so nothing downstream depends on this. */
+  G.PLANE.session = "s"; G.PLANE.me = { session: true, capabilities: ["contribute"] };
+  await G.renderAdd();
+  ok("REACH: the form paints a holder for the record's account, and it starts EMPTY",
+     /id="a-note"/.test(els.get("#content").innerHTML)
+     && flat(stripTags(noteHolder().innerHTML)) === "");
+  const got = await G.addCapture(document_.locator, document_.authority, false);
+  ok("the ordinary capture path completes", got.ok === true && got.doc === document_);
+  const shown = noteHolder().innerHTML;
+  const read = flat(stripTags(shown));
+  ok("DEC-51: the record's own account of what this capture is worth is IN FRONT OF THE MEMBER "
+     + "at the moment of capture, not afterwards on the document page",
+     read.length > 0);
+  ok("DEC-51 — WHOLE, NOT SPLIT: the note reaches the member entire. A rendering that is merely "
+     + "MOST of it is the split Bob refused (2026-08-10, resting on DEC-39 and UI-28's measurement "
+     + "that the parts reassemble character-for-character)",
+     read.includes(NOTE_FLAT));
+  for (const c of CLAUSES)
+    ok(`DEC-51 — WHOLE, NOT SPLIT: clause ${CLAUSES.indexOf(c) + 1} of ${CLAUSES.length} reaches the member`,
+       read.includes(c));
+  ok("DEC-51 — THE CO-ATTESTATION CLAUSE SHIPS, and it is the one a tidying edit removes: it "
+     + "describes an act this surface cannot offer, which is exactly why it is the sentence that "
+     + "stops a member reaching for co-attestation to solve a problem it does not address",
+     read.includes(CO_ATTESTATION_CLAUSE));
+  /* ORDERED BEFORE THE EQUALITY DELIBERATELY, and the ordering is the control's
+     evidence exactly as §3's runtime arm is. This suite is FAIL-FAST, so a
+     surface that computes a grade letter of its own must trip the assertion that
+     NAMES UI-32 — not the string-for-string one, which would also go red and
+     would report the wrong reason. */
+  ok("UI-32 STANDS: the rendering states no grade letter this surface derived — every letter a "
+     + "member reads here is inside the record's own sentence, and UI-32's removal of the "
+     + "surface-COMPUTED letter from this form is not reopened by rendering the plane's",
+     gradeLettersIn(shown).length === 0);
+  ok("DEC-49: it is rendered STRING-FOR-STRING against the plane's own export — nothing dropped "
+     + "and nothing of ours added around it",
+     read === NOTE_FLAT);
+  ok("and it is NOT the attest fence wearing the note's place — a different act, a different "
+     + "reader, a different moment (REC-48's rule)",
+     !read.includes(flat(ATTEST_FENCE)));
+
+  /* THE CEILING PATH. DEC-51 says AT THE MOMENT OF CAPTURE, and the moment a
+     member is asked what the record should say about an unfinished capture is
+     the moment they most need the record's own account of what one is worth. */
+  ctx.recPost = async (op) => {
+    if (op !== "acquire") return { ok: true, result: {} };
+    return { document: document_, note: NOTE,
+             snapshot: { complete: false, outstanding: 9, continuation: { session: "s-ceiling" } } };
+  };
+  noteHolder().innerHTML = "";
+  const ceilinged = G.addCapture(document_.locator, document_.authority, true);
+  await settle();
+  ok("DEC-51: the account stands while the member is being ASKED what the record should say, "
+     + "which is the other moment of capture this surface has",
+     flat(stripTags(noteHolder().innerHTML)) === NOTE_FLAT);
+  els.get("#ai-yes").click();
+  ok("and it survives the answer", (await ceilinged).ok === true
+     && flat(stripTags(noteHolder().innerHTML)) === NOTE_FLAT);
+
+  /* NO FALLBACK (UI-39/UI-40). A plane that publishes nothing gets nothing
+     written on its behalf — asserted in both the absent and the blank shapes,
+     because "" and undefined arrive by different routes. */
+  for (const [what, answer] of [["publishes no note at all", { document: document_, snapshot: null }],
+                                ["publishes a blank one", { document: document_, snapshot: null, note: "   " }]]) {
+    ctx.recPost = async (op) => (op === "acquire" ? answer : { ok: true, result: {} });
+    noteHolder().innerHTML = "<div>stale</div>";
+    const r = await G.addCapture(document_.locator, document_.authority, false);
+    ok(`NO FALLBACK: a plane that ${what} leaves the holder empty rather than getting a sentence `
+       + `written for it`, r.ok === true && noteHolder().innerHTML === "");
+  }
+  noteHolder().innerHTML = "";
+}
 
 /* The static half of D-132/D-133, over this file's own source, so a future edit
    that reintroduces either defect fails HERE rather than on a member's screen. */
@@ -858,6 +1013,60 @@ for(const word of ["subrequest", "runtime", "manifest", "register", "corroborati
        + (found.length ? found.join(" · ") : `none, over ${FILES.length} files and ${DOCTRINE.size} phrases`),
        found.length === 0);
   }
+  /* ---- (C) AND NOBODY HOLDS A WHOLE PUBLICATION AS A LITERAL, SUITES INCLUDED
+       (UI-54, 2026-08-10) ------------------------------------------------------
+
+     THE HOLE (A) AND (B) LEAVE, AND IT IS STRUCTURAL RATHER THAN AN OVERSIGHT.
+     Both detectors judge the REMAINDER after `minusPublications` — they have to,
+     because the publication NAMES the unreachable grade in order to deny it, so
+     an unsubtracted reader fires on the correct page (UI-28's measurement). The
+     consequence is that an EXACT copy of a publication is invisible to both: it
+     is subtracted before either looks. That is precisely the copy this project
+     has now been bitten by five times, most recently as the reason UI-54's own
+     assertion had to read the plane's export rather than a sentence typed into
+     the harness — a hand copy agrees at zero cost, forever, including on the day
+     the enforced ceiling moves out from under it.
+
+     WHY IT IS A CONTIGUOUS WORD RUN AND NOT AN N-GRAM SET. (B) already narrows
+     to grade-bearing clauses because the fence's first two parts — timestamps
+     and secondhand reports — stand legitimately all over the attest region and
+     the glossary, and an unnarrowed phrase reader fired 26 times on correct
+     prose. A whole publication reproduced word-for-word is a different subject:
+     correct prose does not accidentally emit an entire published sentence, so
+     this detector needs no narrowing and no exemption list. It reads the WORD
+     STREAM rather than the characters, which is what makes it see a copy split
+     across a `"…" + "…"` concatenation — the shape a copy actually takes in a
+     JavaScript file, and the shape a substring test would miss. */
+  {
+    const stream = t => words(t).join(" ");
+    const PUB_STREAMS = PUBLICATIONS.map(stream);
+    ok("INSTRUMENT: each publication yields a substantial word run to look for",
+       PUB_STREAMS.length === 2 && PUB_STREAMS.every(s => words(s).length >= 20));
+    /* ALIVE IN EVERY FILE, AS A DELTA — the planted control is the publication
+       itself, so this detector is a function of what the record published and
+       not of anything held here. */
+    const runs = (hay, needle) => hay.split(needle).length - 1;
+    const deaf = [];
+    for(const f of FILES){
+      const base = stream(stripComments(readable(f) || ""));
+      for(const p of PUB_STREAMS)
+        if(runs(base + " " + p, p) <= runs(base, p)) deaf.push(rel(f));
+    }
+    ok("REACH: a planted publication is visible in EVERY file's own word stream — "
+       + (deaf.length ? `DEAF: [${deaf.join(" ")}]` : `all ${FILES.length} files live`),
+       deaf.length === 0);
+    const copies = [];
+    for(const f of FILES){
+      const s = stream(stripComments(readable(f) || ""));
+      const hit = PUB_STREAMS.filter(p => s.includes(p));
+      if(hit.length) copies.push(`${rel(f)} holds ${hit.length} whole publication(s) verbatim`);
+    }
+    ok("NOR DOES ANY FILE UNDER civicos-ui/ HOLD A WHOLE PUBLICATION AS A LITERAL — the only route "
+       + "from the record's sentence to a member is the plane's export and a pass-through — "
+       + (copies.length ? copies.join(" · ") : `none, over ${FILES.length} files`),
+       copies.length === 0);
+  }
+
   console.log(`  sweep: ${FILES.length} files (${SURFACE.length} outside test/), ${BYTES} characters read, `
             + `${clauses.length} grade-bearing clauses -> ${DOCTRINE.size} phrases; `
             + `raw letter hits in ${rawHits.length} files, none surviving the strip outside test/`);

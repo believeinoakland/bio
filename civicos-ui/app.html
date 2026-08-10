@@ -14094,6 +14094,7 @@ async function renderAdd(){
     ${addActionPaneHtml()}
     <div id="a-err" class="teach hidden"></div>
     <div id="a-prog"></div>
+    <div id="a-note"></div>
     <div class="rv-bar" style="margin:18px 0 0"><button class="btn" id="a-go" disabled onclick="addGo()">Add it to the record</button>
       <span class="n" id="a-n">A title and a body are the minimum.</span></div>`;
   addTypeSync(); addValidate();
@@ -14152,6 +14153,53 @@ function addErr(html){
   e.classList.toggle("hidden", !html); e.innerHTML = html || "";
 }
 
+/* op=acquire's `note`, RENDERED — WHOLE — AT THE MOMENT OF CAPTURE.
+   DEC-51 (Bob, 2026-08-10), resting on DEC-39 (Bob, 2026-08-04) and DEC-49's
+   translation discipline. UI-54 enacts it and the reasoning is written here
+   rather than only in the ruling, because the two things most likely to be
+   undone by a later tidy are both invisible from the code alone.
+
+   WHY IT IS RENDERED HERE AT ALL, and it reverses the note two lines up in
+   `ADD_CAPTURE_TEACH` — deliberately, in the direction the ruling names, and
+   only for the half the ruling moved. DEC-39 already settled the substance: the
+   plane OWNS the fence wording and PUBLISHES IT WITH THE ACT. The act at this
+   site is the CAPTURE ITSELF, and the plane has been publishing its account of
+   what that capture is worth on every single answer — `addCapture` received it
+   and threw it away, so a member's only account of capture strength arrived on
+   the document page afterwards. A surface that receives the record's own words
+   and discards them is withholding at exactly the moment the member forms the
+   belief, which the failure asymmetry forbids: when uncertain, be noisy.
+
+   WHOLE, NOT SPLIT, AND THIS IS THE PART A LATER READER WILL WANT TO "FIX".
+   The note's last clause describes CO-ATTESTATION — an act this surface does
+   not offer and cannot offer. Stripping it as irrelevant here is the obvious
+   tidy and it is the defect, not the caution. DEC-39's three-part shape was
+   deliberate; UI-28 measured that the parts reassemble character-for-character;
+   and the clause naming co-attestation is exactly the sentence that stops a
+   member reaching for co-attestation to solve a problem it does not address —
+   which is the misreading Bob's own trial example produced. A rendering that is
+   merely MOST of the note is the split the ruling refused. `add-surface.test.mjs`
+   §3a asserts every clause of the note reaches the member and names DEC-51 when
+   one does not, and `add-surface.control.mjs` arm 1 drives it.
+
+   NOT ONE WORD OF IT IS AUTHORED HERE (DEC-49). What is rendered is the string
+   the plane sent, escaped and otherwise untouched — no heading composed for it,
+   no gloss, no re-wording, and NO FALLBACK: a plane that publishes no note
+   leaves this holder EMPTY rather than getting a sentence written on its
+   behalf. That is UI-39's rule (delete a falsehood without writing a new one)
+   and UI-40's (render the record's accounts verbatim, with no fallback).
+
+   AND IT STATES NO GRADE OF ITS OWN. UI-32 removed the surface-COMPUTED grade
+   letter from this form and that removal STANDS: what arrives here is the
+   plane's SENTENCE about a capture that has now actually happened, never a
+   letter this surface derived about one that has not. The tree-wide sweep at
+   the foot of `add-surface.test.mjs` is what keeps the difference honest. */
+function addCaptureNote(note){
+  const h = $("#a-note"); if(!h) return;
+  const said = (note == null ? "" : String(note)).trim();
+  h.innerHTML = said ? `<div class="teach" id="a-note-said">${esc(said)}</div>` : "";
+}
+
 /* Capture, then promote. In that order and never the reverse: a fetch that
    fails must not leave a half-made bundle in the record.
    The continuation is DRIVEN. A page over the runtime's subrequest ceiling comes
@@ -14177,6 +14225,10 @@ async function addGo(){
      above a missing feature; one line, at the only place that can hold it. */
   HELD_BOUNDED = null;
   CHANGED_FROM = null;
+  /* UI-54: and so is the note, for the same reason — the record's account of the
+     LAST capture is not an account of this one. It is re-rendered the moment
+     this run's own capture answers. */
+  addCaptureNote(null);
   const go = $("#a-go"); if(go) go.disabled = true;
   const type = ($("#a-type")||{}).value || "information";
   const title = (($("#a-title")||{}).value||"").trim();
@@ -14189,7 +14241,10 @@ async function addGo(){
     let doc = null, snap = null, partial = null;
     if(loc){
       const r = await addCapture(loc, auth, wantSubs);
-      if(!r.ok){ addSay(""); addErr(esc(r.why)); return; }
+      /* UI-54: nothing was captured into the record on this path, so the
+         record's account of a capture's worth comes off the screen with the
+         progress line. It is cleared, never replaced with a sentence of ours. */
+      if(!r.ok){ addSay(""); addCaptureNote(null); addErr(esc(r.why)); return; }
       doc = r.doc; snap = r.snap; partial = r.partial || null;
       /* Before anything is written: is this document already in the record? The
          answer is the classifier's, not the member's. */
@@ -14206,6 +14261,7 @@ async function addGo(){
            error, not a question, and not a lecture about why the bytes differed:
            one sentence, then the document it is already in. */
         addSay("");
+        addCaptureNote(null);   /* UI-54: nothing was added, so the account of what a capture is worth goes too. */
         addErr(`This is already in the record${held.bundle.title?` as <b>${esc(held.bundle.title)}</b>`:""}, and the source is still publishing the same document. Nothing was added. Opening it now&hellip;`);
         setTimeout(()=>openBundle(held.bundle.bundle_id), 1400);
         return;
@@ -14580,6 +14636,13 @@ async function addCapture(locator, authority, wantSubs){
       acq = await recPostR("acquire", { locator, authority, ...(wantSubs?{subresources:true}:{}), ...(session?{continue:session}:{}) });
     }catch(e){ return { ok:false, why: acquireWhy(e) }; }
     if(!acq.document) return { ok:false, why: acquireWhy(acq) };
+    /* DEC-51/UI-54: the plane has answered with a document, so the capture has
+       happened and the record's own account of what it is worth is in hand.
+       It is rendered HERE — before the completeness branch below, and on every
+       tick of the continuation, so the account stands whichever way this call
+       ends rather than only on the clean path. `addCaptureNote` renders it
+       whole or renders nothing. */
+    addCaptureNote(acq.note);
     const snap = acq.snapshot || null;
     if(!wantSubs || !snap || snap.complete) return { ok:true, doc: acq.document, snap };
     session = snap.continuation && snap.continuation.session;
