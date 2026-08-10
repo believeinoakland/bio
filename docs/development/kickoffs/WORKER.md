@@ -10,35 +10,38 @@ practices live here; a spawn brief is now the ITEM and nothing else.
 **If your brief contradicts this file, your brief wins** — it knows your item. If your
 brief is silent, this file governs.
 
-## NEVER WAIT ON A PREDICATE THAT MATCHES YOUR OWN COMMAND LINE
+## TO WAIT FOR A QUIET MACHINE, RUN `node tools/waitquiet.mjs`. DO NOT WRITE THE LOOP.
 
-**Measured 2026-08-09: three worker shells sat in this loop until Bob noticed them, with nothing
-running.**
+```
+node tools/waitquiet.mjs                  # wait, bounded, then measure
+node tools/waitquiet.mjs --check          # answer once: 0 quiet, 1 busy
+```
+
+Up to eight workers share this machine, so an uncontended figure sometimes needs a wait. **Do not
+hand-roll it.** On 2026-08-09 three workers sat in
 
 ```
 until ! pgrep -f "scripts/battery.mjs"; do sleep 10; done      # DEADLOCKS. ALWAYS.
 ```
 
-**`pgrep -f` matches the full command line — and the waiter's own command line contains the
-string it is searching for.** So the loop finds itself, waits, finds itself, forever. Three of
-them also matched each other, which makes the count look like real work. **There was no battery:
-`workerd` was at zero and no node process was running one.** They had been spinning for hours
-after their item had already reported and merged.
+**forever.** `pgrep -f` matches the FULL COMMAND LINE, and the waiter's own command line contains
+the string it searches for — so each loop found itself, slept, and found itself again. The three
+also matched each other, which made the count look like real work. **No battery was running at
+all**; `workerd` was at zero. They spun for hours after their item had already merged, and nothing
+noticed, because **a wait that cannot fail is indistinguishable from one that has not finished.**
 
-It is the same shape as every instrument defect this file warns about — a check that answers
-about itself and reads as a measurement of something else.
+**This is a COMMAND rather than a warning because the warning was already tried.** This file
+records the vigilance fix failing for `git stash` and for id allocation; what worked both times
+was a tool. The tool matches **positionally** — the executable must BE `node` and argv[1] must BE
+the battery path — so a shell that merely mentions the string cannot satisfy it. It is bounded,
+and on timeout it exits 2 naming what it was still seeing.
 
-**Instead:**
-
-- **Match something you cannot be.** `pgrep -f 'node .*scripts/battery.mjs'` excludes the shell,
-  or watch for `workerd`, which is what a battery actually spawns and no waiter is.
-- **Better: do not poll a process at all.** Run the battery in the foreground and read its exit
-  status, or have it write a sentinel file and wait on the FILE.
-- **Always bound the wait.** A loop with no iteration cap cannot report that it gave up, and a
-  wait that cannot fail is indistinguishable from one that never finished.
-- **Prove your predicate is FALSE before you rely on it being TRUE.** Run it once with nothing
-  running: if it still matches, it will never release you. That is the negative control for a
-  wait, and it costs one command.
+**If you ever do write a wait of your own, its negative control is one command: run the predicate
+once with nothing running.** If it still matches, it will never release you. That control is the
+one nobody ran — and it is worth knowing that `waitquiet`'s own first draft failed it twice, once
+by anchoring a regex that `ps`'s output never matches, and once because its "don't match another
+waiter" line was itself a substring test that swallowed the fixture. Both were caught by the
+over-strictness arm, in the direction that releases a wait too early.
 
 ## Your environment
 
