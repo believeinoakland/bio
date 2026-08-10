@@ -75,6 +75,25 @@ _(drained by CONDUCT 2026-08-07 — **`IS-BUILD-PLAN.md` IS THE AUTHORITY for th
 
 Fences, placements and controls from the earlier handover STAND — the plan corrected the sequencing, not the doctrine. No entries outstanding.)_
 
+**2026-08-10 · BOB · THE DECIDED INDEX IS IN THE LOOP, AND THERE IS A NEW GATE.**
+Branch `bob-corpus-index` (596c697), green, unmerged. What changed for CONDUCT:
+
+- **`node tools/decided.mjs "<subject>"` before raising a question or writing a decision
+  item.** Added to `CLAUDE.md`, so every session loads it. It answers from
+  `docs/DECIDED.md`, generated from every ruling in the corpus — 585 of them, 161 KB
+  against the corpus's 7.4 MB. Measured cause: the reading a kickoff demands is ~565k
+  tokens, which no session can read, and only 12% of rulings are in `DECISIONS.md`.
+- **`plancheck` now FAILS on a stale `docs/DECIDED.md`.** Any turn that rules on anything
+  must run `node tools/decided.mjs` and commit the result, exactly as a version bump must
+  leave `check-versions` green. This is a NEW failure mode in a gate CONDUCT runs before
+  every push — the first stale-index failure will look like an unrelated break otherwise.
+- **No queue item is superseded and no worker should be stopped.** Nothing else moved:
+  the archive and ledger-rolling moves in `docs/development/CORPUS-STUDY.md` are
+  SPECIFIED AND NOT EXECUTED, and one of them is gated on a hazard CONDUCT should know
+  about before touching prose in bulk — **`mintid` derives its id floors by reading ids
+  MENTIONED in prose, and its ledger is not committed, so removing prose that names a
+  high id LOWERS the floor and a fresh clone re-issues an id already in use.**
+
 An entry names: what changed, which queue items it affects, and whether any in-flight
 work is superseded. It does NOT decide worker lifecycle — stopping a running worker is
 CONDUCT's call.
