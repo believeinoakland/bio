@@ -7281,3 +7281,14 @@ expected: DEBT.md's D-252 row, which is the authority for this item.
 accepts-when: as the D-252 row. **Baseline MEASURED IN THIS WORKTREE BEFORE ANY EDIT: 151/151 suites green · 9,688 assertions · 171.1s · exit 0** (the brief carried no figure; the nearest figures on `main` were VF-1's 138/8,827 and CPDF-12's 132/8,256, both stale — main moved). FINAL: **151/151 · 9,733 assertions · 155.3s · exit 0**, +45 all in `textchain.test.mjs` (146 -> 191, attributed by re-running that suite alone against the true baseline, not by subtraction). `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED, exit 0, `arms 736/736 · classified 145/145 · corpus 146/146`. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit 0. `node tools/plancheck.mjs` clean but for UNPUSHED. Negative controls: eleven arms, each ALONE, 0 surprises, every restore sha256-MATCH and cmp-IDENTICAL.
 concurrency: checked over every unreleased block in this file with a parser rather than by eye. The only open claim naming `textchain.mjs` or `test/nc-cpdf10.mjs` is CPDF-10's own — this area's, and landed on `main` at HEAD. No open claim names `mergeTier3Text`, `tier3Pages` or the Tier-3 wire branch. `scripts/coverage.mjs` is named by several open claims and only its `arms` numeral is touched here, so a conflict there COLLAPSES TO ONE SET and is re-read from a printed run.
 released:
+
+## CLAIM 2026-08-09 M0 (D-249)
+
+- `bio-plane/test/hygiene.test.mjs` — the PORT half of the ground check, beside M0-10's `GROUND` regex
+- `bio-plane/test/d249-port.probe.mjs` — NEW, the runtime probe (not discovered by the battery)
+- `bio-plane/test/d249-port.control.mjs` — NEW, the five negative-control arms (edits real sources; not discovered)
+- `docs/development/DEBT.md` — D-249's row (closing), D-281 and D-282 (new)
+- `docs/development/MEASUREMENTS.md` — the port figures
+
+Recorded AFTER the first edits rather than before, which is the wrong order and is
+stated rather than tidied. No other session held these paths.
