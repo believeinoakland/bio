@@ -674,6 +674,168 @@ export const PERMITTED_AUTO_COMPOSITION = {
 };
 
 /* =========================================================================
+ * SK-4 — CHECK DEPLOYS FIRST. THE SEQUENCING IS RECORDED HERE; THE GATE IS NOT.
+ *
+ * `IS-BUILD-PLAN.md` SK-4; `INVESTIGATIVE-SESSION.md` §2 (the objective and the
+ * first deployed mode) and §14b.4; `docs/archive/IS-SWEEP-2026-08-07.md` §4b item
+ * 7; DEC-24 (the CHECK role) and DEC-55's enacted CHECK-first instruction.
+ *
+ * ---------------------------------------------------------------------------
+ * THE ROW'S OWN CONSTRAINT, AND IT IS THE WHOLE SHAPE OF WHAT IS BELOW
+ * ---------------------------------------------------------------------------
+ *
+ * The plan row is explicit: *"SK-4 RECORDS the sequencing; the gate itself is a
+ * row in FL-3's table and must not be re-implemented here."* So this block holds
+ * NO FLAG, NO PREDICATE AND NO DECISION. It holds an ADDRESS and a reason, and a
+ * statement of what the thing at that address does not reach.
+ *
+ * The gate is `agent-worker/src/harness.mjs` — FL-3's landed `gate-mode` row, the
+ * FIRST row every run takes, reading a `deployed` flag that no judgement can set.
+ * A second gate written here would be the defect §14b.4 names, and it would be
+ * worse than the ordinary case of that defect: two gates disagreeing is how a run
+ * gets past both while each looks like it held.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY AN ADDRESS AND NOT AN IMPORT, WHICH IS A DECISION AND NOT LAZINESS
+ * ---------------------------------------------------------------------------
+ *
+ * This module is bundled into the PLANE's Worker. Importing the fleet member's
+ * harness would drag a fleet member into the plane's bundle — the exact inversion
+ * of the reasoning `harness.mjs` itself records for pinning `LEVELS` rather than
+ * importing `airun.mjs` (*"the fleet's whole point is that a member ships
+ * alone"*). What closes the drift there is a SOURCE PIN, and that is what closes
+ * it here: `GATE_ADDRESS` names the file, the exports and the row KEY, and
+ * `test/skillsequencing.test.mjs` DEREFERENCES that address against the landed
+ * module. A row renamed, a mode dropped, or the flag flipped fails this area's
+ * suite rather than leaving a doctrine sentence that quietly stopped being true.
+ *
+ * ---------------------------------------------------------------------------
+ * AND THE RESIDUE IS LARGE, SO IT IS STATED FIRST RATHER THAN LAST
+ * ---------------------------------------------------------------------------
+ *
+ * SK-3's rule — `does_not_reach` is required even on the ENFORCED items, because
+ * a partial fence read as a whole one is worse than an unenforced rule read as
+ * unenforced — bites hardest on this record. The gate is real and it is code, and
+ * it sits INSIDE the thing it gates: `ai_runs.mode` is free text in the plane's
+ * schema with no vocabulary check and no C-number over it (MEASURED, and the
+ * suite re-measures it every run), so what refuses `investigate` is one row in
+ * one fleet member's own control flow and nothing at the record's edge. That is
+ * a true statement about a gate whose authorisation surface is deliberately
+ * small, and it is NOT a statement that the record refuses a mode. It does not.
+ * ========================================================================= */
+
+/** WHERE THE GATE ACTUALLY LIVES. An address, dereferenced by the suite — never
+ *  an import, never a copy, and never a flag this file holds. */
+export const GATE_ADDRESS = {
+  file: "agent-worker/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) — landed, and outside this area's paths",
+  modes_export: "MODES",
+  table_export: "CONTROL_FLOW",
+  row: "gate-mode",
+  first_step_export: "FIRST_STEP",
+  decision_function: "nextStep",
+  why_it_is_first:
+    "a run in a mode that is not deployed terminates before it has spent anything, so the gate "
+    + "cannot be reached around by exhausting something else first",
+};
+
+/** Where §2's ruling was written, and where the sweep restates it. Both are
+ *  looked up by the suite; neither is quoted from memory. */
+export const SEQUENCING_SOURCE = TABLE_SOURCE;
+export const SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
+
+/** SK-4's ONE DOCTRINE ITEM. It records an ORDER and cites a gate; it decides
+ *  nothing and refuses nothing.
+ *
+ *  `order` IS THE DELIVERABLE. Everything else on this object is either a span
+ *  of a document (checked by lookup) or an address (checked by dereference), so
+ *  the only thing here a reader has to take on trust is the order itself — and
+ *  the suite pins that to the landed table in BOTH directions, so a mode added,
+ *  dropped or enabled moves it. */
+export const DEPLOYMENT_SEQUENCE = {
+  id: "check-deploys-first",
+
+  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
+     mode that deploys first, and every later index is a mode that enables only
+     after the one before it has been verified live. */
+  order: ["check", "investigate"],
+  first_deployed_mode: "check",
+
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
+     because a session cannot verify its own copying by re-reading it. */
+  text: "CHECK IS THE FIRST DEPLOYED MODE",
+  role:
+    "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role "
+    + "— the record read adversarially, by the machine aimed at self-directed overclaiming, the "
+    + "threat model the doctrine names",
+  because:
+    "also the safest first deployment, because a run over a concluded inquiry has the smallest "
+    + "authorisation surface and the clearest ground truth to be measured against",
+  satisfies:
+    "Deploying that mode first satisfies the enacted instruction without a second architecture",
+  source: SEQUENCING_SOURCE,
+
+  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
+     standard: one pin proves the sentence was copied; two prove the RULING is
+     the one both surfaces carry, so a sequencing quietly reversed on either
+     fails here rather than in a review nobody re-runs. */
+  also_named_in:
+    "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session "
+    + "run with §2's objective against an existing conclusion IS the CHECK role; deploy that mode "
+    + "first. No second architecture.",
+  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
+
+  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
+     half is this area's, and saying so is the point rather than a disclaimer. */
+  enabling_condition:
+    "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED "
+    + "inquiry, swept after, with `op=audit` clean.",
+  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
+
+  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
+     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     cannot leave it stale by editing prose around it. `null` is not "unknown":
+     it is "no live run has been verified", and the suite holds it against the
+     landed flag, which is still `false`. */
+  verification_recorded: null,
+
+  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
+  enables_how:
+    "by an EDIT to the landed table under review — `MODES.investigate.deployed`. A mode that could "
+    + "be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
+
+  gate: GATE_ADDRESS,
+
+  /* NO C-NUMBER, AND THAT IS A FACT ABOUT THE RECORD RATHER THAN AN OMISSION
+     HERE. Nothing in the check catalogue refuses a mode, so citing a C-number
+     would be citing something that does not exist. `enforced_by_row` is a THIRD
+     kind of backing beside SK-2's C-numbers and SK-3's instruction-only, and the
+     suite prints all three rather than collapsing them — a control-flow row is
+     code, but it is not a refusal at the record's edge and must not be tallied
+     as one. */
+  enforced_by: [],
+  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
+
+  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
+     landed sources rather than believed. */
+  does_not_reach:
+    "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a "
+    + "build with the flag already flipped, and no instrument reads a release note. It also does "
+    + "not reach the RECORD: `ai_runs.mode` is free text in the plane's schema with no vocabulary "
+    + "check and no C-number over it, so a caller that never runs this harness can open a run in "
+    + "any mode string at all and the plane will store it. What the gate refuses is one fleet "
+    + "member's own control flow, which is the smallest authorisation surface §2 asked for and is "
+    + "also the whole of its reach. And it cannot verify its own enabling condition: `deployed: "
+    + "true` is an edit, and the REVIEW of that edit — not this text and not that flag — is what "
+    + "holds CHECK's live verification in front of it.",
+
+  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
+  holds_no_gate:
+    "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of "
+    + "it gets past nothing, because the row at `gate-mode` runs before anything it could ignore.",
+};
+
+/* =========================================================================
  * THE FOUR-LEVEL SEARCH, AND WHICH ABSENCE IS STATED AT EACH
  * ========================================================================= */
 
@@ -860,6 +1022,27 @@ export function judgementLayers() {
           + "reading as a fence when it is a sentence is the defect §14b.4 names, and a partially "
           + "enforced one reading as a fully enforced one is the same defect wearing a citation. "
           + "One of the five has no code behind it at all and says so.",
+      },
+    },
+    /* SK-4. IT LOADS AT LAUNCH AND NOWHERE ELSE, because that is the only moment
+       the order it records is about — and because a layer fetched later would be
+       a layer fetched after the gate has already answered. The layer carries the
+       ADDRESS of the thing that actually refuses, so a run reading this learns
+       where the gate is rather than being told what it says. */
+    deployment_sequence: {
+      load_when: "the run is launched, or a member asks which mode is deployed and why",
+      sourcing: "authored",
+      body: {
+        sequence: DEPLOYMENT_SEQUENCE,
+        gate: GATE_ADDRESS,
+        ruled_in: SEQUENCING_SOURCE,
+        restated_in: SEQUENCING_ALSO_NAMED_IN,
+        note: "this layer is INSTRUCTION and it holds no flag. The mode that is deployed is read "
+          + "from FL-3's landed table at the address above, which is CODE and is the first row "
+          + "every run takes; this text neither restates that flag nor could change it. What it "
+          + "adds is the REASON for the order and the enabling condition for the second mode, "
+          + "both of which are facts a run should be able to state and neither of which any code "
+          + "can be asked to hold.",
       },
     },
     judgement_boundary: {

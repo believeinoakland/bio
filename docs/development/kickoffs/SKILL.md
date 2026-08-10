@@ -212,3 +212,95 @@ document's own list and make the document the expectation.
    `civicos-ui/**` and no check in the plane can see a rendering. Both are stated in
    `does_not_reach` rather than smoothed over. If SK-4 or a UI item wants them enforced, the
    fence belongs beside the rendering.
+
+## SK-4 — LANDED 2026-08-10. THE TRACK IS CLOSED. What a later reader starts from.
+
+Read the plan row for scope; this records only what EXISTS now.
+
+**The deployment record lives in `bio-plane/src/skilldoctrine.mjs` beside SK-2's clauses and
+SK-3's prohibitions**, as `DEPLOYMENT_SEQUENCE` and `GATE_ADDRESS`. It renders as a SEVENTH
+judgement layer, `deployment_sequence`, reaching SK-1's pack through the same
+`judgementLayers()` spread SK-2 built — **no change was needed in `skillpack.mjs` for the
+second time running, which is what that design was for.**
+
+**THE ROW'S CONSTRAINT WAS THE DESIGN, AND IT IS WHY THERE IS AN ADDRESS AND NOT AN IMPORT.**
+The investigate-mode gate is FL-3's LANDED `gate-mode` row — the first row every run takes,
+reading `MODES[...].deployed`, which no judgement can set. SK-4 re-implements none of it.
+`skilldoctrine.mjs` cannot import `agent-worker/src/harness.mjs` (it would drag a fleet member
+into the plane's bundle — the exact inversion of the reasoning `harness.mjs` records for
+pinning `LEVELS`), so `GATE_ADDRESS` names the file, four exports and the row KEY, and
+**`test/skillsequencing.test.mjs` DEREFERENCES that address against the landed module**. A row
+renamed, an export dropped or a mode added in FL-3's lane fails here rather than leaving a
+citation pointing nowhere. It is `harness.mjs`'s own SOURCE PIN pattern, run the other way.
+
+**THE TRIPWIRE, AND IT IS MEANT TO FIRE.** ARM B4 holds the recorded order against the landed
+flags in BOTH directions: index 0 is the only deployed mode, every later index is not, and
+`verification_recorded` is `null` exactly while that is so. **When VF-4 verifies CHECK's first
+live run and FL-3 flips `investigate.deployed`, ARM B4 and four BLOCK D arms go RED until the
+record moves in the same commit.** That is the deliverable, not a fragility: a deployment that
+changed the order without changing the record is what this row exists to make impossible to do
+quietly. Control arm (2) is that exact edit and is the arm to run before believing any future
+enablement.
+
+**THE ASYMMETRY IS RUN, NOT ARGUED, and it is BLOCK D.** The row's negative control — *"attempt
+an investigate-mode launch before CHECK's verification is recorded → the deployment gate
+refuses"* — is RUNNABLE TODAY, because `nextStep` is pure and the flag is landed, so it runs in
+the suite every time rather than only in the control harness. `skillsequencing.control.mjs` arm
+(1) removes the fence and **NAMES TEN SKILL-SIDE ARMS THAT MUST STAY GREEN**; all ten did,
+while the whole of BLOCK D went red. `mustStayGreen` is SK-3's addition, kept.
+
+**TWO FINDINGS, AND BOTH ARE THE PREDECESSORS' FINDING AGAIN.** SK-2's arm (5) and SK-3's arm
+(3) each caught an assertion whose expectation was computed from its own subject.
+
+1. **Anticipated and designed out**: `order[0] === first_deployed_mode` is the blind form here
+   and costs nothing to satisfy. ARMS A3 and A4 instead PARSE the first-deployed mode out of
+   **two different documents' own sentences** (§2's `CHECK IS THE FIRST DEPLOYED MODE`, and the
+   sweep's §4b item 7), and ARMS B3/B4 hold the set and the partition against FL-3's landed
+   flags in both directions. Control arm (3) confirms all three fire on a reversal.
+2. **AND ONE WAS STILL SHIPPED AND CAUGHT BY RUNNING THE CONTROL — the same class, a third
+   time, one altitude down.** ARM E3 perturbed the pack with the LITERAL
+   `["investigate", "check"]` to prove the version digest moves; control arm (3) makes that
+   exactly the real value, so the perturbation became a NO-OP and E3 failed for a reason
+   unrelated to the digest. **An arm whose fixture can COINCIDE with its subject is measuring
+   the coincidence.** It now appends a sentinel. **The lesson to carry: knowing about the
+   defect class does not prevent it — running the control does.**
+
+**A THIRD MEASUREMENT WORTH INHERITING: the gate detector had to be NARROWED, and the narrowing
+is the finding.** Run through `codeOnly` (strings KEPT — right for `declared-source.mjs`'s own
+subject, since a check id lives in a string), the detector reported 2 of 3 gate shapes inside
+`skilldoctrine.mjs`, every one from the record's own prose about where the gate is. **A doctrine
+module's authored text lives in STRING LITERALS.** It now runs `strip(src, { strings: true })`,
+the same estate lexer in the mode this subject needs, and the strings-kept reading is PRINTED
+beside the assertion so the exclusion is never silent.
+
+**THE INSTRUCTION-ONLY FIGURE IS NOW THREE FIGURES, AND SK-4 MOVED NONE OF THE OLD ONES.** 16
+doctrine items · **4 carry no code at all** (SK-2's 3 clauses + SK-3's 1 prohibition, unchanged)
+· 11 backed by a C-number · **1 backed by a control-flow ROW**. The third category is SK-4's and
+is printed separately on purpose: a control-flow row is code, but it is NOT a refusal at the
+record's edge, and tallying it as one would overstate precisely the thing this row is about.
+
+**WHAT SK-4 COULD NOT REACH, STATED RATHER THAN PAPERED OVER, AND PRINTED BY THE SUITE IN BLOCK
+G EVERY RUN.** The row's accepts-when has two halves.
+
+1. **NOT REACHED — *"the first live run in scratch targets a concluded inquiry"*. THERE IS NO
+   LIVE RUN.** That half is VF-4's, VF-4 waits on DS-4, and DS-4 is DIST's gated deploy in a
+   different session. Nothing in this suite drives a deployed anything, and no assertion in it
+   should be read as evidence that a run has ever executed in any mode. **No deployment was
+   simulated to make the row look green.**
+2. **REACHED ONLY IN THE STATIC SENSE — *"the deployment record shows CHECK enabled before
+   investigate"*.** What exists to be read today is the landed table's flags: CHECK deployed,
+   investigate not. There is no RELEASE NOTE, because nothing has been released — so "before"
+   is verified as **an order that HOLDS**, not as a sequence of two observed deployments. Those
+   are different claims and this suite makes only the first.
+
+**Two things SK-4 did NOT do.**
+
+1. **The recipe layer is still declared EMPTY** — unchanged from SK-2 and SK-3, and for their
+   reason: it waits on a published surface registry, which is an interface item and not a skill
+   one. Three items have now inherited this; it is not going to close from inside this area.
+2. **NOTHING IN `agent-worker/**` WAS TOUCHED**, and one thing there needs FLEET's attention:
+   the gate closes a refused run with `bound: "cancelled"`, which the plane's own `RUN_ENDINGS`
+   defines as *"a member stopped it"*, and `mode-not-deployed` — which `harness.mjs`'s header
+   says a refused run terminates on — exists nowhere but that comment. Both facts are pinned by
+   ARM D5 and raised as a DELEGATION in `CLAIMS.md`. **ARM D5 will go RED on the fix, which is
+   deliberate: it is to be updated in the same commit as the correction.**

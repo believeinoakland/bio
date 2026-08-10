@@ -7843,3 +7843,61 @@ control arms.
 a fact, because this figure has been wrong in the record four times:
 `wc -l < bio-plane/src/store.mjs`. **SK-3 edited none of it** — the two lines the control
 harness touches in it are armed and restored inside one worktree.
+
+## SK-4 — CHECK deploys first (2026-08-10)
+
+**Battery with SK-4: 164/164 suites green · 10,115 assertions · 161.6 s** (baseline 163/163 ·
+10,086 · 160.0 s). **THE DELTA WAS ATTRIBUTED BY RE-RUNNING THE WHOLE BASELINE AND DIFFING PER
+SUITE, NEVER BY SUBTRACTION.** `git stash` was NOT used to reach the baseline and that is a
+correction rather than a preference: `scripts/battery.mjs`'s own header records that
+`refs/stash` is REPOSITORY-WIDE across every worktree, so a `stash -u`/`pop` pair can deposit
+one worker's untracked suites into another's `test/`. The baseline was reached by copying the
+three touched files aside, `git checkout HEAD --` on the tracked one, and restoring all three
+afterwards **verified by sha256** (`81c3a8d9…`, `26538ea3…`, `37b45545…`).
+
+**Exactly two rows moved:** `skillsequencing.test.mjs` **+26 (new)** and `hygiene.test.mjs`
+**627 → 630**, whose own per-suite arms see one more suite. 26 + 3 = 29, which is the whole
+delta. **Nothing else moved at all** — in particular `skilldoctrine.test.mjs` held at 43,
+`skillprohibitions.test.mjs` at 30 and `skillpack.test.mjs` at 46 with the doctrine module
+extended by a seventh disclosed layer. The +3 in `hygiene` is the reason this is measured
+rather than reasoned about: subtraction would have credited all 29 to the new suite. **This
+reproduces SK-3's +3 in the same suite**, which is now a known constant of adding one suite.
+
+**Coverage `--strict`: exit 0**, run directly with `$?` read UNPIPED. The register reports the
+new suite as CONTAMINATED before the commit (arms 833 · classified 158 · corpus 159, against a
+reproducible 826/157/158) — the untracked-suite mechanism the register documents — and
+`REGISTER_FLOOR` is moved to the reproducible triple only after the suite is in a commit.
+`1 UNCLASSIFIED` before and after: unchanged, and not this suite.
+
+**THE GATE DETECTOR'S NARROWING, MEASURED RATHER THAN CHOSEN.** BLOCK C's detector was first
+run through `codeOnly` — the estate lexer's strings-KEPT mode, which is right for
+`declared-source.mjs`'s own subject because a check id lives in a string. Over
+`skilldoctrine.mjs` it reported **2 of its 3 gate shapes**, every one of them from the
+deployment record's own authored prose, which necessarily uses the words `mode` and `deployed`
+to say where the gate is. **A doctrine module's authored text lives in STRING LITERALS, so a
+detector that reads strings is reading prose.** It now runs `strip(src, { strings: true })` —
+the same lexer, the mode this subject needs — and the strings-kept reading is PRINTED beside
+the assertion every run so the exclusion is never silent.
+
+**THE MODE GATE'S REACH, MEASURED against the landed schema and catalogue (ARM F2, re-run every
+battery):** `ai_runs.mode` is a free-text column with no vocabulary check and **no C-number over
+it anywhere in `checks/bio-checks.mjs`**. What refuses an undeployed mode is one row inside one
+fleet member's own control flow. That is the smallest authorisation surface §2 asked for and it
+is also the whole of its reach; it is stated in the record's `does_not_reach` rather than
+smoothed over.
+
+**THE TERMINATOR IS MISATTRIBUTED, MEASURED (ARM D5, and a DELEGATION to FLEET).** FL-3's gate
+closes a refused run with `bound: "cancelled"`, which `RUN_ENDINGS` defines as *"a member
+stopped it"*; a member did not. And `mode-not-deployed`, which `harness.mjs`'s own header says a
+refused run terminates on, appears **once in the repository — in that comment** — and is in
+neither `RUN_ENDINGS` nor `RUN_BOUNDS`.
+
+**Instruction-only, the three figures, printed by `skillsequencing.test.mjs` every run: 16
+doctrine items · 4 carry no code at all (unchanged by SK-4) · 11 backed by a C-number · 1
+backed by a control-flow ROW.** The third category is SK-4's and is printed separately rather
+than folded into the second: a control-flow row is code, but it is not a refusal at the
+record's edge, and tallying it as one would overstate exactly the thing this row is about.
+
+**`store.mjs` line count, measured this turn: 26,201** (`wc -l < bio-plane/src/store.mjs`).
+**SK-4 edited none of it, and none of `agent-worker/**` either** — the harness lines two control
+arms touch are armed and restored inside one worktree, verified by sha256 and by content.
