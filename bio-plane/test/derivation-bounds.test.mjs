@@ -101,6 +101,7 @@
  *   - `.map`/`.forEach`/`.filter`/`.reduce`/`.flatMap` on a tainted receiver ARE followed;
  *     any other callback form is not.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

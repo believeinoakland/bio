@@ -21,6 +21,7 @@
  *     in-plane path stays the common case.
  */
 /* NEGATIVE CONTROL: neuter the escalation predicate (needsTier2 -> always false, or drop the env.PDF_WORKER.fetch call) -> the "tier 2 recovered the text" assertion fails (the CID doc comes back tier 1, empty text). */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

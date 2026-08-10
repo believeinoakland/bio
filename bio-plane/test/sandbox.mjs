@@ -53,7 +53,16 @@
  * NOT imported by the probes (`*-probe.mjs`, `*-scale.mjs`). They are not
  * battery, they are bounded separately, and `tier1-coverage-probe.mjs` keeps a
  * deliberately PERSISTENT PDF cache in `$TMPDIR` that this module would delete.
+ *
+ * D-282, 2026-08-10: THIS MODULE NOW TAKES A SECOND SIDE EFFECT, and it is stated
+ * here rather than left to be discovered. `./stdio.mjs` makes stdout and stderr
+ * synchronous, so the `process.exit()` on the last line of every suite — the same
+ * line this module's whole header is about — cannot discard the suite's own tally
+ * when a reader hands it a pipe. It is imported here as well as by every suite so
+ * that the CONTROL and PROBE harnesses which already take this module's side
+ * effect take that one too; D-282 was found by a control arm, not by the battery.
  */
+import "./stdio.mjs";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

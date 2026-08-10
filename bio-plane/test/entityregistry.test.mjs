@@ -19,6 +19,7 @@
  *
  * NEGATIVE CONTROL: comment out the alias inserts (the two `put(...)` calls) in store.mjs createEntity -> an entity op=entity still finds BY KEY carries no alias rows, so op=entitybyalias returns count 0 for a name it is known to carry. RUN 2026-07-31 framework-agent-fw6: alias persist dropped -> 6 fail (the alias count, first-class aliases, canonical flag, found-by-canonical-label, found-by-explicit-alias, duplicate-alias-refused); separately, relation persist dropped (comment the INSERT in declareRelation) -> op=relation returns found:false for a relation just declared. Both restored -> 47 pass.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

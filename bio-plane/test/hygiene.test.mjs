@@ -51,6 +51,7 @@
  * no runtime, and it catches the mistake at the moment it is made rather
  * than the next time somebody wonders why the battery is slow.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -116,6 +117,41 @@ for (const f of suites) {
   const src = readFileSync(join(DIR, f), "utf8");
   const tail = src.slice(-400);
   t(`${f} exits deterministically`, /process\.exit\((?!1\))/.test(tail) || /process\.exit\(fail/.test(tail), true);
+}
+
+/* ---- and that exit does not throw the suite's own result away --------------
+ * D-282, and it is the rule DIRECTLY ABOVE this one that makes it necessary
+ * rather than being in tension with it — exactly as D-186's sandbox rule is.
+ * Every suite must end `process.exit(…)` so a lingering workerd handle can never
+ * turn a green run into a hang. `scripts/battery.mjs` spawns every suite with
+ * default stdio, which is a PIPE, and on darwin node's writes to a pipe are
+ * ASYNCHRONOUS — so `process.exit` returns to the OS with the tail still queued,
+ * and the tail is where the TALLY lives. D-93 exists precisely because a suite
+ * that reports no tally reads as a suite that was never run.
+ *
+ * MEASURED 2026-08-10, one child, two captures of the same run: 200,093 bytes
+ * reached a FILE and 131,099 reached a PIPE. The threshold, which D-282's row
+ * named UNDETERMINED, bisects at the pipe buffer — 65,573 bytes survive and
+ * 65,580 do not — and at higher volumes the loss is NONDETERMINISTIC.
+ *
+ * `test/stdio.mjs` is the fix and carries the argument for it; it is imported
+ * for its SIDE EFFECT, so this check is a spelling check and says so. WHAT IT
+ * CANNOT SEE, stated rather than implied: a suite that takes the fix through
+ * some other module, a suite that spells the specifier differently, and any
+ * `.mjs` in this directory that is not a `.test.mjs` — the controls and probes
+ * get it through `sandbox.mjs` and nothing here asserts that they do. The
+ * BEHAVIOUR is driven end to end by `test/tally-through-pipe.test.mjs`; this is
+ * the census that stops the 153rd suite being written without it. */
+console.log("\n--- every suite flushes before it exits (takes the D-282 fix) ---");
+{
+  const missing = suites.filter((f) => !readFileSync(join(DIR, f), "utf8").includes('"./stdio.mjs"'));
+  t(`all ${suites.length} suites import test/stdio.mjs${missing.length ? ` (missing: ${JSON.stringify(missing.slice(0, 8))}${missing.length > 8 ? ` … and ${missing.length - 8} more` : ""})` : ""}`,
+    missing.length, 0);
+  /* The REACH half. A census that looked at nothing would report zero missing
+     and pass a tree in which no suite had the fix at all, which is the failure
+     mode D-282 was found in — an instrument that was wrong while the arm was
+     right. So the corpus size is asserted and PRINTED. */
+  t(`the census actually read a corpus (${suites.length} suites)`, suites.length >= 100, true);
 }
 
 /* ---- every suite that makes temp files owns a sandbox that outlives it ------

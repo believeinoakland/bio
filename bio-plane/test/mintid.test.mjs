@@ -87,6 +87,7 @@
  * behaviour stands and the strict floor was added beside it — but the example is
  * gone, exactly as the C-29 catalogue comment removed its own.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync, readdirSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";

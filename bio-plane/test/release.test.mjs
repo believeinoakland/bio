@@ -14,6 +14,7 @@
  *   - released documents conformance-check clean AFTER, and started clean
  *     BEFORE (standing lesson 4: an after-check alone measures nothing)
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

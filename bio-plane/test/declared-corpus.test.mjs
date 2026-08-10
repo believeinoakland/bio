@@ -74,6 +74,7 @@
  * counter-runs were restored and re-verified by sha256 before this line was
  * written.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

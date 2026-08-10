@@ -81,6 +81,7 @@
  *     manufacture one to assert a behaviour. The OR is stated at the method.
  *   IT CANNOT see a second isolate. One store, one Durable Object.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

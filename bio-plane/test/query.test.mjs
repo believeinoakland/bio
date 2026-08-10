@@ -30,6 +30,7 @@
  *   - A member's words never reach SQL or an FTS5 expression as syntax. Terms
  *     are bound as arguments and quoted as FTS5 string literals.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { compile, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, MEANING } from "../src/query.mjs";
 import { readFileSync } from "node:fs";
 

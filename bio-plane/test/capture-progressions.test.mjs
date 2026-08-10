@@ -22,6 +22,7 @@
  *
  * NEGATIVE CONTROL: in src/store.mjs captureProgressions, drop the capture-join by forcing it to find no placements (`const rows = [];` in place of the SELECT ... WHERE capture_sha=?) -> the op returns an EMPTY instances[] for a capture KNOWN to be threaded, so its stage and findings vanish. RUN 2026-08-01 record-agent-9: with the join dropped 6 assertions FAIL (the award capture's count/instance, its stage + progression + subject, its missing-predecessor finding + established projection, its AFTER-deadline both-kinds + the overdue finding's grade/deadline/overdue_by_ms, and the need capture's own stage) while the other 7 still PASS (the two setup asserts, the BEFORE/reset absence-of-overdue asserts, the two "capture in NO progression -> empty" asserts, and the NO_SHA refusal — all expect an empty/refused answer, which the neutered join produces for everything); restored -> 13/13 green. Confirms the membership, stage, and findings all came from the capture-join and nothing else.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

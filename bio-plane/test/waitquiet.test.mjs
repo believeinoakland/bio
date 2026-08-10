@@ -16,6 +16,7 @@
    process is found BY PID (the direction that would release a wait too early) ·
    (5) the tool excludes ITSELF positionally, including from a path that merely
    contains its own name — the bug its first draft shipped. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { spawn } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";

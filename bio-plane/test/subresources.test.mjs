@@ -22,6 +22,7 @@
  *    than silently.
  */
 /* NEGATIVE CONTROL: delete the linkproject dispatch block below (the only place its op= appears) -> npm run test:coverage names that op UNREACHED again (M0-1; RUN 2026-07-31 verify-agent-1: unreached 0 -> 1, the op reappears in the list). */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

@@ -27,6 +27,7 @@
    (4) THROW AWAY THE UNATTRIBUTABLE COUNT at the producer's return -> this suite **27/0** (untouched), current **61/1**. The two halves of D-266 are independent and the arm proves it.
    (5) COUNT ONE BRANCH OF THE SILENCE AND NOT THE OTHER — the `!from` increment removed, so the answer is 1 where the truth is 2 -> this suite 27/0, current **61/1**. This is what makes the EXACT figure in that suite worth writing: 'at least one' would have passed.
    (6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of spread directly into `items`, correct code in a form the producer does not use -> **BOTH SUITES GREEN**, which is the receipt that the producer-wiring pin corrected by this item asks its property rather than trading one spelling for two. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

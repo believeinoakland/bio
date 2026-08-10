@@ -112,6 +112,7 @@
  *       FOR RUNNING THE REAL THING ON THE REAL MACHINE BEFORE BELIEVING A
  *       HARNESS, and it is recorded rather than quietly fixed.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, chmodSync, existsSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";

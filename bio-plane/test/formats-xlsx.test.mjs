@@ -27,6 +27,7 @@
  */
 /* NEGATIVE CONTROL: (1) collapse <f> into <v> — in src/formats-xlsx.mjs's formula-item emit, replace `formula: c.f` with `formula: c.v` -> the suite fails NAMING the formula/value distinction. RE-RUN 2026-08-03 against the conformed `evidentiary` envelope: 3 of 75 failed ("the formula is held BESIDE its cached value — TWO named fields, both present", "never collapsed: the formula is not the value", "the hidden sheet's cross-sheet formula is held too"); restored -> 75 pass 0 fail. (2) strip the hidden flag — in src/formats-xlsx.mjs's sheets mapping, replace `hidden: state === "visible" ? false : state` with `hidden: false` -> the suite fails on the hidden flag everywhere it is surfaced. RE-RUN 2026-08-03 against the conformed shape: 6 of 75 failed ("Reconciliation is FLAGGED hidden", "sheets carried with hidden flags", "the hidden SHEET is a first-class finding (source null — workbook-scoped, stated)", "and enumerates its kinds", "per-sheet units, hidden flags carried", "the hidden SHEET is still flagged (workbook.xml is not a text part)"); restored -> 75 pass 0 fail. */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { createHash } from "node:crypto";
 import { getFormat, listFormats, detectFormat } from "../src/formats.mjs";

@@ -19,6 +19,7 @@
  *   (5) BREAK THE ONE IMPLEMENTATION — give CHECK 4 its own inlined copy of the origin walk rather than calling `#independenceOf` -> **exit 1, 11 pass, 3 FAIL: B2, C1 and D1, exactly as declared.** Behaviour would be identical the day it was written, which is precisely the condition under which two implementations drift; C-22.4's receipt is a rule with two implementations leaving its suite green at 98 of 98 while one absorbed the other's control. Note B2 and D1 fall with C1: a drifted second walk stops REFUSING, so the gate goes with the pin.
  *   (6) OVER-STRICTNESS: make `#independenceOf` report a shared origin whenever two parts cite anything, ignoring provenance -> **exit 1, 5 pass, 9 FAIL**, including **ARM B1** (a genuinely independent reading reported as sharing) and the FIXTURE arm itself, because the write gate now refuses the correct submission the fixture is built on. **THE DECLARATION UNDERSTATED THIS ARM** — it named B1 only. That the fixture cannot even be built is the sharper result and is recorded as such: a fence this wide does not merely mis-report, it makes correct work unwritable. Correct work refused is the opposite defect and the worse one, and without this arm every other arm here is satisfied by a function that always answers "shared".
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

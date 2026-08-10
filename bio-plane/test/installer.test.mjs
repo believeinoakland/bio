@@ -8,6 +8,7 @@
  *
  * Negative-control detail: disable the published-token denylist in tokens.mjs liveToken (return true for any non-empty value instead of checking PUBLISHED_TOKEN_HASHES) so a leaked repo token authenticates -> 4 assertions fail (published value authenticates as admin, selftest calls the poisoned binding live, bootstrap reports a usable credential, claim accepts the published bootstrap token); restored, 30 pass.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

@@ -59,6 +59,7 @@
  *     file would not be noticed, which is PL-18's three-rows defect and is why
  *     B1 asserts the anchor occurs EXACTLY once rather than at least once.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";

@@ -168,6 +168,7 @@
  * pretend to make it — the residual roster is PRINTED every run and ratcheted, so a NEW
  * member of the class fails the build even though the walk cannot grade the old ones.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

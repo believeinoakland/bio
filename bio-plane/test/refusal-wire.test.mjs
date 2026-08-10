@@ -79,6 +79,7 @@
  *     interesting one and it is COUNTED and PRINTED rather than assumed absent.
  *   - IT IS NOT A LIVE PROBE. A green harness is not a serving build (D-108).
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

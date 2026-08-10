@@ -24,6 +24,7 @@
  *      points (the setup page's writer and a machine caller's op=promote)
  *      produce the same object, and no path asks for a title.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";

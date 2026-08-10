@@ -65,6 +65,7 @@
  *      first half — a walk over every refusal `store.mjs` mints, reporting how
  *      much each one SHADOWS and whether any suite pins it at all.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, readdirSync } from "node:fs";

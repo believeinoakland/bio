@@ -24,6 +24,7 @@
  *
  * NEGATIVE CONTROL: (1 — the missing-predecessor check, M4's gap) empty Store.#REQUIRED_FIRES (make it `new Set([])`) in store.mjs -> the missing 'solicitation' stage no longer surfaces, so op=instance finding_count 1->0 and the accepts-when "missing solicitation is a finding" assertions fail — the gap is hidden. (2 — the weakest-grade chain, D-73) make Store.#weakerGrade return the STRONGER end (swap the `<=` to `>=`) -> the need(A)→award(A)→contract(C) chain reads grade A not C, so "the instance grade is the weakest connection (C)" and "the finding carries the weak grade C" fail — a weak link is hidden. RUN 2026-07-31 framework-agent-fw9: (1) #REQUIRED_FIRES emptied -> the "exactly ONE missing-predecessor finding" assertion fails (finding_count 1->0) and the downstream finding[0] lookups then throw, so the suite is not green (the missing-predecessor check is load-bearing); restored. (2) #weakerGrade returns stronger -> 5 fail, 32 pass (the award→contract chain-link grade C->A; the instance grade C->A on both thread and instance read; the mirrored weakest-of-chain; the finding grade C->A); restored -> 37 pass, 0 fail.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

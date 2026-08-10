@@ -97,6 +97,7 @@
  * BEFORE the `MANIFEST_NOT_RECORDED` fallback rather than after it. That is
  * weaker than a drive and is reported as weaker.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";

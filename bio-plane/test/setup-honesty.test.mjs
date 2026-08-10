@@ -31,6 +31,7 @@
  * (source presence + both checkBundle arms); both reverted -> green.
  */
 /* NEGATIVE CONTROL: (a) re-add the NO_AUTHORITY branch to setup.mjs acquireWhy -> the "no removed refusal named" assertion FAILS; (b) drop the content_hash line from mdFor -> the "emits content_hash" and the checkBundle "content_hash present clears C-2.7" assertions FAIL. RUN 2026-07-31 record-agent-3: (a) 1 fail; (b) 3 fail; both reverted -> 6 pass. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { SETUP_HTML } from "../src/setup.mjs";
 import { checkBundle, createSha256 } from "../checks/bio-checks.mjs";
 

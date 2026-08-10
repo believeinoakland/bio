@@ -30,6 +30,7 @@
 /* NEGATIVE CONTROL: in src/pptx.mjs's pptxText, merge the notes into the slide text — change the `document` line to `const document = [...slides.map((s) => s.text), ...speakerNotes.map((s) => s.text)].filter((t) => t.length).join("\n");` — and the suite fails NAMING the distinction. RUN 2026-08-03: 2 of 95 failed ("speaker notes are NOWHERE in document — the deck as presented" and "document is the slide texts newline-joined — THE DECK AS PRESENTED"); restored -> 95 pass 0 fail. */
 /* NEGATIVE CONTROL (COFF-7, hidden slides): in src/pptx.mjs neuter the ONE funnel both attribute locations pass through — change `const declaresNotShown = (v) => v === "0" || v === "false";` to `const declaresNotShown = (v) => false;` — and the suite fails NAMING a hidden slide now indistinguishable from a visible one. RUN 2026-08-03: 8 of 110 failed ("ONE hidden-slide item — the hidden slide flagged, the visible slides NOT", "the envelope counts and names the kind", "the hidden slide's text unit is MARKED — and the visible units are not", "its speaker-notes unit carries the slide's mark too", plus the sldIdLst-location and reordered-declaration cases); restored -> 110 pass 0 fail. */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { linkWrapper } from "../src/subresources.mjs";
 import { detectFormat, getFormat, listFormats } from "../src/formats.mjs";

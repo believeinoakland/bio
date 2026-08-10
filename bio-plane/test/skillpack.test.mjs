@@ -40,6 +40,7 @@
  * `op=affordances`, `op=airunopen`, `op=airun` and `op=promote` are all reached
  * with their literals written out so `scripts/coverage.mjs` credits them.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
