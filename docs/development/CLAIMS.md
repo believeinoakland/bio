@@ -666,3 +666,17 @@ paths: `bio-plane/src/skilldoctrine.mjs` (SK-2's judgement layer, this area's �
   The control harness TRANSIENTLY edits `checks/bio-checks.mjs` and `src/store.mjs` and
   restores both, verified by content AND by sha256 — SK-2's arm (8) is the precedent. A
   transient armed edit inside one worktree is not a claim on the path.
+
+
+## CLAIM 2026-08-10 SKILL (SK-3 — AMENDMENT: the coverage register's floor)
+session: sk3-prohibitions (worktree `agent-ab590a192167d2ca3`)
+opened: 2026-08-10T00:00:00Z
+Appended rather than edited into the claim above, per this file's append-only rule.
+paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures ONLY**, moved
+  UPWARD to the triple a green `--strict` run PRINTED as REPRODUCIBLE once SK-3's suite was
+  in a commit (813/155/156 -> 821/156/157). Nothing else in that file, and `FLEET_FLOOR`
+  unmoved at 2 members / 4 ops / 5 suites / 48 arms. This is the ratchet the file's own
+  comment instructs the item that grows the register to move, and the reason a path outside
+  the first claim is taken at all: leaving it would install slack in a ratchet whose whole
+  purpose is to have none. SK-2's amendment one entry up is the precedent and the shape.
+---
