@@ -8,12 +8,15 @@ Read `kickoffs/CONDUCT.md` (the loop), then `WORKER.md`, then `ORCHESTRATION.md`
 
 ## State at handoff — GREEN and PUBLISHED
 
-`origin/main` = **`cc99ec1`**, verified by this session on the consolidated tree, not
-inherited from a note:
+**Verified by this session on the consolidated tree at `cc99ec1` AND re-verified at
+`39b246b` after another session pushed on top of it — not inherited from a note.** The
+figures below are identical on both, and the commit carrying this file adds only prose
+plus two `DEBT.md` rows (so expect `planning-hygiene`'s tally to rise by a small amount
+and nothing else to move):
 
 - battery **157/157 · 9,841 assertions**
 - `node bio-plane/scripts/coverage.mjs --strict` **exit 0**, read UNPIPED
-- `node civicos-ui/test/run.mjs` **exit 0** from the repo root
+- `node civicos-ui/test/run.mjs` **exit 0** from the repo root — but read D-286 below before you trust a single run of this one
 - `node tools/plancheck.mjs` **0 fail / 0 warn**
 - working tree clean, local even with the remote, **zero workers running**
 
@@ -31,6 +34,23 @@ fails shape, one instrument over. **Do not fix it by adding a floor without thin
 a floor on a figure that legitimately falls whenever the corpus is consolidated would
 fire on the next honest roll. The honest instrument is probably a delta with the corpus
 size PRINTED, which is the shape M0-14 and D-265 both landed on.
+
+## ONE OF YOUR FOUR GATES IS INTERMITTENTLY RED. IT IS D-286 AND IT IS NOT A REGRESSION.
+
+**The UI harness answered EXIT 1 on `39b246b` and EXIT 0 on a re-run with nothing
+changed**, and I nearly recorded that as a red `main`. It is not. `ai-session-context.
+test.mjs` draws its fixture AT RUNTIME with no seed, and on the failing run it drew
+`inquiry 1278/3354` beside `project 2076/5981` — **3354 − 1278 = 2076 exactly**, so a
+derivation ARM D forbids became indistinguishable from a figure the record published.
+ARM D0b is the instrument arm that watches for precisely that, and it fired correctly.
+
+**Do not weaken D0b and do not close this by re-running until it is green.** The guard is
+right; the unseeded draw is wrong. Full row and the two ways to close it are in D-286.
+
+**What it means for you operationally: when the UI harness fails, read WHICH arm.** If it
+is D0b, re-run once and check the arithmetic in the fixture line — the suite prints it.
+Any other failure is real. **The rate is a sample of one in six runs in one session and
+is NOT established**, which is why the row says so instead of rounding it to "rare".
 
 ## WHY THIS SESSION HANDED OFF, because the reasoning is the point and not the verdict
 
@@ -139,6 +159,9 @@ written to be spawned from.** Two things they carry that you should not re-deriv
 - **D-248's six pre-existing id collisions.** `D-124`'s two rows are deliberately adjacent
   in the live `DEBT.md` with a comment saying why — separating them made `mintid` read the
   collision as resolved.
+- **D-286** — the UI harness's unseeded fixture, above. **D-287 is a GAP I created** by
+  running `mintid D` twice; it is recorded as its own row rather than left to be found,
+  because a silent gap and a lost row look identical and this ledger exists so they do not.
 - **13.6 MB of dead residue at `/tmp/mfp` and `/tmp/mfp-m0-10-arm`.** THREE sessions have
   now failed to remove it; the sandbox refuses paths outside the working directory. It
   needs someone who can reach outside, and that is the whole of it.

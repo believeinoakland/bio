@@ -1164,9 +1164,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
 - MB → 26 KB, a new gate (`plancheck` fails on a stale `DECIDED.md`) and a new tool (`decided.mjs`) I had never run.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:55`
+  `docs/development/kickoffs/CONDUCT-NEXT.md:75`
 - — it created `docs/DECIDED.md`, `tools/decided.mjs` and `CORPUS-STUDY.md` there and edited `CLAUDE.md` and `tools/plancheck.mjs`, then withdrew on its own.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:149`
+  `docs/development/kickoffs/CONDUCT-NEXT.md:172`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
