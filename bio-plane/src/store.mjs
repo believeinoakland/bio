@@ -11850,6 +11850,19 @@ export class Store extends DurableObject {
    *  derivation and a case set that is undetermined for a two-document instance
    *  would be undetermined for no reason at all. */
   static QUEUE_CONDITION_SUBJECTS_MAX = 16;
+  /** D-266. How many RECORDED DISPOSITIONS `op=queue` publishes beside the open
+   *  feed, before the publication itself reports that it was cut.
+   *
+   *  IT IS A BOUND ON A PUBLICATION AND NOT ON A DERIVATION, and saying which
+   *  matters here: `proposalsFeed` already reads `proposal_dispositions` whole
+   *  in order to AGE the open feed, so nothing is scanned twice and no work is
+   *  amplified by this block. What the bound protects is the ANSWER — REC-57's
+   *  discipline applied to a collection that grows with every act a member
+   *  takes, on an op whose other collections are all bounded. Sixty-four, the
+   *  same figure the shared-inquiry reads use: a member with more than sixty
+   *  four standing decisions is reading a register rather than a queue, and
+   *  `op=proposals` is the op that answers that question without a cap. */
+  static QUEUE_DISPOSED_MAX = 64;
   /** REC-32 / REC-2 / D-61. The prefix `index.mjs` stamps on `author` (and on
    *  `leases.actor`) for a MACHINE credential — `token:<class>` — deleting any
    *  caller-supplied value first, so it is unforgeable and NAMED rather than
@@ -12971,6 +12984,34 @@ export class Store extends DurableObject {
    *  reason another project should never learn the reading was proposed. */
   #findingsVersionFromAnotherTeam(viewer, now) {
     const out = [];
+    /* D-266 — THE SILENCE, COUNTED. Not attributed: counted.
+     *
+     * The gap D-266 folds in is this producer's, and it is real — a reading of
+     * a shared question composed BY HAND, or by a run whose context is not one
+     * of the projects named here, reaches the other team with NO item minted,
+     * because the source team is the RUN's stored context or it is nothing and
+     * this producer will not guess one. **That much does not change here and
+     * must not: attributing a team we cannot read is the record claiming more
+     * than it can support, which this project ranks as worse than the silence.**
+     *
+     * WHAT DOES CHANGE IS THAT THE SILENCE IS NO LONGER SILENT. Absence at one
+     * level is not evidence of absence at the next, and saying WHICH is true is
+     * a first-class obligation rather than a diagnostic detail (CLAUDE.md). A
+     * member reading this feed could not tell *no reading arrived from another
+     * team* from *readings arrived and this record cannot say whose they are* —
+     * two very different facts that rendered identically as an empty list. The
+     * count below is the second one, published on the feed's envelope, and it
+     * is deliberately a COUNT AND AN INQUIRY rather than a version name and a
+     * guess: it says how much this read could not attribute and where to go and
+     * look, and it claims nothing whatever about who authored anything.
+     *
+     * IT DISTINGUISHES NOTHING FURTHER, AND THAT IS REC-74 RATHER THAN
+     * LAZINESS. Telling *the run's context was the instance* from *the run's
+     * context was a project this viewer cannot see* would mean PROJECTING a
+     * stored column of `ai_runs`, which this reader's declared role forbids —
+     * so the two are counted together and the answer says they are. */
+    let unattributed = 0;
+    const unattributedIn = [];
     const shared = this.#queueSharedInquiryCandidates();
     for (const inq of shared) {
       const q = this.#queueSharedInquiry(inq, viewer);
@@ -12979,6 +13020,17 @@ export class Store extends DurableObject {
       if (drawing.length < 2) continue;
       const ids = new Set(drawing.map((p) => p.id));
       const qname = q.title || inq;
+      /* THE HAND-COMPOSED READINGS, COUNTED AND NEVER READ. A `count(*)` over
+         the complement of the predicate below — one aggregate per question
+         inside a loop that is already bounded, projecting no column of any
+         row, so nothing here reaches a member except the number itself. */
+      {
+        const c = this.#one(
+          `SELECT count(*) c FROM inquiry_basis_versions
+            WHERE bundle_id=? AND (run IS NULL OR run='')`, inq);
+        const n = c ? Number(c.c) || 0 : 0;
+        if (n > 0) { unattributed += n; if (!unattributedIn.includes(inq)) unattributedIn.push(inq); }
+      }
       /* BOUNDED, for the reason the two bounds above are: a per-question read
          with per-row work inside it is the amplification class the battery's
          ceiling refuses. One more than may be used, so the truncation is a fact
@@ -13010,7 +13062,15 @@ export class Store extends DurableObject {
         const from = drawing.find((p) => this.#one(
           `SELECT run FROM ai_runs WHERE run=? AND context_type='project' AND context_id=?`,
           v.run, p.id));
-        if (!from) continue;
+        /* D-266: the OTHER half of the silence — a reading that DOES carry a
+           run, whose context this read could not match to any project it
+           named. Counted with the hand-composed ones above and never told
+           apart from them, for the REC-74 reason stated at the head. */
+        if (!from) {
+          unattributed += 1;
+          if (!unattributedIn.includes(inq)) unattributedIn.push(inq);
+          continue;
+        }
         const src = from.id;
         if (!ids.has(src)) continue;
         /* THE OTHER TEAMS. If the source is the only project drawing on the
@@ -13107,6 +13167,12 @@ export class Store extends DurableObject {
         });
       }
     }
+    /* D-266 — CARRIED ON THE ARRAY, the way `#projectsDrawingOn` already
+       carries `truncated` and `bound`. The producer's contract is its ITEMS;
+       this is a fact ABOUT THE READ that has no item to sit on, precisely
+       because the readings it counts minted none. */
+    out.unattributed = unattributed;
+    out.unattributed_inquiries = unattributedIn;
     return out;
   }
 
@@ -13212,9 +13278,15 @@ export class Store extends DurableObject {
                    + "reading rather than about a progression stage. Offering Adopt, Defer or "
                    + "Dismiss on it would offer an act that could only ever be refused, so the "
                    + "record says so here instead of letting a surface find out at the click. "
-                   + "WIDENING the act to a second identity is a doctrine question about what "
-                   + "declining means for a finding that is recomputed on every read (D-222's "
-                   + "grain problem), and it is open as D-266 rather than answered in passing." };
+                   + "WHAT DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ IS NOT OPEN "
+                   + "AND IS NOT WHY THIS SAYS NO: a disposition is keyed on the finding's "
+                   + "STABLE IDENTITY, it stands until it is re-triaged whether or not the fact "
+                   + "still fires, and it AGES the finding out of the open list instead of "
+                   + "deleting it (D-79, and op=proposedispose says so at its own site). The two "
+                   + "kinds that ARE dispositionable are themselves recomputed on every read, so "
+                   + "being derived is not what withholds the act — carrying no identity the act "
+                   + "is keyed on is. What is open as D-266 is the WIDENING: a second key shape, "
+                   + "and whether one team may set aside a finding about another team's stance." };
   }
 
   /** The four generators, in catalogue order, and the ONE place a CONDITION
@@ -13382,7 +13454,13 @@ export class Store extends DurableObject {
        writes; see their headers for why D-216's per-project answer is what
        makes them necessary rather than optional. */
     items.push(...this.#findingsStanceDiverged(viewer, now));
-    items.push(...this.#findingsVersionFromAnotherTeam(viewer, now));
+    /* D-266: the second producer's answer is held rather than spread straight
+       into `items`, because it carries ONE fact that has no item — how many
+       readings of a shared question this read could not attribute to a team.
+       An empty item list and an unattributable set are different answers and
+       until now they rendered as the same one. */
+    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
+    items.push(...fromAnotherTeam);
 
     /* ------------------------------------------ CONDITION · REC-32
        The three generators, derived on read from the producing subsystems' own
@@ -13532,6 +13610,68 @@ export class Store extends DurableObject {
     items.sort((a, b) => rank(a.class) - rank(b.class)
       || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     const out = items.slice(0, cap);
+
+    /* ============ D-266 · AN AGED FINDING MUST NOT READ LIKE AN ABSENT ONE
+     *
+     * **THE RULING THIS BLOCK IS THE TEETH OF, and the record made it rather
+     * than this item: a disposition is keyed on the finding's STABLE IDENTITY,
+     * it STANDS until it is re-triaged whether or not the underlying fact still
+     * fires, and it AGES the finding out of the open list instead of deleting
+     * it.** D-79 in terms — *a finding that disappears is indistinguishable
+     * from one that was never made, and that rule does not relax because the
+     * finder was a machine* — and `proposeDispose` says the same at its own
+     * site (*the disposition is a standing decision keyed by identity … it does
+     * NOT require a gap to currently fire*), and `proposalsFeed` implements
+     * both halves: the disposed proposal leaves `proposals[]` and is RETURNED
+     * in `dispositions[]`.
+     *
+     * **BEING RECOMPUTED ON EVERY READ IS NOT THE PROBLEM IT LOOKED LIKE, AND
+     * THAT IS A MEASUREMENT RATHER THAN A PREFERENCE.** The two kinds that ARE
+     * dispositionable today are themselves derived on every read — this feed
+     * stamps them `age: { state: "undetermined", reason: "derived_on_read" }`
+     * with its own hand, and `proposalsFeed` rebuilds them from
+     * `progression_instances` every time it is called. Nothing is stored for a
+     * disposition to attach to. What it attaches to instead is the IDENTITY,
+     * and the identity is stable by construction: `proposal_dispositions`'
+     * primary key is `(progression_key, stage_key)` and the item this feed
+     * mints for it is `FINDING::<progression>::<stage>` — the same identity,
+     * written by two producers that never consult each other. So a dismissal is
+     * a fact about the SUBJECT, not about the inputs, and it neither decays nor
+     * un-dismisses itself when they move. The record has already accepted the
+     * consequence in the sharpest available case: a stage that later crosses
+     * its deadline does NOT re-ask a member who set the gap aside.
+     *
+     * **WHAT WAS ACTUALLY BROKEN, AND IT WAS LIVE.** `proposalsFeed` keeps both
+     * halves; THIS OP KEPT ONLY THE FIRST. `op=queue` is the one feed a member
+     * opens by habit, and a finding they had dismissed simply stopped being in
+     * it, with nothing anywhere in the answer saying so — indistinguishable
+     * from a finding the record never derived, which is exactly what D-79
+     * forbids and exactly the sparse-level failure CLAUDE.md makes a first-class
+     * obligation. The surface had noticed and had done the only thing it could:
+     * `civicos-ui/app.html` keeps a page-local Map of the dispositions IT
+     * performed and renders them under the queue. That is honest and it is a
+     * SECOND PLACE A FACT IS STATED (D-21/DEC-8) that survives neither a reload
+     * nor a second member. The record holds the fact; the op now publishes it.
+     *
+     * **IT PUBLISHES THE DECISION AND ASSERTS NOTHING ABOUT THE GAP.** Whether
+     * the underlying finding would fire again today is deliberately NOT claimed
+     * here — the decision stands either way, and recomputing it would be a
+     * second derivation of a question `op=proposals` already answers. `mute` one
+     * block down is the deliberate contrast and the two say so about each other:
+     * a mute is PERSONAL and changes nobody else's feed, a disposition is a
+     * RECORD ACT carrying its author and reason and clears the finding under
+     * every case it appears in. */
+    const dispCap = Store.QUEUE_DISPOSED_MAX;
+    const dispAll = Array.isArray(feed.dispositions) ? feed.dispositions : [];
+    const disposedOut = dispAll.slice(0, dispCap).map((d) => ({
+      /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
+         surface ties a decision to the thing it removed without rebuilding
+         the identity from two columns — the drift class IC-53 closed one
+         field over. */
+      id: `FINDING::${d.key}`,
+      key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
+      state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+    }));
     return {
       ok: true, member: me, items: out,
       /* REC-57: `truncated` was already here and is UNTOUCHED — this op is the
@@ -13562,6 +13702,50 @@ export class Store extends DurableObject {
               + "from the record, nothing here left another member's queue, and only CONDITION kinds "
               + "can be here: an OBLIGATION leaves every list when it is RESOLVED and a FINDING when "
               + "it is dismissed, both of which are acts the record keeps.",
+      },
+      /* D-266. The other half of the sentence `mute` has just finished — a
+         FINDING leaves this list when it is dismissed, and here is every one
+         that did. `personal: false` is stated for the same reason `mute` states
+         `personal: true`: the one thing a reader must be able to tell about a
+         shorter feed is WHOSE act shortened it. */
+      disposed: {
+        personal: false,
+        findings: disposedOut,
+        count: disposedOut.length,
+        recorded: dispAll.length,
+        bound: dispCap,
+        truncated: dispAll.length > disposedOut.length,
+        detail: "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) "
+              + "carrying its author and their reason, and it did so for everybody rather than for the "
+              + "member reading this — the opposite of the block above. It has NOT left the record: the "
+              + "decision is keyed on the finding's own identity, the same id the open feed mints for "
+              + "it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is "
+              + "NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op "
+              + "that answers that. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that "
+              + "this plane cannot say; and it is not a statement about findings in general, because "
+              + "only a finding carrying a defined progression's real stage can be dispositioned at all "
+              + "today — every item publishes its own answer to that on `disposition` (D-266).",
+      },
+      /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
+         closed, because closing it needs an identity this record does not
+         hold and inventing one would be the overclaim the silence exists to
+         avoid. */
+      unattributed_readings: {
+        count: Number(fromAnotherTeam.unattributed) || 0,
+        inquiries: Array.isArray(fromAnotherTeam.unattributed_inquiries)
+          ? fromAnotherTeam.unattributed_inquiries : [],
+        detail: "readings of a SHARED question that this read met and could not attribute to a team, "
+              + "so no `new-version-arrived-from-another-team` item was minted for them. The source "
+              + "team is a run's own stored context or it is nothing: a member does not name a team in "
+              + "this record, and guessing one from who authored a reading would manufacture the very "
+              + "connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE "
+              + "ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts "
+              + "and until now they read the same. The questions are named so a member can go and look "
+              + "(op=basisversions); the readings are not named and no author is implied. Why each one "
+              + "could not be attributed is deliberately NOT distinguished: telling a hand-composed "
+              + "reading from one whose run sat under something other than a project would mean "
+              + "projecting a stored column of `ai_runs`, which this reader's declared role forbids "
+              + "(REC-74). Zero means this read attributed everything it met, not that it did not look.",
       },
       counts: {
         obligation: out.filter((i) => i.class === "OBLIGATION").length,

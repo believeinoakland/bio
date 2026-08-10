@@ -7023,3 +7023,65 @@ fall by the difference — was NOT taken, because the ramp exhausts the machine'
 ephemeral range and would have inflicted `EADDRNOTAVAIL` on four other worktrees'
 suites and corrupted their baselines. The instrument IS the hazard. The `reuse` arm
 proves the same property with 400 sockets instead of 16,000.
+
+## 2026-08-09 — D-266: what DECLINING means for a finding recomputed on every read (worktree-agent-a6db8a28ca10a37e0)
+
+**Instruments:** `cd bio-plane && npm run test:battery`; `node scripts/coverage.mjs --strict` run
+DIRECTLY with `$?` read UNPIPED; `node civicos-ui/test/run.mjs` from the REPO ROOT, exit UNPIPED;
+`node bio-plane/test/d266.control.mjs`. Quiet tree at `19745ad` for the baseline.
+
+| figure | baseline (before any edit) | final | note |
+| --- | --- | --- | --- |
+| battery | **151 suites (146 plane · 5 fleet) · 151/151 green · 9,688 assertions** | **151/151 · 9,700** | +12, and NO suite was added |
+| `proposedispose.test.mjs` | 18 | 27 | +9 — the `disposed` publication, driven |
+| `current.test.mjs` | 59 | 62 | +3 — the counted silence, both branches |
+| every other counted suite | — | unchanged | 2 of 149 counted suites moved; attributed by re-running the true baseline, never by subtraction |
+| coverage `--strict` | exit 0 · OPS 163/163 · CHECKS 224/224 · REGISTER FLOOR arms **731**/731 | exit 0 · OPS 163/163 · CHECKS 224/224 · arms **738**/738 | ONE floor moved, from the printed `GREW by 7 arm(s)`; `classified` 145 and `corpus` 146 UNMOVED because no suite was added |
+| UI harness | 44, exit 0 | 44, exit 0 | this item edits nothing under `civicos-ui/` |
+
+**THE BRIEFED FIGURE WAS STALE AND THE MEASUREMENT IS WHY WE KNOW.** PL-13's claim, written the
+same morning, recorded **142 suites / 9,179 assertions**. Nine suites and 509 assertions had landed
+on `main` between that measurement and this one. Re-measured rather than quoted, which is the
+practice, and reported because a corrected figure is the same kind of result as a confirmed one.
+
+**Negative controls — SIX ARMS, ALL AS DECLARED, and each arm ran BOTH affected suites** so an arm
+that broke something else would have said so. Baseline row first: `proposedispose` 27/0,
+`current` 62/0. Restores verified by sha256, by content, and by `cmp` against a per-arm pristine
+copy AND a pristine of record; pen inside the worktree.
+
+| arm | what was armed | measured | the point |
+| --- | --- | --- | --- |
+| 1 | `disposedOut` built over an empty array — the block is published, present, and EMPTY for a member who HAS dismissed something | 24/3 · current 62/0 | **the BEFORE arm stays GREEN**, recorded as that arm's own limit: an assertion that a block is empty cannot see a block that is *wrongly* empty |
+| 2 | the published decision keyed on decider-and-instant instead of the finding's identity | 26/1 · current 62/0 | ONLY the identity arm falls — it separates *publishes something* from *publishes the identity the act is keyed on*, which is what the ruling turns on |
+| 3 | the whole block published under a name nothing reads — yesterday's answer | 21/6 · current 62/0 | the BEFORE arm falls too. **Arms 1 and 3 together are the measurement that an ABSENT block and an EMPTY one are different facts to this suite** |
+| 4 | the unattributable count thrown away at the producer's return | 27/0 · current 61/1 | the two halves of D-266 are independent, and this proves it |
+| 5 | one branch of the silence counted and not the other | 27/0 · current 61/1 | why the suite asserts the EXACT figure 2 — "at least one" would have passed |
+| 6 | OVER-STRICTNESS: a producer re-wired through a local instead of spread straight into `items` | **both suites GREEN** | the wiring pin this item had to correct now asks its property rather than trading one spelling for two |
+
+**What these instruments CANNOT see, stated.** (a) The runner reports `bundle.test.mjs` and
+`livefire.test.mjs` as *assertions unknown* in BOTH runs, so 149 of 151 suites are counted and a
+delta inside those two would be invisible to the per-suite attribution above; both were `ok` in
+both runs. (b) The class sweep below reads `continue;` inside the methods reachable from
+`queueFeed` **by name** — it cannot see a drop performed by `.filter()`, by a `WHERE` clause, or by
+a producer added after this walk was written, and those were classified by READING rather than by
+the matcher. (c) The register counted **7** arms where nine were declared and run, because three of
+them are LABELLED (`(D-266.4)`) rather than ordinal and the counter deliberately does not widen to
+bracketed tokens; the floor moved to the printed 7, which is D-233's under-count class running in
+the safe direction.
+
+**THE CLASS SWEEP — every place `op=queue`'s answer is quietly shorter than what the record holds.**
+Corpus: 14 methods reachable from `queueFeed`, 16 `continue;` sites plus the filters and gates read
+by hand. **Two were undeclared silences and both are closed here** (the disposition ageing; the
+unattributable readings). **Nine are deliberate closures and say so at their own site** — the
+viewer gate (REC-30 withholds WHOLE, asserted in `current.test.mjs`), `case.excluded`, the three
+published bounds, the items cap, `mute`, the undrivable attribution guard, and the several
+`continue`s that drop nothing real (no divergence to report, not a project, fewer than two projects
+drawing). **One is a REAL INSTANCE THAT IS NOT CLOSED HERE AND IS NAMED RATHER THAN SWEPT:**
+`queueFeed` drops a task on `!#queueEventLive(row)`, so an OBLIGATION that left every list because
+it was RESOLVED vanishes from this feed with nothing in the answer saying so — the same shape the
+`disposed` block just fixed one class over. It is materially weaker (the resolution is on the task
+row and `op=tasks`, which the same surface already calls, publishes it, whereas nothing called
+`op=proposals`) and closing it belongs to whoever owns the obligation half. **One more is recorded
+and NOT fixed:** `#projectsDrawingOn` drops a citing project whose `bundle.md` cannot be read, with
+no declaration — a can't-happen for a promoted bundle, inside PL-13's span, named here so it is not
+found twice.

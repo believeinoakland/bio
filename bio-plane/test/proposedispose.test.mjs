@@ -19,7 +19,14 @@
  * Everything is driven THROUGH the control plane (a real caller's only route), so coverage credits
  * op=proposedispose on the control-plane surface, not only the store (D-43).
  */
-/* NEGATIVE CONTROL: (a) IN-SUITE — op=proposedispose with an empty reason is refused NO_REASON, and a bad `to` is refused NOT_A_DISPOSITION (the reason is required and never prefilled). (b) STORE-LEVEL, RUN 2026-07-31 record-agent-7: in store.mjs proposalsFeed, neuter the disposition read (make `disposed` an always-empty Map by skipping the SELECT) -> the DISMISSED procurement::solicitation proposal REAPPEARS as OPEN (proposal_count back to 2, dispositions[] empty) and the "no longer surfaces as open" + "aged into dispositions[]" assertions FAIL; restored -> full suite green. */
+/* NEGATIVE CONTROL: (a) IN-SUITE — op=proposedispose with an empty reason is refused NO_REASON, and a bad `to` is refused NOT_A_DISPOSITION (the reason is required and never prefilled). (b) STORE-LEVEL, RUN 2026-07-31 record-agent-7: in store.mjs proposalsFeed, neuter the disposition read (make `disposed` an always-empty Map by skipping the SELECT) -> the DISMISSED procurement::solicitation proposal REAPPEARS as OPEN (proposal_count back to 2, dispositions[] empty) and the "no longer surfaces as open" + "aged into dispositions[]" assertions FAIL; restored -> full suite green.
+   D-266's SIX ARMS, RUN 2026-08-09 (d266-disposition), driven by `test/d266.control.mjs` — `cd bio-plane && node test/d266.control.mjs`. Every arm armed ALONE with every other defence held OPEN, every arm running BOTH this suite and `current.test.mjs` so an arm that broke something else would say so, every restore verified by sha256, by content and by `cmp` against a per-arm pristine copy AND a pristine of record, pen inside the worktree. BASELINE this suite 27/0, current.test.mjs 62/0. ALL SIX AS DECLARED.
+   (1) BUILD `disposedOut` OVER AN EMPTY ARRAY — the block is published, present and empty, for a member who HAS dismissed a finding -> **24/3** here, current 62/0: the published-decision, published-identity and re-decided arms fail. **The BEFORE arm stays GREEN and that is on the record as the arm's own limit** — an assertion that a block is empty cannot see a block that is wrongly empty, which is why arm (3) exists beside this one.
+   (2) KEY THE PUBLISHED DECISION ON DECIDER-AND-INSTANT instead of the finding's identity -> **26/1**, current 62/0, and ONLY the published-identity arm falls. The state, the reason, the decider and the time are all still published, so this is the arm that distinguishes *publishes something* from *publishes the identity the act is keyed on* — the one the ruling turns on.
+   (3) THE REVERT — the envelope publishes the block under a name nothing reads, so `q.disposed` is `undefined`, which is exactly this op's shape yesterday -> **21/6**, current 62/0, and THE BEFORE ARM FALLS TOO. Arm (1) and arm (3) together are the measurement that an ABSENT block and an EMPTY one are different facts to this suite, which is the sparse obligation this item is an instance of.
+   (4) THROW AWAY THE UNATTRIBUTABLE COUNT at the producer's return -> this suite **27/0** (untouched), current **61/1**. The two halves of D-266 are independent and the arm proves it.
+   (5) COUNT ONE BRANCH OF THE SILENCE AND NOT THE OTHER — the `!from` increment removed, so the answer is 1 where the truth is 2 -> this suite 27/0, current **61/1**. This is what makes the EXACT figure in that suite worth writing: 'at least one' would have passed.
+   (6) OVER-STRICTNESS — `#findingsStanceDiverged` re-wired through a LOCAL instead of spread directly into `items`, correct code in a form the producer does not use -> **BOTH SUITES GREEN**, which is the receipt that the producer-wiring pin corrected by this item asks its property rather than trading one spelling for two. */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
@@ -49,6 +56,13 @@ const getProposals = async (tok = "mem-rec7") =>
   rP(await (await mf.dispatchFetch(`http://x/api/?op=proposals&token=${tok}`)).json());
 const listBundles = async (tok = "mem-rec7") =>
   rP(await (await mf.dispatchFetch(`http://x/api/?op=list&token=${tok}`)).json());
+/* D-266. THE MEMBER'S OWN FEED, read beside op=proposals rather than instead of it — the whole of
+   this item's defect was that these two ops disagreed about whether a dismissal had happened, and a
+   suite that only ever read the one that got it right could not have seen that. The literal
+   `op=queue` is here (not interpolated) so scripts/coverage.mjs credits the control-plane surface. */
+const getQueue = async (tok = "mem-rec7") =>
+  rP(await (await mf.dispatchFetch(`http://x/api/?op=queue&token=${tok}`)).json());
+const queueIds = (q) => (Array.isArray(q && q.items) ? q.items : []).map((i) => i.id);
 /* THE op under test, reached by a member THROUGH the control plane. The literal `op=proposedispose`
    string is here (not interpolated) so scripts/coverage.mjs credits it on the control-plane surface. */
 const proposeDispose = async (body, tok = "mem-rec7") => rP(await (await mf.dispatchFetch(
@@ -129,6 +143,22 @@ t("op=proposals surfaces TWO open proposals before any disposition",
   [feed0.proposal_count, feed0.disposition_count, feed0.proposals.map((p) => p.key).sort()],
   [2, 0, ["grant::application", "procurement::solicitation"]]);
 
+/* ---- D-266 · THE BEFORE PICTURE ON THE MEMBER'S OWN FEED. Taken here, before any act, because the
+   arms further down are DELTAS and a delta with no before is an assertion about nothing. ---- */
+const q0 = await getQueue();
+t("D-266 — before any disposition, op=queue carries BOTH findings as open items, keyed on the same "
++ "identity op=proposedispose is: the item id is the act's key with the class in front of it, "
++ "written by a producer that never consults the disposition table",
+  [q0.ok, queueIds(q0).filter((i) => i.startsWith("FINDING::")).sort()],
+  [true, ["FINDING::grant::application", "FINDING::procurement::solicitation"]]);
+t("D-266 — and the `disposed` block is PRESENT AND EMPTY rather than absent. THE RECORD LOOKED AND "
++ "HOLDS NONE is a different fact from THIS PLANE CANNOT SAY, and a member who has dismissed "
++ "nothing must be able to tell which they are looking at (CLAUDE.md: sparse is normal at every "
++ "level and which level was empty is the answer, not a footnote)",
+  [typeof q0.disposed, q0.disposed?.count, q0.disposed?.findings, q0.disposed?.personal,
+   q0.disposed?.truncated, q0.disposed?.bound],
+  ["object", 0, [], false, false, 64]);
+
 /* ---- the ACT: a member DISMISSES procurement::solicitation with a reason, through the control plane.
    No bundle is minted; the disposition is the whole of the act (D-79 — declining is not authoring). ---- */
 console.log("\n--- a member DISMISSES a proposal with a reason -> recorded, NO bundle minted ---");
@@ -160,6 +190,70 @@ t("the dismissed proposal is AGED into dispositions[] with its state, reason, de
   (() => { const d = feed1.dispositions.find((x) => x.key === "procurement::solicitation");
     return [feed1.disposition_count, d && d.state, d && d.reason, d && d.decided_by, typeof (d && d.at)]; })(),
   [1, "dismissed", "these awards are below the solicitation threshold, so no RFP was required", "class:member", "string"]);
+
+/* ================================================================== D-266
+   THE SAME FACT ON THE FEED A MEMBER ACTUALLY OPENS, and until this item the
+   op that got it right and the op that did not were the same store.
+
+   `proposalsFeed` has always kept both halves of D-79 — the disposed proposal
+   leaves `proposals[]` and is RETURNED in `dispositions[]`, because *a finding
+   that disappears is indistinguishable from one that was never made*. `op=queue`
+   read that feed, inherited the AGEING, and published NONE of the ageing: the
+   item simply stopped being in the answer. `civicos-ui/app.html` had noticed and
+   was keeping a page-local Map of the dispositions IT had performed, which is a
+   second place a fact is stated (D-21/DEC-8) and survives neither a reload nor a
+   second member.
+
+   THE ASSERTIONS BELOW ARE THE RULING, NOT A FEATURE. What declining means for a
+   finding recomputed on every read was already answered by this record: the
+   decision is keyed on the finding's STABLE IDENTITY, it stands until it is
+   re-triaged whether or not the underlying gap still fires, and it AGES the
+   finding rather than deleting it. Note what that makes these two kinds — they
+   are DERIVED ON EVERY READ (proposalsFeed rebuilds them from
+   progression_instances each time, and the queue stamps them
+   `age.reason = "derived_on_read"` with its own hand), so this suite is already
+   the proof that a derived finding is dispositionable. Being derived was never
+   what withheld the act. ================================================== */
+console.log("\n--- D-266: op=queue publishes the aged decision, so a dismissed finding does not read like an absent one ---");
+const qd = await getQueue();
+t("D-266 — the dismissed finding is GONE FROM THE OPEN ITEMS, exactly as before this item: the "
++ "ageing is inherited from proposalsFeed and nothing about it changed",
+  queueIds(qd).filter((i) => i.startsWith("FINDING::")), ["FINDING::grant::application"]);
+t("D-266 — AND IT IS NOW SAID. The decision is published with its state, the member's own reason, "
++ "who decided and when, so the shorter feed is attributable instead of merely shorter. This is "
++ "the assertion that was impossible to make yesterday and it is the whole item",
+  (() => { const d = (qd.disposed?.findings || []).find((x) => x.key === "procurement::solicitation");
+    return [qd.disposed?.count, d && d.state, d && d.reason, d && d.decided_by, typeof (d && d.at)]; })(),
+  [1, "dismissed", "these awards are below the solicitation threshold, so no RFP was required",
+   "class:member", "string"]);
+t("D-266 — THE PUBLISHED IDENTITY IS THE ITEM'S OWN, and this is the measurement the ruling rests "
++ "on rather than a restatement of it: the id on the aged decision is the id the OPEN feed mints "
++ "for a finding of that identity, and the two are produced by code that never consults each other "
++ "— one from `proposal_dispositions`' primary key, the other from proposalsFeed's aggregation key. "
++ "A surface ties the decision to the thing it removed without rebuilding the key from two columns",
+  (() => { const d = (qd.disposed?.findings || []).find((x) => x.key === "procurement::solicitation");
+    const openId = queueIds(qd).find((i) => i === "FINDING::grant::application");
+    return [d && d.id, d && [d.progression_key, d.stage_key],
+            openId === "FINDING::" + "grant::application"]; })(),
+  ["FINDING::procurement::solicitation", ["procurement", "solicitation"], true]);
+t("D-266 — the two ways this feed gets shorter SAY WHOSE ACT SHORTENED IT, and they say opposite "
++ "things: a disposition is `personal: false` (a record act, clearing the finding under every case "
++ "it appears in, for everybody) and a mute is `personal: true` (one member's preference, changing "
++ "nobody else's feed). D-125/DEC-16's boundary, visible in the answer rather than only in doctrine",
+  [qd.disposed?.personal, qd.mute?.personal], [false, true]);
+t("D-266 — the answer does NOT claim the underlying gap is closed, and refusing to claim it is the "
++ "point: the decision stands until it is re-triaged whether the gap still fires or not (D-79), so "
++ "the block publishes the DECISION and names op=proposals as the op that answers the other question",
+  [/RE-TRIAGED/.test(String(qd.disposed?.detail || "")),
+   /op=proposals/.test(String(qd.disposed?.detail || "")),
+   /NOT asserted here/.test(String(qd.disposed?.detail || ""))], [true, true, true]);
+t("D-266 — OVER-STRICTNESS: the UNdismissed finding is untouched in every respect — still an open "
++ "item, still advertising the act with the key op=proposedispose accepts. A block that aged the "
++ "wrong thing, or withdrew an act it should not have, fails here rather than passing quietly",
+  (() => { const open = (qd.items || []).find((i) => i.id === "FINDING::grant::application");
+    return [!!open, open?.disposition?.available, open?.disposition?.key,
+            open?.age?.state, open?.age?.reason]; })(),
+  [true, true, "grant::application", "undetermined", "derived_on_read"]);
 
 /* ---- NEGATIVE CONTROLS through the op: the reason is REQUIRED and never prefilled. ---- */
 console.log("\n--- NEGATIVE CONTROLS (through the op): no reason -> NO_REASON; bad target -> NOT_A_DISPOSITION ---");
@@ -199,6 +293,18 @@ const g3 = feed3.dispositions.find((d) => d.key === "grant::application");
 t("a re-disposition UPSERTS on (progression_key, stage_key): still TWO dispositions, the one row updated",
   [redo.ok, feed3.disposition_count, g3.state, g3.reason],
   [true, 2, "dismissed", "on reflection this grant needs no separate application"]);
+/* D-266: and the member's own feed says the same thing about the SAME identity. RE-TRIAGEABLE is
+   the half of the ruling a single dismissal cannot demonstrate — a decision that stands until it is
+   re-triaged is only distinguishable from a decision that is final if re-triaging it is shown to
+   move it, and to move it IN PLACE rather than to append a second standing decision. */
+const qd2 = await getQueue();
+t("D-266 — a RE-DECIDED finding keeps ONE published decision, moved, never a second beside it: the "
++ "identity is what the decision hangs on, so re-triage rewrites it and the feed cannot end up "
++ "showing a member two different answers about one question. And no open item came back",
+  [qd2.disposed?.count,
+   (qd2.disposed?.findings || []).map((d) => [d.key, d.state]).sort(),
+   queueIds(qd2).filter((i) => i.startsWith("FINDING::"))],
+  [2, [["grant::application", "dismissed"], ["procurement::solicitation", "dismissed"]].sort(), []]);
 
 /* ---- op=purge clears the disposition store (D-113): a whole-store purge that reported ALL while
    leaving dispositions is the silent-leftover D-113 exists to prevent. ---- */

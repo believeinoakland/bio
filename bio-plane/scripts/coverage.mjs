@@ -445,6 +445,22 @@ const REGISTER_FLOOR = {
      smoothed: the figure the floor moves to is the one the instrument PRINTED,
      and the arm count in a declaration is a function of its own prose (M0-9's
      property) — so never compare this total across two edits of that text. */
+  /* MOVED 2026-08-09 by D-266 (worktree-agent-a6db8a28ca10a37e0): 731 -> 738, from the
+     figure this item's own green `--strict` run PRINTED (`arms 738/731 · classified
+     145/145 · corpus 146/146 · GREW by 7 arm(s)`), never by adding to the number above.
+     `classified` and `corpus` DO NOT MOVE and that is correct rather than an oversight:
+     this item adds NO suite. Its driver is `test/d266.control.mjs`, deliberately not a
+     `.test.mjs` because it edits real sources while it runs, so the battery must not
+     discover it and this register must not count it as a corpus member.
+     THE DISCREPANCY IS RECORDED BECAUSE IT IS THE INSTRUMENT'S OWN DOCUMENTED CLASS AND
+     IT RUNS IN THE SAFE DIRECTION. D-266 declared SIX ordinal arms in
+     `proposedispose.test.mjs` and THREE more in `current.test.mjs` — nine — and the
+     register counted SEVEN, because the three in `current.test.mjs` are LABELLED
+     (`(D-266.4)`) rather than ordinal and this counter deliberately does not widen to
+     bracketed tokens (it would then count every `(D-113)` the prose is full of). One of
+     the three happened to match anyway. All nine arms were RUN and all nine came back as
+     declared; the floor moves to what the instrument PRINTED, which is the rule, and the
+     under-count is D-233's class reporting fewer arms than were driven. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
