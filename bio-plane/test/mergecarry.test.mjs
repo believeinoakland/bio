@@ -81,6 +81,7 @@
    which matters more here than usual because a leaked `git init` tree is the exact hazard
    the header warns about. It does NOT weaken the outside-the-estate property: sandbox.mjs
    repoints $TMPDIR within the system temp root, and section 1 asserts that. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";

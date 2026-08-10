@@ -37,6 +37,7 @@
  *     that is absent by decision needs an arm proving the absence is real.
  *  8. DEC-49: the driven code set EQUALS the registry, floor as well as ceiling.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

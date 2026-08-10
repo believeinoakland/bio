@@ -319,3 +319,32 @@ paths: `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md`,
   **NOT** `BIO_Communications_Platforms.md` or `BIO_Design_Requirements_v2.md` R9, which
   recommend platforms to ADOPTING GROUPS rather than describing our substrate.
   **NOT** `bio-plane/**`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+
+---
+
+## CLAIM 2026-08-10 M0 (D-282 — a flooding suite loses its tally through a pipe)
+session: d282-tally-through-pipe (worktree `agent-a12f0d082be9568ec`)
+opened: 2026-08-10T17:10:00Z
+paths:
+- `bio-plane/test/stdio.mjs` — NEW, the fix: stdout/stderr made synchronous before a suite writes
+- `bio-plane/test/tally-through-pipe.test.mjs` — NEW, the assertion (discovered by the battery)
+- `bio-plane/test/tally-through-pipe.control.mjs` — NEW, the three negative-control arms (not discovered)
+- `bio-plane/test/*.test.mjs` — ONE added import line at the head of each, and nothing else in any of them
+- `bio-plane/test/sandbox.mjs` — one added import so the controls and probes that already take its side effect take this one too
+- `bio-plane/test/hygiene.test.mjs` — the new check that a suite without the import fails the battery
+- `docs/development/DEBT.md` — D-282's row (closing), append-only
+- `docs/development/MEASUREMENTS.md` — the pipe/file byte figures and the bisected threshold
+
+NOT `bio-plane/src/**`, NOT `civicos-ui/**`, NOT `docs/development/QUEUE.md`.
+`civicos-ui/test/run.mjs` and the `civicos-ui/test/*.test.mjs` suites carry the same
+exposure and are DELEGATED below rather than edited here.
+
+## DELEGATION 2026-08-10 M0 -> UI (D-282's other estate)
+`civicos-ui/test/**` has the same defect and this session does not own it. Every
+suite there ends `process.exit(...)`, and `civicos-ui/test/run.mjs` spawns its
+members with piped stdout, so a UI suite that fails with a large enough dump loses
+its own tally exactly as `hygiene.test.mjs` did. The fix is one added import line
+per suite — `import "../../bio-plane/test/stdio.mjs";` or a UI-local copy of it —
+and the module carries the argument in its header. Measured here, not assumed:
+through a pipe a 2,000,000-byte child delivered 65,536 bytes and no tally; with the
+import it delivered all of it, every run.

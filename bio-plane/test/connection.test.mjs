@@ -24,6 +24,7 @@
  *
  * NEGATIVE CONTROL: (1 — D-72, the grade) make Store.#weakerGrade return the STRONGER grade (swap the <= to >= so it returns the higher-rank end) in store.mjs -> a C-weak connection is stored graded A and established:true, so op=connect/op=connections report it established and the "the WEAKER end governs -> grade C, not established" and "carries the weaker of its two ends" assertions flip (the connection no longer carries its honest weakest grade, D-72 regressed). (2 — D-67, the persist) disable the `INSERT INTO connections` in Store.deriveConnections (guard it `if (false)`) -> op=connect still REPORTS connections formed but nothing is stored, so op=connections returns nothing for a pair known to concern the entity (the connection is emitted and stored nowhere, D-67 regressed). RUN 2026-07-31 framework-agent-fw8: (1) #weakerGrade returns stronger -> 2 fail (the A—C weaker-end grade/established assertion + the weaker-of-two assertion), 39 pass; restored. (2) INSERT disabled -> op=connect reports count 3 but op=connections(E_ORD) count 3->0 and by-capture 2->0 (2 fail, then the downstream reads that depend on a stored connection crash — the persist is load-bearing); restored -> 41 pass, 0 fail.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

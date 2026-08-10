@@ -20,6 +20,7 @@
  */
 /* NEGATIVE CONTROL: in src/docx.mjs's evidentiary item builder (docxStructure), change `item.superseded = c.text` to `item.superseded = null` — dropping the SUPERSEDED WORDING from the w:del emit -> the suite fails naming it ("the deletion carries the SUPERSEDED WORDING — the figure the published form removes"). RUN 2026-08-03: 2 of 82 failed (that assertion and the deletion-item deep-equal beside it); restored -> 82 pass 0 fail. */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { linkWrapper } from "../src/subresources.mjs";
 import { detectFormat, getFormat, listFormats } from "../src/formats.mjs";

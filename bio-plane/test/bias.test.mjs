@@ -107,6 +107,7 @@
  * adds no gate: no answer here refuses anything for carrying a bias.
  */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

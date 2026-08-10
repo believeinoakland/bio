@@ -68,6 +68,7 @@
  * "OR" as a member-facing word (DEC-32's elicitation clause 1, D-226), and
  * block 9 asserts that of every canned translation directly.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

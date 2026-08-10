@@ -56,6 +56,7 @@
  * Those two are reported OPEN and routed, which is a worker's job; ruling on
  * them is not.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, readdirSync } from "node:fs";

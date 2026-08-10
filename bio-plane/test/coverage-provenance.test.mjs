@@ -62,6 +62,7 @@
  *       under a dot-directory could be ENROLLED HERE AND NEVER RUN THERE. A
  *       manifest under `.claude/` must now be invisible to both.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";

@@ -41,6 +41,7 @@
  * subject registry; its shape is checked and its resolution is not, and the
  * reason is stated at the check.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

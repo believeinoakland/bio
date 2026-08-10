@@ -110,6 +110,7 @@
  *  5. DEC-49: the driven code set EQUALS the registry, floor as well as ceiling.
  *  6. OVER-STRICTNESS: the fence does not refuse correct work.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

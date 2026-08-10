@@ -30,6 +30,7 @@
  * taskDrain call) and this suite FAILS on "firing the alarm drains ..." and
  * "the queue is empty after the drain", naming the queue that was left undrained.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

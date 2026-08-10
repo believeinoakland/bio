@@ -72,6 +72,7 @@
  * would be exactly the overclaim this project treats as worse than a gap.
  */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";

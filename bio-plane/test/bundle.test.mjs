@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-07-31) disable the store CAS-on-base inside the SHIPPED artifact dist/bio-plane.bundled.mjs (guard `cur.bundle_sha !== base` with `false`), so the bundled build no longer refuses a stale write -> livefire against the bundle reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE/garbage base refused, live/history state, lease base); restored the artifact via git. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

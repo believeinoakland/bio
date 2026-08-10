@@ -56,6 +56,7 @@
  *       project's full row; "op=list does not name the project" want false
  *       got true) -> restored, 36 pass, stable across 10 consecutive runs.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

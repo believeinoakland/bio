@@ -141,6 +141,7 @@
  *      because it EMBEDS `detail` verbatim (§4b) — a fifth channel UI-43's
  *      four-site count did not include.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 /* UI-53: the UI estate's ONE derived ban family, imported so ARM L can DRIVE the

@@ -2,6 +2,7 @@
 /* The capture op: the one op that moves bytes. Content-addressed, verified
    server-side, immutable once landed, confined by store prefix.
    Negative-control detail: disable the server-side integrity check in the capture handler (guard `digest !== sha` with `false`, accepting a body whose bytes do not match the sha256 parameter) -> 2 assertions fail (the INTEGRITY refusal on a mismatched body); restored, 19 pass. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

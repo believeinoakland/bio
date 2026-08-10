@@ -69,6 +69,7 @@
  * fence and no refusal. If a fence refuses something it should not, that is
  * reported, not smoothed — and block 6 is where such a thing would show.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

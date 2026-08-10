@@ -52,6 +52,7 @@
  * the conclusion, and two conclusions disagreeing is a different, undesigned
  * thing.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit — added by CONDUCT at REC-42's integration; this suite predates M0-8 and hygiene named it */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

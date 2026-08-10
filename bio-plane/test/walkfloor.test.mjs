@@ -70,6 +70,7 @@
    run — the baseline arm went red at `walkfloor.test.mjs imports test/sandbox.mjs`,
    which is the estate catching a real mistake in the very item that adds a
    detector, and is recorded rather than quietly fixed. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";

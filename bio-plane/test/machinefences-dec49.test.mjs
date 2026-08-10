@@ -69,6 +69,7 @@
  *   (4) OVER-STRICTNESS: a correctly coded-and-translated refusal phrased
  *       unlike anything REC-64 wrote — VF-2's Spanish-row standard — must PASS.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

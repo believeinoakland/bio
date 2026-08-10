@@ -55,6 +55,7 @@
  * be exactly the roster that read as a complete sweep while 27 ops were hidden.
  */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";

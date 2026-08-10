@@ -101,6 +101,7 @@
  * AND THE CLASS SWEEP is at the foot, with its corpus and its reach PRINTED:
  * which other questions a surface plainly needs cannot be asked of the plane.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

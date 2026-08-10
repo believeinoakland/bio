@@ -25,6 +25,7 @@
  *
  * NEGATIVE CONTROL: in src/store.mjs #instanceDeadlines (the ONE derivation both the feed and the alarm read), force it to find nothing (`return out;` immediately after `const out = [];`) -> no overdue is ever derived: op=proposals surfaces NO overdue_successor for a genuinely-overdue contract and the AFTER proposal is not overdue, and the alarm's overduescan.overdue_count stays 0 with no future deadline to wake for. RUN 2026-07-31 record-agent-8: with #instanceDeadlines neutered 7 assertions FAIL (the AFTER "overdue true/both kinds", the distinct overdue_successor finding, its grade/deadline, the BEFORE tick re-arming to the deadline, the named next_deadline, the AFTER tick's overdue_count 1, and PART 2's env-clock overdue) while the missing_predecessor / BEFORE / non-parseable / discharge / no-date / self-terminate assertions still PASS (they do not depend on the overdue layer); restored -> 22/22 green. Confirms the overdue signal came from the deadline derivation and nothing else.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

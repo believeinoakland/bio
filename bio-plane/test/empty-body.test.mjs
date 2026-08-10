@@ -27,6 +27,7 @@
  * searchfields/selectionlist all 500 non-JSON (5 fail); guard restored -> green.
  */
 /* NEGATIVE CONTROL: replace the store.mjs fetch empty-body guard with an unconditional `body = await req.json()` -> the five debt ops (stats/index/dangling/searchfields/selectionlist) return a non-JSON HTTP 500 (the 1101 class) and the "well-formed JSON" assertions FAIL. RUN 2026-07-31 record-agent-3: guard broken -> 8 fail; restored -> 10 pass. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

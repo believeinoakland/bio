@@ -38,6 +38,7 @@
  * governed document is not even a monitoring candidate". Restored -> 22/22 green.
  */
 /* NEGATIVE CONTROL: in src/store.mjs recordSourceOutcome, make the `governed` branch increment consecutive_failures (drop the D-104 exclusion) -> three governed refusals become eligible and the tick fires a SPURIOUS grade-C fallback; suite FAILS 4 assertions naming the address (RUN 2026-07-31, restored 22/22 green). */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

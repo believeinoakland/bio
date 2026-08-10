@@ -20,6 +20,7 @@
  *   - breaking the handler (returning the raw bytes instead of the structure)
  *     makes the deferred-link assertions FAIL — recorded in the report.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

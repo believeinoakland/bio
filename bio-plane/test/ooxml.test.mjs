@@ -21,6 +21,7 @@
  */
 /* NEGATIVE CONTROL: in discriminate(), right after the readContainer ok-check, insert `return { ok:true, format: flavours[0].flavour, mainPart:null, confidence:"high", signals }` (skipping the [Content_Types].xml + main-part discrimination) -> the plain-ZIP assertion fails (zip expected, docx got), with the renamed-ZIP, declared-main-part-absent, OPC-unrecognized and xlsx/pptx discrimination assertions. RUN 2026-08-03: 13 of 97 failed; the container-walk, round-trip, rels, core-props and size-guard assertions still passed; restored -> 97 pass 0 fail. */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import {
   MEASURED_OOXML_TEXT_BOUND_BYTES, declaredTextBytes, sizeGuard, crc32 as modCrc32,
   hasZipMagic, normalizePartName, readContainer, readPart,

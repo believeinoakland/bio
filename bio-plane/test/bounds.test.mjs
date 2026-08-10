@@ -107,6 +107,7 @@
  *       is the point of keeping the pin alive through the change: an exemption
  *       would have let the next such op join a list, and a pin makes it fail.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, readdirSync } from "node:fs";

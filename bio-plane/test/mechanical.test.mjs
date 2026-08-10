@@ -17,6 +17,7 @@
  * what it did: the diff is the evidence, not the claim. This suite writes the
  * violations deliberately and asserts each one is caught.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

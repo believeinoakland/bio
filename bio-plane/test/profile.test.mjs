@@ -24,6 +24,7 @@
  * "aspnet_webforms", got undefined). RUN 2026-07-31, restored. A profile that still
  * passes with the handler unstamped would be recording nothing load-bearing.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

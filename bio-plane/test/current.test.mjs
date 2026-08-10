@@ -91,6 +91,7 @@
  *   IT CANNOT see whether a member ACTS on either notification, which is the
  *     surface's question and UI-45's successor's.
  * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

@@ -34,6 +34,7 @@
  *   because of what it IS. A caller passing weight=refuse must not turn it into
  *   one, or the weight distinction is advisory and the gate is decoration.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

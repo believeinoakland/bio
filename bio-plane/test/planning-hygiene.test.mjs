@@ -49,6 +49,7 @@
  * This suite reads the planning surface as text, on purpose: it is cheap, needs no
  * runtime, and catches the drift at the moment it is made.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 /* M0-18 — ONE mechanism, imported. The reason is at `allDocs()`. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";

@@ -87,6 +87,7 @@
        ARM P5 PRINTS which columns got which, so the weaker half is visible
        rather than assumed. */
 
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

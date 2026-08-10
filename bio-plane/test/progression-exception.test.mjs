@@ -23,6 +23,7 @@
  * op=discharge and op=exceptions on the control-plane surface, not only the store (D-43).
  */
 /* NEGATIVE CONTROL: in store.mjs #assembleInstance force `const discharged = false;` (ignore the exception documents) -> the DISCHARGED solicitation stage falls back to a missing_predecessor finding, so the finding reappears and the discharge vanishes. RUN 2026-07-31 framework-agent-fw10: the "AFTER the exception: solicitation no longer surfaces as a finding" and "solicitation is a distinct DISCHARGED state" assertions FAIL, then the suite throws on the now-undefined discharged-state lookup (dSol) — NOT green; restored -> 36 pass, 0 fail. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

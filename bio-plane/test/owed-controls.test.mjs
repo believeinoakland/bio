@@ -41,6 +41,7 @@
  * evidence an arm RAN is the measured figure in the owner's own declaration, and
  * what is mechanised here is that the declaration is still there to be read.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";

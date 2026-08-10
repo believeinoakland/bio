@@ -30,6 +30,7 @@
  * green.
  */
 /* NEGATIVE CONTROL: neuter the D-78 stamp in index.mjs op=promote (force `want` to always "human", or delete the surfaced_by block) -> the agent-written focus records the writer's hardcoded literal `human` and the "an agent records agent" (+ "did NOT survive") assertions FAIL. RUN 2026-07-31 record-agent-3: want forced to "human" -> 2 fail; restored -> 8 pass. */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

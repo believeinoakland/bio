@@ -7186,3 +7186,98 @@ floors and found FOUR ratchets where the dropped diff listed two.
 **Battery:** true baseline at `19745ad` **151/151 suites green · 9,688 assertions**; final
 **152/152 · 9,704**. Delta +16 attributed by DIFFING the two full runs, never by
 subtraction: the new suite 15, `hygiene.test.mjs` 591 -> 592.
+
+## 2026-08-10 · D-282 — what a pipe actually discards when a suite exits, bisected
+
+Instrument: `bio-plane/test/tally-through-pipe.test.mjs` (in the battery),
+`bio-plane/test/tally-through-pipe.control.mjs` (four arms, run), and a standalone
+reproduction harness that spawns ONE child twice and captures it to a PIPE and to a
+FILE. Machine: darwin 25.5.0, node v26.5.0, worktree `agent-a12f0d082be9568ec`,
+HEAD `87278a2`. Every figure below is from a run, not from a document.
+
+**THE MECHANISM, REPRODUCED FIRST.** Same child, same run, two captures:
+
+| capture | bytes | tally readable |
+| --- | --- | --- |
+| FILE (`stdio` fd to a regular file) | 200,093 | yes |
+| PIPE (default `stdio`, what `battery.mjs` uses) | 131,099 | **NO** |
+
+**THE THRESHOLD, WHICH D-282's ROW NAMED UNDETERMINED, IS BISECTED — AND THE ROW'S
+MODEL OF IT WAS TOO SIMPLE.** For a SINGLE write the boundary is the pipe buffer and
+nothing else: **65,573 bytes survive, 65,580 do not**, and every partial arrival
+observed across every configuration is an exact multiple of **65,536**. But the
+threshold is not one number, because there are TWO independent variables — the size
+of the largest write, and the total volume racing the parent's draining. Total held
+at 2,000,000 bytes, only the write size varied, n=3:
+
+| write size | tally through a pipe, 3 runs | bytes arriving | with the fix |
+| --- | --- | --- | --- |
+| 1,024 | MISSING, MISSING, **present** | 518,144 | present, 2,000,920 B |
+| 8,192 | MISSING × 3 | 688,128 | present, 2,007,064 B |
+| 32,768 | MISSING × 3 | 196,608 | present, 2,031,640 B |
+| 65,536 | MISSING × 3 | 1,114,112 | present, 2,031,640 B |
+| 98,304 | MISSING × 3 | 65,536 | present, 2,064,408 B |
+| 262,144 | MISSING × 3 | 65,536 | present, 2,097,176 B |
+
+**SO THE LOSS IS NONDETERMINISTIC AT THE MARGIN.** Three identical runs, three
+different answers. That is the single most important property here and the row did
+not have it: a failing suite may or may not report its own count, run to run.
+
+**THE CAP WOULD NOT HAVE CLOSED IT, MEASURED RATHER THAN ARGUED.** Every line capped
+at 512 bytes — D-237's cap idiom applied to `got` — 5 runs at each volume:
+
+| total | ≈ capped failures | tally lost | with the fix |
+| --- | --- | --- | --- |
+| 100,000 – 400,000 | 195 – 781 | 0 / 5 | 0 / 5 |
+| 800,000 | 1,563 | **1 / 5** | 0 / 5 |
+| 1,600,000 | 3,125 | **1 / 5** | 0 / 5 |
+| 3,200,000 | 6,250 | **1 / 5** | 0 / 5 |
+
+**AND THE CAP IS THE FIX THAT WOULD HAVE LOOKED GREEN.** With the cap armed on a
+genuinely large but perfectly readable 1,000,156-byte diagnosis, the pipe and the
+file captures agree perfectly — **312 bytes and 312 bytes** — so every arm that
+measures LOSS passes, while the MIDDLE and the TAIL of the diagnosis are gone. That
+is the whole reason `test/stdio.mjs` caps nothing.
+
+**IT IS PLATFORM-SPECIFIC AND THE ROW NEVER SAID SO.** Node writes to a pipe
+SYNCHRONOUSLY on Linux and Windows and ASYNCHRONOUSLY on macOS. This defect cannot
+occur on a Linux CI machine, which is part of why it survived; the suite therefore
+runs an UNFIXED fixture as a reach arm and reports `NOT EXHIBITED` by name rather
+than passing quietly where it could not have failed.
+
+**HOW CLOSE A GREEN RUN COMES TO THE BUFFER**, measured because it is what decides
+whether "no historical figure was truncated" is structure or luck. Each suite run
+twice, once to a file and once to a pipe:
+
+| suite | bytes (green) | % of one 65,536-byte pipe buffer | loss |
+| --- | --- | --- | --- |
+| `hygiene.test.mjs` | 46,399 | **71%** | none |
+| `bounds.test.mjs` | 25,228 | 38% | none |
+| `suggest.test.mjs` | 22,763 | 35% | none |
+| `subresources.test.mjs` | 22,385 | 34% | none |
+| `textchain.test.mjs` | 15,260 | 23% | none |
+| `check-firing.test.mjs` | 8,771 | 13% | none |
+
+Green output is thousands of small writes against an actively draining reader, and
+that survives far past 64 KiB — the exposure was always the FAILING run. `hygiene`
+at 71% of one buffer and rising with every ratchet is worth knowing anyway.
+
+**BATTERY.** True baseline measured on this worktree at `87278a2` before any edit,
+captured to a FILE and not to a pipe: **157/157 suites green · 9,844 assertions ·
+151.5s · exit 0**. After: **158/158 · 9,861 · exit 0**. Delta **+17**, attributed by
+DIFFING the two full runs rather than by subtraction — the new suite 13, and
+`hygiene.test.mjs` 607 -> 611 (the new census is 2 assertions; the other 2 are the
+new suite passing through `hygiene`'s existing per-suite checks).
+
+**THE INSTRUMENT MEASURED ITSELF, and it is recorded because it looked like a
+finding and was not.** The baseline run's residue report named `/private/tmp/claude-501`
+as **HELD BY THIS RUN**, attributed to `acquire.test.mjs`. That is this session's own
+scratchpad: the battery's stdout was redirected into it, so every child inherited the
+open descriptor. D-237's pid-chain arm was exactly right and the path was the
+harness's, not a suite's.
+
+**WHAT COULD NOT BE MEASURED AND IS NOT ROUNDED UP:** no raw output of any historical
+FAILING battery run was kept anywhere in this repository, so none can be re-examined
+for a truncated tail. The historical reach of D-282 is NARROWED — no reported figure
+is shown to have been truncated, and the runner self-reports any count it could not
+read — and it is not established.

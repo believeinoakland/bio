@@ -29,6 +29,7 @@
  *
  * NEGATIVE CONTROL: (a) make Store.#isEstablished return true for "C" in store.mjs -> op=resolutions and op=concerns report a Grade C correspondence as established:true (the "a C is never established" assertions flip). (b) neutralise the INSERT in Store.#upsertResolution -> op=resolve still REPORTS resolved but nothing is stored, so op=resolutions and the reverse index op=concerns empty for a document known to concern the entity. RUN 2026-07-31 framework-agent-fw7: (a) #isEstablished("C")=true -> 3 fail (the grade-C established assertion, the resolutions established:false, and the concerns established:false); (b) INSERT dropped -> resolutions(shaA) count 3->0 (and the reverse index concerns(E_ORD) 2->0), so the document known to concern the ordinance vanishes from the index. Both restored -> 39 pass, 0 fail.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

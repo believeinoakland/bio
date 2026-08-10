@@ -92,6 +92,7 @@
  * only by a paired arm asserting the producer itself was found. That failure
  * mode is reproduced deliberately below and is what the neutering arm exists for.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, relative, extname } from "node:path";

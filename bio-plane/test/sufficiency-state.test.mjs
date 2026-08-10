@@ -61,6 +61,7 @@
  *      when the next item wires the state, which is the point: the next item
  *      corrects it and says why, rather than finding it stale.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";

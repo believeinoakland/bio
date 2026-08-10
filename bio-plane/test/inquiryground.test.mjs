@@ -50,6 +50,7 @@
  * string in this act says AND, OR, disjunction, branch or `ground` — DEC-32
  * clause 1 — which block 6 asserts of the published prompt and label directly.
  */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
