@@ -115,3 +115,15 @@ protocol against I3 (op contracts) and I5 (schema); nothing here bypasses it.
   designation authored, bar shown as the case's property); published case page
   (bar prominent, per-claim strength beside each finding, supporting members visibly
   not load-bearing); multi-case membership on the finding view. Depends on: CASE-5.
+
+**THE ARC'S DEFINITION OF DONE — named here so it cannot be missed (Bob, 2026-08-10:
+"the build plan needs to be updated properly"):** the CASE arc is not complete until,
+in the same turn the last item lands, (a) **`docs/BIO_DATAPLANE_STATE.md` is amended to
+describe case-as-production as the SHIPPED shape** — the state doc records what runs,
+so its update rides the landing, never precedes it; (b) the RULED-AND-NOT-YET-BUILT
+banner at the head of THIS document comes down and the document is archived per the
+working-surface rule (`docs/archive/`, where `decided.mjs` keeps its rulings findable);
+and (c) `node tools/decided.mjs` is regenerated so the index stops carrying the
+pre-build framing. A landing that skips (a) leaves the record's state document
+describing a plane that no longer exists — the exact defect class Bob's substrate
+instruction just paid to remove.

@@ -220,6 +220,12 @@ a finding serves many cases and a project spans many cases.
   case page shows the bar as the CASE'S property with per-claim strength beside each
   finding; multi-case membership on the finding view). Depends: CASE-5
 
+**THE ARC'S DEFINITION OF DONE (added same day, on Bob's question):** the CASE arc is not
+complete until `docs/BIO_DATAPLANE_STATE.md` is amended — in the same turn the last item
+lands — to describe case-as-production as the SHIPPED shape, the design doc's
+ruled-not-built banner comes down, and the DECIDED index is regenerated. Write it into
+the closing item's accepts-when so it is a condition, not a memory.
+
 **What this supersedes is in the design doc's table — enact the bookkeeping as you drain:**
 DEC-71 is closed on the register (done by BOB); D-280's composed read goes with CASE-2;
 REC-44's finding-side stamping goes with CASE-5; UI-55's audit and any in-flight
