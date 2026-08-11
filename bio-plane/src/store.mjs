@@ -568,6 +568,28 @@ export class Store extends DurableObject {
          nobody delivered, which on THIS column would mean a wake that never
          happened reading as one that did. */
       ["capture_requests", "run_woken_at", "TEXT"],
+      /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
+         AUTHORED ROLE for it. Additive and nullable for the reason every column
+         above is, and here NULL carries two facts this item exists to keep
+         distinguishable rather than a missing value.
+         *
+         * A member rostered before this column existed was rostered under the
+         * pre-DEC-72 model, where a case edition read its members' bytes at the
+         * CASE's edition number and pinned nothing -- so no version was ever
+         * chosen for it, and NULL says so. Backfilling the finding's current
+         * bundle_sha would be the worst available answer: it would claim the
+         * published case froze a version, at a hash nobody signed for that
+         * purpose, on an edition that may have moved since.
+         *
+         * And a member rostered before `role` existed was never designated
+         * load-bearing or supporting by anybody, because no surface asked. A
+         * backfill of either value would manufacture the authored designation
+         * DEC-72 clause 4 requires be claimed -- in one direction asserting that
+         * evidence was presented as meeting a bar, in the other that it was
+         * presented as not. Both are claims about what a group told its readers,
+         * and neither may come out of a migration. */
+      ["published_case_members", "version_sha", "TEXT"],
+      ["published_case_members", "role", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -16942,11 +16964,42 @@ export class Store extends DurableObject {
            the point of it — a reader reconstructing the record from this op
            alone must be able to see the bias each case edition was produced
            under without asking us for it. */
-        `SELECT case_id, edition, scope, bias_acknowledgement, ratified_at, manifest_sha, manifest
-         FROM published_cases ORDER BY case_id, edition`),
+        /* CASE-1 / DEC-72: and WHOSE PRODUCTION the case is, on the public index,
+           for the same reason the acknowledgement is on it — a reader
+           reconstructing the record from this op alone must be able to see which
+           project published a case, because under DEC-72 the bar the case was
+           held to is THAT PROJECT'S and no other. A LEFT JOIN rather than an
+           inner one, and that is the load-bearing half: a case published before
+           this model has no `cases` row, and it must still appear here with its
+           project stated as unknown rather than disappearing from the index
+           because the record gained a table. */
+        `SELECT c.case_id, c.edition, c.scope, c.bias_acknowledgement, c.ratified_at,
+                c.manifest_sha, c.manifest, k.project_id
+         FROM published_cases c LEFT JOIN cases k ON k.case_id = c.case_id
+         ORDER BY c.case_id, c.edition`),
+      /* CASE-1 / DEC-72: the member's PINNED VERSION and its AUTHORED ROLE travel
+         with the roster row, because they are what the roster row now IS —
+         (finding id, version hash, role, ordinal). Both are null until CASE-2
+         authors a role and CASE-3 pins a version, and `production` below states
+         that in words rather than leaving a reader to read a bare null. */
       caseMembers: this.#rows(
-        `SELECT case_id, edition, ord, bundle_id FROM published_case_members
+        `SELECT case_id, edition, ord, bundle_id, version_sha, role FROM published_case_members
          ORDER BY case_id, edition, ord`),
+      /* CASE-1 / DEC-72, and it exists because "undetermined is first-class and
+         must be STATED" is not satisfied by a null. Three different facts arrive
+         here as null and a reader cannot tell them apart without this sentence:
+         a case nobody published as a project's production, a member nobody
+         designated, and a member whose version nobody pinned. */
+      production: "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was "
+                + "held to is that project's, told to the publishing act at the time it was made. Where "
+                + "`project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was "
+                + "published before this model, and an absent owner is not a claim that it had none, it "
+                + "is this record saying it does not know. Where a member's `role` is null NOBODY "
+                + "DESIGNATED that member load-bearing or supporting, so nothing here says whether the "
+                + "case rests on it: a designation is authored by the publisher and is never derived, so "
+                + "the record will not supply one it was not given. Where `version_sha` is null the "
+                + "member was rostered without a version being pinned, and the finding it names may have "
+                + "moved since. None of the three is a gap in this answer; each is a state of the record.",
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
       altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "

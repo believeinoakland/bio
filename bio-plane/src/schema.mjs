@@ -1491,14 +1491,105 @@ CREATE TABLE IF NOT EXISTS published_cases (
 -- BOTH directions -- "which findings are in this case edition" (assembling the
 -- container) and "which case does this finding belong to" (the public read
 -- path resolving a finding id, which is why bundle_id is indexed).
+-- CASE-1 / DEC-72 ADDS THE TWO FACTS A MEMBERSHIP ROW WAS MISSING: WHICH VERSION
+-- OF THE FINDING IS IN THE CASE, AND WHAT THE PUBLISHER SAID IT WAS DOING THERE.
+-- The design's member is (finding id, version hash, role, ordinal); before this
+-- item the first and the last were here and the middle two were not.
+--
+-- version_sha -- CLAUSE 3, publication pins versions LIKE A COMMIT. Bob: "Once
+--   published, the act of changing the findings (or any claims of any of the
+--   findings) results in the changed version becoming a new version." The pin is
+--   the finding's own bundle_sha, which is the hash the member SIGNED, so the
+--   member row names a version by the same identity the signature covers.
+--   NO SECOND COLUMN FOR THE MEMBER'S OWN EDITION NUMBER, deliberately: a
+--   version is identified by its hash, and published_bundles is keyed
+--   (bundle_id, edition), so resolving a pin is a PK-prefix seek on that
+--   finding's own handful of editions rather than a scan. A stored edition
+--   number beside the hash would be a second way to say the same thing, and the
+--   two would eventually disagree. It also names the conflation the artifact
+--   flip removes: today #caseEditionState reads published_bundles at the CASE'S
+--   edition number, which is only correct while one case owns one finding.
+--
+-- role -- CLAUSE 4, and it is AUTHORED BY THE PUBLISHER, never derived. Bob:
+--   "All load-bearing findings of a case being published must meet the necessary
+--   bar. Other findings/claims that don't meet the bar can be a part of the
+--   published work, though they aren't presented as load-bearing." Two values and
+--   nothing else: 'load_bearing' and 'supporting'. Spelled snake_case to match
+--   every other closed vocabulary in this schema ('cuts_against' is the exact
+--   precedent -- a hyphenated English term stored with an underscore), and the
+--   spelling is fixed HERE so CASE-2 and CASE-6 do not each invent a third.
+--
+-- BOTH ARE NULLABLE AND THERE IS NO DEFAULT ON EITHER, WHICH IS THE WHOLE
+-- DISCIPLINE OF THIS PAIR. Rows written before DEC-72 pinned no version and
+-- carry no authored designation, and NULL states exactly that -- the same answer
+-- inquiry_basis_versions.affirmed_parts gives, and for the same reason: a
+-- DEFAULT of 'supporting' would mean a member could be designated by OMISSION,
+-- and a default of 'load_bearing' would have the record assert that evidence
+-- meets a bar nobody claimed it met. A designation that can happen without an
+-- act is not authored. CASE-2 makes both REQUIRED AT THE DOOR, where a refusal
+-- can name what is missing, rather than here where a constraint would only
+-- break the shipped ratify path.
 CREATE TABLE IF NOT EXISTS published_case_members (
-  case_id   TEXT NOT NULL,
-  edition   INTEGER NOT NULL,
-  ord       INTEGER NOT NULL,
-  bundle_id TEXT NOT NULL,
+  case_id     TEXT NOT NULL,
+  edition     INTEGER NOT NULL,   -- the CASE's edition, never the member's
+  ord         INTEGER NOT NULL,
+  bundle_id   TEXT NOT NULL,
+  version_sha TEXT,               -- the member finding's pinned bundle_sha. NULL = not pinned, and STATED
+  role        TEXT,               -- 'load_bearing' | 'supporting'. NULL = nobody authored one, and STATED
   PRIMARY KEY (case_id, edition, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS published_case_members_bundle ON published_case_members(bundle_id);
+-- CASE-1 / DEC-72: THE CASE IDENTITY, AND WHOSE PRODUCTION THE CASE IS.
+--
+-- Bob, 2026-08-10, ruling the model this table exists to make structural: a case
+-- is A PRODUCTION OF A PROJECT -- its own object, a set of finding-versions plus
+-- the publishing project, published by a project OWNER against THAT PROJECT'S bar
+-- at act time. The design is CASE-AS-PRODUCTION.md and it is the authority.
+--
+-- WHY THIS IS A THIRD TABLE RATHER THAN A COLUMN ON published_cases, and it is
+-- the one structural decision in this item. published_cases is keyed
+-- (case_id, edition). A project_id on THAT row would be a project per EDITION,
+-- which permits edition 1 to be project A's production and edition 2 to be
+-- project B's -- and under DEC-72 that is not a case with two editions, it is
+-- two different productions wearing one identity. The bar is read from the
+-- publishing project at act time, so a case whose owner can change between
+-- editions is a case whose STANDARD OF EVIDENCE can change without anyone
+-- authoring the change. One row per case_id makes that unrepresentable rather
+-- than merely discouraged.
+--
+-- project_id IS NOT NULL, AND THE ABSENCE OF A ROW IS THE HONEST STATEMENT FOR
+-- EVERY CASE PUBLISHED BEFORE THIS MODEL. DEC-72 removes the project-less
+-- publication path outright, so a row here that named no project would be
+-- exactly the shape the ruling deletes. Cases already in published_cases were
+-- published under the pre-DEC-72 model and genuinely have no owning project;
+-- they get NO ROW HERE, and a reader asking whose production such a case was is
+-- answered "undetermined" by the missing row rather than by a NULL that would
+-- read as a project the record lost. Backfilling a project would be inventing an
+-- attribution to get past a gate, which this record refuses everywhere else.
+-- The constraint is affordable here precisely BECAUSE the table is new: the two
+-- columns this item adds to published_case_members are nullable for the mirror
+-- reason -- their rows already exist and honestly lack the fact.
+--
+-- WHO WRITES IT: CASE-2, which is where publishCase() first takes a publishing
+-- project and an owner-only fence. CASE-1 builds the object and writes no row,
+-- so op=export answers project_id NULL for every case in the store today and
+-- says so. That is a stated state of the record, not a gap in the answer.
+--
+-- THERE IS DELIBERATELY NO opened_by. The act's author belongs to the ACT, and
+-- the act that mints this identity is the publication of an edition, which
+-- published_cases already carries. A second author column here would be a second
+-- authority for one fact, which is how the drift this repo keeps finding starts.
+--
+-- AND THERE IS DELIBERATELY NO INDEX ON project_id YET. "Which cases does this
+-- project own" is clause 6's query and it is CASE-2's and CASE-6's to ask -- an
+-- index declared before any statement filters on it is REC-69's own class, an
+-- access path built for a question no op asks. It belongs in the commit that
+-- brings its reader.
+CREATE TABLE IF NOT EXISTS cases (
+  case_id    TEXT PRIMARY KEY,  -- one identity, invariant across every edition
+  project_id TEXT NOT NULL,     -- the OWNING project. Its bar is the case's bar, read at act time
+  opened     TEXT NOT NULL      -- the instant this identity came into being
+);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive

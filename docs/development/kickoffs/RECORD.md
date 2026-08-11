@@ -203,3 +203,59 @@ document never wrote.
    Three of D-280's arms declared exactly that and all three came back NOT AS DECLARED on
    the first run. **The arms were right and the declarations were wrong**, and they were
    corrected and the correction recorded rather than the paragraph being rewritten.
+
+## Appended 2026-08-10 by the CASE-1 worker (worktree `agent-a1af1f1e654822176`)
+
+Appended rather than rewriting this file, for the reason the two notes above give: other RECORD
+workers may be live and this turn closed one narrow item — **the first row of DEC-72's CASE arc.**
+CASE-2, CASE-3, CASE-4, CASE-5 and CASE-6 all rest on what landed here, so this note is written for
+them specifically.
+
+**THE CASE TABLES ARE NOW THREE, AND WHICH ONE HOLDS WHAT IS THE THING TO GET RIGHT BEFORE YOU
+TOUCH ANY OF THEM.** The names carry history and one of them is misleading:
+
+- **`cases`** — NEW, CASE-1's. The case IDENTITY and the PROJECT whose production it is. Keyed
+  `case_id` ALONE. **Nothing writes it yet: CASE-2 is its writer**, and `project_id` is NOT NULL
+  precisely so a project-less publication cannot be represented.
+- **`published_cases`** — keyed `(case_id, edition)`. **It is the EDITIONS table**, whatever its name
+  says, and it holds the ceremony DEC-72 leaves unchanged (scope, completeness, bias
+  acknowledgement, the container manifest). It was NOT renamed and NOT duplicated: a second editions
+  table would be a second authority for which editions a case has.
+- **`published_case_members`** — the roster, now `(case_id, edition, ord, bundle_id, version_sha,
+  role)`. **`edition` on this row is the CASE'S edition and never the member's** — the shipped
+  `#caseEditionState` reads `published_bundles` at the case's edition number, which is only correct
+  while one case owns one finding, and that is the conflation CASE-5's artifact flip removes.
+
+**FOUR THINGS THIS TURN PAID FOR, so the next session does not.**
+
+1. **THE CASE OBJECT WAS ALREADY HALF-BUILT AND THE BRIEF DID NOT SAY SO.** `published_cases` and
+   `published_case_members` have existed since REC-44/DEC-44. An item briefed as "add the case
+   object" that adds a fourth and fifth table would have shipped two authorities for one fact.
+   **Grep the schema for the thing you are about to add before you add it** — the same instruction
+   this file already gives about helpers in `store.mjs`, arriving at tables.
+2. **A NULLABLE COLUMN WITH NO DEFAULT IS A DESIGN DECISION, AND THE OVER-STRICTNESS CONTROL IS WHAT
+   PROVES IT.** `role` takes no default because a default designates a case member load-bearing or
+   supporting BY OMISSION, which is DEC-72 clause 4's authored act happening without an act. The
+   negative control's arm (d) gives `role` a `NOT NULL DEFAULT 'supporting'` and measures the
+   consequence: **the shipped publish-and-ratify path still succeeds end to end**, the case still
+   reaches the public index, and the member simply comes back designated by nobody. Nothing else in
+   the plane notices. A tightening that looks like caution is how that class arrives.
+3. **THE JOIN THAT BINDS A CASE TO ITS PROJECT MUST BE `LEFT`, AND NO ARM OVER AN EMPTY STORE CAN
+   SEE IT.** An inner join deletes every pre-DEC-72 case from `op=publishedmanifest` the moment the
+   table lands. Arm (c) proves it: **block 1 stays entirely green and block 2 goes red.** If you are
+   adding a table that other rows join to, the arm that matters needs a real published row, not a
+   booted store.
+4. **MAKE THE DESIGN DOCUMENT THE EXPECTATION.** `caseobject.test.mjs` block 3 parses the CASE-1
+   bullet out of `CASE-AS-PRODUCTION.md` at run time and demands a column for every fact the bullet
+   names. Three items shipped a blind-by-construction assertion today; this one cannot be, because
+   the document is not derived from the schema and this item may not edit it. **It looks in
+   `docs/development/` AND `docs/archive/`**, because CASE-6's definition of done archives that file
+   — a suite that knew only the working path would go red on a correct landing.
+
+**WHAT CASE-2 SHOULD DO FIRST.** `publishCase()` takes no project today (measured — its signature is
+`{ target, targets, caseId, scope, statement, excluded, subjectPosition, subjectJustification,
+biasAcknowledgement, viewer, author }`), and the case identity is DERIVED from what the members
+already belong to, then minted. Under DEC-72 the project comes in at the door and the owner fence
+runs against it. **The `project_id NOT NULL` constraint is the one thing CASE-1 could not drive** —
+no op writes `cases`, and this plane exposes no SQL surface, so it is pinned structurally and said
+so. The first CASE-2 arm should be a project-less publish refused BY NAME.

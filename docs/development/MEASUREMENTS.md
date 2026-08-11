@@ -8028,3 +8028,55 @@ separate items shipped on 2026-08-10.
 `skillsequencing.test.mjs` 27/0. **Every one of those numbers moved, and each is corrected at
 its own suite's `NEGATIVE CONTROL:` line rather than left for a later session to re-derive** —
 this repository's most-repeated finding is a hand-carried number nobody re-measures.
+## 2026-08-10 · CASE-1 (DEC-72's case object) — the gates, and two figures that were wrong before they were re-measured
+
+Instrument: `bio-plane` battery (`npm run test:battery`), `bio-plane/scripts/coverage.mjs --strict`,
+`civicos-ui/test/run.mjs`, `tools/plancheck.mjs --local`. Worktree `agent-a1af1f1e654822176`,
+branch `worktree-agent-a1af1f1e654822176`, over HEAD `692101b`.
+
+| what | figure |
+| --- | --- |
+| baseline, AFTER `npm ci` in `bio-plane/` | **164/164 suites · 10,117 assertions · exit 0** |
+| after CASE-1 | **165/165 suites · 10,139 assertions · exit 0** (+1 suite, +22 assertions) |
+| `coverage.mjs --strict` | **exit 0, read UNPIPED** · OPS 163/163 reached (0 unreached) · CHECKS 228/228 named |
+| negative-control register | 160/160 suites declare one · **839 arms** across 159 classified · floor `arms 833/833 · classified 158/158 · corpus 159/159` (the +6 is this item's, and the FLOOR WAS NOT MOVED — see below) |
+| `civicos-ui/test/run.mjs` | exit 0, all harnesses green |
+| `tools/plancheck.mjs --local` | 0 fail, 0 warn |
+| `wc -l < bio-plane/src/store.mjs` | **26,201** at the start of this turn (the figure `kickoffs/RECORD.md` carried in prose was 16,300, itself a correction of 4,900 — the instruction is the command, not the answer) |
+
+**TWO WRONG NUMBERS WERE PRODUCED IN THIS TURN AND BOTH WERE CAUGHT BY RE-MEASURING RATHER THAN BY
+REVIEW. They are recorded because the mechanism, not the mistake, is the finding.**
+
+**1. A BATTERY RUN REPORTED `exit code 0` WHILE THE BATTERY EXITED 2.** The run was backgrounded as
+`npm run test:battery 2>&1 | tail -25`, and the harness reported the PIPELINE's status — which is
+`tail`'s. This is exactly the trap `CLAUDE.md` records against `coverage --strict` (CONDUCT recorded
+a false `exit 0` that way on 2026-08-04, caught by REC-49), arriving on a DIFFERENT command in a
+DIFFERENT position: not `cmd | tail` typed at a prompt, but a backgrounded pipeline whose completion
+notification quotes the exit code back. **The rule as written names the coverage script; the defect
+is a property of the shell.** Re-run as `npm run test:battery > file 2>&1; echo "EXIT=$?"` it read
+**EXIT=2**, and there were two real failures. `tail -25` also truncated the summary line out of the
+captured output entirely, so the figures could not have been quoted from it either way.
+
+**2. THE TWO FAILURES THAT `exit 0` HID WERE BOTH THIS ITEM'S OWN, AND BOTH WERE RATCHETS FIRING.**
+Neither was found by reading the diff.
+
+- `hygiene.test.mjs` — *"caseobject.test.mjs exits deterministically"*. The rule reads the LAST 400
+  CHARACTERS of a suite for `process.exit(…)`, and this suite's foot carried a long
+  `NEGATIVE CONTROL:` block AFTER its exit call, pushing the exit out of the window. Corrected by
+  moving the declaration block ABOVE the summary and ending the file on `process.exit(fail ? 1 : 0)`.
+  Four items tripped this class at integration on 2026-08-10; this is the fifth, and the shape here
+  is specific — **it was not a missing exit, it was a present exit with prose after it.**
+- `owed-controls.test.mjs` A13b — *"and `--strict` still EXITS 0"*. A suite-level assertion that the
+  REAL `coverage.mjs --strict` passes, so this item's own strict failure surfaced through a second,
+  unrelated suite. The cause: the negative-control register could not classify this suite's
+  declaration, because the first item after the marker's paragraph read `(baseline)` and
+  `control-register.mjs`'s `OPENS_ITEM` accepts at most two letters in a parenthesised ordinal.
+  **A declaration the instrument cannot read is reported UNCLASSIFIED and never scored zero (D-233),
+  and `--strict` gates on it.** Corrected to `(0) BASELINE`, after which the register counts six arms.
+
+**THE REGISTER FLOOR WAS DELIBERATELY NOT MOVED.** The measured post-commit tally is
+`arms 839 · classified 159 · corpus 160`; the committed floor stays at `833/158/159`. The floor only
+ever rises and a loose floor gates nothing, whereas `REGISTER_FLOOR` has a documented duplicate-key
+hazard and CONDUCT re-derives it from the MERGED run — so a worker moving it on a branch produces a
+figure that was true of a tree nobody will have. Left for the integrator, and named here so it is
+one act rather than a re-derivation.

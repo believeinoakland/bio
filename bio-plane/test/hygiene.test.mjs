@@ -593,6 +593,28 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
        answer forever, and neither of these is. */
     published_cases:      "published case projection (DEC-44): the authored scope, the completeness assertion and the container manifest per case per edition; nothing else holds them, and a case once published answers forever",
     published_case_members: "the DECLARED case->findings roster per edition, from the members' own signed bytes; it is what says a case edition is incomplete, which published_bundles (the ratified subset) cannot",
+    /* CASE-1 / DEC-72, and the exemption is the SAME judgement its three siblings
+       above carry rather than a new one. `cases` binds a published case to the
+       PROJECT whose production it is, and under DEC-72 that binding is not a
+       convenience: the standard of evidence the case was published against is
+       that project's, so a purge that dropped the row would leave the published
+       record unable to say what bar it had cleared. Nothing else holds it — the
+       artifact flip that will freeze it into the case's own signed bytes is
+       CASE-5 and has not landed, so today this table IS the only holder, which is
+       exactly the test published_edges fails and these four pass.
+       *
+       * THE DANGLING project_id IS NOT AN OBJECTION AND IS THE SAME ONE
+       * published_case_members ALREADY ANSWERS: after a whole-store purge its
+       * bundle_id names a finding nobody holds, and that is correct, because
+       * `seq` is exempt too so allocid can never reissue the identifier and hand
+       * a later bundle somebody else's published case.
+       *
+       * REVISIT THIS EXEMPTION IF A LATER ITEM MAKES A CASE EXIST BEFORE IT IS
+       * PUBLISHED. Today CASE-2 writes this row at the publishing act, so every
+       * row here belongs to the published projection. A DRAFT case would be
+       * working data, and working data surviving a purge is the leftover this
+       * check exists to catch — pointed the other way. */
+    cases:                "the case IDENTITY and the PROJECT whose production it is (DEC-72); the published record's own statement of which project's bar a case was held to, held nowhere else until CASE-5's artifact flip, and a case once published answers forever",
     inbox:                "quarantined public intake; inbound submissions awaiting review, explicitly not the record and not corpus-derived",
     knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
     capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",
