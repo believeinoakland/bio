@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: SIX arms, declared here and run in one step by `node test/skillsequencing.control.mjs [arm]` from `bio-plane/` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`suggest.control.mjs`'s precedent, SK-2's and SK-3's shape). Each arm is armed ALONE with the others held open, each DECLARES BEFORE IT RUNS what must fail AND what must stay green, and every restore is verified BY CONTENT as well as by sha256 against a uniquely-named per-arm pristine copy. The arms and their measured results are recorded here after the run:
-   (0) BASELINE, clean tree: 26 pass, 0 fail. Not decoration — it is what distinguishes six-arms-working from six-arms-broken, and the harness REFUSES to run an arm over a red baseline.
+   (0) BASELINE, clean tree: ~~26 pass~~ **27 pass, 0 fail — RE-MEASURED 2026-08-10 BY FL-7**, which corrected ARM D5 (SK-4's tripwire, which fired as designed) and added ARM D5b. **FL-7's OWN FOUR ARMS ARE NOT RE-DECLARED HERE AND ARE NOT COUNTED HERE: they live in `agent-worker/test/harness.control.mjs` (F1-F4), which drives THIS suite as well as its own, because the defect they arm against has one half in each tree and an arm that could only reach one tree could not measure the agreement at all.** Under F1 this suite reads 22/5 and under F4 26/1. Not decoration — it is what distinguishes six-arms-working from six-arms-broken, and the harness REFUSES to run an arm over a red baseline.
    (1) **THE ROW'S OWN, AND THE ITEM'S POINT — REMOVE FL-3's GATE.** `nextStep`'s `gate-mode` branch in `agent-worker/src/harness.mjs` stops reading the `deployed` flag, and NOT ONE WORD OF THE SKILL CHANGES -> 21 pass, 5 FAIL: ARM D1, D2, D3, D4, D5 — the whole of BLOCK D and nothing else. **TEN SKILL-SIDE ARMS WERE NAMED AND ALL TEN STAYED GREEN — A1, A2, A3, A4, A5, C1, C2, C3, F1, F2 — while the gate was gone.** The sequencing is still recorded, still verbatim, still cites the row, and still refuses nothing. **That asymmetry IS the row's proof: what refuses an investigate-mode launch is FL-3's table and not this text**, and `mustStayGreen` (SK-3's addition) asserts the green side rather than observing it. DECLARED AS THREE AND MEASURED AS FIVE, and the two extra are kept: D2 is the DISCRIMINATION (with no gate, the deployed and the undeployed mode answer alike) and D5 is the terminator (no gate, no `cancelled` to pin). Under-declaring them would have credited the arm with less than it does.
    (2) THE FLAG FLIPPED WITHOUT THE RECORD MOVING — `MODES.investigate.deployed` set to `true` in the landed harness, `DEPLOYMENT_SEQUENCE.verification_recorded` left `null` -> 21 pass, 5 FAIL: ARM B4 (the tripwire, naming the flip) and D1, D2, D4, D5 (the gate genuinely opens). **This is the arm the item exists to make impossible to do quietly**, and it is the shape a real VF-4 enablement will take — when it fires legitimately, the record moves in the same commit as the flag and all five go green again. It is the arm to run before believing any future enablement.
    (3) THE ORDER REVERSED IN THE RECORD ONLY — `order` written `["investigate", "check"]` and `first_deployed_mode` left alone -> 23 pass, 3 FAIL: ARM A3, ARM A4 and ARM B4. **A3 and A4 are why the DOCUMENT is the expectation**: each parses the first-deployed mode out of a DIFFERENT document's own sentence, so neither can be satisfied by editing the array they are checked against. Written the blind way — "`order[0]` equals `first_deployed_mode`" — both sides would have moved together and this arm would have proved nothing, which is exactly what SK-2's arm (5) and SK-3's arm (3) each found inside their own suites. **THIS ARM ALSO FOUND A DEFECT IN THIS SUITE, and it is the second finding of the same class in one item:** ARM E3 perturbed the pack by writing the LITERAL `["investigate", "check"]`, which is precisely what this arm makes the real value — so the perturbation became a no-op and E3 failed for a reason unrelated to the digest it measures. An arm whose fixture can COINCIDE with its subject is measuring the coincidence. E3 now appends a sentinel and differs whatever the real order says.
@@ -341,7 +341,7 @@ t("ARM D1 (THE ROW'S NEGATIVE CONTROL): an investigate-mode launch attempted bef
   + "the sequencing itself rather than a budget or an error",
   [investigate.step, investigate.bound,
    /is not deployed/.test(investigate.why), /CHECK is the first deployed mode/.test(investigate.why)],
-  ["close", "cancelled", true, true]);
+  ["close", "mode-not-deployed", true, true]);
 
 t("ARM D2 (THE DISCRIMINATION, because a gate that refused everything would refuse nothing "
   + "meaningful): the SAME function on the SAME step with the deployed mode PROCEEDS. The refusal "
@@ -353,7 +353,7 @@ t("ARM D3: the gate is not a denylist of one word — an ABSENT mode and a mode 
   + "mis-spelled are both refused. A gate that only knew the string `investigate` would pass every "
   + "future mode by default, which is the direction this failure runs in",
   [absent.step, absent.bound, nonsense.step, nonsense.bound],
-  ["close", "cancelled", "close", "cancelled"]);
+  ["close", "mode-not-deployed", "close", "mode-not-deployed"]);
 
 /* THE ORDERING CLAIM, MEASURED. The harness's own comment says the gate runs
    "before any bound is consulted"; a run that reported a budget instead would
@@ -367,20 +367,71 @@ t("ARM D4: the gate is reached BEFORE any bound. A run in an undeployed mode who
   + "exhausted still stops on the MODE — so a run that was never allowed to start can never be "
   + "reported as one that ran out of something",
   [investigateBroke.step, investigateBroke.bound, /is not deployed/.test(investigateBroke.why)],
-  ["close", "cancelled", true]);
+  ["close", "mode-not-deployed", true]);
 
-/* THE FINDING, ASSERTED SO IT CANNOT BE LOST. See BLOCK G and the DELEGATION. */
-t("ARM D5 (A NAMED TRIPWIRE ON A FINDING, NOT AN ENDORSEMENT): the gate's refusal is recorded "
-  + "under the ending `cancelled`, which the plane's own vocabulary defines as 'a member stopped "
-  + "it' — a member did not. And `mode-not-deployed`, which FL-3's own header says a refused run "
-  + "terminates on, is in NEITHER the plane's endings NOR its bounds. Both facts are measured here "
-  + "so the misattribution is published rather than implied; WHEN FLEET CORRECTS IT THIS ARM GOES "
-  + "RED AND MUST BE UPDATED WITH THE FIX, which is the only way a finding does not rot",
-  [investigate.bound, RUN_ENDINGS[investigate.bound],
+/* ARM D5 — THE TRIPWIRE FIRED, AND THIS IS THE CORRECTION IT ASKED FOR.
+ *
+ * ================= WHAT THIS ARM SAID UNTIL 2026-08-10 =================
+ * It asserted, exhaustively and on purpose, that `investigate.bound` was
+ * `"cancelled"`, that `RUN_ENDINGS[that]` read `"a member stopped it"`, that
+ * `mode-not-deployed` was in NEITHER `RUN_ENDINGS` nor `RUN_BOUNDS`, and that
+ * `harness.mjs`'s source nevertheless contained the word. Its own label said:
+ * *"WHEN FLEET CORRECTS IT THIS ARM GOES RED AND MUST BE UPDATED WITH THE FIX,
+ * which is the only way a finding does not rot."*
+ *
+ * ============== WHY IT WAS RIGHT WHEN WRITTEN (2026-08-10, SK-4) ==============
+ * **Every one of those five assertions was TRUE of the repository it was written
+ * against, and the arm was never an endorsement — it was a MEASUREMENT of a
+ * defect, published rather than described.** SK-4 could not fix it: the ending
+ * vocabulary is `bio-plane/src/airun.mjs` and the gate is `agent-worker/`, so the
+ * fix was a two-area change and SK-4's alternatives were to file a note that
+ * would rot or to pin the facts in an arm that would go red the moment somebody
+ * corrected them. It chose the arm. **That was the right call and this red is
+ * the arm succeeding, not failing** — a finding that survives to be corrected by
+ * a later area is exactly what a tripwire is for.
+ *
+ * ================= WHAT CHANGED (2026-08-10, FL-7, IC-62) =================
+ * FLEET took the call the delegation handed it and closed it by ADDING the
+ * ending rather than by correcting the comment. `mode-not-deployed` is now the
+ * plane's third `RUN_ENDINGS` term, and `gate-mode` closes a refused launch on
+ * it. The alternative — editing `harness.mjs`'s header to admit `cancelled` —
+ * would have made the two halves agree while leaving a machine refusal on record
+ * as a member act, which is the misattribution this arm existed to name.
+ *
+ * SO THE ARM IS CORRECTED AND NOT EXEMPTED, and it now measures the SAME FIVE
+ * FACTS with the polarity the fix earned. It is still a tripwire: if anyone
+ * regresses the gate to `cancelled`, or removes the ending from the plane's
+ * vocabulary, or lets the header and the catalogue drift apart again, this goes
+ * red naming which. `CLAUDE.md`: correct superseded tests, never exempt them —
+ * an exempted test is a rule nobody is enforcing and nobody remembers deleting. */
+t("ARM D5 (THE TRIPWIRE, CORRECTED BY FL-7 RATHER THAN EXEMPTED — see the dated block above for what it "
+  + "asserted before and why that was right when written): the gate's refusal is recorded under an ending "
+  + "that names A MACHINE REFUSING A LAUNCH, not a member stopping a run. `mode-not-deployed` is now IN the "
+  + "plane's endings, is NOT in its bounds (no bound was reached — the gate fires first), and is the word "
+  + "`harness.mjs` names. The member's word `cancelled` still exists and still means a member",
+  /* THE TEXT TEST IS "does it DENY a member acted", not "does the word `member`
+     appear" — the first draft of this arm asked the second and went red against
+     a correct sentence, because the honest wording *"no member stopped this
+     run"* names the member in order to rule one out. Measured, not reasoned:
+     the arm reported `true` where the defect would have too. */
+  [investigate.bound,
+   /\bno member\b/.test(RUN_ENDINGS[investigate.bound] || ""),
    Object.prototype.hasOwnProperty.call(RUN_ENDINGS, "mode-not-deployed"),
    Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "mode-not-deployed"),
-   HARNESS_SRC.includes("mode-not-deployed")],
-  ["cancelled", "a member stopped it", false, false, true]);
+   HARNESS_SRC.includes("mode-not-deployed"),
+   RUN_ENDINGS.cancelled],
+  ["mode-not-deployed", true, true, false, true, "a member stopped it"]);
+
+/* THE MISATTRIBUTION ARM, NAMED. FL-7's queue row requires that closing a
+   gate-refused run as `cancelled` FAILS an assertion that says so — so the
+   regression reports the DEFECT rather than an unequal string. */
+t("ARM D5b (FL-7's named misattribution arm): a gate-refused run closing under the member's word is "
+  + "reported AS a misattribution. This is the assertion that must fail, naming it, if the gate ever "
+  + "regresses to `cancelled`",
+  investigate.bound === "cancelled"
+    ? `MISATTRIBUTION: a gate refusal is recorded as '${RUN_ENDINGS.cancelled}'`
+    : "ok",
+  "ok");
 
 /* ==========================================================================
    BLOCK E — THE PACK CARRIES IT, AND THE VERSION MOVES WHEN IT MOVES.

@@ -89,6 +89,41 @@
  *       **ALSO DIED (`-1`) ON THE FIRST RUN, same class as H2, swept with it.**
  *   H10 OVER-STRICTNESS, nothing broken -> harness **194 pass / 0 FAIL**, member
  *       **98 pass / 0 FAIL**, `coverage.mjs --strict` **exit 0**.
+ *
+ * ===========================================================================
+ * RESULTS — FL-7's FOUR ARMS, 2026-08-10, worktree agent-a0301fcdabdaf43c6.
+ * Baseline before every arm: `harness.test.mjs` **209 pass / 0 fail**,
+ * `airun.test.mjs` **114 / 0**, `skillsequencing.test.mjs` **27 / 0**, battery
+ * 164/164 · 10,117 assertions, `coverage.mjs --strict` exit 0. **ALL FOUR AS
+ * DECLARED on the recorded pass; ONE came back wrong first and it was a finding
+ * about the INSTRUMENT, recorded rather than smoothed.**
+ *
+ *   F1  the gate regresses to `cancelled` -> **harness 203/6 · skillsequencing
+ *       22/5 · airun 114/0 (GREEN, as declared — its subject is the catalogue,
+ *       which is untouched)**. DIRECTION 2 failed, DIRECTION 1 HELD, and a
+ *       misattribution arm NAMED it rather than reporting an unequal string.
+ *   F2  `mode-not-deployed` removed from the plane's RUN_ENDINGS -> **harness
+ *       207/2 · airun 108/6**; DIRECTION 1 failed, the through-the-op arms G1/G2
+ *       failed (C-22.5 refuses a bound the vocabulary no longer holds — which is
+ *       what proves the op path is real), V6 failed.
+ *       **CAME BACK WRONG FIRST: `airun 0 pass, -1 FAIL` — the suite DIED rather
+ *       than failing.** FL-7's own new ARM G2 read
+ *       `gl.entries[gl.entries.length - 1].bound`, and with the close REFUSED the
+ *       log had no terminal entry, so the read threw and took every arm behind it
+ *       down. Identical to this driver's H2/H9 and to FL-2's A3, and the fix was
+ *       the same: **the CLASS was swept, not the site** — every nested read in
+ *       FL-7's arms is null-tolerant now. Worth stating plainly: knowing the
+ *       defect class did not prevent it, and running the control did.
+ *   F3  the header's terminates-on claim changed to `cancelled` (a DIFFERENT
+ *       REAL ending) -> **harness 208/1**. EXACTLY ONE assertion failed:
+ *       DIRECTION 2 alone, with DIRECTION 1 GREEN. **This is the arm that earns
+ *       the two-way claim** — it shows the two directions are two independent
+ *       assertions and not one written twice, which no other arm can show.
+ *   F4  OVER-STRICTNESS, ARMED: `cancelled`'s own sentence rewritten -> **airun
+ *       112/2 · skillsequencing 26/1 · harness 209/0**. A genuine member
+ *       cancellation is still asserted to read as a member act; the gate and the
+ *       two-way arms were untouched, which is what shows the fix ADDED a word
+ *       rather than making the two endings interchangeable.
  * ===========================================================================
  */
 
@@ -130,6 +165,27 @@ function runNamed(file, label) {
 }
 const runHarness = () => runNamed("harness.test.mjs", "harness");
 const runMember = () => runNamed("agent-worker.test.mjs", "agent-worker");
+
+/* FL-7's arms reach ACROSS THE TREE, and they have to. This item's defect had
+   one half in `agent-worker/src/harness.mjs` (the gate's ending) and the other
+   in `bio-plane/src/airun.mjs` (the catalogue that defines it), and the whole
+   point of the fix is that the two are now asserted against EACH OTHER. An arm
+   that could only run the member's suites could not measure that at all.
+   The plane's suites print `<label>: N pass, M fail` — a DIFFERENT tail from the
+   member's `N passed, M failed` — so the shape is matched explicitly rather than
+   loosened into one regex that would quietly match neither on a rename. A suite
+   that DIED still reports `fail: -1`, the same rule as above. */
+function runPlane(file, label) {
+  const r = spawnSync(process.execPath, [join(PLANE, "test", file)], { cwd: PLANE, encoding: "utf8" });
+  const out = (r.stdout || "") + (r.stderr || "");
+  const m = out.match(new RegExp(`${label}:\\s*(\\d+) pass,\\s*(\\d+) fail`));
+  const failed = [...out.matchAll(/^\s*FAIL\s+(.+)$/gm)].map((x) => x[1].trim());
+  return m ? { ran: true, pass: +m[1], fail: +m[2], failed, out }
+           : { ran: false, pass: 0, fail: -1, failed, out };
+}
+const runAirun = () => runPlane("airun.test.mjs", "airun");
+const runSeq = () => runPlane("skillsequencing.test.mjs", "skillsequencing");
+const AIRUN = join(PLANE, "src", "airun.mjs");
 
 function runCoverageStrict() {
   const r = spawnSync(process.execPath, [join(PLANE, "scripts", "coverage.mjs"), "--strict"],
@@ -432,6 +488,109 @@ arm({
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · empty-run arms ${empty ? "FAILED" : "did NOT fail"} · F10 ${f10Held ? "held" : "also failed"} · dedup ${dedupHeld ? "held" : "also failed"}`,
       asDeclared: r.ran && empty && f10Held && dedupHeld,
+    };
+  },
+});
+
+/* ============================================================================
+ * SECTION F7 — FL-7. THE GATE'S ENDING NAMES WHO ACTUALLY ACTED, AND THE
+ * HEADER AND THE CATALOGUE ARE HELD TO EACH OTHER IN BOTH DIRECTIONS.
+ *
+ * THE DEFECT THESE ARMS ARE BUILT AGAINST WAS REAL AND WAS SHIPPED: from FL-3
+ * until FL-7 the gate closed a refused launch on `cancelled` ("a member stopped
+ * it" — no member did), while this file's own header promised it terminated on
+ * `mode-not-deployed`, a word defined NOWHERE in the repository. Two halves,
+ * and the reason neither was caught is that NOTHING COMPARED THEM. F1 and F2
+ * arm each half separately; **F3 is the arm that matters most**, because it
+ * breaks only ONE direction of the agreement and shows the other direction
+ * stays green — which is what proves the two-way assertion is genuinely two
+ * assertions and not one written twice.
+ * ========================================================================== */
+
+arm({
+  id: "F1", subject: "THE MISATTRIBUTION ITSELF — the gate regresses to the member's word",
+  what: "`gate-mode` closes a refused launch on `cancelled` again, exactly as it did before FL-7. The plane's catalogue is untouched and still defines `mode-not-deployed`",
+  mustFail: "the harness gate arms, A6b's DIRECTION 2 (code -> header), the through-the-op B7 arms INCLUDING the named misattribution arm, and — across the tree — skillsequencing ARM D1/D3/D4/D5 and D5b, which must NAME the misattribution rather than report an unequal string",
+  mustNot: "A6b's DIRECTION 1 (the header still names a word the catalogue still defines, so that half is genuinely undisturbed) — and `airun.test.mjs`, whose subject is the catalogue and not the gate, must stay GREEN",
+  file: HARNESS,
+  find: `return { step: "close", bound: "mode-not-deployed",`,
+  replace: `return { step: "close", bound: "cancelled",`,
+  run() {
+    const rh = runHarness();
+    const seq = runSeq();
+    const air = runAirun();
+    const namedIt = seq.failed.some((l) => /D5b|misattribution/i.test(l))
+                 || rh.failed.some((l) => /misattribution/i.test(l));
+    const dir2 = anyFailed(rh, /DIRECTION 2/);
+    const dir1Held = !anyFailed(rh, /DIRECTION 1/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · skillsequencing ${seq.pass}/${seq.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
+        + ` · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held: ${dir1Held} · a misattribution arm NAMED it: ${namedIt}`,
+      asDeclared: rh.ran && seq.ran && air.ran && rh.fail > 0 && seq.fail > 0
+                  && air.fail === 0 && dir2 && dir1Held && namedIt,
+    };
+  },
+});
+
+arm({
+  id: "F2", subject: "THE CATALOGUE LOSES THE WORD — the header promises what nothing defines",
+  what: "`mode-not-deployed` is removed from the plane's RUN_ENDINGS, restoring the exact pre-FL-7 condition on the catalogue side while the gate still tries to close on it",
+  mustFail: "A6b's DIRECTION 1 (header -> catalogue) BY NAME; airun ARM V6/V6b; and the through-the-op arms G1/G2 — C-22.5 must refuse a bound the vocabulary no longer holds, which is the proof the op path is real and not a store-level assertion",
+  mustNot: "nothing in this section is exempt — but the failure must be about the VOCABULARY, so `harness.test.mjs`'s A6 gate-step arms (which read `nextStep`'s return, not the plane) keep passing on step and why",
+  file: AIRUN,
+  find: `  "mode-not-deployed":`,
+  replace: `  "mode-not-deployed-REMOVED-BY-CONTROL-ARM-F2":`,
+  run() {
+    const rh = runHarness();
+    const air = runAirun();
+    const dir1 = anyFailed(rh, /DIRECTION 1/);
+    const opArm = anyFailed(air, /ARM G1|ARM G2/);
+    const v6 = anyFailed(air, /ARM V6/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
+        + ` · DIRECTION 1 failed: ${dir1} · through-the-op G1/G2 failed: ${opArm} · V6 failed: ${v6}`,
+      asDeclared: rh.ran && air.ran && rh.fail > 0 && air.fail > 0 && dir1 && opArm && v6,
+    };
+  },
+});
+
+arm({
+  id: "F3", subject: "ONE DIRECTION ONLY — the header names a DIFFERENT REAL ending",
+  what: "the header's terminates-on claim is changed from `mode-not-deployed` to `cancelled`. **Both words are real endings the catalogue defines**, so the header -> catalogue direction is satisfied and only the code -> header direction is violated. This is the arm that shows the two directions are two independent assertions rather than one restated",
+  mustFail: "A6b's DIRECTION 2 ALONE (the gate produces `mode-not-deployed`, the header now promises `cancelled`)",
+  mustNot: "A6b's DIRECTION 1 — `cancelled` IS in the catalogue, so that half must stay GREEN, and a run in which both directions fail together would mean this suite holds one assertion written twice",
+  file: HARNESS,
+  find: "terminates on `mode-not-deployed` before",
+  replace: "terminates on `cancelled` before",
+  run() {
+    const rh = runHarness();
+    const dir2 = anyFailed(rh, /DIRECTION 2/);
+    const dir1Held = !anyFailed(rh, /DIRECTION 1/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held GREEN: ${dir1Held}`,
+      asDeclared: rh.ran && rh.fail > 0 && dir2 && dir1Held,
+    };
+  },
+});
+
+arm({
+  id: "F4", subject: "OVER-STRICTNESS, ARMED — a GENUINE member cancellation must still read as `cancelled`",
+  what: "NOTHING about the member's ending is touched; instead the plane's `cancelled` TEXT is rewritten to a different sentence. The correction must not have made the member's ending vestigial: arms that assert a member cancellation is recorded as a member act must still be LIVE and must notice",
+  mustFail: "airun ARM V6b and skillsequencing ARM D5 — both read `cancelled`'s sentence and both must object, which is what shows the member's ending is still genuinely asserted rather than left as a word nobody checks",
+  mustNot: "the gate arms, DIRECTION 1 or DIRECTION 2 — none of them is about the member's ending, and a fix that made `cancelled` and `mode-not-deployed` interchangeable would show up as those failing too",
+  file: AIRUN,
+  find: `  cancelled:  "a member stopped it",`,
+  replace: `  cancelled:  "the run came to an end somehow",`,
+  run() {
+    const air = runAirun();
+    const seq = runSeq();
+    const rh = runHarness();
+    const memberArms = anyFailed(air, /ARM V6b/) || anyFailed(seq, /ARM D5/);
+    const gateHeld = !anyFailed(rh, /DIRECTION 1|DIRECTION 2/) && rh.fail === 0;
+    return {
+      observed: `airun ${air.pass}/${air.fail} FAIL · skillsequencing ${seq.pass}/${seq.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
+        + ` · a member-ending arm objected: ${memberArms} · the gate/two-way arms held: ${gateHeld}`,
+      asDeclared: air.ran && seq.ran && rh.ran && memberArms && gateHeld,
     };
   },
 });

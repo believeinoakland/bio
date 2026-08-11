@@ -885,3 +885,68 @@ paths: `civicos-ui/test/member-respect.test.mjs` (NEW — the sweep),
   writer — DEC-69 is READ, at run time, as this sweep's authority).
   **NOT** any existing suite under `civicos-ui/test/` — no arm, floor or census in another
   worker's file is moved by this item.
+## CLAIM 2026-08-10 FLEET (FL-7 — the mode gate's refusal gets a word that names a machine, not a member)
+session: fl7-gate-ending (worktree `agent-a0301fcdabdaf43c6`)
+opened: 2026-08-10T00:00:00Z
+paths: **NAMED BY REGION, NOT BY FILE, because CASE-1 is live on new schema work in
+  `schema.mjs`/`store.mjs` and a file-level claim here would collide with it for no reason.**
+  - `bio-plane/src/airun.mjs` — **the `RUN_ENDINGS` declaration ONLY** (one added key and its
+    text, plus the reasoning comment above it). **NOT** `RUN_BOUNDS`, **NOT** `checkBound`,
+    **NOT** `STANDARD_BASIS`, **NOT** `OBSERVATION_*`, **NOT** `stopBecause`'s ordering.
+  - `agent-worker/src/harness.mjs` — **the `gate-mode` branch inside `nextStep` ONLY** (the
+    `bound:` it closes on) and **the gate paragraph of the file header**. **NOT** the table,
+    **NOT** `LEVELS`/`MODES`/`BUDGET_BOUNDS`, **NOT** any other row.
+  - `agent-worker/test/harness.test.mjs` — **arm A6 ONLY** (the three assertions naming the
+    gate's ending) plus a NEW two-way agreement arm. **NOT** A5's source pin, **NOT** any
+    other arm, **NOT** the file's control declaration except to add this item's arms.
+  - `agent-worker/test/harness.control.mjs` — **APPENDED arms only**; no existing arm edited.
+  - `bio-plane/test/airun.test.mjs` — **ARM V6 ONLY** (the endings-set assertion). **NOT** V1-V5,
+    **NOT** V7+.
+  - `bio-plane/test/skillsequencing.test.mjs` — **ARMS D4 and D5 and the absent/nonsense-mode
+    assertion above them ONLY** (SK-4's tripwire, corrected per its own instruction). **NOT**
+    blocks A-C, **NOT** blocks E-G.
+  - `bio-plane/test/airunclose-ending.test.mjs` (NEW — the through-the-op arm).
+  - `docs/development/INTERFACE-CHANGES.md` (APPENDED — the IC for the added ending),
+    `docs/development/CLAIMS.md` (this entry),
+    `docs/development/MEASUREMENTS.md` (APPENDED).
+  **NOT** `bio-plane/src/store.mjs` (READ ONLY — `#aiRunTerminate` already renders
+  `RUN_ENDINGS[bound]` and needs no edit for a key to be added; CASE-1 is live in this file).
+  **NOT** `bio-plane/src/schema.mjs` (untouched — this item adds no table and no column).
+  **NOT** `bio-plane/src/skillpack.mjs` (READ ONLY — it publishes `endings: RUN_ENDINGS` by
+  IMPORT, so the new term reaches the pack with no edit; that is the design working).
+  **NOT** `civicos-ui/check-refusal-codes.mjs` (READ ONLY — its arm E harvests vocabularies BY
+  SHAPE, so the new term is guarded the moment it lands, again with no edit).
+  **NOT** `docs/development/DECISIONS.md` (CONDUCT is its sole writer).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT is its sole writer).
+### AMENDMENT 2026-08-10 (same session, `fl7-gate-ending`) — one region added, one planned file dropped
+`bio-plane/test/airun.test.mjs`: the claim above named **ARM V6 ONLY**. It now also covers
+**ARM C/F** (the block headed *"the two endings that are not bounds"*). The reason is that the
+block's subject IS this item: FL-7 makes it three endings, and the through-the-op arm the
+`accepts-when` requires belongs beside `ARM C1`, which already drives `op=airunclose` with
+`bound: "cancelled"` and asserts the plane accepts it. **The planned new suite
+`bio-plane/test/airunclose-ending.test.mjs` is NOT created and is dropped from the claim** — it
+would have booted a second miniflare to re-stage a fixture this block already has, and split
+one subject across two files so that a later reader could correct one and miss the other.
+Still **NOT** V1-V5, **NOT** V7+, **NOT** ARM B, R or X.
+## DELEGATION 2026-08-10 FLEET -> SKILL (SK-4's finding is CLOSED; its kickoff still describes it as open)
+raised by: `fl7-gate-ending` (worktree `agent-a0301fcdabdaf43c6`), landing FL-7.
+**This is a NOTICE, not a request for work in this sprint, and nothing is blocked on it.**
+
+`docs/development/kickoffs/SKILL.md` item 2 (around line 302) says the gate closes a refused
+run with `bound: "cancelled"`, that `mode-not-deployed` *"exists nowhere but that comment"*, and
+that **"ARM D5 will go RED on the fix, which is deliberate: it is to be updated in the same
+commit as the correction."** **All three sentences are now historical.** FL-7 landed the
+correction: `mode-not-deployed` is the plane's third `RUN_ENDINGS` term (IC-62), `gate-mode`
+closes on it, and **ARM D5 was corrected in the same commit with a dated block recording what it
+asserted before and why that was right when written** — exactly as SK-4 instructed, and NOT
+exempted.
+
+FLEET did not edit `kickoffs/SKILL.md`: it is SKILL's path and this is a two-area change
+already. **What SKILL may want to do at its next turn is re-word that item in the past tense**,
+because a kickoff that describes a closed defect as open is the class this project keeps
+paying for — a reader who trusts it will re-raise a settled finding. The prediction in the
+kickoff was CORRECT and is worth keeping as a receipt; only its tense is wrong.
+
+SK-4's judgement is worth recording as vindicated rather than merely superseded: it could not
+fix the defect (two areas), so it chose an arm that would go red over a note that would rot, and
+the arm is what carried the finding intact to the area that could close it.
