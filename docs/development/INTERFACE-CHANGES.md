@@ -3874,3 +3874,120 @@ says what it is doing rather than quietly passing a case.
 
 None for any consumer. A UI that starts reading the bar reads the same keys it would have read
 before; it simply gets the answer of the projects that still stand behind it.
+
+---
+
+## IC-63 · I5 + I3: THE CASE OBJECT — a new `cases` table binding a case identity to the PROJECT whose production it is, two additive columns on `published_case_members` (`version_sha`, `role`), and three additive fields plus one statement on `op=publishedmanifest` · PROPOSED 2026-08-10 (CASE-1, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I5** (the store schema) — the change this item is filed for — and **I3** (the op
+  contracts) for the additive half that carries it to a caller.
+- **Proposer:** RECORD, session `case1-case-object` (worktree `agent-a1af1f1e654822176`), 2026-08-10,
+  enacting `docs/development/CASE-AS-PRODUCTION.md`'s CASE-1 bullet under **DEC-72**.
+- **Owner to land it:** `RECORD` (owns I3 and I5).
+- **Consumers to answer:** `UI` — and see MEASURED IMPACT: it has none.
+- **Status:** PROPOSED. **NOTHING IS REMOVED AND NO VALUE MOVES.** Filed rather than argued to be
+  exempt because I5's rules are not style and because a schema is where DEC-72's model either
+  becomes structural or quietly does not.
+
+### The change
+
+**1. I5 — one new table, `cases`.** The case IDENTITY and the project whose production it is.
+
+    CREATE TABLE IF NOT EXISTS cases (
+      case_id    TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      opened     TEXT NOT NULL
+    );
+
+**Keyed on `case_id` alone, and that is the load-bearing decision.** `published_cases` is keyed
+`(case_id, edition)`, so a `project_id` column THERE would be a project per EDITION — permitting
+edition 1 to be project A's production and edition 2 to be project B's. Under DEC-72 that is not a
+case with two editions, it is two productions wearing one identity, and because **the bar is read
+from the publishing project at act time** it is also a case whose standard of evidence can change
+without anyone authoring the change. One row per case makes that unrepresentable rather than
+discouraged.
+
+**`project_id` is NOT NULL, and a pre-DEC-72 case is stated by having NO ROW.** DEC-72 removes the
+project-less publication path outright, so a row naming no project would be exactly the shape the
+ruling deletes. Cases already in `published_cases` genuinely have no owning project; they get no
+row here, and "undetermined" is carried by the absence rather than by a NULL that would read as an
+owner the record lost. Backfilling one would be inventing an attribution to get past a gate.
+
+**2. I5 — two additive nullable columns on `published_case_members`.** The design's member is
+`(finding id, version hash, role load-bearing|supporting, ordinal)`; before this item the first and
+the last were present and the middle two were not.
+
+    version_sha TEXT   -- the member finding's pinned bundle_sha (clause 3, publication pins like a commit)
+    role        TEXT   -- 'load_bearing' | 'supporting' (clause 4, AUTHORED by the publisher)
+
+**Both nullable with NO DEFAULT, and that is deliberate rather than lax.** A default on `role` would
+mean a member could be designated by OMISSION — `supporting` would have the record assert a group
+presented evidence as not load-bearing, `load_bearing` that it asserted the evidence met a bar
+nobody claimed. Clause 4's designation is authored by the publisher; a designation that can happen
+without an act is not authored. CASE-2 makes both REQUIRED AT THE DOOR, where a refusal can name
+what is missing. Added to `#migrate`'s additive `ALTER TABLE … ADD COLUMN` ladder, so an existing
+store gets them without a rebuild — `published_case_members` is the published projection and may
+never be dropped and recreated.
+
+**Spelling: `load_bearing` / `supporting`**, snake_case like every other closed vocabulary in this
+schema (`cuts_against` is the exact precedent — a hyphenated English term stored with an
+underscore). Fixed here so CASE-2 and CASE-6 do not each invent a third.
+
+**3. I3 — `op=publishedmanifest` gains three fields and one statement. ADDITIVE, no key removed.**
+
+    cases[].project_id        the owning project, or null
+    caseMembers[].version_sha the pinned version, or null
+    caseMembers[].role        the authored designation, or null
+    production                a STATEMENT saying what each of those three nulls means
+
+`cases[]` is now `published_cases LEFT JOIN cases`. **The join is LEFT and that is not a detail:** an
+inner join would DELETE every pre-DEC-72 case from the public index the moment this table landed —
+the record losing published material because it gained a column. The suite's negative control arm
+(c) drives exactly that and it is invisible over an empty store.
+
+`production` exists because **"undetermined is first-class and must be STATED" is not satisfied by a
+null.** Three different facts arrive as null — no project recorded, no designation authored, no
+version pinned — and a reader cannot tell them apart without the sentence.
+
+### What is NOT in this change
+
+**No index on `cases(project_id)`.** "Which cases does this project own" is DEC-72 clause 6's query
+and it belongs in the commit that brings its reader; an index declared before any statement filters
+its leading column is REC-69's own class. **No writer.** Nothing writes `cases` until CASE-2, which
+is where `publishCase` first takes a publishing project and an owner-only fence. **No change to
+`publishCase`, `publish`, `#caseEditionState`, `publishedCase` or `#requiredStrengthFor`** — all
+CASE-2/CASE-3/CASE-5 ground.
+
+### MEASURED CONSUMER IMPACT, measured rather than asserted
+
+- **`civicos-ui`: ZERO.** The one hand-maintained reader is `civicos-ui/app.html:15667`
+  (`const members = r.caseMembers || []`), which uses `case_id`, `edition`, `ord` and `bundle_id`
+  from a member row and `case_id`, `edition`, `manifest_sha` from a case row. Every one of those is
+  untouched; the three new fields are ignored by a consumer that does not name them.
+  `civicos-ui/test/publishedcase.test.mjs` and `civicos-ui/test/preauth-vocabulary.test.mjs` BUILD
+  `caseMembers` fixtures rather than reading them, so an added key cannot reach them.
+- **Across `newgroup`, `agent-worker`, `pdf-worker`, `docprofile`, `tools`:** the only hits for
+  `caseMembers` / `published_case_members` are BUILT ARTIFACTS — `release/bio-plane.bundled.mjs`,
+  `bio-plane/dist/bio-plane.bundled.mjs`, `newgroup/dist/newgroup.bundled.mjs` and
+  `newgroup/src/release.mjs`, which is a compiled copy of `bio-plane/src` regenerated by DIST and
+  never a hand-maintained consumer.
+- **In-tree readers of the moved shape:** `bio-plane/test/multifinding.test.mjs` is the only suite
+  that reads `idx.caseMembers`. **Predicted unchanged before the run and CONFIRMED after it: 74 pass,
+  0 fail**, the same figure it reported on the baseline.
+- **`bio-plane/test/hygiene.test.mjs`** gains ONE key in its purge `EXEMPT` map for `cases`. That is
+  a correction, not an exemption of a rule: `cases` takes the same judgement `published_cases`,
+  `published_case_members`, `published_bundles` and `published_shas` already carry — it is the
+  published projection, nothing else holds the case-to-project binding until CASE-5's artifact flip,
+  and a case once published answers forever. The reasoning is at the site, together with the one
+  condition that would reverse it: **if a later item lets a case exist as a DRAFT before it is
+  published, this exemption must be revisited**, because a draft case is working data and working
+  data surviving a purge is D-113 pointed the other way.
+- **No shape any area builds against loses a key, and no value moves for any input.** A consumer
+  written against yesterday's answer reads the same bytes it read yesterday for every case in the
+  store today, because nothing writes a non-null into any of the three new fields until CASE-2.
+
+### MIGRATION
+
+None for any consumer. A UI that starts reading `project_id`, `role` or `version_sha` gets `null`
+until CASE-2 and CASE-3 land, and `production` says in words what that null means, so a surface can
+be built against the final shape today without rendering a claim the record cannot support.
