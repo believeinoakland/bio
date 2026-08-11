@@ -40108,6 +40108,44 @@ var PdfDoc = class {
     }
     return this._encrypted = enc;
   }
+  /** The document information dictionary — the trailer's `/Info` (D-251).
+   *
+   *  TWO SHAPES, because the corpus has both and reading only one would make a
+   *  whole class of document silently metadata-less. A classic PDF carries
+   *  `trailer << … /Info N 0 R >>`; a modern xref-STREAM PDF (what Legistar and
+   *  OpenGov serve, and the class this item was raised about) has no `trailer`
+   *  keyword at all and carries `/Info` on its `/Type /XRef` stream dict.
+   *
+   *  THE LAST ONE IN THE FILE WINS, which is incremental-update semantics
+   *  without parsing an xref — the same reasoning `scanTopLevel` already runs
+   *  on, so a document that was re-saved reports the metadata it was re-saved
+   *  WITH rather than the metadata it was born with.
+   *
+   *  Returns the resolved dict map, or null. Cached; call after
+   *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
+  infoDict() {
+    if (this._info !== void 0) return this._info;
+    const cands = [];
+    const re2 = /\btrailer\b/g;
+    let m2;
+    while (m2 = re2.exec(this.s)) {
+      const r2 = parseValueSafe(this.s, m2.index + 7);
+      const map = r2 && r2.value && r2.value.t === "dict" ? r2.value.map : null;
+      if (map && map.Info && map.Info.t === "ref") cands.push([m2.index, map.Info]);
+    }
+    for (const v2 of this.objects.values()) {
+      if (!v2 || v2.t !== "stream") continue;
+      const type = v2.dict.Type;
+      if (!(type && type.t === "name" && type.v === "XRef")) continue;
+      if (v2.dict.Info && v2.dict.Info.t === "ref") cands.push([v2.start, v2.dict.Info]);
+    }
+    cands.sort((a2, b2) => a2[0] - b2[0]);
+    for (let i2 = cands.length - 1; i2 >= 0; i2--) {
+      const map = this.dictOf(cands[i2][1]);
+      if (map) return this._info = map;
+    }
+    return this._info = null;
+  }
 };
 function numberVal(v2) {
   return typeof v2 === "number" ? v2 : null;
@@ -40117,6 +40155,69 @@ function parseValueSafe(s2, pos) {
     return parseValue(null, s2, pos);
   } catch {
     return null;
+  }
+}
+var PRODUCER_DETERMINATIONS = Object.freeze(["ocr", "undetermined"]);
+var OCR_PRODUCER_MARKERS = Object.freeze([
+  /* MEASURED IN THE LIVE RECORD — the reason this item exists (CPDF-9). Both
+     spellings are carried because the vendor ships the engine under several
+     product names and a second row costs nothing. */
+  Object.freeze({ marker: "abbyy", re: /\babbyy\b/i }),
+  Object.freeze({ marker: "finereader", re: /\bfine\s?reader\b/i }),
+  /* Engines that do nothing else. */
+  Object.freeze({ marker: "tesseract", re: /\btesseract\b/i }),
+  Object.freeze({ marker: "omnipage", re: /\bomnipage\b/i }),
+  Object.freeze({ marker: "readiris", re: /\breadiris\b/i }),
+  Object.freeze({ marker: "ocrmypdf", re: /\bocrmypdf\b/i }),
+  Object.freeze({ marker: "acrobat-capture", re: /\bacrobat\s+capture\b/i }),
+  /* A producer that says OCR ABOUT ITSELF. Anchored on non-alphanumerics so an
+     unrelated word that merely contains the letters does not fire. */
+  Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i })
+]);
+function classifyProducer({ producer = null, creator = null, unreadable = null } = {}) {
+  const clean = (v2) => typeof v2 === "string" && v2.trim() ? v2.trim() : null;
+  if (unreadable)
+    return Object.freeze({
+      producer: null,
+      creator: null,
+      determination: "undetermined",
+      ocr: null,
+      why: String(unreadable)
+    });
+  const p2 = clean(producer), c2 = clean(creator);
+  for (const [field, value] of [["producer", p2], ["creator", c2]]) {
+    if (!value) continue;
+    for (const m2 of OCR_PRODUCER_MARKERS) {
+      if (!m2.re.test(value)) continue;
+      return Object.freeze({
+        producer: p2,
+        creator: c2,
+        determination: "ocr",
+        why: null,
+        ocr: Object.freeze({ engine: value, field, marker: m2.marker })
+      });
+    }
+  }
+  return Object.freeze({
+    producer: p2,
+    creator: c2,
+    determination: "undetermined",
+    ocr: null,
+    why: p2 || c2 ? "no_ocr_marker_in_producer_metadata" : "no_producer_metadata"
+  });
+}
+function readProducer(doc) {
+  if (doc.isEncrypted()) return classifyProducer({ unreadable: "encrypted" });
+  try {
+    const info2 = doc.infoDict();
+    if (!info2) return classifyProducer({});
+    const str = (k2) => {
+      const v2 = doc.resolve(info2[k2]);
+      return v2 && v2.t === "str" ? v2.v : null;
+    };
+    return classifyProducer({ producer: str("Producer"), creator: str("Creator") });
+  } catch {
+    return classifyProducer({ unreadable: "info_unreadable" });
   }
 }
 function classifyUri(uri) {
@@ -40687,13 +40788,38 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     stack.length = 0;
   }
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {
+    undetermined.push({
+      page: pageIdx,
+      reason: "no_text_layer",
+      font: null,
+      codes: "",
+      count: 0
+    });
+  }
   return { text, undetermined };
 }
+function pageDrawsImage(doc, resources) {
+  const xo2 = resources ? doc.dictOf(resources.XObject) : null;
+  if (!xo2) return false;
+  for (const name of Object.keys(xo2)) {
+    const map = doc.dictOf(xo2[name]);
+    if (map && nameOf(doc, map.Subtype) === "Image") return true;
+  }
+  return false;
+}
 async function extractText2(doc, pageOrder) {
+  const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
     const marker = { page: null, reason: "encrypted", font: null, codes: "", count: 0 };
-    return { document: "", pages: [], undetermined: [marker], counts: { chars: 0, undetermined: 1 } };
+    return {
+      document: "",
+      pages: [],
+      undetermined: [marker],
+      counts: { chars: 0, undetermined: 1 },
+      producer
+    };
   }
   const fontCache = /* @__PURE__ */ new Map();
   const pages = [];
@@ -40719,7 +40845,8 @@ async function extractText2(doc, pageOrder) {
     document: document2,
     pages,
     undetermined: allUndetermined,
-    counts: { chars: document2.length, undetermined: allUndetermined.length }
+    counts: { chars: document2.length, undetermined: allUndetermined.length },
+    producer
   };
 }
 async function extractPdfStructure(bytes) {

@@ -32,11 +32,14 @@ machine-local, so if `.env` is ever empty again that file is the answer.
 
 ## THE ONE THING THAT REFRAMES YOUR WHOLE LANE, and it is measured
 
-**NEITHER FLEET MEMBER IS DEPLOYED ANYWHERE.** In the account, on 2026-08-10:
+**THE FLEET HAD NEVER BEEN DEPLOYED. ONE HALF OF IT NOW IS.** Measured on 2026-08-10: the
+account held only `biosmoke7`, `civicos` and `newgroup` — listed, not probed by guessed name.
+`pdf-worker` was then built and deployed and is serving; **`agent-worker` cannot be deployed
+as configured** and the reason is D-292 below.
 
 ```
-biosmoke7     HTTP 200        newgroup   HTTP 200      civicos  HTTP 200
-pdf-worker    HTTP 404        agent-worker  HTTP 404
+before          biosmoke7 200   civicos 200   newgroup 200   pdf-worker 404   agent-worker 404
+after           biosmoke7 200   civicos 200   newgroup 200   pdf-worker 200   agent-worker REFUSED
 ```
 
 And the plane's own configuration declares three service bindings that the deployed plane does
@@ -47,8 +50,8 @@ wrangler.jsonc declares : PDF_WORKER -> pdf-worker, AGENT_WORKER -> agent-worker
 live biosmoke7 has      : []          (zero service bindings of any kind)
 ```
 
-**DS-1 is written as "the installer installs the fleet". Read against the tree, it is larger
-than that: there is no deployed fleet ANYWHERE to install a copy of.** Both members exist in
+**DS-1 is written as "the installer installs the fleet". Read against the tree it is larger
+than that, and the deploy above is why: half the fleet could not go up at all.** Both members exist in
 the repo with `fleet-member.json`, both carry suites, and a great deal of work has been built
 against them — FL-2 through FL-5, D-262, D-276 — with **no member ever having run outside a
 test harness.**
@@ -60,6 +63,17 @@ treats as authoritative and the configuration that actually ships have no mechan
 them equal. Arming `SELF` also arms two monitoring consumers that are inert today — REC-26's
 and CAP-3's — whose semantics are RECORD's and CAPTURE's, so that is a change to make
 deliberately and with them told, not as a side effect of a deploy.
+
+**MEASURED 2026-08-10 BY ACTUALLY TRYING IT, and it changes DS-1's content: `pdf-worker` IS
+NOW DEPLOYED and serving `{"ok":true,"name":"pdf-worker","version":"0.1.0"}`. `agent-worker`
+was REFUSED by Cloudflare** — *"Service binding 'PLANE' references Worker 'bio-plane' which was
+not found"*. **Every service binding in the repo names `bio-plane`, and no worker is ever
+deployed under that name**: `deploy.mjs` takes the slug as an argument, this instance is
+`biosmoke7`, and a group's instance is named by the group. That is **D-292**, and it corrects
+D-202's stated remainder — deriving bindings from `wrangler.jsonc` alone would make every plane
+deploy fail identically. The binding target must be the INSTANCE SLUG. **Do not fix it by
+writing `biosmoke7` into the configs**; that hardcodes the smoke instance into files meant for
+arbitrary group accounts.
 
 **Sequencing consequence worth stating before you plan:** DS-2 (version authority spans the
 fleet) and DS-4 (the gated deploy) both assume a fleet that can be versioned and deployed.
