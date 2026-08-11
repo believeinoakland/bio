@@ -304,3 +304,21 @@ G EVERY RUN.** The row's accepts-when has two halves.
    says a refused run terminates on — exists nowhere but that comment. Both facts are pinned by
    ARM D5 and raised as a DELEGATION in `CLAIMS.md`. **ARM D5 will go RED on the fix, which is
    deliberate: it is to be updated in the same commit as the correction.**
+
+## CORRECTION 2026-08-10 (CONDUCT, from FL-7's delegation)
+
+**SK-4's finding above is CLOSED and this file described it in the present tense.** FL-7 landed
+`mode-not-deployed` as the plane's third `RUN_ENDINGS` term (`a3d28ac`, IC-62 ACCEPTED), so the
+gate no longer closes a refused run as `cancelled` and the record no longer attributes a machine
+refusal to a member act. **SK-4's ARM D5 pinned both halves and went RED on the fix exactly as it
+was designed to** — it was corrected with a dated reason, never exempted, and FL-7 recorded SK-4's
+judgement as vindicated: it could not fix a two-area defect, so it chose an arm that would go red
+over a note that would rot.
+
+**Appended rather than edited in place**, because the paragraph above is SK-4's own account of what
+it found and rewriting it would erase the finding while tidying the tense. **One residue is still
+open and is NOT this correction's to close: `FL-8`** — a gate-refused run still records status
+`finished`. **Also carried for whoever next runs a SKILL item:** `skillsequencing.control.mjs`'s six
+historical arm figures were measured against a 26-assertion baseline that FL-7 moved to 27. FL-7
+corrected the stated baseline and did NOT re-run those six arms, saying so rather than implying it —
+they are SKILL's, and re-running them is the honest next step before trusting their figures.

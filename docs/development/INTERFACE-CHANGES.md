@@ -3879,6 +3879,8 @@ before; it simply gets the answer of the projects that still stand behind it.
 
 ## IC-62 · I3: `RUN_ENDINGS` GAINS ONE ADDITIVE TERM — `mode-not-deployed`, so a launch the deployment gate REFUSED stops saying a member cancelled it · PROPOSED 2026-08-10 (FL-7, enacting SK-4's DELEGATION) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Additive, and accepted on a MEASURED basis rather than a permissive one: ten files read `RUN_ENDINGS`, nine derive from `Object.keys` or look up by key and absorbed the third term with no edit, and exactly one carried a hand-written exhaustive expectation — which was corrected, not exempted. **`civicos-ui`'s impact is zero and STRUCTURALLY so**, because its own ARM V1 asserts the UI holds no copy of this vocabulary, so the change stayed two-area rather than three; that is the drift defence paying for itself at the moment a vocabulary moved. **The residue this row NAMES rather than fixes is now FL-8**: a gate-refused run still records status `finished`, which is the same misdescription one vocabulary over. Naming it here instead of reaching into `RUN_STATUS` mid-item was the right call — a third vocabulary is not a place to arrive by accident.
+
 - **Interface:** I3 (the plane's published run vocabulary — `RUN_BOUNDS` / `RUN_ENDINGS`,
   reaching members through `op=affordances`' pack body and through a run's own stopped record)
 - **Proposer:** FLEET, session `fl7-gate-ending`, 2026-08-10, from QUEUE FL-7
