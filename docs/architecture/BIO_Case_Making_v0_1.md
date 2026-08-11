@@ -417,6 +417,18 @@ risk of any state machine, not of this one.
 
 ## Naming: three names for three phases, and the type name question
 
+> **AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The
+> collapse below STANDS for inquiry and finding — one recursive object, a finding being
+> an inquiry that reached a conclusion. **`case` is no longer a phase of that object: a
+> case is a PRODUCTION OF A PROJECT** — a set of finding-versions plus the publishing
+> project, published by a project owner against the project's own bar, members pinned by
+> version. A finding serves many cases; a project spans many cases. What this section
+> says about the names' member-facing role survives; what it says about `case` being the
+> same object in a later phase does not. `docs/development/CASE-AS-PRODUCTION.md` is the
+> design; DEC-72 is the ruling.
+
+
+
 **RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes,
 `case` once published.** Same object, different phases, different names.
 

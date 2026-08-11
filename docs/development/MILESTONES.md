@@ -487,6 +487,17 @@ D-147 / D-148 (the records-request lifecycle and the fee quote as evidence) ·
 > placement note under M9, 2026-08-07.** The published bundle carrying the claim's
 > current version is this rung's ceremony, behind D-187's reshape and DEC-59's elements.
 
+> **DEC-72 RESHAPES THIS RUNG'S OBJECT MODEL (Bob, 2026-08-10) — read
+> `docs/development/CASE-AS-PRODUCTION.md` before building anything here.** A case is a
+> PRODUCTION OF A PROJECT: its own object — a set of finding-versions plus the publishing
+> project — published by a project OWNER against the PROJECT'S bar at act time, members
+> pinned by version like a commit, load-bearing members meeting the bar and supporting
+> members included without being presented as load-bearing (at least one load-bearing
+> member required). A finding serves many cases across projects and within one; a project
+> may span several published cases. The decomposition is CASE-1 … CASE-6 (BOB INBOX,
+> 2026-08-10), all on this rung; the acceptance below reads through DEC-72 wherever it
+> assumes a case is a phase of the finding or that a bar attaches to one.
+
 > **These two rungs are not appended after the substrate; they are what the other eight
 > serve.** D-127 records the structural finding and it is worth keeping in front of a
 > reader of this ladder: M0–M8 are substrate and surfaces — running unattended, every

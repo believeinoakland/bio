@@ -193,6 +193,39 @@ both ways — wherever a set of decisions arises, check the member is ENABLED to
 or in bulk and FORCED into neither. A bulk-only surface is the same flaw as a
 per-item-only one.**
 
+**2026-08-10 · BOB · DEC-72: A CASE IS A PRODUCTION OF A PROJECT — THE PUBLICATION
+REDESIGN, RULED BY BOB AND DECOMPOSED.** Read `docs/development/CASE-AS-PRODUCTION.md`
+FIRST — it is the design, the implications each worked, and the supersession table. The
+ruling in one line: a case is its own OBJECT (a set of finding-versions plus the
+publishing project), published by a project OWNER against the PROJECT'S bar at act time;
+members pin by version like a commit; load-bearing members meet the bar, supporting
+members are included without being presented as load-bearing (≥1 load-bearing required);
+a finding serves many cases and a project spans many cases.
+
+**The decomposition, all M10, IC protocol against I3/I5 where marked:**
+- **CASE-1 · the case object** (schema: project-owned case, membership rows of finding ×
+  version-hash × role × ordinal, editions; I5). Depends on: —
+- **CASE-2 · publication as the project's production** (owner fence; per-act project bar;
+  ≥1 load-bearing; bar gates load-bearing members' derived strength; strictest-composition
+  and the project-less path REMOVED, suites corrected never exempted; I3). Depends: CASE-1
+- **CASE-3 · version pinning** (freeze members by version hash on the existing version
+  chain; edits to published versions mint new versions). Depends: CASE-1
+- **CASE-4 · lifecycle + revision flags** (`published` leaves the inquiry state machine —
+  State Rules amendment; containing cases FLAGGED set-but-never-clear when a member
+  revises). Depends: CASE-2, CASE-3
+- **CASE-5 · the artifact flip** (case-side freezing; finding bytes stop naming a case;
+  verify/publishedcase/publishedmanifest read the case artifact; stranger-verification
+  proven end to end). Depends: CASE-2, CASE-3
+- **CASE-6 · the surfaces** (owner-gated ceremony with authored load-bearing designation;
+  case page shows the bar as the CASE'S property with per-claim strength beside each
+  finding; multi-case membership on the finding view). Depends: CASE-5
+
+**What this supersedes is in the design doc's table — enact the bookkeeping as you drain:**
+DEC-71 is closed on the register (done by BOB); D-280's composed read goes with CASE-2;
+REC-44's finding-side stamping goes with CASE-5; UI-55's audit and any in-flight
+publication work should read CASE-AS-PRODUCTION.md before landing anything on the old
+shape. Sequencing, wave placement and worker scoping are yours as always.
+
 **2026-08-10 · BOB · A SURGICAL GATE PROFILE EXISTS: `node tools/gates.mjs`.** Bob asked
 why a docs-only change costs ~25 minutes of gates. The tool measures the diff: entirely
 prose under `docs/` → the doc-facing suites (derived at run time by grepping `test/` for

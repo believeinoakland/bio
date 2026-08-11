@@ -200,7 +200,55 @@ enacted: 2026-08-10 · session BOB, same turn — nothing to build and nothing t
   item (carried in the 2026-08-10 BOB INBOX entry) is closed as withdrawn. Reasoning in
   this entry.
 
-### DEC-71 · open
+### DEC-72 · answered
+raised: 2026-08-10 · session BOB, recording a design ruling Bob converged in conversation
+  (the brainstorm brake was his: "nothing we discuss should change anything until we zero
+  in on the truth" — this entry is the zeroing-in, recorded on his explicit go).
+for: bob (his own ruling, recorded)
+question: What is a published case — a phase of a finding, or its own object — and whose
+  standard of evidence governs publication?
+response: **A CASE IS A PRODUCTION OF A PROJECT: ITS OWN OBJECT — A SET OF FINDING-VERSIONS
+  PLUS THE PUBLISHING PROJECT — AND THE BAR IS THE PROJECT'S, TOLD TO THE PUBLISHING ACT.**
+  Bob, 2026-08-10, the four propositions and the answers that closed them, verbatim where
+  it matters:
+  (1) *"The bar — that is, the standard of evidence — is a property of a project, not an
+  inquiry or claim."* Nothing composes across projects: the same finding may clear a
+  journalist project's bar and fall short of a lawyer project's, and both facts stand.
+  (2) *"Only findings that are part of a project can be published"* — publishing is
+  *"something that's done as a production of the project."* The project-less publication
+  path is removed.
+  (3) Publication pins versions like a commit: *"Once published, the act of changing the
+  findings (or any claims of any of the findings) results in the changed version becoming
+  a new version."*
+  (4) *"All load-bearing findings of a case being published must meet the necessary bar.
+  Other findings/claims that don't meet the bar can be a part of the published work,
+  though they aren't presented as load-bearing."* The designation is authored by the
+  publisher; each claim's own strength is displayed beside the case's standard, because
+  *"a claim could be even stronger than required for that case."*
+  (5) *"The publisher of a project … must be a manager of the project"* — ruled with the
+  default that MANAGER IS THE EXISTING PROJECT OWNER ROLE, no third role minted.
+  (6) A finding has lasting value and serves many cases, across projects and within one:
+  *"A finding is mined, often involving hard work. So once resolved, the finding should
+  have lasting value."* A project may span several published cases (an investigative
+  series), and *"a case is a different object, not just a different phase of a finding."*
+  Second ruled default: A CASE REQUIRES AT LEAST ONE LOAD-BEARING MEMBER.
+decided: 2026-08-10 · Bob
+enacted: 2026-08-10 · session BOB, same turn — the design with every implication worked
+  (revision flags on containing cases, the artifact-flip, the lifecycle change, the
+  honest-absent-bar posture) is `docs/development/CASE-AS-PRODUCTION.md`; the
+  decomposition (CASE-1 … CASE-6, all M10, interfaces I3/I5 via the IC protocol) is in
+  the BOB INBOX; M10's milestone entry is amended; `BIO_Case_Making_v0_1.md`'s
+  three-phases naming section carries a dated amendment note. SUPERSEDES: DEC-71
+  (dissolved — bars never attach to findings, so none can linger), DEC-17's
+  strictest-across-citers composition (the group-default-seeds-projects half of DEC-17
+  STANDS), D-280's fix (moot — the composed read is removed), the project-less
+  publication path, REC-44's finding-side case stamping (the stranger-verification
+  property is preserved case-side), and `published` as an inquiry lifecycle state
+  (only-CONCLUDED-may-be-a-member survives as the precondition). DEC-44 is NOT
+  superseded; its one-finding degenerate case stays legal. Reasoning in this entry and
+  CASE-AS-PRODUCTION.md.
+
+### DEC-71 · answered
 raised: 2026-08-10 · CONDUCT (at D-280's integration — the worker filed IC-61 stating the
   consequence in the open rather than letting it land quietly, and this entry is CONDUCT
   routing it to the person whose call it is)
@@ -256,6 +304,16 @@ requires severance, a severed citation means a project genuinely LEFT — which 
 the question to its clean form (does a departed project's declared bar still govern?)
 and strengthens the shipped direction, because the leftover bar cannot be defended as
 protecting evidence quality.
+response: **SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes
+  the bar a property of the PROJECT, told to the publishing act at act time; no bar ever
+  attaches to a finding, so no departed project's bar can linger and nothing composes
+  across citers. D-280's fix becomes moot rather than wrong (the composed read it
+  corrected is removed by CASE-2), and its direction — a fence must rest on a live
+  assertion — is the same instinct DEC-72 makes structural.
+decided: 2026-08-10 · Bob, via DEC-72
+enacted: 2026-08-10 · session BOB, same turn — carried entirely by DEC-72's enactment:
+  `docs/development/CASE-AS-PRODUCTION.md` (design and supersession table) and the CASE-2
+  decomposition item in the BOB INBOX. Reasoning in DEC-72 and this entry.
 
 ### DEC-70 · open
 raised: 2026-08-10 · CONDUCT (lifted from D-280's report — the worker raised it and did NOT
