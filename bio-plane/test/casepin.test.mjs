@@ -67,7 +67,8 @@
  *     which is CASE-5. This item serves the pin and does not move the predicate.
  */
 
-import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import "./stdio.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -250,7 +251,24 @@ const reopen = async (target, reason) =>
    store method behind it and `publishcase` is a DO-internal name index.mjs does
    not whitelist. Spelled as the literal a real caller uses, which is also what
    `coverage.mjs` credits. */
-const publishCase = async (body) => rP(await POST(`op=publish&token=${VERA}`, body));
+/* CORRECTED 2026-08-10 AT THE CASE-2/CASE-3 INTEGRATION, NEVER EXEMPTED, AND THE OLD
+   CALL WAS RIGHT WHEN IT WAS WRITTEN. This suite published with no `project` and no
+   `roles`, which was the entire shape of `op=publish` until CASE-2 landed DEC-72 in
+   parallel with CASE-3. CASE-2 built `publishingproject.mjs` and corrected every suite
+   it could SEE — this one did not exist on its branch, which is why the pair went red
+   at the merge and not before. Routed through CASE-2's own helper rather than through a
+   second hand-rolled project fixture: a second way to make a publishing project is a
+   second thing to keep true. **The project is owned by VERA and not by nadia, because CASE-2's
+   fence is OWNER-ONLY and vera is the member this suite publishes and ratifies as** — a project
+   owned by someone else answers `NO_SUCH_PROJECT`, since a project you cannot see is answered
+   exactly as one that does not exist. `allLoadBearing` designates every target load-bearing,
+   which is what this suite means — it is about the PIN, and a supporting member would
+   be an unrelated variable in a freeze test. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-case3", owner: "vera",
+  id: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
+const publishCase = async (body) => rP(await POST(`op=publish&token=${VERA}`,
+  { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
 
 /* THE SIX ACT OPS, SPELLED OUT AS LITERALS rather than composed. `coverage.mjs`
    reads `op=<name>` out of suite sources to decide whether a real caller has a

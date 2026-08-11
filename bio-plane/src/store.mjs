@@ -26676,7 +26676,7 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author") }),
         strengthbar: () => this.strengthBarSet({ ...(body || {}),
           author: url.searchParams.get("author") }),
-        /* CASE-2 / IC-64: `project` is the arm DEC-72 makes the answer. `target`
+        /* CASE-2 / IC-65: `project` is the arm DEC-72 makes the answer. `target`
            is still ACCEPTED and still REACHES the method — deliberately, because
            a withdrawn arm that 404s at the router tells a caller nothing, while
            one that reaches the method is refused BY NAME with the reason. */

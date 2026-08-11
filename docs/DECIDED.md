@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-649 rulings across 67 documents.
+650 rulings across 67 documents.
 
 ## DEC-
 
@@ -57,7 +57,9 @@ authority is the file named, never this one.
 - **DEC-17** · 2026-08-01 — RULED 2026-08-01 (DEC-17). `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that a claim *"needs a standard of proof attached and that is doctrine rather than architecture — the next design conversation"*; this is that conversation. The question was what makes an unsupported case harder to state, and…  
   `docs/development/DEBT.md:124`
 - **DEC-17** — Removes DEC-17's strictest-across-citers composition and the project-less publication path — suites CORRECTED, never exempted.** Carries D-280's composed read, which becomes MOOT rather than wrong (see its row below).  
-  `docs/development/QUEUE.md:541`
+  `docs/development/QUEUE.md:540`
+- **DEC-17** — The one genuine ambiguity was DECIDED FROM THE AUTHORITY rather than returned:** whether the group default still backs a publication is answered verbatim by the supersession table (*group default as a publication bar — Removed*).  
+  `docs/development/QUEUE.md:543`
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1369`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
@@ -203,7 +205,7 @@ authority is the file named, never this one.
 - **DEC-72** · 2026-08-10 — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
   `docs/development/DECISIONS.md:307`
 - **DEC-72** · 2026-08-10 — op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are…  
-  `docs/development/INTERFACE-CHANGES.md:4205`
+  `docs/development/INTERFACE-CHANGES.md:4203`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
   `docs/development/QUEUE.md:197`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
@@ -1188,9 +1190,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - project, then to the RULED group-admin fallback, then to `unassigned`.  
   `docs/development/INTERFACE-CHANGES.md:3838`
 - argument appears on a mutating op, an argument arm of a read op is WITHDRAWN, and a value the stamped bar could previously carry (`source: "group"`) can no longer occur.  
-  `docs/development/INTERFACE-CHANGES.md:4215`
+  `docs/development/INTERFACE-CHANGES.md:4217`
 - `op=strengthbarof`: the `target=` arm is WITHDRAWN; a `project=` arm replaces it; `group=` is UNCHANGED.** op=strengthbarof&target=<finding> -> REFUSED, reason BAR_IS_A_PROJECT_PROPERTY  
-  `docs/development/INTERFACE-CHANGES.md:4270`
+  `docs/development/INTERFACE-CHANGES.md:4272`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  

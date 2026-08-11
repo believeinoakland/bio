@@ -1174,7 +1174,18 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
     + `&conclusion=${encodeURIComponent("The ledger and the minutes carry the transfer.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
   if (!concluded?.ok) throw new Error(`conclude ${PUBD}: ${JSON.stringify(concluded).slice(0, 400)}`);
+  /* CORRECTED 2026-08-10 AT THE CASE-2/CASE-3 INTEGRATION, NEVER EXEMPTED, AND THE OLD
+     CALL WAS RIGHT WHEN IT WAS WRITTEN. It published with no `project` and no `roles`,
+     which was the whole shape of `op=publish` until CASE-2 landed DEC-72: a case is a
+     PRODUCTION OF A PROJECT, so a publication naming no project is one whose bar nobody
+     declared. This suite is not about publication — it publishes only to reach a
+     published finding — so it takes the shortest conforming call rather than acquiring
+     an opinion about the ceremony. The project is the one this fixture already enrols
+     for its `current` arms; the finding is designated load_bearing because CASE-2
+     requires at least one and a default would be a designation nobody authored. */
   const pubd = await POST(`op=publish&token=${RUTH}&target=${encodeURIComponent(PUBD)}`, {
+    project: "PROJ-2026-2000-oversight",
+    roles: { [PUBD]: "load_bearing" },
     scope: "Whether the sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
     excluded: [{ description: "the FY2023 comparison memo", reason: "a records request for it is outstanding" }],

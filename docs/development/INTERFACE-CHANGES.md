@@ -4120,7 +4120,6 @@ None for any consumer. A UI that starts reading `project_id`, `role` or `version
 until CASE-2 and CASE-3 land, and `production` says in words what that null means, so a surface can
 be built against the final shape today without rendering a claim the record cannot support.
 
-<<<<<<< HEAD
 ## IC-64 · I3: `op=publishedcase`'s member rows GAIN `version_sha` (the pinned version), and the FOUR version acts that MOVE A READING'S STATE now REFUSE on a published finding (`PUBLISHED_CANNOT_MOVE_VERSION`, C-25.34) · PROPOSED 2026-08-10 (CASE-3, enacting DEC-72 clause 3) — the version bump and the RESOLUTION are CONDUCT's
 
 **RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Measured impact: the four version-act ops have **no rendering consumer** — only four rows in `surface-registry.test.mjs` marking them owed by UI-43 — and `version_sha` has zero consumers outside the plane. **So the behaviour change lands BEFORE its surface exists, which is the cheap direction and is worth naming:** UI-43 will build against a fence that is already true, rather than against one that arrives later and quietly invalidates what it drew. The refusal ships with its sentence — the untranslated-in-reach ratchet did not move.
@@ -4199,10 +4198,13 @@ that DIST regenerates and nobody edits.
 **So the honest reading is that this lands before its consumer exists, which is the cheap moment to
 land it** — and the note UI-43 needs is above, in "What a caller must do", rather than in a handoff
 nobody re-reads.
-=======
 ---
 
-## IC-64 · I3: `op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+## IC-65 · I3: `op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+**RENUMBERED FROM IC-64 TO IC-65 AT INTEGRATION, 2026-08-10 by CONDUCT — the established collision protocol: the LATER allocation moves.** CASE-2 and CASE-3 ran in parallel and both minted `IC-64`, because `mintid` derives its floor from ids MENTIONED IN PROSE and **neither branch could see the other's file**: each read a corpus whose highest IC was 63 and each was right about the corpus it could read. CASE-3's IC-64 merged first and is already RESOLVED, so this one moves — the same reasoning DEC-50 was renumbered under, that the id other documents will already be citing is the one that stays. **Caught by `mintid --audit`'s duplicate arm in the battery, not by review**, which is the argument for that arm existing: two correct workers, one number, and nothing in either branch could have detected it. **A parallel wave should mint shared-namespace ids at SPAWN rather than in the worker** — recorded here because it is CONDUCT's lesson, not the workers'.
+
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Measured impact ZERO and asserted rather than surveyed: `op=publish` has no UI consumer BY ASSERTION (DEC-33 defers the ceremony and `publication-entry.test.mjs` pins that it is never reached on the wire), `op=strengthbarof` has none at all, and `required_strength`'s one consumer reads four fields none of which move. One stale mock fixture is named for CASE-6.
 
 - **Interface:** **I3** (the op contracts). I5 is NOT filed against: this item adds no table and
   no column — CASE-1 built `cases`, `published_case_members.role` and `.version_sha` under IC-63,
@@ -4367,4 +4369,3 @@ minting cases whose standard of evidence nobody declared.
 
 **For any caller of `op=strengthbarof&target=`:** ask the publishing project instead. The refusal
 says so by name.
->>>>>>> worktree-agent-a819c7ac95b78cff1
