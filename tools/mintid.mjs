@@ -277,6 +277,25 @@ export const NAMESPACES = {
   M0: item("test-estate queue items"),
   DIST: item("DIST queue items"),
   DS: item("DIST track rows in IS-BUILD-PLAN.md — the SAME lane as DIST under a second prefix, which is worth knowing and is not this item's to reconcile"),
+  /* Registered 2026-08-10 when DEC-72's decomposition arrived. The design doc
+     `CASE-AS-PRODUCTION.md` names CASE-1..CASE-6 as a BULLET LIST, which matches
+     NEITHER allocation shape — so unlike PL/FL/SK/VF/DS, the queue's `### CASE-n ·`
+     headings are the FIRST allocation site rather than a second one, and there is no
+     duplicate to renumber. Registered before the headings were written, so the prefix
+     was never allocating unregistered. */
+  /* CASE CARRIES ITS OWN CEILING AND ITS OWN PATTERN, AND BOTH ARE PAID FOR.
+     The FIRST registration used the generic `\bCASE-(\d+)` and minted CASE-2027..2032
+     — because the record's PUBLISHED CASE IDENTIFIER is `CASE-<year>-<seq>`, and
+     `CASE-2026-0001` in an archived ledger read as queue item 2026. That is `M`'s
+     hazard exactly, named in this file already: TWO ALLOCATION SPACES WEARING ONE
+     PREFIX. The six ids are BURNED and the design doc's own CASE-1..CASE-6 stand.
+     The pattern now requires the number to END there — a word boundary NOT followed
+     by a hyphen — so the record's identifier can never move this floor again. Kept as
+     a pattern rather than a ceiling because a ceiling of 999 would still admit
+     `CASE-0001-...` if the identifier's shape ever flips. */
+  CASE: { ...item("case-as-a-production queue items (DEC-72, CASE-AS-PRODUCTION.md)"),
+          ceiling: 999,
+          pattern: (ns) => new RegExp(`\\b${ns}-(\\d+)\\b(?!-)`, "g") },
 
   /* (iii) structural */
   I: { kind: "structural", what: "interface identities", corpus: ["docs/development/INTERFACES.md"],
