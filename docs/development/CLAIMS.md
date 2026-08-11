@@ -30,6 +30,18 @@ The format is the one `PARALLELISM.md` fixes:
 > check whether a path was claimed could not read it, which is the one thing a claim
 > register has to support. Nothing was edited and no held claim moved.
 
+### FINDING 2026-08-10 CONDUCT — **A SECOND SESSION COMMITTED IN CONDUCT'S WORKING TREE AND SWEPT UNCOMMITTED WORK INTO ITS COMMIT. NOTHING WAS LOST; THE RECORD WAS MISATTRIBUTED.**
+
+**What happened, measured rather than inferred.** CONDUCT finished integrating CASE-1 — the queue row closed with its reasoning, IC-63 resolved, `REGISTER_FLOOR` moved to 839/159/160 from the merged green run — and had NOT yet committed. A DIST session working in **the same checkout** then committed with a broad `git add`, and `576dd52` ("dist: rewrite DIST-NEXT") carries four files: its own `DIST-NEXT.md` rewrite **plus CONDUCT's `QUEUE.md`, `INTERFACE-CHANGES.md` and `coverage.mjs` changes.** CONDUCT's next `git commit` reported *nothing to commit, working tree clean*, which is how this was noticed at all.
+
+**Nothing was lost and that is checked, not assumed:** `CASE-1 · done` present, `CASE-2`/`CASE-3` marked running, five `RESOLUTION: ACCEPTED` rows, floor at 839 — all on `origin/main`.
+
+**The cost is real anyway, and it is the record's kind of cost.** The reasoning for CASE-1's integration — why two of three clauses were extended rather than duplicated, why the floor moved to that figure from that run — is now under a commit message about a stale resume prompt. **A reader running `git log` on `coverage.mjs` to ask why the floor moved will find an answer about DIST-NEXT.** The reasoning survives in `QUEUE.md`'s own `landed:` line, which is why the loss is attribution rather than content.
+
+**The rule this crosses is already written: DEC-3, one session per tree** (`main` is CONDUCT's). `PARALLELISM.md`'s claim mechanism reserves paths BETWEEN checkouts and cannot see two sessions inside ONE checkout — the same blind spot this queue records for two areas claiming one file, one level up. **A claim would not have prevented this.** What would: DIST running in its own worktree, or committing by explicit path rather than `add -A`.
+
+**Not repaired by rewriting history.** `CLAUDE.md`: never force-push. The commit stands, this entry names what is inside it, and the next reader of `576dd52` has somewhere to land. Recorded here rather than only in a commit message because a commit message is exactly the surface that failed.
+
 ## CLAIM 2026-08-09 UI (UI-42 — version review: rotation and diff)
 session: ui42-version-review (worktree agent-a8c8ed9c32eb56980)
 opened: 2026-08-09T00:00:00Z
