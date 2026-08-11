@@ -515,7 +515,8 @@ conflict worth having.
 written AT ACTIVATION in the same act (`plancheck` fails an ACTIVE area with no kickoff).
 Recorded here so activation is one act rather than a re-derivation.
 
-### CASE-1 · queued
+### CASE-1 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` is only true while a worker is alive** — verify with `git log --oneline main | grep -i 'CASE-1'` before believing it.
 milestone: M10
 interface: I5 via the IC protocol — new schema; file the IC before building
 depends-on: none. **THIS IS THE TOP OF THE CASE WAVE and the only row in it.**
@@ -560,8 +561,8 @@ milestone: M10
 interface: I3 consumption
 depends-on: CASE-5
 scope: **Design doc is the authority.** The surfaces: publication ceremony UI (owner-gated, load-bearing designation AUTHORED, bar shown as the case's property); published case page (bar prominent, per-claim strength beside each finding, **supporting members visibly NOT load-bearing**); multi-case membership on the finding view. **DEC-69 governs every one of these surfaces** — inform at the act once; never nag, re-confirm or force a mode.
-accepts-when: as the design doc's CASE-6 bullet.
-added: 2026-08-10 · CONDUCT
+accepts-when: as the design doc's CASE-6 bullet — **PLUS THE ARC'S DEFINITION OF DONE, WHICH IS A CONDITION ON THIS ROW AND NOT A MEMORY** (Bob, relayed 2026-08-10). CASE-6 is the closing item, so it does not pass until, **in the same turn it lands**: (1) `docs/BIO_DATAPLANE_STATE.md` is AMENDED to the case-as-production model — not afterwards, not as a follow-up row; (2) `docs/development/CASE-AS-PRODUCTION.md` is ARCHIVED to `docs/archive/`, which `decided.mjs` and `mintid` both still scan, so archiving is not lossy; (3) `node tools/decided.mjs` regenerated and committed. **Written into `accepts-when` deliberately rather than into a handoff note: this session has watched a note-not-an-item failure three times today, and a definition of done carried in prose is the same shape.**
+added: 2026-08-10 · CONDUCT (the closing conditions added the same day, from Bob's relayed instruction)
 
 ### REC-15 · blocked
 milestone: M10
@@ -721,7 +722,8 @@ genuinely open and blocked on a judgement that is RECORD's, not the scheduler's)
 inside the very turn that was repairing the board. That is the third instance this month
 (PL-18, PL-19, UI-53) and the first where the cost was immediate.
 
-### FL-7 · queued
+### FL-7 · running
+spawned: 2026-08-10 · CONDUCT (worker live at spawn). **`running` is only true while a worker is alive** — verify with `git log --oneline main | grep -i 'FL-7'` before believing it.
 milestone: M9
 interface: possibly I3 — an added run ENDING is a published vocabulary; file the IC with measured consumer impact if the shape moves
 depends-on: none — FL-3 is landed
