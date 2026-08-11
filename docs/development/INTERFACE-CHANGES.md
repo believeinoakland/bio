@@ -4119,3 +4119,80 @@ CASE-2/CASE-3/CASE-5 ground.
 None for any consumer. A UI that starts reading `project_id`, `role` or `version_sha` gets `null`
 until CASE-2 and CASE-3 land, and `production` says in words what that null means, so a surface can
 be built against the final shape today without rendering a claim the record cannot support.
+
+## IC-64 · I3: `op=publishedcase`'s member rows GAIN `version_sha` (the pinned version), and the FOUR version acts that MOVE A READING'S STATE now REFUSE on a published finding (`PUBLISHED_CANNOT_MOVE_VERSION`, C-25.34) · PROPOSED 2026-08-10 (CASE-3, enacting DEC-72 clause 3) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I3** (the op contracts). **NOT I5** — and that is worth stating rather than
+  leaving to be noticed: CASE-1 already landed `published_case_members.version_sha`, so this item
+  adds no column, no table and no migration row. It FILLS a column that shipped empty.
+- **Proposer:** RECORD, session `case3-version-pinning` (worktree `agent-a36b6782b06f5a651`),
+  2026-08-10, enacting `docs/development/CASE-AS-PRODUCTION.md`'s CASE-3 bullet under **DEC-72**.
+- **Owner to land it:** `RECORD` (owns I3).
+- **Consumers to answer:** `UI`. See MEASURED IMPACT — one registry row set, no rendering consumer.
+- **Status:** PROPOSED. **ONE HALF IS PURELY ADDITIVE; THE OTHER HALF IS A BEHAVIOUR CHANGE AND IS
+  FILED AS ONE.** A field appearing is not an interface event worth an IC on its own; four ops that
+  used to SUCCEED now refusing in a state they previously accepted is, and burying that under the
+  additive half is how a loosened or tightened fence reaches a release note instead of a review.
+
+### The change
+
+**1. I3 — `op=publishedcase`'s `findings[]` entries gain `version_sha`.** The hash the case FROZE
+that member at, written at ratification from the RATIFIED BYTES — it is the member's own
+`bundle_sha`, which is the hash the member SIGNED, so the roster row names a version by the same
+identity the signature covers. `null` keeps its CASE-1 meaning exactly: rostered, and no version
+pinned. The same value already travels on `op=publishedmanifest`'s `caseMembers[]` rows, which
+CASE-1 published; this item is what puts a value in it.
+
+**It is served BESIDE `bundle_sha` and is not a second spelling of it.** `bundle_sha` is what the
+published row HOLDS; `version_sha` is what the case COMMITTED TO. Today they agree, because a
+member's edition is still slaved to its case's — **the moment they can diverge is CASE-5's**, and
+this item deliberately does not move the resolution predicate that would make them diverge.
+
+**2. I3 — a behaviour change on four ops.** `op=versionaccept`, `op=versionreject`,
+`op=versionconsider` and `op=versionrevert` now REFUSE when the inquiry is `published`:
+
+    reason: "PUBLISHED_CANNOT_MOVE_VERSION"   check: C-25.34
+    (a DEC-49 canned translation ships with it, in VERSION_ACT_CHECKS)
+
+**This closes a hole rather than adding a policy, and the precedent is in the two doors either side
+of it.** `op=inquirydivide` has always answered `PUBLISHED_CANNOT_DIVIDE` and `op=inquiryground`
+`PUBLISHED_CANNOT_RESTRUCTURE` — the latter in words that describe this door exactly: *"a published
+case's composed strength and its per-group breakdown are inside signed, ratified bytes. Re-cutting
+the structure underneath them would leave this document composing to something the edition on the
+record contradicts."* Moving which READING a finding stands on re-cuts that structure by the other
+route. DEC-72 clause 3 makes it explicit — Bob: *"Once published, the act of changing the findings
+(or any claims of any of the findings) results in the changed version becoming a new version."*
+
+**`op=versionhide` and `op=versioncurrent` are DELIBERATELY UNFENCED, and the line is the catalog's
+own rather than a judgement.** It is `VERSION_ACT_TO`, which already maps exactly the state-moving
+acts to a state and these two to `null`. `hide` is the prune flag and D-214 / DEC-29(b) rule that
+pruning HIDES AND NEVER DELETES, so nothing the published bytes assert has moved; `current` is §7's
+PROJECT stance, whose second write lands on the project and which requires `from === "accepted"`
+anyway. **A fence tighter than its rule is an undeclared interface change wearing the costume of
+caution**, so the over-strictness case is armed as its own negative control (arm (d)) rather than
+asserted to be fine.
+
+### What a caller must do
+
+**For the additive half: nothing.** A consumer that ignores `version_sha` is unaffected.
+
+**For the refusal: a surface that offers accept / reject / consider / revert on a finding must stop
+offering them once it is `published`, and offer REOPEN instead.** The refusal names the route in
+both its `detail` and its canned translation, so a surface that simply renders the translation is
+already correct — but a surface that renders the four controls unconditionally will now show a
+member four buttons that cannot work, which is the DEC-69 shape (never a control that refuses when
+it could be a control that is not there).
+
+### Measured impact
+
+**One registry row set, and no rendering consumer.** Measured 2026-08-10 across `civicos-ui/` and
+`newgroup/`: the only hits for the four op names are four rows in
+`civicos-ui/test/surface-registry.test.mjs` recording them as **published-by-PL-2, OWED-BY UI-43**
+— i.e. the ceremony surface is not built yet, so there is no screen today that offers these acts
+and none that can be made wrong by the refusal. `version_sha` has **zero** consumers outside the
+plane and the docs. Every other hit is `newgroup/src/release.mjs`, a BUILT COPY of the plane source
+that DIST regenerates and nobody edits.
+
+**So the honest reading is that this lands before its consumer exists, which is the cheap moment to
+land it** — and the note UI-43 needs is above, in "What a caller must do", rather than in a handoff
+nobody re-reads.

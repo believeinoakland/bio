@@ -157,6 +157,11 @@ console.log("\n--- 2. a real case, published and ratified, carries the new membe
 const GROUP = "believe-in-oakland";
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 let CASE_ROW = null, MEMBER_ROW = null;
+/* CASE-3 (2026-08-10): the sha that went into the signed `bio-ratify` statement,
+   hoisted here so block 3 can compare the PIN against the SIGNATURE rather than
+   against the pin column. Captured at the ratification below, and deliberately
+   not read back out of the answer under test. */
+let SIGNED_SHA = null;
 {
   const invite = async (memberId, role, capabilities) =>
     (await POST("op=memberadd&token=adm-case1",
@@ -265,6 +270,7 @@ let CASE_ROW = null, MEMBER_ROW = null;
   const liveSha = async () => ((await GET(`op=list&token=${RUTH}`)) || [])
     .find((b) => b.bundle_id === INQ)?.bundle_sha ?? null;
   const s = await liveSha();
+  SIGNED_SHA = s;
   const rat = await POST(`op=ratify&token=${RUTH}`, { bundleId: INQ, expectedSha: s, sig: signRatify(INQ, s) });
   t("and it RATIFIES with a real ssh signature — `published_case_members` is written inside that "
   + "transaction and nothing short of a real ratification reaches it",
@@ -284,12 +290,29 @@ let CASE_ROW = null, MEMBER_ROW = null;
   t("the case row carries `project_id`, PRESENT and NULL: this case was published before DEC-72's model "
   + "and no project owns it, which is a state of the record rather than a gap in the answer",
     ["project_id" in (CASE_ROW || {}), CASE_ROW?.project_id ?? null], [true, null]);
-  t("the member row carries `role` and `version_sha`, both PRESENT and NULL — nobody designated this "
-  + "member load-bearing or supporting and nobody pinned its version, and a migration may not invent "
-  + "either (a default would be a designation nobody authored)",
-    ["role" in (MEMBER_ROW || {}), MEMBER_ROW?.role ?? null,
-     "version_sha" in (MEMBER_ROW || {}), MEMBER_ROW?.version_sha ?? null],
-    [true, null, true, null]);
+  /* CORRECTED 2026-08-10 BY CASE-3, NEVER EXEMPTED, AND THE OLD ASSERTION WAS
+     RIGHT WHEN IT WAS WRITTEN. It read `version_sha` PRESENT and NULL, which was
+     the true state of the record while nothing wrote the column — CASE-1 built
+     the object and deliberately wrote no pin. **CASE-3 is the item that pins a
+     version**, exactly as this suite's own `production` sentence said it would
+     ("null until CASE-2 authors a role and CASE-3 pins a version"), so a member
+     ratified into a case now carries the hash its member SIGNED. Asserting NULL
+     here would now be asserting that the freeze did not happen.
+     THE TWO HALVES ARE SPLIT because they are now two different facts, and that
+     split is the point rather than a tidy-up: `role` is STILL null, because
+     CASE-2 has not landed and a designation may not be invented by a migration
+     or by a default — which is the half of the original claim that has not
+     moved, and it keeps its original wording. */
+  t("the member row carries `role` PRESENT and NULL — nobody has designated this member load-bearing "
+  + "or supporting, and a migration may not invent one (a default would be a designation nobody "
+  + "authored). CASE-2 is the item that fills it",
+    ["role" in (MEMBER_ROW || {}), MEMBER_ROW?.role ?? null], [true, null]);
+  t("and it carries `version_sha` PRESENT and PINNED to the hash this member SIGNED — CASE-3 landed "
+  + "the freeze this suite predicted, and the expectation is the sha fed to ssh-keygen rather than the "
+  + "column being read back",
+    ["version_sha" in (MEMBER_ROW || {}), MEMBER_ROW?.version_sha === SIGNED_SHA,
+     /^[0-9a-f]{64}$/.test(String(MEMBER_ROW?.version_sha))],
+    [true, true, true]);
   /* AND THE ROW SURVIVED THE JOIN. A LEFT JOIN written as an inner one would
      drop every pre-DEC-72 case off the public index the moment this table
      landed — the record losing published material because it gained a column.

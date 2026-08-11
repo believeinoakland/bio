@@ -562,9 +562,27 @@ const REGISTER_FLOOR = {
      fleet member and no fleet suite, and touched no file under `agent-worker/`. ONE KEY SET,
      checked for duplicates before writing; the previous value (826) is REPLACED, never joined.
      Battery 164/164 · 10,115 assertions; `--strict` exit 0 read unpiped. */
-  arms: 839,
-  classified: 159,
-  corpus: 160,
+  /* MOVED 2026-08-10 by CASE-3 (worktree agent-a36b6782b06f5a651): 839 -> 845 /
+     159 -> 160 / 160 -> 161, ALL THREE IN THE SAME TURN and every one read off
+     the figure a green `--strict` run PRINTED on this branch
+     (`arms 845/839 · classified 160/159 · corpus (suites read) 161/160 · GREW by
+     6 arm(s)`), never by adding to the numbers that were here.
+     THE RISE IS ONE NEW SUITE, `test/casepin.test.mjs`, whose declaration states
+     SIX armed arms (a)-(f) plus an unnumbered baseline — so `classified` and
+     `corpus` each move by one and `arms` by six. The baseline is deliberately
+     NOT an ordinal item: `countArms` reads the enumerated list, and an opening
+     `(baseline)` item is what CASE-1 measured going unreadable one item earlier.
+     **MEASURED AFTER THE COMMIT, NOT BEFORE.** Read on the working tree the run
+     reported the suite as UNTRACKED and held all three figures at the
+     in-commit values (839/159/160), because `provenance.mjs` will not let this
+     register count work no other checkout can see (D-238). The floor move is
+     therefore taken from a run made AFTER `git commit`, which is the only run in
+     which these numbers are reproducible by anyone else.
+     CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
+     see CASE-2's arms, and every figure here is true of this branch alone. */
+  arms: 845,
+  classified: 160,
+  corpus: 161,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
