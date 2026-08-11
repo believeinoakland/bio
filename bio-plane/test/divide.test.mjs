@@ -80,6 +80,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { DIVIDE_PROMPT, ACTS } from "../src/affordances.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -116,9 +117,17 @@ const conclude = async (tok, { target, conclusion, falsifier }) =>
    brought them together. The helper supplies a default so every assertion below
    goes on measuring what it was written to measure; the NEW rule is asserted on
    its own, by name, rather than by these calls happening to omit the field.
-   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins.
+   CORRECTED 2026-08-10, CASE-2 / DEC-72, in exactly that shape one ruling on: a
+   case is a PRODUCTION OF A PROJECT, so the act takes a publishing project and an
+   AUTHORED designation for every member. Both are supplied as defaults here for
+   the same reason `scope` is — this suite's subject is DIVIDING an inquiry, not
+   the publication ceremony, and every assertion below must go on measuring what
+   it was written to measure. The new rules are asserted by name in
+   `caseproduction.test.mjs`, which is where they are the subject. */
 const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
+  { scope: "Whether the signature question was properly handled, on the documents in hand.",
+    project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
 const affordances = async (target, tok = "mem-rec16") =>
   rP(await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`));
 const actIds = (r) => (r?.acts ?? []).map((a) => a.id).sort();
@@ -154,6 +163,13 @@ const ROSA = await enrol("rosa", "rosa-passphrase-1", "member", ["contribute"]);
 /* ---- documents ---- */
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
+/* CASE-2 / DEC-72: publication is a production of a project, so this suite needs
+   one and PILAR must own it. It declares NO BAR — an undeclared project is an
+   ABSENT bar, so nothing this suite publishes is newly gated and the fixture adds
+   a publisher rather than a fence. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-rec16", owner: "pilar",
+  id: "PROJ-2026-1600-divide", created: NOW, updated: LATER });
 const refLines = (refs) => refs.length
   ? ["references:", ...refs.flatMap((r) => typeof r === "string"
       ? [`  - target: ${r}`, "    rel: cites", "    status: confirmed"]

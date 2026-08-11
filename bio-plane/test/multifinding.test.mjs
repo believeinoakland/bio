@@ -50,6 +50,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- multifinding ---");
@@ -86,7 +87,16 @@ const anonBytes = async (args) => await anonRaw(`op=publishedbytes&${args}`);
 
 /* The ops are written out literally so coverage.mjs credits them at the CONTROL
    PLANE, which is a real caller's only route (D-43). */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* CORRECTED 2026-08-10, CASE-2 / DEC-72: a case is a PRODUCTION OF A PROJECT, so
+   the act takes a publishing project and an AUTHORED designation for every
+   member. Both are DEFAULTED here, and every existing refusal arm below goes on
+   driving its own subject — several of them (an EMPTY targets list, a duplicate
+   member) deliberately pass a member set the default partition then covers
+   exactly, which is why `allLoadBearing` derives from the body rather than
+   naming ids. This suite's subject is the SET and the container; the new rules
+   are asserted by name in `caseproduction.test.mjs`. */
+const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
+  { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -132,6 +142,11 @@ const ratify = async (id) => {
 /* ---- documents ---- */
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
+/* CASE-2 / DEC-72's publishing project, owned by WREN, who publishes throughout.
+   NO BAR is declared, so nothing this suite publishes is newly gated. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-rec44", owner: "wren",
+  id: "PROJ-2026-4400-multifinding", created: NOW, updated: LATER });
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];
@@ -348,8 +363,39 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
     e1.findings.map((f) => f.strength.map((a) => [a.axis, a.state, a.grade])),
     [[["capture", "graded", "B"], ["connection", "graded", "C"]],
      [["capture", "unrated", null], ["connection", "graded", "D"]]]);
-  t("and the ACT reports NO case-level strength",
-    ["strength" in e1, "required" in e1], [false, false]);
+  /* ==== CORRECTED 2026-08-10 BY CASE-2 UNDER DEC-72, NEVER EXEMPTED, AND THE
+     TWO HALVES OF THIS ASSERTION HAVE COME APART — WHICH IS THE RULING ITSELF.
+     It read `["strength" in e1, "required" in e1], [false, false]`: neither a
+     case-level strength NOR a case-level bar. Both were right when written,
+     because under DEC-17 the bar was read PER FINDING (from the projects citing
+     it), so a single case-level `required` would have been a composition over
+     findings — R2's forbidden composition wearing the bar's name, the exact
+     defect the `strength` half guards against.
+
+     DEC-72 SEPARATES THEM. Bob: *"The bar — that is, the standard of evidence —
+     is a property of a project, not an inquiry or claim."* The bar is now read
+     ONCE, from the publishing project, and is the CASE's own property; the
+     strength stays PER FINDING and composing it is still forbidden. So:
+
+       `strength` MUST STILL BE ABSENT — a case of two findings worth different
+       things has TWO answers, and one letter over the case is the composition
+       DEC-44 and R2 both refuse. This fixture is the only one in the estate that
+       can see it, because its two members differ on both axes.
+       `required` MUST NOW BE PRESENT — and its presence is not a relaxation: it
+       is the assertion that the two members CANNOT have been held to different
+       standards, which under the old model they could. `findings[].required`
+       still answers per member and is asserted below to be IDENTICAL across
+       them, which is the same claim from the other side. */
+  t("and the ACT reports NO case-level STRENGTH — a case of two findings worth different things has "
+  + "TWO answers, and one letter over the case is R2's forbidden composition at case altitude",
+    "strength" in e1, false);
+  t("BUT IT DOES REPORT A CASE-LEVEL BAR, and that asymmetry IS DEC-72: the standard of evidence is "
+  + "a property of the PUBLISHING PROJECT, read once at act time, so it is the case's own — while "
+  + "the strength remains each finding's and composing it stays forbidden",
+    ["required" in e1, e1.required.project, e1.project], [true, PUBLISHING_PROJECT, PUBLISHING_PROJECT]);
+  t("and the per-member bar AGREES with it in every member — the same claim from the other side, and "
+  + "a state the old model could not guarantee because each finding read its own citers",
+    e1.findings.map((f) => f.required.project), [PUBLISHING_PROJECT, PUBLISHING_PROJECT]);
 }
 const E1 = globalThis.__E1;
 const CASE_ID = E1.caseId;
@@ -561,12 +607,29 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
   t("a member whose signed bytes name a DIFFERENT roster is refused by name, never reconciled",
     [rl.reason, rl.declared, rl.signed], ["CASE_MEMBERSHIP_DIVERGED", [FIND_A, FIND_B], [FIND_C]]);
 
+  /* CORRECTED 2026-08-10, CASE-2 / DEC-72, AND IT IS THE 2026-08-05 CORRECTION
+     ABOVE ARRIVING A THIRD TIME — the note beside adversary 1 says the comment
+     "is only true if EVERYTHING the case asserts is copied, and this item added
+     a third thing it asserts". DEC-72 adds a FOURTH: the AUTHORED PARTITION,
+     which C-2.8 now requires on `published` and requires to cover the roster
+     EXACTLY. An adversary that rewrites `case_findings` and leaves `case_roles`
+     naming only itself is refused BY THE GATE (`GATE_REFUSED`) before it ever
+     reaches the divergence check — so it would silently stop testing its own
+     subject, which is exactly the failure the 2026-08-05 note recorded.
+     `case_project` needs no such treatment: FIND_C published under the same
+     project, so those bytes already agree. */
+  const rolesBlock = (ids) => "case_roles:\n"
+    + ids.map((x) => `  - target: ${x}\n    role: load_bearing`).join("\n");
+  const withRoles = (md, ids) =>
+    md.replace(/^case_roles:.*(?:\n[ -].*)*/m, rolesBlock(ids));
+
   /* ADVERSARY 2 — the ASSERTION disagrees. The roster now matches; what differs
      is the scope the member signed, which is the other half of what makes a
      case edition ONE claim rather than whatever the last ratification said. */
-  const scopeLie = swap(swap(swap(cMd,
+  const scopeLie = withRoles(swap(swap(swap(cMd,
     "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
-    "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`);
+    "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`),
+    [FIND_A, FIND_B, FIND_C]);
   await mustPromote(FIND_C, scopeLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
   const sl = await ratify(FIND_C);
   t("and a member whose signed bytes state a DIFFERENT scope or completeness claim is refused by name",
@@ -581,12 +644,13 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
      would report the acknowledgement as protected when nothing was reading it.
      Two members who signed different accounts of the bias their shared case was
      produced under have not published one case. */
-  const biasLie = swap(swap(swap(swap(swap(cMd,
+  const biasLie = withRoles(swap(swap(swap(swap(swap(cMd,
     "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
     "case_scope", `case_scope: "${SCOPE1}"`),
     "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`),
     "completeness", blockOf(publishedMd, "completeness"))
-    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
+    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded")),
+    [FIND_A, FIND_B, FIND_C]);
   await mustPromote(FIND_C, biasLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
   const bl = await ratify(FIND_C);
   t("REC-47: a member whose signed bytes state a DIFFERENT BIAS ACKNOWLEDGEMENT is refused by name",

@@ -4120,6 +4120,7 @@ None for any consumer. A UI that starts reading `project_id`, `role` or `version
 until CASE-2 and CASE-3 land, and `production` says in words what that null means, so a surface can
 be built against the final shape today without rendering a claim the record cannot support.
 
+<<<<<<< HEAD
 ## IC-64 · I3: `op=publishedcase`'s member rows GAIN `version_sha` (the pinned version), and the FOUR version acts that MOVE A READING'S STATE now REFUSE on a published finding (`PUBLISHED_CANNOT_MOVE_VERSION`, C-25.34) · PROPOSED 2026-08-10 (CASE-3, enacting DEC-72 clause 3) — the version bump and the RESOLUTION are CONDUCT's
 
 **RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Measured impact: the four version-act ops have **no rendering consumer** — only four rows in `surface-registry.test.mjs` marking them owed by UI-43 — and `version_sha` has zero consumers outside the plane. **So the behaviour change lands BEFORE its surface exists, which is the cheap direction and is worth naming:** UI-43 will build against a fence that is already true, rather than against one that arrives later and quietly invalidates what it drew. The refusal ships with its sentence — the untranslated-in-reach ratchet did not move.
@@ -4198,3 +4199,172 @@ that DIST regenerates and nobody edits.
 **So the honest reading is that this lands before its consumer exists, which is the cheap moment to
 land it** — and the note UI-43 needs is above, in "What a caller must do", rather than in a handoff
 nobody re-reads.
+=======
+---
+
+## IC-64 · I3: `op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I3** (the op contracts). I5 is NOT filed against: this item adds no table and
+  no column — CASE-1 built `cases`, `published_case_members.role` and `.version_sha` under IC-63,
+  and CASE-2 is the item that first WRITES two of them.
+- **Proposer:** RECORD, session `case2-publication-production` (worktree `agent-a819c7ac95b78cff1`),
+  2026-08-10, enacting `docs/development/CASE-AS-PRODUCTION.md`'s CASE-2 bullet under **DEC-72**.
+- **Owner to land it:** `RECORD` (owns I3).
+- **Consumers to answer:** `UI` — and see MEASURED IMPACT: it is ZERO on every moving field.
+- **Status:** PROPOSED. **THIS ONE IS NOT ADDITIVE AND IS NOT PRETENDING TO BE.** A required
+  argument appears on a mutating op, an argument arm of a read op is WITHDRAWN, and a value the
+  stamped bar could previously carry (`source: "group"`) can no longer occur. Filed BEFORE any code
+  was written, because a contract that NARROWS is exactly the case the protocol exists for.
+
+### Why this is a contract change and not a defect fix
+
+Bob ruled DEC-72 on 2026-08-10: **a case is a production of a project**, and *"the bar — that is,
+the standard of evidence — is a property of a project, not an inquiry or claim."* Three consequences
+land on I3 at once, and the design doc's supersession table names each of them as REMOVED rather
+than deprecated:
+
+| what DEC-72 removes | where it is reachable today |
+| --- | --- |
+| the project-less publication path (`publishCase` with no project) | `op=publish` accepts `targets` and no project |
+| **the group default AS A PUBLICATION BAR** (its surviving role is SEEDING new projects — DEC-17's other half STANDS) | `#requiredStrengthFor`'s group fallback, stamped as `source: "group"` |
+| DEC-17's strictest-across-citers composition | `#requiredStrengthFor`, reachable as `op=strengthbarof&target=` |
+
+### The change
+
+**1. `op=publish` gains two REQUIRED arguments and nine refusals.**
+
+    project   the PUBLISHING PROJECT's bundle id.  REQUIRED.
+    roles     { "<finding id>": "load_bearing" | "supporting" } — one entry per member. REQUIRED.
+
+Both arrive in the BODY (`roles` is a map, which a query string cannot express honestly — REC-14's
+own reasoning); `project` is additionally accepted on the search params as the one-line form a probe
+can reach, exactly as `targets=a,b` already is. Refusals, each naming what is missing:
+
+    NO_PUBLISHING_PROJECT        publishing is a production of a PROJECT (DEC-72 clause 2)
+    NO_SUCH_PROJECT              the id answers to no bundle this viewer can see
+    NOT_A_PROJECT                the id names something that is not a project
+    NOT_THE_PROJECT_OWNER        only a project OWNER publishes (DEC-72 clause 5; "manager" IS the
+                                 existing owner role — no third role is minted)
+    NO_MEMBER_ROLE               a member carries no authored designation, NAMED
+    BAD_MEMBER_ROLE              a designation outside the schema's two-term vocabulary, NAMED
+    NO_LOAD_BEARING_MEMBER       zero load-bearing members (DEC-72's second ruled default)
+    CASE_BELONGS_TO_ANOTHER_PROJECT   a later edition may not change whose production a case is
+    BELOW_PROJECT_STRENGTH       a LOAD-BEARING member's derived strength is under the project's bar,
+                                 naming the member, the axis, the bar, and what it reached
+
+**The four authority refusals fire FIRST, beside `MACHINE_CANNOT_PUBLISH`, and that DEPARTS from
+this method's own stated convention** — its comments say twice that a new refusal goes LAST *"so an
+existing caller's diagnosis does not change under them."* That rule protects a caller who is still
+making a LEGAL call while learning about a new authored field. A project-less caller is not making a
+legal call any more; telling them to write a bias acknowledgement before telling them the act is not
+theirs to perform is wasted work on a request that can never succeed. The reasoning is written at the
+site rather than left here.
+
+**2. `BELOW_PROJECT_STRENGTH` gates LOAD-BEARING members ONLY — and this is the one that is easy to
+get backwards, so it is stated in the contract.** Bob's DEC-71 input, verbatim: *"that standard
+doesn't require that every piece of evidence must meet that standard. Rather, it means that the
+overall findings in that project must meet the standard — even if some evidence cited is below the
+necessary grade."* A supporting member below the bar is **ACCEPTED and MARKED**, never refused. That
+pair — one refusal and one acceptance over the same grade — is the whole shape of this item.
+
+**3. `op=strengthbarof`: the `target=` arm is WITHDRAWN; a `project=` arm replaces it; `group=` is
+UNCHANGED.**
+
+    op=strengthbarof&target=<finding>    -> REFUSED, reason BAR_IS_A_PROJECT_PROPERTY
+    op=strengthbarof&project=<project>   -> { ok:true, project, bar }        (NEW)
+    op=strengthbarof&group=<group>       -> { ok:true, group, bar }          (UNCHANGED — DEC-17's
+                                            group default still SEEDS new projects)
+
+A refusal rather than a silently different answer: under DEC-72 no bar attaches to a finding at all,
+so any value returned for a `target` would be a fact the record does not hold. The refusal detail
+names DEC-72 and points at the `project=` arm — informed at the act, once (DEC-69).
+
+**REC-30's leak on this op DISSOLVES rather than being re-gated.** Its residual was stated honestly
+when it was written: *"`source: "project"` on a target only invisible projects cite still says that
+SOME project declares a bar on it."* With no cross-citer walk there is no `projects[]`, no
+interpolated ids and no residual. The `#bundleRedactor` filtering on this path is REMOVED because
+what it filtered no longer exists — not because the exposure was judged acceptable.
+
+**4. The stamped `required_strength` block: one value withdrawn, one field added.**
+
+    source: "group"      NO LONGER OCCURS — the group default is not a publication bar (DEC-72)
+    source: "project"    now means THE PUBLISHING PROJECT, alone, read at act time
+    projects: [...]      REMOVED — nothing composes across citers
+    project: "<id>"      ADDED — which project's bar this case was held to
+    declared / capture / connection / detail   UNCHANGED in name, type and meaning
+
+The block is now computed ONCE per case rather than once per member, which is the design's own
+correction: the bar is the CASE's property (clause 2), and reading it per member was an artifact of
+the model in which a bar attached to a finding.
+
+**5. Two new frontmatter keys in a published finding's signed bytes**, written by `op=publish` and
+required on `published` by C-2.8:
+
+    case_project: <project id>              whose production this case is
+    case_roles:                             the AUTHORED partition, covering exactly the roster
+      - target: <finding id>
+        role: load_bearing | supporting
+
+**Why the WHOLE partition is in EVERY member's bytes** — it restates the roster, so it is argued
+rather than assumed. REC-44 already writes `case_findings` into every member for the stated reason
+that *"a stranger holding one of them must be able to read which case it was published in … and what
+else the case rests on — without contacting this instance."* A stranger holding a SUPPORTING finding
+must equally be able to see that it was not presented as load-bearing, and that the case had a
+load-bearing member at all — neither is answerable from a per-member `role` scalar. The restatement
+is not TRUSTED: the ratify committer refuses `CASE_ROLES_DIVERGED` when the partition does not cover
+the roster, or when two members signed different partitions — exactly the treatment `case_findings`
+and `bias_acknowledgement` already get. DEC-32's discipline names it a PARTITION someone asserts, so
+BOTH halves are named; a `case_load_bearing` subset with `supporting` derived by complement was
+considered and rejected on that ground.
+
+**6. `cases` and `published_case_members.role` are WRITTEN, by the RATIFY committer, out of the
+SIGNED bytes and nothing else.** `op=publish` writes neither row. This follows `published_cases`' own
+doctrine at the same site, and it keeps CASE-1's purge exemption honest: CASE-1 exempted `cases` from
+`purge` with the stated reversal condition *"if a later item lets a case exist as a DRAFT before
+publication, revisit."* Writing at ratify creates no such draft state, so the condition is not
+triggered and `purge` is untouched.
+
+### MEASURED consumer impact — ZERO, each half measured separately
+
+- **`op=publish` has NO UI consumer, by design AND by assertion.** DEC-33 defers the publication
+  ceremony; `civicos-ui/test/publication-entry.test.mjs` asserts ON THE WIRE that `op=publish` is
+  never reached from the surface — *"op=publish was never reached while rendering the page"* and
+  *"op=publish is still unreached after driving the act"*. So the two required arguments reach no
+  caller that exists. **The only callers are plane suites, which this item corrects.**
+- **`op=strengthbarof` has NO UI consumer.** `grep` over `civicos-ui/**`: zero hits. Its callers are
+  five plane suites (`publish`, `d280-strengthbar`, `gate-reads`, `d216-sharing.probe`,
+  `machine-fences`), and `machine-fences`' call is the `group=` arm, which does not move.
+- **`required_strength` DOES have a UI consumer, and it reads FOUR FIELDS, none of which move.**
+  `civicos-ui/app.html`'s `pubBarHtml` reads `declared`, `capture`, `connection`, `detail`; the
+  per-member row on the case page reads the same three. **`source` is read by NOTHING in the UI**,
+  and neither are `projects`, `declared_by` or `declared_at`. Measured by grep over the whole file,
+  not inferred from one function.
+- **One MOCK FIXTURE will look stale, and is named so it is not mistaken for a consumer:**
+  `civicos-ui/test/publishedcase.test.mjs`'s `BAR_DECLARED` carries `source:"group"`, `declared_by`
+  and `declared_at`. It is a fixture the suite CONSTRUCTS, not a field the surface READS, and
+  nothing asserts on `source`. **CASE-6 is where that fixture should be re-shaped**; it is recorded
+  here rather than reached into from this area.
+- **`case_findings` / `case_scope` / the new `case_roles` / `case_project`**: the UI reads none of
+  them. They are frontmatter of a signed bundle; the surface reads the plane's `op=publishedcase`
+  projection.
+
+### The alternative considered and rejected
+
+**Keep `#requiredStrengthFor` alive for `op=strengthbarof` and use the project bar only inside
+`publishCase`.** That would have made this purely additive with no withdrawn arm. Rejected: it leaves
+the superseded composition running behind a read op, so the record answers one bar to a reader and
+holds a case to another — the two-authorities-for-one-fact shape this repository keeps paying for —
+and the supersession table names the FUNCTION as removed rather than as bypassed.
+
+### MIGRATION
+
+**For the UI: nothing.** Every field it reads keeps its name, type and meaning.
+
+**For any caller of `op=publish`:** add `project` and `roles`. There is no compatibility window and
+none is offered, because the old shape is the shape DEC-72 deletes — a publication with no project
+is not a thing this record can honestly hold, and accepting one for a transition period would mean
+minting cases whose standard of evidence nobody declared.
+
+**For any caller of `op=strengthbarof&target=`:** ask the publishing project instead. The refusal
+says so by name.
+>>>>>>> worktree-agent-a819c7ac95b78cff1

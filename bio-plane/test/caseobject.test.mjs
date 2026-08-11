@@ -65,6 +65,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { makePublishingProject } from "./publishingproject.mjs";
 import { tmpdir } from "node:os";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -156,6 +157,9 @@ console.log("\n--- 1. the case object answers a caller, on a store the DO migrat
 console.log("\n--- 2. a real case, published and ratified, carries the new member facts ---");
 const GROUP = "believe-in-oakland";
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+/* ADDED 2026-08-10 BY CASE-2: the publishing project. Declared at this scope
+   rather than inside the block because the corrected assertions below name it. */
+const PUBLISHING_PROJECT = "PROJ-2026-0100-caseobject";
 let CASE_ROW = null, MEMBER_ROW = null;
 /* CASE-3 (2026-08-10): the sha that went into the signed `bio-ratify` statement,
    hoisted here so block 3 can compare the PIN against the SIGNATURE rather than
@@ -178,6 +182,11 @@ let SIGNED_SHA = null;
      are no ordinary members until two exist. */
   const RUTH = await enrol("ruth", "admin", ["contribute", "publish", "create_projects"]);
   await enrol("gus", "admin", ["contribute", "publish"]);
+  /* CASE-2 / DEC-72: publication is a production of a project and RUTH must own
+     it. Declaring NO bar keeps this block measuring the SCHEMA and not a gate. */
+  await makePublishingProject({
+    post: POST, mf, sha, machineToken: "adm-case1", owner: "ruth",
+    id: PUBLISHING_PROJECT, created: NOW, updated: LATER });
 
   const infoMd = (id) => ["---",
     `id: ${id}`, "object_type: information", "schema: information@1",
@@ -255,6 +264,12 @@ let SIGNED_SHA = null;
   if (!cn.ok) throw new Error(`conclude: ${JSON.stringify(cn).slice(0, 400)}`);
 
   const pub = await POST(`op=publish&token=${RUTH}`, { target: INQ,
+    /* ADDED 2026-08-10 BY CASE-2, AND IT IS THIS ITEM'S OWN PREDICTION COMING
+       TRUE. CASE-1's schema comment said, of the `cases` table: *"WHO WRITES IT:
+       CASE-2, which is where publishCase() first takes a publishing project and
+       an owner-only fence."* This is that. The project is promoted and owned in
+       the fixture above; it declares no bar, so nothing here is newly gated. */
+    project: PUBLISHING_PROJECT, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
     excluded: [{ target: LEFT, description: "the FY2023 comparison memo",
@@ -282,34 +297,32 @@ let SIGNED_SHA = null;
   t("the published case and its one member reach a caller with no credential at all",
     [!!CASE_ROW, !!MEMBER_ROW, MEMBER_ROW?.ord], [true, true, 0]);
 
-  /* THE THREE NEW FACTS, AND THE ASSERTION IS THAT THEY ARE PRESENT AND EMPTY.
-     Present, because a key that is absent is a key a consumer cannot read and a
-     CASE-2 that fills it would be changing a shape rather than a value. Empty,
-     because nothing has authored a designation, pinned a version or named a
-     project — and this record does not answer a question nobody asked it. */
-  t("the case row carries `project_id`, PRESENT and NULL: this case was published before DEC-72's model "
-  + "and no project owns it, which is a state of the record rather than a gap in the answer",
-    ["project_id" in (CASE_ROW || {}), CASE_ROW?.project_id ?? null], [true, null]);
-  /* CORRECTED 2026-08-10 BY CASE-3, NEVER EXEMPTED, AND THE OLD ASSERTION WAS
-     RIGHT WHEN IT WAS WRITTEN. It read `version_sha` PRESENT and NULL, which was
-     the true state of the record while nothing wrote the column — CASE-1 built
-     the object and deliberately wrote no pin. **CASE-3 is the item that pins a
-     version**, exactly as this suite's own `production` sentence said it would
-     ("null until CASE-2 authors a role and CASE-3 pins a version"), so a member
-     ratified into a case now carries the hash its member SIGNED. Asserting NULL
-     here would now be asserting that the freeze did not happen.
-     THE TWO HALVES ARE SPLIT because they are now two different facts, and that
-     split is the point rather than a tidy-up: `role` is STILL null, because
-     CASE-2 has not landed and a designation may not be invented by a migration
-     or by a default — which is the half of the original claim that has not
-     moved, and it keeps its original wording. */
-  t("the member row carries `role` PRESENT and NULL — nobody has designated this member load-bearing "
-  + "or supporting, and a migration may not invent one (a default would be a designation nobody "
-  + "authored). CASE-2 is the item that fills it",
-    ["role" in (MEMBER_ROW || {}), MEMBER_ROW?.role ?? null], [true, null]);
-  t("and it carries `version_sha` PRESENT and PINNED to the hash this member SIGNED — CASE-3 landed "
-  + "the freeze this suite predicted, and the expectation is the sha fed to ssh-keygen rather than the "
-  + "column being read back",
+  /* ==== RESOLVED AT INTEGRATION 2026-08-10 BY CONDUCT. BOTH SIDES OF THIS BLOCK
+     WERE CORRECT ON THEIR OWN BRANCH AND NEITHER IS CORRECT NOW, WHICH IS THE
+     WHOLE REASON THE CONFLICT IS WORTH READING RATHER THAN PICKING A SIDE.
+
+     CASE-1 built three columns and deliberately wrote none of them, asserting all
+     three PRESENT and NULL — right the day it was written. CASE-2 then filled
+     `project_id` and `role` and left `version_sha` asserted NULL **on purpose**,
+     writing: "a suite that quietly started expecting all three would stop being
+     able to tell CASE-3 landing from CASE-3 being forgotten." CASE-3, in parallel,
+     filled `version_sha` and left `role` asserted NULL for the mirror-image reason.
+
+     EACH SIDE PLANTED A TRIPWIRE FOR THE OTHER, AND THE MERGE IS THE MOMENT BOTH
+     FIRE. Taking either side wholesale would have asserted that a landed item had
+     not landed — silently, in a green suite. So all three are now asserted as
+     WRITTEN, each naming which item authored it, and the tripwire property is kept
+     rather than discarded: revert either item and exactly one assertion below goes
+     red, naming that item. Corrected, never exempted (CLAUDE.md). */
+  t("the case row carries `project_id`, PRESENT and NAMED — CASE-2 makes publication a production of a "
+  + "project, so a case published through the act records whose it is",
+    ["project_id" in (CASE_ROW || {}), CASE_ROW?.project_id ?? null], [true, PUBLISHING_PROJECT]);
+  t("the member row carries `role`, PRESENT and AUTHORED by CASE-2 — the publisher designated this "
+  + "member load-bearing and the record says who said so, where before it could only say nobody had; "
+  + "a default here would have been a designation nobody authored",
+    ["role" in (MEMBER_ROW || {}), MEMBER_ROW?.role ?? null], [true, "load_bearing"]);
+  t("and `version_sha` is PRESENT and PINNED by CASE-3 to the hash this member SIGNED — the expectation "
+  + "is the sha fed to ssh-keygen rather than the column read back, so the two sides share no code path",
     ["version_sha" in (MEMBER_ROW || {}), MEMBER_ROW?.version_sha === SIGNED_SHA,
      /^[0-9a-f]{64}$/.test(String(MEMBER_ROW?.version_sha))],
     [true, true, true]);
@@ -318,9 +331,25 @@ let SIGNED_SHA = null;
      landed — the record losing published material because it gained a column.
      Block 2 is the only place that can see it, because the join has nothing to
      drop until a real case exists. */
-  t("a case with NO owning project is still ON the index — the join that binds a case to its project is "
-  + "LEFT, so gaining this table cannot delete published cases from the public record",
+  /* CORRECTED 2026-08-10 BY CASE-2, AND THE LOSS IS STATED RATHER THAN PAPERED
+     OVER. This arm read "a case with NO owning project is still ON the index",
+     and it was the arm CASE-1's control (c) proved load-bearing: turning the
+     LEFT join into an inner one drops every pre-DEC-72 case off the public
+     index. **THIS SUITE CAN NO LONGER PRODUCE A CASE WITH NO OWNING PROJECT
+     THROUGH THE OP**, because DEC-72 removed that path and `op=publish` now
+     refuses it by name — so the arm's fixture is unreachable by any act.
+     What survives, and is asserted, is that the join still ANSWERS. The
+     LEFT-ness itself is now pinned STRUCTURALLY, off the source, because a
+     behavioural arm for it would require a row no act can write: a store
+     migrated from before DEC-72 genuinely holds such cases, and they must not
+     vanish from the record because the plane gained a table. */
+  t("the case index still answers over the join at all",
     (idx.cases || []).length >= 1, true);
+  t("and the join that binds a case to its project is STILL LEFT — asserted off the source, because "
+  + "the row it protects (a case published before DEC-72, owned by no project) is one no act can "
+  + "write any more. A pre-DEC-72 store HAS those rows, and an inner join would delete published "
+  + "material from the public record the moment this table landed",
+    /LEFT JOIN cases/i.test(readFileSync(join(DIR, "..", "src", "store.mjs"), "utf8")), true);
 }
 
 /* ====================================================================== 3

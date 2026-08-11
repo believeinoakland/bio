@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-643 rulings across 66 documents.
+649 rulings across 67 documents.
 
 ## DEC-
 
@@ -52,6 +52,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:131`
 - **DEC-16** — Q3 · SETTLED by DEC-16 — EVERY ANCESTOR, with one shared resolution.** The unit of queue state is the EVENT, not the (member, case) entry: one state, several homes, which dissolves the flooding objection without a second mechanism.  
   `docs/development/research/RECONCILED.md:1382`
+- **DEC-17** — section 4 (DEC-17's declared bar) is CORRECTED to the project-alone read** with a dated block saying what it asserted before and why that was right when written.  
+  `docs/development/CLAIMS.md:1145`
 - **DEC-17** · 2026-08-01 — RULED 2026-08-01 (DEC-17). `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that a claim *"needs a standard of proof attached and that is doctrine rather than architecture — the next design conversation"*; this is that conversation. The question was what makes an unsupported case harder to state, and…  
   `docs/development/DEBT.md:124`
 - **DEC-17** — Removes DEC-17's strictest-across-citers composition and the project-less publication path — suites CORRECTED, never exempted.** Carries D-280's composed read, which becomes MOOT rather than wrong (see its row below).  
@@ -200,6 +202,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Case_Making_v0_1.md:420`
 - **DEC-72** · 2026-08-10 — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
   `docs/development/DECISIONS.md:307`
+- **DEC-72** · 2026-08-10 — op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are…  
+  `docs/development/INTERFACE-CHANGES.md:4205`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
   `docs/development/QUEUE.md:197`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
@@ -1127,6 +1131,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:1059`
 - back 164/166 exit 2, and both failures were SUPERSEDED ASSERTIONS in suites this claim had excluded — the standing rule is *correct superseded tests, never exempt them*, so the fix was to correct them and widen the claim rather than to route around them.  
   `docs/development/CLAIMS.md:1061`
+- Tests — CORRECTED, NEVER EXEMPTED, and each named by ARM:** - `bio-plane/test/caseproduction.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseproduction.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
+  `docs/development/CLAIMS.md:1140`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1181,6 +1187,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:2958`
 - project, then to the RULED group-admin fallback, then to `unassigned`.  
   `docs/development/INTERFACE-CHANGES.md:3838`
+- argument appears on a mutating op, an argument arm of a read op is WITHDRAWN, and a value the stamped bar could previously carry (`source: "group"`) can no longer occur.  
+  `docs/development/INTERFACE-CHANGES.md:4215`
+- `op=strengthbarof`: the `target=` arm is WITHDRAWN; a `project=` arm replaces it; `group=` is UNCHANGED.** op=strengthbarof&target=<finding> -> REFUSED, reason BAR_IS_A_PROJECT_PROPERTY  
+  `docs/development/INTERFACE-CHANGES.md:4270`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  
@@ -1233,6 +1243,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
+- `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
+  `docs/development/kickoffs/RECORD.md:323`
 - `PRACTICE-SURVEY.md` itself, and `DECIDED.md` for anything already ruled. ## The one thing that makes this area different, and it is not a style note  
   `docs/development/kickoffs/SKILL.md:14`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.** `ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record did not publish*, over every function in the AI-session block.  

@@ -1,3 +1,9 @@
+/* ==== SUPERSEDED IN PART, 2026-08-10, BY CASE-2 UNDER DEC-72 — READ THIS BEFORE THE DECLARATION BELOW ====
+   **ARMS (A), (C), (C2) AND (E) BELOW ARE NO LONGER RUNNABLE AS WRITTEN, AND THEY ARE KEPT RATHER THAN DELETED BECAUSE THEY ARE THE RECORD OF WHAT THE OLD MODEL DID.** Every one of them edits `#requiredStrengthFor`, which CASE-2 REMOVED: `CASE-AS-PRODUCTION.md`'s supersession table retires DEC-17's strictest-across-citers composition and calls D-280's fix "moot rather than wrong — the code it fixed is removed with the composition". There is no longer a bar read on this path to arm. Their MEASUREMENTS stand as history and their reasoning about faithful copies and over-strictness is still the best statement of why §7 counts call sites off the source.
+   **STILL RUNNABLE AND STILL THIS SUITE'S CONTROLS: (B) the routing site and (D) the projection read**, whose sites #routeTask and restingOn are untouched by DEC-72 and are driven by §5 and §6. (G) BASELINE is unchanged in kind; its NUMBERS moved with the correction and are re-measured by CASE-2 rather than carried.
+   **WHERE THE PREDICATE'S WIDTH IS NOW PINNED:** `severedhomes.test.mjs` §4 (D-267's own suite) drives all four severance spellings through the homes walk. This suite's §3 no longer can, and says so in its own block rather than here.
+   **CASE-2'S OWN CONTROLS FOR WHAT REPLACED THIS ARE IN `caseproduction.control.mjs`**, including the arm that would catch the composition being restored.
+   ======================================================================================================= */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/d280-strengthbar.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`severedhomes.control.mjs`'s precedent, PL-13's `current.control.mjs` before it). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad (PL-10). Every arm is armed ALONE with every other defence held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`) against a per-arm pristine copy named with the ARM ID as well as the path, and every arm DECLARES before it runs what MUST fail and what MUST NOT.
    (A) THE DRIVEN SITE'S CONFIRMATION, REVERTED. In src/store.mjs #requiredStrengthFor delete the `if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;` line -> D-280's defect exactly: a project whose ONLY citing relation is `status: severed` sets the publication bar on the document it left. MUST FAIL: §2's headline bar arm and §2's strictest-per-axis arm (the withdrawn project's STRICTER bar binds again and its id is named in `projects`). MUST NOT FAIL: every over-strictness arm in §3, §5's routing arms, §6's restson arms — which is what makes this arm measure the bar read and not the predicate.
    (B) THE ROUTING SITE'S CONFIRMATION, REVERTED. In src/store.mjs #routeTask replace the `find` over `citeEdges` with `[...citeEdges][0]` -> the obligation is addressed to the owner of a project that WITHDREW. MUST FAIL: §5's routing arm. MUST NOT FAIL: §2, §3, §6 — armed apart from (A) on purpose, because one confirmation covering for another is exactly how a half-fix reads as a whole one.
@@ -311,8 +317,20 @@ await promote(P_OTHERREL, projectMd(P_OTHERREL,
   [{ target: SUBJ_OTHERREL, rel: "relates_to", status: "severed" },
    { target: SUBJ_OTHERREL, rel: "cites", status: "confirmed" }], STRICT), "project", "forming");
 
+/* ADDED 2026-08-10 by CASE-2 (DEC-72): A PROJECT THAT DECLARES NO BAR AT ALL.
+   D-280's corpus had no such project because it did not need one — under the old
+   model an undeclared project simply contributed nothing to the composition, and
+   the group default was reached by having no citer rather than by having a
+   silent one. Under DEC-72 this is the load-bearing fixture: it is what makes
+   "the group default is NOT a fallback publication bar" a measurement instead of
+   a claim, because the group HAS declared `C` and a fall-through would be
+   visible as `C` rather than as an absent bar. */
+const P_UNDECLARED = "PROJ-2026-9209-declares-no-bar";
+await promote(P_UNDECLARED, projectMd(P_UNDECLARED,
+  [{ target: SUBJ_LIVE, status: "confirmed" }]), "project", "forming");
+
 const PROJECTS = [P_LIVE, P_WITHDRAWN, P_MIXED_LIVE, P_MIXED_GONE, P_NOSTATUS, P_ODDSTATUS,
-                  P_PADSTATUS, P_OTHERREL];
+                  P_PADSTATUS, P_OTHERREL, P_UNDECLARED];
 console.log(`  CORPUS: ${SUBJECTS.length} subject document(s), ${PROJECTS.length} citing project(s), `
   + `every one promoted through op=promote and readable back through op=image`);
 t("FIXTURE GUARD: every subject and every citer really landed — the corpus is non-empty and the "
@@ -327,93 +345,178 @@ t("FIXTURE GUARD: the withdrawal is really IN the promoted document — `status:
   true);
 
 /* ====================================================================== 2
- * THE DRIVEN SITE — op=strengthbarof.
+ * THE DRIVEN SITE — AND ITS QUESTION WAS DISSOLVED THE SAME DAY IT WAS ANSWERED.
+ *
+ * ===== CORRECTED 2026-08-10 BY CASE-2, UNDER DEC-72. NEVER EXEMPTED. =========
+ *
+ * EVERY ASSERTION THAT STOOD IN BLOCKS 2 AND 3 WAS RIGHT WHEN IT WAS WRITTEN,
+ * AND D-280'S MEASUREMENTS REMAIN THE RECORD OF WHAT THE OLD MODEL DID. They are
+ * quoted here rather than deleted, because the sharpest of them is part of WHY
+ * the model changed:
+ *
+ *   - "a project that STILL CITES sets the bar and is NAMED"
+ *     -> `source: "project"`, `projects: [P_LIVE]`
+ *   - "a document whose ONLY citing project authored `status: severed` no longer
+ *      answers `declared: true, source: project`"
+ *   - "STRICTEST-PER-AXIS STILL COMPOSES ... a document cited live at B/B and
+ *      severed at A/A answers B/B" — **a project that had WITHDRAWN was
+ *      TIGHTENING a bar on a document it had left**
+ *   - "AND NOW THE SAME DOCUMENT TAKES THE GROUP DEFAULT — which is what a
+ *      default IS"
+ *   - block 3's four over-strictness shapes, each reaching the bar through
+ *     `#refEdgeSevered`
+ *
+ * WHAT MADE THEM WRONG IS NOT A DEFECT IN THE CODE THEY TESTED. Bob ruled DEC-72
+ * hours after D-280 landed: *"The bar — that is, the standard of evidence — is a
+ * property of a project, not an inquiry or claim."* `CASE-AS-PRODUCTION.md`'s
+ * supersession table then records, in these words:
+ *
+ *     "D-280's severed-citer fix — MOOT RATHER THAN WRONG: the code it fixed is
+ *      removed with the composition."
+ *     "DEC-17's strictest-across-citers composition (`#requiredStrengthFor` …) —
+ *      Removed. That clause was a session's conservative construction, not Bob's
+ *      ruling."
+ *     "the project-less publication path (`publishCase` with no project; GROUP
+ *      DEFAULT AS A PUBLICATION BAR) — Removed."
+ *
+ * So: there is no cross-citer walk to withdraw a citer FROM, no group fallback
+ * to fall through TO, and no bar on a finding to ask FOR. **A question that
+ * cannot be asked is not a test that can be softened**, and the honest
+ * correction is to assert that it cannot be asked — which is what block 2 now
+ * does, driven through the same op, over the same fixture, at the same altitude.
+ *
+ * D-280'S SURVIVING SITES ARE UNTOUCHED AND STILL DRIVEN: `#routeTask` in block
+ * 5 and `restingOn` in block 6 both still consume `#refEdgeSevered`, both still
+ * pass, and neither is superseded by anything. Only the BAR READ went.
+ *
+ * WHERE THE PREDICATE'S OVER-STRICTNESS IS STILL PINNED, since block 3's four
+ * spelling shapes can no longer reach a bar through this op: `severedhomes.test.mjs`
+ * §4 drives all four of them — no `status:` key, `Severed`, `severed ` with
+ * trailing whitespace, and a severed second relation beside a confirmed citation
+ * — through the homes walk, which is D-267's own suite and the predicate's home.
+ * That is stated rather than assumed: this suite does NOT claim coverage it lost.
  * ===================================================================== */
-console.log("\n--- 2. op=strengthbarof: a project that withdrew does not set the bar ---");
+console.log("\n--- 2. DEC-72: the bar is a PROJECT's property, so the question this block asked is gone ---");
 {
-  /* THE MUST-NOT-FAIL COMPLEMENT FIRST, so the headline below cannot be read as
-     "the bar read broke". A project that still cites still declares. */
-  const live = await barOf(MACHINE, SUBJ_LIVE);
-  t("a project that STILL CITES sets the bar and is NAMED — unchanged, and asserted first so the "
-  + "headline cannot be satisfied by a bar read that simply stopped working",
-    [g(live, "bar.declared"), g(live, "bar.source"), g(live, "bar.capture"),
-     g(live, "bar.connection"), g(live, "bar.projects")],
-    [true, "project", "B", "B", [P_LIVE]]);
+  /* THE FIXTURE IS UNCHANGED AND THAT IS WHAT MAKES THIS BLOCK WORTH KEEPING.
+     Every subject below is the same document D-280 built, cited by the same
+     projects with the same severance spellings. What changed is the answer. */
 
-  /* THE HEADLINE. No group default is declared yet, so the honest answer for a
-     document whose only citer withdrew is that NOBODY declares a bar for it. */
+  /* (a) THE WITHDRAWN-CITER QUESTION IS UNASKABLE. Not "answered differently" —
+     unaskable. This is the single arm that most directly replaces D-280's
+     headline, and it fires over the very document whose only citer withdrew. */
   const gone = await barOf(MACHINE, SUBJ_WITHDRAWN_ONLY);
-  t("THE DEFECT, DRIVEN: a document whose ONLY citing project authored `status: severed` no longer "
-  + "answers `declared: true, source: project` — the project that withdrew does not set the bar on "
-  + "the document it left",
-    [g(gone, "bar.declared"), g(gone, "bar.source"), g(gone, "bar.capture"),
-     g(gone, "bar.connection"), g(gone, "bar.projects")],
-    [false, "none", null, null, null]);
-  t("and it does NOT go quiet about it: an absent bar is STATED in the record's own standing "
-  + "sentence, so a fence that loosened says that it loosened",
-    [String(g(gone, "bar.detail")).includes("not a bar of zero"),
-     String(g(gone, "bar.detail")).includes("makes no claim to have cleared any standard")],
-    [true, true]);
-  t("the withdrawn project is not named ANYWHERE in the answer — not in `projects` and not "
-  + "interpolated into the prose, which is REC-30's leak shape and would republish the id by the "
-  + "back door even while the bar itself was dropped",
-    JSON.stringify(gone).includes(P_WITHDRAWN), false);
+  t("D-280's HEADLINE QUESTION CANNOT BE ASKED ANY MORE: the bar of a FINDING is refused BY NAME, "
+  + "because under DEC-72 no bar ever attaches to a finding and a value returned here would be a "
+  + "fact the record does not hold",
+    [gone.ok, gone.reason], [false, "BAR_IS_A_PROJECT_PROPERTY"]);
+  t("and the refusal SAYS what changed and where to go instead — informed at the act, once (DEC-69), "
+  + "rather than a caller discovering the model moved from a shape that quietly differs",
+    [String(gone.detail).includes("property of a PROJECT"),
+     String(gone.detail).includes("op=strengthbarof&project=")], [true, true]);
 
-  /* THE SHARPEST OBSERVATION IN THE SUITE. Both projects cite; one withdrew;
-     the withdrawn one declares the STRICTER bar. Strictest-per-axis still runs
-     and now runs over the declarations that are still standing. */
-  const mixed = await barOf(MACHINE, SUBJ_MIXED);
-  t("STRICTEST-PER-AXIS STILL COMPOSES, AND NO LONGER COMPOSES OVER A WITHDRAWAL: a document cited "
-  + "live at B/B and severed at A/A answers B/B and names only the project still standing behind "
-  + "it — a withdrawn declaration cannot tighten a bar any more than it can set one",
-    [g(mixed, "bar.source"), g(mixed, "bar.capture"), g(mixed, "bar.connection"),
-     g(mixed, "bar.projects")],
-    ["project", "B", "B", [P_MIXED_LIVE]]);
+  /* (b) THE SEVERANCE IS IRRELEVANT TO THE BAR IN BOTH DIRECTIONS NOW, and
+     asserting it over the LIVE citer as well as the withdrawn one is what makes
+     this a statement about the model rather than about one fixture. Under
+     D-280's model these two documents answered DIFFERENTLY — that difference
+     was the whole item. They now answer identically. */
+  const live = await barOf(MACHINE, SUBJ_LIVE);
+  t("A LIVE CITER AND A WITHDRAWN ONE NOW ANSWER IDENTICALLY, which is the model change stated as a "
+  + "measurement: the difference between these two documents WAS D-280's entire subject, and "
+  + "citation no longer bears on a bar in either direction",
+    [live.ok, live.reason, live.reason === gone.reason], [false, "BAR_IS_A_PROJECT_PROPERTY", true]);
 
-  /* THE GROUP DEFAULT, DECLARED THROUGH THE ACT. `op=strengthbar` refuses a
-     machine credential (DEC-49 / REC-64), so this is nadia's act and not the
-     suite's — the same reason the fixture enrols members at all. */
+  /* (c) NOTHING COMPOSES. The mixed subject is D-280's sharpest fixture: cited
+     LIVE at B/B and SEVERED at A/A. Each project is now asked for its OWN bar
+     and gets its own answer, and neither is composed into anything. */
+  const mixLive = await GET(`op=strengthbarof&token=${MACHINE}&project=${encodeURIComponent(P_MIXED_LIVE)}`);
+  const mixGone = await GET(`op=strengthbarof&token=${MACHINE}&project=${encodeURIComponent(P_MIXED_GONE)}`);
+  t("EACH PROJECT DECLARES FOR ITSELF AND NOTHING COMPOSES: the pair cited live at B/B and severed "
+  + "at A/A no longer produces ONE composed answer — each project answers its own declaration, and "
+  + "the same finding may clear one and fall short of the other with both facts honest at once",
+    [mixLive.bar.source, mixLive.bar.capture, mixLive.bar.connection,
+     mixGone.bar.source, mixGone.bar.capture, mixGone.bar.connection],
+    ["project", "B", "B", "project", "A", "A"]);
+  t("and the answer carries NO projects[] ARRAY AT ALL — the composition is gone from the shape and "
+  + "not merely from the arithmetic, so REC-30's leak of secret citer ids has nothing left to leak",
+    [("projects" in mixLive.bar), ("projects_out_of_view" in mixLive.bar),
+     JSON.stringify(mixLive).includes(P_MIXED_GONE)], [false, false, false]);
+  t("each project's answer NAMES ITSELF, so a reader is told whose declaration they are being given "
+  + "rather than a bar with no author",
+    [mixLive.bar.project, mixGone.bar.project], [P_MIXED_LIVE, P_MIXED_GONE]);
+
+  /* (d) THE GROUP DEFAULT NO LONGER STANDS IN FRONT OF ANYTHING — and this arm
+     is the direct descendant of "AND NOW THE SAME DOCUMENT TAKES THE GROUP
+     DEFAULT". The default is declared through the act, exactly as before, and
+     then a project that declares nothing is measured against it. */
   const set = await POST(`op=strengthbar&token=${NADIA}`, { capture: "C", connection: "C" });
-  t("the GROUP declares its default through op=strengthbar, carrying its author",
+  t("the GROUP declares its default through op=strengthbar, carrying its author — UNCHANGED, and "
+  + "DEC-17's group-default half STANDS",
     [set.ok, set.capture, set.connection, set.author], [true, "C", "C", "nadia"]);
-  const fallback = await barOf(MACHINE, SUBJ_WITHDRAWN_ONLY);
-  t("AND NOW THE SAME DOCUMENT TAKES THE GROUP DEFAULT — which is what a default IS. Dropping a "
-  + "withdrawn project's declaration does not delete the group's own standard; it stops one "
-  + "project's abandoned override standing in front of it",
-    [g(fallback, "bar.declared"), g(fallback, "bar.source"), g(fallback, "bar.capture")],
-    [true, "group", "C"]);
-  t("and the LIVE citer's override still beats the group default it is stricter than — the "
-  + "override path is intact and this arm is what says so",
-    [g(await barOf(MACHINE, SUBJ_LIVE), "bar.source"),
-     g(await barOf(MACHINE, SUBJ_LIVE), "bar.capture")], ["project", "B"]);
+  const grp = await GET(`op=strengthbarof&token=${MACHINE}&group=believe-in-oakland`);
+  t("and the group arm still answers it, now SAYING what it is for: the default SEEDS a new project "
+  + "and is not a publication bar",
+    [grp.ok, grp.bar.capture, grp.seeds_new_projects], [true, "C", true]);
+  /* THE FIXTURE'S OWN VACUITY GUARD, INVERTED INTO THE ARM THAT MATTERS. D-280
+     used `capture: A` against a group default of `C` so a wrongly-withdrawn
+     citer would fall through and be caught. The same asymmetry now proves the
+     opposite property: a project declaring NOTHING must answer ABSENT and must
+     NOT answer `C`, because the group default falling through would be exactly
+     the removed publication path surviving. */
+  const undeclared = await GET(`op=strengthbarof&token=${MACHINE}&project=${encodeURIComponent(P_UNDECLARED)}`);
+  t("A PROJECT THAT DECLARES NOTHING ANSWERS ABSENT AND NEVER THE GROUP'S `C` — the group default is "
+  + "NOT a fallback publication bar (DEC-72), and this arm is the one that would catch the removed "
+  + "path surviving, because the group HAS declared `C` and a fall-through would be visible",
+    [undeclared.bar.declared, undeclared.bar.source, undeclared.bar.capture,
+     String(undeclared.bar.detail).includes("not a bar of zero")],
+    [false, "none", null, true]);
+
+  /* (e) THE WITHDRAWN ID IS STILL NOWHERE IN THE ANSWER — REC-30's arm, kept
+     because a refusal is still an answer and could still leak. */
+  t("the withdrawn project is named NOWHERE in any of these answers, refusal or otherwise — REC-30's "
+  + "leak shape, re-asserted over the new shape rather than retired with the old one",
+    [JSON.stringify(gone).includes(P_WITHDRAWN),
+     JSON.stringify(undeclared).includes(P_WITHDRAWN)], [false, false]);
 }
 
 /* ====================================================================== 3
- * OVER-STRICTNESS — THE POINT OF THIS ITEM.
+ * OVER-STRICTNESS — RE-AIMED, BECAUSE THE DOOR IT USED IS GONE AND THE ROOM
+ * BEHIND IT IS NOT.
  * ===================================================================== */
-console.log("\n--- 3. over-strictness: severance narrows ONLY on a positive recorded withdrawal ---");
+console.log("\n--- 3. over-strictness: severance cannot reach a bar in EITHER direction any more ---");
 {
+  /* D-280'S FOUR SHAPES, DRIVEN AGAIN — and what they now measure is that the
+     bar read treats all four IDENTICALLY, which is the honest residue of an
+     over-strictness arm once the fence it guarded has been removed. The arm's
+     original worry was a fence that dropped a bar somebody still meant; there
+     is no longer a fence here to be too strict OR too loose, and asserting the
+     uniformity is what says so rather than assuming it. */
   const shapes = [
-    [SUBJ_NOSTATUS, P_NOSTATUS, "a reference with NO `status:` key at all — the shape most of this "
-      + "corpus's documents carry before anybody severs anything"],
-    [SUBJ_ODDSTATUS, P_ODDSTATUS, "`status: Severed`, capitalised — a spelling the catalog does not "
-      + "write, and not evidence of anything"],
-    [SUBJ_PADSTATUS, P_PADSTATUS, "`status: \"severed \"` — the RIGHT word with trailing whitespace, "
-      + "and still not a withdrawal: trimming our way into inferring one is the direction that costs "
-      + "somebody a bar they never withdrew"],
-    [SUBJ_OTHERREL, P_OTHERREL, "a severed `relates_to` beside a CONFIRMED `cites` — ANY live edge "
-      + "keeps the citer, which is the OR that separates all-severed from any-severed"],
+    [SUBJ_NOSTATUS, "a reference with NO `status:` key at all"],
+    [SUBJ_ODDSTATUS, "`status: Severed`, capitalised — a spelling the catalog does not write"],
+    [SUBJ_PADSTATUS, "`status: \"severed \"` — the RIGHT word with trailing whitespace"],
+    [SUBJ_OTHERREL, "a severed `relates_to` beside a CONFIRMED `cites`"],
   ];
-  for (const [subject, project, why] of shapes) {
+  const answers = [];
+  for (const [subject, why] of shapes) {
     const b = await barOf(MACHINE, subject);
-    t(`LIVE, and the bar stands: ${why}`,
-      [g(b, "bar.declared"), g(b, "bar.source"), g(b, "bar.capture"), g(b, "bar.projects")],
-      [true, "project", "A", [project]]);
+    answers.push(b.reason);
+    t(`SEVERANCE NO LONGER BEARS ON A BAR, so this shape is refused exactly like every other: ${why}`,
+      [b.ok, b.reason], [false, "BAR_IS_A_PROJECT_PROPERTY"]);
   }
-  t("VACUITY GUARD for the four arms above: they read `capture: A`, and the GROUP default is `C` — "
-  + "so a fence that wrongly withdrew every one of these citers would fall through to the group "
-  + "and be caught, rather than answering the same letter by coincidence",
-    (await GET(`op=strengthbarof&token=${MACHINE}&group=believe-in-oakland`)).bar?.capture, "C");
+  t("ALL FOUR SPELLINGS ANSWER THE SAME THING, and that uniformity IS the over-strictness result "
+  + "here: with no fence on this path there is nothing left to be too strict or too loose about",
+    new Set(answers).size, 1);
+  /* AND THE COVERAGE THAT MOVED IS NAMED RATHER THAN QUIETLY DROPPED. The
+     predicate is still live and still has a width; this op is simply no longer
+     one of the ways to measure it. Asserting the pin EXISTS is not a substitute
+     for the arms, and is not offered as one — blocks 5 and 6 below drive
+     `#refEdgeSevered` through the two sites that survived. */
+  const SEVERED_SUITE = readFileSync(new URL("./severedhomes.test.mjs", import.meta.url), "utf8");
+  t("THE PREDICATE'S OVER-STRICTNESS IS STILL PINNED, AT ITS OWN HOME AND NAMED HERE SO THE MOVE IS "
+  + "VISIBLE: severedhomes.test.mjs (D-267's suite) drives all four spellings through the homes "
+  + "walk. This suite does not claim the coverage it lost",
+    ["Severed", "severed ", "status:", "over-strictness"].every((s) => SEVERED_SUITE.includes(s)), true);
 }
 
 /* ====================================================================== 4
@@ -515,16 +618,45 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);
-  t("and it is CONSUMED by six call sites, three of them D-280's: #citesInto, #restsOnLive, "
-  + "#queueAncestorEdges, #requiredStrengthFor, #routeTask and restingOn. The count is a FLOOR that "
-  + "moves when somebody adds a reader, which is precisely the event D-267 could not detect",
-    calls >= 6, true);
-  /* THE ONE RE-DERIVATION THIS SUITE PERFORMS, and it is a spelling check
-     rather than a census: D-280's row printed the corpus and is the authority.
-     This asserts only that the site it names still reads the way it named it. */
-  t("the driven site really consults the predicate — asserted off the SOURCE as well as through the "
-  + "op, because an op arm alone cannot tell a confirmation from a fixture that happened to agree",
-    /#requiredStrengthFor[\s\S]{0,3000}?this\.#refEdgeSevered\(citerId, bundleId/.test(STORE_SRC), true);
+  /* CORRECTED 2026-08-10 by CASE-2 (DEC-72), NEVER EXEMPTED, AND THE DEPARTURE
+     IS NAMED — 6 -> 5. The pin's own text says the count "moves when somebody
+     adds a reader", and this is the same event running backwards: a reader was
+     REMOVED. `#requiredStrengthFor` is gone with DEC-17's strictest-across-citers
+     composition, so its call is gone with it. The other FIVE are untouched and
+     are still listed by name, which is what makes this a floor a later session
+     has to read rather than a number they can satisfy with any five.
+     KEPT AS A FLOOR (`>=`) RATHER THAN TIGHTENED TO AN EXACT COUNT: it was a
+     floor before this item and its purpose is to notice ARRIVALS. Turning it
+     into an equality while REMOVING a member would be using a supersession to
+     ratchet an unrelated instrument, which is not this item's to do. */
+  t("and it is CONSUMED by five call sites, two of them D-280's surviving ones: #citesInto, "
+  + "#restsOnLive, #queueAncestorEdges, #routeTask and restingOn. It was SIX until CASE-2 removed "
+  + "#requiredStrengthFor under DEC-72 — the count is a FLOOR that moves when somebody adds a "
+  + "reader, which is precisely the event D-267 could not detect",
+    calls >= 5, true);
+  /* CORRECTED 2026-08-10 by CASE-2: this arm asserted that the DRIVEN site
+     consults the predicate. The driven site was `#requiredStrengthFor` and it no
+     longer exists, so the arm is turned around and now asserts its ABSENCE —
+     which is the stronger statement and the one that would catch the removal
+     being reverted without its reasoning. The two SURVIVING sites are pinned
+     positively beside it, so this block still says "the predicate is really
+     consulted" about the sites where that is still the claim. */
+  t("THE REMOVED SITE IS REALLY REMOVED, asserted off the SOURCE: `#requiredStrengthFor` is gone "
+  + "from the plane entirely, so DEC-17's strictest-across-citers composition cannot be reached by "
+  + "any door — a removal proved by absence rather than by an op that stopped answering",
+    /#requiredStrengthFor\s*\(/.test(STORE_SRC), false);
+  t("and its REPLACEMENT reads ONE project and walks no edges at all: #projectBar consults neither "
+  + "the refs table nor the severance predicate, because under DEC-72 citation does not bear on a "
+  + "bar and a walk left standing would be the composition surviving in a new name",
+    [/#projectBar\s*\(projectId\)/.test(STORE_SRC),
+     /#projectBar\(projectId\)\s*\{[\s\S]{0,1200}?\}/.exec(STORE_SRC)?.[0]?.includes("refs") ?? true,
+     /#projectBar\(projectId\)\s*\{[\s\S]{0,1200}?\}/.exec(STORE_SRC)?.[0]?.includes("#refEdgeSevered") ?? true],
+    [true, false, false]);
+  t("the two SURVIVING D-280 sites really consult the predicate — asserted off the SOURCE as well "
+  + "as through the op, because an op arm alone cannot tell a confirmation from a fixture that "
+  + "happened to agree",
+    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(STORE_SRC),
+     /restingOn\([\s\S]{0,3000}?this\.#refEdgeSevered\(/.test(STORE_SRC)], [true, true]);
 
   /* ---- THE SITES LEFT UNCHANGED, PINNED SO THE JUDGEMENT IS ENFORCED --------
      A silent partial fix is the thing D-280's row exists to prevent, so each

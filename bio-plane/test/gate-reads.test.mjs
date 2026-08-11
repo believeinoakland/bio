@@ -546,23 +546,59 @@ console.log("\n--- op=projectownerarith: an owner count IS existence ---");
 
 console.log("\n--- REC-14's reads, swept at the merge (2026-08-04) ---");
 {
-  /* op=strengthbarof: the bar of a SHARED information that only the SECRET
-     project declares a bar on. The VALUE is the record's and is identical for
-     both readers (DEC-17: never set by who a reader is, and op=publish stamps it
-     from the whole corpus whatever this read shows); the project's NAME is not. */
+  /* ==== CORRECTED 2026-08-10 BY CASE-2 UNDER DEC-72, NEVER EXEMPTED. ========
+     SIX ASSERTIONS STOOD HERE AND EVERY ONE WAS RIGHT WHEN WRITTEN. They swept
+     REC-30's measured leak: `#requiredStrengthFor` reported `projects: [...]`
+     and interpolated the same ids into its prose, so an uninvited member asking
+     the bar of a SHARED information learned the ids of the SECRET projects
+     citing it — §7.9's reverse-edge walk arriving by a new door. They asserted
+     that the VALUE was identical for both readers, that the NAMES were withheld,
+     and that the withholding was STATED without a count.
+
+     **THE EXPOSURE DISSOLVED; IT WAS NOT RE-GATED, AND THE DIFFERENCE MATTERS
+     TO ANYONE READING THIS BLOCK LATER.** DEC-72 makes a bar a property of a
+     PROJECT, so there is no cross-citer walk, no `projects[]` array, and no
+     prose naming a citer — REC-30's own residual (*"`source: "project"` on a
+     target only invisible projects cite still says that SOME project declares a
+     bar on it"*) is gone with the machinery that produced it.
+
+     WHAT REPLACES THEM IS A NARROWER GATE, ASSERTED HERE: the read now takes a
+     PROJECT, and a project the viewer may not see is answered byte-identically
+     to one that does not exist — this suite's standing posture, and strictly
+     stronger than withholding a name from an answer that still admits the
+     project exists. */
   const dv = (await GET(`op=strengthbarof&token=${dave}&target=${INFO}`)).body.result;
   const cl = (await GET(`op=strengthbarof&token=${carol}&target=${INFO}`)).body.result;
-  t("the owner is told which project declared the bar", cl.bar.projects, [PROJ]);
-  t("the uninvited member is told the SAME bar, per axis",
-    [dv.bar.capture, dv.bar.connection, dv.bar.declared, dv.bar.source],
-    [cl.bar.capture, cl.bar.connection, cl.bar.declared, cl.bar.source]);
-  t("and is told NO project name", dv.bar.projects, []);
-  t("nor one in the prose — the detail interpolated the same ids",
-    JSON.stringify(dv).includes(PROJ), false);
-  t("the withholding is STATED, and without a count (the count is the leak)",
-    [dv.bar.projects_out_of_view, "projects_out_of_view_count" in dv.bar], [true, false]);
-  t("a machine credential is not filtered",
-    (await GET(`op=strengthbarof&token=mem-rec25&target=${INFO}`)).body.result.bar.projects, [PROJ]);
+  t("THE LEAK'S PATH IS GONE: a bar is not a property of a document, so the target arm answers "
+  + "BOTH readers the same refusal and there is no walk left to leak a citer from",
+    [dv.ok, dv.reason, cl.ok, cl.reason],
+    [false, "BAR_IS_A_PROJECT_PROPERTY", false, "BAR_IS_A_PROJECT_PROPERTY"]);
+  t("and neither answer names the secret project ANYWHERE — REC-30's leak shape, re-asserted over "
+  + "the new shape rather than retired with the old one",
+    [JSON.stringify(dv).includes(PROJ), JSON.stringify(cl).includes(PROJ)], [false, false]);
+  t("nor does either carry the composed array at all, so there is nothing left to filter",
+    [("projects" in (dv.bar || {})), ("projects" in (cl.bar || {}))], [false, false]);
+  /* THE NEW GATE, AND IT IS THE ONE THAT MATTERS NOW. The bar lives on the
+     project, so asking for a SECRET project's bar is asking about a bundle the
+     viewer may not see — and the answer is the absent one, byte for byte. */
+  const secretBar = (await GET(`op=strengthbarof&token=${dave}&project=${PROJ}`)).body.result;
+  const absentBar = (await GET(`op=strengthbarof&token=${dave}&project=PROJ-2026-9999-nope`)).body.result;
+  /* THE ID THE CALLER SUPPLIED IS NORMALISED OUT OF BOTH ANSWERS BEFORE THEY ARE
+     COMPARED — `op=projectownerarith`'s arm twenty lines up does exactly this,
+     for exactly this reason: echoing back the id a caller asked about tells them
+     nothing they did not already type, and leaving it in would make every
+     absent-vs-hidden comparison in this file impossible to write. What must be
+     identical is EVERYTHING ELSE. */
+  const flatten = (r, id) => JSON.parse(JSON.stringify(r).split(id).join("<ASKED>"));
+  t("A HIDDEN PROJECT'S BAR IS BYTE-IDENTICAL TO ONE THAT DOES NOT EXIST — withheld WHOLE, which is "
+  + "stronger than the old posture of answering a value while withholding a name",
+    flatten(secretBar, PROJ), flatten(absentBar, "PROJ-2026-9999-nope"));
+  t("and the OWNER is told her own project's bar, so the gate is a gate and not a wall",
+    [(await GET(`op=strengthbarof&token=${carol}&project=${PROJ}`)).body.result.bar.declared,
+     (await GET(`op=strengthbarof&token=${carol}&project=${PROJ}`)).body.result.bar.capture],
+    [true, "B"]);
+  t("a machine credential is not filtered — the operator view the token exists for",
+    (await GET(`op=strengthbarof&token=mem-rec25&project=${PROJ}`)).body.result.bar.declared, true);
   t("the GROUP arm names no bundle at all, for anybody",
     "projects" in ((await GET(`op=strengthbarof&token=${dave}`)).body.result.bar || {}), false);
 
@@ -621,8 +657,14 @@ console.log("\n--- REC-29's inherited lesson: EVERY gate-like store param is SER
   const plain = await GET(`op=list&token=${dave}`);
   t("`viewer`: a caller cannot compile a query for somebody else's position",
     await GET(`op=list&token=${dave}&viewer=class:admin`), plain);
-  t("`viewer` on REC-14's bar read: a forged class:admin buys no project name",
-    (await GET(`op=strengthbarof&token=${dave}&target=${INFO}&viewer=class:admin`)).body.result.bar.projects, []);
+  /* CORRECTED 2026-08-10 by CASE-2 (DEC-72): there is no `projects[]` to forge a
+     name out of any more, so the impostor arm moves to the read that CAN now be
+     forged — the PROJECT arm, where a forged class:admin would buy the bar of a
+     project dave was never invited to. Same question, at the door that exists. */
+  t("`viewer` on REC-14's bar read: a forged class:admin buys no hidden project's bar",
+    [(await GET(`op=strengthbarof&token=${dave}&project=${PROJ}&viewer=class:admin`)).body.result.ok,
+     (await GET(`op=strengthbarof&token=${dave}&project=${PROJ}&viewer=class:admin`)).body.result.reason],
+    [false, "NO_SUCH_PROJECT"]);
   t("`viewer` on the swept reads either: op=dangling under a forged class:member",
     (await GET(`op=dangling&token=${dave}&viewer=class:member`)).body.result.dangling.map((x) => x.bundle_id),
     [INFO]);
@@ -821,10 +863,19 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "and NO id and NO count, because the count is the leak. The GRADES themselves are not gated and must "
       + "not be: what a document earned against a subject is a record fact, and a grade that moved with the "
       + "reader would be the record claiming something different to different people.",
-    strengthbarof: "REC-30 at the merge: #requiredStrengthFor reports `projects: [...]` and interpolates "
-      + "the same ids into its detail — §7.9's reverse-edge walk arriving by a new door. The bar VALUE is "
-      + "deliberately NOT gated (DEC-17: it is never set by who a reader is, and op=publish stamps it from "
-      + "the whole corpus regardless); the NAMES are withheld and the withholding is stated without a count.",
+    /* CORRECTED 2026-08-10 by CASE-2 (DEC-72), never exempted. The classification
+       below described a walk that no longer exists, and a classification table
+       describing removed machinery is how a reader concludes a gate is doing
+       work nothing does. */
+    strengthbarof: "CASE-2 / DEC-72: a bar is a property of a PROJECT, so this read takes a project and "
+      + "the whole cross-citer walk is gone. REC-30's measured leak — #requiredStrengthFor reporting "
+      + "`projects: [...]` and interpolating the same ids into its detail, §7.9's reverse-edge walk "
+      + "arriving by a new door — DISSOLVED with the composition rather than being re-gated, and so did "
+      + "its own stated residual (`source: \"project\"` still admitting SOME project declared a bar). What "
+      + "is gated now is narrower and stronger: a project the viewer may not see is answered "
+      + "byte-identically to one that does not exist, withheld WHOLE. The bar VALUE of a VISIBLE project is "
+      + "deliberately NOT reader-dependent (DEC-17's surviving stake: it is never set by who a reader is), "
+      + "and the finding arm is refused by name rather than answered, because no bar attaches to a finding.",
     /* PL-10 / D-220, 2026-08-07: the document-version chain. Classified here by
        the item that adds it, on op=meaningrows' precedent. */
     versionchain: "PL-10: EVERY VERSION AT AN ADDRESS NAMES A BUNDLE, so a capture filed inside a project "

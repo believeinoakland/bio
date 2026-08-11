@@ -2320,6 +2320,19 @@ function checkDividedExtension(fm, findings) {
 export const SUBJECT_POSITIONS = ['sought_and_answered', 'sought_no_answer', 'not_sought'];
 export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
 
+/** CASE-2 / DEC-72 clause 4: the two designations a case member can carry.
+ *  EXPORTED for SUBJECT_POSITIONS' own reason — op=affordances publishes the
+ *  vocabulary and no surface keeps a copy, so CASE-6's ceremony renders the two
+ *  terms the gate actually accepts rather than a third spelling of them.
+ *
+ *  THE SPELLING IS THE SCHEMA'S. CASE-1 fixed it on
+ *  `published_case_members.role` and said in the column's own comment that it
+ *  was fixed there "so CASE-2 and CASE-6 do not each invent a third". This is
+ *  that spelling consumed; `store.mjs`'s `Store.MEMBER_ROLES` is the same list,
+ *  and the suite asserts all three agree by PARSING the schema rather than by
+ *  restating it, because a vocabulary written three times is one that drifts. */
+export const CASE_MEMBER_ROLES = ['load_bearing', 'supporting'];
+
 /** REC-14: the three ASSERTED fields of a completeness block, in one place so
  *  the gate (C-21.1), the store's own pre-flight and the frozen projection all
  *  compare the same thing.
@@ -2424,6 +2437,55 @@ function checkPublishedExtension(fm, findings) {
   if (typeof fm.case_scope !== 'string' || fm.case_scope.trim() === '') {
     findings.push(f('C-2.8', 'error', 'published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
       ['author the case scope on op=publish']));
+  }
+  /* CASE-2 / DEC-72 — TWO MORE, AND THE GATE RUNS THEM FOR THE REASON THIS ACT
+     ALREADY RUNS C-21.1 TWICE: *"a one-sided check is a check the other side has
+     to catch."* op=publish refuses both at the door, where a refusal can name
+     what is missing; this is the ratification side, where the subject is bytes
+     that may have been edited after the act and before the signature.
+
+       case_project  A case is a PRODUCTION OF A PROJECT (DEC-72 clause 2), and
+                     the project is what supplied the standard of evidence. A
+                     published finding naming no project is one whose bar nobody
+                     declared — the shape the ruling deletes.
+       case_roles    Clause 4's AUTHORED partition, WHOLE, in every member's
+                     bytes: which findings the case RESTS ON and which travel
+                     with it. It must cover the roster exactly and name at least
+                     one load-bearing member, because all-supporting material
+                     asserts nothing conclusively while the completeness
+                     assertion claims coverage of a question no member answers.
+
+     Checked against `case_findings` rather than against a list restated here,
+     so the two cannot come to disagree about who is in the case. */
+  if (typeof fm.case_project !== 'string' || fm.case_project.trim() === '' || fm.case_project === 'null') {
+    findings.push(f('C-2.8', 'error', 'published state requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is',
+      ['publish through op=publish with project=<project id>, which writes it into the bytes you sign']));
+  }
+  {
+    const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
+    const rows = Array.isArray(fm.case_roles) ? fm.case_roles.filter((r) => r && typeof r === 'object') : null;
+    if (!rows || !rows.length) {
+      findings.push(f('C-2.8', 'error', 'published state requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member\'s bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default — a member designated by omission was designated by nobody',
+        ['designate every member on op=publish with roles={"<finding id>": "load_bearing"|"supporting"}']));
+    } else {
+      const named = new Map(rows.map((r) => [String(r.target ?? ''), String(r.role ?? '')]));
+      for (const m of roster) {
+        if (!named.has(m)) {
+          findings.push(f('C-2.8', 'error', `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
+        } else if (!CASE_MEMBER_ROLES.includes(named.get(m))) {
+          findings.push(f('C-2.8', 'error', `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(', ')}`));
+        }
+      }
+      for (const [t] of named) {
+        if (t && !roster.includes(t)) {
+          findings.push(f('C-2.8', 'error', `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
+        }
+      }
+      if (roster.length && !roster.some((m) => named.get(m) === 'load_bearing')) {
+        findings.push(f('C-2.8', 'error', 'case_roles names no LOAD-BEARING member: a case rests on at least one finding that meets the project\'s standard of evidence (DEC-72\'s second ruled default). All-supporting material asserts nothing conclusively while the completeness assertion claims coverage of a question no member conclusively answers',
+          ['designate the finding the case actually rests on, or do not publish this as a case yet']));
+      }
+    }
   }
   /* REC-47 / DEC-46 (a). DEC-20 is the doctrine and it is worth stating at the
      gate rather than only in the register: a published case CARRIES the bias it

@@ -414,9 +414,36 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    bound belongs to the plane and not to the caller. Whether this read wants a
    real bound is REC-66's question one method later, and it is DELEGATED rather
    than answered here. */
-const CLASS_MEASURED_2026_08_08 = 31;
+/* MOVED 31 → 30 ON 2026-08-10 BY CASE-2, AND THE DEPARTURE IS NAMED AND MEASURED
+   BECAUSE THIS FIGURE HAS A FLOOR AS WELL AS A CEILING. The FLOOR exists exactly
+   so a shrinking roster cannot read as progress — REC-60's 27 was a shrunken
+   measurement nobody could distinguish from an improvement and it went unnoticed
+   for two days — so a session that lowers it owes the same account as one that
+   raises it.
+
+   **THE DEPARTED MEMBER IS `#requiredStrengthFor`, MEASURED AND NOT INFERRED.**
+   The roster was re-derived by THIS SAME WALK over `git show HEAD:bio-plane/src/store.mjs`
+   and over the working tree, and `comm` over the two sorted rosters reports
+   EXACTLY ONE DEPARTURE AND NO ARRIVAL. That is the same instrument and the same
+   method D-280 used to name its own arrival one entry up, run in the opposite
+   direction.
+
+   WHY IT LEFT: it did not stop qualifying — it ceased to exist. Bob ruled DEC-72
+   on 2026-08-10, making the standard of evidence a property of a PROJECT;
+   `CASE-AS-PRODUCTION.md`'s supersession table removes DEC-17's
+   strictest-across-citers composition, which WAS the cross-citer walk that put
+   this method in the class.
+
+   **AND ITS REPLACEMENT DELIBERATELY DOES NOT JOIN.** `#projectBar` reads ONE
+   project's bundle.md with `#one` and walks nothing — no scan, so no
+   amplification, so no membership. That is asserted rather than assumed: the
+   walk above ran over the working tree and reports no arrival at all. A
+   replacement that had quietly re-entered the class would mean the composition
+   survived under a new name, and this ratchet is one of the two instruments in
+   the estate that could have seen it. */
+const CLASS_MEASURED_2026_08_08 = 30;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",

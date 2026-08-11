@@ -78,6 +78,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { AI_CREDENTIAL_CHECKS, CAPTURE_REQUEST_CHECKS, VERSION_ACT_CHECKS,
          MACHINE_FENCE_CHECKS, isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
+import { makePublishingProject } from "./publishingproject.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE_SRC = join(DIR, "..", "src", "index.mjs");
@@ -501,7 +502,16 @@ console.log("\n--- 4. publish: a concluded case with every authored field the ce
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
   if (!cn.ok) throw new Error(`conclude for publish: ${JSON.stringify(cn).slice(0, 500)}`);
 
-  const BODY = { target: INQ,
+  /* ADDED 2026-08-10, CASE-2 / DEC-72: publication is a PRODUCTION OF A PROJECT
+     and the act is fenced to a project OWNER. Both are fixture here, not
+     subject — this block's subject is the MACHINE fence, and the payload's whole
+     job is to be complete enough that only the credential can be what refuses
+     it. The project declares no bar, so nothing about this payload is newly
+     gated; the owner is RUTH, who is the member half of the pair below. */
+  const PUB_PRJ = await makePublishingProject({
+    post: POST, mf, sha, machineToken: "adm-vf5", owner: "ruth",
+    id: "PRJ-2026-9000-publish", created: NOW, updated: LATER });
+  const BODY = { target: INQ, project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
     excluded: [{ target: LEFT, description: "the FY2023 comparison memo",

@@ -299,3 +299,50 @@ edition writes a later edition's row, and a second sha at an already-published
 edition is refused by `EDITION_EXISTS` long before the pin write. It is kept
 because two authorities for one version must be incapable of disagreeing — and it
 is not claimed to be a reachable refusal.
+## CASE-2 landed — publication is a production of a project (DEC-72), 2026-08-10
+
+Appended, never rewritten: other RECORD workers are live, and a CASE-3 worker is on version
+pinning in the same neighbourhood.
+
+**WHAT A LATER RECORD WORKER NEEDS TO KNOW, in the order it will bite:**
+
+1. **`op=publish` NOW TAKES `project` AND `roles`, AND BOTH ARE REQUIRED.** `roles` is a map from
+   finding id to `load_bearing` | `supporting`, covering every member exactly. Eight existing suites
+   drove this op with neither; they were corrected through a SHARED fixture,
+   `bio-plane/test/publishingproject.mjs`, rather than by eight copies of a project template. If you
+   add a suite that publishes, use it — and note it deliberately does NOT wrap the act, so the
+   publication itself stays spelled out in the suite that asserts on it.
+
+2. **`#requiredStrengthFor` IS GONE.** DEC-17's strictest-across-citers composition went with it, and
+   so did the group default as a publication bar. Its replacement is `#projectBar(projectId)`, which
+   reads ONE project's `bundle.md` and walks nothing. **Do not reintroduce a fallback there** — the
+   group default's surviving role is SEEDING a new project (DEC-17's other half, which STANDS), and
+   `caseproduction.test.mjs` §7 asserts the absence off the source precisely because a composition
+   under a new name would pass every behavioural arm.
+
+3. **`op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`. Use
+   `&project=`. The `&group=` arm is unchanged and now says `seeds_new_projects: true` in its answer.
+
+4. **THE RATIFY COMMITTER WRITES `cases` AND `published_case_members.role`, OUT OF THE SIGNED BYTES.**
+   `op=publish` writes NEITHER — deliberately, and it is what keeps CASE-1's `purge` exemption honest
+   (its stated reversal condition was a case existing as a DRAFT before publication; this item
+   creates no such state). Two new frontmatter keys carry them: `case_project` and `case_roles`.
+
+5. **THE ONE LINE CASE-3 AND CASE-2 SHARE**, named so the merge is expected rather than discovered:
+   the `INSERT INTO published_case_members` statement inside `publish()`'s `if (caseId)` block.
+   CASE-2 adds `role`; CASE-3 adds `version_sha`. CASE-1 added both columns in one commit precisely
+   so both would be written, and neither item can avoid the statement.
+
+6. **`caseobject.test.mjs` (CASE-1's) NOW EXPECTS `project_id` AND `role` FILLED AND `version_sha`
+   STILL NULL.** That split is deliberate and load-bearing: a suite that quietly started expecting
+   all three would stop being able to tell CASE-3 landing from CASE-3 being forgotten.
+
+7. **A FINDING REPORTED RATHER THAN FIXED, because it is not this item's scope:** `op=promote` does
+   not re-run C-2.8's `published` entry requirements on an already-`published` document. Driven in
+   both directions — bytes with `case_project` removed promote `[ok: true]`, and so do bytes with
+   `case_scope` removed, a field required since REC-44 — so it is PRE-EXISTING. `op=ratify` does run
+   the catalog and refuses, so the plane is closed. See `MEASUREMENTS.md`.
+
+**WHAT IS STILL OWED BY THE ARC** (CASE-4, CASE-5, CASE-6 and the arc's definition of done) is in
+`QUEUE.md` and `CASE-AS-PRODUCTION.md`; nothing in this item touches
+`docs/BIO_DATAPLANE_STATE.md`, which the arc binds to CASE-6.
