@@ -49,6 +49,11 @@
 # else's corpus (M0-15: `git stash -u` is repository-wide, not per-worktree).
 .d280-harness/
 
+# CASE-2's pen, named for its item for the same reason every one above it is.
+# An interrupted driver must not leave an untracked file that becomes somebody
+# else's corpus (M0-15: `git stash -u` is repository-wide, not per-worktree).
+.case2-harness/
+
 # macOS Finder artifact — committed once by CONDUCT on 2026-08-10 via `git add -A`.
 .DS_Store
 **/.DS_Store

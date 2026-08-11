@@ -68,6 +68,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publishedcase ---");
@@ -114,9 +115,15 @@ const anonBytes = async (args) => await anonRaw(`op=publishedbytes&${args}`);
    brought them together. The helper supplies a default so every assertion below
    goes on measuring what it was written to measure; the NEW rule is asserted on
    its own, by name, rather than by these calls happening to omit the field.
-   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+   A body that sets `scope` (or `scope: ""`, to drive the refusal) wins.
+   CORRECTED 2026-08-10, CASE-2 / DEC-72, in exactly that shape one ruling on: a
+   case is a PRODUCTION OF A PROJECT, so the act takes a publishing project and an
+   AUTHORED designation for every member, defaulted here for the same reason. This
+   suite's subject is the PUBLIC READ PATH; the new rules are asserted by name in
+   `caseproduction.test.mjs`. */
 const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
+  { scope: "Whether the signature question was properly handled, on the documents in hand.",
+    project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -165,6 +172,11 @@ const ratify = async (id) => {
 /* ---- documents ---- */
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
+/* CASE-2 / DEC-72's publishing project, owned by VERA, who publishes throughout.
+   NO BAR is declared, so nothing this suite publishes is newly gated. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-rec22", owner: "vera",
+  id: "PROJ-2026-2200-publishedcase", created: NOW, updated: LATER });
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];

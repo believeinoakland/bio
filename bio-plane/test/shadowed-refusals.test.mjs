@@ -109,6 +109,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { makePublishingProject } from "./publishingproject.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -610,7 +611,16 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
   if (!cn.ok) throw new Error(`conclude: ${JSON.stringify(cn).slice(0, 400)}`);
+  /* ADDED 2026-08-10, CASE-2 / DEC-72: publication is a PRODUCTION OF A PROJECT
+     and is fenced to a project OWNER. Fixture, not subject — this block's
+     subject is a SHADOWED REFUSAL, and the payload's job is to be complete
+     enough that only the shadowing rule can be what refuses it. The project
+     declares no bar, so nothing here is newly gated. */
+  const PUB_PRJ = await makePublishingProject({
+    post: POST, mf, sha, machineToken: "mem-rec78", owner: "ruth",
+    id: "PROJ-2026-7800-publish", created: NOW, updated: LATER });
   const pub = await POST(`op=publish&token=${RUTH}`, { target: INQ,
+    project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
     excluded: [{ target: LEFT, description: "the FY2023 comparison memo",

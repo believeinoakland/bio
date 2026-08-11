@@ -76,6 +76,7 @@ import { dirname, join } from "node:path";
    and the difference is argued in full at the pin roster walk in block 4. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
+import { makePublishingProject } from "./publishingproject.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
@@ -380,7 +381,15 @@ const fence = (code, payload, machineAnswer) => {
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
   if (!cn.ok) throw new Error(`conclude for publish: ${JSON.stringify(cn).slice(0, 400)}`);
 
-  const BODY = { target: INQ,
+  /* ADDED 2026-08-10, CASE-2 / DEC-72: publication is a PRODUCTION OF A PROJECT
+     and is fenced to a project OWNER. Fixture, not subject — this block's
+     subject is the MACHINE fence, and the payload exists so that ONLY the
+     credential can be what refuses it. RUTH owns it and is the member half of
+     the pair below; the project declares no bar, so nothing is newly gated. */
+  const PUB_PRJ = await makePublishingProject({
+    post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
+    id: "PROJ-2026-7300-publish", created: NOW, updated: LATER });
+  const BODY = { target: INQ, project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
     excluded: [{ target: LEFT, description: "the FY2023 comparison memo",

@@ -428,11 +428,32 @@ const calls = (STORE_SRC.match(/this\.#refEdgeSevered\(/g) || []).length;
    site it added and why — which is the whole reason the count is EXACT and not
    a floor. Raising it silently, or relaxing it to `>=`, would retire the only
    tripwire D-267 left behind. */
-t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `#citesInto`, "
-+ "`#restsOnLive`, `#queueAncestorEdges`, and D-280's three: `#requiredStrengthFor`, `#routeTask` "
-+ "and `restingOn`. D-267 exists because the rule had four inline implementations and a fifth "
-+ "reader that did not know it existed, and NO behavioural arm can see a faithful copy",
-  [defs, calls], [1, 6]);
+/* CORRECTED AGAIN 2026-08-10 BY CASE-2, 6 → 5, AND THE DEPARTURE IS NAMED HERE
+   EXACTLY AS THE ARRIVALS WERE. The paragraph above demands that a session
+   touching this count "come here, read this paragraph, and say in it which site
+   it added and why". This is the same obligation running backwards: a reader was
+   REMOVED, not added, and saying so is what stops a shrinking count reading as
+   progress — REC-60's own failure mode, one instrument over.
+
+   **THE DEPARTED SITE IS `#requiredStrengthFor`, AND IT DID NOT LOSE THE CALL —
+   IT CEASED TO EXIST.** Bob ruled DEC-72 hours after D-280 landed, making the
+   standard of evidence a property of a PROJECT; `CASE-AS-PRODUCTION.md`'s
+   supersession table removes DEC-17's strictest-across-citers composition and
+   calls D-280's fix at that site *"moot rather than wrong — the code it fixed is
+   removed with the composition"*. There is no bar read over citers left to ask
+   the severance question of. The other FIVE are untouched, and D-280's two
+   surviving sites (`#routeTask`, `restingOn`) still consult the predicate and
+   are still driven by `d280-strengthbar.test.mjs` §5 and §6.
+
+   IT STAYS EXACT RATHER THAN BECOMING A FLOOR. The paragraph above says
+   relaxing it to `>=` "would retire the only tripwire D-267 left behind", and
+   that argument is unaffected by a member leaving. */
+t("STRUCTURAL: the severance rule has ONE definition and FIVE callers — `#citesInto`, "
++ "`#restsOnLive`, `#queueAncestorEdges`, and D-280's two surviving sites: `#routeTask` and "
++ "`restingOn`. It was SIX until CASE-2 removed `#requiredStrengthFor` under DEC-72. D-267 exists "
++ "because the rule had four inline implementations and a fifth reader that did not know it "
++ "existed, and NO behavioural arm can see a faithful copy",
+  [defs, calls], [1, 5]);
 t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either projection — both "
 + "edge kinds go through `consider`, so a future edge kind added to this method inherits the "
 + "confirmation instead of quietly reopening the defect",

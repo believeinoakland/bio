@@ -116,13 +116,42 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
    goes on measuring what it was written to measure; the NEW rule is asserted on
    its own, by name, rather than by these calls happening to omit the field.
    A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+/* CORRECTED 2026-08-10, CASE-2 / DEC-72, and the shape is REC-44's own: op=publish
+   now requires a PUBLISHING PROJECT and an AUTHORED ROLE for every member,
+   because a case is a production of a project and the load-bearing partition is
+   asserted by the publisher. The helper supplies both as defaults for exactly
+   the reason it already supplies `scope` — so every assertion below goes on
+   measuring what it was written to measure — and the NEW rules are asserted ON
+   THEIR OWN, BY NAME, in block 9, rather than by these calls happening to omit a
+   field. A body that sets `project` or `roles` (or sets either empty, to drive a
+   refusal) wins.
+   `roles` DEFAULTS TO ALL-LOAD-BEARING, which is deliberate and is the only
+   default that keeps the old assertions honest: every member of this suite's
+   fixture case was material the case rested on, and defaulting to `supporting`
+   would have quietly made a case that asserts nothing while the blocks below
+   still claimed it published a finding. */
+const rolesFor = (body) => {
+  const set = Array.isArray(body?.targets) ? body.targets
+            : typeof body?.targets === "string" && body.targets.trim() ? body.targets.split(",")
+            : body?.target ? [body.target] : [];
+  return Object.fromEntries(set.map((s) => [String(s).trim(), "load_bearing"]));
+};
 const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
+  { scope: "Whether the signature question was properly handled, on the documents in hand.",
+    project: PROJ, roles: rolesFor(body), ...body }));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
 const strengthbar = async (tok, body) => rP(await POST(`op=strengthbar&token=${tok}`, body));
-const barOf = async (target) => rP(await GET(`op=strengthbarof&token=mem-rec14&target=${encodeURIComponent(target)}`));
+/* CORRECTED 2026-08-10, CASE-2 / DEC-72. This helper asked for the bar OF A
+   FINDING, which was the right question under DEC-17's composed read and is not
+   a question the record can answer any more: a bar is a property of a PROJECT.
+   The `target=` arm still exists and is refused by name — block 4 drives it,
+   because a withdrawn arm that nothing exercises is a withdrawal nobody can
+   check. */
+const barOfProject = async (id) => rP(await GET(`op=strengthbarof&token=mem-rec14&project=${encodeURIComponent(id)}`));
+const barOfTarget = async (target) => rP(await GET(`op=strengthbarof&token=mem-rec14&target=${encodeURIComponent(target)}`));
+const barOfGroup = async () => rP(await GET(`op=strengthbarof&token=mem-rec14&group=believe-in-oakland`));
 const editionsOf = async (id) => rP(await GET(`op=publishededitions&token=mem-rec14&id=${encodeURIComponent(id)}`));
 const excludedBy = async (id) => rP(await GET(`op=excludedby&token=mem-rec14&id=${encodeURIComponent(id)}`));
 const affordances = async (target) => rP(await GET(`op=affordances&token=mem-rec14&target=${encodeURIComponent(target)}`));
@@ -336,6 +365,48 @@ await mustPromote(INQ_THIN, inquiryMd(INQ_THIN, { question: "Who signed the memo
 await mustPromote(INQ_OPEN, inquiryMd(INQ_OPEN, { question: "Does this recur?",
   refs: [INFO_CAP], legs: [{ target: INFO_CAP }] }), "inquiry", "open");
 
+/* CASE-2 / DEC-72: THE PUBLISHING PROJECT, AND IT EXISTS BEFORE THE FIRST
+   PUBLICATION RATHER THAN AFTER IT. Under DEC-17 this project was promoted in
+   block 4, halfway through the suite, because it was only ever a CITER whose
+   declared bar composed into a finding's answer. Under DEC-72 it is the thing
+   the case is a production OF, so it has to exist before anything publishes.
+   IT DECLARES NO BAR YET, which is what keeps block 4's first assertion
+   measuring its own subject: edition 1 must state the bar ABSENT, and an absent
+   bar is not a bar of zero. Block 4 then AMENDS the project with a declared bar
+   — a second promote of its own bundle.md, which is DEC-17's "authored, dated,
+   on-the-record act" performed rather than described.
+   NADIA CREATES IT AND PILAR OWNS IT, and the split is the fixture being honest
+   rather than convenient: creating a project needs the `create_projects`
+   capability, which PILAR does not hold and which this suite does not grant her
+   just to make a setup line shorter — C-38.5 refused exactly that and the
+   refusal was right. PILAR is who publishes throughout this suite, and DEC-72
+   fences publication to a project OWNER, so ownership is established through the
+   Durable Object's `projectclaimowner` surface — which is how `projects.test.mjs`
+   and `d280-strengthbar.test.mjs` both establish it, there being no
+   control-plane op for it. */
+await mustPromote(PROJ, projectMd(PROJ, { refs: [INQ_CASE] }), "project", "investigating", NADIA);
+{
+  /* THE REAL CEREMONY, PERFORMED RATHER THAN SHORT-CIRCUITED — and it is worth
+     the three calls. `op=promote` already made NADIA the owner (7.1: the creator
+     is the owner), so `projectclaimowner` answers OWNED and pilar reaches
+     ownership the way Membership Architecture v2 section 7 says anyone does:
+     invited by an owner, joining herself, then added as an owner by the sole
+     existing one — which 7.10 permits unilaterally, consensus being required
+     only from the third owner on. A fixture that wrote the participant row
+     directly would be asserting DEC-72's fence against a state the plane's own
+     rules cannot produce. */
+  const stub = await mf.getDurableObjectNamespace("STORE");
+  const obj = stub.get(stub.idFromName("bio"));
+  const doGet = async (op, qs) => rP(await (await obj.fetch(`http://x/${op}?${qs}`)).json());
+  const step = async (label, r) => {
+    if (r.ok !== true) throw new Error(`${label} ${PROJ}: ${JSON.stringify(r)}`);
+    return r;
+  };
+  await step("projectinvite", await doGet("projectinvite", `projectId=${PROJ}&handle=pilar&by=nadia`));
+  await step("projectjoin", await doGet("projectjoin", `projectId=${PROJ}&by=pilar`));
+  await step("projectowneradd", await doGet("projectowneradd", `projectId=${PROJ}&handle=pilar&by=nadia`));
+}
+
 const CONCL = "The transfer rests on a memo nobody adopted.";
 const FALS = "An adopted resolution naming the transfer would overturn this.";
 await conclude(PILAR, { target: INQ_CASE, conclusion: CONCL, falsifier: FALS });
@@ -534,16 +605,66 @@ console.log("\n--- 4. DEC-17: the declared bar, stamped beside the derived pair 
   const set = await strengthbar(NADIA, { capture: "B", connection: "C" });
   t("the GROUP declares the default, and the declaration carries its author and its date",
     [set.ok, set.capture, set.connection, set.author], [true, "B", "C", "nadia"]);
-  t("an inquiry in no project takes the group default", (await barOf(INQ_CASE)).bar.source, "group");
-  /* DEC-17: a PROJECT may override the group default, and it does so in its own
-     bundle.md — authored, dated, promoted through the gate, in append-only
-     history. You can lower your own bar; you cannot do it quietly. */
+  /* ==== CORRECTED 2026-08-10, CASE-2 / DEC-72, AND NEVER EXEMPTED ==========
+     THREE ASSERTIONS STOOD HERE AND ALL THREE WERE RIGHT WHEN THEY WERE
+     WRITTEN. What they measured was DEC-17 as this plane implemented it:
+       - "an inquiry in no project takes the group default" -> bar.source "group"
+       - "a project citing the inquiry OVERRIDES the group default, and names
+          the project that set it" -> source "project", projects [PROJ]
+       - and behind them, `#requiredStrengthFor`'s strictest-across-citers walk.
+
+     WHAT MADE THEM WRONG is not a defect in the code they tested. Bob ruled
+     DEC-72 on 2026-08-10: *"The bar — that is, the standard of evidence — is a
+     property of a project, not an inquiry or claim."* A finding has no bar to
+     ask for, so "the bar of INQ_CASE" is no longer a question with an answer;
+     the group default is no longer a publication bar at all (its surviving role
+     is SEEDING a new project); and `CASE-AS-PRODUCTION.md`'s supersession table
+     records that the strictest-across-citers clause *"was a session's
+     conservative construction, not Bob's ruling"*.
+
+     So each assertion is REPLACED BY ONE MEASURING WHAT REPLACED IT, at the
+     same altitude and through the same op. The first two below are the direct
+     descendants of the two named above. */
+  t("A FINDING HAS NO BAR TO ASK FOR: the target arm is REFUSED BY NAME, and the refusal points at the project",
+    [(await barOfTarget(INQ_CASE)).ok, (await barOfTarget(INQ_CASE)).reason,
+     (await barOfTarget(INQ_CASE)).detail.includes("property of a PROJECT")],
+    [false, "BAR_IS_A_PROJECT_PROPERTY", true]);
+  t("the GROUP default still answers and still SAYS what it is for — DEC-17's surviving half, which SEEDS a new project",
+    [(await barOfGroup()).ok, (await barOfGroup()).bar.capture, (await barOfGroup()).seeds_new_projects],
+    [true, "B", true]);
+  t("and the group default declares NO bar on the project: an undeclared project is an ABSENT bar, never the group's",
+    [(await barOfProject(PROJ)).bar.declared, (await barOfProject(PROJ)).bar.source,
+     (await barOfProject(PROJ)).bar.detail.includes("not a bar of zero")],
+    [false, "none", true]);
+  /* DEC-17's surviving mechanism, unchanged and now the ONLY one: a project
+     declares its bar in its own bundle.md — authored, dated, promoted through
+     the gate, in append-only history. You can lower your own bar; you cannot do
+     it quietly. This is a SECOND promote of the same project, which is what
+     makes it an amendment on the record rather than a fixture rewrite. */
+  /* THE DECLARED PAIR IS (capture B, connection C) AND THE CHANGE FROM (B, B) IS
+     NOT COSMETIC — it is CASE-2 taking effect, and it is recorded rather than
+     smoothed. Under DEC-17 this project declared (B, B) and the plane STAMPED it
+     beside the derived pair without ever comparing the two: the whole point of
+     the old block was that the bar was written down, and whether the case
+     cleared it was REC-15's deferred pre-flight. Under DEC-72 the bar is
+     ENFORCED at the act, and this suite's case derives (capture B, connection C)
+     — so a (B, B) bar now correctly REFUSES edition 2 with
+     BELOW_PROJECT_STRENGTH, and block 5's subject (DEC-12: two editions, both
+     answering) would have been destroyed by a fixture measuring somebody else's
+     rule. The bar is set to the pair this case genuinely meets; the REFUSAL and
+     its supporting-member complement are armed in `caseproduction.test.mjs`,
+     where they are the subject rather than an accident of a fixture. */
   await mustPromote(PROJ, projectMd(PROJ, { refs: [INQ_CASE],
-    bar: { capture: "B", connection: "B", author: "nadia", at: "2026-07-03T00:00:00Z" } }),
-    "project", "investigating", NADIA);
-  const pbar = await barOf(INQ_CASE);
-  t("a project citing the inquiry OVERRIDES the group default, and names the project that set it",
-    [pbar.bar.source, pbar.bar.capture, pbar.bar.connection, pbar.bar.projects], ["project", "B", "B", [PROJ]]);
+    bar: { capture: "B", connection: "C", author: "nadia", at: "2026-07-03T00:00:00Z" } }),
+    "project", "investigating", NADIA, await shaOf(PROJ));
+  const pbar = await barOfProject(PROJ);
+  t("the PROJECT declares its own bar, and it is read from that project ALONE and named as its own",
+    [pbar.ok, pbar.bar.source, pbar.bar.project, pbar.bar.capture, pbar.bar.connection],
+    [true, "project", PROJ, "B", "C"]);
+  t("NOTHING COMPOSES ACROSS CITERS ANY MORE: the answer carries no projects[] array at all",
+    ["projects" in pbar.bar, "projects_out_of_view" in pbar.bar], [false, false]);
+  t("and a bar is asked only of a PROJECT: an inquiry id on the project arm is refused as the wrong type",
+    (await barOfProject(INQ_CASE)).reason, "NOT_A_PROJECT");
 }
 
 /* ======================================== 5. DEC-12: a second edition, and both answer */
@@ -586,9 +707,17 @@ console.log("\n--- 5. DEC-12: reopened, concluded again, published at edition 2 
      FINDING (DEC-17 makes it a property of the project doing the work, and the
      work is the finding), so it is read from findings[] rather than from the top
      of the answer. Values unchanged. */
+  /* CORRECTED 2026-08-10, CASE-2 / DEC-72: the values move from (B, B) to
+     (B, C) because the fixture's declared bar did — see block 4, where the
+     reason is recorded. `source: "project"` is unchanged and now means THE
+     PUBLISHING PROJECT rather than the strictest citer. */
   t("edition 2 carries the PROJECT's declared bar, stamped beside the derived pair",
     [e2.findings[0].required.source, e2.findings[0].required.capture, e2.findings[0].required.connection],
-    ["project", "B", "B"]);
+    ["project", "B", "C"]);
+  t("and the bar is the CASE's property: it names the publishing project, at case altitude AND on the member",
+    [e2.project, e2.required.project, e2.findings[0].required.project], [PROJ, PROJ, PROJ]);
+  t("the authored partition comes back with the act, so a caller never has to re-derive who carried the case",
+    e2.roles, [{ target: INQ_CASE, role: "load_bearing" }]);
   const rat2 = await ratify(INQ_CASE);
   t("edition 2 ratifies", [rat2.ok, rat2.edition], [true, 2]);
   const eds = await editionsOf(INQ_CASE);

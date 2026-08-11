@@ -5664,6 +5664,16 @@ export default {
         ? ratifiedFm.case_id : null;
       const caseFindings = caseId && Array.isArray(ratifiedFm.case_findings) ? ratifiedFm.case_findings : null;
       const caseScope = caseId && typeof ratifiedFm.case_scope === "string" ? ratifiedFm.case_scope : null;
+      /* CASE-2 / DEC-72: WHOSE PRODUCTION THIS CASE IS, AND WHICH MEMBERS IT
+         RESTS ON — read out of the RATIFIED BYTES exactly like the roster and
+         the scope beside them, and out of nothing else. The store commits
+         `cases.project_id` and `published_case_members.role` from these two and
+         refuses a member whose bytes disagree with one already ratified, which
+         is only meaningful because they came from inside the hash the member
+         signed rather than off this request. */
+      const caseProject = caseId && typeof ratifiedFm.case_project === "string"
+        && ratifiedFm.case_project !== "null" ? ratifiedFm.case_project : null;
+      const caseRoles = caseId && Array.isArray(ratifiedFm.case_roles) ? ratifiedFm.case_roles : null;
       /* REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read out of the
          RATIFIED BYTES exactly like the scope beside it and out of nothing
          else. A disclosure this plane took off the request rather than out of
@@ -5758,7 +5768,8 @@ export default {
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
           required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          caseId, caseScope, caseFindings, caseBiasAck, group: ratifiedFm.group ?? null,
+          caseId, caseScope, caseFindings, caseBiasAck, caseProject, caseRoles,
+          group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s),
         }) })));
@@ -5769,6 +5780,12 @@ export default {
                       store: storeName, tokenClass: cls },
                     pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS"
                             || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED"
+                            /* CASE-2 / DEC-72: both are DISAGREEMENTS BETWEEN
+                               SIGNED DOCUMENTS, which is what 409 says here —
+                               the same class as the roster and the assertion
+                               beside them, not a fault in this request. */
+                            || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED"
+                            || pub.reason === "CASE_NAMES_NO_PROJECT"
                             || pub.reason === "CASE_ROSTER_EXCLUDES_SELF") ? 409 : 500);
 
       /* The fence: ratified bytes land content-addressed in the published

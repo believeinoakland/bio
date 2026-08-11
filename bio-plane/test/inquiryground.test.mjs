@@ -57,6 +57,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { makePublishingProject } from "./publishingproject.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 
@@ -121,6 +122,14 @@ const RUTH = await enrol("ruth", "admin", ["contribute"]);
 const VIEWONLY = await enrol("vic", "member", []);
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+/* CASE-2 / DEC-72: publication is a production of a project, owned by CAROL who
+   publishes the one case in block 6. NO BAR is declared, so nothing here is
+   newly gated — this suite's subject is op=inquiryground. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: async (q, bd) => await mf.dispatchFetch(`http://x/api/?${q}`,
+    { method: "POST", body: JSON.stringify(bd ?? {}) }).then((r) => r.json()),
+  mf, sha, machineToken: "adm-rec45", owner: "carol",
+  id: "PROJ-2026-4500-inquiryground", created: NOW, updated: LATER });
 /* THE ATTRIBUTION THE CALLER TRIES TO HAND US. A perfectly well-formed member
    name that belongs to nobody, and a perfectly well-formed timestamp from six
    years before the act — which is exactly why REC-42's gate cannot catch it and
@@ -511,6 +520,10 @@ console.log("\n--- 7. removing a grouping is a restructure; and the states that 
      required. Nothing else in this block moves — a published case still refuses
      restructuring by name, at whatever arity the case has. */
   const pub = await POST(`op=publish&token=${CAROL}`, { target: INQ_PUB,
+    /* ADDED 2026-08-10, CASE-2 / DEC-72: the publishing project and the authored
+       designation. Fixture, not subject — as the note below already says of the
+       field its own item added. */
+    project: PUBLISHING_PROJECT, roles: { [INQ_PUB]: "load_bearing" },
     scope: "Whether the FY2024 transfer rested on anything the Council adopted.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
     excluded: [], subjectPosition: "sought_and_answered",

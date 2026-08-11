@@ -59,6 +59,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle } from "../checks/bio-checks.mjs";
+import { makePublishingProject } from "./publishingproject.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -155,6 +156,14 @@ const DAVE = await enrol("dave", "member", ["contribute"]);
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const ASSERTED_AT = "2026-08-05T09:00:00Z";
+/* CASE-2 / DEC-72: publication is a production of a project, owned by CAROL who
+   publishes in block 5. NO BAR is declared — an undeclared project is an ABSENT
+   bar, so the frozen pairs this suite measures are not newly gated by anything. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: async (q, b) => await mf.dispatchFetch(`http://x/api/?${q}`,
+    { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json()),
+  mf, sha, machineToken: "adm-rec42", owner: "carol",
+  id: "PROJ-2026-4200-grounds", created: NOW, updated: LATER });
 
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -626,6 +635,10 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
      unchanged; the frozen PER-FINDING pair is what it measures and DEC-44 leaves
      that altitude exactly where REC-42 put it. */
   const pub = await POST(`op=publish&token=${CAROL}`, { target: CASE,
+    /* ADDED 2026-08-10, CASE-2 / DEC-72: a case is a PRODUCTION OF A PROJECT and
+       every member carries an AUTHORED designation. Fixture, not this suite's
+       subject — the frozen per-finding branch block is. */
+    project: PUBLISHING_PROJECT, roles: { [CASE]: "load_bearing" },
     scope: "Whether the FY2024 transfer was authorised.",
     statement: "This case covers the authorisation question on the documents in hand.",
     excluded: [], subjectPosition: "sought_and_answered",
@@ -679,6 +692,10 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
     + `&conclusion=${encodeURIComponent("The transfer was authorised.")}`
     + `&falsifier=${encodeURIComponent("A charter provision forbidding it.")}`);
   const pub2 = await POST(`op=publish&token=${CAROL}`, { target: PLAIN,
+    /* ADDED 2026-08-10, CASE-2 / DEC-72: a case is a PRODUCTION OF A PROJECT and
+       every member carries an AUTHORED designation. Fixture, not this suite's
+       subject — the frozen per-finding branch block is. */
+    project: PUBLISHING_PROJECT, roles: { [PLAIN]: "load_bearing" },
     scope: "Whether the transfer was authorised, on the two documents named.",
     statement: "This case covers the authorisation question on the two documents named.",
     excluded: [], subjectPosition: "not_sought",

@@ -68,6 +68,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -109,8 +110,16 @@ const conclude = async (tok, { target, conclusion, falsifier }) =>
    goes on measuring what it was written to measure; the NEW rule is asserted on
    its own, by name, rather than by these calls happening to omit the field.
    A body that sets `scope` (or `scope: ""`, to drive the refusal) wins. */
+/* CORRECTED 2026-08-10, CASE-2 / DEC-72, in the shape the paragraph above already
+   established one ruling earlier: a case is a PRODUCTION OF A PROJECT, so the act
+   takes a publishing project and an AUTHORED designation for every member. Both
+   are supplied as defaults for the same reason `scope` is — this suite's subject
+   is the re-evaluation obligation, not the publication ceremony, and every
+   assertion below must go on measuring what it was written to measure. The new
+   rules are asserted BY NAME in `caseproduction.test.mjs`. */
 const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.", ...body }));
+  { scope: "Whether the signature question was properly handled, on the documents in hand.",
+    project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target ?? "")}`, body));
 const reopen = async (tok, target, reason) =>
@@ -181,6 +190,11 @@ const ratify = async (id) => {
 /* ---- documents ---- */
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
+/* CASE-2 / DEC-72's publishing project. NO BAR is declared, so nothing this
+   suite publishes is newly gated — the fixture adds a publisher, not a fence. */
+const PUBLISHING_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-rec17", owner: "pilar",
+  id: "PROJ-2026-1700-reeval", created: NOW, updated: LATER });
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];

@@ -8080,3 +8080,59 @@ ever rises and a loose floor gates nothing, whereas `REGISTER_FLOOR` has a docum
 hazard and CONDUCT re-derives it from the MERGED run — so a worker moving it on a branch produces a
 figure that was true of a tree nobody will have. Left for the integrator, and named here so it is
 one act rather than a re-derivation.
+
+## CASE-2 · 2026-08-10 · publication as the project's production (DEC-72)
+
+**Instrument:** `cd bio-plane && npm run test:battery`, `node scripts/coverage.mjs --strict` run
+DIRECTLY with `$?` read UNPIPED, `node civicos-ui/test/run.mjs`, and
+`node test/caseproduction.control.mjs` for the arms.
+
+| what | before | after |
+| --- | --- | --- |
+| battery | 165/165 · 10,156 | **166/166 · 10,2xx** (one new suite, `caseproduction.test.mjs`) |
+| `d280-strengthbar.test.mjs` | 29 pass | 34 pass |
+| `publish.test.mjs` | 88 pass | 94 pass |
+| `gate-reads.test.mjs` | 110 pass | 115 pass |
+| `multifinding.test.mjs` | 70 pass | 76 pass |
+| `caseobject.test.mjs` (CASE-1's) | 17 pass | 19 pass |
+| `#refEdgeSevered` call sites | 6 | **5** — `#requiredStrengthFor` departed |
+| REC-66's unbounded-derivation class | 31 | **30** — same departure, and `#projectBar` did NOT join |
+
+**THE TWO RATCHET MOVES WERE MEASURED, NOT INFERRED, AND BOTH MOVED DOWNWARD.** A shrinking
+ratchet is the direction this estate has been burned by before (REC-60's 27 was a shrunken
+measurement nobody could distinguish from progress and it went unnoticed for two days), so both
+were re-derived rather than adjusted to fit:
+
+- **REC-66's class, 31 → 30.** The suite's OWN walk was run over `git show HEAD:bio-plane/src/store.mjs`
+  and over the working tree, the two rosters sorted, and `comm` reports **exactly one departure and
+  no arrival**: `#requiredStrengthFor`. That is D-280's own method for naming its arrival, run in
+  the opposite direction. **`#projectBar` deliberately does not join the class** — it reads one
+  project's `bundle.md` with `#one` and walks nothing — and the absence of an arrival is what says
+  the composition did not survive under a new name.
+- **D-267's caller pin, 6 → 5.** Kept EXACT rather than relaxed to a floor: the pin's own text says
+  relaxing it "would retire the only tripwire D-267 left behind", and that argument is unaffected
+  by a member leaving rather than arriving.
+
+**MEASURED AND REPORTED RATHER THAN FIXED — `op=promote` DOES NOT RE-RUN C-2.8's PUBLISHED ENTRY
+REQUIREMENTS ON AN ALREADY-`published` DOCUMENT.** Found while building an adversary, and the first
+version of the arm asserted the opposite and was wrong. Driven: bytes with `case_project` deleted
+promote with `[ok: true, reason: null]`. The probe was then repeated on a field that has been
+C-2.8-required since REC-44 — `case_scope` — and it behaves identically, `[true, null]`. **So this
+is PRE-EXISTING behaviour of the re-promote path and NOT something CASE-2 introduced**, which is why
+it is recorded here rather than patched inside this item. `op=ratify` DOES run the catalog and
+refuses the same bytes `GATE_REFUSED`, so the plane is closed; what is now recorded is the ORDER,
+which had been assumed identical at the two steps and is not.
+
+**MEASURED CONSUMER IMPACT FOR IC-64 — ZERO, each half measured separately rather than asserted
+together.** `op=publish` has no UI consumer *by assertion*: DEC-33 defers the ceremony and
+`civicos-ui/test/publication-entry.test.mjs` asserts on the wire that it is never reached.
+`op=strengthbarof` has no UI consumer at all (grep over `civicos-ui/**`: zero hits). `required_strength`
+DOES have one, and it reads exactly four fields — `declared`, `capture`, `connection`, `detail` —
+none of which move; `source` is read by nothing in the UI, and neither are `projects`, `declared_by`
+or `declared_at`.
+
+**REC-30's LEAK ON `op=strengthbarof` DISSOLVED RATHER THAN BEING RE-GATED**, including the residual
+REC-30 itself named honestly (*"`source: "project"` on a target only invisible projects cite still
+says that SOME project declares a bar on it"*). With no cross-citer walk there is no `projects[]`,
+no interpolated id and no residual. What replaces it is strictly narrower: a project the viewer may
+not see is answered byte-identically to one that does not exist.

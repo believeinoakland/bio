@@ -4355,6 +4355,7 @@ export class Store extends DurableObject {
   publishCase({ target = null, targets = null, caseId = null, scope = "",
                 statement = "", excluded = null, subjectPosition = "",
                 subjectJustification = "", biasAcknowledgement = "",
+                project = null, roles = null,
                 viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-publish — REC-64/C-32.6. The fence alone. */
@@ -4364,6 +4365,58 @@ export class Store extends DurableObject {
                      + "may never author the completeness assertion or the position on putting it to its "
                      + "subject, both of which are declared bias. Sign in as a member." };
     /* END DEC-49 REGION is-machine-publish */
+
+    /* ============ CASE-2 / DEC-72: PUBLICATION IS A PRODUCTION OF A PROJECT ==
+       Bob, 2026-08-10: *"Only findings that are part of a project can be
+       published"* — publishing is *"something that's done as a production of
+       the project"* — and *"the publisher of a project … must be a manager of
+       the project"*, ruled with the default that MANAGER IS THE EXISTING OWNER
+       ROLE. `CASE-AS-PRODUCTION.md` is the authority.
+
+       THESE FOUR REFUSALS FIRE FIRST, BESIDE THE MACHINE FENCE, AND THAT
+       DELIBERATELY DEPARTS FROM THIS METHOD'S OWN CONVENTION. Twice below, a
+       comment says a newly added refusal goes LAST "so an existing caller's
+       diagnosis does not change under them". That rule protects a caller who is
+       still making a LEGAL call and is merely learning about a new authored
+       field. A project-less caller is not making a legal call any more — DEC-72
+       removes that path outright — so ordering their diagnosis behind the
+       ceremony would make them author a bias acknowledgement for a request that
+       can never succeed. These are AUTHORITY fences, and this act already runs
+       its authority fence first.
+
+       CASE-1 COULD NOT DRIVE `cases.project_id NOT NULL` THROUGH AN OP, because
+       nothing wrote the table; it pinned the constraint structurally and named
+       this as the item that makes it real. This block is that. */
+    const gate = viewerPredicate(viewer);
+    const proj = String(project ?? "").trim();
+    if (!proj)
+      return { ok: false, reason: "NO_PUBLISHING_PROJECT",
+               detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is "
+                     + "what supplies the standard of evidence this case is held to, read from that project "
+                     + "alone at this moment — so a publication naming no project is one whose bar nobody "
+                     + "declared, and an absent publisher is not a publisher of none." };
+    const pb = this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      proj, ...gate.args);
+    if (!pb)
+      return { ok: false, reason: "NO_SUCH_PROJECT", project: proj,
+               detail: `no project answers to ${proj}. A project you cannot see is answered exactly as one that `
+                     + `does not exist, which is this record's standing posture and not a hint.` };
+    if (normalizeType(pb.object_type) !== "project")
+      return { ok: false, reason: "NOT_A_PROJECT", project: proj, object_type: pb.object_type,
+               detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a `
+                     + `case to (DEC-72). Publication is wielded at the top of a project's roster.` };
+    /* Membership Architecture v2 section 7's OWN predicate, consumed and never
+       restated — a second implementation of the owner rule is this repository's
+       most-repeated defect class and has already absorbed a control here. No
+       admin bypass: an administrator sees every project and DIRECTS none of
+       them (v2 4.9), and publishing is the most directing act there is. */
+    if (!this.#isProjectOwner(proj, who))
+      return { ok: false, reason: "NOT_THE_PROJECT_OWNER", project: proj, author: who,
+               detail: `publishing is ${proj}'s own production and is wielded by an OWNER of it (DEC-72). An `
+                     + `administrator sees every project and directs none of them, and a participant who is not `
+                     + `an owner contributes to the work without putting the project's name on it.` };
+    /* ============ END CASE-2 / DEC-72 project fence ======================= */
     /* REC-44: the SET. `targets` is the shape; `target` is the one-finding
        degenerate case DEC-44 determination 5 keeps legal, and it is normalised
        here so nothing below has two arities to think about. A comma-separated
@@ -4491,7 +4544,8 @@ export class Store extends DurableObject {
        being a nicety: a case that published two of three findings and then
        refused the third would leave the record asserting a case that does not
        exist, and there is no half of this act worth keeping. */
-    const gate = viewerPredicate(viewer);
+    /* `gate` is compiled once at the top of this act, where CASE-2's project
+       fence needs it first — one compilation point, which is the rule. */
     const prepared = [];
     for (const id of members) {
       const b = this.#one(
@@ -4521,6 +4575,127 @@ export class Store extends DurableObject {
                        + "published is reopened before it can be concluded again for a new edition." };
       prepared.push({ id, b, fm, text: liveMd.content });
     }
+
+    /* ==== CASE-2 / DEC-72 clause 4: THE AUTHORED LOAD-BEARING PARTITION =====
+       Bob, 2026-08-10: *"All load-bearing findings of a case being published
+       must meet the necessary bar. Other findings/claims that don't meet the
+       bar can be a part of the published work, though they aren't presented as
+       load-bearing."*
+
+       IT IS A PARTITION SOMEONE ASSERTS — DEC-32's discipline at case altitude —
+       so BOTH halves are authored and neither is a default. CASE-1 deliberately
+       left NO DEFAULT on `published_case_members.role` for exactly this: *"a
+       DEFAULT of 'supporting' would mean a member could be designated by
+       OMISSION, and a default of 'load_bearing' would have the record assert
+       that evidence meets a bar nobody claimed it met. A designation that can
+       happen without an act is not authored. CASE-2 makes both REQUIRED AT THE
+       DOOR, where a refusal can name what is missing."* This is that door.
+
+       A MAP KEYED BY MEMBER ID RATHER THAN A THIRD MEMBER ARITY. `target` and
+       `targets` are already normalised into one list above, and the code went to
+       some trouble so that "nothing below has two arities to think about"; a
+       `members: [{target, role}]` shape would be a third. A map also cannot
+       silently reorder against the roster, which a parallel array can. */
+    const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
+    if (roles != null && !roleMap)
+      return { ok: false, reason: "BAD_ROLES", allowed: Store.MEMBER_ROLES,
+               detail: "roles is a map from finding id to designation — {\"INQ-…\": \"load_bearing\"} — one entry "
+                     + "per member of this case. It is not a list: a list would be positional against the "
+                     + "roster, and a partition that can silently reorder is not one anybody authored." };
+    const memberRoles = [];
+    for (const p of prepared) {
+      const r = roleMap ? String(roleMap[p.id] ?? "").trim() : "";
+      if (!r)
+        return { ok: false, reason: "NO_MEMBER_ROLE", target: p.id, allowed: Store.MEMBER_ROLES,
+                 detail: `${p.id} carries no authored designation. Every member of a case is declared `
+                       + `load_bearing or supporting BY THE PUBLISHER (DEC-72): a load-bearing finding is one `
+                       + `the case rests on and must meet the project's standard of evidence, and a supporting `
+                       + `one travels with the case without being presented as carrying it. There is no `
+                       + `default, because a member designated by omission was designated by nobody.` };
+      if (!Store.MEMBER_ROLES.includes(r))
+        return { ok: false, reason: "BAD_MEMBER_ROLE", target: p.id, role: r, allowed: Store.MEMBER_ROLES,
+                 detail: `${p.id} is designated '${r}', which is not one of: ${Store.MEMBER_ROLES.join(", ")}. `
+                       + `The two terms are the record's own and are spelled as the schema spells them.` };
+      memberRoles.push({ target: p.id, role: r });
+    }
+    /* DEC-72's SECOND RULED DEFAULT, and the design doc states the reason
+       rather than leaving it to be reconstructed: *"All-supporting material
+       would assert nothing conclusive while the completeness ceremony claims
+       coverage of a question no member conclusively answers."* */
+    const loadBearing = memberRoles.filter((m) => m.role === "load_bearing");
+    if (!loadBearing.length)
+      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER", members: members.slice(),
+               detail: "a case rests on at least one LOAD-BEARING finding (DEC-72). Every member here is "
+                     + "supporting, so the case asserts nothing conclusively — while its completeness "
+                     + "assertion claims coverage of a question no member answers. Designate the finding "
+                     + "the case actually rests on, or do not publish this as a case yet." };
+
+    /* ==== CASE-2 / DEC-72 clause 2: THE BAR, READ FROM THE PUBLISHING PROJECT
+       ALONE, AT ACT TIME — AND READ ONCE ============================
+       Bob: *"The bar — that is, the standard of evidence — is a property of a
+       project, not an inquiry or claim."* Nothing composes across citers and
+       nothing is inherited: the same finding may clear a journalist project's
+       bar and fall short of a lawyer project's, and both facts stand.
+
+       ONCE PER CASE, NOT ONCE PER MEMBER, and that is the design correcting
+       itself rather than an optimisation. Reading the bar inside the per-member
+       write loop was an artifact of the model in which a bar attached to a
+       FINDING; under DEC-72 the bar is the CASE's property, so a case whose
+       members could be stamped with different bars would be the old model
+       surviving in the bytes.
+
+       THE GROUP DEFAULT IS NOT CONSULTED HERE, and this is the half that is
+       easiest to get wrong. `CASE-AS-PRODUCTION.md`'s supersession table removes
+       *"the project-less publication path (`publishCase` with no project; GROUP
+       DEFAULT AS A PUBLICATION BAR)"* in those words. DEC-17's group default
+       STANDS — its remaining role is SEEDING new projects, an authored act on a
+       project — and it is still served by op=strengthbarof&group=. What it no
+       longer does is gate a publication nobody declared it for. */
+    const bar = this.#projectBar(proj);
+    /* Undetermined is first-class: an absent bar gates NOTHING and is not a bar
+       of zero, so this loop simply does not run and the case publishes stating
+       that it cleared no declared standard. */
+    if (bar.declared) {
+      const rank = (g) => BASIS_GRADES.indexOf(g);
+      for (const m of loadBearing) {
+        const pair = this.strengthOf(m.target);
+        for (const axis of Store.STRENGTH_AXES) {
+          const want = bar[axis];
+          if (!BASIS_GRADES.includes(want)) continue;   /* an axis the project left unset gates nothing */
+          const got = pair[axis];
+          /* A DERIVED GRADE OF NULL DOES NOT MEET A DECLARED BAR, and it is
+             refused with the STATE named rather than with a letter invented for
+             it. `unrated` and `undetermined` are different frozen facts (R2 /
+             DEC-21) and neither is a grade: treating either as clearing a bar
+             would be the record claiming a standard was met by material nobody
+             graded — the overclaim class this project ranks worst. */
+          if (got.grade === null || rank(got.grade) > rank(want))
+            return { ok: false, reason: "BELOW_PROJECT_STRENGTH", target: m.target, axis,
+                     project: proj, required: want, reached: got.grade, state: got.state,
+                     detail: `${m.target} is LOAD-BEARING in this case and reaches ${axis} `
+                           + `${got.grade === null ? got.state + " (no grade)" : "'" + got.grade + "'"}, `
+                           + `against ${proj}'s declared standard of '${want}'. A case rests on its `
+                           + `load-bearing findings, so those are what the project's bar is asked of. `
+                           + `A finding below the bar may still travel with this case — designate it `
+                           + `SUPPORTING and it is published, marked as not carrying the case (DEC-72). `
+                           + `That is the honest move and never severing the citation.` };
+        }
+      }
+    }
+    /* AND NOTHING IS ASKED OF THE SUPPORTING MEMBERS. This absence is the item,
+       so it is stated rather than left to be inferred from a loop that iterates
+       one list. Bob, on DEC-71: *"every project has a standard of evidence. But
+       that standard doesn't require that every piece of evidence must meet that
+       standard. Rather, it means that the overall FINDINGS in that project must
+       meet the standard — even if some evidence cited is below the necessary
+       grade. … While the draft agenda may not meet the grade to contribute
+       conclusively to the findings, it can still be included in the report
+       because it really was in the draft agenda that really was found on the
+       city website. … The citation doesn't have to be severed."* A gate that
+       refused the draft agenda would be a gate pressuring a member into
+       severing a true citation to publish, which is the shape this record
+       refuses everywhere. The suite arms both halves of this pair together,
+       because one without the other proves nothing. */
 
     /* ---- REC-44: THE CASE IDENTITY, and it is decided from the RECORD ----
        Three routes and one rule. A caller may NAME an existing case (this is
@@ -4567,6 +4742,31 @@ export class Store extends DurableObject {
                        + `move it, publish a new edition of ${had} without it first.` };
     const minted = !theCase;
     if (minted) theCase = this.allocId("CASE", new Date().toISOString().slice(0, 4)).id;
+
+    /* CASE-2 / DEC-72: A CASE'S PRODUCING PROJECT IS INVARIANT ACROSS ITS
+       EDITIONS, and this refusal is what makes CASE-1's key choice mean
+       something at runtime. `cases` is keyed on `case_id` ALONE precisely so
+       that edition 1 cannot be project A's production and edition 2 project B's
+       — and since the bar is read from the publishing project AT ACT TIME, a
+       case that could change hands is a case whose STANDARD OF EVIDENCE changes
+       with nobody authoring the change. The schema makes that unrepresentable;
+       without this refusal the act would simply fail at the ratify INSERT with
+       a constraint error naming nothing a member could act on.
+       The RATIFIED row is asked first and the working bytes second, exactly as
+       the case identity above resolves — one is the record, the other is this
+       act's own unratified preparation. */
+    const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
+    const claimedProject = ownedBy ? ownedBy.project_id
+      : [...new Set(prepared.map((p) => (typeof p.fm.case_project === "string"
+          && p.fm.case_project !== "null" ? p.fm.case_project : null)).filter(Boolean))][0] || null;
+    if (claimedProject && claimedProject !== proj)
+      return { ok: false, reason: "CASE_BELONGS_TO_ANOTHER_PROJECT", caseId: theCase,
+               project: proj, owner: claimedProject, ratified: !!ownedBy,
+               detail: `case ${theCase} is ${claimedProject}'s production, and a case does not change hands `
+                     + `between editions (DEC-72). The bar a case is held to is read from its publishing `
+                     + `project at the moment of publication, so letting edition 2 name a different project `
+                     + `would change this case's standard of evidence with nobody authoring the change. `
+                     + `Publish the new edition as ${claimedProject}, or publish this material as a new case.` };
 
     /* DEC-12 as DEC-44 rehomes it: the edition comes from the PUBLISHED RECORD
        of THE CASE, never from the caller, and it is what the next ratification
@@ -4635,7 +4835,8 @@ export class Store extends DurableObject {
        two findings whose strengths differ has TWO answers, and composing them
        into one is R2's forbidden composition at case altitude. */
     const pair = this.strengthOf(target);
-    const bar = this.#requiredStrengthFor(target, fm);
+    /* CASE-2 / DEC-72: `bar` is NOT read here any more. It is the CASE's
+       property and is computed ONCE, from the publishing project, above. */
 
     const withHistory = Store.#appendStateHistory(text, {
       timestamp: when, from_state: b.current_state, to_state: "published",
@@ -4680,6 +4881,33 @@ export class Store extends DurableObject {
        them. */
     text = Store.#setOrAddScalar(text, "bias_acknowledgement", `"${Store.#fmSafe(back)}"`);
     text = Store.#setOrAddScalar(text, "case_findings", `[${roster}]`);
+    /* CASE-2 / DEC-72: WHOSE PRODUCTION THIS CASE IS, INSIDE THE BYTES THE
+       MEMBER SIGNS — for case_id's own reason and not a new one. A stranger
+       holding one finding must be able to read which project published it and
+       therefore whose standard of evidence the case was held to, without
+       contacting this instance (S9). It is also what lets the ratify committer
+       write the `cases` row out of the SIGNED bytes rather than out of a
+       request, which is #publishEdges' doctrine and the reason `published_cases`
+       is committed the same way. */
+    text = Store.#setOrAddScalar(text, "case_project", proj);
+    /* CASE-2 / DEC-72 clause 4: THE AUTHORED PARTITION, WHOLE, IN EVERY MEMBER.
+       It restates the roster `case_findings` already carries, so the reason is
+       argued rather than assumed. A stranger holding a SUPPORTING finding must
+       be able to see two things that a per-member `role:` scalar cannot tell
+       them: that THIS document was not presented as carrying the case, and that
+       the case had a load-bearing member at all. Both are answerable only from
+       the whole partition, and REC-44 already writes the whole roster into every
+       member for exactly that reason.
+       THE RESTATEMENT IS NOT TRUSTED. The ratify committer refuses
+       CASE_ROLES_DIVERGED when the partition does not cover the roster, or when
+       two members signed different partitions — the same treatment case_findings
+       and bias_acknowledgement already get, which is what makes a restated fact
+       checkable rather than a second authority.
+       A `case_load_bearing` SUBSET with `supporting` derived by complement was
+       considered and rejected: DEC-32's discipline names this a PARTITION
+       someone asserts, and a half nobody wrote down is a half nobody authored. */
+    text = Store.#setOrAddBlock(text, "case_roles",
+      memberRoles.flatMap((m) => [`  - target: ${m.target}`, `    role: ${m.role}`]));
     text = Store.#setOrAddBlock(text, "completeness", [
       `  statement: "${stmt}"`,
       `  subject_position: ${pos}`,
@@ -4738,9 +4966,17 @@ export class Store extends DurableObject {
           `    weakest: ${g.weakest ? g.weakest.target_id : "null"}`,
           `    load_bearing: ${g.load_bearing}`,
           `    population: ${g.population}`]));
+    /* DEC-17 as DEC-72 rehomes it. The block keeps every field a reader was
+       given — `declared`, `capture`, `connection`, `detail` are unmoved in name,
+       type and meaning, which is what makes the UI's four reads survive this
+       change untouched. What moves is BENEATH them: `source` can no longer be
+       "group" (the group default is not a publication bar), `projects[]` is gone
+       with the composition, and `project` NAMES the one project whose bar this
+       case was held to. IC-64. */
     text = Store.#setOrAddBlock(text, "required_strength", [
       `  declared: ${bar.declared}`,
       `  source: ${bar.source}`,
+      `  project: ${proj}`,
       `  capture: ${bar.capture ?? "null"}`,
       `  connection: ${bar.connection ?? "null"}`,
       `  detail: "${Store.#fmSafe(bar.detail)}"`]);
@@ -4770,8 +5006,12 @@ export class Store extends DurableObject {
     const entry = `### Session ${when} | Published | ${who}\n`
                 + `Trigger: op=publish on ${target}\n`
                 + `Changes: state ${b.current_state} to published, case ${theCase} edition ${edition}.\n`
+                + `Published by: ${proj} (this case is that project's production, DEC-72)\n`
                 + `Case scope: ${scp}\n`
                 + `Findings in this case: ${roster}\n`
+                + `Load-bearing: ${loadBearing.map((m) => m.target).join(", ")}\n`
+                + `Supporting: ${memberRoles.filter((m) => m.role === "supporting")
+                                             .map((m) => m.target).join(", ") || "none"}\n`
                 + `Completeness: ${stmt}\n`
                 + `Excluded: ${rows.length} item(s).\n`
                 + `Subject position: ${pos} — ${just}\n`;
@@ -4810,6 +5050,15 @@ export class Store extends DurableObject {
                        grade: pair[axis].grade,
                        weakest: pair[axis].weakest ? pair[axis].weakest.target_id : null })),
                      required: bar,
+                     /* CASE-2 / DEC-72 clause 4: THE DESIGNATION, BESIDE THE
+                        STRENGTH AND THE BAR — which is exactly the shape the
+                        design says a reader must be given: *"each claim's own
+                        derived strength displayed beside the case's standard"*,
+                        with supporting members VISIBLY not load-bearing. A
+                        surface holding the pair and the bar but not the role
+                        would have to guess which members the bar was actually
+                        asked of, and it was asked of none of them but these. */
+                     role: (memberRoles.find((m) => m.target === target) || {}).role ?? null,
                      /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
                         obligation on everything whose basis names this FINDING and
                         RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
@@ -4838,6 +5087,18 @@ export class Store extends DurableObject {
              ...(written.length === 1 ? { target: written[0].target, bundleSha: written[0].bundleSha,
                                           from: written[0].from } : {}),
              scope: scp,
+             /* CASE-2 / DEC-72: WHOSE PRODUCTION, AND THE BAR IT WAS HELD TO —
+                at CASE altitude, because under DEC-72 both are the case's
+                properties rather than any member's. `findings[].required`
+                answers the same block per member and stays where REC-44 put it,
+                so a caller written against the old shape reads on unchanged;
+                this is the answer to "what standard is THIS CASE claiming", and
+                a surface that wants it should not have to pick a member and hope
+                the others agree. They cannot disagree any more, which is the
+                design working rather than an invariant to police. */
+             project: proj, required: bar,
+             /* The authored partition, in the roster's own order. */
+             roles: memberRoles,
              /* REC-47: BESIDE the completeness block, not inside it. The lens
                 and the limits are two claims (DEC-46), and nesting one in the
                 other is the collapse REC-44 spent an item undoing one altitude
@@ -4859,6 +5120,20 @@ export class Store extends DurableObject {
   }
 
   static COMPLETENESS_MAX = 2000;
+
+  /* CASE-2 / DEC-72 clause 4: THE TWO DESIGNATIONS A CASE MEMBER CAN CARRY, and
+     the spelling is the SCHEMA'S rather than this file's. CASE-1 fixed it on
+     `published_case_members.role` in `schema.mjs` — snake_case like every other
+     closed vocabulary there (`cuts_against` is the exact precedent) — and said
+     in the column's own comment that it was fixed there "so CASE-2 and CASE-6 do
+     not each invent a third". This constant is that spelling CONSUMED, and the
+     suite asserts the two agree by PARSING the schema rather than by restating
+     it here, because a vocabulary written twice is a vocabulary that drifts.
+
+     ORDER IS NOT ARBITRARY: `load_bearing` first, because a refusal listing the
+     allowed values should name the one that carries the case before the one
+     that accompanies it. Nothing derives meaning from the index. */
+  static MEMBER_ROLES = ["load_bearing", "supporting"];
 
   /* REC-16: DIVIDING an inquiry. open|surfaced|concluded -> `divided`, which is
    * TERMINAL (DEC-28), with the parent's legs re-homed onto children that each
@@ -5789,101 +6064,84 @@ export class Store extends DurableObject {
     return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
   }
 
-  /* DEC-17 as amended: the bar the GROUP declared as its default, which a
-     PROJECT may override in its own bundle.md.
-     *
-     * WHY THE PROJECT HALF IS AUTHORED FRONTMATTER AND NOT A TABLE: DEC-17's
-     * escape is that a group may lower its own bar and may not do it quietly —
-     * *"the amendment is an authored, dated, on-the-record act visible in the
-     * published case"*. A project's bundle.md IS that: authored, dated,
-     * promoted through the gate, in append-only history. A settings row would be
-     * a way to change the standard with nothing to read afterwards.
-     *
-     * AN INQUIRY OUTSIDE ANY PROJECT HAS NO PROJECT BAR (DEC-17): the
-     * declaration is a property of a project, and inheriting one from elsewhere
-     * would invent it. The group default still applies, because that is what a
-     * default is.
-     *
-     * WHERE TWO PROJECTS CITE ONE INQUIRY, the STRICTEST declared bar wins PER
-     * AXIS — never composed into one letter. This is mine to decide and the
-     * reasoning is conservative-by-construction: a case used by two projects
-     * must satisfy both, and taking the strictest can never let a case past a
-     * bar somebody set for it. REC-15's preflight is where falling short is
-     * refused; this only decides what is STAMPED. */
-  #requiredStrengthFor(bundleId, fm) {
-    /* REC-51: STRICTEST is lowest index in the catalog's OWN order, which is
-       strongest-first — the same ordering `checkEarnedLeg` compares against and
-       the same one `UNREACHABLE_CAPTURE_GRADE` steps through. Read from the
-       array rather than restated, so "strictest" cannot come to mean something
-       else here than it means at the enforcement point. */
-    const rank = (g) => BASIS_GRADES.indexOf(g);
-    const strictest = { capture: null, connection: null };
-    const projects = [];
-    /* D-280: THE CANDIDATE'S EDGES, GATHERED PER CITER BEFORE ANY IS JUDGED.
-       `refs` is keyed (bundle_id, target_id, kind), so ONE citer may hold
-       SEVERAL rows against one target and the withdrawal question is asked per
-       EDGE — which means the rows have to be grouped before it can be asked at
-       all. A Map preserves first-seen order, which is the order `projects` was
-       reported in before this, and it de-duplicates a citer that reaches the
-       target twice: that id used to be interpolated into `detail` twice. */
-    const edges = new Map();
-    for (const r of this.#rows(
-      `SELECT r.bundle_id, r.kind FROM refs r JOIN bundles b ON b.bundle_id=r.bundle_id
-       WHERE r.target_id=?`, bundleId)) {
-      if (!edges.has(r.bundle_id)) edges.set(r.bundle_id, []);
-      edges.get(r.bundle_id).push(r.kind);
-    }
-    for (const [citerId, kinds] of edges) {
-      const pb = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, citerId);
-      if (!pb || normalizeType(pb.object_type) !== "project") continue;
-      /* D-280: A PROJECT THAT WITHDREW DOES NOT SET THE BAR ON THE DOCUMENT IT
-         LEFT. DEC-17 makes the bar "the group's own declaration about its own
-         work"; `status: severed` is the recorded decision to stop drawing on
-         the question, and a declaration nobody stands behind any more is not
-         one. The rule is D-267's ONE predicate, CONSUMED and not restated — a
-         second implementation of the homes rule is this repository's
-         most-repeated defect and has already absorbed a control here.
-         ANY LIVE EDGE KEEPS THE CITER, which is the conservative direction and
-         the same OR `#queueAncestorEdges` takes: withdrawing a `relates_to` is
-         not withdrawing a citation. `kind` of '' means the entry authored no
-         `rel`, so the predicate is asked WITHOUT a relation constraint rather
-         than against a spelling the document never wrote — and severance still
-         narrows only on a POSITIVE recorded withdrawal, so an unreadable citer,
-         an absent `status:` and a spelling the catalog does not write all stay
-         LIVE. A fence tighter than its rule drops a bar somebody still means. */
-      if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, citerId);
-      if (!md || md.content === null) continue;
-      const pfm = parseFrontmatter(md.content).data || {};
-      const rq = pfm.required_strength;
-      if (!rq || typeof rq !== "object") continue;
-      let named = false;
-      for (const axis of ["capture", "connection"]) {
+  /* CASE-2 / DEC-72: THE BAR IS A PROPERTY OF A PROJECT, READ FROM THAT PROJECT
+     ALONE. Bob, 2026-08-10: *"The bar — that is, the standard of evidence — is a
+     property of a project, not an inquiry or claim."*
+
+     THIS REPLACES `#requiredStrengthFor`, WHICH IS REMOVED, AND WHAT WENT WITH
+     IT IS AS IMPORTANT AS WHAT ARRIVED — so it is named here rather than left
+     for a reader to notice from a diff. `CASE-AS-PRODUCTION.md`'s supersession
+     table, verbatim:
+
+       "DEC-17's strictest-across-citers composition (`#requiredStrengthFor`,
+        'WHERE TWO PROJECTS CITE ONE INQUIRY, the STRICTEST declared bar wins')
+        — Removed. That clause was a session's conservative construction, not
+        Bob's ruling."
+
+     Three things left with it, each deliberately:
+
+     1. THE CROSS-CITER WALK. Nothing composes across projects. The same finding
+        may clear a journalist project's bar and fall short of a lawyer
+        project's, and both facts are honest at once; a strictest-wins rule made
+        one project's standard govern another's production.
+     2. THE GROUP-DEFAULT FALLBACK, which the same table removes in its own row:
+        *"the project-less publication path (`publishCase` with no project; GROUP
+        DEFAULT AS A PUBLICATION BAR)"*. DEC-17's group default STANDS and is
+        still served by op=strengthbarof&group= — its surviving role is SEEDING a
+        new project, an authored act ON a project. What it no longer does is gate
+        a publication nobody declared it for. **An absent project bar is an
+        ABSENT bar**, not the group's, and it is STATED as absent.
+     3. D-280'S SEVERED-CITER PREDICATE AT THIS SITE ONLY. It is MOOT RATHER THAN
+        WRONG — the design says so in those words — because the composed read it
+        corrected is what has gone. `#refEdgeSevered` itself is untouched and
+        D-280's other two sites (`#routeTask`, `restingOn`) keep it: they answer
+        different questions and neither is superseded. Deleting a live predicate
+        because one of its callers went would be a second defect.
+
+     WHY THE PROJECT'S BAR IS AUTHORED FRONTMATTER AND NOT A TABLE — carried
+     forward from DEC-17 unchanged, because DEC-72 did not touch it: a group may
+     lower its own bar and may not do it quietly — *"the amendment is an
+     authored, dated, on-the-record act visible in the published case"*. A
+     project's bundle.md IS that: authored, dated, promoted through the gate, in
+     append-only history. A settings row would be a way to change the standard
+     with nothing to read afterwards.
+
+     AT ACT TIME, and the caller decides when that is. This function reads the
+     project's CURRENT declaration; `publishCase` calls it once and freezes the
+     answer into the bytes the member signs, so a later amendment to the project
+     never moves a case that is already published. */
+  #projectBar(projectId) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, projectId);
+    const pfm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
+    const rq = pfm.required_strength;
+    const declared = { capture: null, connection: null };
+    let named = false;
+    if (rq && typeof rq === "object")
+      for (const axis of Store.STRENGTH_AXES) {
+        /* Read against the CATALOG's own vocabulary rather than a restated
+           list, so a grade this file accepts cannot come to differ from one the
+           enforcement point accepts (REC-51's rule). */
         if (!BASIS_GRADES.includes(rq[axis])) continue;
+        declared[axis] = rq[axis];
         named = true;
-        if (strictest[axis] === null || rank(rq[axis]) < rank(strictest[axis])) strictest[axis] = rq[axis];
       }
-      if (named) projects.push(citerId);
-    }
-    if (projects.length)
-      return { declared: true, source: "project", projects,
-               capture: strictest.capture, connection: strictest.connection,
-               detail: `required by ${projects.join(", ")}: capture ${strictest.capture ?? "not set"}, `
-                     + `connection ${strictest.connection ?? "not set"}. The bar is the group's own `
-                     + `declaration about its own work, stated in advance, and is never set by who a reader is.` };
-    const g = this.#one(`SELECT capture, connection, author, at FROM group_strength_bar WHERE group_id=?`,
-      fm?.group || "believe-in-oakland");
-    if (g && (g.capture || g.connection))
-      return { declared: true, source: "group", capture: g.capture ?? null, connection: g.connection ?? null,
-               declared_by: g.author, declared_at: g.at,
-               detail: `the group's default required strength: capture ${g.capture ?? "not set"}, `
-                     + `connection ${g.connection ?? "not set"}, declared by ${g.author} on ${g.at}.` };
+    if (named)
+      return { declared: true, source: "project", project: projectId,
+               capture: declared.capture, connection: declared.connection,
+               detail: `required by ${projectId}, the project whose production this case is: capture `
+                     + `${declared.capture ?? "not set"}, connection ${declared.connection ?? "not set"}. `
+                     + `The bar is the project's own declaration about its own work, stated in advance, and `
+                     + `is never set by who a reader is.` };
     /* Undetermined is first-class and must be STATED. An absent bar gates
-       nothing, and it is NOT a bar of zero. */
-    return { declared: false, source: "none", capture: null, connection: null,
-             detail: "no required evidentiary strength was declared for this case, by the group or by any "
-                   + "project citing it, so nothing here was measured against one. An absent bar is not a bar "
-                   + "of zero, and this case makes no claim to have cleared any standard." };
+       nothing, and it is NOT a bar of zero. The sentence names the PROJECT,
+       because under DEC-72 that is the only place a reader should now go and
+       look — the group default is not a fallback here and saying "or by any
+       project citing it" would describe machinery that no longer runs. */
+    return { declared: false, source: "none", project: projectId, capture: null, connection: null,
+             detail: `${projectId} declares no required evidentiary strength, so nothing in this case was `
+                   + `measured against one. An absent bar is not a bar of zero, and this case makes no `
+                   + `claim to have cleared any standard. A project declares its bar in its own bundle.md, `
+                   + `which is an authored, dated, on-the-record act.` };
   }
 
   /* DEC-17 as amended: the GROUP sets the default a new project starts from.
@@ -5928,50 +6186,74 @@ export class Store extends DurableObject {
                  + "which is an authored, dated, on-the-record act visible in every case it governs." };
   }
 
-  /** REC-30's sweep, applied to REC-14's read: `#requiredStrengthFor` reports
-   *  `projects: [...]` and interpolates the same ids into its `detail`, which is
-   *  the §7.9 reverse-edge walk op=backlinks was gated for, arriving again by a
-   *  new door — an uninvited member asking the bar of a shared Information
-   *  learned the ids of the secret projects citing it.
+  /** THE BAR READ. THREE ARMS, AND ONE OF THEM WAS WITHDRAWN BY DEC-72 RATHER
+   *  THAN QUIETLY RE-POINTED — IC-64.
    *
-   *  THE BAR VALUE ITSELF IS NOT GATED, deliberately, and this is the one place
-   *  in the sweep where I left a signal standing. DEC-17's stake, stated in
-   *  #requiredStrengthFor's own comment, is that the bar "is never set by who a
-   *  reader is": it is the case's property, and a reader-dependent bar would let
-   *  the plane tell one member "no required strength was declared for this case"
-   *  while the record holds one — an affirmative false statement about the
-   *  record, which this project ranks above a narrow inference. It costs the
-   *  stamp nothing: op=publish computes the bar from #requiredStrengthFor
-   *  directly (see publishCase), so what lands in the published bytes is the
-   *  whole corpus's answer whatever this read shows.
+   *  `project=` — THE ANSWER, under DEC-72. The bar is a property of a project,
+   *  read from that project alone, and this is where a surface asks for it.
    *
-   *  So: identities withheld, value kept, and the withholding STATED without a
-   *  count — #queueAncestors' `out_of_view` posture exactly. THE RESIDUAL IS
-   *  REAL AND IS NAMED RATHER THAN PAPERED OVER: `source: "project"` on a target
-   *  only invisible projects cite still says that SOME project declares a bar on
-   *  it. It names none of them, which is the rule this sweep enforces, and
-   *  closing it would mean making the bar a function of the reader. */
-  strengthBarOf({ group = null, target = null, viewer = null } = {}) {
-    if (target) {
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-      const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
-      const bar = this.#requiredStrengthFor(target, fm);
-      if (!Array.isArray(bar.projects)) return { ok: true, target, bar };
-      const keep = this.#bundleRedactor(viewer);
-      const visible = bar.projects.filter((id) => keep(id) !== null);
-      if (visible.length === bar.projects.length) return { ok: true, target, bar };
-      return { ok: true, target, bar: {
-        ...bar, projects: visible, projects_out_of_view: true,
-        detail: (visible.length
-          ? `required by ${visible.join(", ")} and by at least one project you may not see: `
-          : "required by at least one project you may not see: ")
-          + `capture ${bar.capture ?? "not set"}, connection ${bar.connection ?? "not set"}. `
-          + "The bar is the group's own declaration about its own work, stated in advance, and is never "
-          + "set by who a reader is: the value here is the whole record's, and only the names are withheld." } };
+   *  `group=` — UNCHANGED, and it is DEC-17's surviving half. The group default
+   *  SEEDS a new project; it is not a publication bar and has not been one since
+   *  DEC-72. Serving it here is how a member sees what a new project would start
+   *  from.
+   *
+   *  `target=` — REFUSED BY NAME. Under DEC-72 no bar attaches to a finding at
+   *  all, so there is no honest value to return for one: answering `declared:
+   *  false` would say the record holds no bar for this material when a project
+   *  may well hold one, and answering a composed value would resurrect the thing
+   *  that was removed. A refusal that NAMES the change and points at the project
+   *  is the only answer that is true — informed at the act, once (DEC-69), and
+   *  never repeated at a second surface.
+   *
+   *  REC-30'S LEAK ON THIS OP IS GONE, AND IT DISSOLVED RATHER THAN BEING
+   *  RE-GATED — which is worth stating because "the sweep's assertions changed"
+   *  is otherwise indistinguishable from "the sweep was weakened". REC-30 found
+   *  that `#requiredStrengthFor` reported `projects: [...]` and interpolated the
+   *  same ids into its prose, so an uninvited member asking the bar of a shared
+   *  Information learned the ids of the SECRET projects citing it — §7.9's
+   *  reverse-edge walk arriving by a new door. It gated the names and kept the
+   *  value, and it NAMED its own residual honestly: *"`source: "project"` on a
+   *  target only invisible projects cite still says that SOME project declares a
+   *  bar on it."* With the cross-citer walk removed there is no `projects[]`, no
+   *  interpolated id, and no residual: the `#bundleRedactor` filtering that stood
+   *  here is removed because what it filtered no longer exists. A caller naming a
+   *  project they cannot see is answered exactly as one naming a project that
+   *  does not exist, which is this record's standing posture and strictly
+   *  narrower than what REC-30 could achieve over a walk.
+   *
+   *  DEC-17'S STAKE SURVIVES INTACT AND IS THE REASON THE VALUE IS NOT GATED
+   *  ONCE THE PROJECT IS VISIBLE: the bar *"is never set by who a reader is"*.
+   *  Two members who can both see a project are told the same bar. */
+  strengthBarOf({ group = null, target = null, project = null, viewer = null } = {}) {
+    if (target)
+      return { ok: false, reason: "BAR_IS_A_PROJECT_PROPERTY", target,
+               detail: "a standard of evidence is a property of a PROJECT, not of a finding or a claim "
+                     + "(DEC-72). No bar attaches to this finding, and none ever did on its own behalf: "
+                     + "what governed it was whichever project published it, at the moment it published. "
+                     + "Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= "
+                     + "for the default a new project starts from." };
+    if (project) {
+      const pid = String(project).trim();
+      const gate = viewerPredicate(viewer);
+      const pb = this.#one(
+        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+        pid, ...gate.args);
+      if (!pb)
+        return { ok: false, reason: "NO_SUCH_PROJECT", project: pid,
+                 detail: `no project answers to ${pid}. A project you cannot see is answered exactly as one `
+                       + `that does not exist.` };
+      if (normalizeType(pb.object_type) !== "project")
+        return { ok: false, reason: "NOT_A_PROJECT", project: pid, object_type: pb.object_type,
+                 detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a `
+                       + `PROJECT (DEC-72).` };
+      return { ok: true, project: pid, bar: this.#projectBar(pid) };
     }
     const gid = String(group ?? "").trim() || "believe-in-oakland";
     const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
     return { ok: true, group: gid, bar: g || null,
+             /* DEC-17's surviving half, stated in the answer so a reader cannot
+                mistake this for a publication bar: it SEEDS a new project. */
+             seeds_new_projects: true,
              detail: g ? null : "no group default is declared. An absent bar gates nothing and is not a bar of zero." };
   }
 
@@ -15427,7 +15709,10 @@ export class Store extends DurableObject {
    *    walk stopped several levels down. That is REC-14's measured leak shape
    *    exactly (`#requiredStrengthFor` interpolated the same project ids into
    *    its prose that its `projects` array named), so the sweep runs over every
-   *    string in the answer and not over the id fields alone.
+   *    string in the answer and not over the id fields alone. **THAT FUNCTION IS
+   *    GONE — removed by CASE-2 under DEC-72 — and the citation is kept because
+   *    the leak SHAPE it demonstrated is why this sweep is written the way it
+   *    is; do not go looking for a live caller.**
    *
    * 3. WHAT IS *NOT* READER-DEPENDENT, stated because the residual is real.
    *    Today `viewerPredicate` filters PROJECT bundles and nothing else — the
@@ -17683,6 +17968,7 @@ export class Store extends DurableObject {
   publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
             edition, title, completeness, strength, required, edges,
             caseId = null, caseScope = null, caseFindings = null, caseBiasAck = null,
+            caseProject = null, caseRoles = null,
             group = null } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -17761,8 +18047,76 @@ export class Store extends DurableObject {
              VALUES (?,?,?,?,?,?)`,
             caseId, ed, cScope, cComp, cBias, now);
         }
+        /* ===== CASE-2 / DEC-72: WHOSE PRODUCTION, AND WHO CARRIED IT ========
+           BOTH ARE COMMITTED FROM THE SIGNED BYTES AND FROM NOTHING ELSE —
+           #publishEdges' doctrine, and the same reason `published_cases` above
+           is: op=publish wrote them into every member's document BEFORE the sha
+           was taken, so the signature covers them. A project id or a role this
+           plane took off a request rather than out of the signed document would
+           be an attribution we made on the group's behalf, and a reader has no
+           way to tell the two apart.
+
+           THIS IS ALSO WHY `cases` IS WRITTEN HERE AND NOT AT op=publish.
+           CASE-1 exempted `cases` from `purge` and stated the condition that
+           would reverse it: *"if a later item lets a case exist as a DRAFT
+           before publication, revisit, because draft data surviving a purge is
+           D-113 pointed the other way."* Writing the row at ratification —
+           where `published_cases` is written, out of the same bytes — means
+           this item creates NO such draft state, so the exemption stands
+           exactly as CASE-1 left it and `purge` is untouched. */
+        const cProject = typeof caseProject === "string" && caseProject.trim() && caseProject !== "null"
+          ? caseProject.trim() : null;
+        if (!cProject)
+          return { ok: false, reason: "CASE_NAMES_NO_PROJECT", bundleId, caseId,
+                   detail: `${bundleId} names case ${caseId} and no publishing project. A case is a PRODUCTION `
+                         + `OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence `
+                         + `this case was held to — a published case that names none is one whose bar nobody `
+                         + `declared. Re-publish through op=publish, which writes it into the bytes you sign.` };
+        const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
+        if (owner) {
+          if (owner.project_id !== cProject)
+            return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", bundleId, caseId, edition: ed,
+                     declared: owner.project_id, signed: cProject,
+                     detail: `case ${caseId} is ${owner.project_id}'s production and these bytes name `
+                           + `${cProject}. A case does not change hands between editions or between members `
+                           + `(DEC-72): the bar is read from the publishing project, so two answers here would `
+                           + `be two standards of evidence for one case with nobody having authored either.` };
+        } else {
+          /* One row per case_id, ever — the identity, not the edition. CASE-1's
+             sharpest call, and this INSERT is where it becomes real. */
+          this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?)
+                         ON CONFLICT(case_id) DO NOTHING`, caseId, cProject, now);
+        }
+        /* The AUTHORED partition, read out of the signed bytes as an array of
+           {target, role}. It restates the roster, and the restatement is
+           CHECKED rather than trusted — which is what makes it a second
+           statement of one fact that cannot drift rather than a second
+           authority for it (D-21's actual concern). */
+        const signedRoles = (Array.isArray(caseRoles) ? caseRoles : [])
+          .filter((r) => r && typeof r === "object")
+          .map((r) => ({ target: String(r.target ?? "").trim(), role: String(r.role ?? "").trim() }))
+          .filter((r) => r.target);
+        const roleFor = new Map(signedRoles.map((r) => [r.target, r.role]));
+        if (signedRoles.length !== roster.length || roster.some((m) => !roleFor.has(m)))
+          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed,
+                   roster, signed: signedRoles,
+                   detail: `this finding's signed bytes carry a load-bearing partition that does not cover the `
+                         + `roster of case ${caseId} exactly. Every member is designated load_bearing or `
+                         + `supporting BY THE PUBLISHER (DEC-72), and a member the partition is silent about `
+                         + `was designated by nobody.` };
+        for (const m of roster)
+          if (!Store.MEMBER_ROLES.includes(roleFor.get(m)))
+            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed, target: m,
+                     role: roleFor.get(m), allowed: Store.MEMBER_ROLES,
+                     detail: `case ${caseId} designates ${m} '${roleFor.get(m)}', which is not one of: `
+                           + `${Store.MEMBER_ROLES.join(", ")}.` };
+        if (!roster.some((m) => roleFor.get(m) === "load_bearing"))
+          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed, roster,
+                   detail: `case ${caseId} has no LOAD-BEARING member in the bytes ${bundleId} signed. A case `
+                         + `rests on at least one load-bearing finding (DEC-72): all-supporting material `
+                         + `asserts nothing conclusively while the completeness assertion claims coverage.` };
         const declared = this.#rows(
-          `SELECT ord, bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
+          `SELECT ord, bundle_id, role FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
           caseId, ed);
         if (declared.length) {
           const was = declared.map((r) => r.bundle_id).join(",");
@@ -17772,10 +18126,30 @@ export class Store extends DurableObject {
                      detail: `this finding's signed bytes name a different set of findings for case ${caseId} `
                            + `edition ${ed} than the members already ratified into it. The roster is part of `
                            + `what each member signed, so a disagreement is refused rather than reconciled.` };
+          /* The SECOND member's partition is checked against the FIRST's, in
+             the roster's own order — the CASE_ASSERTION_DIVERGED treatment
+             applied to the fact this item adds. Two members who signed
+             different partitions have not published one case, and reconciling
+             them silently would let the record present as load-bearing a
+             finding only one of them designated. */
+          const wasRoles = declared.map((r) => r.role ?? "").join(",");
+          const nowRoles = roster.map((m) => roleFor.get(m)).join(",");
+          if (wasRoles !== nowRoles)
+            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed,
+                     declared: declared.map((r) => ({ target: r.bundle_id, role: r.role })),
+                     signed: roster.map((m) => ({ target: m, role: roleFor.get(m) })),
+                     detail: `this finding's signed bytes designate the members of case ${caseId} edition `
+                           + `${ed} differently from the members already ratified into it. Which findings a `
+                           + `case RESTS ON is part of what every member signed, and a disagreement about it `
+                           + `is refused rather than reconciled.` };
         } else {
+          /* CASE-2 writes `role`. **CASE-3 writes `version_sha` INTO THIS SAME
+             STATEMENT** — the two columns arrived together in CASE-1 precisely
+             so both would be written, and this line is the one place the two
+             items genuinely share. Named here so the merge is expected. */
           roster.forEach((m, i) => this.sql.exec(
-            `INSERT INTO published_case_members (case_id,edition,ord,bundle_id) VALUES (?,?,?,?)
-             ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`, caseId, ed, i, m));
+            `INSERT INTO published_case_members (case_id,edition,ord,bundle_id,role) VALUES (?,?,?,?,?)
+             ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`, caseId, ed, i, m, roleFor.get(m)));
         }
       }
       this.sql.exec(
@@ -26151,6 +26525,13 @@ export class Store extends DurableObject {
              search params as the one-line form a probe can reach. */
           targets: (body || {}).targets || url.searchParams.get("targets") || null,
           caseId: url.searchParams.get("caseId") || (body || {}).caseId || null,
+          /* CASE-2 / DEC-72: the PUBLISHING PROJECT. On the search params as the
+             one-line form a probe can reach, exactly as `targets=a,b` is, with
+             the body taking over when the caller has one. `roles` has NO search
+             param form and that is not an omission: it is a map from finding id
+             to designation, which a query string cannot express honestly — the
+             same reason `excluded[]` has never had one. */
+          project: url.searchParams.get("project") || (body || {}).project || null,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* REC-16, publishcase's shape exactly: the BODY carries the authored
@@ -26179,8 +26560,13 @@ export class Store extends DurableObject {
           author: url.searchParams.get("author") }),
         strengthbar: () => this.strengthBarSet({ ...(body || {}),
           author: url.searchParams.get("author") }),
+        /* CASE-2 / IC-64: `project` is the arm DEC-72 makes the answer. `target`
+           is still ACCEPTED and still REACHES the method — deliberately, because
+           a withdrawn arm that 404s at the router tells a caller nothing, while
+           one that reaches the method is refused BY NAME with the reason. */
         strengthbarof: () => this.strengthBarOf({ group: url.searchParams.get("group"),
           target: url.searchParams.get("target"),
+          project: url.searchParams.get("project"),
           viewer: url.searchParams.get("viewer") }),
         publishededitions: () => this.publishedEditions(url.searchParams.get("id")),
         /* REC-22: the public read path's store side. No `viewer` is stamped on
