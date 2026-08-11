@@ -6616,6 +6616,30 @@ export const VERSION_ACT_CHECKS = {
       + 'part rather than assumed from silence, so every part has to be named before this reading '
       + 'becomes what the record stands on.',
   },
+  /* CASE-3 — DEC-72 CLAUSE 3 AT THE READING DOOR. Bob: "Once published, the act
+     of changing the findings (or any claims of any of the findings) results in
+     the changed version becoming a new version." A published case pins each
+     member by the hash its members signed, so the claims underneath that hash
+     cannot move without the case becoming a statement about the present.
+     NO NEW FAMILY, DELIBERATELY: C-22's own header charges a new `*_CHECKS`
+     family as a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack
+     for everybody else's walk, and this refusal belongs to the six version acts
+     whose family already exists. C-25.32's row records the same choice.
+     REACHED BY FOUR OF THE SIX ACTS and not all six — `hide` and `current` are
+     the two `VERSION_ACT_TO` maps to null, and the reasoning for leaving them
+     outside is at the refusal site rather than restated here.
+     THE TRANSLATION NAMES THE ROUTE OUT rather than only the wall: a member told
+     only "no" learns nothing about reopening, and DEC-12 built reopening for
+     exactly this. D-226 governs the wording — no "compose", no "derive". */
+  PUBLISHED_CANNOT_MOVE_VERSION: {
+    check: 'C-25.34',
+    where: 'src/store.mjs #moveVersionState, reached from the four acts that move a state',
+    translation: 'This question has been published, and the case it went out in froze it as it '
+      + 'stood. Changing which reading of the evidence it stands on now would leave the published '
+      + 'version saying something the question no longer says. Pick it back up first, make the '
+      + 'change, and publish that as a new edition — the published one keeps its own signature and '
+      + 'goes on answering.',
+  },
 };
 /* The two ways a composition can compose, and DEC-32's own words for them. NOT a
    surface vocabulary: DEC-32's elicitation clause 1 bans "ground partition" and

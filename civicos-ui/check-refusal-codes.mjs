@@ -369,7 +369,24 @@ const FLOOR = {
                           for everybody else's walk unless it is moved in the same turn"*. It is
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
-  rows: 174,    /* MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
+  rows: 176,    /* MOVED 174 -> 176, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), READ
+                          OFF THIS FILE'S OWN GREEN RUN and never by adding to the number that was here.
+                          CASE-3 minted ONE row — PUBLISHED_CANNOT_MOVE_VERSION (C-25.34) in the
+                          EXISTING VERSION_ACT_CHECKS, so `families` does not move: SK-1's rule that a
+                          family is a floor which buys slack for everybody else's walk, and C-25.32's
+                          row records the same choice one item earlier.
+                          **PRE-EXISTING SLACK OF 1 FOUND AND CLEARED HERE, AND IT WAS NOT THIS
+                          ITEM'S:** the tree measured 175 rows against a floor of 174 BEFORE this
+                          item touched anything (measured by reverting bio-checks.mjs to HEAD and
+                          re-running). That is the sixth item running to find a floor already stale,
+                          and the file's own header says why it matters — a floor with slack is not a
+                          ratchet. */
+                       /* `rows`' PRIOR NOTE, KEPT AND EXPLICITLY LABELLED AS THE PRIOR ONE. The
+                          header above records that two keep-both merges left continuation comments
+                          attached to keys they were never written about, and that an unreadable
+                          comment block has stopped carrying its findings — so this one says whose
+                          it is rather than floating above the next key.
+                          MOVED 167 -> 168, 2026-08-09, worktree agent-ae8e8c4d786783a6b, READ OFF
                           THIS FILE'S OWN GREEN RUN ON THE MERGED TREE (`arm A: … 168 rows — floor
                           16/167 · GREW by 1 row(s) since the floor was set`) and never by adding one
                           to the number that was here. **THE FIRST FIGURE THIS ITEM WROTE WAS
@@ -389,7 +406,19 @@ const FLOOR = {
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census: 433,    /* MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
+  census: 437,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+                          the figure this file PRINTED on a green run (`walk: UNION (the census) 437
+                          codes over 27 files`) and never by adding to what was here.
+                          **THREE OF THE FOUR ARE PRE-EXISTING SLACK AND ONE IS THIS ITEM'S.**
+                          Measured, not inferred: with `bio-checks.mjs` reverted to HEAD the census
+                          read 436 against a floor of 433, so 3 codes had landed since the floor was
+                          last moved and nobody moved it; CASE-3's own C-25.34 takes it to 437. The
+                          slack is reported rather than quietly absorbed, because the whole argument
+                          of this block is that a floor with slack is not a ratchet — and a floor
+                          moved to the measured value without saying how much of the move was
+                          somebody else's is the same silence one layer in. */
+                       /* `census`' PRIOR NOTE, KEPT AND LABELLED AS THE PRIOR ONE:
+                          MOVED 428 -> 429, 2026-08-09, agent-ae8e8c4d786783a6b, from the figure this
                           file PRINTED on a green run of the MERGED tree (`walk: UNION (the census)
                           429 codes over 26 files … floor 428`); the pre-merge read of 427 -> 428 was
                           superseded by main moving under the item, and is re-read rather than kept. One code, `VERSION_REASON_MALFORMED`, minted at the
@@ -416,7 +445,18 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach: 227,    /* MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
+  reach: 229,    /* MOVED 227 -> 229, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+                          this file's own printed figure (`arm B: REACH 229 codes`) and never by
+                          adding to what was here. ONE of the two is pre-existing slack (the tree
+                          measured 228 against a floor of 227 with `bio-checks.mjs` reverted to HEAD)
+                          and one is C-25.34, which enters reach through R1 — it is a family row, and
+                          every family row is in reach by definition. **The ratchet beside this
+                          figure did NOT move: 40 of 229 codes in reach still carry no canned
+                          translation, exactly as before, because C-25.34 shipped WITH its sentence.**
+                          A refusal added without one would have raised that ceiling, which is the
+                          number this whole file exists to drive down. */
+                       /* `reach`' PRIOR NOTE, KEPT AND LABELLED AS THE PRIOR ONE:
+                          MOVED 221 -> 222, 2026-08-09, agent-ae8e8c4d786783a6b, from this file's own
                           green run of the MERGED tree (`arm B: REACH 222 codes — R1 family rows 168
                           … floor 221 · GREW by 1`); the pre-merge read of 220 -> 221 was superseded
                           by main moving under the item, and is re-read rather than kept. The new code arrives TRANSLATED, so `reachGap` below does NOT move
@@ -646,7 +686,17 @@ const FLOOR = {
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
   vocabularyTerms: 63, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
-  untranslated: 246,   /* REC-79 — the size of arm F's SUBJECT: census codes with no canned
+  untranslated: 248,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
+                          from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
+                          summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
+                          THIS ITEM'S** — the partition summed to 248 against a floor of 246 with
+                          `bio-checks.mjs` reverted to HEAD, and C-25.34 does not enter arm F's
+                          subject at all because it shipped with a canned translation. Moved because
+                          leaving it is the slack this file's header spent four paragraphs arguing
+                          against, and reported as somebody else's because a floor moved without
+                          saying whose growth it absorbed teaches the next reader nothing. */
+                       /* `untranslated`' PRIOR NOTE, KEPT AND LABELLED AS THE PRIOR ONE:
+                          REC-79 — the size of arm F's SUBJECT: census codes with no canned
                           translation. A FLOOR and not a ceiling, which reads backwards until you see
                           what it defends: the partition is only meaningful if it is partitioning the
                           real remainder, and a walk that lost sight of half the census would produce

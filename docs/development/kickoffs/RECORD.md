@@ -259,3 +259,43 @@ already belong to, then minted. Under DEC-72 the project comes in at the door an
 runs against it. **The `project_id NOT NULL` constraint is the one thing CASE-1 could not drive** —
 no op writes `cases`, and this plane exposes no SQL surface, so it is pinned structurally and said
 so. The first CASE-2 arm should be a project-less publish refused BY NAME.
+
+## CASE-3 · version pinning landed (2026-08-10, worktree `agent-a36b6782b06f5a651`)
+
+APPENDED, never rewritten — other RECORD workers are live.
+
+**DEC-72 clause 3 is now structural, and the two halves it needed were different
+shapes of missing.**
+
+- **The pin is WRITTEN.** `publish()` — the ratify committer — sets
+  `published_case_members.version_sha` from the ratifying member's own signed
+  `bundle_sha`, write-once (`AND version_sha IS NULL`). CASE-1 landed the column;
+  until this item **nothing on earth filled it**, so a published case named its
+  members and froze nothing. Each member pins its OWN row at its OWN ratification,
+  because the roster is written by whichever member ratifies FIRST — at which
+  moment the others have signed nothing and their hashes do not exist.
+- **The mint fence.** `#moveVersionState` now refuses
+  `PUBLISHED_CANNOT_MOVE_VERSION` (C-25.34) for the four acts that MOVE a
+  reading's state, on a `published` finding. **This closed a hole rather than
+  adding a policy:** `divide()` and `groundInquiry()` have always refused exactly
+  this, the latter in words that describe the version door precisely. `hide` and
+  `current` are outside the fence and the line is `VERSION_ACT_TO`'s own — the
+  catalog's table, not a judgement.
+- **The pin is SERVED** on `#caseEditionState`'s member rows, so `op=publishedcase`
+  answers an anonymous reader with the version each member was frozen at.
+
+**WHAT WAS DELIBERATELY NOT DONE, so the next item does not re-derive it.**
+Resolving a member BY THE PIN instead of by the CASE'S edition number is the
+conflation CASE-1's schema comment hands to **the artifact flip, CASE-5**. This
+item serves the pin and does not move the predicate. Today `version_sha` and the
+served `bundle_sha` agree because a member's edition is still slaved to its case's;
+**CASE-5 is where they can diverge, and that is the point at which the pin starts
+doing work no other column can do.**
+
+**A MEASURED FINDING WORTH CARRYING.** The write-once predicate is genuinely
+UNREACHABLE, and that was established by running the arm rather than by reasoning
+about it: the pin UPDATE is keyed `(case_id, EDITION, bundle_id)`, so a later
+edition writes a later edition's row, and a second sha at an already-published
+edition is refused by `EDITION_EXISTS` long before the pin write. It is kept
+because two authorities for one version must be incapable of disagreeing — and it
+is not claimed to be a reachable refusal.

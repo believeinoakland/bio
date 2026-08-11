@@ -17777,6 +17777,47 @@ export class Store extends DurableObject {
             `INSERT INTO published_case_members (case_id,edition,ord,bundle_id) VALUES (?,?,?,?)
              ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`, caseId, ed, i, m));
         }
+        /* CASE-3 / DEC-72 CLAUSE 3 — THE PIN. Bob: "Once published, the act of
+           changing the findings (or any claims of any of the findings) results
+           in the changed version becoming a new version." A case that names its
+           members and not the VERSIONS of them is a claim about the present; the
+           design's member is (finding id, VERSION HASH, role, ordinal), and this
+           is where the hash arrives.
+
+           IT IS `bundleSha` AND IT COMES FROM THE RATIFIED BYTES, never from a
+           parameter and never from the working record — #publishEdges' doctrine,
+           for #publishEdges' reason. `bundleSha` is the hash the member SIGNED,
+           so the membership row names a version by the same identity the
+           signature covers, and a pin the record could not have witnessed is
+           unrepresentable rather than merely discouraged.
+
+           EACH MEMBER PINS ITS OWN ROW, AT ITS OWN RATIFICATION, AND THAT IS THE
+           WHOLE REASON THIS IS NOT PART OF THE ROSTER INSERT ABOVE. The roster is
+           written by whichever member ratifies FIRST, out of the set every member
+           signed — at which moment the other members have signed nothing and
+           their shas do not exist. Writing all N pins there would mean inventing
+           N-1 of them, which is the shape this record refuses everywhere else.
+           Until a member ratifies, its pin stays NULL, and CASE-1's column
+           comment already says what NULL means: rostered, not yet pinned.
+
+           WRITE-ONCE BY CONSTRUCTION — `AND version_sha IS NULL`, and the
+           predicate is the enforcement rather than a decoration on it. There is
+           no UPDATE in this file that can move a pin off a sha once it holds
+           one, so "the pinned version is never mutated" is a property of the
+           statement rather than a rule a later caller is trusted to respect. A
+           re-ratification of the SAME bytes (the `existed` retry path above)
+           finds the pin already equal and writes nothing; DIFFERENT bytes at an
+           edition already published never reach this line at all, because
+           EDITION_EXISTS refuses them thirty lines up. **STATED PLAINLY RATHER
+           THAN DRESSED UP: that makes this predicate a SECOND fence in front of
+           a door EDITION_EXISTS already holds shut, and the suite says so** —
+           it is here because the two authorities for one version (this column
+           and the published_bundles row) must be incapable of disagreeing, not
+           because a reachable caller is known to attack it. */
+        this.sql.exec(
+          `UPDATE published_case_members SET version_sha=?
+           WHERE case_id=? AND edition=? AND bundle_id=? AND version_sha IS NULL`,
+          bundleSha, caseId, ed, bundleId);
       }
       this.sql.exec(
         `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
@@ -17816,8 +17857,21 @@ export class Store extends DurableObject {
     const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, opened, ratified_at, manifest_sha
                          FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
     if (!c) return null;
+    /* CASE-3: `version_sha` — THE PIN — travels with the roster row, because a
+       reader of a case edition must be able to say WHICH VERSION of each member
+       the case froze, and a freeze nobody can read is not one the reader can
+       rely on. It is served beside `bundle_sha` and is NOT a second spelling of
+       it: `bundle_sha` is what the published row HOLDS NOW and `version_sha` is
+       what the case COMMITTED TO, and today they agree only because a member's
+       edition is still slaved to its case's. THE MOMENT THEY CAN DIVERGE IS
+       CASE-5's — resolving a member BY THE PIN instead of by the CASE'S edition
+       number is the conflation CASE-1's schema comment hands to the artifact
+       flip, and this item deliberately leaves the predicate below where the
+       authority put it rather than half-moving it here. NULL means rostered and
+       not yet pinned, exactly as the column comment says. */
     const roster = this.#rows(
-      `SELECT ord, bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`, caseId, ed);
+      `SELECT ord, bundle_id, version_sha FROM published_case_members
+       WHERE case_id=? AND edition=? ORDER BY ord`, caseId, ed);
     const findings = [], awaiting = [];
     for (const m of roster) {
       const r = this.#one(
@@ -17826,6 +17880,7 @@ export class Store extends DurableObject {
          FROM published_bundles WHERE bundle_id=? AND edition=?`, m.bundle_id, ed);
       if (!r) { awaiting.push(m.bundle_id); continue; }
       findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,
+                      version_sha: m.version_sha ?? null,
                       ratified_at: r.ratified_at, gate_version: r.gate_version, sig_armored: r.sig_armored,
                       attestor: { member: r.attestor_member, key_b64: r.attestor_key },
                       strength: r.strength ? JSON.parse(r.strength) : null,
@@ -19920,6 +19975,67 @@ export class Store extends DurableObject {
           known: rows.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
     const row = rows[idx];
     const from = typeof row.state === "string" ? row.state.trim() : "";
+
+    /* CASE-3 / DEC-72 CLAUSE 3 — AN EDIT TOUCHING A PUBLISHED VERSION MINTS A
+       NEW ONE, AND THIS IS THE DOOR THAT WAS STANDING OPEN. Bob's words are the
+       whole rule: "Once published, the act of changing the findings (OR ANY
+       CLAIMS OF ANY OF THE FINDINGS) results in the changed version becoming a
+       new version."
+
+       THE TWO NEIGHBOURING DOORS ALREADY REFUSE THIS AND THIS ONE DID NOT, which
+       is what makes it a defect rather than a new policy: `divide()` refuses
+       PUBLISHED_CANNOT_DIVIDE and `groundInquiry()` refuses
+       PUBLISHED_CANNOT_RESTRUCTURE, the latter in words that describe THIS act
+       exactly — "a published case's composed strength and its per-group
+       breakdown are inside signed, ratified bytes. Re-cutting the structure
+       underneath them would leave this document composing to something the
+       edition on the record contradicts." Moving which READING the record stands
+       on is re-cutting that structure by the other route: what a finding derives
+       follows the reading a member accepted, so an accept, a rejection or a
+       set-aside on a published finding moves the answer underneath an edition
+       that froze the old one. A case pins its members by hash precisely so a
+       reader can trust the frozen answer; letting the finding's claims move
+       under the pin makes every published case a claim about the present rather
+       than a record of an act.
+
+       AND THE MINT IS NOT A NEW MECHANISM — it is the route DEC-12 built and the
+       two refusals above already name: REOPEN, move the reading, publish a new
+       EDITION. That appends a row to this finding's own chain in
+       `published_bundles`; the pinned edition keeps its own signature, attestor,
+       time and gate version, and the case that froze it keeps answering. This
+       refusal is what makes the mint the only route, which is why it is worded
+       as a direction rather than a wall.
+
+       THE FENCE IS `to !== null`, AND THE LINE IS THE CATALOG'S OWN RATHER THAN
+       MY JUDGEMENT — it is `VERSION_ACT_TO`, which already maps exactly the acts
+       that MOVE A STATE to a state and the two that move none to null. So
+       accept, reject, consider and revert are fenced, and `hide` and `current`
+       are deliberately OUTSIDE it:
+         `hide` is the prune flag, and D-214 / DEC-29(b) rule that PRUNING HIDES
+         AND NEVER DELETES — the version stays in the record and stays queryable,
+         so nothing the published bytes assert has moved. Fencing a display
+         setting would be a rule wider than the ruling it enforces.
+         `current` is §7's PROJECT stance and its second write lands on the
+         PROJECT bundle, not on the finding's claims; it also requires `from ===
+         "accepted"`, so it can only point at a reading the record already stood
+         on. What a project says it stands on is not what the finding says.
+       Fencing either would be an undeclared interface change wearing the costume
+       of caution, and the suite arms the over-strictness case for both.
+
+       PLACED AFTER THE READING IS LOCATED, deliberately: a member whose real
+       mistake is a mistyped reading name should be told about the typo, which
+       costs them one retry, rather than be sent to reopen a published case,
+       which is a real act on the record. The fence still precedes every write. */
+    if (to !== null && b.current_state === "published")
+      return refuse("PUBLISHED_CANNOT_MOVE_VERSION",
+        `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding `
+        + `at the version its members signed. Moving a reading from ${from || "no recorded state"} to `
+        + `${to} would change what this finding rests on underneath an edition already on the record, `
+        + `leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move `
+        + `the reading, and publish what changed as a new edition — the route DEC-12 built for exactly `
+        + `this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned `
+        + `edition keeps its own signature and keeps answering.`,
+        { target, version: vname, from, to, state: b.current_state });
 
     /* BEAT 3's GUARD — the authored reason, through the ONE predicate the
        catalog also calls. Checked before the edge so a member who supplies

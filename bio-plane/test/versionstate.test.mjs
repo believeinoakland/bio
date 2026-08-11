@@ -1146,6 +1146,44 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
      promoting a version block the writer cannot address — an inline empty
      `basis_versions: []` carries no row to move. */
   drive({ code: "VERSION_ACT_UNWRITABLE", check: VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE.check });
+  /* CASE-3 / C-25.34 — PUBLISHED_CANNOT_MOVE_VERSION, and it is DRIVEN OUT OF THE
+     PLANE like every code above it rather than typed, which for this one costs a
+     whole finding taken through the ceremony.
+     THIS SUITE'S ARM IS WHY THE FIXTURE IS WORTH IT. The registry-equality
+     assertion below is a FLOOR as well as a ceiling, so CASE-3 adding a row to
+     `VERSION_ACT_CHECKS` turned this suite RED the moment the row landed — which
+     is the arm doing exactly what it was built to do, and the correction is to
+     DRIVE the new code here rather than to widen the arm around it.
+     NO SIGNATURE IS NEEDED: `op=publish` is the ceremony and it moves the
+     document to `published` on its own; ratification is a separate act, and this
+     refusal keys on the STATE rather than on anything ratified. That is why a
+     suite with no signer can reach it at all. */
+  const PUBD = "INQ-2026-2000-published-finding";
+  /* A `basis[]` LEG IS REQUIRED, and the refusal that taught this is worth the
+     line: `op=conclude` answers NO_BASIS because "concluding one that rests on
+     nothing would put the record's name to an assertion nothing supports". The
+     version rows are a reading OF a basis and are not one. */
+  await mustPromote(PUBD, inquiryMd(PUBD, { refs: [LEDGER], basis: [{ target: LEDGER }], versions: [V1] }),
+    "inquiry");
+  /* THE SETUP STEP'S RESULT IS CHECKED. REC-18 recorded the cost of not doing
+     it: a conclude that silently failed surfaced later as an ILLEGAL_TRANSITION
+     at publish, and the assertion that depended on it read as a defect in the
+     thing under test. This fixture reproduced that exact sequence on its first
+     run, which is why the check is here. */
+  const concluded = rP(await GET(`op=conclude&token=${RUTH}&target=${encodeURIComponent(PUBD)}`
+    + `&conclusion=${encodeURIComponent("The ledger and the minutes carry the transfer.")}`
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
+  if (!concluded?.ok) throw new Error(`conclude ${PUBD}: ${JSON.stringify(concluded).slice(0, 400)}`);
+  const pubd = await POST(`op=publish&token=${RUTH}&target=${encodeURIComponent(PUBD)}`, {
+    scope: "Whether the sewer transfer was authorised, on the documents in hand.",
+    statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
+    excluded: [{ description: "the FY2023 comparison memo", reason: "a records request for it is outstanding" }],
+    subjectPosition: "sought_and_answered",
+    subjectJustification: "We put the claims to the City Administrator and printed what came back.",
+    biasAcknowledgement: "This group holds a declared position that transfers should be adopted in public "
+                       + "session, and edition 1 reads the record through it." });
+  if (!rP(pubd)?.ok) throw new Error(`publish ${PUBD}: ${JSON.stringify(pubd).slice(0, 400)}`);
+  drive(await act("accept", { target: PUBD, version: "opening account" }));
   console.log(`  ${driven.size} codes DRIVEN out of the plane, ${registry.length} in the registry`);
   t("THE DRIVEN SET EQUALS THE REGISTRY — a FLOOR as well as a ceiling, because a ceiling over an empty "
   + "set passes triumphantly",
@@ -1179,7 +1217,18 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
   t("and every C-number is PINNED BY NAME against what the plane actually sent — a renumbering, a "
   + "collision or a code silently re-pointed at another refusal fails here",
     Object.fromEntries([...wire].sort()),
-    { MACHINE_CANNOT_MOVE_VERSION: "C-25.24", VERSION_ACT_NOT_AN_INQUIRY: "C-25.21",
+    { MACHINE_CANNOT_MOVE_VERSION: "C-25.24",
+      /* C-25.34, added 2026-08-10 by CASE-3 (DEC-72 clause 3), and placed HERE
+         rather than at the end because the comparison is against
+         `Object.fromEntries([...wire].sort())` — key ORDER is part of what is
+         asserted, so a new row goes in its sorted position. It cost one red run
+         to learn, and the note is left so the next row does not.
+         The map grew because the REGISTRY grew, and this suite found out by going
+         RED rather than by being told, which is the equality arm above doing its
+         job. The refusal is driven over a finding this block takes through
+         op=conclude and op=publish, so the number is compared against what the
+         plane SENT on a real published document. */
+      PUBLISHED_CANNOT_MOVE_VERSION: "C-25.34", VERSION_ACT_NOT_AN_INQUIRY: "C-25.21",
       VERSION_ACT_NO_INQUIRY: "C-25.20", VERSION_ACT_NO_SUCH_VERSION: "C-25.23",
       VERSION_ACT_NO_VERSION: "C-25.22", VERSION_ACT_UNWRITABLE: "C-25.31",
       /* CORRECTED, NEVER EXEMPTED — D-271, 2026-08-09. The old list was RIGHT

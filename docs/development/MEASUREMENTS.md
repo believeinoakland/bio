@@ -8080,3 +8080,37 @@ ever rises and a loose floor gates nothing, whereas `REGISTER_FLOOR` has a docum
 hazard and CONDUCT re-derives it from the MERGED run — so a worker moving it on a branch produces a
 figure that was true of a tree nobody will have. Left for the integrator, and named here so it is
 one act rather than a re-derivation.
+
+## CASE-3 · version pinning (2026-08-10, worktree `agent-a36b6782b06f5a651`, instrument named per row)
+
+| what | figure | instrument |
+| --- | --- | --- |
+| battery, baseline on this worktree AFTER `npm ci` | **165/165 suites · 10,156 assertions · exit 0** | `npm run test:battery`, exit read from `$?` written to a file, never through a pipe |
+| battery, first run WITH the change | 162/166 · exit **4** | same. The four were `hygiene`'s two arms on the new suite plus its knock-ons — see the note below |
+| battery, after the hygiene fixes | **166/166 suites · 10,189 assertions · exit 0** | same |
+| `casepin.test.mjs` | 33 assertions | the suite itself |
+| `scripts/coverage.mjs --strict` | exit **0** | run DIRECTLY, `$?` read with nothing piped after it |
+| `civicos-ui/check-refusal-codes.mjs` | exit **0** | run directly |
+| refusal-code census | 436 → **437** | the harness's own printed figure |
+| DEC-49 family rows | 175 → **176** | ditto — one row, no new family |
+| codes in reach of a surface | 228 → **229** | ditto. The untranslated-in-reach ratchet did NOT move (40), because C-25.34 shipped with its sentence |
+| PRE-EXISTING FLOOR SLACK FOUND, none of it this item's | census **3**, rows **1**, reach **1**, arm-F partition **2** | measured by reverting `bio-checks.mjs` to HEAD and re-running the harness |
+
+**THE HYGIENE FAILURES ARE RECORDED RATHER THAN SMOOTHED, because they are a trap
+this repository has now paid for twice in one day.** The new suite's first full
+battery run came back 162/166 exit 4, and both root failures were the suite's own
+shape, not the plane's: it built a Miniflare without `.dispose()`, and its
+`NEGATIVE CONTROL` block sat AFTER the `process.exit()` call, pushing the exit out
+of the **last 400 bytes** `hygiene.test.mjs` reads to check a suite ends on its own
+result. **CASE-1 hit the identical 400-byte trap earlier the same day and recorded
+it; this item hit it anyway.** A trap recorded in a `landed:` line is not a trap
+the next worker avoids — which is an argument for the arm, not for the note.
+
+**AND `--strict` EXITED 1 TWICE BEFORE IT EXITED 0, both times on the negative-
+control REGISTER rather than on coverage.** The declaration must be `NEGATIVE
+CONTROL` marker, then the arm list, then prose: a paragraph between the marker and
+the list makes the register read NULL arms, the suite drops out of `classified`
+entirely, and `--strict` fails. The first attempt also opened the list with an
+unmarked `baseline` item, which is CASE-1's `(baseline)` failure one form over.
+Both are now stated inside the suite at the block itself, where the next author
+is standing.
