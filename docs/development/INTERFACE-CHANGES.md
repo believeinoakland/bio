@@ -4122,6 +4122,8 @@ be built against the final shape today without rendering a claim the record cann
 
 ## IC-64 · I3: `op=publishedcase`'s member rows GAIN `version_sha` (the pinned version), and the FOUR version acts that MOVE A READING'S STATE now REFUSE on a published finding (`PUBLISHED_CANNOT_MOVE_VERSION`, C-25.34) · PROPOSED 2026-08-10 (CASE-3, enacting DEC-72 clause 3) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Measured impact: the four version-act ops have **no rendering consumer** — only four rows in `surface-registry.test.mjs` marking them owed by UI-43 — and `version_sha` has zero consumers outside the plane. **So the behaviour change lands BEFORE its surface exists, which is the cheap direction and is worth naming:** UI-43 will build against a fence that is already true, rather than against one that arrives later and quietly invalidates what it drew. The refusal ships with its sentence — the untranslated-in-reach ratchet did not move.
+
 - **Interface:** **I3** (the op contracts). **NOT I5** — and that is worth stating rather than
   leaving to be noticed: CASE-1 already landed `published_case_members.version_sha`, so this item
   adds no column, no table and no migration row. It FILLS a column that shipped empty.
