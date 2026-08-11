@@ -145,10 +145,50 @@ export const RUN_BOUNDS = {
 /* The conditions a run may end on that are NOT a bound being reached. Kept
    apart from RUN_BOUNDS because "the member asked for it to stop" and "the
    budget ran out" are different facts, and collapsing them would put this item
-   on the wrong side of its own doctrine two lines after stating it. */
+   on the wrong side of its own doctrine two lines after stating it.
+
+   FL-7 (2026-08-10, IC-62) ADDED THE THIRD, AND THE SENTENCE DIRECTLY ABOVE IS
+   WHAT DECIDED IT. `mode-not-deployed` is a THIRD such fact, and it arrived as a
+   MEASURED misattribution rather than as a gap somebody noticed: FL-3's
+   deployment gate (`agent-worker/src/harness.mjs`, `gate-mode`) closed a refused
+   launch on `cancelled` — which this vocabulary defines two lines up as *"a
+   member stopped it"*. **A member did not.** The gate refused a mode that is not
+   deployed, before anything was spent and with nobody asking. So a run's own
+   ending was attributing a MACHINE REFUSAL TO A MEMBER ACT, in the one field
+   that says why the run stopped, which is CLAUDE.md's worst defect class — a
+   record claiming more than it can support — arriving at the smallest possible
+   scale and therefore the easiest to leave alone.
+
+   WHY THE WORD WAS MINTED RATHER THAN REUSED, since this project's standing
+   instruction points the other way and that deserves an answer at the site.
+   §14b.6's rule, quoted in `harness.mjs`'s own header, is *"the record already
+   has the word and lacks the writer — IS-9(d) builds that producer rather than
+   minting a new kind"*. **That ruling is conditional on the word EXISTING, and
+   it was measured here and did not:** at FL-7 `mode-not-deployed` appeared
+   EXACTLY ONCE in the whole repository — inside the `harness.mjs` comment that
+   promised a refused run terminates on it — and was in neither this object nor
+   `RUN_BOUNDS`. Both existing endings are FALSE of a gate refusal. The spelling
+   is kept as the one that comment already used, so that header became TRUE
+   rather than both sides moving to a third name nobody had written yet.
+
+   AND IT IS AN ENDING RATHER THAN A BOUND for the reason this object exists: no
+   bound was reached. The gate fires BEFORE any bound is consulted — a run that
+   was never allowed to start must not be able to report that it ran out of
+   something — which `harness.test.mjs` A6 and `skillsequencing.test.mjs` ARM D4
+   both measure.
+
+   THE HEADER AND THIS CATALOGUE ARE HELD IN AGREEMENT IN BOTH DIRECTIONS by
+   `agent-worker/test/harness.test.mjs` A6b, which reads THIS FILE and the
+   harness source as text: every ending the header names must exist here, and the
+   ending the gate actually closes on must be the one the header names. Either
+   half drifting fails that arm, which is the thing that stops this recurring —
+   the previous state was exactly one of those two halves being unasserted. */
 export const RUN_ENDINGS = {
   completed:  "the run finished its work",
   cancelled:  "a member stopped it",
+  "mode-not-deployed":
+    "the deployment gate refused this launch before it spent anything: the mode it asked for "
+  + "is not deployed yet, so no member stopped this run and no budget ran out",
 };
 
 export const RUN_STATUS = { running: 1, finished: 1, stopped: 1 };

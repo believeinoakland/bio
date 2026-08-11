@@ -40,6 +40,11 @@
    (H9) THE EMPTY-RUN INSTRUMENT (VF-1's owed control 7). Make `emptyLevelCandidates` return `[]` -> the empty-run arm must FAIL: an empty run and a silent failure become indistinguishable, which is the exact defect §9's kind exists to prevent.
    (H10) OVER-STRICTNESS, nothing broken, and these must PASS.
    ALL TEN ARMS RUN 2026-08-08 IN WORKTREE agent-ad6e5ed43aac4a2ab, baseline 194/0 (this suite) and 98/0 (agent-worker.test.mjs) before each; every one AS DECLARED on the recorded pass. **FOUR CAME BACK WRONG FIRST AND EVERY ONE WAS A FINDING ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT — recorded, not smoothed:** H1 never ARMED (patch matched 0 times), then exited 2 on a restore MISMATCH (two snapshots of one file collided on the copy's name — the `cmp` instrument caught what the sha256 could not), then had its MUST-NOT corrected (`queue` is DEDUP'S output, so F10 cannot hold when dedup is skipped); H2 and H9 both KILLED the suite rather than failing it (`0 pass, -1 FAIL`) on a nested read of an empty collection — the CLASS was swept, not the two sites. MEASURED figures: H1 166/28 · H2 184/10 · H3 191/3 · H4 189/4 · H5 186/8 · H6 193/1 · H7 191/3 · H8 harness 192/2 + member 95/3 · H9 187/7 · H10 194/0, 98/0, coverage --strict exit 0. **ALL TEN RE-RUN 2026-08-09 UNDER FL-5 (which changed this file's subject: `collect` became a judged row and the fan-out composes spawn contracts) — 10 of 10 still AS DECLARED, every figure identical except H8, whose patch SITE moved and now reads harness 193/1 + member 96/2.**
+   (F1) FL-7 — THE MISATTRIBUTION ITSELF. Regress `gate-mode` to close on `cancelled` -> the gate arms, A6b's DIRECTION 2 and the through-the-op B7 arms must FAIL and a misattribution arm must NAME it; A6b's DIRECTION 1 and `bio-plane/test/airun.test.mjs` must HOLD.
+   (F2) FL-7 — THE CATALOGUE LOSES THE WORD. Remove `mode-not-deployed` from the plane's RUN_ENDINGS -> A6b's DIRECTION 1, airun V6/V6b and the through-the-op G1/G2 must FAIL (C-22.5 refusing a bound the vocabulary no longer holds is what proves the op path is real).
+   (F3) FL-7 — ONE DIRECTION ONLY, AND IT IS THE ARM THAT EARNS THE TWO-WAY CLAIM. Change the header's terminates-on word to `cancelled`, a DIFFERENT REAL ending -> DIRECTION 2 must fail ALONE, with DIRECTION 1 GREEN. Measured 208/1: exactly one assertion.
+   (F4) FL-7 — OVER-STRICTNESS, ARMED. Rewrite `cancelled`'s own sentence -> airun V6b and skillsequencing D5 must object (a genuine member cancellation is still asserted as a member act); the gate and both directions must HOLD.
+   FL-7's FOUR ARMS RUN 2026-08-10 IN WORKTREE agent-a0301fcdabdaf43c6, baseline harness 209/0, airun 114/0, skillsequencing 27/0, battery 164/164 · 10,117. ALL FOUR AS DECLARED — F1 203/6+22/5+114/0 · F2 207/2+108/6 · F3 208/1 · F4 112/2+26/1+209/0. **F2 CAME BACK WRONG FIRST AND IT WAS A FINDING ABOUT THE ARM: `airun 0 pass, -1 FAIL` — the suite DIED, because FL-7's own new G2 read `gl.entries[len-1].bound` and the refused close left no terminal entry. Same class as H2/H9 above and swept the same way, across every nested read FL-7 added. Knowing the class did not prevent it; running the control did.**
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -268,16 +273,96 @@ console.log("\n--- A6 · SK-4's gate is a ROW in this table, not a sentence in a
   const gate = (mode) => nextStep({ step: "gate-mode", mode, pass: 0, maxPasses: 3 });
   t("a CHECK run passes the gate to `resume`", gate("check").step, "resume");
   t("an investigate run is CLOSED at the gate", gate("investigate").step, "close");
-  t("and the ending is named, never inferred", gate("investigate").bound, "cancelled");
+  /* CORRECTED 2026-08-10 BY FL-7 (IC-62), AND THE OLD EXPECTATION WAS `cancelled`.
+     IT WAS RIGHT WHEN WRITTEN because it recorded what the gate then DID; it was
+     never right about what the gate MEANT. The plane defines `cancelled` as "a
+     member stopped it" and no member is present at this branch — the gate refused
+     a launch before anything was spent — so the assertion was pinning a
+     misattribution rather than a rule. FL-7 added `mode-not-deployed` to the
+     plane's RUN_ENDINGS (the word this file's own header had already promised and
+     nothing had ever defined) and this arm moved with the fix. */
+  t("and the ending NAMES THE MACHINE THAT ACTED — a gate refusal is not a member cancelling a run",
+    gate("investigate").bound, "mode-not-deployed");
   t("the refusal cites VF-5/SK-4's sequencing", /VF-5\/SK-4/.test(gate("investigate").why), true);
   t("an unknown mode is closed too, never defaulted to CHECK", gate("wat").step, "close");
   t("an absent mode is closed too", gate(undefined).step, "close");
+  /* OVER-STRICTNESS, and it is the arm that keeps the correction honest: the fix
+     must not have made `cancelled` unreachable or unmeaning. A member stopping a
+     run is still `cancelled`, and the gate must never produce that word. */
+  t("the gate NEVER closes on `cancelled` for any mode it refuses — the member's word is not the machine's",
+    ["wat", undefined, "investigate", ""].map((m) => gate(m).bound).filter((b) => b === "cancelled"), []);
   /* THE GATE FIRES BEFORE ANY BOUND IS CONSULTED. A mode that is not deployed
      must not be able to report that it ran out of budget — that would be a run
      that never should have started blaming the budget. */
   t("the gate fires even with every budget exhausted",
     nextStep({ step: "gate-mode", mode: "investigate", pass: 9, maxPasses: 1,
-               budget: { fetches: { allowed: 1, consumed: 9 } } }).bound, "cancelled");
+               budget: { fetches: { allowed: 1, consumed: 9 } } }).bound, "mode-not-deployed");
+}
+
+console.log("\n--- A6b · THE HEADER AND THE PLANE'S CATALOGUE AGREE, ASSERTED IN BOTH DIRECTIONS (FL-7) ---");
+{
+  /* WHY THIS ARM EXISTS, and it is a receipt rather than a precaution. From FL-3
+     until FL-7 this file's header said a refused run "terminates on
+     `mode-not-deployed`" while the code closed on `cancelled`, and
+     `mode-not-deployed` was defined NOWHERE — it appeared exactly once in the
+     whole repository, in that comment. Two failures, and NEITHER was catchable:
+     a comment naming a value nothing defines, and a gate producing a value the
+     comment contradicts. **One direction of assertion would have caught one of
+     them.** Both directions are asserted here, and they fail independently.
+
+     THE EXPECTATION IS THE PLANE'S OWN SOURCE, NEVER A LITERAL RE-TYPED HERE.
+     A6's LEVELS pin (just above) is the precedent and the reason is the same:
+     an expected set derived from the thing under test moves with it and proves
+     nothing — three items shipped exactly that defect on 2026-08-10. So the
+     catalogue is PARSED out of `bio-plane/src/airun.mjs`, the header is READ as
+     text out of `../src/harness.mjs`, and the two are compared to each other. */
+  const blk = PLANE_AIRUN.match(/export const RUN_ENDINGS = \{([\s\S]*?)\n\};/);
+  t("the plane's RUN_ENDINGS block was actually found — a silent no-match would pass everything",
+    blk != null, true);
+  const planeEndings = [...(blk?.[1] ?? "").matchAll(/^\s{2}"?([\w-]+)"?\s*:/gm)].map((m) => m[1]);
+  t("REACH: the parse found a non-trivial catalogue (floor 3), so neither direction below is vacuous",
+    planeEndings.length >= 3, true);
+
+  /* THE HEADER'S CLAIM IS A SPECIFIC SENTENCE, SO IT IS READ AS ONE. The prose
+     says a refused run *"terminates on `X`"*, and that phrase is the whole
+     contract between this file's documentation and the record's vocabulary.
+     Parsing THAT rather than sweeping every backticked word in the file is what
+     keeps the arm from being answered by an unrelated token — and it is why the
+     header may still DISCUSS `cancelled` historically (it does, at length)
+     without confusing this measurement: only the terminates-on claim is a claim.
+
+     Read from the file's leading prose — everything ahead of its first `export`,
+     which is all comment — so no line of CODE can satisfy an assertion that is
+     about the DOCUMENTATION. A whole-file grep would have been answered by the
+     gate's own string literal and would have passed throughout the entire
+     period this arm exists to have caught. */
+  const firstExport = HARNESS_SRC.indexOf("\nexport ");
+  t("REACH: the file's leading prose was isolated ahead of its first export", firstExport > 0, true);
+  const HEADER_PROSE = HARNESS_SRC.slice(0, firstExport > 0 ? firstExport : HARNESS_SRC.length);
+  t("REACH: and that prose contains no executable export, so DIRECTION 1 below cannot be answered by code",
+    /^\s*export /m.test(HEADER_PROSE), false);
+  const claim = /terminates on `([\w-]+)`/.exec(HEADER_PROSE);
+  t("the header still makes its terminates-on claim at all — a deleted sentence must not read as agreement",
+    claim != null, true);
+
+  /* DIRECTION 1 — HEADER -> CATALOGUE. The word the header promises must EXIST
+     in the plane's catalogue. THIS IS THE HALF THAT WAS MISSING FOR THE WHOLE
+     PRE-FL-7 PERIOD: the header promised `mode-not-deployed` and nothing
+     anywhere defined it, and no arm could contradict a comment. */
+  t("DIRECTION 1 (header -> catalogue): the ending this header promises a refused run terminates on is DEFINED "
+    + "in the plane's RUN_ENDINGS. Pre-FL-7 it was defined nowhere in the repository and this direction is what "
+    + "now refuses that",
+    planeEndings.includes(claim?.[1] ?? "(no claim)"), true);
+
+  /* DIRECTION 2 — CODE -> HEADER. The ending the gate ACTUALLY closes on must be
+     the word the header promises. THIS HALF WAS ALSO MISSING: the code said
+     `cancelled`, the header said otherwise, and nothing compared them. */
+  const actual = nextStep({ step: "gate-mode", mode: "investigate", pass: 0, maxPasses: 3 }).bound;
+  t("DIRECTION 2 (code -> header): the ending the gate actually produces IS the one the header promises — "
+    + "the two halves are compared to each other, so either one drifting fails here",
+    actual, claim?.[1] ?? "(no claim)");
+  t("and the produced ending is the PLANE's, not one this member minted (DEC-8's drift class)",
+    planeEndings.includes(actual), true);
 }
 
 console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's owed control 7) ---");
@@ -818,7 +903,24 @@ console.log("\n--- B7 · SK-4's gate through the op: an investigate run stops be
 {
   const mf = newMf({ mode: "investigate", maxPasses: 3, budget: wide });
   const out = await (await runOp(mf, base)).json();
-  t("the run was closed at the gate", out.ended?.bound ?? null, "cancelled");
+  /* CORRECTED 2026-08-10 BY FL-7 (IC-62). THE OLD EXPECTATION WAS `cancelled`
+     AND IT WAS RIGHT WHEN WRITTEN — it recorded what the gate then produced
+     through the op, which is what this arm is for. It was never right about what
+     the record then SAID: the plane defines `cancelled` as "a member stopped it",
+     and this run was refused by a deployment gate with no member anywhere near
+     it. FL-7 gave the machine's act its own word. This is the THROUGH-THE-OP
+     half of the acceptance — the ending is read off what the op actually
+     returned, not asserted at a store or off `nextStep`'s return value. */
+  t("the run was closed at the gate, carrying an ending that NAMES WHAT HAPPENED — a machine refused the "
+    + "launch, and the record no longer says a member stopped it",
+    out.ended?.bound ?? null, "mode-not-deployed");
+  /* THE MISATTRIBUTION ARM, stated as its own assertion so a regression NAMES
+     the defect instead of failing an equality: whatever else changes, the word
+     that means "a member did this" must never come out of this gate. */
+  t("and it is NOT `cancelled` — the member-attribution assertion, which must fail naming it if the gate "
+    + "ever closes a refused run under a member's word again",
+    out.ended?.bound === "cancelled" ? "MISATTRIBUTED: a gate refusal recorded as a member cancellation" : "ok",
+    "ok");
   t("it took exactly one step", (out.trace || []).length, 1);
   t("which was the gate", out.trace?.[0]?.step ?? null, "gate-mode");
   const st = await mockState(mf);

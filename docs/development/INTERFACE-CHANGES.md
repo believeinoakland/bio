@@ -3874,3 +3874,130 @@ says what it is doing rather than quietly passing a case.
 
 None for any consumer. A UI that starts reading the bar reads the same keys it would have read
 before; it simply gets the answer of the projects that still stand behind it.
+
+---
+
+## IC-62 · I3: `RUN_ENDINGS` GAINS ONE ADDITIVE TERM — `mode-not-deployed`, so a launch the deployment gate REFUSED stops saying a member cancelled it · PROPOSED 2026-08-10 (FL-7, enacting SK-4's DELEGATION) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the plane's published run vocabulary — `RUN_BOUNDS` / `RUN_ENDINGS`,
+  reaching members through `op=affordances`' pack body and through a run's own stopped record)
+- **Proposer:** FLEET, session `fl7-gate-ending`, 2026-08-10, from QUEUE FL-7
+- **Owner to land it:** FLEET (the declaration is `bio-plane/src/airun.mjs`; the producer is
+  `agent-worker/src/harness.mjs`)
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, precisely
+
+`bio-plane/src/airun.mjs`'s `RUN_ENDINGS` goes from two terms to three:
+
+    completed          "the run finished its work"
+    cancelled          "a member stopped it"
+  + mode-not-deployed  "the deployment gate refused this launch before it spent anything: the
+                        mode it asked for is not deployed yet, and no member and no budget was
+                        involved"
+
+`agent-worker/src/harness.mjs`'s `gate-mode` branch closes on that term instead of on
+`cancelled`. **Nothing is renamed, nothing is removed, and no existing value changes meaning.**
+This is purely ADDITIVE: every run already closed under `completed` or `cancelled` still reads
+exactly as it did, and `checkBound` (C-22.5) accepts a strict superset of what it accepted
+before.
+
+### WHY — AND THE HALF THAT MAKES IT AN ERROR RATHER THAN A PREFERENCE
+
+FL-3's mode gate closes a refused run with `bound: "cancelled"`. The plane's own vocabulary
+defines `cancelled` as **"a member stopped it"**. A member did not: the gate refused a launch
+before anything was spent. **So the run's own ending currently attributes a machine refusal to
+a member act** — a record claiming more than it can support, in the one field that says why a
+run stopped, and this project ranks that class worst.
+
+`RUN_ENDINGS`' own header already contains this argument, one value over: *"'the member asked
+for it to stop' and 'the budget ran out' are different facts, and collapsing them would put
+this item on the wrong side of its own doctrine two lines after stating it."* A gate refusal
+is a THIRD such fact, and the same sentence decides it.
+
+### WHY NOT THE OTHER READING — correcting the comment — AND IT WAS A REAL OPTION
+
+FL-7 could have closed by editing `harness.mjs`'s header to say the gate terminates on
+`cancelled`, making the two agree at zero cost and adding nothing to a published vocabulary.
+**That was rejected because it closes the cheap half and cements the expensive one.** The
+disagreement between the header and the code is the SYMPTOM; the misattribution is the defect.
+A comment correction would leave a gate-refused run permanently on record as a member act and
+would have made the header's accuracy the reason the misattribution became permanent.
+
+**The precedent that looks like it argues the other way, and why it does not.** `harness.mjs`'s
+own header quotes §14b.6: *"the record already has the word and lacks the writer —
+`runtime-ceiling-reached` exists in the condition vocabulary with NO producer — IS-9(d) builds
+that producer rather than minting a new kind."* That ruling is CONDITIONAL on the word existing.
+**Measured here: it does not.** `mode-not-deployed` appears exactly once in the entire
+repository — in the comment that promises it — and is in neither `RUN_ENDINGS` nor `RUN_BOUNDS`.
+Applied honestly the precedent points the other way: there was no word, both existing endings
+are FALSE of this run, and minting is what the case actually calls for. The name is kept as
+`mode-not-deployed` deliberately, so the header FL-3 already wrote becomes TRUE rather than
+requiring both sides to move to a third spelling.
+
+**Why an ENDING and not a BOUND.** `RUN_ENDINGS` is declared as "the conditions a run may end
+on that are NOT a bound being reached". No bound was reached — the gate fires before any bound
+is consulted, which `harness.test.mjs` A6 and `skillsequencing.test.mjs` ARM D4 both already
+measure. It is an ending.
+
+### MEASURED CONSUMER IMPACT, and it is measured rather than asserted
+
+`grep -rln RUN_ENDINGS` across every tree, `node_modules` excluded — 10 files, and each is
+classified by how it READS the object rather than by which area owns it:
+
+- **DERIVED, absorbs the new term with NO EDIT (7 files).** `bio-plane/src/skillpack.mjs:394`
+  publishes `endings: RUN_ENDINGS` by import (declared `"imported"` at line 208), so the pack
+  gains the term with no authorship. `bio-plane/src/store.mjs:22405/23103/23635` renders
+  `RUN_ENDINGS[bound]` by lookup. `bio-plane/test/skillpack.test.mjs:302` and
+  `bio-plane/test/skilldoctrine.test.mjs:639` build term sets with
+  `...Object.keys(RUN_ENDINGS)`. `civicos-ui/check-refusal-codes.mjs` arm E harvests
+  vocabularies **BY SHAPE**, so the new term is guarded the moment it lands — its text is
+  written to clear that guard's real floor (a PHRASE of ≥3 words, not restating its key).
+  `civicos-ui/test/refusal-codes.test.mjs` drives that arm.
+- **`civicos-ui/test/ai-session-wire.test.mjs`: ZERO, AND STRUCTURALLY SO.** Its ARM V1 asserts
+  the running-session block holds **NO COPY** of this vocabulary and prints what arrived. So a
+  new term is not merely tolerated by the UI — the UI is asserted not to know it. Its ARM V2
+  polarity fixture reads `Object.keys(RUN_ENDINGS)[0]`, which is `completed` and stays
+  `completed` because the term is APPENDED. **No `civicos-ui` edit is owed by this IC**, which
+  is why it is a two-area change and not three.
+- **EXHAUSTIVE, and it is the ONE assertion that must move: `bio-plane/test/airun.test.mjs:155`**
+  (ARM V6), `Object.keys(RUN_ENDINGS).sort()` against the literal `["cancelled", "completed"]`.
+  It goes RED on this change **by design** — it is the guard that stops an ending being added
+  without a reason — and FL-7 corrects it in the same commit with a dated note, never exempts
+  it. `airun.test.mjs:135` prints the count and follows.
+- **The tripwire that was BUILT to go red: `bio-plane/test/skillsequencing.test.mjs` ARM D5**,
+  SK-4's named tripwire on this exact finding, whose own text instructs the fixing area to
+  update it. ARM D4 and the absent/nonsense-mode assertion above it name `cancelled` too and
+  move with it.
+- **`agent-worker/`: the producer.** `harness.mjs`'s gate branch and header,
+  `harness.test.mjs` arm A6's three ending assertions.
+- **NO SCHEMA CHANGE.** `ai_runs.stopped_bound` is a text column that already stores whatever
+  `checkBound` admits; no table, no column, no migration.
+- **Built artifacts are not consumers.** `release/bio-plane.bundled.mjs` and
+  `newgroup/dist/newgroup.bundled.mjs` are compiled copies regenerated by DIST.
+
+### THE CONSEQUENCE SOMEBODY SHOULD CHOOSE RATHER THAN INHERIT, stated in the open
+
+**A run refused by the gate is recorded with status `finished`, not `stopped`** — because
+`#aiRunTerminate` keys that on whether the ending is a BOUND, and an ending is not. That is
+UNCHANGED by this IC: `cancelled` already had exactly that property, so a member-cancelled run
+reads `finished` today. **FL-7 does not alter it, and names it here rather than fixing it
+quietly**, because whether "refused at the gate" and "ran to completion" should share a status
+word is the same question one level up, it reaches `RUN_STATUS` (a third vocabulary), and it is
+not what this item was scoped to decide. Raised in FL-7's report for CONDUCT.
+
+### MIGRATION
+
+None for any consumer. A consumer that switches on the ending gains a case it did not have; a
+consumer that looks the term up in the published vocabulary — which is every in-tree reader but
+one — gets a sentence for it automatically.
+
+### 2 · RESPONSES
+
+_(awaiting: RECORD owns `airun.mjs`'s declaration; UI is measured NOT-AFFECTED above with the
+evidence, and CONDUCT may answer for a dormant area in writing per the protocol.)_
+
+### 3 · RESOLUTION
+
+_(CONDUCT's.)_

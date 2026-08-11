@@ -101,6 +101,29 @@
  * takes, it reads a flag the caller cannot set from inside a judgement, and a
  * run in a mode that is not deployed terminates on `mode-not-deployed` before
  * it has spent anything.
+ *
+ * **THAT SENTENCE WAS FALSE WHEN IT WAS WRITTEN AND IS TRUE NOW — FL-7,
+ * 2026-08-10, IC-62.** From FL-3 until FL-7 this header named
+ * `mode-not-deployed` while the `gate-mode` branch of `nextStep`, far below in
+ * this same file, closed on `cancelled` — and `mode-not-deployed` existed
+ * NOWHERE ELSE IN THE REPOSITORY:
+ * not in the plane's `RUN_ENDINGS`, not in its `RUN_BOUNDS`, only here. So the
+ * header described a value that did not exist while the code produced one that
+ * said "a member stopped it" about a run no member touched. SK-4 measured both
+ * halves and delegated the call; FL-7 closed it by ADDING the ending the header
+ * had already named, rather than by editing this sentence down to match the
+ * defect — the disagreement was the symptom and the misattribution was the bug.
+ *
+ * **AND THE AGREEMENT IS NOW ASSERTED IN BOTH DIRECTIONS, which is the half
+ * that stops it recurring.** `test/harness.test.mjs` A6b reads this file and
+ * the plane's `airun.mjs` as TEXT and holds two claims that fail independently:
+ * every ending named in this header must EXIST in the plane's catalogue, and
+ * the ending the gate actually closes on must be the one this header names.
+ * One direction alone is what allowed the original drift — a comment nobody
+ * could contradict. **Neither side is the expectation for the other's test:**
+ * the catalogue is read from the plane's own source, never from a literal
+ * copied into the arm, because an expectation derived from the subject moves
+ * with it and proves nothing (three items shipped exactly that on 2026-08-10).
  * ========================================================================= */
 
 /* THE FOUR LEVELS, IN FAN-OUT ORDER.
@@ -450,7 +473,16 @@ export function nextStep(state) {
   if (at === "gate-mode") {
     const mode = MODES[String(s.mode || "")];
     if (!mode || !mode.deployed)
-      return { step: "close", bound: "cancelled",
+      /* `mode-not-deployed`, NOT `cancelled`, AND THE CHANGE IS FL-7 (2026-08-10,
+         IC-62) CORRECTING A MISATTRIBUTION THIS LINE USED TO MAKE. This branch
+         closed on `cancelled` from FL-3 until FL-7 — and the plane defines
+         `cancelled` as "a member stopped it", which is FALSE of every run that
+         reaches this line: the gate refused a launch, nobody asked, and nothing
+         had been spent. The ending now names the machine that actually acted.
+         The word is the plane's (`bio-plane/src/airun.mjs` RUN_ENDINGS) and is
+         NOT minted here — a fleet member inventing an ending would be the
+         drift class DEC-8 closed. */
+      return { step: "close", bound: "mode-not-deployed",
                why: `mode '${String(s.mode || "(none)")}' is not deployed. CHECK is the first deployed mode `
                   + `(§2); investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). `
                   + `This gate is a row in the control-flow table and never a sentence in the skill.` };

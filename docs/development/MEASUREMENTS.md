@@ -7972,3 +7972,59 @@ not print the token a session would grep for.
 **Baseline discipline.** `npm ci` in `bio-plane/` FIRST: the fresh worktree had no
 `bio-plane/node_modules`, and the UI harness reads a false red without it. Baseline
 measured AFTER the install: 46 suites, 0 FAIL, exit 0.
+
+## 2026-08-10 · FL-7 — the mode gate's ending, and what the two-way assertion actually cost
+
+**Instrument:** `bio-plane` battery (`npm run test:battery`), `scripts/coverage.mjs --strict`
+read UNPIPED, and `agent-worker/test/harness.control.mjs` arms F1-F4. Worktree
+`agent-a0301fcdabdaf43c6`.
+
+**Baseline, measured AFTER `npm ci` in `bio-plane/` and not before.** The trap in `CLAUDE.md`
+held exactly as written: this worktree had no `bio-plane/node_modules`. Baseline after install:
+**164/164 suites · 10,117 assertions · 169.8s**, `coverage --strict` exit 0. Suite baselines:
+`harness.test.mjs` 199/0 (the figure its own header carried), `airun.test.mjs` 107/0,
+`skillsequencing.test.mjs` 26/0.
+
+**THE DEFECT, MEASURED IN BOTH HALVES BEFORE ANYTHING WAS CHANGED.** `mode-not-deployed`
+occurred **exactly once in the entire repository as a defined or produced value — zero times.**
+Its only occurrence in source was the `harness.mjs` comment promising it; the other four hits
+were the three planning documents describing the finding and SK-4's arm asserting its absence.
+`grep -rln RUN_ENDINGS` over every tree, `node_modules` excluded: **10 files**, of which
+**exactly ONE** carried an exhaustive hand-written expectation (`airun.test.mjs` ARM V6,
+`["cancelled", "completed"]`). The other nine derive from `Object.keys(RUN_ENDINGS)` or look up
+by key and absorbed a third term with no edit. **That ratio is the measurement that made the IC
+cheap** — and it is a property of how the vocabulary was written, not luck.
+
+**`civicos-ui` impact: ZERO, and structurally rather than incidentally.**
+`civicos-ui/test/ai-session-wire.test.mjs` ARM V1 asserts the running-session block holds **no
+copy** of the run vocabulary. The UI is asserted NOT to know these words, so adding one cannot
+reach it. No UI edit was owed; the change stayed two-area.
+
+**WHAT THE NEGATIVE CONTROL BOUGHT, and it is the finding worth carrying.** Four arms, each
+armed alone, restores verified by sha256 AND `cmp`. Three came back as declared. **F2 came back
+`airun 0 pass, -1 FAIL` — the suite DIED rather than failing**, because FL-7's own new ARM G2
+read `gl.entries[gl.entries.length - 1].bound` and a refused close leaves no terminal entry.
+This is the third recorded instance of that class in this estate (harness H2, H9; FL-2's A3),
+and **the arm's author had read all three declarations in this same session before writing the
+defect.** Recorded plainly: **knowing the defect class did not prevent it; running the control
+did.** The class was swept across every nested read FL-7 added, not patched at the one site.
+
+**F3 IS THE ARM THAT EARNS THE TWO-WAY CLAIM, and it is worth naming what it measures that the
+others cannot.** Breaking the header's terminates-on word to `cancelled` — a DIFFERENT REAL
+ending — produced **harness 208/1: exactly ONE failing assertion**, DIRECTION 2, with
+DIRECTION 1 green. An agreement asserted in "both directions" by one comparison written twice
+would have failed both halves together. One assertion failing alone is the evidence that the
+two directions are two independent claims. **The expectation on each side is the OTHER side's
+source** — the catalogue parsed out of `airun.mjs`, the claim parsed out of `harness.mjs`'s
+prose — never a literal retyped into the arm, which is the blind-by-construction defect three
+separate items shipped on 2026-08-10.
+
+**Measured arm figures.** F1 (gate regresses to `cancelled`): harness 203/6 · skillsequencing
+22/5 · airun 114/0 GREEN as declared. F2 (catalogue loses the word): harness 207/2 · airun
+108/6. F3 (header names a different real ending): harness 208/1. F4 (over-strictness, armed —
+`cancelled`'s sentence rewritten): airun 112/2 · skillsequencing 26/1 · harness 209/0.
+
+**Suite baselines after FL-7:** `harness.test.mjs` 209/0, `airun.test.mjs` 114/0,
+`skillsequencing.test.mjs` 27/0. **Every one of those numbers moved, and each is corrected at
+its own suite's `NEGATIVE CONTROL:` line rather than left for a later session to re-derive** —
+this repository's most-repeated finding is a hand-carried number nobody re-measures.

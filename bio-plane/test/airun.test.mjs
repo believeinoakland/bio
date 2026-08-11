@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. ~~Clean tree: 101 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 103, not 101. Clean tree after UI-38's ARM U rewrite: 107 pass, 0 fail.**
+/* NEGATIVE CONTROL: every arm below was RUN on 2026-08-07 by is6-agent, and every restore was verified by CONTENT as well as sha256 — an NC harness in this repository once reported a byte-identical restore over a file that had not been restored. ~~Clean tree: 101 pass, 0 fail.~~ **CORRECTED 2026-08-08 (UI-38) BY MEASURING IT: the clean tree on `57b5067` ran 103, not 101. Clean tree after UI-38's ARM U rewrite: 107 pass, 0 fail.** **RE-MEASURED 2026-08-10 BY FL-7: 114 pass, 0 fail** — it corrected ARM V6 (the endings set, which went red BY DESIGN when a third ending landed) and added V6b plus ARM G1-G5, the through-the-op arms for `mode-not-deployed`. **FL-7's arms against THIS suite are declared and run from `agent-worker/test/harness.control.mjs` (F1-F4), not from here, because they break sources in BOTH trees; under F2 this suite reads 108/6 and under F4 112/2.**
    ARM U's ARMS, 2026-08-08 (UI-38, cross-area — see IC-41). ARM U lifts `civicos-ui/app.html`'s renderers out BY NAME, so UI-38's collapse of three field-named renderers into one broke this file with `ReferenceError: aiSessionBudgetHtml is not defined` — a throw that ends the MODULE while the battery reads `assertions unknown`, which is the class WORKER.md warns about and is why the consumer was corrected here rather than delegated. The arm proving the new U9 family: in `civicos-ui/app.html`'s `aiSessionBlockHtml`, make the nested loop `continue` unconditionally -> U9b and U9d FAIL naming `bias` and its fields, with U3/U3b/U6/U7 beside them. **U9's own first run FAILED against CORRECT behaviour** — it asked for every KEY of the bias block and named `now` and `moved`, which are `null` on a run with no manifest and which the surface deliberately renders nothing for; the ARM was narrowed, not the surface.
    (1) THE ITEM'S OWN, AND IT IS FIRST — A RUN KILLED MID-FLIGHT. In src/store.mjs neuter the reaper's tick by making the `ai-run-reap` registry entry a no-op (`tick: (now) => ({ airunreap: { at: null, lapsed: 0, reaped: [] } })`), which is exactly what "the run writes its own log on the way out" amounts to for a run that was killed -> 11 FAIL, 90 pass, and every one NAMES the killed run or what a surface can no longer render: K2c (reaped [] against one named run), K3 (log has 3 entries, not 4 — the terminal one is simply absent), K4 (bound null against "lease"), K5 (state null), K5b (no sentence naming the bound), K6 (still "running" hours after it died), K7 (seqs [1,2,3]), K8 (op=airun publishes no condition), K9 (a late tick REOPENS a dead run), U6 and U7 (the running-session surface has nothing to render about a run that ended). Restored, 101 pass.
    (2) MAKE THE LOG WRITE ONLY ON SUCCESS. In #aiRunTerminate guard the #aiRunAppend call with `stoppedByBound ? null : …` -> 8 FAIL, 93 pass, across TWO runs and nothing else: K3/K4/K5/K5b/K7 name the killed run that left nothing, B3/B4/B5 name the budget-exhausted one. EVERY arm about a run that FINISHED stays GREEN — C1-C4 and F1-F2 do not move — which is the finding as a measurement rather than a sentence: a log that exists only when the run finished is a log about the runs that did not need one. (Noted precisely: the CANCELLED run stays green under this arm because `cancelled` is an ENDING and not a bound, so this mutation does not reach it. The first draft of this line claimed C3 failed; it does not, and the claim is corrected rather than left standing.)
@@ -150,9 +150,31 @@ console.log("\n--- ARM V · D-129's vocabulary, D-104's split, §14b.6's bounds 
      without a reason cannot slip in unnoticed. */
   t("ARM V5: the bound vocabulary is §14b.6's three plus lease and runtime",
     Object.keys(RUN_BOUNDS).sort(), ["fetches", "lease", "runtime", "subsessions", "wallclock"]);
-  t("ARM V6: an ENDING is not a bound — 'a member stopped it' and 'the budget ran out' are "
-    + "different facts and the vocabularies are kept apart",
-    Object.keys(RUN_ENDINGS).sort(), ["cancelled", "completed"]);
+  /* ARM V6 CORRECTED 2026-08-10 BY FL-7 (IC-62), AND THE OLD SET WAS
+     ["cancelled", "completed"]. IT WAS RIGHT WHEN WRITTEN: two endings were all
+     the record had, and asserting them EXHAUSTIVELY is exactly what makes a
+     third one impossible to add without a reason — which is the guard working,
+     not the guard being wrong. FL-7 supplied the reason. The gate in FL-3's
+     control-flow table refused undeployed-mode launches and closed them on
+     `cancelled`, which this vocabulary defines as "a member stopped it" — so a
+     MACHINE REFUSAL was on record as a MEMBER ACT, and `mode-not-deployed`
+     (the word `agent-worker/src/harness.mjs`'s header had promised since FL-3
+     while nothing anywhere defined it) is now the third ending. Still asserted
+     as a SET, so a FOURTH cannot slip in unnoticed either. */
+  t("ARM V6: an ENDING is not a bound — 'a member stopped it', 'the budget ran out' and 'a gate "
+    + "refused the launch' are different facts and the vocabularies are kept apart",
+    Object.keys(RUN_ENDINGS).sort(), ["cancelled", "completed", "mode-not-deployed"]);
+  /* THE MISATTRIBUTION THIS ITEM CLOSED, ASSERTED AT THE VOCABULARY ITSELF so
+     the distinction cannot be quietly collapsed back by an editor who reads the
+     two sentences as saying the same thing. They must not. */
+  t("ARM V6b (FL-7): the member's ending ATTRIBUTES the stop to a member; the gate's ending explicitly "
+    + "DENIES one, because 'undetermined is first-class and must be STATED' applies to who acted just as it "
+    + "does to a grade. Two different sentences about two different facts, and neither may be the other",
+    [/a member stopped it/.test(RUN_ENDINGS.cancelled),
+     /\bno member\b/.test(RUN_ENDINGS["mode-not-deployed"]),
+     /a member stopped it/.test(RUN_ENDINGS["mode-not-deployed"]),
+     RUN_ENDINGS.cancelled === RUN_ENDINGS["mode-not-deployed"]],
+    [true, true, false, false]);
   t("ARM V7: `runtime-ceiling-reached` is the record's OWN word, read live from queuestate.mjs "
     + "and never copied here",
     Object.prototype.hasOwnProperty.call(QUEUE_CONDITION_KINDS, "runtime-ceiling-reached"), true);
@@ -476,6 +498,74 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
   t("ARM F1: a completed run closes on `completed`", [f.terminated, f.bound], [true, "completed"]);
   t("ARM F2: and its search state is `partial`, taken from what it actually recorded rather than "
     + "declared about itself", f.state, "partial");
+
+  /* ------------------------------------------------------------------- *
+   *  ARM G · THE THIRD ENDING (FL-7 / IC-62), DRIVEN THROUGH THE OP.
+   *
+   *  WHY THIS IS AT THE OP AND NOT AT THE STORE, and it is the whole point
+   *  of the arm rather than a stylistic preference. `CLAUDE.md`: *"a
+   *  store-level test and a passing battery are not evidence that a caller
+   *  can reach the feature — `op=invitelook` shipped with a ReferenceError
+   *  while 1276 assertions passed."* An ending added to a catalogue that no
+   *  caller can actually close a run on would be exactly that defect: the
+   *  vocabulary would publish a word, `airun.test.mjs` would assert the word
+   *  is in the object, and every one of those assertions would be true of a
+   *  feature nobody could use. So this run is OPENED through `op=airunopen`
+   *  and CLOSED through `op=airunclose`, and what is asserted is what the OP
+   *  returned and what `op=airunlog` then publishes.
+   * ------------------------------------------------------------------- */
+  const REFUSEDMODE = "RUN-2026-0810-modegate";
+  await POST(`op=airunopen&token=${TOK}`, {
+    run: REFUSEDMODE, contextType: "inquiry", contextId: BUNDLE,
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
+  const g = await POST(`op=airunclose&token=${TOK}`,
+    { run: REFUSEDMODE, bound: "mode-not-deployed", at: at(T0, 500) });
+  t("ARM G1 (FL-7, THROUGH THE OP): a run refused by the deployment gate can actually be CLOSED on "
+    + "`mode-not-deployed` by a caller — C-22.5 admits it, and the op returns it. A catalogue entry no "
+    + "caller can reach would be the `op=invitelook` defect wearing a vocabulary",
+    [g.terminated ?? null, g.bound ?? null], [true, "mode-not-deployed"]);
+  /* EVERY NESTED READ BELOW IS NULL-TOLERANT, AND THE CLASS WAS SWEPT RATHER
+     THAN THE ONE SITE THAT BIT. MEASURED, not anticipated: control arm F2
+     (remove the ending from the catalogue) made `op=airunclose` refuse, which
+     left the log with NO terminal entry, and `gl.entries[len-1].bound` THREW —
+     the suite reported `0 pass, -1 FAIL` and DIED instead of failing, taking
+     every arm behind it. That is FL-2's A3 class and `harness.test.mjs`'s
+     header says the same thing: an assertion that throws cannot NAME what it
+     broke. The control caught it; reading the arm did not. */
+  const lastOf = (log) => ((log && log.entries) || []).slice(-1)[0] || {};
+  const gl = await GET(`op=airunlog&token=${TOK}&run=${REFUSEDMODE}`);
+  t("ARM G2: and the PUBLISHED record names the machine's act rather than a member's — this is the "
+    + "misattribution FL-7 closed, read back out of the log the way a member would see it",
+    lastOf(gl).bound ?? null, "mode-not-deployed");
+  t("ARM G3: the log's own sentence is the vocabulary's, rendered rather than restated — a surface reads "
+    + "this instead of the machine word (DEC-49)",
+    /no member stopped this run/.test(lastOf(gl).detail || ""), true);
+  /* THE MISATTRIBUTION ARM THE QUEUE ROW REQUIRES: closing a gate-refused run
+     as `cancelled` is still ACCEPTED by the plane (it is a legal ending and the
+     plane does not police a caller's honesty), and that is exactly why the
+     assertion lives here — it names what the record would then be CLAIMING. */
+  const MISATTR = "RUN-2026-0810-misattributed";
+  await POST(`op=airunopen&token=${TOK}`, {
+    run: MISATTR, contextType: "inquiry", contextId: BUNDLE,
+    principalClaude: "instance", skillVersion: "investigative-session@1",
+    bounds: [{ bound: "fetches", allowed: 100 }], state: {}, at: T0 });
+  const m = await POST(`op=airunclose&token=${TOK}`,
+    { run: MISATTR, bound: "cancelled", at: at(T0, 500) });
+  const ml = await GET(`op=airunlog&token=${TOK}&run=${MISATTR}`);
+  t("ARM G4 (THE NAMED MISATTRIBUTION ARM): a gate-refused run closed as `cancelled` puts 'a member "
+    + "stopped it' on the record about a run no member touched. The plane ACCEPTS it — `cancelled` is a "
+    + "legal ending and the plane cannot know who asked — so what stops the defect is the GATE naming its "
+    + "own act, which ARM G1 measures. This arm states the cost of getting it wrong",
+    [m.bound ?? null, /a member stopped it/.test(lastOf(ml).detail || "")],
+    ["cancelled", true]);
+  /* OVER-STRICTNESS: the correction must not have made the member's ending
+     unreachable or changed its meaning. ARM C1 above already closes a real
+     member cancellation on `cancelled` and still passes; G5 pins that the two
+     endings remain DISTINCT at the op, so a later tidy-up cannot merge them. */
+  t("ARM G5 (OVER-STRICTNESS): a genuine member cancellation still reads as `cancelled` and the two "
+    + "endings stay distinct through the op — the fix added a word, it did not take one away",
+    [c.bound ?? null, g.bound ?? null, c.bound === g.bound], ["cancelled", "mode-not-deployed", false]);
 }
 
 /* ------------------------------------------------------------------------- *
