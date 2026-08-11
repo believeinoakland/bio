@@ -251,6 +251,23 @@ const PROJ_OTHER = "PROJ-2026-2200-other";
 const INQ_STRONG = "INQ-2026-2200-strong";
 const INQ_WEAK = "INQ-2026-2200-weak";
 const INQ_SPARE = "INQ-2026-2200-spare";
+/* FOUR FINDINGS WHOSE ONLY JOB IS TO BE REFUSED, AND THEY EXIST BECAUSE THE
+   CONTROLS MEASURED THAT THEY HAD TO. Arms (C) and (D) each turn one of this
+   item's REFUSALS into a SUCCESS — that is what a control does — and a refusal
+   that becomes a success MOVES THE RECORD: the act publishes, the members leave
+   `concluded`, and every later act in the suite meets a case that has already
+   happened. On the first control run that cascade brought down §5's ACCEPTANCE
+   arm under arm (D), which is precisely the arm that distinguishes "the gate
+   works" from "the gate refuses everything" — so the cascade was destroying the
+   one measurement the item most needs.
+   Giving each removal-arm's act ITS OWN members makes the arms independent
+   rather than merely declared independent. It is the same reasoning that put
+   `mustFail`/`mustNotFail` per suite in the driver: an arm that can only be read
+   through another arm's wreckage is not armed alone. */
+const INQ_SUPP_A = "INQ-2026-2200-allsupp-a";
+const INQ_SUPP_B = "INQ-2026-2200-allsupp-b";
+const INQ_BAR_A = "INQ-2026-2200-barpair-strong";
+const INQ_BAR_B = "INQ-2026-2200-barpair-weak";
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
 await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
@@ -267,6 +284,17 @@ await mustPromote(INQ_WEAK, inquiryMd(INQ_WEAK,
 await mustPromote(INQ_SPARE, inquiryMd(INQ_SPARE,
   { question: "Who indexed the memo?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }),
   "inquiry", "open");
+/* The refusal-only members. INQ_BAR_A clears the bar and INQ_BAR_B does not, so
+   §5's refusal act has the same shape as its acceptance act and the two differ
+   in nothing but which findings they name. */
+await mustPromote(INQ_SUPP_A, inquiryMd(INQ_SUPP_A,
+  { question: "Was the notice posted?", refs: [INFO_CAP, INFO_CONN], legs: legs("B") }), "inquiry", "open");
+await mustPromote(INQ_SUPP_B, inquiryMd(INQ_SUPP_B,
+  { question: "Was the notice posted in time?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
+await mustPromote(INQ_BAR_A, inquiryMd(INQ_BAR_A,
+  { question: "Did the clerk receive it?", refs: [INFO_CAP, INFO_CONN], legs: legs("B") }), "inquiry", "open");
+await mustPromote(INQ_BAR_B, inquiryMd(INQ_BAR_B,
+  { question: "Did the clerk acknowledge it?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
 
 const BAR = { capture: "B", connection: "B", author: "nadia", at: "2026-07-03T00:00:00Z" };
 await mustPromote(PROJ, projectMd(PROJ, { bar: BAR }), "project", "investigating", NADIA);
@@ -301,6 +329,9 @@ await conclude(PILAR, { target: INQ_WEAK, conclusion: "Undetermined on the prese
   falsifier: "A signature page would settle it." });
 await conclude(PILAR, { target: INQ_SPARE, conclusion: "Undetermined on the present record.",
   falsifier: "The clerk's index would settle it." });
+for (const id of [INQ_SUPP_A, INQ_SUPP_B, INQ_BAR_A, INQ_BAR_B])
+  await conclude(PILAR, { target: id, conclusion: "Undetermined on the present record.",
+    falsifier: "A signature page would settle it." });
 
 /* FIXTURE GUARDS. An assertion over a fixture that did not land passes for free,
    and the two grade facts below are what every arm in §5 and §6 rests on. */
@@ -402,26 +433,40 @@ console.log("\n--- 4. DEC-72 clause 4: the partition is AUTHORED, and there is n
   + "roster and a partition that can silently reorder is not one anybody authored",
     (await publish(PILAR, { ...CEREMONY, target: INQ_STRONG, project: PROJ,
       roles: [{ target: INQ_STRONG, role: "load_bearing" }] })).reason, "BAD_ROLES");
-  /* DEC-72'S SECOND RULED DEFAULT. */
-  const allSupporting = await publish(PILAR, { ...CEREMONY, targets: [INQ_STRONG, INQ_WEAK], project: PROJ,
-    roles: { [INQ_STRONG]: "supporting", [INQ_WEAK]: "supporting" } });
+  /* DEC-72'S SECOND RULED DEFAULT — driven on ITS OWN MEMBERS, so that the arm
+     which removes this refusal cannot move the record §5 then measures. */
+  const allSupporting = await publish(PILAR, { ...CEREMONY,
+    scope: "Whether notice of the transfer was posted, on the documents in hand.",
+    statement: "This case covers the notice question only, at edition 1.",
+    targets: [INQ_SUPP_A, INQ_SUPP_B], project: PROJ,
+    roles: { [INQ_SUPP_A]: "supporting", [INQ_SUPP_B]: "supporting" } });
   t("AN ALL-SUPPORTING CASE IS REFUSED: a case rests on at least one load-bearing finding, and this "
   + "one asserts nothing conclusively while its completeness assertion claims coverage",
     [allSupporting.ok, allSupporting.reason], [false, "NO_LOAD_BEARING_MEMBER"]);
-  t("NOTHING MOVED under any of the five", [await stateOf(INQ_STRONG), await stateOf(INQ_WEAK)],
-    ["concluded", "concluded"]);
+  t("NOTHING MOVED under any of the five",
+    [await stateOf(INQ_STRONG), await stateOf(INQ_WEAK), await stateOf(INQ_SUPP_A)],
+    ["concluded", "concluded", "concluded"]);
 }
 
 /* ========== 5. THE PAIR — the item's whole shape, asserted as ONE comparison */
 console.log("\n--- 5. THE PAIR: the SAME finding, below the SAME bar, refused as load-bearing and accepted as supporting ---");
 {
-  /* THE REFUSAL. INQ_WEAK derives connection C against a declared connection B. */
-  const below = await publish(PILAR, { ...CEREMONY, targets: [INQ_STRONG, INQ_WEAK], project: PROJ,
-    roles: { [INQ_STRONG]: "load_bearing", [INQ_WEAK]: "load_bearing" } });
+  /* THE REFUSAL, ON ITS OWN MEMBERS. INQ_BAR_B derives connection C against a
+     declared connection B. It is a SEPARATE PAIR from the acceptance act below
+     for a reason the controls measured rather than a reason of taste: arm (D)
+     turns this refusal into a SUCCESS, and a success here would publish the
+     acceptance act's members out from under it — bringing down the very arm that
+     distinguishes a working gate from a wall. Same shape, same grades, same bar,
+     different ids. */
+  const below = await publish(PILAR, { ...CEREMONY,
+    scope: "Whether the clerk received and acknowledged the transfer memo.",
+    statement: "This case covers the receipt question only, at edition 1.",
+    targets: [INQ_BAR_A, INQ_BAR_B], project: PROJ,
+    roles: { [INQ_BAR_A]: "load_bearing", [INQ_BAR_B]: "load_bearing" } });
   t("A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED, naming the member, the axis, the "
   + "bar and what it actually reached — a member is told what is short, not that something is",
     [below.ok, below.reason, below.target, below.axis, below.required, below.reached, below.project],
-    [false, "BELOW_PROJECT_STRENGTH", INQ_WEAK, "connection", "B", "C", PROJ]);
+    [false, "BELOW_PROJECT_STRENGTH", INQ_BAR_B, "connection", "B", "C", PROJ]);
   t("and the refusal offers the HONEST move rather than the expedient one: designate it supporting, "
   + "never sever a citation that is true (Bob, on DEC-71)",
     [String(below.detail).includes("designate it"), String(below.detail).includes("never severing")],
@@ -432,17 +477,28 @@ console.log("\n--- 5. THE PAIR: the SAME finding, below the SAME bar, refused as
      if the two arms differed in any other respect this pair would prove nothing. */
   const ok = await publish(PILAR, { ...CEREMONY, targets: [INQ_STRONG, INQ_WEAK], project: PROJ,
     roles: { [INQ_STRONG]: "load_bearing", [INQ_WEAK]: "supporting" } });
+  /* READ DEFENSIVELY FROM HERE ON, AND IT IS NOT TIDINESS. Several arms of this
+     item's own control let an act SUCCEED that this suite expects to be refused
+     — arm (B) neuters the owner fence, so a member publishes in §3 and every act
+     after it meets a case that has already moved. **A CRASH NAMES NOTHING**: a
+     TypeError inside an assertion goes through no assertion at all, the battery
+     reports `assertions unknown`, and the control's own finding is destroyed by
+     the way the suite reads. That is `publishedcase.test.mjs` block 8's recorded
+     lesson and it was earned here the same way — arm (B)'s first run threw at
+     this exact line and reported NO TALLY beside twelve correctly-named
+     failures. */
+  const weak = (ok.findings || []).find((f) => f.target === INQ_WEAK) || {};
   t("THE SAME FINDING, THE SAME GRADES, THE SAME BAR — DESIGNATED SUPPORTING, IT PUBLISHES. One word "
   + "is the only difference between this act and the refusal above, and that is the whole item",
-    [ok.ok, ok.edition, ok.findings.length], [true, 1, 2]);
+    [ok.ok, ok.edition ?? null, (ok.findings || []).length], [true, 1, 2]);
   t("Bob's DEC-71 input, enacted: the bar gates the FINDINGS a case rests on, never every piece of "
   + "evidence — the draft agenda travels with the report and the citation is not severed",
-    ok.roles, [{ target: INQ_STRONG, role: "load_bearing" }, { target: INQ_WEAK, role: "supporting" }]);
+    ok.roles ?? null, [{ target: INQ_STRONG, role: "load_bearing" }, { target: INQ_WEAK, role: "supporting" }]);
   t("AND IT IS MARKED, not merely tolerated: the act reports each member's designation beside its "
   + "own derived strength and the case's bar, which is what lets a reader see it is not load-bearing",
-    [ok.findings.find((f) => f.target === INQ_WEAK).role,
-     ok.findings.find((f) => f.target === INQ_WEAK).strength.find((s) => s.axis === "connection").grade,
-     ok.findings.find((f) => f.target === INQ_WEAK).required.connection],
+    [weak.role ?? null,
+     (weak.strength || []).find((s) => s.axis === "connection")?.grade ?? null,
+     weak.required?.connection ?? null],
     ["supporting", "C", "B"]);
   /* MARKED IN THE SIGNED BYTES, which is where a stranger reads it. */
   const weakBytes = await imageOf(INQ_WEAK);
@@ -480,18 +536,24 @@ console.log("\n--- 6. OVER-STRICTNESS: a case that legitimately meets the bar mu
   t("VACUITY GUARD, and it is what makes the arm below mean something: a SINGLE supporting member is "
   + "still refused, so 'a case published' below cannot be satisfied by the gate having given up",
     [solo.ok, solo.reason], [false, "NO_LOAD_BEARING_MEMBER"]);
+  /* THE SAME REFUSAL, RE-DRIVEN HERE so this block is visibly testing the fence
+     §5 tested and not a different one — and driven on §5's OWN refusal-only
+     member rather than on INQ_SPARE. That is the fixture-independence rule
+     again, at the last place it bites: arm (D) turns this probe into a SUCCESS,
+     and if it ran on INQ_SPARE it would publish the member the over-strictness
+     arm below needs still-concluded, bringing down the one assertion in this
+     suite that says a good case still ships. Measured on the control's third
+     run, corrected here rather than in the declaration. */
   const good = await publish(PILAR, { ...CEREMONY,
-    scope: "Whether the clerk indexed the memo, on the documents in hand.",
-    statement: "This case covers the indexing question only, at edition 1.",
+    scope: "Whether the clerk acknowledged receipt, on the documents in hand.",
+    statement: "This case covers the acknowledgement question only, at edition 1.",
     biasAcknowledgement: "The same declared position on public adoption is in force; this case reads "
-      + "the clerk's index through it, which is the first source here the group did not itself request.",
-    targets: [INQ_SPARE], project: PROJ, roles: { [INQ_SPARE]: "load_bearing" } });
-  /* INQ_SPARE derives connection C against a bar of B, so it must NOT publish as
-     load-bearing either — which is the SAME refusal, and asserting it here keeps
-     the over-strictness arm honest about which fence it is testing. */
+      + "the clerk's acknowledgement through it, and says so as of this edition.",
+    targets: [INQ_BAR_A, INQ_BAR_B], project: PROJ,
+    roles: { [INQ_BAR_A]: "load_bearing", [INQ_BAR_B]: "load_bearing" } });
   t("a load-bearing member below the bar is refused HERE TOO, so this block is not smuggling a "
   + "different fixture past a different fence",
-    [good.ok, good.reason, good.target], [false, "BELOW_PROJECT_STRENGTH", INQ_SPARE]);
+    [good.ok, good.reason, good.target], [false, "BELOW_PROJECT_STRENGTH", INQ_BAR_B]);
   /* NOW THE PROJECT LOWERS ITS OWN BAR — DEC-17's surviving mechanism, an
      authored, dated, on-the-record act — and the SAME case publishes unchanged.
      Nothing about the findings moved; the standard did, and somebody wrote it
@@ -507,7 +569,7 @@ console.log("\n--- 6. OVER-STRICTNESS: a case that legitimately meets the bar mu
     targets: [INQ_SPARE], project: PROJ, roles: { [INQ_SPARE]: "load_bearing" } });
   t("THE PROJECT LOWERS ITS OWN BAR ON THE RECORD AND THE SAME CASE PUBLISHES — nothing about the "
   + "finding changed, the STANDARD did, and somebody authored the change in the project's own bytes",
-    [now.ok, now.edition, now.findings[0].role, now.required.connection],
+    [now.ok, now.edition ?? null, (now.findings || [])[0]?.role ?? null, now.required?.connection ?? null],
     [true, 1, "load_bearing", "C"]);
   t("AND THE BAR IS READ AT ACT TIME: the case that published a moment ago under (B, B) still carries "
   + "(B, B) in its own frozen bytes — a later amendment never moves a case already published",
@@ -650,7 +712,11 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
   t("THE `cases` ROW IS WRITTEN, AND IT NAMES THE PUBLISHING PROJECT — CASE-1 built the table and "
   + "said CASE-2 would be what first writes it; this is that, driven through op=ratify",
     [theCase != null, theCase?.project_id], [true, PROJ]);
-  const members = (man.caseMembers || []).filter((m) => m.case_id === theCase.case_id);
+  /* DEFENSIVE for §5's own reason: arm (H) makes the committed project a
+     literal, so `theCase` is not found and a `.case_id` read throws — destroying
+     the arm's four correctly-named failures with a tally of `assertions
+     unknown`. Measured on arm (H)'s first run and corrected here. */
+  const members = (man.caseMembers || []).filter((m) => m.case_id === (theCase || {}).case_id);
   t("and each MEMBERSHIP ROW carries the designation its own bytes declared — the column CASE-1 "
   + "added with no default is now written by the act that authors it",
     members.map((m) => [m.bundle_id, m.role]).sort(),

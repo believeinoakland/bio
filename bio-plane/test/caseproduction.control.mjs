@@ -166,22 +166,63 @@ arm("A", "THE PROJECT-LESS PUBLICATION PATH, PUT BACK — CASE-1's handed-over a
                    "THE SAME FINDING, THE SAME GRADES, THE SAME BAR"] }]);
 
 /* ================================================================ (B) THE OWNER FENCE */
+/* THIS DECLARATION CAME BACK WRONG ON ITS FIRST RUN AND THE ARM WAS RIGHT.
+   RECORDED HERE RATHER THAN QUIETLY REWRITTEN (D-282's precedent, and it is the
+   third time in two days an arm has corrected its own declaration).
+
+   It originally demanded that §5's pair stay GREEN. **That is impossible by
+   construction, and realising why is worth more than the arm was.** This fence's
+   whole job is to stop a STATE CHANGE: with it neutered, RUTH's publish in §3
+   SUCCEEDS, INQ_STRONG moves to `published`, and every act after it meets a case
+   that has already moved — so §5 goes red as a CASCADE rather than because the
+   bar comparison broke. An arm that removes a fence cannot also promise the
+   record is untouched downstream of it.
+
+   THE SAME FIRST RUN FOUND A DEFECT IN THE SUITE, NOT IN THE PLANE: §5 read
+   `ok.findings.length` off a refusal and threw, so the suite reported NO TALLY
+   beside twelve correctly-named failures — a crash NAMES NOTHING, and the
+   control's own finding was destroyed by the way the suite read. §5 and §6 now
+   read defensively and this arm reports named failures with a tally. */
 arm("B", "THE OWNER FENCE NEUTERED — any member holding `publish` publishes another project's "
-  + "production. DECLARED: §3's non-owner arm and its wrong-project sibling MUST fail. §2 and §5 "
-  + "MUST stay green.",
+  + "production. DECLARED: §3's non-owner arm and its wrong-project sibling MUST fail. §2 MUST stay "
+  + "green, because it runs BEFORE the record moves. **§5 IS NOT DECLARED EITHER WAY** and the "
+  + "reason is above: this arm changes the state of the record, so everything downstream of §3 is "
+  + "measuring a different fixture and a promise about it would be a promise about a cascade.",
   [["store", `    if (!this.#isProjectOwner(proj, who))`, `    if (false)`]],
   [{ name: OWN,
      mustFail: ["A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
                 "AND OWNERSHIP IS OF A PROJECT, NOT A STANDING"],
-     mustNotFail: ["A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME",
-                   "THE SAME FINDING, THE SAME GRADES, THE SAME BAR"] }]);
+     mustNotFail: ["A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME"] }]);
 
 /* ================================================= (C) THE LOAD-BEARING MINIMUM */
+/* THIS ARM AND (D) BOTH CAME BACK NOT AS DECLARED ON THE SECOND RUN, AND THE
+   ARMS WERE RIGHT WHILE THE SUITE'S FIXTURE WAS WRONG. Recorded rather than
+   softened, and the correction is in the SUITE rather than in this paragraph.
+
+   THE MECHANISM, WHICH IS GENERAL AND WORTH CARRYING: an arm that turns one of
+   this item's REFUSALS into a SUCCESS MOVES THE RECORD. The act publishes, its
+   members leave `concluded`, and every later act meets a case that has already
+   happened — so assertions downstream fall as a CASCADE rather than because
+   their own subject broke. Arms that ADD a refusal (E, F) do not have this
+   problem, which is why only the removal arms were affected.
+
+   It mattered most exactly where it hurt most: under (D) the cascade brought
+   down §5's ACCEPTANCE arm, which is the one arm that distinguishes "the gate
+   works" from "the gate refuses everything". **A control that destroys the
+   measurement it exists to protect is worth fixing at the fixture, not at the
+   declaration.** §4's all-supporting act and §5's refusal act now run on their
+   OWN members (`INQ_SUPP_*`, `INQ_BAR_*`), so these arms are independent rather
+   than merely declared independent. */
 arm("C", "DEC-72's SECOND RULED DEFAULT REMOVED — an all-supporting case publishes, asserting "
   + "nothing conclusively while its completeness assertion claims coverage of a question no member "
   + "answers. DECLARED: §4's all-supporting arm and §6's VACUITY GUARD MUST fail. §5's pair MUST "
-  + "stay green, because a case WITH a load-bearing member is untouched by this arm.",
-  [["store", `    if (!loadBearing.length)`, `    if (false)`]],
+  + "stay green — which is TRUE ONLY BECAUSE §4's act now runs on its own members; before that "
+  + "fixture split this declaration was wrong and the arm said so.",
+  /* THE ANCHOR CARRIES ITS REFUSAL NAME, because `if (!loadBearing.length)`
+     ALONE OCCURS TWICE in store.mjs and the blind-arming guard refused the arm
+     on its first run — which is that guard working, and is why it exists. */
+  [["store", `    if (!loadBearing.length)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`,
+             `    if (false)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`]],
   [{ name: OWN,
      mustFail: ["AN ALL-SUPPORTING CASE IS REFUSED", "VACUITY GUARD"],
      mustNotFail: ["A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED",
@@ -191,7 +232,10 @@ arm("C", "DEC-72's SECOND RULED DEFAULT REMOVED — an all-supporting case publi
 arm("D", "THE BAR STOPS BEING ASKED AT ALL — a load-bearing member below the project's standard "
   + "publishes. DECLARED: §5's REFUSAL arm and §6's same-refusal arm MUST fail. **§5's SUPPORTING "
   + "arm and §6's lowered-bar arm MUST stay GREEN**, which is what distinguishes 'the gate works' "
-  + "from 'the gate refuses everything' and is the whole reason (D) and (E) are separate.",
+  + "from 'the gate refuses everything' and is the whole reason (D) and (E) are separate. Those two "
+  + "MUST-STAY-GREEN clauses are only meaningful because §5's refusal act runs on its OWN members — "
+  + "see (C)'s note; before that split this arm published the acceptance act's members out from "
+  + "under it and destroyed its own most important measurement.",
   [["store", `    if (bar.declared) {\n      const rank = (g) => BASIS_GRADES.indexOf(g);`,
              `    if (false) {\n      const rank = (g) => BASIS_GRADES.indexOf(g);`]],
   [{ name: OWN,
