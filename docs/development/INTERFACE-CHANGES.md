@@ -4005,6 +4005,8 @@ evidence, and CONDUCT may answer for a dormant area in writing per the protocol.
 _(CONDUCT's.)_
 ## IC-63 · I5 + I3: THE CASE OBJECT — a new `cases` table binding a case identity to the PROJECT whose production it is, two additive columns on `published_case_members` (`version_sha`, `role`), and three additive fields plus one statement on `op=publishedmanifest` · PROPOSED 2026-08-10 (CASE-1, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-08-10 by CONDUCT at integration.** Additive only — no key removed, no value moved — and the measured consumer impact is ZERO: the single hand-maintained reader names `case_id`, `edition`, `ord`, `bundle_id`, none of which move, and every other hit is a built copy DIST regenerates. **The `production` statement is the part worth keeping in view:** three different facts arrive as null on a pre-DEC-72 case, and `undetermined` must be STATED rather than inferred from a null — that is this record's rule applied at the moment a model changed underneath existing rows.
+
 - **Interface:** **I5** (the store schema) — the change this item is filed for — and **I3** (the op
   contracts) for the additive half that carries it to a caller.
 - **Proposer:** RECORD, session `case1-case-object` (worktree `agent-a1af1f1e654822176`), 2026-08-10,

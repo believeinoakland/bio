@@ -1,197 +1,131 @@
-# DIST kickoff — paste this to start the DIST session
+# DIST — resume here. Rewritten 2026-08-10. The previous contents were FIVE DAYS STALE and described a world that no longer exists.
 
-Written 2026-08-04 by the outgoing CONDUCT session, which held the DIST role for one
-deploy and is handing it to a session of its own. Everything below is verified against
-`origin/main` and against the live origins, not remembered. Paste the block below the rule.
+**Read this box before anything else.** The file you would otherwise have read was written
+2026-08-04 and said the release seed was missing and the plane was deployed-but-unreleased.
+**Both were resolved on 2026-08-05.** A session starting from that text would spend its first
+hour re-solving a solved problem and might reach for a key rotation that is not needed. It has
+been replaced rather than appended to, because a stale resume prompt is not a document with an
+error in it — it is a wrong instruction to the one session that must act on it.
 
----
+Everything below was MEASURED on 2026-08-10 against `origin/main` at `0432308` and against the
+live account, not remembered. **Verify it yourself anyway** — that is the standing rule and it
+is what caught the staleness above.
 
-Kickoff: thread DIST.
+## What is TRUE right now, measured
 
-You are the DIST session for BIO/CivicOS — the only area that cuts plane releases and the
-owner of distribution.
+**The release is coherent and serving.** All four version sources agree, and `hygiene`'s D-106
+check (the authority, not a grep) exits 0:
 
-**WORK IN YOUR OWN WORKTREE — `claude --worktree DIST` — and NOT in the main checkout at
-`/Users/sparky/ClaudeCodeBIO/bio`.** One session per working tree (`PARALLELISM.md`, DEC-3);
-CONDUCT holds main and every other session, including BOB, works in a worktree. **This line
-was WRONG until 2026-08-05 and named the main checkout**, because the CONDUCT session that
-wrote this prompt was holding the DIST role itself at the time, so "the working directory is
-`bio/`" was true for it and became false the instant DIST split off. The receipt is not
-hypothetical: on 2026-08-05 a DIST session committed its handover **inside CONDUCT's tree**
-four minutes before CONDUCT committed its own work, and either could have swept up the
-other's files. This is the SECOND time a rule written for one coordinating session failed to
-follow a role that split off it — `ORCHESTRATION.md` carries both receipts. If you are
-reading this in `bio/` rather than a worktree, move before you edit anything.
-
-**Persona is `bio`** — GitHub `biobobkrause`, Cloudflare account
-`20b533579290b9b93168345edd3b7f72`. **Never the `neo` persona**, which this machine
-defaults to. A fresh checkout was once found authenticated to the wrong account and a
-deploy would have SUCCEEDED, putting the installer somewhere nobody was looking. If any
-`wrangler` command reports a different account, stop and say so.
-
-**Credentials are in `.env` (gitignored). Read them from there and never print them** — not
-even to confirm one landed. Confirm a credential by USING it and reporting what the service
-said. `CF_TOKEN` and `CF_ACCT` are present and working.
-
-Read first, in this order: `CLAUDE.md`, `docs/development/kickoffs/DIST.md` (your gate — ten
-steps, and its own rule is that a release failing any step is not a release),
-`docs/development/kickoffs/BATON.md`, `docs/development/ORCHESTRATION.md`. Then `git fetch`
-and trust `origin/main` over anything in this prompt.
-
-## What is true right now
-
-**The plane and the UI are LIVE and current, but nothing has been RELEASED.** That
-distinction is your whole opening position:
-
-| | live | released to installers |
-| --- | --- | --- |
-| plane `biosmoke7` | **0.56.0** | `release/RELEASE.json` says **0.55.0** |
-| UI `civicos` | build **`74cc1646044b`** | n/a — carries no version |
-
-A group installing through `newgroup` today receives **0.55.0**, because `release/` is
-signed for those bytes and has deliberately not been touched. `bio-plane/package.json` and
-`wrangler.jsonc` both read 0.56.0 and agree (hygiene's D-106 check is green); the installer
-suite is green at 103/103 with 0.55.0 still embedded, which is correct until you re-cut.
-
-`main` is green: battery **100/100 / 5,664**, `node scripts/coverage.mjs --strict` exit 0 at
-130/130 ops and 100/100 controls, UI harness 34/34, plancheck 0 fail / 0 warn.
-
-**You hold the release baton.** It reads `holder: DIST since 2026-08-04`. It was TAKEN from
-`CAPTURE`, whose session ended 2026-07-31 and never released it — a baton held by a session
-that no longer exists is the stale-lock shape that file exists to make visible.
-
-## The release seed — RESOLVED by DIST 2026-08-05, and **where it actually lives**
-
-**The seed is recovered and it is THE release key, not a new one. No rotation.** But the
-correction filed here at 05:35 by CONDUCT (715aa36) got the CAUSE backwards, and the cause is
-the part a future session needs, so it is corrected in turn with the timings.
-
-**What CONDUCT measured was DIST's own write, four minutes earlier.** The sequence, and every
-timestamp is off the filesystem or the commit itself:
-
-| time (2026-08-05) | what happened |
+| source | reads |
 | --- | --- |
-| 05:31:0x | DIST reads `.env` at session start: **`BIO_RELEASE_SEED` EMPTY**, exactly as the handover said |
-| 05:31:42 | **DIST writes the seed into `.env`**, having found it OUTSIDE the repo (below) |
-| 05:33:35 | CONDUCT commits 6f9dd6f (the one-session-per-tree sweep) |
-| 05:35:29 | CONDUCT commits 715aa36: *"Measured today it is present with a 68-character value"* |
+| `bio-plane/package.json` | 0.56.0 |
+| `bio-plane/wrangler.jsonc` `vars.VERSION` | 0.56.0 |
+| `release/RELEASE.json` | 0.56.0, signed, `sha256 da67aa4d…` |
+| the live plane `biosmoke7` `/version` | 0.56.0 |
+| what `raw.githubusercontent.com` serves installers | 0.56.0, same sha |
 
-So the handover's premise was **CORRECT when written and when the DIST session opened**. It
-did not become false because it was wrong; it became false because DIST went and found the
-key. `715aa36`'s conclusion — *"only the premise was wrong"* — is the one thing in it that is
-not true, and it matters because it points the next session at `.env` as the key's home.
+So a group installing through `newgroup` today receives the same bytes the smoke instance is
+running, and the signature over them verifies against the `ARMED_SIGNERS` trust root. **The
+seed is present and is the EXISTING signer** — no rotation, no `ARMED_SIGNERS` edit. It lives
+at `~/Downloads/bio-signing-keys.txt`, NOT in `.env`; `.env` is populated from it and is
+machine-local, so if `.env` is ever empty again that file is the answer.
 
-**`.env` IS NOT WHERE THE KEY LIVES.** `.env` is gitignored and machine-local: it does not
-survive a fresh clone, it is not on any other machine, and it was empty on this one for the
-whole life of the 0.56.0 deploy. The durable copy is:
+## THE ONE THING THAT REFRAMES YOUR WHOLE LANE, and it is measured
 
-    /Users/sparky/Downloads/bio-signing-keys.txt        (mtime 2026-07-24)
+**NEITHER FLEET MEMBER IS DEPLOYED ANYWHERE.** In the account, on 2026-08-10:
 
-which holds BOTH `bio-release` and `bio-ratify` in the `BIOKEY-RAW1.<label>.<seed>` envelope,
-and whose date sits comfortably before 0.55.0 was cut — consistent with its being the key
-that signed it. **If `.env` is ever empty again, that file is the answer, not a rotation.**
-It is a browser download from `tools/sign-release.html`'s "Download as a file" button, which
-is why it is in `Downloads/` and why nothing in the repo references it.
+```
+biosmoke7     HTTP 200        newgroup   HTTP 200      civicos  HTTP 200
+pdf-worker    HTTP 404        agent-worker  HTTP 404
+```
 
-**It is the right key, and this was verified rather than assumed** — by deriving the public
-half from the seed and comparing, not by trusting the label:
+And the plane's own configuration declares three service bindings that the deployed plane does
+not have:
 
-    derived: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl
+```
+wrangler.jsonc declares : PDF_WORKER -> pdf-worker, AGENT_WORKER -> agent-worker, SELF -> bio-plane
+live biosmoke7 has      : []          (zero service bindings of any kind)
+```
 
-byte-identical to the trust root pinned at `newgroup/src/index.mjs:73` `ARMED_SIGNERS` and to
-the `signer` field of the 0.55.0 `RELEASE.json`. So: no `ARMED_SIGNERS` edit, no `newgroup`
-rebuild for the key's sake, no redeploy, and **every installer already distributed keeps
-working**. The expensive rotation path the paragraphs below warn about is not the path.
+**DS-1 is written as "the installer installs the fleet". Read against the tree, it is larger
+than that: there is no deployed fleet ANYWHERE to install a copy of.** Both members exist in
+the repo with `fleet-member.json`, both carry suites, and a great deal of work has been built
+against them — FL-2 through FL-5, D-262, D-276 — with **no member ever having run outside a
+test harness.**
 
-**One thing worth Bob knowing, and it is not a blocker:** a signing key that only exists as a
-browser download in `~/Downloads` on one laptop is a single point of failure for the whole
-supply chain — losing it forces exactly the rotation this project has arranged to avoid.
-Where it gets backed up is his call, not a session's; the correct action is not to move,
-copy, or "tidy" it. Raised in the handover below.
+**That is D-202, still open, and its remaining half is yours**: `deploy.mjs` sends a HARDCODED
+binding list and its `keep_bindings` gained `service` (the protective half, landed 2026-08-05)
+but it still does not DERIVE its bindings from `wrangler.jsonc`. So the file the repository
+treats as authoritative and the configuration that actually ships have no mechanism keeping
+them equal. Arming `SELF` also arms two monitoring consumers that are inert today — REC-26's
+and CAP-3's — whose semantics are RECORD's and CAPTURE's, so that is a change to make
+deliberately and with them told, not as a side effect of a deploy.
 
-CONDUCT's own two riders were right and stand: deriving a public key proves the seed is the
-right one but signs nothing, so **gate step 5 and its four negative controls still have to
-pass** (they did — see the handover); and CONDUCT signed nothing, because signing is DIST's
-gated act.
+**Sequencing consequence worth stating before you plan:** DS-2 (version authority spans the
+fleet) and DS-4 (the gated deploy) both assume a fleet that can be versioned and deployed.
+Neither is meaningful until a member has been deployed once. **DS-1 is therefore not merely
+first in the dependency list; it is the row that makes the other three real.**
 
-The text below is kept because the format note, the four controls and the rotation warning
-are all still correct and load-bearing.
+## Your rows, and what waits on them
 
-**`BIO_RELEASE_SEED` was recorded as not on this machine** — the key was present in `.env`
-but empty, and no in-tree script references it, so the signer is genuinely out-of-tree as
-`DIST.md` says. Without it you could not complete gate step 5, so you could not write a
-truthful `RELEASE.json` or tag.
+| row | what | blocked on |
+| --- | --- | --- |
+| **DS-1** | D-115 — the installer installs the FLEET; an instance that cannot get it SAYS SO rather than silently doing less (D-106's class). `bindings: []` stays structural on the installer itself | FL-2 — landed. **Unblocked now** |
+| **DS-2** | D-116 — version authority spans the fleet | DS-1 |
+| **DS-3** | the account cascade config — an instance-level token; **minting stays a MEMBER act** | DS-1 |
+| **DS-4** | the gated deploy, then hand to VF-4 | DS-1, DS-2, FL-2 |
+| FL-6 | FLEET's — the Claude-account cascade at runtime | **DS-3** |
+| VF-4 | VERIFY's — live verification in scratch, a full CHECK run against a concluded inquiry. **The arc's finale** | **SK-4 and DS-4** |
 
-The format, from `docs/SESSION-KICKOFF.md:48`:
-`BIO_RELEASE_SEED=BIOKEY-RAW1.bio-release.<base64 of a 32-byte Ed25519 seed>` — the
-project's own envelope, which `ssh-keygen` cannot load, which is why the gate reconstructs
-the SSHSIG path in Node and verifies against stock `ssh-keygen -Y verify` **with four
-negative controls: altered bytes, wrong namespace, wrong key, and the previous release's
-signature against the new bytes. All four must fail to verify.**
+`QUEUE.md`'s `## IS BUILD PLAN — STATUS` is the tracker; `IS-BUILD-PLAN.md` owns the rows and
+the ids. **Do not write these ids as `### <ID> ·` or `| <ID> |` in `QUEUE.md`** — those are
+`mintid`'s two allocation-site shapes and doing so allocates them a second time. `plancheck`
+already failed that way once and the refusal is correct.
 
-**Do not generate a new seed casually.** The public half is pinned as a trust root in
-`newgroup/src/index.mjs:73` `ARMED_SIGNERS`, and that file's own comment says an unsigned or
-wrongly signed release is **refused outright and the built-in copy installs instead**. A new
-key is a ROTATION: it also means updating `ARMED_SIGNERS`, rebuilding and redeploying the
-installer, and accepting that any installer already distributed refuses new releases until
-replaced. 0.55.0 is signed by that key, so the private half existed on some machine when it
-was cut — finding it beats regenerating it. Bob copies it to the clipboard and you read it
-with `pbpaste`; it never appears in a prompt or a transcript.
+## Authority, and where it stops
 
-## Deploy discipline that is already proved, and one trap that is not yet closed
+Bob, 2026-08-10: **the smoke-instance deploy authority is STANDING. Only REAL-record and
+installer releases come back to him.** So deploying `biosmoke7` to exercise the fleet is yours
+to do; putting an installer in front of real groups is not.
 
-- `bio-plane/scripts/deploy.mjs` believes only the bytes it reads back from the account, and
-  then WAITS for the version to actually serve. On 2026-08-04 it reported `serving 0.55.0,
-  waiting for 0.56.0…` then `serving 0.56.0 after 4s`. **If it prints ROLLOUT NOT CONFIRMED,
-  do not verify behaviour yet** — a probe can be answered by the previous build, which once
-  looked exactly like a security defect in the new one.
-- **D-201, open and yours**: `deploy.mjs` would DESTROY the `civicos` UI worker. Its metadata
-  is the PLANE's — it declares the R2 buckets, and `keep_bindings` does not include
-  `service`. The live UI has exactly ONE binding, `service PLANE -> biosmoke7`, and it is
-  what makes `/api` work at all. The UI path is closed by `civicos-ui/deploy-ui.mjs`; **the
-  row stays open until `deploy.mjs` REFUSES the `civicos` slug by name** rather than relying
-  on nobody trying it. Close that early — it is a few lines and it is a live trap.
-- `civicos-ui/deploy-ui.mjs` first REFUSED a deploy that had actually succeeded, because the
-  account returns the module inside a MULTIPART envelope and hashing the response body
-  compares the envelope. It now extracts the module the way `deploy.mjs` always has. Reuse
-  that, do not re-learn it.
+`deploy.mjs` refuses a plane release without the baton and reads the baton from the REMOTE. It
+also now REFUSES the `civicos` and `pdf-worker` slugs by name (D-201) — it deploys the plane's
+metadata and would DELETE bindings a different worker needs. **If you deploy a fleet member,
+do not reach for `deploy.mjs`.**
 
-## Your queued items
+## The gate, unchanged and not optional
 
-- **DIST-2** (M1) — the installer generates and binds `DAEMON_TOKEN` in BOTH `uploadInstall`
-  and `uploadUpdate`. DIST-1's constraint is satisfied in this direction: the plane
-  classifies the class before the installer binds it.
-- **DIST-3** (M7) — the installer REQUIRES Workers Paid, verifies it, and REFUSES to
-  complete rather than installing something quietly degraded. Refusing IS the fix, because
-  the failure it guards is a group getting something quietly different from every
-  description of it.
-- **D-193** — `newgroup/src/release.mjs` embeds a bundled copy of the pre-REC-41 `setup.mjs`,
-  whose panel describes a disclosure the plane no longer makes. It refreshes for free at the
-  next release cut; the row exists so the cut is not made unknowingly. **Check the bundle was
-  rebuilt from current source rather than assuming it.**
+`kickoffs/DIST.md` holds the ten steps. The ones that have actually caught things:
 
-## Two things you inherit that are not yours to fix
+- **Regression is DIST's own**, run on the merged `main`, not trusted from the contributing area.
+- **Sign with four negative controls** — altered bytes, wrong namespace, wrong key, and the
+  previous release's signature against the new bytes. All four must FAIL to verify. Stock
+  `ssh-keygen -Y verify` is the acceptance; the repo's own signer is browser-only.
+- **A deploy verified is not a build serving.** `deploy.mjs` reads the bytes back and then WAITS
+  for the version to serve. If it prints ROLLOUT NOT CONFIRMED, do not measure behaviour yet.
+- **Re-cut the installer and read it back**, confirming the embedded version AND that
+  `bindings: []` is still empty. That empty binding set is a structural security guarantee.
+- **`op=audit` clean before anything is called done.** It is NOT clean today — see below.
 
-- **D-200** — `op=audit` on the live instance is NOT clean: 10 `C-18.9` findings, documents
-  at or past `verified` naming no provenance chain. Measured to be pre-existing record state,
-  identical in the 0.55.0 and 0.56.0 bundles. **Gate step 8 wants a clean audit before
-  anything is called done, and 0.56.0 was deployed with a known-unclean one, stated rather
-  than passed.** It is RECORD's to fix; yours to decide whether it blocks a release, and to
-  say so to Bob rather than deciding it silently. Do not close it by weakening C-18.9.
-- A red battery goes back to the area that owns the code as a DELEGATION in `CLAIMS.md`.
-  **DIST does not fix failures it finds** — holding the fix would put DIST back on the
-  critical path, which is the whole reason the area exists.
+## What you inherit that is not yours to fix
 
-## How you work
+- **D-200** — `op=audit` on the live instance is not clean: ten `C-18.9` findings, documents at
+  or past `verified` naming no provenance chain. Measured pre-existing and identical in the
+  0.55.0 and 0.56.0 bundles, so no release caused it. It is RECORD's to fix and **yours to
+  decide whether it blocks a release — and to SAY SO rather than deciding it silently.** 0.56.0
+  shipped with it stated rather than passed.
+- The `.env` `BIO_ADMIN_TOKEN` and `BIO_MEMBER_TOKEN` did not authenticate against the live
+  instance when last tried (2026-08-05), so `op=audit` could not be run from here. Establish
+  whether that is still true before planning around it; D-205's rotation has since happened.
 
-Claim in `CLAIMS.md` before editing, and name what you open. You own `newgroup/**`,
-`release/**`, `bio-plane/scripts/deploy.mjs`, the version in `bio-plane/package.json` and
-`wrangler.jsonc`, and all tags — **no other area touches these**, and you touch no other
-area's ground. Run `node tools/plancheck.mjs` green before every push and verify from the
-REMOTE afterwards. Read exit statuses UNPIPED: `cmd | tail` reports tail's status, so a
-failed strict run reads as exit 0, and `npm run test:coverage --strict` does not pass the
-flag at all — run `node scripts/coverage.mjs --strict` directly.
+## Which account you are talking to
 
-CONDUCT runs as a separate session and owns `main`, the queue and worker lifecycle. It does
-not cut releases or deploy. Coordinate through `CLAIMS.md` and `QUEUE.md`, not by editing
-each other's ground.
+`wrangler` authenticates from an OAuth session stored on the MACHINE, and **this machine's
+OAuth is the `neo` persona** — measured 2026-08-05: `npx wrangler whoami` reported
+`neocloudflare@neologic.com` / `2f4cabcc…`, not this project's account. Both `wrangler.jsonc`
+files pin `account_id`, so the repository decides where a Worker goes — but **run wrangler with
+`CLOUDFLARE_API_TOKEN` from `.env`**, which resolves to `Biocloudflare@neologic.com's Account`
+/ `20b533579290b9b93168345edd3b7f72`. `scripts/deploy.mjs` was never exposed: it takes the
+account from `CF_ACCT` and calls the REST API directly.
+
+**If any wrangler command reports a different account, stop and say so.**

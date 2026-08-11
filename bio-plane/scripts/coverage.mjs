@@ -562,9 +562,9 @@ const REGISTER_FLOOR = {
      fleet member and no fleet suite, and touched no file under `agent-worker/`. ONE KEY SET,
      checked for duplicates before writing; the previous value (826) is REPLACED, never joined.
      Battery 164/164 · 10,115 assertions; `--strict` exit 0 read unpiped. */
-  arms: 833,
-  classified: 158,
-  corpus: 159,
+  arms: 839,
+  classified: 159,
+  corpus: 160,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
