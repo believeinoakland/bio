@@ -1,4 +1,11 @@
-# DIST — resume here. Rewritten 2026-08-10. The previous contents were FIVE DAYS STALE and described a world that no longer exists.
+# DIST — resume here. Rewritten 2026-08-10, UPDATED 2026-09-10 (the fleet is now fully deployed).
+
+**2026-09-10, and read this first: `agent-worker` IS DEPLOYED.** Everything below that says it cannot be
+was true on 2026-08-10 and is not true now. D-292's deploy half is CLOSED — `tools/deploy-fleet.mjs`
+templates the binding from the instance slug, and the account reads back `service PLANE -> biosmoke7`.
+The account now holds FIVE workers: agent-worker, biosmoke7, civicos, newgroup, pdf-worker.
+**What remains of DS-1 is the INSTALLER half, and it is blocked on the release format, not on wiring —
+that is D-297.**
 
 **Read this box before anything else.** The file you would otherwise have read was written
 2026-08-04 and said the release seed was missing and the plane was deployed-but-unreleased.
@@ -38,9 +45,18 @@ account held only `biosmoke7`, `civicos` and `newgroup` — listed, not probed b
 as configured** and the reason is D-292 below.
 
 ```
-before          biosmoke7 200   civicos 200   newgroup 200   pdf-worker 404   agent-worker 404
-after           biosmoke7 200   civicos 200   newgroup 200   pdf-worker 200   agent-worker REFUSED
+2026-08-10 before   biosmoke7 200   civicos 200   newgroup 200   pdf-worker 404   agent-worker 404
+2026-08-10 after    biosmoke7 200   civicos 200   newgroup 200   pdf-worker 200   agent-worker REFUSED
+2026-09-10 now      biosmoke7 200   civicos 200   newgroup 200   pdf-worker 200   agent-worker 200
 ```
+
+**The fleet member deployer is `tools/deploy-fleet.mjs`, and it is the answer to the sentence below that
+tells you not to reach for `deploy.mjs`.** It refuses anything without a `fleet-member.json`, refuses a
+missing `--instance` (a default would be the hardcoded name D-292 exists to forbid), PRE-FLIGHTS every
+service target against the account so the refusal names the missing worker instead of Cloudflare's code
+10143, generates a TEMPORARY templated config (the tracked config is never written to), and waits for
+`/version` to serve. It routes through `wrangler` on purpose: `agent-worker/wrangler.jsonc` rules that
+THE SOURCE DEPLOYS, NOT A BUNDLE, and wrangler bundles from source, so that decision stays intact.
 
 And the plane's own configuration declares three service bindings that the deployed plane does
 not have:
@@ -84,7 +100,7 @@ first in the dependency list; it is the row that makes the other three real.**
 
 | row | what | blocked on |
 | --- | --- | --- |
-| **DS-1** | D-115 — the installer installs the FLEET; an instance that cannot get it SAYS SO rather than silently doing less (D-106's class). `bindings: []` stays structural on the installer itself | FL-2 — landed. **Unblocked now** |
+| **DS-1** | D-115 — the installer installs the FLEET. **Deploy half CLOSED 2026-09-10** (`tools/deploy-fleet.mjs`, agent-worker up). **Installer half is D-297**: `RELEASE.json` carries ONE asset, so there is nothing for an install to fetch or verify per member; `newgroup/src` mentions the members zero times. `bindings: []` stays structural on the installer itself | **D-297 — a release-format decision that touches FLEET's recorded no-build-step ruling** |
 | **DS-2** | D-116 — version authority spans the fleet | DS-1 |
 | **DS-3** | the account cascade config — an instance-level token; **minting stays a MEMBER act** | DS-1 |
 | **DS-4** | the gated deploy, then hand to VF-4 | DS-1, DS-2, FL-2 |
