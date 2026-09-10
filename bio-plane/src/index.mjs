@@ -5674,6 +5674,24 @@ export default {
       const caseProject = caseId && typeof ratifiedFm.case_project === "string"
         && ratifiedFm.case_project !== "null" ? ratifiedFm.case_project : null;
       const caseRoles = caseId && Array.isArray(ratifiedFm.case_roles) ? ratifiedFm.case_roles : null;
+      /* CASE-5 / DEC-72: THE CASE'S EDITION AND THE CASE'S BAR, out of the
+         RATIFIED BYTES exactly like the roster, the scope and the project beside
+         them, and out of nothing else.
+         `edition` above is now THE MEMBER'S OWN — that is the artifact flip, and
+         the two numbers were one field until this item. The store keys
+         `published_bundles` on the first and `published_cases` /
+         `published_case_members` on the second, and a case edition taken off the
+         request would place a member into an edition nobody signed for.
+         `required_strength` is the block op=publish stamps from the publishing
+         project at act time. It has always been in these bytes; what is new is
+         that the store commits it CASE-SIDE, where it is one fact under the same
+         divergence refusal as the scope, rather than only per member — a bar is
+         the CASE's property (clause 2) and two members ratifying either side of
+         a project's bar moving used to give one case two standards. */
+      const caseEdition = caseId && Number.isInteger(ratifiedFm.case_edition)
+        ? ratifiedFm.case_edition : null;
+      const caseBar = caseId && ratifiedFm.required_strength
+        && typeof ratifiedFm.required_strength === "object" ? ratifiedFm.required_strength : null;
       /* REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read out of the
          RATIFIED BYTES exactly like the scope beside it and out of nothing
          else. A disclosure this plane took off the request rather than out of
@@ -5768,7 +5786,7 @@ export default {
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
           required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          caseId, caseScope, caseFindings, caseBiasAck, caseProject, caseRoles,
+          caseId, caseScope, caseFindings, caseBiasAck, caseProject, caseRoles, caseEdition, caseBar,
           group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s),
@@ -5837,10 +5855,32 @@ export default {
              that it is readable without our cooperation, so the only place that
              ambiguity could be resolved is the one place the reader cannot
              reach. REC-44 bumped 1 -> 2 for the same class of reason. */
-          format: "bio-case-container/3",
+          /* CASE-5 / DEC-72 bumps 3 -> 4, AND THE BUMP IS THE SAME ARGUMENT
+             REC-47 MADE, arriving on the fields the artifact flip adds. `/4`
+             carries the PIN, the AUTHORED ROLE, each member's OWN edition, whose
+             production the case is and the standard it was held to. Without a
+             version move a `/3` container carrying no pin and a `/4` container
+             whose pin was WITHHELD are indistinguishable to a stranger holding
+             the zip, and "the record is silent" would read as "the case froze
+             nothing" — which is the one claim this artifact exists to refute.
+             The whole premise is that it is readable without our cooperation, so
+             the only place that ambiguity could be resolved is the one place the
+             reader cannot reach. */
+          format: "bio-case-container/4",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
+          /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
+             this case is, and the standard of evidence it was held to. The
+             design doc's own list of what the CASE artifact freezes names the
+             bar; before this item it was reachable only by opening a member's
+             bundle.md and reading that member's copy, which is one member's
+             stamp of a case property. A stranger weighing a case has to be able
+             to see what the group required of it and who required it, from the
+             bytes in their hand. `bar: null` is the absent-bar posture and never
+             a bar of zero, which `verify` below says in words. */
+          project: cs.project ?? null,
+          bar: cs.bar ?? null,
           /* DEC-44 determination 2: what the case is ABOUT, authored by the
              group. Beside it, what it left OUT. A reader needs both. */
           scope: cs.scope ?? null,
@@ -5869,10 +5909,49 @@ export default {
              document's bytes, and a case-level signature would be a signature
              over something nobody reviewed. */
           findings: cs.findings.map((f) => ({
-            bundle_id: f.bundle_id, title: f.title, edition: cs.edition,
-            bundle_sha: f.bundle_sha, ratified_at: f.ratified_at, gate_version: f.gate_version,
+            bundle_id: f.bundle_id, title: f.title,
+            /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
+               ARTIFACT. It read `edition: cs.edition` — the CASE's number,
+               written onto every member as though it were the member's. While
+               the two were slaved it happened to be true; the artifact flip makes
+               it a claim about a finding that the finding's own published row
+               contradicts, and this is the copy that TRAVELS, so a reader has no
+               way to check it against anything. It is the member's own edition,
+               off the member's own published row, resolved by the pin. */
+            edition: f.edition,
+            bundle_sha: f.bundle_sha,
+            /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
+               sentence: the CASE artifact freezes its members — *"content by
+               hash, version, per-member strength pair, role, the bar, the
+               exclusions."* The pair and the exclusions were already here (the
+               latter inside `completeness.excluded`, which is why it is not
+               copied a second time); the version and the role were not.
+               `version_sha` is what the case COMMITTED TO and `bundle_sha` is
+               what the member SIGNED — equal by construction at assembly, and
+               carried as two fields anyway, because a reader checking the freeze
+               must be able to see the case's commitment as a separate statement
+               from the finding's own hash. `role` is the authored designation
+               (clause 4): a stranger holding a SUPPORTING member must be able to
+               see it was not presented as carrying the case. */
+            version_sha: f.version_sha ?? null,
+            role: f.role ?? null,
+            ratified_at: f.ratified_at, gate_version: f.gate_version,
             attestor: f.attestor,
-            signature: { namespace: NS_RATIFY, statement: ratifyStatement(f.bundle_id, f.bundle_sha),
+            /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
+               ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
+               `ratifyStatement()` returns a Uint8Array — it is the message fed
+               to the signer — and JSON.stringify turns a Uint8Array into an
+               OBJECT KEYED BY BYTE INDEX: {"0":98,"1":105,…}. So the container
+               told a stranger to check a signature over a statement it printed
+               as 47 numbered integers, and the one thing they had to have in
+               ASCII was the one thing they had to decode. Nothing consumed it —
+               measured across `civicos-ui`, the battery and this file — so this
+               is a correction and not a withdrawal, and it rides the /4 bump
+               with the rest of what the flip adds. Decoded here rather than by
+               changing `ratifyStatement`, whose Uint8Array return is exactly
+               right for `verifySshsig`'s caller two thousand lines up. */
+            signature: { namespace: NS_RATIFY,
+                         statement: new TextDecoder().decode(ratifyStatement(f.bundle_id, f.bundle_sha)),
                          armored: f.sig_armored },
             strength: f.strength, required_strength: f.required,
             parts: f.parts.map((p) => `${f.bundle_id}/${p.path}`),
@@ -5892,7 +5971,21 @@ export default {
           verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
                 + "makes one detectable by anyone holding it, without this instance's cooperation. Each "
                 + "finding is signed on its own bytes; there is no case-level strength, because composing "
-                + "several findings' strengths into one letter is a claim the evidence does not support.",
+                + "several findings' strengths into one letter is a claim the evidence does not support. "
+                /* CASE-5: THE INSTRUCTIONS A STRANGER ACTUALLY NEEDS, in the
+                   artifact rather than in our documentation — which they do not
+                   have, and which is the whole point of the thing they are
+                   holding. Three sentences, one per field the flip adds, each of
+                   them a check the reader can RUN. */
+                + "EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's "
+                + "edition: since the artifact flip the two are separate numbers, so a member of edition 2 "
+                + "of this case may be at its own edition 1. `version_sha` is the version THIS CASE "
+                + "COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this "
+                + "container was assembled over a member the case did not pin and you should not rely on "
+                + "it. `role` is the publisher's authored designation: only `load_bearing` members were "
+                + "held to the `bar` above, and a `supporting` member is part of the published work without "
+                + "being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is "
+                + "not a standard of zero — the case claims no cleared bar and says so.",
         };
         const mText = JSON.stringify(manifest, null, 1);
         const mBytes = new TextEncoder().encode(mText);

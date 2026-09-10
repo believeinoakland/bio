@@ -649,8 +649,22 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
     const img = await GET(`op=image&token=${RUTH}&id=${INQ}`);
     const files = img.image || img;
     const cur = files["bundle.md"];
+    /* CORRECTED 2026-09-10, CASE-5 (DEC-72's artifact flip). THE FIXTURE MOVED,
+       NOT THE RULE, AND THE OLD FIXTURE WAS RIGHT WHEN IT WAS WRITTEN.
+       `edition:` used to be one number doing two jobs — the finding's version
+       and its case's edition — so rewriting it moved both. After the flip they
+       are two scalars, and a revision that moved only `edition:` produced a
+       document claiming to be the finding's third version INSIDE its case's
+       FIRST edition: an edition already ratified, whose completeness assertion
+       this revision rewrites. The plane refused it with `CASE_ASSERTION_DIVERGED`
+       — CORRECTLY, and that refusal firing first is what this block measured as a
+       failure. A real revision of a published case moves both numbers, so the
+       fixture moves both. `EDITION_NOT_INCREMENTED` itself is untouched: it keys
+       `published_bundles`, which is the FINDING's own chain, which is what it
+       always keyed and now says. */
     const next = cur
       .replace(/^edition: \d+$/m, `edition: ${n}`)
+      .replace(/^case_edition: \d+$/m, `case_edition: ${n}`)
       .replace(/^  statement: ".*"$/m, `  statement: "As of edition ${n} this case still covers the `
         + `FY2024 sewer fund transfer alone, and the FY2023 comparison memo is still outstanding."`)
       .replace(/^  subject_justification: ".*"$/m, `  subject_justification: "Edition ${n}: we put the `

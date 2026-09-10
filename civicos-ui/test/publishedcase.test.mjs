@@ -1823,12 +1823,35 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      DEC-59's, deliberately out of UI-40's scope, and it is a SURFACE GAP rather
      than an unconsumed publication — the gate enforces it (C-21.1) and the
      battery asserts it. */
+  /* CORRECTED 2026-09-10 (CASE-5, DEC-72's artifact flip), never exempted, and
+     the register GREW by two — which is this arm firing exactly as arm (d) was
+     built to make it fire. `op=publishedcase` now publishes the CASE's own
+     standard of evidence and the sentence that says what its absence means, and
+     this surface reads neither yet. Both are SURFACE GAPS and neither is an
+     unconsumed publication: the plane's battery asserts both, and CASE-6 owns
+     the page that must print them — its queue row requires the bar be shown "as
+     the case's property" with each claim's own strength beside it, which is
+     precisely these two keys. Named here rather than tolerated, so the day
+     CASE-6 lands its reader this arm fires again and the entries are DELETED
+     rather than the arm relaxed. `project` is NOT on this list because the
+     surface already reads a `.project` and the textual walk sees it; that is a
+     known limit of a name-based reach and it is UI-35's own, not this item's. */
   const UNREAD = {
     bias_acknowledgement: "the GROUP's acknowledgement of the bias the case was produced under "
                         + "(REC-47, DEC-46 (a)), gated by C-21.1 and asserted by the battery. NOT an "
                         + "unconsumed publication — a SURFACE GAP. DEC-34's per-page header shows a "
                         + "`Declared bias` computed from HUNCH legs, which is a DIFFERENT fact, so a "
                         + "reader of the public record never meets the group's own sentence.",
+    bar: "the CASE's standard of evidence, read from its publishing project at the moment of "
+       + "publication and frozen case-side (DEC-72 clause 2, CASE-5). A SURFACE GAP and not an "
+       + "unconsumed publication: the page still prints a per-member `required` block, which is "
+       + "each member's stamped COPY of this one fact, so a reader sees the bar without being told "
+       + "it is the case's rather than the finding's. CASE-6's row requires it shown as the case's "
+       + "property.",
+    bar_detail: "the sentence that says what a NULL bar means — that no standard is recorded, which "
+              + "is not a standard of zero. It exists precisely so a surface cannot render an absent "
+              + "bar as a met one, so it is unread on exactly the page that will need it most. "
+              + "CASE-6's, with `bar`.",
   };
   const unread = published.filter(k => !readsIt(k));
   ok("UI-35: every top-level key the plane publishes is either READ by this surface or NAMED as unread with a reason",

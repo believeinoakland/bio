@@ -1468,12 +1468,41 @@ CREATE INDEX IF NOT EXISTS published_edges_to ON published_edges(to_bundle);
 -- hidden: each finding carries its own signature over its own bytes (the
 -- finding is the unit of truth), so a case edition exists from the first
 -- ratification and can only be SERVED as a container once the last one lands.
+-- CASE-5 / DEC-72 clause 2 ADDS bar -- THE STANDARD OF EVIDENCE, STORED WHERE
+-- IT IS A PROPERTY OF. Bob: "the bar -- that is, the standard of evidence -- is
+-- a property of a project, not an inquiry or claim", told to the publishing act
+-- at act time. CASE-2 computed it correctly and then had nowhere case-side to
+-- put it, so the only place it was reachable was published_bundles.required --
+-- once PER MEMBER.
+--
+-- THAT IS NOT A TIDINESS COMPLAINT AND THE DEFECT IT LEAVES IS REACHABLE. The
+-- bar is read from the publishing project AT ACT TIME and members ratify at
+-- DIFFERENT times, so a project whose bar moved between the first member's
+-- ratification and the last one gave a single case edition TWO standards of
+-- evidence, each stamped into different members' signed bytes, with nothing in
+-- the plane noticing. Stored here it is ONE fact about the case, committed from
+-- the signed bytes like the scope beside it and under the SAME divergence
+-- refusal (CASE_ASSERTION_DIVERGED) -- so two members who signed different bars
+-- are refused rather than reconciled.
+--
+-- JSON, matching the shape op=publish already stamps into every member's
+-- required_strength block: declared, source, project, capture, connection,
+-- detail. Not six columns, because it is ONE authored answer read at ONE
+-- instant, and splitting it would let five sixths of a bar be written.
+--
+-- NULLABLE, and NULL is the honest answer for every edition published before
+-- this column existed. A backfill from any member's required would look
+-- defensible and would be an invention: it would assert that the case was held
+-- to that standard when what the record actually holds is one member's stamp,
+-- and where the two members disagree the backfill would have to choose which
+-- disagreement to publish as the group's.
 CREATE TABLE IF NOT EXISTS published_cases (
   case_id      TEXT NOT NULL,
   edition      INTEGER NOT NULL,
   scope        TEXT,
   completeness TEXT,
   bias_acknowledgement TEXT,
+  bar          TEXT,               -- the CASE's standard of evidence, as JSON. NULL = none recorded, and STATED
   opened       TEXT NOT NULL,
   ratified_at  TEXT,
   manifest_sha TEXT,
@@ -1507,8 +1536,14 @@ CREATE TABLE IF NOT EXISTS published_cases (
 --   finding's own handful of editions rather than a scan. A stored edition
 --   number beside the hash would be a second way to say the same thing, and the
 --   two would eventually disagree. It also names the conflation the artifact
---   flip removes: today #caseEditionState reads published_bundles at the CASE'S
---   edition number, which is only correct while one case owns one finding.
+--   flip removes: before CASE-5 #caseEditionState read published_bundles at the
+--   CASE'S edition number, which is only correct while one case owns one finding.
+--   CASE-5 LANDED THAT FLIP 2026-09-10 -- resolution is now BY THIS COLUMN, and
+--   the old predicate survives ONLY as the fallback for a row written before
+--   CASE-3, whose pin is honestly NULL. edition on this table is the CASE'S
+--   and a member's own edition is published_bundles', and after the flip the two
+--   genuinely differ: a finding joining a case at that case's edition 2 having
+--   published once before is at ITS OWN edition 1 inside the case's edition 2.
 --
 -- role -- CLAUSE 4, and it is AUTHORED BY THE PUBLISHER, never derived. Bob:
 --   "All load-bearing findings of a case being published must meet the necessary

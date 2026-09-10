@@ -2438,6 +2438,29 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f('C-2.8', 'error', 'published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
       ['author the case scope on op=publish']));
   }
+  /* CASE-5 / DEC-72 — THE ARTIFACT FLIP'S OWN ENTRY REQUIREMENT, AND IT IS HERE
+     RATHER THAN IN THE STORE FOR CASE-1'S STATED REASON: a refusal belongs where
+     it can name what is absent.
+
+     `edition` above (checkPublishedExtension) is THE FINDING'S OWN edition, on
+     its own version chain. `case_edition` is the CASE's. Until the flip these
+     were ONE number stamped under one name, which is what baked one-case-per-
+     finding into the format — a finding already published at edition 1 could not
+     join a second case, because that case's edition 1 demanded bytes at a number
+     the finding had spent. The ratify committer keys `published_cases` and
+     `published_case_members` on this field, so bytes that name a case and no case
+     edition would be placed by a number the plane chose rather than one the
+     member signed.
+
+     REQUIRED ONLY WHEN `case_id` IS PRESENT, and that is not leniency: the
+     refusal directly above already names a missing `case_id`, and a document
+     that has neither should be told the one thing that is actually wrong with it
+     rather than two spellings of it. */
+  if (typeof fm.case_id === 'string' && fm.case_id.trim() !== '' && fm.case_id !== 'null'
+      && (!Number.isInteger(fm.case_edition) || fm.case_edition < 1)) {
+    findings.push(f('C-2.8', 'error', `published state requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
+      ['publish through op=publish, which stamps both numbers into the bytes you sign']));
+  }
   /* CASE-2 / DEC-72 — TWO MORE, AND THE GATE RUNS THEM FOR THE REASON THIS ACT
      ALREADY RUNS C-21.1 TWICE: *"a one-sided check is a check the other side has
      to catch."* op=publish refuses both at the door, where a refusal can name
