@@ -515,7 +515,9 @@ conflict worth having.
 written AT ACTIVATION in the same act (`plancheck` fails an ACTIVE area with no kickoff).
 Recorded here so activation is one act rather than a re-derivation.
 
-### FL-8 · queued
+### FL-8 · running
+spawned: 2026-09-10 · CONDUCT (worker live at spawn). **`running` is only true while a worker is alive** — verify with `git log --oneline main | grep -i 'FL-8'`.
+ic-preallocated: **IC-67, minted BY CONDUCT AT SPAWN and handed to the worker.** This is the IC-64 lesson enacted rather than remembered: on 2026-08-10 CASE-2 and CASE-3 ran in parallel and BOTH minted `IC-64`, because `mintid` derives its floor from ids MENTIONED IN PROSE and neither branch could see the other's file — each read a corpus whose highest IC was 63 and each was RIGHT about the corpus it could read. Nothing in either branch could have detected it; `mintid --audit` caught it at integration. **A shared-namespace id must be minted where the parallel workers are VISIBLE TO EACH OTHER, which is here.**
 milestone: M9
 interface: I3 — `RUN_STATUS` is a published vocabulary; file the IC with measured consumer impact if the shape moves
 depends-on: FL-7 (landed)
@@ -559,7 +561,9 @@ scope: **Design doc is the authority.** Lifecycle and the revision flag: `publis
 accepts-when: as the design doc's CASE-4 bullet.
 added: 2026-08-10 · CONDUCT
 
-### CASE-5 · queued
+### CASE-5 · running
+spawned: 2026-09-10 · CONDUCT (worker live at spawn). **`running` is only true while a worker is alive** — verify with `git log --oneline main | grep -i 'CASE-5'`.
+ic-preallocated: **IC-66, minted BY CONDUCT AT SPAWN and handed to the worker.** This is the IC-64 lesson enacted rather than remembered: on 2026-08-10 CASE-2 and CASE-3 ran in parallel and BOTH minted `IC-64`, because `mintid` derives its floor from ids MENTIONED IN PROSE and neither branch could see the other's file — each read a corpus whose highest IC was 63 and each was RIGHT about the corpus it could read. Nothing in either branch could have detected it; `mintid --audit` caught it at integration. **A shared-namespace id must be minted where the parallel workers are VISIBLE TO EACH OTHER, which is here.**
 milestone: M10
 interface: I3 via the IC protocol
 depends-on: CASE-2, CASE-3
