@@ -872,6 +872,12 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
        inside case edition 2, and a case that verifies must keep verifying. A fence
        wider than the ruling it enforces is an undeclared contract change wearing
        the costume of caution. -> a legitimate case stops verifying.
+       AND ITS 22 FAILURES ARE THE SAME 22 AS (a)'s, VERIFIED BY DIFFING THE TWO
+       ARMS' FAILURE SETS RATHER THAN ASSUMED FROM THE TALLY. That is expected
+       and is worth stating: the two arms are DIFFERENT CAUSES with ONE EFFECT —
+       (a) removes the pin's answer, (c) refuses to accept it — and both put BETA
+       into `awaiting`. Equal tallies from unequal causes is exactly the shape a
+       control can report as a coincidence if nobody looks, so it was looked at.
 
    (d) RE-SLAVE THE EDITION — `publishCase` stamps the CASE's edition as the
        member's `edition:` again. MEASURED 44/7. This is the arm that proves THE
