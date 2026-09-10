@@ -580,9 +580,9 @@ const REGISTER_FLOOR = {
      which these numbers are reproducible by anyone else.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-2's arms, and every figure here is true of this branch alone. */
-  arms: 852,
-  classified: 161,
-  corpus: 162,
+  arms: 858,
+  classified: 162,
+  corpus: 163,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

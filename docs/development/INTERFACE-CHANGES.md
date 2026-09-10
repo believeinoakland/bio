@@ -4584,6 +4584,8 @@ and CONDUCT may answer for a dormant area in writing per the protocol.)_
 _(CONDUCT's.)_
 ## IC-66 · I3 + I5: THE ARTIFACT FLIP — A CASE MEMBER IS RESOLVED BY ITS PINNED VERSION AND NO LONGER BY THE CASE'S EDITION NUMBER; a finding's `edition` becomes ITS OWN and the case's moves to `case_edition`; the CASE CONTAINER goes to `bio-case-container/4` carrying `version_sha`, `role`, the member's own edition, the producing project and the case's BAR · PROPOSED 2026-09-10 (CASE-5, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-09-10 by CONDUCT at integration.** Accepted, and **its measured impact is NOT zero, which is why this row is more useful than the two before it.** One file, one function, three lines — and the failure it names is SILENT: a diverged member reads as awaiting ratification forever, with a blank pair and a blank bar, and appears a second time in the not-in-any-case list. **A consumer that breaks loudly is a consumer somebody fixes; this one would have been read as an empty record.** Enqueued as **UI-56** rather than left as a delegation in `CLAIMS.md`, because a notice is not an item. The row also carries the remaining half of CASE-5's bullet into **CASE-5b**: finding bytes still name a case, and they cannot stop until a case-level signing ceremony exists for those facts to move to.
+
 - **Interface:** **I3** (the op contracts: `op=publish`, `op=ratify`, `op=publishedcase`,
   `op=publishedmanifest`, `op=publishededitions`, `op=publishedlist`) **and I5** (one additive
   column, `published_cases.bar`).
