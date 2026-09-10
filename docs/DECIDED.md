@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-650 rulings across 67 documents.
+652 rulings across 67 documents.
 
 ## DEC-
 
@@ -1135,6 +1135,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:1061`
 - Tests — CORRECTED, NEVER EXEMPTED, and each named by ARM:** - `bio-plane/test/caseproduction.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseproduction.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
   `docs/development/CLAIMS.md:1140`
+- Tests — CORRECTED, NEVER EXEMPTED:** - `bio-plane/test/caseflip.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseflip.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
+  `docs/development/CLAIMS.md:1212`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1247,6 +1249,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:129`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
   `docs/development/kickoffs/RECORD.md:323`
+- CORRECTED with dated reasons, never exempted.  
+  `docs/development/kickoffs/RECORD.md:377`
 - `PRACTICE-SURVEY.md` itself, and `DECIDED.md` for anything already ruled. ## The one thing that makes this area different, and it is not a style note  
   `docs/development/kickoffs/SKILL.md:14`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.** `ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record did not publish*, over every function in the AI-session block.  
