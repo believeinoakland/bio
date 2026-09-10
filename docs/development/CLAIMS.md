@@ -1275,3 +1275,25 @@ must never render as a bar of zero; `bar_detail` carries that sentence in the an
 **Not urgent in the shipped record and that is stated rather than implied:** no case in any
 live store can have diverged yet, because nothing before this commit could produce one. The
 first diverged case will be the first one a member adds a new finding to at a later edition.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-5, `case5-artifact-flip`) — one file added to the claim, and the honest reason is that a UI RATCHET CAUGHT THIS ITEM
+
+This claim said **NOT `civicos-ui/**`** and the item had to edit one file inside it.
+`civicos-ui/test/publishedcase.test.mjs`'s UI-35 arm asserts that **every top-level key
+`op=publishedcase` publishes is either READ by the surface or NAMED as unread with a
+reason** — and it went red naming `bar` and `bar_detail`, the two keys this item adds.
+
+**That is the ratchet working, not an obstacle**, and it is the same shape CASE-3 recorded
+when it had to widen into `caseobject.test.mjs`: the standing rule is *correct superseded
+tests, never exempt them*, so the fix is to name the two fields with the reason they are
+unread and widen the claim, never to route around the arm. **The register GREW by two,
+which is exactly the movement UI-35's arm (d) was built to detect.**
+
+  `civicos-ui/test/publishedcase.test.mjs` — the `UNREAD` map in block 16 ONLY: two entries
+  added, each stating that it is a SURFACE GAP rather than an unconsumed publication and
+  naming CASE-6 as the row that owns the reader. **NOT** the arm, **NOT** the walk, **NOT**
+  any other block, **NOT** `civicos-ui/app.html` (CASE-6's, and the DELEGATION above is how
+  it is told). No floor moved.
+
+**No live worker holds `civicos-ui/test/publishedcase.test.mjs`:** UI-55 is the newest UI
+claim on this register and names DEC-69's nagging audit, not this file.
