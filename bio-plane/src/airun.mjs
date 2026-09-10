@@ -191,7 +191,105 @@ export const RUN_ENDINGS = {
   + "is not deployed yet, so no member stopped this run and no budget ran out",
 };
 
-export const RUN_STATUS = { running: 1, finished: 1, stopped: 1 };
+/* WHAT BECAME OF A RUN — the third of this file's three run vocabularies, and
+   the one FL-7 deliberately did not reach into.
+
+   FL-8 (2026-09-10, IC-67) ADDED `never-started`, AND THE ARGUMENT IS FL-7'S
+   OWN APPLIED ONE LEVEL UP. `#aiRunTerminate` keys this on whether the ending
+   is a BOUND: a bound reached is `stopped`, anything else is `finished`. A
+   deployment-gate refusal reaches NO bound, so it fell through to `finished` —
+   and **a launch the gate refused did not FINISH; it never started.** It took
+   no step, spent nothing, and was refused before any bound was consulted. The
+   record's own field for what became of the run said it ran to its end.
+
+   THE MEASUREMENT §14b.6 REQUIRES, RUN BEFORE THE WORD WAS MINTED, because
+   this project's standing rule points the other way and that deserves an answer
+   at the site rather than in a commit message. The rule — quoted in
+   `agent-worker/src/harness.mjs`'s header — is *"the record already has the
+   word and lacks the writer: build that producer rather than minting a new
+   kind"*, and FL-7 established that it is CONDITIONAL ON THE WORD EXISTING. So
+   the three terms that were here were asked, one at a time:
+
+     - `running`  — false of a terminated run; not a candidate.
+     - `finished` — the defect itself. Its only producer is a run that reached
+                    its own end.
+     - `stopped`  — the only real candidate, and it FAILS on measurement. Its
+                    sole producer anywhere in the plane is `stoppedByBound`, and
+                    every sentence the record renders beside it says a bound was
+                    reached (`store.mjs`: *"the run stopped because the '<b>'
+                    bound was reached"*; `aiRunRead` prints `RUN_BOUNDS[b]` next
+                    to it; `harness.mjs` NOT_OUR_BOUNDS.lease: *"a run that
+                    stopped heartbeating DIED rather than finished"*). Filing a
+                    never-started run under it would hand a consumer a status
+                    whose whole established meaning is bound-exhaustion, about a
+                    run that consulted no bound.
+
+   **AND THE HALF THAT DECIDES IT: ALL THREE PRESUPPOSE THE RUN STARTED.**
+   `running` is under way; `finished` and `stopped` are two ways of having run.
+   There was no term here for a launch that was refused, and none elsewhere in
+   the tree either. So §14b.6's condition failed here exactly as it failed for
+   FL-7, and applied honestly the precedent points at minting.
+
+   `never-started` names the RUN'S CONDITION rather than the machine's act, and
+   that is why it is not spelled `refused`: `refused` is already a state word in
+   two unrelated families (`capture_requests.state`, `subresources` LINK_TYPES),
+   and a SECOND way for a run never to start would not fit under a word that
+   names who refused this one.
+
+   A MEMBER-CANCELLED RUN STILL READS `finished`, AND THAT IS A DECISION RATHER
+   THAN AN OVERSIGHT. `cancelled` is an ending too, so it sits on the same side
+   of the keying, and one could argue a run a member stopped did not "finish"
+   either. It is left exactly as it was: that run RAN, which is what `finished`
+   and `stopped` both presuppose and what `never-started` denies. It is a
+   different question, decided on a weaker argument, and moving it here would be
+   a second value-move riding on this one's reasoning. `airun.test.mjs` ARM H3
+   pins the whole partition so a later tidy-up cannot sweep them together.
+
+   THE VALUES ARE `1` AND NOT SENTENCES, DELIBERATELY. `civicos-ui/check-refusal-codes.mjs`
+   arm E harvests member-facing vocabularies from this file BY SHAPE — an
+   exported plain object whose values are ALL strings — and its own header
+   records `RUN_STATUS` as *"excluded by that shape rather than by an
+   exception"*. Giving these terms texts would enrol a lifecycle word in the
+   DEC-49 guard as though a surface rendered a sentence in its place, which is
+   not what this vocabulary is. The shape is kept; the reasoning is here. */
+export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1 };
+
+/* WHICH ENDINGS MEAN THE RUN NEVER STARTED. Declared as DATA rather than as a
+   literal inside the keying function, so both directions are walkable by a
+   suite: every key here must be an ENDING (never a bound — a run that never
+   started cannot have reached one), and `never-started` must be REACHABLE, or
+   it is a term in a published vocabulary with no producer.
+
+   ONE MEMBER TODAY, and that is a measurement rather than a shape chosen for
+   the future: `mode-not-deployed` is the only way a launch is currently refused
+   before its first step (`agent-worker/src/harness.mjs`'s `gate-mode` row, the
+   FIRST row every run takes). A second one added later joins this set and
+   inherits the status with no edit to the keying — which is the difference
+   between a set and an `if`. */
+export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
+
+/** WHAT BECAME OF A RUN THAT ENDED ON `bound` — the ONE place this is decided.
+ *
+ *  IT LIVES HERE, BESIDE THE THREE VOCABULARIES IT READS, AND THE MOVE IS HALF
+ *  OF FL-8. The rule was an inline ternary written TWICE inside
+ *  `store.mjs #aiRunTerminate` (once for the `UPDATE`, once for the returned
+ *  object) and a THIRD time by hand in `agent-worker/test/harness.test.mjs`'s
+ *  plane mock — and **that third copy was measurably WRONG:** it answered
+ *  `stopped` for `mode-not-deployed` from the moment FL-7 minted the ending,
+ *  while the plane answered `finished`. Nothing caught it because nothing
+ *  compared them. That is this repository's parallel-path class, and the remedy
+ *  is the one it always is: one function, and the copies BUILT FROM it.
+ *
+ *  `running` is deliberately not reachable from here. It is `aiRunOpen`'s to
+ *  write and this function only ever answers about a run that has ENDED — a
+ *  terminate path that could return `running` would be a run leaving `running`
+ *  by staying in it. */
+export function runStatusFor(bound) {
+  const b = bound == null ? "" : String(bound);
+  if (Object.prototype.hasOwnProperty.call(RUN_NEVER_STARTED, b)) return "never-started";
+  if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return "stopped";
+  return "finished";
+}
 
 /* REC-74 — HOW THE RUN'S BAR IS KNOWN, AND THE ABSENT CASE IS A MEMBER OF THIS
    VOCABULARY RATHER THAN A NULL.

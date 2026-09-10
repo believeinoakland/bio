@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-650 rulings across 67 documents.
+653 rulings across 67 documents.
 
 ## DEC-
 
@@ -1193,6 +1193,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:4217`
 - `op=strengthbarof`: the `target=` arm is WITHDRAWN; a `project=` arm replaces it; `group=` is UNCHANGED.** op=strengthbarof&target=<finding> -> REFUSED, reason BAR_IS_A_PROJECT_PROPERTY  
   `docs/development/INTERFACE-CHANGES.md:4272`
+- THE ONE HAND COPY THAT IS CORRECTED: `agent-worker/test/harness.test.mjs`'s plane mock**, whose `airunclose` branch reproduced the plane's keying by hand and has disagreed with it since FL-7. It is BUILT from `runStatusFor` over the plane's live vocabularies and interpolated into the mock worker source, so it…  
+  `docs/development/INTERFACE-CHANGES.md:4526`
+- THE OVER-STRICTNESS HALF, DECIDED IN THE ITEM AND NOT INHERITED **A member-cancelled run keeps reading `finished`, and that is a decision rather than an oversight.** `cancelled` is an ending, so it falls on the same side of the keying as `completed`, and one could  
+  `docs/development/INTERFACE-CHANGES.md:4546`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  
@@ -1271,6 +1275,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:5863`
 - THE CLASS IS FOUR TIMES THE SIZE OF THE ELEVEN, AND THAT IS WHAT DECIDED THE MECHANISM.** The eleven machine fences are 11 of **47** hand-built sites naming a catalogued code with no translation of their own, and the figure GROWS on its own every time a refusal is written by hand.  
   `docs/development/MEASUREMENTS.md:6566`
+- THE MEASUREMENT THAT DECIDED THE ITEM, and it is the one §14b.6 demands before anything is minted: does `RUN_STATUS` already carry an honest term for a run that never started?** Instrument: `grep -arn` over every tree with `node_modules` and built artifacts excluded, plus reading each term's PRODUCER in…  
+  `docs/development/MEASUREMENTS.md:8175`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:117`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

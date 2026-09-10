@@ -125,6 +125,43 @@
  *       two-way arms were untouched, which is what shows the fix ADDED a word
  *       rather than making the two endings interchangeable.
  * ===========================================================================
+ * RESULTS — FL-8's FIVE ARMS, 2026-09-10, worktree agent-a50bd4cc90737bcaf.
+ * Baseline before every arm: `harness.test.mjs` **213 pass / 0 fail**,
+ * `airun.test.mjs` **126 / 0**, battery **167/167 · 10,279 assertions** measured
+ * on `main` before any edit. **ALL FIVE AS DECLARED, each armed ALONE.**
+ *
+ *   G1  the plane's `RUN_NEVER_STARTED` emptied, so a gate-refused run is
+ *       recorded `finished` again -> **airun 122/4 · harness 212/1**. H1, H2,
+ *       W3 and W5 failed and H2 NAMED the misdescription ("MISDESCRIBED: a
+ *       launch the gate refused is on record as a run that FINISHED") rather
+ *       than reporting an unequal string; the over-strictness partition H3, the
+ *       vocabulary pin V9 and the source arm W1 all HELD.
+ *   G2  the store's `runStatusFor(bound)` call replaced by an INLINE COPY that
+ *       returns identical answers -> **airun 125/1. EXACTLY ONE assertion:
+ *       ARM W1 alone.** Every behavioural arm stayed green, because nothing a
+ *       caller can observe changed — only where the rule lives. **This is the
+ *       arm that earns the two-way claim**, FL-7's F3 one item on: it shows the
+ *       source-agreement assertion is a second independent claim rather than the
+ *       behavioural one written twice, which no arm that breaks behaviour can
+ *       show.
+ *   G3  a FIFTH status term (`abandoned`) added with no producer -> **airun
+ *       124/2**: V9 (the exact SET — the guard this vocabulary had never had)
+ *       and W3 (vocabulary -> keying: every terminal term must be REACHABLE)
+ *       failed, and nothing else. Two assertions because they are two claims.
+ *   G4  OVER-STRICTNESS, ARMED: `cancelled` and `completed` swept into
+ *       `RUN_NEVER_STARTED` -> **airun 123/3**: H3 (the whole partition), C4
+ *       (the member cancellation's status, which FL-8 deliberately leaves
+ *       standing) and W3 (`finished` becomes the term with no producer) failed;
+ *       H1 and H2 HELD, which is what shows the arm measures OVER-reach and not
+ *       the fix.
+ *   G5  the plane mock's hand-written status keying put back, in the exact
+ *       spelling it carried from FL-3 until FL-8 -> **harness 211/2 · airun
+ *       126/0**: A6c2 and B7's FL-8 arm failed; A6c itself and both A6b
+ *       directions held. **The defect this arm re-creates was REAL and was found
+ *       by measurement rather than by a control: the mock had answered `stopped`
+ *       for `mode-not-deployed` since FL-7 minted the ending while the plane
+ *       answered `finished`, and nothing compared the two.**
+ * ===========================================================================
  */
 
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
@@ -591,6 +628,132 @@ arm({
       observed: `airun ${air.pass}/${air.fail} FAIL · skillsequencing ${seq.pass}/${seq.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
         + ` · a member-ending arm objected: ${memberArms} · the gate/two-way arms held: ${gateHeld}`,
       asDeclared: air.ran && seq.ran && rh.ran && memberArms && gateHeld,
+    };
+  },
+});
+
+
+/* ============================================================================
+ * SECTION G — FL-8 / IC-67. WHAT BECAME OF A RUN, AND WHETHER THE THREE
+ * VOCABULARIES ARE HELD IN AGREEMENT OR ONLY SAID TO BE.
+ *
+ * FL-7 fixed the ENDING and NAMED this residue in IC-62 rather than reaching
+ * into a third vocabulary mid-item. FL-8 is that place, arrived at deliberately:
+ * a gate-refused run was recorded with STATUS `finished`, because
+ * `#aiRunTerminate` keyed the status on whether the ending was a BOUND and a
+ * refusal reaches none. **A launch the gate refused did not FINISH; it never
+ * started.**
+ *
+ * THE ARMS ARE DESIGNED AS A SET RATHER THAN AS FOUR VARIATIONS, and G2 is the
+ * one that earns the rest — FL-7's F3 lesson one item on. A control that breaks
+ * BEHAVIOUR proves the behavioural arms are live; only a control that leaves the
+ * behaviour EXACTLY AS IT IS while moving where the rule LIVES can show that the
+ * source-agreement arm is a second independent claim rather than the first one
+ * written twice.
+ * ========================================================================== */
+
+const STORE = join(PLANE, "src", "store.mjs");
+
+arm({
+  id: "G1", subject: "THE DEFECT ITSELF RESTORED — a gate-refused run recorded as one that FINISHED",
+  what: "`RUN_NEVER_STARTED` is emptied in the plane's airun.mjs, so `runStatusFor` falls through exactly as the pre-FL-8 ternary did and a launch the deployment gate refused is recorded `finished` again",
+  mustFail: "airun ARM H1 (the status through three ops) and ARM H2, which must NAME the misdescription rather than report an unequal string; ARM W3, because `never-started` becomes a published term with no producer; ARM W5, which joins the ending and the status on one run; and the member suite's own FL-8 arm",
+  mustNot: "ARM H3 (the over-strictness partition — nothing about a completed, cancelled or bound-stopped run moves), ARM V9 (the vocabulary is untouched), ARM W1 (the store still asks airun.mjs), W2 or W4",
+  file: AIRUN,
+  find: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };`,
+  replace: `export const RUN_NEVER_STARTED = {};`,
+  run() {
+    const air = runAirun();
+    const rh = runHarness();
+    const named = anyFailed(air, /ARM H1|ARM H2/);
+    const namesIt = /MISDESCRIBED: a launch the gate refused is on record as a run that FINISHED/.test(air.out);
+    const heldOpen = !anyFailed(air, /ARM H3|ARM V9|ARM W1|ARM W2|ARM W4/);
+    return {
+      observed: `airun ${air.pass}/${air.fail} FAIL · harness ${rh.pass}/${rh.fail} FAIL`
+        + ` · the status arms failed: ${named} · the failure NAMES the misdescription: ${namesIt}`
+        + ` · the over-strictness, vocabulary and source arms held: ${heldOpen}`,
+      asDeclared: air.ran && rh.ran && named && namesIt && heldOpen
+                  && anyFailed(air, /ARM W3/) && rh.fail > 0,
+    };
+  },
+});
+
+arm({
+  id: "G2", subject: "A SECOND COPY OF THE RULE THAT AGREES — the arm that earns the two-way claim",
+  what: "the store stops ASKING airun.mjs and decides the status itself, with a copy that returns IDENTICAL answers for every bound and every ending. Nothing a caller can observe changes; only where the rule lives does",
+  mustFail: "airun ARM W1, and EXACTLY THAT ONE. It is the whole point of this arm: a source-agreement assertion that failed here together with the behavioural arms would be the same comparison written twice, which is what FL-7's F3 measured one item ago",
+  mustNot: "every other assertion in the suite — H1, H2, H3, H4, V9, W2, W3, W4, W5 — because the record a caller reads is byte-for-byte what it was",
+  file: STORE,
+  find: `      const status = runStatusFor(bound);`,
+  replace: `      const status = bound === "mode-not-deployed" ? "never-started"\n                   : (stoppedByBound ? "stopped" : "finished");`,
+  run() {
+    const air = runAirun();
+    const w1 = anyFailed(air, /ARM W1/);
+    return {
+      observed: `airun ${air.pass}/${air.fail} FAIL · W1 failed: ${w1} · failing arms: `
+        + `${air.failed.length ? air.failed.map((l) => (l.match(/ARM \w+/) || ["?"])[0]).join(", ") : "none"}`,
+      asDeclared: air.ran && w1 && air.fail === 1,
+    };
+  },
+});
+
+arm({
+  id: "G3", subject: "THE VOCABULARY POINTED ELSEWHERE — a status term with no producer",
+  what: "a FIFTH status term (`abandoned`) is added to `RUN_STATUS` with nothing anywhere able to produce it — the shape of every vocabulary drift this repository has recorded: a published word nothing writes",
+  mustFail: "airun ARM V9 (the vocabulary is asserted as an exact SET, the guard `RUN_ENDINGS` has had since FL-7 and the status vocabulary had NEVER had) and ARM W3 (vocabulary -> keying: every terminal term must be REACHABLE). Two assertions, and they are two claims rather than one — V9 is about what the set IS, W3 about whether anything can write it",
+  mustNot: "ARM W2 (keying -> vocabulary is unaffected: producing a subset is still producing terms the vocabulary holds), ARM W1, ARM W4, or any behavioural arm — nothing a run does changes",
+  file: AIRUN,
+  find: `export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1 };`,
+  replace: `export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1, abandoned: 1 };`,
+  run() {
+    const air = runAirun();
+    const both = anyFailed(air, /ARM V9/) && anyFailed(air, /ARM W3/);
+    const held = !anyFailed(air, /ARM W1|ARM W2|ARM W4|ARM H1|ARM H2|ARM H3|ARM H4/);
+    return {
+      observed: `airun ${air.pass}/${air.fail} FAIL · V9 and W3 both failed: ${both}`
+        + ` · the keying and behavioural arms held: ${held}`,
+      asDeclared: air.ran && both && held && air.fail === 2,
+    };
+  },
+});
+
+arm({
+  id: "G4", subject: "OVER-STRICTNESS, ARMED — the fix must not sweep every ending into `never-started`",
+  what: "`RUN_NEVER_STARTED` gains `cancelled` and `completed`, so a run that genuinely RAN to its end and one a member stopped are ALSO recorded as never having started. This is the over-reach the queue row's second control exists to catch, and it is the shape a careless fix would actually take",
+  mustFail: "airun ARM H3 (the whole partition in one assertion, naming which one moved), ARM C4 (the member cancellation's own status, which has read `finished` since IS-6 and is deliberately left standing by FL-8), and ARM W3 — because with every ending swept up, `finished` becomes the term with no producer",
+  mustNot: "ARM H1 or H2 — the gate refusal still reads `never-started`, which is what shows this arm measures OVER-reach and not the fix itself; nor ARM V9, W1, W2 or W4",
+  file: AIRUN,
+  find: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };`,
+  replace: `export const RUN_NEVER_STARTED = { "mode-not-deployed": 1, cancelled: 1, completed: 1 };`,
+  run() {
+    const air = runAirun();
+    const overreach = anyFailed(air, /ARM H3/) && anyFailed(air, /ARM C4/) && anyFailed(air, /ARM W3/);
+    const gateHeld = !anyFailed(air, /ARM H1|ARM H2|ARM V9|ARM W1|ARM W2|ARM W4/);
+    return {
+      observed: `airun ${air.pass}/${air.fail} FAIL · the over-strictness arms objected: ${overreach}`
+        + ` · the gate's own arms held: ${gateHeld}`,
+      asDeclared: air.ran && overreach && gateHeld,
+    };
+  },
+});
+
+arm({
+  id: "G5", subject: "THE MOCK DECIDES AGAIN — the instrument defect FL-8 found, put back",
+  what: "the plane mock's `airunclose` branch stops looking the status up and reproduces the plane's keying by hand, in the exact spelling it carried from FL-3 until FL-8 (`bound === \"completed\" || bound === \"cancelled\" ? \"finished\" : \"stopped\"`). This is not a hypothetical: it is what the file actually said, and it had been answering `stopped` for `mode-not-deployed` while the plane answered `finished`, with nothing comparing the two",
+  mustFail: "harness A6c2 (the source assertion that the hand-written keying is GONE and the table arrived as data) and B7's FL-8 arm, which reads the status the member's refused launch is recorded under",
+  mustNot: "A6c itself — the interpolated table is still correct, which is exactly why a table alone was never the fix; nor A6b's two directions, nor any airun arm, because the plane is untouched",
+  file: join(MEMBER, "test", "harness.test.mjs"),
+  find: `      S.status = STATUS_BY_BOUND[bound] || "finished";`,
+  replace: `      S.status = bound === "completed" || bound === "cancelled" ? "finished" : "stopped";`,
+  run() {
+    const rh = runHarness();
+    const air = runAirun();
+    const objected = anyFailed(rh, /A6c2/) && anyFailed(rh, /NEVER STARTED/);
+    const held = !anyFailed(rh, /A6c \(FL-8\)|DIRECTION 1|DIRECTION 2/) && air.ran && air.fail === 0;
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
+        + ` · the mock's own arms objected: ${objected} · the table arm and the plane held: ${held}`,
+      asDeclared: rh.ran && objected && held,
     };
   },
 });
