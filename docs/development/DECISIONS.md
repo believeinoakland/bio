@@ -360,6 +360,22 @@ decided: 2026-09-10 · Bob
   (enactment is CONDUCT's drain: the shipped provisional IS this ruling, so nothing in
   the plane moves — the site's `provisional` comment becomes `ruled DEC-70` and the
   pinning assertion stands as the ruling's pin.)
+enacted: 2026-09-10 · CONDUCT — **NOTHING IN THE PLANE MOVED, AND THAT IS THE WHOLE POINT: the
+  shipped provisional IS the ruling.** `reevaluations` still counts a severed leg, every other
+  D-280 site still refuses one, and `d280-strengthbar.test.mjs` is unchanged in SUBJECT — 34/0.
+  **What changed is the assertion's STANDING, and flipping it is the enactment rather than a
+  tidy-up.** SITE (c)'s pin read *"a doctrine question... a ruling is raised rather than taken"*;
+  a comment that still says a question is open when it is closed is the stale-instruction class
+  this project keeps paying for — the same shape as a resume prompt describing a solved problem.
+  It now reads as DEC-70's own pin and carries Bob's reasoning at the site: **relative
+  contributions SHIFT under DEC-32's arithmetic, so when a strong branch later weakens the severed
+  corroborating leg is exactly the thread then needed** — discharging the connection would
+  silently drop it. The boundary is carried too, because it is the half a later reader would
+  otherwise over-apply: **a severed leg still contributes NOTHING to strength, gates nothing, and
+  counts toward NO bar. The connection INFORMS, never binds.** DEC-69 is untouched — `op=reevaluations`
+  is a pull-read, so no member is prompted; the ruling's own note on what a future PUSHED feed
+  would owe (tells ONCE, dispositionable, ages) is left in this entry rather than built, since
+  nothing pushes it today. Reasoning in this entry and at `d280-strengthbar.test.mjs` SITE (c).
 
 ### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)

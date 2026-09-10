@@ -663,11 +663,25 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      site this item did not change is asserted to be STILL UNCHANGED, with the
      reason in the label. A later session that changes one of these has to move
      an assertion and read why it was there. */
-  t("SITE (c) `reevaluations` IS DELIBERATELY UNCHANGED, and the pin says so: whether severing a "
-  + "leg DISCHARGES REC-17's second-look obligation, or whether the obligation is about what the "
-  + "record ONCE rested on, is a doctrine question and not an implementation one. The provisional "
-  + "is the conservative direction — a re-evaluation prompt shown to somebody who already withdrew "
-  + "costs a glance; one dropped costs the second look — and a ruling is raised rather than taken",
+  /* RULED 2026-09-10 — DEC-70, Bob. This assertion does not move and its SUBJECT does not
+     move; what changes is its STANDING. It was pinned as a PROVISIONAL awaiting a ruling; the
+     ruling came back Reading B — SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION — and the
+     shipped provisional IS that ruling, so nothing in the plane moves. Flipping the words
+     rather than leaving them is the whole enactment: a comment that still says "a ruling is
+     raised rather than taken" tells the next session a question is open when it is closed,
+     which is the stale-instruction class this project keeps paying for.
+     WHY IT IS RULED THIS WAY, in Bob's own reasoning: relative contributions SHIFT under
+     DEC-32's arithmetic — when a strong branch later weakens, a severed corroborating leg's
+     relevance shifts AT THAT MOMENT, and discharging the connection would silently drop the one
+     thread then needed. WHAT THE RULING DOES NOT MOVE: a severed leg still contributes nothing
+     to strength, gates nothing, and counts toward no bar — every other D-280 site stands as
+     fixed. The connection INFORMS, never binds. */
+  t("SITE (c) `reevaluations` IS UNCHANGED AND NOW RULED SO — DEC-70 (Bob, 2026-09-10): the "
+  + "obligation attaches to what a finding EVER rested on, because severance discharges SUPPORT "
+  + "and never CONNECTION. A severed leg contributes nothing to strength and counts toward no bar, "
+  + "but it stays CONNECTED, because relative contributions shift — when a strong branch later "
+  + "weakens, the severed corroborating leg is exactly the thread then needed. This pin is no "
+  + "longer a provisional awaiting an answer; it is the ruling's own pin",
     /reevaluations\([\s\S]{0,2600}?#refEdgeSevered/.test(STORE_SRC), false);
   t("SITE (e) `#leadBasisAbsence` IS DELIBERATELY UNCHANGED, AND THE ARGUMENT IS THE PIN: it counts "
   + "basis legs to answer WAS THIS DOCUMENT MADE PART OF A CASE, and a document that was made part "
