@@ -4372,6 +4372,8 @@ says so by name.
 
 ## IC-67 · I3: `RUN_STATUS` GAINS ONE TERM — `never-started` — AND THE STATUS KEYING MOVES OUT OF `#aiRunTerminate` INTO ONE DECLARED FUNCTION, so a launch the deployment gate REFUSED stops being recorded as a run that FINISHED · PROPOSED 2026-09-10 (FL-8, enacting QUEUE FL-8, the residue IC-62 named) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-09-10 by CONDUCT at integration.** Accepted on a measured basis, and the row's own restraint is why: unlike IC-62, **the UI genuinely READS this vocabulary**, so "zero UI edits" here is a measured result rather than a structural impossibility — three UI tests derive from `Object.keys`, `check-refusal-codes.mjs` arm E excludes it BY SHAPE, and the one CSS selector pins `running`, which does not move. **The row states the harder half plainly: this is ADDITIVE IN THE VOCABULARY BUT A MOVE IN THE DATA**, and it says why there is no backfill instead of leaving the reader to notice. Pre-existing `ai_runs` rows keep `status='finished'`; that disposition lives in the row's MIGRATION section rather than a DEBT row, which is the right place for a fact about one interface change.
+
 - **Interface:** I3 (the plane's published run vocabulary. `RUN_STATUS` reaches members through
   `op=airun`'s and `op=airuns`' `session.status`, through `op=airunlog`'s `status`, and through
   `op=airunclose`'s own return — and it reaches a member's EYES verbatim, because
