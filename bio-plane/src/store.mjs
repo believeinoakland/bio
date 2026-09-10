@@ -590,6 +590,16 @@ export class Store extends DurableObject {
          * and neither may come out of a migration. */
       ["published_case_members", "version_sha", "TEXT"],
       ["published_case_members", "role", "TEXT"],
+      /* CASE-5 / DEC-72 clause 2: the CASE's own standard of evidence, stored
+         where it is a property of. Additive and nullable for the reason every
+         column above is, and NULL here is a state of the record rather than a
+         missing value: an edition published before this column existed recorded
+         its bar only inside each member's signed `required_strength` block, and
+         a backfill from any one member would publish one member's stamp as the
+         group's answer -- and would have to CHOOSE, where two members ratified
+         either side of a project's bar moving. The full reasoning is at the
+         column in schema.mjs. */
+      ["published_cases", "bar", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -4776,6 +4786,37 @@ export class Store extends DurableObject {
     const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, theCase);
     const edition = (top && top.m != null ? Number(top.m) : 0) + 1;
 
+    /* ===== CASE-5 / DEC-72: THE ARTIFACT FLIP, AND THIS IS WHERE IT STARTS ===
+       A FINDING'S EDITION IS ITS OWN. THE CASE'S EDITION IS THE CASE'S.
+
+       They were never one fact. `edition` immediately above is the CASE's —
+       DEC-12 as DEC-44 rehomes it, editions are over the CONTAINER — and until
+       this item that same number was ALSO stamped into every member's
+       frontmatter as the member's `edition:` and committed to
+       `published_bundles`. While every member re-published at every case edition
+       the two agreed by accident, and `#caseEditionState` read the accident:
+       `published_bundles WHERE bundle_id=? AND edition=<the CASE's number>`.
+
+       THE ACCIDENT IS WHAT BAKED ONE-CASE-PER-FINDING INTO THE FORMAT, which is
+       the design doc's own diagnosis of what the flip removes. A finding already
+       published at edition 1 could not join a second case, because that case's
+       edition 1 would demand bytes at a number the finding had already spent —
+       and `EDITION_EXISTS` would refuse it, correctly, for a reason that has
+       nothing to do with the finding.
+
+       So each member's `edition:` now comes off THAT MEMBER'S OWN published
+       chain, and the case's number travels beside it as `case_edition:`. What a
+       reader gains is a finding whose edition means what it says; what the
+       record gains is that a member of case edition N can be at its own edition
+       M, and the PIN is then the only column that can resolve it. That is CASE-3's
+       handoff sentence made real rather than restated. */
+    const memberEditions = new Map();
+    for (const id of members) {
+      const mt = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, id);
+      memberEditions.set(id, (mt && mt.m != null ? Number(mt.m) : 0) + 1);
+    }
+    /* ===== END CASE-5 edition split ====================================== */
+
     /* C-21.1, before anything moves, AND AT CASE ALTITUDE. The comparison is
        against the previous ratified edition OF THIS CASE — not the previous
        promotion of any one finding — because what a reader was given is a case
@@ -4852,7 +4893,9 @@ export class Store extends DurableObject {
     /* setOrAdd throughout: an inquiry authored before this state existed
        carries none of these keys, and #setScalar alone would move the state and
        leave the entry requirements unmet — the bundle the catalog rejects. */
-    text = Store.#setOrAddScalar(text, "edition", String(edition));
+    /* CASE-5: THE MEMBER'S OWN edition, off its own published chain. The case's
+       number is `case_edition` fourteen lines down. */
+    text = Store.#setOrAddScalar(text, "edition", String(memberEditions.get(target)));
     /* REC-44: THE CASE, INSIDE THE BYTES THE MEMBER SIGNS, in every member
        finding and not in one designated one. It is the same three facts written
        into N documents and that is NOT D-21's second place to state one fact:
@@ -4867,6 +4910,17 @@ export class Store extends DurableObject {
        nothing else (#publishEdges' doctrine), so two members claiming different
        sets are refused instead of silently reconciled. */
     text = Store.#setOrAddScalar(text, "case_id", theCase);
+    /* CASE-5 / DEC-72: THE CASE'S EDITION, NAMED AS THE CASE'S. It is not a new
+       fact in these bytes — `edition:` carried exactly this number before this
+       item, under a name that said it was the finding's. What changed is that
+       the two are no longer forced equal, so the document has to say which one
+       it means, and a reader of the frontmatter can now tell a finding's third
+       version from the case's third edition. It is inside the bytes the member
+       signs for `case_id`'s own reason: the ratify committer keys
+       `published_cases` and `published_case_members` on it, and a case edition
+       this plane took off a request rather than out of the signed document would
+       place a member in an edition nobody signed for. */
+    text = Store.#setOrAddScalar(text, "case_edition", String(edition));
     text = Store.#setOrAddScalar(text, "case_scope", `"${Store.#fmSafe(scp)}"`);
     /* REC-47 / DEC-46 (a): INTO THE BYTES THE MEMBER SIGNS, for the same reason
        the case identity and the scope are — a stranger holding ONE finding must
@@ -5044,6 +5098,11 @@ export class Store extends DurableObject {
     if (!promoted.ok) return { ...promoted, target, caseId: theCase, moved: written.map((w) => w.target) };
       written.push({ target, from: b.current_state, to: "published", bundleSha: promoted.bundleSha,
                      title: fm.title ?? null,
+                     /* CASE-5: THE MEMBER'S OWN EDITION, beside the case's at
+                        the top of this answer. A caller that read the one
+                        `edition` this act used to return could not tell which
+                        altitude it was at, because there was only one number. */
+                     edition: memberEditions.get(target),
                      /* PER FINDING, and it stays a per-finding array in the
                         answer for the same reason it stays one in the bytes. */
                      strength: Store.STRENGTH_AXES.map((axis) => ({ axis, state: pair[axis].state,
@@ -5067,9 +5126,24 @@ export class Store extends DurableObject {
                         because edition 1 moves nothing under anybody: there was no
                         prior edition for a leg to be resting on. It is raised PER
                         FINDING because a leg rests on a finding, never on a case —
-                        C-21.2's altitude, which DEC-44 leaves exactly where it was. */
-                     ...(edition > 1
-                       ? { reevaluation: { source: "edition", since: when, edition,
+                        C-21.2's altitude, which DEC-44 leaves exactly where it was.
+
+                        CORRECTED BY CASE-5, 2026-09-10, AND THE OLD READING WAS
+                        WRONG IN A WAY ONLY THE FLIP MAKES VISIBLE. This gate and
+                        this field both read the CASE's edition, because before
+                        the flip there was one number and it was the case's. But
+                        the sentence above is right: a leg rests on a FINDING and
+                        C-21.2 compares against THAT FINDING'S OWN frozen pair at
+                        the edition the leg names. So a finding published for the
+                        FIRST TIME as a new member of a case's edition 2 raised a
+                        re-evaluation obligation saying it had moved — on a
+                        document that had never been published, at an edition
+                        number that was not its own. Both now read the member's
+                        own edition, which is what every consumer of this field
+                        was already treating it as. */
+                     ...(memberEditions.get(target) > 1
+                       ? { reevaluation: { source: "edition", since: when,
+                                           edition: memberEditions.get(target),
                                            raised: this.#reevalRaisedBy(target, viewer) } }
                        : {}) });
     }
@@ -17258,10 +17332,18 @@ export class Store extends DurableObject {
            this model has no `cases` row, and it must still appear here with its
            project stated as unknown rather than disappearing from the index
            because the record gained a table. */
-        `SELECT c.case_id, c.edition, c.scope, c.bias_acknowledgement, c.ratified_at,
+        /* CASE-5 / DEC-72 clause 2: AND THE BAR, on the reconstruction index, for
+           the reason the acknowledgement and the project are already on it — a
+           reader rebuilding the published record from this op ALONE must be able
+           to say what standard each case edition was held to, and until this
+           item the only route was one member's stamped `required` block, which is
+           one member's copy of a case property. `production` below states what a
+           null means so a bare null cannot read as a bar of zero. */
+        `SELECT c.case_id, c.edition, c.scope, c.bias_acknowledgement, c.bar, c.ratified_at,
                 c.manifest_sha, c.manifest, k.project_id
          FROM published_cases c LEFT JOIN cases k ON k.case_id = c.case_id
-         ORDER BY c.case_id, c.edition`),
+         ORDER BY c.case_id, c.edition`)
+        .map((c) => ({ ...c, bar: c.bar ? safeJson(c.bar) : null })),
       /* CASE-1 / DEC-72: the member's PINNED VERSION and its AUTHORED ROLE travel
          with the roster row, because they are what the roster row now IS —
          (finding id, version hash, role, ordinal). Both are null until CASE-2
@@ -17284,7 +17366,24 @@ export class Store extends DurableObject {
                 + "case rests on it: a designation is authored by the publisher and is never derived, so "
                 + "the record will not supply one it was not given. Where `version_sha` is null the "
                 + "member was rostered without a version being pinned, and the finding it names may have "
-                + "moved since. None of the three is a gap in this answer; each is a state of the record.",
+                + "moved since. None of the three is a gap in this answer; each is a state of the record. "
+                /* CASE-5 / DEC-72: the fourth null, and the ONE instruction a
+                   reconstructor cannot do without. `caseMembers[].edition` is the
+                   CASE's and `published[].edition` is the FINDING's, and they are
+                   no longer the same number — so the join between the two tables
+                   is `version_sha` to `bundle_sha` and NEVER edition to edition.
+                   Said here rather than left to be inferred because a join on the
+                   old equality does not error: it silently drops exactly the
+                   members the pin exists for, which is the defect IC-66 measures
+                   in this record's own UI. */
+                + "Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that "
+                + "is NOT a bar of zero: the edition predates the case carrying its own bar, or none was "
+                + "ever declared, and a case that cleared no declared standard says so. AND THE JOIN "
+                + "BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO "
+                + "EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the "
+                + "FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its "
+                + "own edition 1. A join on the two numbers does not fail — it silently drops the members "
+                + "the pin exists to name.",
       shas: this.#rows(
         `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
       altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
@@ -17968,7 +18067,7 @@ export class Store extends DurableObject {
   publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
             edition, title, completeness, strength, required, edges,
             caseId = null, caseScope = null, caseFindings = null, caseBiasAck = null,
-            caseProject = null, caseRoles = null,
+            caseProject = null, caseRoles = null, caseEdition = null, caseBar = null,
             group = null } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -17996,11 +18095,19 @@ export class Store extends DurableObject {
                  detail: `edition ${ed} of ${bundleId} is already published at a different sha. An edition is a `
                        + `SEPARATE DOCUMENT and answers forever: republishing different bytes under the same `
                        + `number would leave a reader who cited edition ${ed} unable to say which one they read.` };
+      /* CASE-5 corrects the WORDING and not the rule: this refusal always keyed
+         `published_bundles`, which is one BUNDLE's chain, and said "this case".
+         Before the flip a bundle's chain and its case's editions were the same
+         numbers so the sentence read true; after it they are not, and a member
+         told "this case is published through edition 3" while ITS OWN chain is
+         at 3 inside a case at edition 5 would go looking at the wrong altitude. */
       if (!existed && highest && ed <= highest)
         return { ok: false, reason: "EDITION_NOT_INCREMENTED", bundleId, edition: ed, highest,
-                 detail: `this case is published through edition ${highest}; a revision must increment the `
-                       + `edition (DEC-12). Editions do not overwrite each other — edition ${highest} keeps its `
-                       + `own signature, attestor, time and gate version, and a new one joins it.` };
+                 detail: `${bundleId} is published through edition ${highest} on its OWN version chain; a `
+                       + `revision must increment it (DEC-12). Editions do not overwrite each other — edition `
+                       + `${highest} keeps its own signature, attestor, time and gate version, and a new one `
+                       + `joins it. This is the FINDING's edition, not the edition of any case it is a member `
+                       + `of: since CASE-5 the two are separate numbers.` };
       const now = new Date().toISOString();
       /* REC-44: THE CASE ROW AND THE MEMBERSHIP, both written from the RATIFIED
          BYTES the control plane read out of the signed document and out of
@@ -18014,6 +18121,40 @@ export class Store extends DurableObject {
          what the first one signed. Without this the case row would be whatever
          the last ratification happened to say, and two members could disagree
          about what case they are in with nothing noticing. */
+      /* ===== CASE-5 / DEC-72: THE CASE'S EDITION IS THE CASE'S ==============
+         `ed` above is THE MEMBER'S — it keys `published_bundles` and the two
+         refusals that keep a finding's own chain honest. Every statement in the
+         case block below keys `published_cases` / `published_case_members`
+         instead, and those take the CASE's number, which arrives in the signed
+         bytes as `case_edition`. Before the flip the two were ONE VARIABLE,
+         which is the conflation `schema.mjs`'s `version_sha` comment names and
+         the reason a finding could only ever belong to one case.
+
+         IT COMES OUT OF THE SIGNED BYTES, like every other case fact here and
+         for `#publishEdges`' reason: a case edition taken off the request would
+         place a member into an edition nobody signed for, and the divergence
+         refusals below would then be checking a number this plane chose against
+         a roster the members did.
+
+         FALLING BACK TO `ed` IS DEFENCE IN DEPTH AND NOT A POLICY DEFAULT, and
+         the distinction is worth being exact about because a silent default is
+         how a fact stops being authored. **The GATE for this field is C-2.8**,
+         which requires `case_edition` on a published inquiry and names it when
+         it is missing — the same door CASE-2 put `case_project` and `case_roles`
+         behind, and for CASE-1's stated reason: a refusal belongs where it can
+         say what is absent. What the fallback covers is the one case the gate
+         cannot: bytes signed before this field existed, whose two numbers WERE
+         equal, being replayed through the idempotent re-ratification path. For
+         those bytes `ed` is the right answer and is the answer they already got.
+
+         DECLARED OUTSIDE THE `if (caseId)` BLOCK BECAUSE `#caseEditionState` AT
+         THE FOOT OF THIS METHOD NEEDS IT. That call is the ratify path's answer
+         to "is this case edition complete", and reading it at the member's
+         number was the same conflation one level up: a case at edition 2 whose
+         new member is at its own edition 1 would have been asked about a case
+         edition 1 that had already completed, and this act would have reported a
+         DIFFERENT edition's state to the container assembler. */
+      const cEd = caseId ? (Number.isInteger(caseEdition) ? caseEdition : ed) : ed;
       if (caseId) {
         const roster = (Array.isArray(caseFindings) ? caseFindings : [])
           .map((x) => String(x ?? "").trim()).filter(Boolean);
@@ -18022,10 +18163,34 @@ export class Store extends DurableObject {
                    detail: `${bundleId} names case ${caseId} but is not in the roster its own bytes carry. A `
                          + `finding that is not a member of the case it claims cannot be placed in it.` };
         const cRow = this.#one(
-          `SELECT scope, completeness, bias_acknowledgement FROM published_cases WHERE case_id=? AND edition=?`,
-          caseId, ed);
+          `SELECT scope, completeness, bias_acknowledgement, bar FROM published_cases WHERE case_id=? AND edition=?`,
+          caseId, cEd);
         const cScope = caseScope ?? null;
         const cComp = completeness ? JSON.stringify(completeness) : null;
+        /* CASE-5 / DEC-72 clause 2: THE BAR, COMMITTED CASE-SIDE FROM THE SIGNED
+           BYTES AND UNDER THE SAME DIVERGENCE REFUSAL AS THE SCOPE ABOVE IT.
+           Bob: the standard of evidence is *"a property of a project, not an
+           inquiry or claim"*, told to the publishing act at act time — so it is
+           a property of the CASE the act produced, and until this item the
+           record had nowhere case-side to hold it. It lived once per member, in
+           `published_bundles.required`.
+
+           THE DEFECT THAT LEFT IS REACHABLE AND IS WHY THIS IS A REFUSAL AND NOT
+           A CONVENIENCE. The bar is read from the publishing project AT ACT TIME
+           and members ratify at DIFFERENT times, so a project whose bar moved
+           between the first member's ratification and the last one gave ONE case
+           edition TWO standards of evidence — each inside a different member's
+           signature, both honest about themselves, and no surface able to say
+           which one the case was held to. Committed here it is one fact, and two
+           members who signed different bars are refused exactly as two members
+           who signed different scopes already are.
+
+           IT IS THE SIGNED BYTES' COPY, never the project's current answer.
+           Re-reading `#projectBar` here would put a bar in the published record
+           that nobody attested and that could move after publication — the
+           reason `#publishEdges`' doctrine exists, arriving on the field the
+           whole of clause 2 is about. */
+        const cBar = caseBar && typeof caseBar === "object" ? JSON.stringify(caseBar) : null;
         /* REC-47: the acknowledgement is committed from the RATIFIED BYTES like
            the scope beside it and out of nothing else, and it is under the SAME
            divergence refusal. Two members who signed different acknowledgements
@@ -18035,17 +18200,18 @@ export class Store extends DurableObject {
         const cBias = caseBiasAck ?? null;
         if (cRow) {
           if ((cRow.scope ?? null) !== cScope || (cRow.completeness ?? null) !== cComp
-              || (cRow.bias_acknowledgement ?? null) !== cBias)
-            return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId, edition: ed,
-                     detail: `this finding's signed bytes state a different scope, completeness assertion or `
-                           + `bias acknowledgement for case ${caseId} edition ${ed} than the members already `
-                           + `ratified into it. A case edition asserts ONE scope, ONE completeness claim and `
-                           + `ONE acknowledgement of the bias it was produced under, and every member signed it.` };
+              || (cRow.bias_acknowledgement ?? null) !== cBias || (cRow.bar ?? null) !== cBar)
+            return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId, edition: cEd,
+                     detail: `this finding's signed bytes state a different scope, completeness assertion, `
+                           + `bias acknowledgement or standard of evidence for case ${caseId} edition ${cEd} `
+                           + `than the members already ratified into it. A case edition asserts ONE scope, ONE `
+                           + `completeness claim, ONE acknowledgement of the bias it was produced under and ONE `
+                           + `bar, and every member signed all four.` };
         } else {
           this.sql.exec(
-            `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,opened)
-             VALUES (?,?,?,?,?,?)`,
-            caseId, ed, cScope, cComp, cBias, now);
+            `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened)
+             VALUES (?,?,?,?,?,?,?)`,
+            caseId, cEd, cScope, cComp, cBias, cBar, now);
         }
         /* ===== CASE-2 / DEC-72: WHOSE PRODUCTION, AND WHO CARRIED IT ========
            BOTH ARE COMMITTED FROM THE SIGNED BYTES AND FROM NOTHING ELSE —
@@ -18075,7 +18241,7 @@ export class Store extends DurableObject {
         const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
         if (owner) {
           if (owner.project_id !== cProject)
-            return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", bundleId, caseId, edition: ed,
+            return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", bundleId, caseId, edition: cEd,
                      declared: owner.project_id, signed: cProject,
                      detail: `case ${caseId} is ${owner.project_id}'s production and these bytes name `
                            + `${cProject}. A case does not change hands between editions or between members `
@@ -18098,7 +18264,7 @@ export class Store extends DurableObject {
           .filter((r) => r.target);
         const roleFor = new Map(signedRoles.map((r) => [r.target, r.role]));
         if (signedRoles.length !== roster.length || roster.some((m) => !roleFor.has(m)))
-          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed,
+          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: cEd,
                    roster, signed: signedRoles,
                    detail: `this finding's signed bytes carry a load-bearing partition that does not cover the `
                          + `roster of case ${caseId} exactly. Every member is designated load_bearing or `
@@ -18106,25 +18272,25 @@ export class Store extends DurableObject {
                          + `was designated by nobody.` };
         for (const m of roster)
           if (!Store.MEMBER_ROLES.includes(roleFor.get(m)))
-            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed, target: m,
+            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: cEd, target: m,
                      role: roleFor.get(m), allowed: Store.MEMBER_ROLES,
                      detail: `case ${caseId} designates ${m} '${roleFor.get(m)}', which is not one of: `
                            + `${Store.MEMBER_ROLES.join(", ")}.` };
         if (!roster.some((m) => roleFor.get(m) === "load_bearing"))
-          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed, roster,
+          return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: cEd, roster,
                    detail: `case ${caseId} has no LOAD-BEARING member in the bytes ${bundleId} signed. A case `
                          + `rests on at least one load-bearing finding (DEC-72): all-supporting material `
                          + `asserts nothing conclusively while the completeness assertion claims coverage.` };
         const declared = this.#rows(
           `SELECT ord, bundle_id, role FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
-          caseId, ed);
+          caseId, cEd);
         if (declared.length) {
           const was = declared.map((r) => r.bundle_id).join(",");
           if (was !== roster.join(","))
-            return { ok: false, reason: "CASE_MEMBERSHIP_DIVERGED", bundleId, caseId, edition: ed,
+            return { ok: false, reason: "CASE_MEMBERSHIP_DIVERGED", bundleId, caseId, edition: cEd,
                      declared: declared.map((r) => r.bundle_id), signed: roster,
                      detail: `this finding's signed bytes name a different set of findings for case ${caseId} `
-                           + `edition ${ed} than the members already ratified into it. The roster is part of `
+                           + `edition ${cEd} than the members already ratified into it. The roster is part of `
                            + `what each member signed, so a disagreement is refused rather than reconciled.` };
           /* The SECOND member's partition is checked against the FIRST's, in
              the roster's own order — the CASE_ASSERTION_DIVERGED treatment
@@ -18135,11 +18301,11 @@ export class Store extends DurableObject {
           const wasRoles = declared.map((r) => r.role ?? "").join(",");
           const nowRoles = roster.map((m) => roleFor.get(m)).join(",");
           if (wasRoles !== nowRoles)
-            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: ed,
+            return { ok: false, reason: "CASE_ROLES_DIVERGED", bundleId, caseId, edition: cEd,
                      declared: declared.map((r) => ({ target: r.bundle_id, role: r.role })),
                      signed: roster.map((m) => ({ target: m, role: roleFor.get(m) })),
                      detail: `this finding's signed bytes designate the members of case ${caseId} edition `
-                           + `${ed} differently from the members already ratified into it. Which findings a `
+                           + `${cEd} differently from the members already ratified into it. Which findings a `
                            + `case RESTS ON is part of what every member signed, and a disagreement about it `
                            + `is refused rather than reconciled.` };
         } else {
@@ -18149,7 +18315,7 @@ export class Store extends DurableObject {
              items genuinely share. Named here so the merge is expected. */
           roster.forEach((m, i) => this.sql.exec(
             `INSERT INTO published_case_members (case_id,edition,ord,bundle_id,role) VALUES (?,?,?,?,?)
-             ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`, caseId, ed, i, m, roleFor.get(m)));
+             ON CONFLICT(case_id,edition,bundle_id) DO NOTHING`, caseId, cEd, i, m, roleFor.get(m)));
         }
         /* CASE-3 / DEC-72 CLAUSE 3 — THE PIN. Bob: "Once published, the act of
            changing the findings (or any claims of any of the findings) results
@@ -18191,7 +18357,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `UPDATE published_case_members SET version_sha=?
            WHERE case_id=? AND edition=? AND bundle_id=? AND version_sha IS NULL`,
-          bundleSha, caseId, ed, bundleId);
+          bundleSha, caseId, cEd, bundleId);
       }
       this.sql.exec(
         `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
@@ -18215,9 +18381,14 @@ export class Store extends DurableObject {
          EXISTS and is stated as incomplete, which is honest: the findings that
          did ratify are published and answerable, and the container that would
          claim to carry all of them is not yet assemblable. */
-      const caseState = caseId ? this.#caseEditionState(caseId, ed, group) : null;
+      const caseState = caseId ? this.#caseEditionState(caseId, cEd, group) : null;
+      /* CASE-5: `edition` here is and always was THE MEMBER'S — this method
+         commits one bundle. `caseEdition` is stated beside it rather than left
+         to be inferred from `case.edition`, because the control plane's
+         container assembler branches on the pair and an assembler reading one
+         number for two altitudes is the defect this item exists to remove. */
       return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now, edges: graph,
-               ...(caseId ? { caseId, case: caseState } : {}) };
+               ...(caseId ? { caseId, caseEdition: cEd, case: caseState } : {}) };
     });
   }
 
@@ -18228,33 +18399,80 @@ export class Store extends DurableObject {
      in particular NO case-level strength, because there is no such thing —
      every member's frozen PAIR travels with that member. */
   #caseEditionState(caseId, ed, group = null) {
-    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, opened, ratified_at, manifest_sha
+    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, bar, opened, ratified_at, manifest_sha
                          FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
     if (!c) return null;
+    /* CASE-5 / DEC-72 clause 2: WHOSE PRODUCTION, on the one accessor that
+       answers "what IS this case edition". It is the case IDENTITY's project
+       (`cases` is keyed on `case_id` alone, CASE-1's sharpest call), so it is
+       read once here rather than per edition — a case does not change hands
+       between editions and a per-edition read would imply it could. NULL for a
+       case published before DEC-72, which CASE-1's schema comment says is the
+       honest answer and not a gap. */
+    const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
     /* CASE-3: `version_sha` — THE PIN — travels with the roster row, because a
        reader of a case edition must be able to say WHICH VERSION of each member
        the case froze, and a freeze nobody can read is not one the reader can
        rely on. It is served beside `bundle_sha` and is NOT a second spelling of
        it: `bundle_sha` is what the published row HOLDS NOW and `version_sha` is
-       what the case COMMITTED TO, and today they agree only because a member's
-       edition is still slaved to its case's. THE MOMENT THEY CAN DIVERGE IS
-       CASE-5's — resolving a member BY THE PIN instead of by the CASE'S edition
-       number is the conflation CASE-1's schema comment hands to the artifact
-       flip, and this item deliberately leaves the predicate below where the
-       authority put it rather than half-moving it here. NULL means rostered and
-       not yet pinned, exactly as the column comment says. */
+       what the case COMMITTED TO. NULL means rostered and not yet pinned,
+       exactly as the column comment says.
+
+       ===== CASE-5 / DEC-72: THE ARTIFACT FLIP, AND THIS PREDICATE IS ITS HEART.
+       CASE-3 landed the pin and handed this line on in terms: *"resolving a
+       member BY THE PIN instead of by the CASE'S edition number is NOT done …
+       CASE-5 is where they can diverge and where the pin starts doing work no
+       other column can."* This is that line.
+
+       WHAT IT WAS: `published_bundles WHERE bundle_id=? AND edition=?` at the
+       CASE'S edition number — the conflation `schema.mjs`'s `version_sha`
+       comment names, *"only correct while one case owns one finding"*. Now that
+       `op=publish` stamps a member's OWN edition, a member of case edition 2 can
+       sit at its own edition 1, and the old predicate does not merely return a
+       different row: IT RETURNS NOTHING. The member falls into `awaiting`, the
+       edition reads INCOMPLETE forever, and no container is ever assembled — a
+       published case silently claiming it is still waiting for a finding that
+       ratified. That is what the negative control arms and it fails by name.
+
+       THE PIN IS THE ONLY COLUMN THAT CAN ANSWER IT, and that is the point
+       rather than a preference: a hash identifies a version, and the case
+       committed to a hash. `AND version_sha IS NOT NULL` is not needed on the
+       lookup — a NULL pin never reaches it, because the fallback below owns that
+       row.
+
+       THE FALLBACK IS FOR ROWS WRITTEN BEFORE CASE-3, WHOSE PIN IS HONESTLY
+       NULL, and it is the OLD predicate unchanged. Those editions were published
+       under the slaved model where the two numbers were equal, so reading them
+       at the case's number is not a guess — it is the fact those rows were
+       written under. A row that is pinned is never read that way, so a pin can
+       never be silently bypassed by the compatibility path. */
     const roster = this.#rows(
-      `SELECT ord, bundle_id, version_sha FROM published_case_members
+      `SELECT ord, bundle_id, version_sha, role FROM published_case_members
        WHERE case_id=? AND edition=? ORDER BY ord`, caseId, ed);
+    const MEMBER_COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
+                         gate_version, sig_armored, strength, required, parts`;
     const findings = [], awaiting = [];
     for (const m of roster) {
-      const r = this.#one(
-        `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, gate_version,
-                sig_armored, strength, required, parts
-         FROM published_bundles WHERE bundle_id=? AND edition=?`, m.bundle_id, ed);
+      const r = m.version_sha
+        ? this.#one(`SELECT ${MEMBER_COLS} FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`,
+                    m.bundle_id, m.version_sha)
+        : this.#one(`SELECT ${MEMBER_COLS} FROM published_bundles WHERE bundle_id=? AND edition=?`,
+                    m.bundle_id, ed);
       if (!r) { awaiting.push(m.bundle_id); continue; }
       findings.push({ ord: m.ord, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,
                       version_sha: m.version_sha ?? null,
+                      /* CASE-5: THE MEMBER'S OWN EDITION, served rather than
+                         implied. Before the flip a reader could take the case's
+                         edition as every member's and be right; now they cannot,
+                         and a surface that has to guess would guess wrong on
+                         exactly the members the pin exists for. */
+                      edition: r.edition,
+                      /* CASE-5: the AUTHORED designation on the one accessor
+                         that answers what a case edition IS. CASE-2 wrote it into
+                         the roster row and into every member's signed bytes; the
+                         container manifest and the public read both need it, and
+                         both of them come through here. */
+                      role: m.role ?? null,
                       ratified_at: r.ratified_at, gate_version: r.gate_version, sig_armored: r.sig_armored,
                       attestor: { member: r.attestor_member, key_b64: r.attestor_key },
                       strength: r.strength ? JSON.parse(r.strength) : null,
@@ -18271,6 +18489,16 @@ export class Store extends DurableObject {
       c.ratified_at = at;
     }
     return { caseId, edition: ed, group: group ?? null,
+             /* CASE-5 / DEC-72 clause 2, and the pair is one fact in two halves:
+                WHOSE production this case is, and WHAT STANDARD it was held to.
+                They belong together because the second is only meaningful as the
+                first's property — "bar: B/B" with no publisher is a requirement
+                nobody asserted, which is the shape DEC-72 spent a whole ruling
+                removing. Both are served here rather than derived by any caller,
+                so the ratify path and the public read cannot disagree about them
+                any more than they can about the scope. */
+             project: owner ? owner.project_id : null,
+             bar: c.bar ? safeJson(c.bar) : null,
              scope: c.scope ?? null,
              /* REC-47 / DEC-46 (a): the bias the case was produced under travels
                 with it, on every surface that serves the case block. DEC-20 is
@@ -18424,8 +18652,15 @@ export class Store extends DurableObject {
       /* REC-44: each published FINDING names the case it was published in, so a
          public index can be read as the cases it actually is. The finding rows
          stay the rows — a finding is what carries a signature and a frozen pair
-         — and the case is stated beside them rather than replacing them. */
-      .map((r) => ({ ...r, case_id: this.#caseOf(r.bundle_id, r.edition) })),
+         — and the case is stated beside them rather than replacing them.
+         CASE-5: resolved BY THE HASH, and `case_edition` is stated beside the
+         case id because it is no longer derivable from `edition` on this row —
+         that number is the FINDING's. A consumer joining a member to its case on
+         the equality of the two numbers is the defect IC-66 measures in the UI. */
+      .map((r) => {
+        const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
+        return { ...r, case_id: cm ? cm.case_id : null, case_edition: cm ? cm.edition : null };
+      }),
       cases: this.#rows(
       `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
        ORDER BY case_id, edition`)
@@ -18448,12 +18683,21 @@ export class Store extends DurableObject {
        is a CASE assertion, so it is fetched from the case each edition belongs
        to rather than repeated on every member finding of it. */
     return { ok: true, bundleId, editions: rows.map((r) => {
-      const cid = this.#caseOf(r.bundle_id, r.edition);
-      const c = cid ? this.#one(
-        `SELECT scope, completeness, bias_acknowledgement, manifest_sha
+      /* CASE-5: BY THE HASH, and the case's edition comes back WITH the case id
+         rather than being taken from `r.edition`. This read is the clearest
+         instance of the conflation in the file: it resolved the case at the
+         FINDING's edition and then fetched `published_cases` at that same
+         number, so a finding at its own edition 1 inside a case at edition 3 was
+         answered with edition 1's scope, completeness and bias acknowledgement —
+         a case assertion attributed to the wrong edition of the right case. */
+      const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
+      const cid = cm ? cm.case_id : null;
+      const c = cm ? this.#one(
+        `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
          FROM published_cases WHERE case_id=? AND edition=?`,
-        cid, r.edition) : null;
-      return { ...r, case_id: cid,
+        cm.case_id, cm.edition) : null;
+      return { ...r, case_id: cid, case_edition: cm ? cm.edition : null,
+               bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
                   reported from there — one manifest per case per edition,
                   naming every member finding's parts. */
@@ -18498,10 +18742,28 @@ export class Store extends DurableObject {
      answer is asserted by the suite rather than left to review. */
   publishedCase({ id = null, edition = null, sha256 = null, caseId = null } = {}) {
     let theCase = caseId ? String(caseId).trim() : null, ed = null, asked = null;
+    /* CASE-5: the FINDING's own edition, kept apart from `ed` (the CASE's) from
+       here on. The two used to be one variable on this method as well, and the
+       loose-bundle fallback below reads `published_bundles` — which is keyed on
+       the finding's number and would have been handed the case's. */
+    let askedEdition = null;
     if (sha256) {
       const r = this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`,
                           sha256);
-      if (r) { asked = r.bundle_id; ed = Number(r.edition); theCase = this.#caseOf(r.bundle_id, ed); }
+      /* CASE-5 / DEC-72: THE STRANGER'S OWN ROUTE, and the conflation was at its
+         worst here. A caller who holds a hash and nothing else — the caller the
+         whole published projection exists for — was answered by taking the
+         FINDING's edition off its published row and asking for the CASE at that
+         number. While the two agreed it worked; after the flip it would fetch a
+         different edition of the right case, or none, and hand a stranger one
+         edition's scope and completeness assertion over another edition's
+         findings. Resolved by the hash the case actually pinned. */
+      if (r) {
+        asked = r.bundle_id;
+        askedEdition = Number(r.edition);
+        const cm = this.#caseOfSha(r.bundle_id, sha256, askedEdition);
+        if (cm) { theCase = cm.case_id; ed = cm.edition; }
+      }
     } else if (id) {
       const want = edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
       if (this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, id)) {
@@ -18529,13 +18791,19 @@ export class Store extends DurableObject {
        ratified bytes answer, and that promise is not about inquiries. */
     if (!state && (asked || sha256 || id)) {
       const who = asked || id;
-      const want = ed;
+      /* CASE-5: the FINDING's number, never the case's. `ed` is the case
+         edition this method resolved (or the one the caller asked for) and
+         `published_bundles` has never been keyed on it. Before the flip the
+         substitution was invisible; it is the same class as the two above. */
+      const want = askedEdition != null ? askedEdition
+                 : (sha256 == null && id != null && edition != null
+                    && Number.isInteger(Number(edition)) ? Number(edition) : null);
       const r = sha256
-        ? this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha256)
+        ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha256)
         : want != null
-          ? this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_id=? AND edition=?`, who, want)
-          : this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who);
-      if (r && !this.#caseOf(r.bundle_id, r.edition)) {
+          ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, who, want)
+          : this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who);
+      if (r && !this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition)) {
         const st = this.#looseEditionState(r.bundle_id, r.edition);
         if (st) { theCase = null; ed = r.edition; state = st; }
       }
@@ -18582,12 +18850,19 @@ export class Store extends DurableObject {
            purged; the dishonest one is the restriction having been broken, and the
            suite's negative control is exactly that. */
         if (!t) { unresolved.push({ to: e.to_bundle, kind: e.kind }); continue; }
-        const tCase = this.#caseOf(e.to_bundle, t.edition);
+        /* CASE-5: BY THE HASH. `t.edition` is the TARGET FINDING's own edition
+           and this line asked `published_cases` for a container at that number —
+           so a served leg pointing at a finding inside a case whose editions ran
+           ahead of the finding's would report the wrong container hash, or none,
+           on the surface a reader uses to check the leg. `case_edition` is
+           stated so the reader can fetch the container the hash belongs to. */
+        const tm = this.#caseOfSha(e.to_bundle, t.bundle_sha, t.edition);
         serves.push({ to: e.to_bundle, kind: e.kind, edition: t.edition, title: t.title,
-                      bundle_sha: t.bundle_sha, ratified_at: t.ratified_at, case_id: tCase,
-                      manifest_sha: tCase
+                      bundle_sha: t.bundle_sha, ratified_at: t.ratified_at,
+                      case_id: tm ? tm.case_id : null, case_edition: tm ? tm.edition : null,
+                      manifest_sha: tm
                         ? (this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
-                                     tCase, t.edition)?.manifest_sha ?? null)
+                                     tm.case_id, tm.edition)?.manifest_sha ?? null)
                         : null });
       }
       return { ...fnd, serves, names, unresolved,
@@ -18604,6 +18879,26 @@ export class Store extends DurableObject {
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     return { ok: true, caseId: theCase, edition: ed, scope: state.scope,
+             /* CASE-5 / DEC-72 clause 2, ON THE ANONYMOUS PUBLIC READ, which is
+                the surface the whole ruling is FOR. Clause 4's design sentence
+                is *"each claim's own derived strength displayed beside the case's
+                standard"* — a reader cannot do that if the standard is not on
+                the answer, and until this item the only way to reach it was to
+                pick one member's `required` block and hope the others agreed.
+                `project` beside it because a bar with no publisher is a
+                requirement nobody asserted. Both null for a case published
+                before DEC-72, and null here is the design's absent-bar posture,
+                not a bar of zero: `bar_detail` below says so in words. */
+             project: state.project ?? null, bar: state.bar ?? null,
+             bar_detail: state.bar
+               ? "the standard of evidence this case was held to, read from its publishing project at the "
+               + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
+               + "to any finding, and nothing composed it across projects. Each member's own derived pair is "
+               + "printed beside it inside findings[], and a member may exceed it."
+               : "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case "
+               + "was published before a case carried its own standard, or no bar was ever declared — in "
+               + "which case the case claims no cleared standard and says so, because undetermined is "
+               + "first-class here and is never rounded to a number nobody chose.",
              bias_acknowledgement: state.bias_acknowledgement ?? null,
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
@@ -18697,9 +18992,25 @@ export class Store extends DurableObject {
        bias. */
     return { caseId: null, edition: ed, scope: null, completeness: null,
              bias_acknowledgement: null,
+             /* CASE-5: `project` and `bar` null here for the reason `scope` and
+                `completeness` already are — whose production a thing is and what
+                standard it was held to are CASE assertions, and this is not a
+                case. Stated rather than omitted so a renderer sees "no such
+                assertion" instead of a missing key it might read as a bar of
+                zero, which is the distinction the design doc's absent-bar clause
+                is entirely about. */
+             project: null, bar: null,
              opened: r.ratified_at, ratified_at: r.ratified_at, manifest_sha: null,
              complete: true, awaiting: [],
              findings: [{ ord: 0, bundle_id: r.bundle_id, title: r.title, bundle_sha: r.bundle_sha,
+                          /* CASE-5: the same two keys `#caseEditionState` serves
+                             per member, so ONE renderer still serves both shapes
+                             — which is this method's whole reason for existing.
+                             `version_sha` is null because nothing pinned these
+                             bytes: no case committed to them. `role` is null
+                             because a designation is a case's partition and there
+                             is no case here to be a member of. */
+                          version_sha: null, role: null, edition: ed,
                           ratified_at: r.ratified_at, gate_version: r.gate_version, sig_armored: r.sig_armored,
                           attestor: { member: r.attestor_member, key_b64: r.attestor_key },
                           strength: r.strength ? JSON.parse(r.strength) : null,
@@ -18733,6 +19044,39 @@ export class Store extends DurableObject {
       : this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
                   bundleId);
     return r ? r.case_id : null;
+  }
+
+  /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
+     RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
+     `#caseOf(bundleId, edition)` above takes a CASE edition and is still exactly
+     right when a caller holds one. What its callers actually held, in four of
+     the five places it was used, was a `published_bundles` row — whose `edition`
+     is the FINDING'S, and passing that as the case's is the same conflation
+     `#caseEditionState` carried, arriving through the argument list instead of
+     through a WHERE clause. Before the flip the two numbers agreed and nobody
+     could see it; after it a finding at its own edition 1 inside a case at
+     edition 2 would resolve to NO CASE AT ALL and read as unpublished material.
+     Answers BOTH halves — the case and THE CASE'S EDITION — because every caller
+     that wanted one wanted the other and was deriving it from the wrong number.
+     The fallback is the pre-CASE-3 row whose pin is honestly NULL, and for those
+     rows the finding's edition IS the case's, which is the model they were
+     written under.
+     ORDER BY edition DESC LIMIT 1 and it is a real bound, not a formality: one
+     sha can in principle be pinned by more than one case edition, so the newest
+     membership answers. Nothing writes that shape today — every member
+     re-publishes at each edition and mints a new sha — and the day something
+     does, this returns the most recent claim rather than an arbitrary one. */
+  #caseOfSha(bundleId, bundleSha, fallbackEdition = null) {
+    const r = bundleSha
+      ? this.#one(`SELECT case_id, edition FROM published_case_members
+                   WHERE bundle_id=? AND version_sha=? ORDER BY edition DESC LIMIT 1`, bundleId, bundleSha)
+      : null;
+    if (r) return { case_id: r.case_id, edition: Number(r.edition) };
+    const legacy = fallbackEdition != null
+      ? this.#one(`SELECT case_id, edition FROM published_case_members
+                   WHERE bundle_id=? AND edition=? AND version_sha IS NULL`, bundleId, fallbackEdition)
+      : null;
+    return legacy ? { case_id: legacy.case_id, edition: Number(legacy.edition) } : null;
   }
 
   /* REC-22: which of these ids have a published edition, and what each one FROZE

@@ -1169,3 +1169,109 @@ paths: **NAMED BY REGION AND BY SITE, NEVER BY FILE — and the precision is the
   **NOT** `bio-plane/scripts/coverage.mjs` (**if `REGISTER_FLOOR` has to move, it goes in an
   AMENDMENT block below and is reported to CONDUCT by name** — CONDUCT re-derives it from the
   merged run).
+
+## CLAIM 2026-09-10 RECORD (CASE-5 — DEC-72's ARTIFACT FLIP: case-side freezing, a member resolved BY ITS PIN, and the stranger-verification property preserved case-side)
+session: case5-artifact-flip (worktree `agent-a279f7840e26862b0`, branch
+  `worktree-agent-a279f7840e26862b0`)
+opened: 2026-09-10T00:00:00Z
+paths: **NAMED BY REGION, AND AN FL-8 WORKER IS LIVE ON `airun.mjs` / `RUN_STATUS`** — a
+  different neighbourhood entirely, but the CASE header's rule is that precision is the only
+  protection two workers on RECORD's ground get, so the regions are named anyway.
+  **`bio-plane/src/store.mjs` — named by SITE:**
+  (1) `publishCase()`: the EDITION allocation only — the member's `edition:` stamp becomes the
+  MEMBER'S OWN next edition and a new `case_edition:` scalar carries the CASE's. **NOT** the
+  project fence, **NOT** the owner fence, **NOT** the bar computation, **NOT** the roles
+  partition, **NOT** the C-21.1 freshness comparison, **NOT** the case-identity resolution.
+  (2) `publish()` (the ratify committer): the `caseEdition` parameter and the split between the
+  MEMBER's `ed` (published_bundles, EDITION_EXISTS, EDITION_NOT_INCREMENTED) and the CASE's
+  `cEd` (published_cases, published_case_members, the pin UPDATE, #caseEditionState); plus ONE
+  new refusal `CASE_NAMES_NO_EDITION` and the case-level `bar` commit beside the existing
+  `CASE_ASSERTION_DIVERGED` arm. **NOT** the roles divergence arms, **NOT** `#publishEdges`,
+  **NOT** `published_shas`.
+  (3) `#caseEditionState()`: the member RESOLUTION PREDICATE — by `version_sha` rather than by
+  the CASE's edition number. This is the statement CASE-3's claim deliberately left here for
+  CASE-5, in those words.
+  (4) `#caseOf()` and a new `#caseOfSha()`: pin-based membership resolution, and its callers in
+  `publishedList()`, `publishedEditions()`, `publishedCase()`, `publishedRegistryFor()`.
+  (5) `publishedCase()` and `publishedManifest()`: the case artifact's fields.
+  **NOT** `purge()` (no new table — a COLUMN on an existing published table), **NOT**
+  `promote()`, **NOT** `#moveVersionState()` (CASE-3's, landed), **NOT** the run / task /
+  capture / link / proposal surfaces.
+  **`bio-plane/src/schema.mjs`** — ONE COLUMN (`bar TEXT`) on the EXISTING `published_cases`
+  table and its comment. No new table, so **`purge` is untouched** and D-113 does not bite.
+  New text goes nowhere near the `host_governor` block and carries **no semicolon inside any
+  `--` comment**.
+  **`bio-plane/src/index.mjs`** — `op=ratify`'s ratified-frontmatter reader ONLY: `caseEdition`
+  and `caseBar` read out of the signed bytes beside the fields already there, and the CASE
+  CONTAINER manifest assembly (`bio-case-container/3` -> `/4`). **NOT** the R2 copy, **NOT** the
+  reuse re-check, **NOT** the gate, **NOT** any other op.
+  **`bio-plane/checks/bio-checks.mjs`** — `checkInquiryPublished`'s C-2.8 block ONLY: the
+  `case_edition` requirement added beside `case_scope`/`case_project`/`case_roles`. **NOT**
+  `STATES`, **NOT** `checkCompletenessFreshness`, **NOT** `checkInquiryBasis`, **NOT**
+  `VERSION_ACT_CHECKS`, **NOT** any other C-number.
+  **Tests — CORRECTED, NEVER EXEMPTED:**
+  - `bio-plane/test/caseflip.test.mjs` (NEW — the item's own suite),
+    `bio-plane/test/caseflip.control.mjs` (NEW — the negative-control driver, committed so the
+    arms re-run in one step).
+  - `bio-plane/test/publishedcase.test.mjs`, `bio-plane/test/casepin.test.mjs`,
+    `bio-plane/test/caseobject.test.mjs`, `bio-plane/test/caseproduction.test.mjs`,
+    `bio-plane/test/publish.test.mjs`, `bio-plane/test/doorbell.test.mjs`,
+    `bio-plane/test/hygiene.test.mjs` — touched ONLY where this item's change makes an existing
+    assertion false, each with a dated reason at the assertion saying what it asserted before
+    and why that was right when written. **No floor, census or ratchet moved without naming the
+    arrival.**
+  `docs/development/INTERFACE-CHANGES.md` (IC-66, APPENDED — the file is append-only),
+  `docs/development/CLAIMS.md` (this entry),
+  `docs/development/kickoffs/RECORD.md` (APPENDED, never rewritten — other RECORD workers are
+  live), `docs/development/MEASUREMENTS.md` (appended).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT is sole writer), **NOT**
+  `docs/development/DECISIONS.md` (CONDUCT is sole writer), **NOT**
+  `docs/development/CASE-AS-PRODUCTION.md` (the authority, READ ONLY — CASE-6 archives it),
+  **NOT** `docs/BIO_DATAPLANE_STATE.md` (**the arc binds it to CASE-6's `accepts-when`**),
+  **NOT** `bio-plane/src/airun.mjs` and **NOT** `RUN_STATUS` (FL-8 is live there),
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `release/**`, **NOT**
+  `bio-plane/dist/**`, **NOT** `bio-plane/scripts/coverage.mjs` (**if `REGISTER_FLOOR` has to
+  move it goes in an AMENDMENT block below and is reported to CONDUCT by name**).
+
+### DELEGATION 2026-09-10 RECORD (CASE-5) -> UI: **THE PUBLIC INDEX JOINS A CASE MEMBER TO ITS RATIFIED ROW ON AN EQUALITY THAT IS NO LONGER TRUE, AND IT LOSES ROWS SILENTLY**
+
+**What changed, and it is not a field moving.** No key is removed from any op and no key
+changes type. What moved is a GUARANTEE: `caseMembers[].edition` is the CASE's edition and
+`published[].edition` is the FINDING's own, and since DEC-72's artifact flip those are no
+longer forced to be the same number. A finding joining a case at that case's edition 2,
+having published once before, sits at its OWN edition 1 inside the case's edition 2.
+
+**Where it bites, measured 2026-09-10 by grep over `civicos-ui/`, `newgroup/`, `docprofile/`,
+`pdf-worker/`, `tools/`, `agent-worker/` and `release/`, built copies excluded. ONE file, ONE
+function, THREE lines** — `civicos-ui/app.html`, `pubIndex`, around 15673 / 15680 / 15701:
+
+    inCase  = new Set(members.map((m) => m.bundle_id + "@" + m.edition))
+    waiting = roster.filter((m) => !byId.has(m.bundle_id + "@" + cs.edition))
+    row     = byId.get(m.bundle_id + "@" + cs.edition)
+
+`byId` is keyed on the FINDING's own edition; all three look it up under the CASE's. For a
+member whose editions differ the lookup misses, and **it misses silently**: the member renders
+as AWAITING RATIFICATION forever, its frozen pair and its bar render blank, and its ratified
+row also appears a second time in the not-in-any-case list below. Nothing errors.
+
+**The fix is one line each and needs no new data.** IC-63 already publishes
+`caseMembers[].version_sha` and `published[].bundle_sha`, so the join is PIN TO SHA:
+
+    byShaKey = new Map(pub.map((p) => [p.bundle_sha, p]))   // instead of id@edition
+    row      = byShaKey.get(m.version_sha)
+
+`op=publishedmanifest`'s `production` sentence now states this rule in the answer itself, so
+the page can be written against the contract rather than against this note. A roster row with
+a NULL `version_sha` is a pre-CASE-3 row and keeps the old join honestly — for those rows the
+two numbers ARE equal, which is the model they were written under.
+
+**Also newly available on surfaces UI already reads, and CASE-6 will want all of them:**
+`op=publishedcase`'s `findings[]` gain `edition` (the member's own) and `role`
+(`load_bearing` | `supporting`), and the answer gains `project`, `bar` and `bar_detail` — the
+case's producing project and the standard of evidence it was held to, as CASE properties
+rather than as one member's stamped copy. `bar: null` is the design's absent-bar posture and
+must never render as a bar of zero; `bar_detail` carries that sentence in the answer.
+
+**Not urgent in the shipped record and that is stated rather than implied:** no case in any
+live store can have diverged yet, because nothing before this commit could produce one. The
+first diverged case will be the first one a member adds a new finding to at a later edition.

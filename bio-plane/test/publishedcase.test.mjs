@@ -522,9 +522,20 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
      gained `bias_acknowledgement` (DEC-46 (a)) and the version moved with it,
      so a reader can tell a container that declared nothing from one written
      before the field existed. The pin still demands an exact version. */
+  /* CORRECTED AGAIN 2026-09-10, CASE-5 (DEC-72's artifact flip): `/3` -> `/4`,
+     AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN. A `/3` container was
+     exactly what this plane produced until the flip. `/4` carries what the CASE
+     artifact now freezes case-side — each member's PIN (`version_sha`), its
+     AUTHORED ROLE, its OWN edition, and the case's producing project and bar —
+     and the version moves for REC-47's own reason, restated one field over: a
+     `/3` container that carries no pin and a `/4` container whose pin was
+     WITHHELD must not be indistinguishable to a stranger holding the zip.
+     The pin still demands an EXACT version and deliberately not a `startsWith`:
+     a range match here would pass silently over the next flip, which is the
+     failure mode this assertion exists to prevent. */
   t("the manifest itself answers by its own hash, to anyone",
     [m.status, manifest.format, manifest.case, manifest.edition],
-    [200, "bio-case-container/3", e1.caseId, 1]);
+    [200, "bio-case-container/4", e1.caseId, 1]);
   t("the manifest names the case's SCOPE and carries EVERY finding, each with its own signature and its own pair",
     [typeof manifest.scope, manifest.findings.map((x) => x.bundle_id),
      manifest.findings.every((x) => x.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----")),

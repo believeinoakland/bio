@@ -346,3 +346,59 @@ pinning in the same neighbourhood.
 **WHAT IS STILL OWED BY THE ARC** (CASE-4, CASE-5, CASE-6 and the arc's definition of done) is in
 `QUEUE.md` and `CASE-AS-PRODUCTION.md`; nothing in this item touches
 `docs/BIO_DATAPLANE_STATE.md`, which the arc binds to CASE-6.
+
+## CASE-5 landed 2026-09-10 — DEC-72's ARTIFACT FLIP. What the next RECORD worker must know.
+
+1. **A FINDING'S `edition` IS ITS OWN NOW, AND THE CASE'S IS `case_edition`.** They were one field
+   doing two jobs. `op=publish` stamps the member's next edition off that member's own published
+   chain and the case's number beside it; `op=ratify` reads both out of the signed bytes; the store
+   keys `published_bundles` on the first and `published_cases` / `published_case_members` on the
+   second. **If you write a fixture that rewrites `edition:` in a published document's bytes, you
+   almost certainly have to rewrite `case_edition:` too** — `shadowed-refusals.test.mjs` was the
+   suite that found this, and it went red in exactly that way.
+
+2. **A CASE MEMBER IS RESOLVED BY ITS PIN.** `#caseEditionState` selects `published_bundles` on
+   `bundle_sha = version_sha`, and the old `edition = <the case's>` predicate survives ONLY as the
+   fallback for a roster row written before CASE-3, whose pin is honestly NULL. Same rule in the new
+   `#caseOfSha`, which replaced four `#caseOf(bundleId, r.edition)` calls that were passing a
+   FINDING's edition into a CASE-edition parameter.
+
+3. **`published_cases` GAINED `bar`, committed from the signed bytes under the existing
+   `CASE_ASSERTION_DIVERGED` refusal.** The bar is the CASE's property (DEC-72 clause 2) and had
+   nowhere case-side to live, so it existed only once per member in `published_bundles.required` —
+   which meant a project whose bar moved between two members' ratifications gave one case two
+   standards. It is served on `op=publishedcase` (with `project` and `bar_detail`), on
+   `op=publishedmanifest`'s `cases[]`, and inside the container.
+
+4. **THE CONTAINER IS `bio-case-container/4`.** It gained `project`, `bar`, and per finding
+   `version_sha`, `role` and the member's OWN `edition` — and `findings[].signature.statement` is
+   now the ASCII string rather than a `Uint8Array` serialised as an object of byte indices. Three
+   suites pin the format literal exactly (`publishedcase`, `multifinding` ×2) and they were
+   CORRECTED with dated reasons, never exempted. **Pin the exact version, never a prefix**: a range
+   match passes silently over the next flip.
+
+5. **C-2.8 REQUIRES `case_edition` on a published inquiry, and only when `case_id` is present.** The
+   store keeps a documented fallback to the member's edition for bytes signed before the field
+   existed — defence in depth for the idempotent re-ratification path, NOT a policy default. The
+   gate is the catalog, where a refusal can name what is missing (CASE-1's rule, CASE-2's precedent).
+
+6. **WHAT THE CASE-5 BULLET STILL OWES, and it is stated in IC-66 rather than left to be found:
+   FINDING BYTES STILL NAME A CASE.** `case_id`, `case_findings`, `case_roles`, `case_scope`,
+   `bias_acknowledgement` and `required_strength` are still stamped into every member. This item
+   removed the half that was load-bearing on the FORMAT — the edition conflation, which is what made
+   one-case-per-finding structural — and stopped there deliberately. Every case fact this plane
+   commits is committed FROM THE SIGNED BYTES and from nothing else, and **there is no signature over
+   a case** for those facts to move to; the container says so in its own words. Removing them without
+   first minting a case-level signing ceremony would leave the plane committing a group's case
+   assertions from an UNSIGNED REQUEST. That ceremony is a second publication ceremony and is larger
+   than the rest of CASE-5 combined. **Raised to CONDUCT as the remaining half.**
+
+7. **MULTI-CASE MEMBERSHIP IS STILL REFUSED** (`FINDING_IN_ANOTHER_CASE` /
+   `FINDINGS_IN_DIFFERENT_CASES`). The flip makes it REPRESENTABLE — that was the format bake — but
+   lifting the fence is a surface question (which case does a finding id resolve to) and belongs with
+   CASE-6, which owns the finding view. `caseflip.test.mjs` DRIVES the refusal so "still refused" is
+   distinguishable from "nobody checked".
+
+**WHAT IS STILL OWED BY THE ARC** (CASE-4, CASE-6 and the arc's definition of done) is in `QUEUE.md`
+and `CASE-AS-PRODUCTION.md`; nothing in this item touches `docs/BIO_DATAPLANE_STATE.md`, which the
+arc binds to CASE-6.

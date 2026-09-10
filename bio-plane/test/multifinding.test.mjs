@@ -469,11 +469,28 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
      so "the record is silent" would read as "the group declared nothing". The
      pin is not loosened — the exact version is still demanded — and the field
      it was bumped FOR is now demanded beside it. */
+  /* CORRECTED AGAIN 2026-09-10, CASE-5 (DEC-72's artifact flip): `/3` -> `/4`,
+     AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN — `/3` is exactly what
+     this plane produced until the flip. `/4` carries what the CASE artifact now
+     freezes case-side: each member's PIN (`version_sha`), its AUTHORED ROLE, its
+     OWN edition, and the case's producing project and bar. The version moves for
+     the same reason REC-47 moved it one field over, and the pin here is not
+     loosened: an exact version is still demanded, because a range match would
+     pass silently over the NEXT change to this artifact. */
   t("the manifest describes the CASE and carries every member finding with its own signature and pair",
     [manifest.format, manifest.case, manifest.edition,
      manifest.findings.map((f) => f.bundle_id),
      manifest.findings.every((f) => f.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----"))],
-    ["bio-case-container/3", CASE_ID, 1, [FIND_A, FIND_B], true]);
+    ["bio-case-container/4", CASE_ID, 1, [FIND_A, FIND_B], true]);
+  /* CASE-5, ADDED RATHER THAN CORRECTED: this suite's two members publish at the
+     SAME case edition, so their own editions and their case's agree — which is
+     the SLAVED shape, still perfectly legal and now one case among two. Pinned
+     here so the flip cannot be read as having made every member diverge: what it
+     removed is the guarantee that they agree, not the agreement. The DIVERGED
+     shape is `caseflip.test.mjs`'s fixture. */
+  t("both members here sit at their OWN edition 1 inside case edition 1 — the numbers still agree when the "
+    + "history agrees, which is what the flip stopped GUARANTEEING rather than stopped allowing",
+    [manifest.findings.map((f) => f.edition), manifest.edition], [[1, 1], 1]);
   /* REC-47 / DEC-46 (a): IN THE CONTAINER, which is the copy that travels.
      DEC-20 makes the bias part of the evidentiary record that accompanies every
      published case; the container is the artifact that accompanies it once this
@@ -1059,8 +1076,9 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
                    (c.manifest && c.manifest.findings || []).map((f) => f.bundle_id),
                    (c.manifest && c.manifest.findings || []).every((f) => Array.isArray(f.strength))]),
     /* CORRECTED 2026-08-05, REC-47: /2 -> /3, for the reason recorded at the
-       container assertion in block 2. */
-    [["bio-case-container/3", [FIND_A, FIND_B], true], ["bio-case-container/3", [FIND_A, FIND_B], true]]);
+       container assertion in block 2. CORRECTED AGAIN 2026-09-10, CASE-5: /3 ->
+       /4, for the reason recorded at the same assertion. */
+    [["bio-case-container/4", [FIND_A, FIND_B], true], ["bio-case-container/4", [FIND_A, FIND_B], true]]);
   /* THE THIRD STATE, AND WHAT THE FIXTURE MEASURED ABOUT IT rather than what the
      item assumed. FIND_C was PUBLISHED into a case of its own in block 2b and
      never ratified — and that case appears on the index NOWHERE, because

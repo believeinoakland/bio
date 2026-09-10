@@ -4369,3 +4369,134 @@ minting cases whose standard of evidence nobody declared.
 
 **For any caller of `op=strengthbarof&target=`:** ask the publishing project instead. The refusal
 says so by name.
+
+## IC-66 · I3 + I5: THE ARTIFACT FLIP — A CASE MEMBER IS RESOLVED BY ITS PINNED VERSION AND NO LONGER BY THE CASE'S EDITION NUMBER; a finding's `edition` becomes ITS OWN and the case's moves to `case_edition`; the CASE CONTAINER goes to `bio-case-container/4` carrying `version_sha`, `role`, the member's own edition, the producing project and the case's BAR · PROPOSED 2026-09-10 (CASE-5, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I3** (the op contracts: `op=publish`, `op=ratify`, `op=publishedcase`,
+  `op=publishedmanifest`, `op=publishededitions`, `op=publishedlist`) **and I5** (one additive
+  column, `published_cases.bar`).
+- **Proposer:** RECORD, session `case5-artifact-flip` (worktree `agent-a279f7840e26862b0`),
+  2026-09-10, enacting `docs/development/CASE-AS-PRODUCTION.md`'s CASE-5 bullet under **DEC-72**.
+- **Owner to land it:** `RECORD` (owns I3 and I5).
+- **Consumers to answer:** `UI` — and **MEASURED IMPACT IS NOT ZERO HERE**, unlike IC-63/64/65.
+  See the measurement below; a DELEGATION is filed in `CLAIMS.md`.
+- **Status:** PROPOSED. **Additive on the wire, NOT additive in MEANING** — no key is removed and
+  no key changes type, but `findings[].edition` and `caseMembers[].edition` stop being guaranteed
+  equal to the case's edition, and a consumer that JOINED ON THAT EQUALITY silently loses rows.
+  Filed BEFORE any code was written, because a silent-join-break is exactly the case the protocol
+  exists for.
+
+### Why this is a contract change and not a defect fix
+
+The design doc names it as the largest mechanical piece of DEC-72: *"The signed-artifact direction
+FLIPS. Today each published finding's bytes name its case (one-case-per-finding baked into the
+format). Now the CASE artifact freezes its members — content by hash, version, per-member strength
+pair, role, the bar, the exclusions — and a finding's bytes stop naming any case."*
+
+`schema.mjs`'s own `version_sha` comment, written by CASE-1 before this item existed, names the
+defect this closes in terms: *"It also names the conflation the artifact flip removes: today
+`#caseEditionState` reads `published_bundles` at the CASE'S edition number, which is only correct
+while one case owns one finding."* CASE-3 landed the pin and handed the predicate on: *"resolving a
+member BY THE PIN instead of by the CASE'S edition number is NOT done."*
+
+### The change
+
+**1. A FINDING'S `edition` IS NOW ITS OWN, AND THE CASE'S EDITION IS `case_edition`.**
+
+`op=publish` stamps into each member's frontmatter:
+
+    edition:       the MEMBER'S own next edition, off its own published chain   (WAS: the case's)
+    case_edition:  the CASE's next edition                                       (NEW)
+
+`op=ratify` reads both out of the RATIFIED BYTES and out of nothing else, exactly as it already
+reads `case_id`, `case_scope`, `case_project`, `case_roles` and the bias acknowledgement. The
+member's edition keys `published_bundles` (and its `EDITION_EXISTS` / `EDITION_NOT_INCREMENTED`
+refusals, which are now genuinely per-finding); the case's edition keys `published_cases` and
+`published_case_members`.
+
+**WHY BOTH NUMBERS ARE NEEDED AND ONE WILL NOT DO.** They were never the same fact. An edition of a
+CASE is a separate document a reader was handed (DEC-12 as DEC-44 rehomes it); an edition of a
+FINDING is a version on that finding's own chain. While every member re-published at every case
+edition the two agreed by accident, and that accident is what baked one-case-per-finding into the
+format: a finding already published at edition 1 could not join a second case, because the second
+case's edition 1 would demand bytes at a number that finding had already spent. New refusal:
+
+    CASE_NAMES_NO_EDITION   a member's signed bytes name a case and no case edition
+
+**2. A MEMBER IS RESOLVED BY ITS PIN.** `#caseEditionState` resolved each member with
+`SELECT … FROM published_bundles WHERE bundle_id=? AND edition=?` at the CASE's edition. It now
+resolves on `version_sha` — the hash the member SIGNED, written by CASE-3 — and falls back to the
+old predicate ONLY for a roster row whose pin is NULL, which is every row written before CASE-3.
+Same treatment in `#caseOf`, which decides which case a published finding belongs to.
+
+Consequence on the wire: `op=publishedcase`'s `findings[]` entries gain
+
+    edition       the MEMBER'S OWN edition        (NEW — previously the case's, and implicit)
+    role          'load_bearing' | 'supporting'   (NEW on this surface; IC-63 put it in the schema)
+
+**3. THE CASE'S BAR IS FROZEN CASE-SIDE.** New column `published_cases.bar TEXT`, committed at
+ratification FROM THE SIGNED BYTES under the same `CASE_ASSERTION_DIVERGED` refusal that already
+holds scope, completeness and the bias acknowledgement. The bar was reachable only per member, off
+`published_bundles.required` — and because it is read from the publishing project AT ACT TIME while
+members ratify at different times, a project whose bar moved between two ratifications gave one case
+two standards with nothing noticing. It is a case property (DEC-72 clause 2) and it is now stored,
+served and refused as one. `op=publishedcase` and `op=publishedmanifest`'s `cases[]` gain `bar`;
+`op=publishedcase` gains `project`.
+
+**4. THE CONTAINER GOES TO `bio-case-container/4`.** The version moves for REC-47's stated reason —
+a stranger holding a `/3` zip that lacks a pin and a `/4` zip whose pin was withheld must not be
+indistinguishable. What `/4` adds, and every one of them is the design's own list of what the CASE
+artifact freezes:
+
+    project                  whose production the case is (DEC-72 clause 2)
+    bar                      the standard of evidence, as the CASE's property
+    findings[].version_sha   the pin — the version the case COMMITTED TO
+    findings[].role          the AUTHORED designation (clause 4)
+    findings[].edition       the MEMBER'S OWN edition  (WAS: `cs.edition`, the case's — a
+                             statement that was wrong in the artifact and is corrected here)
+
+`exclusions` are NOT added: they are already frozen case-side inside `completeness.excluded`, and a
+second copy would be a second authority for one fact.
+
+### MEASURED CONSUMER IMPACT — NOT ZERO, and the measurement names the sites
+
+Measured 2026-09-10 by grep over `civicos-ui/`, `newgroup/`, `docprofile/`, `pdf-worker/`,
+`tools/`, `agent-worker/` and `release/`, built copies excluded.
+
+**`civicos-ui/app.html`, ONE function (`pubIndex`), THREE join sites, all the same defect:** the
+public index joins a roster row to its ratified row on `bundle_id + "@" + <the CASE's edition>`.
+
+    ~15673  inCase   = new Set(members.map((m) => m.bundle_id + "@" + m.edition))
+    ~15680  waiting  = roster.filter((m) => !byId.has(m.bundle_id + "@" + cs.edition))
+    ~15701  row      = byId.get(m.bundle_id + "@" + cs.edition)
+
+For a member whose own edition differs from its case's, all three miss: the member reads as
+**AWAITING RATIFICATION FOREVER**, its pair and bar render blank, and its ratified row also appears
+a second time in the not-in-any-case list below. **The fix is one line each and the data is already
+on the wire** — IC-63 published `caseMembers[].version_sha` and `published[].bundle_sha`, so the
+join becomes pin-to-sha. A DELEGATION → UI carrying exactly this is filed in `CLAIMS.md`.
+
+Everywhere else measured ZERO: `op=publishedcase`'s `c.edition` reads are the CASE's edition and are
+unmoved; `serves[].edition` already named a target finding's own edition; `newgroup/` and
+`bio-plane/dist/` carry BUILT COPIES DIST regenerates; `docprofile/`, `pdf-worker/`, `tools/`,
+`agent-worker/` and `release/` read none of the moving fields.
+
+### WHAT THIS ITEM DOES **NOT** DO, STATED IN THE CONTRACT RATHER THAN DISCOVERED BY THE NEXT READER
+
+**A finding's bytes still carry `case_id`, `case_findings`, `case_roles`, `case_scope`,
+`bias_acknowledgement` and `required_strength`.** The CASE-5 bullet says finding bytes stop naming a
+case, and this item removes the deepest half of that — the `edition` conflation, which is the half
+that actually baked one-case-per-finding into the FORMAT — and stops there deliberately.
+
+The reason is doctrinal and is measured, not judged. Every case fact this plane commits is committed
+FROM THE SIGNED BYTES AND FROM NOTHING ELSE (`#publishEdges`' doctrine, restated at seven sites in
+`publish()`), because *"a case identity, a scope statement or a roster that is not inside the hash
+the member signed is one this plane would be asserting on their behalf."* There is today **no
+signature over a case** — the container manifest says so in its own words: *"The signature is per
+finding because the FINDING is the unit of truth … a case-level signature would be a signature over
+something nobody reviewed."* So removing the case facts from member bytes without first minting a
+case-level signing ceremony would leave the plane committing a group's case assertions from an
+UNSIGNED REQUEST, which is the attribution class this record refuses everywhere else. That ceremony
+is a second publication ceremony — a case document, its gate, its checks, its ratify path — and it
+is larger than the rest of CASE-5 combined. **Raised to CONDUCT as the remaining half rather than
+half-built here.**

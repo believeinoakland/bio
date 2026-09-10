@@ -8169,3 +8169,69 @@ REC-30 itself named honestly (*"`source: "project"` on a target only invisible p
 says that SOME project declares a bar on it"*). With no cross-citer walk there is no `projects[]`,
 no interpolated id and no residual. What replaces it is strictly narrower: a project the viewer may
 not see is answered byte-identically to one that does not exist.
+
+## 2026-09-10 · CASE-5, DEC-72's ARTIFACT FLIP — the divergence had to be MANUFACTURED, and that is the item's central measurement
+
+**A MEMBER'S EDITION AND ITS CASE'S COULD NOT DIVERGE ON ANY PATH, and this was measured before a
+line was written rather than assumed from CASE-3's handoff note.** `op=publish` stamped the CASE's
+edition into every member's frontmatter and `op=ratify` committed that number to
+`published_bundles`, so a member's published edition WAS its case's, by construction, everywhere.
+The consequences, each traced to the statement that produces it:
+
+- `#caseEditionState` resolved a member with `published_bundles WHERE bundle_id=? AND edition=?` at
+  the CASE's number and was correct only because of the slaving — `schema.mjs`'s own `version_sha`
+  comment, written by CASE-1, says exactly this and names the artifact flip as what removes it.
+- **A finding already published at edition 1 could not join a second case at all.** That case's
+  edition 1 would demand bytes at a number the finding had already spent, and `EDITION_EXISTS`
+  refused it — for a reason having nothing to do with the finding. **This is what the design doc's
+  "one-case-per-finding baked into the FORMAT" means mechanically**, and it is why the flip is a
+  change to the FORMAT rather than to a read.
+- So no fixture over the shipped plane could produce a case member whose pin did work no other
+  column could do. `casepin.test.mjs` said so in its own limits block and was right.
+
+**WHAT MAKES THEM DIVERGE, and it is the smallest thing that does:** a member's `edition:` is now
+its OWN next edition off its OWN published chain, and the case's number travels as a new
+`case_edition:` scalar. The fixture is one case, two editions, one added member — case edition 1 is
+`[ALPHA]`, case edition 2 is `[ALPHA, BETA]`, and BETA (concluded, never before published) sits at
+**its own edition 1 inside the case's edition 2**. No second case and no multi-case membership are
+needed, which matters because multi-case membership is still refused and belongs to CASE-6.
+
+**FOUR SITES CARRIED THE SAME CONFLATION THROUGH AN ARGUMENT LIST RATHER THAN A WHERE CLAUSE**, and
+they were found by asking which callers of `#caseOf(bundleId, edition)` were holding a
+`published_bundles` row: `publishedList`, `publishedEditions`, `publishedCase`'s sha route, and
+`publishedCase`'s `serves[]` edge resolution. `publishedEditions` was the sharpest — it resolved the
+case at the FINDING's edition and then fetched `published_cases` at that same number, so a finding at
+its own edition 1 inside a case at edition 3 would have been answered with **edition 1's scope,
+completeness assertion and bias acknowledgement**: a case assertion attributed to the wrong edition
+of the right case. All four now resolve by hash (`#caseOfSha`).
+
+**A CASE COULD HOLD TWO STANDARDS OF EVIDENCE, and nothing in the plane could notice.** The bar is
+read from the publishing project AT ACT TIME (CASE-2, DEC-72 clause 2) and members ratify at
+DIFFERENT times, so a project whose bar moved between the first member's ratification and the last
+gave one case edition two bars — each inside a different member's signature, both honest about
+themselves, and no surface able to say which the case was held to. There was nowhere case-side to
+put it: `published_cases` had no `bar` column and `published_bundles.required` is per member. Closed
+by storing it on `published_cases`, committed from the signed bytes under the SAME
+`CASE_ASSERTION_DIVERGED` refusal that already holds the scope.
+
+**ONE FIELD IN THE PORTABLE CONTAINER WAS UNREADABLE BY THE READER IT EXISTS FOR.**
+`findings[].signature.statement` was `ratifyStatement()`'s return value — a `Uint8Array` — and
+`JSON.stringify` turns a Uint8Array into an object keyed by byte index. So the artifact told a
+stranger to check a signature over a statement it printed as 47 numbered integers. Measured to have
+ZERO consumers (`civicos-ui`, the battery, `src/`) and corrected to the ASCII string under the `/4`
+bump. `findings[].edition` was separately a FALSE STATEMENT in that artifact: it wrote `cs.edition`,
+the CASE's number, onto every member as though it were the member's.
+
+**MEASURED CONSUMER IMPACT FOR IC-66 — NOT ZERO, unlike IC-63/64/65, and named by site.** Grep over
+`civicos-ui/`, `newgroup/`, `docprofile/`, `pdf-worker/`, `tools/`, `agent-worker/`, `release/`,
+built copies excluded. **ONE file, ONE function, THREE lines:** `civicos-ui/app.html`'s `pubIndex`
+joins a roster row to its ratified row on `bundle_id + "@" + <the CASE's edition>` at ~15673,
+~15680 and ~15701, while its `byId` map is keyed on the FINDING's own edition. A diverged member
+misses all three and **misses silently** — rendering as awaiting ratification forever, with a blank
+pair and a blank bar, and appearing a second time in the not-in-any-case list. The data for the
+correct join (`caseMembers[].version_sha` to `published[].bundle_sha`) has been on the wire since
+IC-63. Everywhere else measured zero. DELEGATION filed in `CLAIMS.md`.
+
+**GATES.** Baseline on `main` for this worktree, measured after `npm ci`: **167/167 suites · 10,279
+assertions · exit 0**, matching the figure the brief carried. See the CASE-5 landing line in
+`QUEUE.md` for the item's own figures.
