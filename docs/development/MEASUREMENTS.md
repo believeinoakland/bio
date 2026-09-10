@@ -8169,3 +8169,56 @@ REC-30 itself named honestly (*"`source: "project"` on a target only invisible p
 says that SOME project declares a bar on it"*). With no cross-citer walk there is no `projects[]`,
 no interpolated id and no residual. What replaces it is strictly narrower: a project the viewer may
 not see is answered byte-identically to one that does not exist.
+
+## FL-8 · 2026-09-10 · what a run's STATUS could honestly say, and one instrument that had been lying since FL-7
+
+**THE MEASUREMENT THAT DECIDED THE ITEM, and it is the one §14b.6 demands before anything is
+minted: does `RUN_STATUS` already carry an honest term for a run that never started?** Instrument:
+`grep -arn` over every tree with `node_modules` and built artifacts excluded, plus reading each
+term's PRODUCER in `bio-plane/src/store.mjs`. **Answer: no, and the reason is structural rather
+than a gap.** `RUN_STATUS` held three terms and **all three presuppose the run started** —
+`running` is under way, `finished` is "it ran and ended without a bound", `stopped` is "it ran and a
+bound stopped it". `stopped` was the only real candidate and it fails on its producer: its SOLE
+writer anywhere in the plane was `stoppedByBound`, and every sentence the record renders beside it
+names a bound (`"the run stopped because the '<b>' bound was reached"`, `RUN_BOUNDS[b]` in
+`aiRunRead`, and `harness.mjs`'s *"a run that stopped heartbeating DIED rather than finished"*).
+`node tools/decided.mjs` returns the no-ruling floor for "run status finished stopped" and for "a
+run that never started". So §14b.6's reuse rule — **conditional on the word existing**, as FL-7
+established — fails here exactly as it failed there, and `never-started` was minted with that as
+its recorded basis.
+
+**AN INSTRUMENT DEFECT FOUND BY MEASUREMENT RATHER THAN BY A CONTROL, and it had been live for a
+month.** `agent-worker/test/harness.test.mjs`'s plane mock decided a closed run's status with a
+hand copy of the plane's rule: `bound === "completed" || bound === "cancelled" ? "finished" :
+"stopped"`. That was correct when written and stopped being correct the moment FL-7 minted a third
+ending — **from FL-7 until FL-8 the mock answered `stopped` for `mode-not-deployed` while the real
+plane answered `finished`, and nothing compared the two.** Every arm driven through it in that
+window was evidence about a plane that does not exist. The table is now BUILT by `runStatusFor`
+over the plane's own vocabularies and interpolated into the mock as data; arm A6c asserts it covers
+the whole domain a legal close can name, which makes the mock's fallback unreachable rather than
+merely unlikely. **This is the parallel-path class arriving in the instrument, where it is worse
+than in the product.**
+
+**MEASURED CONSUMER IMPACT FOR IC-67 — SIX FILES READ `RUN_STATUS`, ZERO EDITS OWED OUTSIDE THE
+PLANE.** Three `civicos-ui` test files DERIVE from `Object.keys` and absorb the term with no edit;
+`check-refusal-codes.mjs` arm E excludes it BY SHAPE (its values are `1`, not text) and the added
+term keeps that shape; `app.html`'s one `data-status` selector pins `running`, which does not move.
+**Stated as the WEAKER claim than IC-62's deliberately:** FL-7's UI impact was zero *structurally*
+(ARM V1 asserts the UI holds no copy of `RUN_ENDINGS`), while here the UI genuinely READS
+`RUN_STATUS` and the zero is by DERIVATION. Four hand-written status expectations exist in the
+battery (`airun.test.mjs` C4 and K6, `scheduler.test.mjs:568`, `harness.test.mjs:756`) and **not one
+moves** — every one names a bound-stop or the member's ending.
+
+**AND THE ABSENCE THAT WAS THE FINDING: `RUN_STATUS` HAD NO EXHAUSTIVE PIN AT ALL.** `RUN_BOUNDS`
+has `airun.test.mjs` ARM V5 and `RUN_ENDINGS` has ARM V6 — the guard that made FL-7 supply a reason
+before a third ending could land — and the third run vocabulary had nothing, so a term could have
+been added, or one of the three renamed, with nothing anywhere asking why. ARM V9 closes it.
+
+**BATTERY: 167/167 suites · 10,279 assertions on `main` before any edit** (the true baseline, and
+it matches the brief) **and 167/167 · 10,295 after, exit 0** — +16 assertions in exactly two suites:
+`airun.test.mjs` 114 → 126 (+12: V9, H1-H4, W0-W5) and `agent-worker/harness.test.mjs` 209 → 213
+(+4: the A6c block's three, and B7's status arm). **No suite count moved — no file was added, and
+that is deliberate: FL-7's own amendment records why splitting one subject across two files lets a
+later reader correct one and miss the other.** `coverage.mjs --strict` run DIRECTLY with `$?` read
+unpiped: **exit 0**, REGISTER FLOOR arms 852/852 · classified 161/161 · corpus 162/162,
+**`REGISTER_FLOOR` NOT MOVED**. The fleet register grew 48 → 58 arms against its own floor of 48.

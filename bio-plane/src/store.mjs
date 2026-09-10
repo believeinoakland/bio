@@ -221,6 +221,13 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             which is the failure this repository has now measured six times. */
          RUN_CONTEXTS,
          checkObservation, checkCondition, checkBound, finishedBound,
+         /* FL-8 / IC-67: WHAT BECAME OF THE RUN, decided in `airun.mjs` beside the
+            three vocabularies it reads rather than as a ternary here. Imported for
+            `finishedBound`'s reason exactly, one field over: this rule had two
+            copies inside `#aiRunTerminate` and a THIRD by hand in the fleet
+            member's plane mock, and the third had been wrong since FL-7 minted a
+            third ending. */
+         runStatusFor,
          /* PL-18: the project-membership gate, decided ONCE in `airun.mjs` for all
             three run verbs rather than three times here — DEC-63's ruling that the
             gate is participation and not a capability tier. */
@@ -22948,12 +22955,26 @@ export class Store extends DurableObject {
           : `the run ended: ${RUN_ENDINGS[bound]}`,
       }, at, 1);
       if (bad) return { run, found: true, terminated: false, ...bad };
+      /* FL-8 / IC-67 — WHAT BECAME OF THIS RUN, ASKED ONCE AND OF `airun.mjs`.
+         This was `stoppedByBound ? "stopped" : "finished"`, written out TWICE
+         here, and it recorded a launch the deployment gate REFUSED as a run that
+         FINISHED — a gate refusal reaches no bound, so it fell through the false
+         arm. **It did not finish; it never started.** The keying now lives beside
+         the vocabularies it reads (`runStatusFor`), so the status a run is
+         recorded under cannot drift from the endings and bounds that decide it,
+         and the fleet member's mock is BUILT from the same function instead of
+         reproducing it by hand — which is how the previous copy came to be
+         answering `stopped` for `mode-not-deployed` while this line answered
+         `finished`, with nothing comparing them. `stoppedByBound` stays: it still
+         chooses the terminal entry's SENTENCE two lines up, which is a different
+         question from what the run's status is. */
+      const status = runStatusFor(bound);
       this.sql.exec(
         `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
          WHERE run = ?`,
-        stoppedByBound ? "stopped" : "finished", at, bound, condition, at, run);
+        status, at, bound, condition, at, run);
       return { run, found: true, terminated: true,
-               status: stoppedByBound ? "stopped" : "finished",
+               status,
                bound, condition, state, at };
     });
   }

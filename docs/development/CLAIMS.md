@@ -1169,3 +1169,56 @@ paths: **NAMED BY REGION AND BY SITE, NEVER BY FILE — and the precision is the
   **NOT** `bio-plane/scripts/coverage.mjs` (**if `REGISTER_FLOOR` has to move, it goes in an
   AMENDMENT block below and is reported to CONDUCT by name** — CONDUCT re-derives it from the
   merged run).
+## CLAIM 2026-09-10 FLEET (FL-8 — a launch the gate refused did not FINISH; the STATUS gets a word for a run that never started)
+session: fl8-run-status (worktree `agent-a50bd4cc90737bcaf`)
+opened: 2026-09-10T00:00:00Z
+paths: **NAMED BY REGION, NOT BY FILE. A CASE-5 worker is live on the PUBLISHED-ARTIFACT path
+  (`published_cases`, the manifest/ratify surfaces) in `store.mjs` and `index.mjs`; this item's
+  neighbourhood in that file is the AI-RUN family — `#aiRunTerminate` and nothing else — and the
+  two do not touch. Named precisely rather than by file so the disjointness is checkable.**
+  - `bio-plane/src/airun.mjs` — **the `RUN_STATUS` declaration and the keying function beside it
+    ONLY** (one added status term, one added classification set, one added exported function, and
+    the reasoning comment above them). **NOT** `RUN_BOUNDS`, **NOT** `RUN_ENDINGS` (READ ONLY —
+    FL-7's three terms are unchanged and this item adds none), **NOT** `checkBound`, **NOT**
+    `checkCondition`, **NOT** `checkObservation`, **NOT** `finishedBound`, **NOT**
+    `STANDARD_BASIS`, **NOT** `OBSERVATION_*`, **NOT** `projectGate`.
+  - `bio-plane/src/store.mjs` — **the TWO status expressions inside `#aiRunTerminate` ONLY**
+    (`stoppedByBound ? "stopped" : "finished"`, at the `UPDATE` and at the returned object), plus
+    the reasoning comment above them. **NOT** the terminal-entry append, **NOT**
+    `#aiRunSearchState`, **NOT** `aiRunOpen`/`aiRunTick`/`#aiRunReap`/`aiRunClose`, **NOT**
+    `aiRunRead`, **NOT** `aiRunsInContext`, **NOT** the wake/reap SQL, **NOT** `#bundleGate`,
+    **NOT** anything in the published-case, manifest or ratify families (CASE-5's neighbourhood),
+    **NOT** any other region of the file.
+  - `bio-plane/test/airun.test.mjs` — **ARM V (one added assertion), the ARM C/F/G block (added
+    status arms) and the file's NEGATIVE CONTROL header ONLY.** **NOT** ARM B, D, K, L, R, S, U or X.
+  - `agent-worker/test/harness.test.mjs` — **the PLANE MOCK's `airunclose` branch ONLY** (the
+    hand-written copy of the plane's status keying, which is measurably WRONG today) and its
+    interpolated declaration at the top of the mock, plus ONE added assertion in B7. **NOT** the
+    mock's other op branches, **NOT** arms A1-A6b, **NOT** B1-B6, B8+, **NOT** the source pins.
+  - `agent-worker/test/harness.control.mjs` — **APPENDED arms only**; no existing arm edited.
+  - `docs/development/INTERFACE-CHANGES.md` (IC-67, APPENDED — the file is append-only, and the id
+    is **PRE-ALLOCATED BY CONDUCT**, not minted here: two parallel workers each minted `IC-64` on
+    2026-08-10 because `mintid` derives its floor from ids mentioned in prose and neither branch
+    could see the other's file),
+    `docs/development/CLAIMS.md` (this entry),
+    `docs/development/MEASUREMENTS.md` (APPENDED).
+  **NOT** `bio-plane/src/schema.mjs` (untouched — `ai_runs.status` is a TEXT column with no CHECK
+  constraint and no enum; this item adds no table, no column and no migration).
+  **NOT** `bio-plane/src/index.mjs` (READ ONLY — the op table is unchanged and no op is added).
+  **NOT** `bio-plane/src/skillpack.mjs` (READ ONLY — the pack publishes `bounds` and `endings` and
+  has never published `RUN_STATUS`; measured, not assumed).
+  **NOT** `bio-plane/checks/bio-checks.mjs` (READ ONLY — no C-number moves; the status is DERIVED
+  from a bound C-22.5 has already admitted, so there is nothing new to refuse).
+  **NOT** `civicos-ui/**` (READ ONLY — measured for the IC: three files read `RUN_STATUS` and all
+  three DERIVE from `Object.keys`, and the one CSS selector pins `running`, which does not move).
+  **NOT** `agent-worker/src/harness.mjs` (READ ONLY — the gate already closes on the right ENDING;
+  a fleet member does not decide a status and this item gives it nothing to emit).
+  **NOT** `bio-plane/test/skillsequencing.test.mjs` (READ ONLY — ARMS D4/D5 assert the ENDING and
+  no status; measured before claiming).
+  **NOT** `bio-plane/test/scheduler.test.mjs` (READ ONLY — its `stopped` assertion is a LEASE
+  lapse, which stays `stopped`).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT is its sole writer).
+  **NOT** `docs/development/DECISIONS.md` (CONDUCT is its sole writer).
+  **NOT** `newgroup/**`, **NOT** `release/**` (built artifacts DIST regenerates).
+  **NOT** `bio-plane/scripts/coverage.mjs` (**if `REGISTER_FLOOR` has to move it goes in an
+  AMENDMENT block below and is reported to CONDUCT by name**).

@@ -4369,3 +4369,214 @@ minting cases whose standard of evidence nobody declared.
 
 **For any caller of `op=strengthbarof&target=`:** ask the publishing project instead. The refusal
 says so by name.
+
+## IC-67 · I3: `RUN_STATUS` GAINS ONE TERM — `never-started` — AND THE STATUS KEYING MOVES OUT OF `#aiRunTerminate` INTO ONE DECLARED FUNCTION, so a launch the deployment gate REFUSED stops being recorded as a run that FINISHED · PROPOSED 2026-09-10 (FL-8, enacting QUEUE FL-8, the residue IC-62 named) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the plane's published run vocabulary. `RUN_STATUS` reaches members through
+  `op=airun`'s and `op=airuns`' `session.status`, through `op=airunlog`'s `status`, and through
+  `op=airunclose`'s own return — and it reaches a member's EYES verbatim, because
+  `civicos-ui/app.html`'s indicator prints the record's status word and carries it into
+  `data-status`)
+- **Proposer:** FLEET, session `fl8-run-status`, 2026-09-10, from QUEUE FL-8
+- **Owner to land it:** FLEET (the declaration is `bio-plane/src/airun.mjs`; the writer is
+  `bio-plane/src/store.mjs` `#aiRunTerminate`)
+- **The id is PRE-ALLOCATED BY CONDUCT, not minted in this worker.** On 2026-08-10 two parallel
+  workers each minted `IC-64` because `mintid` derives its floor from ids MENTIONED IN PROSE and
+  neither branch could see the other's file. `IC-67` was handed to this item at spawn.
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, precisely
+
+`bio-plane/src/airun.mjs`'s `RUN_STATUS` goes from three terms to four:
+
+    running        the run is under way
+    finished       it ran, and it ended without a bound stopping it
+    stopped        it ran, and a bound stopped it
+  + never-started  the launch was refused before the first step ran
+
+and the keying that CHOOSES between them moves out of `store.mjs` into one exported function
+beside the vocabulary:
+
+    export const RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
+    export function runStatusFor(bound) { ... }
+
+`#aiRunTerminate` calls it in the two places it previously wrote
+`stoppedByBound ? "stopped" : "finished"` inline (the `UPDATE` and the returned object).
+**No status is renamed, none is removed, and `running`, `finished` and `stopped` keep exactly the
+meanings their producers already gave them.**
+
+### THIS IS NOT PURELY ADDITIVE AND SAYING SO IS THE POINT
+
+IC-62 was additive in both senses: a term was added and no run's recorded ending moved. **This one
+is additive in the VOCABULARY and a MOVE in the DATA.** One class of run — a launch the deployment
+gate refused, closed on `mode-not-deployed` — stops reading `finished` and starts reading
+`never-started`. A consumer that treats `finished` as "every run that ended without a bound" will
+see one fewer row under that word.
+
+Measured in-tree: **no such consumer exists.** Nothing in `bio-plane/src`, `agent-worker/src` or
+`civicos-ui` compares a run's status to `finished` at all; the UI carries whatever arrived into an
+attribute and prints it. The one hand-written `finished` expectation in the battery
+(`airun.test.mjs` ARM C4) is about a MEMBER CANCELLATION and is deliberately left standing — see
+the over-strictness section below. It is stated as a MOVE anyway, because "nobody in this tree
+reads it" is not "nobody reads it": a group runs its own instance, and `op=airun` is published.
+
+### WHY — AND WHY IT IS AN ERROR RATHER THAN A PREFERENCE
+
+`#aiRunTerminate` keys the status on whether the ending is a BOUND. A gate refusal reaches no
+bound, so it falls through to `finished`. **A launch the gate refused did not finish; it never
+started.** The record's own field for "what became of this run" says it ran to its end, about a run
+that never took a step, spent nothing, and was refused before any bound was consulted.
+
+This is the same misdescription FL-7 closed one vocabulary over, and it is the same class: **a
+record claiming more than it can support, in a terminal fact.** `RUN_ENDINGS`' own header carries
+the deciding sentence — *"'the member asked for it to stop' and 'the budget ran out' are different
+facts, and collapsing them would put this item on the wrong side of its own doctrine two lines
+after stating it."* "It never started" is a THIRD such fact at the status level, and the same
+sentence decides it.
+
+### THE MEASUREMENT §14b.6 REQUIRES, RUN BEFORE ANYTHING WAS MINTED
+
+§14b.6's standing rule, quoted in `harness.mjs`'s own header, is *"the record already has the word
+and lacks the writer — build that producer rather than minting a new kind"*, and FL-7 established
+that **it is conditional on the word EXISTING**. So the question was asked first, of `RUN_STATUS`'s
+three terms, and the answer is measured rather than asserted:
+
+- **`running`** — false of a terminated run. Not a candidate.
+- **`finished`** — the defect itself. Its only producer is a run that reached its own end.
+- **`stopped`** — the only real candidate, and it FAILS on measurement. Its sole producer in the
+  whole plane is `stoppedByBound`, and every sentence the record renders beside it says a bound was
+  reached: `#aiRunTerminate` writes *"the run stopped because the '<bound>' bound was reached"*,
+  `aiRunRead` renders `RUN_BOUNDS[stopped_bound]` next to it, and `NOT_OUR_BOUNDS.lease` says *"a
+  run that stopped heartbeating DIED rather than finished"*. Putting a never-started run under
+  `stopped` would hand a consumer a status whose entire established meaning is bound-exhaustion,
+  about a run that consulted no bound — which is the collapse this file refused one vocabulary over.
+
+**And the deeper half of the measurement: all three existing terms PRESUPPOSE THE RUN STARTED.**
+`running` is under way; `finished` and `stopped` are two ways of having run. There is no term in
+`RUN_STATUS` for a launch that was refused, and there was none anywhere else either — a sweep of
+`airun.mjs`, `queuestate.mjs` (`QUEUE_CONDITION_KINDS`, `QUEUE_OBLIGATION_KINDS`) and the wider tree
+for `never-started` / `not-started` / an unstarted-run word returned NOTHING for a run's lifecycle.
+So §14b.6's condition fails here exactly as it failed for FL-7, and for the same reason: applied
+honestly, the precedent points at minting.
+
+**`node tools/decided.mjs` finds no ruling on the subject** ("run status finished stopped", "a run
+that never started" — both return the floor's no-ruling answer; "RUN_STATUS" returns two UI items
+about the indicator's animation and nothing about the vocabulary's members). **The class ruling is
+FL-7's own** — a run's recorded terminal facts must name what actually happened — which is why this
+was enqueued as an ITEM and not routed to Bob as a decision.
+
+### WHY THE SPELLING IS `never-started`
+
+It says what happened rather than who did it. `refused` was the obvious alternative and was rejected
+on two measurements: the plane already uses `refused` as a state word in two unrelated families
+(`capture_requests.state`, `subresources` `LINK_TYPES`), and — the stronger reason — it names the
+MACHINE'S ACT, so a second way for a run never to start would not fit under it. `never-started`
+names the RUN's condition, which is what a status is. The hyphenated multiword form matches the
+plane's own habit (`mode-not-deployed`, `runtime-ceiling-reached`, `context-has-no-project`) and
+reads as English to a member, which matters here because the UI prints this word verbatim.
+
+### WHY THE KEYING MOVES, AND IT IS HALF THE ITEM
+
+The status rule lived as an inline ternary written TWICE inside `#aiRunTerminate` (once for the
+`UPDATE`, once for the returned object) and a THIRD time as a hand-written copy in
+`agent-worker/test/harness.test.mjs`'s plane mock. **That third copy is measurably WRONG TODAY:** it
+reads `bound === "completed" || bound === "cancelled" ? "finished" : "stopped"`, so it has been
+answering `stopped` for `mode-not-deployed` since FL-7 landed the ending, while the real plane
+answered `finished`. Nothing caught it, because nothing compared the two. That is this repository's
+parallel-path class, and it is why the rule becomes ONE exported function that the plane calls and
+the mock is BUILT FROM rather than agreeing with by hand.
+
+### MEASURED CONSUMER IMPACT, and it is measured rather than asserted
+
+`grep -arn RUN_STATUS` across every tree, `node_modules` and built artifacts excluded — 6 files,
+classified by HOW each reads it rather than by which area owns it:
+
+- **`bio-plane/src/airun.mjs`** — the declaration. This item's own site.
+- **DERIVED, absorbs the new term with NO EDIT (3 files, all `civicos-ui`).**
+  `civicos-ui/test/ai-session-wire.test.mjs:862` builds its vocabulary walk with
+  `...Object.keys(RUN_STATUS)`. `civicos-ui/test/ai-session-context.test.mjs:463` takes
+  `Object.keys(RUN_STATUS)` for ARM P: its REACH floor is `>= 3` (four passes), P1 counts CSS
+  selectors and not statuses, P2 asks whether the selector's word is IN the vocabulary (it is —
+  `running`, unmoved), and P5's polarity fixture reads `statuses[0]`, which is `running` and stays
+  `running` because the term is APPENDED. `civicos-ui/test/connections-sidebar.test.mjs:111` names
+  it only in a comment describing the pattern.
+- **`civicos-ui/check-refusal-codes.mjs`: ZERO, AND STRUCTURALLY SO — its own header says why.**
+  Arm E harvests member-facing vocabularies BY SHAPE (*"an exported plain object whose values are
+  ALL strings"*) and records `RUN_STATUS = { running: 1, … }` as *"excluded by that shape rather
+  than by an exception"*. The added term keeps that shape (`"never-started": 1`), and so does the
+  new `RUN_NEVER_STARTED` set, so the guard's surface is exactly where it was. **This is a
+  DIFFERENCE from IC-62 worth stating rather than inheriting: the UI's zero impact there was
+  structural in the strong sense (ARM V1 asserts the UI holds NO COPY of `RUN_ENDINGS`), while here
+  the UI genuinely READS `RUN_STATUS` and the zero is by DERIVATION.** Derived is enough, and it is
+  a weaker claim than FL-7's, so it is written as the weaker claim.
+- **`civicos-ui/app.html`: ONE CSS SELECTOR, and it does not move.**
+  `.ai-run .dot[data-status="running"]` is the single place this application writes a status word,
+  and `running` is untouched. The failure direction was already declared safe by UI-49: *"an
+  unrecognised status renders a still dot, never a false pulse"* — so a `never-started` run renders
+  a STILL dot and the word beside it, which is the right answer with no UI edit at all. **No
+  `civicos-ui` edit is owed by this IC**; it is a two-area change (plane + the fleet member's suite)
+  and not three.
+- **HAND-WRITTEN STATUS EXPECTATIONS IN THE BATTERY — four, and NOT ONE OF THEM MOVES.** Each was
+  read before this was written rather than after it failed: `airun.test.mjs` ARM C4 (`finished`, a
+  member cancellation — see below), ARM K6 (`stopped`, a lease lapse), `scheduler.test.mjs:568`
+  (`stopped`, a lease lapse), `harness.test.mjs:756` (`stopped`, the runtime ceiling). Every one
+  names a bound-stop or the member's ending, and `runStatusFor` answers all four exactly as the
+  ternary did.
+- **THE ONE HAND COPY THAT IS CORRECTED: `agent-worker/test/harness.test.mjs`'s plane mock**, whose
+  `airunclose` branch reproduced the plane's keying by hand and has disagreed with it since FL-7.
+  It is BUILT from `runStatusFor` over the plane's live vocabularies and interpolated into the mock
+  worker source, so it cannot drift again. Corrected, never exempted.
+- **NO EXHAUSTIVE PIN EXISTED ON `RUN_STATUS` AT ALL, and that is a finding rather than a
+  convenience.** `RUN_ENDINGS` has one (`airun.test.mjs` ARM V6, the guard that made FL-7 supply a
+  reason) and `RUN_BOUNDS` has one (ARM V5). The status vocabulary had none, so a fourth term could
+  have been added with no reason and nothing would have asked. This item adds ARM V9 in that
+  family — asserted as a SET, so a FIFTH cannot slip in unnoticed either.
+- **NO SCHEMA CHANGE.** `ai_runs.status` is `TEXT NOT NULL DEFAULT 'running'` with no CHECK
+  constraint and no enum. No table, no column, no migration, and `hygiene.test.mjs`'s
+  `host_governor` rule is not in play.
+- **NO NEW OP AND NO NEW REFUSAL.** The status is DERIVED from a bound `checkBound` (C-22.5) has
+  already admitted, so there is nothing new for the check catalogue to refuse and no C-number moves.
+- **`bio-plane/src/skillpack.mjs`: NOT A CONSUMER, measured.** The pack publishes `bounds:
+  RUN_BOUNDS` and `endings: RUN_ENDINGS` by import and has never published `RUN_STATUS`, so
+  `op=affordances`' pack body is byte-identical across this change.
+- **Built artifacts are not consumers.** `release/bio-plane.bundled.mjs` and
+  `newgroup/dist/newgroup.bundled.mjs` are compiled copies DIST regenerates.
+
+### THE OVER-STRICTNESS HALF, DECIDED IN THE ITEM AND NOT INHERITED
+
+**A member-cancelled run keeps reading `finished`, and that is a decision rather than an oversight.**
+`cancelled` is an ending, so it falls on the same side of the keying as `completed`, and one could
+argue a run a member stopped did not "finish" either. **It is deliberately out of scope and left
+exactly as it is:** the member's ending is not a misdescription of the same kind — that run RAN,
+which is precisely what `finished` and `stopped` both presuppose and what `never-started` denies.
+Moving it would be a second value-move in the same commit, decided on a weaker argument, in a class
+the queue row explicitly protects with its second negative control. `airun.test.mjs` ARM C4 states
+it and stays green; ARM H3 pins the whole partition — a completed run `finished`, a member
+cancellation `finished`, a bound-stop `stopped` — so a later tidy-up cannot sweep them together.
+
+### MIGRATION
+
+**None, and no backfill — stated rather than left to be discovered.** A run closed on
+`mode-not-deployed` before this change keeps `status = 'finished'` in the row it was written into.
+Rewriting a terminal fact recorded at termination time to match a later vocabulary is the opposite
+of what this record does everywhere else, and the pair a reader actually has — `status` beside
+`stopped_bound`, which still names `mode-not-deployed` — stays unambiguous for those rows. The
+affected population is bounded and small (only launches refused by the mode gate, only since FL-7
+landed the ending), and `ai_runs` is declared SCRATCH-class with an expiry rather than RECORD, so a
+stale status there is not a claim the record is making about the world. **Not opened as a DEBT row,
+because the alternative — an `UPDATE ai_runs SET status = …` migration rewriting recorded terminal
+facts — is worse than the thing it would fix, and that is a disposition rather than a deferral.**
+
+A consumer that switches on the status gains a case it did not have. A consumer that prints the
+status — which is every in-tree reader — prints the new word with no edit.
+
+### 2 · RESPONSES
+
+_(awaiting: RECORD owns `airun.mjs`'s declaration and `store.mjs`'s writer; UI is measured
+NOT-AFFECTED above with the evidence — three derived readers, one CSS selector that does not move —
+and CONDUCT may answer for a dormant area in writing per the protocol.)_
+
+### 3 · RESOLUTION
+
+_(CONDUCT's.)_

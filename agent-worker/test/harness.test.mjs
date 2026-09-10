@@ -45,6 +45,12 @@
    (F3) FL-7 — ONE DIRECTION ONLY, AND IT IS THE ARM THAT EARNS THE TWO-WAY CLAIM. Change the header's terminates-on word to `cancelled`, a DIFFERENT REAL ending -> DIRECTION 2 must fail ALONE, with DIRECTION 1 GREEN. Measured 208/1: exactly one assertion.
    (F4) FL-7 — OVER-STRICTNESS, ARMED. Rewrite `cancelled`'s own sentence -> airun V6b and skillsequencing D5 must object (a genuine member cancellation is still asserted as a member act); the gate and both directions must HOLD.
    FL-7's FOUR ARMS RUN 2026-08-10 IN WORKTREE agent-a0301fcdabdaf43c6, baseline harness 209/0, airun 114/0, skillsequencing 27/0, battery 164/164 · 10,117. ALL FOUR AS DECLARED — F1 203/6+22/5+114/0 · F2 207/2+108/6 · F3 208/1 · F4 112/2+26/1+209/0. **F2 CAME BACK WRONG FIRST AND IT WAS A FINDING ABOUT THE ARM: `airun 0 pass, -1 FAIL` — the suite DIED, because FL-7's own new G2 read `gl.entries[len-1].bound` and the refused close left no terminal entry. Same class as H2/H9 above and swept the same way, across every nested read FL-7 added. Knowing the class did not prevent it; running the control did.**
+   (G1) FL-8 — THE DEFECT ITSELF. Empty the plane's `RUN_NEVER_STARTED` so a gate-refused run is recorded `finished` again -> airun H1/H2/W3/W5 and this suite's own FL-8 arm must FAIL, with H2 NAMING the misdescription; the over-strictness partition H3, the vocabulary pin V9 and the source arm W1 must HOLD.
+   (G2) FL-8 — A SECOND COPY OF THE RULE THAT AGREES, AND IT IS THE ARM THAT EARNS THE TWO-WAY CLAIM. Replace the store's `runStatusFor(bound)` call with an inline copy returning IDENTICAL answers -> airun ARM W1 must fail ALONE, with every behavioural arm GREEN. Measured 125/1: exactly one assertion, which is what shows the source arm is a second independent claim and not the behavioural one written twice (FL-7's F3, one item on).
+   (G3) FL-8 — A STATUS TERM WITH NO PRODUCER. Add a fifth term (`abandoned`) to `RUN_STATUS` -> ARM V9 (the exact SET, a guard this vocabulary had NEVER had) and ARM W3 (vocabulary -> keying: every terminal term must be reachable) must both fail, and nothing else.
+   (G4) FL-8 — OVER-STRICTNESS, ARMED. Sweep `cancelled` and `completed` into `RUN_NEVER_STARTED` -> ARM H3 (the whole partition), ARM C4 (the member cancellation's status, deliberately left standing by FL-8) and ARM W3 (`finished` becomes the term with no producer) must fail; H1/H2 must HOLD, which is what shows this measures OVER-reach rather than the fix.
+   (G5) FL-8 — THE MOCK DECIDES AGAIN. Put back the plane mock's hand-written status keying, in the exact spelling it carried from FL-3 until FL-8 -> A6c2 and B7's FL-8 arm must fail; A6c itself and both A6b directions must HOLD, and the plane must stay green.
+   FL-8's FIVE ARMS RUN 2026-09-10 IN WORKTREE agent-a50bd4cc90737bcaf, baseline harness 213/0, airun 126/0, battery 167/167 · 10,279 on `main` before any edit. ALL FIVE AS DECLARED, each armed ALONE — G1 airun 122/4 + harness 212/1 · G2 airun 125/1 (exactly one) · G3 airun 124/2 · G4 airun 123/3 · G5 harness 211/2 + airun 126/0. **THE FINDING THAT PAID FOR G5 WAS FOUND BY MEASUREMENT AND NOT BY THE CONTROL: this suite's plane mock had been answering `stopped` for `mode-not-deployed` since FL-7 minted the ending, while the real plane answered `finished`. A mock that contradicts the plane makes every arm driven through it evidence about a plane that does not exist, and nothing compared the two.**
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -68,6 +74,21 @@ import {
    record does not hold. */
 import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
 import { MEANING_ARM } from "../src/harness.mjs";
+/* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
+   REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
+   The mock's `airunclose` branch computed the run's status by hand as
+   `bound === "completed" || bound === "cancelled" ? "finished" : "stopped"`. That
+   was right when it was written and stopped being right the moment FL-7 minted a
+   THIRD ending: from then until now this mock answered `stopped` for
+   `mode-not-deployed` while the real plane answered `finished`, and nothing
+   caught it because nothing compared the two. A mock that contradicts the plane
+   is worse than no mock — every arm driven through it is evidence about a plane
+   that does not exist. The table is now BUILT from `runStatusFor` over the
+   plane's own vocabularies and interpolated into the mock's source, so it cannot
+   drift again; arm A6c asserts the member can close on nothing the table lacks.
+   Imported in the SUITE and not in the Worker: `harness.mjs`'s own header records
+   why the member itself may not import the plane's module graph. */
+import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor } from "../../bio-plane/src/airun.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -363,6 +384,7 @@ console.log("\n--- A6b · THE HEADER AND THE PLANE'S CATALOGUE AGREE, ASSERTED I
     actual, claim?.[1] ?? "(no claim)");
   t("and the produced ending is the PLANE's, not one this member minted (DEC-8's drift class)",
     planeEndings.includes(actual), true);
+
 }
 
 console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's owed control 7) ---");
@@ -477,7 +499,17 @@ const AIK = "aik-" + "a".repeat(64);
 /* THE PLANE MOCK. FL-2's, extended with the run object, the observation log,
    the budget with a real exhaustion path, and F10's plane side as PL-3 built
    it. `MUTATING` is the set that moves the RECORD. */
+/* FL-8 / IC-67 — WHAT THE PLANE WOULD RECORD, COMPUTED FROM THE PLANE. One entry
+   per bound and per ending the plane's catalogue holds, each answered by the
+   plane's own `runStatusFor`, then interpolated into the mock below as data. The
+   mock LOOKS UP; it does not decide. Arm A6c asserts the table covers the whole
+   domain a legal close can name, which is what makes the mock's fallback
+   unreachable rather than merely unlikely. */
+const STATUS_BY_BOUND = Object.fromEntries(
+  [...Object.keys(RUN_BOUNDS), ...Object.keys(RUN_ENDINGS)].map((b) => [b, runStatusFor(b)]));
+
 const PLANE_MOCK = `
+const STATUS_BY_BOUND = ${JSON.stringify(STATUS_BY_BOUND)};
 const MUTATING = new Set(["purge","promote","airunopen","airuntick","airunclose","suggest","capturerequest"]);
 const canon = (v) => {
   if (v === null || typeof v !== "object") return JSON.stringify(v ?? null);
@@ -571,7 +603,9 @@ export default {
         return Response.json({ ok: false, reason: "AI_RUN_BOUND_UNNAMED", code: "AI_RUN_BOUND_UNNAMED",
           check: "C-22.5", translation: "That run stopped without saying what stopped it." }, { status: 400 });
       S.runlog.push({ seq: ++S.seq, level: "document", state: "LOOKED_INDETERMINATE", terminal: 1, bound, condition: null });
-      S.status = bound === "completed" || bound === "cancelled" ? "finished" : "stopped";
+      /* THE PLANE'S OWN ANSWER, LOOKED UP — not reproduced. See the import block
+         at the head of this file for the drift this replaces. */
+      S.status = STATUS_BY_BOUND[bound] || "finished";
       S.ended = { bound, condition: null };
       return Response.json({ ok: true, result: { terminated: true, bound, condition: null } });
     }
@@ -614,6 +648,39 @@ export default {
   },
 };
 `;
+
+/* --- A6c · FL-8 / IC-67: THE MOCK LOOKS THE PLANE'S STATUS UP, IT DOES NOT
+   DECIDE IT. Placed HERE, immediately after the mock's source, because the
+   assertions read that source and a `const` is not hoisted.
+
+   WHY IT IS AN ARM RATHER THAN A CONVENIENCE. Until FL-8 the mock decided a
+   closed run's status with a hand-written copy of the plane's rule, and that
+   copy had been WRONG since FL-7 minted a third ending — it answered `stopped`
+   for `mode-not-deployed` while the plane answered `finished`. Nothing caught it
+   because nothing compared them: this repository's parallel-path class arriving
+   in the INSTRUMENT rather than in the product, where it is worse, because every
+   arm driven through a mock that contradicts the plane is evidence about a plane
+   that does not exist. These two assertions are what stop it becoming a copy
+   again — the table must cover the whole domain the plane admits, which makes
+   the mock's `|| "finished"` fallback UNREACHABLE for any legal close rather
+   than merely unlikely, and the interpolation must actually have reached the
+   mock's source. */
+console.log("\n--- A6c · the plane mock's status table is the PLANE's, built not copied (FL-8) ---");
+{
+  const mockDomain = [...Object.keys(RUN_BOUNDS), ...Object.keys(RUN_ENDINGS)];
+  t("A6c REACH: the domain taken from the plane's catalogue is non-trivial (floor 8: five bounds and "
+    + "three endings), so the two assertions below are not walking an empty set",
+    mockDomain.length >= 8, true);
+  t("A6c (FL-8): the mock's status table covers every bound AND every ending the plane's catalogue holds, "
+    + "and each answer is the PLANE's own — taken from `runStatusFor` rather than reproduced here",
+    mockDomain.filter((b) => STATUS_BY_BOUND[b] !== runStatusFor(b)), []);
+  t("A6c2: and that table reached the mock's source AS DATA, with the hand-written keying gone — a mock "
+    + "that decides a status is a second producer of the plane's rule, which is the drift this removed",
+    [/const STATUS_BY_BOUND = \{/.test(PLANE_MOCK),
+     /STATUS_BY_BOUND\[bound\]/.test(PLANE_MOCK),
+     /bound === "completed"/.test(PLANE_MOCK)],
+    [true, true, false]);
+}
 
 const newMf = (cfg = {}) => new Miniflare({
   workers: [
@@ -929,6 +996,19 @@ console.log("\n--- B7 · SK-4's gate through the op: an investigate run stops be
   t("no fetch was requested", st.budget.fetches.consumed, 0);
   t("and the refusal IS in the log — a gate that closed silently would be unauditable",
     st.runlog.length > 0, true);
+  /* FL-8 / IC-67 — WHAT THIS MEMBER'S REFUSED LAUNCH IS RECORDED AS, AND THE ARM
+     IS DELIBERATELY MODEST ABOUT WHAT IT PROVES. The mock is not the plane, so
+     this is evidence that the member's gate produces a close the PLANE'S OWN
+     KEYING answers `never-started` for — the table it looks the status up in was
+     built by `runStatusFor` at the head of this file. **The behavioural proof
+     that the real plane records it is `bio-plane/test/airun.test.mjs` ARM H1,
+     driven through `op=airunclose` and read back through `op=airun`**, and it is
+     named here so a reader of this arm does not mistake a mock for a record.
+     Before FL-8 this same read would have said `stopped`, from a hand copy that
+     had disagreed with the plane's `finished` since FL-7 landed. */
+  t("FL-8: and the run the gate refused is recorded as one that NEVER STARTED — the plane's own keying, "
+    + "looked up rather than reproduced here, and the real-plane proof is airun.test.mjs ARM H1",
+    st.status ?? null, "never-started");
   await mf.dispose();
 }
 
