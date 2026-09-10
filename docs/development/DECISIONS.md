@@ -315,7 +315,7 @@ enacted: 2026-08-10 · session BOB, same turn — carried entirely by DEC-72's e
   `docs/development/CASE-AS-PRODUCTION.md` (design and supersession table) and the CASE-2
   decomposition item in the BOB INBOX. Reasoning in DEC-72 and this entry.
 
-### DEC-70 · open
+### DEC-70 · answered
 raised: 2026-08-10 · CONDUCT (lifted from D-280's report — the worker raised it and did NOT
   write here, correctly: this file names CONDUCT as sole writer of new entries)
 for: bob
@@ -339,6 +339,27 @@ recommendation: **leave it until you rule.** Consistency across the three sites 
   was there.
 reversal cost: one predicate call either way, plus its arms.
 prior art: `node tools/decided.mjs` returned nothing on this subject — a floor, not a ceiling.
+response: **READING B — THE OBLIGATION ATTACHES TO WHAT A FINDING EVER RESTED ON, AND THE
+  FORMULATION IS: SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION.** Bob, 2026-09-10,
+  verbatim: *"The basis on which a finding rests can/does change for any number of
+  reasons. A change may strengthen the finding, or weaken it. The important thing to
+  remember is that there may be several basis of a case that relate to the finding,
+  though seemingly don't contribute materially to the finding at that moment. But if
+  some underlying evidence of that basis or others moves, the relative contributions
+  could shift as well. So keeping evidence connected has value over the lifetime."*
+  The reasoning worked with him: relative contributions shift under DEC-32's own
+  arithmetic — when a strong branch later weakens, a severed corroborating leg's
+  relevance shifts at that moment, and discharging the connection would silently drop
+  the one thread then needed. What the ruling does NOT move: a severed leg still
+  contributes nothing to strength, gates nothing, and counts toward no bar — every
+  D-280 site stands as fixed. The connection INFORMS, never binds: `op=reevaluations`
+  is a pull-read today, so no member is prompted (DEC-69 untouched); if this feed ever
+  becomes a pushed notification, it tells ONCE, is dispositionable, and ages (D-79,
+  D-266's machinery) — never a recurring nag.
+decided: 2026-09-10 · Bob
+  (enactment is CONDUCT's drain: the shipped provisional IS this ruling, so nothing in
+  the plane moves — the site's `provisional` comment becomes `ruled DEC-70` and the
+  pinning assertion stands as the ruling's pin.)
 
 ### DEC-2 · deferred
 raised: 2026-07-31 · BOB (seeded from DEBT D-1)
