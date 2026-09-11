@@ -49,11 +49,28 @@ const runSuite = (rel) => {
       { cwd: PLANE, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
   } catch (e) { out = `${e.stdout || ""}${e.stderr || ""}`; }
   /* THE FOOT LINE IS THE EVIDENCE THE MODULE REACHED ITS OWN END.  Without it a
-     count is not a low number, it is NO number, and it is reported as -1. */
-  const m = out.match(/\n(?:walkfloor|hygiene):\s+(\d+) pass, (\d+) fail/);
+     count is not a low number, it is NO number, and it is reported as -1.
+     D-302 added `op-claims` to the set, because its phantom arm's whole subject is
+     that suite's fifth floor and a suite that died before its foot would report
+     zero failures. */
+  const m = out.match(/\n(?:walkfloor|hygiene|op-claims):\s+(\d+) pass, (\d+) fail/);
   if (!m) return { pass: -1, fail: -1, reachedFoot: false, out };
   return { pass: Number(m[1]), fail: Number(m[2]), reachedFoot: true, out };
 };
+
+/* Which suites an arm is judged on.  D-302's phantom arm is about
+   `test/op-claims.test.mjs`; every arm before it was about the detector and its
+   ratchet, so that pair stays the default. */
+const DEFAULT_SUITES = { walkfloor: "test/walkfloor.test.mjs", hygiene: "test/hygiene.test.mjs" };
+
+/* D-302 · THE PHANTOM ARM'S TOKEN, BUILT AND NEVER SPELLED.  This file is COMMITTED
+   and sits inside the repository corpus `scripts/op-claims.mjs` sweeps, so a literal
+   `op=<name>` here is a third party's claim about the dispatch table — and one
+   carrying an attribution would raise the very figure the phantom arm asserts a
+   phantom cannot raise.  `test/op-claims.test.mjs` composes its own fixtures the
+   same way and records the four places its first draft failed by citing itself. */
+const OP = (n) => "op=" + n;
+const DISPATCHES = "dispatches" + " to";
 
 /* ------------------------------------------------------------------ THE ARMS */
 /* `patch` returns the edited source, or null if it could not find its anchor.
@@ -62,10 +79,11 @@ const ARMS = [
   {
     id: "baseline",
     what: "NO EDIT AT ALL — the row that distinguishes six-arms-broken from six-arms-working",
-    expect: "walkfloor GREEN (31 pass / 0 fail) and hygiene GREEN (0 fail). If this row is "
+    expect: "walkfloor GREEN (39 pass / 0 fail — RE-MEASURED 2026-09-10 by D-302, was 31 "
+          + "before its eight added arms) and hygiene GREEN (0 fail). If this row is "
           + "red, every other row in this table is uninterpretable.",
     file: null, patch: null,
-    ok: (r) => r.walkfloor.fail === 0 && r.hygiene.fail === 0 && r.walkfloor.pass >= 31,
+    ok: (r) => r.walkfloor.fail === 0 && r.hygiene.fail === 0 && r.walkfloor.pass >= 39,
   },
   {
     id: "hop",
@@ -136,35 +154,114 @@ const ARMS = [
     id: "overstrict",
     what: "OVER-STRICTNESS — correct work in a spelling the ratchet was not written against",
     expect: "MUST **PASS**, both suites GREEN. A NEW consumer that floors on a walk one "
-          + "import away but ASKS `provenance.mjs` is correct work. If the ratchet names "
-          + "it, the check is tighter than its rule — an undeclared interface change "
-          + "wearing the costume of caution — and it gets switched off by the third "
-          + "person it interrupts.",
+          + "import away, on the figure that walk declares REPRODUCIBLE, is correct work — "
+          + "it is D-257's two-line pattern, done right. If the ratchet names it, the check "
+          + "is tighter than its rule — an undeclared interface change wearing the costume "
+          + "of caution — and it gets switched off by the third person it interrupts.",
+    /* CORRECTED 2026-09-10 BY D-302, NEVER EXEMPTED, AND THE CORRECTION IS THE ITEM
+       ARRIVING IN ITS OWN CONTROL. The fixture used to floor on `r.corpus.length`
+       — a WORKING-TREE figure — and import `provenance.mjs`, because under the old
+       predicate importing that module WAS the definition of correct work. It is
+       not: the import is a fact about the consumer's file and the exposure is a
+       fact about the figure. Under the real rule this fixture was a genuine
+       unguarded floor wearing a guard's costume, so leaving it here would have
+       asserted that the corrected ratchet must NOT fire on a real instance — an
+       over-strictness arm defending the defect. Correct work is now spelled the
+       way D-257 spells it, and the `ratchet` arm below is the same fixture with
+       the reproducible figure swapped back out, which makes the pair a DELTA. */
     newFile: join(PLANE, "test", "walkfloor-overstrict.probe.mjs"),
-    body: `/* ARM overstrict FIXTURE. Correct work: floors on a walk one import away AND
-   asks provenance.mjs. The ratchet must leave it alone. Deleted by the driver. */
-import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
-import { readGitProvenance } from "../scripts/provenance.mjs";
-const r = sweepWalkFloors();
-readGitProvenance(process.cwd());
-if (r.corpus.length >= 42) console.log("ok");
+    body: `/* ARM overstrict FIXTURE. Correct work: floors on the HEAD-REPRODUCIBLE figure
+   a walk one import away publishes. The ratchet must leave it alone. Deleted by the driver. */
+import { sweep } from "../scripts/op-claims.mjs";
+const r = sweep();
+if (r.filesRepro >= 42) console.log("ok");
 `,
     ok: (r) => r.walkfloor.fail === 0 && r.hygiene.fail === 0,
   },
   {
     id: "ratchet",
-    what: "THE RATCHET ITSELF — a NEW UNGUARDED cross-file floor must fail BY NAME",
+    what: "THE RATCHET ITSELF — a NEW cross-file floor on a WORKING-TREE figure must fail BY NAME",
     expect: "MUST FAIL: hygiene's 'every cross-file walk-derived floor is GUARDED or "
           + "NAMED' arm, and the failure must NAME the new file. A ratchet that does not "
-          + "fire on a new instance is a mechanism believed on its existence.",
+          + "fire on a new instance is a mechanism believed on its existence. Held against "
+          + "`overstrict` above, which is the SAME fixture reading the reproducible figure, "
+          + "this is a DELTA over one identifier rather than a claim about a fixture.",
     newFile: join(PLANE, "test", "walkfloor-ratchet.probe.mjs"),
-    body: `/* ARM ratchet FIXTURE. A new cross-file floor with NO provenance guard.
+    body: `/* ARM ratchet FIXTURE. A new cross-file floor on a WORKING-TREE figure.
    The census cannot see it (no readdirSync here); the detector must. Deleted by the driver. */
-import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
-const r = sweepWalkFloors();
-if (r.corpus.length >= 99) console.log("ok");
+import { sweep } from "../scripts/op-claims.mjs";
+const r = sweep();
+if (r.dynamic >= 99) console.log("ok");
 `,
     ok: (r) => r.hygiene.fail > 0 && /walkfloor-ratchet\.probe\.mjs/.test(r.hygiene.out),
+  },
+
+  /* ============================ D-302's THREE ARMS ============================ */
+  {
+    id: "phantom",
+    what: "THE ARM THIS ITEM EXISTS FOR — an UNCOMMITTED attribution arrival must not move "
+        + "the corpus the fifth floor stands on, and the BEFORE state is proved in the same run",
+    expect: "MUST **PASS**: `op-claims` GREEN with the phantom present. The suite's own "
+          + "label must print `5 of 6 attribution(s)` — SIX counted over the working tree, "
+          + "which is the figure the floor read BEFORE this item and is therefore the "
+          + "'before' proved rather than described, and FIVE over `git ls-tree HEAD`, which "
+          + "is what the floor reads now and what the phantom cannot touch. A floor moved to "
+          + "the 6 a contaminated run PRINTED would be permanently too high and would fail "
+          + "every honest run afterwards — D-238's payload, live.",
+    suites: { "op-claims": "test/op-claims.test.mjs" },
+    newFile: join(PLANE, "test", "d302-phantom.probe.md"),
+    /* A CORRECT attribution on purpose: a wrong one would fail as a WRONG-METHOD
+       finding and the arm would pass for the wrong reason. The claim is TRUE and
+       still must not move a floor, because the exposure is arrival, not falsity.
+       AND THE TOKEN IS COMPOSED AT RUNTIME, NEVER SPELLED. This driver is a
+       COMMITTED file inside the corpus `op-claims.mjs` sweeps, so a literal
+       fixture here is a real routing claim in HEAD — it would raise
+       `attributionsRepro` by one and this arm's own expected `5 of 6` would read
+       `6 of 7`, the arm moving the figure it exists to prove immovable. Measured:
+       the first draft of this arm did exactly that. `test/op-claims.test.mjs`
+       obeys the same rule in its §5 fixtures and says why at length. */
+    body: `ARM phantom FIXTURE — uncommitted, deleted by the driver.
+
+A routing claim nobody committed: ${OP("publish")} ${DISPATCHES} \`Store.publishCase()\`.
+`,
+    ok: (r) => r["op-claims"].fail === 0 && /5 of 6 attribution\(s\)/.test(r["op-claims"].out),
+  },
+  {
+    id: "guardimport",
+    what: "POINT THE GRADE BACK AT THE IMPORT SPELLING — the predicate D-302 removed",
+    expect: "MUST FAIL, and the failure must NAME a file the old predicate misgrades. "
+          + "`test/op-claims.test.mjs` does not import `provenance.mjs`, so all five of its "
+          + "genuinely-guarded floors grade UNGUARDED again and hygiene's GUARDED-or-NAMED "
+          + "arm fires on it by name; the two files that DO import it go back to reading "
+          + "GUARDED, so their named entries fail as STALE. Both directions, one run.",
+    file: DETECTOR,
+    patch: (s) => s.includes("                    guarded: g.grade === \"GUARDED\" };")
+      ? s.replace("                    guarded: g.grade === \"GUARDED\" };",
+                  "                    guarded: facts.get(f).importsProvenance };")
+      : null,
+    ok: (r) => r.hygiene.fail > 0 && /op-claims\.test\.mjs/.test(r.hygiene.out),
+  },
+  {
+    id: "reportonly",
+    what: "OVER-STRICTNESS, SECOND DIRECTION — a consumer that only REPORTS working-tree "
+        + "figures is legal and must never be failed",
+    expect: "MUST **PASS**, both suites GREEN. D-257 ruled that a walk which only reports "
+          + "fails safe, and `walkfigure.mjs` implements that ruling in the hint: ToString "
+          + "PRINTS while ToNumber THROWS. A report is not a floor, it needs no guard and no "
+          + "unwrap, and a detector that flagged it would make every diagnostic line in the "
+          + "estate a finding — which is how a check gets switched off. "
+          + "DELIBERATELY NOT THE FIXTURE: the same report written through "
+          + "`.overWorkingTree(why)`. That WOULD fail, on D-265's passage ratchet, and "
+          + "correctly — an unwrap is a DECISION and the ratchet exists to name decisions. "
+          + "Declaring that shape must pass would weaken D-265 rather than test D-302.",
+    newFile: join(PLANE, "test", "walkfloor-reportonly.probe.mjs"),
+    body: `/* ARM reportonly FIXTURE. Imports a walk and only PRINTS its WORKING-TREE
+   figures — no comparison, no unwrap. Must be legal. Deleted by the driver. */
+import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
+const r = sweepWalkFloors();
+console.log(\`estate: \${r.corpus.count} module(s), \${r.walkModules.count} walk module(s)\`);
+`,
+    ok: (r) => r.walkfloor.fail === 0 && r.hygiene.fail === 0,
   },
 ];
 
@@ -210,11 +307,13 @@ for (const arm of arms) {
     console.log(`  added ${target.split("/").pop()} · ${statSync(target).size} bytes`);
   } else { armed = true; console.log("  (no edit — baseline)"); }
 
-  const r = { walkfloor: runSuite("test/walkfloor.test.mjs"), hygiene: runSuite("test/hygiene.test.mjs") };
-  console.log(`  walkfloor: ${r.walkfloor.pass} pass / ${r.walkfloor.fail} fail`
-    + `${r.walkfloor.reachedFoot ? "" : "   <-- NO FOOT LINE: the module did not reach its own end"}`);
-  console.log(`  hygiene:   ${r.hygiene.pass} pass / ${r.hygiene.fail} fail`
-    + `${r.hygiene.reachedFoot ? "" : "   <-- NO FOOT LINE: the module did not reach its own end"}`);
+  const suites = arm.suites ?? DEFAULT_SUITES;
+  const r = {};
+  for (const [key, rel] of Object.entries(suites)) {
+    r[key] = runSuite(rel);
+    console.log(`  ${`${key}:`.padEnd(11)}${r[key].pass} pass / ${r[key].fail} fail`
+      + `${r[key].reachedFoot ? "" : "   <-- NO FOOT LINE: the module did not reach its own end"}`);
+  }
 
   /* restore, and PROVE it */
   let restored = "n/a";
@@ -234,14 +333,13 @@ for (const arm of arms) {
 
   const verdict = !armed ? "DID NOT ARM" : (arm.ok(r) ? "AS DECLARED" : "NOT AS DECLARED");
   console.log(`  VERDICT:  ${verdict}${note ? ` (${note})` : ""}\n`);
-  results.push({ id: arm.id, verdict, restored, walkfloor: `${r.walkfloor.pass}/${r.walkfloor.fail}`,
-                 hygiene: `${r.hygiene.pass}/${r.hygiene.fail}` });
+  results.push({ id: arm.id, verdict, restored,
+                 tallies: Object.entries(r).map(([k, v]) => `${k}=${v.pass}/${v.fail}`).join("  ") });
 }
 
 console.log("--- SUMMARY ---");
 for (const r of results)
-  console.log(`  ${r.id.padEnd(14)} ${String(r.verdict).padEnd(16)} restore=${r.restored}`
-    + `  walkfloor=${r.walkfloor}  hygiene=${r.hygiene}`);
+  console.log(`  ${r.id.padEnd(14)} ${String(r.verdict).padEnd(16)} restore=${r.restored}  ${r.tallies}`);
 const bad = results.filter((r) => r.verdict !== "AS DECLARED" || (r.restored !== "VERIFIED" && r.restored !== "n/a"));
 console.log(bad.length
   ? `\n${bad.length} arm(s) NOT as declared or not restored — RECORD THEM, do not smooth them.`

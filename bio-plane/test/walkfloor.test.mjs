@@ -15,29 +15,55 @@
  * suite would have agreed with BOTH of this detector's own first-draft bugs, each of
  * which reported a perfectly clean estate (§0 records them).
  *
- * NEGATIVE CONTROL: `node test/walkfloor.control.mjs [arm]` — EIGHT arms, each armed
+ * NEGATIVE CONTROL: `node test/walkfloor.control.mjs [arm]` — ELEVEN arms, each armed
  * ALONE with every other defence held OPEN, each DECLARING before it ran what must
  * fail and what must not, every restore verified by sha256 AND by a byte compare
  * against a UNIQUELY NAMED per-arm pristine copy with the byte count printed and
- * floored against the empty-string digest.  Run 2026-08-09, all eight AS DECLARED.
- * Figures are walkfloor pass/fail · hygiene pass/fail.
+ * floored against the empty-string digest.  RE-RUN WHOLE 2026-09-10 by D-302, all
+ * eleven AS DECLARED, every restore VERIFIED.  Figures are walkfloor pass/fail ·
+ * hygiene pass/fail, except (9) which is op-claims pass/fail.
  *
- *   (1) baseline — NO EDIT AT ALL: 31/0 · 570/0, GREEN as declared.  The row that
- *       makes every other row interpretable.
- *   (2) hop — never seed a binding from an imported walk-derived export: 21/10 · 567/3.
+ *   (1) baseline — NO EDIT AT ALL: 39/0 · 665/0, GREEN as declared.  The row that
+ *       makes every other row interpretable.  (Was 31/0 · 570/0 on 2026-08-09.)
+ *   (2) hop — never seed a binding from an imported walk-derived export: 29/10 · 660/5.
  *   (3) destructured — restore first-draft bug (a), a destructured parameter list
- *       read as a function body: 21/10 · 567/3.
+ *       read as a function body: 29/10 · 659/6.
  *   (4) stringstrip — restore first-draft bug (b), imports read off source with
- *       string literals blanked: 20/11 · 567/3.
+ *       string literals blanked: 28/11 · 660/5.
  *   (5) modulegrain — grade at MODULE granularity instead of BINDING granularity:
- *       27/4 · 569/1.  THE ARM THAT PROVES THE FALSE-POSITIVE GUARD IS REAL.
+ *       35/4 · 660/5.  THE ARM THAT PROVES THE FALSE-POSITIVE GUARD IS REAL, AND
+ *       ON 2026-09-10 IT FOUND THE INSTRUMENT RATHER THAN THE SUBJECT: D-302's
+ *       first-draft grade read `info.from` off an `undefined`, because this arm
+ *       makes every identifier live by construction, and hygiene died with a
+ *       TypeError reporting NO tally (-1/-1) instead of a low one.  Recorded, not
+ *       smoothed; an unresolved root is now graded UNCLASSIFIED at the site.
  *   (6) stripper — make the stripper a no-op, so prose and regex literals count as
- *       code: 28/3 · 570/0.
- *   (7) overstrict — a NEW consumer that floors on a walk one import away AND asks
- *       `provenance.mjs`: 31/0 · 570/0, GREEN as declared.  Correct work in a
- *       spelling the ratchet was not written against must PASS.
- *   (8) ratchet — a NEW consumer that floors and is NOT guarded: 31/0 · 569/1, and
- *       the failure NAMES the new file.
+ *       code: 33/6 · 661/4.
+ *   (7) overstrict — a NEW consumer that floors on the figure a walk declares
+ *       REPRODUCIBLE: 39/0 · 665/0, GREEN as declared.  D-302 CORRECTED THIS
+ *       FIXTURE: it used to floor on a WORKING-TREE figure and import
+ *       `provenance.mjs`, which was correct work only under the predicate D-302
+ *       removed — so it asserted that the ratchet must not fire on a real instance.
+ *   (8) ratchet — the SAME fixture reading a WORKING-TREE figure instead:
+ *       39/0 · 664/1, and the failure NAMES the new file.  A delta over one
+ *       identifier rather than a claim about a fixture.
+ *   (9) phantom — D-302's own arm, and the one the item exists for.  An UNCOMMITTED
+ *       file carrying a TRUE routing claim — the publish op, stated in op-claims'
+ *       attribution grammar to dispatch to the method the table really routes it
+ *       to, with the token COMPOSED AT RUNTIME so this control does not plant a
+ *       claim in the corpus it measures — is planted and `test/op-claims.test.mjs` is run:
+ *       35/0, GREEN, and its label prints `5 of 6 attribution(s)` — the working-tree
+ *       count MOVED to 6, which is the figure the fifth floor read before this item
+ *       and is the BEFORE proved rather than described, while the reproducible
+ *       figure the floor now reads stayed 5.  Removing the phantom prints 5 of 5.
+ *  (10) guardimport — point the grade back at the import spelling: 39/0 · 661/4,
+ *       and the failures NAME `op-claims.test.mjs`, whose five genuinely-guarded
+ *       floors the old predicate misgrades because that file does not import
+ *       `provenance.mjs`.  The discarded predicate kept as a CONTROL.
+ *  (11) reportonly — OVER-STRICTNESS, second direction: a consumer that imports a
+ *       walk and only PRINTS its working-tree figures, no comparison and no unwrap:
+ *       39/0 · 665/0, GREEN as declared.  A report is not a floor (D-257), and a
+ *       detector that flagged one would make every diagnostic line a finding.
  *
  * THE ARMS ARE ENUMERATED, AND THEY SIT DIRECTLY UNDER THE MARKER'S OWN PARAGRAPH.
  * NEITHER IS A STYLE CHOICE, AND BOTH WERE MEASURED RATHER THAN GUESSED.  This
@@ -79,6 +105,8 @@ import { fileURLToPath } from "node:url";
 import {
   sweepWalkFloors, strip, stripComments, moduleFacts, functionsOf,
   importsOf, comparisonsOf, seededLocals, WALK_PRIMITIVES, REPO,
+  /* D-302: the grade is read off the figure's declared bucket, not off an import. */
+  bucketsOf, gradeOf,
 } from "../scripts/walkfloor.mjs";
 /* GUARDED: this suite FLOORS on what `walkfloor.mjs`'s walk found (§4 below), which
    is precisely the class it is built to detect, so it asks the same question every
@@ -316,9 +344,85 @@ t("`functionsOf` finds a top-level function and spans its real body",
 t("`comparisonsOf` reads both operand roots and does not mistake `=>` or `>>` for a comparison",
   comparisonsOf(strip(`const f = (a) => a;\nconst g = x >> 2;\nif (r.files >= 300) {}`))
     .map((c) => `${c.left.root}${c.op}${c.right.atom.trim()}`), ["r>=300"]);
-t("`seededLocals` reaches a fixpoint through one further hop",
-  [...seededLocals(strip(`const r = sweep();\nconst m = r;\nconst z = m.files;`), ["sweep"])].sort(),
-  ["m", "r", "sweep", "z"]);
+/* CORRECTED 2026-09-10 BY D-302, NEVER EXEMPTED. `seededLocals` returned a Set of
+   names and now returns a Map name -> { from, key }, because a grade read off the
+   FIGURE needs to know which figure a binding roots in — the old return could say a
+   local was walk-derived and nothing more. The question is unchanged and the four
+   names are the same four; what is added is the second arm, which is the new
+   information and would have been unassertable before. */
+{
+  const live = seededLocals(strip(`const r = sweep();\nconst m = r;\nconst z = m.files;`), ["sweep"]);
+  t("`seededLocals` reaches a fixpoint through one further hop",
+    [...live.keys()].sort(), ["m", "r", "sweep", "z"]);
+  t("...and each local carries the declared FIGURE it roots in, which is what the grade is read "
+  + "off — `z` names `files` through two hops, `r` and `m` name none because they hold the whole result",
+    [live.get("z").key, live.get("r").key, live.get("m").key], ["files", null, null]);
+}
+/* THE SHADOW RULE, DRIVEN — D-302's false-positive narrowing, as a DELTA. A name
+   BOUND as an arrow parameter is not the live one, and the measured instance is in
+   `hygiene.test.mjs`: a live `n` and, 1,478 lines away, `(n) => n.endsWith(...)`.
+   Asserted in both directions, because a rule that stopped seeding anything at all
+   would pass the first half alone. */
+{
+  const shadowed = seededLocals(strip(`const n = sweep();\nconst files = list.filter((n) => n.endsWith("x"));`), ["sweep"]);
+  const real = seededLocals(strip(`const n = sweep();\nconst files = n.corpus;`), ["sweep"]);
+  t("a name bound as an ARROW PARAMETER does not seed from the live one, while the same name "
+  + "read as a value still does — the delta, not the absence",
+    [shadowed.has("files"), real.has("files"), real.get("files")?.key], [false, true, "corpus"]);
+}
+
+/* ---- D-302 · THE BUCKET READER AND THE GRADE, DRIVEN ON THEIR OWN -----------
+ *
+ * These replaced a regex asking whether the file carrying a floor imports
+ * `provenance.mjs` — a question about an import list used to grade a FIGURE, and
+ * measured wrong in BOTH directions on this estate at once. The arms below are
+ * built rather than read off the tree, so they hold when the tree moves. */
+{
+  const mod = `import { walkResult } from "./walkfigure.mjs";
+export function w(d) { return walkResult({ about: "x",
+  workingTree: { files: readdirSync(d).length, chars: 7 },
+  reproducible: { filesRepro: 3, charsRepro: 4 },
+  safe: { findings: [[], "asserted EMPTY by every caller, so a phantom reds it"] },
+  data: { prov: null } }); }`;
+  const b = bucketsOf(strip(mod));
+  t("`bucketsOf` reads all four buckets out of a walkResult() call, shorthand keys included",
+    [b.declared, b.calls, [...b.workingTree].sort(), [...b.reproducible].sort(),
+     [...b.safe], [...b.data], [...b.conflicts]],
+    [true, 1, ["chars", "files"], ["charsRepro", "filesRepro"], ["findings"], ["prov"], []]);
+  /* THE COMMENT TRAP, WHICH THIS ESTATE HAS NOW PAID FOR IN FOUR SEPARATE
+     INSTRUMENTS. `walkfloor.mjs`'s own header spells `walkResult(` in prose. */
+  t("a walkResult() written only in a COMMENT declares nothing — the trap M0-16, REC-64 and "
+  + "REC-70 were each an item about",
+    bucketsOf(strip(`/* we call walkResult({ reproducible: { x: 1 } }) elsewhere */\nexport const N = 1;`)).declared,
+    false);
+  t("and the DEFINITION's destructured parameter list is not a declaration either — "
+  + "`export function walkResult({ about, workingTree = {} })` in walkfigure.mjs",
+    bucketsOf(strip(`export function walkResult({ about, workingTree = {}, reproducible = {} }) { return 1; }`)).declared,
+    false);
+
+  /* THE GRADE, EVERY BRANCH, INCLUDING THE ONES THAT MUST REFUSE TO ANSWER. */
+  t("`gradeOf` answers from the bucket, and says WHY in every branch",
+    [gradeOf(b, "filesRepro", "m").grade, gradeOf(b, "files", "m").grade,
+     gradeOf(b, "findings", "m").grade, gradeOf(b, "prov", "m").grade,
+     gradeOf(b, "nosuchkey", "m").grade, gradeOf(b, null, "m").grade,
+     gradeOf(null, "filesRepro", "m").grade,
+     [gradeOf(b, "filesRepro", "m"), gradeOf(b, "files", "m"), gradeOf(b, null, "m")]
+       .every((g) => typeof g.why === "string" && g.why.length > 20)],
+    ["GUARDED", "WORKING-TREE", "SAFE-BUCKET", "UNCLASSIFIED", "UNCLASSIFIED",
+     "UNCLASSIFIED", "UNCLASSIFIED", true]);
+  /* THE UNSAFE DIRECTION IS UNREACHABLE BY A SILENCE: only `reproducible` grades
+     GUARDED, and every state this reader cannot resolve falls the other way. */
+  t("nothing but the REPRODUCIBLE bucket grades GUARDED — an unresolved key, an undeclared "
+  + "module and a data payload all fall to the side that still has to be NAMED",
+    ["files", "findings", "prov", "nosuchkey", null]
+      .map((k) => gradeOf(b, k, "m").grade === "GUARDED")
+      .concat([gradeOf(null, "filesRepro", "m").grade === "GUARDED"]),
+    [false, false, false, false, false, false]);
+  /* A KEY TWO CALLS DISAGREE ABOUT IS A CONFLICT, NEVER A GUESS. */
+  const conf = bucketsOf(strip(`walkResult({ workingTree: { n: 1 } });\nwalkResult({ reproducible: { n: 2 } });`));
+  t("a key declared into two buckets by two calls is reported as a CONFLICT and refuses to grade",
+    [[...conf.conflicts], conf.calls, gradeOf(conf, "n", "m").grade], [["n"], 2, "UNCLASSIFIED"]);
+}
 
 /* A probe that litters is counted by the next walk, which is the defect D-243 met
    in `mintid.test.mjs`. The floor is the MEASURED count (16 on the run that wrote

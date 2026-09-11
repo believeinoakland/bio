@@ -594,15 +594,13 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  /* MOVED 2026-09-10 TWICE IN ONE INTEGRATION and COLLAPSED TO ONE SET AT THE
-     MERGE, per this claim's own instruction: D-265 moved 883 -> 888 / 164 -> 165 /
-     165 -> 166 (one new suite, walkfigure, five arms) and CPDF-13 independently
-     moved 883 -> 887 / 164 -> 165 / 165 -> 166 (one new suite, calibration, four
-     arms + a deliberately non-ordinal baseline). Neither branch could see the
-     other. The figures below are NEITHER side's: they are what the merged tree's
-     own green `--strict` run PRINTED after this merge commit, read from output,
-     never summed by hand. ONE KEY SET, grepped before writing. */
-  arms: 892,
+  /* MOVED 2026-09-10 THREE TIMES IN ONE DAY and COLLAPSED TO ONE SET AT EACH
+     MERGE: D-265 (+5 arms, walkfigure), CPDF-13 (+4 arms, calibration) and D-302
+     (+3 arms across hygiene/walkfloor, no new suite) each moved this blind to the
+     others. The figures below are what the merged tree's own green `--strict` run
+     PRINTED after the D-302 merge, read from output, never summed by hand.
+     ONE KEY SET, grepped before writing. */
+  arms: 895,
   classified: 166,
   corpus: 167,
 };

@@ -8596,3 +8596,122 @@ variable and interpolated into the template, and that sweep reads filtered colum
 OFF THE SQL TEXT. **A true fact was invisible to the instrument whose entire job
 is to notice its absence**, and the concatenated form is what hid it. The two
 statements are now written out.
+
+## 2026-09-10 · D-302 — the fifth walk-derived floor, and a GUARDED column that was measuring the wrong file
+
+Instrument: `bio-plane/scripts/op-claims.mjs` (`sweep()`), `bio-plane/scripts/walkfloor.mjs`
+(`node scripts/walkfloor.mjs`, and `sweepWalkFloors()` driven from `test/hygiene.test.mjs`).
+Worktree `agent-abe820d46ab667b7d`, `npm ci` first, `main` at `176e86f`.
+
+**THE FIFTH FLOOR'S TWO POPULATIONS, AND THE PHANTOM THAT SEPARATES THEM.** `sweep()` now
+publishes `attributionsRepro` beside the four `*Repro` figures M0-18 added. Measured on a clean
+tree: **5 attributions over the working tree, 5 over `git ls-tree HEAD`**. With an UNCOMMITTED
+file carrying one true routing claim planted (`walkfloor.control.mjs`'s `phantom` arm), the same
+run prints **5 of 6** — the working-tree figure moved by exactly the phantom and the reproducible
+figure did not. **That 6 is the number the floor read before this item**, so a floor moved to the
+figure a contaminated run PRINTED would have been permanently too high (D-238's payload), and it is
+the "before" proved rather than described. The floor is now `attributionsRepro.length >= 5`, the
+exact printed figure rather than a round number below it: its four siblings (300 / 10,000,000 /
+5,000 / 150) guard corpora of hundreds and millions, while this population is five hand-written
+sentences in append-only history and a SETTLED IC.
+
+**THE GUARDED COLUMN WAS INVERTED ON THIS ESTATE — MEASURED, NOT INFERRED.** Until today
+`walkfloor.mjs` graded a floor site by a regex asking whether the file CARRYING the floor imports
+`provenance.mjs`. Of the four files carrying cross-file floors:
+
+| file | imports `provenance.mjs` | old grade | measured truth |
+| --- | --- | --- | --- |
+| `test/op-claims.test.mjs` | **no** | UNGUARDED ×5 | all five floor on `*Repro` figures — **GUARDED** |
+| `test/hygiene.test.mjs` | yes | GUARDED ×11 | working-tree and safe-bucket figures — **not guarded** |
+| `test/walkfloor.test.mjs` | yes | GUARDED ×2 | working-tree REACH figures — **not guarded** |
+| `test/walkfigure.test.mjs` | no | UNGUARDED ×3 | working-tree figures — not guarded (agreed by luck) |
+
+The predicate agreed with the truth on **one file of four**, and on that one for the wrong reason.
+This is how D-265's brief could record that *"both instances are already GUARDED"* — right for four
+floors and wrong for the fifth, with no instrument able to tell those states apart.
+
+**THE CENSUS, RE-MEASURED FROM PRINTED OUTPUT** (`node scripts/walkfloor.mjs`, before -> after):
+
+| figure | before | after |
+| --- | --- | --- |
+| modules read | 380 | 380 |
+| walk modules | 21 | 21 |
+| cross-file floors | 21 | **18** |
+| of those GUARDED | 4 (wrongly) | **5** |
+| ceilings at zero | 8 | **6** |
+| unclassified comparisons | 37 | **21** |
+| chokepoint passages / files | 18 / 5 | **17 / 5** |
+
+**THE FLOOR COLUMN IS TWO MOVEMENTS AND THEY ARE REPORTED SEPARATELY, because a net figure would
+hide both.** The grade change plus the shadow narrowing took floors 21 -> **16**, ceilings
+8 -> **5** and unclassified 37 -> **21**, measured at that point. This item's own two new hygiene
+arms — the grade asserted as a delta, and the discarded predicate kept as a control — are
+THEMSELVES cross-file floors (`selfSites.length >= 3`, `guardedFiles.length >= 1`) with one
+ceiling (`selfSites.length > 0`), taking the published figures to **18 / 6**. That is the
+self-application arm working rather than an inconsistency: a detector that did not see its own
+additions would be the finding. The chokepoint passage that went away is the one this item closed.
+**The after-column was first written as 16 / 5 from a run taken BEFORE those arms existed and is
+corrected here to the re-measured 18 / 6** — the same class of error as the battery delta below,
+in the same session, which is why both are recorded rather than quietly fixed.
+
+**THE FIVE SITES THAT VANISHED WERE FALSE POSITIVES THE OLD GRADE HID, AND THEY WERE FOUND ONLY
+BECAUSE THE GRADE STARTED NAMING A FIGURE.** The flow has no lexical scoping, so
+`const files = readdirSync(srcDir).filter((n) => n.endsWith(".mjs"))` seeded from a live `n` bound
+1,478 lines away, carrying `files` -> `raw` -> `cat` -> `predBody` -> `predEnd` into the report:
+six of `hygiene.test.mjs`'s own locals, every one graded GUARDED and therefore never questioned.
+The moment the column had to say WHICH figure, it said `'chars'` about `predEnd > 2` — a claim the
+record cannot support. Narrowed in the cry-wolf direction only (a name BOUND as a parameter in an
+expression no longer seeds from it): **-5 sites, -3 ceilings, -16 unclassified**, and no real site
+lost. The other direction is open and is now **D-304**.
+
+**BATTERY:** baseline **171/171 · 10,531**, exit 0, measured on this worktree after `npm ci` and
+before any edit. The brief predicted ~10,537; the measured figure is 10,531 and the measurement is
+what is used. **THAT -6 IS D-303 AND NOT THIS WORKTREE**, established after the fact rather than
+assumed: M0-23's worker independently measured the same 10,531 where `main` publishes 10,537, with
+its own files held out, and reproduced the identical -6 at a pre-rebase base pair (10,482 vs
+10,488). Same tracked content, different total, so the cause is environmental. Recorded here
+because the honest reading at baseline time was "trust your own run and attribute later", and the
+attribution arrived from another item's row rather than from this one's investigation. Final **171/171 · 10,542**, exit 0. Delta **+11**, attributed by DIFFING the two runs
+suite by suite and never by subtraction — THREE suites moved and every other row is byte-identical:
+`walkfloor.test.mjs` 31 -> **39** (+8: the bucket reader, the grade's seven branches, the conflict
+case, the key-carrying flow and the shadow rule as a delta), `hygiene.test.mjs` 663 -> **665**
+(+2: the grade asserted as a delta in both directions in one run, and the discarded predicate kept
+as a control), `planning-hygiene.test.mjs` 219 -> **220** (+1: the D-304 row). **`op-claims`
+35 -> 35 and `walkfigure` 32 -> 32, both UNMOVED** — that pair is the arm saying the fifth floor's
+move altered no other assertion in the suite that owns it, and reshaped nothing in D-265's
+chokepoint.
+
+**THIS SECTION FIRST SAID `10,551` AND `+20`, WRITTEN WHILE THE FINAL BATTERY WAS STILL RUNNING,
+AND IT WAS WRONG BY 9.** Corrected to the measured figure rather than the prose being rewritten
+around it. The error was the same shape in miniature as the item's subject: `+2` was predicted for
+`planning-hygiene` on the reasoning that two DEBT rows had moved, when only ONE is a new row — a
+disposition rewritten in place adds no assertion. The D-265 section immediately above this one
+records the identical mistake (`+27` written before the run against a real `+49`), which makes this
+the second consecutive item in this file to write a delta before measuring it, and the reason the
+instruction is to diff the runs rather than to reason about them.
+
+**RE-BASELINED AFTER TWO REBASES, AND THE DELTA REPRODUCED EXACTLY — measured, not carried over.**
+`origin/main` moved twice while this item ran (D-302's own queue row, then M0-23's census
+integration), so the base the `+11` was attributed against no longer existed. The TRUE new baseline
+was measured rather than subtracted: the base commit `6c54f4c` was checked out in this worktree and
+the whole battery run against it — **171/171 · 10,532**, exit 0. This item's tree on top of it reads
+**171/171 · 10,543**, exit 0: **+11 again, the same three suites, the same per-suite figures**
+(`walkfloor.test.mjs` 31 -> 39, `hygiene.test.mjs` 663 -> 665, `planning-hygiene.test.mjs`
+220 -> 221; `op-claims` 35 and `walkfigure` 32 UNMOVED). Re-running the baseline is what makes that
+a measurement rather than `10,543 − 11`, and it is also the arm that would have caught an
+interaction between M0-23's newly-landed census suite and this item's grade change. There was none.
+
+
+**NEGATIVE CONTROLS:** `node test/walkfloor.control.mjs` — **11 arms, all AS DECLARED, every
+restore VERIFIED by sha256 AND byte compare.** The `overstrict` arm's FIXTURE was corrected rather
+than exempted: it used to floor on a working-tree figure while importing `provenance.mjs`, which
+was "correct work" only under the predicate this item removed, so it had been asserting that the
+ratchet must NOT fire on a real instance. **`modulegrain` came back NOT AS DECLARED on the first
+full run and the instrument was wrong, not the arm** — it widens liveness to every identifier, the
+new grade read `info.from` off an `undefined`, and `hygiene.test.mjs` died with a TypeError
+reporting **no tally (-1/-1)** rather than a low one. An unresolved root is now graded UNCLASSIFIED.
+**A second instrument error, recorded rather than smoothed:** the first draft of this item's own
+control SPELLED its `op=` fixture in a committed file, which put a real routing claim into the
+corpus the arm exists to prove immovable — the phantom's `5 of 6` became `6 of 7`. The token is now
+composed at runtime, the way `test/op-claims.test.mjs`'s §5 fixtures already were and for the
+reason its header already gave.

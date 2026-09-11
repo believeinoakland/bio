@@ -106,6 +106,16 @@
  *    primitive list does not name.
  *  - Flow THROUGH a data structure — `arr.push(sweep()); arr[0].files >= 300` — and
  *    flow through a function PARAMETER inside the consumer.
+ *  - LEXICAL SCOPE.  The flow is a regex fixpoint over a whole file, so a local
+ *    and a parameter sharing a name are the same binding to it.  D-302 narrowed
+ *    the FALSE-POSITIVE half of that — a name BOUND as a parameter in an
+ *    expression no longer seeds from it, which removed 5 sites, 3 ceilings and 16
+ *    unclassified rows on this estate, every one of them a suite's own local.  The
+ *    other half remains: two same-named locals in different blocks are still one.
+ *  - WHICH walk of a multi-walk module a figure came from.  D-302 reads the
+ *    `walkResult()` bucket declarations per MODULE and merges them, because the
+ *    flow does not always know which export produced the value.  A key two calls
+ *    declare differently is reported as a CONFLICT, never guessed at.
  *  - Whether the directory walked is a REPOSITORY directory or a `mkdtemp` SANDBOX.
  *    That judgement is the same one M0-16's named list carries, made by reading each
  *    site, and it is why this module's output is a ratchet with a NAMED list rather
@@ -117,12 +127,68 @@ import { readdirSync, readFileSync, lstatSync } from "node:fs";
 import { join, relative, dirname, resolve, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/* ---- D-302 · HOW A SITE IS GRADED, AND WHY THE OLD PREDICATE WAS WRONG -------
+ *
+ * THE DEFECT WAS INSIDE THIS MODULE AND IT ANSWERED ABOUT THE WRONG FILE.  Until
+ * 2026-09-10 a floor site's `guarded` column was this regex:
+ *
+ *     /^\s*import\s[^\n]*["'][^"'\n]*provenance\.mjs["']/m
+ *
+ * asked of the file the FLOOR is in.  That is a question about a module's import
+ * list, and the thing being graded is a FIGURE.  Measured on this estate, it was
+ * wrong in BOTH directions at once:
+ *
+ *   - `test/op-claims.test.mjs` graded UNGUARDED for all five of its floors, and
+ *     four of them are floored on `filesRepro` / `charsRepro` / `mentionsRepro` /
+ *     `namesRepro` — figures counted over `git ls-tree HEAD`, which is D-257's
+ *     guard exactly.  The file simply does not import `provenance.mjs`; the WALK
+ *     does, one module away.
+ *   - `test/hygiene.test.mjs` graded GUARDED for all ELEVEN of its sites, several
+ *     of which floor on figures the walk itself declares WORKING-TREE and which
+ *     say so in a named constant at their own site.  The file imports
+ *     `provenance.mjs` for an unrelated arm, and that was the whole basis.
+ *
+ * THAT IS ALSO HOW THE RECORD CAME TO BELIEVE D-265's "both instances are already
+ * GUARDED" — right for four floors and wrong for the fifth, with no instrument
+ * able to tell the two states apart.  A predicate that answers about the wrong
+ * file cannot.
+ *
+ * SO THE GRADE IS READ OFF THE CLASSIFICATION D-265 PUT ON THE VALUE.  Every walk
+ * that publishes through `walkResult()` declares each figure into exactly one of
+ * four buckets, and the bucket is the answer to the question this column is asking:
+ *
+ *   reproducible  -> GUARDED.      The figure is the HEAD-restricted count.  A
+ *                                  floor on it is the CORRECT act (D-257).
+ *   workingTree   -> WORKING-TREE. An uncommitted arrival moves it.  Not guarded;
+ *                                  a floor here must be a NAMED decision.
+ *   safe          -> SAFE-BUCKET.  Declared safe because callers PIN it or assert
+ *                                  it EMPTY — which is a reason a floor is not.
+ *   data          -> UNCLASSIFIED. Not a figure.
+ *
+ * AND WHAT IT CANNOT RESOLVE IT SAYS SO ABOUT, rather than grading it.  A walk
+ * publishing no `walkResult()` declaration, a comparison reading the whole result
+ * instead of a declared key, a key two modules disagree about — each comes back
+ * UNCLASSIFIED with the reason attached, and UNCLASSIFIED is NOT guarded, so it
+ * still has to be NAMED.  The unsafe direction is not reachable by a silence.
+ *
+ * WHAT THIS STILL CANNOT DO, stated because a grade that hides its limits is read
+ * as though it had none: the buckets are read from SOURCE, per module, MERGED
+ * across every `walkResult()` call in it.  A module whose two walks declared the
+ * same key into different buckets is reported as a CONFLICT rather than guessed
+ * at, and a key resolved through a hop this flow does not model comes back
+ * UNCLASSIFIED.  The RUNTIME half of the same question — the brand in
+ * `walkfigure.mjs`, which refuses the floor at the site — has none of those
+ * limits and is the reason this one is allowed to have them. */
+
 /* GUARDED, and by its OWN rule rather than as a formality.  This module walks
    directories it does not control, and `hygiene.test.mjs` FLOORS on what it
    returns — so by stage 3 above it is itself one half of a cross-file
    walk-derived floor.  It asks `provenance.mjs` the same question every other
    guarded walk asks, and hands the answer up so a site found only in an
-   UNTRACKED file is labelled rather than counted silently. */
+   UNTRACKED file is labelled rather than counted silently.  NOTE, since the
+   paragraph above just removed that import's role as a GRADE: asking provenance
+   is still what makes this walk's own output honest about tracked-ness.  It was
+   never a bad thing to do — it was a bad thing to grade a third party's floor by. */
 import { readGitProvenance, stateOf, repoPath } from "./provenance.mjs";
 /* D-265: this module's own result carries its classification — see the return of
    `sweepWalkFloors` for why the detector applies the brand to itself. */
@@ -253,6 +319,102 @@ function braceBody(s, from) {
 
 const IDENT = "[A-Za-z_$][A-Za-z0-9_$]*";
 
+/* --------------------------------------------- D-302 · THE BUCKET DECLARATION */
+
+export const WALK_BUCKETS = ["workingTree", "reproducible", "safe", "data"];
+
+/* The top-level property NAMES of an object-literal body, split on commas at depth
+   zero so a nested object, array or call cannot contribute a key.  Shorthand
+   (`chars`) and long form (`files: files.length`) both resolve to the same name,
+   which is the point: the DECLARATION is a set of names and the values are not
+   read at all. */
+function literalKeys(body) {
+  const keys = [];
+  let depth = 0, start = 0;
+  const parts = [];
+  for (let p = 0; p <= body.length; p++) {
+    const c = body[p];
+    if (p === body.length || (c === "," && depth === 0)) { parts.push(body.slice(start, p)); start = p + 1; continue; }
+    if (c === "{" || c === "[" || c === "(") depth++;
+    else if (c === "}" || c === "]" || c === ")") depth--;
+  }
+  for (const part of parts) {
+    const m = part.match(new RegExp(`^\\s*(${IDENT})\\s*(:|$)`));
+    if (m) keys.push(m[1]);
+  }
+  return keys;
+}
+
+/* Brace-match the object literal that is the sole argument of every
+   `walkResult({ ... })` call in this module, and read the four bucket key sets out
+   of it.  Over STRIPPED source, so a `walkResult(` written in a comment — this
+   module's own header contains several — cannot contribute a declaration.  That is
+   the same trap M0-16's census fell into and REC-70, REC-64 and this module's own
+   first draft each paid for separately. */
+export function bucketsOf(stripped) {
+  const out = { declared: false, calls: 0, conflicts: new Set() };
+  for (const b of WALK_BUCKETS) out[b] = new Set();
+
+  const re = /(^|[^A-Za-z0-9_$.])walkResult\s*\(/g;
+  for (let m; (m = re.exec(stripped));) {
+    /* `export function walkResult({ about, workingTree = {}, ... })` is the
+       DEFINITION, in `walkfigure.mjs`, and reading its destructured parameter list
+       as a declaration would make the chokepoint module declare every bucket name
+       as a key of itself. Measured: it contributes no keys anyway (the parameters
+       use `=`, not `:`), but it would set `declared`, which is the field the grade
+       turns on. Excluded structurally. */
+    if (/\bfunction\s*$/.test(stripped.slice(Math.max(0, m.index - 24), m.index + m[0].length - "walkResult(".length))) continue;
+    const arg = braceBody(stripped, m.index + m[0].length - 1);
+    if (!arg) continue;
+    out.declared = true; out.calls++;
+    const body = stripped.slice(arg.start, arg.end);
+    /* the buckets are top-level properties of that argument; each one's own body
+       is brace-matched from its colon so a bucket is read as a whole */
+    for (const bucket of WALK_BUCKETS) {
+      const bre = new RegExp(`(^|[^A-Za-z0-9_$.])${bucket}\\s*:`, "g");
+      for (let bm; (bm = bre.exec(body));) {
+        const inner = braceBody(body, bm.index + bm[0].length - 1);
+        if (!inner) continue;
+        for (const k of literalKeys(body.slice(inner.start, inner.end))) {
+          for (const other of WALK_BUCKETS)
+            if (other !== bucket && out[other].has(k)) out.conflicts.add(k);
+          out[bucket].add(k);
+        }
+        break;                          // the FIRST `bucket:` in this call is its declaration
+      }
+    }
+  }
+  return out;
+}
+
+/* The grade a comparison earns, from the bucket its figure was declared into.
+   `key` is the property of the walk result the comparison reads; `null` means the
+   flow could not name one, which is a finding and not a pass. */
+export function gradeOf(buckets, key, originRel) {
+  if (!buckets || !buckets.declared)
+    return { grade: "UNCLASSIFIED", key,
+      why: `${originRel} publishes no walkResult() declaration, so nothing on the value says which population it counts` };
+  if (!key)
+    return { grade: "UNCLASSIFIED", key,
+      why: "the comparison reads a binding this flow could not resolve to a declared figure" };
+  if (buckets.conflicts.has(key))
+    return { grade: "UNCLASSIFIED", key,
+      why: `'${key}' is declared into two different buckets by ${originRel}'s walkResult() calls` };
+  if (buckets.reproducible.has(key))
+    return { grade: "GUARDED", key,
+      why: `'${key}' is declared REPRODUCIBLE — counted over git ls-tree HEAD, so a phantom cannot move it` };
+  if (buckets.workingTree.has(key))
+    return { grade: "WORKING-TREE", key,
+      why: `'${key}' is declared WORKING-TREE — an uncommitted arrival moves it, and only UP` };
+  if (buckets.safe.has(key))
+    return { grade: "SAFE-BUCKET", key,
+      why: `'${key}' is declared SAFE because callers PIN it or assert it EMPTY; a FLOOR is neither` };
+  if (buckets.data.has(key))
+    return { grade: "UNCLASSIFIED", key, why: `'${key}' is declared DATA — not a figure at all` };
+  return { grade: "UNCLASSIFIED", key,
+    why: `'${key}' is not a figure ${originRel}'s walkResult() declares` };
+}
+
 /* Balance forward from the `(` at `openIdx`, returning the index AFTER its `)`.
    THIS EXISTS BECAUSE OF A MEASURED BUG IN THIS MODULE'S OWN FIRST DRAFT, and the
    bug is worth keeping written down because it made the instrument report a clean
@@ -355,10 +517,17 @@ export function moduleFacts(src) {
     exported,
     derivedExports: new Set([...derived].filter((d) => exported.has(d))),
     allDerived: derived,
-    /* over the COMMENT-ONLY strip: the path is a string literal, and M0-16's own
-       first draft proved that grading this by a bare mention anywhere in the file
-       reads a HEADER that names the module in prose as an import. */
-    guarded: /^\s*import\s[^\n]*["'][^"'\n]*provenance\.mjs["']/m.test(stripComments(src)),
+    /* D-302 · THE CLASSIFICATION THIS MODULE'S OWN WALKS PUT ON THEIR FIGURES.
+       This REPLACED a regex asking whether the file imports `provenance.mjs` —
+       a question about an import list, used to grade a figure, and measured wrong
+       in both directions on this estate. The header says which directions. */
+    buckets: bucketsOf(s),
+    /* KEPT, AND IT IS NO LONGER A GRADE. Whether a module asks `provenance.mjs`
+       is still worth reporting about a WALK — a walk that never asks cannot say
+       whether what it found is in any commit — but it is a fact about that
+       module, not a verdict on a third party's floor. Named so it cannot be
+       mistaken for the grade again. */
+    importsProvenance: /^\s*import\s[^\n]*["'][^"'\n]*provenance\.mjs["']/m.test(stripComments(src)),
   };
 }
 
@@ -453,31 +622,104 @@ export function comparisonsOf(stripped) {
   return out;
 }
 
-/* The locals in a consumer that carry a walk-derived value, to a fixpoint. */
+/* The locals in a consumer that carry a walk-derived value, to a fixpoint.
+ *
+ * D-302 · EACH LIVE LOCAL NOW CARRIES THE KEY IT ROOTS IN, because the grade is a
+ * property of the FIGURE and a value that arrives with no key can only be graded
+ * UNCLASSIFIED.  `const r = sweep()` carries no key — `r` is the whole result —
+ * while `const { files } = corpus()`, `const n = sweep().files` and
+ * `const x = r.sites.filter(...)` all carry one.  A local derived from a local that
+ * already has a key INHERITS it, which is what lets `const m = realFigure; const n
+ * = m;` still name `chars` two hops later.
+ *
+ * Returns a Map local -> { from, key }.  `from` is the walking module the value
+ * came out of; `key` is the declared figure, or null when this flow could not name
+ * one.  Null is a finding, not a pass — see `gradeOf`. */
 export function seededLocals(stripped, seeds) {
-  const live = new Set(seeds);
-  const calls = (expr) => [...live].some((nm) =>
-    new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*\\(`).test(expr)
-    || new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*[.\\[]`).test(expr)
-    || new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*$`).test(expr.trim()));
+  /* Seeds arrive either as a Map name -> { from, key } (the sweep, which knows
+     both) or as a bare list of names (a suite driving this stage on its own, where
+     neither is known and neither is needed). Normalised here rather than at each
+     caller: this is an exported stage and `test/walkfloor.test.mjs` drives it with
+     the list spelling, which D-302 would otherwise have broken with a TypeError
+     inside the suite — a throw that goes through no assertion at all. */
+  const live = new Map();             // name -> { from, key }
+  for (const e of seeds ?? [])
+    Array.isArray(e) ? live.set(e[0], e[1] ?? { from: null, key: null })
+      : live.set(e, { from: null, key: null });
+
+  /* D-302 · A NAME BOUND AS A PARAMETER INSIDE THE EXPRESSION IS NOT THE LIVE ONE.
+   * This flow has no lexical scoping — it is a regex fixpoint over a whole file —
+   * and that produced a measured FALSE POSITIVE on this estate rather than a
+   * theoretical one.  `hygiene.test.mjs:2285` binds a live figure to `n`; 1,478
+   * lines earlier, `const files = readdirSync(srcDir).filter((n) => n.endsWith(...))`
+   * binds `n` as an ARROW PARAMETER.  The old matcher saw `n.` in that expression,
+   * marked `files` walk-derived, and through `raw` -> `cat` -> `predBody` ->
+   * `predEnd` carried SIX of that suite's own locals into the report.
+   *
+   * IT WAS INVISIBLE BEFORE THIS ITEM because the grade came from the file's import
+   * list, so all six read GUARDED and nobody had to ask which figure they were
+   * floors on.  The moment the grade is read off the FIGURE, a false positive stops
+   * being a harmless extra row and becomes the report stating which population a
+   * number counts when it counts nothing of the kind — a record claiming more than
+   * it can support, which is worse here than a missing row.
+   *
+   * The rule is the shape of the defect inverted: if an expression BINDS the name,
+   * the occurrences in it are the binding's.  It narrows only the cry-wolf
+   * direction, which is the direction that gets a check switched off. */
+  const shadows = (expr, nm) => {
+    const re = new RegExp(`(?:\\(([^)]*)\\)|(${IDENT}))\\s*=>`, "g");
+    for (let m; (m = re.exec(expr));) {
+      const params = m[1] ?? m[2] ?? "";
+      if (new RegExp(`(^|[^A-Za-z0-9_$.])${nm}($|[^A-Za-z0-9_$])`).test(params)) return true;
+    }
+    return false;
+  };
+
+  /* the live name this expression reads, and the member it takes off it */
+  const readsLive = (expr) => {
+    for (const [nm, info] of live) {
+      if (shadows(expr, nm)) continue;
+      const mem = new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*(?:\\([^;]*\\))?\\s*\\.\\s*(${IDENT})`).exec(expr);
+      if (mem) return { from: info.from, key: info.key ?? mem[2] };
+      if (new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*[(\\[]`).test(expr)
+        || new RegExp(`(^|[^A-Za-z0-9_$.])${nm}\\s*$`).test(expr.trim()))
+        return { from: info.from, key: info.key ?? null };
+    }
+    return null;
+  };
 
   for (let pass = 0; pass < 8; pass++) {
     let grew = false;
     const simple = new RegExp(`(?:const|let|var)\\s+(${IDENT})\\s*=\\s*([^;\\n]*)`, "g");
     for (let m; (m = simple.exec(stripped));) {
-      if (!live.has(m[1]) && calls(m[2])) { live.add(m[1]); grew = true; }
+      if (live.has(m[1])) continue;
+      const info = readsLive(m[2]);
+      if (info) { live.set(m[1], info); grew = true; }
     }
     const destr = /(?:const|let|var)\s*\{([^}]*)\}\s*=\s*([^;\n]*)/g;
     for (let m; (m = destr.exec(stripped));) {
-      if (!calls(m[2])) continue;
+      const info = readsLive(m[2]);
+      if (!info) continue;
       for (const part of m[1].split(",")) {
         const nm = part.trim().split(/\s*:\s*/).pop().trim();
-        if (nm && /^[A-Za-z_$]/.test(nm) && !live.has(nm)) { live.add(nm); grew = true; }
+        /* destructuring a whole result NAMES the key; destructuring something that
+           already has one keeps the parent's */
+        if (nm && /^[A-Za-z_$]/.test(nm) && !live.has(nm)) {
+          live.set(nm, { from: info.from, key: info.key ?? nm }); grew = true;
+        }
       }
     }
     if (!grew) break;
   }
   return live;
+}
+
+/* The declared figure a comparison operand reads: the local's own key if it has
+   one, otherwise the first member taken off the live root in the operand text. */
+export function keyOfOperand(atom, root, info) {
+  if (info && info.key) return info.key;
+  const m = new RegExp(`(^|[^A-Za-z0-9_$.])${root}\\s*(?:\\([^)]*\\))?\\s*\\.\\s*(${IDENT})`).exec(atom);
+  return m ? m[2] : null;
 }
 
 /* ------------------------------------------------------------------ THE SWEEP */
@@ -524,7 +766,13 @@ export function sweepWalkFloors({ repo = REPO, roots = CENSUS_ROOTS } = {}) {
 
   const walkModules = [...facts.entries()]
     .filter(([, v]) => v.walks > 0)
-    .map(([f, v]) => ({ file: relative(repo, f), walks: v.walks, guarded: v.guarded,
+    .map(([f, v]) => ({ file: relative(repo, f), walks: v.walks,
+                        importsProvenance: v.importsProvenance,
+                        /* D-302: whether this walk CLASSIFIES what it publishes is
+                           the fact every grade downstream depends on, so it is on
+                           the roster rather than inferred at each site. */
+                        classifies: v.buckets.declared,
+                        reproducible: [...v.buckets.reproducible].sort(),
                         derived: [...v.derivedExports].sort() }));
 
   /* (b) the flow, per consumer */
@@ -551,11 +799,10 @@ export function sweepWalkFloors({ repo = REPO, roots = CENSUS_ROOTS } = {}) {
     }
     if (!seeds.size) continue;
 
-    const live = seededLocals(s, [...seeds.keys()].map((k) => k.split(".")[0]).filter((k, i, a) => a.indexOf(k) === i)
-      .concat([...seeds.keys()].filter((k) => !k.includes("."))));
-    /* namespace member calls: treat the namespace root as live only where the
-       walk-derived member is the one being called */
-    for (const k of seeds.keys()) if (k.includes(".")) live.add(k.split(".")[0]);
+    /* the namespace root is live wherever a walk-derived member is called off it */
+    const flowSeeds = new Map();
+    for (const [k, v] of seeds) flowSeeds.set(k.includes(".") ? k.split(".")[0] : k, { from: v.from, key: null });
+    const live = seededLocals(s, flowSeeds);
 
     for (const c of comparisonsOf(s)) {
       const lRoot = c.left.root, rRoot = c.right.root;
@@ -566,10 +813,27 @@ export function sweepWalkFloors({ repo = REPO, roots = CENSUS_ROOTS } = {}) {
       const lNum = numOf(c.left.atom), rNum = numOf(c.right.atom);
       const rel = relative(repo, f);
       const origin = [...seeds.values()].map((v) => relative(repo, v.from));
+      /* D-302 · THE GRADE, READ OFF THE FIGURE RATHER THAN OFF THIS FILE'S
+         IMPORTS. The side that is live is the side carrying the walk value; the
+         key it reads decides the bucket, and the bucket decides the grade. */
+      const liveRoot = lLive ? lRoot : rRoot;
+      const liveAtom = lLive ? c.left.atom : c.right.atom;
+      /* A ROOT THE FLOW DOES NOT KNOW IS GRADED UNCLASSIFIED, NOT DEREFERENCED.
+         Measured, not defensive: the `modulegrain` control arm widens `lLive` /
+         `rLive` to every identifier, so the root is by construction absent from
+         `live` — and the first draft of this grade read `info.from` straight off
+         `undefined`, killing `hygiene.test.mjs` with a TypeError that went through
+         no assertion at all and reported NO tally rather than a low one. The arm
+         came back NOT AS DECLARED and the instrument was wrong, not the arm. */
+      const info = live.get(liveRoot) ?? { from: null, key: null };
+      const key = keyOfOperand(liveAtom, liveRoot, info);
+      const originRel = info.from ? relative(repo, info.from) : "(no walking module resolved)";
+      const g = gradeOf(info.from ? facts.get(info.from)?.buckets : null, key, originRel);
       const row = { file: rel, line: c.line, op: c.op,
                     expr: `${c.left.atom.trim()} ${c.op} ${c.right.atom.trim()}`.trim(),
                     from: [...new Set(origin)].sort(),
-                    guarded: facts.get(f).guarded };
+                    origin: originRel, key: g.key, grade: g.grade, why: g.why,
+                    guarded: g.grade === "GUARDED" };
 
       /* a comparison against 0 is a CEILING AT ZERO — fails safe (D-257) */
       if ((lLive && rNum === 0) || (rLive && lNum === 0)) { ceilings.push(row); continue; }
@@ -620,12 +884,18 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   console.log(`walkfloor: ${r.corpus.count} module(s) read · ${r.walkModules.count} walk `
     + `module(s) · provenance ${r.provenance}`);
   for (const w of r.walkModules.overWorkingTree(REPORTING_ONLY))
-    console.log(`  WALK ${w.file} · ${w.walks} primitive call(s) · walk-derived exports: `
+    console.log(`  WALK ${w.file} · ${w.walks} primitive call(s) · `
+      + `${w.classifies ? `classifies (reproducible: ${w.reproducible.join(", ") || "none"})` : "NO walkResult() declaration"}`
+      + ` · walk-derived exports: `
       + `${w.derived.length ? w.derived.join(", ") : "(none reachable from an export)"}`);
-  console.log(`\n  CROSS-FILE FLOORS: ${r.sites.length}`);
+  console.log(`\n  CROSS-FILE FLOORS: ${r.sites.length}`
+    + ` (${r.sites.filter((s) => s.guarded).length} GUARDED)`);
+  /* D-302: the GRADE and the REASON, never a bare GUARDED/UNGUARDED. A column
+     that cannot say WHY is a column the next reader has to re-derive, and this
+     one spent a year saying the wrong thing without anybody being able to tell. */
   for (const s of r.sites)
-    console.log(`    ${s.file}:${s.line}  ${s.expr}   <- ${s.from.join(", ")} `
-      + `[${s.guarded ? "GUARDED" : "UNGUARDED"}, ${s.state}]`);
+    console.log(`    ${s.file}:${s.line}  ${s.expr}   <- ${s.origin} `
+      + `[${s.grade}, ${s.state}] — ${s.why}`);
   console.log(`  CEILINGS AT ZERO (fail safe, not flagged): ${r.ceilings.length}`);
   for (const s of r.ceilings) console.log(`    ${s.file}:${s.line}  ${s.expr}`);
   console.log(`  UNCLASSIFIED comparisons over a walk-derived binding: ${r.unknowns.length}`);
