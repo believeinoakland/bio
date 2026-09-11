@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: FOUR ARMS PLUS A BASELINE, each armed ALONE with every other
+/* NEGATIVE CONTROL: FIVE ARMS PLUS A BASELINE, each armed ALONE with every other
    defence held OPEN, RUN, and recorded at the foot of this file with the count it
    MEASURED rather than the count it was expected to. The driver is
    `test/casesign.control.mjs` — COMMITTED, so every arm re-runs in one step with
@@ -7,10 +7,10 @@
    INSIDE THIS WORKTREE (never the shared scratchpad: PL-10's harness was
    overwritten mid-turn by a concurrent worker, and UI-38 met an NC harness that
    reported a byte-identical restore over a file it had not restored).
-   ALL FIVE RUN 2026-09-10 AGAINST THIS FILE, with the count each one MEASURED:
+   ALL SIX RUN 2026-09-10 AGAINST THIS FILE, with the count each one MEASURED:
 
    (0) BASELINE, nothing armed -> **54 pass, 0 fail**. The row that distinguishes
-   four-arms-broken from four-arms-working, and the one nobody runs. It is
+   five-arms-broken from five-arms-working, and the one nobody runs. It is
    NUMBERED rather than named because the register's `OPENS_ITEM` grammar accepts
    at most two letters inside the parentheses: CASE-1 measured a declaration
    scored UNCLASSIFIED for opening its list with the word `(baseline)`, and that
@@ -37,6 +37,23 @@
    RATIFIED, so the member's published sha moved, and the container a stranger
    verifies in block 5 was assembled over different bytes. The deletion done first
    does not merely go unrefused — it reaches the signed artifact that travels.
+
+   (b2) THE SAME QUESTION AT THE OTHER DEPTH, and the queue row's second arm in
+   its most literal reading: remove the CEREMONY itself — `op=publish` stops
+   authoring a case document — while the eight keys stay gone from member bytes,
+   which is the tree as it would be if the deletion had been done first ->
+   **0 pass, 1 fail**, and the failure is the FIXTURE saying there is no ceremony
+   to perform. **THE MEASUREMENT IS AN ABSENCE AND THAT IS THE FINDING:** with the
+   keys gone and no document to sign, NO CASE FACT IS COMMITTED BY ANY ROUTE —
+   `CASE_UNSIGNED` cannot fire because nothing reaches the committer, and arm (a)'s
+   question stops being askable. The ceremony is not a fence standing in front of
+   the deletion; it is the only thing that makes the deletion representable. **IT
+   TOOK TWO CORRECTIONS TO PRODUCE A TALLY AT ALL** — it first died on
+   `pub.caseDocument.doc_sha` with no count, and a guard on the KEY alone still let
+   it through because `op=publish` reads its row back rather than assuming the
+   write landed, so the answer carried a `caseDocument` with a null sha. A control
+   that produces no count cannot be compared with the baseline it exists to be
+   compared with (CASE-4's arm (d), same shape).
 
    (c) OVER-STRICTNESS — make the case document's bar arm demand a DECLARED bar
    rather than a STATED one -> **15 pass, 1 fail**: every case published by a
@@ -346,6 +363,20 @@ console.log("\n--- 1. op=publish authors a case document and commits NOT ONE cas
 const pub = await publish({ targets: [LEAD, SUPP],
   roles: { [LEAD]: "load_bearing", [SUPP]: "supporting" } });
 if (!pub.ok) bail("publish the two-finding case", pub);
+/* AND THE ANSWER MUST CARRY A CASE DOCUMENT, checked HERE rather than let to throw
+   forty lines down. Control arm (b2) removes the ceremony entirely, and on its
+   first run this suite died with NO TALLY AT ALL —
+   which is CASE-4's arm (d) exactly: a bare throw names nothing, and a control
+   that produces no count cannot be compared with the baseline it exists to be
+   compared with. Named, the same arm reports a fixture failure and a tally.
+   THE GUARD CHECKS THE SHA AND NOT MERELY THE KEY, which is the correction the
+   arm's SECOND run forced: with the document write armed away, `op=publish` still
+   answers a `caseDocument` object — it reads the row back rather than assuming the
+   write landed — but with `doc_sha: null`. A guard on the key alone passed it
+   straight through and the suite died four blocks later on `doc1.text`. The
+   read-back is the right design and the guard has to match it. */
+if (!pub.caseDocument || !/^[0-9a-f]{64}$/.test(String(pub.caseDocument.doc_sha)))
+  bail("op=publish authored no case document — there is no ceremony to perform", pub);
 const CASE = pub.caseId;
 {
   t("op=publish answers the CASE DOCUMENT to review, with its hash and its byte length",

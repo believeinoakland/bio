@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-656 rulings across 67 documents.
+661 rulings across 67 documents.
 
 ## DEC-
 
@@ -486,6 +486,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:5610`
 - **C-2.8** — ONE INSTRUMENT COMMENT CORRECTED MID-BUILD AND REPORTED: REACH C2's comment claimed it read the removed shapes out of the raw source when the code uses hand-written specimens — an instrument OVERCLAIMING WHAT IT DOES, the same defect one altitude up, now saying what the code does and pointing at arm (b) for the…  
   `docs/archive/ledgers/QUEUE-2026-08.md:2036`
+- **C-2.8** — input this item deletes, CORRECTED (never exempted) with the dated reason at the site; (b) `checkInquiryPublished`'s C-2.8 case block, same; (c) ONE NEW FAMILY `CASE_DOC_CHECKS` — the case document's gate — with its own C-number taken from the catalog's own allocation.  
+  `docs/development/CLAIMS.md:1835`
 - **C-6.3** · 2026-08-01 — CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed.  
   `docs/architecture/BIO_Case_Making_v0_1.md:466`
 - **C-7.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-7.1 `proves()` block replaced by a pointer, the retirement block widened to be keyed by retired id, the header's SUPERSEDED note and `NEGATIVE CONTROL:` line extended).  
@@ -532,6 +534,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:774`
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
+- **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
+  `docs/development/INTERFACE-CHANGES.md:5073`
 ## REC-
 
 - **REC-3** · 2026-07-31 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
@@ -1139,6 +1143,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:1271`
 - Tests — CORRECTED, NEVER EXEMPTED:** - `bio-plane/test/caselifecycle.test.mjs` (NEW — the item's own suite), `bio-plane/test/caselifecycle.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step; it edits real sources, so it is deliberately NOT a  
   `docs/development/CLAIMS.md:1615`
+- — the STILL-THERE block only, CORRECTED to the opposite assertion with the reason the old one was right before and is wrong now.  
+  `docs/development/CLAIMS.md:1839`
+- **2026-09-10** — a delegation cannot carry a red gate and this claim will be AMENDED in place, as CASE-4's was. **NOT** `newgroup/**`, **NOT** `release/**`. ### AMENDMENT 2026-09-10, MID-ITEM (CASE-5b, `case5b-case-signing`) — **SIXTEEN FILES ADDED TO THE CLAIM, AND THE HONEST REASON IS THAT A CEREMONY INSERTED BETWEEN TWO ACTS…  
+  `docs/development/CLAIMS.md:1855`
+- helper and at the assertions the flip superseded, every superseded assertion CORRECTED with a dated reason at the site and none exempted: `publish`, `multifinding`, `publishedcase`, `caseflip`, `casepin`, `caseproduction`, `caselifecycle`, `reevaluation`, `caseobject`.  
+  `docs/development/CLAIMS.md:1884`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

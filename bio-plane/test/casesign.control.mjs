@@ -90,6 +90,33 @@ const ARMS = {
        + "                   'bias_acknowledgement', 'required_strength']) {",
          "  for (const k of []) {") },
 
+  /* (b2) IS THE QUEUE ROW'S SECOND ARM IN ITS MOST LITERAL READING, and it is
+     kept BESIDE (b) rather than instead of it because the two ask the same
+     question at two different depths. The row says: *"strip the six keys WITHOUT
+     the ceremony and the unsigned-commit arm must fail — proving the ceremony is
+     the precondition and not decoration."* (b) neuters the FENCE that keeps a
+     member from asserting a case in its own bytes, which is the half a caller can
+     attack. (b2) removes the CEREMONY ITSELF — op=publish stops authoring a case
+     document — leaving the deletion standing entirely alone, which is exactly the
+     state the tree would be in if this item had been done in the other order.
+     WHAT IT MEASURES IS AN ABSENCE RATHER THAN A REFUSAL, and that is the point:
+     with the keys gone and no document to sign, NO CASE FACT IS EVER COMMITTED BY
+     ANY ROUTE. `CASE_UNSIGNED` cannot fire because nothing reaches the committer;
+     `op=caseratify` has nothing to read. A published case simply does not exist.
+     So the ceremony is not a fence in front of the deletion — it is the only
+     thing that makes the deletion representable, and an arm that expected a named
+     refusal here would be looking for a door in a wall with no room behind it. */
+  b2: { files: [STORE],
+        label: "(b2) THE DELETION STANDING ENTIRELY ALONE — remove the CEREMONY, not its fence: op=publish "
+             + "stops authoring a case document while the eight keys stay gone from member bytes. No case "
+             + "fact is committed by any route, so the case never exists and the unsigned-commit arm has "
+             + "nothing to refuse. This is the tree as it would be if the deletion had been done first",
+        apply: () => edit(STORE,
+          "    this.sql.exec(\n"
+        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by)",
+          "    if (false) this.sql.exec(\n"
+        + "      `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by)") },
+
   /* ===== (c) WAS ARMED IN THE WRONG DIRECTION ON ITS FIRST RUN AND CAME BACK
      GREEN — 50 pass, 0 fail — AND THE CORRECTION IS WORTH MORE THAN THE ARM.
      The first (c) added `if (!caseEditionClaimed(fm)) return false;` to
