@@ -15,10 +15,24 @@
  *      ceiling's own currency (op=cpuprobe measured 40M iterations fit on Free);
  *   4. scores page 2 against the embedded human-verified ground truth
  *      (transcribed 2026-08-03 from the 300-dpi scan, digits adjudicated by
- *      zooming the image), characters and DIGITS separately;
- *   5. NEGATIVE CONTROL: OCRs a blank white page of the same dimensions and
- *      requires empty output — an engine that hallucinates on a blank page is
- *      the failure mode that would put invented text in the record;
+ *      zooming the image), characters and DIGITS separately — and, since
+ *      CPDF-16, digit-position DISAGREEMENTS as a FIFTH expression with its
+ *      own column (D-305: a digit swapped for another digit aligns
+ *      digit-to-digit and MINTS NOTHING — $50,000 read as $10,000 read clean
+ *      in the minted column on CPDF-14's R3 run of record; the exhibit is
+ *      driven below on every run). The four original expressions and the
+ *      ground truth are BYTE-PINNED by the CPDF-14 and CPDF-15 probes'
+ *      comparability guards: the fifth is ADDITIVE, they are never edited;
+ *   5. NEGATIVE CONTROLS + THE GATE (D-314, CPDF-16): OCRs a blank white page
+ *      AND CPDF-11's uniform-noise control (same recipe, same seed, the
+ *      ground-truthed page's own dimensions) and requires empty output on
+ *      both — an engine that hallucinates on a blank or noise page is the
+ *      failure mode that would put invented text in the record, and this
+ *      engine DOES (D-314: 9,968 characters on uniform noise, measured by
+ *      CPDF-15). A floor REFERENCE is therefore only ever taken from a run
+ *      that passed BOTH controls; an agreement-with-the-floor figure over a
+ *      noise-failing floor run reads `undetermined` naming the gate, never a
+ *      number (`floorAgreement()` below is the path, and it is driven);
  *   6. with --provenance, samples recent Oakland Legistar attachments via the
  *      Legistar web API and reports how often /Producer //Creator names
  *      scanner or OCR software (the text-layer-provenance detection).
@@ -80,9 +94,58 @@ function score(label, gtRaw, ocrRaw) {
   const digTotal = pairs.filter(([g]) => g && /[0-9]/.test(g)).length;
   const digErr = pairs.filter(([g, o]) => g && /[0-9]/.test(g) && g !== o).length;
   const minted = pairs.filter(([g, o]) => o && /[0-9]/.test(o) && (!g || !/[0-9]/.test(g))).length;
+  /* THE FIFTH EXPRESSION (D-305, added by CPDF-16, ADDITIVE — the four above are
+     byte-pinned by CPDF-14's and CPDF-15's comparability guards and are not
+     edited): digit-position DISAGREEMENT — a position where the ground truth
+     has a digit, the output has a digit OPPOSITE it, and they differ. This is
+     exactly the class `minted` is blind to: a digit swapped for another digit
+     aligns digit-to-digit, mints nothing, and reads clean in that column
+     ($50,000 -> $10,000 minted 0 on CPDF-14's R3 run of record). */
+  const disagree = pairs.filter(([g, o]) => g && /[0-9]/.test(g) && o && /[0-9]/.test(o) && g !== o).length;
   console.log(`  [${label}] GT ${gt.length} chars; edits ${dist}; char accuracy ${((1 - dist / gt.length) * 100).toFixed(2)}%`);
   console.log(`  [${label}] GT digit chars ${digTotal}; digit errors ${digErr} (${((1 - digErr / digTotal) * 100).toFixed(2)}%); digits MINTED by OCR ${minted}`);
+  console.log(`  [${label}] digit-position DISAGREEMENTS (digit-for-digit substitution, D-305) ${disagree}`);
   console.log(`  [${label}] all char errors (gt->ocr): ${JSON.stringify(errs)}`);
+  return { dist, gtChars: gt.length, digTotal, digErr, minted, disagree };
+}
+
+/* D-305 EXHIBIT, driven on EVERY run before any engine is installed: the R3
+ * substitution class applied to the ground truth itself. A substitution-only
+ * corruption MUST move the new column and MUST NOT move the minted column —
+ * if either side fails, the instrument is wrong and says so. */
+{
+  const ex = score("D-305 exhibit: GT with $50,000 -> $10,000, substitution only",
+    GT_PAGE2, GT_PAGE2.replace("$50,000", "$10,000"));
+  if (!(ex.disagree > 0 && ex.minted === 0)) {
+    console.error(`D-305 EXHIBIT BROKEN: expected disagree>0 && minted===0, got disagree=${ex.disagree} minted=${ex.minted}`);
+    process.exit(1);
+  }
+  console.log(`  D-305 exhibit holds: disagree=${ex.disagree} (>0), minted=${ex.minted} (0) — the fifth column sees what the minted column cannot`);
+}
+
+/* D-314 (CPDF-16): THE CONTROL GATE, and the ONLY path to an agreement figure.
+ * The gate verdict is taken from the blank AND noise control reads of the same
+ * engine run; a floor reference may only be taken from a run that passed both. */
+function controlGate(blankText, noiseText) {
+  const blankChars = norm(blankText).length, noiseChars = norm(noiseText).length;
+  const passed = blankChars === 0 && noiseChars === 0;
+  const parts = [];
+  if (noiseChars) parts.push(`the floor engine invented ${noiseChars} chars on uniform noise`);
+  if (blankChars) parts.push(`${blankChars} chars on a blank page`);
+  return { passed, blankChars, noiseChars, reason: passed ? null : parts.join(" and ") };
+}
+
+/* Agreement-with-the-floor over a floor run that FAILED its control gate is a
+ * number scored against noise (D-314's finding), so it is never a number here:
+ * it answers `undetermined` naming the gate. Callers must not unwrap
+ * `.agreement` without checking for the string. */
+function floorAgreement(gate, floorText, otherText) {
+  if (!gate || !gate.passed) {
+    return { agreement: "undetermined", reason: `noise gate: ${gate && gate.reason ? gate.reason : "controls never ran"}` };
+  }
+  const ref = norm(floorText), other = norm(otherText);
+  const { dist } = levenshteinPairs(ref, other);
+  return { agreement: (1 - dist / Math.max(1, ref.length)) * 100 };
 }
 
 const work = mkdtempSync(join(tmpdir(), "cpdf9-ocr-"));
@@ -136,8 +199,18 @@ for i,p in enumerate(r.pages):
         im = im.convert("L" if im.mode=="1" else im.mode)
         im.rotate(90, expand=True).save(f"{out}/page{i}.png")  # /Rotate 270
 Image.new("L",(3300,2550),255).save(f"{out}/blank.png")
+# --- CPDF-16 addition (D-314): CPDF-11's uniform-noise control, the SAME recipe
+# (ocr-moondream-probe.mjs), same seed, at the ground-truthed page's own
+# dimensions -- so the floor is gated on the very control it failed in CPDF-15.
+import random
+random.seed(11)
+gtpage = Image.open(f"{out}/page1.png")
+W,H = gtpage.size
+noise = Image.new("L",(W,H))
+noise.putdata([random.randint(0,255) for _ in range(W*H)])
+noise.save(f"{out}/noise.png")
 `, pdf, work]);
-console.log("pages extracted (image-only re-verified: 0 fonts, no text layer), upright, + blank control page");
+console.log("pages extracted (image-only re-verified: 0 fonts, no text layer), upright, + blank and noise control pages (noise: CPDF-11's recipe, seed 11, D-314)");
 
 // -- 3. calibration + OCR ---------------------------------------------------
 burn(2_000_000);
@@ -148,6 +221,7 @@ const iterPerMs = 40_000_000 / calMs;
 console.log(`\nCALIBRATION: 40,000,000 reference iterations (cpu.mjs burn) = ${calMs.toFixed(0)} ms on this machine (${Math.round(iterPerMs).toLocaleString()} iter/ms)`);
 
 const { createWorker } = await import(join(work, "node_modules/tesseract.js/src/index.js"));
+const floorRuns = []; // CPDF-16 (D-314): each model's page-2 read + its control-gate verdict
 // cachePath keeps tesseract.js's traineddata cache in the temp dir — without it
 // the library writes eng.traineddata into the CWD (found the hard way). Each
 // model gets its OWN cache dir: the cache key is just "eng.traineddata", so a
@@ -164,6 +238,7 @@ for (const [label, opts] of [
   const t0 = performance.now();
   const worker = await createWorker("eng", 1, opts);
   console.log(`\nMODEL ${label}: init ${(performance.now() - t0).toFixed(0)} ms`);
+  let page2Text = ""; // CPDF-16: the ground-truthed page's read, the candidate floor reference
   for (let i = 0; i < 4; i++) {
     const times = []; let text = "", conf = 0;
     for (let r = 0; r < 5; r++) {
@@ -173,13 +248,40 @@ for (const [label, opts] of [
     }
     const ms = median(times);
     console.log(`  page${i + 1}: median ${ms.toFixed(0)} ms warm (~${(ms * iterPerMs / 1e6).toFixed(1)}M ref-iter equivalent), chars=${text.length}, tesseract-confidence=${conf}`);
-    if (i === 1) score(label, GT_PAGE2, text);
+    if (i === 1) { score(label, GT_PAGE2, text); page2Text = text; }
   }
   const { data: blank } = await worker.recognize(join(work, "blank.png"));
   const ok = norm(blank.text) === "";
   console.log(`  NEGATIVE CONTROL blank 3300x2550: text=${JSON.stringify(blank.text)} confidence=${blank.confidence} -> ${ok ? "PASS (yields nothing)" : "FAIL (invented text on a blank page)"}`);
   if (!ok) process.exitCode = 1;
+  /* CPDF-16 (D-314): the NOISE control, CPDF-11's recipe at the ground-truthed
+     page's own dimensions. An engine that answers on noise disqualifies its run
+     as an agreement reference whatever its clean-page score. */
+  const { data: noiseRead } = await worker.recognize(join(work, "noise.png"));
+  const noiseOk = norm(noiseRead.text) === "";
+  console.log(`  NEGATIVE CONTROL noise (CPDF-11 recipe, seed 11): chars=${norm(noiseRead.text).length} confidence=${noiseRead.confidence} -> ${noiseOk ? "PASS (yields nothing)" : "FAIL (invented text on uniform noise — D-314's class)"}`);
+  if (!noiseOk) process.exitCode = 1;
+  const gate = controlGate(blank.text, noiseRead.text);
+  floorRuns.push({ label, gate, page2Text });
+  console.log(`  FLOOR REFERENCE: ${gate.passed
+    ? "ELIGIBLE — both controls passed; this run may serve as an agreement reference"
+    : `undetermined — noise gate FAILED (${gate.reason}); no agreement figure may be scored against this run (D-314)`}`);
   await worker.terminate();
+}
+
+/* CPDF-16 (D-314), DRIVEN END TO END: the agreement-with-the-floor path, each
+ * side gated on ITS OWN control verdict. The reference side is the model named
+ * in brackets; over a noise-failing reference the column is `undetermined`
+ * naming the gate — never a number scored against noise. */
+console.log("\nAGREEMENT-WITH-THE-FLOOR (page 2, gated per D-314):");
+for (const ref of floorRuns) {
+  for (const other of floorRuns) {
+    if (other === ref) continue;
+    const a = floorAgreement(ref.gate, ref.page2Text, other.page2Text);
+    console.log(a.agreement === "undetermined"
+      ? `  reference [${ref.label}] vs [${other.label}]: undetermined — ${a.reason}`
+      : `  reference [${ref.label}] vs [${other.label}]: ${a.agreement.toFixed(2)}% (gate passed: blank+noise both clean)`);
+  }
 }
 
 // -- 4. provenance sampling (--provenance) ----------------------------------
