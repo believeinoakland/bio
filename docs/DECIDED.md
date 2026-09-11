@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-656 rulings across 67 documents.
+653 rulings across 67 documents.
 
 ## DEC-
 
@@ -758,6 +758,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2280`
 - **UI-49** — THE OTHER THREE THINGS THE BRIEF ASKED FOR, EACH DECIDED AND RECORDED AT THE SITE.** - **The observation-log surface: RE-TAKEN, not inherited.** Of UI-49's four grounds, **ground 4 has EXPIRED** (`aiRunLog` now clamps to `AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` and publishes `limit` and `truncated`, on the ABSENT answer…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4580`
+- **UI-56** — CASE-5b (running) → CASE-6 (queued; its `accepts-when` IS the arc's definition of done — dataplane doc amended, `CASE-AS-PRODUCTION.md` archived, DECIDED regenerated, same turn) | CONDUCT #9, plus UI-56 and background D-265 |  
+  `docs/development/kickoffs/BOB-NEXT.md:24`
 ## FW-
 
 - **FW-1** · 2026-08-03 — RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`) - **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no  
@@ -1223,20 +1225,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1122`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1134`
-- `docs/DECIDED.md`. Regenerate it in any turn that rules on anything. ---  
-  `docs/development/kickoffs/BOB-NEXT.md:20`
-- The DECIDED index **indexed its own output** and reported 997 rulings against 568 — an instrument answering about itself, in the tool written to relieve exactly that. - The generated index then **made an op claim it was only QUOTING**, and `op-claims` attributed it to the index rather than the source.  
-  `docs/development/kickoffs/BOB-NEXT.md:61`
-- Regenerate `docs/DECIDED.md` in any turn that rules on anything; plancheck gates it. - Hand architectural change over through the `BOB INBOX` at the top of `QUEUE.md`, append-only.  
-  `docs/development/kickoffs/BOB-NEXT.md:152`
-- NOTATION IS SETTLED: `classDiagram` for structure, `stateDiagram-v2` for lifecycle, edges labelled with the ACT.  
-  `docs/development/kickoffs/BOB-NEXT.md:155`
+- Report what was DONE and what was DECIDED.  
+  `docs/development/kickoffs/BOB-NEXT.md:81`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:81`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
   `docs/development/kickoffs/BOB.md:101`
-- Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:181`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
