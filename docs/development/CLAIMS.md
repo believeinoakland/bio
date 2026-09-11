@@ -1398,6 +1398,7 @@ half is not, and it cannot be closed by DIST alone.**
   uploads instead, say so and DIST will build that — it costs a manifest with a hash per part and makes
   the signature cover a set rather than a file, which is why it is not the recommendation.
 
+<<<<<<< HEAD
 ---
 
 ## CLAIM 2026-09-10 FLEET (FL-9 — the per-member build step on the GUARD pattern: a committed bundle whose gate refuses to ship stale)
@@ -1546,3 +1547,16 @@ arm(s)`, provenance `175 of 175 discovered item(s) are in the commit at HEAD (d8
 pre-commit run prints the same numerals as CONTAMINATED beside the in-commit values, so moving
 from it would have installed the OLD number as the new one and read as a no-op (D-238).
 **CONDUCT RE-DERIVES BOTH ON THE MERGED TREE** — this branch cannot see CASE-4's arms.
+=======
+## CLAIM 2026-09-10 FLEET (area stand-up — a status addendum in the area's own kickoff; NO fleet code ground)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-10
+paths: `docs/development/kickoffs/FLEET.md` ONLY — a stand-up addendum recording verified state.
+  **NOT** `agent-worker/**`, **NOT** `pdf-worker/**`, **NOT** `tools/**`, **NOT**
+  `docs/development/QUEUE.md` (CONDUCT's sole ground). **FL-9's worker holds the fleet build
+  ground and was measured ALIVE at claim time** — untracked `fl9probe.mjs`/`fl9diff.mjs` and
+  file activity at 17:10 local in worktree `agent-abe10acbf93247266` — so per the kickoff's own
+  rule this session claims none of it and coordinates through CONDUCT. The kickoff is the one
+  path FL-9's brief does not name and the area session is its writer of record.
+released: 2026-09-10, same turn — the addendum lands in the same commit as this entry.
+>>>>>>> origin/main
