@@ -2577,3 +2577,4 @@ and came out byte-identical, so it carries no diff.
 `node tools/decided.mjs` re-run because this item RULES on something — the seven roster
 acts STAY `NON_ACTS`, argued at their table and carried as D-311 — and `plancheck` fails on
 the drift. 682 rulings, 190.8 KB. No line was written by hand.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 173/173 · 10,779 (+15 attributed per suite, the worker's mintid +1 reconciled to 20bb1cf's own prose), `coverage --strict` exit 0 read unpiped (floor 906/167/168 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. IC-75's delegation is UI-57, an item; the 16 orphaned workerd processes were verified idle and killed.
