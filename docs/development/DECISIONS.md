@@ -1046,9 +1046,19 @@ enacted: 2026-08-10 · CONDUCT — **NO CHANGE, and the no-change is the enactme
   this entry.
 
 
-### DEC-73 · open
+### DEC-73 · answered
 raised: 2026-09-10 · CONDUCT #9 (lifted from CPDF-14's report at integration)
 for: bob
+response: "So using my neo address for git commits is fine. This is a non-issue."
+  (Bob, 2026-09-11, to BOB after the exposure was measured for him: the address
+  appears ONLY in git commit metadata — 1,170 commits on `main`, not the 30 the
+  entry spot-checked — and NOWHERE the record touches: zero occurrences in tracked
+  content (the sole match is this entry quoting it), none in the plane, installer
+  or UI, and a published case identifies its signer by SSH key and namespace, never
+  by email. The exposure is development-history bookkeeping; the record is clean.)
+decided: commits continue with the current identity — the status quo IS the decision,
+  not a provisional awaiting a better one. No repo-local `user.email` override, no
+  history change. Nothing to enact; the entry closes on the answer alone.
 question: Every commit on `main` — the whole visible history, 30 of 30 checked — is
   authored `Bob Krause <neobobkrause@gmail.com>`, the NEO persona's email, on the BIO
   project's public GitHub repository (`believeinoakland/bio`, the biobobkrause persona).
