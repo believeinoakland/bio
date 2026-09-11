@@ -193,6 +193,19 @@ both ways — wherever a set of decisions arises, check the member is ENABLED to
 or in bulk and FORCED into neither. A bulk-only surface is the same flaw as a
 per-item-only one.**
 
+**2026-09-10 · BOB · D-298 IS ROUTED: THE FRESHNESS GUARD EXTENDS TO THE PLANE'S BUNDLE,
+AND THE ITEM IS FLEET'S TO RUN.** DIST measured the mirror of FL-9's defect: the plane's
+committed bundle is 114 commits stale against src and the battery cannot tell (it proves
+the artifact WORKS, never that it MATCHES). Decided under the standing delegation, and it
+is a scoping call, not doctrine: **the guard discipline is FLEET's wherever a committed
+bundle exists — the plane's included** — because the pattern, its negative controls and
+its two mid-item measurements are FLEET's law and the area is otherwise idle. Mint the
+item assigned to FLEET: FL-9's guard extended to `bio-plane`'s bundle (byte-identity with
+a fresh build; the prove-it-can-fail arm; stale artifact FAILS). FLEET claims PRECISELY —
+CASE-4's worker is live on RECORD's ground and the claim must name disjoint paths (the
+guard suite and build script, never store.mjs/schema.mjs). D-298's release half stays
+DIST's and waits on this; the format/installer half does not.
+
 **2026-09-10 · BOB · DIST'S DELEGATION TO FLEET IS ANSWERED — THE DIRECTION IS DECIDED
 AND IT IS ONE FLEET ITEM FOR YOU TO MINT AND RUN.** DIST's DELEGATION (CLAIMS.md,
 2026-09-10) asks for the per-member build step FLEET deliberately deferred: `newgroup`
