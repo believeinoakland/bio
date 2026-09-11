@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-687 rulings across 67 documents.
+688 rulings across 67 documents.
 
 ## DEC-
 
@@ -504,6 +504,8 @@ authority is the file named, never this one.
   `docs/development/kickoffs/RECORD.md:404`
 - **IC-75** — Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never exempted** — the set is MEASURED from the battery delta rather than guessed, and every one is named in an amendment to this claim before it is edited. - `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed…  
   `docs/development/CLAIMS.md:2486`
+- **IC-75** — act is absent" are CORRECTED at their site with a dated reason, never exempted. - `civicos-ui/test/case6.control.mjs` — three arms appended (`f`, `g`, `h`) for this item; the existing arms a–e are untouched and re-run. - `docs/development/INTERFACE-CHANGES.md` — **IC-75's `Status` block ONLY**: the CONSUMER  
+  `docs/development/CLAIMS.md:2595`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1196,9 +1198,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - pinned bytes anywhere, the pin is CORRECTED at the site with a dated reason, never exempted. - `bio-plane/test/d310.control.mjs` — **NEW**, this item's negative-control driver.  
   `docs/development/CLAIMS.md:2482`
 - `bio-plane/test/caseflip.test.mjs` — the driven pin CORRECTED, never exempted. - `bio-plane/test/derivation-bounds.test.mjs` — two bound arguments that cite the fence BY NAME as the reason their scan is bounded at 1.  
-  `docs/development/CLAIMS.md:2611`
+  `docs/development/CLAIMS.md:2636`
 - item makes false), `docs/DECIDED.md` (regenerated). **SCHEMA IS NOT EXPECTED TO MOVE** and did not: `published_case_members` already keys (case_id, edition, ord) with a `published_case_members_bundle` index on  
-  `docs/development/CLAIMS.md:2626`
+  `docs/development/CLAIMS.md:2651`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
