@@ -2279,3 +2279,4 @@ paths:
   `bio-plane/scripts/coverage.mjs` — no floor here can move, because a probe declares no checks.
   **NOT** `newgroup/**`. **NOT** `civicos-ui/**`. **NOT** `bio-plane/dist/**` — nothing this item
   writes is a plane source, so FL-10's staleness guard has nothing to catch.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 173/173 · 10,755 (+2 fully attributed to planning-hygiene on the two new DEBT rows), `coverage --strict` exit 0 read unpiped, UI harness exit 0 from the repo root, `mintid --audit` 0 breaks. The verdict is enacted: CPDF-10 re-routed to blocked-on-DEC-74; DEC-73 and DEC-74 raised.

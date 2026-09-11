@@ -1045,3 +1045,58 @@ enacted: 2026-08-10 · CONDUCT — **NO CHANGE, and the no-change is the enactme
   construction: this is a capability to ADD when a group asks, never one to unwind. Reasoning in
   this entry.
 
+
+### DEC-73 · open
+raised: 2026-09-10 · CONDUCT #9 (lifted from CPDF-14's report at integration)
+for: bob
+question: Every commit on `main` — the whole visible history, 30 of 30 checked — is
+  authored `Bob Krause <neobobkrause@gmail.com>`, the NEO persona's email, on the BIO
+  project's public GitHub repository (`believeinoakland/bio`, the biobobkrause persona).
+  The standing rule ("the machine defaults to the neo persona which must not be used")
+  has been enforced for push credentials and the Cloudflare account, but the git AUTHOR
+  identity was never covered, and `~/.gitconfig` supplies the neo email to every commit.
+  Should commits going forward carry a bio-persona author identity, and if so which
+  name/email — and does the existing history stand as-is?
+why it is Bob's: it is his public identity linkage, not a mechanism. The two personas
+  exist to be separable, and the author field on a public repo links them for anyone who
+  looks; only Bob can weigh whether that linkage matters and what identity should appear.
+  Rewriting history is NOT proposed under any answer (never force-push).
+provisional: commits continue with the current identity — CONDUCT choosing a new public
+  author identity for Bob unilaterally would be worse than one more day of the status
+  quo, and 30 commits already carry it, so marginal exposure per commit is nil.
+alternative: a repo-local `git config user.email <bio address>` (one command, this
+  checkout and each worktree created after it), which stops the linkage growing without
+  touching history.
+recommendation: set the repo-local identity to the bio persona's address once Bob names
+  it; leave history alone.
+what reversing costs: nothing — a repo-local config is one line to set or unset.
+
+### DEC-74 · open
+raised: 2026-09-10 · CONDUCT #9 (CPDF-14's verdict at integration)
+for: bob
+question: CPDF-14 measured the composed shape (detect → crop → transcribe) and the
+  verdict is NO-GO on the non-negotiable: the image-region ANCHOR itself does not
+  reproduce (1/8 pages returned the same box count across three detect runs on identical
+  bytes; half the boxes have no counterpart at IoU≥0.5), transcription reproducibility is
+  worse than the default path, and the invention band moved DOWN the ladder (R1 minted 7
+  digits composed where the default path minted 0). That exhausts DEC-35's in-account
+  candidates for Tier-3 OCR — Moondream default NO-GO (CPDF-12), Moondream composed NO-GO
+  (CPDF-14) — leaving tesseract-as-fleet-member (DEC-42's CPU question, unmeasured on the
+  runtime, D-245) and the EXTERNAL tier (Azure DI Read primary), which DEC-35 rules is
+  never funded without your word. Fund the external tier, direct the tesseract runtime
+  probe first, or accept that image-only documents (13 of 1,458 censused Oakland pages)
+  have no Tier-3 text path for now?
+why it is Bob's: funding a vendor account is his risk and his money (DEC-35 said NOTHING
+  FUNDED in so many words), and accepting a capability gap on the record's reach is a
+  product-priority call, not a mechanism.
+provisional: CPDF-10 is BLOCKED and nothing is built or funded; the measured incidence
+  (13 image-only pages of 1,458, concentrated in two documents) says the gap is real and
+  small, so nothing degrades meanwhile that was working before.
+alternative: the tesseract runtime probe (DEC-42's line) is in-account and unfunded —
+  it could run as a measurement item first and might make the funding question moot in
+  either direction.
+recommendation: run the tesseract runtime probe before funding anything — it is the
+  cheap measurement standing between you and a vendor account, and CPDF-14's instrument
+  discipline (comparability guard, blank/noise controls) is reusable on it as-is.
+what reversing costs: funding later costs only the days waited; funding now and finding
+  tesseract sufficed costs an external dependency the D-115 class exists to avoid.
