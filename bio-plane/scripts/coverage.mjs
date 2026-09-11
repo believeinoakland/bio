@@ -594,7 +594,7 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  arms: 879,
+  arms: 883,
   classified: 164,
   corpus: 165,
 };

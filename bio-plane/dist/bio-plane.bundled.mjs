@@ -2474,6 +2474,86 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 -- with no statement behind it is an access path built for a question no op asks, which
 -- is the finding that ratchet exists to hold. Add one WITH the statement that reads it.
 
+-- CASE-4 / DEC-72: THE REVISION FLAG. A CASE EDITION FROZE A MEMBER AT A HASH,
+-- AND THAT MEMBER HAS SINCE MINTED A NEW VERSION.
+--
+-- The design (CASE-AS-PRODUCTION.md, "Revised findings vs the cases containing
+-- them"): a case is a frozen, signed edition, honest as of its date. When a
+-- member finding is later revised, the containing cases are FLAGGED, never
+-- silently updated and never automatically re-published -- the cascade doctrine
+-- one level up. New editions are each owning project's deliberate act.
+--
+-- WHY A TABLE AND NOT A DERIVED READ, WHICH IS THE ONE STRUCTURAL DECISION HERE.
+-- The condition itself IS derivable: CASE-5 unslaved the member's edition from
+-- the case's and made a member resolve BY ITS PIN, so "this case's pin is no
+-- longer this finding's current version" is one comparison over columns that
+-- already exist. A derived answer was written first and is wrong for exactly one
+-- reason: IT CLEARS ITSELF. Revert the finding to the pinned bytes, or let the
+-- pin and the head agree again by any route, and the derived flag vanishes with
+-- nobody having acted -- which is D-79's ruling one altitude up. A finding that
+-- disappears is indistinguishable from one that was never made, and a flag that
+-- stops being raised is indistinguishable from a project that dealt with it. So
+-- the OBSERVATION is derived (from the pin, and from no second mechanism) and
+-- the FLAG is written down, once, at the moment the revision mints.
+--
+-- SET-BUT-NEVER-CLEAR IS LITERAL. No statement anywhere DELETES a row here. An
+-- owning project that acts ADDS the discharge to the row it discharges
+-- (acted_at / acted_by / acted_edition), so the record holds both the flag and
+-- what was done about it, in the order it happened. A row with acted_at NULL is
+-- outstanding; a row with acted_at set is history, and history is not absence.
+--
+-- THE ACT THAT DISCHARGES IS A NEW RATIFIED EDITION OF THAT CASE, and it is
+-- deliberately an act that ALREADY EXISTS rather than a new acknowledgement op.
+-- The design names it: "New editions are each owning project's deliberate act."
+-- It is also the only discharge available without walking into CASE-5b's wall --
+-- every case fact this plane commits is committed FROM THE SIGNED BYTES, and a
+-- bare acknowledgement op would commit a case-level assertion from an unsigned
+-- request. A ratified edition is signed, so the discharge rests on a signature
+-- exactly as the flag's pin does.
+--
+-- SCOPED TO case_id, WHICH IS D-266's RULING ARRIVING HERE: a disposition is
+-- scoped to the key's own subject. A case is ONE project's production (cases is
+-- keyed on case_id alone, CASE-1's sharpest call), so a project acting on ITS
+-- case discharges rows carrying that case_id and reaches no other project's.
+-- Where several cases containing revised members are owned by several projects,
+-- one project acting leaves every other project's rows outstanding -- and that
+-- is structural here rather than a rule somebody has to remember, because the
+-- discharge statement's WHERE clause names case_id and nothing wider.
+--
+-- pinned_sha is the hash the case COMMITTED TO (published_case_members.version_sha
+-- as it stood) and revised_sha is the version that superseded it as the finding's
+-- head. Both are stored rather than re-read: the roster row can be re-pinned by a
+-- later edition, and a flag that re-read the pin would silently re-describe what
+-- it was raised about.
+--
+-- Keyed (case_id, edition, bundle_id, revised_sha) so a member that revises
+-- three times against one frozen edition raises three rows and not one -- each
+-- revision is its own fact, and collapsing them would let the second and third
+-- vanish into the first.
+--
+-- DERIVED FROM NOTHING, so it is not rebuilt by a projection pass; it is a
+-- record of events. It carries a bundle_id, so it is cleared by BOTH arms of
+-- op=purge -- the D-113 silent-leftover, asserted against this file by
+-- hygiene.test.mjs.
+CREATE TABLE IF NOT EXISTS case_revision_flags (
+  case_id       TEXT NOT NULL,
+  edition       INTEGER NOT NULL,  -- the CASE edition whose roster froze the pin
+  bundle_id     TEXT NOT NULL,     -- the member finding that revised
+  pinned_sha    TEXT NOT NULL,     -- what the case committed to
+  revised_sha   TEXT NOT NULL,     -- the version that superseded it
+  project_id    TEXT,              -- the OWNING project that must act. NULL for a pre-DEC-72 case, and STATED
+  since         TEXT NOT NULL,
+  acted_at      TEXT,              -- NULL while the flag stands. NEVER set back to NULL, and the row is never deleted
+  acted_by      TEXT,              -- the member whose act discharged it
+  acted_edition INTEGER,           -- the CASE edition that act published
+  PRIMARY KEY (case_id, edition, bundle_id, revised_sha)
+);
+-- Outstanding-by-member is the question op=caseflags asks with a bundle_id, and
+-- it is the only filter whose leading column is not the primary key's. The index
+-- arrives WITH that statement, which is the rule the finding_dispositions comment
+-- above had to learn by failing the build.
+CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bundle_id);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -2775,6 +2855,7 @@ __export(bio_checks_exports, {
   basisVersionFindings: () => basisVersionFindings,
   biasAcknowledgementOf: () => biasAcknowledgementOf,
   canonicalJson: () => canonicalJson,
+  caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
   checkGatheringGrammar: () => checkGatheringGrammar,
@@ -2791,6 +2872,7 @@ __export(bio_checks_exports, {
   ed25519Verify: () => ed25519Verify,
   inquiryQuestionOf: () => inquiryQuestionOf,
   isBoilerplate: () => isBoilerplate,
+  isCaseMemberBytes: () => isCaseMemberBytes,
   isMachineIdentity: () => isMachineIdentity,
   isMachineStamp: () => isMachineStamp,
   isPublicHttpsLocator: () => isPublicHttpsLocator,
@@ -2896,9 +2978,17 @@ var HEADINGS = {
 };
 HEADINGS.problem = HEADINGS.focus;
 var HEADINGS_WHEN = {
-  inquiry: [{ heading: "## What This Excludes", states: ["published"] }]
+  inquiry: [{ heading: "## What This Excludes", whenCaseMember: true }]
 };
 HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
+var caseEditionClaimed = (fm) => {
+  const e = fm?.case_edition;
+  return !(e === void 0 || e === null || e === "" || e === "null");
+};
+var isCaseMemberBytes = (fm) => {
+  const c = fm?.case_id;
+  return typeof c === "string" && c.trim() !== "" && c !== "null" && caseEditionClaimed(fm);
+};
 var vocabFor = (table, t) => table[t] !== void 0 ? table[t] : table[normalizeType(t)];
 var STATES = {
   information: {
@@ -2929,13 +3019,70 @@ var STATES = {
        machine already carries deferred/dismissed -> open for exactly that.
        `concluded -> surfaced` follows the table's own convention, where every
        existing edge into `open` names the alias beside it. */
-  /* REC-14 / DEC-12: `published` joins, and it is NOT TERMINAL. It is
-       reachable ONLY from `concluded` — a material set cannot be asserted over a
-       question with no conclusion — and it leaves ONLY to `open` (and its
-       `surfaced` alias), which is DEC-12's reopening: *"A closed finding can be
-       reopened, and a published case can be revised, though when republished,
-       the edition number must be incremented and the case treated as a separate
-       document."*
+  /* ============ CASE-4 / DEC-72, 2026-09-10: `published` LEAVES THIS MACHINE.
+       THE STATE GOES; THE PRECONDITION IT ENFORCED DOES NOT, AND THAT DISTINCTION
+       IS THE WHOLE ITEM.
+  
+       Bob's ruling (DEC-72) makes a case ITS OWN OBJECT — a set of
+       finding-versions plus the publishing project — rather than a phase of a
+       finding. `CASE-AS-PRODUCTION.md`: *"A finding's lifecycle ends at
+       `concluded`; publication is the case relation."* Its supersession table
+       rules on this table by name: *"`published` as an inquiry lifecycle state
+       (State Rules per-type machine; ILLEGAL_TRANSITION publishing-only-from-
+       concluded) — the precondition survives as 'only a CONCLUDED finding may be
+       a case member'; the state itself becomes the case relation."*
+  
+       WHAT `concluded: [... 'published' ...]` WAS ACTUALLY DOING, and it is why
+       deleting it alone would have been a defect rather than the change. That one
+       array entry was carrying TWO facts at once. The first is that publishing
+       moves the document to a new lifecycle state — that fact is what DEC-72
+       deletes. The second is that publishing is reachable from `concluded` AND
+       FROM NOWHERE ELSE — a material set cannot be asserted over a question with
+       no conclusion — and THAT fact survives the ruling untouched. Because both
+       rode on one array entry, removing the entry removes both: with no
+       `published` anywhere in `edges`, the old guard
+       `legalFrom.includes("published")` is false from EVERY state, which reads as
+       a gate that refuses everything and is in fact a gate that has stopped
+       asking. So `publishCase()` now carries the precondition EXPLICITLY, as its
+       own named refusal (`NOT_CONCLUDED`) over `concluded` alone. A rule that used
+       to be a side effect of a table is now a sentence, which is the only form in
+       which it can survive the table.
+  
+       `published` IS STILL IN `legacy` BELOW AND THAT IS NOT A HEDGE. Ratified
+       bytes are immutable and a store that has published anything holds documents
+       whose frontmatter says `current_state: published` — bytes whose hash a
+       stranger may already be verifying against. Rewriting them to say something
+       else would break every pin that names them and would be this record editing
+       what it already signed. The focus machine four rows down is kept whole for
+       exactly this reason and states it in those words: a legacy document
+       validates against the vocabulary it was authored under. So the word stays
+       VALID and stops being REACHABLE — nothing in `edges` names it as a
+       destination, which is what "removed from the state machine" means for a
+       machine that cannot rewrite its own history. `legal` is what this machine
+       produces; `legacy` is what it must still read.
+  
+       THE OUT-EDGES ARE KEPT for the same reason and only for it: a document
+       already sitting at `published` must still be pickable-up, or the removal
+       would strand every case ever published behind a state with no exit. Nothing
+       new ever arrives there to use them.
+  
+       WHAT REPLACED THE STATE EVERYWHERE ELSE: the CASE RELATION. Every guard
+       that read `current_state === 'published'` — cannot divide, cannot
+       restructure, cannot move a version, the frozen/confirmed basis split,
+       reopen's own gate — now asks whether the document's CURRENT VERSION is a
+       case member, which CASE-5 made answerable by the pin (`bundle_sha =
+       version_sha`). That is one question with one answer instead of a state word
+       and a roster that could disagree, and it is also why CASE-4 needed no second
+       mechanism to notice a revision: a revised member's head stops matching the
+       pin, and that same inequality IS the revision flag.
+  
+       ============ The REC-14 / DEC-12 reasoning that put `published` here, kept
+       because it is what the removal has to preserve. It was: reachable ONLY from
+       `concluded` — a material set cannot be asserted over a question with no
+       conclusion — and it leaves ONLY to `open` (and its `surfaced` alias), which
+       is DEC-12's reopening: *"A closed finding can be reopened, and a published
+       case can be revised, though when republished, the edition number must be
+       incremented and the case treated as a separate document."*
   
        REOPENING DOES NOT UNPUBLISH, and this table is where that survives. The
        inquiry's STATE and its PUBLICATION HISTORY are two different records: the
@@ -2981,13 +3128,23 @@ var STATES = {
        mind in silence. `divided: []` is that fact, and it is what makes the
        children's `supersedes` edges the only forward path. */
   inquiry: {
-    legal: ["open", "deferred", "dismissed", "surfaced", "concluded", "published", "divided"],
+    legal: ["open", "deferred", "dismissed", "surfaced", "concluded", "divided"],
+    /* CASE-4 / DEC-72: STATES THIS MACHINE NO LONGER PRODUCES AND MUST STILL
+       READ. Valid in bytes that already carry them; named by no edge as a
+       destination, so nothing can enter them again. See the block above. */
+    legacy: ["published"],
     edges: {
       open: ["deferred", "dismissed", "concluded", "divided"],
       surfaced: ["deferred", "dismissed", "concluded", "divided"],
       deferred: ["open", "surfaced", "dismissed"],
       dismissed: ["open", "surfaced", "deferred"],
-      concluded: ["open", "surfaced", "deferred", "dismissed", "published", "divided"],
+      /* `published` REMOVED from this list by CASE-4 — it was the only edge INTO
+         the state, and with it gone the state is unreachable. The precondition
+         it also carried (publishing only from `concluded`) is now publishCase()'s
+         own NOT_CONCLUDED refusal. */
+      concluded: ["open", "surfaced", "deferred", "dismissed", "divided"],
+      /* KEPT so a document already at `published` is not stranded. No new
+         document ever arrives here to use these. */
       published: ["open", "surfaced"],
       divided: []
     }
@@ -3377,8 +3534,9 @@ function checkHeadings(ctx, findings) {
     if (!present.includes(h)) findings.push(f("C-3.1", "error", `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
   }
   for (const c of conditional) {
-    if (c.states.includes(ctx.fm?.current_state) && !present.includes(c.heading))
-      findings.push(f("C-3.1", "error", `required heading '${c.heading}' is missing: the ${ctx.fm?.current_state} state carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
+    const owed = c.whenCaseMember ? isCaseMemberBytes(ctx.fm) : (c.states || []).includes(ctx.fm?.current_state);
+    if (owed && !present.includes(c.heading))
+      findings.push(f("C-3.1", "error", `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
   }
   for (const h of present) {
     if (!canonical.includes(h)) findings.push(f("C-3.1", "error", `heading '${h}' is not in the canonical set for ${ot}`, ["rename to the canonical heading, preserving body"]));
@@ -3389,7 +3547,8 @@ function checkStateLegality(ctx, findings) {
   const spec = vocabFor(STATES, ot);
   if (!spec) return;
   const cur = ctx.fm.current_state;
-  if (!spec.legal.includes(cur)) {
+  const readable = [...spec.legal, ...spec.legacy || []];
+  if (!readable.includes(cur)) {
     findings.push(f("C-4.1", "error", `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(", ")})`));
   }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
@@ -4226,7 +4385,17 @@ function checkInquiryExtension(ctx, findings) {
       ));
     }
   }
-  if (fm.current_state === "published") checkPublishedExtension(fm, findings);
+  if (isCaseMemberBytes(fm)) checkPublishedExtension(fm, findings);
+  else if (caseEditionClaimed(fm))
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `case_edition '${fm.case_edition}' names an edition of no case: membership is the PAIR (case_id, case_edition), and an edition number with no case identity beside it places this finding in an edition nobody can resolve, with no scope and nothing for C-21.1 to be fresh against (DEC-44, DEC-72)`,
+      [
+        "publish through op=publish, which mints or carries the case identity and stamps both into the bytes",
+        "or clear case_edition: a document that is not a member of a case edition does not claim one"
+      ]
+    ));
   if (fm.current_state === "divided") checkDividedExtension(fm, findings);
   if (fm.subject_entity !== void 0 && fm.subject_entity !== null && fm.subject_entity !== "") {
     if (typeof fm.subject_entity !== "string" || !ENTITY_ID_RE.test(fm.subject_entity)) {
@@ -4368,7 +4537,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      `published state requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe \u2014 edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
+      `a case member requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe \u2014 edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
       ["publish through op=publish, which stamps the edition from the published record"]
     ));
   }
@@ -4377,36 +4546,45 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything",
+      "a case member requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything",
       /* REC-56 / D-203's sweep, fourth site, and this one had a REACHABLE act
          available that the old string did not name. `published: ['open',
          'surfaced']` — `published -> concluded` is NOT an edge, so "move the
          inquiry back to concluded" fires C-4.2. What IS reachable is the full
-         ceremony the STATES table's own comment describes: `published -> open
-         -> concluded -> published` at edition 2, and `op=reopen` DOES apply at
-         `published` (REOPENABLE_FROM carries it, precisely so a legal edge is
-         not left with no caller). So the correction here names an act rather
-         than only refusing one. */
+         ceremony the STATES table's own comment describes, and `op=reopen` DOES
+         apply, precisely so a legal edge is not left with no caller. So the
+         correction here names an act rather than only refusing one.
+         CORRECTED AGAIN 2026-09-10 (CASE-4 / DEC-72), never exempted, AND THE
+         EDGE IS WHAT MOVED — not the advice. The route was `published -> open`
+         because a case member wore `published`; DEC-72 ends that state, a member
+         sits at `concluded`, and the ceremony is now `concluded -> open ->
+         concluded` with a new edition published from there. `op=reopen` still
+         applies, for the same reason it always did: its gate is now "a
+         disposition OR a case member", so a case member reopens and a concluded
+         finding in no case is still refused NOT_SET_DOWN. REC-56's whole point is
+         that a repair string must name a route that EXISTS, and
+         `repair-reachability.test.mjs` is the instrument that catches it when one
+         stops existing — which is exactly how this line was found. */
       [
         "author completeness.statement and the exclusion list",
-        "or reopen this case for a second edition (published -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12)"
+        "or reopen this case for a second edition (concluded -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12, DEC-72)"
       ]
     ));
   } else {
     if (typeof c.statement !== "string" || c.statement.trim() === "") {
-      findings.push(f("C-2.8", "error", "published state requires a non-empty completeness.statement"));
+      findings.push(f("C-2.8", "error", "a case member requires a non-empty completeness.statement"));
     }
     if (typeof c.author !== "string" || c.author.trim() === "") {
-      findings.push(f("C-2.8", "error", "published state requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
+      findings.push(f("C-2.8", "error", "a case member requires completeness.author: the completeness assertion is a named member's claim about the limits of this case"));
     }
     if (!ISO_TS_RE.test(String(c.at || ""))) {
-      findings.push(f("C-2.8", "error", `published state requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f("C-2.8", "error", `a case member requires completeness.at as an ISO timestamp (got '${c.at}')`));
     }
     if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
       findings.push(f(
         "C-2.8",
         "error",
-        `published state requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`,
+        `a case member requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`,
         ["declare the group's position on putting this case to its subject"]
       ));
     }
@@ -4414,24 +4592,16 @@ function checkPublishedExtension(fm, findings) {
       findings.push(f(
         "C-2.8",
         "error",
-        "published state requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)",
+        "a case member requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)",
         ["justify the position \u2014 including a deliberate decision not to give notice"]
       ));
     }
-  }
-  if (typeof fm.case_id !== "string" || fm.case_id.trim() === "" || fm.case_id === "null") {
-    findings.push(f(
-      "C-2.8",
-      "error",
-      "published state requires case_id: a published case is a CONTAINER over one or more findings (DEC-44), and a finding published into no case has no edition, no scope and nothing for C-21.1 to hold it to",
-      ["publish through op=publish, which mints or carries the case identity and stamps it into the bytes"]
-    ));
   }
   if (typeof fm.case_scope !== "string" || fm.case_scope.trim() === "") {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings' titles \u2014 a scope this plane wrote is not a scope the group made (DEC-44)",
+      "a case member requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings' titles \u2014 a scope this plane wrote is not a scope the group made (DEC-44)",
       ["author the case scope on op=publish"]
     ));
   }
@@ -4439,7 +4609,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      `published state requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
+      `a case member requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
       ["publish through op=publish, which stamps both numbers into the bytes you sign"]
     ));
   }
@@ -4447,7 +4617,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is",
+      "a case member requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is",
       ["publish through op=publish with project=<project id>, which writes it into the bytes you sign"]
     ));
   }
@@ -4458,7 +4628,7 @@ function checkPublishedExtension(fm, findings) {
       findings.push(f(
         "C-2.8",
         "error",
-        "published state requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member's bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default \u2014 a member designated by omission was designated by nobody",
+        "a case member requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member's bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default \u2014 a member designated by omission was designated by nobody",
         ['designate every member on op=publish with roles={"<finding id>": "load_bearing"|"supporting"}']
       ));
     } else {
@@ -4489,7 +4659,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) \u2014 what is refused here is publishing SILENTLY about the lens, not publishing under one",
+      "a case member requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) \u2014 what is refused here is publishing SILENTLY about the lens, not publishing under one",
       ["author the bias acknowledgement on op=publish, fresh for this edition"]
     ));
   }
@@ -4497,7 +4667,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)",
+      "a case member requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)",
       ["publish through op=publish, which writes the roster into every member's bytes"]
     ));
   } else if (typeof fm.id === "string" && !fm.case_findings.includes(fm.id)) {
@@ -4507,7 +4677,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal \u2014 an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse",
+      "a case member requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal \u2014 an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse",
       ["author completeness_excluded, empty if nothing was excluded"]
     ));
   } else {
@@ -4536,7 +4706,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      'published state requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
+      'a case member requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
       ["publish through op=publish, which stamps both frozen axis objects into the bytes"]
     ));
   } else {
@@ -4556,7 +4726,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      'published state requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
+      'a case member requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
       ["publish through op=publish, which freezes the per-ground breakdown beside the pair"]
     ));
   } else if (grouped) {
@@ -4588,7 +4758,7 @@ function checkPublishedExtension(fm, findings) {
     findings.push(f(
       "C-2.8",
       "error",
-      "published state requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)",
+      "a case member requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)",
       ["declare the group default with op=strengthbar, or publish with the bar stated absent"]
     ));
   } else if (rq.declared) {
@@ -4601,7 +4771,7 @@ function checkPublishedExtension(fm, findings) {
 }
 function checkCompletenessFreshness(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== "inquiry") return;
-  if (ctx.fm?.current_state !== "published") return;
+  if (!isCaseMemberBytes(ctx.fm)) return;
   const reg = ctx.publishedCaseRegistry;
   if (!reg) return;
   const cid = typeof ctx.fm.case_id === "string" && ctx.fm.case_id !== "null" ? ctx.fm.case_id : null;
@@ -11088,7 +11258,7 @@ async function containerEntries(manifest, manifestBytes, read) {
 
 // src/affordances.mjs
 var DISPOSITIONS = ["deferred", "dismissed"];
-var REOPENABLE_FROM = [...DISPOSITIONS, "published"];
+var REOPENABLE_FROM = [...DISPOSITIONS];
 var ENTITY_KINDS = [
   /* safeguard 4's SUBJECT kinds */
   "source",
@@ -11499,12 +11669,21 @@ var ACTS = [
      not that this caller's parameters will pass, which is exactly what release
      and conclude already say here. Narrowing it would unpublish DEFER on the
      one question a member most wants to defer. */
+  /* CASE-4 / DEC-72, 2026-09-10: `!f.case_member`, and it restores a rule rather
+     than adding one. The STATES table's own comment has said since REC-14 that
+     `published -> deferred|dismissed` is DELIBERATELY not an edge — *"Ageing is
+     what happens to a finding NOBODY published (D-79); a published case cannot
+     quietly stop being worked on, because it is already out in the world."* The
+     edge table was the enforcement; DEC-72 moves a case member to `concluded`,
+     which DOES carry the disposition edges, so the rule had to become a
+     condition. The store refuses PUBLISHED_CANNOT_BE_SET_DOWN by name, and this
+     clause is what keeps the pre-flight from offering what that refuses. */
   {
     id: "dispose",
     label: "Dispose (defer or dismiss)",
     weight: "refuse",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && DISPOSITIONS.some((d) => edgesFrom(f2).includes(d))
+    applies: (f2, ty) => ty === "inquiry" && !f2.case_member && DISPOSITIONS.some((d) => edgesFrom(f2).includes(d))
   },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
@@ -11558,12 +11737,20 @@ var ACTS = [
      no edition recorded" hazard this act was scoped around cannot arise there
      -- and published -> open is the only route to a second edition. The
      reasoning is on REOPENABLE_FROM itself, where both consumers read it. */
+  /* CASE-4 / DEC-72, 2026-09-10: THE DISJUNCTION, AND IT MIRRORS `reopen()`'s
+     GATE EXACTLY — that is the requirement rather than a coincidence, since a
+     pre-flight that could disagree with the refusal it fronts is DEC-8's
+     failure. The store now permits reopening from a disposition OR because the
+     document is a member of a published case; `REOPENABLE_FROM` lost
+     `published` with the state, and `edgesFrom` alone would offer this act on
+     EVERY concluded finding, which the store refuses NOT_SET_DOWN with REC-31's
+     own reason. */
   {
     id: "reopen",
     label: "Reopen",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && REOPENABLE_FROM.includes(f2.current_state) && edgesFrom(f2).includes("open")
+    applies: (f2, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f2.current_state) || !!f2.case_member) && edgesFrom(f2).includes("open")
   },
   /* REC-14. An inquiry whose machine offers the `published` edge — which is
        `concluded` and nothing else, because a material set cannot be asserted
@@ -11593,13 +11780,36 @@ var ACTS = [
        the declared and justified subject position) and C-21.1's freshness check
        are ACT-TIME refusals the store words itself — the release precedent:
        publishing the act says the state machine permits the move, not that this
-       caller's parameters will pass. */
+       caller's parameters will pass.
+  
+       `!f.case_member` IS THE OTHER HALF AND IT IS NOT NEW BEHAVIOUR. Before
+       CASE-4 a member of a published case wore `current_state: published`, whose
+       edge list carried no `published` destination, so the act was already not
+       offered there — and `op=publish` would already have refused it, since
+       publishing an unchanged member would mint a second edition of bytes nobody
+       revised. The condition is now said instead of falling out of the table. A
+       member that HAS been revised (reopened, worked, concluded again) is no
+       longer pinned, so `case_member` is false and the act reappears — which is
+       exactly DEC-12's second-edition route.
+  
+       CASE-4 / DEC-72, 2026-09-10: `edgesFrom(f).includes("published")` WAS THE
+       PRECONDITION WEARING A STATE MACHINE'S CLOTHES, and it is now the
+       precondition itself. There is no `published` destination in the inquiry
+       machine any more, so that expression is FALSE FOR EVERY DOCUMENT — the act
+       would have vanished from every affordance answer with the suite green,
+       which is the failure mode a state removal produces if nobody looks. The
+       condition was only ever true from `concluded` (it was `concluded`'s edge and
+       no other state's), so `concluded` IS the expression, said plainly. This is
+       the affordance-layer half of the same sentence `publishCase()`'s
+       NOT_CONCLUDED refusal carries, and the two must agree: an act this file
+       offers that the store then refuses is the pre-flight lying, which is the one
+       thing affordances.mjs exists to prevent. */
   {
     id: "publish",
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && edgesFrom(f2).includes("published")
+    applies: (f2, ty) => ty === "inquiry" && f2.current_state === "concluded" && !f2.case_member
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -11636,13 +11846,23 @@ var ACTS = [
      reasoning is at divide()'s guard, where both consumers of the distinction
      can read it), and unpublishing the act here would disagree in the other
      direction. ONE predicate behind both, as with retire and #citesInto. */
+  /* FOURTH CONDITION, ADDED BY CASE-4 / DEC-72, 2026-09-10, AND IT IS NOT A NEW
+     RULE — IT IS AN OLD RULE THAT LOST ITS CARRIER. `op=inquirydivide` has
+     refused PUBLISHED_CANNOT_DIVIDE since REC-16, and this predicate did not
+     need to say so, because a published case wore `current_state: published`
+     whose edge list has no `divided` in it — `edgesFrom` did the work. DEC-72
+     ends that state: a case member sits at `concluded`, and `concluded` DOES
+     carry the `divided` edge. So without this clause the act is offered on every
+     published case and the store then refuses it, which is DEC-8's headline
+     failure and was caught by `divide.test.mjs`'s own DEC-8 arm rather than
+     reasoned about in advance. */
   {
     id: "inquirydivide",
     label: "Divide (split this question)",
     weight: "single",
     types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
-    applies: (f2, ty) => ty === "inquiry" && edgesFrom(f2).includes("divided") && (f2.basis_legs ?? 0) >= 1 && (f2.rested_on?.working ?? 0) === 0
+    applies: (f2, ty) => ty === "inquiry" && edgesFrom(f2).includes("divided") && !f2.case_member && (f2.basis_legs ?? 0) >= 1 && (f2.rested_on?.working ?? 0) === 0
   },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
        something, and whose record is still working.
@@ -11692,7 +11912,15 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: GROUND_PROMPT,
-    applies: (f2, ty) => ty === "inquiry" && (f2.basis_legs ?? 0) >= 1 && f2.current_state !== "published" && f2.current_state !== "divided"
+    /* CASE-4 / DEC-72: `f.current_state !== "published"` became
+       `!f.case_member`. The exclusion is unchanged in meaning — a member of a
+       signed edition cannot be restructured, and `op=inquiryground` refuses it
+       PUBLISHED_CANNOT_RESTRUCTURE — but the state word is gone, so a predicate
+       still naming it would offer this act on every published case and the op
+       would then refuse it. That is a pre-flight disagreeing with the refusal it
+       fronts, which is DEC-8's headline failure and the one thing this file
+       exists to prevent. `divided` is untouched: it is still a state. */
+    applies: (f2, ty) => ty === "inquiry" && (f2.basis_legs ?? 0) >= 1 && !f2.case_member && f2.current_state !== "divided"
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
@@ -20062,6 +20290,17 @@ var Store = class _Store extends DurableObject {
       declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
       current_state: b.current_state,
       criticality: b.criticality ?? null,
+      /* CASE-4 / DEC-72: THE CASE RELATION AS A FACT, and it is a FACT
+         and never a rule — `basis_legs` and `rested_on` beside it are the
+         precedent, and this method still holds no copy of any act rule.
+         It has to be here because `published` has left the state machine:
+         two acts used to derive themselves from `current_state`, and a
+         document that is a member of a signed case now wears no word that
+         says so. The rules that consume it are the act catalogue's, which
+         is where they were before. Asked through the ONE predicate the
+         refusals run, so a published act and the refusal it fronts cannot
+         disagree — DEC-8, which is the whole reason this file exists. */
+      case_member: normalizeType(b.object_type) === "inquiry" ? this.#caseRelationOf(target).member : false,
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -20096,6 +20335,14 @@ var Store = class _Store extends DurableObject {
   static SELECTION_TTL_MS = 3e5;
   static SELECTION_MAX_ITEMS = 1e4;
   // an enumeration above this is REFUSED, never downgraded
+  /* CASE-4 / DEC-72 / REC-60: the page size for `op=caseflags`. A CHOSEN
+     CONSTANT and never a finding — the flag table grows with every revision of
+     every published member and has no natural ceiling, so the read publishes
+     `limit` and `truncated` beside its answer rather than scanning whatever is
+     there. 500 is deliberately generous: the common ask is one case or one
+     finding, where the real answer is a handful of rows, and a bound a legitimate
+     caller trips is a bound that teaches people to ignore it. */
+  static CASE_FLAGS_LIMIT = 500;
   static SELECTION_MAX_PER_OWNER = 32;
   /* D-109. The task queue drains on the SAME Durable Object alarm the selection
      sweep uses: armed on enqueue, re-armed by the alarm while the queue is
@@ -21315,11 +21562,15 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         drift: sel.drift,
         detail: "this selection resolves to no members, so there is nothing to dispose"
       };
-    const offenders = [], illegal = [];
+    const offenders = [], illegal = [], published = [];
     for (const id of sel.members) {
       const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
       if (!b || normalizeType(b.object_type) !== "inquiry") {
         offenders.push(id);
+        continue;
+      }
+      if (this.#caseRelationOf(id).member) {
+        published.push({ id, from: b.current_state });
         continue;
       }
       if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
@@ -21330,6 +21581,14 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         reason: "NOT_INQUIRIES",
         offenders: offenders.sort(),
         detail: "disposition moves an inquiry's state, and this selection carries something else. The set is refused whole rather than narrowed to the inquiries in it."
+      };
+    if (published.length)
+      return {
+        ok: false,
+        reason: "PUBLISHED_CANNOT_BE_SET_DOWN",
+        to,
+        offenders: published.sort((a, b) => a.id < b.id ? -1 : 1),
+        detail: "a finding that is a member of a published case cannot be deferred or dismissed. AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the group quietly stopped working is indistinguishable from one that was never asked, which is why it is made visible rather than left to vanish. A published case is already out in the world and cannot stop being worked on quietly \u2014 a reader is holding it. What IS available is the route DEC-12 built: reopen it (op=reopen), and let the next edition say what changed."
       };
     if (illegal.length)
       return {
@@ -21516,6 +21775,317 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       (this.#refEdgeSevered(r.bundle_id, id, "cites") ? severed : confirmed).push(r.bundle_id);
     return { confirmed: confirmed.sort(), severed: severed.sort() };
   }
+  /* ================== CASE-4 / DEC-72: THE CASE RELATION ====================
+   *
+   * THE ONE PREDICATE THAT REPLACES `current_state === "published"`, and there
+   * is exactly one of it for the reason #citesInto above has exactly one of
+   * itself: five guards and an affordance all used to ask the state word, and
+   * five copies of a question is five chances to answer it differently.
+   *
+   * Bob's ruling (DEC-72) ends `published` as an inquiry lifecycle state:
+   * *"A finding's lifecycle ends at `concluded`; publication is the case
+   * relation."* So every act that refused because a document was published —
+   * cannot divide, cannot restructure, cannot move a version, a basis leg that
+   * is FROZEN rather than working, and reopen's own gate — now asks this.
+   *
+   * IT IS ANSWERED BY THE PIN, WHICH IS CASE-5's OWN MECHANISM READ THE OTHER
+   * WAY AND NOT A SECOND ONE. CASE-5 unslaved a member's edition from its case's
+   * and made `#caseEditionState` resolve a member BY ITS PIN
+   * (`published_bundles.bundle_sha = published_case_members.version_sha`). Asked
+   * from the member's side, the same equality answers "is my CURRENT version the
+   * one some case froze". It has to be the current version and not merely "has
+   * this id ever been published": a finding that was published, reopened and
+   * revised is NOT a case member any more — the case holds the old version
+   * forever and the working document has moved on — and an id-only test would
+   * refuse restructuring on a document the group is legitimately working again.
+   *
+   * TWO ARMS, BECAUSE PUBLICATION IS TWO ACTS.
+   *
+   *   PINNED — the ratified relation. The roster row names this document's
+   *   current `bundle_sha`. This is the relation as the RECORD holds it, and it
+   *   exists only after `op=ratify`, because the roster and the pin are both
+   *   committed by the ratify committer out of the SIGNED BYTES and out of
+   *   nothing else (#publishEdges' doctrine).
+   *
+   *   PREPARED — the window between `op=publish` and `op=ratify`, where the case
+   *   exists in the bytes and NOWHERE ELSE. It is read off the document's own
+   *   frontmatter pair (`case_id`, `case_edition`) against `published_cases`,
+   *   and it is a REFUSAL INPUT ONLY: nothing here commits a case fact, which is
+   *   what keeps it clear of CASE-5b's wall. Without this arm the removal of the
+   *   state word would OPEN that window — today `publishCase()` stamps
+   *   `published` immediately, so a member cannot restructure a prepared
+   *   document between the two acts, and a guard that stopped biting there would
+   *   let a member publish under one composed strength and ratify under another.
+   *   That is a loosened publication fence reached through a lifecycle change,
+   *   which is precisely the class this record refuses to ship quietly.
+   *
+   * The prepared arm ENDS at `op=reopen`, which clears `case_edition` — the same
+   * act that ended the `published` state before, doing the same job through the
+   * relation instead of through the word.
+   *
+   * Returns the pinned rows themselves rather than a bare boolean, because the
+   * revision flag below needs to know WHICH case editions froze WHICH hash, and
+   * deriving that twice from two queries is how two answers start disagreeing. */
+  #caseRelationOf(bundleId) {
+    const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b) return { member: false, pinned: [], prepared: null };
+    const pinned = this.#rows(
+      `SELECT case_id, edition, version_sha, role FROM published_case_members
+        WHERE bundle_id=? AND version_sha=? ORDER BY case_id, edition`,
+      bundleId,
+      b.bundle_sha
+    );
+    let prepared = null;
+    const claim = this.#caseClaimInBytes(bundleId);
+    if (claim) {
+      const row = this.#one(
+        `SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`,
+        claim.case_id,
+        claim.edition
+      );
+      if (!row || row.ratified_at === null || row.ratified_at === void 0) prepared = claim;
+    }
+    return { member: pinned.length > 0 || prepared !== null, pinned, prepared };
+  }
+  /* The membership CLAIM a working document makes about itself, as the PAIR.
+   * `case_id` alone is not the claim: `op=reopen` deliberately leaves it behind
+   * so `publishCase()` can re-derive which case a second edition belongs to
+   * without ever taking an identity from a caller, so a reopened document that
+   * is back in `open` still carries it. `case_edition` is written by publish and
+   * cleared by reopen, so the two together say "these bytes assert membership of
+   * a specific edition of a specific case" — which is true of exactly the
+   * documents that used to say `current_state: published`. The catalog's
+   * `isCaseMemberBytes` asks the identical question of the identical pair, and
+   * it is imported rather than restated so the store and the catalog cannot
+   * drift. Returns null when no claim is made. */
+  #caseClaimInBytes(bundleId) {
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+    if (!md || md.content === null) return null;
+    const fm = parseFrontmatter(md.content).data || {};
+    if (!isCaseMemberBytes(fm)) return null;
+    const ed = Number(fm.case_edition);
+    if (!Number.isInteger(ed) || ed < 1) return null;
+    return { case_id: String(fm.case_id).trim(), edition: ed };
+  }
+  /* ============= CASE-4 / DEC-72: THE REVISION FLAG, SET AT THE MINT ==========
+   *
+   * `CASE-AS-PRODUCTION.md`: *"A case is a frozen, signed edition, honest as of
+   * its date. When a member finding is later revised (new version minted), the
+   * containing cases are FLAGGED, never silently updated and never automatically
+   * re-published — the cascade doctrine (set-but-never-clear, re-evaluation
+   * offered) one level up. New editions are each owning project's deliberate
+   * act."*
+   *
+   * WHERE IT IS CALLED FROM AND WHY THAT IS THE WHOLE DESIGN. It is called from
+   * `promote()`, which is the ONE write in this plane that mints a version, with
+   * the sha the new version is REPLACING. Every route that can revise a member —
+   * reopening it, concluding it again, restructuring its basis, moving a
+   * reading, publishing a second edition — arrives at `promote`, so one call
+   * site catches all of them and no future act can revise a member past a flag
+   * that was only wired into the acts somebody thought of.
+   *
+   * IT NEEDS NO SECOND MECHANISM TO NOTICE A REVISION, and this is CASE-5's
+   * gift rather than this item's cleverness. CASE-5 made a member resolve BY ITS
+   * PIN, so a revision is definitionally a version whose hash is not the one the
+   * case froze. The condition is therefore one equality over a column that
+   * already exists — `published_case_members.version_sha = <the sha being
+   * replaced>` — and every case edition holding that pin is flagged. A second
+   * mechanism (a marker in the bytes, a state, a derived "has moved" read) would
+   * be a second authority for a fact the pin already holds.
+   *
+   * THE OBSERVATION IS DERIVED; THE FLAG IS WRITTEN DOWN. A derived-on-read flag
+   * was the first design and it is wrong for exactly one reason: IT CLEARS
+   * ITSELF. Let the head and the pin agree again by any route and the derived
+   * answer vanishes with nobody having acted — D-79's ruling one altitude up (a
+   * finding that disappears is indistinguishable from one that was never made,
+   * so it AGES rather than vanishes). A flag that stops being raised is
+   * indistinguishable from a project that dealt with it, which is the whole
+   * thing the cascade doctrine exists to prevent. So the row is written once, at
+   * the instant the revision mints, and nothing in this file deletes one.
+   *
+   * ONE ROW PER (case edition, member, revised version). A member that revises
+   * three times against one frozen edition raises three rows: each revision is
+   * its own fact and collapsing them would let the second and third disappear
+   * into the first. `ON CONFLICT DO NOTHING` because the key is exactly the
+   * event's own identity — re-minting the same sha against the same edition is
+   * the same event, not a second one.
+   *
+   * THE FLAG IS NOT AN ASSERTION ABOUT THE CASE AND THAT IS DELIBERATE. CASE-5
+   * named the wall: every case FACT this plane commits is committed from the
+   * SIGNED BYTES, and there is no signature over a case for an unsigned one to
+   * rest on. Nothing written here is a case's claim. Both halves of the row are
+   * observations this plane made itself from two hashes it already holds — the
+   * pin (committed from signed bytes at ratification) and the new head — so the
+   * record is saying "these two hashes differ", which is a measurement and not
+   * an attribution. The DISCHARGE has the same property for the same reason: it
+   * is stamped by a ratified edition, which is signed. */
+  #flagCasesOnRevision(bundleId, replacedSha, when) {
+    if (!bundleId || !replacedSha) return [];
+    const frozen = this.#rows(
+      `SELECT case_id, edition FROM published_case_members
+        WHERE bundle_id=? AND version_sha=? ORDER BY case_id, edition`,
+      bundleId,
+      replacedSha
+    );
+    if (!frozen.length) return [];
+    const head = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
+    const revised = head ? head.bundle_sha : null;
+    if (!revised || revised === replacedSha) return [];
+    const raised = [];
+    for (const fz of frozen) {
+      const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, fz.case_id);
+      this.sql.exec(
+        `INSERT INTO case_revision_flags
+           (case_id, edition, bundle_id, pinned_sha, revised_sha, project_id, since)
+         VALUES (?,?,?,?,?,?,?)
+         ON CONFLICT(case_id, edition, bundle_id, revised_sha) DO NOTHING`,
+        fz.case_id,
+        fz.edition,
+        bundleId,
+        replacedSha,
+        revised,
+        owner ? owner.project_id : null,
+        when
+      );
+      raised.push({
+        case_id: fz.case_id,
+        edition: fz.edition,
+        bundle_id: bundleId,
+        pinned_sha: replacedSha,
+        revised_sha: revised,
+        project_id: owner ? owner.project_id : null,
+        since: when
+      });
+    }
+    return raised;
+  }
+  /* ============ CASE-4 / DEC-72: THE DISCHARGE, AND ITS SCOPE ===============
+   *
+   * *"New editions are each owning project's deliberate act."* So the act that
+   * discharges a flag is a NEW RATIFIED EDITION OF THAT CASE, and it is
+   * deliberately an act that already exists rather than a bare acknowledgement
+   * op. Two reasons, and the second is the load-bearing one:
+   *   (1) the design names it, in those words; and
+   *   (2) a bare acknowledgement op would commit a CASE-LEVEL assertion — "this
+   *       project has considered this revision" — from an UNSIGNED REQUEST,
+   *       which is the attribution class CASE-5 hit, named and refused, and
+   *       which CASE-5b exists to open properly. A ratified edition is signed,
+   *       so the discharge rests on a signature exactly as the pin does.
+   *
+   * SCOPED TO case_id AND NOTHING WIDER, WHICH IS D-266's RULING ARRIVING HERE:
+   * a disposition is scoped to the key's own subject. The WHERE clause names one
+   * case, so a project acting on ITS case reaches no other project's rows — and
+   * where several flagged cases are owned by several projects, one project
+   * acting leaves every other project's flags outstanding. That is structural
+   * rather than a rule somebody has to remember, because there is no statement
+   * anywhere that could clear a flag carrying a different case_id.
+   *
+   * IT IS A DISCHARGE AND NOT A CLEAR, WHICH IS THE LITERAL READING OF
+   * SET-BUT-NEVER-CLEAR. The row is not deleted and the flag is not unset: the
+   * ACT is added to it. What the record then holds is that the flag was raised,
+   * and that this edition, published by this member at this instant, is what the
+   * owning project did about it. A row with acted_at NULL is outstanding; a row
+   * with acted_at set is history, and history is not absence.
+   *
+   * ONLY OUTSTANDING ROWS ARE STAMPED (`acted_at IS NULL`), so a second edition
+   * never re-describes what the first one discharged. */
+  #dischargeCaseFlags(caseId, edition, by, when) {
+    if (!caseId) return 0;
+    const outstanding = this.#rows(
+      `SELECT case_id, edition, bundle_id, revised_sha FROM case_revision_flags
+        WHERE case_id=? AND acted_at IS NULL`,
+      caseId
+    );
+    if (!outstanding.length) return 0;
+    this.sql.exec(
+      `UPDATE case_revision_flags SET acted_at=?, acted_by=?, acted_edition=?
+        WHERE case_id=? AND acted_at IS NULL`,
+      when,
+      by ?? null,
+      edition ?? null,
+      caseId
+    );
+    return outstanding.length;
+  }
+  /** CASE-4 / DEC-72: THE READ. `op=caseflags`.
+   *
+   * A flag nobody can read is a flag that does not exist, and the whole point of
+   * set-but-never-clear is that the outstanding ones stay visible until an
+   * owning project acts. Answers by case, by member finding, or over the whole
+   * store, and it reports DISCHARGED rows too rather than filtering them out —
+   * a project that acted is a fact about the record, and an answer that showed
+   * only the outstanding ones would make the discharge look like a deletion,
+   * which is the thing this design refuses.
+   *
+   * NOT GATED BY VIEWER, and that is a decision with a reason rather than an
+   * omission: every fact in a row here is already public. The case editions and
+   * their rosters are served to anybody by `op=publishedcase`, the pinned hash
+   * is in the container manifest a stranger verifies against, and the revised
+   * hash is a published version's own. Gating it would withhold from a member
+   * what the published record already tells a stranger. */
+  caseFlags({ caseId = null, target = null, outstandingOnly = false, limit = null } = {}) {
+    const where = [], args = [];
+    if (caseId) {
+      where.push(`case_id=?`);
+      args.push(String(caseId).trim());
+    }
+    if (target) {
+      where.push(`bundle_id=?`);
+      args.push(String(target).trim());
+    }
+    if (outstandingOnly) where.push(`acted_at IS NULL`);
+    const cap = Math.max(1, Math.min(Number(limit) || _Store.CASE_FLAGS_LIMIT, _Store.CASE_FLAGS_LIMIT));
+    const rows = this.#rows(
+      `SELECT case_id, edition, bundle_id, pinned_sha, revised_sha, project_id, since,
+              acted_at, acted_by, acted_edition
+         FROM case_revision_flags
+        ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+        ORDER BY since, case_id, edition, bundle_id
+        LIMIT ?`,
+      ...args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    if (truncated) rows.length = cap;
+    const flags = rows.map((r) => ({
+      case_id: r.case_id,
+      edition: r.edition,
+      bundle_id: r.bundle_id,
+      pinned_sha: r.pinned_sha,
+      revised_sha: r.revised_sha,
+      /* THE PROJECT THAT MUST ACT. NULL is STATED and never elided: a case
+         published before DEC-72 has no owning project, and a reader must be
+         able to tell "nobody owns this" from "somebody does and we lost it". */
+      project_id: r.project_id ?? null,
+      since: r.since,
+      outstanding: r.acted_at === null || r.acted_at === void 0,
+      acted: r.acted_at === null || r.acted_at === void 0 ? null : { at: r.acted_at, by: r.acted_by ?? null, edition: r.acted_edition ?? null }
+    }));
+    return {
+      ok: true,
+      ...caseId ? { caseId: String(caseId).trim() } : {},
+      ...target ? { target: String(target).trim() } : {},
+      flags,
+      count: flags.length,
+      /* THE BOUND, BESIDE THE ANSWER. `count` is what was returned and
+         `limit` is what could be; `truncated` says more exists, measured
+         by the extra row asked for rather than by comparing a full page
+         to a ceiling. A truncated answer's `outstanding` and
+         `projects_owing` are therefore about THIS PAGE and say so. */
+      limit: cap,
+      truncated,
+      outstanding: flags.filter((x) => x.outstanding).length,
+      /* WHICH PROJECTS STILL OWE AN ACT, deduplicated, because "each
+         owning project acts" is the design's condition and a reader
+         should not have to compute it. A case whose project is unknown
+         appears as null in this list rather than being dropped. */
+      projects_owing: [...new Set(flags.filter((x) => x.outstanding).map((x) => x.project_id))].sort((a, b) => String(a) < String(b) ? -1 : 1),
+      /* SET-BUT-NEVER-CLEAR, SAID IN THE ANSWER. A surface rendering this
+         must not offer a "dismiss" control, and a reader must not read a
+         discharged row as a deleted one. */
+      doctrine: "a revision flag is SET AND NEVER CLEARED: it is DISCHARGED by the owning project publishing a new edition of that case, which is recorded beside it rather than replacing it. A case with several owning projects is not discharged by one of them acting (DEC-72, D-266's scoping, D-79's ageing)."
+    };
+  }
   /* THE ONE live-basis-leg predicate (REC-17 / D-5). Which inquiries REASON
    * FROM this one — `SELECT ... FROM inquiry_basis WHERE target_id=?`, the
    * single indexed lookup REC-11 built `inquiry_basis_target` for, and the
@@ -21559,7 +22129,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         severed.push(leg);
         continue;
       }
-      (r.current_state === "published" ? frozen : confirmed).push(leg);
+      (this.#caseRelationOf(r.bundle_id).member ? frozen : confirmed).push(leg);
     }
     return { confirmed, frozen, severed, all: [...confirmed, ...frozen] };
   }
@@ -22813,14 +23383,14 @@ Changes: responds_to edge added to ${actionId}.
       };
     let text = liveMd.content;
     const fm = parseFrontmatter(text).data || {};
-    if (!REOPENABLE_FROM.includes(b.current_state))
+    if (!REOPENABLE_FROM.includes(b.current_state) && !this.#caseRelationOf(target).member)
       return {
         ok: false,
         reason: "NOT_SET_DOWN",
         target,
         from: b.current_state,
         reopenable: REOPENABLE_FROM,
-        detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or something the group has PUBLISHED. An open inquiry is already open, and a CONCLUDED one moves forward by publishing a new EDITION (DEC-12) \u2014 op=publish \u2014 rather than quietly reverting to open still wearing its conclusion, which would record nothing. Reopening a PUBLISHED case IS this act and does not unpublish it: every edition keeps answering with its own signature, attestor, time and gate version."
+        detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or a finding that is a MEMBER OF A PUBLISHED CASE. An open inquiry is already open, and a CONCLUDED one that is in no case moves forward by publishing a new EDITION (DEC-12) \u2014 op=publish \u2014 rather than quietly reverting to open still wearing its conclusion, which would record nothing. Reopening a finding that IS in a published case is this act and does not unpublish anything: every edition keeps answering with its own signature, attestor, time and gate version."
       };
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = spec?.edges?.[b.current_state] || [];
@@ -22853,6 +23423,7 @@ Changes: responds_to edge added to ${actionId}.
     text = _Store.#setScalar(text, "prior_state", b.current_state);
     text = _Store.#setScalar(text, "current_state", "open");
     text = _Store.#setScalar(text, "disposition_reason", `""`);
+    text = _Store.#setScalar(text, "case_edition", "null");
     text = _Store.#setScalar(text, "last_updated", `"${when}"`);
     const entry = `### Session ${when} | Reopened | ${who}
 Trigger: op=reopen on ${target}
@@ -23166,17 +23737,22 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
         };
       const fm = parseFrontmatter(liveMd.content).data || {};
-      const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
-      const legalFrom = spec?.edges?.[b.current_state] || [];
-      if (!legalFrom.includes("published"))
+      if (b.current_state !== "concluded")
         return {
           ok: false,
-          reason: "ILLEGAL_TRANSITION",
-          to: "published",
+          reason: "NOT_CONCLUDED",
           target: id,
           from: b.current_state,
           object_type: fm.object_type ?? b.object_type,
-          detail: "publishing is reachable ONLY from `concluded`: a material set cannot be asserted over a question with no conclusion. Conclude it first (op=conclude), and a case already published is reopened before it can be concluded again for a new edition."
+          detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion. Conclude it first (op=conclude). A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
+        };
+      if (this.#caseRelationOf(id).member)
+        return {
+          ok: false,
+          reason: "ALREADY_A_CASE_MEMBER",
+          target: id,
+          from: b.current_state,
+          detail: "this finding is already a member of a published case at the version it stands at now, so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one from bytes nobody revised would make the edition number a count of publish calls rather than a record of what changed. Reopen it (op=reopen), work it, conclude it again, and publish that \u2014 which is the route DEC-12 built and the one that leaves a reader able to see what moved."
         };
       prepared.push({ id, b, fm, text: liveMd.content });
     }
@@ -23342,23 +23918,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       const { id: target2, b, fm } = p;
       let text = p.text;
       const pair = this.strengthOf(target2);
-      const withHistory = _Store.#appendStateHistory(text, {
-        timestamp: when,
-        from_state: b.current_state,
-        to_state: "published",
-        blurb: `edition ${edition}`,
-        author: who
-      });
-      if (!withHistory)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_STATE_HISTORY",
-          target: target2,
-          detail: "this document's state_history block cannot be extended in place, and a publication recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-        };
-      text = withHistory;
-      text = _Store.#setScalar(text, "prior_state", b.current_state);
-      text = _Store.#setScalar(text, "current_state", "published");
       text = _Store.#setOrAddScalar(text, "edition", String(memberEditions.get(target2)));
       text = _Store.#setOrAddScalar(text, "case_id", theCase);
       text = _Store.#setOrAddScalar(text, "case_edition", String(edition));
@@ -23445,7 +24004,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       ]);
       const entry = `### Session ${when} | Published | ${who}
 Trigger: op=publish on ${target2}
-Changes: state ${b.current_state} to published, case ${theCase} edition ${edition}.
+Changes: joined case ${theCase} at case edition ${edition} as a member; state unchanged at ${b.current_state} (DEC-72: publication is the case relation).
 Published by: ${proj} (this case is that project's production, DEC-72)
 Case scope: ${scp}
 Findings in this case: ${roster}
@@ -23480,12 +24039,16 @@ Subject position: ${pos} \u2014 ${just}
           bytes: bytes.length,
           sha256: createSha256().update(bytes).hex()
         }, ...carried],
+        /* CASE-4 / DEC-72: the projection carries the state the document actually
+           has, which publication does not move. `prior_state` is likewise the
+           document's own, unchanged — the promotion is a new VERSION of a
+           `concluded` finding, not a transition. */
         meta: {
           object_type: fm.object_type ?? b.object_type,
           group: fm.group || "believe-in-oakland",
           title: fm.title,
-          current_state: "published",
-          prior_state: b.current_state,
+          current_state: b.current_state,
+          prior_state: fm.prior_state ?? null,
           created: fm.created,
           last_updated: when,
           criticality: fm.criticality ?? null
@@ -23494,8 +24057,9 @@ Subject position: ${pos} \u2014 ${just}
       if (!promoted.ok) return { ...promoted, target: target2, caseId: theCase, moved: written.map((w) => w.target) };
       written.push({
         target: target2,
-        from: b.current_state,
-        to: "published",
+        state: b.current_state,
+        case_id: theCase,
+        case_edition: edition,
         bundleSha: promoted.bundleSha,
         title: fm.title ?? null,
         /* CASE-5: THE MEMBER'S OWN EDITION, beside the case's at
@@ -23557,7 +24121,6 @@ Subject position: ${pos} \u2014 ${just}
       caseId: theCase,
       minted,
       edition,
-      to: "published",
       /* THE SET, in the order the member published it — which is the
          order the container's parts[] and every rendering take. */
       findings: written,
@@ -23570,7 +24133,7 @@ Subject position: ${pos} \u2014 ${just}
       ...written.length === 1 ? {
         target: written[0].target,
         bundleSha: written[0].bundleSha,
-        from: written[0].from
+        state: written[0].state
       } : {},
       scope: scp,
       /* CASE-2 / DEC-72: WHOSE PRODUCTION, AND THE BAR IT WAS HELD TO —
@@ -23729,7 +24292,7 @@ Subject position: ${pos} \u2014 ${just}
       };
     const parentText = liveMd.content;
     const fm = parseFrontmatter(parentText).data || {};
-    if (b.current_state === "published")
+    if (this.#caseRelationOf(target).member)
       return {
         ok: false,
         reason: "PUBLISHED_CANNOT_DIVIDE",
@@ -24250,7 +24813,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         object_type: b.object_type,
         detail: "a basis is what a QUESTION rests on, and only an inquiry carries one."
       };
-    if (b.current_state === "published")
+    if (this.#caseRelationOf(target).member)
       return {
         ok: false,
         reason: "PUBLISHED_CANNOT_RESTRUCTURE",
@@ -27516,6 +28079,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         owner = ownerMemberId;
       }
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
+      this.#flagCasesOnRevision(
+        bundleId,
+        base ?? null,
+        (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z")
+      );
       return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
     });
   }
@@ -33208,7 +33776,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         since: row.last_updated,
         detail: `${targetId} was abandoned. A claim resting on it names a question that will not be answered.`
       });
-    else if (row.current_state === "open" && REOPENABLE_FROM.includes(row.prior_state))
+    else if (row.current_state === "open" && (REOPENABLE_FROM.includes(row.prior_state) || row.prior_state === "concluded"))
       causes.push({
         source: "reopened",
         since: row.last_updated,
@@ -33216,7 +33784,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       });
     const ratified = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, targetId);
     const latestRatified = ratified && ratified.m != null ? Number(ratified.m) : 0;
-    const fm = latestRatified > 0 || row.current_state === "published" ? this.#frontmatterOf(targetId) : null;
+    const fm = latestRatified > 0 ? this.#frontmatterOf(targetId) : null;
     const authored = fm && Number.isInteger(fm.edition) ? fm.edition : 0;
     const latest = Math.max(latestRatified, authored);
     const edition = latest > 1 ? { latest, latest_ratified: latestRatified, since: row.last_updated } : null;
@@ -33905,7 +34473,18 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          document it doubts would attach itself to whatever bundle was next
          allocated that id, which is the silent-leftover class in its most
          damaging form: a doubt about somebody else's document. */
-      "provenance_route_marks"
+      "provenance_route_marks",
+      /* CASE-4 / DEC-72 / D-113: the revision flags are keyed on the MEMBER
+         FINDING's `bundle_id`, so they ride this list and clear in BOTH arms.
+         Per-bundle: purging a finding and leaving its flags would leave rows
+         saying a case is waiting on a revision to a document nobody holds, and
+         the flag would then attach itself to whatever bundle was next allocated
+         that id. Whole-store: a scratch reset reporting scope ALL while a case
+         still reads as flagged is the silent-leftover exactly. It is a record of
+         EVENTS rather than a projection, so nothing rebuilds it — which is
+         precisely why leaving it would be permanent rather than self-correcting.
+         hygiene.test.mjs holds this list against schema.mjs. */
+      "case_revision_flags"
     ];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -36031,6 +36610,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           cEd,
           bundleId
         );
+        this.#dischargeCaseFlags(caseId, cEd, attestorMember ?? null, now);
       }
       this.sql.exec(
         `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
@@ -38346,7 +38926,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       );
     const row = rows[idx];
     const from = typeof row.state === "string" ? row.state.trim() : "";
-    if (to !== null && b.current_state === "published")
+    if (to !== null && this.#caseRelationOf(target).member)
       return refuse(
         "PUBLISHED_CANNOT_MOVE_VERSION",
         `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding at the version its members signed. Moving a reading from ${from || "no recorded state"} to ${to} would change what this finding rests on underneath an edition already on the record, leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move the reading, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned edition keeps its own signature and keeps answering.`,
@@ -43590,6 +44170,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           target: url.searchParams.get("target"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* CASE-4 / DEC-72: THE REVISION FLAGS. `?case=` asks one case, `?target=`
+           asks one member finding, neither sweeps the store. UNGATED and
+           unstamped, unlike `reevaluations` above, and the difference is a fact
+           about the subject rather than a relaxation: every field in the answer
+           is already served to a stranger by op=publishedcase and by the case
+           container's own manifest. Gating it would withhold from a member what
+           the published record already tells anybody. */
+        caseflags: () => this.caseFlags({
+          caseId: url.searchParams.get("case"),
+          target: url.searchParams.get("target"),
+          limit: url.searchParams.get("limit"),
+          outstandingOnly: url.searchParams.get("outstanding") === "1"
+        }),
         /* REC-12: the derived strength PAIR, on read. A DO-internal read of
            the same class as basis/restson — REC-14 stamps this pair into the
            ratified bytes and REC-22 serves it, and those are the items that
@@ -45039,6 +45632,24 @@ var OPS = {
        identically whether it was never ratified or never existed. */
   publishedcase: { classes: null, mutating: false },
   publishedbytes: { classes: null, mutating: false },
+  /* CASE-4 / DEC-72: THE REVISION FLAGS ON A PUBLISHED CASE. A case is a frozen,
+       signed edition honest as of its date; when a member finding is later revised
+       the containing cases are FLAGGED, set-but-never-clear until each owning
+       project acts. This is where a reader — a member deciding whether to publish
+       a new edition, or a stranger weighing how current a case is — sees which
+       flags stand and which were discharged.
+  
+       `classes: null` — UNGATED, on publishedcase's own reasoning above and not on
+       a new one. Every fact in the answer is already public: the case editions and
+       their rosters come out of op=publishedcase, the pinned hash is in the
+       container manifest a stranger verifies against, and the revised hash is a
+       published version's own. Nothing here reads working material, so there is no
+       working material for a missing predicate to leak — and gating it would
+       withhold from a member exactly what the published record already tells
+       anybody. NO `NEEDS` ENTRY, on op=reevaluations' precedent: a read carries no
+       working capability, so REC-19's NEEDS/NON_ACTS totality neither gains nor
+       loses a row. */
+  caseflags: { classes: null, mutating: false },
   excludedby: { classes: ["admin", "member", "probe"], mutating: false },
   publishedlist: { classes: ["admin", "member", "probe"], mutating: false },
   inbox: { classes: ["admin", "member", "probe"], mutating: false },
@@ -46378,6 +46989,18 @@ var index_default = {
         const out2 = await doAnswer(stub2.fetch(new Request("http://do/publishedmanifest")));
         if (!out2.answered) return storeSilent("publishedmanifest");
         return json({ ok: true, result: out2.result }, 200);
+      }
+      if (op === "caseflags") {
+        const q = new URLSearchParams();
+        const cid = (url.searchParams.get("case") || "").trim();
+        const tgt = (url.searchParams.get("target") || "").trim();
+        if (cid) q.set("case", cid);
+        if (tgt) q.set("target", tgt);
+        if (url.searchParams.get("outstanding") === "1") q.set("outstanding", "1");
+        if (url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        const fOut = await doAnswer(stub2.fetch(`http://do/caseflags?${q}`));
+        if (!fOut.answered) return storeSilent("caseflags");
+        return json({ ok: true, result: fOut.result }, 200);
       }
       if (op === "publishedcase" || op === "publishedbytes") {
         const shaParam = (url.searchParams.get("sha256") || "").toLowerCase();
@@ -48405,7 +49028,7 @@ var index_default = {
         }
       }
       const ratifiedFm = typeof image["bundle.md"] === "string" ? parseFrontmatter(image["bundle.md"]).data || {} : {};
-      const isCase = normalizeType(ratifiedFm.object_type) === "inquiry" && ratifiedFm.current_state === "published";
+      const isCase = normalizeType(ratifiedFm.object_type) === "inquiry" && isCaseMemberBytes(ratifiedFm);
       const edition = isCase && Number.isInteger(ratifiedFm.edition) ? ratifiedFm.edition : 1;
       const frozenStrength = isCase && Array.isArray(ratifiedFm.published_strength) ? ratifiedFm.published_strength : null;
       const frozenCompleteness = isCase ? {
