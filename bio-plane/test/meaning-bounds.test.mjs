@@ -963,11 +963,62 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    its frontmatter. It is a real member by the walker's own definition, and the
    bound is stated here rather than claimed by exempting it, because an exempted
    member is a rule nobody is enforcing. */
+/* ===== MOVED 39 -> 40, 2026-09-10, BY D-309, AND A CEILING THAT RISES OWES ITS
+   REASON AT THE SITE — this repository's standing rule is that a ceiling is not a
+   ratchet, so a rise is recorded loudly rather than absorbed. Every previous move
+   of this figure FELL. This one does not, and CONDUCT should read it as a
+   deliberate act rather than as drift.
+
+   THE NEW MEMBER IS `publishCase()`, REACHED BY `op=publish`, and it is named at
+   both levels deliberately. The roster this walk prints keys rows by the store's
+   DO path, so the line above reads as the lower-cased method name; writing that
+   spelling with an `op=` in front of it is a WRONG-LEVEL attribution and
+   `op-claims.test.mjs` refuses it by name. **It refused this comment twice** —
+   once for the original spelling and once for the sentence explaining the
+   correction, which quoted the very token it was correcting. That is a receipt
+   `WORKER.md` already carries ("a check that caught its own correction"), met
+   here, and the fix is to describe the token rather than spell it.
+
+   It joined for ONE reason: D-309 enacted
+   DEC-72 clause 6, and `publishCase()`'s membership derivation had to stop asking
+   "which case is this finding in" with `#one(… ORDER BY edition DESC LIMIT 1)`
+   and start asking with `#rows(SELECT DISTINCT case_id …)`. A finding may now
+   serve many cases, so the scalar answer was a guess over a set — the defect that
+   whole item exists to remove. The function already published collections
+   (`moved`, `findings`, `roles`); what changed is that it now also contains an
+   unbounded row source, which is this walk's definition and it is right to name
+   it.
+
+   WHY THE BOUND IS NOT THE FIX HERE, stated because "add a LIMIT" is the obvious
+   move and it is WRONG on this collection. The scan answers "which cases does
+   this finding already serve", and its result feeds the `CASE_IDENTITY_AMBIGUOUS`
+   refusal, which names every candidate so a publisher can choose between them. A
+   LIMIT would let that refusal name TWO candidates when the record holds five —
+   **a truncated candidate list is a record claiming less than it holds, inside
+   the one refusal whose entire job is not answering a set-valued question with
+   part of the set.** Truncation would be the overclaim class arriving through a
+   pagination convention.
+
+   THE BOUND, MEASURED AND STATED RATHER THAN CLAIMED BY EXEMPTING IT — which is
+   the posture this file already takes with `op=caseratify` twenty lines up, and
+   D-309's member is the SAME SHAPE as that one. The scan is an equality on
+   `published_case_members_bundle`, CASE-1's leading-column index, and returns one
+   row per DISTINCT case a finding serves. That is bounded by **how many cases a
+   publisher has deliberately published this finding into** — an act, signed for
+   each time, not a corpus — exactly as `op=caseratify`'s three collections are
+   bounded by the roster a publisher authored by hand. It does not grow with the
+   store. The loop around it runs once per member of the act, which is that same
+   authored roster.
+
+   AND IT IS A REAL MEMBER, COUNTED HONESTLY. It is not exempted, not special-
+   cased in the walker, and not hidden behind a narrowed matcher: the figure
+   MOVED, so the next item to add an unbounded collection read still fails here.
+   ===================================================================== */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
-+ "phantom; REC-66 FIXED one member) and fails here",
-  BARE_OPS.length <= 39, true);
++ "phantom; REC-66 FIXED one member), MOVED 39 -> 40 by D-309 with its reason above, and fails here",
+  BARE_OPS.length <= 40, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a

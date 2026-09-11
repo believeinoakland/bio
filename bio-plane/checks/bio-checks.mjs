@@ -8289,6 +8289,56 @@ export const QUEUE_MINT_CHECKS = {
 };
 
 /* =========================================================================
+ * C-44 — THE CASE IDENTITY A PUBLISHING ACT DID NOT STATE (D-309, DEC-72
+ * clause 6). ONE C-NUMBER, ONE CODE, ONE FAMILY.
+ *
+ * WHY THE FAMILY EXISTS AT ALL, since `publishCase()` already makes ~20 refusals
+ * and none of them is in a DEC-49 family. It is not a sweep of that function and
+ * must not become one: REC-64's sweep is its own work, and the `where` below
+ * names a REGION rather than the function for exactly the reason C-22's header
+ * records — PL-1's two rows named `promote` when they meant an arm of it, and
+ * **32 long-standing refusals instantly owed translations they were never in
+ * scope for, and `main`'s UI harness went red.** So the governed span here is
+ * `case-identity-derivation` and nothing else: the one refusal D-309 mints.
+ *
+ * WHY IT IS A NEW FAMILY RATHER THAN A ROW IN AN EXISTING ONE, which is a real
+ * cost and is paid deliberately. A new `*_CHECKS` family is a FLOOR in
+ * `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's walk
+ * unless it is moved in the same turn — C-22's own header says so, and CASE-3 and
+ * C-25.32 both chose an existing family to avoid it. There was no existing family
+ * to choose here: not one of `publishCase()`'s refusals carries a code today, so
+ * this condition has no relatives. The floor IS moved in the same turn, from the
+ * figures a green run printed.
+ *
+ * WHAT THE CONDITION IS. DEC-72 clause 6 rules that a finding can serve many
+ * cases. REC-44 gave the publishing act three routes to a case identity — NAME
+ * one, DERIVE one from what the members already belong to, MINT one — and while
+ * a finding could belong to at most one case the DERIVE route was reading a fact.
+ * Under clause 6 it can face several candidates, and then it is a guess between
+ * two opposite acts: a further edition of an existing case, or a new case resting
+ * on findings that already serve one. The act refuses and names every candidate.
+ *
+ * IT IS AN ALLOCATION CARRYING ITS ENFORCEMENT SITE, on AI_RUN_CHECKS' precedent,
+ * and `checkBundle` does not call it: the condition is about an ACT's arguments
+ * against the published record, and there is no such thing in a bundle document.
+ * The C-number, the wire code and the translation are ONE ROW here, and
+ * `src/store.mjs` imports this and holds no second copy — a hand copy agrees at
+ * zero cost, measured five times.
+ * ========================================================================= */
+export const CASE_DERIVATION_CHECKS = {
+  CASE_IDENTITY_AMBIGUOUS: {
+    check: 'C-44.1',
+    where: 'src/store.mjs publishCase > case-identity-derivation',
+    translation: 'This publication did not say which case it is. The findings you are publishing '
+      + 'already serve more than one published case, and a finding is allowed to serve many — so '
+      + 'the record cannot work out from them alone whether you are publishing a further edition '
+      + 'of one of those cases or starting a new case that rests on the same work. Nothing has '
+      + 'been published and nothing has changed. Say which case this is, or say that it is a new '
+      + 'one, and publish again.',
+  },
+};
+
+/* =========================================================================
  * REC-64 / DEC-49 — THE MACHINE/MEMBER BOUNDARY, IN WORDS.
  *
  * **THIS FAMILY EXISTS BECAUSE THREE ITEMS CONVERGED ON ONE SET OF TWELVE FROM

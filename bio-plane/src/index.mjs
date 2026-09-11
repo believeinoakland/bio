@@ -3212,6 +3212,14 @@ export default {
         const q = new URLSearchParams();
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
+        /* D-309 / IC-74: a finding may serve many cases (DEC-72 clause 6), so a
+           finding id alone can be an ambiguous question and the store refuses it
+           `FINDING_IN_SEVERAL_CASES` naming every candidate. This forwards the
+           reader's ANSWER to that question. It is a resolution aid and never an
+           assertion: the store still resolves the case from the RECORD and only
+           uses this to pick among memberships the record already holds, so a
+           caseId a caller invents reaches nothing. */
+        if (url.searchParams.get("caseId")) q.set("caseId", url.searchParams.get("caseId"));
         if (/^[0-9a-f]{64}$/.test(shaParam)) q.set("sha256", shaParam);
         /* REC-52, SITE (b). This read used to be
              `if (!c || !c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);`

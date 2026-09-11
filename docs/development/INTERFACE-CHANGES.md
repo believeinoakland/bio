@@ -5581,3 +5581,100 @@ row:
   totality arm did not move; `op=queue`'s `options[]` is untouched by UI.
 - **NOTHING ON I3 MOVES FOR THIS**, which is why UI-57 was filed as I3 CONSUMPTION with no IC
   of its own.
+
+## IC-74 · I3: **A FINDING MAY SERVE MANY CASES** — `FINDING_IN_ANOTHER_CASE` and `FINDINGS_IN_DIFFERENT_CASES` are DELETED, one new refusal `CASE_IDENTITY_AMBIGUOUS` (C-44) is minted in their place, and every read op that answers "which case is this finding in" becomes SET-VALUED · PROPOSED 2026-09-10 (D-309, enacting DEC-72 clause 6) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the plane's wire surface), STABLE
+- **Proposer:** worker D-309, worktree `agent-a26bce57cd13e5ea5`
+- **Owner to land it:** RECORD (the plane)
+- **Filed BEFORE any code was written**, as the queue row requires.
+
+### What is being changed, and why it is not optional
+
+DEC-72 clause 6: *"A project can span many cases; a finding can serve many cases
+— across projects and within one."* Bob's reason, from `CASE-AS-PRODUCTION.md`:
+*"A finding is mined, often involving hard work. So once resolved, the finding
+should have lasting value."* CASE-5's artifact flip made the shape representable
+in the FORMAT; the plane still refuses it. This closes that.
+
+### THE WIRE CHANGES, AND EVERY ONE IS MEASURED RATHER THAN PREDICTED
+
+**1. Two refusals are DELETED from `op=publish`.** A consumer that branches on
+either code will stop seeing it. Neither is replaced by a synonym, because the
+rule each enforced is the rule DEC-72 clause 6 overturns.
+
+- `FINDING_IN_ANOTHER_CASE` — *"A finding belongs to one case."* Gone.
+- `FINDINGS_IN_DIFFERENT_CASES` — *"publishing it into a second would make 'which
+  edition does this leg cite' unanswerable, since editions are over the CASE."*
+  Gone, and the stated reason is ALSO answered rather than merely overruled:
+  CASE-5's pin resolves a member by HASH, so a leg naming an edition of a case
+  resolves without needing the finding to have only one case.
+
+**2. One refusal is MINTED: `CASE_IDENTITY_AMBIGUOUS` (C-44).** `op=publish`
+called with NO `caseId` over members that already belong to one or more published
+cases. Before clause 6 the derivation was determinate — membership named exactly
+one case, so deriving it was reading a fact. After clause 6 the same derivation is
+a GUESS between two real intentions: a further edition of a case these findings
+are already in, or a NEW case resting on the same mined findings. The act refuses
+and names every candidate, so the publisher answers the question instead of the
+plane answering it for them. REC-44's own comment already names the route out:
+*"A caller may NAME an existing case (this is how a second edition, or a finding
+joining a case, is published)."* It carries a canned DEC-49 translation.
+
+**3. FIVE READ OPS CHANGE ANSWER SHAPE, and this is the measured consumer
+impact the queue row asks for.** In every one the rule is the same and it is
+stated once: **a new `cases` ARRAY is authoritative and is always present; the
+pre-existing scalar `case_id` / `case_edition` fields are KEPT and are the sole
+membership when there is exactly one, and NULL when the question has no answer or
+more than one.** A consumer that goes on reading the scalar therefore never
+receives a guess — it receives `null`, which it already handles, because a
+finding in no case has always answered `null` there. **That is the whole design of
+this migration: the old field can only become MORE null, never WRONG.**
+
+| op | field(s) | before | after |
+| --- | --- | --- | --- |
+| `op=publishedlist` | per finding row | `case_id`, `case_edition` | + `cases: [{case_id, edition}]` |
+| `op=publishededitions` | per edition | `case_id`, `case_edition` | + `cases: [{case_id, edition}]` |
+| `op=publishedcase` | a served basis leg | `case_id`, `case_edition`, `manifest_sha` | + `cases: [{case_id, edition, manifest_sha}]` |
+| `op=ratify` | the answer | `caseId`, `caseEdition`, `case` | + `cases: [{caseId, caseEdition}]` |
+| `op=publishedcase` | RESOLUTION by a FINDING id or a HASH | resolved to one case | refuses `FINDING_IN_SEVERAL_CASES` naming them, when several |
+
+The last row is the only one that can refuse where it did not before, and it is
+the method's OWN doctrine applied rather than a new rule — `publishedCase()`
+already says in its header that *"the surface resolves without deciding on the
+reader's behalf what they meant."* A stranger holding one finding id that serves
+two cases is told both and picks; answering with one would attribute a finding's
+support to a case the reader did not ask about.
+
+### Consumer impact, MEASURED
+
+- **`civicos-ui/`** — grepped for `case_id` / `case_edition` outside `test/`:
+  **the only hit is `check-mock-envelope.mjs`'s alias-stripping comment**, which
+  is about SQL column aliases and not about this shape. The published case page's
+  multi-membership renderer `pubOtherCasesHtml` **already reads the whole
+  `caseMembers` table from `op=publishedmanifest` and is correct for any n** —
+  CASE-6 built it that way on purpose so this item's landing would not move the
+  surface. **So the surface half needs NO migration, and that is a measurement,
+  not a hope.** The UI harness is run from the repo root as a gate regardless.
+- **`newgroup/`** — out of bounds and not a consumer of these ops.
+- **The check catalog** — `checkCompletenessFreshness` was the one consumer of
+  `publishedCaseRegistry`'s resolved case and CASE-5b already retired it; the
+  registry is plumbed and not read at that key. `publishedRegistryFor`'s
+  per-edition `case_id` is not read by any catalog check (grepped).
+- **`bio-plane/dist/bio-plane.bundled.mjs`** is a BUILD ARTIFACT and is DIST's;
+  it is not edited here.
+
+### The interface risk this does NOT take
+
+**A case with several OWNING PROJECTS stays unrepresentable** — `cases` is keyed
+on `case_id` alone, CASE-1's sharpest call, so a case does not change hands
+between its editions. That is a separate limit, it is not this item's, and it is
+deliberately **not widened**. `caselifecycle.test.mjs` block 7 goes on proving
+"several owning projects means several cases" and its assertions do not move; only
+the comment's *reason* changes, because it cited this fence.
+
+### State
+
+**PROPOSED 2026-09-10.** RECORD is the owner and is the proposer's own area.
+CONTENT, FRAMEWORK, RETRIEVAL and DIST are not consumers of I3's case-membership
+shape (measured above). **CONDUCT takes the version bump and the RESOLUTION.**
