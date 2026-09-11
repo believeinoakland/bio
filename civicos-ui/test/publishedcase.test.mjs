@@ -60,6 +60,49 @@
  *       arm, which requires the producer's own reads to still be there and fails with "NONE AT ALL — the
  *       walk found nothing, which is itself suspect". Do not delete the paired arm to tidy the block: it
  *       is the only thing standing between this measurement and a confident zero over nothing.
+ *
+ * ==== UI-56'S ARMS (IC-66's delegation), ALL RUN 2026-09-10 against the final files. The suite is
+ *      234 assertions whole; the PRE-ITEM suite was MEASURED at 226 (run at `HEAD` with `HEAD`'s
+ *      `app.html`, both restored and `cmp`-verified) rather than derived by subtraction. Every file
+ *      restored BYTE-IDENTICALLY after every arm, sha256 AND `cmp` compared, byte counts printed and
+ *      floored. The subject of these arms is `civicos-ui/app.html`, 1,170,731 B, sha256
+ *      c694ad3831377845… — unchanged across all three. **THIS FILE'S OWN sha IS DELIBERATELY NOT
+ *      QUOTED HERE**: writing it into the file it digests changes it, and a figure that cannot be
+ *      true when it is read is worse than no figure. What is asserted instead is the property the
+ *      runner actually enforces — this file was byte-identical before and after each arm.
+ *      THE BASELINE ROW IS PART OF THE RECORD: nothing armed, 234/234, 0 failed — without it, five
+ *      arms broken and five arms working are the same output. ====
+ *   (u1) THE CASE-EDITION JOIN RESTORED — in `pubList`, collapse `pubMemberKey` to the old key:
+ *       `const pubMemberKey = (m, cs) => m.bundle_id + "@" + (cs ? cs.edition : m.edition);`.
+ *       RUN: 229 pass, 5 FAIL. The diverged member `INQ-2026-4600` is not joined to its ratified row
+ *       at all, loses its pair, loses its declared bar, and appears a SECOND time in the not-in-any-case
+ *       list; the row count moves 8 -> 9 with it. **AND THE FIXTURE IS THE ARM**: with a member whose
+ *       own edition AGREES with its case's, this defect is invisible — every one of the five failures
+ *       needs a member at its own edition 1 inside a case at edition 2, which is the state CASE-5 made
+ *       reachable and which no fixture in this suite carried before.
+ *       NOTE WHAT STAYS GREEN, and it is the finding: 225 of the 226 PRE-EXISTING assertions. Both
+ *       editions of the two-finding case, the solo case, the awaiting window, the stuck container and
+ *       both loose rows go on answering perfectly. The surface does not break — it drops one finding
+ *       out of the record and says two contradictory things about it, on a page whose every other word
+ *       is right. The ONE pre-existing assertion that moves is the row count, and it moves without
+ *       being able to say what happened; the four that name the finding are the ones that can.
+ *   (u1b) THE SAME DEFECT AS THE REAL PRE-ITEM BYTES — `civicos-ui/app.html` swapped for `HEAD`'s
+ *       actual content (1,167,827 B, 0695719f0e60fdc2…) rather than a hand restoration. RUN: 229 pass,
+ *       5 FAIL, THE SAME FIVE. This arm exists because a hand-written "restoration" is a claim about
+ *       what the old code did, and a claim that costs nothing to produce is not evidence; the two runs
+ *       agreeing is what makes (u1) a measurement of the shipped defect rather than of my retelling.
+ *   (u2) OVER-STRICTNESS — THE UNDIVERGED RENDERING, BYTE FOR BYTE. Same suite, same fixture, only
+ *       `app.html` swaps: the index is dumped under the fix and under `HEAD`, and every row that is
+ *       not the diverged member's is compared BYTE FOR BYTE. RUN: 7 undiverged rows each side, 0
+ *       byte-differing rows — THE FIX CHANGES NOTHING AT ALL for an undiverged member, including the
+ *       PINNED-and-agreeing members and the UNPINNED legacy member (`CASE-2026-0004`, `version_sha`
+ *       null), whose join still falls back to the case's edition and must. Only the diverged rows
+ *       differ, in the declared direction: `HEAD` renders 2 rows (its case, `awaiting?=true`, and a
+ *       duplicate `data-notacase` row, `duplicated-as-loose?=true`), the fix renders 1 (its case,
+ *       both false). The corpus is asserted non-empty and the dump floored at 5,000 chars, because an
+ *       over-strictness arm over an empty rendering passes for free.
+ * Restore after each; (u1) is a single unique string replacement and the runner REFUSES to arm if its
+ * anchor matches any number of times other than one.
  */
 /* UI-18 · O2 THE PUBLISHED CASE, AS UI-29 CORRECTS IT — the surface UI-PLAN
  * calls "the reason the rest exists", driven here against the public read path
@@ -206,6 +249,14 @@ const PARENT = "INQ-2026-4000";
 const SIBLING = "INQ-2026-4103";
 const INFO = "INFO-2026-8001";               // ratified bytes that are in NO case
 const LOOSE_FIND = "INQ-2026-4500";          // REC-49: a ratified FINDING in no case — it still has a pair
+/* UI-56 (IC-66's delegation): THE DIVERGED MEMBER, and the whole item lives on it.
+   CASE-5 unslaved a member's edition from its case's, so a case's edition 2 may
+   carry a finding that is at ITS OWN edition 1 — and the surface used to join the
+   two on the CASE's number. A fixture in which the two editions AGREE cannot see
+   that defect AT ALL, which is why this pair is here rather than an assertion
+   added over the rows that were already present. */
+const CASE_DIV = "CASE-2026-0005";           // edition 2 of the case…
+const FIND_V = "INQ-2026-4600";              // …whose only member is at its own edition 1
 
 const A1 = "a".repeat(64), A2 = "b".repeat(64);          // FIND_A's bundle sha, editions 1 and 2
 const B1 = "c".repeat(64), B2 = "d".repeat(64);          // FIND_B's
@@ -216,6 +267,11 @@ const C_SHA = "4".repeat(64);
 const INFO_SHA = "5".repeat(64);
 const LOOSE_SHA = "6".repeat(64);
 const E_SHA = "7".repeat(64), K_SHA = "8".repeat(64);
+/* UI-56: `D_SHA` is a PIN WITH NO RATIFIED ROW BEHIND IT — the declared-and-not-yet-
+   ratified member's version was pinned when it was rostered and the finding has not
+   been signed, which is the state the awaiting window exists for. `V_SHA` is the
+   diverged member's own ratified hash, and `DIV_MAN` its case's container. */
+const D_SHA = "9".repeat(64), V_SHA = "ab".repeat(32), DIV_MAN = "cd".repeat(32);
 
 const L_CAP_B = INFO;               // capture B, supports, SERVED
 const L_CAP_D = "INFO-2026-8002";   // capture D, supports, NAMED — FIND_A's capture DETERMINING leg
@@ -566,6 +622,15 @@ const PUB_ROWS = [
   { bundle_id:FIND_K, edition:1, title:"Was the contract amended after award?", bundle_sha:K_SHA,
     ratified_at:"2026-07-30T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
     strength:PAIR_A, required:BAR_ABSENT },
+  /* UI-56: THE DIVERGED MEMBER'S OWN RATIFIED ROW, AND ITS EDITION IS 1 WHILE ITS
+     CASE'S IS 2. It carries a pair AND a declared bar deliberately — the defect
+     this item closes blanked BOTH, so a fixture row holding only one of them
+     could not tell a half fix from a whole one. Note what is NOT here: no row at
+     edition 2. The finding never moved; only the case did, which is precisely
+     what CASE-5 made possible. */
+  { bundle_id:FIND_V, edition:1, title:"Did the vendor disclose the sub-award?", bundle_sha:V_SHA,
+    ratified_at:"2026-08-02T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
+    strength:PAIR_B, required:BAR_DECLARED },
 ];
 const manOf = (caseId, ed, rows) => JSON.stringify({ format:"bio-case-container/2", case:caseId, edition:ed,
   findings:rows });
@@ -587,15 +652,46 @@ const CASE_ROWS = [
      container that is not there. */
   { case_id:CASE_STUCK, edition:1, scope:"Whether the amendment was made after award.",
     ratified_at:"2026-07-30T09:00:00Z", manifest_sha:null, manifest:null },
+  /* UI-56: A COMPLETE, ASSEMBLED CASE AT EDITION 2 WHOSE MEMBER IS AT ITS OWN
+     EDITION 1. It is assembled on purpose: the container exists and the plane
+     records it as finished, so there is nothing about this case that is actually
+     awaiting anything — which is what made the old join's "DECLARED AND NOT YET
+     RATIFIED" a flat contradiction of the row it was printed inside. */
+  { case_id:CASE_DIV, edition:2, scope:"Whether the sub-award was disclosed to the board.",
+    ratified_at:"2026-08-02T10:00:00Z", manifest_sha:DIV_MAN,
+    manifest: manOf(CASE_DIV, 2, [ { bundle_id:FIND_V, strength:PAIR_B, required_strength:BAR_DECLARED } ]) },
 ];
+/* CORRECTED 2026-09-10 (UI-56), AND THE MOCK WAS AS WRONG AS THE SURFACE — D-173's
+   rule, that a UI mock answers the WIRE SHAPE and never a shape convenient to the
+   suite. `publishedManifest()` selects `case_id, edition, ord, bundle_id,
+   version_sha, role` from `published_case_members`; these rows carried the first
+   four and dropped the last two, so the surface's join could be written against a
+   column the fixture did not have and NOT ONE assertion could notice. The two
+   columns are restored here, and with them the only thing that makes this suite
+   able to see UI-56's defect at all.
+
+   `version_sha` IS THE PIN AND IS NULLABLE ON PURPOSE. `FIND_K` is left UNPINNED
+   deliberately: the plane states in its own `production` sentence that a null pin
+   means the member was rostered without a version being pinned, which is the
+   pre-CASE-5 world and is still on real instances. It is this suite's standing
+   OVER-STRICTNESS arm for UI-56 — an undiverged, unpinned, legacy member must go
+   on rendering EXACTLY as it does today, and block 1's `CASE-2026-0004` assertion
+   is what holds it to that. `FIND_D` is pinned to a sha no ratified row answers
+   to, which is what a declared-and-not-yet-ratified member really looks like. */
 const CASE_MEMBERS = [
-  { case_id:CASE, edition:1, ord:0, bundle_id:FIND_A }, { case_id:CASE, edition:1, ord:1, bundle_id:FIND_B },
-  { case_id:CASE, edition:2, ord:0, bundle_id:FIND_A }, { case_id:CASE, edition:2, ord:1, bundle_id:FIND_B },
-  { case_id:CASE_SOLO, edition:1, ord:0, bundle_id:FIND_S },
-  { case_id:CASE_WAIT, edition:1, ord:0, bundle_id:FIND_C },
-  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_E },
-  { case_id:CASE_WAIT, edition:1, ord:2, bundle_id:FIND_D },
-  { case_id:CASE_STUCK, edition:1, ord:0, bundle_id:FIND_K },
+  { case_id:CASE, edition:1, ord:0, bundle_id:FIND_A, version_sha:A1, role:null },
+  { case_id:CASE, edition:1, ord:1, bundle_id:FIND_B, version_sha:B1, role:null },
+  { case_id:CASE, edition:2, ord:0, bundle_id:FIND_A, version_sha:A2, role:null },
+  { case_id:CASE, edition:2, ord:1, bundle_id:FIND_B, version_sha:B2, role:null },
+  { case_id:CASE_SOLO, edition:1, ord:0, bundle_id:FIND_S, version_sha:S_SHA, role:null },
+  { case_id:CASE_WAIT, edition:1, ord:0, bundle_id:FIND_C, version_sha:C_SHA, role:null },
+  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_E, version_sha:E_SHA, role:null },
+  { case_id:CASE_WAIT, edition:1, ord:2, bundle_id:FIND_D, version_sha:D_SHA, role:null },
+  { case_id:CASE_STUCK, edition:1, ord:0, bundle_id:FIND_K, version_sha:null, role:null },
+  /* THE DIVERGED ROSTER ROW: the case is at edition 2 and the pin names the
+     finding's edition-1 bytes. `2` and `1` are two different numbers here and
+     that is the entire fixture. */
+  { case_id:CASE_DIV, edition:2, ord:0, bundle_id:FIND_V, version_sha:V_SHA, role:null },
 ];
 
 const PUBLISHED_SHAS = new Map([
@@ -843,8 +939,23 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
      (a pair belongs to a finding; belonging to no case costs it a case identity,
      a scope and a completeness assertion, and not its pair). The four CASE rows
      are unchanged. */
+  /* CORRECTED AGAIN 2026-09-10 (UI-56), never exempted: 7 -> 8 rows and 5 -> 6 case
+     rows. A fixture row joined — a complete case edition 2 holding a member at its
+     own edition 1 — and the rule this assertion states does not move: one row per
+     CASE EDITION, plus one per ratified bundle in no case.
+     AND THE ARM CORRECTED THIS COMMENT, WHICH IS RECORDED RATHER THAN QUIETLY
+     FIXED. It first claimed the count would be BLIND to the defect — that a
+     diverged member dropped from its case and re-rendered as a loose bundle
+     would leave the same total. MEASURED, THAT IS FALSE: the case row does not
+     disappear under the defect, it renders as `awaiting`, so the loose row is an
+     ADDITION and the index goes to 9 rows (arm 1 and arm 1b both fail this line,
+     229/234). The count is therefore one real witness among five — but it is the
+     only one of the five that cannot say WHICH finding went wrong or how, which
+     is why the named assertions below exist and why they are this item's
+     evidence. A count that moves for the right reason and a count that moves for
+     the wrong one are the same number. */
   ok("the index enumerates CASE EDITIONS — two editions of the two-finding case, one each of the others",
-     rows.length === 7 && (idx.match(/data-caserow="CASE-/g) || []).length === 5);
+     rows.length === 8 && (idx.match(/data-caserow="CASE-/g) || []).length === 6);
   const e1 = rows[0], e2 = rows[1];
   ok("a case row names the CASE identity and its edition, and the identity is not any member's bundle id",
      e1.includes(CASE) && /edition 1/.test(e1) && !e1.includes("data-caserow=\"" + FIND_A));
@@ -929,6 +1040,88 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
      && (looseFind.match(/data-axis="capture"/g) || []).length === 1
      && !/carries no frozen strength pair/.test(strip(looseFind))
      && /no case identity, no scope statement and no completeness assertion/.test(strip(looseFind)));
+  /* ============ UI-56 · THE DIVERGED MEMBER (IC-66's delegation) ============
+     A CASE'S EDITION AND ITS MEMBER'S EDITION ARE TWO NUMBERS SINCE CASE-5, and
+     the join between the roster and the ratified rows is the member's PINNED
+     VERSION HASH — `caseMembers[].version_sha` to `published[].bundle_sha` —
+     never edition to edition. The plane ships that rule in words on this very op
+     (`publishedManifest().production`); this block is it, driven.
+
+     WHY THESE ASSERTIONS AND NOT A COUNT. The broken join failed SILENTLY and in
+     three places at once, and every one of the three is a false statement about
+     the published record rather than a blank space: the member reads as awaiting
+     ratification forever, its pair and its bar go, and it is listed a SECOND time
+     as belonging to no case. A count notices that SOMETHING moved (measured: 9
+     rows instead of 8) and can say nothing whatever about which finding, in which
+     direction, or whether the record now over- or under-states — and the marks
+     are not even missing, they RELOCATE onto the loose row, so a mark tally reads
+     clean. Only assertions that NAME the finding and ask WHERE it is can tell a
+     restored record from a rearranged one; that is arm (c)'s and arm (j)'s
+     finding in this same suite, one altitude up. */
+  const divRow = rows.find(r => /data-caserow="CASE-2026-0005"/.test(r));
+  ok("UI-56: a member whose OWN edition differs from its case's is joined to its ratified row at all",
+     !!divRow && /data-member="ratified" data-findingsec="INQ-2026-4600"/.test(divRow)
+     && !/data-member="awaiting"/.test(divRow)
+     && !/DECLARED AND NOT YET RATIFIED/.test(strip(divRow)));
+  ok("UI-56: and the case edition holding it is NOT reported as still collecting signatures",
+     !!divRow && /data-caseedition="complete"/.test(divRow)
+     && !/NOT FINISHED YET/.test(strip(divRow))
+     && /container sha256:cdcdcdcdcdcdcdcd/.test(strip(divRow)));
+  ok("UI-56: the diverged member shows ITS OWN frozen pair — both axes, from the bytes IT signed",
+     !!divRow && /class="pub-axisrow" data-finding="INQ-2026-4600"/.test(divRow)
+     && (divRow.match(/data-axis="capture"/g) || []).length === 1
+     && (divRow.match(/data-axis="connection"/g) || []).length === 1
+     && /Documents B/.test(strip(divRow)) && /Links UNRATED/.test(strip(divRow))
+     && !/carries no frozen strength pair/.test(strip(divRow)));
+  ok("UI-56: and its DECLARED BAR, which the broken join blanked beside the pair",
+     !!divRow && /bar: Documents B/.test(strip(divRow)) && !/bar: none declared/.test(strip(divRow)));
+  /* AND THE OTHER HALF, WHICH IS THE ONE A READER WOULD HAVE BELIEVED. A finding
+     dropped from its case did not vanish from the page — it reappeared at the
+     bottom under "not a member of any published case", so the index asserted of
+     the SAME finding that it was awaiting ratification inside a case and that it
+     belonged to no case, in one screen. Exactly once, and in the right place. */
+  /* AND THIS ASSERTION CORRECTED ITSELF ON ITS FIRST RUN, WHICH IS RECORDED
+     RATHER THAN SMOOTHED. Its last clause counted bare `data-finding="…"` and
+     read 3 where it declared 1 — because a pair emits the attribute on its
+     `pub-axisrow` AND on each of the two `pub-grade` badges inside it. THE
+     SUBJECT WAS CORRECT AND THE INSTRUMENT WAS WRONG, in the direction that
+     fails loudly rather than the direction that passes quietly; the anchored
+     spelling below is the one the rest of this block already uses, and the
+     unanchored count is exactly the mistake the anchor exists to stop. */
+  ok("UI-56: the diverged member appears EXACTLY ONCE on the whole index, and never as a loose bundle",
+     (idx.match(/data-findingsec="INQ-2026-4600"/g) || []).length === 1
+     && !/data-notacase="INQ-2026-4600"/.test(idx)
+     && (idx.match(/class="pub-axisrow" data-finding="INQ-2026-4600"/g) || []).length === 1
+     && (idx.match(/data-member="[a-z]+" data-findingsec="INQ-2026-4600"/g) || []).length === 1);
+  /* THE PIN IS WHAT IS READ, AND THE FIXTURE PROVES IT COULD NOT HAVE BEEN THE
+     EDITION: there is no ratified row for this finding at the case's edition at
+     all, so a join that produced the right answer produced it from the hash. */
+  ok("UI-56: the join is the PIN — no ratified row for this finding exists at the case's edition",
+     CASE_MEMBERS.find(m => m.bundle_id === FIND_V).version_sha === V_SHA
+     && Number(CASE_MEMBERS.find(m => m.bundle_id === FIND_V).edition) === 2
+     && PUB_ROWS.filter(p => p.bundle_id === FIND_V).length === 1
+     && Number(PUB_ROWS.find(p => p.bundle_id === FIND_V).edition) === 1);
+  /* OVER-STRICTNESS, STATED AS AN ASSERTION RATHER THAN LEFT TO THE OTHER ARMS:
+     a member with NO PIN is not diverged and is not broken either. `version_sha`
+     is nullable, the plane says what a null means, and for such a member the
+     case's edition is the only reference there is — so the old key must still be
+     used and must still land. `CASE-2026-0004` above is the row that proves it;
+     this names the mechanism so a future edit cannot delete the fallback and pass. */
+  ok("UI-56 over-strictness: an UNPINNED legacy member still joins on the case's edition and renders whole",
+     CASE_MEMBERS.find(m => m.bundle_id === FIND_K).version_sha === null
+     && !!stuck && /class="pub-axisrow" data-finding="INQ-2026-4401"/.test(stuck)
+     && !/DECLARED AND NOT YET RATIFIED/.test(strip(stuck))
+     && (idx.match(/data-findingsec="INQ-2026-4401"/g) || []).length === 1
+     && !/data-notacase="INQ-2026-4401"/.test(idx));
+  /* AND THE MOCK ANSWERS THE WIRE (D-173). The roster fixture dropped two of the
+     six columns `publishedManifest()` selects, which is how a surface could join
+     on a column the suite did not have and stay green. A pin on the wire that no
+     fixture carries is a pin no assertion can be wrong about. */
+  ok("UI-56: the roster fixture answers the WIRE SHAPE — every member row carries `version_sha` and `role`",
+     CASE_MEMBERS.length === 10
+     && CASE_MEMBERS.every(m => "version_sha" in m && "role" in m)
+     && CASE_MEMBERS.filter(m => m.version_sha).length === 9);
+
   /* THE INDEX IS THE PLACE A READER QUOTES FROM, so the same structural sweep
      runs here, over the same complement: everything outside the marked member
      blocks. A letter that survives here is a letter attached to a CASE. */

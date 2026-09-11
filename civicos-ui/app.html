@@ -15676,18 +15676,58 @@ async function pubList(fromNav){
     const cases = r.cases || [];
     const members = r.caseMembers || [];
     PUB.index = { published: pub, cases, members };
-    /* the ratified bundle rows, by id and edition, so a member row can carry the
-       title the group signed rather than one this page composes */
+    /* the ratified bundle rows, so a member row can carry the title the group
+       signed rather than one this page composes.
+
+       CORRECTED 2026-09-10 (UI-56, IC-66's delegation), AND NOT EXEMPTED. THE
+       JOIN FROM A ROSTER ROW TO ITS RATIFIED ROW IS THE MEMBER'S PINNED VERSION
+       HASH — `caseMembers[].version_sha` TO `published[].bundle_sha` — AND NEVER
+       EDITION TO EDITION. The plane says exactly this in `publishedManifest()`'s
+       own `production` sentence, in the words it ships to any reconstructor:
+       "`caseMembers.edition` is the CASE's edition and `published.edition` is
+       the FINDING's own, and since the artifact flip a member of a case's
+       edition 2 may be at its own edition 1."
+
+       WHY THIS WAS WRONG AND WHY NOTHING NOTICED. Until CASE-5 the two numbers
+       were the same number, so `bundle_id + "@" + cs.edition` was right by
+       coincidence rather than by rule, and a join on a coincidence does not
+       error when the coincidence ends — IT SILENTLY DROPS EXACTLY THE MEMBERS
+       THE PIN EXISTS TO NAME. A diverged member read as awaiting ratification
+       forever, with a blank pair and a blank bar, and appeared a SECOND time in
+       the not-in-any-case list below as though it belonged to nothing: three
+       false statements about the published record, none of which looks like a
+       defect on the screen. A fixture in which the two editions AGREE cannot see
+       any of it, which is why this item's control uses a diverged one.
+
+       THE NULL PIN IS A STATE OF THE RECORD AND NOT A GAP (the same sentence
+       says so): a member rostered before the pin existed carries `version_sha`
+       null, and for that member the case's edition is the only reference there
+       is — which is also, exactly, the pre-CASE-5 world in which the two numbers
+       agreed. So the fallback is the OLD key, used only where there is no pin,
+       and an undiverged or legacy member renders precisely as it does today.
+
+       ONE HELPER RATHER THAN COPIES OF THE KEY, deliberately: the defect was
+       several sites spelling one rule, and several sites drift apart again.
+       `pubMemberKey` IS the rule and is the only place it is written.
+       `byId` deliberately answers to BOTH the hash and `bundle_id@edition`,
+       because the pinned and the unpinned member ask it different questions and
+       a row must be findable by whichever one its roster row can put. */
+    const pubMemberKey = (m, cs) => m && m.version_sha
+      ? String(m.version_sha)
+      : m.bundle_id + "@" + (cs ? cs.edition : m.edition);
     const byId = new Map();
-    for(const p of pub) byId.set(p.bundle_id + "@" + p.edition, p);
-    const inCase = new Set(members.map((m) => m.bundle_id + "@" + m.edition));
+    for(const p of pub){
+      byId.set(p.bundle_id + "@" + p.edition, p);
+      if(p.bundle_sha) byId.set(String(p.bundle_sha), p);
+    }
+    const inCase = new Set(members.map((m) => pubMemberKey(m, null)));
     const top = new Map();
     for(const cs of cases) top.set(cs.case_id, Math.max(Number(cs.edition || 1), Number(top.get(cs.case_id) || 0)));
     const rows = [];
     for(const cs of cases){
       const roster = members.filter((m) => m.case_id === cs.case_id && Number(m.edition) === Number(cs.edition))
                             .sort((a, b) => Number(a.ord) - Number(b.ord));
-      const waiting = roster.filter((m) => !byId.has(m.bundle_id + "@" + cs.edition));
+      const waiting = roster.filter((m) => !byId.has(pubMemberKey(m, cs)));
       /* WHETHER THE EDITION IS FINISHED IS THE PLANE'S OWN RECORDED FACT, not
          one derived here: the container is assembled the instant the last member
          ratifies, so `manifest_sha` is the edition's completion, full stop.
@@ -15708,7 +15748,7 @@ async function pubList(fromNav){
          bar for the case: `required_strength` is frozen into a finding's bytes
          and two members may have been held to different standards. */
       const findingRows = roster.map((m) => {
-        const row = byId.get(m.bundle_id + "@" + cs.edition);
+        const row = byId.get(pubMemberKey(m, cs));
         /* THE MEMBER'S OWN RATIFIED ROW IS THE SOURCE (REC-49). `row.strength`
            and `row.required` are the pair and the bar frozen into the bytes that
            member signed — the same two the case page reads and the same two the
@@ -15756,7 +15796,14 @@ async function pubList(fromNav){
     /* AND THE RATIFIED BUNDLES THAT ARE IN NO CASE, which are not case files and
        are said to be exactly that rather than dropped or dressed up as one. */
     for(const p of pub){
+      /* CORRECTED 2026-09-10 (UI-56): A ROW IS "IN A CASE" IF ANY ROSTER ROW
+         POINTS AT IT, and a roster row points with its PIN. Asking only
+         `bundle_id@edition` asked the roster's editions a question they stopped
+         being able to answer at CASE-5 — so a diverged member, already missing
+         from its own case above, was ALSO listed here as belonging to no case
+         at all. The same finding, twice on one page, contradicting itself. */
       if(inCase.has(p.bundle_id + "@" + p.edition)) continue;
+      if(p.bundle_sha && inCase.has(String(p.bundle_sha))) continue;
       /* CORRECTED 2026-08-05 (REC-49), NOT EXEMPTED. UI-29 stated four absences
          here in one breath and three of them are structural — a loose bundle
          genuinely has no case identity, no scope statement and no completeness

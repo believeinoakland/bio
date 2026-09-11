@@ -1795,3 +1795,19 @@ at HEAD; REGISTER_FLOOR 868→872 moved to the printed figure. `src/signpage.mjs
 as the claim promised — the render regenerates byte-identically. **For CONDUCT:** the FL-10
 QUEUE row and IC-70's RESOLUTION are yours; D-298's clause (1) is closed by this, clause (2)
 (the assembler refusal) and the coherent cut remain DIST's.
+
+## CLAIM 2026-09-10 UI (UI-56 — IC-66's delegation: the published index joins a roster row to its ratified row on the CASE's edition, and a diverged member misses SILENTLY)
+session: UI worker (worktree `.claude/worktrees/agent-a7734fd4d9baf1c20`, branch `worktree-agent-a7734fd4d9baf1c20`)
+opened: 2026-09-10
+paths:
+  - `civicos-ui/app.html` — **THE `pubList()` FUNCTION ONLY**, and inside it only the roster-to-ratified
+    JOIN: the `byId` map construction, the `inCase` set, the `waiting` filter, the per-member `row`
+    lookup, and the not-in-any-case loop's membership test. No other function, no markup, no CSS.
+  - `civicos-ui/test/publishedcase.test.mjs` — the index block (block 1) and the `publishedmanifest`
+    fixture rows (`CASE_MEMBERS`, `PUB_ROWS`, `CASE_ROWS`): the roster fixture is CORRECTED to the wire
+    shape the plane actually selects (`version_sha`, `role`) and gains a DIVERGED member. Existing
+    assertions are corrected at their site with a dated reason where the fixture's row count moves;
+    none is exempted.
+  **NOT** `bio-plane/src/**` — the plane already answers `version_sha` on `caseMembers[]` and states the
+  join rule in `publishedManifest().production`; this item is pure I3 CONSUMPTION and nothing on the wire
+  moves. **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground). **NOT** any other UI suite.
