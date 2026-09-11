@@ -66,6 +66,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { tmpdir } from "node:os";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -281,6 +282,12 @@ let SIGNED_SHA = null;
   t("a real case is published through the unchanged ceremony at edition 1 — the act CASE-2 will rework "
   + "is not touched by this item and must still work over the changed tables",
     [pub.ok, pub.edition], [true, 1]);
+  /* CASE-5b: THE CASE'S OWN SIGNATURE, which is what now writes `cases`,
+     `published_cases` and `published_case_members` — the three tables this suite
+     is about. `op=publish` authors the case document and commits none of them;
+     the member's own `op=ratify` below still publishes the FINDING. Two
+     ratifications, two signatures, two subjects. */
+  await ratifyCase(async (q, b) => rP(await POST(q, b)), pub, { dir, key: "ruth", token: RUTH });
 
   const liveSha = async () => ((await GET(`op=list&token=${RUTH}`)) || [])
     .find((b) => b.bundle_id === INQ)?.bundle_sha ?? null;

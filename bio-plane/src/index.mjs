@@ -3,8 +3,8 @@ import { livefire } from "./livefire.mjs";
 import { SETUP_HTML } from "./setup.mjs";
 import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
-import { runGate, GATE_VERSION } from "./gate.mjs";
-import { verifySshsig, ratifyStatement, NS_RATIFY } from "./sshsig.mjs";
+import { runGate, runCaseGate, GATE_VERSION } from "./gate.mjs";
+import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* The locator fence, taken from the catalog rather than restated: https only,
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
@@ -756,6 +756,25 @@ const OPS = {
      working capability, so REC-19's NEEDS/NON_ACTS totality neither gains nor
      loses a row. */
   caseflags:      { classes: null,                                 mutating: false },
+  /* CASE-5b / DEC-72: THE CASE-LEVEL SIGNING CEREMONY, and it is two ops
+     because reviewing and signing are two acts.
+
+     `casedocument` is UNGATED (`classes: null`) on op=publishedcase's own
+     reasoning and not a new one. A RATIFIED case document is signed published
+     bytes a stranger is entitled to check — it is the artifact the container
+     carries, and gating it would make the stranger-verification path depend on
+     this instance's goodwill, which is the one thing that path exists to refute.
+     AN UNRATIFIED one is working material and it is answered too, deliberately:
+     the answer says `ratified: false` in its own field, so what a reader learns
+     from an unsigned case document is that somebody started a ceremony, which is
+     exactly as much as the record knows. Nothing in it is a claim the record
+     stands behind until the signature is there, and it says so.
+
+     `caseratify` is GATED like `ratify`, and to the same classes: it is the
+     publication surface, and the registered signing key governs the authority on
+     top of the capability. No fifth capability token is minted. */
+  casedocument:   { classes: null,                                 mutating: false },
+  caseratify:     { classes: ["admin", "member", "probe"],           mutating: true  },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -1366,6 +1385,10 @@ const PROGRESSION_ACTIONS = ["connect", "connections", "progressiondefine", "pro
                              "proposedispose", "captureprogressions"];
 const SESSION_OPS = {
   member: new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+                   /* CASE-5b: signing the CASE DOCUMENT, beside signing a finding.
+                      A session op for `ratify`'s own reason — the attestation carries
+                      a member's name for as long as the record lasts. */
+                   "caseratify",
                    /* CPDF-10: attesting that a transcription matches the image is a
                       MEMBER act — a person's testimony, carrying their name for as
                       long as the record lasts. It is a session op before it is
@@ -1388,6 +1411,7 @@ const SESSION_OPS = {
                       and the store refuses everything else BY SHAPE (C-29.1). */
                    "aicredentialmint", "aicredentialrevoke"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+                   "caseratify",
                    "attesttext",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
@@ -1598,6 +1622,10 @@ const NEEDS = {
      key was doing the capability's job: a member with no publish reached
      op=ratify and was stopped only by not having a key. */
   ratify:           "publish",
+  /* CASE-5b: ratifying the CASE DOCUMENT is the same surface as ratifying a
+     finding — it is the act that commits what the group is publishing, one
+     altitude up. A member who may not publish may not sign a case either. */
+  caseratify:       "publish",
   /* REC-14: authoring a case carries the SAME capability as ratifying one, and
      deliberately not `contribute`. Concluding says what the record shows;
      publishing puts the group's name on it and states, in the group's voice,
@@ -2989,6 +3017,41 @@ export default {
         const fOut = await doAnswer(stub.fetch(`http://do/caseflags?${q}`));
         if (!fOut.answered) return storeSilent("caseflags");
         return json({ ok: true, result: fOut.result }, 200);
+      }
+
+      /* ===== CASE-5b / DEC-72: THE CASE-LEVEL SIGNING CEREMONY ================
+
+         THE READ. A member cannot sign what they have not read, and the container
+         manifest's constraint — *a case-level signature would be a signature over
+         something nobody reviewed* — is answered by this op existing and by the
+         document it hands back being the WHOLE document rather than a summary of
+         it. The sha in the answer is the sha the signature covers. */
+      if (op === "casedocument") {
+        const caseId = url.searchParams.get("case") || "";
+        const ed = url.searchParams.get("edition");
+        if (!caseId || !ed)
+          return json({ ok: false, reason: "MALFORMED",
+                        detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>" }, 400);
+        const out = await doAnswer(stub.fetch(
+          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`));
+        if (!out.answered) return storeSilent("casedocument");
+        const r = out.result;
+        /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
+           from the spread. D-240's detector grades a json() site by its first
+           boolean-shaped property, and an answer whose verdict arrives only
+           inside a spread reads as UNCLASSIFIED — which is a place this
+           detector'"'"'s own subject could hide. The spread still carries the
+           store'"'"'s own `ok`, so the two cannot disagree. */
+        if (!r?.ok) return json({ ok: false, ...r }, 404);
+        return json({ ok: true, ...r,
+                      /* THE STATEMENT TO SIGN, PRINTED. It is the exact bytes
+                         `caseRatifyStatement` builds, handed to the member so the
+                         signer page, the wizard and a member at a terminal all
+                         sign the same thing — the same service `op=ratify`'s own
+                         clients get, one altitude up. */
+                      sign: { namespace: NS_RATIFY,
+                              statement: new TextDecoder().decode(
+                                caseRatifyStatement(r.case_id, r.edition, r.doc_sha)) } });
       }
 
       if (op === "publishedcase" || op === "publishedbytes") {
@@ -5521,6 +5584,94 @@ export default {
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
 
+    /* THE SIGNATURE, AND THE COMMIT. Same order of operations as `op=ratify`,
+       deliberately: verify everything, run the catalog, then commit. What is
+       different is the SUBJECT — this act commits the CASE's own assertions, out
+       of the case document, which is the signature those facts had nowhere to
+       move to before this item. */
+    if (op === "caseratify") {
+      const body = await req.json().catch(() => null);
+      if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha
+          || typeof body?.sig !== "string")
+        return json({ ok: false, reason: "MALFORMED",
+                      detail: "caseratify requires caseId, edition (integer), expectedSha, and sig "
+                            + "(armored SSH signature over the case document's sha)" }, 400);
+
+      const factsOut = await doAnswer(stub.fetch(
+        `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
+        + `&edition=${encodeURIComponent(String(body.edition))}`));
+      /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
+         its whole block: BEFORE the commit a silence refuses the act outright,
+         because nothing has been written and 502's sentence — nothing here is a
+         statement about the record — is exactly true. */
+      if (!factsOut.answered) return storeSilent("caseratify/facts");
+      const facts = factsOut.result;
+      if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
+
+      if (facts.doc.doc_sha !== body.expectedSha)
+        return json({ ok: false, reason: "CASE_RATIFY_STALE",
+                      detail: "the case document has changed since it was reviewed; read it again and re-sign",
+                      expected: facts.doc.doc_sha, got: body.expectedSha,
+                      store: storeName, tokenClass: cls }, 409);
+      /* D-57: NO_SIGNERS IS INSTANCE-WIDE and the detail must never say "for
+         you" — the same sentence op=ratify carries, for the same reason. */
+      if (!facts.signers.length)
+        return json({ ok: false, reason: "NO_SIGNERS",
+                      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+                      store: storeName, tokenClass: cls }, 409);
+      const sv = await verifySshsig(body.sig,
+                                    caseRatifyStatement(facts.doc.case_id, facts.doc.edition, facts.doc.doc_sha),
+                                    NS_RATIFY, facts.signers.map((s) => s.key_b64));
+      if (!sv.ok)
+        return json({ ok: false, reason: "SIG_" + sv.reason,
+                      ...(sv.keyB64 ? { keyB64: sv.keyB64 } : {}),
+                      ...(sv.detail ? { detail: sv.detail } : {}),
+                      store: storeName, tokenClass: cls }, 403);
+      const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
+
+      /* THE CATALOG, over the bytes the signature covers and over nothing else.
+         `priorCase` is C-21.1's fact at case altitude and comes down with the
+         rest of the facts from the one place that has the rows — passing null
+         would not soften C-21.1, it would blind it. */
+      const fm = parseFrontmatter(facts.doc.text).data || {};
+      const gate = runCaseGate({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
+                                 fm, priorCase: facts.priorCase
+                                   ? { edition: facts.priorCase.edition,
+                                       statement: facts.priorCase.completeness
+                                         ? (JSON.parse(facts.priorCase.completeness).statement ?? null) : null,
+                                       bias_acknowledgement: facts.priorCase.bias_acknowledgement ?? null }
+                                   : null });
+      if (!gate.ok)
+        return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
+                      findings: gate.findings, store: storeName, tokenClass: cls }, 409);
+
+      const out = await doAnswer(stub.fetch("http://do/caseratify", {
+        method: "POST", body: JSON.stringify({
+          caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
+          sigArmored: body.sig, attestorKey: sv.keyB64,
+          attestorMember: attestor?.member_id ?? sessMember, gateVersion: gate.gateVersion,
+        }) }));
+      if (!out.answered) return storeSilent("caseratify/commit");
+      const r = out.result;
+      if (!r?.ok)
+        return json({ ok: false, ...(r && r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: r }),
+                      store: storeName, tokenClass: cls }, 409);
+      return json({ ok: true, ...r, gateVersion: gate.gateVersion,
+                    attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+                    /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
+                       INFERRED FROM AN EMPTY LIST. The case is committed and the
+                       members still sign their own bytes, because the finding is
+                       the unit of truth — the container becomes assemblable when
+                       the last of them lands. */
+                    next: r.awaiting?.length
+                      ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify `
+                        + `(op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a `
+                        + `container when the last of them lands.`
+                      : "the case is committed and every member finding is already ratified at the version "
+                        + "this case pinned.",
+                    store: storeName, tokenClass: cls });
+    }
+
     /* Ratification: the act that moves a bundle into the published corpus.
        The authority is the SSHSIG over the canonical statement, verified
        against the registered active signers; the token or session only
@@ -5709,51 +5860,28 @@ export default {
         author: ratifiedFm.completeness?.author ?? null,
         at: ratifiedFm.completeness?.at ?? null,
       } : null;
-      /* REC-44 / DEC-44: WHICH CASE THIS FINDING WAS PUBLISHED IN, AND WITH
-         WHOM — read out of the RATIFIED BYTES like the edition beside it, and
-         out of nothing else. op=publish wrote all three into every member's
-         document before the sha was taken, so the signature covers them: a case
-         identity, a scope statement or a roster that is not inside the hash the
-         member signed is one this plane would be asserting on their behalf. */
-      const caseId = isCase && typeof ratifiedFm.case_id === "string" && ratifiedFm.case_id !== "null"
-        ? ratifiedFm.case_id : null;
-      const caseFindings = caseId && Array.isArray(ratifiedFm.case_findings) ? ratifiedFm.case_findings : null;
-      const caseScope = caseId && typeof ratifiedFm.case_scope === "string" ? ratifiedFm.case_scope : null;
-      /* CASE-2 / DEC-72: WHOSE PRODUCTION THIS CASE IS, AND WHICH MEMBERS IT
-         RESTS ON — read out of the RATIFIED BYTES exactly like the roster and
-         the scope beside them, and out of nothing else. The store commits
-         `cases.project_id` and `published_case_members.role` from these two and
-         refuses a member whose bytes disagree with one already ratified, which
-         is only meaningful because they came from inside the hash the member
-         signed rather than off this request. */
-      const caseProject = caseId && typeof ratifiedFm.case_project === "string"
-        && ratifiedFm.case_project !== "null" ? ratifiedFm.case_project : null;
-      const caseRoles = caseId && Array.isArray(ratifiedFm.case_roles) ? ratifiedFm.case_roles : null;
-      /* CASE-5 / DEC-72: THE CASE'S EDITION AND THE CASE'S BAR, out of the
-         RATIFIED BYTES exactly like the roster, the scope and the project beside
-         them, and out of nothing else.
-         `edition` above is now THE MEMBER'S OWN — that is the artifact flip, and
-         the two numbers were one field until this item. The store keys
-         `published_bundles` on the first and `published_cases` /
-         `published_case_members` on the second, and a case edition taken off the
-         request would place a member into an edition nobody signed for.
-         `required_strength` is the block op=publish stamps from the publishing
-         project at act time. It has always been in these bytes; what is new is
-         that the store commits it CASE-SIDE, where it is one fact under the same
-         divergence refusal as the scope, rather than only per member — a bar is
-         the CASE's property (clause 2) and two members ratifying either side of
-         a project's bar moving used to give one case two standards. */
-      const caseEdition = caseId && Number.isInteger(ratifiedFm.case_edition)
-        ? ratifiedFm.case_edition : null;
-      const caseBar = caseId && ratifiedFm.required_strength
-        && typeof ratifiedFm.required_strength === "object" ? ratifiedFm.required_strength : null;
-      /* REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read out of the
-         RATIFIED BYTES exactly like the scope beside it and out of nothing
-         else. A disclosure this plane took off the request rather than out of
-         the signed document would be one we made on the group's behalf — and a
-         reader has no way to tell the difference, which is precisely why it
-         must come from inside the hash the member signed. */
-      const caseBiasAck = caseId ? biasAcknowledgementOf(ratifiedFm) : null;
+      /* ===== CASE-5b / DEC-72: EIGHT CASE READS LEFT THIS BLOCK ==============
+
+         `caseId`, `caseFindings`, `caseScope`, `caseProject`, `caseRoles`,
+         `caseEdition`, `caseBar` and `caseBiasAck` were all read out of THIS
+         MEMBER'S ratified frontmatter and handed to `publish()`, which committed
+         `cases`, `published_cases` and the roster from them. That was the only
+         way to get a case fact inside a signature, and REC-44's sentence for it
+         was exact: *a case identity, a scope statement or a roster that is not
+         inside the hash the member signed is one this plane would be asserting on
+         their behalf.*
+
+         THE SENTENCE IS UNCHANGED AND THE HASH IS A DIFFERENT ONE NOW. Those
+         facts are committed by `op=caseratify`, out of the CASE DOCUMENT a member
+         reviewed and signed, before any member ratifies. So this act has no case
+         fact to read and none to pass: it commits one finding's own published
+         row, and the store resolves which case that row belongs to from the PIN
+         the case froze — `published_case_members.version_sha = bundle_sha`,
+         CASE-3's column answering CASE-3's question.
+
+         WHAT STAYED IS WHAT WAS ALWAYS THE FINDING'S — its own edition, its
+         frozen strength pair, its frozen completeness. Read out of the ratified
+         bytes exactly as before, and out of nothing else. ==================== */
 
       /* DEC-34 as REC-44 corrects it: THE CONTAINER IS THE CASE'S, and it is
          therefore NOT BUILT HERE. It used to be, because a case was assumed to
@@ -5840,8 +5968,11 @@ export default {
              control plane must not invent one for it. */
           ...(isCase ? { edition } : {}), title: ratifiedFm.title ?? null,
           completeness: frozenCompleteness, strength: frozenStrength,
-          required: isCase ? (ratifiedFm.required_strength ?? null) : null,
-          caseId, caseScope, caseFindings, caseBiasAck, caseProject, caseRoles, caseEdition, caseBar,
+          /* CASE-5b: `required` IS NOT SENT ANY MORE. The bar is the CASE's
+             (DEC-72 clause 2) and it left these bytes with the rest of the case,
+             so there is nothing here to send. `publish()` reads it from
+             `published_cases.bar` — committed from the case document a member
+             signed — which is the same doctrine reading a different signature. */
           group: ratifiedFm.group ?? null,
           edges,
           shas: shas.map(({ text, ...s }) => s),
@@ -5921,10 +6052,60 @@ export default {
              The whole premise is that it is readable without our cooperation, so
              the only place that ambiguity could be resolved is the one place the
              reader cannot reach. */
-          format: "bio-case-container/4",
+          /* CASE-5b / DEC-72 bumps 4 -> 5, AND THIS BUMP IS LOAD-BEARING IN A WAY
+             THE OTHERS WERE NOT. `/4` and every version before it carried the
+             case's scope, roster, partition, bias acknowledgement and bar as
+             MANIFEST FIELDS — and a stranger could check every one of them,
+             because the same facts were inside each member's SIGNED bundle.md.
+             That is the property REC-44 bought and it is why the fields could be
+             taken on trust here: the manifest was a convenience over material
+             the reader could verify.
+
+             CASE-5b removes those facts from member bytes. A `/4`-shaped
+             manifest built after this item would carry the same fields with
+             NOTHING BEHIND THEM — assertions this instance makes about itself,
+             checkable against nothing, which is precisely the ambiguity the
+             format comment above says this artifact exists to refute. So `/5`
+             carries `case_document`: the bytes, their hash, and the armored
+             signature a member made over them, verifiable with ssh-keygen
+             against a key the artifact names.
+
+             WITHOUT THE VERSION MOVE a reader could not tell a `/4` container
+             whose case facts were member-signed from a `/4` container whose case
+             facts were nobody's. That distinction is the entire difference
+             between this record and a press release. */
+          format: "bio-case-container/5",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
+          /* THE SIGNED CASE DOCUMENT, WHOLE. The text is carried rather than a
+             digest of it for the same reason every member's bundle.md is carried
+             rather than named: a stranger must be able to RE-HASH what they hold
+             and check the signature over it themselves. A digest alone would let
+             them detect a mismatch and never let them read what was signed.
+
+             THE STATEMENT IS PRINTED IN ASCII, which is CASE-5's own correction
+             arriving on the new field: `caseRatifyStatement()` returns a
+             Uint8Array, and `JSON.stringify` renders one as an object of byte
+             indices — so a `/4` container told a stranger to verify over a
+             statement printed as numbered integers. Decoded here, at the site,
+             rather than by changing what the statement builder returns. */
+          case_document: cs.document ? {
+            doc_sha: cs.document.doc_sha,
+            text: cs.document.text,
+            gate_version: cs.document.gate_version,
+            ratified_at: cs.document.ratified_at,
+            attestor: cs.document.attestor,
+            signature: { namespace: NS_RATIFY,
+                         statement: new TextDecoder().decode(
+                           caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)),
+                         /* `armored`, the SAME field name every member's
+                            signature already uses twelve lines down. A second
+                            spelling for one thing in one artifact is how a
+                            consumer comes to handle only the half it happened to
+                            meet first. */
+                         armored: cs.document.sig_armored },
+          } : null,
           /* DEC-72 clause 2, INSIDE THE ARTIFACT THAT TRAVELS. Whose production
              this case is, and the standard of evidence it was held to. The
              design doc's own list of what the CASE artifact freezes names the

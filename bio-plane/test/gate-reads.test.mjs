@@ -1000,6 +1000,19 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "is no working material for a missing predicate to leak. Gating it would withhold from a member "
       + "exactly what the published record already tells anybody — and the whole point of a flag that is "
       + "SET AND NEVER CLEARED is that it stays visible until an owning project acts.",
+    /* CASE-5b / DEC-72, 2026-09-10: the CASE DOCUMENT — the thing a member signs
+       when what is being asserted is the case's own. */
+    casedocument: "PUBLISHED PROJECTION (CASE-5b / DEC-72), on op=publishedcase's own reasoning and "
+      + "not a new one. A RATIFIED case document IS signed published bytes: it is the artifact the "
+      + "container carries and the one a stranger re-hashes to check the case's signature, so gating "
+      + "it would make the stranger-verification path depend on this instance's goodwill — which is "
+      + "the single claim that path exists to refute. An UNRATIFIED one is answered too, deliberately, "
+      + "and it says `ratified: false` IN ITS OWN FIELD: what a reader learns from an unsigned case "
+      + "document is that somebody started a ceremony, which is exactly as much as the record knows. "
+      + "Nothing in it is a claim the record stands behind until the signature is there, and the answer "
+      + "says so rather than leaving the reader to infer it from a null. It reads one table written "
+      + "only by op=publish and op=caseratify and touches no working material, so there is no working "
+      + "material for a missing predicate to leak.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "

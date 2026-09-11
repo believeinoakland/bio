@@ -69,6 +69,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publishedcase ---");
@@ -121,9 +122,16 @@ const anonBytes = async (args) => await anonRaw(`op=publishedbytes&${args}`);
    AUTHORED designation for every member, defaulted here for the same reason. This
    suite's subject is the PUBLIC READ PATH; the new rules are asserted by name in
    `caseproduction.test.mjs`. */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.",
-    project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. Not run
+   when publish REFUSED, so the refusal arms stay refusals rather than crashes. */
+const publish = async (tok, body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${tok}`,
+    { scope: "Whether the signature question was properly handled, on the documents in hand.",
+      project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "vera", token: tok });
+  return r;
+};
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -535,7 +543,7 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
      failure mode this assertion exists to prevent. */
   t("the manifest itself answers by its own hash, to anyone",
     [m.status, manifest.format, manifest.case, manifest.edition],
-    [200, "bio-case-container/4", e1.caseId, 1]);
+    [200, "bio-case-container/5", e1.caseId, 1]);
   t("the manifest names the case's SCOPE and carries EVERY finding, each with its own signature and its own pair",
     [typeof manifest.scope, manifest.findings.map((x) => x.bundle_id),
      manifest.findings.every((x) => x.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----")),

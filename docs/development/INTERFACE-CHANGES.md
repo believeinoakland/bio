@@ -5002,3 +5002,115 @@ a battery green on an artifact nobody ships from) FAILS instead of shipping.
 
 **PROPOSED, 2026-09-10.** The guard half is FL-10's to land; the release half is DIST's and
 nothing here builds against it. **The version bump and the RESOLUTION are CONDUCT's.**
+
+---
+
+## IC-71 · I3 + I5: THE CASE-LEVEL SIGNING CEREMONY — a CASE DOCUMENT a member reviews and signs (`op=casedocument` + `op=caseratify`, one new table `case_documents`, catalog family C-41), and then the DELETION it was the precondition for: a finding's bytes STOP NAMING A CASE (`case_id`, `case_edition`, `case_project`, `case_scope`, `case_findings`, `case_roles`, `bias_acknowledgement`, `required_strength` all leave member frontmatter); container to `bio-case-container/5` · PROPOSED 2026-09-10 (CASE-5b, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interfaces:** **I3** (op contracts) and **I5** (schema), owner `RECORD`.
+- **Proposer:** CASE-5b (session `case5b-case-signing`), 2026-09-10.
+- **Id PRE-MINTED BY CONDUCT at the CASE-5b spawn** — not minted in this worktree. The
+  IC-64 lesson enacted rather than remembered: on 2026-08-10 two parallel workers each
+  minted `IC-64` because `mintid` derives its floor from ids MENTIONED IN PROSE and
+  neither branch could see the other's file.
+- **Consumers to answer:** `UI` (the published case page and the finding view), `DIST`
+  (the container format travels in a release), `CONDUCT` (the version bump).
+
+### The change, in one sentence
+
+A case's own assertions are committed from a CASE DOCUMENT that a member reviews and
+signs, instead of from N copies stamped into N members' signed bytes — so a finding's
+bytes stop naming a case, which is the half of the CASE-5 bullet that CASE-5 could not
+reach.
+
+### WHY THE ORDER IS CEREMONY-FIRST-DELETION-SECOND, because the shape of this row is the argument
+
+CASE-5 measured the wall and stated it rather than working around it: *every case fact
+this plane commits is committed FROM THE SIGNED BYTES AND FROM NOTHING ELSE*
+(`#publishEdges`' doctrine, restated at seven sites in `publish()`), **and there was no
+signature over a case for those facts to move to.** Deleting the keys first would have
+left the plane committing a group's case assertions from an UNSIGNED REQUEST — the
+attribution class this record refuses everywhere.
+
+The container manifest already stated the constraint that shaped the answer, in its own
+words: *"a case-level signature would be a signature over something nobody reviewed."*
+So the thing signed is **not** a synthesised summary of the roster. It is the publisher's
+own authored assertions — the scope, the completeness statement, each exclusion with its
+reason, the subject position and its justification, the bias acknowledgement, the
+load-bearing partition, the bar — every one of them an argument a member typed at
+`op=publish`, assembled into a document with a frontmatter half the gate reads and a
+prose half a person reads. Nothing in it is composed, summarised or inferred by this
+plane, and the suite asserts that by reconstructing the document's every authored
+sentence from the arguments the act was given.
+
+### The acts, in order
+
+| act | what it does | who |
+| --- | --- | --- |
+| `op=publish` | AUTHORS the case document (and commits **nothing** case-side). Promotes each member to a new version and PINS every one of them, by hash, in that one document. | project owner |
+| `op=casedocument` | reads it back whole, with the exact statement to sign. **Ungated**, on `op=publishedcase`'s reasoning. | anyone |
+| `op=caseratify` | verifies the SSHSIG, runs the catalog (C-41), and commits `cases`, `published_cases` and `published_case_members` **from the signed document**. | a member with `publish` |
+| `op=ratify` | unchanged in shape: each member signs its OWN bytes, because the finding is the unit of truth. | each member |
+
+**THE ORDERING IS NEW AND IT REMOVES AN INVENTION.** The roster used to be written by
+whichever member ratified FIRST — at which moment the other members had signed nothing,
+which is exactly why CASE-3 had to pin one member at a time and said so at the site:
+*"writing all N pins there would mean inventing N-1."* The case document names all N
+pins in one authored statement, so clause 3's freeze (*"publication pins versions, like
+a commit"*) is now a single act rather than N assembled over time.
+
+### MEASURED CONSUMER IMPACT, taken BEFORE building rather than after
+
+Grep over `bio-plane/src`, `bio-plane/test`, `bio-plane/checks`, `bio-plane/scripts`,
+`civicos-ui`, `newgroup`, `docprofile`, `pdf-worker`, `agent-worker`, `tools`; built
+copies (`**/dist/**`) and `release/**` excluded structurally.
+
+| reader | what it reads | affected? |
+| --- | --- | --- |
+| `civicos-ui/app.html` (`pubIndex`, `pubBarHtml`) | `cs.case_id`, `m.case_id`, `row.required` | **WIRE FIELDS, NOT FRONTMATTER — and they do NOT move.** `cases[].case_id` and `caseMembers[].case_id` come from `published_cases`/`published_case_members`, which are still written, just from a different signature. `published_bundles.required` is still written and still carries the same block — sourced now from `published_cases.bar` (itself committed from the signed case document) instead of from the member's own stamp. **NO UI CODE CHANGE IS OWED BY THIS ROW.** |
+| `civicos-ui/app.html` comments at ~15086 and ~15708 | prose: *"`required_strength` is frozen into the finding's own bytes and two findings of one case may have been held to different standards"* | **STALE PROSE, and it was already half-stale after CASE-5.** DEC-72 clause 2 removed the possibility those sentences describe. **DELEGATED to CASE-6**, which owns the published case page and is where the per-finding bar should become the CASE's bar on the surface. Filed in `CLAIMS.md`. |
+| `newgroup/src/release.mjs` | every one of the eight keys | **BUILT COPY — the embedded plane source. ZERO hand-maintained readers.** DIST regenerates it. |
+| `bio-plane/checks/bio-checks.mjs` | `isCaseMemberBytes`, `caseEditionClaimed`, `checkPublishedExtension`'s six case arms | **CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there. The six arms are REHOMED to `checkCaseDocument` (C-41), not deleted — asserted by NAME on both sides of the move, because moving a check is the shape a lost check wears. |
+| `bio-plane/src/index.mjs` `op=ratify` | eight case reads out of the ratified frontmatter | removed; the relation comes off the PIN. |
+| `bio-plane/src/store.mjs` `publish()` | eight case parameters | removed from the SIGNATURE rather than ignored — an argument a caller can still pass is one a caller will eventually believe is read. |
+| the CASE CONTAINER | `bio-case-container/4` | **→ `/5`, and this bump is load-bearing in a way the others were not.** `/4`'s case fields were a convenience over material the reader could verify inside each member's signed bundle.md. After this item that material is not there, so a `/4`-shaped manifest built today would carry the same fields with NOTHING BEHIND THEM. `/5` carries `case_document` — the bytes, the hash, and the armored signature — so the stranger is back where they were: holding bytes somebody signed. Without the bump a reader could not tell a `/4` whose case facts were signed from a `/4` whose case facts were nobody's. |
+| `bio-plane/test/*` (9 suites driving `op=publish` then `op=ratify`) | the ceremony is a new step between them | one shared fixture, `test/caseceremony.mjs`, on `publishingproject.mjs`'s precedent and for its reason (nine inline copies of one ceremony is the shape this repo keeps paying for). **CASE-5b's own suite does NOT use it** and signs inline, so helper and subject share no code path. |
+| `docprofile/`, `pdf-worker/`, `tools/`, `agent-worker/`, `release/` | none of the moving fields | **ZERO.** |
+
+### The schema half (I5)
+
+ONE new table, `case_documents (case_id, edition, doc_sha, text, authored_at, authored_by,
+sig_armored, attestor_key, attestor_member, gate_version, ratified_at)`, placed beside its
+`cases` sibling and BEFORE the `host_governor` block. No existing table changes shape.
+
+**`purge` IS TOUCHED, AND IT IS CASE-1'S OWN REVERSAL CONDITION ARRIVING RATHER THAN A NEW
+JUDGEMENT.** CASE-1 exempted `cases` and wrote the condition that would reverse it at the
+site: *"if a later item lets a case exist as a DRAFT before publication, revisit, because
+draft data surviving a purge is D-113 pointed the other way."* **This is that later item** —
+a case document is authored unsigned and stays that way until `op=caseratify`. So the split
+is BY SIGNATURE and not by table: the whole-store purge clears UNRATIFIED case documents
+(working data) and leaves RATIFIED ones standing (the signed bytes `published_cases` was
+committed from, which nothing else holds). `cases` keeps its exemption unchanged, because it
+is still written only at ratification and no draft ever reaches it. **Stated plainly because
+the D-113 check cannot see it:** hygiene's structural pass matches `DELETE FROM
+case_documents` and scores the table covered without reading the WHERE clause, so the suite
+DRIVES the split instead of asserting it.
+
+### What is REFUSED, by name
+
+- **`CASE_UNSIGNED`** — the arm this item exists for. A commit of a case assertion that
+  arrives with no armored signature and no attestor key is refused by name. A silent skip
+  would be indistinguishable from a case that had nothing to write.
+- **`CASE_RATIFY_STALE`** — the document moved since it was reviewed.
+- **`CASE_EDITION_ALREADY_RATIFIED`** — a second, different attestation over one edition.
+- **`CASE_PRODUCTION_DIVERGED`** — kept from CASE-2, asked once instead of per member.
+- **`CASE_ASSERTION_DIVERGED`** — **KEPT AND RE-AIMED.** It now compares what the CASE's
+  signer asserted against what THIS member's own signed bytes froze. That is a real
+  disagreement between two signers.
+- `CASE_MEMBERSHIP_DIVERGED`, `CASE_ROLES_DIVERGED` and `CASE_ROSTER_EXCLUDES_SELF`
+  **are withdrawn, and the reason is not that a fence was lowered.** All three existed to
+  notice that N COPIES OF ONE FACT had stopped agreeing. There is one copy now and it
+  cannot disagree with itself: the shapes they refused are unrepresentable rather than
+  refused, which is the outcome this record reaches for everywhere else.
+
+**PROPOSED, 2026-09-10.** The version bump and the RESOLUTION are CONDUCT's.

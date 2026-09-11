@@ -51,6 +51,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- multifinding ---");
@@ -95,8 +96,32 @@ const anonBytes = async (args) => await anonRaw(`op=publishedbytes&${args}`);
    exactly, which is why `allLoadBearing` derives from the body rather than
    naming ids. This suite's subject is the SET and the container; the new rules
    are asserted by name in `caseproduction.test.mjs`. */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER. `op=publish` now AUTHORS a case
+   document and commits nothing case-side; the case's own assertions are committed
+   when a member SIGNS it (op=caseratify). Every assertion below is about the
+   state after the ceremony, so the ceremony runs here where a reader can see it.
+   Deliberately NOT run when publish REFUSED — the refusal arms below would
+   otherwise become fixture crashes. `casesign.test.mjs` owns the ceremony itself
+   and shares no code path with this helper. */
+const publish = async (tok, body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${tok}`,
+    { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "wren", token: WREN });
+  return r;
+};
+/* `sign: false` LEAVES THE CEREMONY UNPERFORMED, which is a real and reachable
+   state of the record — a case authored and not yet signed — and block 2b drives
+   the index's posture toward it rather than asserting the absence of an id
+   nothing ever created. An absence that costs nothing to produce is not
+   evidence. */
+const caseSign = async (pub) =>
+  ratifyCase(async (q, b) => rP(await POST(q, b)), pub, { dir, key: "wren", token: WREN });
+/* CASE-5b: the CASE DOCUMENT, read back through the ANONYMOUS surface — no
+   token, because `op=casedocument` is ungated on `op=publishedcase`'s reasoning
+   and because a stranger is exactly who this document exists for. */
+const caseDocOf = async (caseId, edition) =>
+  rP(await GET(`op=casedocument&case=${encodeURIComponent(caseId)}&edition=${edition}`));
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -344,18 +369,47 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
     [await stateOf(FIND_A), await stateOf(FIND_B)], ["concluded", "concluded"]);
 
   const [mdA, mdB] = [await imageOf(FIND_A), await imageOf(FIND_B)];
-  /* THE CASE IS IN THE BYTES EACH MEMBER SIGNS, in every member and not in one
-     designated one: a stranger holding ONE finding must be able to read which
-     case it was published in, what that case was about and what else it rests
-     on, without contacting this instance (DEC-44 determination 3). */
-  t("every member carries the case id, the scope and the WHOLE roster in the bytes it will sign",
-    [mdA, mdB].map((md) => [new RegExp(`^case_id: ${e1.caseId}$`, "m").test(md),
-                            md.includes(`case_scope: "${SCOPE1}"`),
-                            new RegExp(`^case_findings: \\[${FIND_A}, ${FIND_B}\\]$`, "m").test(md),
-                            /^edition: 1$/m.test(md)]),
-    [[true, true, true, true], [true, true, true, true]]);
-  t("and the completeness assertion is the CASE's — one claim, carried by both members",
-    [mdA.includes(`statement: "${STMT1}"`), mdB.includes(`statement: "${STMT1}"`)], [true, true]);
+  const doc1 = await caseDocOf(e1.caseId, 1);
+  /* ==== CORRECTED 2026-09-10 BY CASE-5b UNDER DEC-72, NEVER EXEMPTED, AND THE
+     OLD ASSERTION WAS RIGHT FOR THE FORMAT IT WAS WRITTEN AGAINST. ============
+
+     IT READ: every MEMBER carries `case_id`, `case_scope` and the whole
+     `case_findings` roster in the bytes it will sign — *"a stranger holding ONE
+     finding must be able to read which case it was published in, what that case
+     was about and what else it rests on, without contacting this instance"*
+     (DEC-44 determination 3). That property is real and it is why REC-44 wrote
+     the case into every member: a finding's signature was the ONLY signature in
+     the system, so N copies inside N signatures was the only way to get a case
+     fact inside one at all.
+
+     WHY IT IS WRONG NOW: CASE-5b mints the signature those facts were always
+     about. The case's identity, scope and roster are signed ONCE, in the CASE
+     DOCUMENT a member reviews and ratifies, and they are no longer in a member's
+     frontmatter. Leaving this arm as it was would have it demanding a format the
+     ruling deleted.
+
+     THE PROPERTY IS NOT LOOSENED AND THAT IS WHAT THIS ARM NOW MEASURES. The
+     stranger is asked to do exactly what they were asked before — read the case
+     without contacting this instance — and the same three facts are demanded, in
+     the same spellings, off bytes a member SIGNED. What is asserted beside them
+     is the half that is genuinely new: the member's own bytes carry NONE of it
+     any more, so there is one authority and not N. */
+  t("the CASE DOCUMENT carries the case id, the scope and the WHOLE roster in the bytes a member signs",
+    [new RegExp(`^case_id: ${e1.caseId}$`, "m").test(doc1.text),
+     doc1.text.includes(`case_scope: "${SCOPE1}"`),
+     new RegExp(`^case_findings: \\[${FIND_A}, ${FIND_B}\\]$`, "m").test(doc1.text),
+     doc1.ratified],
+    [true, true, true, true]);
+  t("and NO member's bytes name the case any more — one authority for the case's facts, not N copies held together by divergence refusals",
+    [mdA, mdB].map((md) => ["case_id:", "case_scope:", "case_findings:", "case_roles:",
+                            "case_project:", "case_edition:", "bias_acknowledgement:",
+                            "required_strength:"].filter((k) => md.includes(k))),
+    [[], []]);
+  t("what a member's bytes still carry is its OWN edition on its own chain",
+    [/^edition: 1$/m.test(mdA), /^edition: 1$/m.test(mdB)], [true, true]);
+  t("and the completeness assertion is the CASE's — one claim, in the case document and in both members' own frozen copies",
+    [doc1.text.includes(`statement: "${STMT1}"`),
+     mdA.includes(`statement: "${STMT1}"`), mdB.includes(`statement: "${STMT1}"`)], [true, true, true]);
   /* REC-47 / DEC-46 (a): THE ALTITUDE, and this suite is the only place it can
      be asserted, because it is the only one with a case of more than one
      finding. The bias acknowledgement is a CASE claim: ONE acknowledgement,
@@ -368,9 +422,20 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
      A case whose findings came from DIFFERENT source biases is DEC-46 (3)'s
      case, and it lands as SEPARATE projects rather than as one case with N
      lenses. */
-  t("THE ALTITUDE: the bias acknowledgement is the CASE's — ONE claim, byte-identical in both members",
-    [mdA.includes(`bias_acknowledgement: "${BACK1}"`), mdB.includes(`bias_acknowledgement: "${BACK1}"`)],
-    [true, true]);
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. The ALTITUDE argument above
+     is untouched and is in fact what this item enacted: the acknowledgement is a
+     CASE claim, not a per-finding one. The old arm proved that by demanding the
+     sentence be BYTE-IDENTICAL in both members — which was the strongest
+     available evidence while the only place to put it was inside each member.
+     Now there is one copy, so "byte-identical in both" is not a property the
+     record can even fail to have: it is asserted where the claim now lives, and
+     the complement — that no member carries one — is asserted above. A test for
+     an equality that is true by construction is exactly the equality that costs
+     nothing to produce. */
+  t("THE ALTITUDE: the bias acknowledgement is the CASE's — ONE claim, in the case document a member signed",
+    [doc1.text.includes(`bias_acknowledgement: "${BACK1}"`),
+     mdA.includes("bias_acknowledgement:"), mdB.includes("bias_acknowledgement:")],
+    [true, false, false]);
   t("and the ACT answers ONE acknowledgement for the case, not one per finding",
     [e1.bias_acknowledgement, e1.findings.some((f) => "bias_acknowledgement" in f)], [BACK1, false]);
 
@@ -498,7 +563,7 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
     [manifest.format, manifest.case, manifest.edition,
      manifest.findings.map((f) => f.bundle_id),
      manifest.findings.every((f) => f.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----"))],
-    ["bio-case-container/4", CASE_ID, 1, [FIND_A, FIND_B], true]);
+    ["bio-case-container/5", CASE_ID, 1, [FIND_A, FIND_B], true]);
   /* CASE-5, ADDED RATHER THAN CORRECTED: this suite's two members publish at the
      SAME case edition, so their own editions and their case's agree — which is
      the SLAVED shape, still perfectly legal and now one case among two. Pinned
@@ -584,18 +649,56 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
     [false, true, false, true]);
 }
 
-/* ============================== 2b. THE ROSTER AND THE ASSERTION ARE WHAT EACH MEMBER SIGNED */
-console.log("\n--- 2b. two members who disagree about the case are REFUSED, never reconciled ---");
+/* ============================== 2b. THE ROSTER AND THE ASSERTION ARE WHAT SOMEBODY SIGNED */
+console.log("\n--- 2b. a member cannot assert the case, and the one divergence that is still real is REFUSED ---");
 {
-  /* WHY AN ADVERSARY IS NEEDED HERE AT ALL, stated because the first version of
-     this suite did NOT have one and the negative control found that rather than
-     review: every member of a case published by op=publish carries the same
-     roster and the same assertion BY CONSTRUCTION, so the divergence refusals
-     could be deleted outright with all of blocks 1-5 still green. That is the
-     inbox-grammar failure mode exactly — a suite testing something else because
-     every input it generates is well-formed. So the disagreement is
-     MANUFACTURED, through op=promote's hand-written door, which is the one route
-     a document can reach `published` without this act having written it. */
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b UNDER DEC-72, NEVER EXEMPTED, AND THE
+     BLOCK IT REPLACES WAS RIGHT ABOUT EVERYTHING EXCEPT WHAT THE FORMAT WOULD
+     BECOME. =================================================================
+
+     WHAT IT USED TO DO, AND WHY IT EXISTED AT ALL — the note is kept verbatim
+     because it is the best sentence in this suite: *"every member of a case
+     published by op=publish carries the same roster and the same assertion BY
+     CONSTRUCTION, so the divergence refusals could be deleted outright with all
+     of blocks 1-5 still green. That is the inbox-grammar failure mode exactly —
+     a suite testing something else because every input it generates is
+     well-formed. So the disagreement is MANUFACTURED, through op=promote's
+     hand-written door, which is the one route a document can reach `published`
+     without this act having written it."* Three adversaries followed: one lying
+     about the ROSTER (CASE_MEMBERSHIP_DIVERGED), one about the SCOPE, one about
+     the BIAS ACKNOWLEDGEMENT (both CASE_ASSERTION_DIVERGED).
+
+     WHY THAT IS NOW THE WRONG TEST, and it is not that a fence was lowered. All
+     three refusals existed to notice that **N COPIES OF ONE FACT had stopped
+     agreeing** — which was a reachable defect precisely because the case's
+     identity, roster, scope, partition, project and bias acknowledgement lived
+     inside N members' frontmatter. CASE-5b signs them ONCE, in the case
+     document, and REFUSES them in a member's bytes outright. There is one copy
+     and it cannot disagree with itself: the adversaries are not refused, they
+     are UNREPRESENTABLE, which is the outcome this record reaches for
+     everywhere else and is strictly stronger than a refusal.
+
+     SO THE SUBJECT OF THIS BLOCK MOVED WITH THE DEFECT, and the block is kept
+     rather than deleted because the question it asks is still live: can a
+     hand-written document force its way into somebody else's case through
+     op=promote's door? It is now asked of the door that exists.
+
+       (a) THE LIE IS REFUSED AT THE GATE, BY NAME, PER KEY. The same
+           hand-written bytes the old adversary 1 used — a member's frontmatter
+           naming another case's id, scope, roster and acknowledgement — are
+           refused by C-2.8, and the refusal names EVERY key it found rather
+           than the first. That is the format closing the route, measured rather
+           than argued.
+       (b) AND THE CASE IS UNMOVED. Whatever a member writes in its own bytes,
+           the case edition still holds exactly the two findings whose versions
+           the case document PINNED.
+       (c) THE ONE DIVERGENCE THAT IS STILL REAL IS STILL REFUSED BY NAME.
+           `CASE_ASSERTION_DIVERGED` survives, re-aimed: it compares what the
+           CASE's signer asserted about the case's limits against what THIS
+           member's own signed bytes froze as theirs. Those are two different
+           members' signatures over two different documents, so they genuinely
+           can differ — which is exactly the property that made the old arms
+           worth having, arriving at the one place it is still true. */
   const publishedMd = await imageOf(FIND_A);
   /* A frontmatter block runs from its own key to the next key at column 0. */
   const blockOf = (md, key) => {
@@ -606,6 +709,7 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
     const was = blockOf(md, key);
     return was ? md.replace(was, replacement) : md;
   };
+  const addAfterFm = (md, lines) => md.replace(/^(---\n)/, `$1${lines.join("\n")}\n`);
 
   const cc = await conclude(WREN, { target: FIND_C,
     conclusion: "No notice of the transfer was published before it was executed.",
@@ -616,85 +720,116 @@ console.log("\n--- 2b. two members who disagree about the case are REFUSED, neve
     subjectPosition: "not_sought",
     subjectJustification: "Notice would let the record be revised before it is captured; we say so.",
     biasAcknowledgement: "The group's declared position on public adoption applies to the notice question too, "
-                       + "and this case is read through it." });
+                       + "and this case is read through it." }, { sign: false });
   if (!own.ok) throw new Error(`publish FIND_C: ${JSON.stringify(own)}`);
   t("(fixture) FIND_C publishes into a case of its OWN, which is minted separately",
     [own.ok, own.minted, own.caseId !== CASE_ID], [true, true, true]);
+  /* ===== THE UNSIGNED WINDOW, DRIVEN — CASE-5b's own before/after, taken here
+     because this is the one place a case exists with its document unsigned.
+     `op=publish` AUTHORED the document and committed NOTHING: no `cases` row, no
+     `published_cases` row, no roster. That is the fence the whole item rests on,
+     and it is measured rather than argued. */
+  const beforeSign = rP(await anonJson("op=publishedmanifest"));
+  t("(fixture) BEFORE the ceremony: op=publish authored the case document and committed NOTHING — the case is on the public index nowhere, and no roster names its member",
+    [(beforeSign.cases || []).some((c) => c.case_id === own.caseId),
+     (beforeSign.caseMembers || []).some((m) => m.case_id === own.caseId),
+     /^[0-9a-f]{64}$/.test(own.caseDocument.doc_sha), own.caseDocument.case_id],
+    [false, false, true, own.caseId]);
+  await caseSign(own);
+  const afterSign = rP(await anonJson("op=publishedmanifest"));
+  t("(fixture) AFTER a member SIGNS that document: the case, its roster and its pin are all on the index — committed from bytes somebody reviewed, with every member still AWAITING",
+    [(afterSign.cases || []).some((c) => c.case_id === own.caseId),
+     (afterSign.caseMembers || []).filter((m) => m.case_id === own.caseId).map((m) => m.bundle_id),
+     (afterSign.caseMembers || []).filter((m) => m.case_id === own.caseId)
+       .every((m) => /^[0-9a-f]{64}$/.test(m.version_sha))],
+    [true, [FIND_C], true]);
   const cMd = await imageOf(FIND_C);
+  /* (fixture) THE ARM IS ARMED — these bytes really do carry none of the keys
+     the lie is about to add, so what (a) refuses is the LIE and not the
+     document's ordinary shape. An adversary indistinguishable from the baseline
+     proves nothing. */
+  t("(fixture) FIND_C's own published bytes name NO case — so the lie below is the only thing under test",
+    ["case_id:", "case_findings:", "case_scope:", "bias_acknowledgement:"].filter((k) => cMd.includes(k)), []);
 
-  /* ADVERSARY 1 — the SET disagrees. Everything the case asserts is copied from
-     a member that really is in it, so the ONLY difference is the roster. */
-  /* CORRECTED 2026-08-05, REC-47: the acknowledgement is copied too. Without
-     it FIND_C's OWN acknowledgement travels in these bytes, the assertion
-     divergence fires first, and this adversary reports CASE_ASSERTION_DIVERGED
-     — so it would silently stop testing the ROSTER, which is its whole subject.
-     The comment above is only true if EVERYTHING the case asserts is copied,
-     and this item added a third thing it asserts. */
-  const rosterLie = swap(swap(swap(swap(swap(cMd,
-    "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
-    "case_scope", `case_scope: "${SCOPE1}"`),
-    "bias_acknowledgement", `bias_acknowledgement: "${BACK1}"`),
-    "completeness", blockOf(publishedMd, "completeness"))
-    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
-  await mustPromote(FIND_C, rosterLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  /* ADVERSARY — the old block's roster lie, unchanged in what it WRITES: another
+     case's identity, its scope, its roster and its acknowledgement, hand-written
+     into a member's own frontmatter through the one door that skips op=publish. */
+  const lie = addAfterFm(swap(cMd, "edition", "edition: 1"), [
+    `case_id: ${CASE_ID}`,
+    "case_edition: 1",
+    `case_scope: "${SCOPE1}"`,
+    `bias_acknowledgement: "${BACK1}"`,
+    `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`,
+  ]);
+  await mustPromote(FIND_C, lie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
   const rl = await ratify(FIND_C);
-  t("a member whose signed bytes name a DIFFERENT roster is refused by name, never reconciled",
-    [rl.reason, rl.declared, rl.signed], ["CASE_MEMBERSHIP_DIVERGED", [FIND_A, FIND_B], [FIND_C]]);
+  t("(a) a member that writes a case into its OWN bytes is refused BY THE GATE, and the refusal names EVERY key it found rather than the first",
+    [rl.reason,
+     (rl.findings || []).filter((x) => x.check === "C-2.8" && /a finding's bytes name a case/.test(x.detail))
+       .map((x) => /name a case \((\w+)\)/.exec(x.detail)?.[1]).sort()],
+    ["GATE_REFUSED", ["bias_acknowledgement", "case_edition", "case_findings", "case_id", "case_scope"]]);
+  t("(a2) and the refusal SAYS where those facts live now, so a member is told the shape rather than only refused it",
+    /CASE DOCUMENT a member reviews and ratifies/.test(
+      (rl.findings || []).find((x) => /a finding's bytes name a case/.test(x.detail))?.detail ?? ""), true);
 
-  /* CORRECTED 2026-08-10, CASE-2 / DEC-72, AND IT IS THE 2026-08-05 CORRECTION
-     ABOVE ARRIVING A THIRD TIME — the note beside adversary 1 says the comment
-     "is only true if EVERYTHING the case asserts is copied, and this item added
-     a third thing it asserts". DEC-72 adds a FOURTH: the AUTHORED PARTITION,
-     which C-2.8 now requires on `published` and requires to cover the roster
-     EXACTLY. An adversary that rewrites `case_findings` and leaves `case_roles`
-     naming only itself is refused BY THE GATE (`GATE_REFUSED`) before it ever
-     reaches the divergence check — so it would silently stop testing its own
-     subject, which is exactly the failure the 2026-08-05 note recorded.
-     `case_project` needs no such treatment: FIND_C published under the same
-     project, so those bytes already agree. */
-  const rolesBlock = (ids) => "case_roles:\n"
-    + ids.map((x) => `  - target: ${x}\n    role: load_bearing`).join("\n");
-  const withRoles = (md, ids) =>
-    md.replace(/^case_roles:.*(?:\n[ -].*)*/m, rolesBlock(ids));
-
-  /* ADVERSARY 2 — the ASSERTION disagrees. The roster now matches; what differs
-     is the scope the member signed, which is the other half of what makes a
-     case edition ONE claim rather than whatever the last ratification said. */
-  const scopeLie = withRoles(swap(swap(swap(cMd,
-    "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
-    "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`),
-    [FIND_A, FIND_B, FIND_C]);
-  await mustPromote(FIND_C, scopeLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
-  const sl = await ratify(FIND_C);
-  t("and a member whose signed bytes state a DIFFERENT scope or completeness claim is refused by name",
-    [sl.reason, sl.caseId, sl.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 1]);
-
-  /* ADVERSARY 3 — REC-47. The roster, the scope and the completeness block now
-     ALL match what the real members signed; the ONLY difference is the BIAS
-     ACKNOWLEDGEMENT. It is a separate adversary rather than a variant of
-     adversary 2 because adversary 2 can be made to pass by a divergence check
-     that reads only scope and completeness — which is exactly what the check
-     did before this item — and a suite that could not tell those two apart
-     would report the acknowledgement as protected when nothing was reading it.
-     Two members who signed different accounts of the bias their shared case was
-     produced under have not published one case. */
-  const biasLie = withRoles(swap(swap(swap(swap(swap(cMd,
-    "case_id", `case_id: ${CASE_ID}`), "edition", "edition: 1"),
-    "case_scope", `case_scope: "${SCOPE1}"`),
-    "case_findings", `case_findings: [${FIND_A}, ${FIND_B}, ${FIND_C}]`),
-    "completeness", blockOf(publishedMd, "completeness"))
-    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded")),
-    [FIND_A, FIND_B, FIND_C]);
-  await mustPromote(FIND_C, biasLie, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
-  const bl = await ratify(FIND_C);
-  t("REC-47: a member whose signed bytes state a DIFFERENT BIAS ACKNOWLEDGEMENT is refused by name",
-    [bl.reason, bl.caseId, bl.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 1]);
-  t("and the refusal SAYS the acknowledgement is one of the three things a case edition asserts once",
-    /bias acknowledgement/.test(bl.detail ?? ""), true);
-
-  t("no adversary reached the case: its edition still holds exactly the two findings that signed it",
+  t("(b) no adversary reached the case: its edition still holds exactly the two findings the case document PINNED",
     (await anonCase(`id=${CASE_ID}`)).findings.map((f) => f.bundle_id), [FIND_A, FIND_B]);
+
+  /* ===== (c) WAS WRITTEN TO DRIVE THE SURVIVING DIVERGENCE AND MEASURED
+     SOMETHING BETTER. RECORDED AS MEASURED RATHER THAN SMOOTHED. =============
+
+     The arm was: give FIND_C a DIFFERENT completeness block from the one its own
+     case document asserts, and expect `CASE_ASSERTION_DIVERGED` — the one case
+     fact that still lives in two signatures and could therefore still disagree.
+     It came back GREEN-ratified with NO refusal at all, and the reason is a fact
+     about the plane rather than about the arm.
+
+     **THE PIN IS THE HASH OF THE MEMBER'S OWN BYTES.** Editing those bytes to
+     change the completeness block changes the sha, so the document no longer
+     matches the `version_sha` the case document froze — and the member is
+     therefore not in that case edition at all. It ratifies as an ordinary
+     finding. There is no reachable route to bytes that BOTH match the pin and
+     carry a different completeness claim, because matching the pin IS carrying
+     those bytes.
+
+     SO `CASE_ASSERTION_DIVERGED` IS A SECOND FENCE IN FRONT OF A DOOR THE PIN
+     ALREADY HOLDS SHUT, and this suite says so out loud rather than leaving a
+     reader to believe an unexercised refusal is load-bearing. That is CASE-3's
+     own posture on its write-once pin predicate, arriving one item later on the
+     refusal that predicate makes redundant: it is kept because two authorities
+     for one fact must be incapable of disagreeing, not because a reachable
+     caller is known to attack it.
+
+     WHAT THE ARM ASSERTS NOW IS THE PROPERTY THAT IS ACTUALLY THERE, and it is
+     the stronger one: a member that edits its bytes LEAVES the case rather than
+     corrupting it, and the case goes on naming the version it froze. */
+  const clean = swap(cMd, "completeness", blockOf(publishedMd, "completeness"))
+    .replace(/^completeness_excluded:.*(?:\n[ -].*)*/m, blockOf(publishedMd, "completeness_excluded"));
+  await mustPromote(FIND_C, clean, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  const edited = await anonCase(`id=${own.caseId}`);
+  t("(c) a member that edits its own bytes LEAVES its case rather than corrupting it — the case goes on naming the version it FROZE, and the member reads as AWAITING",
+    [edited.findings.map((f) => f.bundle_id), edited.awaiting, edited.complete], [[], [FIND_C], false]);
+  t("(c2) STATED RATHER THAN LEFT TO BE BELIEVED: CASE_ASSERTION_DIVERGED was NOT exercised by this arm and is not reachable by any caller route this suite can build, because matching the pin IS carrying the bytes the pin hashes",
+    edited.findings.length, 0);
+  /* Put the honest bytes back, so the sweeps below read a whole record rather
+     than the wreckage of an attack — the same restore the REC-47 adversary block
+     performs, and for the same reason. Restoring the CONTENT restores the SHA,
+     which is what re-matches the pin, and that equality is worth its own
+     assertion: it is the property that makes the pin a statement about BYTES
+     rather than about an act. */
+  await mustPromote(FIND_C, cMd, "inquiry", "published", (await listRow(FIND_C)).bundle_sha);
+  /* MEASURED AGAINST THE WORKING SHA AND THE ROSTER'S PIN DIRECTLY, rather than
+     against what the case SERVES — because FIND_C has never been ratified in
+     this suite, so it has no published row to serve either way, and an arm that
+     read `findings` would report the same empty list before and after the
+     restore. An outcome that costs nothing to produce is not evidence. */
+  const pinOnIndex = ((rP(await anonJson("op=publishedmanifest")).caseMembers) || [])
+    .find((m) => m.case_id === own.caseId && m.bundle_id === FIND_C);
+  t("(c3) restoring the CONTENT restores the SHA, and the case's pin names it again — the pin is a statement about BYTES, not about an act",
+    [pinOnIndex.version_sha === (await listRow(FIND_C)).bundle_sha,
+     /^[0-9a-f]{64}$/.test(pinOnIndex.version_sha)], [true, true]);
 }
+
 
 /* ================================== 3. C-21.1 IS PER CASE PER EDITION */
 console.log("\n--- 3. C-21.1: the completeness assertion is authored PER CASE PER EDITION ---");
@@ -798,19 +933,44 @@ console.log("\n--- 3. C-21.1: the completeness assertion is authored PER CASE PE
      member signing a different account of the bias the case was made under
      would otherwise be reconciled silently — leaving whichever member ratified
      FIRST to decide what the public record says the case's lens was. */
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. THE ADVERSARY ABOVE
+     IS NOW UNBUILDABLE, AND THE ARGUMENT FOR IT IS WHAT MADE IT UNNECESSARY. ==
+
+     THE OLD ARM: FIND_B, a legitimate member of the declared roster, re-promoted
+     with a DIFFERENT `bias_acknowledgement` in its own frontmatter, expecting
+     `CASE_ASSERTION_DIVERGED`. Every word of the reasoning above is correct, and
+     the closing sentence is the one this item acted on: *"a second member signing
+     a different account of the bias the case was made under would otherwise be
+     reconciled silently — leaving whichever member ratified FIRST to decide what
+     the public record says the case's lens was."*
+
+     THAT IS THE DEFECT CASE-5b REMOVES RATHER THAN GUARDS. The acknowledgement is
+     signed ONCE, in the case document, so there is no first member to decide it
+     and no second member to contradict it. A member's bytes carry no
+     acknowledgement at all — the gate refuses the key BY NAME — so the lie cannot
+     be written, let alone ratified. The three arms below are the same question
+     asked of the mechanism that answers it now: can a member state the case's
+     lens? No, and here is the refusal that says so. */
   {
     const goodB = await imageOf(FIND_B);
     const OTHER = "A different account of the lens, signed by the second member only.";
-    const lie = goodB.replace(/^bias_acknowledgement: .*$/m, `bias_acknowledgement: "${OTHER}"`);
-    t("(fixture) the adversary really differs ONLY in the acknowledgement",
-      [lie !== goodB, lie.replace(/^bias_acknowledgement: .*$/m, "") === goodB.replace(/^bias_acknowledgement: .*$/m, "")],
-      [true, true]);
+    /* The key is ADDED rather than replaced, because it is no longer there to
+       replace — which is itself the first thing worth asserting. */
+    t("(fixture) a member's published bytes carry NO bias acknowledgement to diverge from — the adversary's raw material is gone",
+      /^bias_acknowledgement: /m.test(goodB), false);
+    const lie = goodB.replace(/^(---\n)/, `$1bias_acknowledgement: "${OTHER}"\n`);
+    t("(fixture) and the lie really differs ONLY in the acknowledgement",
+      [lie !== goodB, lie.replace(/^bias_acknowledgement: .*\n/m, "") === goodB], [true, true]);
     await mustPromote(FIND_B, lie, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
     const bad = await ratify(FIND_B);
-    t("REC-47, ISOLATED: a rostered member signing a DIFFERENT bias acknowledgement is refused BY NAME",
-      [bad.reason, bad.caseId, bad.edition], ["CASE_ASSERTION_DIVERGED", CASE_ID, 2]);
-    t("and the refusal NAMES the acknowledgement as one of the three things a case edition asserts once",
-      /bias acknowledgement/.test(bad.detail ?? ""), true);
+    t("REC-47, ISOLATED: a rostered member that states the CASE's lens in its OWN bytes is refused BY THE GATE, naming the key",
+      [bad.reason,
+       (bad.findings || []).some((x) => x.check === "C-2.8"
+         && /a finding's bytes name a case \(bias_acknowledgement\)/.test(x.detail))],
+      ["GATE_REFUSED", true]);
+    t("and the refusal SAYS the acknowledgement is signed once, in the case's own document, rather than N times in N members",
+      /signed ONCE, in the CASE DOCUMENT/.test(
+        (bad.findings || []).find((x) => /bias_acknowledgement/.test(x.detail))?.detail ?? ""), true);
     /* Put the honest bytes back and let the edition complete, so everything
        below reads a real, whole case rather than the wreckage of an attack. */
     await mustPromote(FIND_B, goodB, "inquiry", "published", (await listRow(FIND_B)).bundle_sha);
@@ -1028,8 +1188,20 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
       const roster = (idx.caseMembers || [])
         .filter((m) => m.case_id === cs.case_id && Number(m.edition) === Number(cs.edition));
       for (const m of roster) {
+        /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED — AND IT IS IC-66's
+           OWN DEFECT, FOUND HERE RATHER THAN IN THE UI. This read
+           `p.bundle_id === m.bundle_id && p.edition === cs.edition`: the
+           MEMBER's published row joined on the CASE's edition number. That was
+           right while the two numbers were slaved, which is exactly what CASE-5
+           unslaved — and IC-66 measured the identical join in
+           `civicos-ui/app.html` (enqueued as UI-56). Left as it was, a member
+           whose own edition differs from its case's MISSES the join and reads as
+           awaiting ratification forever; and a member whose bytes moved AFTER
+           the case pinned them would be matched to a version the case never
+           froze, which is worse — the sweep would then grade the wrong document.
+           The join is the PIN, which is the only column that can answer it. */
         const row = (idx.published || [])
-          .find((p) => p.bundle_id === m.bundle_id && Number(p.edition) === Number(cs.edition));
+          .find((p) => p.bundle_id === m.bundle_id && p.bundle_sha === m.version_sha);
         const where = `${label} ${cs.case_id}@${cs.edition} ${m.bundle_id}`;
         if (!row) {
           /* DECLARED AND NOT YET RATIFIED. Nothing has been signed for it, so
@@ -1060,10 +1232,22 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
   /* AND THE SWEEP IS NOT PASSING ON AN EMPTY ANSWER — the fixture is asserted
      rather than assumed, because a sweep over zero cases returns [] and would
      look identical. */
-  t("the fixture the sweep ran over: two case editions, two members each, four ratified findings",
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE NEW THIRD ROW IS
+     THE ITEM ITSELF RATHER THAN NOISE. Under the old shape a case reached the
+     public index only when its FIRST MEMBER ratified, because that is when the
+     `published_cases` row was written. Since CASE-5b the case row is written when
+     the CASE DOCUMENT is signed — so block 2b's FIND_C case, published and
+     deliberately never ratified by any member, is now a real case edition on the
+     index with its whole roster AWAITING. That is the honest state and the
+     better one: a reader can see what a case claims and which versions it froze
+     before the last member lands, and the window is STATED rather than the case
+     being invisible until somebody signs a finding. Its five rostered members
+     against four RATIFIED rows is exactly that difference, which CASE-1's schema
+     comment names as the only thing that can say an edition is incomplete. */
+  t("the fixture the sweep ran over: three case editions (one of them awaiting), five rostered members, four ratified findings",
     [(nowIdx.cases || []).map((c) => `${c.case_id}@${c.edition}`),
      (nowIdx.caseMembers || []).length, (nowIdx.published || []).length],
-    [[`${CASE_ID}@1`, `${CASE_ID}@2`], 4, 4]);
+    [[`${CASE_ID}@1`, `${CASE_ID}@2`, "CASE-2026-0002@1"], 5, 4]);
 
   const pairOf = (idx, id, ed) => ((idx.published || [])
     .find((p) => p.bundle_id === id && Number(p.edition) === ed) || {}).strength;
@@ -1095,18 +1279,37 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
     /* CORRECTED 2026-08-05, REC-47: /2 -> /3, for the reason recorded at the
        container assertion in block 2. CORRECTED AGAIN 2026-09-10, CASE-5: /3 ->
        /4, for the reason recorded at the same assertion. */
-    [["bio-case-container/4", [FIND_A, FIND_B], true], ["bio-case-container/4", [FIND_A, FIND_B], true]]);
-  /* THE THIRD STATE, AND WHAT THE FIXTURE MEASURED ABOUT IT rather than what the
-     item assumed. FIND_C was PUBLISHED into a case of its own in block 2b and
-     never ratified — and that case appears on the index NOWHERE, because
-     `published_cases` is written at the first RATIFICATION out of that member's
-     signed bytes, exactly like the roster and for the same reason. So the index
-     can never hold a case edition with an empty roster, and a surface drawing
-     one would be drawing a case that nothing signed. Both halves are asserted,
-     because it is the pair of them that makes the state unreachable rather than
-     merely unobserved. */
-  t("a case PUBLISHED but never ratified is not on the public index at all: nothing was signed, so there is nothing to state",
-    (nowIdx.cases || []).some((c) => c.case_id !== CASE_ID), false);
+    [["bio-case-container/5", [FIND_A, FIND_B], true], ["bio-case-container/5", [FIND_A, FIND_B], true]]);
+  /* ===== THE THIRD STATE, CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND
+     THE OLD ARM'S PRINCIPLE IS THE ONE THIS ITEM ENACTED. =====================
+
+     IT SAID: FIND_C was PUBLISHED into a case of its own and never ratified, so
+     that case appears on the index NOWHERE — *"`published_cases` is written at
+     the first RATIFICATION out of that member's signed bytes … a surface drawing
+     one would be drawing a case that nothing signed."* The PRINCIPLE is exactly
+     right and is untouched: nothing reaches the public index that nobody signed.
+
+     WHAT MOVED IS WHICH SIGNATURE. The case's own assertions are now signed in
+     the case document, so a case edition reaches the index when THAT document is
+     ratified, with every member still AWAITING. Nothing about it is unsigned:
+     the scope, the roster, the pins, the partition, the bar and the
+     acknowledgement on that row all came out of bytes a member reviewed. What a
+     reader gains is that they can see what a case claims and which versions it
+     froze BEFORE the last member lands, with the window stated rather than the
+     case being invisible until somebody signs a finding.
+
+     SO THE ARM IS INVERTED AND KEPT, AND THE UNSIGNED CASE IS STILL DRIVEN: a
+     case edition whose DOCUMENT was never signed is still on the index NOWHERE,
+     which is the same rule asked of the act that now carries it. */
+  t("a case whose DOCUMENT a member signed IS on the public index, with its whole roster AWAITING — the window is stated, not hidden",
+    (nowIdx.cases || []).filter((c) => c.case_id !== CASE_ID)
+      .map((c) => [c.case_id, (nowIdx.caseMembers || [])
+        .filter((m) => m.case_id === c.case_id).map((m) => m.bundle_id), !!c.manifest_sha]),
+    [["CASE-2026-0002", [FIND_C], false]]);
+  /* AND THE UNSIGNED HALF OF THE RULE IS DRIVEN IN BLOCK 2b, at the one moment
+     it is observable — see the BEFORE/AFTER pair there. It is not re-asserted
+     here against an id nothing created, because an absence that costs nothing to
+     produce is not evidence. */
   t("and every case edition the index DOES hold has a roster, so it can never present a case of nought findings",
     (nowIdx.cases || []).filter((c) => !(nowIdx.caseMembers || [])
       .some((m) => m.case_id === c.case_id && Number(m.edition) === Number(c.edition)))

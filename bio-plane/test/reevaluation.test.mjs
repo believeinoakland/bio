@@ -69,6 +69,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -117,9 +118,16 @@ const conclude = async (tok, { target, conclusion, falsifier }) =>
    is the re-evaluation obligation, not the publication ceremony, and every
    assertion below must go on measuring what it was written to measure. The new
    rules are asserted BY NAME in `caseproduction.test.mjs`. */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.",
-    project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. Not run
+   when publish REFUSED, so the refusal arms stay refusals rather than crashes. */
+const publish = async (tok, body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${tok}`,
+    { scope: "Whether the signature question was properly handled, on the documents in hand.",
+      project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: tok });
+  return r;
+};
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target ?? "")}`, body));
 const reopen = async (tok, target, reason) =>

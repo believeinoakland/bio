@@ -650,6 +650,11 @@ export const RUNGS = {
      unlike everything below. */
   attest:             "attested",   // Constructs:275 (a CAPTURE act — CAPTURE_ACTS below)
   ratify:             "attested",   // Constructs:275 (publication pre-flight is REC-15's)
+  /* CASE-5b / DEC-72: signing the CASE DOCUMENT is `attested` for `ratify`'s own
+     reason and not a new one — its authority is a registered signer's key over
+     the document's hash, which is a thing the group does not hold by having
+     decided something. Same rung, same ladder, a different subject. */
+  caseratify:         "attested",
 
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
@@ -1448,6 +1453,16 @@ export const NON_ACTS = {
   /* Inbox and publication. */
   inboxresolve: "inbox disposition, keyed by knock id",
   ratify: "publication: its pre-flight is the deferred op=publishpreflight (REC-15), because the refusal turns on gate state a surface cannot see",
+  /* CASE-5b / DEC-72. A NON_ACT for `ratify`'s reason and ALSO for a reason of
+     its own, which is why it gets its own sentence rather than riding the row
+     above. Its subject is a CASE EDITION, keyed (case_id, edition) — not a
+     bundle in a state — so there is no object for it to appear beside, which is
+     the same shape `inboxresolve` and `discharge` carry here. And like `ratify`
+     its refusals turn on gate state and on whether a signature verifies, neither
+     of which a surface can see in advance. The act the SURFACE offers is
+     `op=publish`; this is the signature that act asks for next, and op=publish's
+     own answer names it in `next:`. */
+  caseratify: "case publication: its subject is a case edition keyed (case_id, edition) rather than a bundle in a state, and its refusals turn on gate state and signature verification a surface cannot see — op=publish's answer names it in `next:`",
   /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
      standard its work is held to — authored before the work, about their own
      intentions — so there is no object in any state for it to appear beside. A

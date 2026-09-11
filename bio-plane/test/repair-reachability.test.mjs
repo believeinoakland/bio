@@ -457,8 +457,20 @@ const runChecks = async (files) => (await checkBundle({
      an arm measuring nothing, green or red by accident. The fixture now asserts
      the ceremony is owed BEFORE reading its repairs, so the probe cannot go
      hollow the way the plant in the REACH block nearly did. */
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE FIXTURE'S OWN
+     STATED PURPOSE IS WHY IT HAD TO MOVE. This handed in `case_id` +
+     `case_edition` to make the document read as a case member — the right pair
+     while op=publish stamped them into every member. CASE-5b REFUSES those keys
+     in a finding's bytes, so the old fixture no longer arms the published
+     ceremony: it arms this item's own refusal, whose repairs say "remove
+     case_id" rather than anything about reopening. That is the arm going HOLLOW
+     in exactly the way the paragraph above warns about — a probe reading
+     whatever the wrong findings happen to contain. A case member is now
+     recognised by its FROZEN STRENGTH PAIR, which is what op=publish stamps and
+     what op=reopen clears, so the fixture hands that in instead. */
   const pubFindings = (await checkBundle({ folderName: "INQ-2026-0003-x",
-    files: inq("concluded", "case_id: CASE-2026-0001\ncase_edition: 1\n"),
+    files: inq("concluded", "published_strength:\n  - axis: capture\n    state: unrated\n"
+                          + "    grade: null\n  - axis: connection\n    state: unrated\n    grade: null\n"),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true })).findings
     .filter((x) => x.check === "C-2.8" && Array.isArray(x.repairs));
   t("THE PROBE IS ARMED: a document that CLAIMS case membership is owed the published ceremony, so the repairs below exist to be read",

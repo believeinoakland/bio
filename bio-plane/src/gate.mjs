@@ -32,7 +32,7 @@
  * removed out of band.
  */
 
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, checkCaseDocument } from "../checks/bio-checks.mjs";
 
 /* 1.20.0 (REC-23/D-130): C-2.10's counterparty becomes a three-valued block.
    A MINOR bump on REC-14's precedent (1.18.0 -> 1.19.0 also made the catalog
@@ -44,6 +44,36 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
+
+/* CASE-5b / DEC-72: THE CASE DOCUMENT'S GATE, run at op=caseratify and nowhere
+   else — `runGate`'s own rule one level up, and for the same reason: a catalog
+   that runs at two doors is a catalog whose two doors drift.
+
+   IT RUNS THE CATALOG RATHER THAN REIMPLEMENTING IT, which is this file's whole
+   premise. `checkCaseDocument` is a pure function over the parsed frontmatter
+   and two facts the document cannot carry about itself (which case and which
+   edition the store is about to commit it as, and what the PREVIOUS edition of
+   this case asserted, for C-21.1). Passing null for the prior case does not
+   soften C-21.1, it BLINDS it — the same sentence `runGate` already carries
+   about `publishedRegistry`, arriving at case altitude.
+
+   THE VERSION IT REPORTS IS THE SAME `GATE_VERSION`, deliberately: what judged a
+   ratification is one catalog at one version, and giving the case door a version
+   of its own would let the two drift apart while each looked internally
+   consistent. A member reading `plane-gate/1.0 (bio-checks 1.20.0)` on a case
+   ratification and on a finding ratification has read the same fact. */
+export function runCaseGate({ caseId, edition, fm, priorCase }) {
+  const findings = checkCaseDocument(fm, { caseId, edition, priorCase: priorCase || null });
+  const errors = findings
+    .filter((x) => x.severity === "error")
+    .map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) }));
+  return {
+    gateVersion: GATE_VERSION,
+    ok: errors.length === 0,
+    findings: errors,
+    warnings: findings.filter((x) => x.severity !== "error").length,
+  };
+}
 
 export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
                                 publishedRegistry, publishedCaseRegistry, earnedRegistry }) {

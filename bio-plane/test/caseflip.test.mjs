@@ -77,14 +77,16 @@
  *     plane cannot reach at the moment of the check.
  *
  * WHAT NO ARM HERE REACHES, STATED RATHER THAN LEFT TO BE DISCOVERED:
- *   - A FINDING'S BYTES STILL NAME A CASE. `case_id`, `case_findings`,
- *     `case_roles`, `case_scope`, `bias_acknowledgement` and `required_strength`
- *     are still stamped into every member. This item removed the half of that
- *     sentence which was load-bearing on the FORMAT — the edition conflation —
- *     and stopped. The reason is in IC-66 and is doctrinal: every case fact this
- *     plane commits is committed from the SIGNED BYTES and from nothing else, and
- *     there is no signature over a case for those facts to move to. Nothing here
- *     asserts that finding bytes have stopped naming a case, because they have not.
+ *   - **CLOSED 2026-09-10 BY CASE-5b.** This entry read: *"A FINDING'S BYTES
+ *     STILL NAME A CASE … Nothing here asserts that finding bytes have stopped
+ *     naming a case, because they have not."* That was the honest state of the
+ *     record, and it is kept here rather than deleted because it is the sentence
+ *     the next item was scoped off — a stated limit doing exactly the work a
+ *     stated limit is for. CASE-5b minted the CASE-LEVEL SIGNING CEREMONY those
+ *     facts had nowhere to move to (a case document, its gate C-41, its ratify
+ *     path `op=caseratify`), and the block-6 arm is now INVERTED: it demands
+ *     that not one of the eight keys survives in the published document, and
+ *     that every one of them is in the case document a member signed. IC-71.
  *   - MULTI-CASE MEMBERSHIP. `FINDING_IN_ANOTHER_CASE` still refuses a finding
  *     into a second case. The flip makes that representable rather than
  *     impossible-by-format; lifting the refusal is a surface question (which case
@@ -95,6 +97,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -272,8 +275,17 @@ const PUBLISHING_PROJECT = await makePublishingProject({
      gates nothing — the bar is under assertion here, not the refusal it can
      produce, which is CASE-2's suite and stays there. */
   bar: { capture: "D", connection: "D", author: "rosa", at: NOW } });
-const publishCase = async (body) => rP(await POST(`op=publish&token=${ROSA}`,
-  { project: PUBLISHING_PROJECT, ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. The case's
+   own assertions are committed when a member SIGNS the case document, so every
+   assertion below is about the state after that signature. Not run when publish
+   REFUSED. */
+const publishCase = async (body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${ROSA}`,
+    { project: PUBLISHING_PROJECT, ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "rosa", token: ROSA });
+  return r;
+};
 
 const INFO_A = "INFO-2026-5500-memo";
 const INFO_B = "INFO-2026-5500-left-out";
@@ -468,7 +480,7 @@ const MANIFEST2 = await (async () => {
     [shaBytes(raw) === MANIFEST2, man.case, man.edition], [true, CASE, 2]);
   t("the format version MOVED with the fields the flip adds — a /3 container carrying no pin and a /4 "
     + "container whose pin was withheld must not be indistinguishable to a stranger",
-    man.format, "bio-case-container/4");
+    man.format, "bio-case-container/5");
 
   /* THE DESIGN'S OWN LIST, one assertion per item on it. */
   t("CONTENT BY HASH: every part is named by sha256 and namespaced by the finding it belongs to",
@@ -775,16 +787,56 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
      statement about the plane's index, which is not what the bullet is about. */
   const betaBytes = new TextDecoder().decode(new Uint8Array(
     await (await anonRaw(`op=publishedbytes&sha256=${SIGNED_BETA_1}`)).arrayBuffer()));
-  t("the bullet ALSO demands that FINDING BYTES STOP NAMING A CASE, AND THEY STILL DO — the published "
-    + "document still carries case_id, case_findings, case_roles, case_scope and required_strength. "
-    + "Pinned as the state of the record: those facts have no signature to move to (IC-66)",
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THIS IS THE
+     ASSERTION THE WHOLE ITEM WAS MEASURED AGAINST. ==========================
+
+     WHAT IT SAID, AND WHY IT WAS RIGHT: *"the bullet ALSO demands that FINDING
+     BYTES STOP NAMING A CASE, AND THEY STILL DO … pinned as the state of the
+     record: those facts have no signature to move to (IC-66)."* CASE-5 could not
+     remove them, and it refused to pretend otherwise — this arm existed so that
+     "still there" stayed distinguishable from "nobody checked", which is the
+     difference between a stated limit and a silent one. It did its job: the item
+     that closed the gap was scoped off exactly this sentence.
+
+     WHY IT IS WRONG NOW: CASE-5b mints the signature those facts had nowhere to
+     move to. A CASE DOCUMENT carries the case's identity, edition, producing
+     project, scope, roster, partition, bias acknowledgement and bar; a member
+     reviews it and signs it (`op=caseratify`); and the plane commits `cases`,
+     `published_cases` and the roster out of those signed bytes and out of
+     nothing else. The keys are gone from finding bytes and the gate REFUSES them
+     there, so their absence is a property of the format rather than of
+     op=publish remembering not to write them.
+
+     THE ARM IS INVERTED RATHER THAN DELETED, and it demands MORE than the old
+     one did: the same five keys the old arm listed, plus the three the ruling
+     added after the CASE-5 bullet was written (`case_edition`, `case_project`,
+     `bias_acknowledgement`) — because `case_edition` without `case_id` would
+     name an edition of no case, which is C-2.8's own sentence. All eight are
+     read OUT OF THE PUBLISHED BYTES THEMSELVES, by their own sha, for the reason
+     the old arm gave: the claim is about what a finding's DOCUMENT carries, so
+     the document is what is inspected. */
+  t("the bullet demands that FINDING BYTES STOP NAMING A CASE, AND THEY NO LONGER DO — not one of the "
+    + "eight keys survives in the published document, and the case's facts are signed once in the "
+    + "CASE DOCUMENT a member ratified (CASE-5b, IC-71)",
     [/finding bytes stop naming a case/i.test(bullet),
-     ["case_id:", "case_findings:", "case_roles:", "case_scope:", "required_strength:"]
-       .filter((k) => betaBytes.includes(k))],
-    [true, ["case_id:", "case_findings:", "case_roles:", "case_scope:", "required_strength:"]]);
-  t("what the flip DID remove from those bytes is the conflation: `edition:` is now the FINDING's own "
-    + "version and the case's number is named as the case's, so the format no longer forces them equal",
-    [/^edition: 1$/m.test(betaBytes), /^case_edition: 2$/m.test(betaBytes)], [true, true]);
+     ["case_id:", "case_edition:", "case_project:", "case_findings:", "case_roles:", "case_scope:",
+      "bias_acknowledgement:", "required_strength:"].filter((k) => betaBytes.includes(k))],
+    [true, []]);
+  t("and what a member's bytes still carry is its OWN edition on its own chain — the conflation the "
+    + "flip removed stays removed, and the case's number is not in these bytes to be confused with it",
+    [/^edition: 1$/m.test(betaBytes), /^case_edition: /m.test(betaBytes)], [true, false]);
+  /* AND THE FACTS ARE WHERE THE ITEM SAYS THEY ARE — asserted positively as well
+     as negatively, because an absence alone cannot tell a reader whether the
+     facts MOVED or were simply dropped. The document is fetched through the
+     ANONYMOUS surface, which is the caller the whole flip exists for. */
+  const betaDoc = rP(await (await anonRaw(`op=casedocument&case=${CASE}&edition=2`)).json());
+  t("and every one of them is in the CASE DOCUMENT instead, in bytes a member SIGNED — the facts "
+    + "moved, they were not dropped",
+    [["case_id:", "case_edition:", "case_project:", "case_findings:", "case_roles:", "case_scope:",
+      "bias_acknowledgement:", "required_strength:"].filter((k) => !String(betaDoc.text).includes(k)),
+     betaDoc.ratified, /^[0-9a-f]{64}$/.test(String(betaDoc.doc_sha)),
+     String(betaDoc.sig_armored || "").startsWith("-----BEGIN SSH SIGNATURE-----")],
+    [[], true, true, true]);
 
   /* MULTI-CASE MEMBERSHIP, DRIVEN RATHER THAN ASSUMED. LOOSE is concluded and
      published as a case of its own, and ALPHA — already a member of CASE — is

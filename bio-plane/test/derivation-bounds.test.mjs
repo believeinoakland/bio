@@ -460,9 +460,37 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    definition and is counted honestly; the bound is stated here rather than
    claimed by exempting it, because an exempted member is a rule nobody is
    enforcing. */
-const CLASS_MEASURED_2026_08_08 = 31;
+/* CASE-5b / DEC-72, 2026-09-10: THE ARRIVAL IS `#caseClaimInBytes`, AND THE BOUND
+   IS MEASURED AND STATED RATHER THAN CLAIMED BY EXEMPTING IT — the same posture
+   `#flagCasesOnRevision` above takes, and for the same reason: an exempted member
+   is a rule nobody is enforcing.
+
+   WHAT THE WALKER SEES AND WHAT IS ACTUALLY THERE. It sees a `#rows(` with no
+   LIMIT followed by a `for`, which is exactly its class definition and it is
+   right to name it. The SCAN, measured: `SELECT case_id, edition, text FROM
+   case_documents WHERE ratified_at IS NULL` — every case document AUTHORED AND
+   NOT YET SIGNED. The loop parses each one's frontmatter and looks for this
+   finding at this finding's current hash.
+
+   THE BOUND IS THE NUMBER OF CEREMONIES STARTED AND NOT FINISHED, which is a
+   different quantity from "the corpus" in a way worth being exact about: a row
+   leaves this set permanently the moment a member signs it (`ratified_at` is
+   stamped once and never cleared), and the whole-store `purge` clears exactly
+   the unsigned ones. So it does not grow with the number of published cases, the
+   number of findings, or the age of the instance — only with the number of
+   publications a group opened and abandoned. It is 0 on an instance where every
+   ceremony was completed.
+
+   WHY IT IS A SCAN AT ALL, since the honest answer is not "it had to be": the
+   pins live INSIDE the signed document, which is the whole point of the item, so
+   there is no column to index them by until a signature commits them to
+   `published_case_members`. A derived index over unsigned documents would be a
+   second authority for a fact the signature does not yet cover — the shape this
+   record refuses — so the scan is the price of the pins being authored rather
+   than projected, and it is paid over the smallest set in the store. */
+const CLASS_MEASURED_2026_08_08 = 32;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",

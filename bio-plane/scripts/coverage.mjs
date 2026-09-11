@@ -594,9 +594,17 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  arms: 883,
-  classified: 164,
-  corpus: 165,
+  /* MOVED 2026-09-10 by CASE-5b, from the figures a green `--strict` run PRINTED
+     on this branch — `REGISTER FLOOR arms 888/883 · classified 165/164 · corpus
+     (suites read) 166/165`. ONE new suite, `test/casesign.test.mjs`, whose
+     declaration states FIVE arms (a numbered baseline plus (a)-(d), each with the
+     count it MEASURED written back into it). NOTHING FELL: +5 arms, +1 classified,
+     +1 corpus, and the three moves agree with one suite of five arms arriving,
+     which is the arithmetic this floor exists to make checkable.
+     **ONE KEY SET** — grep the KEYS, do not read the block. */
+  arms: 888,
+  classified: 165,
+  corpus: 166,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

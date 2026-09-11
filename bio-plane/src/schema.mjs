@@ -1625,6 +1625,60 @@ CREATE TABLE IF NOT EXISTS cases (
   project_id TEXT NOT NULL,     -- the OWNING project. Its bar is the case's bar, read at act time
   opened     TEXT NOT NULL      -- the instant this identity came into being
 );
+-- CASE-5b / DEC-72: THE CASE DOCUMENT -- THE THING A MEMBER SIGNS WHEN WHAT IS
+-- BEING ASSERTED IS THE CASE'S OWN, AND NOT ANY ONE FINDING'S.
+--
+-- WHY IT EXISTS, and the reason is a wall CASE-5 measured rather than a feature
+-- anyone wanted. Every case fact this plane commits is committed FROM THE SIGNED
+-- BYTES AND FROM NOTHING ELSE (#publishEdges' doctrine). Until this table the
+-- only signed bytes in the system were a FINDING's, so op=publish stamped the
+-- case's scope, roster, partition, bias acknowledgement and bar into EVERY
+-- member's frontmatter -- N copies of one fact, each inside a different
+-- signature, held together by four divergence refusals. A finding's bytes could
+-- not stop naming a case, because there was no signature over a case for those
+-- facts to move to.
+--
+-- THE CONSTRAINT THAT SHAPED IT is the container manifest's own sentence: a
+-- case-level signature would be a signature over SOMETHING NOBODY REVIEWED. So
+-- what is stored here is not a synthesised summary of the roster. It is the
+-- publisher's own authored assertions, written once, in the words they authored
+-- them in at the ceremony -- the scope, the completeness statement, the
+-- exclusions and their reasons, the subject position and its justification, the
+-- bias acknowledgement, the load-bearing partition, the bar -- assembled into a
+-- document a member reads whole and signs. Every sentence in it was typed by a
+-- person at op=publish. The roster appears because a partition needs targets,
+-- and it appears WITH THE PINS, which is clause 3's freeze stated where the
+-- freeze is actually asserted.
+--
+-- doc_sha IS THE IDENTITY THE SIGNATURE COVERS, and text is kept beside it so
+-- the document can be re-read and re-verified without this instance being
+-- trusted to re-render it. Rendering it twice is exactly the equality that costs
+-- nothing to produce, so the bytes are stored rather than recomputed.
+--
+-- sig_armored / attestor_key / attestor_member / gate_version / ratified_at ARE
+-- ALL NULL UNTIL op=caseratify LANDS, and that window is a real state which is
+-- STATED rather than hidden: between op=publish and the case ratification the
+-- case is AUTHORED AND UNSIGNED, and nothing case-side is committed while they
+-- are NULL. That is the whole fence -- the store refuses CASE_UNSIGNED rather
+-- than writing a case row from a request, which is the attribution class this
+-- record refuses everywhere else.
+--
+-- ONE ROW PER (case_id, edition). An edition is a separate document and answers
+-- forever, exactly as published_cases' own key says.
+CREATE TABLE IF NOT EXISTS case_documents (
+  case_id         TEXT NOT NULL,
+  edition         INTEGER NOT NULL,
+  doc_sha         TEXT NOT NULL,   -- sha256 of text. The identity the signature covers
+  text            TEXT NOT NULL,   -- the authored document itself, stored not recomputed
+  authored_at     TEXT NOT NULL,
+  authored_by     TEXT,            -- the member who drove op=publish
+  sig_armored     TEXT,            -- NULL until op=caseratify. NULL means AUTHORED AND UNSIGNED
+  attestor_key    TEXT,
+  attestor_member TEXT,
+  gate_version    TEXT,
+  ratified_at     TEXT,
+  PRIMARY KEY (case_id, edition)
+);
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
 -- consumers that FIRE something (CAP-3's archive-monitor and REC-26's
 -- monitor-cadence). It exists because a retry is not free here: an archive

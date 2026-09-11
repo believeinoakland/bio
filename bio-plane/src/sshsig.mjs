@@ -200,3 +200,27 @@ export const NS_RATIFY = "bio-ratify";
    verified signature IS the integrity check and cannot diverge from one. */
 export const ratifyStatement = (bundleId, bundleSha) =>
   te.encode(`bio-ratify ${bundleId} ${bundleSha}\n`);
+
+/* CASE-5b / DEC-72: THE CASE DOCUMENT'S STATEMENT, and it is a SEPARATE
+   statement rather than `ratifyStatement` reused with a case id in the bundle
+   slot. Two reasons, and the second is the load-bearing one.
+
+   (1) A case edition is identified by a PAIR — `(case_id, edition)` — where a
+   bundle is identified by its id alone, its edition living inside the bytes. A
+   statement that dropped the edition would have one signature standing for every
+   edition of a case, which is the same defect EDITION_EXISTS refuses one level
+   down.
+
+   (2) AND IT IS DOMAIN SEPARATION, not decoration. `ratifyStatement` is the
+   sentence a member signs over a FINDING. If a case document could be signed
+   with a statement of that exact shape, a signature gathered for one act would
+   verify for the other the moment an identifier collided — and case ids and
+   bundle ids are both allocId-minted strings. The leading token differs, so the
+   two message spaces cannot overlap no matter what the identifiers do.
+
+   The NAMESPACE stays `bio-ratify`: it is the SSHSIG namespace this instance's
+   signers already have configured, and splitting it would make every existing
+   signer page and wizard wrong for an act they are perfectly entitled to
+   perform. The separation is in the message, which is where a verifier looks. */
+export const caseRatifyStatement = (caseId, edition, docSha) =>
+  te.encode(`bio-ratify-case ${caseId} ${edition} ${docSha}\n`);

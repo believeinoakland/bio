@@ -69,6 +69,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -267,8 +268,21 @@ const reopen = async (target, reason) =>
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case3", owner: "vera",
   id: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
-const publishCase = async (body) => rP(await POST(`op=publish&token=${VERA}`,
-  { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER. `op=publish` now AUTHORS a case
+   document and commits nothing case-side — the case's identity, roster, PINS,
+   partition, scope, bar and acknowledgement are committed when a member SIGNS
+   that document (op=caseratify). This suite's whole subject is the PIN, and the
+   pin is now written by that signature, so the ceremony runs here where a reader
+   can see it. `sign: false` leaves it unperformed where a block needs the
+   authored-and-unsigned state. `casesign.test.mjs` owns the ceremony itself and
+   shares no code path with this helper. */
+const publishCase = async (body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${VERA}`,
+    { project: PUBLISHING_PROJECT, roles: allLoadBearing(body), ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "vera", token: VERA });
+  return r;
+};
 
 /* THE SIX ACT OPS, SPELLED OUT AS LITERALS rather than composed. `coverage.mjs`
    reads `op=<name>` out of suite sources to decide whether a real caller has a
@@ -384,15 +398,39 @@ console.log("\n--- 1. the case FREEZES its member at the hash the member signed 
      row?.version_sha !== null], [true, true]);
 }
 
-/* THE STRUCTURAL HALF, STATED AS STRUCTURAL. The write-once predicate cannot be
-   driven (EDITION_EXISTS refuses the only caller route to a second sha at a
-   published edition), so it is pinned against the source and NOT claimed as a
-   reachable refusal. */
+/* THE STRUCTURAL HALF, STATED AS STRUCTURAL. The write-once property cannot be
+   driven (no caller route reaches a second sha at a published edition), so it is
+   pinned against the source and NOT claimed as a reachable refusal.
+
+   ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE PROPERTY MOVED
+   RATHER THAN WEAKENED. ====================================================
+
+   IT PINNED: `UPDATE published_case_members SET version_sha=? … WHERE …
+   version_sha IS NULL` — CASE-3's predicate, which made a pin unmovable once
+   written, and which existed in that shape because the pin had to be written by
+   whichever member ratified FIRST, out of its own sha, while the other members'
+   shas did not yet exist. CASE-3 said so at the site: *"writing all N pins there
+   would mean inventing N-1."*
+
+   WHY IT IS WRONG NOW: there is no such UPDATE any more. The pins are AUTHORED —
+   all N of them, in the case document, before anybody signs — and they are
+   committed in one statement at `op=caseratify`. Nothing is invented, so the
+   defensive predicate has nothing left to defend.
+
+   WHERE THE PROPERTY WENT, AND IT IS STRONGER: the pin is now INSIDE THE BYTES A
+   MEMBER SIGNED, and the case document can only be rewritten while it is
+   UNSIGNED (`WHERE case_documents.sig_armored IS NULL`). So "the pinned version
+   is never mutated" stopped being a predicate on an UPDATE of a projection and
+   became a property of a signature over a document — which is the difference
+   between a rule a later caller is trusted to respect and one a later caller
+   cannot express. Both halves are pinned, because it is the pair that closes it:
+   the pin is in the signed document, and the signed document is immutable. */
 {
-  t("the pin write is WRITE-ONCE by construction — the UPDATE carries `version_sha IS NULL`, so no "
-  + "statement in this file can move a pin off a sha it already holds (NOT driven: EDITION_EXISTS "
-  + "refuses the only route a caller has to a second sha at a published edition)",
-    /UPDATE published_case_members SET version_sha=\?[\s\S]{0,200}?version_sha IS NULL/.test(STORE_SRC), true);
+  t("the pins are AUTHORED IN THE CASE DOCUMENT, all of them, in one statement — so the pin is inside the bytes a member signed rather than assembled over N ratifications",
+    /version_sha: \$\{pins\.get\(m\) \?\? "null"\}/.test(STORE_SRC), true);
+  t("and the case document is WRITE-ONCE ONCE SIGNED — the re-author carries `sig_armored IS NULL`, so no statement in this file can move a pin a signature already covers (NOT driven: there is no caller route to it)",
+    /ON CONFLICT\(case_id,edition\) DO UPDATE[\s\S]{0,400}?WHERE case_documents\.sig_armored IS NULL/.test(STORE_SRC),
+    true);
 }
 
 /* ====================================================================== 2
@@ -609,11 +647,18 @@ console.log("\n--- 6. the expectation is parsed from CASE-AS-PRODUCTION.md, not 
   /* AND THE REUSE RULE, which is the constraint the item was given rather than a
      property of the answer: D-21 forbids a second version table, so the pin had
      to name a row on the chain `published_bundles` already holds. */
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. The RULE is untouched —
+     D-21 forbids a second version table and the pin must name a row on the chain
+     `published_bundles` already holds — and the first half still measures it
+     exactly. The second half grepped for the UPDATE that no longer exists,
+     because CASE-5b writes all N pins in the roster INSERT out of the signed case
+     document rather than one at a time; the column and the chain it names are
+     unchanged, which is what this arm is actually about. */
   t("and the chain the pin names is the EXISTING one — no second version table was built, which is "
   + "D-21's rule and the reason the pin is a bundle_sha rather than an id of its own",
     [/CREATE TABLE IF NOT EXISTS case_versions/.test(
        readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8")),
-     /published_case_members SET version_sha/.test(STORE_SRC)],
+     /INSERT INTO published_case_members \(case_id,edition,ord,bundle_id,version_sha,role\)/.test(STORE_SRC)],
     [false, true]);
 }
 
