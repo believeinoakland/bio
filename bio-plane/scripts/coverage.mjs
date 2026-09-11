@@ -600,7 +600,18 @@ const REGISTER_FLOOR = {
      baseline, DELEGATION in `CLAIMS.md`.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-4's arms, and every figure here is true of this branch alone. */
-  arms: 868,
+  /* MOVED 2026-09-10 by FL-10 (worktree bio-worktrees/FLEET): 868 -> 872, read
+     off the figure a green POST-COMMIT `--strict` run PRINTED on this branch —
+     `REGISTER FLOOR  arms 872/868 · classified 163/163 · corpus (suites read)
+     164/164 · GREW by 4 arm(s)`, `provenance: 175 of 175 discovered item(s) are
+     in the commit at HEAD (3607b3b)`, exit 0 read unpiped — never by adding to
+     the number that was here. THE RISE IS FOUR APPENDED ARMS in
+     `test/fleetbundles.test.mjs`'s declaration (FL-10, D-298: the PLANE's own
+     bundle gets the guard), all four RUN from `test/fleetbundles.control.mjs`
+     with measured tallies in the declaration. `classified` and `corpus` did not
+     move: no suite was added, one grew. CONDUCT RE-DERIVES THESE ON THE MERGED
+     TREE and should: this branch cannot see CASE-4's arms. */
+  arms: 872,
   classified: 163,
   corpus: 164,
 };

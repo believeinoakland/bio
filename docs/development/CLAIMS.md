@@ -1577,3 +1577,19 @@ paths:
   - `bio-plane/test/fleetbundles.test.mjs` and `bio-plane/test/fleetbundles.control.mjs` — plane sections and APPENDED arms; no existing arm edited.
   - `bio-plane/dist/bio-plane.bundled.mjs` (REBUILT to today's src — closing D-298's 114-commit staleness is the item) and `bio-plane/dist/bio-plane.bundle.json` (NEW manifest; zero readers today, measured).
   **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/schema.mjs` (FL-10's own claim rule — if the work seems to need them, that is a finding to report), **NOT** `bio-plane/src/**` at all (`signpage.mjs` regenerates deterministically from `tools/sign-release.html`; a diff there would be a FINDING, not a change of mine), **NOT** `newgroup/**`, **NOT** `release/**` (D-298's release half is DIST's), **NOT** `docs/development/QUEUE.md`.
+
+### RELEASED 2026-09-10: the FL-10 claim above — landed as `3607b3b` (the guard) + the floor-move commit beside it
+All acceptance clauses measured, none believed: fresh build byte-identical to the committed
+bundle asserted (2,556,614 B, sha256 d95d280d…, 43 first-party inputs, ZERO vendored so the
+byte arm can never skip); a deliberately stale bundle FAILS naming the file (arms 6/6b: 54/2
+and 52/4, exit 1); the tree-shake arm reproduced ON THE PLANE (a non-entry edit left the
+bundle byte-identical and the input-hash arm failed anyway — FL-10's NC(2) by measurement);
+the generated-input loop closed and proven (arm 7: 55/1, exactly the render assertion);
+over-strictness green post-commit (arm 8: rebuild leaves the tree UNCHANGED, 56/0). Battery
+168/169 · 10,405 — the one red is `action-loop.test.mjs` 73/6, the PRE-EXISTING pinned-clock
+failure FL-9 measured identical on the untouched baseline and already delegated; not this
+item's. UI harnesses green. `--strict` exit 0 READ UNPIPED, post-commit, provenance 175/175
+at HEAD; REGISTER_FLOOR 868→872 moved to the printed figure. `src/signpage.mjs` untouched,
+as the claim promised — the render regenerates byte-identically. **For CONDUCT:** the FL-10
+QUEUE row and IC-70's RESOLUTION are yours; D-298's clause (1) is closed by this, clause (2)
+(the assembler refusal) and the coherent cut remain DIST's.
