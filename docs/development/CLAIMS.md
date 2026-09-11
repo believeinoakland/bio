@@ -1565,3 +1565,15 @@ paths: `docs/development/kickoffs/FLEET.md` ONLY — the takeover addendum. **NO
   **NOT** `pdf-worker/**`, **NOT** `bio-plane/**`, **NOT** `docs/development/QUEUE.md`. FL-9 is
   `done` and merged (`7429166`, integrated `626fad7`); no worker holds fleet ground.
 released: 2026-09-10, same turn — the addendum lands in the same commit as this entry.
+
+## CLAIM 2026-09-10 FLEET (FL-10 — the plane's committed bundle gets FL-9's guard; a stale plane artifact FAILS instead of shipping)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-10
+paths:
+  - `bio-plane/scripts/fleet-bundle.mjs` — the plane's descriptor and any shared-check growth ONLY; every existing export keeps its shape (two build scripts and the gate consume them).
+  - `bio-plane/scripts/embed-signpage.mjs` — an EXPORT + main-guard refactor only; the npm `embed:sign` behaviour is unchanged.
+  - `bio-plane/scripts/build-plane.mjs` — NEW, the plane's thin build caller on the agent-worker pattern.
+  - `bio-plane/package.json` — the `"build"` script line ONLY.
+  - `bio-plane/test/fleetbundles.test.mjs` and `bio-plane/test/fleetbundles.control.mjs` — plane sections and APPENDED arms; no existing arm edited.
+  - `bio-plane/dist/bio-plane.bundled.mjs` (REBUILT to today's src — closing D-298's 114-commit staleness is the item) and `bio-plane/dist/bio-plane.bundle.json` (NEW manifest; zero readers today, measured).
+  **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/schema.mjs` (FL-10's own claim rule — if the work seems to need them, that is a finding to report), **NOT** `bio-plane/src/**` at all (`signpage.mjs` regenerates deterministically from `tools/sign-release.html`; a diff there would be a FINDING, not a change of mine), **NOT** `newgroup/**`, **NOT** `release/**` (D-298's release half is DIST's), **NOT** `docs/development/QUEUE.md`.

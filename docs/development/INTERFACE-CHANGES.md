@@ -4831,3 +4831,38 @@ committed manifest, and the gate asserts the pin as well as the bytes. Measured,
 release half is DIST's and nothing is built against it. **The version bump and the RESOLUTION are
 CONDUCT's**, per the standing arrangement for worker-raised ICs. `I6` should absorb finding (3) —
 its real input surface crosses into `bio-plane/src/` — in the same turn it goes to 1.0.0.
+
+## IC-70 · I4 (+I6 context): THE PLANE'S OWN COMMITTED BUNDLE GAINS FL-9's GUARD — `dist/bio-plane.bundle.json` beside `dist/bio-plane.bundled.mjs`, and a stale plane artifact FAILS instead of shipping · PROPOSED 2026-09-10 (FL-10, enacting BOB's D-298 routing) — the RESOLUTION is CONDUCT's
+
+- **Interfaces:** **I4** (plane → installer, the release artifact), **1.0.0 STABLE**, owner `DIST`.
+  I6 is named on FL-10's row for continuity with IC-68 and gains only knowledge, no shape: no fleet
+  member changes here at all.
+- **Proposer:** FL-10 (the FLEET area session), 2026-09-10.
+- **Id PRE-MINTED BY CONDUCT at the FL-10 mint** — the IC-64 lesson enacted; not minted in this worktree.
+- **Owner to land the RELEASE half:** `DIST` (D-297, D-298's clause 2 — the assembler that REFUSES
+  an incoherent release). **This item lands the plane's GUARD half only** and builds nothing
+  against the release format.
+- **Consumers to answer:** `DIST` (owner of I4 and the release ceremony), `FLEET` (proposer).
+
+### The change, in one sentence
+
+`bio-plane` commits the SAME guarded-bundle shape IC-68 gave every fleet member — the existing
+`dist/bio-plane.bundled.mjs` gains `dist/bio-plane.bundle.json` (its sha256, byte length, exact
+recipe, and the sha256 of every input) and the FL-9 gate asserts the committed module is
+byte-identical to a fresh build of `src` — so D-298's defect class (114 commits of silent drift,
+a battery green on an artifact nobody ships from) FAILS instead of shipping.
+
+### MEASURED CONSUMER IMPACT, taken before building rather than after
+
+| reader | what it reads | affected? |
+| --- | --- | --- |
+| **`dist/bio-plane.bundle.json` (NEW)** | — | **ZERO readers today, measured by grep over the repo.** DIST's release half (D-297/D-298(2)) is its intended first consumer. Additive in fact. |
+| `bio-plane/test/bundle.test.mjs` | loads `dist/bio-plane.bundled.mjs` under miniflare | path unchanged; the REBUILT artifact is today's battery-green source. The battery proves it, not this row. |
+| `newgroup/scripts/embed-release.mjs` | runs `npm run build` in the plane, then reads the artifact | command name and artifact path unchanged; the build now ALSO writes the manifest (additive output). It rebuilds before reading, so it never sees a half-state. |
+| `bio-plane/package.json "build"` | the recipe | moves from an inline esbuild CLI line to `scripts/fleet-bundle.mjs`'s ONE expression via a thin `scripts/build-plane.mjs` caller (agent-worker's pattern). **Byte-identity of CLI-built vs library-built output is MEASURED before landing and recorded in the landed report.** |
+| `agent-worker/scripts/build.mjs`, `pdf-worker/scripts/build.mjs`, `test/fleetbundles.test.mjs` | `fleet-bundle.mjs` exports | existing exports keep their shapes; the plane arrives as a NEW exported descriptor, not via `discoverMembers` — deliberately, because a `bio-plane/fleet-member.json` would enrol the plane in `coverage.mjs`'s FLEET rules (no mutating surface ops), which the plane necessarily violates. |
+| `bio-plane/scripts/embed-signpage.mjs` | run by `npm run embed:sign` only (measured) | gains an exported renderer + an import-guard on main; CLI behaviour unchanged. Closes the generated-input loop: the gate can assert committed `src/signpage.mjs` IS the deterministic render of `tools/sign-release.html` without writing. |
+| `release/**` | the released 0.56.0 asset | UNTOUCHED. `dist` and `release/` intentionally diverge after the rebuild — that divergence is D-298's truthful state (114 commits of unreleased work), and making the release coherent again is the separate gated cut D-298 already names as DIST's. |
+
+**PROPOSED, 2026-09-10.** The guard half is FL-10's to land; the release half is DIST's and
+nothing here builds against it. **The version bump and the RESOLUTION are CONDUCT's.**
