@@ -2252,3 +2252,4 @@ After this item the census reports ZERO rows WIDER THAN THE WIRE and ZERO fields
 FIXTURE across the whole package, and the three NARROWER rows that remain are ONE deliberate
 closure in three suites — `cases[].bias_acknowledgement`, `.bar` and `.project_id`, which no
 surface in `app.html` reads.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `db1df93` and verified on the MERGED tree: battery 173/173 · 10,753 (delta ZERO, predicted), `coverage --strict` exit 0 read unpiped, UI harness exit 0 (`auth-surface` 94), `mintid --audit` 0 breaks.

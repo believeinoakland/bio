@@ -367,7 +367,7 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### M0-24 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching `auth-surface.test.mjs`; if none does, this row reads `queued`.
+### M0-24 · done
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
 depends-on: none — M0-23's census (arm C of `civicos-ui/check-mock-envelope.mjs`) is landed and is the instrument that measured this
@@ -375,6 +375,7 @@ scope: **M0-23's census delegation, the fixable half: `civicos-ui/test/auth-surf
 accepts-when: the census's arm C reports `auth-surface`'s `published[]` at the wire shape and its phantom keys GONE; a loose ratified finding WITH a pair representable in the fixture and asserted; `node civicos-ui/test/run.mjs` from the repo root, exit UNPIPED, 0; `cd bio-plane && npm run test:battery` green — measure your own baseline.
 NEGATIVE CONTROL: run and recorded, armed ALONE — (1) restore one phantom key and something must FAIL naming it; (2) over-strictness — a fixture legitimately narrower than the wire with zero measured readers (the `cases[]` 6/9 state) must stay NAMED, never failed.
 added: 2026-09-10 · CONDUCT (M0-23's delegation at integration — a delegation is a notice, and a notice is not an item)
+landed: `d931814`, merged on `main` at `db1df93`. `published[]` 7/9 → 9/9, the phantom `manifest`/`manifest_sha` keys GONE (fixture-only, which is precisely why nothing could ever fail on them), `caseMembers[]` absent → 6/6, `cases[]` added at 6/9 and NAMED — across the whole package the census now reports ZERO rows wider than the wire and ZERO fields absent from a fixture. `auth-surface` 74 → 94 assertions; battery 173/173 · 10,753 on the merged tree, delta ZERO (the predicted shape); UI harness exit 0; `--strict` exit 0 unpiped; `mintid --audit` 0 breaks. **THE CONTROL CAUGHT THE ITEM'S OWN NEW ASSERTION BEING THE DEFECT THE ITEM EXISTS TO REFUSE**: the first draft pinned `cases[]`'s three columns ABSENT, so the honest widening (the day a surface renders the bar) would have gone red against a suite claiming to defend against over-strictness — found by ARMING the control, never by reading the code; corrected to assert what `pubList` demonstrably reads, free in both directions. The empty-record arm corrected with its dated reason (it emptied one array of three and would have gone red for a fixture that got MORE faithful). The worker reproduced **D-303's −6 exactly** (10,663 vs main's 10,669 at its base) — third independent sighting, recorded on that row's subject. **A BOUND ON THE CENSUS, delegated and carried here so nobody over-reads the instrument: its headline says 37 ops resolved but only ONE builds a row array from a readable SELECT — the census's real corpus is `publishedmanifest`'s four arrays, and whether the other 36 are un-SELECTable by construction or merely unreadable by that reader is UNDETERMINED.** "Class closed in reach" means closed THERE.
 
 ### D-302 · done
 milestone: M0 (background lane, holds no slot)
