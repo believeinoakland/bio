@@ -1543,3 +1543,26 @@ that says otherwise. That is authored rendering — it needs `op=affordances`' n
 or `op=publishedcase`'s roster — and it is the DELEGATION filed above, alongside **UI-56**,
 which touches the same neighbourhood. **No UI behaviour was authored here; three mirrors were
 made to agree with the catalog again.**
+
+### AMENDMENT 2026-09-10 RECORD (CASE-4) — **`REGISTER_FLOOR` MOVED, AND IT IS REPORTED HERE BY NAME BECAUSE THE CLAIM ABOVE SAID IT WOULD BE**
+
+`bio-plane/scripts/coverage.mjs`'s `REGISTER_FLOOR` moves **858 -> 865 arms / 162 -> 163
+classified / 163 -> 164 corpus**, all three in one edit, every figure read off what a green
+`--strict` run PRINTED — `arms 865/858 · classified 163/162 · corpus (suites read) 164/163 ·
+GREW by 7 arm(s)` — and never by adding to the numbers that were there.
+
+**The rise is ONE new suite**, `bio-plane/test/caselifecycle.test.mjs`, whose declaration states
+seven armed arms — (a), (b), (b2), (c), (d), (d2), (e) — plus an unnumbered baseline. So
+`classified` and `corpus` each move by one and `arms` by seven, which is exactly what the
+register printed rather than what the declaration claims: the two agree here, and where they
+have not agreed in the past (D-266's nine-declared-seven-counted) the figure the floor takes is
+the instrument's.
+
+**MEASURED AFTER THE COMMIT, NOT BEFORE.** On the working tree the run reported `contaminated:
+1 suite(s) no other checkout has` and held all three figures at the in-commit values, because
+`provenance.mjs` refuses to let this register count work no other checkout can see (D-238). A
+floor moved while a phantom is present is permanently too high. The move is taken from the run
+made after `git commit`.
+
+**CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should:** this branch cannot see FL-9's arms,
+and every figure here is true of this branch alone.

@@ -580,9 +580,31 @@ const REGISTER_FLOOR = {
      which these numbers are reproducible by anyone else.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-2's arms, and every figure here is true of this branch alone. */
-  arms: 858,
-  classified: 162,
-  corpus: 163,
+  /* MOVED 2026-09-10 by CASE-4 (worktree agent-a2cabbd5225deffd5): 858 -> 865 /
+     162 -> 163 / 163 -> 164, ALL THREE IN THE SAME TURN and every one read off
+     the figure a green `--strict` run PRINTED on this branch
+     (`arms 865/858 · classified 163/162 · corpus (suites read) 164/163 · GREW by
+     7 arm(s)`), never by adding to the numbers that were here.
+     THE RISE IS ONE NEW SUITE, `test/caselifecycle.test.mjs`, whose declaration
+     states SEVEN armed arms — (a), (b), (b2), (c), (d), (d2), (e) — plus an
+     unnumbered baseline, so `classified` and `corpus` each move by one and
+     `arms` by seven. The baseline is deliberately NOT an ordinal item, which is
+     CASE-1's measured lesson: `countArms` reads the enumerated list and an
+     opening `(baseline)` item went unreadable one item earlier. Its driver,
+     `test/caselifecycle.control.mjs`, is deliberately not a `.test.mjs` because
+     it edits real sources while it runs, so the battery must not discover it and
+     this register must not count it as a corpus member.
+     **MEASURED AFTER THE COMMIT, NOT BEFORE.** Read on the working tree the run
+     reported `contaminated: 1 suite(s) no other checkout has` and held all three
+     figures at the in-commit values, because `provenance.mjs` will not let this
+     register count work no other checkout can see (D-238). The floor move is
+     taken from the run made AFTER `git commit`, which is the only run in which
+     these numbers are reproducible by anyone else.
+     CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
+     see FL-9's arms, and every figure here is true of this branch alone. */
+  arms: 865,
+  classified: 163,
+  corpus: 164,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
