@@ -2449,3 +2449,4 @@ arm, no other figure touched.
 - `civicos-ui/test/publication-entry.test.mjs` — a `NEGATIVE CONTROL:` declaration added at
   the head. The suite had none and `coverage.mjs` had been printing it in the civicos-ui
   NO CONTROL list (reported, not gated); the figure moves 25/47 → 26/47.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `9e738ae` (+ ratchet fix `715ab23`) and verified on the MERGED tree: battery 173/173 · 10,764 (+4 closing exactly), `coverage --strict` exit 0 read unpiped (floor 906/167/168 unmoved), UI harness exit 0 after the M0-24 cross-item ratchet was corrected at the cause and D-286's D0b flake passed its one re-run, `mintid --audit` 0 breaks. THE CASE ARC IS DONE; the plane residue is D-309, an item.
