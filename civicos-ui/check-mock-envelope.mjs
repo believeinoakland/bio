@@ -105,6 +105,38 @@
  *       and NO harness reaches `signIn` — arm B is blind to it and always was.
  *       Restored byte-identical, app.html sha256
  *       37b23352da844222ff69c61366751d3d684df5661a0df4928592f766eb59560e.
+ *
+ * ARM C (M0-23, 2026-09-10) — THE FIXTURE-SHAPE CENSUS. Its own rules and its own
+ * blind spots are stated at the arm; what belongs here is its CONTROLS, run
+ * against the final file with the subject restored by sha256 AND byte-for-byte:
+ *
+ *   (c1) DOES IT SEE A DROPPED COLUMN AT ALL — `version_sha` deleted from both
+ *       roster rows of `test/preauth-vocabulary.test.mjs`'s `caseMembers`
+ *       fixture (the exact defect UI-56 and M0-23 each found on this op). RUN:
+ *         arm C: NARROWER THAN THE WIRE … preauth-vocabulary.test.mjs ·
+ *         publishedmanifest.caseMembers[] carries 5 of the 6 column(s) …
+ *       naming the suite, the field and the column — and the guard still EXITS
+ *       0, which is the declared behaviour and not a miss: a narrow fixture is
+ *       reported, never failed. Restored byte-identical (164,282 B).
+ *   (c2) THE INSTRUMENT FOUND WRONG THREE TIMES BY ITS OWN FIRST RUN, recorded
+ *       rather than smoothed, because all three were the arm misreporting the
+ *       plane rather than the plane being wrong. (i) The `SELECT` reader took the
+ *       first backtick after `this.#rows(` and the plane DOCUMENTS its queries in
+ *       block comments that quote column names in backticks — so `cases[]` was
+ *       read as starting inside a comment and scored UNCLASSIFIED. (ii) The
+ *       narrow-row sentence counted the fixture's TOTAL keys against the plane's
+ *       column count and printed "carries 9 of the 9 column(s) … MISSING
+ *       strength, required", contradicting itself. (iii) The method finder
+ *       required a single-line parameter list and reported `resolveReferences`
+ *       and `threadInstance` as "not found as a method" when both are plainly
+ *       there. Each is corrected at its site, and each is why the arm PRINTS ITS
+ *       CORPUS: the first run's headline read "1 op classified, 8 fields judged"
+ *       and the corrected one reads 37 resolved, 10 judged over 70 rows.
+ *   (c3) THE FLOORS ARE THE ARM'S OWN NEGATIVE CONTROL and they are structural
+ *       rather than run: it FAILS if store.mjs cannot be read, if no op resolves
+ *       to a method, or if no field is judged — because a census over an empty
+ *       corpus reports a clean estate for free, which this project has shipped
+ *       three times.
  */
 import fs from "fs";
 import path from "path";
@@ -251,6 +283,10 @@ const SUITES_WITH_OP_TRAFFIC = [
   "subject-view.test.mjs",
 ];
 
+/* Arm C reads what arm B's single re-run already observed, so the census costs
+   no second pass over the harness. One row per suite per op. */
+const OBSERVED = [];
+
 function armB(){
   const probe = path.join(TESTDIR, "envelope-probe.mjs");
   if(!fs.existsSync(probe)){ FAIL("test/envelope-probe.mjs is missing — arm B cannot run"); return; }
@@ -287,6 +323,7 @@ function armB(){
     }
     for(const r of rows){
       opsSeen.add(r.op);
+      if(r.rowKeys && Object.keys(r.rowKeys).length) OBSERVED.push({ suite, op:r.op, rowKeys:r.rowKeys });
       observed += r.wrapped + r.flat;
       const want = wireShapeOf(r.op);
       checked++;
@@ -308,10 +345,236 @@ function armB(){
   notes.push(`arm B coverage — ops exercised by the harness: ${[...opsSeen].sort().join(" ")}`);
 }
 
+/* ============================================================
+   ARM C — THE FIXTURE-SHAPE CENSUS (M0-23, UI-56's delegation)
+   ============================================================
+
+   THE CLASS, and it is D-173 one altitude down. Arm B asks what shape the
+   ENVELOPE was. A mock can answer a perfectly wrapped envelope whose ROWS drop
+   half the columns the plane selects, and no assertion can notice: a suite
+   cannot assert against a column its own fixture does not have. That is not a
+   live defect on its own — the surface reads what it reads — but it is the
+   condition under which a real defect is unseeable, and it has now been found
+   twice on the same op. `publishedManifest()` selects six columns for
+   `caseMembers[]`; `publishedcase.test.mjs` carried four (UI-56) and
+   `preauth-vocabulary.test.mjs` carried the same four (M0-23). `version_sha`,
+   one of the two missing, is THE COLUMN THE PUBLISHED INDEX'S JOIN IS MADE ON.
+
+   IT REPORTS AND IT DOES NOT FAIL ON A NARROW FIXTURE, deliberately, and this
+   is the over-strictness rule enacted rather than promised. A fixture may be
+   legitimately narrower than the wire: `caseMembers[].role` is selected by the
+   plane and READ BY NO SURFACE IN app.html (`memberRole()` is the project
+   roster's, a different table), so a suite exercising a surface that never
+   reads it is not carrying a defect. A guard that failed on that would push
+   every suite toward carrying columns for their own sake. So the arm NAMES what
+   is narrow and leaves the judgement to a reader, in the shape this estate
+   already uses for an open question (the DEC-49 report, the runner's phantom
+   residual).
+
+   WHAT IT DOES FAIL ON is losing its own subject. A walk that covers nothing
+   passes everything, and this project has hit that three times, so the arm
+   fails if the plane's columns cannot be read at all, or if the census observed
+   no answer for an op it could read columns for. A census over an empty corpus
+   is the zero-cost outcome arriving in the instrument.
+
+   NOTHING HERE IS A LIST OF COLUMNS. The op is resolved to its store method
+   through the DO's own dispatch table, and the columns are read out of that
+   method's `SELECT`s. Add a seventh column to `caseMembers[]`, or a fifth array
+   to the answer, and this arm sees it the same day — where a list of spellings
+   would go stale the moment somebody wrote the fourth.
+
+   WHAT IT CANNOT SEE, stated every run rather than only here:
+     - An op no suite drives. Arm C's reach is arm B's reach, which is the
+       harness's. It prints its corpus so the gap is visible.
+     - A field the plane does not build from a readable `SELECT` — anything
+       assembled in JS, parsed out of a manifest, or selected with `*` — is not
+       classified and is NAMED as unclassified rather than scored zero.
+     - Whether a missing column MATTERS. It says the fixture cannot represent
+       the column; it does not say any surface reads it. That is the reader's
+       judgement and the reason this arm reports.
+     - A suite that builds a correct fixture and never answers it. The census
+       observes ANSWERS, not source. */
+
+const STORE = path.join(HERE, "..", "bio-plane", "src", "store.mjs");
+
+/* The method body, taken by brace-matching from the declaration rather than by
+   a line count, so it cannot silently read half a method. */
+/* CORRECTED DURING M0-23's OWN FIRST RUN, recorded rather than smoothed: this
+   first required the parameter list to contain no `)` and to sit on one line,
+   and it reported `resolveReferences` and `threadInstance` as "not found as a
+   method" when both are plainly there — the instrument naming the subject wrong
+   in the direction that looks like a finding. */
+function methodBody(src, name){
+  const m = new RegExp("^  " + name + "\\s*\\([\\s\\S]*?\\)\\s*\\{", "m").exec(src);
+  if(!m) return null;
+  let i = src.indexOf("{", m.index), depth = 0;
+  for(let j = i; j < src.length; j++){
+    if(src[j] === "{") depth++;
+    else if(src[j] === "}"){ depth--; if(depth === 0) return src.slice(i, j + 1); }
+  }
+  return null;
+}
+
+/* `<field>: this.#rows(`SELECT … FROM …`)` — the only shape the plane builds a
+   row array with. Aliases are stripped (`c.case_id` -> `case_id`) and an
+   explicit `AS` wins, because the KEY THE WIRE CARRIES is what a fixture has to
+   match, not the column the table happens to call it. */
+function selectFields(body){
+  const out = new Map(), unreadable = [];
+  const re = /(\w+):\s*this\.#rows\(/g;
+  let m;
+  while((m = re.exec(body))){
+    const field = m[1];
+    /* CORRECTED DURING M0-23's OWN FIRST RUN, and it is the receipt for why a
+       census must be read before it is believed: this took the FIRST backtick
+       after `this.#rows(`, and the plane documents its queries in block comments
+       that quote column names IN BACKTICKS. So `cases` was read as starting
+       inside a comment, found no `SELECT … FROM`, and was reported UNCLASSIFIED
+       — the arm scoring the plane's best-documented query as unreadable. The
+       comments are stripped first now. */
+    const rest = body.slice(m.index + m[0].length - 1);
+    const cleaned = rest.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/.*$/gm, "");
+    const tick = cleaned.indexOf("`");
+    if(tick < 0){ unreadable.push(field + " (no template literal)"); continue; }
+    const end = cleaned.indexOf("`", tick + 1);
+    if(end < 0){ unreadable.push(field + " (unterminated literal)"); continue; }
+    const sql = cleaned.slice(tick + 1, end);
+    const sel = /SELECT\s+([\s\S]*?)\s+FROM\s/i.exec(sql);
+    if(!sel){ unreadable.push(field + " (no SELECT … FROM)"); continue; }
+    if(/\*/.test(sel[1])){ unreadable.push(field + " (SELECT * — the columns are the table's, not this text's)"); continue; }
+    const cols = sel[1].split(",").map(c => {
+      const t = c.trim().replace(/\s+/g, " ");
+      const as = / AS ([A-Za-z0-9_]+)$/i.exec(t);
+      if(as) return as[1];
+      const bare = t.split(".").pop();
+      return /^[A-Za-z0-9_]+$/.test(bare) ? bare : null;
+    }).filter(Boolean);
+    if(!cols.length){ unreadable.push(field + " (no column names recoverable)"); continue; }
+    out.set(field, cols);
+  }
+  return { fields: out, unreadable };
+}
+
+function armC(){
+  let src = "";
+  try{ src = fs.readFileSync(STORE, "utf8"); }
+  catch(_){ FAIL("arm C could not read bio-plane/src/store.mjs — the census has no authority to compare against and would pass over nothing"); return; }
+
+  /* The op -> method binding comes from the DO's OWN dispatch table. */
+  const dispatch = new Map();
+  for(const d of src.matchAll(/^\s*([a-z0-9_]+):\s*\(\)\s*=>\s*this\.([A-Za-z0-9_]+)\(/gm))
+    if(!dispatch.has(d[1])) dispatch.set(d[1], d[2]);
+  if(!dispatch.size){ FAIL("arm C read no op -> method bindings out of store.mjs's dispatch table — its subject is gone"); return; }
+
+  const opsObserved = [...new Set(OBSERVED.map(o => o.op))].sort();
+  const wire = new Map(), unclassified = [], noMethod = [];
+  let resolved = 0, noRows = 0;
+  for(const op of opsObserved){
+    const method = dispatch.get(op);
+    if(!method){ noMethod.push(op); continue; }
+    const body = methodBody(src, method);
+    if(!body){ noMethod.push(op + " (" + method + " not found as a method)"); continue; }
+    resolved++;
+    const { fields, unreadable } = selectFields(body);
+    for(const u of unreadable) unclassified.push(op + "." + u);
+    if(fields.size) wire.set(op, fields);
+    else noRows++;
+  }
+
+  if(!wire.size){
+    FAIL("arm C classified ZERO ops — no op the harness drives resolves to a store method with a "
+       + "readable SELECT, so the census would report a clean corpus over nothing. Establish whether "
+       + "the dispatch table, the method shape or the harness's reach moved before trusting this.");
+    return;
+  }
+
+  let judged = 0, narrow = 0, rowsSeen = 0;
+  const narrowRows = [], wideRows = [], censusRows = [], absentFields = [];
+  for(const o of OBSERVED){
+    const fields = wire.get(o.op);
+    if(!fields) continue;
+    for(const [field, cols] of fields){
+      const got = o.rowKeys[field];
+      /* THE SUITE ANSWERED NO SUCH ARRAY AT ALL, which is NARROWER than dropping
+         columns and would be invisible if it were simply skipped — absence at one
+         level is not evidence of absence at the next, and a fixture missing a
+         whole wire array is a fixture that cannot assert about that array's
+         existence either. Named, not judged: a suite may legitimately never
+         answer a field its surface does not read. */
+      if(!got){ absentFields.push(`${o.suite} · ${o.op} answers NO ${field}[] at all (the plane always sends it, with ${cols.length} column(s))`); continue; }
+      judged++;
+      rowsSeen += got.rows;
+      /* AN EMPTY ARRAY IS NOT A NARROW FIXTURE AND IS NOT A WIDE ONE — it is
+         zero evidence, and it is SAID rather than dropped, because a census whose
+         judged count is inflated by empty answers is exactly the headline that
+         passes over an empty corpus. */
+      if(!got.rows){ censusRows.push(`${o.suite} · ${o.op}.${field}[]: EMPTY (0 rows) — counted as judged, proves nothing either way`); continue; }
+      const have = new Set(got.keys);
+      const missing = cols.filter(c => !have.has(c));
+      const extra = got.keys.filter(k => !cols.includes(k));
+      /* CORRECTED DURING M0-23's OWN FIRST RUN: this counted the fixture's TOTAL
+         key count against the plane's column count and printed "carries 9 of the
+         9 column(s) … MISSING strength, required" — a sentence that contradicts
+         itself, because two of those nine keys were the fixture's own additions.
+         What the census is about is the INTERSECTION. */
+      const carried = cols.length - missing.length;
+      censusRows.push(`${o.suite} · ${o.op}.${field}[]: ${carried}/${cols.length} wire column(s) over ${got.rows} row(s)`);
+      if(missing.length){ narrow++; narrowRows.push(`${o.suite} · ${o.op}.${field}[] carries ${carried} of the ${cols.length} column(s) the plane selects, over ${got.rows} row(s) — MISSING ${missing.join(", ")}`); }
+      if(extra.length) wideRows.push(`${o.suite} · ${o.op}.${field}[] answers ${extra.length} key(s) the plane's SELECT does not: ${extra.join(", ")}`);
+    }
+  }
+
+  if(!judged){
+    FAIL("arm C judged NO field at all — every op it could read columns for was answered by a suite "
+       + "without the array in question. The census is measuring nothing and reporting clean.");
+    return;
+  }
+
+  notes.push(`arm C: THE FIXTURE-SHAPE CENSUS — ${OBSERVED.length} suite/op answer(s) observed across `
+           + `${opsObserved.length} op(s); ${resolved} resolved through the DO's OWN dispatch table to a store `
+           + `method (${noMethod.length} not resolved, named below), and ${wire.size} of those build at least one `
+           + `row array from a readable SELECT (${noRows} build their answer some other way and are outside this `
+           + `census by construction); ${judged} array field(s) judged over ${rowsSeen} fixture row(s); `
+           + `${narrow} NARROWER THAN THE WIRE · floors ${judged} judged / ${wire.size} classified`);
+  /* THE CORPUS, PRINTED. A census that does not say what it compared against
+     cannot be told apart from one that compared against nothing. */
+  for(const [op, fields] of wire)
+    for(const [field, cols] of fields)
+      notes.push(`arm C: THE WIRE — ${op}.${field}[] is ${cols.length} column(s) read out of the plane's own `
+               + `SELECT: ${cols.join(", ")}`);
+  for(const r of censusRows) notes.push(`arm C: JUDGED — ${r}`);
+  for(const r of narrowRows)
+    notes.push(`arm C: NARROWER THAN THE WIRE (reported, NOT failed — a suite exercising a surface that never `
+             + `reads the dropped column is legitimately narrow, and only a reader can say which this is): ${r}`);
+  if(!narrowRows.length)
+    notes.push(`arm C: no fixture in reach is narrower than the plane's own SELECT — and the figure that makes `
+             + `that mean something is the ${judged} field(s) judged above, not this sentence`);
+  for(const r of absentFields)
+    notes.push(`arm C: FIELD ABSENT FROM THE FIXTURE ENTIRELY (narrower than dropping a column, and named `
+             + `for the same reason — it is not judged, because a suite may never answer a field its surface `
+             + `does not read): ${r}`);
+  for(const r of wideRows.slice(0, 12))
+    notes.push(`arm C: WIDER THAN THE WIRE (a key the plane's SELECT does not carry — often a field the method `
+             + `adds in JS after the query, which this arm cannot see, so it is NAMED and not failed): ${r}`);
+  if(unclassified.length)
+    notes.push(`arm C: UNCLASSIFIED — ${unclassified.length} field(s) the plane builds in a way no SELECT text `
+             + `can be read out of, NAMED rather than scored zero: ${unclassified.slice(0, 10).join(" · ")}`);
+  if(noMethod.length)
+    notes.push(`arm C: NOT RESOLVED — ${noMethod.length} observed op(s) have no `
+             + `\`op: () => this.method()\` binding this reader can see (a parameterised entry, an op the `
+             + `control plane answers itself, or a mock's own invention): ${noMethod.slice(0, 12).join(" ")}`);
+  notes.push(`arm C: WHAT THIS CENSUS CANNOT SEE (stated every run, not only in the header): an op NO suite `
+           + `drives is outside it entirely — its reach is the harness's; a field the plane assembles in JS, `
+           + `parses out of a manifest or selects with \`*\` is unclassified, named above; an EMPTY array `
+           + `carries no column evidence and is counted as judged but proves nothing; and it says a fixture `
+           + `CANNOT REPRESENT a column, never that any surface reads it.`);
+}
+
 /* ============================================================ */
 
 armA();
 armB();
+armC();
 
 for(const n of notes) console.log("  " + n);
 if(fails.length){
