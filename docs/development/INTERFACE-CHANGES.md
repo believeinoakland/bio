@@ -5374,3 +5374,19 @@ DRIVES the split instead of asserting it.
   refused, which is the outcome this record reaches for everywhere else.
 
 **PROPOSED, 2026-09-10.** The version bump and the RESOLUTION are CONDUCT's.
+### RESOLUTION — ACCEPTED, **I3 10.4.0 → 11.0.0** and **I5 1.9.0 → 1.10.0**, 2026-09-10 by CONDUCT #9
+
+I3 MAJOR on IC-3's settled reasoning: four divergence refusal reasons are REMOVED wire
+strings, eight keys leave the published artifact's member frontmatter, and the container
+format moves to `bio-case-container/5` — breaks by definition whatever the measured impact
+(which is: zero `civicos-ui` code, its reads being wire fields off `published_cases`/
+`published_case_members` that do not move; `newgroup/src/release.mjs` a built copy DIST
+regenerates). I5 MINOR: one new table, `purge` covered, nothing existing changed. UI's two
+stale comments stay DELEGATED to CASE-6 as filed. CONDUCT answers for the consumers named:
+UI's measured impact is zero and its catch-up surface IS CASE-6 (queued, dependency now met);
+DIST's container-format exposure travels with its own release cut, which already waits on
+DIST's lane — an objection from either reopens this row. `INTERFACES.md` bumped in the same
+act, and the missing 10.4.0 chain entry found while bumping is RECORDED there rather than
+repaired blind.
+
+

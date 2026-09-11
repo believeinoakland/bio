@@ -2197,3 +2197,4 @@ condition under which a delegation is the right instrument rather than an excuse
 DEC-72 says the bar is one fact about the case, and the design doc separately says each claim's own
 derived strength is displayed beside the case's standard, so the pair is `strength` per finding and
 `bar` per case.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `ac2941e` and verified on the MERGED tree: battery 173/173 · 10,753 (10,680 + the attributed +73, closing exactly suite for suite), `coverage --strict` exit 0 read unpiped (OPS 171/171, CHECKS 249/249, `REGISTER_FLOOR` collapsed a fourth time and verified by print at 901/167/168), UI harness exit 0, `mintid --audit` 0 breaks, `dist/**` rebuilt on the merged tree. IC-71 RESOLVED in the same act: I3 11.0.0, I5 1.10.0.
