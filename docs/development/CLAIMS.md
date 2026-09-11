@@ -1899,6 +1899,7 @@ paths:
   in it; it is the census's subject and is READ ONLY here), **NOT** any other suite under
   `civicos-ui/test/` — the census REPORTS on them and edits none, **NOT**
   `docs/development/QUEUE.md` (CONDUCT's sole ground).
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 171/171 · 10,537 (delta ZERO against pre-merge main, the worker's predicted shape), `coverage --strict` exit 0 read unpiped, UI harness exit 0, `mintid --audit` 0 breaks.
 
 ### DELEGATION 2026-09-10 (M0-23 → UI / whoever next holds these suites) — what the fixture-shape census found OUTSIDE my claim
 The census arm M0-23 added to `civicos-ui/check-mock-envelope.mjs` (arm C) reports, on every
