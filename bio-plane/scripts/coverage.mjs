@@ -594,9 +594,19 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  arms: 883,
-  classified: 164,
-  corpus: 165,
+  /* MOVED 2026-09-10 by D-265 (883 -> 888 / 164 -> 165 / 165 -> 166), ALL THREE IN
+     THE SAME TURN and every one taken from the figure this item's own green
+     `--strict` run PRINTED — `arms 888/883 · classified 165/164 · corpus 166/165 ·
+     GREW by 5 arm(s)` — never incremented by hand and never counted from the
+     source. The figures were read AFTER the commit, because the comparison is
+     against the REPRODUCIBLE figure and an untracked suite is excluded from it:
+     the same run before committing printed 883/883 and would have moved nothing.
+     The cause is one new suite, `test/walkfigure.test.mjs`, whose `NEGATIVE
+     CONTROL:` declaration states FIVE arms. Every one of those arms was RUN, and
+     each is recorded in that declaration with its measured figures. */
+  arms: 888,
+  classified: 165,
+  corpus: 166,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
