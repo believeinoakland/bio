@@ -1870,3 +1870,4 @@ concurrency: checked over the whole register. **No live claim names any path abo
   the list that asked for it in prose.
   **Restored to green and measured:** `coverage-provenance` 28 → 29, `owed-controls` 40 → 41,
   the +1 in each being the new assertion on the derived list.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `33e0b5e` and verified on the MERGED tree: battery 171/171 · 10,537 (pre-merge main 10,488 + the attributed +49, closing exactly), `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` 888/165/166, UI harness exit 0, `mintid --audit` 0 breaks. The CLAIMS.md merge conflict was the claim's own predicted one and was resolved keep-both (two appended blocks, no shared row).
