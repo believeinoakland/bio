@@ -105,7 +105,48 @@ const ARMS = {
            VALUES (?,?,?,?,?,?,?,?,?,?,?)\`,
           nid, sig.engine, live.version, observed, now, live.cap,
           "announcement", "{}", "{}", sig.source, "from a changelog");
-        this.sql.exec(\`UPDATE calibrations SET superseded_by=?, drift=? WHERE calibration_id=?\`,
+        this.sql.exec(\`UPDATE reading_text_source SET derivation_cap=? WHERE capture_sha=?\`,
+                        cal.cap, o.capture_sha);`,
+    mustFail: ["NO MACHINE MINTS A GRADE (DEC-4)"],
+    mustPass: ["op=calibrationdrift names EXACTLY", "IT RAISES A RE-EVALUATION OBLIGATION"],
+  },
+
+  /* (b) THE ITEM'S NEGATIVE CONTROL (2). Let a CHANGELOG SIGNAL ALONE mark a
+     calibration current, with no probe run. Armed by adding the path a
+     well-meaning author would add: the vendor announced a release, so record
+     that the engine now stands at that version and carry the last cap forward.
+     It is wrong because the cap is a MEASUREMENT and nothing measured this one.
+     MUST FAIL: the three "A CLAIM IS NOT A MEASUREMENT" assertions.
+     MUST NOT FAIL: the refusal of a signal that CARRIES a cap, which is a
+     different fence entirely and must still be standing. */
+  changelog: {
+    file: "src/store.mjs",
+    find: `    const subject = this.#one(
+      \`SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?\`, sig.engine);`,
+    repl: `    const subject = this.#one(
+      \`SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?\`, sig.engine);
+    /* NEGATIVE CONTROL ARM (b) — THE DEFECT, INSERTED: an announcement mints a
+       "current" calibration with no probe behind it, carrying the last cap. */
+    {
+      const live = this.#calibrationCurrent(sig.engine);
+      if (live) {
+        const nid = this.#mintCalibrationId();
+        this.sql.exec(
+          \`INSERT INTO calibrations
+             (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by,note)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)\`,
+          nid, sig.engine, live.version, observed, now, live.cap,
+          "announcement", "{}", "{}", sig.source, "from a changelog");
+        /* replaced_by, not superseded_by — D-221's total version-edge sweep
+           reserves that word in the schema and the column was renamed for it.
+           THIS ARM WAS BROKEN BY THAT RENAME AND THE HARNESS CAUGHT IT: the
+           insert referenced a column that no longer existed, the store threw,
+           the suite DIED, and the driver reported -1 pass / -1 fail / foot
+           false rather than a confident zero. An arm that crashes its subject
+           measures nothing, and the only reason that was visible is the -1. */
+        this.sql.exec(\`UPDATE calibrations SET replaced_by=?, drift=? WHERE calibration_id=?\`,
                       nid, "same", live.calibration_id);
       }
     }`,
