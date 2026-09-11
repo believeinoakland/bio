@@ -598,11 +598,24 @@ const REGISTER_FLOOR = {
      ONE RED IS EXPECTED ON THIS TREE AND IS NEITHER ITEM'S: `action-loop.test.mjs`
      pins a fixture clock at 2026-09-10 and the machine rolled past it. Both workers
      measured it independently on untouched baselines. It is M0-22. */
-  arms: 868,
-  classified: 163,
-  corpus: 164,
-  classified: 163,
-  corpus: 164,
+  arms: 875,
+  classified: 164,
+  corpus: 165,
+  /* THE DUPLICATE `classified`/`corpus` KEYS THAT STOOD HERE FOR ONE COMMIT WERE MINE,
+     2026-09-10, AND THEY ARE THE SEVENTH INSTANCE OF THE HAZARD THE COMMENT ABOVE
+     DESCRIBES. Resolving FL-9's and CASE-4's competing floor blocks, I replaced the
+     conflict region with a full key set while the SHARED lines below it — which were
+     never in conflict — survived untouched. Valid JavaScript; the LAST key wins; and
+     the last pair read 163/164, LOWER than the merged run's measured 164/165. Slack
+     installed in a ratchet whose whole purpose is to have none, by the same edit that
+     wrote the warning about it.
+     IT WAS CAUGHT BY READING THE TOOL'S OWN OUTPUT, not by review: `--strict` printed
+     `classified 164/163 · corpus 165/164` while the file plainly said 164 and 165, and
+     a floor that disagrees with the number you just typed is the tell. **A duplicate
+     object key cannot be seen by reading the value you expect to find** — which is why
+     the check is grep the KEYS, not read the block. Left recorded rather than silently
+     deleted, because seven instances is a property of this block's shape and the next
+     merge conflict here will be the eighth chance. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

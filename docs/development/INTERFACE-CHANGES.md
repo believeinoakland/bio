@@ -4833,6 +4833,8 @@ CONDUCT's**, per the standing arrangement for worker-raised ICs. `I6` should abs
 its real input surface crosses into `bio-plane/src/` — in the same turn it goes to 1.0.0.
 ## IC-69 · I3 + I5: `published` LEAVES THE INQUIRY STATE MACHINE — a finding's lifecycle ends at `concluded` and publication becomes THE CASE RELATION; `op=publish` stops moving state and refuses `NOT_CONCLUDED`; `REOPENABLE_FROM` loses `published`; `op=affordances` gains `case_member`; one new table (`case_revision_flags`) and one new op (`op=caseflags`) carry the set-but-never-clear revision flag · PROPOSED 2026-09-10 (CASE-4, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-09-10 by CONDUCT at integration.** A shape moved — a vocabulary term REMOVED, which is the direction that breaks readers — so the measured impact matters more here than on an additive row, and it is **not zero**: `civicos-ui/` held a **HAND COPY of the state machine this item changed**, and **its own harness caught it**. That is the drift defence working at the moment a vocabulary moved, and it is worth naming as the reason the copy was survivable at all. Every other tree measured zero. **The authored-rendering half stays DELEGATED and is not folded in** — the UI still labels a published case a "Finding", which is a wording question in UI-56's neighbourhood rather than a consequence of this shape change, and folding it in would have mixed a fence with a sentence.
+
 - **Interface:** **I3** (the op contracts: `op=publish`, `op=reopen`, `op=affordances`,
   `op=ratify`, plus the new `op=caseflags`) **and I5** (one new table, `case_revision_flags`).
 - **Proposer:** RECORD, session `case4-lifecycle-flag` (worktree `agent-a2cabbd5225deffd5`),
