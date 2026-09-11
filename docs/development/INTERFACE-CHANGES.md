@@ -5582,6 +5582,19 @@ row:
 - **NOTHING ON I3 MOVES FOR THIS**, which is why UI-57 was filed as I3 CONSUMPTION with no IC
   of its own.
 
+### RESOLUTION — ACCEPTED, **I3 13.0.0 → 14.0.0**, 2026-09-10 by CONDUCT #9
+
+MAJOR on IC-25's and IC-47's own rule: the SET of published acts is something consumers build
+against, and narrowing it for a caller class is a behaviour break whatever the measured impact.
+The measured impact is exactly one consumer surface, named in this row's own table, delegated as
+UI-57 and LANDED in the same integration wave — the publishing section now renders on the OBJECT
+and the act gates only the record's own label, so the owner rule stays stated for the readers the
+narrowing removed the act from. Machine-credential answers byte-identical, measured by the item's
+own probe. UI has answered as consumer on this row; RECORD is dormant and CONDUCT answers for it,
+protocol step 3. D-311 (the seven roster acts, decided to stay; the machine fence) is the recorded
+residue and reopens nothing here. `INTERFACES.md` bumped in the same act.
+
+
 ## IC-74 · I3: **A FINDING MAY SERVE MANY CASES** — `FINDING_IN_ANOTHER_CASE` and `FINDINGS_IN_DIFFERENT_CASES` are DELETED, one new refusal `CASE_IDENTITY_AMBIGUOUS` (C-44) is minted in their place, and every read op that answers "which case is this finding in" becomes SET-VALUED · PROPOSED 2026-09-10 (D-309, enacting DEC-72 clause 6) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (the plane's wire surface), STABLE

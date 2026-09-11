@@ -2613,6 +2613,7 @@ paths:
   ground). **NOT** any other UI suite.
 
 ---
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,804 (delta zero, predicted), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0 (`publication-entry` 146), `mintid --audit` 0 breaks. IC-75 RESOLVED in the same act: I3 14.0.0.
 
 ## D-309 · claimed 2026-09-10 · worktree `agent-a26bce57cd13e5ea5`, branch `worktree-agent-a26bce57cd13e5ea5`
 
