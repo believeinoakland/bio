@@ -2579,6 +2579,39 @@ acts STAY `NON_ACTS`, argued at their table and carried as D-311 — and `planch
 the drift. 682 rulings, 190.8 KB. No line was written by hand.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 173/173 · 10,779 (+15 attributed per suite, the worker's mintid +1 reconciled to 20bb1cf's own prose), `coverage --strict` exit 0 read unpiped (floor 906/167/168 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. IC-75's delegation is UI-57, an item; the 16 orphaned workerd processes were verified idle and killed.
 
+## CLAIM 2026-09-10 UI (UI-57 — IC-75's delegation: the publishing statement goes back on the OBJECT, and only the act-shaped affordance inside it stays on the act)
+session: UI worker (worktree `.claude/worktrees/agent-ad3cc6110399bc6c6`, branch `worktree-agent-ad3cc6110399bc6c6`)
+opened: 2026-09-10
+paths:
+  - `civicos-ui/app.html` — **THE `publicationEntryHtml` REGION ONLY** (between the
+    `__PUBLICATION_ENTRY_START__` / `__PUBLICATION_ENTRY_END__` markers): the function's gate, the
+    act-shaped leading clause, and the region header's WHEN-IT-RENDERS paragraph. Plus the FIVE-LINE
+    `pubEntry` comment immediately above `const pubEntry = publicationEntryHtml(actsR);` in
+    `openInquiry` (~:6191), which states the old gate as a fact and would otherwise describe a
+    constraint nothing enforces. No other function, no markup, no CSS, and the `elsewhere` call
+    itself is UNCHANGED.
+  - `civicos-ui/test/publication-entry.test.mjs` — the fixture gains a NON-OWNER's concluded
+    inquiry (the class D-310 narrowed for) and the block-6 assertions that read "absent where the
+    act is absent" are CORRECTED at their site with a dated reason, never exempted.
+  - `civicos-ui/test/case6.control.mjs` — three arms appended (`f`, `g`, `h`) for this item; arms
+    `a`, `b`, `c` and `e` untouched and re-run on the merged tree; arm `d` RETIRED at its site
+    with its reason and its replacement named, because the origin/main merge (D-309) DELETED the
+    fence it broke — `FINDING_IN_ANOTHER_CASE`, enacting DEC-72 clause 6 — so the anchor matched
+    zero times. **The retirement is a correction, not an exemption**: the row stays, it says who
+    closed the subject, and it points at `bio-plane/test/multicase.control.mjs`, which D-309
+    shipped to drive the refusal that replaced it. Nothing under `bio-plane/**` is touched. The
+    runner also stops ENDING THE RUN on an arm that fails to arm (that throw had left arms `e`
+    through `h` silently unmeasured) and prints the failing-assertion COUNT with 20 lines instead
+    of 8, so an arm's MUST-NOT-FAIL half is readable.
+  - `docs/development/INTERFACE-CHANGES.md` — **IC-75's `Status` block ONLY**: the CONSUMER
+    ANSWER this row asks `UI` for by name, and the one word in the standing sentence that
+    stops saying `UI` is still awaited. **The RESOLUTION and the version bump are NOT touched
+    and remain CONDUCT's**, exactly as the row's last line says.
+  **NOT** `bio-plane/src/**` — nothing on the wire moves; `op=affordances` already publishes
+  `object_type` and `current_state` and `actsFor()` already returns both. **NOT**
+  `bio-plane/test/check-mock-envelope.mjs`. **NOT** `docs/development/QUEUE.md` (CONDUCT's sole
+  ground). **NOT** any other UI suite.
+
 ---
 
 ## D-309 · claimed 2026-09-10 · worktree `agent-a26bce57cd13e5ea5`, branch `worktree-agent-a26bce57cd13e5ea5`

@@ -5791,13 +5791,30 @@ function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null
    rung's promise and it is what this section states, because a member who is
    about to ask their operator to publish should have read it first.
 
-   WHEN IT RENDERS: exactly when the record publishes the act. Not on a question
-   the record does not offer it for — a page that explained publication on an
-   open question would be asserting that publication is available there. And it
-   renders THE SAME for every credential: it is a statement about the record and
-   not a control, so a credential that cannot act reads every word of it. Q12's
-   one credential sentence is the surface's, rendered once by `openInquiry`, and
-   nothing here narrates a control or greys one.
+   WHEN IT RENDERS — CORRECTED BY UI-57, 2026-09-10, AND THE OLD SENTENCE IS
+   KEPT IN VIEW BECAUSE IT IS WHY THE DEFECT EXISTED. It used to read *"exactly
+   when the record publishes the act"*, and that was true only while the act's
+   presence was a fact about the OBJECT. D-310 made the published act set
+   per-caller (a member who owns no project is no longer offered `publish`), so
+   the same gate started meaning "when the record publishes the act TO THIS
+   READER" without a line of this file changing — and the whole section, the
+   owner rule below included, disappeared for exactly the class the rule is
+   about. IC-75 measured it before the code landed and delegated it here.
+   IT NOW RENDERS ON THE OBJECT: a concluded inquiry, which is the state the
+   record's publication rule applies to and the act's own object-side condition
+   read verbatim. Not on a question the record does not offer publication for at
+   all — a page that explained publication on an open question would be asserting
+   that publication is available there. And it renders THE SAME for every
+   credential: it is a statement about the record and not a control, so a
+   credential that cannot act reads every word of it. Q12's one credential
+   sentence is the surface's, rendered once by `openInquiry`, and nothing here
+   narrates a control or greys one.
+   WHAT THE ACT'S PRESENCE STILL GATES, and it is one clause: the record's own
+   published LABEL for the act, plus the prompt riding it. A label the record did
+   not publish to this reader is a label this surface would be inventing. The
+   RULE is never gated — that is the distinction the whole item turns on, and a
+   later edit that gates a sentence of the statement on `act` has re-made the
+   defect in a smaller place.
 
    ── CASE-6 / DEC-72, 2026-09-10 · WHAT THIS SECTION HAD TO START SAYING, AND
       WHY IT IS STILL NOT A CEREMONY ────────────────────────────────────────
@@ -5870,13 +5887,37 @@ function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null
    told by silence that it does not exist.
    ============================================================ */
 function publicationEntryHtml(r){
-  const act = (r && r.ok) ? actNamed(r.acts, "publish") : null;
-  if(!act) return "";
+  /* UI-57 / IC-75, 2026-09-10 · THE GATE IS THE OBJECT'S STATE AND NOT THE ACT'S
+     PRESENCE, and it reads from the same answer it always did — `actsFor()`
+     already returns `object_type` and `current_state`, which `op=affordances`
+     publishes beside `acts`. Nothing new is asked of the plane and nothing is
+     composed here: these are the publish act's OWN object-side conditions
+     (`affordances.mjs`: `ty === "inquiry" && f.current_state === "concluded"`),
+     consumed verbatim and minus the per-credential one D-310 added. So the
+     section renders exactly where the record's publication rule APPLIES, which
+     is what the act's presence was a proxy for until the answer became
+     per-caller. `concluded` has no alias in the inquiry machine — `surfaced`
+     aliases `open` and nothing aliases this — so one spelling is the whole set. */
+  const ok = !!(r && r.ok);
+  const onObject = ok && r.object_type === "inquiry" && r.current_state === "concluded";
+  if(!onObject) return "";
+  /* THE ONE ACT-SHAPED THING IN THIS SECTION, and the only part the act's
+     presence gates: the record's OWN published label for the act. Where the
+     record does not publish the act to this reader there is no label, and none
+     is written on the plane's behalf — the same rule the prompt takes one line
+     below, read in the same honest direction. What does NOT move with it is the
+     statement itself: the rule is the record's and reads identically for every
+     credential, which is this section's header's own standing refusal of a
+     per-credential variant. */
+  const act = ok ? actNamed(r.acts, "publish") : null;
+  const named = act
+    ? `The record publishes this act on this question under its own name for it: <b>${esc(act.label)}</b>. `
+    : `Publication is an act the record defines on a concluded question. `;
   /* The producer's own words, rendered unmodified, and only if it sent them. */
-  const prompt = (typeof act.prompt === "string" && act.prompt.trim())
+  const prompt = (act && typeof act.prompt === "string" && act.prompt.trim())
     ? `<p class="subj-note">${esc(act.prompt)}</p>` : "";
   return `<h2 class="sec">Publishing this case</h2>
-    <p class="subj-note">The record publishes this act on this question under its own name for it: <b>${esc(act.label)}</b>. This section explains what that act is. It does not carry it.</p>
+    <p class="subj-note">${named}This section explains what that act is. It does not carry it.</p>
     ${prompt}
     <div class="card"><div class="prose">
       <p><b>Publishing is the one act here that cannot be taken back.</b> A published case goes across the fence: its bytes keep answering to anyone who holds them, checkable against the published hash without this group&rsquo;s help, and this group cannot make them stop.</p>
@@ -6188,9 +6229,17 @@ async function openInquiry(id, fromNav){
     ACTS_HERE = (actsR && actsR.ok) ? actsR.acts : [];
     const rels = (back && Array.isArray(back.backlinks)) ? back.backlinks : [];
 
-    /* UI-17a. The publication entry point renders only where the record itself
-       publishes the `publish` act, and `elsewhere` is DERIVED from whether it
-       rendered — never from a list written down here (UI-20's rule). So the act
+    /* UI-17a, CORRECTED BY UI-57 2026-09-10. The publication entry point renders
+       where the OBJECT is one the record's publication rule applies to — a
+       concluded inquiry — and no longer where the `publish` act happens to be
+       published to this reader; D-310 made that set per-caller and the old
+       sentence here stated a gate the function no longer has.
+       `elsewhere` is still DERIVED from whether the section rendered, never from
+       a list written down here (UI-20's rule), and the derivation stays EXACT
+       without a second condition because `actBarHtml` intersects `elsewhere`
+       with the acts the record actually published: a reader who is offered no
+       `publish` act has nothing for the strip to route, so the routing sentence
+       is absent for them by the same fact that removed the control. So the act
        strip says where the explanation lives instead of calling the act
        uncarried, and no control for it exists on either side. */
     const pubEntry = publicationEntryHtml(actsR);

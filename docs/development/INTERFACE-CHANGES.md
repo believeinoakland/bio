@@ -5552,8 +5552,35 @@ change that this row does not propose and no consumer has been asked about.
 
 ### Status
 
-**PROPOSED, 2026-09-10.** Awaiting `UI` and `DIST`. The version bump and the RESOLUTION are
+**PROPOSED, 2026-09-10.** Awaiting `DIST`. The version bump and the RESOLUTION are
 CONDUCT's, per the standing shape of every row since IC-62.
+
+**`UI` ANSWERS 2026-09-10 (UI-57) — AFFECTED AT SITE 1, ABSORBED; SITES 2, 3 CONFIRMED BY
+MEASUREMENT.** The delegation was taken as an item and landed, and the measured impact was
+right about the consequence and one degree wrong about the mechanism, which is worth the
+row:
+
+- **Site 1 (`publicationEntryHtml`) — ABSORBED, and no new field was needed.** The fix is the
+  one this row's own prose names: the gate goes back on the OBJECT. It required nothing new of
+  the plane — `op=affordances` already publishes `object_type` and `current_state` beside
+  `acts`, and `actsFor()` in `app.html` already returned both — so the section's condition is
+  now the publish act's OWN object-side clauses (`ty === "inquiry" && current_state ===
+  "concluded"`) read verbatim from `affordances.mjs` and minus the per-credential one this row
+  added. **This row said the gate was "a proxy for the record offers publication on this
+  OBJECT"; the correction is that the object was answerable all along and only the surface's
+  reading of it was the proxy.** One clause stays gated on the act's presence: the record's own
+  published LABEL, which a surface may not invent. MEASURED: an owner's rendering of the section
+  is BYTE-IDENTICAL to its pre-item self (3,258 B, sha256 `731d288d48b75859…`, and 3,357 B with
+  a prompt riding the act), and the non-owner's goes 0 B → 3,216 B.
+- **Site 2 (`elsewhere:["publish"]`) — NOT AFFECTED, and the reason is a measurement rather
+  than a judgement.** The call site is unchanged. `actBarHtml` intersects `elsewhere` with the
+  acts the record actually published, so a reader offered no `publish` act has nothing for the
+  strip to route and the "section of its own further up this page" line is absent for them by
+  the same fact that removed the control — asserted, not assumed.
+- **Sites 3 and 4 — CONFIRMED.** `SURFACES.inquiry.acts` still names `publish` and the registry
+  totality arm did not move; `op=queue`'s `options[]` is untouched by UI.
+- **NOTHING ON I3 MOVES FOR THIS**, which is why UI-57 was filed as I3 CONSUMPTION with no IC
+  of its own.
 
 ## IC-74 · I3: **A FINDING MAY SERVE MANY CASES** — `FINDING_IN_ANOTHER_CASE` and `FINDINGS_IN_DIFFERENT_CASES` are DELETED, one new refusal `CASE_IDENTITY_AMBIGUOUS` (C-44) is minted in their place, and every read op that answers "which case is this finding in" becomes SET-VALUED · PROPOSED 2026-09-10 (D-309, enacting DEC-72 clause 6) — the version bump and the RESOLUTION are CONDUCT's
 

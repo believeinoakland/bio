@@ -1,4 +1,13 @@
-/* NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs c` — ONE ARM, armed
+/* NEGATIVE CONTROL (UI-57, 2026-09-10): `node civicos-ui/test/case6.control.mjs f`
+ * — and `g` and `h` beside it, each armed ALONE. `f` is the arm this item exists
+ * for: it re-gates the section on the ACT, which is the code as it stood before
+ * UI-57, and the non-owner's rule statement must FAIL as ABSENT and be named.
+ * `g` is the over-strictness arm (a non-owner legitimately offered acts this item
+ * did not anticipate must still read the statement); `h` re-arms DEC-69 against
+ * the non-owner's own page. RESULTS are recorded in the driver and in this
+ * file's UI-57 block below.
+ *
+ * NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs c` — ONE ARM, armed
  * ALONE, run 2026-09-10, `civicos-ui/app.html` restored from a uniquely-named
  * pristine copy and verified by sha256 AND by `cmp` with the byte count printed
  * (1203867 B, MATCH / IDENTICAL) and a minimum floored.
@@ -45,8 +54,25 @@
  *       string-for-string against the acting credential's — with exactly ONE
  *       whoami-sourced sentence, no greyed control and no per-control narration
  *       (Q12);
- *   (7) where the record does NOT publish the act, the section is ABSENT rather
- *       than shown-and-disabled. Absent, not greyed, is the whole rule.
+ *   (7) where the record's publication rule does not reach the OBJECT, the
+ *       section is ABSENT rather than shown-and-disabled. Absent, not greyed, is
+ *       the whole rule. (CORRECTED BY UI-57: this read "where the record does NOT
+ *       publish the act", which was the same sentence only while the published
+ *       act set was a fact about the object — see (8).)
+ *   (8) UI-57 / IC-75, 2026-09-10 — THE GATE IS THE OBJECT AND NOT THE ACT.
+ *       D-310 stopped `op=affordances` offering `publish` to a caller who holds
+ *       the owner position on no project, which is correct: `publishCase()`
+ *       refuses that caller BY NAME. But this section was gated on the act's
+ *       presence, so the narrowing deleted the whole statement — the
+ *       `data-pubwho` paragraph included — for exactly the class the owner rule
+ *       is about, and the fence went back to being learned by silence. IC-75
+ *       measured it before the plane change landed and delegated it here. The
+ *       section now renders on the OBJECT (a concluded inquiry: the act's own
+ *       object-side condition, read verbatim and minus the per-credential one)
+ *       and the ONLY thing the act's presence still gates is the record's own
+ *       published LABEL for it, which this surface may not invent. So a
+ *       non-owner reads every word of the rule and is offered nothing, and their
+ *       statement is byte-identical to an owner's.
  *
  * NEGATIVE CONTROL, three arms, RUN 2026-08-05 and restored byte-identical
  * after each — civicos-ui/app.html's sha256 compared before and after every
@@ -165,11 +191,26 @@ const DOCS = {
     acts:[PUBLISH_PROMPTED],
     q:"Was the harbour dredging contract awarded without a competitive bid?",
     f:"A published bid tabulation naming two or more bidders." },
-  /* Open: the record does NOT publish the act, so the section must be absent. */
+  /* Open: the record's publication rule does not apply to this OBJECT at all,
+     so the section must be absent. Corrected wording, UI-57 2026-09-10: this
+     fixture used to be described as "the record does not publish the act", which
+     was the same thing only while the act set was a fact about the object. */
   "INQ-2026-9003": { state:"open", title:"Who approved the transfer?",
     acts:[CONCLUDE_ACT],
     q:"Which officer approved the transfer out of the sewer fund?",
     f:"A signed approval carrying a different officer's name." },
+  /* UI-57 / D-310 · THE NON-OWNER'S CONCLUDED INQUIRY, and it is the fixture
+     this item exists for. `op=affordances` now withholds `publish` from a caller
+     who holds the owner position on no project (`f.project_owner !== false`), so
+     the answer for that reader on a CONCLUDED question carries every other act
+     and not this one. The object is identical to INQ-2026-9001's in every
+     respect the record states about it — same type, same state — and the only
+     difference is the per-caller act set, which is exactly the distinction the
+     section's gate now has to get right. */
+  "INQ-2026-9004": { state:"concluded", title:"Did the authority waive the tipping fee?",
+    acts:[CONCLUDE_ACT],
+    q:"Did the solid-waste authority waive the tipping fee for the marina contractor?",
+    f:"A fee schedule showing the contractor billed at the posted rate." },
 };
 
 function mockFetch(u, opts){
@@ -464,10 +505,17 @@ ok("and it is still a STATEMENT: no control was wired for any of the three",
    !/actGo\("publish"/.test(sec) && !/<button/i.test(sec) && !/<input/i.test(sec)
    && !/<select/i.test(sec) && !/onclick=/i.test(sec));
 
-/* ============ (6) ABSENT, NOT GREYED, WHERE THE RECORD DOES NOT PUBLISH IT ============ */
+/* ============ (6) ABSENT, NOT GREYED, WHERE THE RULE DOES NOT APPLY ============ */
 const openQ = await open("INQ-2026-9003");
 PAGES.push(["an open question", openQ]);
-ok("the entry point does not render on a question the record does not offer the act for",
+/* CORRECTED, UI-57 2026-09-10. The old assertion read "a question the record
+   does not offer the ACT for" and was measuring the right thing by the wrong
+   name: on an OPEN question the record does not offer publication to ANYBODY,
+   which is a fact about the object, and that is what must keep it absent. The
+   act's presence stopped being a statement about the object when D-310 made the
+   published set per-caller, so the name is corrected here rather than left to
+   read as though the act were still the authority. */
+ok("the entry point does not render on a question the record's publication rule does not apply to",
    section(openQ) === "");
 ok("and nothing is left in its place — no heading, no stub, no greyed control",
    !openQ.includes("Publishing this case") && !/disabled/.test(openQ));
@@ -476,15 +524,93 @@ ok("the act strip on that page is unchanged and offers its own acts",
 ok("nothing on that page says publication runs through anyone",
    !/operator/i.test(openQ));
 
-/* the function itself refuses the same way, for a caller that is not this page */
+/* THE FUNCTION DRIVEN DIRECTLY, for the shapes a page cannot easily produce.
+   CORRECTED AT THE SITE, UI-57 2026-09-10: two of these four used to assert ""
+   for an answer carrying NO object fields at all and called the reason "no act
+   was published". That was never what the ABSENCE proved — an answer with no
+   `object_type`/`current_state` is absent from the rule's reach for a second,
+   independent reason — so the old pair is kept (it is still correct, and a
+   malformed answer must still render nothing) and the pair that actually
+   separates the two gates is ADDED below. */
 ok("the entry point renders NOTHING for a refusal from the plane",
    ctx.__publicationEntryHtml({ ok:false, refusal:{reason:"NO_SUCH_BUNDLE"}, acts:[] })==="");
-ok("the entry point renders NOTHING where no act was published",
+ok("the entry point renders NOTHING for an answer that states nothing about the object",
    ctx.__publicationEntryHtml({ ok:true, acts:[] })==="");
 ok("the entry point renders NOTHING for a null answer",
    ctx.__publicationEntryHtml(null)==="");
-ok("the entry point does not render for some OTHER act",
-   ctx.__publicationEntryHtml({ ok:true, acts:[CONCLUDE_ACT] })==="");
+ok("the entry point renders NOTHING for an object the rule does not reach, whatever the acts say",
+   ctx.__publicationEntryHtml({ ok:true, object_type:"inquiry", current_state:"open",
+                                acts:[PUBLISH_ACT] })===""
+   && ctx.__publicationEntryHtml({ ok:true, object_type:"finding", current_state:"concluded",
+                                   acts:[PUBLISH_ACT] })==="");
+/* AND THE ONE THAT IS THE ITEM: the OBJECT decides, so a concluded inquiry
+   renders the section with NO act published on it at all. */
+ok("the entry point RENDERS on a concluded inquiry the record publishes no act on",
+   ctx.__publicationEntryHtml({ ok:true, object_type:"inquiry", current_state:"concluded",
+                                acts:[] }).includes('data-pubwho="1"'));
+ok("and it renders it for some OTHER act just the same — the act list is not the gate",
+   ctx.__publicationEntryHtml({ ok:true, object_type:"inquiry", current_state:"concluded",
+                                acts:[CONCLUDE_ACT] }).includes('data-pubwho="1"'));
+
+/* ============ UI-57 / IC-75 · THE NON-OWNER, WHICH IS THE WHOLE ITEM =========
+   D-310 narrowed `op=affordances` so a caller who owns no project is no longer
+   offered `publish` — correctly, because `publishCase()` refuses them BY NAME.
+   The section's gate was the act's presence, so the narrowing took the whole
+   statement away from exactly the readers the owner rule was written for:
+   *"finding that out from an operator after assembling a case is the worst
+   possible moment to learn it."* IC-75 measured that before the plane change
+   landed and delegated it here. What must now be true, and it is the queue row's
+   acceptance verbatim: the non-owner READS THE RULE and is OFFERED NO CONTROL. */
+const nonOwner = await open("INQ-2026-9004");
+PAGES.push(["a non-owner's concluded question", nonOwner]);
+const nsec = section(nonOwner);
+ok("UI-57: a non-owner viewing a concluded inquiry still sees the publishing section",
+   nsec !== "" && nonOwner.includes("Publishing this case"));
+ok("UI-57: and the OWNER RULE is stated to them, in the record's own words, not learned by silence",
+   /data-pubwho="1"/.test(nsec)
+   && /published BY A PROJECT, and only by an owner of it/.test(nsec)
+   && /an administrator, who can see every project, directs none of them/.test(nsec));
+ok("UI-57: the other two CASE-6 properties reach them too — the statement is not a summary",
+   /data-pubauthored="1"/.test(nsec) && /data-pubbar="1"/.test(nsec)
+   && /cannot be taken back/.test(nsec)
+   && /runs through the group&rsquo;s operator today/.test(nsec));
+/* THE RULE ITSELF IS ONE RENDERING. The section's header forbids a per-credential
+   variant by name, so the statement is compared BYTE FOR BYTE against the owner's.
+   The comparison is over the CARD — the leading sentence is the act-shaped half
+   and is legitimately absent here, which is the only thing the act still gates. */
+const card = (s) => { const i = s.indexOf('<div class="card">'); return i < 0 ? "" : s.slice(i); };
+ok("UI-57: the statement a non-owner reads is the SAME statement, byte for byte",
+   card(nsec) !== "" && card(nsec) === card(sec));
+ok("UI-57: no publication control is offered to them — absent, not greyed",
+   !/<button[^>]*publish/i.test(nonOwner) && !/actGo\("publish"/.test(nonOwner)
+   && !/disabled/.test(nonOwner) && !/<button/.test(nsec));
+ok("UI-57: op=publish is not reached while rendering their page",
+   !CALLS.some(c=>c.op==="publish"));
+/* AND THE SURFACE INVENTS NO LABEL. The record published no `publish` act to
+   this reader, so there is no producer label to render and none may be written
+   on the plane's behalf — the same rule the absent prompt takes. */
+ok("UI-57: no label for the act is invented where the record published none",
+   !nsec.includes("Publish (author the case)")
+   && !/Publish this case|Publish the case|Start publishing/i.test(nsec));
+ok("UI-57: the act strip routes nothing it was not given — no section-of-its-own line for publish",
+   !/also publishes <b>Publish \(author the case\)<\/b>/.test(nonOwner));
+ok("UI-57: and the strip still offers this reader the acts the record DID publish",
+   nonOwner.includes("What can be done here") && nonOwner.includes("Conclude"));
+/* DEC-69 OVER THE NON-OWNER'S OWN PAGE: the rule is stated ONCE there too. A
+   statement that is restored for a reader and then told to them twice has traded
+   one defect for the one DEC-69 names. */
+ok("UI-57 / DEC-69: the owner rule is stated to the non-owner exactly ONCE",
+   (nsec.match(/data-pubwho="1"/g) || []).length === 1
+   && (nsec.match(/published BY A PROJECT, and only by an owner of it/g) || []).length === 1
+   && (nsec.match(/data-pubauthored="1"/g) || []).length === 1
+   && (nsec.match(/data-pubbar="1"/g) || []).length === 1);
+ok("UI-57 / DEC-69: nothing re-confirms or asks them to agree to anything either",
+   !/\bconfirm\b/i.test(nsec) && !/\backnowledg/i.test(nsec) && !/\bagree\b/i.test(nsec));
+/* AND NOTHING NARRATES THE ABSENCE AT THEM. The rule is stated about the RECORD;
+   the surface does not tell this reader what they personally may not do, which
+   is Q12's rule and the thing a per-credential variant would have produced. */
+ok("UI-57: the absence is not narrated per-credential — the rule is about the record, not the reader",
+   !/you (can|may) not|not permitted|insufficient|this credential cannot publish/i.test(nsec));
 
 /* ============ the vocabulary guard, over every page rendered ============ */
 for(const [where, html] of PAGES){
@@ -498,4 +624,4 @@ for(const [where, html] of PAGES){
 }
 
 if(fails.length){ console.error(`publication-entry: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`publication-entry: ${n} assertions, all green — the act stated as irreversible with correction moving forward, editions standing, a withdrawal as another attested act, publication run through the operator, the plane's own label and prompt rendered unmodified, NO ceremony control anywhere and op=publish unreached on the wire, and the act strip routing the record's own act at the explanation rather than at a ceremony that does not exist`);
+console.log(`publication-entry: ${n} assertions, all green — the act stated as irreversible with correction moving forward, editions standing, a withdrawal as another attested act, publication run through the operator, the plane's own label and prompt rendered unmodified, NO ceremony control anywhere and op=publish unreached on the wire, the act strip routing the record's own act at the explanation rather than at a ceremony that does not exist, and (UI-57) the statement gated on the OBJECT so a non-owner D-310 withholds the act from still reads the owner rule byte-for-byte as an owner does, with no control and no invented label`);
