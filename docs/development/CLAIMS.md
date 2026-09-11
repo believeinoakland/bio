@@ -1994,3 +1994,57 @@ paths:
     exactly as FL-10's release note said it would be. No version bumped, nothing signed,
     nothing deployed — that is DIST's.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `4a0c248` and verified on the MERGED tree: battery 172/172 · 10,669 (pre-merge 10,537 + the attributed +132, closing exactly), `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` collapsed to ONE SET and re-read from the merged run's print (892/166/167 — both branches had moved it blind to each other, the claim's own predicted conflict), UI harness exit 0, `mintid --audit` 0 breaks.
+
+
+## CLAIM 2026-09-10 M0 (M0-24 — M0-23's census delegation, the fixable half: a `publishedmanifest` fixture that cannot represent the record's own published shape)
+session: M0 worker (worktree `.claude/worktrees/agent-a48e1c6d709be1620`, branch `worktree-agent-a48e1c6d709be1620`)
+opened: 2026-09-10
+paths:
+  - `civicos-ui/test/auth-surface.test.mjs` — the `MANIFEST` fixture (its `published[]` rows
+    corrected to the nine columns the plane's own `SELECT` carries, the two PHANTOM keys
+    `manifest`/`manifest_sha` DELETED from those rows, and the `cases[]`/`caseMembers[]` arrays the
+    plane always sends added so a loose ratified finding WITH a pair is representable), plus any
+    assertion the corrected fixture moves — corrected at its site with a dated reason, never
+    exempted — plus the assertions that READ the corrected shape, without which the correction is
+    decoration (M0-23's own measured finding), and the file's summary line.
+  - `docs/development/CLAIMS.md` (this entry).
+  **NOT** `civicos-ui/check-mock-envelope.mjs` — it is the INSTRUMENT that measured this item and a
+  subject may not edit its own instrument; if it needs a change it is DELEGATED with the reason.
+  **NOT** `civicos-ui/test/preauth-vocabulary.test.mjs`, **NOT** `civicos-ui/test/publishedcase.test.mjs`
+  (M0-23 and UI-56 just landed in them; they are READ ONLY here, as the peers whose wire shape this
+  fixture is corrected against), **NOT** `civicos-ui/app.html` (this item changes no surface — the
+  record's shape did not move, only a mock's ability to represent it), **NOT** `bio-plane/src/**`
+  (the plane already answers all nine columns; CASE-5b holds the publish path), **NOT**
+  `bio-plane/test/op-claims.test.mjs` or `bio-plane/scripts/walkfloor.mjs` (D-302 is live in them),
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground).
+  **`cases[]` IS LEFT AT 6/9 DELIBERATELY**, matching both peer suites: M0-23's census measured ZERO
+  readers in `app.html` of `bias_acknowledgement`, of `project_id` and of a case-level `bar`, and a
+  fence tighter than its rule is the over-strictness this estate refuses. The census NAMES it every
+  run, which is the correct disposition and is this item's second control arm.
+
+### DELEGATION 2026-09-10 (M0-24 → whoever next holds `civicos-ui/check-mock-envelope.mjs`) — the census's REACH, measured from its own headline
+I did not touch the instrument that measured me, deliberately: a subject may not edit its own
+instrument. Two things its own printed figures say, neither of them a defect and neither closeable
+from inside my claim:
+
+1. **THE CENSUS'S SUBJECT IS EFFECTIVELY ONE OP.** Its headline reads `37 resolved through the DO's
+   OWN dispatch table to a store method … and **1 of those** build at least one row array from a
+   readable SELECT (36 build their answer some other way and are outside this census by
+   construction)`. That one op is `publishedmanifest`. So "the fixture-shape class is closed in
+   reach" means closed on four arrays of one op — the arm says so every run, in its own
+   CANNOT-SEE sentence, and it is repeated here because a reader meeting `3 NARROWER THAN THE
+   WIRE` beside `108 answers across 44 ops` will read a far wider estate than was measured. Whether
+   the other 36 are genuinely un-SELECTable or merely unreadable BY THIS READER is UNDETERMINED and
+   I did not establish it; it is the difference between a census whose corpus is one op by the
+   plane's construction and one whose corpus is one op by its own reader's limits.
+2. **MY OWN ITEM'S FIRST ARM MEASURED THE REPORT/FAIL BOUNDARY WORKING AS DESIGNED.** With a phantom
+   key restored, arm C re-reported the row as WIDER THAN THE WIRE naming the key — and exited 0.
+   That is correct and is why this estate needed an ASSERTION in the suite rather than a louder
+   census. It is recorded so nobody later "fixes" the census by making it fail: the report-only
+   rule is what keeps a legitimately narrow fixture legal, and M0-24's arm (h) measured both
+   spellings of that.
+
+After this item the census reports ZERO rows WIDER THAN THE WIRE and ZERO fields ABSENT FROM A
+FIXTURE across the whole package, and the three NARROWER rows that remain are ONE deliberate
+closure in three suites — `cases[].bias_acknowledgement`, `.bar` and `.project_id`, which no
+surface in `app.html` reads.
