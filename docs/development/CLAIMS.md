@@ -2644,3 +2644,4 @@ the absence of a delegation is a measurement and not an oversight.
 
 concurrency: checked over the register. D-310 holds `bio-plane/src/affordances.mjs`;
 CPDF-15 holds scratch/probe paths only. No live claim names any path above.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `dad57cd` and verified on the MERGED tree: battery 174/174 · 10,804 (10,779 + the attributed +25, closing exactly), `coverage --strict` exit 0 read unpiped (floor 909/168/169 by print), UI harness exit 0, `mintid --audit` 0 breaks, `dist/**` rebuilt. The DEBT conflict was two same-row edits resolved by keeping each row's CLOSING copy (D-309 from the branch, D-310 from main), the split-the-resolution rule applied.
