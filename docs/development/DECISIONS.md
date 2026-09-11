@@ -1046,8 +1046,14 @@ enacted: 2026-08-10 · CONDUCT — **NO CHANGE, and the no-change is the enactme
   this entry.
 
 
-### DEC-73 · answered
+### DEC-73 · answered · enacted
 raised: 2026-09-10 · CONDUCT #9 (lifted from CPDF-14's report at integration)
+enacted: 2026-09-11 · CONDUCT #9, and the enactment is NIL-ACTION by the answer's own
+  terms — the status quo IS the decision, so nothing is built, configured, or unwound;
+  the provisional (commits continue with the current identity) simply stops being
+  provisional. The reasoning lives in this entry's own `response:` (Bob's measured
+  ruling: 1,170 commits, metadata only, the record identifies signers by key and
+  namespace, never by email). Recorded in the enacting commit on `main`.
 for: bob
 response: "So using my neo address for git commits is fine. This is a non-issue."
   (Bob, 2026-09-11, to BOB after the exposure was measured for him: the address
