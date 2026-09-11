@@ -2739,3 +2739,4 @@ paths:
   CPDF-10's ground (the third fleet member — `agent-worker/**`, `pdf-worker/**`, fleet paths).
 concurrency: checked over the register. CPDF-10 is live on the fleet-member ground, disjoint
 from every path above. No live claim names `ocr-measure-probe.mjs`.
+released: 2026-09-11 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,808 (+1 attributed to planning-hygiene on D-315), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. D-305 and D-314 closed; D-315 stands as the probes-side residue.
