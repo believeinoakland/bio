@@ -38,7 +38,7 @@
    verifies in block 5 was assembled over different bytes. The deletion done first
    does not merely go unrefused — it reaches the signed artifact that travels.
 
-   (b2) THE SAME QUESTION AT THE OTHER DEPTH, and the queue row's second arm in
+   (2b) THE SAME QUESTION AT THE OTHER DEPTH, and the queue row's second arm in
    its most literal reading: remove the CEREMONY itself — `op=publish` stops
    authoring a case document — while the eight keys stay gone from member bytes,
    which is the tree as it would be if the deletion had been done first ->
@@ -364,7 +364,7 @@ const pub = await publish({ targets: [LEAD, SUPP],
   roles: { [LEAD]: "load_bearing", [SUPP]: "supporting" } });
 if (!pub.ok) bail("publish the two-finding case", pub);
 /* AND THE ANSWER MUST CARRY A CASE DOCUMENT, checked HERE rather than let to throw
-   forty lines down. Control arm (b2) removes the ceremony entirely, and on its
+   forty lines down. Control arm (2b) removes the ceremony entirely, and on its
    first run this suite died with NO TALLY AT ALL —
    which is CASE-4's arm (d) exactly: a bare throw names nothing, and a control
    that produces no count cannot be compared with the baseline it exists to be

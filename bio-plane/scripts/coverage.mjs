@@ -601,8 +601,17 @@ const REGISTER_FLOOR = {
      count it MEASURED written back into it). NOTHING FELL: +5 arms, +1 classified,
      +1 corpus, and the three moves agree with one suite of five arms arriving,
      which is the arithmetic this floor exists to make checkable.
+     MOVED AGAIN THE SAME DAY, 888 -> 889, when that suite's control gained a
+     SIXTH row — and the second move is worth more than the first, because
+     **THIS FLOOR CAUGHT THE ITEM THAT WAS MOVING IT.** The new arm was numbered
+     `(b2)`, and `control-register.mjs`'s `OPENS_ITEM` grammar accepts
+     `(<digits><letters>)` or `(<one or two letters>)` — never letter-then-digit
+     — so `(b2)` opened no list item, ENDED the declaration's paragraph, and
+     dropped the two arms after it. The register printed `arms 886/888` and NAMED
+     the shrink. Renumbered `(2b)` it reads 889. A ceiling could never have fired
+     on that, which is D-233's whole argument for a floor.
      **ONE KEY SET** — grep the KEYS, do not read the block. */
-  arms: 888,
+  arms: 889,
   classified: 165,
   corpus: 166,
 };

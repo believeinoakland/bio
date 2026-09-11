@@ -1,4 +1,4 @@
-/* CASE-5b's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in
+/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in
  * one step:
  *
  *     node test/casesign.control.mjs            # every arm, in order
@@ -24,13 +24,22 @@
  *
  * EACH ARM IS ARMED ALONE, with every other defence held open.
  *
- * WHAT THE FOUR ARMS ARE FOR, since a list of edits is not a list of questions:
+ * WHAT THE FIVE ARMS ARE FOR, since a list of edits is not a list of questions:
  *   (a) is the arm this item exists for: if a case assertion arrives at the
  *       commit from an UNSIGNED request, is it REFUSED BY NAME — or written?
  *   (b) is the queue row's second arm, and it is the one that proves the ORDER
  *       of this item: strip the keys WITHOUT the ceremony's fence and (a)'s
  *       question stops being askable, because nothing refuses a member that
  *       asserts a case for itself.
+ *   (2b) asks the same thing one level deeper — remove the CEREMONY rather than
+ *       its fence, which is the tree as it would be if the deletion had been done
+ *       first. **IT IS NUMBERED `2b` AND NOT `b2`, AND THAT IS A RECEIPT RATHER
+ *       THAN A PREFERENCE:** `control-register.mjs`'s `OPENS_ITEM` grammar
+ *       accepts `(<digits><letters>)` and `(<one or two letters>)`, so `(b2)` —
+ *       letter then digit — opens no list item, ENDS the declaration's paragraph,
+ *       and silently drops every arm after it. MEASURED: the register read 886
+ *       arms against a floor of 888 and NAMED the shrink, which is the floor
+ *       doing exactly the job D-233 built it for.
  *   (c) asks the question a control usually forgets — is the fence WIDER than
  *       the rule? Correct work in a spelling this item did not anticipate must
  *       still pass.
@@ -67,7 +76,7 @@ const edit = (file, needle, replacement) => {
 };
 
 const ARMS = {
-  baseline: { files: [], label: "nothing armed — what distinguishes four-arms-working from four-arms-broken",
+  baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
               apply: () => {} },
 
   a: { files: [INDEX],
@@ -90,13 +99,13 @@ const ARMS = {
        + "                   'bias_acknowledgement', 'required_strength']) {",
          "  for (const k of []) {") },
 
-  /* (b2) IS THE QUEUE ROW'S SECOND ARM IN ITS MOST LITERAL READING, and it is
+  /* (2b) IS THE QUEUE ROW'S SECOND ARM IN ITS MOST LITERAL READING, and it is
      kept BESIDE (b) rather than instead of it because the two ask the same
      question at two different depths. The row says: *"strip the six keys WITHOUT
      the ceremony and the unsigned-commit arm must fail — proving the ceremony is
      the precondition and not decoration."* (b) neuters the FENCE that keeps a
      member from asserting a case in its own bytes, which is the half a caller can
-     attack. (b2) removes the CEREMONY ITSELF — op=publish stops authoring a case
+     attack. (2b) removes the CEREMONY ITSELF — op=publish stops authoring a case
      document — leaving the deletion standing entirely alone, which is exactly the
      state the tree would be in if this item had been done in the other order.
      WHAT IT MEASURES IS AN ABSENCE RATHER THAN A REFUSAL, and that is the point:
@@ -106,8 +115,8 @@ const ARMS = {
      So the ceremony is not a fence in front of the deletion — it is the only
      thing that makes the deletion representable, and an arm that expected a named
      refusal here would be looking for a door in a wall with no room behind it. */
-  b2: { files: [STORE],
-        label: "(b2) THE DELETION STANDING ENTIRELY ALONE — remove the CEREMONY, not its fence: op=publish "
+  "2b": { files: [STORE],
+        label: "(2b) THE DELETION STANDING ENTIRELY ALONE — remove the CEREMONY, not its fence: op=publish "
              + "stops authoring a case document while the eight keys stay gone from member bytes. No case "
              + "fact is committed by any route, so the case never exists and the unsigned-commit arm has "
              + "nothing to refuse. This is the tree as it would be if the deletion had been done first",
