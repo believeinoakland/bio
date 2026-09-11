@@ -1910,7 +1910,7 @@ Awaited. RECORD does not answer on UI's behalf; the one UI impact is a stale com
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0 / the I5 catch-up note in `INTERFACES.md`; see "THE 2026-09-10 BACKLOG RESOLUTION" at the foot of this file.)*
 
 
 ### RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-08
@@ -2007,7 +2007,7 @@ The field is therefore new rather than changed, and **the run now distinguishes 
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0 / the I5 catch-up note in `INTERFACES.md`; see "THE 2026-09-10 BACKLOG RESOLUTION" at the foot of this file.)*
 
 
 ## IC-31 · I3: ONE new write op — the investigative session's suggest endpoint · I5: one additive nullable column and one scratch table · PROPOSED 2026-08-08 (PL-3 / IS-4) — the version bump and the RESOLUTION are CONDUCT's
@@ -2040,7 +2040,7 @@ The field is therefore new rather than changed, and **the run now distinguishes 
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The version bump is CONDUCT's — IC-25's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0 / the I5 catch-up note in `INTERFACES.md`; see "THE 2026-09-10 BACKLOG RESOLUTION" at the foot of this file.)*
 
 
 ## IC-32 · NEW INTERFACE I8 — `plane ↔ agent-worker`, the second fleet service binding · PROPOSED 2026-08-08 (FL-2 / VF-3) — the version bump and the RESOLUTION are CONDUCT's
@@ -3221,7 +3221,7 @@ changes on the surface.
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0; see "THE 2026-09-10 BACKLOG RESOLUTION" at the foot of this file.)*
 
 ---
 
@@ -3342,7 +3342,7 @@ DEC-49 already licenses and that one refusal in this family already carried.)*
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0; see "THE 2026-09-10 BACKLOG RESOLUTION" at the foot of this file.)*
 
 ## IC-53 · I3: every `op=queue` ITEM gains ONE ADDITIVE FIELD — `disposition`, the identity the disposition act is keyed on · PROPOSED 2026-08-09 (PL-13, answering UI-45's handed-over plane question) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -3418,7 +3418,7 @@ green. UI-43 is live on `app.html` and this touches one function body inside UI-
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's and IC-42's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0; see the foot of this file.)*
 
 ## IC-52 · I3: `op=versionaccept` GAINS AN `affirmed` ARGUMENT AND A REFUSAL (C-25.33); `op=versionstrength` AND `op=basisversions` EACH GAIN ONE ADDITIVE FIELD · PROPOSED 2026-08-09 (D-271, enacting DEC-32 clause 4 and completing D-195) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -3575,7 +3575,7 @@ in. The delegation names the two functions.
 
 ### 3 · RESOLUTION
 
-*(CONDUCT's. The I3 version bump is CONDUCT's — IC-25's, IC-42's and IC-53's precedent.)*
+*(RESOLVED 2026-09-10 by CONDUCT #9 at the backlog pass — ADDITIVE, collapsed into I3 10.4.0; see the foot of this file.)*
 
 ---
 
@@ -5389,4 +5389,38 @@ DIST's lane — an objection from either reopens this row. `INTERFACES.md` bumpe
 act, and the missing 10.4.0 chain entry found while bumping is RECORDED there rather than
 repaired blind.
 
+---
 
+## THE 2026-09-10 BACKLOG RESOLUTION — CONDUCT #9, every row that still said "the bump is CONDUCT's"
+
+Thirteen landed-and-unversioned rows plus two late breaks, settled in one pass so the
+registry stops carrying debts as marginalia. `INTERFACES.md` carries every number moved,
+each entry saying it was resolved late and that sequence position is resolution order.
+
+- **ADDITIVE, collapsed into I3 10.4.0** (one bump covers several — I2 1.1.0's own
+  precedent, chosen because no consumer ever saw individual numbers): IC-29 (whose PL-1
+  integration moved the I3 head to 10.4.0 without a chain entry — found by `git -S`),
+  IC-30, IC-31, IC-35, IC-36, IC-37, IC-38, IC-40, IC-42, IC-48, IC-53, IC-57. The I5
+  halves of IC-29/30/31/36 are recorded as a CATCH-UP note in I5's chain, subsumed in the
+  numbers since.
+- **BREAKING, resolved late as I3 12.0.0**: IC-47 — the run verbs' C-22.8 participation
+  refusal (DEC-63). A previously-admitted session is now refused; IC-25's rule versions
+  the behaviour change as MAJOR at zero measured impact.
+- **BREAKING, resolved late as I3 13.0.0**: IC-52 — `op=versionaccept`'s `affirmed`
+  argument and C-25.33 (DEC-32 clause 4); the refusal on previously-succeeding
+  multi-part accepts is the break.
+- **ADDITIVE, resolved late as I2 1.3.0**: IC-58 — the `producer` field and the second
+  chain step; zero readers break, measured at filing.
+- **BREAKING, resolved late as I2 2.0.0**: IC-39 — `text_source` string → ordered chain,
+  AS-BUILT and long live (`textchain.mjs` refuses the bare string by name); the entry
+  records a break no chain entry ever had.
+- **I8 rows (IC-32, IC-33, IC-43): RESOLVED WITH NO NUMBER MOVED.** I8 is PROVISIONAL at
+  0.1.0 by FL-5's own recorded verdict; a provisional interface versions when it
+  CONFIRMS, and nothing here confirms it. The rows stand accepted as-built.
+- **Header-stale rows needing nothing**: IC-1 (settled inside I2 1.1.0's entry as
+  amended), IC-20 (I3 6.0.0), IC-25/26/27/28 (I3 10.0.0..10.3.0) — their bodies already
+  carry CHANGED/SETTLED; no action beyond this line naming them.
+
+Every resolution here is CONDUCT answering FOR a dormant consumer (or recording an
+as-built fact), per protocol step 3 — never the area agreeing. An objection from any
+owner reopens the specific row, not this section.

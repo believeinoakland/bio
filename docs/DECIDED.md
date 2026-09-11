@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-669 rulings across 67 documents.
+670 rulings across 67 documents.
 
 ## DEC-
 
@@ -549,7 +549,7 @@ authority is the file named, never this one.
 ## REC-
 
 - **REC-3** · 2026-07-31 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
-  `docs/development/INTERFACES.md:483`
+  `docs/development/INTERFACES.md:499`
 - **REC-8** · 2026-07-31 — PARTLY SETTLED 2026-07-31 (REC-8, Step 7): the TEMPORAL half is built and the mechanism is decided — an `overdue-scan` consumer on REC-1's reconciling DO alarm detects an overdue required successor (derived on read against an injectable clock, no stored flag), surfacing an `overdue_successor` proposal.  
   `docs/development/DEBT.md:71`
 - **REC-11** — her than minting a second constant; (2) ONE `strength:` line in the DO dispatch map beside `basis:`/`restson:`; (3) the CORRECTED comment on #weakerGrade (RECONCILED §1.1 R1-m — the old comment named the two-axis substitution R2 forbids as a design INTENT), with #weakerGrade itself unchanged and deliberately unused…  
@@ -1231,6 +1231,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:4548`
 - SIX EXISTING SUITES CAUGHT THIS CHANGE AND EVERY ONE WAS CORRECTED AT ITS SITE, NEVER EXEMPTED.** This is the measured consumer impact and it is not zero: `scheduler.test.mjs` (registry totality, ten consumers → eleven), `airun.test.mjs` (the same count as a pinned DELTA, 10→11 — corrected rather  
   `docs/development/INTERFACE-CHANGES.md:5122`
+- carry CHANGED/SETTLED; no action beyond this line naming them. Every resolution here is CONDUCT answering FOR a dormant consumer (or recording an as-built fact), per protocol step 3 — never the area agreeing.  
+  `docs/development/INTERFACE-CHANGES.md:5422`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  
