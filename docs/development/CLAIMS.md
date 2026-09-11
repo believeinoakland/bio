@@ -1812,3 +1812,61 @@ paths:
   join rule in `publishedManifest().production`; this item is pure I3 CONSUMPTION and nothing on the wire
   moves. **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground). **NOT** any other UI suite.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `b834f26` and verified on the MERGED tree: battery 170/170 · 10,488, `coverage --strict` exit 0 read unpiped, UI harness exit 0 (47/47, publishedcase 234/234), `mintid --audit` 0 breaks.
+
+## CLAIM 2026-09-10 M0 (D-265 — the walk census's SECOND question, answered by INVERSION: the classification travels with the VALUE)
+session: D-265 worker (worktree `agent-a0f4d228852d41a80`, branch `worktree-agent-a0f4d228852d41a80`)
+opened: 2026-09-10
+paths:
+  - `bio-plane/scripts/walkfigure.mjs` (NEW) — the primitive. A walk's scalar figure and a walk's
+    working-tree collection carry their classification AT RUNTIME, so a floor on an unguarded
+    corpus throws where it is written instead of being detected afterwards.
+  - `bio-plane/scripts/op-claims.mjs` — the EXPORT BOUNDARY ONLY: the object `sweep()` returns and
+    the object `corpus()` returns. The walk, the matcher, `LEDGER`, `PLANNED_OPS`, `readDispatch`,
+    `routeOf`, `opReaching`, `mentionsIn` and `generatedReason` are NOT touched. `rung-ladder.test.mjs`
+    imports `readDispatch`/`routeOf`/`PLANE` only (measured) and is unaffected.
+  - `bio-plane/scripts/walkfloor.mjs` — the RETURNED OBJECT ONLY (its own counts, self-application).
+    The stripper, the derivation, the flow analysis, `WALK_PRIMITIVES` and `CENSUS_ROOTS` are untouched.
+  - `bio-plane/test/op-claims.test.mjs` — the five floors and the two subset comparisons only, moved
+    onto the named unwrap. No assertion deleted; no floor figure changed.
+  - `bio-plane/test/hygiene.test.mjs` — the CROSS-FILE block at the foot of the class census ONLY:
+    the census's second question, the reach DELTA, and the BRANDED-or-NAMED ratchet appended after
+    the existing walkfloor arms. No existing arm edited except the three that floor on
+    `sweepWalkFloors()`'s own counts, which move onto the named unwrap.
+  - `bio-plane/test/walkfigure.test.mjs` (NEW) and `bio-plane/test/walkfigure.control.mjs` (NEW —
+    the negative-control driver, deliberately NOT a `.test.mjs`, `register.control.mjs`'s precedent).
+  - `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` NUMERALS only, from PRINTED figures
+    (a new suite invalidates `corpus`/`classified`). **If this conflicts at merge, COLLAPSE TO ONE
+    SET and re-read the printed figures. Do not keep both.**
+  - `docs/development/DEBT.md` — the D-265 row's disposition, and any residual raised.
+  - `docs/development/MEASUREMENTS.md` — APPEND, one dated section.
+  **NOT** `bio-plane/src/**` (no plane behaviour changes), **NOT** `bio-plane/checks/bio-checks.mjs`,
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `docs/development/QUEUE.md` (CONDUCT's sole
+  ground), **NOT** `scripts/fleet-bundle.mjs` / `migrate/migrate.mjs` / `scripts/residue.mjs` — those
+  three are NAMED in the census with a measured reason and are not edited.
+concurrency: checked over the whole register. **No live claim names any path above.** A CASE-5b
+  worker holds the publish path in `store.mjs`/`index.mjs`/`bio-checks.mjs` and the case suites —
+  this claim names none of them. FLEET's FL-10 claim named `scripts/fleet-bundle.mjs` and is
+  RELEASED; this item only NAMES that file in a census list and does not edit it.
+
+### AMENDMENT 2026-09-10 to the D-265 claim above — THREE PATHS ADDED, AND THE REASON IS A DELEGATION THIS ITEM TRIPPED AND THEN DISCHARGED
+  - `bio-plane/test/instrument-deps.mjs` (NEW) — the derived copy list.
+  - `bio-plane/test/coverage-provenance.test.mjs` — the `REAL` array ONLY (now derived), its
+    import line, and ONE appended assertion. No existing arm edited.
+  - `bio-plane/test/owed-controls.test.mjs` — the `REAL` array ONLY (now derived), its import
+    line, and ONE appended assertion (`A0`). No existing arm edited.
+  **WHY, and it is measured rather than opportunistic.** Both suites copy the REAL
+  `scripts/coverage.mjs` into a scratch repository and kept the list of modules it imports
+  **BY HAND, in two places**. D-265 added exactly ONE import — `walkfloor.mjs` gained
+  `./walkfigure.mjs` — and the full battery came back with `coverage-provenance` at **9 pass,
+  19 fail** and `owed-controls` at **29 pass, 11 fail**. Both suites' own headers name those
+  two figures, to the assertion, as the signature of this exact staleness, and
+  `owed-controls.test.mjs` DELEGATES the fix in `CLAIMS.md` in those words: *"two hand-kept
+  copies of one instrument's dependency list is a thing that will go stale."* The warning was
+  written twice, was exactly right, and was honoured anyway — because a hand-kept copy of
+  another file's imports cannot be kept by the person who does not know it exists. The list is
+  now DERIVED from the instrument's own import graph in ONE shared module, so the second copy
+  is GONE rather than corrected, and each suite asserts the derived set still contains every
+  name its array carried by hand. `WORKER.md`'s *invert, do not lengthen a list*, applied to
+  the list that asked for it in prose.
+  **Restored to green and measured:** `coverage-provenance` 28 → 29, `owed-controls` 40 → 41,
+  the +1 in each being the new assertion on the derived list.

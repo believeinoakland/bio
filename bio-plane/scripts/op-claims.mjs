@@ -62,6 +62,8 @@ import { dirname, join, relative, extname } from "node:path";
    exists and what it cannot see is in its own header; why this walk needed it is
    at the classification block inside `corpus()`. */
 import { readGitProvenance } from "./provenance.mjs";
+/* D-265: the classification this module's exported walks carry. */
+import { walkResult } from "./walkfigure.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PLANE = join(HERE, "..");
@@ -251,7 +253,11 @@ export function generatedReason(src) {
   return null;
 }
 
-export function corpus(root = REPO, roots = null) {
+/* D-265: the RAW walk, module-private.  `sweep()` below reads every byte of it and
+   must keep working with bare values; the EXPORTED `corpus()` is the wrapper that
+   puts the classification on the boundary, because the boundary is where a floor in
+   another file can be written. */
+function corpusRaw(root = REPO, roots = null) {
   const files = [];
   const skipped = [];
   const bases = roots ? roots.map((r) => join(root, r)) : [root];
@@ -312,6 +318,27 @@ export function corpus(root = REPO, roots = null) {
   const repro = out.filter((x) => inCommit(x.rel));
   const charsRepro = repro.reduce((a, x) => a + x.body.length, 0);
   return { files: out, chars, excluded, skipped, prov, repro, charsRepro };
+}
+
+/* D-265 · THE EXPORT BOUNDARY.  Everything above is unchanged; what changes is that
+   a consumer in another file can no longer write `corpus().chars >= 10_000_000`
+   without the line refusing itself.  The comment block above says in prose that the
+   working tree is the unsafe population and `repro` is the safe one — this is that
+   sentence made load-bearing instead of advisory, which is D-265's whole shape. */
+export function corpus(root = REPO, roots = null) {
+  const c = corpusRaw(root, roots);
+  return walkResult({
+    about: "op-claims corpus() — the whole repository working tree",
+    workingTree: { files: c.files, chars: c.chars },
+    reproducible: { repro: c.repro, charsRepro: c.charsRepro },
+    safe: {
+      excluded: [c.excluded, "callers PIN this exactly and name the three members; a phantom "
+        + "arriving here makes that assertion RED, never quietly green (D-257's safe direction)"],
+      skipped: [c.skipped, "reported and asserted non-empty by CONTENT (the dot-segment rule), "
+        + "never floored on its size"],
+    },
+    data: { prov: c.prov },
+  });
 }
 
 /* --------------------------------------------------------------- the mentions */
@@ -570,7 +597,7 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
      `repro`/`charsRepro` exist so the caller can FLOOR on what another checkout
      reproduces without narrowing what is checked. The two are deliberately
      different populations; see `corpus()`. */
-  const { files, chars, excluded, skipped, prov, repro, charsRepro } = corpus(root, roots);
+  const { files, chars, excluded, skipped, prov, repro, charsRepro } = corpusRaw(root, roots);
 
   const plannedNames = new Set(planned.map((p) => p.op));
   const ledgerIndex = new Map(ledger.map((e) => [`${e.file} ${e.name}`, e]));
@@ -655,11 +682,31 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
       mentionsRepro++; namesRepro.add(mt.name);
     }
   }
-  return { table, files: files.length, chars, excluded, mentions, dynamic, offLedger,
-           names: [...names].sort(), findings, attributions, ledgerDrift, plannedBuilt,
-           /* ADDED BY M0-18. Every field above is untouched: `test/op-claims.test.mjs`
-              pins them, and a reader of an existing field must not have its meaning
-              changed under it. */
-           skipped, prov, filesRepro: repro.length, charsRepro,
-           mentionsRepro, namesRepro: [...namesRepro].sort() };
+  /* D-265 · THE EXPORT BOUNDARY.  Every KEY below is the one M0-12 and M0-18 named
+     and nothing is renamed, removed or re-populated — `test/op-claims.test.mjs`
+     pins them.  What changes is that the six WORKING-TREE figures now carry their
+     classification, so a floor written on one in ANY other file refuses itself
+     where it is written.  The four `*Repro` figures stay bare on purpose: flooring
+     on them is the CORRECT act, and making the right thing awkward is how a check
+     gets switched off. */
+  return walkResult({
+    about: "op-claims sweep() — the whole repository working tree",
+    workingTree: { files: files.length, chars, mentions, dynamic, offLedger,
+                   names: [...names].sort(), attributions },
+    reproducible: { filesRepro: repro.length, charsRepro,
+                    mentionsRepro, namesRepro: [...namesRepro].sort() },
+    safe: {
+      excluded: [excluded, "PINNED exactly by its callers and named member by member; "
+        + "a phantom makes that assertion RED rather than quietly green"],
+      findings: [findings, "asserted EMPTY — a false op claim in an uncommitted file is "
+        + "still a false claim and must still fail; narrowing this would hide it"],
+      ledgerDrift: [ledgerDrift, "asserted EMPTY; drift arriving from anywhere at all is "
+        + "the finding, so the unsafe direction is not available here"],
+      plannedBuilt: [plannedBuilt, "asserted EMPTY; a planned op that has been built is a "
+        + "finding wherever the file came from"],
+      skipped: [skipped, "reported and asserted by CONTENT (the dot-segment rule), never "
+        + "floored on its size"],
+    },
+    data: { table, prov },
+  });
 }

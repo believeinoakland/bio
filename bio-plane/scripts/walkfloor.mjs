@@ -124,6 +124,14 @@ import { fileURLToPath } from "node:url";
    guarded walk asks, and hands the answer up so a site found only in an
    UNTRACKED file is labelled rather than counted silently. */
 import { readGitProvenance, stateOf, repoPath } from "./provenance.mjs";
+/* D-265: this module's own result carries its classification — see the return of
+   `sweepWalkFloors` for why the detector applies the brand to itself. */
+import { walkResult } from "./walkfigure.mjs";
+
+/* The reason this module's own CLI report unwraps. A report is not a floor. */
+const REPORTING_ONLY =
+  "a REPORT of what the walk found, printed for a reader and floored on by nobody; "
+  + "the reach floors that DO exist are in hygiene.test.mjs and say so at their own site";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PLANE = join(HERE, "..");
@@ -579,19 +587,39 @@ export function sweepWalkFloors({ repo = REPO, roots = CENSUS_ROOTS } = {}) {
   const tracked = (rel) => prov.inHead === null ? "UNVERIFIED" : stateOf(prov, rel);
   for (const arr of [sites, ceilings, unknowns]) for (const r of arr) r.state = tracked(r.file);
 
-  return {
-    corpus: files.map((f) => relative(repo, f)),
-    walkModules, sites, ceilings, unknowns,
-    provenance: prov.inHead === null ? "UNVERIFIED" : "VERIFIED",
-  };
+  /* D-265 · THE DETECTOR CLASSIFIES ITS OWN RESULT, and this is the cheapest
+     evidence available that the brand reaches real code rather than only its own
+     fixtures: `hygiene.test.mjs` FLOORS on the two REACH figures below, one import
+     away, so by this module's own stage 3 it is one half of a cross-file
+     walk-derived floor. Those two figures are counted over the WORKING TREE — a
+     module nobody committed inflates both — so they are branded, and the guarded
+     consumer now has to say at its own site that it knows which population it is
+     flooring on. The three finding lists are `safe` for a stated reason rather than
+     by omission. */
+  return walkResult({
+    about: "walkfloor sweepWalkFloors() — the .mjs estate under CENSUS_ROOTS",
+    workingTree: {
+      corpus: files.map((f) => relative(repo, f)),
+      walkModules,
+    },
+    safe: {
+      sites: [sites, "every member is enumerated BY NAME and ratcheted GUARDED-or-NAMED, so "
+        + "an arrival is a named decision rather than a number somebody moves"],
+      ceilings: [ceilings, "reported only; a ceiling at zero already fails in the safe "
+        + "direction, which is why it is not a site (D-257)"],
+      unknowns: [unknowns, "PRINTED member by member and never scored; a growth here is read "
+        + "as a narrowed unknown, not as a figure to floor on"],
+    },
+    data: { provenance: prov.inHead === null ? "UNVERIFIED" : "VERIFIED" },
+  });
 }
 
 /* Run directly for a report: `node scripts/walkfloor.mjs` */
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const r = sweepWalkFloors();
-  console.log(`walkfloor: ${r.corpus.length} module(s) read · ${r.walkModules.length} walk `
+  console.log(`walkfloor: ${r.corpus.count} module(s) read · ${r.walkModules.count} walk `
     + `module(s) · provenance ${r.provenance}`);
-  for (const w of r.walkModules)
+  for (const w of r.walkModules.overWorkingTree(REPORTING_ONLY))
     console.log(`  WALK ${w.file} · ${w.walks} primitive call(s) · walk-derived exports: `
       + `${w.derived.length ? w.derived.join(", ") : "(none reachable from an export)"}`);
   console.log(`\n  CROSS-FILE FLOORS: ${r.sites.length}`);

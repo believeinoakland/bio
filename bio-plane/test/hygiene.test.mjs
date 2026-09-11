@@ -90,7 +90,14 @@ import { readGitProvenance, reportProvenance, stateOf, repoPath } from "../scrip
 /* M0-21 / D-268: the census below grades a file by whether THAT FILE walks, so a
    floor standing one import away from its walk is invisible to it. This module
    answers the question by DATA FLOW instead. Imported, never restated. */
-import { sweepWalkFloors } from "../scripts/walkfloor.mjs";
+import { sweepWalkFloors, strip as stripSource } from "../scripts/walkfloor.mjs";
+/* D-265: the census's SECOND question. `walkfloor.mjs` asks whether a value produced
+   by a walk reaches a comparison — by reading source, so five stated shapes are
+   invisible to it. `walkfigure.mjs` puts the classification ON the value, where no
+   spelling can go round it, and these are what let this file ask whether a walking
+   module actually applies it. The block at the foot of the census is the argument. */
+import { declarationOf, WalkFloorError, isWalkFigure, isWalkSet } from "../scripts/walkfigure.mjs";
+import { corpus as opCorpus, sweep as opSweep } from "../scripts/op-claims.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -1979,6 +1986,26 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        and `netstat`, not from the directory. Guarding it would be true and
        useless, which is `ref-variance-probe.mjs`'s reason exactly. */
     "bio-plane/test/d249-port.probe.mjs",         // its own test/ census, printed as context, read by no assertion
+    /* ADDED 2026-09-10 by D-265's item, AND THE RATCHET FIRED ON ITS OWN AUTHOR
+       BEFORE ANYONE READ THE DIFF — this file, `walkfigure.test.mjs` and the
+       chokepoint arm below all went red on the first run of the new suite, which
+       is three independent ratchets catching one new file and is the best
+       evidence available that they work.
+       WHY IT IS NAMED AND NOT GUARDED, and the reason is a finding about THIS
+       MATCHER rather than about that file: `walkfigure.test.mjs` CONTAINS NO WALK
+       AT ALL. Its only discovery primitive is the word `readdirSync` inside a
+       FIXTURE TEMPLATE LITERAL — the two-line library its sandboxes import, which
+       has to spell a real primitive because the thing under test is whether the
+       detector recognises one. The file itself mints `mkdtemp` sandboxes, sweeps
+       them, and floors that count at 2.
+       SO THE MATCHER IS COMMENT-BLIND AND NOT STRING-BLIND, measured here. M0-18
+       blinded it to comments after `op-claims.test.mjs` was enumerated on the
+       strength of a SENTENCE DESCRIBING THIS MATCHER; a fixture string is the
+       same class one step over. NOT CORRECTED IN THIS ITEM, deliberately:
+       blinding it to strings would move the census count, the REACH floor and the
+       membership of this very list, which is a measurement rather than an edit and
+       is not what D-265 claims. Carried as debt instead of dissolved here. */
+    "bio-plane/test/walkfigure.test.mjs",         // no walk; its only primitive is inside a fixture template literal
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
@@ -2047,12 +2074,25 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        THE ENTRY IS THAT THE DECISION IS VISIBLE INSTEAD OF SILENT — which is the
        whole difference between this list and the blindness it replaces. */
     "bio-plane/test/op-claims.test.mjs",
+    /* ADDED 2026-09-10 by D-265, and it is a finding about the DETECTOR that is
+       worth more than the entry. `walkfigure.test.mjs` §7 writes three real floors
+       on a real walk — `s.files >= 300`, `s.chars >= 10_000_000`,
+       `s.names.count >= 150` — and writes them ON PURPOSE, inside a closure whose
+       assertion is that each one is REFUSED. They never evaluate; the brand throws
+       first, and the suite fails if any of them does not.
+       THE STATIC DETECTOR CANNOT TELL A FLOOR FROM AN ASSERTION THAT THE FLOOR IS
+       REFUSED, because both are the same three tokens in the same source. That is
+       the cry-wolf direction arriving from a shape nobody had written before, and
+       the correct disposition is the one the census already provides: a decision
+       that is VISIBLE. Guarding them would be meaningless — there is no figure here
+       a phantom can move, because there is no figure here at all. */
+    "bio-plane/test/walkfigure.test.mjs",
   ];
   const wfNewly = wfUnguarded.map((s) => s.file)
     .filter((f, i, a) => a.indexOf(f) === i && !CROSS_FILE_NAMED.includes(f)).sort();
   const wfStale = CROSS_FILE_NAMED.filter((f) => !wfUnguarded.some((s) => s.file === f));
 
-  console.log(`  cross-file walk->floor: ${wf.corpus.length} module(s) read · ${wf.walkModules.length} walk module(s) ·`
+  console.log(`  cross-file walk->floor: ${wf.corpus.count} module(s) read · ${wf.walkModules.count} walk module(s) ·`
     + ` ${wf.sites.length} floor(s) whose value crosses a module boundary`
     + ` (${wf.sites.filter((s) => s.guarded).length} GUARDED, ${wfUnguarded.length} named)`
     + ` · ${wf.ceilings.length} ceiling-at-zero · ${wf.unknowns.length} UNCLASSIFIED · provenance ${wf.provenance}`);
@@ -2065,10 +2105,19 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* (1) REACH. A detector that reads nothing passes every absolute assertion, and
      three walks in this repository reported a spotless verdict over an empty
      corpus in one week. The corpus is PRINTED above and floored here. */
-  t(`the cross-file detector REACHES the estate rather than a corner of it (${wf.corpus.length} module(s), floor 200)`,
-    wf.corpus.length >= 200, true);
-  t(`and it resolved a non-trivial set of WALK modules to flow from (${wf.walkModules.length}, floor 8)`,
-    wf.walkModules.length >= 8, true);
+  /* D-265: both of these are floors on a WORKING-TREE figure — an uncommitted `.mjs`
+     under CENSUS_ROOTS raises them — and the detector's own result now says so, which
+     is what makes this pair the brand's self-application rather than an assertion
+     about fixtures. They stay over the working tree deliberately: REACH is a claim
+     about what the detector READ, and a reach figure narrowed to HEAD would go blind
+     to a detector that had stopped reading uncommitted work. */
+  const REACH_OVER_THE_WORKING_TREE =
+    "a REACH floor, and reach is a claim about what the detector READ — narrowing it to "
+    + "HEAD would hide a detector that stopped reading the uncommitted half of the estate";
+  t(`the cross-file detector REACHES the estate rather than a corner of it (${wf.corpus.count} module(s), floor 200)`,
+    wf.corpus.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 200, true);
+  t(`and it resolved a non-trivial set of WALK modules to flow from (${wf.walkModules.count}, floor 8)`,
+    wf.walkModules.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 8, true);
 
   /* (2) THE TRUE POSITIVE, PINNED AS A DELTA RATHER THAN A COUNT. The real
      `op-claims` split must be FOUND. This is the arm that fails if the detector
@@ -2101,6 +2150,225 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      own output — as GUARDED, because this file asks `provenance.mjs`. */
   t("the detector finds THIS suite's own cross-file floors on it, and reads them as GUARDED",
     wf.sites.some((s) => s.file === "bio-plane/test/hygiene.test.mjs" && s.guarded), true);
+
+  /* ======================================================================== *
+   *  D-265 — THE CENSUS'S SECOND QUESTION, AND IT IS ASKED OF THE VALUE
+   *  RATHER THAN OF THE SOURCE.
+   *
+   *  EVERYTHING ABOVE, INCLUDING D-268's CROSS-FILE HALF, IS A DETECTOR.  A
+   *  detector reads source and therefore has a set of shapes it does not
+   *  understand.  `walkfloor.mjs`'s header states five of them and
+   *  `walkfloor.test.mjs` PINS TWO AS ARMS — a re-export chain, and flow through
+   *  a data structure.  Those are not hedges: in either shape a real floor on a
+   *  real unguarded corpus is scored CLEAN today.  Not UNKNOWN, not NAMED, not
+   *  printed — absent from the output, because the analyser never connects the
+   *  binding to the walk.  `require()`, `await import()`, a walk reached through
+   *  an argument and flow through a function parameter are the other three.
+   *
+   *  THAT IS EXACTLY D-265's ARM: *a new file that floors on an imported walk in
+   *  a spelling you did not anticipate.*  A static analyser will always have such
+   *  a set, and teaching it the third spelling is how the fourth gets written.
+   *
+   *  SO THE ROW PREFERRED THE INVERSION AND SO DOES THIS BLOCK: the exported
+   *  walks carry the classification THEMSELVES, in `scripts/walkfigure.mjs`, so a
+   *  floor computed over an unguarded corpus is impossible to WRITE rather than
+   *  merely detectable afterwards.  The classification travels with the VALUE, so
+   *  it goes through a data structure, a parameter, a rename, a re-export, a
+   *  dynamic import and an arithmetic hop — none of those is a place where the
+   *  value stops being itself.  The five gaps above are not five gaps here; they
+   *  are not a category.
+   *
+   *  THE TWO HALVES ARE COMPLEMENTARY AND BOTH ARE KEPT, which is a decision
+   *  rather than caution.  A brand is dynamic and cannot judge a line that never
+   *  runs; the detector reads source and does not care.  A detector cannot see a
+   *  fourth spelling; the brand has no spellings.  Neither subsumes the other,
+   *  and the arms below assert each where it is strong.
+   * ======================================================================== */
+
+  /* ---- (6) BRANDED OR NAMED: the ratchet, asked by DRIVING the export --------
+   *
+   * A module that brands one figure and leaves four bare would pass "is this
+   * export branded?" while carrying the whole exposure — a mechanism believed on
+   * the strength of its existence rather than its behaviour, which is the defect
+   * this project meets most.  So the question is TOTALITY over a DRIVEN result:
+   * every number and every array the walk publishes is declared into exactly one
+   * bucket, and an UNDECLARED figure fails BY NAME.
+   *
+   * The walks are driven over a NARROW root, not the whole repository.  The
+   * question here is whether the boundary is classified, and that is answered
+   * identically over ten modules and over six hundred; asking it over the whole
+   * tree would put a second 3-second repository walk in this suite for nothing. */
+  const NARROW = ["bio-plane/scripts"];
+  const driven = [
+    { file: "bio-plane/scripts/op-claims.mjs", exp: "corpus", run: () => opCorpus(REPO, NARROW) },
+    { file: "bio-plane/scripts/op-claims.mjs", exp: "sweep", run: () => opSweep({ root: REPO, roots: NARROW }) },
+    { file: "bio-plane/scripts/walkfloor.mjs", exp: "sweepWalkFloors",
+      run: () => sweepWalkFloors({ repo: REPO, roots: [["bio-plane", ["scripts"]]] }) },
+  ];
+
+  /* NAMED, and every entry is CONDITIONAL ON A MEASUREMENT rather than on an
+     opinion.  These three export walk-derived values that nothing floors on
+     across a module boundary today — measured by the detector above, in this same
+     run — so branding them would be work with no exposure behind it.  The moment
+     that stops being true the entry FAILS as stale and the module must be
+     branded, which is the difference between a named decision and an exemption. */
+  const WALK_EXPORTS_NAMED = {
+    "bio-plane/migrate/migrate.mjs":
+      "its walk-derived exports take or mutate a bundle on disk; driving one here would "
+      + "migrate something. No cross-module comparison derives from it — asserted below",
+    "bio-plane/scripts/fleet-bundle.mjs":
+      "its walk-derived exports BUILD and WRITE fleet members; driving one in a suite would "
+      + "produce artifacts. No cross-module comparison derives from it — asserted below",
+    "bio-plane/scripts/residue.mjs":
+      "its walk-derived exports scan the SHARED temp root, which is not isolated between "
+      + "sessions (PL-10). No cross-module comparison derives from it — asserted below",
+  };
+
+  const exporters = wf.walkModules
+    .overWorkingTree("the census's own roster of walking modules, read to ask each one the "
+      + "second question; it is enumerated by name and never floored on")
+    .filter((m) => m.derived.length > 0);
+  const drivenFiles = [...new Set(driven.map((d) => d.file))];
+  const unanswered = exporters.map((m) => m.file)
+    .filter((f) => !drivenFiles.includes(f) && !(f in WALK_EXPORTS_NAMED)).sort();
+  const namedStale = Object.keys(WALK_EXPORTS_NAMED)
+    .filter((f) => !exporters.some((m) => m.file === f)).sort();
+
+  console.log(`  D-265 walk-export classification: ${exporters.length} module(s) export a walk-derived`
+    + ` value · ${drivenFiles.length} DRIVEN and asserted BRANDED · ${Object.keys(WALK_EXPORTS_NAMED).length} NAMED`);
+  for (const m of exporters)
+    console.log(`    ${drivenFiles.includes(m.file) ? "BRANDED" : (m.file in WALK_EXPORTS_NAMED) ? "NAMED  " : "UNANSWERED"}`
+      + ` ${m.file}  exports: ${m.derived.join(", ")}`);
+
+  /* THE RATCHET.  A new walking module that exports its walk is a DECISION. */
+  t(`every walk-derived EXPORT in the estate is BRANDED or NAMED (${JSON.stringify(unanswered)})`,
+    unanswered, []);
+  t(`and the walk-export named list has not gone stale (${JSON.stringify(namedStale)})`,
+    namedStale, []);
+
+  /* THE NAMING IS CONDITIONAL, AND THIS IS THE CONDITION.  A NAMED module that
+     acquires a cross-module comparison has outgrown its entry. */
+  const namedWithFloors = Object.keys(WALK_EXPORTS_NAMED)
+    .filter((f) => wf.sites.some((s) => s.from.includes(f))).sort();
+  t(`no NAMED walk-export module has acquired a cross-module floor — the naming is conditional `
+  + `on a measurement and this is the measurement (${JSON.stringify(namedWithFloors)})`,
+    namedWithFloors, []);
+
+  /* TOTALITY, over the DRIVEN results. */
+  for (const d of driven) {
+    const decl = declarationOf(d.run());
+    t(`${d.file} · ${d.exp}() returns a CLASSIFIED result — every figure it publishes is declared, `
+    + `none laundered (workingTree: ${decl.declared ? decl.buckets.workingTree.join(", ") : "—"})`,
+      [decl.declared, decl.undeclared, decl.laundered, decl.declared && decl.buckets.workingTree.length > 0],
+      [true, [], [], true]);
+  }
+
+  /* ---- (7) THE REACH, AS A DELTA, WITH THE CORPUS PRINTED -------------------
+   *
+   * A detector that catches nothing passes every clean corpus, and three walks in
+   * this repository reported a spotless verdict over an empty corpus in one week.
+   * So the brand's reach is not asserted as "it exists": a set of floor spellings
+   * is PLANTED against a REAL branded figure — taken from a real walk of this
+   * repository, not from a fixture — and the arm is the DELTA between planted and
+   * caught.  Every spelling below is one the source-reading detector states it
+   * cannot see, or one that would launder the figure into a bare number.
+   *
+   * The planted set is FLOORED as well as counted, because a delta of 0 of 0 is
+   * the shape that has passed three headline assertions in this repository. */
+  const realFigure = opCorpus(REPO, NARROW).chars;
+  const planted = [
+    ["through a DATA STRUCTURE — walkfloor.mjs states it cannot see this, and pins it as an arm",
+      () => { const a = []; a.push(realFigure); return a[0] >= 1; }],
+    ["through a FUNCTION PARAMETER — the consumer-side gap stated in the same header",
+      () => ((x) => x >= 1)(realFigure)],
+    ["through a rename and one further hop, then compared",
+      () => { const m = realFigure; const n = m; return n >= 1; }],
+    ["through a PROPERTY of an object literal",
+      () => ({ held: realFigure }).held > 0],
+    ["laundered through ARITHMETIC first — the one-character escape from any brand",
+      () => (realFigure + 0) >= 1],
+    ["laundered through Math.max",
+      () => Math.max(realFigure, 1) >= 1],
+    ["laundered through Number()",
+      () => Number(realFigure) >= 1],
+    ["laundered through unary plus",
+      () => +realFigure >= 1],
+    ["written BACKWARDS, which is the same claim in the other direction",
+      () => 1 <= realFigure],
+    ["through a Map, which is a data structure a source reader would have to model",
+      () => new Map([["k", realFigure]]).get("k") >= 1],
+  ];
+  const escaped = [];
+  let caught = 0;
+  for (const [why, fn] of planted) {
+    try { fn(); escaped.push(`${why} — NO THROW`); }
+    catch (e) { e instanceof WalkFloorError ? caught++ : escaped.push(`${why} — ${e.name}`); }
+  }
+  console.log(`  D-265 brand REACH: ${caught} of ${planted.length} planted floor spelling(s) refused`
+    + ` at the site, over a real figure from a walk of ${NARROW.join(", ")}`);
+  t(`the brand REFUSES every planted floor spelling, asserted as a DELTA over a non-trivial `
+  + `planted corpus (${caught} of ${planted.length} caught, floor 8; escaped: ${JSON.stringify(escaped)})`,
+    [caught === planted.length, planted.length >= 8, escaped], [true, true, []]);
+
+  /* THE OVER-STRICTNESS DIRECTION, ASSERTED AS HARD AS THE OTHER.  A brand that
+     makes reports unreadable is a check somebody switches off — which is
+     `VERIFICATION.md`'s own stated reason for not making `--strict` the gate. */
+  const notFloors = [];
+  try { if (`${realFigure}`.length < 1) notFloors.push("template literal produced nothing"); }
+  catch (e) { notFloors.push(`template literal threw ${e.name}`); }
+  try { String(realFigure); } catch (e) { notFloors.push(`String() threw ${e.name}`); }
+  try { JSON.stringify({ realFigure }); } catch (e) { notFloors.push(`JSON.stringify threw ${e.name}`); }
+  try { if (!/\d/.test(`${realFigure}`)) notFloors.push("the printed figure is not a number"); }
+  catch (e) { notFloors.push(`inspect threw ${e.name}`); }
+  t(`a REPORT is not a floor: printing, interpolating and serialising a walk figure all still `
+  + `work (${JSON.stringify(notFloors)})`, notFloors, []);
+  t("and the figure a walk publishes is recognisable as one, so a suite can ask rather than guess",
+    [isWalkFigure(realFigure), isWalkSet(opCorpus(REPO, NARROW).files),
+     isWalkFigure(opCorpus(REPO, NARROW).charsRepro)],
+    [true, true, false]);
+
+  /* ---- (8) THE CHOKEPOINT'S PASSAGES ARE NAMED ------------------------------
+   *
+   * `.overWorkingTree(why)` is the only way a bare working-tree figure is
+   * reachable, and it is a CHOKEPOINT rather than a list of spellings: a list can
+   * be walked around by writing a sixth shape, a chokepoint can only be walked
+   * THROUGH.  That is the property that makes counting its occurrences sound
+   * where counting `readdirSync(` was not — this is not one spelling among many a
+   * writer might choose, it is the one the value itself forces.
+   *
+   * The count is over STRIPPED source, because M0-16's census enumerated a file
+   * on the strength of the word appearing in a COMMENT explaining the census, and
+   * this file is about to contain several such sentences. */
+  const passages = [];
+  for (const rel of wf.corpus.overWorkingTree("the module list the detector already read, "
+    + "reused to count chokepoint passages rather than walking the tree a second time")) {
+    let body; try { body = readFileSync(join(REPO, rel), "utf8"); } catch { continue; }
+    const n = (stripSource(body).match(/\.overWorkingTree\s*\(/g) || []).length;
+    if (n > 0) passages.push({ file: rel, n });
+  }
+  const PASSAGES_NAMED = {
+    /* Each of these is a site that legitimately needs the bare number, and the
+       reason is written AT the site as a named constant rather than here. */
+    "bio-plane/test/op-claims.test.mjs": "two SUBSET/COLLAPSE checks whose subject IS the "
+      + "working-tree population, one dot-segment rule that must be asked of the whole walk, and "
+      + "ONE REAL FLOOR — `attributions.length >= 4` — named rather than guarded, D-265's residual",
+    "bio-plane/test/hygiene.test.mjs": "this block's own REACH floors and the two roster reads "
+      + "below them; the reasons are the named constants beside each one",
+    "bio-plane/test/walkfloor.test.mjs": "the estate REACH floor, which is a claim about what "
+      + "the detector READ and is deliberately over the working tree",
+    "bio-plane/scripts/walkfloor.mjs": "its own CLI report — a report is not a floor",
+    "bio-plane/test/walkfigure.test.mjs": "the chokepoint's own suite: the unwraps here are the "
+      + "FIXTURES asserting what the unwrap does, including that one with no reason is refused",
+  };
+  const newPassages = passages.map((p) => p.file).filter((f) => !(f in PASSAGES_NAMED)).sort();
+  const stalePassages = Object.keys(PASSAGES_NAMED).filter((f) => !passages.some((p) => p.file === f)).sort();
+  console.log(`  D-265 chokepoint: ${passages.reduce((a, p) => a + p.n, 0)} passage(s) through`
+    + ` .overWorkingTree() in ${passages.length} file(s) of ${wf.corpus.count} read`);
+  for (const p of passages) console.log(`    ${p.n} × ${p.file}`);
+  t(`every passage through the chokepoint is in a NAMED file — a bare working-tree figure is a `
+  + `DECISION, never a silence (${JSON.stringify(newPassages)})`, newPassages, []);
+  t(`and the chokepoint's named list has not gone stale (${JSON.stringify(stalePassages)})`,
+    stalePassages, []);
 }
 
 console.log(`\nhygiene: ${pass} pass, ${fail} fail`);

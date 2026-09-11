@@ -8427,3 +8427,66 @@ refuse"* — now false in both directions. `PHASE` (~1670) maps `published:"case
 seal, and its two `forbids` are still TRUE but now hang off the case relation. The SPACE
 vocabulary's `published` row (~1767) is CORRECT and must not be touched — named so a
 find-and-replace does not take it. DELEGATION filed in `CLAIMS.md`.
+
+## D-265 · 2026-09-10 · a walk's classification carried BY THE VALUE, and the blindness that made it worth doing
+
+**Instrument:** `bio-plane/scripts/walkfigure.mjs` (new), driven by `bio-plane/test/walkfigure.test.mjs`
+and by the census block at the foot of `bio-plane/test/hygiene.test.mjs`. Worktree
+`agent-a0f4d228852d41a80`, tree at `2972946`.
+
+**THE MEASUREMENT THE ITEM RESTS ON, and it is a DELTA between two spellings of ONE floor.**
+`scripts/walkfloor.mjs` (M0-21 / D-268) finds a cross-file walk-derived floor by reading source.
+Its header states five shapes it cannot see. The same floor was written two ways into two sandbox
+fixtures and the real detector run over both:
+
+| the floor | how it is written | sites reported | unclassified |
+| --- | --- | --- | --- |
+| `r.files >= 300` | bound directly from the imported walk | **1** | 0 |
+| `held[0].files >= 300` | the identical value, held in an array first | **0** | **0** |
+
+Zero AND zero is the finding: the second is not printed as UNKNOWN, it is **absent from the
+detector's output entirely**. A floor on an unguarded corpus, scored clean.
+
+**THE SAME QUESTION ASKED OF THE BRAND**, over a real figure from a real walk of this repository
+(`bio-plane/scripts`, 357,393 chars over 15 files), down every route a value travels: held in an
+array, held in a `Map`, through a function parameter, through an object property, through a spread
+— **5 of 5 REFUSED**. In `hygiene.test.mjs` the planted set is larger and asserted as a delta:
+**10 of 10 planted floor spellings refused**, including the three that launder a figure into a bare
+number (`Number()`, unary `+`, `Math.max`) and the comparison written backwards.
+
+**THE ESTATE'S WALK-EXPORT CORPUS, printed by the census every run:** 379 modules read · 21 walk
+modules · **5 of them export a walk-derived value** (`op-claims.mjs`, `walkfloor.mjs`,
+`fleet-bundle.mjs`, `migrate/migrate.mjs`, `residue.mjs`) — 2 DRIVEN and asserted BRANDED, 3 NAMED
+with a reason that is CONDITIONAL on a measurement (no cross-module comparison derives from them
+today, asserted in the same run, so the entry fails as stale the day one does). Chokepoint:
+**14 passages through `.overWorkingTree()` in 4 files** of the 379 read, every file NAMED.
+
+**WHAT THE BRAND CANNOT DO, measured rather than hedged:** it cannot reach a walking module that
+does not use it (which is why the static census is kept and ratchets who does); it cannot judge a
+line that never RUNS; and it cannot stop a caller flooring on a number already unwrapped. A branded
+ARRAY was tried and rejected on measurement: `filter`, `map`, spread and the array iterator all read
+`length` and `ToLength` it, so a throwing `length` breaks every legitimate use — hence `walkSet`,
+which publishes a `count` and no `length`, making `set.length >= 150` read `undefined >= 150`, false
+rather than silently true.
+
+**BATTERY:** baseline **170/170 · 10,482** measured on this worktree before any edit (after
+`npm ci`); final **171/171 · 10,531**, exit 0. Delta **+49**, attributed by DIFFING the two runs
+suite by suite and never by subtraction: `walkfigure.test.mjs` **32** (new), `hygiene` 650 → 663
+(**+13**), `planning-hygiene` 217 → 219 (**+2**, the two new DEBT rows), `coverage-provenance`
+28 → 29 (**+1**) and `owed-controls` 40 → 41 (**+1**, the derived-copy-list assertion in each).
+**`op-claims` 35 → 35 and `walkfloor` 31 → 31, both UNMOVED** — that pair is the arm saying the
+export-boundary change altered no existing assertion in the suites that pin those walks. Five
+suites moved; every other row is identical.
+
+**The `+49` above was first written into this section as `+27` BEFORE the final battery ran, and it
+was wrong by 22.** It is corrected to the measured figure rather than the prose being rewritten
+around it, and recorded because a number written before its measurement is exactly the habit this
+file exists to break.
+
+**A HAND-KEPT LIST WENT STALE ON SCHEDULE AND THE PROSE HAD PREDICTED THE EXACT FIGURES.** Adding
+one import (`walkfloor.mjs` gained `./walkfigure.mjs`) took `coverage-provenance.test.mjs` to
+**9 pass / 19 fail** and `owed-controls.test.mjs` to **29 pass / 11 fail**. Both suites' headers name
+those two numbers, to the assertion, as the signature of a missing entry in their hand-kept copy of
+`coverage.mjs`'s dependency list, and one of them delegates the fix in `CLAIMS.md`. The list is now
+derived from the instrument's own import graph in one shared module (`test/instrument-deps.mjs`):
+6 modules, nothing outside `scripts/`.
