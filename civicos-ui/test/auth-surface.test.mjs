@@ -389,11 +389,20 @@ const MANIFEST = {
       bundle_sha:"e".repeat(64), ratified_at:"2026-07-30T12:00:00Z", attestor_key:"SHA256:zzz",
       gate_version:"1.4", strength:null, required:BAR_DECLARED },
   ],
-  /* 6 of 9 DELIBERATELY — see the correction note above. `manifest_sha` and
-     `manifest` are HERE, on the row the plane actually selects them from. */
+  /* WAS 6 of 9 DELIBERATELY, WIDENED TO 9 of 9 AT THE CASE-6 MERGE (2026-09-10,
+     CONDUCT). M0-24 left `bias_acknowledgement`, `bar` and `project_id` off this
+     row because the census measured ZERO reads of them in `app.html` — and
+     CASE-6, landing in the same integration, made `pubList` read `bar` and
+     `project_id` (the case's own standard, drawn once, DEC-72 clause 2). The
+     zero-readers ground is gone, so the narrowness went with it: this is the
+     honest widening M0-24's own over-strictness arm existed to keep legal.
+     `manifest_sha` and `manifest` are HERE, on the row the plane actually
+     selects them from. */
   cases: [
     { case_id:CASE_ID, edition:1, scope:"Did the marina works get paid for out of the sewer fund?",
-      ratified_at:"2026-07-30T12:30:00Z", manifest_sha:"f".repeat(64), manifest:"{}" },
+      ratified_at:"2026-07-30T12:30:00Z", manifest_sha:"f".repeat(64), manifest:"{}",
+      bar:BAR_DECLARED, project_id:"PRJ-2026-0007",
+      bias_acknowledgement:"Authored for edition 1: the publisher works the sewer-fund beat and says so." },
   ],
   /* 6 of 6. The pin is the join: `version_sha` is the transfer finding's
      `bundle_sha`, and the case's edition (1) DIVERGES from the finding's own (2),
@@ -1041,18 +1050,28 @@ ok("and the document root says so",
   ok("and it is NOT also listed as belonging to no case — the same finding twice on one page, contradicting "
      + "itself, was UI-56's third false statement",
      !pl.includes(`data-notacase="${INCASE}"`));
-  /* AND `required` IS READ, NOT MERELY CARRIED. The other column this item
-     restored to the fixture would otherwise be exactly what M0-23 measured on its
-     own correction: a column the census counts, the page renders, and no
-     assertion opens. DEC-17 as amended — the bar is the FINDING's, frozen into
-     its own bytes, so it is asserted from the plane's own two values rather than
-     from a sentence this file composed. */
-  ok("DEC-17: the rostered member's DECLARED bar is rendered from the plane's own two values, beside the "
-     + "strength reached and never instead of it",
-     pl.includes(`bar: ${"Documents"} ${BAR_DECLARED.capture} · ${"Links"} ${BAR_DECLARED.connection}`));
-  ok("and the bar is stated per FINDING, inside that finding's own marked section — two members of one case "
-     + "may have been held to different standards, so a case-level bar would be a claim the record does not make",
-     new RegExp(`data-findingsec="${INCASE}"[\\s\\S]*?bar: Documents`).test(pl));
+  /* CORRECTED 2026-09-10 AT THE CASE-6 MERGE (CONDUCT), NEVER EXEMPTED. The two
+     assertions here were written by M0-24 against the pre-arc surface: "DEC-17
+     as amended — the bar is the FINDING's, frozen into its own bytes ... a
+     case-level bar would be a claim the record does not make." That was RIGHT
+     when written and is WRONG under DEC-72 clause 2, which CASE-6 landed in the
+     same integration: bars never attach to findings — the bar is the CASE's,
+     the publishing project's property, drawn ONCE — and CASE-5b removed
+     `required_strength` from finding bytes entirely. Two items green alone and
+     red on the pair; the ratchet fired correctly and the assertion was the
+     superseded half. What survives per finding is STRENGTH, and a REFERENCE to
+     the case's one standard — never a second copy of it. */
+  ok("DEC-72 clause 2: the case's DECLARED bar is drawn ONCE, as the case's own, from the plane's two values",
+     new RegExp(`data-casebar="declared" data-case="${CASE_ID}"[\\s\\S]*?Documents ${BAR_DECLARED.capture} &middot; Links ${BAR_DECLARED.connection}`).test(pl));
+  ok("and whose standard it is travels WITH it — the publishing project the plane serves beside the bar, "
+     + "because a standard with no publisher named is a requirement nobody asserted",
+     new RegExp(`data-casebar="declared"[\\s\\S]{0,600}?PRJ-2026-0007`).test(pl));
+  ok("and the bar appears ONCE — no finding section carries a bar of its own (the per-member `bar:` block "
+     + "is GONE, CASE-5b's deletion reaching this surface; the per-finding REFERENCE lives on the finding "
+     + "page, not this index), while the finding's own STRENGTH still renders per finding",
+     (pl.match(/data-casebar="declared"/g) || []).length === 1
+     && !pl.includes("bar: Documents")
+     && !new RegExp(`data-findingsec="${INCASE}"[\\s\\S]{0,400}?data-casebar="`).test(pl));
 }
 
 /* ============================================================
@@ -1258,4 +1277,4 @@ if(!CHILD){
 }
 
 if(fails.length){ console.error(`auth-surface: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · the refusal SENTENCE read out of store.mjs and rendered whole, with the code no member has to decode · no retired login code anywhere under civicos-ui/ · pubList uncredentialed against the published projection · the manifest fixture at the plane's own nine published[] columns, PINNED against store.mjs's SELECT rather than a list, with the two phantom keys gone and cases[] deliberately narrow · a LOOSE ratified finding WITH its frozen pair driven (REC-49) against a rostered one with none · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped (d) a retired code restored on disk (g) a phantom key restored (h) over-strictness: cases[] narrow and NAMED, wide and GREEN (i) the restored bar put back to null`);
+console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · the refusal SENTENCE read out of store.mjs and rendered whole, with the code no member has to decode · no retired login code anywhere under civicos-ui/ · pubList uncredentialed against the published projection · the manifest fixture at the plane's own nine published[] columns, PINNED against store.mjs's SELECT rather than a list, with the two phantom keys gone and cases[] widened to the wire at the CASE-6 merge (the bar became a read column) · a LOOSE ratified finding WITH its frozen pair driven (REC-49) against a rostered one with none · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped (d) a retired code restored on disk (g) a phantom key restored (h) over-strictness: cases[] narrow and NAMED, wide and GREEN (i) the restored bar put back to null`);
