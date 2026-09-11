@@ -2339,3 +2339,4 @@ concurrency: checked over the whole register rather than assumed — every claim
   **D-301 adds NOTHING to hygiene's tally**, it replaces a reader and moves a floor, and the census
   still makes the same three ASSERTIONS. The first draft of that header said the thirteen were mine;
   the baseline run said otherwise, which is why the rule is to diff the runs.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `990181a` and verified on the MERGED tree: battery 173/173 · 10,760 (+5 closing exactly on walkfloor's new arms), `coverage --strict` exit 0 read unpiped (floor 906/167/168 by print), UI harness exit 0, `mintid --audit` 0 breaks.
