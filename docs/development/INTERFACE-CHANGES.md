@@ -4714,3 +4714,118 @@ UNSIGNED REQUEST, which is the attribution class this record refuses everywhere 
 is a second publication ceremony — a case document, its gate, its checks, its ratify path — and it
 is larger than the rest of CASE-5 combined. **Raised to CONDUCT as the remaining half rather than
 half-built here.**
+
+---
+
+## IC-68 · I4 + I6: EVERY FLEET MEMBER GAINS A COMMITTED, HASHED, GUARDED BUNDLE — `dist/<member>.bundled.mjs` BESIDE `dist/<member>.bundle.json`, each ONE asset with ONE sha256, so an installer that cannot bundle has something to fetch and verify · PROPOSED 2026-09-10 (FL-9, enacting BOB's 2026-09-10 answer to DIST's DELEGATION) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interfaces:** **I4** (plane → installer, the release artifact), **1.0.0 STABLE**, owner `DIST`;
+  and **I6** (plane → pdf-worker, the fleet service binding), **0.1.0 PROVISIONAL** with a live
+  consumer, owner `CONTENT-PDF` for the code and `DIST` to release it.
+- **Proposer:** FL-9 (session `fl9-fleet-bundle-guard`), 2026-09-10.
+- **Id PRE-ALLOCATED BY CONDUCT at spawn**, not minted here — the IC-64 lesson enacted rather than
+  remembered: on 2026-08-10 two parallel workers each minted `IC-64` because `mintid` derives its
+  floor from ids MENTIONED IN PROSE and neither branch could see the other's file.
+- **Owner to land the RELEASE half:** `DIST` (D-297). **This item lands the BUILD half only** and
+  deliberately builds nothing against the release format.
+- **Consumers to answer:** `DIST` (owner of I4 and of the release ceremony), `CONTENT-PDF`
+  (owner of I6's code), `FLEET` (proposer and owner of both members).
+
+### The change, in one sentence
+
+Each fleet member now commits **one self-contained ES module** plus **one JSON manifest** stating
+that module's `sha256`, its byte length, the exact build recipe and the sha256 of every input —
+and a gate in the plane's battery asserts the committed module is **byte-identical to a fresh
+build of its source**, so a stale artifact FAILS instead of shipping.
+
+    agent-worker/dist/agent-worker.bundled.mjs      48,392 B   sha256 af14b9e7…
+    agent-worker/dist/agent-worker.bundle.json      the manifest
+    pdf-worker/dist/pdf-worker.bundled.mjs       2,427,807 B   sha256 642a9b78…
+    pdf-worker/dist/pdf-worker.bundle.json          the manifest
+
+### Why, and why it is not a reversal of FLEET's anti-drift ruling
+
+`agent-worker/wrangler.jsonc` said *"The SOURCE deploys, not a bundle"*, because a committed bundle
+is *"a second place its version lives and a committed artifact that can drift from its source
+(D-106's class)"*. **That objection is answered rather than overruled.** The instrument is the one
+this record always reaches for — a hash-verified copy of exact bytes, never a second codebase
+(`newgroup/scripts/embed-release.mjs`, `bio-plane/scripts/embed-signpage.mjs`) — and the shape is
+`check-versions`': equality, in both directions, refusing rather than preferring the newer side.
+The ruling named its own reversal condition (*"FL-3 adds the build step in the turn it adds the
+first dependency"*); BOB reversed it on 2026-09-10 under the standing delegation, as MECHANISM, and
+the reversal is recorded at the site it was written.
+
+**The forcing fact is DIST's, measured 2026-09-10:** `newgroup` is a Worker. It cannot run
+`wrangler` and it cannot bundle. `agent-worker` is three modules, so a one-part script upload could
+not resolve them — and a one-part upload is all an installer has.
+
+### MEASURED CONSUMER IMPACT, taken before building rather than after
+
+**(1) `fleet-member.json` gains one additive key, `bundle`. Every reader was opened and none breaks.**
+Five programs and four suites read this file; the measurement is `grep`, not judgement:
+
+| reader | what it reads | affected? |
+| --- | --- | --- |
+| `bio-plane/scripts/battery.mjs` | `name`, `testDir` | NO |
+| `bio-plane/scripts/coverage.mjs` | `name`, `entry`, `surface`, `testDir` | NO |
+| `tools/deploy-fleet.mjs` | EXISTENCE only (membership test) | NO |
+| `agent-worker/test/agent-worker.test.mjs` | asserts the four keys **by name**, `[meta.name, meta.entry, meta.surface, meta.testDir]` — **not the key SET** | NO |
+| `bio-plane/test/{battery,coverage}-provenance.test.mjs`, `owed-controls.test.mjs` | build fixtures of `{name}` only | NO |
+
+No reader enumerates keys and no reader asserts an exact shape, so the key is additive in fact and
+not merely in intent. **Measured, because an additive field that some reader validates strictly is
+how an "additive" change breaks a consumer.**
+
+**(2) `agent-worker`'s `wrangler.jsonc` `main` moves from `src/index.mjs` to the committed bundle.**
+This is the only behavioural change to a deployed thing, and it is deliberate: if `wrangler` kept
+bundling from source, the bytes Cloudflare runs and the bytes an installer uploads would be produced
+by two different recipes, and **two sources of truth for one artifact is the defect this item
+exists to close, not a side effect to tolerate.** `pdf-worker` has already pointed `main` at its
+bundle since 2026-07-31, so this makes the two members the same shape rather than inventing one.
+`tools/deploy-fleet.mjs` is UNCHANGED and still works — wrangler deploys a pre-bundled entry
+happily — but **its header now argues from a reversed ruling and is STALE**; raised as a DELEGATION
+to DIST rather than edited, because the file is DIST's.
+
+**(3) A FLEET MEMBER'S BUNDLE DEPENDS ON PLANE SOURCE, AND THAT WAS NOT WRITTEN DOWN ANYWHERE.**
+Measured from esbuild's own metafile: `pdf-worker/dist/pdf-worker.bundled.mjs` has **six** inputs,
+and three of them are the PLANE's — `bio-plane/src/pdfstructure.mjs`, `bio-plane/src/subresources.mjs`,
+`bio-plane/src/cpu.mjs` — reached through `pdf-worker/src/index.mjs`'s
+`import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs"`. **So a change to the
+PLANE stales a fleet member's artifact**, silently, from a directory whose author has no reason to
+think about `pdf-worker`. The manifest therefore records inputs by REPOSITORY-relative path and
+hashes the cross-tree ones exactly like the member's own. This is new knowledge about I6's real
+dependency surface and it belongs in the registry when I6 goes to 1.0.0.
+
+**(4) What I4 will need, stated so DIST can land it and NOT built against here.** `release/RELEASE.json`
+carries one asset today (`asset`, `sha256`, `sig`, `signer`). The members are ready to be carried as
+peers of it — each is ONE file with ONE hash — and nothing in this item writes to `release/**`,
+`newgroup/**`, or `RELEASE.json`'s shape. **The MULTI-PART alternative (a signature over a SET)
+stays REFUSED** (BOB, 2026-09-10) and this item reports that the refusal **cost nothing**: both
+members bundle to one file, so one-asset-one-hash is available for each of them.
+
+### What is NOT changing
+
+- **No op, no check, no table, no schema.** I3 and I5 are untouched.
+- **I6's request/response shape is untouched** — `{ capture_sha, store }` in, the I2 structure out.
+- **`release/RELEASE.json` is untouched**, and no version is bumped, signed, tagged or deployed by
+  this item; that is DIST's, and this repository is explicit about it.
+- **No member gains a dependency.** `agent-worker` still imports nothing from npm; its build
+  resolves `esbuild` from the plane's install, the same way `newgroup`'s embed step already expects
+  "the sibling ../bio-plane tree with its devDependencies installed".
+
+### The one thing a reviewer should check hardest, named rather than buried
+
+**A guard that compares a build to an artifact can agree with itself for free**, and this one nearly
+did. esbuild writes its input paths into the output as comments **relative to the process working
+directory**, so the identical source built from `bio-plane/` and from `pdf-worker/` differs by 30
+bytes — a FALSE STALE that would have made the gate cry wolf on the first run from an unexpected
+cwd. The recipe therefore pins `absWorkingDir` to the member directory, the pin is RECORDED in the
+committed manifest, and the gate asserts the pin as well as the bytes. Measured, at
+`MEASUREMENTS.md` 2026-09-10.
+
+### Status
+
+**PROPOSED, 2026-09-10.** The build half is landed on `worktree-agent-abe10acbf93247266`; the
+release half is DIST's and nothing is built against it. **The version bump and the RESOLUTION are
+CONDUCT's**, per the standing arrangement for worker-raised ICs. `I6` should absorb finding (3) —
+its real input surface crosses into `bio-plane/src/` — in the same turn it goes to 1.0.0.

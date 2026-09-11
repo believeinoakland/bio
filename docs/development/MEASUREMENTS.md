@@ -8287,3 +8287,65 @@ IC-63. Everywhere else measured zero. DELEGATION filed in `CLAIMS.md`.
 **GATES.** Baseline on `main` for this worktree, measured after `npm ci`: **167/167 suites · 10,279
 assertions · exit 0**, matching the figure the brief carried. See the CASE-5 landing line in
 `QUEUE.md` for the item's own figures.
+
+## FL-9, 2026-09-10 — the fleet's committed bundles, and three properties of the instrument that guards them
+
+**THE ARTIFACTS, the figures the release format will carry (IC-68).** Built by
+`bio-plane/scripts/fleet-bundle.mjs`, esbuild **0.25.12**, `format: esm`, `platform: neutral`,
+`external: ["cloudflare:workers", "node:*"]`, `absWorkingDir` pinned to the member directory.
+
+| member | artifact | bytes | sha256 | inputs |
+| --- | --- | --- | --- | --- |
+| `agent-worker` | `dist/agent-worker.bundled.mjs` | **48,392** | `af14b9e7fb75737195b50b809aa9abc80e46f3ec94e5ad9e27f1a93787f52d58` | 3 first-party, 0 vendored |
+| `pdf-worker` | `dist/pdf-worker.bundled.mjs` | **2,427,807** | `642a9b78fc745ed6390ccc04e773ef26b733d7c840fa7b791a3a00f5beca862d` | 4 first-party (3 of them the PLANE's), 2 vendored |
+
+`agent-worker`'s 48,392 B matches the figure DIST measured on 2026-09-10 when it built the member
+and then reverted it, which is independent confirmation that this recipe is the one DIST had.
+
+**THE COMMITTED `pdf-worker` BUNDLE WAS NOT STALE — and the first measurement said it was.**
+Rebuilt from source it is byte-identical: same 2,427,807 B, same sha256, so **no deploy is owed**
+and the artifact in the account still matches the tree.
+
+**ESBUILD'S OUTPUT IS CWD-RELATIVE, AND IT PRODUCES A FALSE STALE OF EXACTLY 30 BYTES.** esbuild
+writes each input's path into the output as a comment, relative to the PROCESS working directory.
+The identical `pdf-worker` source built from `pdf-worker/` gives `// src/index.mjs` and
+`// ../bio-plane/src/pdfstructure.mjs`; built from `bio-plane/` the same source gives
+`// ../pdf-worker/src/index.mjs` and `// src/pdfstructure.mjs`. **2,427,837 B against 2,427,807 B,
+and it reads exactly like a stale committed artifact.** Instrument: a five-line esbuild probe, run
+both ways on this tree. The recipe therefore PINS `absWorkingDir`, the pin is recorded in the
+committed manifest, and the gate asserts the pin as well as the bytes — a guard that cries wolf
+gets switched off, which is the same outcome as not having one.
+
+**ESBUILD TREE-SHAKES AN UNUSED EXPORT OUT OF A NON-ENTRY MODULE, SO BYTE-IDENTITY ALONE WOULD PASS
+A REAL SOURCE CHANGE.** Measured by negative control, not reasoned: appending
+`export const __fl9ArmedProbe = 1;` to `agent-worker/src/harness.mjs` — a genuine, committed-source
+change — leaves a fresh build **byte-identical** to the committed artifact. The same append to the
+ENTRY (`src/index.mjs`) does move the bytes. **And a COMMENT-only change anywhere is invisible to
+byte-identity**, because esbuild strips ordinary comments. This is why the manifest records the
+sha256 of every INPUT and why that arm — which needs no install of any kind — is the load-bearing
+one rather than a fallback for machines that cannot build. Both properties are now asserted on every
+battery run, against the real members.
+
+**A FLEET MEMBER'S ARTIFACT DEPENDS ON PLANE SOURCE, AND NOTHING SAID SO.** From esbuild's metafile:
+`pdf-worker` has SIX build inputs and THREE are the plane's — `bio-plane/src/pdfstructure.mjs`,
+`bio-plane/src/subresources.mjs`, `bio-plane/src/cpu.mjs` — reached through
+`pdf-worker/src/index.mjs`'s `import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs"`.
+A change in `bio-plane/src/` stales `pdf-worker`'s committed artifact, from a directory whose author
+has no reason to think about `pdf-worker`. Driven as negative-control arm (2b): the gate fails naming
+the member AND the cross-tree file.
+
+**THE REFUSED MULTI-PART ALTERNATIVE COSTS NOTHING HERE, stated either way as the item required.**
+Both members bundle to ONE file. `agent-worker`'s artifact carries **zero** import specifiers of any
+kind; `pdf-worker`'s carries only the platform's own (`node:*`). Both boot under workerd from a
+single part and answer `GET /version` — driven under miniflare in the gate, not argued. So
+one-asset-one-hash-one-signature is available for each member and a signature over a SET buys
+nothing.
+
+**GATES.** Baseline on this worktree at `3b340d8`, measured after `npm ci` in `bio-plane/` AND in
+`pdf-worker/`: **167/168 suites · 10,345 assertions · exit 1**, with `action-loop.test.mjs` at 73
+pass / 6 FAIL. **That failure is the CALENDAR, not this item and not this tree** — its fixture pins
+a clock entry at `2026-09-10` and the machine has rolled past it, so C-11.1 reports the entry
+silently past-due. CONDUCT's brief records the true baseline as 168/168 · 10,351 measured on `main`
+earlier the same day; the difference is exactly this suite's six assertions. **Both numbers are
+honest measurements of the same tree, and a re-measurement discipline cannot catch a brief that the
+calendar falsified.** DELEGATION filed in `CLAIMS.md`.

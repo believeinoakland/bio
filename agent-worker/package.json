@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "build": "node scripts/build.mjs",
     "test": "node test/agent-worker.test.mjs",
     "control": "node test/agent-worker.control.mjs"
   },

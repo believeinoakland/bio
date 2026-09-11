@@ -57,3 +57,11 @@
 # macOS Finder artifact — committed once by CONDUCT on 2026-08-10 via `git add -A`.
 .DS_Store
 **/.DS_Store
+
+# FL-9's pen, named for its item for the same reason every one above it is. This
+# driver arms sources in THREE trees (`agent-worker/src/`, `pdf-worker/src/` and
+# `bio-plane/src/`) and renames `pdf-worker/node_modules` away for one arm, so an
+# interrupted run leaving an untracked file where the next walk can enrol it as a
+# source is exactly the hazard this line closes (M0-15: `git stash -u` is
+# repository-wide, not per-worktree).
+.nc-fleetbundles/

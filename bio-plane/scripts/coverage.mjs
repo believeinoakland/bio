@@ -580,9 +580,29 @@ const REGISTER_FLOOR = {
      which these numbers are reproducible by anyone else.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-2's arms, and every figure here is true of this branch alone. */
-  arms: 858,
-  classified: 162,
-  corpus: 163,
+  /* MOVED 2026-09-10 by FL-9 (worktree agent-abe10acbf93247266): 858 -> 868 /
+     162 -> 163 / 163 -> 164, ALL THREE IN THE SAME TURN and every one read off
+     the figure a green `--strict` run PRINTED on this branch — `REGISTER FLOOR
+     arms 868/858 · classified 163/162 · corpus (suites read) 164/163 · GREW by
+     10 arm(s)` — never by adding to the numbers that were here.
+     THE RISE IS ONE NEW SUITE, `test/fleetbundles.test.mjs` (the fleet's build
+     guard), whose `NEGATIVE CONTROL:` declaration states ten numbered items; all
+     of them were RUN from `test/fleetbundles.control.mjs` and the measured
+     results are in the declaration. **MEASURED AFTER THE COMMIT, NOT BEFORE** —
+     the run these figures come from reports `provenance: 175 of 175 discovered
+     item(s) are in the commit at HEAD (d83695b)`, so they are the REPRODUCIBLE
+     figures and not the contaminated ones a pre-commit run prints under the same
+     numerals. ONE KEY SET, checked for duplicates before writing; 858 is
+     REPLACED, never joined. Nothing FELL.
+     Battery 168/169 · 10,391 assertions. **The one red suite is NOT this item's
+     and NOT this tree's**: `action-loop.test.mjs` pins a fixture clock at
+     2026-09-10 and the machine has rolled past it — same 73/6 on the untouched
+     baseline, DELEGATION in `CLAIMS.md`.
+     CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
+     see CASE-4's arms, and every figure here is true of this branch alone. */
+  arms: 868,
+  classified: 163,
+  corpus: 164,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -683,7 +703,21 @@ const FLEET_FLOOR = {
      the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
      exit 0 while the fleet-arms ratchet had stopped existing. A ratchet that cannot
      fail is a decoration. Set to the figure a green run PRINTED on the merged tree. */
-  arms: 48,
+  /* MOVED 2026-09-10 by FL-9: 48 -> 58 arms, from the figure a green `--strict` run PRINTED on
+     this branch (`FLEET  2 members beside the plane · 4/4 surface ops reached · 5/5 SUITES
+     declaring a negative control · 58 arms · ... · GREW by 10 arm(s)`), with provenance
+     `175 of 175 discovered item(s) are in the commit at HEAD (d83695b)`.
+     **THIS FLOOR WAS ALREADY STALE BEFORE FL-9 TOUCHED ANYTHING, AND FL-9 DID NOT INVALIDATE
+     IT** — this item added NO fleet member, NO fleet suite and NO fleet arm, and edited no file
+     under `agent-worker/test/` or `pdf-worker/test/`; its own guard is a PLANE suite, counted in
+     `REGISTER_FLOOR` above. The fleet's five suites state 17 + 8 + 19 + 7 + 7 = 58 arms on a tree
+     this item did not change there, so the ratchet has been carrying TEN arms of slack. **A floor
+     with slack is not one**, which is why this moves a figure it did not itself cause rather than
+     leaving it for the next reader to find again — VF-5's own reasoning, and the seventh
+     consecutive item here to find a hand-carried floor stale by measuring it. `members`,
+     `surfaceOps` and `suites` are UNMOVED at 2 / 4 / 5. Named in FL-9's report so CONDUCT
+     re-reads it on the merged tree. */
+  arms: 58,
 };
 
 function discoverFleet() {
