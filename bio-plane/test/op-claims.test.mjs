@@ -1,3 +1,23 @@
+/* NEGATIVE CONTROL (D-302, run 2026-09-10, worktree agent-abe820d46ab667b7d): THE FIFTH
+   FLOOR'S ARM, and it is the one this suite's own residual existed for. `node
+   test/walkfloor.control.mjs phantom` plants an UNCOMMITTED file carrying a TRUE routing
+   claim — the publish op, in this suite's own attribution grammar, stated to dispatch to
+   the method the table really routes it to — and runs THIS SUITE: 35 pass,
+   0 fail, and the attribution label prints `5 of 6 attribution(s)`. The SIX is the
+   working-tree count, which is the figure this floor read until D-302 and is therefore
+   the BEFORE state proved rather than described — a floor moved to the 6 a contaminated
+   run PRINTED would be permanently too high and would fail every honest run afterwards
+   (D-238's payload). The FIVE is `attributionsRepro`, restricted to `git ls-tree HEAD`,
+   which is what the floor reads now and what no phantom can reach. Removing the plant
+   prints `5 of 5`. THE FIXTURE COMPOSES ITS TOKEN AT RUNTIME AND SO DOES THIS PARAGRAPH,
+   for the reason §5 below gives at length: a control whose fixture is SPELLED in a
+   committed file is a claim sitting in the corpus it measures, and this arm's own
+   expected figure would have moved by exactly the arm. Measured, not avoided by habit —
+   the first draft of this block spelled it and the phantom's `5 of 6` became `6 of 7`.
+   The companion arm `guardimport` points `walkfloor.mjs`'s grade back at
+   the import spelling and hygiene then names THIS FILE as misgraded — 661/4 — because it
+   does not import `provenance.mjs` while its five floors are the only guarded ones on the
+   estate. Both armed ALONE, restores verified by sha256 AND by byte compare. */
 /* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
    provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
    — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
@@ -101,9 +121,13 @@ const FIGURE_IS_THE_SUBJECT =
 const WHOLE_TREE_IS_THE_SUBJECT =
   "the dot-segment rule is a claim about what the WALK admitted, so it must be asked "
   + "of the whole working tree; narrowing it to HEAD would hide exactly the arrival it checks";
-const ATTRIBUTIONS_NOT_YET_REPRODUCIBLE =
-  "a REAL floor on a working-tree figure, NAMED rather than guarded: sweep() publishes "
-  + "no attributionsRepro and producing one changes what the walk computes (D-265 residual)";
+/* D-302 REMOVED THE THIRD REASON THAT STOOD HERE. `ATTRIBUTIONS_NOT_YET_REPRODUCIBLE`
+   named the one passage through the chokepoint that was a REAL floor over the working
+   tree — D-265's residual, and the only one of D-268's five that naming could not
+   rescue. `sweep()` now publishes `attributionsRepro`, so the floor below reads the
+   HEAD-reproducible figure and the unwrap is GONE rather than re-justified. The two
+   constants above remain because their sites genuinely need the working-tree number:
+   each is a SUBSET or COLLAPSE check whose subject IS that population. */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -246,18 +270,31 @@ t(`no comment and no planning document names an op that is not in the dispatch t
   result.findings.filter((f) => f.class !== "WRONG-METHOD").map(nameFinding), []);
 t("and no prose attributes an op to a method the dispatch table does not route it to",
   result.findings.filter((f) => f.class === "WRONG-METHOD").map(nameFinding), []);
-/* D-265 · THIS ONE IS A REAL FLOOR ON A WORKING-TREE FIGURE, AND SAYING SO IS THE
-   POINT OF THE UNWRAP RATHER THAN A WAY ROUND IT. D-268 found it — the FIFTH floor,
-   the one no census row and no brief had ever named. By D-257's ruling it should be
-   GUARDED (floored over `git ls-tree HEAD`) and not merely named, and it cannot be
-   here: `sweep()` publishes no `attributionsRepro`, and producing one means changing
-   what the walk COMPUTES, which is outside this item's claim. So it is NAMED, the
-   reason travels with the line, `hygiene.test.mjs` ratchets it, and the residual is
-   carried in DEBT rather than dissolved in a green report. The floor itself has not
-   moved and the assertion is unchanged. */
-t("the attribution half found real routing claims to check — a grammar matching "
-+ "nothing would pass this vacuously",
-  result.attributions.count.overWorkingTree(ATTRIBUTIONS_NOT_YET_REPRODUCIBLE) >= 4, true);
+/* CORRECTED 2026-09-10 BY D-302, NEVER EXEMPTED — AND THE CORRECTION IS THE ITEM.
+   D-268 found this floor: the FIFTH, the one no census row and no brief had named.
+   D-265 could only NAME it, because by D-257's ruling it should be GUARDED — floored
+   over `git ls-tree HEAD` — and `sweep()` published no reproducible pair to floor on.
+   It does now, so the question is unchanged and the corpus it is asked about is the
+   one another checkout at this HEAD reproduces. The old assertion was wrong in the
+   D-238 direction: an attributed routing sentence in a file nobody committed — a
+   phantom carried in by `git stash push -u`, which is repository-wide across every
+   worktree here — could only push it UP, and a floor moved to the figure a
+   contaminated run PRINTED is permanently too high and gets switched off.
+
+   THE FLOOR IS THE FIGURE THE INSTRUMENT PRINTED, 5, AND NOT A ROUND NUMBER BELOW IT.
+   Its four siblings above are floored at 300 / 10,000,000 / 5,000 / 150 against
+   corpora of hundreds and millions, where an exact pin would red on every commit that
+   adds a paragraph. This population is FIVE HAND-WRITTEN SENTENCES, all of them in
+   append-only history or in a SETTLED IC, so the exact figure is the honest ratchet
+   and a fall is a real event somebody should read — which is the identical argument
+   `LEDGER` makes for holding its own counts exactly rather than as a ceiling. The
+   label prints both figures, so a legitimate move is a one-line edit and the number
+   to write is already on screen. */
+t(`the attribution half found real routing claims to check — a grammar matching `
++ `nothing would pass this vacuously — counted over the corpus another checkout `
++ `REPRODUCES (${result.attributionsRepro.length} of ${result.attributions.count} `
++ `attribution(s), ${HEAD_SAYS})`,
+  result.attributionsRepro.length >= 5, true);
 
 console.log("\n--- 4. the ledger is held EXACTLY, and every entry can expire ---");
 t("no ledger entry has drifted: each registered (file,name) appears exactly as many "

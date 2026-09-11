@@ -603,8 +603,19 @@ const REGISTER_FLOOR = {
      the same run before committing printed 883/883 and would have moved nothing.
      The cause is one new suite, `test/walkfigure.test.mjs`, whose `NEGATIVE
      CONTROL:` declaration states FIVE arms. Every one of those arms was RUN, and
-     each is recorded in that declaration with its measured figures. */
-  arms: 888,
+     each is recorded in that declaration with its measured figures.
+
+     888 -> 891 · 2026-09-10 · D-302, moved from the figure a `--strict` run
+     PRINTED (`arms 891/888 · GREW by 3 arm(s)`) and not incremented by hand. The
+     cause is `test/walkfloor.test.mjs`'s declaration going from EIGHT arms to
+     ELEVEN: D-302 added `phantom` (an uncommitted attribution arrival must not
+     move the fifth floor's corpus), `guardimport` (the discarded import-spelling
+     predicate kept as a control) and `reportonly` (over-strictness — a consumer
+     that only REPORTS working-tree figures stays legal). All eleven were RUN,
+     armed ALONE, every restore verified by sha256 AND byte compare, and each is
+     recorded in that declaration with its measured figures. `classified` and
+     `corpus` are UNMOVED at 165 / 166 — no suite gained or lost a declaration. */
+  arms: 891,
   classified: 165,
   corpus: 166,
 };

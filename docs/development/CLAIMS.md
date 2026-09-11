@@ -1929,3 +1929,57 @@ I did not touch any of these files. `preauth-vocabulary.test.mjs`'s `cases[]` ro
 left it narrow DELIBERATELY for the reason in (2) — correcting it would have been the fence
 tighter than its rule that `WORKER.md` warns about, and would have moved this file's measurement
 basis a second time for no measured reader.
+
+## CLAIM 2026-09-10 M0 (D-302 — the fifth walk-derived floor gets a REPRODUCIBLE figure, and the GUARDED/NAMED column stops answering about the wrong file)
+scope: `DEBT.md`'s D-302 row is the authority. Two clauses. **(1)** `sweep()` in
+  `scripts/op-claims.mjs` publishes no `attributionsRepro`, so `test/op-claims.test.mjs`'s
+  FIFTH walk-derived floor (`attributions.length >= 4`) stands over the WORKING TREE, where an
+  uncommitted arrival can only push it UP (D-238's payload). Compute the figure beside the
+  existing four, move the floor onto it from a PRINTED run, and remove the working-tree
+  chokepoint passage at that site. **(2)** `scripts/walkfloor.mjs` decides `guarded` with a
+  regex for an import of `provenance.mjs` — a predicate answering about the WRONG FILE, which
+  is why four genuinely-guarded floors grade UNGUARDED and eleven working-tree floors grade
+  GUARDED. Decide GUARDED/NAMED from the classification D-265 put ON THE VALUE (the
+  `reproducible` bucket of the walk's own `walkResult()` declaration), and re-measure every
+  census figure the change moves from PRINTED output.
+paths:
+  - `bio-plane/scripts/op-claims.mjs` — the `sweep()` repro figures ONLY (one new
+    `attributionsRepro`, and the attribution resolution lifted into ONE helper so the two
+    populations cannot drift). No existing key renamed, removed or re-populated.
+  - `bio-plane/scripts/walkfloor.mjs` — the `guarded` predicate, the bucket reader it is
+    replaced by, the key-carrying flow, and the CLI report's column.
+  - `bio-plane/test/op-claims.test.mjs` — the fifth floor's site and its reason constant.
+  - `bio-plane/test/hygiene.test.mjs` — the D-268 cross-file block ONLY: `CROSS_FILE_NAMED`,
+    the self-application arm (5), and the D-265 chokepoint block's `PASSAGES_NAMED` reason for
+    `op-claims.test.mjs`. **WIDER THAN THE BRIEF'S "the passage ratchet's figure only", and
+    deliberately**: clause (2) moves which files grade GUARDED, so the GUARDED-or-NAMED ratchet
+    and its named list MUST move with it or the ratchet goes red for a correct estate. Every
+    other arm in the file is untouched.
+  - `bio-plane/test/walkfloor.test.mjs` — the estate arms whose grades move, appended arms for
+    the bucket reader. No existing arm deleted.
+  - `bio-plane/test/walkfloor.control.mjs` — the `overstrict` arm's FIXTURE, corrected (not
+    exempted): under the new rule, correct work is a floor on a REPRODUCIBLE figure, not a file
+    that happens to import `provenance.mjs`. Plus the three D-302 arms appended.
+  - `docs/development/DEBT.md` — the D-302 row's disposition.
+  - `docs/development/MEASUREMENTS.md` — APPEND, one dated section.
+  **NOT** `bio-plane/src/**`, **NOT** `bio-plane/checks/bio-checks.mjs`, **NOT**
+  `bio-plane/scripts/walkfigure.mjs` (D-265's chokepoint is CONSUMED, not reshaped), **NOT**
+  `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `docs/development/QUEUE.md`.
+concurrency: checked over the whole register. The only LIVE claim is FLEET's FL-10
+  (`scripts/fleet-bundle.mjs`, `embed-signpage.mjs`, `build-plane.mjs`, `package.json`,
+  `fleetbundles.*`, `dist/**`) — this claim names none of them, and only READS
+  `fleet-bundle.mjs` through the census. A CASE-5b worker holds `store.mjs`/`index.mjs`/
+  `bio-checks.mjs` and the case suites, and an M0-23 worker holds
+  `civicos-ui/test/preauth-vocabulary.test.mjs`; neither path is here.
+
+### AMENDMENT 2026-09-10 to the D-302 claim above — ONE PATH ADDED: `bio-plane/scripts/coverage.mjs`, the `REGISTER_FLOOR` `arms:` FIGURE ONLY
+  Not foreseen when the claim was written, and owed rather than opportunistic: D-302's three new
+  negative-control arms took `test/walkfloor.test.mjs`'s declaration from EIGHT to ELEVEN, and
+  `node scripts/coverage.mjs --strict` printed `arms 891/888 · GREW by 3 arm(s)`. A floor with
+  slack is not a ratchet, so the figure is MOVED IN THE SAME TURN to the one the run PRINTED —
+  891 — never incremented by hand. **`REGISTER_FLOOR` has ONE key set on purpose** and this edit
+  keeps it that way: verified 1 `arms:` inside the object (the second `arms:` in the file at line
+  724 is the FLEET floor, a different object, UNTOUCHED at 58). `classified` 165 and `corpus` 166
+  are UNMOVED — no suite gained or lost a declaration. Nothing else in the file is edited, and the
+  reason the figure moved is written at the site so a merge conflict here resolves by re-reading a
+  printed run rather than by keeping both.

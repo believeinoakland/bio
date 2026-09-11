@@ -608,6 +608,21 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
   let mentions = 0, dynamic = 0, offLedger = 0;
   const names = new Set();
 
+  /* D-302 · ONE MECHANISM, TWO POPULATIONS. The attribution a mention STATES is
+     resolved against the dispatch table here and nowhere else, because the whole
+     working tree and the HEAD-reproducible subset are both about to ask the same
+     question and a second copy of this rule is the thing that goes stale. The
+     copy that already existed in this function — the `mentionsRepro` recount
+     below — is the receipt: it was written as a second loop precisely so the
+     sweep's control arms kept reading one population, and adding an attribution
+     count to it by hand would have been the second copy. */
+  const attributionOf = (site, mt) => {
+    const actual = table.ops.has(mt.name) ? routeOf(mt.name, table).method
+      : table.routes.get(mt.name) ?? null;
+    const ok = actual != null && mt.attributed.toLowerCase() === actual.toLowerCase();
+    return { site, name: mt.name, stated: mt.attributed, actual, ok };
+  };
+
   for (const f of files) {
     for (const mt of mentionsIn(f.body)) {
       if (mt.kind === "DYNAMIC") { dynamic++; continue; }
@@ -618,12 +633,10 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
       /* --- the attribution half, checked for EVERY mention, ledgered or not.
              A registered non-op may still be attributed to the wrong method. */
       if (mt.attributed) {
-        const actual = table.ops.has(mt.name) ? routeOf(mt.name, table).method
-          : table.routes.get(mt.name) ?? null;
-        const ok = actual != null && mt.attributed.toLowerCase() === actual.toLowerCase();
-        attributions.push({ site, name: mt.name, stated: mt.attributed, actual, ok });
-        if (!ok) findings.push({ site, name: mt.name, class: "WRONG-METHOD",
-          detail: `the prose says op=${mt.name} dispatches to ${mt.attributed}(); the dispatch table routes it to ${actual ?? "NOTHING"}()` });
+        const a = attributionOf(site, mt);
+        attributions.push(a);
+        if (!a.ok) findings.push({ site, name: mt.name, class: "WRONG-METHOD",
+          detail: `the prose says op=${mt.name} dispatches to ${mt.attributed}(); the dispatch table routes it to ${a.actual ?? "NOTHING"}()` });
       }
 
       if (table.ops.has(mt.name)) continue;
@@ -672,29 +685,55 @@ export function sweep({ root = REPO, roots = null, planeDir = PLANE,
      restricted to files in the commit, because `test/op-claims.test.mjs` floors
      on it too. Computed here rather than in the loop so the sweep's own control
      arms keep reading one population. */
+  /* D-302 · `attributionsRepro` IS COMPUTED HERE FOR THE SAME REASON THE THREE
+     FIGURES BESIDE IT ARE, and the reason is the one D-238 paid for. The
+     attribution half's non-vacuity floor in `test/op-claims.test.mjs` was the
+     FIFTH walk-derived floor D-268 found, and it was the only one of the five
+     still standing over the WORKING TREE: `refs/stash` is repository-wide across
+     every worktree of this repository and `git stash push -u` carries untracked
+     files, so a routing claim in a file nobody committed arrives here from a tree
+     that never wrote it and can only push that floor UP. D-265 made the exposure
+     VISIBLE — the site unwrapped through the chokepoint with the reason written
+     beside it — but could not close it, because producing this figure changes
+     what the walk COMPUTES and that was outside its claim. This is that change,
+     and it is four lines.
+     THE SWEEP IS STILL OVER THE WHOLE WORKING TREE AND STILL FINDS EVERY WRONG
+     ATTRIBUTION IN IT. `attributions` is unchanged, `findings` is unchanged: a
+     prose claim routing an op to the wrong method is a FINDING wherever the file
+     came from, and narrowing that would hide exactly the sentence a worker is in
+     the middle of writing. Only the FLOOR narrows. */
   const reproRels = new Set(repro.map((f) => f.rel));
   let mentionsRepro = 0;
   const namesRepro = new Set();
+  const attributionsRepro = [];
   for (const f of files) {
     if (!reproRels.has(f.rel)) continue;
     for (const mt of mentionsIn(f.body)) {
       if (mt.kind === "DYNAMIC") continue;
       mentionsRepro++; namesRepro.add(mt.name);
+      if (mt.attributed) attributionsRepro.push(attributionOf(`${f.rel}:${mt.line}`, mt));
     }
   }
   /* D-265 · THE EXPORT BOUNDARY.  Every KEY below is the one M0-12 and M0-18 named
      and nothing is renamed, removed or re-populated — `test/op-claims.test.mjs`
      pins them.  What changes is that the six WORKING-TREE figures now carry their
      classification, so a floor written on one in ANY other file refuses itself
-     where it is written.  The four `*Repro` figures stay bare on purpose: flooring
+     where it is written.  The `*Repro` figures stay bare on purpose: flooring
      on them is the CORRECT act, and making the right thing awkward is how a check
-     gets switched off. */
+     gets switched off.
+     D-302 ADDED THE FIFTH REPRODUCIBLE FIGURE, `attributionsRepro`, and it is the
+     PAIR of `attributions` in exactly the way `filesRepro` is the pair of `files`.
+     Five reproducible figures now, four working-tree ones that still have no pair
+     (`dynamic`, `offLedger`, `mentions`' own names set is paired) — and that is not
+     an omission: nothing floors on them, and a pair produced for a figure no floor
+     reads is a mechanism believed on its existence. */
   return walkResult({
     about: "op-claims sweep() — the whole repository working tree",
     workingTree: { files: files.length, chars, mentions, dynamic, offLedger,
                    names: [...names].sort(), attributions },
     reproducible: { filesRepro: repro.length, charsRepro,
-                    mentionsRepro, namesRepro: [...namesRepro].sort() },
+                    mentionsRepro, namesRepro: [...namesRepro].sort(),
+                    attributionsRepro },
     safe: {
       excluded: [excluded, "PINNED exactly by its callers and named member by member; "
         + "a phantom makes that assertion RED rather than quietly green"],

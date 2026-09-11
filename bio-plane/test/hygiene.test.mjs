@@ -2056,24 +2056,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      about. A NEW one fails by name, which is the outcome worth having. The entry
      is the file, because the five sites in it are one decision and not five. */
   const CROSS_FILE_NAMED = [
-    /* THE MEASURED INSTANCE D-268 WAS RAISED FOR, AND IT IS NAMED HERE RATHER THAN
-       GUARDED FOR A BOUNDARY REASON THAT IS WORTH STATING PLAINLY.
-       `test/op-claims.test.mjs` floors FIVE times on `scripts/op-claims.mjs`'s
-       whole-repository `corpus()`: `files >= 300`, `chars >= 10_000_000`,
-       `mentions >= 5000`, `names.length >= 150` (all four found by this detector on
-       its first real run) and `attributions.length >= 4` (a FIFTH that no census
-       row, and no brief, had ever named — it is what the detector bought).
-       By D-257's own ruling these should be GUARDED, not named: naming is
-       defensible for a walk that only REPORTS and much weaker for one whose count
-       feeds a ratchet, and all five feed ratchets. The guard is D-257's two-line
-       pattern — keep the sweep over the working tree so a finding in uncommitted
-       work is not hidden, and compute the FLOOR over `git ls-tree HEAD` alone.
-       IT IS NOT DONE HERE because this item's claim does not name that suite and a
-       sibling item was briefed to guard exactly these instances; doing it twice in
-       two worktrees is a merge conflict in a file neither of us owns. THE POINT OF
-       THE ENTRY IS THAT THE DECISION IS VISIBLE INSTEAD OF SILENT — which is the
-       whole difference between this list and the blindness it replaces. */
-    "bio-plane/test/op-claims.test.mjs",
+    /* `bio-plane/test/op-claims.test.mjs` STOOD HERE FROM D-268 UNTIL 2026-09-10
+       AND D-302 REMOVED IT, WHICH IS THE ENTRY DOING ITS JOB RATHER THAN AN
+       EXEMPTION BEING DROPPED. The entry said, in D-268's own words, that by
+       D-257's ruling all five of that suite's floors SHOULD be guarded and were
+       only named because guarding them was outside two successive items' claims.
+       All five now are: four read `filesRepro` / `charsRepro` / `mentionsRepro` /
+       `namesRepro`, and the fifth — `attributions.length >= 4`, the one no census
+       row and no brief had ever named — reads `attributionsRepro`, which D-302
+       taught `sweep()` to publish. The `wfStale` arm below is what FORCED the
+       removal: a named file that has stopped being unguarded fails as stale, so a
+       naming cannot outlive the reason it was written. */
     /* ADDED 2026-09-10 by D-265, and it is a finding about the DETECTOR that is
        worth more than the entry. `walkfigure.test.mjs` §7 writes three real floors
        on a real walk — `s.files >= 300`, `s.chars >= 10_000_000`,
@@ -2087,6 +2080,24 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        that is VISIBLE. Guarding them would be meaningless — there is no figure here
        a phantom can move, because there is no figure here at all. */
     "bio-plane/test/walkfigure.test.mjs",
+    /* THE TWO BELOW WERE ADDED 2026-09-10 BY D-302, AND THEY ARE NOT NEW FLOORS —
+       THEY ARE THE SAME FLOORS, GRADED BY A PREDICATE THAT ANSWERS ABOUT THEM.
+       Until D-302 the column read `guarded` off a regex asking whether the file
+       carrying the floor imports `provenance.mjs`. Both files do, for unrelated
+       arms, so every site in them graded GUARDED and no entry was owed. The grade
+       now comes from the bucket the WALK declared the figure into, and both of
+       these floor on figures their own walks declare WORKING-TREE — which each
+       site already SAID, in a named constant, one line above the assertion.
+       THEY STAY OVER THE WORKING TREE ON PURPOSE AND THAT IS THE WHOLE ENTRY:
+       these are REACH floors, and reach is a claim about what the detector READ.
+       Narrowing them to HEAD would make them blind to a detector that had stopped
+       reading the uncommitted half of the estate — which is where both suites'
+       own sandbox fixtures live, and is precisely what the `ratchet` and
+       `overstrict` control arms plant. A guard here would be a fence tighter than
+       its rule. So: NAMED, with the reason at the site and the grade agreeing
+       with it, which is the state D-265 asked for and the old predicate hid. */
+    "bio-plane/test/hygiene.test.mjs",
+    "bio-plane/test/walkfloor.test.mjs",
   ];
   const wfNewly = wfUnguarded.map((s) => s.file)
     .filter((f, i, a) => a.indexOf(f) === i && !CROSS_FILE_NAMED.includes(f)).sort();
@@ -2096,7 +2107,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     + ` ${wf.sites.length} floor(s) whose value crosses a module boundary`
     + ` (${wf.sites.filter((s) => s.guarded).length} GUARDED, ${wfUnguarded.length} named)`
     + ` · ${wf.ceilings.length} ceiling-at-zero · ${wf.unknowns.length} UNCLASSIFIED · provenance ${wf.provenance}`);
-  for (const s of wf.sites) console.log(`    ${s.guarded ? "GUARDED " : "NAMED   "}${s.file}:${s.line}  ${s.expr}   <- ${s.from.join(", ")} [${s.state}]`);
+  /* D-302: the GRADE and the FIGURE it was read off, never a bare GUARDED/NAMED.
+     The old column could not say which number a floor stood on, which is how it
+     read GUARDED for eleven working-tree floors and UNGUARDED for four HEAD ones
+     in the same run without anybody being able to tell. */
+  for (const s of wf.sites) console.log(`    ${s.grade.padEnd(13)}${s.file}:${s.line}  ${s.expr}`
+    + `   <- ${s.origin} [${s.state}] — ${s.why}`);
   /* PRINTED, NEVER SILENTLY SCORED ZERO. A comparison this matcher does not
      understand is a thing it must NAME — that is WORKER.md's rule and it is the
      difference between a narrowed unknown and a false clean. */
@@ -2147,9 +2163,67 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* (5) THE DETECTOR APPLIED TO ITSELF, which is the cheapest evidence available
      that it reaches real code rather than only its own fixtures: THIS SUITE floors
      on `walkfloor.mjs`'s walk, one import away, and must therefore appear in its
-     own output — as GUARDED, because this file asks `provenance.mjs`. */
-  t("the detector finds THIS suite's own cross-file floors on it, and reads them as GUARDED",
-    wf.sites.some((s) => s.file === "bio-plane/test/hygiene.test.mjs" && s.guarded), true);
+     own output.
+     CORRECTED 2026-09-10 BY D-302, NEVER EXEMPTED, AND THE OLD ASSERTION WAS WRONG
+     RATHER THAN SUPERSEDED. It read `… && s.guarded` — true, but for a reason that
+     had nothing to do with the floor: `guarded` was a regex asking whether THIS
+     FILE imports `provenance.mjs`, which it does, for the tracked-estate arms four
+     hundred lines above. The floor two lines below `REACH_OVER_THE_WORKING_TREE`
+     is over the working tree and says so in that constant's own words, so the old
+     arm asserted GUARDED about a figure the walk declares WORKING-TREE — a green
+     that cost nothing to produce. The arm now asks the question it was written to
+     ask, and it is STRICTER: the site must be found, the figure it stands on must
+     be NAMED, and the grade must AGREE with the reason written at the site. */
+  const selfSites = wf.sites.filter((s) => s.file === "bio-plane/test/hygiene.test.mjs");
+  t(`the detector finds THIS suite's own cross-file floors on it, names the FIGURE each one `
+  + `stands on, and grades it from that figure rather than from this file's import list `
+  + `(${selfSites.map((s) => `${s.key}:${s.grade}`).join(", ")})`,
+    [selfSites.length >= 3,
+     selfSites.every((s) => typeof s.key === "string" && s.key.length > 0),
+     selfSites.some((s) => s.key === "corpus" && s.grade === "WORKING-TREE"),
+     selfSites.every((s) => s.grade !== "GUARDED")],
+    [true, true, true, true]);
+
+  /* (5a) D-302 — THE GRADE IS READ OFF THE FIGURE, ASSERTED AS A DELTA IN BOTH
+     DIRECTIONS IN ONE RUN. This is the arm the item exists for. Before it, the
+     column graded `test/op-claims.test.mjs` UNGUARDED for four floors that are
+     guarded in substance and `test/hygiene.test.mjs` GUARDED for eleven that are
+     not — both wrong, in opposite directions, from the same predicate, which is
+     what made the two states indistinguishable and let D-265's brief record that
+     "both instances are already GUARDED".
+     A delta and not two absolutes: a grader that answered GUARDED to everything
+     would pass the first half and a grader that answered nothing would pass the
+     second, and only the pair separates a working column from either. */
+  const ocSites = wf.sites.filter((s) => s.file === "bio-plane/test/op-claims.test.mjs");
+  t(`the five op-claims floors are GUARDED because the figures they stand on are declared `
+  + `REPRODUCIBLE, and this suite's own are not because its are declared WORKING-TREE — one `
+  + `run, both directions (op-claims: ${ocSites.map((s) => s.key).sort().join(", ")})`,
+    [ocSites.length, ocSites.every((s) => s.guarded && /Repro$/.test(s.key)),
+     selfSites.length > 0, selfSites.some((s) => s.guarded)],
+    [5, true, true, false]);
+
+  /* (5b) AND THE OLD PREDICATE WAS NOT MERELY IMPRECISE — ON THIS ESTATE IT WAS
+     EXACTLY INVERTED, WHICH IS WORTH MEASURING RATHER THAN ASSERTING. The grade
+     used to be "does the file carrying the floor import `provenance.mjs`". The
+     only file whose floors are genuinely guarded, `test/op-claims.test.mjs`, does
+     NOT import it; both files that DO import it floor on figures their walks
+     declare WORKING-TREE. So the old column answered wrongly about every site it
+     had, in both directions, and a re-derivation that ever drifts back toward the
+     import spelling will fail here rather than quietly agreeing with itself.
+     This arm reads the import from source deliberately — it is the discarded
+     predicate, kept as the CONTROL rather than as the check. */
+  const floorFiles = [...new Set(wf.sites.map((s) => s.file))].sort();
+  const importsProv = floorFiles.filter((f) =>
+    /^\s*import\s[^\n]*["'][^"'\n]*provenance\.mjs["']/m.test(readFileSync(join(REPO, f), "utf8")));
+  const guardedFiles = floorFiles.filter((f) => wf.sites.some((s) => s.file === f && s.guarded));
+  t(`the discarded predicate is INVERTED against the real one on this estate: the file(s) whose `
+  + `floors are guarded ${JSON.stringify(guardedFiles)} import provenance.mjs in NONE of them, and `
+  + `the ${importsProv.length} file(s) that DO import it ${JSON.stringify(importsProv)} have no `
+  + `guarded site at all`,
+    [guardedFiles.length >= 1, importsProv.length >= 1,
+     guardedFiles.every((f) => !importsProv.includes(f)),
+     importsProv.every((f) => !guardedFiles.includes(f))],
+    [true, true, true, true]);
 
   /* ======================================================================== *
    *  D-265 — THE CENSUS'S SECOND QUESTION, AND IT IS ASKED OF THE VALUE
@@ -2349,9 +2423,15 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   const PASSAGES_NAMED = {
     /* Each of these is a site that legitimately needs the bare number, and the
        reason is written AT the site as a named constant rather than here. */
+    /* RE-MEASURED 2026-09-10 BY D-302 BECAUSE A PASSAGE WENT AWAY, and the count is
+       the reason the entry had to move: the unwrap at `attributions.length >= 4` was
+       D-265's residual — the only passage here that was a REAL FLOOR — and it is
+       GONE, not re-justified, because `sweep()` now publishes `attributionsRepro`
+       and the floor reads that. What is left is the shape the chokepoint is FOR. */
     "bio-plane/test/op-claims.test.mjs": "two SUBSET/COLLAPSE checks whose subject IS the "
-      + "working-tree population, one dot-segment rule that must be asked of the whole walk, and "
-      + "ONE REAL FLOOR — `attributions.length >= 4` — named rather than guarded, D-265's residual",
+      + "working-tree population (each written twice, once per branch of the UNVERIFIED "
+      + "collapse), and one dot-segment rule that must be asked of the whole walk. NO FLOOR "
+      + "PASSES THROUGH HERE ANY MORE — D-302 closed the last one",
     "bio-plane/test/hygiene.test.mjs": "this block's own REACH floors and the two roster reads "
       + "below them; the reasons are the named constants beside each one",
     "bio-plane/test/walkfloor.test.mjs": "the estate REACH floor, which is a claim about what "
