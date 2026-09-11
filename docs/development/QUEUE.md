@@ -367,7 +367,7 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### M0-24 · queued
+### M0-24 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching `auth-surface.test.mjs`; if none does, this row reads `queued`.
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
 depends-on: none — M0-23's census (arm C of `civicos-ui/check-mock-envelope.mjs`) is landed and is the instrument that measured this
