@@ -2253,3 +2253,44 @@ FIXTURE across the whole package, and the three NARROWER rows that remain are ON
 closure in three suites — `cases[].bias_acknowledgement`, `.bar` and `.project_id`, which no
 surface in `app.html` reads.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `db1df93` and verified on the MERGED tree: battery 173/173 · 10,753 (delta ZERO, predicted), `coverage --strict` exit 0 read unpiped, UI harness exit 0 (`auth-surface` 94), `mintid --audit` 0 breaks.
+
+## CLAIM 2026-09-10 M0 (D-301 — the class census is comment-blind and NOT string-blind: a walking FIXTURE counts as a walk)
+session: d301-census-stringblind (worktree `agent-a3a3f27c44675daff`, branch
+  `worktree-agent-a3a3f27c44675daff`)
+opened: 2026-09-10
+scope: `DEBT.md`'s D-301 row is the authority. The class census in `hygiene.test.mjs` runs its
+  discovery matcher over a LOCAL comment-stripper, so a discovery primitive inside a fixture
+  template literal is counted as a walk — `bio-plane/test/walkfigure.test.mjs` was enumerated as
+  a NEW UNGUARDED WALK while containing no walk at all. Run the matcher over the estate's ONE
+  lexer (`strip`, exported by `scripts/walkfloor.mjs`), never a second one, then RE-MEASURE the
+  census count, the REACH floor and `CLASS_NAMED_UNGUARDED`'s membership FROM PRINTED OUTPUT,
+  every drop NAMED with its reason. A measurement, not an edit.
+paths:
+  - `bio-plane/test/hygiene.test.mjs` — the CLASS CENSUS block ONLY (the local `codeOnly`
+    reader it deletes, the `walks` line, the block's own comment, the REACH floor's figure,
+    `CLASS_NAMED_UNGUARDED`'s membership) and the suite's `NEGATIVE CONTROL:` declaration at
+    line 1, appended. **NOT** the D-268 cross-file block below it, **NOT** the D-265 chokepoint
+    block, **NOT** any other arm in the file.
+  - `bio-plane/scripts/walkfloor.mjs` — `strip`'s TEMPLATE-LITERAL BRANCH ONLY, gaining one
+    option (`keepInterpolations`, DEFAULT OFF so no existing caller's behaviour moves) and one
+    named export (`stripToCode`) that spells the census's question once. **CONSUMED, NOT
+    FORKED** — the estate keeps exactly one lexer. **NOT** the `guarded` predicate, **NOT** the
+    buckets, **NOT** the flow stage, **NOT** the CLI report.
+  - `bio-plane/test/walkfloor.test.mjs` — §1 (the stripper's own arms) APPENDED for the new
+    mode. No existing arm deleted or altered.
+  - `bio-plane/test/d301-census.control.mjs` — NEW, this item's negative-control driver.
+    Deliberately not a `.test.mjs`: it edits real sources while it runs, the precedent being
+    `walkfloor.control.mjs` and `d249-port.control.mjs`.
+  - `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` `arms:` FIGURE ONLY, and only if a
+    printed `--strict` run says it GREW. ONE key set, re-read from the print, never incremented.
+  - `docs/development/DEBT.md` — the D-301 row's disposition.
+  - `docs/development/MEASUREMENTS.md` — APPEND, one dated section.
+  - `docs/development/CLAIMS.md` — this entry.
+  **NOT** `bio-plane/src/**` (this item changes no plane behaviour), **NOT** `civicos-ui/**` at
+  all — a CASE-6 worker is live on `app.html` and the UI suites, and the census only READS those
+  files, **NOT** `newgroup/**`, **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground),
+  **NOT** `bio-plane/scripts/walkfigure.mjs`, **NOT** `bio-plane/scripts/op-claims.mjs`.
+concurrency: checked over the whole register rather than assumed — every claim above this one
+  carries a `released:` line, including D-265, D-302 and M0-24, the three items whose ground this
+  is. The only worker named as live in this session's brief is CASE-6 on `civicos-ui/app.html`
+  and the UI suites; no path here is under `civicos-ui/`.
