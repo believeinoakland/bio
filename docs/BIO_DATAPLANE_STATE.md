@@ -66,14 +66,22 @@ process and its re-entry condition has not been met** — and it now states the
 three facts DEC-72 changed: publication is an owner's act, the load-bearing split
 is authored, and the standard is the publishing project's.
 
-**TWO THINGS ARE DELIBERATELY NOT BUILT AND ARE NAMED HERE RATHER THAN LEFT TO BE
-DISCOVERED.** (1) **A finding still cannot serve a SECOND case** —
-`FINDING_IN_ANOTHER_CASE` refuses it, against DEC-72 clause 6, which rules that it
-should. CASE-6 measured the fence rather than deferring on judgement and KEPT it:
-nine scalar "which case is this finding in" readers in `store.mjs` are correct only
-while it holds, so removing it alone would convert them into silent guesses over a
-set. `DEBT.md` D-309, with the count and the closing move; the reasoning is at the
-refusal's own site. (2) **A case with several owning projects is NOT
+**A FINDING MAY SERVE MANY CASES — DEC-72 CLAUSE 6 IS BUILT, 2026-09-10 (D-309).**
+This paragraph used to name it as deliberately NOT built, and that is corrected
+rather than deleted because the sequence is the useful part: CASE-6 measured the
+`FINDING_IN_ANOTHER_CASE` fence rather than deferring on judgement and KEPT it,
+because nine scalar "which case is this finding in" readers in `store.mjs` were
+correct only while it held. D-309 corrected all nine — each decided at its own
+site, six answering with every case, two REFUSING `FINDING_IN_SEVERAL_CASES` and
+naming the candidates rather than choosing for a reader — and only then removed
+the fence. The derivation that could no longer be determinate is refused by name
+(`CASE_IDENTITY_AMBIGUOUS`, C-44.1), with `newCase` beside it so a publisher can
+say they mean a new case rather than a further edition. Wire change: **IC-74**.
+`test/multicase.test.mjs` re-runs the census every battery and asserts zero scalar
+readers remain, so a tenth cannot appear silently.
+
+**ONE THING IS STILL DELIBERATELY NOT BUILT AND IS NAMED HERE RATHER THAN LEFT TO
+BE DISCOVERED.** **A case with several owning projects is NOT
 REPRESENTABLE** — `cases` is keyed on `case_id` alone, deliberately, so a case
 cannot change hands and have its standard of evidence change with it
 (`CASE_BELONGS_TO_ANOTHER_PROJECT`). That is a design property, not a gap. Also

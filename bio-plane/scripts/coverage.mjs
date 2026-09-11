@@ -610,9 +610,36 @@ const REGISTER_FLOOR = {
      rather than an exact count. `classified` and `corpus` are UNMOVED — no suite
      gained or lost a declaration, and the new control driver is a `.control.mjs`
      the battery does not discover. ONE KEY SET, grepped before writing. */
-  arms: 906,
-  classified: 167,
-  corpus: 168,
+  /* MOVED 2026-09-10 by D-309 (worktree agent-a26bce57cd13e5ea5), READ OFF THIS
+     SCRIPT'S OWN `--strict` GREEN RUN (exit 0, unpiped) and never incremented by
+     hand: `NEGATIVE CONTROLS 169 of 169 suites declare one (100.0%) · 909 arms
+     stated across 168 classified declaration(s)`.
+     arms 906 -> 909, classified 167 -> 168, corpus 168 -> 169. **ALL THREE ARE
+     THIS ITEM'S OWN GROWTH AND NONE IS PRE-EXISTING SLACK** — one new battery
+     suite, `test/multicase.test.mjs`, declaring THREE arms; its driver
+     `test/multicase.control.mjs` is a `.control.mjs` the battery does not
+     discover, exactly as the note above records for the previous mover.
+     **THE DECLARATION HAD TO BE REWRITTEN TO BE COUNTED AT ALL, which is the
+     useful half:** its first draft stated the arms as prose and `--strict`
+     FAILED with "declares a negative control this register cannot count the arms
+     of" — D-233's own failure mode, a declaration the instrument cannot read
+     being scored ZERO and folded silently into the tally. Restated with a
+     parenthesised ordinal per arm, counted, and the floor moved in the same turn.
+
+     AND THE MOVE HAD TO WAIT FOR THE COMMIT, which is worth recording because it
+     is not obvious and cost a red run: **the comparison is against the
+     REPRODUCIBLE figure, not the counted one** (M0-16, and this block's own
+     header says so). The register reads only suites that are IN A COMMIT, so
+     while `multicase.test.mjs` was untracked the measured triple stayed
+     906/167/168 while the NEGATIVE CONTROLS line printed 909/168/169 — and a
+     floor moved to the printed line at that moment would have been PERMANENTLY
+     TOO HIGH, failing every honest run afterwards. Moved after the suite landed
+     in a commit, from a `--strict` run that then read 909/168/169 itself.
+     ONE KEY SET, grepped before writing (2 matches for `^  arms:` in this file,
+     the other being FLEET's `arms: 58` — a different table). */
+  arms: 909,
+  classified: 168,
+  corpus: 169,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

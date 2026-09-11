@@ -692,9 +692,17 @@ console.log("\n--- 7. a disposition is scoped to the key's own subject — one p
 {
   /* WREN's member revises too, so two cases owned by two projects are flagged at
      once. THE SHAPE THIS PLANE CAN PRODUCE, and the suite header says why it is
-     this shape: a case has exactly one owning project (CASE-1's key) and a
-     finding belongs to one case (FINDING_IN_ANOTHER_CASE), so "several owning
-     projects" is several CASES. */
+     this shape: a case has exactly one owning project (CASE-1's key), so "several
+     owning projects" is several CASES.
+
+     D-309, 2026-09-10: THE SECOND HALF OF THAT REASON IS GONE AND THE SHAPE IS
+     UNCHANGED. This used to read *"and a finding belongs to one case
+     (FINDING_IN_ANOTHER_CASE)"*. That refusal is deleted — a finding may now
+     serve many cases (DEC-72 clause 6) — but the limit this block is about is the
+     OTHER one, and it is untouched: `cases` is keyed on `case_id` alone, so a
+     single case still has exactly one owning project and cannot change hands
+     between its editions. **D-309 deliberately did not widen that**, and the
+     assertions below therefore do not move. Only the citation does. */
   const all = await anonFlags();
   t("and the two outstanding rows name two different cases and two different owning projects",
     [all.count, all.flags.filter((x) => x.outstanding).map((x) => x.case_id),

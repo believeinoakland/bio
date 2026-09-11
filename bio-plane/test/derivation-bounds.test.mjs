@@ -453,11 +453,27 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    equality on the pinned hash. A row can only match if some case edition froze
    THIS finding at THIS exact sha, so the result is bounded by the number of case
    editions holding one hash, which the schema makes at most one per (case,
-   edition) and which is 1 in every shape the plane can currently produce (a
-   finding belongs to one case — FINDING_IN_ANOTHER_CASE — so the ceiling is that
-   case's edition count). The LOOP does one indexed `cases` lookup and one INSERT
-   per matched row. It is a real member of the class by the walker's own
-   definition and is counted honestly; the bound is stated here rather than
+   edition).
+
+   ===== CORRECTED BY D-309, 2026-09-10 — THE BOUND IS UNCHANGED AND ITS REASON IS
+   NOT. This paragraph used to finish: *"and which is 1 in every shape the plane
+   can currently produce (a finding belongs to one case — FINDING_IN_ANOTHER_CASE
+   — so the ceiling is that case's edition count)."* D-309 deletes that refusal in
+   order to enact DEC-72 clause 6, so the parenthesis became FALSE the moment the
+   fence came down, and a bound argument resting on a deleted rule is a bound
+   nobody is checking. Corrected here rather than exempted.
+
+   WHAT THE BOUND IS NOW, and it is still small and still measured: the result is
+   bounded by the number of (case, edition) pairs that froze THIS finding at THIS
+   exact sha. A finding may now serve many cases, so the ceiling is the sum of
+   those cases' edition counts rather than one case's — a larger constant, still a
+   constant, and still not a function of corpus size. In practice it stays at 1
+   for the common shape for a reason D-309 measured rather than assumed: joining a
+   second case REVISES the member (`op=publish` promotes every member), so each
+   case pins a DIFFERENT sha and only a case document authored before the first
+   ratification can pin one twice. The LOOP does one indexed `cases` lookup and
+   one INSERT per matched row. It is a real member of the class by the walker's
+   own definition and is counted honestly; the bound is stated here rather than
    claimed by exempting it, because an exempted member is a rule nobody is
    enforcing. */
 /* CASE-5b / DEC-72, 2026-09-10: THE ARRIVAL IS `#caseClaimInBytes`, AND THE BOUND

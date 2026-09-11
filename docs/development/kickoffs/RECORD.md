@@ -393,11 +393,17 @@ pinning in the same neighbourhood.
    assertions from an UNSIGNED REQUEST. That ceremony is a second publication ceremony and is larger
    than the rest of CASE-5 combined. **Raised to CONDUCT as the remaining half.**
 
-7. **MULTI-CASE MEMBERSHIP IS STILL REFUSED** (`FINDING_IN_ANOTHER_CASE` /
-   `FINDINGS_IN_DIFFERENT_CASES`). The flip makes it REPRESENTABLE — that was the format bake — but
-   lifting the fence is a surface question (which case does a finding id resolve to) and belongs with
-   CASE-6, which owns the finding view. `caseflip.test.mjs` DRIVES the refusal so "still refused" is
-   distinguishable from "nobody checked".
+7. **MULTI-CASE MEMBERSHIP — REFUSED BY CASE-5, MEASURED BY CASE-6, BUILT BY D-309 (2026-09-10).**
+   This entry read *"STILL REFUSED … lifting the fence is a surface question (which case does a
+   finding id resolve to) and belongs with CASE-6"*. It is kept rather than deleted because **that
+   framing was measured WRONG and the correction is the useful half**: CASE-6 counted the class and
+   found 11 sites in `store.mjs`, 9 of them SCALAR readers correct only while the fence held, so it
+   KEPT the fence and enqueued the plane half as D-309. D-309 corrected all nine — each decided at
+   its own site — minted `CASE_IDENTITY_AMBIGUOUS` (C-44.1) for the derivation that could no longer
+   be determinate, and removed `FINDING_IN_ANOTHER_CASE` and `FINDINGS_IN_DIFFERENT_CASES` LAST.
+   Wire change: **IC-74**. `caseflip.test.mjs`'s pin was CORRECTED, never exempted, and now drives a
+   finding published into two cases end to end; `multicase.test.mjs` re-runs the census every battery
+   and asserts zero scalar readers remain.
 
 **WHAT IS STILL OWED BY THE ARC** (CASE-4, CASE-6 and the arc's definition of done) is in `QUEUE.md`
 and `CASE-AS-PRODUCTION.md`; nothing in this item touches `docs/BIO_DATAPLANE_STATE.md`, which the

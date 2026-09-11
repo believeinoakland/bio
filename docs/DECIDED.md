@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-676 rulings across 67 documents.
+679 rulings across 67 documents.
 
 ## DEC-
 
@@ -490,6 +490,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:7022`
 - **IC-62** — THE ENDING WAS ADDED, NOT THE COMMENT CORRECTED, and the argument is the item.** Correcting the header would have closed the CHEAP half and cemented the EXPENSIVE one: the disagreement was the symptom, the misattribution was the bug, and editing the header to admit `cancelled` would have left a machine refusal…  
   `docs/development/QUEUE.md:914`
+- **IC-74** — `caseflip.test.mjs`'s pin was CORRECTED, never exempted, and now drives a finding published into two cases end to end; `multicase.test.mjs` re-runs the census every battery and asserts zero scalar readers remain.  
+  `docs/development/kickoffs/RECORD.md:404`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -958,7 +960,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant. What survives of it, and where the answers actually live:  
   `docs/architecture/README.md:102`
 - so its update rides the landing, never precedes it; (b) the RULED-AND-NOT-YET-BUILT banner at the head of THIS document comes down and the document is archived per the working-surface rule (`docs/archive/`, where `decided.mjs` keeps its rulings findable); and (c) `node tools/decided.mjs` is regenerated so the index…  
-  `docs/archive/CASE-AS-PRODUCTION.md:148`
+  `docs/archive/CASE-AS-PRODUCTION.md:151`
 - Move 0 — `tools/decided.mjs` and `docs/DECIDED.md`.** 597 rulings, 167 KB, generated, gated by `plancheck`, wired into `CLAUDE.md`.  
   `docs/archive/CORPUS-STUDY.md:24`
 - `docs/DECIDED.md` making a wrong-level op claim it was merely QUOTING; and found a truncated op name — a claim about an op that has never existed, manufactured by my own summary cutting a real op name mid-token.  
@@ -1108,7 +1110,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - S6 · SUPERSEDED — pull, never push** ``` ┌── this case has been superseded ─────────────────── --signal ─┐  
   `docs/archive/research/SB-OUTPUT.md:1195`
 - old rule and were CORRECTED rather than exempted. **7.2 LOST ITS ADMINISTRATOR BYPASS, AND NOTHING HAD EVER EXERCISED IT.** `projectInvite` carried `|| this.#isAdminMember(by)` and no test drove that  
-  `docs/BIO_DATAPLANE_STATE.md:544`
+  `docs/BIO_DATAPLANE_STATE.md:552`
 - Sections marked RULED are his and are not to be re-litigated.  
   `docs/development/AUTHORITY-AND-TRUST.md:4`
 - **2026-07-30** — RULED: the renderer is immaterial. Authority follows the DATA. Bob, 2026-07-30. Sometimes what is being rendered is GIS data, a CAD drawing, or a paper posted to a hosting platform, and the rendering is genuinely executed by  
@@ -1179,6 +1181,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:2416`
 - record the path those workers were pointed at), and `docs/DECIDED.md` (generated; regenerated in this turn).  
   `docs/development/CLAIMS.md:2428`
+- `bio-plane/test/caseflip.test.mjs` — the driven pin CORRECTED, never exempted. - `bio-plane/test/derivation-bounds.test.mjs` — two bound arguments that cite the fence BY NAME as the reason their scan is bounded at 1.  
+  `docs/development/CLAIMS.md:2483`
+- item makes false), `docs/DECIDED.md` (regenerated). **SCHEMA IS NOT EXPECTED TO MOVE** and did not: `published_case_members` already keys (case_id, edition, ord) with a `published_case_members_bundle` index on  
+  `docs/development/CLAIMS.md:2498`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

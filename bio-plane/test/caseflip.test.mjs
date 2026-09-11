@@ -844,10 +844,25 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
 
   /* MULTI-CASE MEMBERSHIP, DRIVEN RATHER THAN ASSUMED. LOOSE is concluded and
      published as a case of its own, and ALPHA — already a member of CASE — is
-     then offered to it. The fence answers. It is pinned here because the flip
-     removes the FORMAT's objection to a finding serving many cases and leaves
-     this refusal as the only thing holding the rule: a reader of this suite must
-     be able to tell "still refused" from "nobody checked". */
+     then offered to it. It is pinned here because the flip removes the FORMAT's
+     objection to a finding serving many cases: a reader of this suite must be
+     able to tell what the plane does from "nobody checked".
+
+     ===== CORRECTED BY D-309, 2026-09-10 — AND THE SUBJECT MOVED, SO THE
+     ASSERTION MOVED WITH IT. This block used to pin MULTI-CASE MEMBERSHIP IS
+     STILL REFUSED, and that was true and deliberate when CASE-6 wrote it: the
+     fence was KEPT on a measured count, and the pin recorded a DECISION rather
+     than a deferral. D-309 is the item that decision named. The nine scalar
+     which-case readers are corrected, `CASE_IDENTITY_AMBIGUOUS` covers the
+     derivation the fence was also protecting, and `FINDING_IN_ANOTHER_CASE` is
+     DELETED — so the old assertion is now pinning a rule that no longer exists.
+
+     IT IS CORRECTED AND NOT EXEMPTED, and the difference matters here more than
+     usual: an exempted arm would leave this suite silent about the one property
+     CASE-5's flip was FOR. So the arm asserts the OPPOSITE outcome, drives it
+     through the ops end to end, and reads the membership BACK — because
+     "the act returned ok" is not evidence that the record holds two memberships,
+     and this suite's own header is where that lesson was written down. */
   await mustConclude(LOOSE);
   const other = await publishCase({ target: LOOSE, roles: { [LOOSE]: "load_bearing" },
     statement: "A separate case over a separate question, published to test the membership fence.",
@@ -872,9 +887,20 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
   }
   const both = await publishCase({ targets: `${LOOSE},${ALPHA}`, caseId: other.caseId,
     roles: { [LOOSE]: "load_bearing", [ALPHA]: "load_bearing" },
-    statement: "An attempt to place a finding that already belongs to one case into a second.",
+    statement: "A finding that already belongs to one case, published into a second one as well.",
     scope: "Whether the loose transfer was authorised.",
-    excluded: [],
+    /* D-309: THIS EDITION STATES ITS OWN LIMITS, and that is C-21.1 doing its job
+       rather than an inconvenience worked around. The arm used to send
+       `excluded: []` — byte-identical to edition 1's — which was invisible while
+       the membership fence refused the act on the line before. With the fence
+       gone the act reaches the completeness gate, and the gate immediately
+       refused `COMPLETENESS_CARRIED_FORWARD`. **That is a finding about the old
+       arm, not about this one: it was never reaching the code it claimed to
+       test.** Recorded rather than smoothed. */
+    excluded: [{ target: INFO_B,
+                 description: "the second case's own excluded material",
+                 reason: "this edition adds a finding from another case, so its limits are its own "
+                       + "and are stated here as of this edition rather than carried forward" }],
     subjectPosition: "not_sought",
     subjectJustification: "Not approached for this attempt, which the fence should refuse first.",
     biasAcknowledgement: "Unchanged declared position on public adoption." });
@@ -903,14 +929,82 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
      memberships as a list, correct for any n, so the plane's half can land
      without the surface moving.
 
-     THE ASSERTION ITSELF IS UNCHANGED ON PURPOSE. What is pinned is that the
-     act is REFUSED and refused BY NAME, and that is exactly as true after the
-     decision as before it — a pin whose subject did not move should not move. */
-  t("and MULTI-CASE MEMBERSHIP IS STILL REFUSED, driven: the flip makes a finding serving many cases "
-    + "REPRESENTABLE, and CASE-6 measured the fence and KEPT it — nine scalar which-case readers in "
-    + "store.mjs are correct only while it holds (reasoning at the refusal, gap in DEBT.md)",
-    [both.ok, ["FINDING_IN_ANOTHER_CASE", "FINDINGS_IN_DIFFERENT_CASES"].includes(both.reason)],
-    [false, true]);
+     WHAT THE ASSERTION SAYS NOW (D-309, 2026-09-10). The paragraphs above are
+     KEPT rather than deleted, because they are the argument that produced this
+     item and a reader arriving at this line needs to know the fence was held
+     deliberately and then lifted deliberately, not that it was never there. What
+     changed underneath them: the nine ARE corrected, so the reason for keeping it
+     is discharged rather than overruled. `FINDING_IN_ANOTHER_CASE` and
+     `FINDINGS_IN_DIFFERENT_CASES` are both DELETED; neither name may appear in an
+     answer again, and the arm asserts that too — a deleted refusal that quietly
+     came back would otherwise look exactly like this arm passing. */
+  t("MULTI-CASE MEMBERSHIP IS PERMITTED AND DRIVEN (D-309, DEC-72 clause 6): a finding already "
+    + "published in one case is published into a SECOND by name, end to end through op=publish — "
+    + "the fence CASE-6 measured and kept is gone now that the nine scalar readers answer set-valued",
+    [both.ok, both.caseId, both.reason ?? null], [true, other.caseId, null]);
+  t("and NEITHER deleted refusal can answer any more — a fence that quietly came back would look "
+    + "exactly like the arm above passing, so both names are pinned as absent",
+    [["FINDING_IN_ANOTHER_CASE", "FINDINGS_IN_DIFFERENT_CASES"].includes(String(both.reason))], [false]);
+  /* AND THE MEMBERSHIP IS READ BACK, because `ok: true` is an outcome that costs
+     nothing to produce and is not evidence that the RECORD holds two of them.
+     The case document is ratified first — CASE-5b's wall: the roster and its pins
+     are committed from the SIGNED BYTES by `ratifyCaseDocument` and by nothing
+     else, so before that act there is no membership to read. Then ALPHA's own
+     published row is asked through the ANONYMOUS index, which is the caller the
+     whole published projection exists for. */
+  await ratifyCase(async (q, b) => rP(await POST(q, b)), both, { dir, key: "rosa", token: ROSA });
+  for (const id of [LOOSE, ALPHA]) {
+    const rb = await ratify(id);
+    if (!rb.ok) throw new Error(`ratify ${id} into the second case: ${JSON.stringify(rb)}`);
+  }
+  /* WHAT THE READ-BACK MEASURED, AND IT CORRECTED THIS ARM'S OWN FIRST DRAFT —
+     recorded because it is a fact about the model that was not obvious and that
+     the item's brief did not predict.
+
+     A FINDING JOINS A SECOND CASE AT A **NEW VERSION**. `op=publish` promotes
+     every member, so ALPHA is at one sha inside CASE and at a later sha inside
+     the second case. Each case therefore holds, and signed for, the exact bytes
+     it froze — which is CASE-3's pin working as designed and is MORE honest than
+     two cases sharing one row, not less. The first draft of this arm asserted
+     that ONE published row would carry two `cases` entries; it does not, and the
+     assertion was wrong rather than the plane. The memberships live across the
+     finding's EDITIONS, so that is where they are read. */
+  /* `op=publishededitions` AND NOT `op=publishedlist`, and the difference is a
+     measurement rather than a preference: BOTH are `classes: ["admin","member",
+     "probe"]`, so neither is anonymous, and the first draft of this arm asked the
+     ANONYMOUS caller for the index and got `NOT_AUTHENTICATED` back — an empty
+     `bundles` array that would have read as "no memberships" if the arm had been
+     written to tolerate it. It is not: the arm asserts the count is 2, so the
+     silence failed loudly, which is what it is for. The anonymous surface is
+     still driven, on `op=publishedcase` below, which IS ungated and is the
+     stranger's own route. */
+  const idx = rP(await GET(`op=publishededitions&id=${ALPHA}&token=${ROSA}`));
+  const alphaRows = idx.editions || [];
+  const alphaCases = [...new Set(alphaRows.flatMap((r) => (r.cases || []).map((c) => c.case_id)))].sort();
+  t("and the RECORD holds both memberships, read back through op=publishededitions: ALPHA "
+    + "serves two cases, each at the version that case actually froze — the shape DEC-72 clause 6 "
+    + "rules for, and `cases` is the set, correct for any n (IC-74)",
+    [alphaCases.length, alphaCases.includes(CASE), alphaCases.includes(other.caseId)],
+    [2, true, true]);
+  /* AND THE SET-VALUED QUESTION IS DRIVEN THROUGH THE OP THAT ASKS IT — sites 3
+     and 4 of CASE-6's nine, `publishedCase()`'s resolution of a FINDING id. This
+     is the one place a stranger's read can no longer be answered with one case,
+     and it is the site that would have become a silent `LIMIT 1` guess had the
+     fence been lifted alone. A store-level test would not have reached it. */
+  const strangerAmbig = rP(await (await anonRaw(`op=publishedcase&id=${ALPHA}`)).json());
+  t("and a STRANGER holding only that finding's id is told it serves TWO cases and asked which they "
+    + "mean, rather than being handed one of them — the surface resolves without deciding on the "
+    + "reader's behalf what they meant, which is this method's own stated doctrine",
+    [strangerAmbig.ok, strangerAmbig.reason, (strangerAmbig.cases || []).slice().sort()],
+    [false, "FINDING_IN_SEVERAL_CASES", [CASE, other.caseId].sort()]);
+  /* THE OVER-STRICTNESS COMPLEMENT, IN THE SUITE RATHER THAN ONLY IN THE CONTROL:
+     a reader who DID say which case is served, not refused. A fence tighter than
+     its rule is an undeclared interface change wearing the costume of caution. */
+  const strangerNamed = rP(await (await anonRaw(
+    `op=publishedcase&id=${ALPHA}&caseId=${encodeURIComponent(other.caseId)}`)).json());
+  t("and a reader who NAMES the case is served it — the refusal above is a resolution aid and not a "
+    + "wall, and the stranger-verification path stays green for a two-case member",
+    [strangerNamed.ok, strangerNamed.caseId], [true, other.caseId]);
 
   /* ==== AND THE SAME FENCE DRIVEN ON ITS OWN, ADDED BY CASE-6 BECAUSE A
      NEGATIVE CONTROL PROVED THE ARM ABOVE CANNOT SEE IT ====================
@@ -932,31 +1026,50 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
      OR above would go on passing if the fence this item reasoned about were
      deleted tomorrow.
 
-     SO THIS ARM MAKES `distinct.length` EQUAL ONE. A single target, already a
+     SO THIS ARM MADE `distinct.length` EQUAL ONE. A single target, already a
      member of its own case, published into an EXPLICITLY NAMED existing case:
-     nothing is in two cases, so the different-cases refusal has nothing to
-     notice, and the only thing between the act and the roster is the
-     `had !== theCase` loop. It is pinned by EXACT EQUALITY on the reason, not by
-     membership of a set. The arm above keeps its OR — both outcomes are honest
-     for a two-target act and which one wins is a property of the fixture's
-     ordering, which is not what either arm is about. */
-  const single = await publishCase({ targets: ALPHA, caseId: other.caseId,
+     nothing was in two cases, so the different-cases refusal had nothing to
+     notice, and the only thing between the act and the roster was the
+     `had !== theCase` loop. It was pinned by EXACT EQUALITY on the reason.
+
+     ===== CORRECTED BY D-309, AND THE LESSON IS CARRIED FORWARD RATHER THAN THE
+     ASSERTION. CASE-6's finding above — *a decision anchored to an assertion that
+     cannot tell which mechanism held is a decision anchored to nothing* — is
+     exactly as true of THIS item's refusal as it was of the fence, and it is why
+     this arm survives its own subject being deleted. `FINDING_IN_ANOTHER_CASE` is
+     gone, so the arm now drives the refusal that REPLACED the part of its job
+     that was still real: `CASE_IDENTITY_AMBIGUOUS`.
+
+     IT IS DRIVEN ALONE AND NAMED EXACTLY, for CASE-6's reason. ALPHA now serves
+     TWO cases (proved by the read-back above, not assumed), and it is published
+     again with NO `caseId` and no `newCase` — so the derivation faces two
+     candidates and no instruction. Nothing else in the act can answer: every
+     other refusal in `publishCase()` is about the payload, and the payload is
+     complete. Pinned by EXACT EQUALITY on the reason, never by membership of a
+     set, because an OR cannot tell you which mechanism held. */
+  for (const rr2 of [await reopen(ALPHA, "Published again with no case named, to drive the "
+                                       + "ambiguous derivation on its own.")])
+    if (!rr2.ok) throw new Error(`reopen ALPHA for the ambiguity arm: ${JSON.stringify(rr2)}`);
+  await mustConclude(ALPHA);
+  const ambiguous = await publishCase({ targets: ALPHA,
     roles: { [ALPHA]: "load_bearing" },
-    statement: "One finding, already a member of its own case, offered to a second case by name.",
+    statement: "One finding that serves two cases, published again without saying which case this is.",
     scope: "Whether one finding may serve two cases.",
     excluded: [],
     subjectPosition: "not_sought",
-    subjectJustification: "Not approached: the membership fence should refuse before any of this is reached.",
+    subjectJustification: "Not approached: the derivation should refuse before any of this is reached.",
     biasAcknowledgement: "Unchanged declared position on public adoption." });
-  t("and the MEMBERSHIP fence is driven ALONE and named EXACTLY — one target, one distinct case, so "
-    + "nothing else can answer for it: this is the refusal CASE-6 measured and chose to keep, and an "
-    + "OR over two fences cannot tell you which one held",
-    [single.ok, single.reason], [false, "FINDING_IN_ANOTHER_CASE"]);
-  t("and it names the finding and the case that already holds it, so a publisher is told what to do "
-    + "about it rather than only that they may not",
-    [String(single.target), String(single.caseId) !== String(other.caseId),
-     String(single.detail).includes("publish a new edition")],
-    [String(ALPHA), true, true]);
+  t("and the AMBIGUOUS DERIVATION is driven ALONE and named EXACTLY (D-309, C-44.1): a finding that "
+    + "serves two cases, published with no case named and no new one asked for, is refused — because "
+    + "membership no longer says which case this is, and the record will not choose",
+    [ambiguous.ok, ambiguous.reason], [false, "CASE_IDENTITY_AMBIGUOUS"]);
+  t("and it names EVERY candidate and carries its DEC-49 translation, so a publisher is told what to "
+    + "decide rather than only that they may not proceed — a refusal a member cannot act on is the "
+    + "state DEC-49 ended",
+    [(ambiguous.cases || []).slice().sort(), ambiguous.check,
+     typeof ambiguous.translation === "string" && ambiguous.translation.length > 0,
+     String(ambiguous.detail).includes("name the case")],
+    [[CASE, other.caseId].sort(), "C-44.1", true, true]);
 }
 
 /* ------------------------------------------------------------------------------

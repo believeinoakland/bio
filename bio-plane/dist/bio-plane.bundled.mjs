@@ -2974,6 +2974,7 @@ __export(bio_checks_exports, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
+  CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
@@ -8915,6 +8916,13 @@ var QUEUE_MINT_CHECKS = {
     check: "C-31.3",
     where: "src/store.mjs queueFeed > is-queue-mint",
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
+  }
+};
+var CASE_DERIVATION_CHECKS = {
+  CASE_IDENTITY_AMBIGUOUS: {
+    check: "C-44.1",
+    where: "src/store.mjs publishCase > case-identity-derivation",
+    translation: "This publication did not say which case it is. The findings you are publishing already serve more than one published case, and a finding is allowed to serve many \u2014 so the record cannot work out from them alone whether you are publishing a further edition of one of those cases or starting a new case that rests on the same work. Nothing has been published and nothing has changed. Say which case this is, or say that it is a new one, and publish again."
   }
 };
 var MACHINE_FENCE_CHECKS = {
@@ -19688,6 +19696,10 @@ function checkSkillVersion(version) {
 }
 
 // src/store.mjs
+function refusal5(key, extra = {}) {
+  const row = CASE_DERIVATION_CHECKS[key];
+  return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
+}
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
@@ -24140,10 +24152,21 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
    *
    * DEC-12: this act does NOT unpublish anything and cannot. Editions append;
    * the working document moves. */
+  /* D-309 / IC-74: `newCase` is REC-44's THIRD ROUTE MADE SAYABLE. REC-44 always
+     had three — NAME a case, DERIVE one, or MINT one — but only the first was
+     ever expressible by a caller; minting happened when the derivation found
+     nothing. Under DEC-72 clause 6 that leaves a real intent with no way to be
+     stated: a publisher building a NEW case out of findings that already serve
+     another one had no word for it, and the derivation would quietly hand them a
+     further edition of the old case instead. This is that word. It is NOT a
+     caller minting an identity — the id is still allocated by this act and never
+     taken from the request, which is the rule REC-44 states and `NO_SUCH_CASE`
+     enforces; what the caller supplies is the INTENT, not the identity. */
   publishCase({
     target = null,
     targets = null,
     caseId = null,
+    newCase = false,
     scope = "",
     statement = "",
     excluded = null,
@@ -24412,22 +24435,27 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     }
     const belongs = /* @__PURE__ */ new Map();
     for (const id of members) {
-      const row = this.#one(
-        `SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
+      const rows2 = this.#rows(
+        `SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? ORDER BY case_id`,
         id
       );
-      if (row) belongs.set(id, row.case_id);
+      if (rows2.length) belongs.set(id, rows2.map((r) => r.case_id));
     }
-    const distinct = [...new Set(belongs.values())];
+    const distinct = [...new Set([...belongs.values()].flat())];
     const claimedInBytes = [...new Set(prepared.map((p) => typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null).filter(Boolean))];
-    if (distinct.length > 1)
-      return {
-        ok: false,
-        reason: "FINDINGS_IN_DIFFERENT_CASES",
-        cases: distinct.sort(),
-        detail: `these findings already belong to different published cases (${distinct.sort().join(", ")}). A finding is a member of ONE case: publishing it into a second would make "which edition does this leg cite" unanswerable, since editions are over the CASE (DEC-12).`
-      };
-    let theCase = String(caseId ?? "").trim() || distinct[0] || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
+    if (newCase && String(caseId ?? "").trim())
+      return refusal5("CASE_IDENTITY_AMBIGUOUS", {
+        cases: [String(caseId).trim()],
+        members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
+        detail: `this act both NAMES case ${String(caseId).trim()} and asks for a new case to be minted. Those are opposite instructions and the record will not choose between them: name the case to publish a further edition of it, or ask for a new one, not both.`
+      });
+    if (!newCase && !String(caseId ?? "").trim() && distinct.length > 1)
+      return refusal5("CASE_IDENTITY_AMBIGUOUS", {
+        cases: distinct.slice().sort(),
+        members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
+        detail: `these findings already serve ${distinct.length} published cases (${distinct.slice().sort().join(", ")}), and this act did not say which case it is publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer says which case this is: name the case to publish a further edition of it, or say so and a new case is minted. The record will not choose for you.`
+      });
+    let theCase = newCase ? null : String(caseId ?? "").trim() || distinct[0] || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
     if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
       return {
         ok: false,
@@ -24435,16 +24463,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         caseId: theCase,
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
-    for (const [id, had] of belongs)
-      if (theCase && had !== theCase)
-        return {
-          ok: false,
-          reason: "FINDING_IN_ANOTHER_CASE",
-          target: id,
-          caseId: had,
-          into: theCase,
-          detail: `${id} is already a published finding of ${had}. A finding belongs to one case; to move it, publish a new edition of ${had} without it first.`
-        };
     const minted = !theCase;
     if (minted) theCase = this.allocId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4)).id;
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
@@ -27745,7 +27763,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  itself rather than saying anything, and it would let a caller grow the log
    *  without limit. */
   provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row = ROUTE_MARK_CHECKS[code];
       return {
         ok: false,
@@ -27759,12 +27777,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     const who = String(author ?? "").trim();
     if (!who)
-      return refusal5(
+      return refusal6(
         "ROUTE_MARK_NO_AUTHOR",
         "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement. This refuses an act with NO principal, and deliberately not a machine one \u2014 op=provenancechain draws the same line and no other, and a stricter fence here would be this op ruling on DEC-52's ground as a side effect."
       );
     if (!bundleId)
-      return refusal5("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+      return refusal6("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
     const gate = viewerPredicate(viewer);
     const seen = this.#one(
       `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
@@ -27772,13 +27790,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       ...gate.args
     );
     if (!seen)
-      return refusal5(
+      return refusal6(
         "ROUTE_MARK_NO_SUCH_BUNDLE",
         "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
         { bundleId }
       );
     if (seen.object_type !== "information")
-      return refusal5(
+      return refusal6(
         "ROUTE_MARK_NOT_A_DOCUMENT",
         `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
         { bundleId, objectType: seen.object_type }
@@ -34176,7 +34194,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
     items.push(...fromAnotherTeam);
     items.push(...this.#queueConditions(viewer, now));
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
       return {
         ok: false,
@@ -34190,19 +34208,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     for (const it of items) {
       if (!_Store.QUEUE_CLASSES.includes(it.class))
-        return refusal5(
+        return refusal6(
           "NO_CLASS",
           `every queue item carries a class from ${_Store.QUEUE_CLASSES.join(" | ")}, and this one carries ${it.class === void 0 ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.`,
           { id: it.id ?? null }
         );
       if (classOfKind(it.kind) === null)
-        return refusal5(
+        return refusal6(
           "NO_SUCH_KIND",
           `${it.kind === void 0 || it.kind === null || it.kind === "" ? "this item carries no kind at all" : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. The vocabulary is queuestate.mjs's three lists and nothing else \u2014 it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.`,
           { id: it.id ?? null, kind: it.kind ?? null }
         );
       if (classOfKind(it.kind) !== it.class)
-        return refusal5(
+        return refusal6(
           "KIND_MISCLASSED",
           `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would let one member silence a task the record believes reached a person, and minting a condition's kind as a finding would make a fact about our own machinery undismissable.`,
           {
@@ -37896,7 +37914,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
          read from the DOCUMENT's own `case_id` — which is inside the bytes the
          signature covers — and never from this table, so a document cannot be
          gated against a case it does not claim. */
-      publishedCaseRegistry: this.publishedCaseRegistryFor([this.#caseClaimOf(bundleId)]),
+      /* D-309: EVERY case this document is prepared into, not one of them. The
+         array was always the registry's shape; only the reader was narrow. */
+      publishedCaseRegistry: this.publishedCaseRegistryFor(this.#caseClaimsOf(bundleId)),
       /* REC-18: what each basis target EARNS, so an earned grade is confirmed at
          the ratification gate and not only at the write. Both gates run the one
          catalog function over the one registry shape, which is the whole reason
@@ -37984,21 +38004,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           detail: `${bundleId} is published through edition ${highest} on its OWN version chain; a revision must increment it (DEC-12). Editions do not overwrite each other \u2014 edition ${highest} keeps its own signature, attestor, time and gate version, and a new one joins it. This is the FINDING's edition, not the edition of any case it is a member of: since CASE-5 the two are separate numbers.`
         };
       const now = (/* @__PURE__ */ new Date()).toISOString();
-      const rel = this.#one(
-        `SELECT m.case_id, m.edition, m.role FROM published_case_members m
-           JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
-          WHERE m.bundle_id=? AND m.version_sha=?
-          ORDER BY m.case_id, m.edition DESC LIMIT 1`,
-        bundleId,
-        bundleSha
-      );
+      const byCase = this.#pinnedCaseEditionsOf(bundleId, bundleSha);
+      const rel = this.#soleCase(byCase);
       const caseId = rel ? rel.case_id : null;
       const cEd = rel ? Number(rel.edition) : ed;
-      if (caseId) {
+      for (const one of byCase) {
+        const oneEd = Number(one.edition);
         const cRow = this.#one(
           `SELECT completeness, bias_acknowledgement, bar FROM published_cases WHERE case_id=? AND edition=?`,
-          caseId,
-          cEd
+          one.case_id,
+          oneEd
         );
         const cComp = completeness ? JSON.stringify(completeness) : null;
         if (cRow && cComp && (cRow.completeness ?? null) !== cComp)
@@ -38006,16 +38021,23 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
             ok: false,
             reason: "CASE_ASSERTION_DIVERGED",
             bundleId,
-            caseId,
-            edition: cEd,
-            detail: `this finding's signed bytes freeze a different completeness assertion for case ${caseId} edition ${cEd} than the CASE DOCUMENT a member signed for it. A case edition asserts ONE completeness claim, and since CASE-5b that claim is signed once, in the case's own document \u2014 so a member whose bytes say something else has not been re-published through op=publish since the case was authored.`
+            caseId: one.case_id,
+            edition: oneEd,
+            detail: `this finding's signed bytes freeze a different completeness assertion for case ${one.case_id} edition ${oneEd} than the CASE DOCUMENT a member signed for it. A case edition asserts ONE completeness claim, and since CASE-5b that claim is signed once, in the case's own document \u2014 so a member whose bytes say something else has not been re-published through op=publish since the case was authored.`
           };
-        this.#dischargeCaseFlags(caseId, cEd, attestorMember ?? null, now);
+        this.#dischargeCaseFlags(one.case_id, oneEd, attestorMember ?? null, now);
       }
-      const required = caseId ? (() => {
-        const b = this.#one(`SELECT bar FROM published_cases WHERE case_id=? AND edition=?`, caseId, cEd);
-        return b && b.bar ? JSON.parse(b.bar) : null;
-      })() : null;
+      const bars = byCase.map((one) => {
+        const b = this.#one(
+          `SELECT bar FROM published_cases WHERE case_id=? AND edition=?`,
+          one.case_id,
+          Number(one.edition)
+        );
+        return { case_id: one.case_id, edition: Number(one.edition), bar: b && b.bar ? b.bar : null };
+      });
+      const distinctBars = [...new Set(bars.map((x) => x.bar))];
+      const barUndetermined = distinctBars.length > 1;
+      const required = !barUndetermined && distinctBars.length === 1 && distinctBars[0] ? JSON.parse(distinctBars[0]) : null;
       this.sql.exec(
         `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
@@ -38054,6 +38076,21 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         existed,
         ratifiedAt: now,
         edges: graph,
+        caseCount: byCase.length,
+        /* A BOOLEAN AND NOT THE LIST, for `caseCount`'s reason exactly and
+           measured the same way. The first draft returned `bars` — the
+           per-case bars themselves — and `meaning-bounds.test.mjs` moved
+           `op=publish` onto the OPAQUE roster: a collection off an
+           unbounded row source, inside a conditional SPREAD, so the walk
+           could not even bucket it as bare. **An op the classifier cannot
+           see is worse than one it grades badly** — that is the state
+           `op=airunlog` was in while a ratchet read green over it — so the
+           array came off rather than the roster growing a blind spot.
+           The FACT survives, which is the part that matters: a member is
+           told their finding's bar is undetermined here rather than being
+           handed one case's standard as though it were the answer, and
+           `published_cases.bar` answers per case for whoever asks. */
+        ...barUndetermined ? { barUndetermined: true } : {},
         ...caseId ? { caseId, caseEdition: cEd, case: caseState } : {}
       };
     });
@@ -38344,8 +38381,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`
       ).map((r) => {
-        const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
-        return { ...r, case_id: cm ? cm.case_id : null, case_edition: cm ? cm.edition : null };
+        const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
+        const sole = this.#soleCase(cms);
+        return {
+          ...r,
+          case_id: sole ? sole.case_id : null,
+          case_edition: sole ? sole.edition : null,
+          cases: cms
+        };
       }),
       cases: this.#rows(
         `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
@@ -38370,7 +38413,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       bundleId
     );
     return { ok: true, bundleId, editions: rows.map((r) => {
-      const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
+      const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
+      const cm = this.#soleCase(cms);
       const cid = cm ? cm.case_id : null;
       const c = cm ? this.#one(
         `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
@@ -38382,6 +38426,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         ...r,
         case_id: cid,
         case_edition: cm ? cm.edition : null,
+        cases: cms,
         bar: c && c.bar ? safeJson(c.bar) : null,
         /* The container's manifest is the CASE edition's, so it is
            reported from there — one manifest per case per edition,
@@ -38436,10 +38481,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (r) {
         asked = r.bundle_id;
         askedEdition = Number(r.edition);
-        const cm = this.#caseOfSha(r.bundle_id, sha2562, askedEdition);
-        if (cm) {
-          theCase = cm.case_id;
-          ed = cm.edition;
+        const cms = this.#casesOfSha(r.bundle_id, sha2562, askedEdition);
+        const got = this.#resolveOneCase(r.bundle_id, cms, caseId);
+        if (!got.ok) return got;
+        if (got.pick) {
+          theCase = got.pick.case_id;
+          ed = got.pick.edition;
         }
       }
     } else if (id) {
@@ -38447,9 +38494,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, id)) {
         theCase = id;
       } else {
-        const m = want != null ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, id, want) : this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
-        if (m) {
-          theCase = m.case_id;
+        const ms = (want != null ? this.#rows(`SELECT case_id, edition FROM published_case_members
+                         WHERE bundle_id=? AND edition=? ORDER BY case_id`, id, want) : this.#rows(`SELECT case_id, edition FROM published_case_members
+                         WHERE bundle_id=? ORDER BY case_id, edition`, id)).map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
+        const got = this.#resolveOneCase(id, ms, caseId);
+        if (!got.ok) return got;
+        if (got.pick) {
+          theCase = got.pick.case_id;
           asked = id;
         }
       }
@@ -38464,7 +38515,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       const who = asked || id;
       const want = askedEdition != null ? askedEdition : sha2562 == null && id != null && edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
       const r = sha2562 ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha2562) : want != null ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, who, want) : this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who);
-      if (r && !this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition)) {
+      if (r && this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition).length === 0) {
         const st = this.#looseEditionState(r.bundle_id, r.edition);
         if (st) {
           theCase = null;
@@ -38505,7 +38556,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           unresolved.push({ to: e.to_bundle, kind: e.kind });
           continue;
         }
-        const tm = this.#caseOfSha(e.to_bundle, t.bundle_sha, t.edition);
+        const tms = this.#casesOfSha(e.to_bundle, t.bundle_sha, t.edition);
+        const manifestOf = (cid, ced) => this.#one(
+          `SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
+          cid,
+          ced
+        )?.manifest_sha ?? null;
+        const tm = this.#soleCase(tms);
         serves.push({
           to: e.to_bundle,
           kind: e.kind,
@@ -38515,11 +38572,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           ratified_at: t.ratified_at,
           case_id: tm ? tm.case_id : null,
           case_edition: tm ? tm.edition : null,
-          manifest_sha: tm ? this.#one(
-            `SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
-            tm.case_id,
-            tm.edition
-          )?.manifest_sha ?? null : null
+          cases: tms.map((x) => ({
+            case_id: x.case_id,
+            edition: x.edition,
+            manifest_sha: manifestOf(x.case_id, x.edition)
+          })),
+          manifest_sha: tm ? manifestOf(tm.case_id, tm.edition) : null
         });
       }
       return {
@@ -38709,29 +38767,127 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        PINNED FIRST, PREPARED SECOND: a ratified relation is the record's answer
        and an unratified case document is this act's own preparation — the same
        order `publishCase()` resolves a case identity in, and for the same reason. */
-  #caseClaimOf(bundleId) {
+  /* ===== D-309 / DEC-72 clause 6, 2026-09-10: SITE 5 OF CASE-6's NINE, AND THE
+       DECISION HERE IS **ALL CASES**.
+  
+       WHAT THIS ANSWERS AND FOR WHOM. Its one caller is `gateFacts`, which feeds
+       `publishedCaseRegistryFor` — the registry C-21.1's freshness rule reads. The
+       question is "what case, or cases, is the document being gated prepared into",
+       and the freshness comparison is against *the previous edition of THAT SAME
+       CASE*. Under clause 6 a finding can be prepared into several, so the honest
+       answer is every one of them: giving the registry ONE case would gate the
+       document against one case's prior edition and leave the others unexamined,
+       which is a check that has quietly stopped asking about half its subject.
+  
+       THE CALLER ALREADY WANTED A LIST. `publishedCaseRegistryFor` takes an ARRAY
+       and always has; the old scalar was being wrapped in `[ ]` at the call site.
+       So this site cost nothing to correct, which is worth recording: the shape was
+       right before the fence came down and only the reader was narrow.
+  
+       PINNED FIRST, PREPARED SECOND is UNCHANGED and its reasoning above still
+       holds in full — a ratified relation is the record's answer and an unratified
+       case document is this act's own preparation. What changed is only that each
+       half may now answer with more than one. */
+  #caseClaimsOf(bundleId) {
     const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
-    if (!b) return null;
-    const pinned = this.#one(
-      `SELECT case_id FROM published_case_members WHERE bundle_id=? AND version_sha=?
-        ORDER BY edition DESC LIMIT 1`,
+    if (!b) return [];
+    const pinned = this.#rows(
+      `SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? AND version_sha=?
+        ORDER BY case_id`,
       bundleId,
       b.bundle_sha
-    );
-    if (pinned) return pinned.case_id;
+    ).map((r) => r.case_id);
+    if (pinned.length) return pinned;
     const claim = this.#caseClaimInBytes(bundleId);
-    return claim ? claim.case_id : null;
+    return claim ? [claim.case_id] : [];
   }
-  #caseOf(bundleId, edition = null) {
-    const r = edition != null ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, bundleId, edition) : this.#one(
-      `SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
-      bundleId
-    );
-    return r ? r.case_id : null;
+  /* ===== D-309: SITES 6 AND 7 OF CASE-6's NINE (the `AND edition=?` spelling and
+       the `ORDER BY edition DESC LIMIT 1` spelling), AND THE DECISION IS **ALL
+       CASES**, RETURNED AS A SET OF DISTINCT CASE IDS.
+  
+       `DISTINCT` IS LOAD-BEARING RATHER THAN TIDY, and it is what keeps the
+       over-strictness promise. A finding can be rostered by SEVERAL EDITIONS OF ONE
+       CASE — that has always been true and has nothing to do with clause 6 — so a
+       row-per-membership answer would report two entries for a finding that serves
+       exactly one case, and every caller deciding "is this set-valued" on
+       `length > 1` would start calling single-case findings ambiguous. The
+       set-valued question this item opened is over CASES, so the set is over cases.
+  
+       The old scalar took the HIGHEST edition. Nothing here needs an edition at all
+       — the one caller (`publishedRegistryFor`) is building a per-edition registry
+       entry and wants the case identity — so the edition sort is dropped rather
+       than carried forward unused. */
+  #casesOf(bundleId, edition = null) {
+    return (edition != null ? this.#rows(`SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? AND edition=?
+                     ORDER BY case_id`, bundleId, edition) : this.#rows(`SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=?
+                     ORDER BY case_id`, bundleId)).map((r) => r.case_id);
+  }
+  /* THE SOLE MEMBERSHIP, OR NULL — D-309's ONE MIGRATION RULE, WRITTEN ONCE SO
+       FIVE READ OPS CANNOT SPELL IT FIVE WAYS.
+  
+       Every op that used to answer `case_id` / `case_edition` as a scalar now
+       serves a `cases` ARRAY beside it and keeps the scalar for the shape that has
+       exactly one answer. This computes that scalar, and the ONLY thing it will
+       ever return is a case the record genuinely holds alone: **it returns null
+       rather than choosing**, which is the entire difference between this item and
+       the nine silent `LIMIT 1` guesses CASE-6 refused to ship.
+  
+       IT COLLAPSES EDITIONS AND NOT CASES, for `#casesOf`'s reason one paragraph
+       up. A finding pinned by editions 1 and 2 of ONE case is NOT set-valued and
+       answers with that case at its NEWEST edition — byte-identical to what the old
+       `ORDER BY edition DESC LIMIT 1` returned. That equality is the whole of
+       D-309's over-strictness arm: a single-case finding answers exactly as it did
+       yesterday, and it does so by construction here rather than by care at five
+       call sites. */
+  #soleCase(list) {
+    const ids = [...new Set((list || []).map((x) => x.case_id))];
+    if (ids.length !== 1) return null;
+    let top = null;
+    for (const x of list) if (top == null || Number(x.edition) > top) top = Number(x.edition);
+    return { case_id: ids[0], edition: top };
+  }
+  /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the
+       READER and never by this plane.
+  
+       `publishedCase()` serves ONE case edition: its scope, its completeness
+       assertion, its bias acknowledgement, its bar, its findings. That is a single
+       artifact and cannot be two. So when a finding serves several cases this
+       surface has three options and only one of them is honest — serve the newest
+       (a guess dressed as an answer), serve all (a container that is not an
+       artifact anybody published), or SAY SO AND NAME THEM.
+  
+       THE CALLER'S OWN `caseId` WINS WHENEVER IT ANSWERS, which is what keeps this
+       a resolution aid rather than a wall: a reader who already knows which case
+       they mean passes it and is served, and only a reader who has not said is
+       asked. That ordering matters — refusing someone who DID say would be a fence
+       tighter than its rule.
+  
+       IT NEVER REFUSES AN EMPTY LIST. A finding in no case at all is not ambiguous,
+       it is loose, and the loose arm further down is what answers it — refusing
+       here would break the doorbell's promise that ratified bytes answer. */
+  #resolveOneCase(bundleId, list, namedCase = null) {
+    const rows = list || [];
+    if (!rows.length) return { ok: true, pick: null };
+    const named = String(namedCase ?? "").trim();
+    if (named) {
+      const mine = rows.filter((x) => x.case_id === named);
+      if (mine.length) return { ok: true, pick: this.#soleCase(mine) };
+    }
+    const sole = this.#soleCase(rows);
+    if (sole) return { ok: true, pick: sole };
+    const cases = [...new Set(rows.map((x) => x.case_id))].sort();
+    return {
+      ok: false,
+      reason: "FINDING_IN_SEVERAL_CASES",
+      target: bundleId,
+      cases,
+      memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
+      detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion \u2014 so this read cannot choose one for you. Ask again naming the case you mean.`
+    };
   }
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
        RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
-       `#caseOf(bundleId, edition)` above takes a CASE edition and is still exactly
+       `#casesOf(bundleId, edition)` above takes a CASE edition and is still exactly
        right when a caller holds one. What its callers actually held, in four of
        the five places it was used, was a `published_bundles` row — whose `edition`
        is the FINDING'S, and passing that as the case's is the same conflation
@@ -38744,28 +38900,89 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        The fallback is the pre-CASE-3 row whose pin is honestly NULL, and for those
        rows the finding's edition IS the case's, which is the model they were
        written under.
-       ORDER BY edition DESC LIMIT 1 and it is a real bound, not a formality: one
-       sha can in principle be pinned by more than one case edition, so the newest
-       membership answers. Nothing writes that shape today — every member
-       re-publishes at each edition and mints a new sha — and the day something
-       does, this returns the most recent claim rather than an arbitrary one.
+       IT USED TO SAY `ORDER BY edition DESC LIMIT 1`, described as a real bound
+       rather than a formality: one sha can in principle be pinned by more than one
+       case edition, so the newest membership answered. Beside it stood the sentence
+       that turned out to be the most useful in the file — *"Nothing writes that
+       shape today"* — and CASE-6 pointed it at the fence that kept it true.
   
-       CASE-6, 2026-09-10: "NOTHING WRITES THAT SHAPE TODAY" IS LOAD-BEARING AND IS
-       NOW POINTED AT THE DECISION THAT KEEPS IT TRUE. The reason nothing writes it
-       is `FINDING_IN_ANOTHER_CASE` in `publishCase()`, which CASE-6 measured and
-       deliberately KEPT — see the block at that refusal for the count (11 sites in
-       the class, 9 of them scalar like this one) and for what lifting it would owe.
-       This helper is one of the nine. If that fence is ever lifted, the sentence
-       above stops being true and this function starts answering a set-valued
-       question with its newest element, which reads as an answer and is a guess.
-       The two must move together; they are cross-referenced so they cannot drift. */
-  #caseOfSha(bundleId, bundleSha, fallbackEdition = null) {
-    const r = bundleSha ? this.#one(`SELECT case_id, edition FROM published_case_members
-                   WHERE bundle_id=? AND version_sha=? ORDER BY edition DESC LIMIT 1`, bundleId, bundleSha) : null;
-    if (r) return { case_id: r.case_id, edition: Number(r.edition) };
-    const legacy = fallbackEdition != null ? this.#one(`SELECT case_id, edition FROM published_case_members
-                   WHERE bundle_id=? AND edition=? AND version_sha IS NULL`, bundleId, fallbackEdition) : null;
-    return legacy ? { case_id: legacy.case_id, edition: Number(legacy.edition) } : null;
+       ===== D-309, 2026-09-10: SITES 8 AND 9 OF CASE-6's NINE, AND THE SENTENCE IS
+       NOW FALSE ON PURPOSE. `FINDING_IN_ANOTHER_CASE` is gone, so something DOES
+       write that shape: a finding can be pinned by case A and case B at one hash,
+       which is precisely what DEC-72 clause 6 rules it may be. The cross-reference
+       did its job — the two moved together, in one item, and neither drifted.
+  
+       **THE DECISION HERE IS ALL MEMBERSHIPS, RETURNED AS AN ARRAY, AND IT IS NOT
+       A CHOICE BETWEEN SHAPES.** The old comment already diagnosed what would
+       happen if this stayed scalar past the fence: it *"starts answering a
+       set-valued question with its newest element, which reads as an answer and is
+       a guess."* This helper has five callers and they want three different things
+       — `publishedList` and `publishedEditions` want to REPORT every membership,
+       `publishedCase`'s loose arm wants the BOOLEAN "in no case at all", and
+       `publishedCase`'s resolution arms want to serve ONE case and must refuse
+       rather than pick when there are two. An array serves all three; a scalar
+       serves none of them honestly. Each caller's decision is argued at its own
+       site, because deciding them here is how one reader's convenience becomes
+       another reader's overclaim.
+  
+       THE LEGACY FALLBACK KEEPS ITS MEANING AND ITS ORDER: pre-CASE-3 rows whose
+       pin is honestly NULL, for which the finding's edition IS the case's, because
+       that is the model they were written under. It is consulted only when the pin
+       answers nothing, exactly as before. */
+  /* D-309: SITE 2's QUERY, LIFTED OUT OF `publish()` AND PUT BESIDE ITS SIBLINGS,
+       AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
+       a reader could otherwise take it for evasion, and it is the opposite.
+  
+       `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
+       `#rows(` call and publishes no collection: *"rows came out of the store and
+       this reader could not say what happened to them."* Correcting site 2 put the
+       first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
+       out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
+       the system, which is the state `op=airunlog` was in while a ratchet read
+       green over it.
+  
+       THE OLD CLASSIFICATION WAS AND REMAINS THE TRUE ONE. These rows do NOT reach
+       the wire: they drive a divergence refusal, a per-case flag discharge, and a
+       scalar bar projection, and the act answers with `caseCount` — a number — and
+       nothing else. `publish()` genuinely publishes no collection. The `#rows(` in
+       its body was the only thing making it look otherwise, so the query moved to
+       where the file's other which-case readers already live rather than the
+       roster growing a member that would have been describing the wrong thing.
+  
+       IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
+       by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
+       census asserts the class total has not shrunk — so a query moved out of sight
+       of one walk is still in sight of the one that exists to count it.
+  
+       WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
+       CASE at that case's newest edition holding them — the same collapse every
+       other D-309 site takes, so "how many cases is this member in" has one answer
+       across the file. The JOIN on `published_cases` is unchanged and still does its
+       job: only case editions that exist are membership. */
+  #pinnedCaseEditionsOf(bundleId, bundleSha) {
+    const rels = this.#rows(
+      `SELECT m.case_id, m.edition, m.role FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.bundle_id=? AND m.version_sha=?
+        ORDER BY m.case_id, m.edition DESC`,
+      bundleId,
+      bundleSha
+    );
+    const byCase = [];
+    for (const r of rels) if (!byCase.some((x) => x.case_id === r.case_id)) byCase.push(r);
+    return byCase;
+  }
+  #casesOfSha(bundleId, bundleSha, fallbackEdition = null) {
+    const rows = bundleSha ? this.#rows(`SELECT case_id, edition FROM published_case_members
+                     WHERE bundle_id=? AND version_sha=? ORDER BY case_id, edition`, bundleId, bundleSha) : [];
+    if (rows.length) return rows.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
+    const legacy = fallbackEdition != null ? this.#rows(
+      `SELECT case_id, edition FROM published_case_members
+                     WHERE bundle_id=? AND edition=? AND version_sha IS NULL ORDER BY case_id`,
+      bundleId,
+      fallbackEdition
+    ) : [];
+    return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
   /* REC-22: which of these ids have a published edition, and what each one FROZE
      -- the one indexed lookup that lets the public read path say, per basis leg,
@@ -38893,7 +39110,18 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         title: r.title,
         bundle_sha: r.bundle_sha,
         ratified_at: r.ratified_at,
-        case_id: this.#caseOf(r.bundle_id, r.edition),
+        /* D-309: **ALL** OF THEM. This registry is per FINDING and stays per
+           finding (the header above), and a finding's case membership is now a
+           set — so `case_ids` carries every one and `case_id` keeps its old name
+           as the sole membership or null. Nothing in the check catalog reads
+           either key today (measured: zero hits for this registry's `case_id` in
+           `checks/bio-checks.mjs`), so the correction is to the shape rather than
+           to a live gate — which is why it is worth making now, before something
+           starts reading a field that would have been quietly guessing. */
+        case_ids: this.#casesOf(r.bundle_id, r.edition),
+        case_id: this.#soleCase(
+          this.#casesOf(r.bundle_id, r.edition).map((c) => ({ case_id: c, edition: r.edition }))
+        )?.case_id ?? null,
         capture: byAxis.capture || null,
         connection: byAxis.connection || null
       };
@@ -39901,7 +40129,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      formed, and the refusal itself when it is not, so the caller's `return` is
      the only place either verdict can be acted on. */
   #refusePairComposed(out) {
-    const refusal5 = (code, detail) => {
+    const refusal6 = (code, detail) => {
       const row = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -39915,30 +40143,30 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!out || out.ok !== true) return null;
     for (const k of _Store.#PAIR_COMPOSED_KEYS)
       if (Object.prototype.hasOwnProperty.call(out, k))
-        return refusal5(
+        return refusal6(
           "VERSION_STRENGTH_COMPOSED",
           `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure standing for both axes. Strength is a PAIR over two populations \u2014 the capture axis and the connection axis \u2014 and there is no value that is both.`
         );
     const pair = out.pair;
     if (!pair || typeof pair !== "object")
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_COMPOSED",
         "this answer carries no pair at all, so whatever it reports is not the two measurements this record makes."
       );
     const keys = Object.keys(pair).sort();
     const want = [..._Store.STRENGTH_AXES].sort();
     if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_COMPOSED",
         `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. Two populations, two answers, and nothing beside them that reads as a summary of both.`
       );
     if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer does not state which readings it was computed over. Every answer says so on its face \u2014 the record's own as plainly as a view somebody constructed \u2014 because absence of the line is exactly what makes the two indistinguishable."
       );
     if (!Array.isArray(out.state_set) || !out.state_set.length)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer carries no machine-readable state set beside its sentence, so a consumer would have to parse prose to learn what it counted."
       );
@@ -40037,7 +40265,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  makes no version current. */
   versionStrength(a = {}) {
     const args = a || {};
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row2 = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -40051,12 +40279,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     };
     const inq = String(args.id ?? "").trim();
     if (!inq)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_NO_INQUIRY",
         "this answers for ONE question: pass id=<INQ-\u2026>. A strength belongs to a question's reading of its evidence, and there is no default question."
       );
     if (normalizeType(OBJECT_TYPES[inq.split("-")[0]]) !== "inquiry")
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not a question, so it holds no readings of evidence and has no strength to report.`,
         { inquiry: inq }
@@ -40064,14 +40292,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const rawStates = args.states == null || args.states === "" ? null : Array.isArray(args.states) ? args.states : String(args.states).split(",");
     const asked = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
     if (asked && asked.length > _Store.VERSION_STRENGTH_STATES_MAX)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_TOO_MANY_STATES",
         `${asked.length} kinds of reading were named and this record has ${_Store.VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
         { inquiry: inq, limit: _Store.VERSION_STRENGTH_STATES_MAX }
       );
     const unknown = asked ? asked.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_UNKNOWN_STATE",
         `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: ${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.`,
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal }
@@ -40084,7 +40312,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ...seen.args
     );
     if (!present)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is no reading of it to measure.",
         { inquiry: inq }
@@ -40094,7 +40322,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const current = project ? this.#currentVersionOf(project, inq, args.viewer ?? null) : null;
     const name = wantVersion || (current ? current.version : "");
     if (!name)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_NO_VERSION",
         project ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is no default reading. Name one explicitly to measure it.` : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-\u2026>) so the reading it stands on can be used. There is no default reading here.",
         { inquiry: inq, project: project || null }
@@ -40106,13 +40334,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       name
     );
     if (!row)
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_NO_SUCH_VERSION",
         `no reading named '${name.slice(0, 60)}' belongs to ${inq}.` + (current && current.version === name ? ` ${project.slice(0, 60)} points at it, so the pointer has outlived the reading it names.` : ``),
         { inquiry: inq, version: name }
       );
     if (!stateSet.includes(row.state))
-      return refusal5(
+      return refusal6(
         "VERSION_STRENGTH_STATE_EXCLUDED",
         `'${name.slice(0, 60)}' is ${row.state} and this answer counts ${stateSet.join(", ")}. Ask again naming ${row.state} among the states to see what it would come to \u2014 the answer will say on its face that it is a view you constructed and not what this record stands on.`,
         { inquiry: inq, version: name, version_state: row.state, state_set: stateSet }
@@ -40696,7 +40924,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
   /** op=suggest — the investigative session's ONE write (IS-4 / §4 group 2). */
   suggestVersion(a = {}) {
     const args = a || {};
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row = SUGGEST_CHECKS[code];
       return {
         ok: false,
@@ -40711,19 +40939,19 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const str = (x) => typeof x === "string" && x.trim() !== "" ? x.trim() : null;
     const target = String(args.target ?? "").trim();
     if (!target)
-      return refusal5(
+      return refusal6(
         "SUGGEST_NO_TARGET",
         "a suggestion is a reading of ONE question's evidence: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "inquiry")
-      return refusal5(
+      return refusal6(
         "SUGGEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so there is nothing under it for a version to be a version of.`,
         { target }
       );
     const kind = String(args.kind ?? "").trim();
     if (!Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, kind))
-      return refusal5(
+      return refusal6(
         "SUGGEST_UNKNOWN_KIND",
         `'${kind.slice(0, 40) || "(none)"}' is not one of \xA79's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. The set is closed because \xA715's empty-run instrument needs an object to count \u2014 without 'level-empty' a run that honestly found nothing is indistinguishable from a run that emitted nothing.`,
         { target, kinds: Object.keys(SUGGEST_KINDS) }
@@ -40736,7 +40964,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       ...gate.args
     );
     if (!b)
-      return refusal5(
+      return refusal6(
         "SUGGEST_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is nothing to add a reading to.",
         { target }
@@ -40744,14 +40972,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow)
-      return refusal5(
+      return refusal6(
         "SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
         { target, run: run || null }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return refusal5(
+      return refusal6(
         "SUGGEST_NO_DOCUMENT",
         "this question has no readable file, so no reading can be added to it.",
         { target }
@@ -40762,14 +40990,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const name = String(args.name ?? "").trim();
     const nameWritten = _Store.#fmSafe(name);
     if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))
-      return refusal5(
+      return refusal6(
         "SUGGEST_NAME_TAKEN",
         `'${name.slice(0, 60)}' already names a reading of ${target}. \xA76 rule 2: a version name is unique WITHIN its inquiry, and derived_from reads by name.`,
         { target, name, known: existing.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
       );
     const legsIn = Array.isArray(args.legs) ? args.legs : [];
     if (legsIn.length > _Store.SUGGEST_LEGS_MAX)
-      return refusal5(
+      return refusal6(
         "SUGGEST_TOO_MANY_LEGS",
         `${legsIn.length} legs were submitted and a version may carry ${_Store.SUGGEST_LEGS_MAX}. The bound is PUBLISHED here rather than applied silently, so a caller splits the reading rather than guessing what fitted.`,
         { target, legs: legsIn.length, limit: _Store.SUGGEST_LEGS_MAX }
@@ -40777,7 +41005,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const level = str(args.level);
     const observedAt = str(args.observed_at);
     if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
-      return refusal5(
+      return refusal6(
         "SUGGEST_EMPTY_LEVEL_UNSTATED",
         `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
         { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS }
@@ -40871,7 +41099,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       "affirmed"
     ].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (forbidden.length)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_UNWRITABLE_STATE",
         `a suggestion is born in state 'suggested' and carries nothing else about what has been decided about it, and this submission set: ${forbidden.join(", ")}. Every one of those is a member act (\xA76 rule 4) reachable only through op=versionaccept and its five siblings.`,
         { target, name, fields: forbidden }
@@ -40883,7 +41111,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredParts = [...new Set(declared)];
     const singlePart = declaredParts.length === 1 && declared.length === 1 && legsIn.length > 0;
     if ((declared.length || needsPartition) && (!who || isMachineIdentity(who) && !singlePart))
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_UNWRITABLE_STATE",
         `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying a part of an argument would carry the answer on its own is an authored judgment a named member signs for (C-25.6). A machine COMPOSES a reading and does not assert its structure \u2014 it may put everything it rests on into ONE part, where there is nothing to assert because there is no maximum to take, and it may still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }
@@ -40897,7 +41125,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     for (let i = 0; i < legsIn.length; i++)
       if (legsIn[i] && legsIn[i].note !== void 0 && legsIn[i].note !== null && legsIn[i].note !== "" && isBoilerplate(legsIn[i].note)) filler.push(`the note on leg ${i}`);
     if (filler.length)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_BOILERPLATE",
         `${filler.join(", ")} carries filler rather than an account of anything. \xA76 rule 1 holds a version's description to a commit message's standard \u2014 what changed and why \u2014 because it is what survives a conversation that was deliberately not kept (\xA710).`,
         { target, name, fields: filler }
@@ -40924,7 +41152,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_LEG_UNREACHABLE",
         `${unreachable.length} of ${legsIn.length} legs cannot be reached at the address given: ${unreachable.map((u) => `${u.target ?? "(none)"} \u2014 ${u.why}`).join("; ")}. A type check would have passed every one of these, which is D-168 exactly.`,
         { target, name, legs: unreachable }
@@ -40951,7 +41179,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredLabels = [...new Set(declared)].sort();
     const partitionDisagrees = JSON.stringify(usedLabels) !== JSON.stringify(declaredLabels);
     if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_PAIR_DOES_NOT_COMPUTE",
         pairError ? `the arithmetic could not be run over this reading: ${pairError}` : partitionDisagrees ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version CARRIES its own structure (\xA73), so the two have to be the same set \u2014 otherwise the maximum is taken over a part nobody declared, or a declared part holds nothing.` : `the pair did not resolve on both axes: capture=${pair?.capture?.state ?? "(none)"}, connection=${pair?.connection?.state ?? "(none)"}.`,
         {
@@ -40966,13 +41194,13 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const originsComplete = ind.complete !== false;
     const shared = ind.shared;
     if (ind.checked && !ind.complete)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `tracing the separately sufficient parts of this reading back to their upstream material reached the published bound of ${OMAX} per step, so independence is UNDETERMINED rather than established. D-129: not found and did not finish looking are different facts, and only one of them licenses putting this forward.`,
         { target, name, limit: OMAX, origins_complete: false }
       ));
     if (shared.length)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_BRANCHES_NOT_INDEPENDENT",
         `${shared.length} pair(s) of separately sufficient parts trace to the same upstream material: ${shared.map((s) => `'${s.a}' and '${s.b}' through ${s.through.join(", ")}`).join("; ")}. \xA712 takes the MAXIMUM across them, so treating them as separate overstates the finding \u2014 D-195. A named member may still affirm they are genuinely separate at the accept ceremony; a machine composing at volume may not.`,
         { target, name, shared }
@@ -41002,14 +41230,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       _Store.BASIS_VERSIONS_LIMIT_MAX + 1
     );
     if (held.length > _Store.BASIS_VERSIONS_LIMIT_MAX)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `${target} holds more than ${_Store.BASIS_VERSIONS_LIMIT_MAX} readings, which is the bound this comparison publishes, so whether this one differs in substance from every existing one was not settled. A duplicate the comparison never reached would read exactly like a new reading.`,
         { target, name, limit: _Store.BASIS_VERSIONS_LIMIT_MAX }
       ));
     const twin = held.find((r) => substanceOf(r.composition) === mine);
     if (twin)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_NOT_DIFFERENT",
         `this reading is identical in substance to '${twin.name}', which ${target} already holds. \xA76 rule 8 is the write gate: a run adds its output as a new version ONLY IF it differs in substance from every existing one. Compared over the same canonical composition the freeze compares, with the name and the parentage excluded \u2014 those are how a reading is addressed, not what it says.`,
         { target, name, same_as: twin.name }
@@ -41059,7 +41287,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     if (text !== null && gRows.length) text = _Store.#appendFmRows(text, "basis_version_grounds", gRows);
     if (text !== null && lRows.length) text = _Store.#appendFmRows(text, "basis_version_legs", lRows);
     if (text === null)
-      return remember(refusal5(
+      return remember(refusal6(
         "SUGGEST_UNWRITABLE_DOCUMENT",
         "this question's version block is in a shape the restricted frontmatter grammar cannot be extended in place, so nothing was written. The grammar has no escapes and a guess would corrupt the document silently.",
         { target, name }
@@ -41380,7 +41608,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  reading carefully is a fence that grows a hole nobody notices. */
   captureRequest(a = {}) {
     const args = a || {};
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row = CAPTURE_REQUEST_CHECKS[code];
       return {
         ok: false,
@@ -41395,14 +41623,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow || runRow.status !== "running")
-      return refusal5(
+      return refusal6(
         "CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run || null }
       );
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
-      return refusal5(
+      return refusal6(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a session may reach to "areas that anybody can go through", and this address is not one on its face.`,
         { address: address || null }
@@ -41414,7 +41642,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       host = null;
     }
     if (!host)
-      return refusal5(
+      return refusal6(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
@@ -41427,7 +41655,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...gate.args
     ) : null;
     if (!b || normalizeType(b.object_type) !== "inquiry")
-      return refusal5(
+      return refusal6(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
         { target: target || null }
@@ -41440,13 +41668,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...gate.args
       );
       if (!lb || normalizeType(lb.object_type) !== "inquiry")
-        return refusal5(
+        return refusal6(
           "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
           `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
           { lead_inquiry: lead }
         );
       if (lead === target)
-        return refusal5(
+        return refusal6(
           "CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
           `this request names ${lead.slice(0, 60)} as both the question it was made under and the question the evidence bears on. That is ordinary evidence for this question, which needs no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one pointing back here would file a notification about this question saying evidence for a different one was found.`,
           { lead_inquiry: lead, target }
@@ -41454,7 +41682,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     }
     const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (brought.length)
-      return refusal5(
+      return refusal6(
         "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
         `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
         { fields: brought }
@@ -41965,7 +42193,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     note = null,
     at = null
   } = {}) {
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -41981,20 +42209,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
-      return refusal5(
+      return refusal6(
         "AI_CREDENTIAL_MINT_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.` : "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
         { who: who || null }
       );
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${String(principalMember ?? who).trim()}` : null;
     if (!principal || principal === "member:")
-      return refusal5(
+      return refusal6(
         "AI_CREDENTIAL_PRINCIPAL_UNSTATED",
         `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for the group, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.`,
         { principalKind: kind || null }
       );
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
-      return refusal5(
+      return refusal6(
         "AI_CREDENTIAL_IDENTITY_TAKEN",
         id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.` : "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
         { tokenId: id || null }
@@ -42021,7 +42249,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
   aiCredentialRevoke({ who = null, tokenId = null, at = null } = {}) {
-    const refusal5 = (code, detail, extra) => {
+    const refusal6 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -42036,14 +42264,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
-      return refusal5(
+      return refusal6(
         "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a machine name there would record the group withdrawing an authority nobody in the group decided to withdraw.` : "no member is named on this act, and a withdrawal nobody authored is not one.",
         { who: who || null }
       );
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
     if (!row)
-      return refusal5(
+      return refusal6(
         "AI_CREDENTIAL_UNKNOWN",
         `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.`,
         { tokenId: id || null }
@@ -43209,14 +43437,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const captured = done.filter((q) => q.state === "captured").length;
       const refused = done.length - captured;
       const bad = this.ctx.storage.transactionSync(() => {
-        const refusal5 = this.#aiRunAppend(r.run, {
+        const refusal6 = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
           state: this.#aiRunSearchState(r.run, false),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting`
         }, iso2, 0);
-        if (refusal5) return refusal5;
+        if (refusal6) return refusal6;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
         for (const q of done)
           this.sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso2, q.request);
@@ -43488,7 +43716,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     viewer = null,
     limit = null
   } = {}) {
-    const refusal5 = (code, detail) => {
+    const refusal6 = (code, detail) => {
       const row = AI_RUNS_CONTEXT_CHECKS[code];
       return {
         ok: false,
@@ -43503,17 +43731,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
     const id = contextId == null ? "" : String(contextId).trim();
     if (!type)
-      return refusal5(
+      return refusal6(
         "AI_RUNS_NO_CONTEXT_TYPE",
         `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
       );
     if (!kinds.includes(type))
-      return refusal5(
+      return refusal6(
         "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
         `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
       );
     if (!id)
-      return refusal5(
+      return refusal6(
         "AI_RUNS_NO_CONTEXT_ID",
         `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once \u2014 a different question, not a wider answer.`
       );
@@ -46444,6 +46672,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
              search params as the one-line form a probe can reach. */
           targets: (body || {}).targets || url.searchParams.get("targets") || null,
           caseId: url.searchParams.get("caseId") || (body || {}).caseId || null,
+          /* D-309 / IC-74: REC-44's mint route, made sayable. Reachable from the
+             body AND from the search params, like `targets` above and for the
+             same reason — a probe must be able to drive it in one line. The
+             string forms are spelled out rather than taken as truthiness, so
+             `newCase=false` on a query string means false instead of meaning
+             "a non-empty string, therefore yes". */
+          newCase: (() => {
+            const q = url.searchParams.get("newCase");
+            const v = q != null ? q : (body || {}).newCase;
+            return v === true || v === "true" || v === "1" || v === "yes";
+          })(),
           /* CASE-2 / DEC-72: the PUBLISHING PROJECT. On the search params as the
              one-line form a probe can reach, exactly as `targets=a,b` is, with
              the body taking over when the caller has one. `roles` has NO search
@@ -46504,6 +46743,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         publishedcase: () => this.publishedCase({
           id: url.searchParams.get("id"),
           edition: url.searchParams.get("edition"),
+          /* D-309 / IC-74: the reader's answer to `FINDING_IN_SEVERAL_CASES`.
+             `publishedCase` has taken a `caseId` for as long as it has had four
+             resolution routes, but NOTHING PLUMBED IT THROUGH THE OP — measured
+             here, not assumed: the suite drove the refusal, then drove the way
+             out of it, and the way out answered as though nothing had been named.
+             A resolution aid a caller cannot reach is not one. */
+          caseId: url.searchParams.get("caseId") || null,
           sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null
         }),
         /* REC-44: internal only, and deliberately NOT an op. The case container's
@@ -48151,7 +48397,7 @@ function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
 }
 function aiScopeDeclaration(writes) {
-  const refusal5 = (code, detail, extra) => {
+  const refusal6 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -48165,13 +48411,13 @@ function aiScopeDeclaration(writes) {
   const asked = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
   for (const op of asked) {
     if (!Object.prototype.hasOwnProperty.call(OPS, op))
-      return refusal5(
+      return refusal6(
         "AI_SCOPE_UNKNOWN_OP",
         `'${op.slice(0, 60)}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).`,
         { op }
       );
     if (!aiReachesAsMember(OPS[op]))
-      return refusal5(
+      return refusal6(
         "AI_SCOPE_BEYOND_MEMBER_REACH",
         `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null }
@@ -48180,7 +48426,7 @@ function aiScopeDeclaration(writes) {
   return { writes: [...new Set(asked)].sort() };
 }
 function aiTaskScope(cred, op, spec) {
-  const refusal5 = (code, detail, extra) => {
+  const refusal6 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -48192,19 +48438,19 @@ function aiTaskScope(cred, op, spec) {
     } };
   };
   if (cred.revoked)
-    return refusal5(
+    return refusal6(
       "AI_CREDENTIAL_REVOKED",
       `credential '${String(cred.tokenId).slice(0, 60)}' was withdrawn on ${cred.revokedAt} by ${cred.revokedBy}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.`,
       { tokenId: cred.tokenId, revokedAt: cred.revokedAt }
     );
   if (!aiReachesAsMember(spec))
-    return refusal5(
+    return refusal6(
       "AI_BEYOND_TASK_SCOPE",
       `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }
     );
   if (spec.mutating && !cred.writes.includes(op))
-    return refusal5(
+    return refusal6(
       "AI_BEYOND_TASK_SCOPE",
       `credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope '${cred.taskScope}', whose writes are ${cred.writes.length ? cred.writes.join(", ") : "(none)"}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }
@@ -48699,6 +48945,7 @@ var index_default = {
         const q = new URLSearchParams();
         if (id) q.set("id", id);
         if (url.searchParams.get("edition")) q.set("edition", url.searchParams.get("edition"));
+        if (url.searchParams.get("caseId")) q.set("caseId", url.searchParams.get("caseId"));
         if (/^[0-9a-f]{64}$/.test(shaParam)) q.set("sha256", shaParam);
         const cOut = await doAnswer(stub2.fetch(`http://do/publishedcase?${q}`));
         if (!cOut.answered) return storeSilent("publishedcase");

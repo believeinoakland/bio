@@ -13,16 +13,19 @@ is in the register entry.
 > deleted because `decided.mjs` and `mintid` both scan `docs/archive/**`: every ruling
 > below stays findable and every id below stays allocated.
 >
-> **ONE CLAUSE IS NOT FULLY BUILT AND IT IS NAMED HERE RATHER THAN IN THE COMMIT THAT
-> FILED THIS AWAY.** Clause 6 — *a finding can serve many cases* — is built in the
-> FORMAT (CASE-5's flip made it representable) and on the SURFACE (CASE-6 renders a
-> finding's memberships as a list, correct for any n) and is **still REFUSED by the
-> plane**: `FINDING_IN_ANOTHER_CASE` stands. CASE-6 measured that fence rather than
-> deferring on judgement and kept it deliberately — nine scalar "which case is this
-> finding in" readers in `store.mjs` are correct only while it holds, so lifting it alone
-> would convert them into silent guesses over a set. **`DEBT.md` D-309** carries the
-> count, the cost and the closing move; the reasoning in full is at the refusal's own
-> site. A second, smaller gap is D-310 (`op=affordances` offers `publish` without the
+> **THE ONE CLAUSE THIS BANNER NAMED AS UNBUILT IS NOW BUILT — CLAUSE 6, CLOSED
+> 2026-09-10 BY D-309.** The banner read: *"Clause 6 — a finding can serve many cases —
+> is built in the FORMAT … and on the SURFACE … and is still REFUSED by the plane:
+> `FINDING_IN_ANOTHER_CASE` stands."* That was the honest state when this document was
+> filed away, and it is kept rather than rewritten because **a stated limit doing exactly
+> the work a stated limit is for is the reason the gap got an item at all**. CASE-6
+> measured the fence rather than deferring on judgement and kept it — nine scalar "which
+> case is this finding in" readers in `store.mjs` were correct only while it held —
+> and D-309 corrected all nine, each decided at its own site, minted
+> `CASE_IDENTITY_AMBIGUOUS` (C-44.1) for the derivation that could no longer be
+> determinate, and removed the fence LAST. Wire change: **IC-74**. The SURFACE did not
+> move, exactly as CASE-6 predicted when it built that half as a list correct for any n.
+> A second, smaller gap remains: D-310 (`op=affordances` offers `publish` without the
 > owner condition the store enforces).
 >
 > **Saying so in the banner is the point.** Archiving a design as finished with a clause
