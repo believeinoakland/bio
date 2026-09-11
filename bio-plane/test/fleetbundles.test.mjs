@@ -7,6 +7,11 @@
    (2b) **THE CROSS-TREE ARM, and it is the one nobody would have looked for.** THREE of `pdf-worker`'s six build inputs are the PLANE's (`../bio-plane/src/pdfstructure.mjs`, `subresources.mjs`, `cpu.mjs`). Append one export to `bio-plane/src/pdfstructure.mjs` -> **42 pass, 1 FAIL, exit 1**, naming `pdf-worker` and `../bio-plane/src/pdfstructure.mjs`; `agent-worker` held, as declared, because it does not import the plane. A change to the plane stales a fleet member's artifact, from a directory whose author has no reason to think about `pdf-worker`.
    (3) **THE ARTIFACT ITSELF EDITED.** Append one line to `agent-worker/dist/agent-worker.bundled.mjs` -> **40 pass, 3 FAIL, exit 1**, naming the manifest mismatch (`does not match its own manifest`) and failing byte-identity; pdf-worker held. The manifest is not a second opinion about the artifact; it is a hash OF it.
    (4) **THE GUARD DELETED.** Remove the `bundle` block from `pdf-worker/fleet-member.json` -> **30 pass, 5 FAIL, exit 1**, naming `pdf-worker: declares no `bundle` block`. **TWO GATES FIRED OVER ONE ARM and both are recorded rather than claimed as one:** the per-member naming AND the GUARDED FLOOR. Discovery is the only evidence, so a member that stops declaring itself must not stop existing (VF-3's lesson, one file over).
+   ---- FL-10's ARMS (D-298: the plane's own bundle gets the guard), RUN 2026-09-10 IN WORKTREE bio-worktrees/FLEET, APPENDED — no FL-9 arm edited. **BASELINE 56 pass / 0 fail, exit 0** before each arm.
+   (6) **FL-10's OWN ARM, AND THE TREE-SHAKE PAIR IN ONE** — append one export to `bio-plane/src/pdfstructure.mjs` (NON-entry) and rebuild nothing -> **54 pass, 2 FAIL, exit 1**: bio-plane's input-hash arm naming `src/pdfstructure.mjs` AND pdf-worker's cross-tree arm naming `../bio-plane/src/pdfstructure.mjs` — the SAME plane edit stales BOTH committed artifacts by name. **The plane's BYTE arm stayed GREEN, as declared: esbuild tree-shakes the unused export, so byte-identity alone would have passed this real source change** — FL-9's measurement holding on the plane, which is FL-10's NC (2) satisfied by measurement rather than assertion. agent-worker held.
+   (6b) **THE SAME CHANGE ON THE PLANE'S ENTRY** (`src/index.mjs`, exports not tree-shaken) -> **52 pass, 4 FAIL, exit 1**: input-hash, byte-identity, the manifest-sha arm, AND the comment-only sensitivity assertion — the fourth is the same change seen by the sensitivity probe, not a second cause. Both members held.
+   (7) **THE GENERATED-INPUT LOOP** — append one HTML comment to `tools/sign-release.html`, re-render nothing -> **55 pass, 1 FAIL, exit 1**, EXACTLY the render assertion naming the stale render; every input-hash and byte arm held, because no hashed input moved. This is the staleness class the manifest cannot see and the arm exists for.
+   (8) **OVER-STRICTNESS, PLANE HALF** — a legitimate `npm run build` of the unchanged plane must leave the tree byte-identical (`git status --porcelain` empty; run after the commit, like (5a)) and the suite green at the baseline figure.
    (5) **OVER-STRICTNESS, and these must all PASS.** (a) Rebuild BOTH members from unchanged sources — a legitimately rebuilt, byte-identical bundle must still pass and the tree must be UNCHANGED afterwards (`git status --porcelain` empty). **RUN AFTER THE COMMIT, deliberately: the tree-unchanged half is only a statement about a clean tree.** (b) A docs-only change must not fail the build — `tools/gates.mjs` derives its doc-facing set from whether a suite's own source or its sibling control mentions the prose directory, and NEITHER of this pair does, so a DOCS-class run does not select this suite at all. **STATED AS THE FENCE IT IS: the DERIVATION is asserted over the real files; a full DOCS-class run of `gates.mjs` was NOT driven from this branch, because the branch's own committed diff makes every classification FULL.** (c) `node scripts/coverage.mjs --strict` exits 0, read from the process's own status.
    ======================================================================== */
 /* THE FLEET'S BUILD GUARD (FL-9, BOB 2026-09-10, answering DIST's DELEGATION).
@@ -63,7 +68,9 @@ import { join } from "node:path";
 import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
+  planeMember,
 } from "../scripts/fleet-bundle.mjs";
+import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../scripts/embed-signpage.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -310,6 +317,75 @@ console.log("\n--- 7 · and the committed bytes really are a Worker: each boots 
       t(`${name}: and it is the version the runtime bound, so the module really initialised`,
         body.version, "bundle-gate");
     } finally { await mf.dispose(); }
+  }
+}
+
+console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because the battery proves the artifact WORKS, never that it MATCHES ---");
+{
+  /* D-298, measured by DIST: `dist/bio-plane.bundled.mjs` sat 114 commits stale
+     against `src` while the battery stayed green — `bundle.test.mjs` livefires
+     the artifact, which proves it WORKS and says nothing about whether anyone
+     ships from it. The plane is NOT a fleet member (it holds the store; the
+     member rules would refuse it), so it arrives as `planeMember()`'s descriptor
+     and the member walk, `GUARDED_FLOOR` and `battery.mjs`'s census all keep
+     their meaning. Booting the artifact is NOT re-proved here — that is
+     `bundle.test.mjs`'s whole job, one file over. */
+  const plane = planeMember(REPO_ROOT);
+
+  /* The committed bytes are read from disk BEFORE any plane build runs — the
+     same independence rule the members get at line one of this file. */
+  let planeCommitted = null;
+  try { planeCommitted = readFileSync(join(plane.abs, plane.bundle.outfile)); } catch { /* named below */ }
+  t("bio-plane: the committed artifact is readable", !!planeCommitted, true);
+
+  const { findings: planeStatic, manifest: planeManifest } = verifyStatic(plane);
+  show(planeStatic);
+  t("bio-plane: no staleness, no recipe drift, no unresolvable import — THE D-298 ARM, dependency-free",
+    planeStatic, []);
+  t("bio-plane: the manifest records first-party inputs for the whole plane, not a token few",
+    (planeManifest?.inputs || []).length >= 40, true);
+  t("bio-plane: and vendors NOTHING — the byte arm is runnable on any checkout, so it can never skip",
+    (planeManifest?.vendoredInputs || []).length, 0);
+
+  /* THE GENERATED-INPUT LOOP the input hashes cannot see: `src/signpage.mjs` is
+     committed and hashed like any source, but it is GENERATED from
+     `tools/sign-release.html` — so a changed page whose render was never re-run
+     leaves every input hash true and the next build different. The gate closes
+     it by rendering IN MEMORY (one expression, imported from the script that
+     writes it) and comparing. Nothing writes. */
+  t("bio-plane: committed src/signpage.mjs IS the render of tools/sign-release.html — a changed page with a stale render fails HERE, not at the next build",
+    renderSignpage(readFileSync(SIGNPAGE_SRC, "utf8")), readFileSync(SIGNPAGE_OUT, "utf8"));
+
+  if (planeCommitted) {
+    const { runnable, reason } = freshBuildRunnable(plane, planeManifest || {});
+    /* No vendored inputs was asserted above, so a skip here is impossible by
+       construction — asserted rather than assumed. */
+    t(`bio-plane: the byte-identity arm is runnable (${reason || "no vendored inputs"})`, runnable, true);
+    if (runnable) {
+      const { findings, built } = await verifyFresh(plane, planeCommitted);
+      show(findings);
+      t(`bio-plane: a fresh build of ${plane.bundle.entry} is byte-identical to the committed ${plane.bundle.outfile}`,
+        findings, []);
+      t("bio-plane: and the manifest's sha256 is that same build's", built.sha256, planeManifest?.sha256);
+      console.log(`        bio-plane: ${built.bytes.length} B · sha256 ${built.sha256}`);
+
+      /* Sensitivity, both directions — the same pair section 5 proves for the
+         members, proved on the plane because a comparison nobody has seen fail
+         is a comparison nobody has seen. */
+      const mutated = await buildMember(plane, { write: false, mutateEntry: "\nexport const __fl10Probe = \"fl10 independence probe\";\n" });
+      t("bio-plane: a build of a CHANGED entry is NOT the committed artifact",
+        Buffer.compare(mutated.bytes, planeCommitted) === 0, false);
+      t("bio-plane: and the change is visible in the output, so the build really consumed it",
+        mutated.bytes.toString("utf8").includes("fl10 independence probe"), true);
+      const commentOnly = await buildMember(plane, { write: false, mutateEntry: "\n/* fl10 comment-only probe */\n" });
+      t("bio-plane: a COMMENT-only source change bundles byte-identically — so byte-identity alone would MISS it",
+        Buffer.compare(commentOnly.bytes, planeCommitted) === 0, true);
+      t("bio-plane: and the input-hash arm would NOT miss it, because the source's sha256 moved",
+        sha256(readFileSync(join(plane.abs, plane.bundle.entry)) + "\n/* fl10 comment-only probe */\n")
+          !== (planeManifest?.inputs || []).find((i) => i.path === plane.bundle.entry)?.sha256, true);
+    }
+    const left = unresolvableSpecifiers(planeCommitted.toString("utf8"), plane.bundle.external);
+    t("bio-plane: its committed artifact imports nothing outside its declared externals", left, []);
   }
 }
 

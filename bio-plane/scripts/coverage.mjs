@@ -580,42 +580,23 @@ const REGISTER_FLOOR = {
      which these numbers are reproducible by anyone else.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-2's arms, and every figure here is true of this branch alone. */
-  /* RE-DERIVED AT INTEGRATION 2026-09-10 by CONDUCT, and BOTH BRANCHES ASKED FOR
-     THIS IN THEIR OWN WORDS. FL-9 moved these to 868/163/164 and CASE-4 moved them
-     to 865/163/164, each read off a post-commit green run on its own branch, each
-     correct about the tree it could see, and each closing with "CONDUCT RE-DERIVES
-     THESE ON THE MERGED TREE". Neither figure is true of the merged tree: FL-9's
-     branch could not see CASE-4's arms and CASE-4's could not see FL-9's.
-     THE VALUE BELOW IS READ OFF THE MERGED RUN — the only run in which both items
-     exist together — and it is ONE KEY SET, checked for duplicates before writing.
-     That check is not ceremony: six historical keep-both merges left duplicate
-     `arms:` keys here, valid JavaScript where the LAST key silently wins, and once
-     the last was the LOWEST — slack installed in a ratchet whose whole purpose is
-     to have none. A keep-both resolution of THIS conflict would have done it again.
-     The rise is two new suites — `test/fleetbundles.test.mjs` (ten declared arms)
-     and `test/caselifecycle.test.mjs` (seven, with the baseline deliberately NOT an
-     ordinal item, CASE-1's measured lesson about `countArms`). Nothing FELL.
-     ONE RED IS EXPECTED ON THIS TREE AND IS NEITHER ITEM'S: `action-loop.test.mjs`
-     pins a fixture clock at 2026-09-10 and the machine rolled past it. Both workers
-     measured it independently on untouched baselines. It is M0-22. */
+  /* RE-DERIVED AT INTEGRATION 2026-09-10 by CONDUCT — the SECOND three-way floor
+     conflict in one turn, and the reason it keeps happening is structural rather
+     than careless: every parallel item that adds a suite must move this block, and
+     no branch can see another's arms. CONDUCT's tree carried 879/164/165 (FL-9 +
+     CASE-4 + M0-22); origin carried 872/163/164 (FL-10). BOTH ARE HONEST FIGURES
+     FOR TREES THAT NO LONGER EXIST.
+     THE VALUE BELOW IS READ OFF THE MERGED RUN, and the resolution is ONE KEY SET
+     — grep the KEYS, do not read the block. That instruction is written this way
+     because ONE COMMIT AGO I resolved this same conflict by replacing the marked
+     region while the SHARED `classified`/`corpus` lines below it survived, leaving
+     duplicates whose LAST pair was LOWER than measured: slack installed in a
+     ratchet whose whole purpose is to have none, by the edit warning about it.
+     Seventh instance of the hazard, and the tell was the tool printing
+     `classified 164/163` while the file plainly said 164. */
   arms: 879,
   classified: 164,
   corpus: 165,
-  /* THE DUPLICATE `classified`/`corpus` KEYS THAT STOOD HERE FOR ONE COMMIT WERE MINE,
-     2026-09-10, AND THEY ARE THE SEVENTH INSTANCE OF THE HAZARD THE COMMENT ABOVE
-     DESCRIBES. Resolving FL-9's and CASE-4's competing floor blocks, I replaced the
-     conflict region with a full key set while the SHARED lines below it — which were
-     never in conflict — survived untouched. Valid JavaScript; the LAST key wins; and
-     the last pair read 163/164, LOWER than the merged run's measured 164/165. Slack
-     installed in a ratchet whose whole purpose is to have none, by the same edit that
-     wrote the warning about it.
-     IT WAS CAUGHT BY READING THE TOOL'S OWN OUTPUT, not by review: `--strict` printed
-     `classified 164/163 · corpus 165/164` while the file plainly said 164 and 165, and
-     a floor that disagrees with the number you just typed is the tell. **A duplicate
-     object key cannot be seen by reading the value you expect to find** — which is why
-     the check is grep the KEYS, not read the block. Left recorded rather than silently
-     deleted, because seven instances is a property of this block's shape and the next
-     merge conflict here will be the eighth chance. */
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
