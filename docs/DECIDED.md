@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-658 rulings across 67 documents.
+656 rulings across 67 documents.
 
 ## DEC-
 
@@ -1243,12 +1243,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- AMENDED AFTER THE FACT, BECAUSE THE CLASS DID EVENTUALLY NARROW AND THE HONEST ACCOUNT IS THE ONE WRITTEN LAST.** Two more followed, and they are ONE class: **a hand-rolled check of mine returning a FALSE NEGATIVE, inside the act of verification.** I ran `plancheck` from `bio-plane/` and read `MODULE_NOT_FOUND` as…  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:95`
-- MB → 26 KB, a new gate (`plancheck` fails on a stale `DECIDED.md`) and a new tool (`decided.mjs`) I had never run.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:116`
-- — it created `docs/DECIDED.md`, `tools/decided.mjs` and `CORPUS-STUDY.md` there and edited `CLAUDE.md` and `tools/plancheck.mjs`, then withdrew on its own.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:223`
+- checked" — when you close it, those assertions are CORRECTED, never exempted. ### CASE-6 — the closing item, and its `accepts-when` is a CONDITION not a memory It carries the arc's definition of done: **in the SAME TURN it lands**, (1)  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:60`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
