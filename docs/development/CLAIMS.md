@@ -2593,8 +2593,16 @@ paths:
   - `civicos-ui/test/publication-entry.test.mjs` — the fixture gains a NON-OWNER's concluded
     inquiry (the class D-310 narrowed for) and the block-6 assertions that read "absent where the
     act is absent" are CORRECTED at their site with a dated reason, never exempted.
-  - `civicos-ui/test/case6.control.mjs` — three arms appended (`f`, `g`, `h`) for this item; the
-    existing arms a–e are untouched and re-run.
+  - `civicos-ui/test/case6.control.mjs` — three arms appended (`f`, `g`, `h`) for this item; arms
+    `a`, `b`, `c` and `e` untouched and re-run on the merged tree; arm `d` RETIRED at its site
+    with its reason and its replacement named, because the origin/main merge (D-309) DELETED the
+    fence it broke — `FINDING_IN_ANOTHER_CASE`, enacting DEC-72 clause 6 — so the anchor matched
+    zero times. **The retirement is a correction, not an exemption**: the row stays, it says who
+    closed the subject, and it points at `bio-plane/test/multicase.control.mjs`, which D-309
+    shipped to drive the refusal that replaced it. Nothing under `bio-plane/**` is touched. The
+    runner also stops ENDING THE RUN on an arm that fails to arm (that throw had left arms `e`
+    through `h` silently unmeasured) and prints the failing-assertion COUNT with 20 lines instead
+    of 8, so an arm's MUST-NOT-FAIL half is readable.
   - `docs/development/INTERFACE-CHANGES.md` — **IC-75's `Status` block ONLY**: the CONSUMER
     ANSWER this row asks `UI` for by name, and the one word in the standing sentence that
     stops saying `UI` is still awaited. **The RESOLUTION and the version bump are NOT touched

@@ -1,8 +1,9 @@
 /* ============================================================================
-   CASE-6 · THE NEGATIVE CONTROL DRIVER — EIGHT arms plus a baseline (five are
-   CASE-6's own, a–e; UI-57 appended f, g and h on 2026-09-10 when IC-75's
-   measured impact became its own item and the section's gate moved from the ACT
-   to the OBJECT), each armed
+   CASE-6 · THE NEGATIVE CONTROL DRIVER — EIGHT arms plus a baseline, SEVEN of
+   them live (five are CASE-6's own, a–e; UI-57 appended f, g and h on 2026-09-10
+   when IC-75's measured impact became its own item and the section's gate moved
+   from the ACT to the OBJECT; `d` is RETIRED, announced and skipped, because
+   D-309 deleted its subject on purpose — read its row), each armed
    ALONE with every other defence held open, each restore verified by sha256 AND
    by byte-for-byte content compare against a per-arm uniquely-named pristine
    copy, with a byte count printed and a minimum floored.
@@ -172,8 +173,28 @@ const ARMS = {
     expect: "publication-entry RED",
   },
 
-  /* ------------------------------------------------------------------- ARM d */
+  /* ------------------------------------------------------------------- ARM d
+     RETIRED 2026-09-10 BY UI-57, AND CORRECTED AT ITS SITE RATHER THAN DELETED
+     OR EXEMPTED. This arm neutered `FINDING_IN_ANOTHER_CASE` to prove CASE-6's
+     KEEP decision was enforced by something rather than merely written down. On
+     2026-09-10 D-309 enacted DEC-72 clause 6 — *"a finding can serve many cases
+     — across projects and within one"* — and DELETED that fence on purpose,
+     which is the one thing that legitimately ends an arm: not a defect, a
+     DELIBERATE CLOSURE. The arm's anchor now matches zero times, and it was the
+     merged tree's own run that said so rather than a reading.
+     THE COVER DID NOT GO AWAY WITH IT, which is the half worth stating: D-309
+     shipped `bio-plane/test/multicase.control.mjs`, whose arms drive the refusal
+     that replaced the fence (`CASE_IDENTITY_AMBIGUOUS`, C-44) across
+     `multicase.test.mjs` and `caseflip.test.mjs`. A retired arm that left its
+     subject unguarded would be a rule nobody is enforcing; this one hands its
+     subject to a live driver and says where. Nothing here is re-pointed at that
+     refusal, because it is RECORD's ground and already has its own control.
+     WHY THE ROW STAYS: an arm silently deleted is an arm nobody remembers, and
+     the next reader of this file would find a–c, e–h and wonder what d was. */
   d: {
+    retired: "D-309 (2026-09-10) DELETED `FINDING_IN_ANOTHER_CASE` enacting DEC-72 clause 6 — "
+           + "a deliberate closure, not a regression. The subject this arm broke no longer exists, "
+           + "and the refusal that replaced it is driven by `bio-plane/test/multicase.control.mjs`.",
     declare: "THE FENCE THIS ITEM DECIDED TO KEEP IS DRIVEN, NOT BELIEVED. Neuter "
            + "FINDING-IN-ANOTHER-CASE (hyphens deliberate — see app.html) so a finding may be "
            + "published into a second case.\n"
@@ -296,12 +317,29 @@ for (const name of want) {
   if (!A) { console.error(`no such arm: ${name}`); process.exit(2); }
   console.log(`\n================ ARM ${name} ================`);
   console.log(`  DECLARED: ${A.declare}`);
+  /* A RETIRED ARM IS ANNOUNCED AND SKIPPED, NEVER DELETED. Its row stays so the
+     letters do not go silently missing, and its reason says WHO closed the
+     subject and WHERE the cover went. See arm d. */
+  if (A.retired) { console.log(`  RETIRED:  ${A.retired}`);
+                   console.log(`  VERDICT:  NOT RUN — subject deliberately closed`); continue; }
   const file = A.file || A.armFile || null;
   const p = file ? pristine(file, name) : null;
   let results;
   try {
     A.arm();
     results = A.check();
+  } catch (e) {
+    /* AN ARM THAT DID NOT ARM IS A FINDING ABOUT THAT ARM — AND NOT A REASON TO
+       END THE RUN. Added by UI-57 after the merged tree's own run: arm d's anchor
+       had gone (D-309 deleted its subject), the throw propagated, and arms e
+       through h NEVER RAN while the output looked like a driver that had simply
+       stopped. Six arms silently unmeasured because a seventh went stale is the
+       expensive half of this; the arm going stale is the cheap half. The restore
+       still runs — it is in the `finally` below — so the tree is clean either way. */
+    console.log(`  **ARM FAILED TO ARM — a finding about this arm, not about the subject**`);
+    console.log(`      ${String(e && e.message || e).split("\n").join("\n      ")}`);
+    notAsDeclared++;
+    continue;
   } finally {
     if (p) restore(file, p, name);
   }
