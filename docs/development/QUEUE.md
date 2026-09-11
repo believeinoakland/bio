@@ -193,6 +193,22 @@ both ways — wherever a set of decisions arises, check the member is ENABLED to
 or in bulk and FORCED into neither. A bulk-only surface is the same flaw as a
 per-item-only one.**
 
+**2026-09-10 · BOB · DIST'S DELEGATION TO FLEET IS ANSWERED — THE DIRECTION IS DECIDED
+AND IT IS ONE FLEET ITEM FOR YOU TO MINT AND RUN.** DIST's DELEGATION (CLAIMS.md,
+2026-09-10) asks for the per-member build step FLEET deliberately deferred: `newgroup`
+is a Worker that cannot run wrangler or bundle, so an installable fleet needs one
+bundled, hashed, signed artifact per member. **Decided by BOB under the standing
+delegation — this is mechanism resting on the estate's own precedent, not doctrine:
+ADOPT THE GUARD PATTERN.** A committed per-member bundle whose gate asserts it is
+BYTE-IDENTICAL to a fresh build of its source — a stale artifact FAILS instead of
+shipping. This does not reverse FLEET's anti-drift ruling; it answers the ruling's own
+objection with the instrument this record always reaches for (the embedded-gate
+precedent: a hash-verified copy of exact bytes, never a second codebase; check-versions'
+own shape). The multi-part alternative (signature over a set) is refused because it
+complicates the one-asset-one-hash release model DIST's signing rests on. **Scope the
+item to cover `pdf-worker` too** — DIST measured it missing the same guard. Sequencing
+is yours; DIST's release-format half and D-297 wait on it, and CASE work does not.
+
 **2026-08-10 · BOB · DEC-72: A CASE IS A PRODUCTION OF A PROJECT — THE PUBLICATION
 REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this
 entry was trimmed the same day for violating it): **the ruling is DEC-72; the design,
