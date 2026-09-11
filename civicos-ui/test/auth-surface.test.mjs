@@ -60,6 +60,17 @@
  *     r.json()).result})`). The public space is reached with NO credential, and
  *     that is asserted: a published-record screen that quietly authenticated
  *     would be a different product.
+ *     **AND THE MANIFEST FIXTURE COULD NOT REPRESENT THE RECORD IT DRIVES —
+ *     M0-24, 2026-09-10**, measured by arm C of `check-mock-envelope.mjs` rather
+ *     than noticed. `published[]` carried 7 of the plane's 9 columns AND answered
+ *     two keys the plane has never sent; `cases[]` and `caseMembers[]` were absent
+ *     entirely. So a loose ratified finding WITH a frozen pair — REC-49's branch,
+ *     and the reason that correction exists — was outside this fixture's
+ *     vocabulary, and the suite was green against a record it could not describe.
+ *     The fixture is corrected at its site, the corrected shape is PINNED against
+ *     `store.mjs`'s own SELECT in (4b), and both halves of the published list are
+ *     driven in (4c). Without the pin the correction is decoration, which is what
+ *     M0-23 measured when its own control came back green.
  *
  *   5 THE COVERAGE LINE ITSELF. `check-mock-envelope.mjs`'s arm B reports the
  *     ops the harness exercises, and UI-24's accepts-when is that the line MOVED.
@@ -86,7 +97,12 @@
  * source-level sweep keeps the retired codes out of the whole package. The
  * corrected reasoning is at `PLANE_WORDS` below, where the old one stood.
  *
- * NEGATIVE CONTROL, FIVE ARMS — (a)-(d) RUN 2026-08-04 (UI-30) and (e) RUN 2026-08-04 (UI-32). Arms (a)-(c) are ALSO run mechanically below in
+ * NEGATIVE CONTROL, NINE ARMS — (a)-(d) RUN 2026-08-04 (UI-30), (e) RUN
+ * 2026-08-04 (UI-32), (f) RUN 2026-08-05 (UI-25), (g)-(i) RUN 2026-09-10 (M0-24).
+ * (The count was stale at "FIVE" while six arms stood — CORRECTED 2026-09-10 with
+ * the two new ones, since a hand-carried number in a header nobody re-measures is
+ * this project's most-repeated finding and this header was an instance of it.)
+ * Arms (a)-(c) are ALSO run mechanically below in
  * their own VM context built from a mutated copy of the source — nothing on
  * disk is touched by those, so there is no restore to get wrong. EVERY ARM WAS
  * ALSO RUN ONCE ON DISK, 2026-08-04 (UI-30), against the FINAL file, which is
@@ -186,6 +202,59 @@
  *       rather than deleted unmeasured, because "someone else already fixed it"
  *       is a claim, and running the control is the evidence.
  *
+ *
+ *   (g) RESTORE ONE PHANTOM KEY — M0-24's, RUN ON DISK 2026-09-10 against the
+ *       FINAL file, armed ALONE. `manifest_sha:"d".repeat(64)` put back on the
+ *       first `published[]` row, which is exactly where it stood before this
+ *       item and is a key `publishedManifest()`'s `published` SELECT has never
+ *       carried.
+ *       ON-DISK RUN: **3 of 92 FAIL**, and the first NAMES the key and the row it
+ *       is on: "…PHANTOM INQ-2026-0004-sewer: manifest_sha". The second is the
+ *       by-name pin on the two `cases[]` columns, and the third is the probe
+ *       child re-running this suite behind it, as in arms (d) and (e).
+ *       AND THE INSTRUMENT'S HALF, measured in the same arm: arm C of
+ *       `check-mock-envelope.mjs` re-reports the row as WIDER THAN THE WIRE
+ *       naming `manifest_sha` — and the guard still EXITS 0. That is the declared
+ *       behaviour and not a miss: the census REPORTS, and this file is where the
+ *       reporting becomes a failure. Before this item the census said the same
+ *       sentence about two keys and nothing in the estate failed, which is the
+ *       decoration M0-23 measured on its own correction.
+ *       Restored byte-identical, sha256 719519e9… (73,766 B).
+ *
+ *   (h) OVER-STRICTNESS — M0-24's, RUN ON DISK 2026-09-10, armed ALONE, and it
+ *       is run in BOTH spellings because a fence is only shown not to overreach
+ *       by pointing it at work it should let through.
+ *       NARROW (as shipped): `cases[]` carries 6 of the plane's 9 columns —
+ *       `bias_acknowledgement`, `bar` and `project_id` omitted because M0-23's
+ *       census measured ZERO reads of any of the three in `app.html`. The census
+ *       NAMES it ("carries 6 of the 9 column(s) … MISSING …") and EXITS 0.
+ *       Nothing fails. That is the correct disposition for an open question.
+ *       WIDE (the spelling this item did not anticipate): all three added to the
+ *       `cases[]` row — the honest widening of the day a surface renders the bar
+ *       or the publishing project. **92 of 92 green, nothing fails**, and the
+ *       census simply re-reports `cases[]` at 9/9 and drops it from the narrow
+ *       list. The pin in (4b) is indifferent to `cases[]` in both directions, by
+ *       construction rather than by promise.
+ *       THIS ARM FOUND ITS OWN SUBJECT WRONG AND IT IS RECORDED RATHER THAN
+ *       SMOOTHED: the first draft of (4b)'s last assertion pinned the three
+ *       columns ABSENT, so the WIDE spelling went RED — a suite that claimed to
+ *       defend against a fence tighter than its rule, being one. It is corrected
+ *       at its site to assert what `pubList` demonstrably reads instead, and the
+ *       defect was found by ARMING the control and never by reading the code.
+ *       Restored byte-identical, sha256 f0174f2f… (74,467 B).
+ *
+ *   (i) PUT `required` BACK TO NULL ON THE ROSTERED MEMBER — M0-24's, RUN ON DISK
+ *       2026-09-10, armed ALONE, and it exists because `required` is the SECOND
+ *       column this item restored and a restored column nothing reads is the
+ *       decoration M0-23 measured on its own correction. The first draft of this
+ *       fixture carried `required: null` on both rows and a declared bar on the
+ *       LOOSE one, where `pubList` renders no bar at all — so the column was
+ *       carried, counted by the census, and opened by nothing.
+ *       ON-DISK RUN: **3 of 94 FAIL** — both DEC-17 assertions in (4c), plus the
+ *       probe child behind them. With the bar on the row the surface actually
+ *       renders one from, the column is READ and not merely present.
+ *       Restored byte-identical, sha256 a9afa3a2… (80,517 B).
+ *
  * Run alone: `node test/auth-surface.test.mjs`.
  */
 import vm from "vm"; import fs from "fs"; import path from "path"; import os from "os";
@@ -228,16 +297,111 @@ const WHOAMI = {
 };
 
 /* `op=publishedmanifest`'s answer — store.mjs publishedManifest(), whose whole
-   point is that anyone can verify it without this instance's cooperation. */
+   point is that anyone can verify it without this instance's cooperation.
+
+   CORRECTED 2026-09-10 (M0-24, M0-23's census delegation), AND NOT EXEMPTED. The
+   old fixture was WRONG IN BOTH DIRECTIONS AT ONCE on one array, which is why it
+   is worth stating rather than quietly rewriting:
+
+     NARROWER — `published[]` carried 7 of the 9 columns the plane's own SELECT
+     carries, MISSING `strength` and `required`. Those two are the frozen pair and
+     the declared bar of a RATIFIED FINDING, and REC-49 put them on this index
+     deliberately, so that a finding answers with its own pair inside the awaiting
+     window as much as outside it. A fixture without them cannot represent a loose
+     ratified finding that HAS a pair — precisely the state REC-49 corrected
+     `pubList` to render — so this suite drove the published list for a month
+     against a manifest in which that branch was unreachable. Nothing was red; the
+     branch was simply outside the fixture's vocabulary, which is D-173's class one
+     altitude down and is exactly what a mock-shape gap costs.
+
+     WIDER — and the same rows answered `manifest` and `manifest_sha`, two keys the
+     `published` SELECT does not carry AT ALL. They belong to `cases[]`, where the
+     container's manifest and its hash actually live, and a bundle row has never
+     had either. A fixture inventing a column is the same defect pointing the other
+     way: an assertion could have been written against a key no plane can send, and
+     it would have been green forever. They are DELETED from `published[]` and
+     appear below on the `cases[]` row, which is the row the plane puts them on.
+
+   AND THE ARRAYS THE PLANE ALWAYS SENDS ARE HERE NOW. `publishedManifest()`
+   answers `cases[]` and `caseMembers[]` on every call; this fixture answered
+   neither, so the four published rows could only ever render as findings in no
+   case. Both are added, with the roster row joined to its finding THROUGH ITS PIN
+   (`caseMembers[].version_sha` -> `published[].bundle_sha`, never edition to
+   edition — the plane says so in its own `production` sentence and UI-56 corrected
+   `pubList` to it), so this suite can now drive both halves of the published list.
+
+   `cases[]` IS LEFT AT 6 OF THE 9 COLUMNS ON PURPOSE, matching both peer suites
+   (`publishedcase.test.mjs` and `preauth-vocabulary.test.mjs`). M0-23's census
+   measured ZERO reads in `app.html` of `bias_acknowledgement`, of `project_id` and
+   of a case-level `bar`. Carrying them here would be a fixture column added for
+   its own sake — a fence tighter than its rule — and the census NAMES the gap on
+   every run, which is the correct disposition for it and is this item's
+   over-strictness control. It becomes real work the day a surface renders one.
+
+   THE SHAPES OF `strength` AND `required` ARE THE PLANE'S, not this file's
+   invention: `strength` is the ARRAY of per-axis objects `pubPair` reads (a pair
+   is both axes or it is not a pair), and `required` is the bar object `declared`
+   gates. Both are modelled on the wire rows `publishedcase.test.mjs` already
+   carries for the same two columns. */
+
+/* One loose finding's frozen pair. GRADED on capture, UNRATED on connection —
+   the DEC-18 boundary case, so the rendered pair cannot be mistaken for a single
+   letter about the whole finding. */
+const LOOSE_PAIR = [
+  { axis:"capture", state:"graded", grade:"B", weakest:"INFO-2026-4401", load_bearing:1, population:2,
+    detail:"capture B — no stronger than the weakest capture it rests on, which is INFO-2026-4401." },
+  { axis:"connection", state:"unrated", grade:null, weakest:null, load_bearing:0, population:1,
+    detail:"UNRATED on connection: no leg on this axis carries an established grade, so this conclusion rests on nothing established here." },
+];
+/* THE TWO STATES OF `required`, BOTH ON THE PAGE. An ABSENT bar is not a bar of
+   zero — the plane says so in its own sentence and `pubBarHtml` prints that
+   sentence rather than a dash — so a fixture that carried only one of the two
+   could not tell the surface's two branches apart. The DECLARED one goes on the
+   rostered member, which is where `pubList` actually renders a bar. */
+const BAR_DECLARED = { declared:true, source:"group", capture:"B", connection:"C",
+  declared_by:"vera", declared_at:"2026-05-02",
+  detail:"the group's default required strength: capture B, connection C, declared by vera on 2026-05-02." };
+const BAR_ABSENT = { declared:false, source:"none", capture:null, connection:null,
+  detail:"no required evidentiary strength was declared for this finding, by the group or by any project citing it, so nothing here was measured against one. An absent bar is not a bar of zero, and this finding makes no claim to have cleared any standard." };
+
+const CASE_ID = "CASE-2026-0002-marina";
+
 const MANIFEST = {
   ok: true, scope: "published",
+  /* NINE COLUMNS, IN THE PLANE'S OWN ORDER, AND NOTHING THE PLANE DOES NOT SEND.
+     The assertion that holds this true reads the column list OUT OF store.mjs
+     rather than repeating it here — see "(4b)" below. */
   published: [
+    /* LOOSE AND WITH A PAIR: this finding is in no case (no roster row points at
+       its hash) and carries its own frozen pair. REC-49's branch, representable
+       here for the first time. */
     { bundle_id:"INQ-2026-0004-sewer", edition:1, title:"Why did the sewer contract skip competitive bid?",
       bundle_sha:"c".repeat(64), ratified_at:"2026-07-14T09:00:00Z", attestor_key:"SHA256:zzz",
-      gate_version:"1.4", manifest_sha:"d".repeat(64), manifest:"{}" },
+      gate_version:"1.4", strength:LOOSE_PAIR, required:BAR_ABSENT },
+    /* IN A CASE, WITH NO PAIR ON THE RECORD AND A BAR THAT WAS DECLARED. Every
+       field here is the OPPOSITE of the row above, deliberately: `strength: null`
+       is what the plane answers for a ratified finding it holds no pair for — a
+       fact about the record rather than a gap — so the no-pair sentence is
+       reachable, and the declared bar is on the row `pubList` actually renders a
+       bar from. The two rows between them reach all four branches, where two
+       copies of one state would have reached two. */
     { bundle_id:"INQ-2026-0011-transfer", edition:2, title:"Where does the transfer basis come from?",
       bundle_sha:"e".repeat(64), ratified_at:"2026-07-30T12:00:00Z", attestor_key:"SHA256:zzz",
-      gate_version:"1.4", manifest_sha:"f".repeat(64), manifest:"{}" },
+      gate_version:"1.4", strength:null, required:BAR_DECLARED },
+  ],
+  /* 6 of 9 DELIBERATELY — see the correction note above. `manifest_sha` and
+     `manifest` are HERE, on the row the plane actually selects them from. */
+  cases: [
+    { case_id:CASE_ID, edition:1, scope:"Did the marina works get paid for out of the sewer fund?",
+      ratified_at:"2026-07-30T12:30:00Z", manifest_sha:"f".repeat(64), manifest:"{}" },
+  ],
+  /* 6 of 6. The pin is the join: `version_sha` is the transfer finding's
+     `bundle_sha`, and the case's edition (1) DIVERGES from the finding's own (2),
+     so a join on edition-to-edition would silently drop this member — which is
+     what UI-56 measured and corrected in `pubList`. */
+  caseMembers: [
+    { case_id:CASE_ID, edition:1, ord:0, bundle_id:"INQ-2026-0011-transfer",
+      version_sha:"e".repeat(64), role:"load_bearing" },
   ],
   shas: [],
   detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
@@ -678,18 +842,217 @@ ok("the published space is the one that is open", E(ctxP, "#pub").classList.cont
 ok("and the document root says so",
    ctxP.__doc.documentElement.getAttribute("data-space") === "published");
 
-/* THE EMPTY CASE, which is a CLAIM about the group and must be stated as one. */
+/* THE EMPTY CASE, which is a CLAIM about the group and must be stated as one.
+
+   CORRECTED 2026-09-10 (M0-24), AND NOT EXEMPTED — this is an assertion the
+   corrected fixture MOVED, and it moved because the old fixture could not
+   represent the state the assertion names. It emptied `published[]` alone, which
+   was a complete description of "has published nothing" only while the fixture
+   had no `cases[]`: `pubList` builds a row per CASE as well as per loose finding,
+   so with the manifest's case left standing the page would have drawn a case file
+   over an empty published list and the empty statement would never have been
+   reached. The assertion would have gone red for a fixture that got MORE
+   faithful, which is the shape that makes a suite argue for its own blind spot.
+   A group that has published nothing has published no cases either, so all three
+   arrays are emptied and restored together. */
 {
   const planeE = makePlane();
-  const saved = MANIFEST.published;
-  MANIFEST.published = [];
+  const saved = { published: MANIFEST.published, cases: MANIFEST.cases, caseMembers: MANIFEST.caseMembers };
+  MANIFEST.published = []; MANIFEST.cases = []; MANIFEST.caseMembers = [];
   const ctxE = boot(SRC, planeE);
   ctxE.__enterPublished();
   await new Promise(r=>setTimeout(r,0));
   const ple = E(ctxE, "#pl")._html;
-  MANIFEST.published = saved;
+  MANIFEST.published = saved.published; MANIFEST.cases = saved.cases; MANIFEST.caseMembers = saved.caseMembers;
   ok("a group that has published nothing says so, and says a stranger could verify one if it had",
      /has not published any case files/i.test(ple) && /verify/i.test(ple));
+  /* The restore is asserted rather than assumed: a fixture mutated for one arm
+     and silently left mutated would make every assertion after it measure a
+     different manifest, and this block sits BEFORE the ones that read the
+     corrected shape. */
+  ok("and the manifest fixture is restored whole for the assertions that follow",
+     MANIFEST.published.length === 2 && MANIFEST.cases.length === 1 && MANIFEST.caseMembers.length === 1);
+}
+
+/* ============================================================
+   (4b) THE FIXTURE'S OWN SHAPE, READ OUT OF THE PLANE — M0-24, 2026-09-10
+   ============================================================
+   WHY THIS BLOCK EXISTS AT ALL, and it is M0-23's measured finding rather than
+   caution. M0-23 corrected a `caseMembers[]` fixture to the wire shape in another
+   suite, ran its own negative control — deleted the corrected column again — and
+   the suite came back GREEN. The census RENDERED the defect and no assertion READ
+   it, so by the item's own criterion the correction was decoration. Correcting a
+   fixture and asserting nothing about it buys a cleaner census line and nothing
+   else, because the next hand to widen or narrow it meets no resistance.
+
+   So the corrected shape is PINNED, and the pin is DERIVED, never a list. The
+   nine columns are read out of `publishedManifest()`'s own `SELECT` in
+   `store.mjs`, the same text `check-mock-envelope.mjs`'s arm C reads and the same
+   way this file already reads the refusal sentence. A hand copy of the column
+   list would agree with the plane at zero cost, which is the very defect one
+   layer up that this suite was written to stop (UI-30, REC-43). Add a tenth
+   column to that SELECT and this fails the same day; the census would have
+   NAMED it and nothing would have failed.
+
+   IT PINS `published[]` ONLY, DELIBERATELY. `cases[]` here is legitimately
+   narrower than the wire — three columns no surface in `app.html` reads, measured
+   by M0-23's census — and a pin over it would be a fence tighter than its rule,
+   forcing a fixture to carry columns for their own sake. The census NAMES that
+   gap every run, which is the disposition an open question gets in this estate.
+   Both halves are this item's controls: the pin must BITE on `published[]`, and
+   it must not reach `cases[]`. */
+{
+  /* The method body, then the `published:` query inside it. Brace-matched rather
+     than line-counted so it cannot silently read half a method, and the comments
+     are stripped first because the plane documents these queries in block
+     comments that quote column names IN BACKTICKS — the exact trap arm C's own
+     first run fell into and recorded. */
+  const mm = /^ {2}publishedManifest\s*\(\s*\)\s*\{/m.exec(STORE_SRC);
+  ok("store.mjs's publishedManifest() is readable from here — the fixture has a source to be pinned against", !!mm);
+  let wireCols = [];
+  if(mm){
+    let i = STORE_SRC.indexOf("{", mm.index), depth = 0, body = "";
+    for(let j = i; j < STORE_SRC.length; j++){
+      if(STORE_SRC[j] === "{") depth++;
+      else if(STORE_SRC[j] === "}"){ depth--; if(depth === 0){ body = STORE_SRC.slice(i, j + 1); break; } }
+    }
+    const at = body.indexOf("published: this.#rows(");
+    const rest = at < 0 ? "" : body.slice(at + "published: this.#rows(".length)
+      .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/.*$/gm, "");
+    const tick = rest.indexOf("`"), end = tick < 0 ? -1 : rest.indexOf("`", tick + 1);
+    const sql = end < 0 ? "" : rest.slice(tick + 1, end);
+    const sel = /SELECT\s+([\s\S]*?)\s+FROM\s/i.exec(sql);
+    wireCols = !sel ? [] : sel[1].split(",").map(c => {
+      const t = c.trim().replace(/\s+/g, " ");
+      const as = / AS ([A-Za-z0-9_]+)$/i.exec(t);
+      if(as) return as[1];
+      const bare = t.split(".").pop();
+      return /^[A-Za-z0-9_]+$/.test(bare) ? bare : null;
+    }).filter(Boolean);
+  }
+  /* THE EXTRACTION IS ASSERTED BEFORE IT IS USED. An extraction that silently
+     yields [] makes the set comparison below trivially true in BOTH directions —
+     no column missing and no column extra over an empty wire — which is this
+     project's "headline totality assertion over an empty corpus", shipped three
+     times. The floor is low on purpose (it is a guard against nothing, not a
+     restatement of the count) and the two named columns are the ones the
+     published surface demonstrably joins and renders on, so a SELECT that lost
+     either would be a different query. */
+  ok("the wire's published[] columns were actually extracted — not an empty list making every comparison below free",
+     wireCols.length >= 5 && wireCols.includes("bundle_id") && wireCols.includes("bundle_sha"));
+  ok("the fixture is not empty — a shape census over zero rows reports a clean fixture for nothing",
+     MANIFEST.published.length > 0);
+
+  const wire = new Set(wireCols);
+  const missing = new Map(), extra = new Map();
+  for(const r of MANIFEST.published){
+    const keys = Object.keys(r);
+    const m = wireCols.filter(c => !keys.includes(c));
+    const x = keys.filter(k => !wire.has(k));
+    if(m.length) missing.set(r.bundle_id, m);
+    if(x.length) extra.set(r.bundle_id, x);
+  }
+  ok(`every published[] row carries EVERY column the plane selects (${wireCols.length} of them) — a fixture `
+     + `narrower than the wire cannot assert about what it dropped` + (missing.size ? ` · MISSING ${[...missing].map(([b,c])=>b+": "+c.join("/")).join(" · ")}` : ""),
+     missing.size === 0);
+  ok(`and NO published[] row answers a key the plane's SELECT does not carry — a fixture wider than the wire `
+     + `invents a column an assertion could be written against forever`
+     + (extra.size ? ` · PHANTOM ${[...extra].map(([b,c])=>b+": "+c.join("/")).join(" · ")}` : ""),
+     extra.size === 0);
+  /* THE TWO PHANTOMS BY NAME, because the general rule above would also be
+     satisfied by a fixture that never had them, and this item's subject is that
+     THESE TWO were there. They are `cases[]`'s columns and a bundle row has never
+     had either. */
+  ok("`manifest` and `manifest_sha` are gone from published[] specifically — they are cases[] columns and a "
+     + "ratified finding's row has never carried them",
+     MANIFEST.published.every(r => !("manifest" in r) && !("manifest_sha" in r)));
+  ok("and they are on cases[], which is the row the plane's SELECT actually takes them from",
+     MANIFEST.cases.length > 0 && MANIFEST.cases.every(c => "manifest" in c && "manifest_sha" in c));
+  /* THE OVER-STRICTNESS ARM, ASSERTED RATHER THAN PROMISED, AND ITS FIRST DRAFT
+     WAS THE DEFECT IT EXISTS TO PREVENT — recorded rather than smoothed, because
+     it was found by ARMING the control and not by reading the code. That draft
+     asserted `cases[]` does NOT carry `bias_acknowledgement`, `bar` or
+     `project_id`, which reads as "the narrowness is deliberate" and IS a fence
+     tighter than its rule: the day CASE-5's bar gets a surface, the honest
+     widening of this fixture would have gone RED against a suite claiming to
+     defend against exactly that. Correct work in a spelling the author did not
+     anticipate must PASS.
+     What it says instead is the property that is actually load-bearing: this
+     fixture carries every `cases[]` column the published surface DEMONSTRABLY
+     reads. The three it omits are free in both directions — the census NAMES
+     them every run, which is the disposition an open question gets here, and a
+     later hand may add them without arguing with this file. */
+  ok("cases[] carries every column pubList actually reads, and the three with no measured reader are free in "
+     + "BOTH directions — named by the census, mandated by nothing here",
+     MANIFEST.cases.every(c => ["case_id","edition","scope","ratified_at","manifest_sha","manifest"]
+       .every(k => k in c)));
+}
+
+/* ============================================================
+   (4c) A LOOSE RATIFIED FINDING THAT HAS A PAIR — REC-49's branch, DRIVEN
+   ============================================================
+   THE STATE THE OLD FIXTURE COULD NOT REACH. UI-29 wrote, honestly for the shape
+   it had, that a ratified bundle in no case has "no case identity, no scope
+   statement and no completeness assertion" and no pair — and REC-49 corrected the
+   fourth of those, because a frozen pair belongs to a FINDING and a finding can
+   perfectly well carry one while belonging to no case. Until this item nothing in
+   this repository drove that branch from a fixture that could hold a pair: with
+   `strength` absent from every row, `pubPair()` returned null for all of them and
+   the page took the no-pair sentence every time. Green, and blind. */
+{
+  const LOOSE = "INQ-2026-0004-sewer";      // in no case, and the plane holds its pair
+  const INCASE = "INQ-2026-0011-transfer";  // rostered, and the plane holds NO pair for it
+
+  ok("the loose finding is genuinely loose — no roster row points at it, by the pin or by the old key",
+     MANIFEST.caseMembers.every(m => m.version_sha !== "c".repeat(64) && m.bundle_id !== LOOSE));
+  ok("it is drawn as a ratified bundle that is in no case", pl.includes(`data-notacase="${LOOSE}"`));
+  /* THE PAIR ITSELF, and it is read as a PAIR: two axis marks, each naming the
+     finding it belongs to. DEC-44's rule is structural on this surface — a mark
+     that cannot name an owner is a mark about nothing — so asserting the owner is
+     asserting the rule, not the markup. */
+  ok("REC-49: and its own frozen pair is ON it — the loose row carries a strength mark for the finding",
+     pl.includes(`class="pub-axisrow" data-finding="${LOOSE}"`));
+  ok("BOTH axes, because a pair is both or it is not a pair (DEC-18/D-160) — and the UNRATED half says so "
+     + "in words rather than being drawn as a weak grade",
+     new RegExp(`data-axis="capture" data-finding="${LOOSE}"`).test(pl)
+     && new RegExp(`data-axis="connection" data-finding="${LOOSE}"`).test(pl)
+     && /Links UNRATED/.test(pl));
+  ok("and the no-pair sentence is NOT said about it — that sentence is a claim about the record and would "
+     + "be false here",
+     !pl.includes(`data-nopair="${LOOSE}"`));
+  /* THE CONTRAST, on the same page, so neither assertion above passes for the
+     reason that everything renders a pair. `strength: null` is what the plane
+     answers for a ratified finding it holds no pair for. */
+  ok("the CONTRAST: the rostered finding the plane holds no pair for gets the no-pair sentence, so the two "
+     + "assertions above are not passing over a page that marks everything",
+     pl.includes(`data-nopair="${INCASE}"`) && !pl.includes(`class="pub-axisrow" data-finding="${INCASE}"`));
+  /* AND THE CASE HALF, which is what makes the loose half mean anything: the
+     roster row joins to its finding THROUGH ITS PIN, across a case edition (1)
+     that diverges from the finding's own (2). UI-56's correction, now
+     representable in this suite's fixture. */
+  ok("the case is drawn, and the plane's own recorded fact decides it is finished — `manifest_sha` is the "
+     + "edition's completion, never a count of the roster (REC-49)",
+     pl.includes(`data-caserow="${MANIFEST.cases[0].case_id}"`) && pl.includes('data-caseedition="complete"'));
+  ok("UI-56: its member joined through its PIN across DIVERGED editions — the case is edition 1 and the "
+     + "finding is edition 2, so an edition-to-edition join would have dropped it and drawn it as awaiting",
+     Number(MANIFEST.caseMembers[0].edition) !== Number(MANIFEST.published[1].edition)
+     && pl.includes(`data-findingsec="${INCASE}"`)
+     && !new RegExp(`data-member="awaiting" data-findingsec="${INCASE}"`).test(pl));
+  ok("and it is NOT also listed as belonging to no case — the same finding twice on one page, contradicting "
+     + "itself, was UI-56's third false statement",
+     !pl.includes(`data-notacase="${INCASE}"`));
+  /* AND `required` IS READ, NOT MERELY CARRIED. The other column this item
+     restored to the fixture would otherwise be exactly what M0-23 measured on its
+     own correction: a column the census counts, the page renders, and no
+     assertion opens. DEC-17 as amended — the bar is the FINDING's, frozen into
+     its own bytes, so it is asserted from the plane's own two values rather than
+     from a sentence this file composed. */
+  ok("DEC-17: the rostered member's DECLARED bar is rendered from the plane's own two values, beside the "
+     + "strength reached and never instead of it",
+     pl.includes(`bar: ${"Documents"} ${BAR_DECLARED.capture} · ${"Links"} ${BAR_DECLARED.connection}`));
+  ok("and the bar is stated per FINDING, inside that finding's own marked section — two members of one case "
+     + "may have been held to different standards, so a case-level bar would be a claim the record does not make",
+     new RegExp(`data-findingsec="${INCASE}"[\\s\\S]*?bar: Documents`).test(pl));
 }
 
 /* ============================================================
@@ -895,4 +1258,4 @@ if(!CHILD){
 }
 
 if(fails.length){ console.error(`auth-surface: ${fails.length} of ${n} assertions FAILED`); process.exit(1); }
-console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · the refusal SENTENCE read out of store.mjs and rendered whole, with the code no member has to decode · no retired login code anywhere under civicos-ui/ · pubList uncredentialed against the published projection · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped (d) a retired code restored on disk`);
+console.log(`auth-surface: ${n} assertions, all green — sign-in through the wrapped shape · the token off \`result\` · every op after it authenticated · boot() driven for the first time · the refusal SENTENCE read out of store.mjs and rendered whole, with the code no member has to decode · no retired login code anywhere under civicos-ui/ · pubList uncredentialed against the published projection · the manifest fixture at the plane's own nine published[] columns, PINNED against store.mjs's SELECT rather than a list, with the two phantom keys gone and cases[] deliberately narrow · a LOOSE ratified finding WITH its frozen pair driven (REC-49) against a rostered one with none · arm-B coverage MEASURED at the probe; negative controls RUN (a) the token read broken (b) right code + invented sentence (c) the login mock unwrapped (d) a retired code restored on disk (g) a phantom key restored (h) over-strictness: cases[] narrow and NAMED, wide and GREEN (i) the restored bar put back to null`);
