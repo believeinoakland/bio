@@ -367,6 +367,15 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
+### D-301 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching the class census's matcher; if none does, this row reads `queued`.
+milestone: M0 (background lane, holds no slot)
+interface: none — test estate; it changes no plane behaviour
+depends-on: D-265 and D-302 (both landed — `strip` and the census's current corpus figures are the ground)
+scope: **`DEBT.md`'s D-301 row is the authority.** The class census in `hygiene.test.mjs` is comment-blind but NOT string-blind, so a discovery primitive inside a fixture template literal counts as a WALK — `walkfigure.test.mjs` was enumerated as a new unguarded walk on its first run while containing no walk at all, and every suite that builds a walking fixture (the natural way to test a walk detector) must be allowlisted for a walk it does not perform. Run the census's matcher over `strip(src)` (`walkfloor.mjs` already exports the estate's ONE lexer, which blanks string and template literals) — never a second lexer — then **RE-MEASURE the census count, the REACH floor and `CLASS_NAMED_UNGUARDED`'s membership from printed output**: files whose only match was in a string drop off, and that is a measurement, not an edit. Every moved figure carries its reason.
+accepts-when: the census scores a walking FIXTURE clean while still scoring a real walk as a walk, both DRIVEN; the re-measured corpus, floor and allowlist membership committed from PRINTED figures with each drop named; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) the arm this item exists for: a REAL discovery primitive in live code must still be enumerated after the string-blinding — a matcher blinded too far is the over-strictness twin; (2) a walking fixture in a template literal must NOT be enumerated, driven with a fixture you did not take from the existing allowlist; (3) neuter the census over `strip(src)` and its reach must fail as a DELTA with the corpus printed (D-265's arm, re-proven on the moved matcher).
+added: 2026-09-10 · CONDUCT (D-265's residual, enqueued when the background lane freed — a residual row with no queue item reaches no worker)
+
 ### M0-24 · done
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
