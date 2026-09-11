@@ -2707,3 +2707,35 @@ paths:
   `bio-plane/scripts/coverage.mjs` — a probe declares no checks, so no floor here can move.
   **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `f0c3de5` and verified on the MERGED tree: battery 174/174 · 10,807 (+3, the worker's own attribution reproduced), `coverage --strict` exit 0 read unpiped, UI harness exit 0, `mintid --audit` 0 breaks. The verdict is enacted: CPDF-10 re-scoped to the measured in-account default and QUEUED; DEC-74 stays open with Bob, better-informed.
+
+## CLAIM 2026-09-11 CONTENT-PDF (CPDF-16 — two floor-instrument defects closed together: D-305's fifth expression, D-314's blank/noise gate; comparability is the constraint)
+session: cpdf16-floor-instrument (worktree `agent-ac13e0cfc839cfcd7`, branch `worktree-agent-ac13e0cfc839cfcd7`)
+opened: 2026-09-11T00:00:00Z
+paths:
+  - `bio-plane/test/ocr-measure-probe.mjs` — the floor instrument (CPDF-9's file), **ADDITIVE
+    REGIONS ONLY**: the digit-position DISAGREEMENT count as a FIFTH expression with its own
+    reported column (D-305), and the blank/noise control gate so a floor reference is only ever
+    taken from a run that passed it, with agreement-over-a-noise-failing-floor answering
+    `undetermined` naming the gate (D-314). The four existing metric expressions, `GT_PAGE2`,
+    `norm` and `levenshteinPairs` stay BYTE-UNCHANGED — the two landed probes pin them by digest
+    and literal presence, and those guards exiting 0 against the edited file is this item's
+    hard constraint.
+  - `bio-plane/test/cpdf16-floor-controls.mjs` — **NEW**, this item's negative-control driver.
+    A PROBE-side driver, deliberately NOT named `*.test.mjs` so the battery's discovery rule
+    (`scripts/battery.mjs`: readdir + `endsWith(".test.mjs")`) never picks it up.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  - `docs/development/DEBT.md` — disposition updates on rows **D-305 and D-314 ONLY** (the two
+    rows this item exists to close), plus **APPEND ONLY** for any row this item raises; ids
+    from `tools/mintid.mjs`.
+  **READ, NEVER EDITED**: `bio-plane/test/ocr-composed-probe.mjs` (CPDF-14) and
+  `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` (CPDF-15) — their comparability guards
+  are this item's READERS and its free negative control; if a guard needed a new digest the
+  additive constraint was violated, which is a finding to report, never an edit to make. Also
+  read, never edited: `bio-plane/test/ocr-moondream-probe.mjs` (CPDF-11's noise-control recipe,
+  replicated additively into the floor at the same seed and dimensions, never moved).
+  **NOT** `bio-plane/src/**` (no plane behaviour changes — the item's own constraint), **NOT**
+  `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's), **NOT** `bio-plane/scripts/coverage.mjs`,
+  **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`, and none of
+  CPDF-10's ground (the third fleet member — `agent-worker/**`, `pdf-worker/**`, fleet paths).
+concurrency: checked over the register. CPDF-10 is live on the fleet-member ground, disjoint
+from every path above. No live claim names `ocr-measure-probe.mjs`.
