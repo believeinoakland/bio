@@ -1510,3 +1510,33 @@ be RELATIVE to the run (`today + N days`) or the suite must pin a clock, and cho
 is the owner's call. **A hardcoded future date in a fixture is a time bomb with a fuse measured in
 days**, and this is the class, not the instance: the same pattern should be swept for wherever a
 suite writes a literal date into a document it then conformance-checks.
+
+### AMENDMENT 2026-09-10, MID-ITEM (FL-9, `fl9-fleet-bundle-guard`) — TWO FILES ADDED TO THE CLAIM, AND ONE OF THEM IS A FLOOR THIS ITEM DID NOT INVALIDATE
+
+Named here rather than left for the merge to discover, because a claim that is silently
+wider than it says is worse than a claim that is wide.
+
+1. **`.gitignore` — ONE APPENDED BLOCK, the negative-control pen `.nc-fleetbundles/`.** The
+   file already names a pen per item (`.ui*-harness/`, `.pl13-harness/`, `.d251-control-pristine/`,
+   `.d266-harness/`, `.d267-harness/`, `.d280-harness/`, `.case2-harness/`) and states the rule
+   at the site: an interrupted driver must not leave an untracked file where the next walk can
+   enrol it as somebody else's corpus. This driver arms sources in THREE trees and renames
+   `pdf-worker/node_modules` away for one arm, so it needs its own line. **NOTHING ELSE IN THAT
+   FILE IS TOUCHED.**
+
+2. **`bio-plane/scripts/coverage.mjs` — `FLEET_FLOOR.arms` MOVED AS WELL AS `REGISTER_FLOOR`,
+   and the honest reason is that IT WAS ALREADY STALE BY TEN ARMS BEFORE THIS ITEM EXISTED.**
+   The claim above said NOT `FLEET_FLOOR`, on the correct reasoning that this item adds no fleet
+   member, no fleet suite and no fleet arm — its guard is a PLANE suite. That reasoning still
+   holds and the floor moved anyway: the fleet's five suites state **17 + 8 + 19 + 7 + 7 = 58**
+   arms on a tree this item did not change there, against a floor of 48. **A floor with slack is
+   not a ratchet**, and this is the seventh consecutive item here to find a hand-carried floor
+   stale by measuring it — VF-5 faced exactly this and moved a figure it had not invalidated
+   rather than leaving it. `members` / `surfaceOps` / `suites` are UNMOVED at 2 / 4 / 5.
+
+**BOTH FLOOR MOVES ARE REPORTED TO CONDUCT BY NAME and are taken from a run made AFTER the
+commit** — `REGISTER FLOOR arms 868/858 · classified 163/162 · corpus 164/163 · GREW by 10
+arm(s)`, provenance `175 of 175 discovered item(s) are in the commit at HEAD (d83695b)`. A
+pre-commit run prints the same numerals as CONTAMINATED beside the in-commit values, so moving
+from it would have installed the OLD number as the new one and read as a no-op (D-238).
+**CONDUCT RE-DERIVES BOTH ON THE MERGED TREE** — this branch cannot see CASE-4's arms.
