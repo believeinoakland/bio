@@ -46,3 +46,25 @@ interfaces change only through `INTERFACE-CHANGES.md`; run in your own worktree
 the channel; `node tools/plancheck.mjs` before any handoff. Decisions that are
 genuinely Bob's go through `DECISIONS.md` via CONDUCT; tactical calls are yours —
 never block on him.
+
+## Stand-up, 2026-09-10 — the area session's first turn, measured rather than believed
+
+The session performed the first act this file orders and records what it found, so the
+next FLEET session starts from evidence:
+
+- **FL-9 was still RUNNING.** The only commit on `main` naming it was `3b340d8` (CONDUCT's
+  spawn); its worker was ALIVE — untracked `fl9probe.mjs`/`fl9diff.mjs` and files touched
+  minutes earlier in worktree `agent-abe10acbf93247266`. **No fleet ground was claimed**;
+  the session's only claim was this file (CLAIMS.md, 2026-09-10, released same turn).
+- **Both members verified serving LIVE**, not believed from this file: `agent-worker` and
+  `pdf-worker` each answered `{"ok":true,...,"version":"0.1.0"}` at `/version` on the
+  pinned account's workers.dev subdomain, probed 2026-09-10 with the account's own token
+  read from `.env`.
+- **FL-6 confirmed blocked on DIST's DS-3** (the build-plan table in `QUEUE.md`), and
+  FL-7/FL-8 are `done` — so with FL-9's ground held there was NOTHING schedulable in this
+  area, and standing by was the correct disposition rather than a stall.
+
+**Take the area over from FL-9's `landed:` row when it appears** — its scope (the guard
+pattern, both members) and its negative controls are the area's law going forward, and
+DIST's release-format half plus D-297 unblock behind it. FL-6 remains the next runnable
+item once DS-3 lands.
