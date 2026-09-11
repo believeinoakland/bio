@@ -845,6 +845,40 @@ const OPS = {
   textprovenance: { classes: ["admin", "member", "probe"],         mutating: false },
   textattest:   { classes: ["admin", "member", "probe"],           mutating: false },
   attesttext:   { classes: ["admin", "member"],                    mutating: true  },
+  /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
+     different cut from CPDF-10's above because a different thing is at stake.
+
+     THE TWO READS are on the same terms every reading read is: what an engine
+     was measured at, and which transcriptions rest on a measurement that has
+     since moved, are facts about the record. `calibrationdrift` in particular
+     is the answer to "is anything in this store graded against a number nobody
+     stands behind any more", and withholding that from a view-only member
+     weighing a case would be the record knowing something about its own
+     reliability that the person relying on it may not ask.
+
+     `calibrate` IS THE CONSEQUENTIAL WRITE and is nonetheless open to `probe`,
+     which is the opposite of `attesttext` beside it — so the reasoning is
+     written out rather than assumed. ATTESTING IS TESTIMONY: a person says they
+     compared this text against the image, it carries their name for as long as
+     the record lasts, and there is no version of it a token can perform.
+     CALIBRATING IS MEASURING: a probe ran, over stated inputs, and produced
+     stated scores, and a machine is exactly the right thing to do that — the
+     scheduled re-probe this item builds is a machine act by construction. The
+     fence that matters here is therefore NOT about who may measure; it is that
+     a measurement may never move a GRADE, and that is enforced structurally at
+     the store (`CAL_CANNOT_REGRADE`) and by the drift handler writing nothing.
+     Admitting `probe` and then refusing the grade move is the honest shape;
+     refusing the machine and letting the grade move would be the fence in the
+     wrong place, which is the defect this project meets most.
+
+     `calibrationsignal` is the WEAKEST act in the plane and is open for the
+     same reason: it records that a vendor announced something, carries no
+     fidelity, and can only ever pull the next probe EARLIER. */
+  calibrations: { classes: ["admin", "member", "probe"],           mutating: false },
+  calibrationdrift: { classes: ["admin", "member", "probe"],       mutating: false },
+  calibrate:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  calibrationsubject: { classes: ["admin", "member", "probe"],     mutating: true  },
+  calibrationsignal: { classes: ["admin", "member", "probe"],      mutating: true  },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry
      are ONE construct). Members BUILD the registry: entitycreate registers a subject
@@ -2755,7 +2789,34 @@ function tier3Note(m, memberNote) {
  * carries), never half-transcribed and never crashing an acquire — the same
  * posture the Tier-2 escalation already takes one tier down.
  * ===================================================================== */
-function ocrTextFromMember(res) {
+/* CPDF-13 / D-253 — WHAT THE `calibration` PARAMETER IS, AND WHY IT ARRIVES
+ * HERE RATHER THAN BEING LOOKED UP HERE.
+ *
+ * `measured_by` (required above, and unchanged) is a free STRING and is a
+ * pointer a HUMAN can follow. D-253 is that nothing checks it resolves, nothing
+ * notices when the named engine ships a new version, and nothing can answer
+ * "which transcriptions rest on a measurement that has been superseded". The
+ * calibration reference is the machine-followable half of the same pointer, and
+ * it lands here because THIS is where the chain is composed.
+ *
+ * IT IS PASSED IN, NOT FETCHED HERE, for `cap`'s own reason exactly (see
+ * `textchain.mjs`'s header): a measurement must not acquire a second home. This
+ * function knows what a step must carry; the store holds the measurements; the
+ * caller joins them. A lookup inside here would make this module a reader of
+ * the calibration table, which is the shape that eventually disagrees with it.
+ *
+ * BOTH DERIVATION STEPS TAKE THE SAME REFERENCE, because both already take the
+ * same `cap` and for the same reason: the member measured its pipeline end to
+ * end — page to pixels to text — and reports one fidelity for it. Stamping the
+ * reference on the `ocr` step alone would say the rendering half rests on
+ * nothing, which is not what was measured.
+ *
+ * NULL IS LEGAL AND IS THE PRE-CPDF-13 SHAPE. A member answering in an instance
+ * that holds no calibration of it produces exactly the chain it produced
+ * before: `cap` and `measured_by` and no reference. That is honest — the grade
+ * rests on a measurement recorded somewhere this record cannot join to — and it
+ * is why `checkChain` refuses only a reference that is present and unreadable. */
+function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
     return { ok: false, why: `the OCR member declined to transcribe this document`
@@ -2805,9 +2866,10 @@ function ocrTextFromMember(res) {
      read them. Both steps carry the same measured cap; `appendStep` would
      refuse the second if it claimed more, which is rule 2 doing its job on the
      path a member's answer actually travels. */
-  let chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by }],
+  let chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by,
+                            calibration }],
                          { step: "ocr", engine: r.engine, version: r.version,
-                           cap: r.cap, measured_by: r.measured_by });
+                           cap: r.cap, measured_by: r.measured_by, calibration });
   if (!Array.isArray(chain))
     return { ok: false, why: `the OCR member's own provenance was refused: ${chain.detail}` };
 
@@ -4958,7 +5020,41 @@ export default {
                     if (!r.ok) {
                       ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
                     } else {
-                      const built = ocrTextFromMember(await r.json());
+                      /* CPDF-13 / D-253 — THE CALIBRATION THE MEMBER'S OWN
+                         FIDELITY RESTS ON, joined here so the chain NAMES it.
+                         Without this the chain records the ENGINE and the grade
+                         rests on a MEASUREMENT with nothing between them, which
+                         is D-253 in one sentence.
+
+                         THE COST IS ONE STORE READ ON A BRANCH THAT ALREADY
+                         MADE A NETWORK CALL, and it is taken HERE rather than
+                         once per acquire on purpose. A capture with a text
+                         layer never reaches this line, so an instance with no
+                         OCR member — which is every instance today — pays
+                         nothing at all for this feature on the capture path.
+
+                         IT FAILS OPEN TO NULL, NEVER TO A GUESS. A store that
+                         does not answer, an engine with no calibration, or a
+                         calibration that has been superseded all produce `null`
+                         — the pre-CPDF-13 chain, with `cap` and `measured_by`
+                         and no reference. A transcription that cannot name its
+                         measurement says so by not naming one; it never names
+                         the nearest available number, which would be the
+                         record claiming a join it does not have. */
+                      const ocrAnswer = await r.json();
+                      let calRef = null;
+                      try {
+                        const stCal = env.STORE.get(env.STORE.idFromName(storeName));
+                        const cOut = await doAnswer(stCal.fetch(
+                          `http://x/?op=calibrations&engine=${
+                            encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`));
+                        const live = ((cOut && cOut.calibrations) || [])
+                          .find((c) => c.superseded_by == null
+                                    && c.version === (ocrAnswer && ocrAnswer.version));
+                        calRef = live ? live.calibration_id : null;
+                      } catch { /* a calibration this record cannot read is a
+                                   calibration this chain does not name. */ }
+                      const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
                       if (built.ok) {
                         /* D-252 — PAGE-WISE, NEVER WHOLESALE. This line was
                            `i2text = built.text`, which threw away a text layer
@@ -6306,7 +6402,15 @@ export default {
        never invited to, by telling them what produced its text. `attesttext`
        is NOT here: it is a WRITE and takes its own member route. */
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
-                                "textprovenance", "textattest", "resolutions",
+                                "textprovenance", "textattest",
+                                /* CPDF-13: the drift obligation's rows NAME the bundle each
+                                   affected capture is filed in, so it takes the same stamp
+                                   for REC-30's reason exactly — otherwise "which of your
+                                   documents rest on a superseded measurement" would disclose
+                                   that a document sits in a project the caller was never
+                                   invited to. `calibrations` is NOT here: it answers about
+                                   ENGINES and names no bundle at all. */
+                                "calibrationdrift", "resolutions",
                                 "concerns", "connections", "instance", "exceptions", "thread",
                                 "discharge", "audit", "searchindexcheck", "projectownerarith",
                                 /* REC-14's read, swept at the merge: its bar report NAMES the

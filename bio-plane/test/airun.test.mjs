@@ -287,9 +287,15 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      what makes this a DELTA, and a comparison against a floor would go on
      passing over a registry that had lost a consumer. What each successive
      correction costs is one line here; what a floor would cost is the arm. */
-  t("ARM S1 (REACH, as a delta): the registry parse reaches 10 consumers, was 9 before FL-4 "
-    + "appended the suspended run's wake",
-    [names.length, names.length - 1], [10, 9]);
+  /* CORRECTED 2026-09-10 by CPDF-13 (D-183), never loosened: the corpus is 11 —
+     `calibration-reprobe` was appended as the ELEVENTH, the same shape again.
+     The paragraph above already says why each successive correction is one line
+     here rather than a `>= N` floor, and that reasoning is unchanged: the number
+     is what makes this a DELTA, and a floor would go on passing over a registry
+     that had LOST a consumer. */
+  t("ARM S1 (REACH, as a delta): the registry parse reaches 11 consumers, was 10 before CPDF-13 "
+    + "appended the calibration re-probe",
+    [names.length, names.length - 1], [11, 10]);
   t("ARM S2: the investigative run joined as ONE appended entry",
     names.filter((n) => n === "ai-run-reap").length, 1);
   t("ARM S2b (PL-4): and the capture-request drain joined as ONE appended entry too — no second "

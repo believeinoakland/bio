@@ -756,6 +756,18 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        telling them what produced its text, which is a new door onto the same
        fact. `textprovenance` additionally ENUMERATES, so it takes the redactor
        on every row rather than on one. */
+    /* CPDF-13 / D-183, 2026-09-10. Classified by the item that adds it, and
+       gated for REC-30's reason and not by resemblance: the drift obligation
+       JOINS the calibrations to `reading_text_source`, so every row NAMES the
+       bundle an affected capture is filed in. An ungated one would tell a caller
+       that a document sits in a project they were never invited to, by way of
+       "this transcription rests on a measurement that has since moved". A row
+       about a bundle the viewer may not see is WITHHELD WHOLE, with no count of
+       what was withheld, because that count is the leak. Its sibling
+       op=calibrations is deliberately UNGATED and the difference between the two
+       is the whole test — that one answers about ENGINES and names no bundle at
+       all. */
+    calibrationdrift: "CPDF-13 / REC-30: the bundle back-reference on every row of the drift obligation",
     textprovenance: "CPDF-10 / REC-30: the bundle back-reference on every row of the transcription index",
     textattest: "CPDF-10 / REC-30: the bundle back-reference on each attestation over a capture",
     /* REC-36's read, classified by the item that adds it (2026-08-04,
@@ -1000,6 +1012,16 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "is no working material for a missing predicate to leak. Gating it would withhold from a member "
       + "exactly what the published record already tells anybody — and the whole point of a flag that is "
       + "SET AND NEVER CLEARED is that it stays visible until an owning project acts.",
+    /* CPDF-13 / D-183, 2026-09-10: the calibration READ. */
+    calibrations: "NAMES NO BUNDLE — it answers about ENGINES. Every row is a dated fidelity "
+      + "measurement of a named derivation engine and version, plus the probe inputs and scores "
+      + "behind it; no capture, no bundle and no document appears anywhere in the answer, so there "
+      + "is no identity for a predicate to filter. Its SIBLING op=calibrationdrift IS gated, and the "
+      + "difference between the two is the whole test: drift joins the measurements to "
+      + "reading_text_source and its rows NAME the bundle each affected capture is filed in, which "
+      + "is REC-30's disclosure exactly — telling a caller which of their documents rest on a "
+      + "superseded measurement would tell them a document sits in a project they were never "
+      + "invited to.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "

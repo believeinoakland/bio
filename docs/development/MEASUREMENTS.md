@@ -8490,3 +8490,109 @@ those two numbers, to the assertion, as the signature of a missing entry in thei
 `coverage.mjs`'s dependency list, and one of them delegates the fix in `CLAIMS.md`. The list is now
 derived from the instrument's own import graph in one shared module (`test/instrument-deps.mjs`):
 6 modules, nothing outside `scripts/`.
+
+
+## CPDF-13 — the CALIBRATION construct, its chain reference and the scheduled re-probe (2026-09-10, worker `agent-ab1e3df0de5e3b8ec`)
+
+**INSTRUMENT:** `bio-plane/test/calibration.test.mjs` (110 assertions) and its
+committed control driver `bio-plane/test/calibration.control.mjs`.
+
+**WHAT WAS MEASURED, AND — SAID FIRST BECAUSE IT IS THE HONEST BOUNDARY — WHAT
+WAS NOT.** No engine was calibrated and no fidelity was measured. There is no
+derivation engine in this repository: CPDF-11 returned NO-GO on Moondream
+(DEC-42) and the tesseract fleet member is CPDF-12's. Every calibration in the
+suite is a SYNTHETIC measurement handed to the construct, which is evidence about
+**the construct and its rules** and not about any engine's accuracy. **The floor a
+real engine is scored against is unchanged and stays CPDF-9's** (99.96% char,
+90/90 digits, zero minted). A green suite here is not a calibrated engine.
+
+**THE CADENCE IS A CHOSEN CONSTANT, NOT A MEASURED ONE.**
+`CALIBRATION_CADENCE_MS` = 30 days. **Nobody has measured how fast a derivation
+engine drifts**, so monthly is a starting point recorded as chosen, revisable by
+measurement, declared in `bio-plane/src/calibration.mjs` and quoted by name in
+`SCHEDULER.md` rather than re-typed. **What would move it:** a measurement of real
+inter-release fidelity change for a pinned engine — the obvious first subject
+being Tier-2 pdf.js across two of its own releases, which needs a probe corpus
+with ground truth and is not built here.
+
+**THE COST THE PLAN NOW STATES** (clause (c)'s "so no group discovers it as a
+surprise"): ONE probe per REGISTERED engine per cadence, on the instance's own
+account, against the free allocation — twelve probe runs a year for a group with
+one calibratable engine; **and exactly ZERO for an instance that has registered
+none**, because `#calibrationWake` returns `null` on its first line when
+`calibration_subjects` is empty and the consumer then holds no alarm at all. The
+suite drives that self-termination on a second Miniflare with nothing registered.
+
+**BATTERY.** Baseline measured on this branch after `npm ci` and after
+fast-forwarding two commits to `main` (`b834f26`): **170/170 suites green, 10,482
+assertions, exit 0**. The brief carried no figure; the nearest figure in the
+corpus — FL-10's claim release of 168/169 with `action-loop.test.mjs` red — is
+STALE, and that red suite measured green here. Final figures are in the worker's
+report with the delta attributed by re-running the true baseline per suite.
+
+**PER-SUITE DELTA, attributed by re-running rather than by subtraction:**
+`textchain.test.mjs` 189 → 196 (+7: the new refusal's arm, two over-strictness
+arms for the OPTIONAL reference, and two `calibrationsOf` readers);
+`scheduler.test.mjs` 46 → 48 (+2: the registry totality assertion corrected to
+eleven consumers, plus an ordering arm for the append); `hygiene.test.mjs` 657,
+unchanged in count (the three new tables joined its EXEMPT map, which it already
+walks); `calibration.test.mjs` 110, all new.
+
+**NEGATIVE CONTROL — 4 arms plus a baseline, 0 came back other than declared on
+the final run; TWO FOUND THE INSTRUMENT WRONG ON THEIR FIRST RUN and both are
+kept.** Full detail in the suite's own `NEGATIVE CONTROL:` line. The two findings
+worth carrying here because they are about METHOD rather than about this item:
+
+1. **A RULE ENFORCED AT TWO SITES IS UNFALSIFIABLE ONE SITE AT A TIME.** The
+   "an announcement may only SHORTEN the interval" arm patched only the loop's
+   `<` comparison and measured **110/0 — NOTHING FAILED** — because the closing
+   `Math.min(at, cadenceAt)` clamps whatever the loop produces. Armed together it
+   measured 106/4, and the fourth failure was one nobody aimed at: the alarm
+   consumer stopped being due, because a signal that can push a probe out pushes
+   it past the alarm instant. **The defect's real reach was larger than the three
+   assertions written for it.**
+2. **A MISSING TALLY REPORTED AS -1 IS WHAT MADE A DEAD SUITE VISIBLE.** The
+   over-strictness arm's first draft tightened a SHARED predicate that `probe_id`
+   (a string) also rides, so every valid calibration was refused, the suite died
+   downstream, and the driver reported `-1 pass / -1 fail / foot false`. A harness
+   trusting a count would have read a beautiful zero-failure run off a module
+   that never reached its own foot.
+
+**CONSUMER IMPACT, MEASURED (IC-72, IC-73).** `grep -rn "calibration"` over
+`civicos-ui/`: **0 hits**. Over `newgroup/`: **0 hits**. A grep for the five new op
+names over `civicos-ui/`: **0**. No existing op's answer gains or loses a field,
+no existing table gains a column the UI reads, and no I2 step field is renamed,
+reshaped or removed. `node civicos-ui/test/run.mjs` green.
+
+**WHAT THE FIRST FULL BATTERY FOUND, AND IT IS THE MOST USEFUL MEASUREMENT IN
+THIS ROW.** The first run of the whole battery against this item came back
+**163/171 suites, exit 8** against a 170/170 baseline. **Not one of the eight was
+a flake, and not one was fixed by moving a number.** Six were TOTALITY GUARDS
+doing exactly what they exist for — naming a new op nobody had classified, a
+registry count that had moved, a table nobody had dispositioned for purge, and a
+schema word reserved by another item's pin — and each was CORRECTED at its site
+with a dated reason. **Two were RATCHETS that had found real unbounded work in
+the first draft**: `#calDriftFor` walked `reading_text_source` with no LIMIT while
+an amplifying loop ran over what came out, and `#mintCalibrationId` read every
+calibration row to take a maximum. **Both were FIXED rather than ceiling-moved, so
+NO FLOOR AND NO CEILING MOVED IN THIS ITEM AT ALL** — `derivation-bounds`,
+`meaning-bounds` and `REGISTER_FLOOR` are all where the previous worker left them.
+
+**A NAMING CONSTRAINT DISCOVERED BY MEASUREMENT, worth carrying because the next
+schema author will meet it.** D-221's version-chain pin
+(`test/versionchain.test.mjs` section 2) sweeps the WHOLE schema — comments
+blanked — for any stored pointer from one version to another, and a
+`calibrations.superseded_by` column set it off. The pin was NOT narrowed: a
+calibration is a measurement of an ENGINE rather than a version of a DOCUMENT, so
+the constructs are unrelated, but loosening a total sweep to admit a lookalike is
+how a guard stops being total. The column is `replaced_by`, with the reasoning at
+the column; the WIRE field stays `superseded_by`, because the sweep reads the
+schema and a reader wants the usual word.
+
+**AND ONE INSTRUMENT-VISIBILITY FINDING.** `airuns.test.mjs`' index sweep scored
+`calibrations_drift` as an index NOBODY FILTERS ON — while the op that filters on
+it was sitting right there. The predicate had been assembled into a `where`
+variable and interpolated into the template, and that sweep reads filtered columns
+OFF THE SQL TEXT. **A true fact was invisible to the instrument whose entire job
+is to notice its absence**, and the concatenated form is what hid it. The two
+statements are now written out.

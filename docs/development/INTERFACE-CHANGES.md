@@ -5002,3 +5002,234 @@ a battery green on an artifact nobody ships from) FAILS instead of shipping.
 
 **PROPOSED, 2026-09-10.** The guard half is FL-10's to land; the release half is DIST's and
 nothing here builds against it. **The version bump and the RESOLUTION are CONDUCT's.**
+
+---
+
+## IC-72 · I5: THREE NEW TABLES — `calibrations`, `calibration_subjects`, `calibration_signals` — one ADDITIVE column on the DERIVED `reading_text_source` projection, and FIVE new ops · PROPOSED 2026-09-10 (CPDF-13, closing D-183 and D-253's join) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema), currently **1.8.0**
+- **Proposer:** CONTENT-PDF, worker `agent-ab1e3df0de5e3b8ec`, 2026-09-10, from QUEUE CPDF-13
+- **Owner to land it:** `RECORD` (I5's owner). The tables are declared in
+  `bio-plane/src/schema.mjs`, the ops in `bio-plane/src/store.mjs` and
+  `bio-plane/src/index.mjs`, and the construct in `bio-plane/src/calibration.mjs`.
+- **Consumers to answer:** `RECORD` (owner), and every area that reads the schema.
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-71 from QUEUE.md),
+  never measured free by hand: seven items collided on a hand-measured id in one day.
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, precisely
+
+**(a) THREE NEW TABLES, all declared BEFORE the `host_governor` block** (the
+`hygiene.test.mjs` rule), with no backticks and no semicolon inside any inline
+`--` comment (the `#migrate` split rule, PL-1 — and the backtick trap was PAID
+FOR again here: the first draft of this block carried six and `node --check`
+reported the SyntaxError at the schema literal):
+
+```
+calibrations         calibration_id PK (CAL-<n>, minted by the store), engine, version,
+                     at, at_ms, cap, probe_id, probe_inputs, scores, measured_by,
+                     superseded_by, drift, note
+                     + INDEX (engine, version, at_ms) and (drift, superseded_by)
+calibration_subjects engine PK, version, probe_id, registered_at, last_probe_ms, enabled
+calibration_signals  signal_id PK, engine, source, observed_at, probe_by_ms, detail,
+                     consumed_at  + INDEX (engine, consumed_at, probe_by_ms)
+```
+
+`replaced_by` and `drift` are the ONLY mutable columns and are set ONCE, when a
+later probe of the same engine lands. Nothing else is ever updated: a calibration
+records a measurement that was taken, and a measurement does not change after the
+fact.
+
+**THE COLUMN IS `replaced_by` AND NOT `superseded_by`, AND A REVIEWER SHOULD KNOW
+WHY BEFORE CONCLUDING THE AUTHOR DID NOT KNOW THE USUAL WORD.** D-221's
+version-chain pin (`test/versionchain.test.mjs` section 2) sweeps the WHOLE schema
+for any stored pointer from one version to another — `supersede[sd]?`,
+`superseded_by`, `predecessor`, `previous_version` and their family — because the
+thesis of that item is that a document's version history is DERIVED from captures
+and is never an edge somebody wrote down. **That pin is total on purpose and this
+column set it off.** The pin was NOT narrowed: a calibration is a measurement of an
+ENGINE rather than a version of a DOCUMENT, so the two constructs are unrelated —
+but loosening a total sweep to admit a lookalike is how a guard stops being total,
+and the next real stored pointer would arrive through the hole this one made. The
+word moved instead, with the reasoning at the column. **The WIRE field on
+`op=calibrations` is still `superseded_by`**, which is the word a reader wants;
+only the stored column carries the constraint.
+
+**(b) ONE ADDITIVE, NULLABLE COLUMN** on `reading_text_source`:
+`calibrations TEXT` (a JSON array of the calibration ids the chain's steps name),
+plus its index. Carried onto an existing store by `#migrate`'s additive-column
+list. **It needs no backfill reasoning of the kind `published_case_members`'
+columns needed, and that is a fact about the column rather than an omission:**
+every column on `reading_text_source` is DERIVED from the stored chain and
+rebuilt with it, so a migrated store fills this in on each reading's next
+projection and cannot disagree with the chain meanwhile. A chain written before
+calibrations existed names none, which is exactly what NULL says and exactly what
+is true of it.
+
+**(c) FIVE NEW OPS.** Two reads (`calibrations`, `calibrationdrift`) and three
+writes (`calibrate`, `calibrationsubject`, `calibrationsignal`). All five admit
+`admin`, `member` and `probe`. `calibrationdrift` takes the REC-30 viewer stamp
+because its rows name the bundle each affected capture is filed in;
+`calibrations` does not, because it answers about ENGINES and names no bundle.
+
+**`calibrate` IS OPEN TO `probe` AND `attesttext` BESIDE IT IS NOT, which looks
+inconsistent and is the considered answer.** Attesting is TESTIMONY — a person
+says they compared this text against the image, and there is no version of that a
+token can perform. Calibrating is MEASURING — a probe ran over stated inputs and
+produced stated scores, and a machine is the right thing to do that; the
+scheduled re-probe this item builds is a machine act by construction. The fence
+that matters is therefore not about who may measure but that a measurement may
+never move a GRADE, and that is enforced structurally (`CAL_CANNOT_REGRADE`, and
+the drift handler writing nothing at all). Admitting the machine and refusing the
+grade move is the honest shape; refusing the machine while letting the grade move
+would be the fence in the wrong place.
+
+**(d) THE PURGE DISPOSITION IS EXEMPTION, NOT INCLUSION, AND IT IS THE ONE
+DECISION IN THIS ROW A REVIEWER SHOULD CHECK HARDEST.** D-113's rule is that a
+DERIVED table must be added to `purge`. These three are not derived from the
+corpus: **a calibration is a measurement of an ENGINE, not of a document.** No
+`bundle_id` appears in any of them, nothing in them is recomputable from captured
+bytes, and a probe that ran on a past date cannot be re-run retroactively. They
+therefore sit in `runtime_observations`' family and are EXEMPTED in
+`hygiene.test.mjs` with that reason stated at the site. The damage of clearing
+them is the argument: **the published projection's transcription grades rest on
+these measurements, so a whole-store purge that dropped them would leave
+published findings whose fidelity ceiling points at a measurement nobody holds** —
+the overclaim class, produced by a reset. The DERIVED half of this item,
+`reading_text_source.calibrations`, IS purged, with its table, as it should be.
+
+### CONSUMER IMPACT, MEASURED RATHER THAN ASSERTED
+
+- **`civicos-ui/**`: ZERO edits.** Measured, not argued: `grep -rn "calibration"
+  civicos-ui/` returns **0 hits** and a grep for the five op names returns **0**.
+  No existing op's answer gains or loses a field and no existing table gains a
+  column the UI reads. `node civicos-ui/test/run.mjs` green.
+- **`newgroup/**`: ZERO edits.** `grep -rn "calibration" newgroup/` returns **0**.
+  The installer ships the schema literal; a new `CREATE TABLE IF NOT EXISTS`
+  before `host_governor` is what every I5 bump since 1.1.0 has been.
+- **SIX EXISTING SUITES CAUGHT THIS CHANGE AND EVERY ONE WAS CORRECTED AT ITS
+  SITE, NEVER EXEMPTED.** This is the measured consumer impact and it is not
+  zero: `scheduler.test.mjs` (registry totality, ten consumers → eleven),
+  `airun.test.mjs` (the same count as a pinned DELTA, 10→11 — corrected rather
+  than loosened to a floor, for the reason its own comment already gives),
+  `hygiene.test.mjs` (D-113's purge-or-exempt census), `rung-ladder.test.mjs`
+  (every mutating op carries a rung or a stated absence — it named all three
+  writes), `gate-reads.test.mjs` (every read is gated or ungated-for-a-reason —
+  it named both reads), and `versionchain.test.mjs` (D-221's total
+  version-edge sweep, which produced the `replaced_by` naming constraint above).
+- **AND TWO RATCHETS CAUGHT REAL UNBOUNDED WORK IN THE FIRST DRAFT, WHICH WAS
+  FIXED RATHER THAN CEILING-MOVED — NO FLOOR OR CEILING IN THIS ITEM MOVED AT
+  ALL.** `derivation-bounds.test.mjs` named a method amplifying over an unbounded
+  scan (`#calDriftFor` walked `reading_text_source` with no LIMIT, and
+  `#mintCalibrationId` read every row to take a max); `meaning-bounds.test.mjs`
+  named a read publishing a bare collection off an unbounded row source
+  (`op=calibrations`). Both now carry the plane's own `limit`/`truncated` pair,
+  the max is taken in SQL, and **the drift read publishes its truncation rather
+  than swallowing it** — an obligation list that silently stopped short would be
+  the record UNDERSTATING a blast radius, the one direction this item must never
+  fail in. `airuns.test.mjs`' index sweep additionally scored
+  `calibrations_drift` as an index nobody filters on, because the predicate had
+  been assembled into a `where` variable and interpolated; the two statements are
+  now written out, which makes the true fact visible to the instrument whose job
+  is to notice its absence.
+
+### MIGRATION
+
+Nothing migrates and nothing is backfilled. An existing store gains three empty
+tables and one NULL column; with no `calibration_subjects` row it registers no
+wake, holds no alarm, and behaves exactly as it did before this row existed.
+
+---
+
+## IC-73 · I2: A DERIVATION STEP IN `text_source`'s CHAIN MAY NAME THE CALIBRATION ITS `cap` RESTS ON — one OPTIONAL field, and a refusal for a reference that is present and UNREADABLE · PROPOSED 2026-09-10 (CPDF-13, closing D-253) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (content → framework), currently **1.1.0 STABLE**
+- **Proposer:** CONTENT-PDF, worker `agent-ab1e3df0de5e3b8ec`, 2026-09-10, from QUEUE CPDF-13
+- **Owner to land it:** `FRAMEWORK` (currently dormant — CONDUCT answers on its
+  behalf IN WRITING per the protocol's step 3, recorded as CONDUCT answering FOR
+  the area and never as the area agreeing)
+- **Producers affected:** `CONTENT-PDF` (live — `src/index.mjs`'s two chain composers)
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-71).
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, precisely
+
+A derivation step in `text_source` may carry one more field:
+
+```
+{ step: "ocr", engine: "…", version: "…", cap: "C",
+  measured_by: "<free string, unchanged>",
++ calibration: "CAL-7" | absent }
+```
+
+That is the whole shape change. `checkChain` gains ONE refusal,
+`TEXT_CHAIN_CAL_REF` (C-35.12), and `textchain.mjs` gains one reader,
+`calibrationsOf(chain)`.
+
+### WHY, AND IT IS D-253 IN ONE SENTENCE
+
+The chain records the ENGINE; the grade rests on a MEASUREMENT; the join between
+them is a SENTENCE. `measured_by` is a free string — today
+`"MEASUREMENTS.md 2026-08-03 (CPDF-9)"` — a pointer a HUMAN can follow, which
+nothing checks, nothing notices going stale, and nothing can invert. No query can
+answer *"which transcriptions rest on a measurement that has been superseded"*,
+which is the question the asymmetric drift handler exists to ask. `calibration`
+is the machine-followable half of the same pointer. **`measured_by` is UNCHANGED
+and is not withdrawn**: it says where a human reads the measurement, and the two
+are not redundant.
+
+### THE FIELD IS OPTIONAL, AND THAT IS THE DECISION, NOT A CONCESSION
+
+**Every chain this record has ever written carries a `cap` and no calibration.** A
+required field would have refused the entire existing store on migration, and a
+fence tighter than its rule is not a safer fence — it is an undeclared interface
+change wearing the costume of caution. So an ABSENT reference stays legal and
+means exactly what it always meant. What IS refused is a reference that is
+**present and unreadable**, because an unresolvable pointer is strictly worse than
+an absent one: it looks like a binding and joins to nothing.
+
+The over-strictness direction is asserted in `test/textchain.test.mjs` by name
+(*"a step with a cap and NO calibration is LEGAL — the pre-CPDF-13 shape"*), and
+`test/calibration.control.mjs`'s `overstrict` arm measures that such an assertion
+is load-bearing rather than decorative.
+
+### CONSUMER IMPACT, MEASURED
+
+- **A consumer reading `step.engine`, `step.version`, `step.cap` or
+  `step.measured_by` is UNAFFECTED** — no field is renamed, reshaped or removed,
+  and no step kind is added. This is IC-39's shape exactly: a new sibling key.
+- **`civicos-ui/**`: ZERO edits, measured** — `grep -rn "calibration" civicos-ui/`
+  returns **0 hits**, and the UI does not read chain steps field-by-field.
+- **`test/textchain.test.mjs` was CORRECTED at its site, never exempted.** Its
+  DEC-49 family-totality assertion caught the new refusal row immediately — the
+  hand-written `codesUsed` list was wrong the moment the refusal landed — and the
+  correction carries a dated reason at the line, with an arm driving the new code.
+  That suite went 189 → 196 assertions, 0 failed.
+- **FRAMEWORK's reader:** the chain reaches FRAMEWORK through FW-15's wire and is
+  consumed whole; an additive per-step key is inert there. CONDUCT should confirm
+  that on the merged tree rather than take it from this branch.
+
+### WHO FILLS IT IN TODAY, STATED PLAINLY BECAUSE IT IS A NARROW ANSWER
+
+`src/index.mjs`'s Tier-3 composer (`ocrTextFromMember`) takes the reference as a
+PARAMETER — it is not looked up there, for `cap`'s own reason: a measurement must
+not acquire a second home. The acquire path joins the member's
+`(engine, version)` to the LIVE calibration for it, one store read, on a branch
+that already makes a network call — so an instance with no OCR member (every
+instance today) pays nothing for this on the capture path. It **fails open to
+NULL, never to a guess**: a store that does not answer, an engine with no
+calibration, or a superseded one all produce the pre-CPDF-13 chain. A
+transcription that cannot name its measurement says so by not naming one; it
+never names the nearest available number.
+
+**`layerChainFor` DELIBERATELY DOES NOT, and it is a closure rather than an
+oversight.** A text layer's cap is `null` by measurement (CPDF-10: a layer is
+authored text and third-party OCR mixed together, and nobody has separated them),
+and D-251's named-engine step is `null` too — somebody else's engine, run at a
+quality nobody here measured. **A calibration reference on a step whose cap is
+`null` would point at a measurement the step does not rest on.** Adding a
+per-acquire store read to attach one would be paying for a join that says
+nothing. When a probe measures a text layer's fidelity, that step gains its
+reference the same way the OCR step does.

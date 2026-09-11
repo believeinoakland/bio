@@ -594,19 +594,17 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  /* MOVED 2026-09-10 by D-265 (883 -> 888 / 164 -> 165 / 165 -> 166), ALL THREE IN
-     THE SAME TURN and every one taken from the figure this item's own green
-     `--strict` run PRINTED — `arms 888/883 · classified 165/164 · corpus 166/165 ·
-     GREW by 5 arm(s)` — never incremented by hand and never counted from the
-     source. The figures were read AFTER the commit, because the comparison is
-     against the REPRODUCIBLE figure and an untracked suite is excluded from it:
-     the same run before committing printed 883/883 and would have moved nothing.
-     The cause is one new suite, `test/walkfigure.test.mjs`, whose `NEGATIVE
-     CONTROL:` declaration states FIVE arms. Every one of those arms was RUN, and
-     each is recorded in that declaration with its measured figures. */
-  arms: 888,
-  classified: 165,
-  corpus: 166,
+  /* MOVED 2026-09-10 TWICE IN ONE INTEGRATION and COLLAPSED TO ONE SET AT THE
+     MERGE, per this claim's own instruction: D-265 moved 883 -> 888 / 164 -> 165 /
+     165 -> 166 (one new suite, walkfigure, five arms) and CPDF-13 independently
+     moved 883 -> 887 / 164 -> 165 / 165 -> 166 (one new suite, calibration, four
+     arms + a deliberately non-ordinal baseline). Neither branch could see the
+     other. The figures below are NEITHER side's: they are what the merged tree's
+     own green `--strict` run PRINTED after this merge commit, read from output,
+     never summed by hand. ONE KEY SET, grepped before writing. */
+  arms: 892,
+  classified: 166,
+  corpus: 167,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

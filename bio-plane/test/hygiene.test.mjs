@@ -626,6 +626,26 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
     capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",
     runtime_observations: "measured CPU cost; a capability fact, not corpus-derived",
+    /* CPDF-13 / D-183. The three calibration tables sit in `runtime_observations`'
+       family and NOT in `reading_text_source`'s, and the distinction is the whole
+       reason the exemption is defensible rather than convenient.
+       A CALIBRATION IS A MEASUREMENT OF AN ENGINE, NOT OF A DOCUMENT. No
+       bundle_id appears in any of the three, nothing in them is recomputable from
+       captured bytes, and the probe that produced each one cannot be re-run
+       retroactively — a fidelity letter is a fact about an engine ON A DATE, and
+       a date that has passed cannot be measured again.
+       AND THE DAMAGE OF CLEARING THEM IS NOT SYMMETRIC WITH THE USUAL PURGE
+       ARGUMENT. `published_bundles` survives a purge because a published claim
+       must stay verifiable; these survive for the same reason one layer down —
+       the published projection's TRANSCRIPTION grades rest on these measurements,
+       so a whole-store purge that cleared them would leave published findings
+       whose fidelity ceiling points at a measurement nobody holds. That is the
+       overclaim class, produced by a reset. The DERIVED half of this item is
+       `reading_text_source.calibrations`, which is a projection of a chain and IS
+       purged, with its table, exactly as it should be. */
+    calibrations:         "dated fidelity measurements of derivation ENGINES (CPDF-13/D-183): a capability fact carrying no bundle_id, unrecomputable from captured bytes, and what the published projection's transcription grades rest on",
+    calibration_subjects: "which engines this instance can probe, and when one last ran; standing configuration of a capability, not corpus-derived",
+    calibration_signals:  "observed vendor announcements (CPDF-13 clause e); somebody else's claim about their own product, kept attributed, and able only to bring the next probe forward — never derived from a captured document",
     cpu_probe:            "stepped CPU-probe checkpoints; transient instrumentation, not corpus-derived",
     host_governor:        "per-host token-bucket governor state; transient pacing, not corpus-derived",
     /* The three DO-constructor tables a purge must not touch (D-137). The other

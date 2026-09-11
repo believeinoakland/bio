@@ -2420,8 +2420,24 @@ CREATE TABLE IF NOT EXISTS reading_text_source (
   engines        TEXT,    -- JSON array of engine names the chain runs through
   derivation_cap TEXT,    -- a BASIS_GRADES letter, or NULL for undetermined
   steps          INTEGER NOT NULL DEFAULT 0,
-  chain          TEXT     -- the chain itself, so a reader needs no second lookup
+  chain          TEXT,    -- the chain itself, so a reader needs no second lookup
+  -- CPDF-13 / D-253: the CALIBRATION IDS this chain's steps reference, JSON
+  -- array. DERIVED from the chain by calibrationsOf() like every other column
+  -- here, so it cannot disagree with the chain it projects.
+  --
+  -- IT IS HERE SO THE DRIFT HANDLER'S QUESTION IS A QUERY. "Which
+  -- transcriptions rest on calibration CAL-n" over a JSON blob is a full scan of
+  -- every reading in the store; over this column it is one indexed read. The
+  -- obligation itself is still DERIVED and stored nowhere (REC-17's rule) --
+  -- what is projected here is the BINDING, which is a fact about the chain, not
+  -- a verdict about the document.
+  --
+  -- NULL means the chain names no calibration, which is the pre-CPDF-13 shape
+  -- and is legal: it says this text never rested on a measurement this record
+  -- holds, which is a different statement from resting on one that moved.
+  calibrations   TEXT
 );
+CREATE INDEX IF NOT EXISTS reading_text_source_cal ON reading_text_source(calibrations);
 CREATE INDEX IF NOT EXISTS reading_text_source_bundle ON reading_text_source(bundle_id);
 CREATE INDEX IF NOT EXISTS reading_text_source_kind
   ON reading_text_source(transcribed, terminal_step);
@@ -2553,6 +2569,110 @@ CREATE TABLE IF NOT EXISTS case_revision_flags (
 -- arrives WITH that statement, which is the rule the finding_dispositions comment
 -- above had to learn by failing the build.
 CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bundle_id);
+
+-- CPDF-13 / D-183 / D-253: THE CALIBRATION -- a dated, identified fidelity
+-- measurement of a named derivation engine and version, stored WITH the probe
+-- inputs and the scores that produced it.
+--
+-- THE INPUTS AND THE SCORES ARE COLUMNS RATHER THAN PROSE, and that is the
+-- item. CPDF-10 shaped measured_by as a free STRING -- today
+-- "MEASUREMENTS.md 2026-08-03 (CPDF-9)" -- which is better than a bare letter
+-- and is still not a binding: nothing checks the pointer resolves, and nothing
+-- can answer "which transcriptions rest on a measurement that has been
+-- superseded". A row here is that answer's other half.
+--
+-- superseded_by IS THE ONLY MUTABLE COLUMN and it is set ONCE, when a later
+-- probe of the same engine lands. Nothing else is ever updated: a calibration
+-- is a record of a measurement that was taken, and a measurement does not
+-- change after the fact. That is append-only history for the same reason the
+-- record's own is.
+--
+-- cap NULL IS A REAL ANSWER, NOT A GAP. A probe that ran and could not
+-- establish a fidelity letter measured something: that this engine's fidelity
+-- is UNDETERMINED, on that date, by that probe. Recording it is strictly better
+-- than recording nothing, because it is DATED.
+CREATE TABLE IF NOT EXISTS calibrations (
+  calibration_id TEXT PRIMARY KEY,   -- CAL-<n>, minted by the store, never by a caller
+  engine         TEXT NOT NULL,      -- the derivation engine measured
+  version        TEXT NOT NULL,      -- ITS version. An external service retrains under one name
+  at             TEXT NOT NULL,      -- the date the PROBE RAN, never the date an announcement landed
+  at_ms          INTEGER NOT NULL,   -- the same instant, for the scheduler's cadence arithmetic
+  cap            TEXT,               -- a BASIS_GRADES letter, or NULL for undetermined -- STATED
+  probe_id       TEXT NOT NULL,      -- which probe produced this
+  probe_inputs   TEXT NOT NULL,      -- JSON. WHAT the probe was given -- two runs of one probe over
+                                     -- different corpora are two measurements wearing one name
+  scores         TEXT NOT NULL,      -- JSON. What came back. Stored so a later reader can disagree
+  measured_by    TEXT NOT NULL,      -- who or what ran the probe
+  -- WHICH CALIBRATION REPLACED THIS ONE. Set ONCE.
+  --
+  -- IT IS replaced_by AND NOT superseded_by, AND THAT IS A DELIBERATE
+  -- NAMING CONSTRAINT RATHER THAN A PREFERENCE. D-221's version-chain pin
+  -- (test/versionchain.test.mjs section 2) sweeps the WHOLE schema for any
+  -- stored pointer from one version to another -- supersede/superseded_by/
+  -- predecessor/previous_version and their family -- because the thesis of that
+  -- item is that a document's version history is DERIVED from captures and is
+  -- never an edge somebody wrote down. That pin is total on purpose and this
+  -- column set it off.
+  --
+  -- THE PIN IS RIGHT AND WAS NOT NARROWED. A calibration is a measurement of an
+  -- ENGINE, not a version of a DOCUMENT, so the two constructs have nothing to
+  -- do with each other -- but loosening a total sweep to admit a lookalike is
+  -- how a guard stops being total, and the next stored pointer would arrive
+  -- through the hole this one made. The word moves instead, and this comment is
+  -- here so a later reader knows the relationship is real and why it is spelled
+  -- this way rather than concluding the author did not know the usual word.
+  replaced_by    TEXT,
+  drift          TEXT,               -- the verdict AT SUPERSESSION: worse, better, same, incomparable
+  note           TEXT
+);
+CREATE INDEX IF NOT EXISTS calibrations_engine ON calibrations(engine, version, at_ms);
+-- "which calibrations have been superseded by a WORSE one" is the drift
+-- handler's whole question, and it is an indexed lookup rather than a scan.
+CREATE INDEX IF NOT EXISTS calibrations_drift ON calibrations(drift, replaced_by);
+
+-- CPDF-13: THE CALIBRATABLE ENGINES THIS INSTANCE ACTUALLY HAS.
+--
+-- The scheduler consumer reads THIS, and an instance with no row here holds NO
+-- ALARM AT ALL -- which is the self-termination property REC-1 prized and the
+-- reason this feature costs an idle instance exactly zero. A group that never
+-- turns on a derivation engine never pays for a probe of one.
+--
+-- ONE PROBE PER SUBJECT PER CADENCE, on the instance's OWN account, against the
+-- free allocation. That is stated in SCHEDULER.md and in calibration.mjs's
+-- header as well as here, because a cost a group discovers by being billed for
+-- it is a cost the plan failed to state.
+CREATE TABLE IF NOT EXISTS calibration_subjects (
+  engine         TEXT PRIMARY KEY,   -- the engine this instance can probe
+  version        TEXT,               -- the version currently installed. NULL until a probe names one
+  probe_id       TEXT NOT NULL,      -- the probe to run for it
+  registered_at  TEXT NOT NULL,
+  last_probe_ms  INTEGER,            -- when a probe LAST RAN. NULL means never -- due immediately
+  enabled        INTEGER NOT NULL DEFAULT 1
+);
+
+-- CPDF-13, clause (e): THE ANNOUNCEMENT WATCH, WHICH MAY ONLY ACCELERATE.
+--
+-- A signal is somebody ELSE'S statement about their own product and the record
+-- keeps it as exactly that. It carries NO cap and NO scores -- checkSignal
+-- refuses one that does -- and the ONE thing it can do is pull probe_by
+-- earlier than the cadence would. It may never stand in for a probe and it may
+-- never itself change a grade.
+--
+-- AND THE ABSENCE OF A SIGNAL DOES NOTHING AT ALL. There is deliberately no
+-- column here that could push a probe OUT: absence of an announcement is not
+-- evidence of no change, and a silent retrain under an unchanged version string
+-- is the exact failure DEC-35 named when it argued against Textract.
+CREATE TABLE IF NOT EXISTS calibration_signals (
+  signal_id      TEXT PRIMARY KEY,
+  engine         TEXT NOT NULL,
+  source         TEXT NOT NULL,      -- WHERE it was observed. A claim, attributed to its claimant
+  observed_at    TEXT NOT NULL,
+  probe_by_ms    INTEGER NOT NULL,   -- the instant this asks the next probe to happen BY
+  detail         TEXT,
+  consumed_at    TEXT                -- set when a probe ran after it. A spent signal accelerates nothing
+);
+CREATE INDEX IF NOT EXISTS calibration_signals_engine
+  ON calibration_signals(engine, consumed_at, probe_by_ms);
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
@@ -2796,6 +2916,7 @@ __export(bio_checks_exports, {
   BIAS_VERDICT_WHOLESALE: () => BIAS_VERDICT_WHOLESALE,
   BOILERPLATE_FORMS: () => BOILERPLATE_FORMS,
   BUNDLE_ID_RE: () => BUNDLE_ID_RE,
+  CALIBRATION_CHECKS: () => CALIBRATION_CHECKS,
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
@@ -9260,6 +9381,60 @@ var TEXT_CHAIN_CHECKS = {
     check: "C-35.11",
     where: "src/textchain.mjs checkAttestation > is-text-attestation",
     translation: "An attestation has to say how much of the document you checked \u2014 this region, this page, or all of it. Checking one table and having that stand behind an entire scanned report is exactly what this record will not do on your behalf."
+  },
+  /* CPDF-13 / D-253. The calibration REFERENCE, and note carefully what this
+     row does NOT refuse: a step with a `cap` and no calibration is the
+     pre-CPDF-13 shape and is LEGAL — every chain written before this rule
+     existed is that shape, and refusing it would be a fence tighter than its
+     rule wearing the costume of caution. What is refused is a reference that is
+     PRESENT AND UNREADABLE, because an unresolvable pointer is worse than an
+     absent one: it looks like a binding and joins to nothing. */
+  TEXT_CHAIN_CAL_REF: {
+    check: "C-35.12",
+    where: "src/textchain.mjs checkChain > is-text-chain-shape",
+    translation: "This step points at the measurement its fidelity rests on, but the pointer is not readable as one. A measurement nobody can look up is not a measurement this record can stand behind \u2014 and a broken pointer is worse than none, because it looks like one that works."
+  }
+};
+var CALIBRATION_CHECKS = {
+  CAL_SHAPE: {
+    check: "C-42.1",
+    where: "src/calibration.mjs checkCalibration > is-calibration-shape",
+    translation: "This measurement is not readable as one. It has to name an engine, a version, a date, and the probe run that produced it \u2014 and the quality figure, where there is one, has to be on the same scale the rest of this record uses."
+  },
+  /* A measurement of "the OCR" is a measurement of nothing re-runnable. */
+  CAL_UNNAMED: {
+    check: "C-42.2",
+    where: "src/calibration.mjs checkCalibration > is-calibration-shape",
+    translation: "A measurement has to say exactly what it measured \u2014 which engine, and which version of it. Services are retrained and re-released under the same name, so the name alone cannot tell a later reader whether the thing you measured is the thing that read their document."
+  },
+  CAL_UNDATED: {
+    check: "C-42.3",
+    where: "src/calibration.mjs checkCalibration > is-calibration-shape",
+    translation: "A measurement has to carry the day it was taken. How good an engine is, is a fact about a particular day \u2014 without one, nothing can tell whether anybody has checked recently, and nothing can ever supersede it."
+  },
+  /* RULE 1, and the one the announcement watch exists under. */
+  CAL_NO_PROBE: {
+    check: "C-42.4",
+    where: "src/calibration.mjs checkCalibration > is-calibration-shape",
+    translation: "Nothing here was actually measured. A release note, a changelog, a model card or a new version number all tell you an engine CHANGED \u2014 none of them tells you how well it now reads a page, and that is the number the record grades against. Run the probe and record what it scored, including the inputs you gave it, so somebody else can disagree with you later."
+  },
+  CAL_SIGNAL_SHAPE: {
+    check: "C-42.5",
+    where: "src/calibration.mjs checkSignal > is-calibration-signal",
+    translation: "This announcement is not readable as one. It has to say which engine it is about and where you saw it, because it is somebody else's statement about their own product and the record keeps it attributed to them."
+  },
+  /* RULE 4's first half, refused at the door rather than sanitised quietly. */
+  CAL_SIGNAL_CLAIMS_MEASUREMENT: {
+    check: "C-42.6",
+    where: "src/calibration.mjs checkSignal > is-calibration-signal",
+    translation: "This announcement carries a quality figure. Noticing that a vendor announced something is useful and the record keeps it \u2014 it brings the next check forward. But what they say about their own product is a claim, and a grade in this record rests on a measurement. The announcement cannot stand in for the check, and it cannot change a grade on its own."
+  },
+  /* RULE 2's teeth at the surface. DEC-4: no machine mints a grade, in EITHER
+     direction — and the direction people expect to be allowed is the downgrade. */
+  CAL_CANNOT_REGRADE: {
+    check: "C-42.7",
+    where: "src/store.mjs calibrationRecord > is-calibration-regrade",
+    translation: "A new measurement cannot re-grade the documents already read by that engine, and that holds even when the new measurement is WORSE. What the record does instead is name exactly which transcriptions were graded under the old measurement, so a person can look at them and decide. Grades in this record are things people put their name to."
   }
 };
 var ADMISSION_CHECKS = {
@@ -11517,6 +11692,22 @@ var RUNG_ABSENT = {
   provenancechain: { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute: { ground: "substrate", is: "assesses a route already captured" },
   airuntick: { ground: "substrate", is: "an AI run's own progress tick" },
+  /* CPDF-13 / D-183. THE THREE CALIBRATION WRITES, and they are `substrate`
+     rather than absent-for-want-of-thought: a RUNG is a step on the ladder of
+     acts that move the RECORD's claims about the civic world, and none of these
+     touches a claim. `calibrate` records what a probe measured of a DERIVATION
+     ENGINE; `calibrationsubject` says which engine this instance can probe; and
+     `calibrationsignal` records that somebody else announced something about
+     their own product. What they establish is how far the record may be
+     TRUSTED, which is a fact about the instrument and not about the subject.
+     AND THE ABSENCE IS LOAD-BEARING RATHER THAN CLERICAL. If `calibrate` carried
+     a rung it would be an act that moves the record — and the whole thesis of
+     this item is that a measurement NEVER moves a grade, in either direction
+     (DEC-4; refused by name at the door as CAL_CANNOT_REGRADE). A rung here
+     would say the opposite of what the construct enforces. */
+  calibrate: { ground: "substrate", is: "records what a probe measured of a derivation ENGINE; it moves no claim and no grade (DEC-4)" },
+  calibrationsubject: { ground: "substrate", is: "declares which engine this instance can probe; registering is not measuring" },
+  calibrationsignal: { ground: "substrate", is: "records a vendor announcement; it may only SHORTEN the interval to the next probe and changes no grade" },
   /* ---- credential: who may act, not what the record says. */
   memberadd: { ground: "credential", is: "roster governance" },
   memberset: { ground: "credential", is: "roster governance" },
@@ -16278,6 +16469,11 @@ function checkChain(chain2) {
         "TEXT_CHAIN_STEP_UNNAMED",
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
+    if (step.calibration != null && !(typeof step.calibration === "string" && step.calibration.trim()))
+      return refusal(
+        "TEXT_CHAIN_CAL_REF",
+        `step ${i} names a calibration that is not a readable identifier (${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works`
+      );
   }
   return null;
 }
@@ -16297,8 +16493,22 @@ function appendStep(chain2, step) {
   }
   return [...chain2, { ...step }];
 }
-function layerChain({ tier = null, container = null, cap = null, measured_by = null } = {}) {
-  return [{ step: "layer", tier, container, cap, measured_by }];
+function layerChain({
+  tier = null,
+  container = null,
+  cap = null,
+  measured_by = null,
+  calibration = null
+} = {}) {
+  return [{ step: "layer", tier, container, cap, measured_by, calibration }];
+}
+function calibrationsOf(chain2) {
+  if (checkChain(chain2)) return [];
+  const out = [];
+  for (const s of chain2)
+    if (typeof s.calibration === "string" && s.calibration.trim() && !out.includes(s.calibration))
+      out.push(s.calibration);
+  return out;
 }
 function derivationCap(chain2, target = null) {
   if (checkChain(chain2)) return null;
@@ -18494,7 +18704,7 @@ function compile({
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
-  const rank2 = rankExpr(ctx.textAtoms);
+  const rank3 = rankExpr(ctx.textAtoms);
   const set = setSql(ast);
   const widenable = implicitOp !== "or" && ast?.op === "and" && Array.isArray(ast.kids) && ast.kids.length > 1;
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
@@ -18512,24 +18722,24 @@ function compile({
       parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
     }
     const args = [...set.args, ...idArm ? idArm.args : []];
-    if (withRanked && rank2) {
+    if (withRanked && rank3) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
-      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank2);
+      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank3);
     }
     return { sql: "WITH " + parts.join(",\n     "), args };
   };
-  const sortField = ctx.sort?.field || (rank2 ? "relevance" : "updated");
+  const sortField = ctx.sort?.field || (rank3 ? "relevance" : "updated");
   const sortDir = ctx.sort?.dir || (sortField === "relevance" ? "ASC" : "DESC");
   let order;
-  if (sortField === "relevance" && rank2) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
+  if (sortField === "relevance" && rank3) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
     const col = `b.${SORTABLE[sortField]}`;
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
   const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
-  const joinRanked = rank2 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
-  const scored = rank2 ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
+  const joinRanked = rank3 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
+  const scored = rank3 ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
   const page = () => {
     const c = cte(true);
     return { sql: `${c.sql}
@@ -18630,7 +18840,7 @@ WHERE ${gate.sql}`,
     sort: { field: sortField, dir: sortDir },
     limit: lim,
     offset: off,
-    match: rank2,
+    match: rank3,
     terms: ctx.textAtoms.map((a) => a.value),
     widenable,
     /* D-222 option A: which meaning arms this query compiled, in order. */
@@ -18858,6 +19068,177 @@ function finishedBound(bounds, { expired = false, offered = null } = {}) {
   if (hit) return String(hit.bound);
   if (expired) return "lease";
   return "completed";
+}
+
+// src/calibration.mjs
+var CALIBRATION_CADENCE_MS = 30 * 24 * 60 * 60 * 1e3;
+function cadenceSentence(ms = CALIBRATION_CADENCE_MS) {
+  const days = ms / (24 * 60 * 60 * 1e3);
+  return `one probe per calibratable engine every ${Number.isInteger(days) ? days : days.toFixed(2)} day(s), on this instance's own account`;
+}
+var DRIFT = { WORSE: "worse", BETTER: "better", SAME: "same", INCOMPARABLE: "incomparable" };
+var PROBE_REQUIRED = ["probe_id", "probe_inputs", "scores"];
+function refusal3(key, detail) {
+  const row = CALIBRATION_CHECKS[key];
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+}
+function rank2(letter) {
+  const i = BASIS_GRADES.indexOf(letter);
+  return i < 0 ? null : i;
+}
+function checkCalibration(cal) {
+  const c = cal && typeof cal === "object" && !Array.isArray(cal) ? cal : null;
+  if (!c)
+    return refusal3("CAL_SHAPE", `a calibration is an object; got ${cal === null ? "null" : typeof cal}`);
+  if (!(typeof c.engine === "string" && c.engine.trim()) || !(typeof c.version === "string" && c.version.trim()))
+    return refusal3(
+      "CAL_UNNAMED",
+      `a calibration names the ENGINE and the VERSION it measured. A measurement of "the OCR" is a measurement of nothing re-runnable: an external service retrains under an unchanged name (DEC-35's own argument against Textract), which is exactly why the pair is required and why neither half is enough alone`
+    );
+  if (!(typeof c.at === "string" && c.at.trim()))
+    return refusal3(
+      "CAL_UNDATED",
+      `a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a reader whether anybody has looked recently`
+    );
+  if (c.cap != null && rank2(c.cap) == null)
+    return refusal3(
+      "CAL_SHAPE",
+      `cap '${String(c.cap)}' is not one of ${BASIS_GRADES.join(", ")}, and a calibration does not invent a scale of its own \u2014 transcription fidelity bounds the capture axis and there is no third one (DEC-4)`
+    );
+  for (const field of PROBE_REQUIRED) {
+    const v = c[field];
+    const present = typeof v === "string" ? v.trim().length > 0 : v != null && typeof v === "object" ? Object.keys(v).length > 0 : false;
+    if (!present)
+      return refusal3(
+        "CAL_NO_PROBE",
+        `this calibration carries no ${field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter`
+      );
+  }
+  if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
+    return refusal3(
+      "CAL_NO_PROBE",
+      `a calibration names what ran the probe. An unattributed measurement is one nobody can re-run`
+    );
+  return null;
+}
+function compare2(next, prev) {
+  if (checkCalibration(next)) return DRIFT.INCOMPARABLE;
+  if (prev == null) return DRIFT.SAME;
+  if (checkCalibration(prev)) return DRIFT.INCOMPARABLE;
+  if (next.engine !== prev.engine) return DRIFT.INCOMPARABLE;
+  const rn = next.cap == null ? null : rank2(next.cap);
+  const rp = prev.cap == null ? null : rank2(prev.cap);
+  if (rn == null && rp == null) return DRIFT.SAME;
+  if (rn == null) return DRIFT.WORSE;
+  if (rp == null) return DRIFT.BETTER;
+  if (rn === rp) return DRIFT.SAME;
+  return rn > rp ? DRIFT.WORSE : DRIFT.BETTER;
+}
+function drifted(verdict) {
+  switch (verdict) {
+    case DRIFT.WORSE:
+      return {
+        verdict,
+        raises_obligation: true,
+        regrades: false,
+        why: `this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)`
+      };
+    case DRIFT.BETTER:
+      return {
+        verdict,
+        raises_obligation: false,
+        regrades: false,
+        why: `this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be the plane making a claim nobody authored (DEC-4)`
+      };
+    case DRIFT.SAME:
+      return {
+        verdict,
+        raises_obligation: false,
+        regrades: false,
+        why: `this measurement agrees with the one it supersedes, so nothing rests on a superseded number`
+      };
+    default:
+      return {
+        verdict: DRIFT.INCOMPARABLE,
+        raises_obligation: false,
+        regrades: false,
+        why: `these two measurements cannot be compared \u2014 a malformed calibration or a different engine \u2014 so no direction can be claimed, and an obligation raised on an uncomparable pair would name transcriptions for a reason nobody could check`
+      };
+  }
+}
+function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRATION_CADENCE_MS } = {}) {
+  if (!Number.isFinite(lastAt)) return {
+    at: 0,
+    from: "never-probed",
+    why: `nothing has ever probed this engine, so a probe is due immediately rather than a cadence from a measurement that does not exist`
+  };
+  const cadenceAt = lastAt + cadenceMs;
+  let at = cadenceAt, from = "cadence";
+  for (const s of Array.isArray(signals) ? signals : []) {
+    const by = s && Number.isFinite(s.probe_by) ? s.probe_by : null;
+    if (by == null) continue;
+    if (by < at) {
+      at = by;
+      from = "signal";
+    }
+  }
+  return {
+    at: Math.min(at, cadenceAt),
+    from,
+    cadence_at: cadenceAt,
+    why: from === "signal" ? `an announcement shortened the interval to the next probe. A watch may only ever ACCELERATE a probe: it never stands in for one and it never itself changes a grade, because absence of an announcement is not evidence of no change and a vendor's documentation is a claim, not a measurement` : `the declared cadence, ${cadenceSentence(cadenceMs)}`
+  };
+}
+function checkSignal(sig) {
+  const s = sig && typeof sig === "object" && !Array.isArray(sig) ? sig : null;
+  if (!s) return refusal3("CAL_SIGNAL_SHAPE", `an announcement signal is an object`);
+  if (!(typeof s.engine === "string" && s.engine.trim()))
+    return refusal3("CAL_SIGNAL_SHAPE", `an announcement signal names the engine it is about`);
+  if (!(typeof s.source === "string" && s.source.trim()))
+    return refusal3(
+      "CAL_SIGNAL_SHAPE",
+      `an announcement signal names WHERE it was observed. It is somebody else's statement about their own product and the record keeps it as that`
+    );
+  if (s.cap !== void 0 || s.scores !== void 0)
+    return refusal3(
+      "CAL_SIGNAL_CLAIMS_MEASUREMENT",
+      `this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing else \u2014 it may never stand in for a probe, and it may never itself set or change a grade. Record the announcement, then run the probe`
+    );
+  return null;
+}
+function driftObligations(supersessions, bound) {
+  const worse = /* @__PURE__ */ new Map();
+  for (const s of Array.isArray(supersessions) ? supersessions : []) {
+    if (!s || !s.superseded || !s.current) continue;
+    if (drifted(s.verdict).raises_obligation !== true) continue;
+    worse.set(s.superseded.calibration_id, s);
+  }
+  const out = [];
+  for (const b of Array.isArray(bound) ? bound : []) {
+    if (!b || b.calibration_id == null) continue;
+    const s = worse.get(b.calibration_id);
+    if (!s) continue;
+    out.push({
+      ...b,
+      superseded_calibration: s.superseded.calibration_id,
+      current_calibration: s.current.calibration_id,
+      engine: s.current.engine,
+      version_measured: s.current.version,
+      cap_when_graded: s.superseded.cap ?? null,
+      cap_now_measured: s.current.cap ?? null,
+      measured_at: s.current.at,
+      verdict: DRIFT.WORSE,
+      /* THE TRIPLE REC-17 ALREADY PUBLISHES, reused rather than minted. A
+         second vocabulary for "this needs another look" would be D-164's lesson
+         inside the item whose whole thesis is that a provenance rule has ONE
+         home. */
+      reeval: { flag: true, since: s.current.at, source: "calibration" },
+      regraded: false,
+      why: `this text was graded under calibration ${s.superseded.calibration_id} of ${s.superseded.engine} ${s.superseded.version} (fidelity ${s.superseded.cap ?? "undetermined"}, measured ${s.superseded.at}). A probe on ${s.current.at} measured that engine at ${s.current.cap ?? "undetermined"}, which is WEAKER \u2014 so what this transcription may support is now less than the record says. NOTHING HAS BEEN RE-GRADED: a grade moves by an authored act and never by a machine (DEC-4). This names the work; a member does it`
+    });
+  }
+  out.sort((a, b) => String(a.id) < String(b.id) ? -1 : 1);
+  return out;
 }
 
 // src/skilldoctrine.mjs
@@ -19165,19 +19546,19 @@ var LICENSES_NOTHING = Object.keys(OBSERVATION_STATES).filter((s) => !DEFINITIVE
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/skillpack.mjs
-function refusal3(key, detail) {
+function refusal4(key, detail) {
   const row = AI_RUN_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 function checkSkillVersion(version) {
   const v = typeof version === "string" ? version.trim() : "";
   if (!v)
-    return refusal3(
+    return refusal4(
       "AI_RUN_SKILL_VERSION_UNNAMED",
       "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them"
     );
   if (!/^[^\s@]+@[^\s@]+$/.test(v))
-    return refusal3(
+    return refusal4(
       "AI_RUN_SKILL_VERSION_UNNAMED",
       `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`
     );
@@ -19447,7 +19828,16 @@ var Store = class _Store extends DurableObject {
          group's answer -- and would have to CHOOSE, where two members ratified
          either side of a project's bar moving. The full reasoning is at the
          column in schema.mjs. */
-      ["published_cases", "bar", "TEXT"]
+      ["published_cases", "bar", "TEXT"],
+      /* CPDF-13 / D-253: the calibration ids a reading's chain references.
+         Additive and nullable, and NULL here needs no backfill reasoning of the
+         kind the two rows above needed — because this column is DERIVED. Every
+         other column on `reading_text_source` is computed from the stored chain
+         and rebuilt with it, so a store migrated forward fills this in on each
+         reading's next projection and cannot disagree with the chain meanwhile.
+         A chain written before calibrations existed names none, which is exactly
+         what NULL says and exactly what is true of it. */
+      ["reading_text_source", "calibrations", "TEXT"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -20790,6 +21180,63 @@ var Store = class _Store extends DurableObject {
         due: (now) => this.#aiRunWakePending(now) > 0 ? now : null,
         wake: (now) => this.#aiRunWakeWake(now),
         tick: (now) => ({ airunwake: this.#aiRunWake(now) })
+      },
+      /* CPDF-13 / D-183 — THE CALIBRATION RE-PROBE, and ONE APPENDED ENTRY
+               exactly as SCHEDULER.md instructs: *"append an entry to
+               #schedConsumers… Do NOT add a second alarm or a cron; that is the
+               decision this file records."* No cron line is added to wrangler.jsonc
+               and no second alarm exists.
+      
+               A NOTE ON THE COUNT, because the item's own text will read as wrong to
+               the next person: QUEUE.md CPDF-13 calls this "a SIXTH REC-1 alarm
+               consumer", which it was on 2026-08-04 when Bob wrote the entry. Five
+               more landed while the item sat queued. This is the ELEVENTH, and the
+               figure is corrected here rather than in the item, because the item is
+               CONDUCT's ground and because a stale count in a brief is exactly the
+               hand-carried-number failure this repository names most often. What the
+               item MEANT — one more consumer on the one alarm, registered the
+               ordinary way — is what this is.
+      
+               WHY A CONSUMER AT ALL, which is D-183's argument and not a scheduling
+               preference. A transcription's grade rests on a fidelity letter; a
+               fidelity letter is a measurement of an engine AT A DATE; engines move.
+               With no clock, the record's grades rest on a measurement that silently
+               ages, and the age is invisible because nothing is looking. This
+               consumer is the thing that looks.
+      
+               INTERVAL-CONSUMER SHAPE, like queue-renotify, monitor-cadence and the
+               reaper: due only when a subject is actually past its own next-probe
+               instant, so it fires at its own moment and no other's. ITS CADENCE IS
+               PER SUBJECT and is `CALIBRATION_CADENCE_MS` — a DECLARED CONSTANT,
+               thirty days, chosen and recorded as chosen because nobody has yet
+               measured how fast a derivation engine drifts. It is revisable by
+               measurement and lives in `calibration.mjs`, in one place, which
+               SCHEDULER.md quotes by name rather than re-typing.
+      
+               AND IT SELF-TERMINATES ON AN INSTANCE THAT HAS REGISTERED NOTHING.
+               `#calibrationWake` returns null on its first line when
+               `calibration_subjects` is empty, so an instance with no calibratable
+               engine holds NO ALARM AT ALL and this feature costs it exactly zero.
+               That is the property REC-1 prized and the one the Free tier the
+               installer targets is paid for. WHAT IT COSTS A GROUP THAT DOES
+               REGISTER ONE, stated here and in SCHEDULER.md so no group discovers it
+               by being billed: ONE PROBE PER SUBJECT PER CADENCE, on the INSTANCE'S
+               OWN ACCOUNT, against the free allocation — never one per document,
+               never one per capture, and never somebody else's vendor key (D-115's
+               class: a sovereign instance must not need a second account).
+      
+               THE TICK RUNS NO PROBE AND WRITES NO CALIBRATION, and that is rule 1
+               holding at the one place it would be most tempting to bend. This plane
+               holds no derivation engine of its own; the tick marks the subject OWED
+               and says so in words. A tick that treated "the cadence elapsed and
+               nobody announced anything" as grounds to refresh a calibration would be
+               the claim-versus-measurement failure committed by the scheduler, and
+               `calibrationRecord` would refuse it anyway. */
+      {
+        name: "calibration-reprobe",
+        due: (now) => this.#calibrationDue(now) > 0 ? now : null,
+        wake: (now) => this.#calibrationWake(now),
+        tick: (now) => ({ calibration: this.#calibrationTick(now) })
       }
     ];
     for (const name of Object.keys(probe || {})) {
@@ -20821,7 +21268,7 @@ var Store = class _Store extends DurableObject {
     const probe = await this.#probeState(now);
     const reg = this.#schedConsumers(probe);
     const grace = _Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null, queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null, airunwake = null;
+    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null, queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null, airunwake = null, calibration = null;
     const probes = [];
     for (const c of reg) {
       const d2 = c.due(now);
@@ -20837,6 +21284,7 @@ var Store = class _Store extends DurableObject {
       else if (c.name === "ai-run-reap") airunreap = r && r.airunreap;
       else if (c.name === "capture-request-drain") capturerequests = r && r.capturerequests;
       else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;
+      else if (c.name === "calibration-reprobe") calibration = r && r.calibration;
       else probes.push(c.name);
     }
     const nextAt = await this.#reconcileAlarm(now, reg, true);
@@ -20860,7 +21308,8 @@ var Store = class _Store extends DurableObject {
       ...monitorcadence ? { monitorcadence } : {},
       ...airunreap ? { airunreap } : {},
       ...capturerequests ? { capturerequests } : {},
-      ...airunwake ? { airunwake } : {}
+      ...airunwake ? { airunwake } : {},
+      ...calibration ? { calibration } : {}
     };
   }
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -23796,14 +24245,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       };
     const bar = this.#projectBar(proj);
     if (bar.declared) {
-      const rank2 = (g) => BASIS_GRADES.indexOf(g);
+      const rank3 = (g) => BASIS_GRADES.indexOf(g);
       for (const m of loadBearing) {
         const pair = this.strengthOf(m.target);
         for (const axis of _Store.STRENGTH_AXES) {
           const want = bar[axis];
           if (!BASIS_GRADES.includes(want)) continue;
           const got = pair[axis];
-          if (got.grade === null || rank2(got.grade) > rank2(want))
+          if (got.grade === null || rank3(got.grade) > rank3(want))
             return {
               ok: false,
               reason: "BELOW_PROJECT_STRENGTH",
@@ -26731,7 +27180,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  itself rather than saying anything, and it would let a caller grow the log
    *  without limit. */
   provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row = ROUTE_MARK_CHECKS[code];
       return {
         ok: false,
@@ -26745,12 +27194,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     const who = String(author ?? "").trim();
     if (!who)
-      return refusal4(
+      return refusal5(
         "ROUTE_MARK_NO_AUTHOR",
         "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement. This refuses an act with NO principal, and deliberately not a machine one \u2014 op=provenancechain draws the same line and no other, and a stricter fence here would be this op ruling on DEC-52's ground as a side effect."
       );
     if (!bundleId)
-      return refusal4("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+      return refusal5("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
     const gate = viewerPredicate(viewer);
     const seen = this.#one(
       `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
@@ -26758,13 +27207,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       ...gate.args
     );
     if (!seen)
-      return refusal4(
+      return refusal5(
         "ROUTE_MARK_NO_SUCH_BUNDLE",
         "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
         { bundleId }
       );
     if (seen.object_type !== "information")
-      return refusal4(
+      return refusal5(
         "ROUTE_MARK_NOT_A_DOCUMENT",
         `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
         { bundleId, objectType: seen.object_type }
@@ -28181,10 +28630,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   #writeTextSource(bundleId, sha, chain2) {
     if (checkChain(chain2)) return;
     const engines = [...new Set(chain2.filter((s) => typeof s.engine === "string" && s.engine).map((s) => s.engine))];
+    const cals = calibrationsOf(chain2);
     this.sql.exec(
       `INSERT OR REPLACE INTO reading_text_source
-         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain)
-       VALUES (?,?,?,?,?,?,?,?)`,
+         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain,calibrations)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
       sha,
       bundleId,
       isTranscribed(chain2) ? 1 : 0,
@@ -28192,7 +28642,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       JSON.stringify(engines),
       derivationCap(chain2),
       chain2.length,
-      JSON.stringify(chain2)
+      JSON.stringify(chain2),
+      cals.length ? JSON.stringify(cals) : null
     );
   }
   /* CPDF-10: RECORD A MEMBER'S ATTESTATION that a document's text matches the
@@ -28490,6 +28941,520 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         derivation_cap: r.derivation_cap,
         steps: r.steps
       }))
+    };
+  }
+  /* ================================================================== *
+   * CPDF-13 — THE CALIBRATION REGION (D-183, D-253).
+   * ================================================================== *
+   *
+   * FOUR STORE METHODS AND ONE SCHEDULER CONSUMER. The RULES are all in
+   * `calibration.mjs` and none of them is restated here; what lives in this
+   * file is the storage, the join, and the surfaces.
+   *
+   * THE ONE THING TO UNDERSTAND BEFORE READING ANY OF IT: the drift handler
+   * WRITES NOTHING ABOUT A TRANSCRIPTION. `calibrationRecord` writes a
+   * calibration row and stamps `replaced_by`/`drift` on the one it replaces —
+   * facts about MEASUREMENTS — and stops. It does not touch `readings`, it does
+   * not touch `reading_text_source`, it does not touch a grade, and it does not
+   * write an obligation. The obligation is DERIVED by `calibrationDrift` on
+   * read, which is REC-17's shape and REC-17's two reasons: a stored verdict
+   * goes stale in both directions, and the member decides rather than the plane.
+   *
+   * THAT IS ALSO WHY THE NEGATIVE CONTROL FOR THIS ITEM IS ARMED BY ADDING
+   * CODE RATHER THAN BY REMOVING IT. There is no line here to delete that would
+   * make the handler re-grade; an arm has to INSERT the write. An arm that must
+   * add a defect to expose one is a stronger statement about the design than an
+   * arm that removes a guard, and it is stated here so the next reader knows the
+   * control was shaped that way on purpose.
+   * ================================================================== */
+  /* The instance's own calibratable engines. An instance with no row here is an
+     instance that holds no alarm for this consumer at all (see the registry
+     entry) — so this read is also the honest answer to "what does this feature
+     cost me", which is nothing until a group registers something. */
+  calibrationSubjects() {
+    return this.#rows(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE enabled=1 ORDER BY engine`
+    );
+  }
+  /* The live (not-yet-superseded) calibration for an engine, or null. ONE row by
+     construction: `calibrationRecord` supersedes the previous one in the same
+     transaction as it inserts the new, so two live rows for one engine is a
+     state this store cannot reach. */
+  #calibrationCurrent(engine) {
+    return this.#one(
+      `SELECT * FROM calibrations WHERE engine=? AND replaced_by IS NULL
+        ORDER BY at_ms DESC LIMIT 1`,
+      engine
+    ) || null;
+  }
+  /* CAL-<n>, minted from the highest suffix this store has ever used rather than
+     from a count — a count re-issues an id after any row is removed, and an id
+     that has meant two things is worse than a gap. The Durable Object
+     serialises, so this needs no lock. */
+  #mintCalibrationId() {
+    const row = this.#one(
+      `SELECT MAX(CAST(substr(calibration_id, 5) AS INTEGER)) AS n FROM calibrations
+        WHERE calibration_id LIKE 'CAL-%'`
+    );
+    const max = row && Number.isFinite(Number(row.n)) ? Number(row.n) : 0;
+    return `CAL-${max + 1}`;
+  }
+  /** RECORD A CALIBRATION — a probe ran, and this is what it measured.
+   *
+   *  EVERY REFUSAL IS `calibration.mjs`'s, called from here AND from the op, so
+   *  a measurement that cannot land through the door cannot be smuggled in
+   *  through a second one (`checkAttestation`'s precedent exactly).
+   *
+   *  WHAT HAPPENS TO THE PREVIOUS CALIBRATION, and it is the whole asymmetry:
+   *  it is stamped `replaced_by` and with the DRIFT VERDICT, in the same
+   *  transaction. That verdict is the ONLY thing the drift handler needs, and
+   *  stamping it here rather than deriving it later is not a stored verdict in
+   *  REC-17's forbidden sense — it is a fact about two MEASUREMENTS, fixed the
+   *  moment both exist and unable to go stale. What is never stored is any
+   *  verdict about a TRANSCRIPTION, which is the thing that would go stale in
+   *  both directions.
+   *
+   *  AND THE SIGNALS ARE CONSUMED. A probe that has run answers every
+   *  announcement that was asking for one, so a spent signal stops accelerating
+   *  anything — otherwise one changelog entry would pull every future probe
+   *  forward for ever. */
+  calibrationRecord(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const at = typeof pkg.at === "string" && pkg.at.trim() ? pkg.at : new Date(now).toISOString();
+    const cal = {
+      engine: pkg.engine,
+      version: pkg.version,
+      at,
+      cap: pkg.cap === void 0 ? null : pkg.cap,
+      probe_id: pkg.probe_id,
+      probe_inputs: pkg.probe_inputs,
+      scores: pkg.scores,
+      measured_by: typeof pkg.measured_by === "string" ? pkg.measured_by : ""
+    };
+    if (pkg.regrade !== void 0 || pkg.apply_to_transcriptions !== void 0)
+      return {
+        ok: false,
+        reason: "CAL_CANNOT_REGRADE",
+        code: "CAL_CANNOT_REGRADE",
+        ...this.#calCheckRow("CAL_CANNOT_REGRADE"),
+        detail: `this call asks the new measurement to re-grade the transcriptions already made by ${String(pkg.engine)}. A calibration records what an engine scores; it never moves a grade, in EITHER direction \u2014 a grade rises or falls only by an authored act (DEC-4, no machine mints a grade). Record the measurement, then read op=calibrationdrift for exactly which transcriptions a member should look at`
+      };
+    const bad = checkCalibration(cal);
+    if (bad) return { ok: false, reason: bad.code, ...bad };
+    return this.ctx.storage.transactionSync(() => {
+      const prev = this.#calibrationCurrent(cal.engine);
+      const id = this.#mintCalibrationId();
+      const verdict = compare2(
+        { ...cal, calibration_id: id },
+        prev ? this.#calRowToCal(prev) : null
+      );
+      this.sql.exec(
+        `INSERT INTO calibrations
+           (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by,note)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        cal.engine,
+        cal.version,
+        cal.at,
+        now,
+        cal.cap,
+        String(cal.probe_id),
+        typeof cal.probe_inputs === "string" ? cal.probe_inputs : JSON.stringify(cal.probe_inputs),
+        typeof cal.scores === "string" ? cal.scores : JSON.stringify(cal.scores),
+        cal.measured_by,
+        typeof pkg.note === "string" ? pkg.note : null
+      );
+      if (prev)
+        this.sql.exec(
+          `UPDATE calibrations SET replaced_by=?, drift=? WHERE calibration_id=?`,
+          id,
+          verdict,
+          prev.calibration_id
+        );
+      this.sql.exec(
+        `INSERT INTO calibration_subjects (engine,version,probe_id,registered_at,last_probe_ms,enabled)
+         VALUES (?,?,?,?,?,1)
+         ON CONFLICT(engine) DO UPDATE SET version=excluded.version, probe_id=excluded.probe_id,
+                                           last_probe_ms=excluded.last_probe_ms`,
+        cal.engine,
+        cal.version,
+        String(cal.probe_id),
+        cal.at,
+        now
+      );
+      this.sql.exec(
+        `UPDATE calibration_signals SET consumed_at=? WHERE engine=? AND consumed_at IS NULL`,
+        cal.at,
+        cal.engine
+      );
+      const d = drifted(verdict);
+      const obligations = d.raises_obligation ? this.#calDriftFor(prev.calibration_id) : [];
+      return {
+        ok: true,
+        calibration_id: id,
+        engine: cal.engine,
+        version: cal.version,
+        at: cal.at,
+        cap: cal.cap,
+        supersedes: prev ? prev.calibration_id : null,
+        drift: d,
+        /* NAMED IN THE ANSWER, always, including when it is zero — an
+           absent field reads as "not applicable" and a 0 reads as
+           "asked, and the answer was none". */
+        obligations_raised: obligations.length,
+        obligations,
+        regraded: 0,
+        why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} ${cal.version} on ${cal.at}: fidelity ${cal.cap ?? "undetermined"}. ${d.why}`
+      };
+    });
+  }
+  /* The catalogue row for a calibration code, so a refusal from this file
+     carries the same `check`/`translation` pair the construct's own refusals
+     do. Read from the catalogue rather than typed here — DEC-49's rule that a
+     code has one home, and the reason `refusal()` exists in calibration.mjs. */
+  #calCheckRow(code) {
+    const row = CALIBRATION_CHECKS[code];
+    return row ? { check: row.check, translation: row.translation } : {};
+  }
+  /* A stored row, back into the shape `calibration.mjs` compares. */
+  #calRowToCal(r) {
+    return {
+      calibration_id: r.calibration_id,
+      engine: r.engine,
+      version: r.version,
+      at: r.at,
+      cap: r.cap ?? null,
+      probe_id: r.probe_id,
+      probe_inputs: r.probe_inputs,
+      scores: r.scores,
+      measured_by: r.measured_by
+    };
+  }
+  /** THE ASYMMETRIC DRIFT HANDLER'S ANSWER — derived, never stored.
+   *
+   *  Which transcriptions rest on a calibration that a LATER probe measured
+   *  WORSE? The join is one indexed read on `calibrations_drift` and one on
+   *  `reading_text_source.calibrations`, and the verdict comes from
+   *  `drifted()`, so the direction rule has exactly one home.
+   *
+   *  THE SET IS EXACT IN BOTH DIRECTIONS AND THE SUITE ASSERTS THE ABSENCES AS
+   *  HARD AS THE PRESENCES. Not here: a transcription bound to a calibration
+   *  superseded by a BETTER measurement; one bound to a calibration nothing has
+   *  superseded; one whose chain names no calibration at all. That last one is
+   *  the subtle absence and it is correct — text that never rested on a
+   *  measurement is not affected by that measurement moving, and sweeping it in
+   *  because it happens to name the same engine would be the record raising an
+   *  obligation nobody can discharge. */
+  #calDriftFor(supersededId = null) {
+    const supers = (supersededId ? this.#rows(
+      `SELECT * FROM calibrations
+            WHERE drift=? AND replaced_by IS NOT NULL AND calibration_id=?`,
+      DRIFT.WORSE,
+      supersededId
+    ) : this.#rows(
+      `SELECT * FROM calibrations
+            WHERE drift=? AND replaced_by IS NOT NULL`,
+      DRIFT.WORSE
+    )).map((r) => ({
+      superseded: this.#calRowToCal(r),
+      verdict: r.drift,
+      current: (() => {
+        const c = this.#one(
+          `SELECT * FROM calibrations WHERE calibration_id=?`,
+          r.replaced_by
+        );
+        return c ? this.#calRowToCal(c) : null;
+      })()
+    })).filter((s) => s.current);
+    if (!supers.length) return [];
+    const wanted = new Set(supers.map((s) => s.superseded.calibration_id));
+    const cap = _Store.TEXT_SOURCE_LIMIT_MAX;
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id, derivation_cap, chain, calibrations
+         FROM reading_text_source WHERE calibrations IS NOT NULL
+        ORDER BY capture_sha LIMIT ?`,
+      cap + 1
+    );
+    const truncated = page.length > cap;
+    const bound = [];
+    for (const r of page.slice(0, cap)) {
+      for (const id of safeJson(r.calibrations) || []) {
+        if (!wanted.has(id)) continue;
+        bound.push({
+          id: r.capture_sha,
+          capture_sha: r.capture_sha,
+          bundle_id: r.bundle_id,
+          calibration_id: id,
+          derivation_cap_recorded: r.derivation_cap ?? null
+        });
+      }
+    }
+    const out = driftObligations(supers, bound);
+    out.truncated = truncated;
+    out.limit = cap;
+    return out;
+  }
+  /** op=calibrationdrift. The derived obligation, gated the way every read that
+   *  names a bundle is (REC-30): a row ABOUT a bundle the viewer may not see is
+   *  WITHHELD WHOLE with no count of what was withheld, because that count is
+   *  the leak. */
+  calibrationDrift({ engine = null, viewer = null } = {}) {
+    const visible = this.#bundleRedactor(viewer);
+    const raw = this.#calDriftFor(null);
+    const all = raw.filter((o) => engine ? o.engine === engine : true).filter((o) => visible(o.bundle_id) !== null);
+    return {
+      ok: true,
+      ...engine ? { engine } : {},
+      obligations: all,
+      count: all.length,
+      /* `limit` beside `truncated`, the plane's own spelling (REC-60's
+         pair). An UNDERSTATED obligation list is the one direction this
+         read must never fail in, so the shortfall is published rather
+         than inferred. */
+      limit: raw.limit,
+      truncated: !!raw.truncated,
+      /* STATED IN EVERY ANSWER, including the empty one, because the
+         property this item is accepted on is that nothing moved. A
+         reader should not have to infer it from an absence. */
+      regraded: 0,
+      why: all.length ? `${all.length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)` : `no transcription in this store rests on a calibration that a later probe measured worse. A calibration that measured BETTER raises nothing by design \u2014 a grade rises only by an authored act`
+    };
+  }
+  /** op=calibrations. What this instance has measured, and when the next probe
+   *  is due for each subject. The due instant comes from `nextProbeDue`, which
+   *  is also what the scheduler consumer reads — one answer, so the surface
+   *  cannot tell a member something different from what the alarm will do. */
+  calibrations({ engine = null, nowMs = null, limit = null } = {}) {
+    const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _Store.TEXT_SOURCE_LIMIT_DEFAULT),
+      _Store.TEXT_SOURCE_LIMIT_MAX
+    ));
+    const page = this.#rows(
+      `SELECT * FROM calibrations${engine ? ` WHERE engine=?` : ""}
+        ORDER BY at_ms DESC, calibration_id DESC LIMIT ?`,
+      ...engine ? [engine] : [],
+      cap + 1
+    );
+    const rows = page.slice(0, cap);
+    const subjects = this.calibrationSubjects().filter((s) => engine ? s.engine === engine : true).map((s) => ({ ...s, next_probe: this.#calNextProbe(s, now) }));
+    return {
+      ok: true,
+      ...engine ? { engine } : {},
+      cadence_ms: CALIBRATION_CADENCE_MS,
+      cadence: cadenceSentence(),
+      count: rows.length,
+      limit: cap,
+      truncated: page.length > cap,
+      calibrations: rows.map((r) => ({
+        calibration_id: r.calibration_id,
+        engine: r.engine,
+        version: r.version,
+        at: r.at,
+        cap: r.cap ?? null,
+        probe_id: r.probe_id,
+        probe_inputs: safeJson(r.probe_inputs) ?? r.probe_inputs,
+        scores: safeJson(r.scores) ?? r.scores,
+        measured_by: r.measured_by,
+        superseded_by: r.replaced_by ?? null,
+        drift: r.drift ?? null,
+        note: r.note ?? null
+      })),
+      subjects,
+      why: subjects.length ? `this instance probes ${subjects.length} engine(s) on its own account \u2014 ` + cadenceSentence() : `no engine is registered for calibration in this instance, so no probe is scheduled and this consumer holds no alarm at all`
+    };
+  }
+  /* One subject's next-probe instant, and the ONLY place the signals reach the
+     cadence. `nextProbeDue` can return an instant at or before the cadence's own
+     and has no arithmetic that could return a later one — rule 4. */
+  #calNextProbe(subject, now) {
+    const signals = this.#rows(
+      `SELECT probe_by_ms FROM calibration_signals
+        WHERE engine=? AND consumed_at IS NULL`,
+      subject.engine
+    ).map((s) => ({ probe_by: s.probe_by_ms }));
+    const due = nextProbeDue({ lastAt: subject.last_probe_ms ?? null, signals });
+    return { ...due, overdue: due.at <= now };
+  }
+  /** op=calibrationsignal — the OPTIONAL announcement watch (clause (e)).
+   *
+   *  IT MAY ONLY SHORTEN THE INTERVAL TO THE NEXT PROBE. That is enforced in
+   *  three places and each is a different kind of guard, which is deliberate:
+   *
+   *    - `checkSignal` REFUSES a signal carrying a cap or scores, so a signal
+   *      cannot even be SHAPED like a measurement.
+   *    - `nextProbeDue` takes the minimum against the cadence's own instant, so
+   *      there is no arithmetic by which a signal produces a later answer.
+   *    - nothing anywhere reads a signal when computing a cap, a grade or a
+   *      drift verdict. A signal is not an input to any of them.
+   *
+   *  The middle one is the one a reader should check hardest, because the
+   *  plausible mistake is not a malicious signal — it is a well-meaning "no
+   *  announcement, so nothing changed, so push the probe out". ABSENCE OF AN
+   *  ANNOUNCEMENT IS NOT EVIDENCE OF NO CHANGE. */
+  calibrationSignalRecord(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const sig = {
+      engine: pkg.engine,
+      source: pkg.source,
+      ...pkg.cap !== void 0 ? { cap: pkg.cap } : {},
+      ...pkg.scores !== void 0 ? { scores: pkg.scores } : {}
+    };
+    const bad = checkSignal(sig);
+    if (bad) return { ok: false, reason: bad.code, ...bad };
+    const observed = typeof pkg.observed_at === "string" && pkg.observed_at.trim() ? pkg.observed_at : new Date(now).toISOString();
+    const by = Number.isFinite(pkg.probe_by_ms) ? pkg.probe_by_ms : now;
+    const id = `CALSIG-${now}-${String(pkg.engine).replace(/[^A-Za-z0-9_.-]/g, "")}`;
+    this.sql.exec(
+      `INSERT OR REPLACE INTO calibration_signals
+         (signal_id,engine,source,observed_at,probe_by_ms,detail,consumed_at)
+       VALUES (?,?,?,?,?,?,NULL)`,
+      id,
+      sig.engine,
+      sig.source,
+      observed,
+      by,
+      typeof pkg.detail === "string" ? pkg.detail : null
+    );
+    const subject = this.#one(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?`,
+      sig.engine
+    );
+    const armed = !!subject;
+    return {
+      ok: true,
+      signal_id: id,
+      engine: sig.engine,
+      source: sig.source,
+      observed_at: observed,
+      probe_by_ms: by,
+      next_probe: subject ? this.#calNextProbe(
+        { ...subject, last_probe_ms: subject.last_probe_ms },
+        now
+      ) : null,
+      armed,
+      /* NAMED, and named as zero rather than omitted. */
+      changed_grades: 0,
+      stood_in_for_probe: false,
+      why: `recorded that ${sig.source} announced something about ${sig.engine}. An announcement may only SHORTEN the interval to the next probe: it does not stand in for one and it changes no grade, because a vendor's documentation is a claim and a grade here rests on a measurement` + (subject ? `` : `. No calibration subject is registered for this engine, so there is no probe for it to accelerate \u2014 the announcement is kept as a fact and does nothing else`)
+    };
+  }
+  /** op=calibrationsubject — REGISTER AN ENGINE THIS INSTANCE CAN PROBE.
+   *
+   *  IT IS A SEPARATE ACT FROM RECORDING A CALIBRATION, and it has to be. The
+   *  first calibratable engine here is Tier-2 pdf.js: pinned, in use, and NEVER
+   *  MEASURED. If a subject could only come into existence by recording a
+   *  measurement of it, the one engine that most needs calibrating would be the
+   *  one engine that could not be scheduled for it — the state a group is
+   *  actually in is "this engine reads our documents and nobody has ever
+   *  checked how well", and that state must be REGISTRABLE and must be VISIBLE.
+   *
+   *  So a never-probed subject is `due immediately` (`nextProbeDue`'s
+   *  `never-probed` branch), not a cadence away. An engine nothing has measured
+   *  has the least standing to wait, and defaulting it to a month would leave
+   *  the record grading against an unmeasured engine for a month while reporting
+   *  that a probe was scheduled.
+   *
+   *  REGISTERING IS NOT MEASURING. This writes a row saying an engine CAN be
+   *  probed; it writes no cap, no score, and nothing a grade could rest on. */
+  calibrationSubjectRegister(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const engine = typeof pkg.engine === "string" ? pkg.engine.trim() : "";
+    const probeId = typeof pkg.probe_id === "string" ? pkg.probe_id.trim() : "";
+    if (!engine)
+      return {
+        ok: false,
+        reason: "CAL_UNNAMED",
+        ...this.#calCheckRow("CAL_UNNAMED"),
+        detail: `registering a calibration subject names the engine to be probed`
+      };
+    if (!probeId)
+      return {
+        ok: false,
+        reason: "CAL_NO_PROBE",
+        ...this.#calCheckRow("CAL_NO_PROBE"),
+        detail: `registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated, which is the shape a measurement never takes here`
+      };
+    const enabled = pkg.enabled === false ? 0 : 1;
+    this.sql.exec(
+      `INSERT INTO calibration_subjects (engine,version,probe_id,registered_at,last_probe_ms,enabled)
+       VALUES (?,?,?,?,NULL,?)
+       ON CONFLICT(engine) DO UPDATE SET probe_id=excluded.probe_id, version=excluded.version,
+                                         enabled=excluded.enabled`,
+      engine,
+      typeof pkg.version === "string" ? pkg.version : null,
+      probeId,
+      new Date(now).toISOString(),
+      enabled
+    );
+    const s = this.#one(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?`,
+      engine
+    );
+    return {
+      ok: true,
+      engine,
+      probe_id: probeId,
+      enabled: !!enabled,
+      cadence_ms: CALIBRATION_CADENCE_MS,
+      cadence: cadenceSentence(),
+      next_probe: this.#calNextProbe(s, now),
+      measured: false,
+      why: `${engine} is registered for calibration in this instance. Registering is not measuring: no fidelity is claimed for it and nothing rests on it until a probe runs. ${s.last_probe_ms == null ? `Nothing has ever probed it, so a probe is due immediately` : `The next probe is due at its own cadence`} \u2014 ${cadenceSentence()}`
+    };
+  }
+  /* ---- the scheduler consumer's three predicates (see #schedConsumers) ---- */
+  /* How many subjects are past their own next-probe instant RIGHT NOW. */
+  #calibrationDue(now) {
+    let n = 0;
+    for (const s of this.calibrationSubjects()) if (this.#calNextProbe(s, now).at <= now) n++;
+    return n;
+  }
+  /* The EARLIEST instant any subject wants a probe, or null when none does —
+     which is what makes this consumer self-terminating. An instance with no
+     registered subject returns null on the first line and holds no alarm. */
+  #calibrationWake(now) {
+    const subjects = this.calibrationSubjects();
+    if (!subjects.length) return null;
+    let earliest = null;
+    for (const s of subjects) {
+      const at = this.#calNextProbe(s, now).at;
+      const want = at <= now ? now + _Store.SCHED_GRACE_MS : at;
+      if (earliest == null || want < earliest) earliest = want;
+    }
+    return earliest;
+  }
+  /* THE TICK. It does NOT run a probe itself and it does not pretend to: this
+       plane holds no derivation engine (CPDF-11 returned NO-GO on Moondream, and
+       the tesseract fleet member is CPDF-12's). What it does is mark the subject
+       DUE, which is the honest state — a probe is owed, and nothing has run it.
+       The day a probe runner exists it is called from this one line.
+  
+       IT NEVER RECORDS A CALIBRATION ON ITS OWN. A tick that wrote a calibration
+       without a probe run would be precisely the claim-versus-measurement failure
+       rule 1 refuses, committed by the scheduler. `calibrationRecord` is the only
+       writer and it refuses a calibration with no probe behind it, so this tick
+       could not do it even if it tried. */
+  #calibrationTick(now) {
+    const due = [];
+    for (const s of this.calibrationSubjects()) {
+      const n = this.#calNextProbe(s, now);
+      if (n.at <= now) due.push({
+        engine: s.engine,
+        probe_id: s.probe_id,
+        last_probe_ms: s.last_probe_ms ?? null,
+        from: n.from
+      });
+    }
+    return {
+      due: due.length,
+      subjects: due,
+      probes_run: 0,
+      calibrations_written: 0,
+      why: due.length ? `${due.length} engine(s) are due a calibration probe. This plane runs no derivation engine of its own, so the probe is OWED and not RUN \u2014 and the record says owed rather than quietly treating the last measurement as current` : `no engine is due a probe`
     };
   }
   /* The reverse index Step 4 builds on: every captured document whose reading
@@ -29304,7 +30269,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
      or weaker one is kept (idempotent, never a downgrade, never a duplicate row). Runs
      inside the caller's transaction. */
   #upsertResolution({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy }) {
-    const rank2 = _Store.#GRADE_RANK;
+    const rank3 = _Store.#GRADE_RANK;
     const at = (/* @__PURE__ */ new Date()).toISOString();
     const est = _Store.#isEstablished(grade) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
@@ -29347,7 +30312,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         at
       };
     }
-    if (rank2[grade] > (rank2[existing.grade] || 0)) {
+    if (rank3[grade] > (rank3[existing.grade] || 0)) {
       this.sql.exec(
         `UPDATE resolutions SET grade=?, method=?, basis=?, established=?, raised_from=?, resolved_by=?, at=?
           WHERE capture_sha=? AND ref=? AND entity_id=?`,
@@ -32646,7 +33611,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
     items.push(...fromAnotherTeam);
     items.push(...this.#queueConditions(viewer, now));
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
       return {
         ok: false,
@@ -32660,19 +33625,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     for (const it of items) {
       if (!_Store.QUEUE_CLASSES.includes(it.class))
-        return refusal4(
+        return refusal5(
           "NO_CLASS",
           `every queue item carries a class from ${_Store.QUEUE_CLASSES.join(" | ")}, and this one carries ${it.class === void 0 ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.`,
           { id: it.id ?? null }
         );
       if (classOfKind(it.kind) === null)
-        return refusal4(
+        return refusal5(
           "NO_SUCH_KIND",
           `${it.kind === void 0 || it.kind === null || it.kind === "" ? "this item carries no kind at all" : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. The vocabulary is queuestate.mjs's three lists and nothing else \u2014 it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.`,
           { id: it.id ?? null, kind: it.kind ?? null }
         );
       if (classOfKind(it.kind) !== it.class)
-        return refusal4(
+        return refusal5(
           "KIND_MISCLASSED",
           `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would let one member silence a task the record believes reached a person, and minting a condition's kind as a finding would make a fact about our own machinery undismissable.`,
           {
@@ -32766,8 +33731,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     }
     items.length = 0;
     items.push(...admitted);
-    const rank2 = (c) => _Store.QUEUE_CLASSES.indexOf(c);
-    items.sort((a, b) => rank2(a.class) - rank2(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const rank3 = (c) => _Store.QUEUE_CLASSES.indexOf(c);
+    items.sort((a, b) => rank3(a.class) - rank3(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     const out = items.slice(0, cap);
     const dispCap = _Store.QUEUE_DISPOSED_MAX;
     const dispAll = [
@@ -38430,7 +39395,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      formed, and the refusal itself when it is not, so the caller's `return` is
      the only place either verdict can be acted on. */
   #refusePairComposed(out) {
-    const refusal4 = (code, detail) => {
+    const refusal5 = (code, detail) => {
       const row = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -38444,30 +39409,30 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!out || out.ok !== true) return null;
     for (const k of _Store.#PAIR_COMPOSED_KEYS)
       if (Object.prototype.hasOwnProperty.call(out, k))
-        return refusal4(
+        return refusal5(
           "VERSION_STRENGTH_COMPOSED",
           `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure standing for both axes. Strength is a PAIR over two populations \u2014 the capture axis and the connection axis \u2014 and there is no value that is both.`
         );
     const pair = out.pair;
     if (!pair || typeof pair !== "object")
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_COMPOSED",
         "this answer carries no pair at all, so whatever it reports is not the two measurements this record makes."
       );
     const keys = Object.keys(pair).sort();
     const want = [..._Store.STRENGTH_AXES].sort();
     if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_COMPOSED",
         `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. Two populations, two answers, and nothing beside them that reads as a summary of both.`
       );
     if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer does not state which readings it was computed over. Every answer says so on its face \u2014 the record's own as plainly as a view somebody constructed \u2014 because absence of the line is exactly what makes the two indistinguishable."
       );
     if (!Array.isArray(out.state_set) || !out.state_set.length)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer carries no machine-readable state set beside its sentence, so a consumer would have to parse prose to learn what it counted."
       );
@@ -38566,7 +39531,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  makes no version current. */
   versionStrength(a = {}) {
     const args = a || {};
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row2 = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -38580,12 +39545,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     };
     const inq = String(args.id ?? "").trim();
     if (!inq)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_NO_INQUIRY",
         "this answers for ONE question: pass id=<INQ-\u2026>. A strength belongs to a question's reading of its evidence, and there is no default question."
       );
     if (normalizeType(OBJECT_TYPES[inq.split("-")[0]]) !== "inquiry")
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not a question, so it holds no readings of evidence and has no strength to report.`,
         { inquiry: inq }
@@ -38593,14 +39558,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const rawStates = args.states == null || args.states === "" ? null : Array.isArray(args.states) ? args.states : String(args.states).split(",");
     const asked = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
     if (asked && asked.length > _Store.VERSION_STRENGTH_STATES_MAX)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_TOO_MANY_STATES",
         `${asked.length} kinds of reading were named and this record has ${_Store.VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
         { inquiry: inq, limit: _Store.VERSION_STRENGTH_STATES_MAX }
       );
     const unknown = asked ? asked.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_UNKNOWN_STATE",
         `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: ${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.`,
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal }
@@ -38613,7 +39578,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ...seen.args
     );
     if (!present)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is no reading of it to measure.",
         { inquiry: inq }
@@ -38623,7 +39588,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const current = project ? this.#currentVersionOf(project, inq, args.viewer ?? null) : null;
     const name = wantVersion || (current ? current.version : "");
     if (!name)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_NO_VERSION",
         project ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is no default reading. Name one explicitly to measure it.` : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-\u2026>) so the reading it stands on can be used. There is no default reading here.",
         { inquiry: inq, project: project || null }
@@ -38635,13 +39600,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       name
     );
     if (!row)
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_NO_SUCH_VERSION",
         `no reading named '${name.slice(0, 60)}' belongs to ${inq}.` + (current && current.version === name ? ` ${project.slice(0, 60)} points at it, so the pointer has outlived the reading it names.` : ``),
         { inquiry: inq, version: name }
       );
     if (!stateSet.includes(row.state))
-      return refusal4(
+      return refusal5(
         "VERSION_STRENGTH_STATE_EXCLUDED",
         `'${name.slice(0, 60)}' is ${row.state} and this answer counts ${stateSet.join(", ")}. Ask again naming ${row.state} among the states to see what it would come to \u2014 the answer will say on its face that it is a view you constructed and not what this record stands on.`,
         { inquiry: inq, version: name, version_state: row.state, state_set: stateSet }
@@ -39225,7 +40190,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
   /** op=suggest — the investigative session's ONE write (IS-4 / §4 group 2). */
   suggestVersion(a = {}) {
     const args = a || {};
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row = SUGGEST_CHECKS[code];
       return {
         ok: false,
@@ -39240,19 +40205,19 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const str = (x) => typeof x === "string" && x.trim() !== "" ? x.trim() : null;
     const target = String(args.target ?? "").trim();
     if (!target)
-      return refusal4(
+      return refusal5(
         "SUGGEST_NO_TARGET",
         "a suggestion is a reading of ONE question's evidence: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "inquiry")
-      return refusal4(
+      return refusal5(
         "SUGGEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so there is nothing under it for a version to be a version of.`,
         { target }
       );
     const kind = String(args.kind ?? "").trim();
     if (!Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, kind))
-      return refusal4(
+      return refusal5(
         "SUGGEST_UNKNOWN_KIND",
         `'${kind.slice(0, 40) || "(none)"}' is not one of \xA79's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. The set is closed because \xA715's empty-run instrument needs an object to count \u2014 without 'level-empty' a run that honestly found nothing is indistinguishable from a run that emitted nothing.`,
         { target, kinds: Object.keys(SUGGEST_KINDS) }
@@ -39265,7 +40230,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       ...gate.args
     );
     if (!b)
-      return refusal4(
+      return refusal5(
         "SUGGEST_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is nothing to add a reading to.",
         { target }
@@ -39273,14 +40238,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow)
-      return refusal4(
+      return refusal5(
         "SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
         { target, run: run || null }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return refusal4(
+      return refusal5(
         "SUGGEST_NO_DOCUMENT",
         "this question has no readable file, so no reading can be added to it.",
         { target }
@@ -39291,14 +40256,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const name = String(args.name ?? "").trim();
     const nameWritten = _Store.#fmSafe(name);
     if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))
-      return refusal4(
+      return refusal5(
         "SUGGEST_NAME_TAKEN",
         `'${name.slice(0, 60)}' already names a reading of ${target}. \xA76 rule 2: a version name is unique WITHIN its inquiry, and derived_from reads by name.`,
         { target, name, known: existing.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
       );
     const legsIn = Array.isArray(args.legs) ? args.legs : [];
     if (legsIn.length > _Store.SUGGEST_LEGS_MAX)
-      return refusal4(
+      return refusal5(
         "SUGGEST_TOO_MANY_LEGS",
         `${legsIn.length} legs were submitted and a version may carry ${_Store.SUGGEST_LEGS_MAX}. The bound is PUBLISHED here rather than applied silently, so a caller splits the reading rather than guessing what fitted.`,
         { target, legs: legsIn.length, limit: _Store.SUGGEST_LEGS_MAX }
@@ -39306,7 +40271,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const level = str(args.level);
     const observedAt = str(args.observed_at);
     if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
-      return refusal4(
+      return refusal5(
         "SUGGEST_EMPTY_LEVEL_UNSTATED",
         `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
         { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS }
@@ -39400,7 +40365,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       "affirmed"
     ].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (forbidden.length)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_UNWRITABLE_STATE",
         `a suggestion is born in state 'suggested' and carries nothing else about what has been decided about it, and this submission set: ${forbidden.join(", ")}. Every one of those is a member act (\xA76 rule 4) reachable only through op=versionaccept and its five siblings.`,
         { target, name, fields: forbidden }
@@ -39412,7 +40377,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredParts = [...new Set(declared)];
     const singlePart = declaredParts.length === 1 && declared.length === 1 && legsIn.length > 0;
     if ((declared.length || needsPartition) && (!who || isMachineIdentity(who) && !singlePart))
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_UNWRITABLE_STATE",
         `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying a part of an argument would carry the answer on its own is an authored judgment a named member signs for (C-25.6). A machine COMPOSES a reading and does not assert its structure \u2014 it may put everything it rests on into ONE part, where there is nothing to assert because there is no maximum to take, and it may still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }
@@ -39426,7 +40391,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     for (let i = 0; i < legsIn.length; i++)
       if (legsIn[i] && legsIn[i].note !== void 0 && legsIn[i].note !== null && legsIn[i].note !== "" && isBoilerplate(legsIn[i].note)) filler.push(`the note on leg ${i}`);
     if (filler.length)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_BOILERPLATE",
         `${filler.join(", ")} carries filler rather than an account of anything. \xA76 rule 1 holds a version's description to a commit message's standard \u2014 what changed and why \u2014 because it is what survives a conversation that was deliberately not kept (\xA710).`,
         { target, name, fields: filler }
@@ -39453,7 +40418,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_LEG_UNREACHABLE",
         `${unreachable.length} of ${legsIn.length} legs cannot be reached at the address given: ${unreachable.map((u) => `${u.target ?? "(none)"} \u2014 ${u.why}`).join("; ")}. A type check would have passed every one of these, which is D-168 exactly.`,
         { target, name, legs: unreachable }
@@ -39480,7 +40445,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredLabels = [...new Set(declared)].sort();
     const partitionDisagrees = JSON.stringify(usedLabels) !== JSON.stringify(declaredLabels);
     if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_PAIR_DOES_NOT_COMPUTE",
         pairError ? `the arithmetic could not be run over this reading: ${pairError}` : partitionDisagrees ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version CARRIES its own structure (\xA73), so the two have to be the same set \u2014 otherwise the maximum is taken over a part nobody declared, or a declared part holds nothing.` : `the pair did not resolve on both axes: capture=${pair?.capture?.state ?? "(none)"}, connection=${pair?.connection?.state ?? "(none)"}.`,
         {
@@ -39495,13 +40460,13 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const originsComplete = ind.complete !== false;
     const shared = ind.shared;
     if (ind.checked && !ind.complete)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `tracing the separately sufficient parts of this reading back to their upstream material reached the published bound of ${OMAX} per step, so independence is UNDETERMINED rather than established. D-129: not found and did not finish looking are different facts, and only one of them licenses putting this forward.`,
         { target, name, limit: OMAX, origins_complete: false }
       ));
     if (shared.length)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_BRANCHES_NOT_INDEPENDENT",
         `${shared.length} pair(s) of separately sufficient parts trace to the same upstream material: ${shared.map((s) => `'${s.a}' and '${s.b}' through ${s.through.join(", ")}`).join("; ")}. \xA712 takes the MAXIMUM across them, so treating them as separate overstates the finding \u2014 D-195. A named member may still affirm they are genuinely separate at the accept ceremony; a machine composing at volume may not.`,
         { target, name, shared }
@@ -39531,14 +40496,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       _Store.BASIS_VERSIONS_LIMIT_MAX + 1
     );
     if (held.length > _Store.BASIS_VERSIONS_LIMIT_MAX)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `${target} holds more than ${_Store.BASIS_VERSIONS_LIMIT_MAX} readings, which is the bound this comparison publishes, so whether this one differs in substance from every existing one was not settled. A duplicate the comparison never reached would read exactly like a new reading.`,
         { target, name, limit: _Store.BASIS_VERSIONS_LIMIT_MAX }
       ));
     const twin = held.find((r) => substanceOf(r.composition) === mine);
     if (twin)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_NOT_DIFFERENT",
         `this reading is identical in substance to '${twin.name}', which ${target} already holds. \xA76 rule 8 is the write gate: a run adds its output as a new version ONLY IF it differs in substance from every existing one. Compared over the same canonical composition the freeze compares, with the name and the parentage excluded \u2014 those are how a reading is addressed, not what it says.`,
         { target, name, same_as: twin.name }
@@ -39588,7 +40553,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     if (text !== null && gRows.length) text = _Store.#appendFmRows(text, "basis_version_grounds", gRows);
     if (text !== null && lRows.length) text = _Store.#appendFmRows(text, "basis_version_legs", lRows);
     if (text === null)
-      return remember(refusal4(
+      return remember(refusal5(
         "SUGGEST_UNWRITABLE_DOCUMENT",
         "this question's version block is in a shape the restricted frontmatter grammar cannot be extended in place, so nothing was written. The grammar has no escapes and a guess would corrupt the document silently.",
         { target, name }
@@ -39909,7 +40874,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  reading carefully is a fence that grows a hole nobody notices. */
   captureRequest(a = {}) {
     const args = a || {};
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row = CAPTURE_REQUEST_CHECKS[code];
       return {
         ok: false,
@@ -39924,14 +40889,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow || runRow.status !== "running")
-      return refusal4(
+      return refusal5(
         "CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run || null }
       );
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
-      return refusal4(
+      return refusal5(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a session may reach to "areas that anybody can go through", and this address is not one on its face.`,
         { address: address || null }
@@ -39943,7 +40908,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       host = null;
     }
     if (!host)
-      return refusal4(
+      return refusal5(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
@@ -39956,7 +40921,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...gate.args
     ) : null;
     if (!b || normalizeType(b.object_type) !== "inquiry")
-      return refusal4(
+      return refusal5(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
         { target: target || null }
@@ -39969,13 +40934,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...gate.args
       );
       if (!lb || normalizeType(lb.object_type) !== "inquiry")
-        return refusal4(
+        return refusal5(
           "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
           `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
           { lead_inquiry: lead }
         );
       if (lead === target)
-        return refusal4(
+        return refusal5(
           "CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
           `this request names ${lead.slice(0, 60)} as both the question it was made under and the question the evidence bears on. That is ordinary evidence for this question, which needs no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one pointing back here would file a notification about this question saying evidence for a different one was found.`,
           { lead_inquiry: lead, target }
@@ -39983,7 +40948,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     }
     const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (brought.length)
-      return refusal4(
+      return refusal5(
         "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
         `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
         { fields: brought }
@@ -40494,7 +41459,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     note = null,
     at = null
   } = {}) {
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -40510,20 +41475,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
-      return refusal4(
+      return refusal5(
         "AI_CREDENTIAL_MINT_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.` : "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
         { who: who || null }
       );
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${String(principalMember ?? who).trim()}` : null;
     if (!principal || principal === "member:")
-      return refusal4(
+      return refusal5(
         "AI_CREDENTIAL_PRINCIPAL_UNSTATED",
         `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for the group, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.`,
         { principalKind: kind || null }
       );
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
-      return refusal4(
+      return refusal5(
         "AI_CREDENTIAL_IDENTITY_TAKEN",
         id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.` : "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
         { tokenId: id || null }
@@ -40550,7 +41515,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
   aiCredentialRevoke({ who = null, tokenId = null, at = null } = {}) {
-    const refusal4 = (code, detail, extra) => {
+    const refusal5 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -40565,14 +41530,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
-      return refusal4(
+      return refusal5(
         "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a machine name there would record the group withdrawing an authority nobody in the group decided to withdraw.` : "no member is named on this act, and a withdrawal nobody authored is not one.",
         { who: who || null }
       );
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
     if (!row)
-      return refusal4(
+      return refusal5(
         "AI_CREDENTIAL_UNKNOWN",
         `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.`,
         { tokenId: id || null }
@@ -41738,14 +42703,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const captured = done.filter((q) => q.state === "captured").length;
       const refused = done.length - captured;
       const bad = this.ctx.storage.transactionSync(() => {
-        const refusal4 = this.#aiRunAppend(r.run, {
+        const refusal5 = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
           state: this.#aiRunSearchState(r.run, false),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting`
         }, iso2, 0);
-        if (refusal4) return refusal4;
+        if (refusal5) return refusal5;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
         for (const q of done)
           this.sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso2, q.request);
@@ -42017,7 +42982,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     viewer = null,
     limit = null
   } = {}) {
-    const refusal4 = (code, detail) => {
+    const refusal5 = (code, detail) => {
       const row = AI_RUNS_CONTEXT_CHECKS[code];
       return {
         ok: false,
@@ -42032,17 +42997,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
     const id = contextId == null ? "" : String(contextId).trim();
     if (!type)
-      return refusal4(
+      return refusal5(
         "AI_RUNS_NO_CONTEXT_TYPE",
         `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
       );
     if (!kinds.includes(type))
-      return refusal4(
+      return refusal5(
         "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
         `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
       );
     if (!id)
-      return refusal4(
+      return refusal5(
         "AI_RUNS_NO_CONTEXT_ID",
         `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once \u2014 a different question, not a wider answer.`
       );
@@ -44250,6 +45215,42 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           url.searchParams.get("limit")
         ),
         attesttext: () => this.attestText(body || {}),
+        /* CPDF-13 / D-183 / D-253 — THE CALIBRATION SURFACE. Five ops, and the
+                   split is the item's doctrine expressed as a capability boundary, the
+                   way CPDF-10's three-way split above is.
+        
+                   `calibrations` and `calibrationdrift` are READS. What an engine was
+                   measured at, and which transcriptions rest on a measurement that
+                   moved, are facts about the record: a view-only member weighing a case
+                   needs them precisely as a contributor does, and an operator asking
+                   "is anything in this store graded against a stale measurement" should
+                   be able to answer it without a session. `calibrationdrift` takes the
+                   viewer stamp for REC-30's reason exactly — its rows NAME the bundles
+                   a capture is filed in.
+        
+                   `calibrate` and `calibrationsubject` MUTATE, and `calibrate` is the
+                   consequential one: it is the act that says a probe RAN. It writes no
+                   grade and cannot (`CAL_CANNOT_REGRADE` refuses a caller who asks it
+                   to), but what it records is what every transcription graded against
+                   that engine will be read against afterwards.
+        
+                   `calibrationsignal` mutates too and is deliberately the WEAKEST act
+                   here: it records that somebody else said something about their own
+                   product. Everything that makes it safe is structural rather than
+                   permissional — it cannot carry a fidelity (`checkSignal` refuses one
+                   that does), and it cannot push a probe out (`nextProbeDue` has no
+                   arithmetic that returns a later instant). */
+        calibrations: () => this.calibrations({
+          engine: url.searchParams.get("engine"),
+          limit: url.searchParams.get("limit")
+        }),
+        calibrationdrift: () => this.calibrationDrift({
+          engine: url.searchParams.get("engine"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        calibrate: () => this.calibrationRecord(body || {}),
+        calibrationsubject: () => this.calibrationSubjectRegister(body || {}),
+        calibrationsignal: () => this.calibrationSignalRecord(body || {}),
         /* REC-36: the same reverse question asked by NAME rather than by the
            source's own reference — section 8.1's grade-C tier. Entity-driven, so
            the registry's aliases do the matching; the viewer stamp is the same
@@ -45739,6 +46740,40 @@ var OPS = {
   textprovenance: { classes: ["admin", "member", "probe"], mutating: false },
   textattest: { classes: ["admin", "member", "probe"], mutating: false },
   attesttext: { classes: ["admin", "member"], mutating: true },
+  /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
+       different cut from CPDF-10's above because a different thing is at stake.
+  
+       THE TWO READS are on the same terms every reading read is: what an engine
+       was measured at, and which transcriptions rest on a measurement that has
+       since moved, are facts about the record. `calibrationdrift` in particular
+       is the answer to "is anything in this store graded against a number nobody
+       stands behind any more", and withholding that from a view-only member
+       weighing a case would be the record knowing something about its own
+       reliability that the person relying on it may not ask.
+  
+       `calibrate` IS THE CONSEQUENTIAL WRITE and is nonetheless open to `probe`,
+       which is the opposite of `attesttext` beside it — so the reasoning is
+       written out rather than assumed. ATTESTING IS TESTIMONY: a person says they
+       compared this text against the image, it carries their name for as long as
+       the record lasts, and there is no version of it a token can perform.
+       CALIBRATING IS MEASURING: a probe ran, over stated inputs, and produced
+       stated scores, and a machine is exactly the right thing to do that — the
+       scheduled re-probe this item builds is a machine act by construction. The
+       fence that matters here is therefore NOT about who may measure; it is that
+       a measurement may never move a GRADE, and that is enforced structurally at
+       the store (`CAL_CANNOT_REGRADE`) and by the drift handler writing nothing.
+       Admitting `probe` and then refusing the grade move is the honest shape;
+       refusing the machine and letting the grade move would be the fence in the
+       wrong place, which is the defect this project meets most.
+  
+       `calibrationsignal` is the WEAKEST act in the plane and is open for the
+       same reason: it records that a vendor announced something, carries no
+       fidelity, and can only ever pull the next probe EARLIER. */
+  calibrations: { classes: ["admin", "member", "probe"], mutating: false },
+  calibrationdrift: { classes: ["admin", "member", "probe"], mutating: false },
+  calibrate: { classes: ["admin", "member", "probe"], mutating: true },
+  calibrationsubject: { classes: ["admin", "member", "probe"], mutating: true },
+  calibrationsignal: { classes: ["admin", "member", "probe"], mutating: true },
   /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY / entity axis (D-83 —
      the framework's entity axis and the bias doctrine's safeguard-4 subject registry
      are ONE construct). Members BUILD the registry: entitycreate registers a subject
@@ -46570,7 +47605,7 @@ function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
 }
 function aiScopeDeclaration(writes) {
-  const refusal4 = (code, detail, extra) => {
+  const refusal5 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -46584,13 +47619,13 @@ function aiScopeDeclaration(writes) {
   const asked = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
   for (const op of asked) {
     if (!Object.prototype.hasOwnProperty.call(OPS, op))
-      return refusal4(
+      return refusal5(
         "AI_SCOPE_UNKNOWN_OP",
         `'${op.slice(0, 60)}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).`,
         { op }
       );
     if (!aiReachesAsMember(OPS[op]))
-      return refusal4(
+      return refusal5(
         "AI_SCOPE_BEYOND_MEMBER_REACH",
         `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null }
@@ -46599,7 +47634,7 @@ function aiScopeDeclaration(writes) {
   return { writes: [...new Set(asked)].sort() };
 }
 function aiTaskScope(cred, op, spec) {
-  const refusal4 = (code, detail, extra) => {
+  const refusal5 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -46611,19 +47646,19 @@ function aiTaskScope(cred, op, spec) {
     } };
   };
   if (cred.revoked)
-    return refusal4(
+    return refusal5(
       "AI_CREDENTIAL_REVOKED",
       `credential '${String(cred.tokenId).slice(0, 60)}' was withdrawn on ${cred.revokedAt} by ${cred.revokedBy}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.`,
       { tokenId: cred.tokenId, revokedAt: cred.revokedAt }
     );
   if (!aiReachesAsMember(spec))
-    return refusal4(
+    return refusal5(
       "AI_BEYOND_TASK_SCOPE",
       `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }
     );
   if (spec.mutating && !cred.writes.includes(op))
-    return refusal4(
+    return refusal5(
       "AI_BEYOND_TASK_SCOPE",
       `credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope '${cred.taskScope}', whose writes are ${cred.writes.length ? cred.writes.join(", ") : "(none)"}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }
@@ -46848,7 +47883,7 @@ function tier3Note(m, memberNote) {
   if (memberNote) say.push(memberNote);
   return say.length ? say.join("; ") : null;
 }
-function ocrTextFromMember(res) {
+function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
     return { ok: false, why: `the OCR member declined to transcribe this document${typeof r.reason === "string" ? ` (${r.reason})` : ""}` };
@@ -46894,13 +47929,19 @@ function ocrTextFromMember(res) {
   if (!outPages.length)
     return { ok: false, why: `the OCR member returned no page this record could anchor, so nothing it produced can be checked against the document` };
   let chain2 = appendStep(
-    [{ step: "pixels", cap: r.cap, measured_by: r.measured_by }],
+    [{
+      step: "pixels",
+      cap: r.cap,
+      measured_by: r.measured_by,
+      calibration
+    }],
     {
       step: "ocr",
       engine: r.engine,
       version: r.version,
       cap: r.cap,
-      measured_by: r.measured_by
+      measured_by: r.measured_by,
+      calibration
     }
   );
   if (!Array.isArray(chain2))
@@ -48350,7 +49391,18 @@ var index_default = {
                     if (!r.ok) {
                       ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
                     } else {
-                      const built = ocrTextFromMember(await r.json());
+                      const ocrAnswer = await r.json();
+                      let calRef = null;
+                      try {
+                        const stCal = env.STORE.get(env.STORE.idFromName(storeName));
+                        const cOut = await doAnswer(stCal.fetch(
+                          `http://x/?op=calibrations&engine=${encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`
+                        ));
+                        const live = (cOut && cOut.calibrations || []).find((c) => c.superseded_by == null && c.version === (ocrAnswer && ocrAnswer.version));
+                        calRef = live ? live.calibration_id : null;
+                      } catch {
+                      }
+                      const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
                       if (built.ok) {
                         const m = mergeTier3Text(baseText, built.text, wantPages);
                         if (!m.ok) ocrNote = m.why;
@@ -49473,6 +50525,14 @@ var index_default = {
       "readingname",
       "textprovenance",
       "textattest",
+      /* CPDF-13: the drift obligation's rows NAME the bundle each
+         affected capture is filed in, so it takes the same stamp
+         for REC-30's reason exactly — otherwise "which of your
+         documents rest on a superseded measurement" would disclose
+         that a document sits in a project the caller was never
+         invited to. `calibrations` is NOT here: it answers about
+         ENGINES and names no bundle at all. */
+      "calibrationdrift",
       "resolutions",
       "concerns",
       "connections",
