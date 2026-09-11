@@ -2706,3 +2706,4 @@ paths:
   `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
   `bio-plane/scripts/coverage.mjs` — a probe declares no checks, so no floor here can move.
   **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `f0c3de5` and verified on the MERGED tree: battery 174/174 · 10,807 (+3, the worker's own attribution reproduced), `coverage --strict` exit 0 read unpiped, UI harness exit 0, `mintid --audit` 0 breaks. The verdict is enacted: CPDF-10 re-scoped to the measured in-account default and QUEUED; DEC-74 stays open with Bob, better-informed.
