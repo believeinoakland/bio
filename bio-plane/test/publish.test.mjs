@@ -74,7 +74,9 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkBundle, STATES, SUBJECT_POSITIONS } from "../checks/bio-checks.mjs";
+import { checkBundle, STATES, SUBJECT_POSITIONS, checkCaseDocument,
+         parseFrontmatter as parseFm } from "../checks/bio-checks.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -136,9 +138,24 @@ const rolesFor = (body) => {
             : body?.target ? [body.target] : [];
   return Object.fromEntries(set.map((s) => [String(s).trim(), "load_bearing"]));
 };
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`,
-  { scope: "Whether the signature question was properly handled, on the documents in hand.",
-    project: PROJ, roles: rolesFor(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER, AND IT IS VISIBLE RATHER THAN
+   HIDDEN. `op=publish` now AUTHORS a case document and commits nothing; the
+   case's own assertions — its identity, project, scope, roster, partition, bias
+   acknowledgement and bar — are committed when a member SIGNS that document
+   through `op=caseratify`. Every assertion below about a published case is about
+   the state after the ceremony, so the ceremony runs here, in the suite, where a
+   reader can see it. It is deliberately NOT run when publish REFUSED: the refusal
+   arms below pass bodies the plane rejects, and a fixture that tried to sign a
+   case that was never authored would turn every one of them into a crash.
+   `casesign.test.mjs` owns the ceremony itself and shares no code path with it. */
+const publish = async (tok, body) => {
+  const r = rP(await POST(`op=publish&token=${tok}`,
+    { scope: "Whether the signature question was properly handled, on the documents in hand.",
+      project: PROJ, roles: rolesFor(body), ...body }));
+  if (r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: PILAR });
+  return r;
+};
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -505,11 +522,21 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
      /^ {2}subject_justification: /m.test(md)], [true, true, true]);
   t("the canonical heading carries the assertion for a person to read",
     md.includes("## What This Excludes"), true);
-  /* REC-47: IN THE BYTES THE MEMBER SIGNS, beside the case scope and for the
-     same reason — a stranger holding this one finding must be able to read the
-     bias the case was produced under without contacting this instance. */
-  t("the bias acknowledgement is IN the bytes that will be signed, verbatim as authored",
-    md.includes(`bias_acknowledgement: "${BACK1}"`), true);
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. REC-47 put the
+     acknowledgement in the bytes THE MEMBER signs, *"beside the case scope and
+     for the same reason — a stranger holding this one finding must be able to
+     read the bias the case was produced under without contacting this
+     instance."* The reason is untouched and the stranger is served identically;
+     what changed is which signed document carries it. It is in the CASE
+     DOCUMENT, signed once by a member, and it travels in the container beside
+     the members — so the copy the stranger reads is the copy that was reviewed
+     rather than one of N stamps. The complement is asserted beside it, because
+     "moved" and "written twice" look the same from the new home alone. */
+  const caseDoc1 = rP(await GET(`op=casedocument&case=${ok.caseId}&edition=${ok.edition}`));
+  t("the bias acknowledgement is IN the bytes a member signs FOR THE CASE, verbatim as authored",
+    caseDoc1.text.includes(`bias_acknowledgement: "${BACK1}"`), true);
+  t("and it is NOT in the member's own bytes — one authored acknowledgement, stated once",
+    md.includes("bias_acknowledgement:"), false);
   t("the case PUBLISHES while carrying a declared bias — DISCLOSED, never disqualifying (DEC-20)",
     [ok.ok, ok.bias_acknowledgement], [true, BACK1]);
   /* CORRECTED 2026-08-04, REC-44 / DEC-44. This used to read `ok.strength` — a
@@ -524,12 +551,22 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
                               { axis: "connection", state: "graded", grade: "C", weakest: INFO_CONN }]);
   t("and the ACT reports NO case-level strength: one letter over a case is R2's forbidden composition at a new altitude",
     "strength" in ok, false);
-  t("the case has an identity of its own, distinct from any bundle id, and it is in the bytes that will be signed",
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. The IDENTITY RULE is
+     untouched and is still the first two clauses: a case id is minted by this
+     act, is distinct from any bundle id at every arity (D-187), and is never
+     taken from a caller. What moved is which signed bytes carry it — the case
+     document rather than every member — so the last three clauses are demanded
+     of that document, in the same spellings, and their ABSENCE from the member
+     is demanded beside them. */
+  t("the case has an identity of its own, distinct from any bundle id, and it is in the bytes a member signs FOR THE CASE",
     [/^CASE-\d{4}-\d{4}$/.test(ok.caseId), ok.caseId !== INQ_CASE,
-     new RegExp(`^case_id: ${ok.caseId}$`, "m").test(md),
-     new RegExp(`^case_findings: \\[${INQ_CASE}\\]$`, "m").test(md),
-     /^case_scope: "/m.test(md)],
+     new RegExp(`^case_id: ${ok.caseId}$`, "m").test(caseDoc1.text),
+     new RegExp(`^case_findings: \\[${INQ_CASE}\\]$`, "m").test(caseDoc1.text),
+     /^case_scope: "/m.test(caseDoc1.text)],
     [true, true, true, true, true]);
+  t("and the FINDING's own bytes name no case at all — the eight keys are gone and the gate refuses them there",
+    ["case_id:", "case_edition:", "case_project:", "case_findings:", "case_roles:", "case_scope:",
+     "bias_acknowledgement:", "required_strength:"].filter((k) => md.includes(k)), []);
   t("a case with no authored scope is refused BY NAME: scope says what the case is ABOUT, completeness what it left OUT",
     (await publish(PILAR, { ...base, target: INQ_THIN, scope: "" })).reason, "NO_SCOPE");
   t("R4's division disclosure is RESERVED in the shape now, so it does not change under readers later",
@@ -541,10 +578,21 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
      because a one-sided check is a check the other side has to catch (REC-13's
      finding, REC-14's precedent) — and hand-written bytes reaching op=promote
      are the route that skips the act entirely. */
-  t("a published document with NO bias acknowledgement is refused BY THE GATE, naming C-2.8",
-    (await errorsOf(INQ_CASE, md.replace(/^bias_acknowledgement: .*$/m, 'bias_acknowledgement: ""'),
-                    undefined, await earnedFor(INQ_CASE)))
-      .filter((e) => e.startsWith("C-2.8") && e.includes("bias_acknowledgement")).length, 1);
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE PAIRING SURVIVES
+     INTACT. REC-47's argument is the one this arm exists for and is unchanged:
+     *"a one-sided check is a check the other side has to catch … hand-written
+     bytes reaching op=promote are the route that skips the act entirely."* The
+     acknowledgement is a CASE fact, so the gate that must catch it is the CASE
+     DOCUMENT's gate, and the refusal it names is C-41.6. Driven through
+     `checkCaseDocument` over the real document with the field emptied — the same
+     shape the old arm used on the member's bytes. */
+  t("a case document with NO bias acknowledgement is refused BY THE GATE, naming C-41.6",
+    checkCaseDocument({ ...(parseFm(caseDoc1.text).data || {}), bias_acknowledgement: "" },
+                      { caseId: ok.caseId, edition: ok.edition })
+      .filter((e) => e.check === "C-41.6" && /bias_acknowledgement/.test(e.message)).length, 1);
+  t("and the ACT refuses it too, so the pairing REC-47 argued for survives at the new altitude — one side is a check the other side has to catch",
+    (await publish(PILAR, { ...base, target: INQ_THIN, biasAcknowledgement: "" })).reason,
+    "NO_BIAS_ACKNOWLEDGEMENT");
   /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and BOTH HALVES OF
      THE RULE STAND. The act is still withdrawn once the finding is in a case and
      the store still refuses a republication of unchanged bytes — what changed is
@@ -891,20 +939,51 @@ console.log("\n--- 6. C-21.1: a completeness claim carried forward unchanged is 
     bias_acknowledgement: BACK2,
     completeness: { statement: STMT2, subject_justification: JUST2,
       excluded: JSON.stringify(EX2.map((r) => [null, r.description, r.reason])) } } } } };
-  const stale = (await imageOf(INQ_CASE)).replace(FRESH_S, STMT2);
-  t("the CATALOG names C-21.1 on a published edition whose statement is the previous edition's",
-    (await errorsOf(INQ_CASE, stale, {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")).length, 1);
-  /* REC-47: THE GATE'S HALF OF THE ITEM. The store refused this above; the
-     catalog must refuse it too, because a one-sided check is a check the other
-     side has to catch (REC-13's finding, REC-14's precedent). These are the
-     bytes a member would be asked to sign. */
-  const staleBias = (await imageOf(INQ_CASE)).replace(FRESH_B, BACK2);
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE PAIRING IS
+     THE WHOLE POINT OF THESE ARMS RATHER THAN THEIR SUBJECT. ================
+
+     REC-47's sentence above is untouched and is why they exist: *"the store
+     refused this above; the catalog must refuse it too, because a one-sided
+     check is a check the other side has to catch."* They ran `checkBundle` over
+     the MEMBER's bytes with a case registry injected, and `checkCompletenessFreshness`
+     compared the four fields against the previous edition of the case the member
+     named.
+
+     WHY THEY MOVED: all three of that function's inputs left a member's bytes.
+     `case_id` is gone (so it cannot resolve the case), `bias_acknowledgement` is
+     gone (so half the compared set is not there), and `edition` is the MEMBER's
+     own number rather than the case's. `checkCompletenessFreshness` is REMOVED
+     for that reason — the reasoning is at its removal site in the catalog — and
+     C-21.1 at case altitude runs in `checkCaseDocument`, over the document where
+     all four fields exist, signed, at the right altitude.
+
+     THE ASSERTIONS ARE NOT LOOSENED: C-21.1 must still fire EXACTLY ONCE on the
+     stale statement, exactly once on the stale acknowledgement, must NAME the
+     field, and must not fire at all on the freshly authored edition. All four
+     demands are unchanged; only the document they are asked of moved. The prior
+     edition is INJECTED exactly as it was, so the expectation still does not come
+     from the thing under test. */
+  const fmOf = (txt) => parseFm(txt).data || {};
+  const doc3 = rP(await GET(`op=casedocument&case=${ok3.caseId}&edition=3`));
+  const prior2 = { edition: 2, statement: STMT2, bias_acknowledgement: BACK2 };
+  const c21 = (fm) => checkCaseDocument(fm, { caseId: ok3.caseId, edition: 3, priorCase: prior2 })
+    .filter((e) => e.check === "C-21.1");
+  const staleStmt = { ...fmOf(doc3.text),
+    completeness: { ...(fmOf(doc3.text).completeness || {}), statement: STMT2 } };
+  t("the CATALOG names C-21.1 on a case edition whose statement is the previous edition's",
+    c21(staleStmt).length, 1);
+  const staleBias = { ...fmOf(doc3.text), bias_acknowledgement: BACK2 };
   t("the CATALOG names C-21.1 on an edition whose BIAS ACKNOWLEDGEMENT is the previous edition's",
-    (await errorsOf(INQ_CASE, staleBias, {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")).length, 1);
+    c21(staleBias).length, 1);
   t("and the C-21.1 finding NAMES the field, so the member knows which sentence to rewrite",
-    (await errorsOf(INQ_CASE, staleBias, {}, undefined, caseReg))
-      .some((e) => e.startsWith("C-21.1") && e.includes("bias_acknowledgement")), true);
+    c21(staleBias).some((e) => /bias acknowledgement/i.test(e.message)), true);
   t("and the freshly authored edition draws no C-21.1 finding at all",
+    c21(fmOf(doc3.text)), []);
+  /* AND THE MEMBER'S OWN GATE IS STILL CLEAN over the same bytes, which is what
+     shows the check MOVED rather than being dropped on the floor: the finding
+     audits without a C-21.1 finding because a finding no longer makes the claim,
+     not because nobody is checking it. */
+  t("and the MEMBER's own bytes audit clean — the claim is the case's, so the finding's gate has nothing to be fresh about",
     (await errorsOf(INQ_CASE, await imageOf(INQ_CASE), {}, undefined, caseReg)).filter((e) => e.startsWith("C-21.1")), []);
   await ratify(INQ_CASE);
 }

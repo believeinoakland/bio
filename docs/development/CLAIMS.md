@@ -2049,3 +2049,151 @@ concurrency: checked over the whole register. The only LIVE claim is FLEET's FL-
   reason the figure moved is written at the site so a merge conflict here resolves by re-reading a
   printed run rather than by keeping both.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `7a16642` and verified on the MERGED tree: battery 172/172 · 10,680 (10,669 + the attributed +11, closing exactly), `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` collapsed to ONE SET a third time and re-read from the merged print (895/166/167), UI harness exit 0, `mintid --audit` 0 breaks.
+
+## CLAIM 2026-09-10 RECORD (CASE-5b — DEC-72's CASE-LEVEL SIGNING CEREMONY, and then the deletion the ceremony is the precondition for)
+session: case5b-case-signing (worktree `agent-a20204cf60f725b5b`, branch
+  `worktree-agent-a20204cf60f725b5b`)
+opened: 2026-09-10
+paths: **NAMED BY REGION. Every live claim on RECORD's ground was released before this one
+  opened (CASE-1/3/4/5, M0-22, FL-10 — checked in this file, not assumed), but the CASE
+  header's rule is that precision is the only protection two workers on `store.mjs` get, so
+  the regions are named anyway.**
+  **`bio-plane/src/schema.mjs`** — ONE NEW TABLE, `case_documents`, placed BESIDE its `cases` /
+  `published_cases` siblings and **BEFORE the `host_governor` block**; **no backticks and no
+  semicolon inside any inline `--` comment** (PL-1). Plus the `purge` TABLES list gaining that
+  one name (D-113 — a derived table missing from `purge` reports scope ALL and leaves rows).
+  **NOT** `published_cases`, **NOT** `published_case_members`, **NOT** `cases` (CASE-1's, landed).
+  **`bio-plane/src/store.mjs` — named by SITE:**
+  (1) `publishCase()`: the FRONTMATTER STAMPING REGION ONLY — the six scalars/blocks this item
+  deletes from every member (`case_id`, `case_edition`, `case_project`, `case_scope`,
+  `bias_acknowledgement`, `case_findings`, `case_roles`, `required_strength`) and the ONE new
+  call that authors the CASE DOCUMENT instead. **NOT** the owner fence, **NOT** the bar
+  computation, **NOT** `BELOW_PROJECT_STRENGTH`, **NOT** the case-identity resolution, **NOT**
+  the C-21.1 freshness comparison, **NOT** the member-edition allocation (CASE-5's, landed).
+  (2) `publish()` (the ratify committer): the CASE BLOCK ONLY — it stops committing `cases`,
+  `published_cases` and the roster from a MEMBER's bytes and keeps only the member's own
+  published row, its edges and its PIN CONFIRMATION. **NOT** `EDITION_EXISTS`, **NOT**
+  `EDITION_NOT_INCREMENTED`, **NOT** `#publishEdges`, **NOT** `published_shas`.
+  (3) NEW methods `caseDocument()` / `ratifyCaseDocument()` and a new `#caseDocText()` author —
+  appended beside the case surfaces, not spliced into an existing one.
+  (4) `#caseRelationOf` / `#caseEditionState` / `#caseOfSha` callers ONLY where the removed keys
+  were their input. **NOT** the run / task / capture / link / proposal / queue surfaces.
+  **`bio-plane/src/index.mjs`** — (a) ONE NEW OP `caseratify` and its OP_TABLE / class / verb
+  rows; (b) `op=ratify`'s ratified-frontmatter reader, which stops reading the six keys and
+  takes the case relation from the PINNED ROSTER instead; (c) the CASE CONTAINER manifest, which
+  gains the case document and its signature (`bio-case-container/4` -> `/5`). **NOT** the R2
+  copy, **NOT** the reuse re-check, **NOT** `op=publish`, **NOT** any other op.
+  **`bio-plane/src/sshsig.mjs`** — ONE new exported statement builder beside `ratifyStatement`.
+  **NOT** `verifySshsig`, **NOT** the namespaces already published.
+  **`bio-plane/checks/bio-checks.mjs`** — (a) `isCaseMemberBytes` / `caseEditionClaimed`, whose
+  input this item deletes, CORRECTED (never exempted) with the dated reason at the site; (b)
+  `checkInquiryPublished`'s C-2.8 case block, same; (c) ONE NEW FAMILY `CASE_DOC_CHECKS` — the
+  case document's gate — with its own C-number taken from the catalog's own allocation. **NOT**
+  `STATES`, **NOT** `checkInquiryBasis`, **NOT** `VERSION_ACT_CHECKS`, **NOT** `checkGrounds`.
+  **`bio-plane/test/caseflip.test.mjs`** — the STILL-THERE block only, CORRECTED to the
+  opposite assertion with the reason the old one was right before and is wrong now. No other
+  arm edited.
+  **`bio-plane/test/casesign.test.mjs` and `bio-plane/test/casesign.control.mjs`** (NEW) — this
+  item's suite and its negative-control driver, written INSIDE this worktree (PL-10/UI-38).
+  **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, and **COLLAPSED TO ONE `arms:`
+  KEY** if a merge leaves two (the six-times defect this file records).
+  **`bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane/dist/bio-plane.bundle.json`** —
+  REBUILT, not hand-edited. **FL-10 landed three hours before this claim opened and its guard
+  asserts the committed bundle is byte-identical to a fresh build of `src`, so a `src` change
+  that does not rebuild turns the battery RED.** Named here because it is a consequence of
+  another item's landing that this claim would otherwise look like it was trespassing on.
+  **`docs/development/INTERFACE-CHANGES.md`** — APPEND of the IC-71 row only. **IC-71 is
+  PRE-MINTED by CONDUCT**; no id is minted in this worktree.
+  **NOT** `docs/development/QUEUE.md`, **NOT** `DECISIONS.md` (CONDUCT's sole ground).
+  **NOT** `civicos-ui/**` — IC-71 measures its impact and DELEGATES; if the UI harness goes red
+  a delegation cannot carry a red gate and this claim will be AMENDED in place, as CASE-4's was.
+  **NOT** `newgroup/**`, **NOT** `release/**`.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-5b, `case5b-case-signing`) — **SIXTEEN FILES ADDED TO THE CLAIM, AND THE HONEST REASON IS THAT A CEREMONY INSERTED BETWEEN TWO ACTS REACHES EVERY SUITE THAT DRIVES BOTH**
+
+The claim above named the plane's five sources, this item's own two suites, `caseflip.test.mjs`,
+`coverage.mjs`'s floor, `dist/**` and the IC row. It was right about the SHAPE of the change and
+wrong about its REACH, in one specific way that is worth writing down rather than quietly widening:
+**`op=caseratify` is a new act BETWEEN `op=publish` and `op=ratify`, so every suite that drove those
+two in sequence now drives three.** That is not a consequence the claim could have measured without
+building the thing first, and it is recorded here rather than in the report so the next worker on
+RECORD's ground sees it in the register where a claim is actually checked.
+
+**TWO PLANE SOURCES, both registration surfaces rather than logic:**
+
+- `bio-plane/src/affordances.mjs` — TWO ROWS. `RUNG_ABSENT.caseratify` (its subject is a case
+  edition keyed `(case_id, edition)`, not a bundle in a state) and `RUNGS.caseratify = "attested"`
+  (its authority is a registered signer's key, which is `ratify`'s own rung and not a new one).
+  Both are TOTALITY tables — `affordances.test.mjs` and `rung-ladder.test.mjs` fail BY NAME on a
+  mutating op classified nowhere — so this is a file the item had to touch the moment it minted an
+  op. **NOT** `ACTS`, **NOT** the affordance derivation, **NOT** any other row.
+- `bio-plane/src/gate.mjs` — ONE new export, `runCaseGate`, beside `runGate` and reporting the same
+  `GATE_VERSION`. **NOT** `runGate`, **NOT** `CATALOG_VERSION`.
+
+**ONE NEW SHARED TEST FIXTURE:** `bio-plane/test/caseceremony.mjs` (NEW), on
+`publishingproject.mjs`'s precedent and for its stated reason — nine suites needing one ceremony is
+nine implementations of it otherwise. `casesign.test.mjs` deliberately does not use it.
+
+**NINE SUITES WHOSE PUBLISH→RATIFY SEQUENCE GAINED THE CEREMONY**, each edited at its own publish
+helper and at the assertions the flip superseded, every superseded assertion CORRECTED with a dated
+reason at the site and none exempted: `publish`, `multifinding`, `publishedcase`, `caseflip`,
+`casepin`, `caseproduction`, `caselifecycle`, `reevaluation`, `caseobject`.
+
+**FOUR FLOOR/REGISTRY SUITES**, each because this item moved a figure it is the ratchet for, and
+each figure moved from what a green run PRINTED:
+`gate-reads.test.mjs` (one UNGATED classification for `op=casedocument`),
+`rung-ladder.test.mjs` (`attested` is three acts, not two),
+`derivation-bounds.test.mjs` (31 → 32, the arrival is `#caseClaimInBytes`, its bound measured and
+stated), `meaning-bounds.test.mjs` (BARE 38 → 39, the arrival is `op=caseratify`; OPAQUE 10 → 9,
+the departure is `publish->publish` and **a figure FALLING carries its reason at the site**).
+
+**ONE SUITE WHOSE FIXTURE THIS ITEM INVALIDATED:** `repair-reachability.test.mjs` — its
+published-ceremony probe made a document read as a case member by handing in `case_id` +
+`case_edition`, which this item REFUSES, so the probe was arming this item's own refusal instead of
+the ceremony and would have gone hollow in exactly the way its own comment warns about.
+
+**AND ONE CHECK DELETED RATHER THAN REHOMED**, named here because a deleted check and a check
+nobody noticed are the same diff: `checkCompletenessFreshness` in `checks/bio-checks.mjs`. All
+three of its inputs left a member's bytes with this item, so it would have returned early on every
+document forever. C-21.1 at case altitude runs in `checkCaseDocument`; `publishCase()`'s own
+CARRIED_FORWARD refusals are untouched, so the two-sided pairing REC-14 built survives one altitude
+up.
+
+**STILL NOT TOUCHED, as the claim promised:** `civicos-ui/**` (IC-71 measures the impact as ZERO
+code — the UI's reads are WIRE fields that do not move — and DELEGATES the two stale prose comments
+to CASE-6, which owns that page), `newgroup/**`, `release/**`, `docs/development/QUEUE.md`,
+`DECISIONS.md`, `purge`'s existing exemptions, and `published_cases` / `published_case_members` /
+`cases` as tables.
+
+### DELEGATION 2026-09-10 RECORD (CASE-5b) -> CASE-6 / UI: **TWO COMMENTS IN `civicos-ui/app.html` NOW DESCRIBE A RULE DEC-72 DELETED, AND THE CODE UNDER THEM IS CORRECT**
+
+**MEASURED IMPACT OF CASE-5b ON `civicos-ui/`: ZERO CODE.** The UI's reads of `case_id`,
+`required_strength` and the per-member bar are all **WIRE FIELDS**, not frontmatter keys:
+`cases[].case_id` and `caseMembers[].case_id` come from `published_cases` / `published_case_members`
+(still written, now from the case document's signature instead of a member's), and `row.required`
+comes from `published_bundles.required` (still written, now sourced from `published_cases.bar`).
+Nothing the UI reads moved, and `node civicos-ui/test/run.mjs` is green on this branch.
+
+**WHAT IS STALE IS PROSE, AND IT WAS ALREADY HALF-STALE BEFORE THIS ITEM.** Two comments —
+`civicos-ui/app.html` ~15086 (`pubBarHtml`) and ~15708 (`pubIndex`) — justify rendering the bar PER
+FINDING with the sentence *"`required_strength` is frozen into the finding's own bytes and two
+findings of one case may have been held to different standards."* **DEC-72 clause 2 removed that
+possibility** (the bar is the CASE's property, read from the publishing project at act time), CASE-5
+moved the authority to `published_cases.bar`, and CASE-5b removed the per-member stamp those
+sentences point at. The rendering still reads correctly because the column is still populated; what
+is wrong is the REASON given for it.
+
+**WHY THIS IS A DELEGATION AND NOT A FIX TAKEN HERE.** Correcting the comments alone would leave
+the surface still choosing the per-finding bar for a reason that no longer exists, which is half a
+change. The real move is for the published case page to render the CASE's bar as the case's — which
+`op=publishedmanifest` has served as `cases[].bar` since CASE-5 (IC-66 named it unread, with
+reasons, and pointed here). **That is CASE-6's ground**: it owns the published case page and its
+`accepts-when` already requires the bar shown as the case's property. This claim says `NOT
+civicos-ui/**` and the harness is green, so there is no red gate forcing the issue — which is the
+condition under which a delegation is the right instrument rather than an excuse.
+
+**WHAT CASE-6 INHERITS, PRECISELY:** two comments to correct, one field to switch to
+(`cases[].bar`, already on the wire), and the per-finding bar to keep or retire as a DESIGN call —
+DEC-72 says the bar is one fact about the case, and the design doc separately says each claim's own
+derived strength is displayed beside the case's standard, so the pair is `strength` per finding and
+`bar` per case.

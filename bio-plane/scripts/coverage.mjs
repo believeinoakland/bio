@@ -594,15 +594,15 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  /* MOVED 2026-09-10 THREE TIMES IN ONE DAY and COLLAPSED TO ONE SET AT EACH
-     MERGE: D-265 (+5 arms, walkfigure), CPDF-13 (+4 arms, calibration) and D-302
-     (+3 arms across hygiene/walkfloor, no new suite) each moved this blind to the
-     others. The figures below are what the merged tree's own green `--strict` run
-     PRINTED after the D-302 merge, read from output, never summed by hand.
+  /* MOVED 2026-09-10 FOUR TIMES IN ONE DAY and COLLAPSED TO ONE SET AT EACH
+     MERGE: D-265 (+5, walkfigure), CPDF-13 (+4, calibration), D-302 (+3, no new
+     suite) and CASE-5b (+6, casesign) each moved this blind to the others. The
+     figures below are what the merged tree's own green `--strict` run PRINTED
+     after the CASE-5b merge, read from output, never summed by hand.
      ONE KEY SET, grepped before writing. */
-  arms: 895,
-  classified: 166,
-  corpus: 167,
+  arms: 901,
+  classified: 167,
+  corpus: 168,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

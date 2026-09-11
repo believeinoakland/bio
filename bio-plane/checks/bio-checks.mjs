@@ -194,13 +194,50 @@ HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
  * ceremony for those facts to move to. This predicate is where that change
  * arrives, and it is ONE function rather than six inlined field reads for that
  * reason. */
+/* CASE-5b / DEC-72, 2026-09-10 — AND THIS IS THE CHANGE THE COMMENT ABOVE SAID
+ * WOULD ARRIVE HERE, ARRIVING. It is ONE function and not six inlined field
+ * reads for exactly this turn.
+ *
+ * WHY THE OLD PREDICATE WAS RIGHT AND IS NOW WRONG, stated rather than deleted.
+ * It keyed on `(case_id, case_edition)` because those were the facts op=publish
+ * stamped into every member's signed bytes, and because a REOPENED document
+ * keeps `case_id` while losing `case_edition` — so the PAIR, and not `case_id`
+ * alone, was what distinguished "these bytes claim membership of a specific
+ * edition of a specific case" from "this document was published once and is
+ * back in `open` being worked". Every word of that was true of the format as it
+ * stood. CASE-5b deletes both fields from finding bytes: the case's own
+ * assertions now live in a CASE DOCUMENT a member signs, which is where they
+ * were always supposed to be and had nowhere to go until this item. A predicate
+ * left keyed on `case_id` would be false for EVERY document published after
+ * this item — and since it is the entry condition to the whole published
+ * ceremony, the ceremony would stop being checked on every document, silently,
+ * with the suite green. That is the same trap CASE-4 recorded one field
+ * earlier, and it is why this is corrected rather than removed.
+ *
+ * THE NEW SIGNAL IS `published_strength`, AND IT IS NOT AN ARBITRARY PICK. It
+ * is the FROZEN PAIR (R2/DEC-21) — both axis objects, derived at the publishing
+ * act from the finding's own basis and stamped into the bytes before the sha is
+ * taken. Three properties make it the right field:
+ *   - op=publish is the ONLY writer. Nothing else in this plane mints it, so a
+ *     document carrying it was published, which is precisely the question.
+ *   - it is the FINDING's OWN fact, not the case's. That matters now: every
+ *     case-level fact has left these bytes, so a predicate keyed on one would
+ *     be keyed on something that is no longer here.
+ *   - `op=reopen` clears it with the rest of the publication stamp, so the
+ *     reopened-document hole the old pair was built to close stays closed. That
+ *     is asserted rather than assumed — see the reopen arm in the suite.
+ * The shape is checked, not merely the presence: a two-axis array is what R2
+ * requires and what checkPublishedExtension goes on to validate in detail, so a
+ * stray `published_strength: []` does not drag a working document into the
+ * ceremony. */
 export const caseEditionClaimed = (fm) => {
   const e = fm?.case_edition;
   return !(e === undefined || e === null || e === '' || e === 'null');
 };
 export const isCaseMemberBytes = (fm) => {
-  const c = fm?.case_id;
-  return typeof c === 'string' && c.trim() !== '' && c !== 'null' && caseEditionClaimed(fm);
+  const s = fm?.published_strength;
+  return Array.isArray(s) && s.length === 2
+    && s.every((a) => a && typeof a === 'object' && typeof a.axis === 'string');
 };
 
 /* THE type-keyed vocabulary lookup (REC-10, normalisation site 1 of 4).
@@ -2327,10 +2364,36 @@ function checkInquiryExtension(ctx, findings) {
      half-formed — the exact hole REC-44's `case_id` arm was written to close,
      arriving through the new door. It is refused here, before the ceremony, and
      it names what is missing rather than what is present. */
-  else if (caseEditionClaimed(fm))
-    findings.push(f('C-2.8', 'error', `case_edition '${fm.case_edition}' names an edition of no case: membership is the PAIR (case_id, case_edition), and an edition number with no case identity beside it places this finding in an edition nobody can resolve, with no scope and nothing for C-21.1 to be fresh against (DEC-44, DEC-72)`,
-      ['publish through op=publish, which mints or carries the case identity and stamps both into the bytes',
-       'or clear case_edition: a document that is not a member of a case edition does not claim one']));
+  /* CASE-5b / DEC-72, 2026-09-10: THE ARM IS CORRECTED AND POINTS THE OTHER WAY
+     NOW, AND THE OLD ONE IS WORTH SAYING OUT LOUD BECAUSE IT WAS RIGHT.
+
+     WHAT IT USED TO SAY: `case_edition` with no `case_id` beside it names an
+     edition of no case, so refuse it — membership was the PAIR and a half-formed
+     claim would otherwise slip past the whole ceremony. That was exactly true
+     while op=publish stamped both into every member.
+
+     WHY IT IS WRONG NOW: this item removes BOTH from finding bytes. A finding's
+     bytes no longer name a case at all — the case's assertions live in a case
+     document a member signs (CASE-5b), which is the signature those facts had
+     nowhere to move to until now. So the shape the old arm refused is no longer
+     "half a membership claim", and the shape it ALLOWED — both fields present —
+     is now the one that must not exist.
+
+     IT IS A REFUSAL RATHER THAN AN ABSENCE, and that is the load-bearing part.
+     If the gate merely stopped requiring these fields, a document carrying a
+     stale `case_id` would sail through and every reader that still looks for one
+     would find a case identity nothing in this plane wrote or checked — the
+     second-authority drift D-21 names, arriving through bytes rather than
+     through a table. Refused here, the deletion is a property of the FORMAT and
+     not a property of op=publish remembering not to write it. */
+  for (const k of ['case_id', 'case_edition', 'case_project', 'case_scope', 'case_findings', 'case_roles',
+                   'bias_acknowledgement', 'required_strength']) {
+    const v = fm?.[k];
+    if (v === undefined || v === null || v === '' || v === 'null') continue;
+    findings.push(f('C-2.8', 'error', `a finding's bytes name a case (${k}): since CASE-5b the case's own assertions — its identity, its edition, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its bar — are signed ONCE, in the CASE DOCUMENT a member reviews and ratifies (op=caseratify), and not N times in N members' frontmatter. A finding is a member of a case because the case pinned its version hash, and that pin is inside the bytes the case's signer signed`,
+      [`remove ${k} from this document's frontmatter`,
+       'the case states these facts once, in its own signed document']));
+  }
   /* REC-16: the `divided` ENTRY REQUIREMENTS, on the same principle again — a
      state is not a label a document may wear. What `divided` claims is that
      this question was two questions and that every leg it rested on now lives
@@ -2618,99 +2681,28 @@ function checkPublishedExtension(fm, findings) {
      with it. Kept as a comment and not as dead code: an `if` that can never be
      true is a rule nobody is enforcing wearing the costume of one. */
 
-  if (typeof fm.case_scope !== 'string' || fm.case_scope.trim() === '') {
-    findings.push(f('C-2.8', 'error', 'a case member requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
-      ['author the case scope on op=publish']));
-  }
-  /* CASE-5 / DEC-72 — THE ARTIFACT FLIP'S OWN ENTRY REQUIREMENT, AND IT IS HERE
-     RATHER THAN IN THE STORE FOR CASE-1'S STATED REASON: a refusal belongs where
-     it can name what is absent.
+  /* ===== CASE-5b / DEC-72: SIX ARMS LEFT THIS FUNCTION, AND THEY LEFT TOGETHER
+     BECAUSE THEY ARE ONE QUESTION ASKED AT THE WRONG ALTITUDE. ================
 
-     `edition` above (checkPublishedExtension) is THE FINDING'S OWN edition, on
-     its own version chain. `case_edition` is the CASE's. Until the flip these
-     were ONE number stamped under one name, which is what baked one-case-per-
-     finding into the format — a finding already published at edition 1 could not
-     join a second case, because that case's edition 1 demanded bytes at a number
-     the finding had spent. The ratify committer keys `published_cases` and
-     `published_case_members` on this field, so bytes that name a case and no case
-     edition would be placed by a number the plane chose rather than one the
-     member signed.
+     `case_scope`, `case_edition`, `case_project`, `case_findings`, `case_roles`
+     and `bias_acknowledgement` were all required HERE, of every member, because
+     every member's bytes carried them. They are not facts about a finding. They
+     are facts about a CASE, and they were in a finding's gate only because a
+     finding's signature was the only signature there was.
 
-     REQUIRED ONLY WHEN `case_id` IS PRESENT, and that is not leniency: the
-     refusal directly above already names a missing `case_id`, and a document
-     that has neither should be told the one thing that is actually wrong with it
-     rather than two spellings of it. */
-  if (typeof fm.case_id === 'string' && fm.case_id.trim() !== '' && fm.case_id !== 'null'
-      && (!Number.isInteger(fm.case_edition) || fm.case_edition < 1)) {
-    findings.push(f('C-2.8', 'error', `a case member requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
-      ['publish through op=publish, which stamps both numbers into the bytes you sign']));
-  }
-  /* CASE-2 / DEC-72 — TWO MORE, AND THE GATE RUNS THEM FOR THE REASON THIS ACT
-     ALREADY RUNS C-21.1 TWICE: *"a one-sided check is a check the other side has
-     to catch."* op=publish refuses both at the door, where a refusal can name
-     what is missing; this is the ratification side, where the subject is bytes
-     that may have been edited after the act and before the signature.
+     THEY ARE NOT DELETED. Every one of them is now an arm of
+     `checkCaseDocument` below, asked ONCE of the document a member actually
+     signs for the case — same requirement, same refusal text where the text was
+     already right, one altitude up. **Moving a check is the shape a lost check
+     wears**, so the suite asserts the arms by NAME on both sides of the move
+     rather than counting them.
 
-       case_project  A case is a PRODUCTION OF A PROJECT (DEC-72 clause 2), and
-                     the project is what supplied the standard of evidence. A
-                     published finding naming no project is one whose bar nobody
-                     declared — the shape the ruling deletes.
-       case_roles    Clause 4's AUTHORED partition, WHOLE, in every member's
-                     bytes: which findings the case RESTS ON and which travel
-                     with it. It must cover the roster exactly and name at least
-                     one load-bearing member, because all-supporting material
-                     asserts nothing conclusively while the completeness
-                     assertion claims coverage of a question no member answers.
-
-     Checked against `case_findings` rather than against a list restated here,
-     so the two cannot come to disagree about who is in the case. */
-  if (typeof fm.case_project !== 'string' || fm.case_project.trim() === '' || fm.case_project === 'null') {
-    findings.push(f('C-2.8', 'error', 'a case member requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is',
-      ['publish through op=publish with project=<project id>, which writes it into the bytes you sign']));
-  }
-  {
-    const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
-    const rows = Array.isArray(fm.case_roles) ? fm.case_roles.filter((r) => r && typeof r === 'object') : null;
-    if (!rows || !rows.length) {
-      findings.push(f('C-2.8', 'error', 'a case member requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member\'s bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default — a member designated by omission was designated by nobody',
-        ['designate every member on op=publish with roles={"<finding id>": "load_bearing"|"supporting"}']));
-    } else {
-      const named = new Map(rows.map((r) => [String(r.target ?? ''), String(r.role ?? '')]));
-      for (const m of roster) {
-        if (!named.has(m)) {
-          findings.push(f('C-2.8', 'error', `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
-        } else if (!CASE_MEMBER_ROLES.includes(named.get(m))) {
-          findings.push(f('C-2.8', 'error', `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(', ')}`));
-        }
-      }
-      for (const [t] of named) {
-        if (t && !roster.includes(t)) {
-          findings.push(f('C-2.8', 'error', `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
-        }
-      }
-      if (roster.length && !roster.some((m) => named.get(m) === 'load_bearing')) {
-        findings.push(f('C-2.8', 'error', 'case_roles names no LOAD-BEARING member: a case rests on at least one finding that meets the project\'s standard of evidence (DEC-72\'s second ruled default). All-supporting material asserts nothing conclusively while the completeness assertion claims coverage of a question no member conclusively answers',
-          ['designate the finding the case actually rests on, or do not publish this as a case yet']));
-      }
-    }
-  }
-  /* REC-47 / DEC-46 (a). DEC-20 is the doctrine and it is worth stating at the
-     gate rather than only in the register: a published case CARRIES the bias it
-     was produced under, as a fact a reader weighs. This field is a DISCLOSURE,
-     never a bar — nothing here reads WHICH bias it names, and nothing anywhere
-     refuses a case for having one. The only bias that disqualifies is an
-     uncleared HUNCH (HUNCH DEBT, D-188), and that refusal is
-     op=publishpreflight's by name. */
-  if (biasAcknowledgementOf(fm) === null || fm.bias_acknowledgement.trim() === '') {
-    findings.push(f('C-2.8', 'error', 'a case member requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) — what is refused here is publishing SILENTLY about the lens, not publishing under one',
-      ['author the bias acknowledgement on op=publish, fresh for this edition']));
-  }
-  if (!Array.isArray(fm.case_findings) || !fm.case_findings.length) {
-    findings.push(f('C-2.8', 'error', 'a case member requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
-      ['publish through op=publish, which writes the roster into every member\'s bytes']));
-  } else if (typeof fm.id === 'string' && !fm.case_findings.includes(fm.id)) {
-    findings.push(f('C-2.8', 'error', `case_findings does not include this document (${fm.id}): a finding that is not a member of the case it names cannot be published into it`));
-  }
+     WHAT STAYED HERE IS WHAT IS GENUINELY THE FINDING'S: its completeness block,
+     its exclusion list, its own frozen strength pair and its frozen grounds. A
+     reader of these bytes is still told everything about THIS document that the
+     ceremony ever told them. What they are no longer told N times is what the
+     case as a whole asserted — for which they read the case document, whose
+     signature covers it. ===================================================== */
   /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
   if (!Array.isArray(fm.completeness_excluded)) {
     findings.push(f('C-2.8', 'error', 'a case member requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
@@ -2796,19 +2788,14 @@ function checkPublishedExtension(fm, findings) {
       }
     }
   }
-  /* DEC-17 as amended. The bar the GROUP set for its own work, stamped beside
-     what the case reached. Absent gates nothing and must SAY so. */
-  const rq = (typeof fm.required_strength === 'object' && fm.required_strength) || null;
-  if (!rq || typeof rq.declared !== 'boolean') {
-    findings.push(f('C-2.8', 'error', 'a case member requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)',
-      ['declare the group default with op=strengthbar, or publish with the bar stated absent']));
-  } else if (rq.declared) {
-    for (const axis of ['capture', 'connection']) {
-      if (!BASIS_GRADES.includes(rq[axis])) {
-        findings.push(f('C-2.8', 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
-      }
-    }
-  }
+  /* CASE-5b: A SEVENTH ARM LEFT WITH THE OTHER SIX, AND IT WAS THE LAST CASE
+     FACT STILL BEING ASKED OF A FINDING. `required_strength` is the BAR, and
+     DEC-72 clause 2 is unambiguous that a bar is a property of the PROJECT told
+     to the publishing act — so it is the CASE's, not any member's. It was here
+     because it was in a member's bytes, and it was in a member's bytes because
+     that is where the signature was. The arm is `C-41.12` now, with the
+     "an ABSENT bar is STATED as absent rather than shown as blank" requirement
+     carried word for word, plus the per-axis grade check below it. */
 }
 
 /** REC-14 / C-21.1: THE COMPLETENESS GATE. On `published`, no ASSERTED field of
@@ -2830,142 +2817,42 @@ function checkPublishedExtension(fm, findings) {
  *  see the published record — the migrate tool and the cli — and this cannot
  *  fire; the gate and the store's write path both inject it, so on every path a
  *  real caller has, it does. */
-function checkCompletenessFreshness(ctx, findings) {
-  if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
-  /* CASE-4 / DEC-72: THE CASE RELATION, not the state word — the same move
-     checkInquiryExtension's published arm makes, and it matters here more than
-     anywhere else in this file, because C-21.1 is the check that refuses a
-     completeness claim CARRIED FORWARD. Left keyed on `published`, this would
-     have returned on every document from the day the state left the machine,
-     and a member could have reprinted edition 1's limits and its bias
-     acknowledgement under edition 2 with nothing in the catalog saying a word.
-     A gate that disappears looks exactly like a gate nobody tripped. */
-  if (!isCaseMemberBytes(ctx.fm)) return;
-  /* REC-44 / DEC-44: PER CASE PER EDITION, and the altitude is the correction.
-     The completeness assertion belongs to the CASE — the container over one or
-     more findings — so the comparison is against the previous edition of THAT
-     CASE, read from a registry of its own. Reading it off the finding was right
-     while a case WAS one inquiry and is wrong now: two findings published in
-     one edition state ONE completeness claim between them, so a per-finding
-     comparison would ask the same question twice and, worse, would let a case
-     reprint edition 1's limits under a finding that had not published before.
-     C-21.2's per-axis inheritance stays PER FINDING (checkInheritedLeg, over
-     ctx.publishedRegistry, untouched): the two live at different altitudes and
-     collapsing them is the mistake this whole item exists to undo.
+/* ===== CASE-5b / DEC-72, 2026-09-10: `checkCompletenessFreshness` IS REMOVED,
+   AND IT IS THE ONE CHECK IN THIS FILE THIS ITEM DELETED RATHER THAN REHOMED.
+   SAID OUT LOUD, BECAUSE A DELETED CHECK AND A CHECK NOBODY NOTICED ARE THE SAME
+   DIFF. ======================================================================
 
-     THE SCOPE STATEMENT IS DELIBERATELY NOT UNDER THIS BYTE-CHECK, and that is
-     a judgement rather than an omission. Completeness is edition-specific by
-     nature — what this edition left out, as of its date — so reprinting it is
-     evidence nobody looked. A case's SCOPE is the project's question, and it
-     legitimately does not move between editions when a finding is revised;
-     requiring it to change every edition would pressure a member into inventing
-     a difference, and "a gate that pressures someone into inventing one is a
-     bug in the gate" is CLAUDE.md's sentence about exactly this shape. It is
-     REQUIRED and never prefilled (checkPublishedExtension), which is the arm
-     that fits the claim it makes.
+   WHAT IT DID: C-21.1 at CASE altitude over a MEMBER's bytes — refusing an
+   edition whose completeness statement, subject justification, exclusion list or
+   bias acknowledgement was byte-identical to the previous ratified edition of the
+   same case. It resolved the case from `ctx.fm.case_id`, took the previous
+   edition from `ctx.publishedCaseRegistry`, and compared the four fields.
 
-     ===================================================================
-     REC-47 / DEC-46 (a): THE BIAS ACKNOWLEDGEMENT *IS* UNDER THIS CHECK,
-     AND IT SITS BESIDE A FIELD THAT IS NOT. THE DISCRIMINATOR, ONCE.
-     ===================================================================
-     Three authored fields now travel on the publish block under TWO rules, so
-     the rule is stated rather than left to be inferred from which arms exist:
+   WHY IT CANNOT WORK ANY MORE, and this is a measurement rather than a
+   preference. All THREE of its inputs left a member's bytes with CASE-5b:
+   `case_id` (so it cannot resolve which case), `bias_acknowledgement` (so half
+   the compared set is not there), and — since CASE-5 — `ctx.fm.edition` is the
+   MEMBER's own number rather than the case's, so "the previous edition" would be
+   selected by comparing a finding's version count against a case's edition count.
+   Left standing it would return early on every document, forever, which is a gate
+   that has stopped asking wearing the costume of one that refuses.
 
-       BYTE-CHECKED   completeness.statement, completeness.subject_justification,
-                      completeness_excluded, bias_acknowledgement
-       REQUIRED ONLY  case_scope
+   WHERE THE RULE WENT, AND BOTH SIDES SURVIVE: `checkCaseDocument`'s C-21.1 arm,
+   which runs at `op=caseratify` over the case document — the one place all four
+   fields exist, signed, at the right altitude. `publishCase()`'s own
+   COMPLETENESS_CARRIED_FORWARD / BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD refusals
+   are untouched, so the act still refuses at the door and the catalog still
+   refuses at ratification. *A one-sided check is a check the other side has to
+   catch* — that pairing is preserved, one altitude up.
 
-     THE TEST IS NOT "could this legitimately stay the same". It is WHAT THE
-     FIELD IS A CLAIM ABOUT. A field that states a FACT ABOUT THE CASE — the
-     question it answers — is one editions do not move, and holding it to a
-     difference manufactures one. A field that states AN AUTHOR'S CLAIM ABOUT
-     THIS EDITION'S MATERIAL is a fresh act each time, because the material is
-     what changed.
-
-     Bias is not scope, and the reason is DEC-46's own distinction rather than a
-     new one. DEC-46 separates two things that travel together: the bias
-     MANIFEST is *computed and stamped*, and the ACKNOWLEDGEMENT is *authored*.
-     The manifest is the constant — the lens itself, which may sit unchanged for
-     years and SHOULD, and which nothing here compares because a derived
-     equality costs nothing to produce (CLAUDE.md). The acknowledgement is not
-     the lens; it is the publisher saying what that lens did TO THIS EDITION'S
-     FINDINGS. Edition 2 revises, adds or drops findings, so what the bias
-     shaped is different material even when the bias itself is byte-identical.
-
-     SO THE PRESSURE-TO-INVENT TEST DOES NOT FIRE HERE, and that is the whole
-     of why the answer differs from scope's. Nobody is asked to invent a change
-     IN THE BIAS. They are asked to state, as of this edition, how this case
-     stands under it — and "the lens is unchanged, and here is what it means for
-     the two findings added since edition 1" is a true sentence a publisher can
-     write without inventing anything. It is the same escape the completeness
-     arm already offers in its own remedy line: if nothing changed, say THAT, as
-     of this edition.
-
-     AND THE FAILURE MODES ARE NOT SYMMETRIC, which settles it. A stale SCOPE
-     misdescribes the question, and a reader holding the container can see the
-     findings and judge for themselves. A stale ACKNOWLEDGEMENT asserts that the
-     publisher weighed their own bias against material they never looked at —
-     a claim about an act that did not happen, which is the overclaiming half of
-     this project's threat model and the defect class it holds worse than a
-     missing feature. DEC-46's own sentence for it: a pre-flight checkbox would
-     be the checkbox these gates exist to refuse, and a gate that only checks
-     PRESENCE *is* a checkbox.
-
-     WHAT THIS ARM IS NOT. It never reads WHICH bias is named and never refuses
-     a case for carrying one — DEC-20: ordinary declared bias is DISCLOSED and
-     travels with every published case. The only bias that disqualifies is an
-     uncleared HUNCH (HUNCH DEBT, D-188), refused by name and elsewhere. This
-     arm refuses one thing only: reprinting last edition's sentence, which is
-     evidence nobody looked. */
-  const reg = ctx.publishedCaseRegistry;
-  if (!reg) return;
-  const cid = typeof ctx.fm.case_id === 'string' && ctx.fm.case_id !== 'null' ? ctx.fm.case_id : null;
-  if (!cid) return;
-  const mine = reg[cid];
-  if (!mine || !mine.editions) return;
-  /* The previous edition is the highest ratified one BELOW this document's own
-     edition: this edition is not in the projection until it is ratified, and a
-     re-ratification of the same edition is refused elsewhere by name. */
-  const prior = Object.values(mine.editions)
-    .filter((x) => Number(x.edition) < Number(ctx.fm.edition))
-    .sort((a, b) => Number(b.edition) - Number(a.edition))[0];
-  if (!prior || !prior.completeness) return;   // edition 1 has nothing to be fresh against
-  /* REC-47: the acknowledgement joins the compared set here rather than in a
-     second loop with a second refusal, because it is the SAME gate for the SAME
-     reason and a second one would be a second place to state one rule (D-21).
-     It is carried on the registry row beside `completeness`, not inside it: the
-     two are different claims (DEC-46 — the lens versus the limits), and folding
-     one into the other's blob is the collapse REC-44 spent an item undoing one
-     altitude down. */
-  const now = { ...completenessFields(ctx.fm), bias_acknowledgement: biasAcknowledgementOf(ctx.fm) };
-  const was = { ...prior.completeness, bias_acknowledgement: prior.bias_acknowledgement ?? null };
-  const LABEL = {
-    statement: 'completeness.statement',
-    subject_justification: 'completeness.subject_justification',
-    excluded: 'completeness_excluded',
-    bias_acknowledgement: 'bias_acknowledgement',
-  };
-  /* One loop, one refusal, TWO sentences — because the two claims are refused
-     for the same reason and about different things, and a message that called
-     the acknowledgement "a completeness claim" would teach the next reader the
-     conflation this item exists to keep out of the record. */
-  const WHY = {
-    bias_acknowledgement:
-      `an acknowledgement of the bias a case was produced under is AUTHORED at the moment of export, not carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked at what this edition actually says. The lens itself may be unchanged and usually is — what must be fresh is the publisher's account of what it means for THIS edition's findings`,
-  };
-  const REMEDY = {
-    bias_acknowledgement:
-      'if the bias itself has not moved, say THAT as of this edition and say what it means for the findings this edition adds or revises — the bias is disclosed, never disqualifying (DEC-20)',
-  };
-  for (const k of Object.keys(LABEL)) {
-    if (now[k] != null && was[k] != null && now[k] === was[k]) {
-      findings.push(f('C-21.1', 'error',
-        `${LABEL[k]} is byte-identical to edition ${prior.edition}'s: ${WHY[k] || 'a completeness claim carried forward unchanged is a checkbox, and this gate exists to refuse it'}. Every edition is a SEPARATE DOCUMENT and states its own claims in its own words, as of its own date (DEC-12, C-21.1)`,
-        [`author ${LABEL[k]} fresh for edition ${ctx.fm.edition}`,
-         REMEDY[k] || 'if nothing about the limits changed, say that AS OF THIS EDITION rather than reprinting the last one']));
-    }
-  }
-}
+   AND THE DISCRIMINATOR THIS FUNCTION CARRIED IS NOT LOST. The long argument for
+   why the BIAS ACKNOWLEDGEMENT is under the byte-check while the SCOPE is not —
+   scope is the project's question and legitimately does not move, so requiring it
+   to change would pressure a member into inventing a difference, while a stale
+   acknowledgement asserts that a publisher weighed their bias against material
+   they never looked at — is restated at `checkCaseDocument`'s C-21.1 arm, which
+   is now the only site that applies it. Three comments in this file point here by
+   name; they now point at that arm. */
 
 /* REC-11: the basis leg vocabularies, exported so op=affordances can publish
    them the way it publishes the disposition set, and so no surface keeps a
@@ -5948,7 +5835,12 @@ export async function checkBundle(input, opts = {}) {
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
-    checkCompletenessFreshness(ctx, findings);
+    /* CASE-5b: `checkCompletenessFreshness(ctx, findings)` STOOD HERE and is
+       removed — C-21.1 at case altitude now runs over the CASE DOCUMENT, in
+       `checkCaseDocument`, which is the only place its four fields exist. The
+       call is deleted rather than left returning early: a check that can never
+       fire is a rule nobody is enforcing wearing the costume of one. The full
+       reasoning is at the removal site above. */
     checkProjectExtension(ctx, findings);
     checkActionExtension(ctx, findings);
     /* PL-12 / D-84: the bias bundle's own arm, beside its four siblings. It
@@ -9280,3 +9172,235 @@ export const ADMISSION_CHECKS = {
       + 'request named. It is confined to its own namespace and this request reached outside it.',
   },
 };
+
+/* ===========================================================================
+   CASE-5b / DEC-72 — THE CASE DOCUMENT'S GATE (C-41).
+
+   WHAT THIS GATES, AND WHY IT IS A SEPARATE FUNCTION RATHER THAN A BRANCH OF
+   checkBundle. A case document is not a bundle. It has no manifest, no history,
+   no register, no files, no state machine and no version chain — it is ONE
+   authored text, hashed once and signed once, which is exactly why it can carry
+   a signature over a case at all. Running it through checkBundle would mean
+   teaching every structural check in this catalog that a sixth object type has
+   none of the structure they check, which is how a gate stops being readable.
+
+   WHERE THESE ARMS CAME FROM: `checkPublishedExtension`, in the same turn, and
+   they came as a group. They asked every MEMBER of a case to carry the case's
+   scope, edition, producing project, roster, partition and bias acknowledgement
+   — because until this item the only signature in the system was a finding's,
+   so the only place a case fact could be signed was inside N findings. The
+   requirement was never wrong. Its ALTITUDE was, and nothing else about it has
+   changed: where the refusal text was already right it is reproduced word for
+   word, so a member who has seen the old message sees the same sentence.
+
+   C-41 AND NOT C-2.8. C-2.8 is the INQUIRY's per-type extension and its findings
+   are reported against an inquiry's bundle id. These findings are reported
+   against a case id at an edition, which is a different subject — and a member
+   reading "C-2.8" on a refusal about a document that is not an inquiry would be
+   sent to the wrong catalog entry. The number is minted with tools/mintid.mjs.
+
+   THE PINS ARM IS THE ONE ARM WITH NO ANCESTOR HERE, and it is clause 3 landing
+   where clause 3 is actually asserted. The design's member is *(finding id,
+   version hash, role, ordinal)*. Before this item the hash was written by
+   whichever member ratified FIRST, out of its own sha, with the other members'
+   shas not yet in existence — so the case could only ever pin one member at a
+   time and the freeze was assembled over N acts. The case document names every
+   member AT A HASH, in one document, signed once: the freeze is a single
+   authored statement, which is what "publication pins versions, LIKE A COMMIT"
+   says. A roster row without a pin is refused here, because a case that names
+   its members and not the versions of them is a claim about the present.
+   =========================================================================== */
+export const CASE_DOCUMENT_FORMAT = 'bio-case-document/1';
+
+/* THE FAMILY, DECLARED — and it is a declaration rather than twelve string
+   literals for two measured reasons rather than tidiness.
+
+   (1) `tools/mintid.mjs` READS THIS FILE FOR THE `C` NAMESPACE'S FLOOR, and its
+   allocation pattern is `check: 'C-n.m'`. A family that exists only as the first
+   positional argument to `f()` is INVISIBLE to that pattern, so its number reads
+   as a MENTION — and `mintid.test.mjs` then fails `no live floor is driven by
+   prose`, correctly, because a floor taken off a sentence is a floor a stray
+   sentence can move. This is a blind spot this item TRIPPED rather than created:
+   every gate check in this catalog is spelled `f('C-2.8', …)` and none of them is
+   an allocation by that pattern either. What this item owes is that the family it
+   MINTS is visible to the allocator that minted it, and that is what this table
+   does; widening the pattern to see the other families is `tools/`' ground and is
+   not taken here.
+
+   (2) The suite asserts the six rehomed arms BY NAME on both sides of the move
+   (checkPublishedExtension -> here), and a declared family is what it asserts
+   against. Moving a check is the shape a lost check wears, so the move is
+   checkable rather than described.
+
+   NOT NAMED `*_CHECKS`: that suffix is RESERVED — the DEC-49 guard harvests every
+   `/_CHECKS$/` export as a REFUSAL family, and these are GATE findings with no
+   refusal code and no canned translation. A table named that way would grow a
+   ratchet's floor falsely, which this estate has already paid for. */
+export const CASE_DOCUMENT_FAMILY = {
+  FORMAT:       { check: 'C-41.1',  what: 'the format token' },
+  IDENTITY:     { check: 'C-41.2',  what: 'case_id, and that it is the case being ratified' },
+  EDITION:      { check: 'C-41.3',  what: 'case_edition, and that it is the edition being ratified' },
+  PROJECT:      { check: 'C-41.4',  what: 'case_project — whose production this is (DEC-72 clause 2)' },
+  SCOPE:        { check: 'C-41.5',  what: 'case_scope — what the case is ABOUT (DEC-44 determination 2)' },
+  BIAS:         { check: 'C-41.6',  what: 'bias_acknowledgement (REC-47 / DEC-46 (a))' },
+  ROSTER:       { check: 'C-41.7',  what: 'case_findings — what the case rests on (DEC-44 determination 3)' },
+  ROLES:        { check: 'C-41.8',  what: 'case_roles — the authored partition (DEC-72 clause 4)' },
+  PINS:         { check: 'C-41.9',  what: 'the version hash per member (DEC-72 clause 3)' },
+  COMPLETENESS: { check: 'C-41.10', what: 'the completeness block (REC-14)' },
+  EXCLUDED:     { check: 'C-41.11', what: 'the exclusion list field (C-9)' },
+  BAR:          { check: 'C-41.12', what: 'required_strength — the standard of evidence (DEC-17 as DEC-72 rehomes it)' },
+};
+const C41 = Object.fromEntries(
+  Object.entries(CASE_DOCUMENT_FAMILY).map(([k, v]) => [k, v.check]));
+
+export function checkCaseDocument(fm, ctx = {}) {
+  const findings = [];
+  const { caseId = null, edition = null, priorCase = null } = ctx;
+
+  if (fm?.format !== CASE_DOCUMENT_FORMAT) {
+    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+      ['re-publish through op=publish, which authors the case document']));
+  }
+  /* THE IDENTITY AND THE EDITION, CHECKED AGAINST WHAT THE STORE IS ABOUT TO
+     COMMIT THEM AS. This is the one arm that is not purely about the bytes, and
+     it is the reason the ceremony is not a rubber stamp: the signature covers
+     THESE bytes, so if the document's own idea of which case and which edition
+     it is differs from the row being written, the plane would be committing a
+     case fact at coordinates nobody signed for. #publishEdges' doctrine, at the
+     one place it can still be violated. */
+  if (typeof fm?.case_id !== 'string' || fm.case_id.trim() === '' || fm.case_id === 'null') {
+    findings.push(f(C41.IDENTITY, 'error', 'a case document requires case_id: without it the document names no case, so C-21.1 has nothing to be fresh against and the container has no identity to be an edition OF (DEC-44)'));
+  } else if (caseId && fm.case_id !== caseId) {
+    findings.push(f(C41.IDENTITY, 'error', `this case document names case ${fm.case_id} and is being ratified as ${caseId}: the signature covers these bytes, so a case identity taken from the request rather than from the signed document would place a commitment where nobody made one`));
+  }
+  if (!Number.isInteger(fm?.case_edition) || fm.case_edition < 1) {
+    findings.push(f(C41.EDITION, 'error', `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
+  } else if (Number.isInteger(edition) && fm.case_edition !== edition) {
+    findings.push(f(C41.EDITION, 'error', `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a bundle`));
+  }
+  /* CASE-2 / DEC-72 clause 2 — WHOSE PRODUCTION. Text preserved from the arm
+     this replaces, with 'a case member' corrected to 'a case document': the
+     requirement is identical and the subject is not. */
+  if (typeof fm?.case_project !== 'string' || fm.case_project.trim() === '' || fm.case_project === 'null') {
+    findings.push(f(C41.PROJECT, 'error', 'a case document requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published case naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is',
+      ['publish through op=publish with project=<project id>, which writes it into the case document you sign']));
+  }
+  /* DEC-44 determination 2. AUTHORED and never prefilled — and this is the arm
+     that fits the claim, since a scope may legitimately be unchanged between
+     editions and a byte-check on it would pressure a member into inventing a
+     difference (see checkCompletenessFreshness). */
+  if (typeof fm?.case_scope !== 'string' || fm.case_scope.trim() === '') {
+    findings.push(f(C41.SCOPE, 'error', 'a case document requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
+      ['author the case scope on op=publish']));
+  }
+  /* REC-47 / DEC-46 (a). DEC-20 is the doctrine and it is worth stating at the
+     gate rather than only in the register: a published case CARRIES the bias it
+     was produced under, as a fact a reader weighs. This field is a DISCLOSURE,
+     never a bar — nothing here reads WHICH bias it names, and nothing anywhere
+     refuses a case for having one. The only bias that disqualifies is an
+     uncleared HUNCH (HUNCH DEBT, D-188), and that refusal is
+     op=publishpreflight's by name. */
+  if (typeof fm?.bias_acknowledgement !== 'string' || fm.bias_acknowledgement.trim() === '') {
+    findings.push(f(C41.BIAS, 'error', 'a case document requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) — what is refused here is publishing SILENTLY about the lens, not publishing under one',
+      ['author the bias acknowledgement on op=publish, fresh for this edition']));
+  }
+  /* DEC-44 determination 3, AND CLAUSE 3'S FREEZE. The roster names every member
+     AT A HASH. Reproduced from the member-side arm and then extended, because
+     the member-side arm could not ask for a pin: at the moment one member signed,
+     the other members' shas did not exist. */
+  const roster = Array.isArray(fm?.case_findings) ? fm.case_findings : null;
+  if (!roster || !roster.length) {
+    findings.push(f(C41.ROSTER, 'error', 'a case document requires case_findings naming every finding in this case: a stranger holding this document must be able to see what the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
+      ['publish through op=publish, which writes the roster into the case document']));
+  }
+  {
+    const names = (roster || []).map((x) => String(x));
+    const rows = Array.isArray(fm?.case_roles) ? fm.case_roles.filter((r) => r && typeof r === 'object') : null;
+    if (!rows || !rows.length) {
+      findings.push(f(C41.ROLES, 'error', 'a case document requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition is signed so a stranger can see which findings were presented as carrying the case (DEC-72 clause 4). There is no default — a member designated by omission was designated by nobody',
+        ['designate every member on op=publish with roles={"<finding id>": "load_bearing"|"supporting"}']));
+    } else {
+      const named = new Map(rows.map((r) => [String(r.target ?? ''), String(r.role ?? '')]));
+      const pinned = new Map(rows.map((r) => [String(r.target ?? ''), r.version_sha]));
+      for (const m of names) {
+        if (!named.has(m)) {
+          findings.push(f(C41.ROLES, 'error', `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
+        } else if (!CASE_MEMBER_ROLES.includes(named.get(m))) {
+          findings.push(f(C41.ROLES, 'error', `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(', ')}`));
+        }
+        const pin = pinned.get(m);
+        if (typeof pin !== 'string' || !/^[0-9a-f]{64}$/.test(pin)) {
+          findings.push(f(C41.PINS, 'error', `case_roles names ${m} without a 64-hex version_sha: publication PINS VERSIONS LIKE A COMMIT (DEC-72 clause 3), so a case that names its members and not the VERSIONS of them is a claim about the present rather than a frozen edition. The pin is the member's own bundle_sha, which is the hash that member signs`,
+            ['re-publish through op=publish, which pins each member at the version it prepared']));
+        }
+      }
+      for (const [t] of named) {
+        if (t && !names.includes(t)) {
+          findings.push(f(C41.ROLES, 'error', `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
+        }
+      }
+      if (names.length && !names.some((m) => named.get(m) === 'load_bearing')) {
+        findings.push(f(C41.ROLES, 'error', 'case_roles names no LOAD-BEARING member: a case rests on at least one finding that meets the project\'s standard of evidence (DEC-72\'s second ruled default). All-supporting material asserts nothing conclusively while the completeness assertion claims coverage of a question no member conclusively answers',
+          ['designate the finding the case actually rests on, or do not publish this as a case yet']));
+      }
+    }
+  }
+  /* REC-14's COMPLETENESS ASSERTION, AT THE ALTITUDE IT WAS ALWAYS ABOUT. It is
+     asked of the member's own bytes too (checkPublishedExtension keeps that arm)
+     and it is asked HERE as well, for the reason this act already runs C-21.1
+     twice: a one-sided check is a check the other side has to catch. */
+  const c = (typeof fm?.completeness === 'object' && fm.completeness) || null;
+  if (!c) {
+    findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything',
+      ['author completeness.statement and the exclusion list']));
+  } else {
+    if (typeof c.statement !== 'string' || c.statement.trim() === '')
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires a non-empty completeness.statement'));
+    if (typeof c.author !== 'string' || c.author.trim() === '')
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
+    if (typeof c.at !== 'string' || !ISO_TS_RE.test(c.at))
+      findings.push(f(C41.COMPLETENESS, 'error', `a case document requires completeness.at as an ISO timestamp (got '${c.at}')`));
+    if (!SUBJECT_POSITIONS.includes(c.subject_position))
+      findings.push(f(C41.COMPLETENESS, 'error', `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`));
+    if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '')
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)'));
+  }
+  /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
+  if (!Array.isArray(fm?.completeness_excluded)) {
+    findings.push(f(C41.EXCLUDED, 'error', 'a case document requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
+      ['author completeness_excluded, empty if nothing was excluded']));
+  }
+  /* DEC-17 AS DEC-72 REHOMES IT: THE BAR, IN THE SIGNED DOCUMENT. The FIELD is
+     required and a DECLARED value is not, which is the whole of "an absent bar
+     is not a bar of zero" written as a check. A case published where no bar was
+     ever declared states that fact and claims no cleared standard — the design
+     doc's own clause — so what is refused here is SILENCE about the bar, never
+     the absence of one. */
+  const rq = (typeof fm?.required_strength === 'object' && fm.required_strength) || null;
+  if (!rq || typeof rq.declared !== 'boolean') {
+    findings.push(f(C41.BAR, 'error', 'a case document requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength each member reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17). An absent bar is not a bar of zero — a reader cannot tell "no bar was declared" from "nobody wrote this down"',
+      ['declare the project bar with op=strengthbar, or publish with the bar stated absent']));
+  } else if (rq.declared) {
+    /* THE PAIR, PER R2, and the reason is the one the member-side arm carried:
+       a scalar would re-collapse the two axes in the one field a reader is most
+       likely to quote. */
+    for (const axis of ['capture', 'connection']) {
+      if (!BASIS_GRADES.includes(rq[axis])) {
+        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')} — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+      }
+    }
+  }
+  /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
+     wording changing at all, because it was always a comparison between two
+     CASE EDITIONS and never between two findings. A completeness claim carried
+     forward unchanged is a checkbox. The scope statement is deliberately NOT in
+     this comparison — the reasoning is at checkCompletenessFreshness. */
+  if (priorCase && c) {
+    if (typeof priorCase.statement === 'string' && priorCase.statement === (c.statement ?? null))
+      findings.push(f('C-21.1', 'error', `the completeness statement is byte-identical to edition ${priorCase.edition}'s. Every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition`));
+    if (typeof priorCase.bias_acknowledgement === 'string'
+        && priorCase.bias_acknowledgement === (fm?.bias_acknowledgement ?? null))
+      findings.push(f('C-21.1', 'error', `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)`));
+  }
+  return findings;
+}

@@ -190,12 +190,23 @@ t("`retired` is nonetheless a legal state, so the assertion above is about an "
 + "edge list and not about a missing key",
   STATES.information.legal.includes("retired"), true);
 
-/* ---- attested: an authority OUTSIDE the group. Both are capture/publication
+/* ---- attested: an authority OUTSIDE the group. All three are capture/publication
    ceremonies requiring a key or a timestamp authority, which is what separates
-   this rung from `reasoned` below it. */
-t("`attested` is carried by exactly the two acts Constructs:275 sources",
+   this rung from `reasoned` below it.
+
+   CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE RUNG'S DEFINITION IS
+   WHAT DECIDED IT rather than a preference for a shorter diff. It read "exactly
+   the two acts Constructs:275 sources", and that was a faithful count of the
+   source at the time. `op=caseratify` is a THIRD publication ceremony whose
+   authority is a registered signer's key over a document's hash — the identical
+   thing `op=ratify` is, one altitude up — so placing it anywhere else on this
+   ladder would have had the ladder describe the act's SUBJECT rather than the
+   authority the act rests on, which is the one thing the rung means. The
+   assertion stays a totality (`exactly`) rather than a membership test, because
+   a rung that only lists what somebody remembered to add is not a classifier. */
+t("`attested` is carried by exactly the three publication and capture ceremonies whose authority is a key held outside the group",
   Object.entries(RUNGS).filter(([, r]) => r === "attested").map(([o]) => o).sort(),
-  ["attest", "ratify"]);
+  ["attest", "caseratify", "ratify"]);
 
 /* ---- reasoned: the store REFUSES the act for want of an authored account.
    Read as a CLASS of refusal codes, never one spelling (REC-76). */

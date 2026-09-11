@@ -950,11 +950,24 @@ console.log(`  RATCHET: ${BARE_ROSTER_MEASURED_2026_08_07} bare-collection read 
    THE MEASUREMENT IS THE WALK'S, TAKEN BY RUNNING IT: it printed 38 against a
    ceiling of 39 and the FLOOR below is what forced this figure to be moved
    deliberately rather than quietly enjoyed. Both halves moved in one edit. */
+/* MOVED 2026-09-10 (CASE-5b) 38 -> 39, BOTH HALVES IN ONE EDIT, and the arrival
+   is NAMED: `op=caseratify`. It publishes `roster`, `members` and `awaiting` off
+   the case document it just committed, which is this roster's definition and it
+   is counted honestly rather than exempted.
+   WHAT THE WALKER SEES AND WHAT IS ACTUALLY THERE. The three collections are the
+   SAME AUTHORED LIST — the `case_findings` roster inside the signed case document
+   — projected three ways. Its length is not a query result: it is the number of
+   findings a publisher named at `op=publish`, every one of which they designated
+   by hand and signed for, so it is bounded by an act rather than by a corpus. The
+   scan behind it reads ONE row (`case_documents` by its primary key) and parses
+   its frontmatter. It is a real member by the walker's own definition, and the
+   bound is stated here rather than claimed by exempting it, because an exempted
+   member is a rule nobody is enforcing. */
 t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publishes a collection "
 + "off an unbounded row source pushes this over the figure RE-MEASURED on 2026-08-08 over the "
 + "CORRECTED corpus (REC-70: 27 was measured over 55 of 156 dispatched ops; REC-67 removed one "
 + "phantom; REC-66 FIXED one member) and fails here",
-  BARE_OPS.length <= 38, true);
+  BARE_OPS.length <= 39, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -972,7 +985,7 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      job on a clean tree — it failed the moment `op=connect` came off the roster,
      which is the only reason this figure is being written by hand rather than
      drifting down unremarked. */
-  BARE_OPS.length >= 38, true);
+  BARE_OPS.length >= 39, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
@@ -1025,19 +1038,30 @@ t("REACH: the OPAQUE roster is a CEILING too — an op that SCANS ROWS, is DISPA
 + "2026-08-07; correcting the success-marker gate left 8, correcting REFUSAL_CALL's spelling on "
 + "2026-08-08 revealed a 9th, and REC-67's string-trim correction a 10th — every one of them "
 + "already hiding inside the bare roster. A NEW one fails here",
-  OPAQUE.length <= 10, true);
+  OPAQUE.length <= 9, true);
 t("REACH: and `op=airunlog` is NOT among them — the arm stated positively, so it fails if the op "
 + "is ever returned to the state this item found it in",
   OPAQUE.filter((e) => e.startsWith("airunlog->")), []);
 /* NOT AN EXEMPTION LIST — a NAMED residual with a reason, which is what the
    item asked for when it said "name exactly which it cannot reach and why".
-   Every one of the eight is a WRITE path that scans rows for its own logic and
+   Every one of them is a WRITE path that scans rows for its own logic and
    answers a scalar or a status; none publishes a collection. They are pinned by
-   NAME so that "8" cannot be satisfied by a different eight. */
+   NAME so that a count cannot be satisfied by a different set.
+   CORRECTED 2026-09-10 (CASE-5b): `publish->publish` LEFT this residual, and the
+   departure is a real change in the plane rather than a reader losing sight of
+   it. `publish()` — the ratify committer — used to read the whole declared
+   roster back out of `published_case_members` to compare it against the roster
+   in THIS member's signed bytes, which is the unbounded scan the walker saw and
+   could not grade. CASE-5b commits the roster ONCE, from the signed case
+   document, so there are no N copies left to reconcile and the read is gone with
+   the reconciliation: the method now resolves ONE row by (bundle_id, pin). The
+   ceiling below is moved DOWN with the floor, and a figure falling is exactly
+   the direction this file warns about, so the reason is stated here rather than
+   enjoyed quietly. */
 t("REACH: and the residual is NAMED, not merely counted — a bare count is satisfied by ANY eight "
 + "ops, so the identities are pinned and a swap fails here",
   OPAQUE, ["projectfork->forkProject", "projectionplan->projectionPlan",
-           "projectowneradd->projectOwnerAdd", "publish->publish",
+           "projectowneradd->projectOwnerAdd",
            "registeraudit->registerAudit", "select->selectionCreate",
            "selectionrelease->selectionRelease", "taskdrain->taskDrain",
            /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write

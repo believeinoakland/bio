@@ -87,6 +87,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -166,6 +167,11 @@ const WREN = await enrol("wren", "wren-passphrase-33", "member", ["contribute", 
 rP(await POST("op=signeradd&token=adm-case4", { keyB64: mkKey("vera"), memberId: "vera", comment: "vera laptop" }));
 rP(await POST("op=signeradd&token=adm-case4", { keyB64: mkKey("wren"), memberId: "wren", comment: "wren laptop" }));
 
+/* CASE-5b: which key signs the CASE DOCUMENT for which publisher. Two members,
+   two projects, two attestors — block 7's whole point is that one project acting
+   does not discharge another's flags, so the two ceremonies must be signed by two
+   different people or the arm would be over one production asked twice. */
+const SIGNER_FOR = { [VERA]: "vera", [WREN]: "wren" };
 const listRow = async (id) => ((await GET(`op=list&token=${VERA}&limit=1000`)).result?.bundles
   || (await GET(`op=list&token=${VERA}&limit=1000`)).result || [])
   .find((b) => b.bundle_id === id);
@@ -284,8 +290,19 @@ const W_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case4", owner: "wren",
   id: "PROJ-2026-0400-wren", created: NOW, updated: LATER });
 
-const publishCase = async (tok, project, body) => rP(await POST(`op=publish&token=${tok}`,
-  { project, roles: allLoadBearing(body), ...body }));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. The
+   revision FLAG this suite is about is raised against a case edition, and a case
+   edition now exists once its DOCUMENT is signed, so the ceremony runs here.
+   The signer key is the member whose token is publishing, which is how this
+   suite's two projects keep two distinct attestors. */
+const publishCase = async (tok, project, body, { sign = true, key = null } = {}) => {
+  const r = rP(await POST(`op=publish&token=${tok}`,
+    { project, roles: allLoadBearing(body), ...body }));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r,
+                     { dir, key: key ?? SIGNER_FOR[tok], token: tok });
+  return r;
+};
 
 /* EVERY AUTHORED FIELD IS FRESH PER EDITION, INCLUDING THE EXCLUSION LIST — C-21.1
    refuses a completeness claim carried forward byte-identically, and it caught
@@ -444,11 +461,24 @@ console.log("\n--- 3. publishing is the CASE RELATION: the finding's lifecycle e
      machine does not have. */
   const bytes = rP(await GET(`op=image&token=${VERA}&id=${V_PUB}`));
   const md = String(bytes?.files?.["bundle.md"] ?? bytes?.["bundle.md"] ?? "");
-  t("the SIGNED BYTES say `concluded` and name the case, rather than saying `published` and naming a "
-  + "state no machine enters",
-    [/^current_state: concluded$/m.test(md), /^current_state: published$/m.test(md),
-     new RegExp(`^case_id: ${V_CASE}$`, "m").test(md), /^case_edition: 1$/m.test(md)],
-    [true, false, true, true]);
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE HALF THIS ITEM
+     TOUCHES IS THE SECOND ONE. The FIRST half — the signed bytes say `concluded`
+     and never `published` — is CASE-4's own subject and is untouched. The second
+     half asked the same bytes to NAME THE CASE, because that is where the case
+     relation lived: op=publish stamped `case_id`/`case_edition` into every
+     member. CASE-5b removes them, so the relation is named by the CASE DOCUMENT
+     and carried by the PIN. Asserting the old pair here would pin a format the
+     ruling deleted; asserting nothing in its place would lose the half of the
+     sentence that says publication IS a relation rather than nothing at all. So
+     the relation is asserted where it now is — off the anonymous public read,
+     which resolves a member by the hash the case froze. */
+  t("the SIGNED BYTES say `concluded` and never `published` — no state no machine enters",
+    [/^current_state: concluded$/m.test(md), /^current_state: published$/m.test(md)], [true, false]);
+  t("and the CASE RELATION is real, named by the case's own signed document and resolved BY THE PIN "
+  + "rather than by a scalar in the member's frontmatter",
+    [md.includes("case_id:"), md.includes("case_edition:"),
+     (await anonCase(`id=${V_CASE}&edition=1`))?.findings?.some((f) => f.bundle_id === V_PUB)],
+    [false, false, true]);
   /* NO TRANSITION IS INVENTED. A state_history entry naming an edge the machine
      does not have fails C-4.2 the moment it is written, and this is the arm that
      proves the act does not write one. */

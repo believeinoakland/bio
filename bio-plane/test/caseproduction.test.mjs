@@ -67,6 +67,7 @@
  * not on PATH rather than dying mid-run (publish.test.mjs's precedent, D-93).
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
@@ -114,7 +115,21 @@ try {
    route, and the literal `op=publish` uninterpolated so coverage credits it
    there (D-43: op=invitelook shipped with a ReferenceError while 1276
    store-level assertions passed). */
-const publish = async (tok, body) => rP(await POST(`op=publish&token=${tok}`, body));
+/* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. This
+   suite's subject is the OWNER FENCE and the BAR, both of which are now committed
+   from the case document's signature rather than from each member's, so the
+   ceremony runs here where a reader can see it. Not run when publish REFUSED —
+   this suite is mostly refusal arms and every one of them would otherwise become
+   a fixture crash. */
+/* CASE-5b: the two-member case published in block 5, carried across blocks so 6
+   and 8 can read its own signed CASE DOCUMENT. */
+let TWO_MEMBER_CASE = null;
+const publish = async (tok, body, { sign = true } = {}) => {
+  const r = rP(await POST(`op=publish&token=${tok}`, body));
+  if (sign && r && r.ok !== false && r.caseDocument)
+    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: tok });
+  return r;
+};
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
@@ -477,6 +492,11 @@ console.log("\n--- 5. THE PAIR: the SAME finding, below the SAME bar, refused as
      if the two arms differed in any other respect this pair would prove nothing. */
   const ok = await publish(PILAR, { ...CEREMONY, targets: [INQ_STRONG, INQ_WEAK], project: PROJ,
     roles: { [INQ_STRONG]: "load_bearing", [INQ_WEAK]: "supporting" } });
+  /* CASE-5b: blocks 6 and 8 read this case's own DOCUMENT — which is where the
+     partition, the producing project and the bar now live — so the handle is
+     carried out of this block rather than re-derived from a published read that
+     does not exist until block 8 ratifies. */
+  TWO_MEMBER_CASE = ok;
   /* READ DEFENSIVELY FROM HERE ON, AND IT IS NOT TIDINESS. Several arms of this
      item's own control let an act SUCCEED that this suite expects to be refused
      — arm (B) neuters the owner fence, so a member publishes in §3 and every act
@@ -500,25 +520,48 @@ console.log("\n--- 5. THE PAIR: the SAME finding, below the SAME bar, refused as
      (weak.strength || []).find((s) => s.axis === "connection")?.grade ?? null,
      weak.required?.connection ?? null],
     ["supporting", "C", "B"]);
-  /* MARKED IN THE SIGNED BYTES, which is where a stranger reads it. */
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE OLD ARM'S OWN
+     ARGUMENT IS WHY IT MOVED. =================================================
+
+     IT READ: the WHOLE partition is in EACH member's signed bytes, so *"a
+     stranger holding the SUPPORTING finding can see both that it was not
+     presented as carrying the case and that the case had a load-bearing member
+     at all."* Both halves of that are answerable only from the WHOLE partition —
+     which is precisely why REC-44 wrote the whole thing into every member, and
+     why CASE-2 restated the argument at the `case_roles` stamp.
+
+     WHY IT IS WRONG NOW: the partition is not in a member's bytes. It is in the
+     CASE DOCUMENT, signed once, and the member's own bytes are refused if they
+     carry it. The stranger is not asked to do anything different — they read the
+     case document, which travels in the container beside the members with its own
+     signature over its own bytes, and which is the copy that was actually
+     reviewed. The three arms below demand the same three facts in the same
+     spellings; what moved is which signed document they are demanded of.
+
+     AND THE COMPLEMENT IS ASSERTED BESIDE THEM, because a suite that only checks
+     the new home cannot tell "moved" from "written twice": neither member's
+     bytes carry any of it. */
   const weakBytes = await imageOf(INQ_WEAK);
   const strongBytes = await imageOf(INQ_STRONG);
-  t("MARKED INSIDE THE BYTES THE MEMBER SIGNS, and the WHOLE partition is in EACH of them — so a "
-  + "stranger holding the SUPPORTING finding can see both that it was not presented as carrying the "
+  const caseDoc = rP(await GET(`op=casedocument&case=${ok.caseId}&edition=${ok.edition}`)).text;
+  t("MARKED INSIDE THE BYTES A MEMBER SIGNS, and the WHOLE partition is in the CASE DOCUMENT — so a "
+  + "stranger holding the case can see both that the weak finding was not presented as carrying the "
   + "case and that the case had a load-bearing member at all",
-    [/case_roles:\n\s+- target: INQ-2026-2200-strong\n\s+role: load_bearing\n\s+- target: INQ-2026-2200-weak\n\s+role: supporting/.test(weakBytes),
-     /case_roles:\n\s+- target: INQ-2026-2200-strong\n\s+role: load_bearing\n\s+- target: INQ-2026-2200-weak\n\s+role: supporting/.test(strongBytes)],
-    [true, true]);
-  t("and whose PRODUCTION it is, in both, for the same reason",
-    [/\ncase_project: PROJ-2026-2200-auditor\n/.test(weakBytes),
-     /\ncase_project: PROJ-2026-2200-auditor\n/.test(strongBytes)], [true, true]);
-  t("the stamped bar names the project it came from and is the SAME on both members — the bar is the "
-  + "CASE's property, so two members held to different standards is a state this act cannot produce",
-    [/required_strength:[\s\S]{0,200}?project: PROJ-2026-2200-auditor/.test(weakBytes),
-     /required_strength:[\s\S]{0,200}?project: PROJ-2026-2200-auditor/.test(strongBytes)], [true, true]);
+    /case_roles:\n\s+- target: INQ-2026-2200-strong\n\s+role: load_bearing\n[\s\S]{0,120}?- target: INQ-2026-2200-weak\n\s+role: supporting/
+      .test(caseDoc), true);
+  t("and whose PRODUCTION it is, in the same document, for the same reason",
+    /\ncase_project: PROJ-2026-2200-auditor\n/.test(caseDoc), true);
+  t("the bar names the project it came from and is stated ONCE — the bar is the CASE's property, so "
+  + "two members held to different standards is a state this act cannot produce",
+    /required_strength:[\s\S]{0,200}?project: PROJ-2026-2200-auditor/.test(caseDoc), true);
+  t("and NEITHER member's bytes carry any of it — the partition, the producing project and the bar "
+  + "moved rather than being written in two places, which is what makes one authority one authority",
+    [weakBytes, strongBytes].map((b) => ["case_roles:", "case_project:", "required_strength:"]
+      .filter((k) => b.includes(k))), [[], []]);
   t("and `source: group` NEVER APPEARS in a published bar again: the group default is not a "
   + "publication bar (DEC-72), and this is the assertion that would catch it coming back",
-    [/source: group/.test(weakBytes), /source: group/.test(strongBytes)], [false, false]);
+    [/source: group/.test(caseDoc), /source: group/.test(weakBytes), /source: group/.test(strongBytes)],
+    [false, false, false]);
 }
 
 /* ================================= 6. over-strictness: a good case still ships */
@@ -571,9 +614,15 @@ console.log("\n--- 6. OVER-STRICTNESS: a case that legitimately meets the bar mu
   + "finding changed, the STANDARD did, and somebody authored the change in the project's own bytes",
     [now.ok, now.edition ?? null, (now.findings || [])[0]?.role ?? null, now.required?.connection ?? null],
     [true, 1, "load_bearing", "C"]);
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED. The RULE is untouched and is
+     what the whole block is for: the bar is read from the publishing project AT
+     ACT TIME, so a project that lowers its bar afterwards never moves a case
+     already published. What moved is WHERE the frozen copy lives — the earlier
+     case's own SIGNED DOCUMENT rather than a stamp inside one of its members. */
   t("AND THE BAR IS READ AT ACT TIME: the case that published a moment ago under (B, B) still carries "
-  + "(B, B) in its own frozen bytes — a later amendment never moves a case already published",
-    /required_strength:[\s\S]{0,220}?connection: B/.test(await imageOf(INQ_STRONG)), true);
+  + "(B, B) in the bytes a member signed for it — a later amendment never moves a case already published",
+    /required_strength:[\s\S]{0,220}?connection: B/.test(
+      rP(await GET(`op=casedocument&case=${TWO_MEMBER_CASE.caseId}&edition=${TWO_MEMBER_CASE.edition}`)).text), true);
 }
 
 /* ================== 7. WHAT WAS REMOVED, asserted as ABSENCE off the source */
@@ -623,82 +672,104 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
   const r1 = await ratify(INQ_STRONG);
   t("the first member of the two-finding case ratifies, opening the case row", r1.ok, true);
 
-  /* ==== THE ADVERSARIES, AND THEY ARE WHY THE DIVERGENCE REFUSALS ARE MORE
-     THAN A COMMENT. Every member of a case published through `op=publish`
-     carries the same case facts BY CONSTRUCTION, so a divergence refusal can be
-     deleted outright with a whole suite green unless something drives the
-     HAND-WRITTEN door — `op=promote`. That is REC-44's control (c) finding,
-     recorded in `multifinding.test.mjs`, and it applies exactly to the two facts
-     this item adds. The bytes are tampered in ONE place and nowhere else. */
-  const weakMd = await imageOf(INQ_WEAK);
-  const swapLine = (md, key, line) => md.replace(new RegExp(`^${key}: .*$`, "m"), line);
-  const liveSha = async (id) => await shaOf(id);
 
-  /* ADVERSARY 1 — THE PRODUCING PROJECT DISAGREES. INQ_WEAK's bytes name
-     PROJ_OTHER while the ratified case row says PROJ. A case that could change
-     hands between members is a case whose STANDARD OF EVIDENCE has two answers
-     and nobody authored either. */
-  const projectLie = swapLine(weakMd, "case_project", `case_project: ${PROJ_OTHER}`);
+  /* ===== CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE THREE
+     ADVERSARIES ARE NOT REFUSED ANY MORE — THEY ARE UNWRITABLE. ==============
+
+     WHAT THEY WERE: INQ_WEAK's own frontmatter tampered through op=promote's
+     hand-written door, in ONE place each — `case_project` naming another project
+     (CASE_PRODUCTION_DIVERGED), `case_roles` designating the case differently
+     (CASE_ROLES_DIVERGED), and `case_project` removed entirely (GATE_REFUSED on
+     C-2.8). The reasoning above them is kept because it is still the right
+     reasoning: *"every member of a case published through `op=publish` carries
+     the same case facts BY CONSTRUCTION, so a divergence refusal can be deleted
+     outright with a whole suite green unless something drives the HAND-WRITTEN
+     door."*
+
+     WHY THEY CANNOT BE BUILT NOW: a member's bytes may not name a case at all.
+     `case_project` and `case_roles` — and the six keys beside them — are refused
+     by C-2.8 the moment they appear in a finding's frontmatter, so there is no
+     document to tamper into disagreement. That is not a fence being lowered: the
+     facts they guarded are asserted ONCE, in the case document, so N copies
+     cannot fall out of step because there are not N copies.
+
+     SO THE SAME DOOR IS DRIVEN AT THE SAME MOMENT, asking what it can still be
+     asked: a member that writes the case's project or the case's partition into
+     its own bytes is refused BY NAME, PER KEY, before any committer is reached.
+     That is strictly stronger than the refusals it replaces — a shape that is
+     unrepresentable cannot be reconciled by a later caller who forgets.
+
+     AND THE TWO COMMITTER REFUSALS THAT SURVIVE ARE STATED AS BELTS BEHIND
+     BRACES, which is the posture this block already takes for
+     `CASE_NAMES_NO_PROJECT` and is why that sentence is worth reusing rather
+     than inventing. `CASE_PRODUCTION_DIVERGED` now lives in `ratifyCaseDocument`
+     and fires only if a CASE DOCUMENT names a project the `cases` row does not —
+     which `op=publish` refuses first as CASE_BELONGS_TO_ANOTHER_PROJECT (block 3
+     drives that). Nothing here can reach it and this suite does not claim to
+     cover it. An arm that "covered" it would be passing for the wrong reason. */
+  const weakMd = await imageOf(INQ_WEAK);
+  const liveSha = async (id) => await shaOf(id);
+  const addAfterFm = (md, lines) => md.replace(/^(---\n)/, `$1${lines.join("\n")}\n`);
+
+  /* (fixture) THE ARM IS ARMED: these bytes carry none of the keys the tampers
+     are about to add, so what is refused below is the tamper and not the
+     document's ordinary shape. */
+  t("(fixture) INQ_WEAK's published bytes name NO case — the tampers below are the only thing under test",
+    ["case_project:", "case_roles:", "case_id:"].filter((k) => weakMd.includes(k)), []);
+
+  /* ADVERSARY 1 — THE MEMBER CLAIMS THE PRODUCING PROJECT. */
+  const projectLie = addAfterFm(weakMd, [`case_project: ${PROJ_OTHER}`]);
   const p1 = await promote(INQ_WEAK, projectLie, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
   t("(fixture) the tampered bytes really promoted — the adversary is through the hand-written door, "
-  + "which is the only door a case's members do not all agree by construction", p1.ok, true);
+  + "which is the only door a case's facts do not reach by construction", p1.ok, true);
   const a1 = await ratify(INQ_WEAK);
-  t("A MEMBER WHOSE SIGNED BYTES NAME A DIFFERENT PRODUCING PROJECT IS REFUSED BY NAME, never "
-  + "reconciled — CASE-1 keyed `cases` on case_id ALONE so this is unrepresentable in the table, and "
-  + "this refusal is what makes that a message rather than a constraint error",
-    [a1.ok, a1.reason, a1.declared, a1.signed],
-    [false, "CASE_PRODUCTION_DIVERGED", PROJ, PROJ_OTHER]);
+  t("A MEMBER THAT NAMES THE CASE'S PRODUCING PROJECT IN ITS OWN BYTES IS REFUSED BY NAME — a case is "
+  + "a PRODUCTION OF A PROJECT (DEC-72) and the project is stated once, in the case's own signed "
+  + "document, so a member asserting one could only ever be a second authority for it",
+    [a1.ok, a1.reason,
+     (a1.findings || []).some((x) => x.check === "C-2.8"
+       && /a finding's bytes name a case \(case_project\)/.test(x.detail))],
+    [false, "GATE_REFUSED", true]);
 
-  /* ADVERSARY 2 — THE PARTITION DISAGREES. The project now matches; what differs
-     is which member the case RESTS ON. Two members who signed different
-     partitions have not published one case, and reconciling silently would let
-     the record present as load-bearing a finding only one of them designated. */
-  const roleLie = (await imageOf(INQ_WEAK))
-    .replace(/^case_roles:.*(?:\n[ -].*)*/m,
-      `case_roles:\n  - target: ${INQ_STRONG}\n    role: supporting\n  - target: ${INQ_WEAK}\n    role: load_bearing`)
-    .replace(new RegExp(`^case_project: .*$`, "m"), `case_project: ${PROJ}`);
+  /* ADVERSARY 2 — THE MEMBER CLAIMS THE PARTITION. Which findings a case RESTS
+     ON is the publisher's authored act (clause 4); a member designating it would
+     be a finding deciding what the case rests on. */
+  const roleLie = addAfterFm(weakMd,
+    ["case_roles:", `  - target: ${INQ_STRONG}`, "    role: supporting",
+     `  - target: ${INQ_WEAK}`, "    role: load_bearing"]);
   const p2 = await promote(INQ_WEAK, roleLie, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
   t("(fixture) the second tamper promoted too", p2.ok, true);
   const a2 = await ratify(INQ_WEAK);
-  t("AND A MEMBER WHOSE SIGNED BYTES DESIGNATE THE CASE DIFFERENTLY IS REFUSED BY NAME: which "
-  + "findings a case RESTS ON is part of what every member signed",
-    [a2.ok, a2.reason], [false, "CASE_ROLES_DIVERGED"]);
+  t("AND A MEMBER THAT DESIGNATES THE CASE'S PARTITION IN ITS OWN BYTES IS REFUSED BY NAME: which "
+  + "findings a case RESTS ON is AUTHORED BY THE PUBLISHER and signed once, not asserted by each "
+  + "finding about itself and its neighbours",
+    [a2.ok, a2.reason,
+     (a2.findings || []).some((x) => x.check === "C-2.8"
+       && /a finding's bytes name a case \(case_roles\)/.test(x.detail))],
+    [false, "GATE_REFUSED", true]);
 
-  /* ADVERSARY 3 — THE BYTES CARRY A CASE AND NAME NO PROJECT AT ALL. This is the
-     shape DEC-72 deletes, arriving at ratification rather than at the act.
-
-     **AND THE ROUTE TO IT IS A MEASUREMENT WORTH RECORDING, BECAUSE THE FIRST
-     VERSION OF THIS ARM ASSERTED THE OPPOSITE AND WAS WRONG.** It declared that
-     the GATE would refuse these bytes at `op=promote` (C-2.8 requires
-     `case_project` on `published`) and that the committer's refusal was
-     therefore unreachable. Driven, `op=promote` ACCEPTED them — `[ok: true,
-     reason: null]`. The control was then pointed at a field that has been
-     C-2.8-required since REC-44: removing `case_scope` from an already-published
-     document is accepted too, `[true, null]`. **So this is PRE-EXISTING
-     behaviour of re-promoting an already-`published` document and NOT something
-     this item introduced** — measured in both directions rather than assumed
-     from either. It is reported as a finding rather than fixed here, because a
-     gate's re-entry conditions are not CASE-2's scope.
-     **WHERE THE FENCE ACTUALLY IS, DRIVEN IN BOTH STEPS RATHER THAN ASSUMED AT
-     EITHER:** `op=promote` accepts the bytes; `op=ratify` runs C-2.8 and refuses
-     them as `GATE_REFUSED` before the committer is reached. So the plane is
-     closed and the ORDER is now recorded instead of guessed — which matters,
-     because the two steps were assumed to behave the same way and they do not.
-     The consequence for THIS suite is a stated limit rather than a claim of
-     coverage: `CASE_NAMES_NO_PROJECT` is a BELT BEHIND BRACES and nothing here
-     can reach it, its reachability belonging to a store whose bytes predate the
-     check. An arm that "covered" it would be passing for the wrong reason. */
-  const noProjectBytes = (await imageOf(INQ_WEAK)).replace(/^case_project: .*$\n/m, "");
-  const p4 = await promote(INQ_WEAK, noProjectBytes, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
-  t("(fixture, and it is the measurement above) op=promote ACCEPTS already-published bytes with a "
-  + "C-2.8-required field removed — pre-existing, reproduced on `case_scope` too, and reported "
-  + "rather than fixed here", p4.ok, true);
+  /* ADVERSARY 3 — EVERY KEY AT ONCE, which is the class rather than an instance.
+     The refusal must NAME ALL EIGHT rather than stopping at the first, because a
+     member told about one key at a time learns the shape one publish at a time. */
+  const allEight = addAfterFm(weakMd, [
+    `case_id: ${TWO_MEMBER_CASE.caseId}`, "case_edition: 1", `case_project: ${PROJ}`,
+    'case_scope: "a scope this member made up"', 'bias_acknowledgement: "a lens this member made up"',
+    `case_findings: [${INQ_WEAK}]`, "case_roles:", `  - target: ${INQ_WEAK}`, "    role: load_bearing",
+    "required_strength:", "  declared: false", "  source: none", `  project: ${PROJ}`,
+    "  capture: null", "  connection: null", '  detail: "none"']);
+  const p4 = await promote(INQ_WEAK, allEight, "inquiry", "published", PILAR, await liveSha(INQ_WEAK));
+  t("(fixture) op=promote ACCEPTS already-published bytes carrying every one of them — pre-existing "
+  + "behaviour of re-promoting a published document, measured by CASE-2 on `case_scope` and "
+  + "reproduced here, reported rather than fixed", p4.ok, true);
   const a3 = await ratify(INQ_WEAK);
-  t("AND RATIFICATION IS WHERE THE FENCE STANDS: the same bytes are refused there, by the GATE "
-  + "running C-2.8 — so a case naming no producing project cannot reach the published record by the "
-  + "hand-written door either, and the committer's own refusal behind it is a belt this suite "
-  + "cannot reach and does not claim to cover",
-    [a3.ok, a3.reason], [false, "GATE_REFUSED"]);
+  t("AND RATIFICATION IS WHERE THE FENCE STANDS, NAMING EVERY KEY IT FOUND: the whole class is "
+  + "refused at once, so a member learns the shape in one refusal rather than one publish at a time",
+    [a3.ok, a3.reason,
+     (a3.findings || []).filter((x) => x.check === "C-2.8" && /a finding's bytes name a case/.test(x.detail))
+       .map((x) => /name a case \((\w+)\)/.exec(x.detail)?.[1]).sort()],
+    [false, "GATE_REFUSED",
+     ["bias_acknowledgement", "case_edition", "case_findings", "case_id", "case_project", "case_roles",
+      "case_scope", "required_strength"]]);
 
   /* RESTORED, AND THE CASE THEN COMPLETES. An adversary that left the record
      broken would make every assertion after it meaningless. */
@@ -725,12 +796,22 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
      doctrine. This is asserted structurally as well, because a behavioural arm
      cannot tell a value read from a signed document from one read off a request
      that happened to carry the same thing. */
-  t("COMMITTED OUT OF THE RATIFIED BYTES AND OUT OF NOTHING ELSE: the control plane reads "
-  + "`case_project` and `case_roles` off the parsed frontmatter of the signed document, exactly as it "
-  + "reads the roster beside them — a project id taken off a request would be an attribution we made "
-  + "on the group's behalf, and a reader cannot tell the two apart",
-    [/ratifiedFm\.case_project/.test(readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8")),
-     /ratifiedFm\.case_roles/.test(readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8"))],
+  /* CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND THE DOCTRINE IS WORD FOR
+     WORD THE SAME ONE. It pinned `ratifiedFm.case_project` and
+     `ratifiedFm.case_roles` in `src/index.mjs` — the control plane reading the
+     two facts off the parsed frontmatter of the signed MEMBER document. Those
+     reads are gone because the facts are gone from a member's bytes. They are
+     read off the parsed frontmatter of the signed CASE DOCUMENT instead, in
+     `ratifyCaseDocument`, and the pin is moved to that site rather than dropped:
+     *a project id taken off a request would be an attribution we made on the
+     group's behalf, and a reader cannot tell the two apart* — which is the whole
+     of why this arm is structural and not behavioural. */
+  t("COMMITTED OUT OF THE SIGNED CASE DOCUMENT AND OUT OF NOTHING ELSE: the committer parses "
+  + "`case_project` and `case_roles` off the frontmatter of the document a member signed, exactly as "
+  + "it parses the roster beside them — a project id taken off a request would be an attribution we "
+  + "made on the group's behalf, and a reader cannot tell the two apart",
+    [/const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_project/.test(STORE_SRC),
+     /const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_roles/.test(STORE_SRC)],
     [true, true]);
   t("and the ratify committer refuses a member whose bytes name a DIFFERENT producing project, "
   + "rather than reconciling them — a case does not change hands between members",
