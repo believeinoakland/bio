@@ -53,7 +53,7 @@ authority is the file named, never this one.
 - **DEC-16** — Q3 · SETTLED by DEC-16 — EVERY ANCESTOR, with one shared resolution.** The unit of queue state is the EVENT, not the (member, case) entry: one state, several homes, which dissolves the flooding objection without a second mechanism.  
   `docs/development/research/RECONCILED.md:1382`
 - **DEC-17** — section 4 (DEC-17's declared bar) is CORRECTED to the project-alone read** with a dated block saying what it asserted before and why that was right when written.  
-  `docs/development/CLAIMS.md:1145`
+  `docs/development/CLAIMS.md:1149`
 - **DEC-17** · 2026-08-01 — RULED 2026-08-01 (DEC-17). `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that a claim *"needs a standard of proof attached and that is doctrine rather than architecture — the next design conversation"*; this is that conversation. The question was what makes an unsupported case harder to state, and…  
   `docs/development/DEBT.md:124`
 - **DEC-17** — Removes DEC-17's strictest-across-citers composition and the project-less publication path — suites CORRECTED, never exempted.** Carries D-280's composed read, which becomes MOOT rather than wrong (see its row below).  
@@ -1130,13 +1130,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - pin, CORRECTED from `[1, 3]` to `[1, 6]` and never exempted**, with a paragraph at the assertion saying why the old one was right when written and what made it wrong.  
   `docs/development/CLAIMS.md:693`
 - **2026-08-10** — AMENDED 2026-08-10, MID-ITEM, AND THE AMENDMENT IS THE HONEST PART: THIS CLAIM ORIGINALLY SAID "NOT `bio-plane/test/caseobject.*`" AND THE ITEM HAD TO EDIT IT.** The full battery came back 164/166 exit 2, and both failures were SUPERSEDED ASSERTIONS in suites this claim had excluded — the standing rule is *correct…  
-  `docs/development/CLAIMS.md:1059`
+  `docs/development/CLAIMS.md:1062`
 - back 164/166 exit 2, and both failures were SUPERSEDED ASSERTIONS in suites this claim had excluded — the standing rule is *correct superseded tests, never exempt them*, so the fix was to correct them and widen the claim rather than to route around them.  
-  `docs/development/CLAIMS.md:1061`
+  `docs/development/CLAIMS.md:1064`
 - Tests — CORRECTED, NEVER EXEMPTED, and each named by ARM:** - `bio-plane/test/caseproduction.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseproduction.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
-  `docs/development/CLAIMS.md:1140`
+  `docs/development/CLAIMS.md:1144`
 - Tests — CORRECTED, NEVER EXEMPTED:** - `bio-plane/test/caseflip.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseflip.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
-  `docs/development/CLAIMS.md:1265`
+  `docs/development/CLAIMS.md:1271`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

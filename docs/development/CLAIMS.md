@@ -900,6 +900,7 @@ paths: `civicos-ui/test/member-respect.test.mjs` (NEW — the sweep),
 ## CLAIM 2026-08-10 FLEET (FL-7 — the mode gate's refusal gets a word that names a machine, not a member)
 session: fl7-gate-ending (worktree `agent-a0301fcdabdaf43c6`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **NAMED BY REGION, NOT BY FILE, because CASE-1 is live on new schema work in
   `schema.mjs`/`store.mjs` and a file-level claim here would collide with it for no reason.**
   - `bio-plane/src/airun.mjs` — **the `RUN_ENDINGS` declaration ONLY** (one added key and its
@@ -966,6 +967,7 @@ the arm is what carried the finding intact to the area that could close it.
 ## CLAIM 2026-08-10 RECORD (CASE-1 — DEC-72's case OBJECT: identity owned by a project, membership by version and role, editions per case)
 session: case1-case-object (worktree `agent-a1af1f1e654822176`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **`bio-plane/src/schema.mjs` — named by REGION, not by file.** (1) ONE NEW TABLE,
   `cases`, inserted immediately AFTER the `published_case_members_bundle` index and BEFORE the
   `monitor_fired` comment block — i.e. beside the two tables it is the identity for, and far
@@ -1007,6 +1009,7 @@ paths: **`bio-plane/src/schema.mjs` — named by REGION, not by file.** (1) ONE 
 ## CLAIM 2026-08-10 RECORD (CASE-3 — DEC-72 clause 3: version pinning; the member frozen by hash, and an edit to a published finding MINTING rather than mutating)
 session: case3-version-pinning (worktree `agent-a36b6782b06f5a651`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **NAMED BY REGION, NOT BY FILE — CASE-2 IS LIVE ON `publishCase` AND THE BAR, AND THE
   QUEUE'S CASE HEADER SAYS IN TERMS THAT TWO WORKERS ON RECORD'S GROUND ARE PROTECTED ONLY BY
   PRECISION.** The split this claim runs on is not my construction: CASE-1 wrote it into the
@@ -1078,6 +1081,7 @@ files, each by REGION:
 session: case2-publication-production (worktree `agent-a819c7ac95b78cff1`, branch
   `worktree-agent-a819c7ac95b78cff1`)
 opened: 2026-08-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **NAMED BY REGION AND BY SITE, NEVER BY FILE — and the precision is the point rather
   than a courtesy. A CASE-3 worker is LIVE on version pinning and lands on the same
   neighbourhood; one line below is genuinely shared and is NAMED AS SHARED rather than
@@ -1172,6 +1176,7 @@ paths: **NAMED BY REGION AND BY SITE, NEVER BY FILE — and the precision is the
 ## CLAIM 2026-09-10 FLEET (FL-8 — a launch the gate refused did not FINISH; the STATUS gets a word for a run that never started)
 session: fl8-run-status (worktree `agent-a50bd4cc90737bcaf`)
 opened: 2026-09-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **NAMED BY REGION, NOT BY FILE. A CASE-5 worker is live on the PUBLISHED-ARTIFACT path
   (`published_cases`, the manifest/ratify surfaces) in `store.mjs` and `index.mjs`; this item's
   neighbourhood in that file is the AI-RUN family — `#aiRunTerminate` and nothing else — and the
@@ -1227,6 +1232,7 @@ paths: **NAMED BY REGION, NOT BY FILE. A CASE-5 worker is live on the PUBLISHED-
 session: case5-artifact-flip (worktree `agent-a279f7840e26862b0`, branch
   `worktree-agent-a279f7840e26862b0`)
 opened: 2026-09-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at the wave boundary — the item is MERGED ON `main` and the holding session is gone. Verified on the MERGED tree rather than on the branch's own: battery 168/168 · 10,351 assertions, `coverage --strict` exit 0 read unpiped, `plancheck` 0 fail / 0 warn. **Released in a sweep rather than one at a time, because six had accumulated across two calendar months** — a claim reserves paths BETWEEN checkouts, so a dead session's claim blocks live work while protecting nothing, and a register that reads as six live claims when none exist is worse than one that reads empty.
 paths: **NAMED BY REGION, AND AN FL-8 WORKER IS LIVE ON `airun.mjs` / `RUN_STATUS`** — a
   different neighbourhood entirely, but the CASE header's rule is that precision is the only
   protection two workers on RECORD's ground get, so the regions are named anyway.
