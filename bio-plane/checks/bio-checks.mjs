@@ -143,11 +143,65 @@ HEADINGS.problem = HEADINGS.focus;
  * an inquiry include a promise it has not made. So the heading is PERMITTED in
  * every state (it can be drafted before publication, which is what the
  * ceremony's ordering needs — authoring the exclusion changes the sha, so it
- * cannot be written after the signature) and REQUIRED in `published`. */
+ * cannot be written after the signature) and REQUIRED of a CASE MEMBER.
+ *
+ * CASE-4 / DEC-72, 2026-09-10: THE CONDITION WAS `states: ['published']` AND THE
+ * STATE IT NAMED NO LONGER EXISTS. It was right when written — `published` was
+ * the inquiry's last lifecycle state, so "is this document published" and "is
+ * this document's current_state published" were one question. DEC-72 separates
+ * them: a finding's lifecycle ends at `concluded` and publication is THE CASE
+ * RELATION. The requirement itself has not moved one inch — the exclusion
+ * assertion is owed by a document that is a member of a published case — so what
+ * changes is only how the condition is asked, and it is now asked of the case
+ * relation the bytes themselves carry. Keying it on the state word would have
+ * silently stopped requiring the heading the moment the word left the machine,
+ * which is a gate that disappears rather than a gate that was lifted. */
 export const HEADINGS_WHEN = {
-  inquiry: [{ heading: '## What This Excludes', states: ['published'] }]
+  inquiry: [{ heading: '## What This Excludes', whenCaseMember: true }]
 };
 HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
+
+/** CASE-4 / DEC-72: THE CASE RELATION AS A DOCUMENT'S OWN BYTES CARRY IT.
+ *
+ * One predicate, exported, so the catalog's several "is this published" sites
+ * cannot drift apart — the same reason DISPOSITIONS and REOPENABLE_FROM live in
+ * one array each. `case_id` is the field REC-44 put inside the bytes the member
+ * SIGNS precisely so a stranger holding one document can read which case it
+ * belongs to without contacting this instance, which is what makes it the right
+ * field to ask: the relation is inside the signature, exactly as the state word
+ * used to be, and nothing here reads a table.
+ *
+ * The `'null'` guard is not decoration: `#setOrAddScalar` writes the STRING
+ * "null" for an absent value, and publishCase()'s own case-identity resolution
+ * already excludes it by name at store.mjs. Two readers of one convention that
+ * disagreed about it would be the drift this file exists to prevent.
+ *
+ * IT IS THE PAIR AND NOT `case_id` ALONE, AND THAT WAS MEASURED RATHER THAN
+ * preferred. `case_id` alone is what a document carries FOREVER after its first
+ * publication — `op=reopen` deliberately leaves it, so `publishCase()` can
+ * re-derive which case a second edition belongs to without taking an identity
+ * from a caller. Keying on it alone therefore makes a REOPENED working document
+ * read as a case member and drags the entire published ceremony onto a document
+ * that is back in `open` being worked — a gate firing where the record says the
+ * group is allowed to be mid-thought. The pair is the assertion: `case_edition`
+ * is written by `publishCase()` and CLEARED by `op=reopen`, so "these bytes
+ * claim to be a member of a specific edition of a specific case" is exactly what
+ * the two of them together say, and it is true of precisely the documents that
+ * used to say `current_state: published`.
+ *
+ * WHEN CASE-5b LANDS, THIS IS THE FIELD PAIR THAT MOVES. CASE-5b removes
+ * `case_id` and friends from finding bytes once there is a case-level signing
+ * ceremony for those facts to move to. This predicate is where that change
+ * arrives, and it is ONE function rather than six inlined field reads for that
+ * reason. */
+export const caseEditionClaimed = (fm) => {
+  const e = fm?.case_edition;
+  return !(e === undefined || e === null || e === '' || e === 'null');
+};
+export const isCaseMemberBytes = (fm) => {
+  const c = fm?.case_id;
+  return typeof c === 'string' && c.trim() !== '' && c !== 'null' && caseEditionClaimed(fm);
+};
 
 /* THE type-keyed vocabulary lookup (REC-10, normalisation site 1 of 4).
  * Membership questions go through normalizeType (C-2.5); vocabulary
@@ -192,13 +246,70 @@ export const STATES = {
      machine already carries deferred/dismissed -> open for exactly that.
      `concluded -> surfaced` follows the table's own convention, where every
      existing edge into `open` names the alias beside it. */
-  /* REC-14 / DEC-12: `published` joins, and it is NOT TERMINAL. It is
-     reachable ONLY from `concluded` — a material set cannot be asserted over a
-     question with no conclusion — and it leaves ONLY to `open` (and its
-     `surfaced` alias), which is DEC-12's reopening: *"A closed finding can be
-     reopened, and a published case can be revised, though when republished,
-     the edition number must be incremented and the case treated as a separate
-     document."*
+  /* ============ CASE-4 / DEC-72, 2026-09-10: `published` LEAVES THIS MACHINE.
+     THE STATE GOES; THE PRECONDITION IT ENFORCED DOES NOT, AND THAT DISTINCTION
+     IS THE WHOLE ITEM.
+
+     Bob's ruling (DEC-72) makes a case ITS OWN OBJECT — a set of
+     finding-versions plus the publishing project — rather than a phase of a
+     finding. `CASE-AS-PRODUCTION.md`: *"A finding's lifecycle ends at
+     `concluded`; publication is the case relation."* Its supersession table
+     rules on this table by name: *"`published` as an inquiry lifecycle state
+     (State Rules per-type machine; ILLEGAL_TRANSITION publishing-only-from-
+     concluded) — the precondition survives as 'only a CONCLUDED finding may be
+     a case member'; the state itself becomes the case relation."*
+
+     WHAT `concluded: [... 'published' ...]` WAS ACTUALLY DOING, and it is why
+     deleting it alone would have been a defect rather than the change. That one
+     array entry was carrying TWO facts at once. The first is that publishing
+     moves the document to a new lifecycle state — that fact is what DEC-72
+     deletes. The second is that publishing is reachable from `concluded` AND
+     FROM NOWHERE ELSE — a material set cannot be asserted over a question with
+     no conclusion — and THAT fact survives the ruling untouched. Because both
+     rode on one array entry, removing the entry removes both: with no
+     `published` anywhere in `edges`, the old guard
+     `legalFrom.includes("published")` is false from EVERY state, which reads as
+     a gate that refuses everything and is in fact a gate that has stopped
+     asking. So `publishCase()` now carries the precondition EXPLICITLY, as its
+     own named refusal (`NOT_CONCLUDED`) over `concluded` alone. A rule that used
+     to be a side effect of a table is now a sentence, which is the only form in
+     which it can survive the table.
+
+     `published` IS STILL IN `legacy` BELOW AND THAT IS NOT A HEDGE. Ratified
+     bytes are immutable and a store that has published anything holds documents
+     whose frontmatter says `current_state: published` — bytes whose hash a
+     stranger may already be verifying against. Rewriting them to say something
+     else would break every pin that names them and would be this record editing
+     what it already signed. The focus machine four rows down is kept whole for
+     exactly this reason and states it in those words: a legacy document
+     validates against the vocabulary it was authored under. So the word stays
+     VALID and stops being REACHABLE — nothing in `edges` names it as a
+     destination, which is what "removed from the state machine" means for a
+     machine that cannot rewrite its own history. `legal` is what this machine
+     produces; `legacy` is what it must still read.
+
+     THE OUT-EDGES ARE KEPT for the same reason and only for it: a document
+     already sitting at `published` must still be pickable-up, or the removal
+     would strand every case ever published behind a state with no exit. Nothing
+     new ever arrives there to use them.
+
+     WHAT REPLACED THE STATE EVERYWHERE ELSE: the CASE RELATION. Every guard
+     that read `current_state === 'published'` — cannot divide, cannot
+     restructure, cannot move a version, the frozen/confirmed basis split,
+     reopen's own gate — now asks whether the document's CURRENT VERSION is a
+     case member, which CASE-5 made answerable by the pin (`bundle_sha =
+     version_sha`). That is one question with one answer instead of a state word
+     and a roster that could disagree, and it is also why CASE-4 needed no second
+     mechanism to notice a revision: a revised member's head stops matching the
+     pin, and that same inequality IS the revision flag.
+
+     ============ The REC-14 / DEC-12 reasoning that put `published` here, kept
+     because it is what the removal has to preserve. It was: reachable ONLY from
+     `concluded` — a material set cannot be asserted over a question with no
+     conclusion — and it leaves ONLY to `open` (and its `surfaced` alias), which
+     is DEC-12's reopening: *"A closed finding can be reopened, and a published
+     case can be revised, though when republished, the edition number must be
+     incremented and the case treated as a separate document."*
 
      REOPENING DOES NOT UNPUBLISH, and this table is where that survives. The
      inquiry's STATE and its PUBLICATION HISTORY are two different records: the
@@ -244,13 +355,23 @@ export const STATES = {
      mind in silence. `divided: []` is that fact, and it is what makes the
      children's `supersedes` edges the only forward path. */
   inquiry: {
-    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded', 'published', 'divided'],
+    legal: ['open', 'deferred', 'dismissed', 'surfaced', 'concluded', 'divided'],
+    /* CASE-4 / DEC-72: STATES THIS MACHINE NO LONGER PRODUCES AND MUST STILL
+       READ. Valid in bytes that already carry them; named by no edge as a
+       destination, so nothing can enter them again. See the block above. */
+    legacy: ['published'],
     edges: {
       open: ['deferred', 'dismissed', 'concluded', 'divided'],
       surfaced: ['deferred', 'dismissed', 'concluded', 'divided'],
       deferred: ['open', 'surfaced', 'dismissed'],
       dismissed: ['open', 'surfaced', 'deferred'],
-      concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'published', 'divided'],
+      /* `published` REMOVED from this list by CASE-4 — it was the only edge INTO
+         the state, and with it gone the state is unreachable. The precondition
+         it also carried (publishing only from `concluded`) is now publishCase()'s
+         own NOT_CONCLUDED refusal. */
+      concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'divided'],
+      /* KEPT so a document already at `published` is not stranded. No new
+         document ever arrives here to use these. */
       published: ['open', 'surfaced'],
       divided: []
     }
@@ -829,8 +950,13 @@ function checkHeadings(ctx, findings) {
     if (!present.includes(h)) findings.push(f('C-3.1', 'error', `required heading '${h}' is missing`, [`insert canonical heading '${h}' with empty body`]));
   }
   for (const c of conditional) {
-    if (c.states.includes(ctx.fm?.current_state) && !present.includes(c.heading))
-      findings.push(f('C-3.1', 'error', `required heading '${c.heading}' is missing: the ${ctx.fm?.current_state} state carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
+    /* CASE-4 / DEC-72: the condition is THE CASE RELATION, not a state word.
+       `states:` is gone from this shape because the state it named is gone from
+       the machine; the requirement is unchanged. */
+    const owed = c.whenCaseMember ? isCaseMemberBytes(ctx.fm)
+               : (c.states || []).includes(ctx.fm?.current_state);
+    if (owed && !present.includes(c.heading))
+      findings.push(f('C-3.1', 'error', `required heading '${c.heading}' is missing: a member of a published case carries it`, [`insert canonical heading '${c.heading}' with the assertion in it`]));
   }
   for (const h of present) {
     if (!canonical.includes(h)) findings.push(f('C-3.1', 'error', `heading '${h}' is not in the canonical set for ${ot}`, ['rename to the canonical heading, preserving body']));
@@ -845,7 +971,15 @@ function checkStateLegality(ctx, findings) {
   const spec = vocabFor(STATES, ot);
   if (!spec) return;
   const cur = ctx.fm.current_state;
-  if (!spec.legal.includes(cur)) {
+  /* CASE-4 / DEC-72: `legacy` is READ HERE AND NOWHERE ELSE, which is the point
+     of it being a separate key. A word this machine no longer produces is still
+     a word its own signed history carries, and refusing bytes we ourselves
+     ratified would make the catalog reject the record. It is deliberately NOT
+     folded into `legal`: every OTHER reader of this table — the affordance
+     derivation, the transition guards, `edgesFrom` — asks what the machine can
+     DO, and must see the shorter list. */
+    const readable = [...spec.legal, ...(spec.legacy || [])];
+  if (!readable.includes(cur)) {
     findings.push(f('C-4.1', 'error', `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(', ')})`));
   }
   const hist = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
@@ -2167,8 +2301,36 @@ function checkInquiryExtension(ctx, findings) {
      is STATED as absent — an absent bar is not a bar of zero.
 
      THE EDITION (DEC-12) is what makes the whole thing safe: edition 2 does not
-     overwrite edition 1, it joins it. */
-  if (fm.current_state === 'published') checkPublishedExtension(fm, findings);
+     overwrite edition 1, it joins it.
+
+     CASE-4 / DEC-72, 2026-09-10: THE CONDITION MOVED AND NOT ONE REQUIREMENT
+     DID. This read `fm.current_state === 'published'`, and it was right when
+     written: `published` was the state, so the state was the question. DEC-72
+     makes publication THE CASE RELATION, so the question is now asked of the
+     relation — `case_id`, which REC-44 put inside the bytes the member signs for
+     precisely the reason that makes it the right field here: it is covered by
+     the signature, exactly as `current_state` was.
+
+     THE OVER-STRICTNESS THIS AVOIDS IS THE POINT AND IT IS WORTH STATING. A
+     naive removal leaves this line testing a word nothing writes any more, so
+     the entire published ceremony — the completeness statement, the exclusion
+     FIELD, the declared and justified subject position, the frozen pair, the
+     bar, the edition, the case id, the scope, the roles — stops being checked
+     ON EVERY DOCUMENT, silently and with the suite green. The requirements are
+     what DEC-72 explicitly does NOT touch ("the ceremony is unchanged"), so
+     losing them to a state removal would be the change taking something nobody
+     ruled on. */
+  if (isCaseMemberBytes(fm)) checkPublishedExtension(fm, findings);
+  /* CASE-4 / DEC-72: AND THIS IS WHERE THE `case_id` REQUIREMENT SURVIVES. The
+     membership claim is the PAIR, so a document asserting a case EDITION while
+     naming no case would otherwise slip past the whole ceremony by being
+     half-formed — the exact hole REC-44's `case_id` arm was written to close,
+     arriving through the new door. It is refused here, before the ceremony, and
+     it names what is missing rather than what is present. */
+  else if (caseEditionClaimed(fm))
+    findings.push(f('C-2.8', 'error', `case_edition '${fm.case_edition}' names an edition of no case: membership is the PAIR (case_id, case_edition), and an edition number with no case identity beside it places this finding in an edition nobody can resolve, with no scope and nothing for C-21.1 to be fresh against (DEC-44, DEC-72)`,
+      ['publish through op=publish, which mints or carries the case identity and stamps both into the bytes',
+       'or clear case_edition: a document that is not a member of a case edition does not claim one']));
   /* REC-16: the `divided` ENTRY REQUIREMENTS, on the same principle again — a
      state is not a label a document may wear. What `divided` claims is that
      this question was two questions and that every leg it rested on now lives
@@ -2371,41 +2533,50 @@ export function completenessFields(fm) {
 function checkPublishedExtension(fm, findings) {
   const e = fm.edition;
   if (!Number.isInteger(e) || e < 1) {
-    findings.push(f('C-2.8', 'error', `published state requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe — edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
+    findings.push(f('C-2.8', 'error', `a case member requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe — edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
       ['publish through op=publish, which stamps the edition from the published record']));
   }
   const c = (typeof fm.completeness === 'object' && fm.completeness) || null;
   if (!c) {
-    findings.push(f('C-2.8', 'error', 'published state requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything',
+    findings.push(f('C-2.8', 'error', 'a case member requires a completeness block: a case that says nothing about what it does not cover is claiming to cover everything',
       /* REC-56 / D-203's sweep, fourth site, and this one had a REACHABLE act
          available that the old string did not name. `published: ['open',
          'surfaced']` — `published -> concluded` is NOT an edge, so "move the
          inquiry back to concluded" fires C-4.2. What IS reachable is the full
-         ceremony the STATES table's own comment describes: `published -> open
-         -> concluded -> published` at edition 2, and `op=reopen` DOES apply at
-         `published` (REOPENABLE_FROM carries it, precisely so a legal edge is
-         not left with no caller). So the correction here names an act rather
-         than only refusing one. */
+         ceremony the STATES table's own comment describes, and `op=reopen` DOES
+         apply, precisely so a legal edge is not left with no caller. So the
+         correction here names an act rather than only refusing one.
+         CORRECTED AGAIN 2026-09-10 (CASE-4 / DEC-72), never exempted, AND THE
+         EDGE IS WHAT MOVED — not the advice. The route was `published -> open`
+         because a case member wore `published`; DEC-72 ends that state, a member
+         sits at `concluded`, and the ceremony is now `concluded -> open ->
+         concluded` with a new edition published from there. `op=reopen` still
+         applies, for the same reason it always did: its gate is now "a
+         disposition OR a case member", so a case member reopens and a concluded
+         finding in no case is still refused NOT_SET_DOWN. REC-56's whole point is
+         that a repair string must name a route that EXISTS, and
+         `repair-reachability.test.mjs` is the instrument that catches it when one
+         stops existing — which is exactly how this line was found. */
       ['author completeness.statement and the exclusion list',
-       'or reopen this case for a second edition (published -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12)']));
+       'or reopen this case for a second edition (concluded -> open, op=reopen) and carry it back through conclude and publish: an edition is not edited back into concluded, and reopening does not unpublish edition 1 (DEC-12, DEC-72)']));
   } else {
     if (typeof c.statement !== 'string' || c.statement.trim() === '') {
-      findings.push(f('C-2.8', 'error', 'published state requires a non-empty completeness.statement'));
+      findings.push(f('C-2.8', 'error', 'a case member requires a non-empty completeness.statement'));
     }
     if (typeof c.author !== 'string' || c.author.trim() === '') {
-      findings.push(f('C-2.8', 'error', 'published state requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
+      findings.push(f('C-2.8', 'error', 'a case member requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
     }
     if (!ISO_TS_RE.test(String(c.at || ''))) {
-      findings.push(f('C-2.8', 'error', `published state requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f('C-2.8', 'error', `a case member requires completeness.at as an ISO timestamp (got '${c.at}')`));
     }
     /* DEC-13. The gate is the DECLARATION, never the act: every position below
        passes, and nothing reads which one it is. */
     if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
-      findings.push(f('C-2.8', 'error', `published state requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`,
+      findings.push(f('C-2.8', 'error', `a case member requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`,
         ['declare the group\'s position on putting this case to its subject']));
     }
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '') {
-      findings.push(f('C-2.8', 'error', 'published state requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)',
+      findings.push(f('C-2.8', 'error', 'a case member requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)',
         ['justify the position — including a deliberate decision not to give notice']));
     }
   }
@@ -2430,12 +2601,25 @@ function checkPublishedExtension(fm, findings) {
      one whose arm differs from case_scope's: it is required here AND it is
      under C-21.1's byte-check. Why, when scope beside it is not, is recorded
      once at checkCompletenessFreshness rather than twice. */
-  if (typeof fm.case_id !== 'string' || fm.case_id.trim() === '' || fm.case_id === 'null') {
-    findings.push(f('C-2.8', 'error', 'published state requires case_id: a published case is a CONTAINER over one or more findings (DEC-44), and a finding published into no case has no edition, no scope and nothing for C-21.1 to hold it to',
-      ['publish through op=publish, which mints or carries the case identity and stamps it into the bytes']));
-  }
+  /* CASE-4 / DEC-72, 2026-09-10: THE `case_id` ARM IS NOW THE ENTRY CONDITION
+     ITSELF AND IS THEREFORE UNREACHABLE FROM HERE — SAID OUT LOUD RATHER THAN
+     DELETED IN SILENCE, because "this cannot fire" and "nobody checked" look
+     identical in a diff. Until this item, this function was entered on
+     `current_state === 'published'` and `case_id` was one of the facts such a
+     document had to carry; a published finding naming no case was a real,
+     reachable shape. DEC-72 makes the case relation the condition, so
+     `isCaseMemberBytes(fm)` is exactly this predicate and a document that fails
+     it never arrives here — the refusal has not been lifted, it has become the
+     door. The requirement is UNCHANGED and is now enforced one line earlier and
+     for every document rather than only for documents wearing a state word.
+     THE ONE THING THAT WOULD MAKE IT REACHABLE AGAIN is CASE-5b removing
+     `case_id` from finding bytes; at that point this function's entry condition
+     moves to whatever the case-level signed document offers, and this arm moves
+     with it. Kept as a comment and not as dead code: an `if` that can never be
+     true is a rule nobody is enforcing wearing the costume of one. */
+
   if (typeof fm.case_scope !== 'string' || fm.case_scope.trim() === '') {
-    findings.push(f('C-2.8', 'error', 'published state requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
+    findings.push(f('C-2.8', 'error', 'a case member requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
       ['author the case scope on op=publish']));
   }
   /* CASE-5 / DEC-72 — THE ARTIFACT FLIP'S OWN ENTRY REQUIREMENT, AND IT IS HERE
@@ -2458,7 +2642,7 @@ function checkPublishedExtension(fm, findings) {
      rather than two spellings of it. */
   if (typeof fm.case_id === 'string' && fm.case_id.trim() !== '' && fm.case_id !== 'null'
       && (!Number.isInteger(fm.case_edition) || fm.case_edition < 1)) {
-    findings.push(f('C-2.8', 'error', `published state requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
+    findings.push(f('C-2.8', 'error', `a case member requires an integer case_edition of 1 or more (got '${fm.case_edition}'): a finding's 'edition' is its OWN version on its own chain, and the CASE's edition is a separate number since the artifact flip. A member that names a case and no case edition would be placed into an edition nobody signed for, and a reader could not tell a finding's third version from the case's third edition`,
       ['publish through op=publish, which stamps both numbers into the bytes you sign']));
   }
   /* CASE-2 / DEC-72 — TWO MORE, AND THE GATE RUNS THEM FOR THE REASON THIS ACT
@@ -2481,14 +2665,14 @@ function checkPublishedExtension(fm, findings) {
      Checked against `case_findings` rather than against a list restated here,
      so the two cannot come to disagree about who is in the case. */
   if (typeof fm.case_project !== 'string' || fm.case_project.trim() === '' || fm.case_project === 'null') {
-    findings.push(f('C-2.8', 'error', 'published state requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is',
+    findings.push(f('C-2.8', 'error', 'a case member requires case_project: a case is a PRODUCTION OF A PROJECT (DEC-72), and the project is what supplied the standard of evidence the case was held to. A published finding naming no project is one whose bar nobody declared, and a stranger holding it cannot say whose production it is',
       ['publish through op=publish with project=<project id>, which writes it into the bytes you sign']));
   }
   {
     const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map((x) => String(x)) : [];
     const rows = Array.isArray(fm.case_roles) ? fm.case_roles.filter((r) => r && typeof r === 'object') : null;
     if (!rows || !rows.length) {
-      findings.push(f('C-2.8', 'error', 'published state requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member\'s bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default — a member designated by omission was designated by nobody',
+      findings.push(f('C-2.8', 'error', 'a case member requires case_roles: the publisher DESIGNATES each member load_bearing or supporting, and the whole partition travels in every member\'s bytes so a stranger holding one finding can see whether it was presented as carrying the case (DEC-72 clause 4). There is no default — a member designated by omission was designated by nobody',
         ['designate every member on op=publish with roles={"<finding id>": "load_bearing"|"supporting"}']));
     } else {
       const named = new Map(rows.map((r) => [String(r.target ?? ''), String(r.role ?? '')]));
@@ -2518,18 +2702,18 @@ function checkPublishedExtension(fm, findings) {
      uncleared HUNCH (HUNCH DEBT, D-188), and that refusal is
      op=publishpreflight's by name. */
   if (biasAcknowledgementOf(fm) === null || fm.bias_acknowledgement.trim() === '') {
-    findings.push(f('C-2.8', 'error', 'published state requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) — what is refused here is publishing SILENTLY about the lens, not publishing under one',
+    findings.push(f('C-2.8', 'error', 'a case member requires bias_acknowledgement: a published case carries the bias it was produced under as a fact the reader weighs, and the publisher ACKNOWLEDGES it at the moment of export rather than passing a pre-flight checkbox (DEC-46). Ordinary declared bias never blocks publication and is disclosed precisely so a reader can apply or discount it (DEC-20) — what is refused here is publishing SILENTLY about the lens, not publishing under one',
       ['author the bias acknowledgement on op=publish, fresh for this edition']));
   }
   if (!Array.isArray(fm.case_findings) || !fm.case_findings.length) {
-    findings.push(f('C-2.8', 'error', 'published state requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
+    findings.push(f('C-2.8', 'error', 'a case member requires case_findings naming every finding in this case: a stranger holding this document must be able to see what else the case rests on without contacting this instance, which is the premise the portable container exists for (DEC-44 determination 3)',
       ['publish through op=publish, which writes the roster into every member\'s bytes']));
   } else if (typeof fm.id === 'string' && !fm.case_findings.includes(fm.id)) {
     findings.push(f('C-2.8', 'error', `case_findings does not include this document (${fm.id}): a finding that is not a member of the case it names cannot be published into it`));
   }
   /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
   if (!Array.isArray(fm.completeness_excluded)) {
-    findings.push(f('C-2.8', 'error', 'published state requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
+    findings.push(f('C-2.8', 'error', 'a case member requires a completeness_excluded field: an EMPTY list is a claim (this case left nothing out) and is legal — an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse',
       ['author completeness_excluded, empty if nothing was excluded']));
   } else {
     fm.completeness_excluded.forEach((r, i) => {
@@ -2559,7 +2743,7 @@ function checkPublishedExtension(fm, findings) {
      and C-21.2 compares against the right one. */
   const axes = Array.isArray(fm.published_strength) ? fm.published_strength : null;
   if (!axes || axes.length !== 2 || !['capture', 'connection'].every((a) => axes.some((x) => x && x.axis === a))) {
-    findings.push(f('C-2.8', 'error', 'published state requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
+    findings.push(f('C-2.8', 'error', 'a case member requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
       ['publish through op=publish, which stamps both frozen axis objects into the bytes']));
   } else {
     for (const a of axes) {
@@ -2586,7 +2770,7 @@ function checkPublishedExtension(fm, findings) {
     && fm.basis.some((l) => l && typeof l === 'object' && typeof l.ground === 'string' && l.ground !== '');
   const frozenGrounds = Array.isArray(fm.published_strength_grounds) ? fm.published_strength_grounds : null;
   if (grouped && !frozenGrounds) {
-    findings.push(f('C-2.8', 'error', 'published state requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
+    findings.push(f('C-2.8', 'error', 'a case member requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached',
       ['publish through op=publish, which freezes the per-ground breakdown beside the pair']));
   } else if (grouped) {
     for (let i = 0; i < frozenGrounds.length; i++) {
@@ -2616,7 +2800,7 @@ function checkPublishedExtension(fm, findings) {
      what the case reached. Absent gates nothing and must SAY so. */
   const rq = (typeof fm.required_strength === 'object' && fm.required_strength) || null;
   if (!rq || typeof rq.declared !== 'boolean') {
-    findings.push(f('C-2.8', 'error', 'published state requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)',
+    findings.push(f('C-2.8', 'error', 'a case member requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength it reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17)',
       ['declare the group default with op=strengthbar, or publish with the bar stated absent']));
   } else if (rq.declared) {
     for (const axis of ['capture', 'connection']) {
@@ -2648,7 +2832,15 @@ function checkPublishedExtension(fm, findings) {
  *  real caller has, it does. */
 function checkCompletenessFreshness(ctx, findings) {
   if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
-  if (ctx.fm?.current_state !== 'published') return;
+  /* CASE-4 / DEC-72: THE CASE RELATION, not the state word — the same move
+     checkInquiryExtension's published arm makes, and it matters here more than
+     anywhere else in this file, because C-21.1 is the check that refuses a
+     completeness claim CARRIED FORWARD. Left keyed on `published`, this would
+     have returned on every document from the day the state left the machine,
+     and a member could have reprinted edition 1's limits and its bias
+     acknowledgement under edition 2 with nothing in the catalog saying a word.
+     A gate that disappears looks exactly like a gate nobody tripped. */
+  if (!isCaseMemberBytes(ctx.fm)) return;
   /* REC-44 / DEC-44: PER CASE PER EDITION, and the altitude is the correction.
      The completeness assertion belongs to the CASE — the container over one or
      more findings — so the comparison is against the previous edition of THAT

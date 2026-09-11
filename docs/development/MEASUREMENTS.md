@@ -8349,3 +8349,81 @@ silently past-due. CONDUCT's brief records the true baseline as 168/168 · 10,35
 earlier the same day; the difference is exactly this suite's six assertions. **Both numbers are
 honest measurements of the same tree, and a re-measurement discipline cannot catch a brief that the
 calendar falsified.** DELEGATION filed in `CLAIMS.md`.
+## 2026-09-10 · CASE-4 / IC-69 — `published` leaves the inquiry state machine (RECORD, worktree `agent-a2cabbd5225deffd5`)
+
+**BASELINE, MEASURED IN THIS WORKTREE AFTER `npm ci`, ON A CLEAN TREE AT `3b340d8`:
+167/168 suites · 10,345 assertions · exit 1.** The brief carried 168/168 · 10,351 and the
+difference is exactly six assertions, all of them in one suite, and **it is a PRE-EXISTING
+TIME BOMB rather than anything this item did — measured before a single edit.**
+
+**`action-loop.test.mjs` FAILS FROM 2026-09-10 ONWARD ON EVERY TREE, AND THE CAUSE IS A
+HAND-CARRIED DATE.** Its fixture declares `const DUE = "2026-09-10"` with the comment *"The
+response window is a FUTURE date so the derivation is exercised by the INJECTED clock and not
+by the wall — which is the point of an injectable clock, and also keeps C-11.1's 'silently
+past-due' arm (a real and separate finding about the document) out of this suite's way."*
+**The wall clock reached the date.** All six failures are the same finding — `C-11.1: clock[0]
+'City response due' is silently past-due (2026-09-10 < today, status still pending)` — drawn
+by five arms asserting the catalog returns zero errors, plus the cached-vs-derived overdue
+pair, which now agrees where it is written to disagree.
+
+**IT IS NOT FIXED BY MOVING THE CONSTANT FORWARD, and that is the finding rather than the
+defect.** A later literal re-arms the same bomb on a later day, which is this project's
+most-repeated class: *a hand-carried number in a document nobody re-measures goes stale
+silently.* The suite already owns an INJECTED CLOCK (`BEFORE_MS` / `AFTER_MS`) and the honest
+repair is to derive `DUE` from it — a date a fixed number of days after the injected "now" —
+so the fixture's future stays future whatever day the suite is run on. **NOT FIXED HERE:
+`action-loop.test.mjs` is the ACTION area's ground and this item holds no claim on it.**
+Reported to CONDUCT by name so it is enqueued as an item rather than rediscovered by the next
+six workers, each of whom will read it as damage their own change did.
+
+**BLAST RADIUS OF THE STATE REMOVAL, MEASURED RATHER THAN ESTIMATED BEFORE THE BUILD.**
+`grep -a` over `bio-plane/src/` found **ten live sites** keyed on `current_state === "published"`
+or on the edge table's `published` entry — the publish guard, the state write, the
+frozen/working basis split, reopen's gate, `PUBLISHED_CANNOT_DIVIDE`,
+`PUBLISHED_CANNOT_RESTRUCTURE`, `PUBLISHED_CANNOT_MOVE_VERSION`, `op=ratify`'s `isCase`
+derivation, the re-evaluation edition arm, and `REOPENABLE_FROM` — plus three in the catalog
+(the `STATES` table, C-2.8's entry requirements, C-21.1's freshness check) and two affordance
+predicates. **FOUR MORE WERE FOUND ONLY BY RUNNING THE SUITES, and every one of them would
+have shipped green:** `op=dispose` (the STATES comment's own rule that a published case cannot
+be quietly set down had the EDGE TABLE as its only enforcement — D-79 reversed by a lifecycle
+change), `op=publish` itself (a second edition of unchanged bytes, because the same deleted
+edge was enforcing "never twice"), `inquirydivide`'s affordance (offered where the op refuses
+— DEC-8), and `checkCompletenessFreshness` (C-21.1 would have returned on every document,
+letting an edition reprint the previous one's limits with nothing in the catalog saying a word).
+
+**THE INSTRUMENT-LIMIT MEASUREMENT, AND IT IS THE THIRD ITEM IN A ROW TO RECORD ONE.** CASE-4's
+D-266 scoping arm (b2) — drop `case_id=?` from the discharge UPDATE so one project's act
+answers every flag in the store — **came back GREEN on its first run.** The cause was the
+FIXTURE's ordering, not the plane: the second project's member revised AFTER the first project
+had already acted, so at the instant of the discharge there was nothing for an unscoped UPDATE
+to over-reach. Corrected by making the two flags COEXIST at the moment of the discharge; the
+arm then fails 4 assertions by name. CASE-3's arm (f) and CASE-5's arm (c) are the same shape.
+
+**AND AN ARM THAT NAMED NOTHING.** Arm (d) — widen the case relation to every `concluded`
+finding — is so over-strict that `op=publish` refuses the FIRST publication in the store, so
+the fixture could not be built and the suite died before printing its own summary: the control
+read `(suite produced no tally)`. **A crash names nothing** (CASE-2's recorded finding). The
+fixture now reports through a `bail()` helper, so an arm that kills the fixture still fails at
+a labelled assertion and still prints a tally — and arm (d2) was added beside it to exercise
+the over-strictness arm the original was written for, because (d) never reaches block 4.
+
+**RATCHETS MOVED, EACH WITH ITS ARRIVAL NAMED.** `derivation-bounds` 30 → 31 (the arrival is
+`#flagCasesOnRevision`; its scan is `published_case_members WHERE bundle_id=? AND
+version_sha=?`, bounded by the number of case editions holding ONE hash, which the schema makes
+at most one per (case, edition) — counted honestly rather than exempted). `bounds` capped-op
+roster 29 → 30 (the arrival is `op=caseflags`). `meaning-bounds`' bare-collection ceiling is
+UNMOVED at 38, because `op=caseflags` publishes `limit` beside `truncated` rather than joining
+that roster.
+
+**MEASURED CONSUMER IMPACT FOR IC-69 — NOT ZERO, and the first site is a HAND COPY OF THE
+MACHINE THIS ITEM CHANGED.** Grep over `civicos-ui/`, `newgroup/`, `pdf-worker/`,
+`agent-worker/`, `docprofile/`, `tools/`, `release/`, built copies excluded. **`newgroup`,
+`pdf-worker`, `agent-worker`, `docprofile`, `tools`, `release`: ZERO** — none reads a state
+vocabulary. **`civicos-ui/app.html`: FOUR sites.** `STATE_EDGES.inquiry` (~1636-1646) mirrors
+`STATES.inquiry.edges` including `concluded:[…,"published",…]` and `published:["open",
+"surfaced"]`, and its own comment says it exists *"so it refuses exactly what the store would
+refuse"* — now false in both directions. `PHASE` (~1670) maps `published:"case"`, so the page
+**labels a CASE a "Finding"**. The state seal vocabulary (~1794-1797) renders a case with no
+seal, and its two `forbids` are still TRUE but now hang off the case relation. The SPACE
+vocabulary's `published` row (~1767) is CORRECT and must not be touched — named so a
+find-and-replace does not take it. DELEGATION filed in `CLAIMS.md`.

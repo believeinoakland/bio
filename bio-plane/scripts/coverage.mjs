@@ -580,27 +580,27 @@ const REGISTER_FLOOR = {
      which these numbers are reproducible by anyone else.
      CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
      see CASE-2's arms, and every figure here is true of this branch alone. */
-  /* MOVED 2026-09-10 by FL-9 (worktree agent-abe10acbf93247266): 858 -> 868 /
-     162 -> 163 / 163 -> 164, ALL THREE IN THE SAME TURN and every one read off
-     the figure a green `--strict` run PRINTED on this branch — `REGISTER FLOOR
-     arms 868/858 · classified 163/162 · corpus (suites read) 164/163 · GREW by
-     10 arm(s)` — never by adding to the numbers that were here.
-     THE RISE IS ONE NEW SUITE, `test/fleetbundles.test.mjs` (the fleet's build
-     guard), whose `NEGATIVE CONTROL:` declaration states ten numbered items; all
-     of them were RUN from `test/fleetbundles.control.mjs` and the measured
-     results are in the declaration. **MEASURED AFTER THE COMMIT, NOT BEFORE** —
-     the run these figures come from reports `provenance: 175 of 175 discovered
-     item(s) are in the commit at HEAD (d83695b)`, so they are the REPRODUCIBLE
-     figures and not the contaminated ones a pre-commit run prints under the same
-     numerals. ONE KEY SET, checked for duplicates before writing; 858 is
-     REPLACED, never joined. Nothing FELL.
-     Battery 168/169 · 10,391 assertions. **The one red suite is NOT this item's
-     and NOT this tree's**: `action-loop.test.mjs` pins a fixture clock at
-     2026-09-10 and the machine has rolled past it — same 73/6 on the untouched
-     baseline, DELEGATION in `CLAIMS.md`.
-     CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this branch cannot
-     see CASE-4's arms, and every figure here is true of this branch alone. */
+  /* RE-DERIVED AT INTEGRATION 2026-09-10 by CONDUCT, and BOTH BRANCHES ASKED FOR
+     THIS IN THEIR OWN WORDS. FL-9 moved these to 868/163/164 and CASE-4 moved them
+     to 865/163/164, each read off a post-commit green run on its own branch, each
+     correct about the tree it could see, and each closing with "CONDUCT RE-DERIVES
+     THESE ON THE MERGED TREE". Neither figure is true of the merged tree: FL-9's
+     branch could not see CASE-4's arms and CASE-4's could not see FL-9's.
+     THE VALUE BELOW IS READ OFF THE MERGED RUN — the only run in which both items
+     exist together — and it is ONE KEY SET, checked for duplicates before writing.
+     That check is not ceremony: six historical keep-both merges left duplicate
+     `arms:` keys here, valid JavaScript where the LAST key silently wins, and once
+     the last was the LOWEST — slack installed in a ratchet whose whole purpose is
+     to have none. A keep-both resolution of THIS conflict would have done it again.
+     The rise is two new suites — `test/fleetbundles.test.mjs` (ten declared arms)
+     and `test/caselifecycle.test.mjs` (seven, with the baseline deliberately NOT an
+     ordinal item, CASE-1's measured lesson about `countArms`). Nothing FELL.
+     ONE RED IS EXPECTED ON THIS TREE AND IS NEITHER ITEM'S: `action-loop.test.mjs`
+     pins a fixture clock at 2026-09-10 and the machine rolled past it. Both workers
+     measured it independently on untouched baselines. It is M0-22. */
   arms: 868,
+  classified: 163,
+  corpus: 164,
   classified: 163,
   corpus: 164,
 };

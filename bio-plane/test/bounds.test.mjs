@@ -432,7 +432,15 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    failure the two blocks above record twice. The paragraph above stays: its
    subject is WHERE the bound sits relative to the gate, and that is a fact about
    the op rather than about the count. */
-  OPS.size, 29);
+/* MOVED TO 30, 2026-09-10 by CASE-4 (DEC-72) — MEASURED by running the walk on
+   this tree and taking what it printed, never by adding one to the figure above.
+   The arrival is `op=caseflags`, DEC-72's revision-flag read: the flag table
+   grows with every revision of every published member and has no natural
+   ceiling, so the read publishes `limit` beside `truncated` rather than scanning
+   whatever is there — which is what puts it on this roster. It is DRIVEN, in
+   this loop's own shape, in `test/caselifecycle.test.mjs`; see DRIVEN_ELSEWHERE
+   below for why there and not here. */
+  OPS.size, 30);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1069,9 +1077,24 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    the default bound — so the flag is measured against the corpus rather than
    read off a code path. Building a second corpus here would be two fixtures for
    one fact, which is the arrangement this repository keeps paying for. */
+/* CASE-4 joins them with ONE op and CPDF-10's reason exactly: the FIXTURE.
+   `op=caseflags` is an ordinary capped read and COULD sit in the loop; what
+   keeps it out is that its bite needs TWO REVISION FLAGS, and a revision flag is
+   only raised when a version is minted over a hash some published case FROZE.
+   That means a real publishing project with an owner, a published case, a
+   RATIFIED member (an ed25519 signature over the bundle sha, through
+   `ssh-keygen -Y sign`), and then a revision — twice over, because a bite of one
+   has to have something to cut. All of that already exists in
+   `test/caselifecycle.test.mjs` for that item's own arms, and the bound is
+   DRIVEN there in exactly this loop's shape: a bite of 1 against a corpus of 2,
+   the answer's `limit` read back as the CLAMPED cap, `truncated` true on the
+   bite and FALSE at the default bound, and an over-ask answered at the ceiling.
+   Building a second corpus here would be two fixtures for one fact — and this
+   one would additionally make a suite that has never needed `ssh-keygen` depend
+   on it, so a machine without it would lose every other arm in this file. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
                                   "capturerequests", "capturerequestdrain", "versionstrength",
-                                  "textprovenance", "textattest"]);
+                                  "textprovenance", "textattest", "caseflags"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1204,6 +1227,15 @@ const answersByOp = new Map([
      nothing extra. */
   ["textprovenance", await GET("op=textprovenance&token=mem-r57&limit=1")],
   ["textattest", await GET(`op=textattest&token=mem-r57&sha256=${"0".repeat(64)}&limit=1`)],
+  /* CASE-4 / DEC-72: driven HERE, for CPDF-10's reason immediately above and in
+     its exact shape. The bite/`truncated` arms need TWO REVISION FLAGS, which
+     need a published, RATIFIED and then revised case — that corpus lives in
+     `test/caselifecycle.test.mjs` and the bound is driven there. The
+     ARRAY-SHAPE pin needs none of it, because what it asks is whether the op
+     answers with a bare array, and that is a property of the RETURN rather than
+     of how many rows are in it. This suite's store holds no published case at
+     all, and answering over it is the only corpus this particular pin needs. */
+  ["caseflags", await GET("op=caseflags&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

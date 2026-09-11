@@ -400,8 +400,22 @@ console.log("\n--- 1. the case FREEZES its member at the hash the member signed 
  * ==================================================================== */
 console.log("\n--- 2. the four acts that MOVE a reading are refused on a published finding, BY NAME ---");
 {
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted. This arm exists to
+     prove the arms beneath it are about a PUBLISHED version rather than about a
+     document that happened to refuse for some other reason — that purpose has
+     not changed, and neither has its value. What changed is what "published"
+     looks like on a document: DEC-72 ends `published` as an inquiry lifecycle
+     state, so a case member sits at `concluded` and the fact that it IS a member
+     is the CASE RELATION. Asserting the state word here would now pin a word the
+     machine no longer produces, so the arm asks the relation directly — through
+     `op=publishedcase`, the anonymous public read this whole suite is written
+     around, which answers only for a case that exists and whose member is
+     resolved BY ITS PIN. That is a STRONGER anchor than the state word ever was:
+     the old assertion could have passed on a document merely wearing a label. */
   t("the finding really is published, so the arms below are about a published version and not about "
-  + "a document that happened to refuse", await stateOf(PUB), "published");
+  + "a document that happened to refuse",
+    [await stateOf(PUB), (await anonCase(`id=${PUB}`))?.findings?.some((f) => f.bundle_id === PUB)],
+    ["concluded", true]);
   const got = {};
   for (const verb of MOVERS)
     got[verb] = await act(verb, { target: PUB, q: "&reason=the%20memo%20was%20superseded" });
@@ -528,8 +542,11 @@ console.log("\n--- 4. the edit MINTS a new version on the finding's own chain, a
  * ==================================================================== */
 console.log("\n--- 5. `hide` and `current` are OUTSIDE the fence, and the line is the catalog's own ---");
 {
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted — block 2's
+     correction, for block 2's reason, and the same stronger anchor. */
   t("the finding is published again, so these arms are about a published version",
-    await stateOf(PUB), "published");
+    [await stateOf(PUB), (await anonCase(`id=${PUB}`))?.findings?.some((f) => f.bundle_id === PUB)],
+    ["concluded", true]);
   /* `hide` IS THE PRUNE FLAG and D-214 / DEC-29(b) rule that pruning HIDES AND
      NEVER DELETES — the version stays in the record and stays queryable, so
      nothing the published bytes assert has moved. Fencing a display setting
@@ -547,7 +564,16 @@ console.log("\n--- 5. `hide` and `current` are OUTSIDE the fence, and the line i
     [cur.reason !== "PUBLISHED_CANNOT_MOVE_VERSION", cur.reason], [true, cur.reason]);
   t("and the split is the CATALOG's own table rather than this suite's opinion: the fenced acts are "
   + "exactly those VERSION_ACT_TO maps to a state, and the unfenced two are the ones it maps to null",
-    [MOVERS.length, NON_MOVERS.length, /to !== null && b\.current_state === "published"/.test(STORE_SRC)],
+    /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and the SOURCE
+       LITERAL is the only thing that moved. The property this pins — the fence is
+       drawn exactly on `VERSION_ACT_TO`'s own split, `to !== null`, and not on
+       this suite's opinion — is untouched and is still read off `store.mjs`'s own
+       text. What changed is the RIGHT-HAND side of the conjunction: the fence
+       asked `b.current_state === "published"` and now asks the CASE RELATION,
+       because DEC-72 removed that state. `to !== null` is the half this arm is
+       actually about and it is unchanged. */
+    [MOVERS.length, NON_MOVERS.length,
+     /to !== null && this\.#caseRelationOf\(target\)\.member/.test(STORE_SRC)],
     [4, 2, true]);
 }
 

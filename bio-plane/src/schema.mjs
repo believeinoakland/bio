@@ -2467,6 +2467,86 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 -- with no statement behind it is an access path built for a question no op asks, which
 -- is the finding that ratchet exists to hold. Add one WITH the statement that reads it.
 
+-- CASE-4 / DEC-72: THE REVISION FLAG. A CASE EDITION FROZE A MEMBER AT A HASH,
+-- AND THAT MEMBER HAS SINCE MINTED A NEW VERSION.
+--
+-- The design (CASE-AS-PRODUCTION.md, "Revised findings vs the cases containing
+-- them"): a case is a frozen, signed edition, honest as of its date. When a
+-- member finding is later revised, the containing cases are FLAGGED, never
+-- silently updated and never automatically re-published -- the cascade doctrine
+-- one level up. New editions are each owning project's deliberate act.
+--
+-- WHY A TABLE AND NOT A DERIVED READ, WHICH IS THE ONE STRUCTURAL DECISION HERE.
+-- The condition itself IS derivable: CASE-5 unslaved the member's edition from
+-- the case's and made a member resolve BY ITS PIN, so "this case's pin is no
+-- longer this finding's current version" is one comparison over columns that
+-- already exist. A derived answer was written first and is wrong for exactly one
+-- reason: IT CLEARS ITSELF. Revert the finding to the pinned bytes, or let the
+-- pin and the head agree again by any route, and the derived flag vanishes with
+-- nobody having acted -- which is D-79's ruling one altitude up. A finding that
+-- disappears is indistinguishable from one that was never made, and a flag that
+-- stops being raised is indistinguishable from a project that dealt with it. So
+-- the OBSERVATION is derived (from the pin, and from no second mechanism) and
+-- the FLAG is written down, once, at the moment the revision mints.
+--
+-- SET-BUT-NEVER-CLEAR IS LITERAL. No statement anywhere DELETES a row here. An
+-- owning project that acts ADDS the discharge to the row it discharges
+-- (acted_at / acted_by / acted_edition), so the record holds both the flag and
+-- what was done about it, in the order it happened. A row with acted_at NULL is
+-- outstanding; a row with acted_at set is history, and history is not absence.
+--
+-- THE ACT THAT DISCHARGES IS A NEW RATIFIED EDITION OF THAT CASE, and it is
+-- deliberately an act that ALREADY EXISTS rather than a new acknowledgement op.
+-- The design names it: "New editions are each owning project's deliberate act."
+-- It is also the only discharge available without walking into CASE-5b's wall --
+-- every case fact this plane commits is committed FROM THE SIGNED BYTES, and a
+-- bare acknowledgement op would commit a case-level assertion from an unsigned
+-- request. A ratified edition is signed, so the discharge rests on a signature
+-- exactly as the flag's pin does.
+--
+-- SCOPED TO case_id, WHICH IS D-266's RULING ARRIVING HERE: a disposition is
+-- scoped to the key's own subject. A case is ONE project's production (cases is
+-- keyed on case_id alone, CASE-1's sharpest call), so a project acting on ITS
+-- case discharges rows carrying that case_id and reaches no other project's.
+-- Where several cases containing revised members are owned by several projects,
+-- one project acting leaves every other project's rows outstanding -- and that
+-- is structural here rather than a rule somebody has to remember, because the
+-- discharge statement's WHERE clause names case_id and nothing wider.
+--
+-- pinned_sha is the hash the case COMMITTED TO (published_case_members.version_sha
+-- as it stood) and revised_sha is the version that superseded it as the finding's
+-- head. Both are stored rather than re-read: the roster row can be re-pinned by a
+-- later edition, and a flag that re-read the pin would silently re-describe what
+-- it was raised about.
+--
+-- Keyed (case_id, edition, bundle_id, revised_sha) so a member that revises
+-- three times against one frozen edition raises three rows and not one -- each
+-- revision is its own fact, and collapsing them would let the second and third
+-- vanish into the first.
+--
+-- DERIVED FROM NOTHING, so it is not rebuilt by a projection pass; it is a
+-- record of events. It carries a bundle_id, so it is cleared by BOTH arms of
+-- op=purge -- the D-113 silent-leftover, asserted against this file by
+-- hygiene.test.mjs.
+CREATE TABLE IF NOT EXISTS case_revision_flags (
+  case_id       TEXT NOT NULL,
+  edition       INTEGER NOT NULL,  -- the CASE edition whose roster froze the pin
+  bundle_id     TEXT NOT NULL,     -- the member finding that revised
+  pinned_sha    TEXT NOT NULL,     -- what the case committed to
+  revised_sha   TEXT NOT NULL,     -- the version that superseded it
+  project_id    TEXT,              -- the OWNING project that must act. NULL for a pre-DEC-72 case, and STATED
+  since         TEXT NOT NULL,
+  acted_at      TEXT,              -- NULL while the flag stands. NEVER set back to NULL, and the row is never deleted
+  acted_by      TEXT,              -- the member whose act discharged it
+  acted_edition INTEGER,           -- the CASE edition that act published
+  PRIMARY KEY (case_id, edition, bundle_id, revised_sha)
+);
+-- Outstanding-by-member is the question op=caseflags asks with a bundle_id, and
+-- it is the only filter whose leading column is not the primary key's. The index
+-- arrives WITH that statement, which is the rule the finding_dispositions comment
+-- above had to learn by failing the build.
+CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bundle_id);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

@@ -1522,3 +1522,63 @@ drift apart.
 > answers it. **The drift this row was written to prevent is exactly the drift
 > that happened** — the state-rules corpus went on asserting the blanket rule
 > for three days after the bias corpus stopped.
+
+## Amendment: `published` leaves the INQUIRY state machine (2026-09-10, DEC-72 / CASE-4)
+
+**Section 4 owns the per-type state machines, and one word leaves the inquiry
+machine here.** Bob ruled **DEC-72** on 2026-08-10 — *a case is a production of a
+project: its own object, a set of finding-versions plus the publishing project* —
+and its design, `docs/development/CASE-AS-PRODUCTION.md`, states the consequence
+for this section: *"A finding's lifecycle ends at `concluded`; publication is the
+case relation. Reopening a finding is unchanged and never edits published
+bytes."*
+
+**WHAT CHANGES.** `published` is no longer a state an inquiry can ENTER. No
+transition names it as a destination; it is removed from the machine's legal set
+and carried in a separate `legacy` set, which is read when VALIDATING bytes and
+by nothing that decides what the machine may DO. Its out-edges (`published ->
+open | surfaced`) are retained so a document already sitting there is not
+stranded. The authority for the edge set remains, as this section has always
+said, the catalog: `bio-plane/checks/bio-checks.mjs`'s `STATES.inquiry`, which is
+catalog-versioned and which the plane holds no second copy of.
+
+**WHY THE LEGACY SET IS NOT A HEDGE.** Ratified bytes are immutable. A store that
+has published anything holds frontmatter reading `current_state: published`,
+inside a hash a stranger may already be verifying against, and inside a version
+some published case froze by that hash. Rewriting those bytes would break every
+pin that names them and would be this record editing what it has already signed.
+The precedent is this section's own: the legacy `focus` machine is kept whole
+because *a legacy document validates against the vocabulary it was authored
+under*. The same rule, one machine over.
+
+**WHAT DOES NOT CHANGE, AND IT IS THE HALF WORTH READING TWICE.** The rule that
+rode on the deleted edge — **only a CONCLUDED finding may be a case member** —
+survives in full. It was never a statement about a lifecycle state: it is that a
+material set cannot be asserted over a question with no conclusion. Under the old
+machine it was enforced as a side effect of `concluded` carrying a `published`
+edge, so deleting that edge would have deleted the rule with it, silently. It is
+now an explicit act-time refusal in the publishing act, named `NOT_CONCLUDED`,
+which a reader can find and a suite can drive. `DEC-72`'s supersession table is
+exact about this: *"the precondition survives as 'only a CONCLUDED finding may be
+a case member'; the state itself becomes the case relation."*
+
+**WHERE THE STATE WENT.** Everything the word used to answer is now answered by
+the CASE RELATION — a case edition's membership row pinning that finding's
+current version (`published_case_members.version_sha = bundles.bundle_sha`). That
+is what fences a published case against division, restructuring and version
+moves; what makes it reopenable; what makes it undisposable (§4's own rule that
+*ageing is what happens to a finding nobody published* — D-79 — is preserved as a
+named refusal, `PUBLISHED_CANNOT_BE_SET_DOWN`, because the edge table that used
+to enforce it is gone); and what a published document's own bytes assert, through
+the pair `case_id` + `case_edition` that publication stamps and reopening clears.
+
+**Section 3.4's state history is unaffected in form and narrower in content:**
+publishing appends no transition, because it moves no state. The act is recorded
+in the document's Session Log and in the case relation, both inside the bytes the
+member signs — which is what §2.1's state/record split has always required, and
+what the catalog's own commentary had already observed in these words: *the
+inquiry's STATE and its PUBLICATION HISTORY are two different records.*
+
+Recorded here so the state-rules corpus and the case corpus cannot drift apart —
+the obligation the cross-reference note above this one exists to enforce, and the
+one that note measured failing for three days.

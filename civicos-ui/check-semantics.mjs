@@ -224,7 +224,20 @@ for (const k of Object.keys(C.TYPE_LABEL))
 /* PHASE: the member-facing name is DERIVED from current_state and stored
    nowhere, so every state an inquiry can legally stand in — under the canonical
    machine and under the legacy one it is read through — must have a phase. */
-const inquiryStates = [...new Set([...STATES.inquiry.legal, ...STATES.focus.legal])].sort();
+/* CASE-4 / DEC-72, 2026-09-10: `STATES.inquiry.legacy` JOINS THIS UNION, AND IT
+   IS THE SAME REASON `STATES.focus.legal` IS ALREADY IN IT — the comment two
+   lines up says so in its own words: *"every state an inquiry can legally stand
+   in — under the canonical machine AND under the legacy one it is read through —
+   must have a phase."* DEC-72 ends `published` as a state an inquiry ENTERS, and
+   the catalog moves it out of `legal` into a new `legacy` key precisely because
+   ratified bytes are immutable: a store that has published anything holds
+   frontmatter saying `current_state: published`, inside a hash a stranger may be
+   verifying against. THE UI IS A READER of those bytes, so it must keep a phase
+   word for the state — and this union is what says so. `legal` alone would make
+   the page drop the entry and render a published case as a plain finding, which
+   is the opposite of what this check is for. */
+const inquiryStates = [...new Set([...STATES.inquiry.legal, ...(STATES.inquiry.legacy || []),
+                                   ...STATES.focus.legal])].sort();
 for (const st of inquiryStates)
   if (C.PHASE[st] === undefined) bad(`PHASE has no member-facing name for the inquiry state '${st}'`);
 for (const [st, phase] of Object.entries(C.PHASE)) {
@@ -285,8 +298,15 @@ for (const [t, spec] of Object.entries(STATES)) {
 for (const [t, row] of Object.entries(S.types)) {
   const spec = STATES[t] !== undefined ? STATES[t] : STATES[normalizeType(t)];
   if (!spec) { bad(`SEMANTICS.types.${t} is a type the catalog does not have`); continue; }
+  /* CASE-4 / DEC-72: `legal ∪ legacy`, for the reason the PHASE union above
+     carries — a semantics ROW is what a reader is shown when they meet a state
+     in bytes, and bytes already signed still carry `published`. `legal` alone
+     would refuse the row that explains a published case to a member. The
+     COMPLETENESS half above stays keyed on `legal`: a row is REQUIRED for every
+     state the machine can produce, and PERMITTED for the ones it can only read.  */
+  const readable = [...spec.legal, ...(spec.legacy || [])];
   for (const st of Object.keys(row.states))
-    if (!spec.legal.includes(st)) bad(`SEMANTICS.types.${t} declares the state '${st}', which the catalog does not call legal for it`);
+    if (!readable.includes(st)) bad(`SEMANTICS.types.${t} declares the state '${st}', which the catalog does not call legal or legacy for it`);
 }
 
 /* ---- 3. the store's literals, as a second instrument ---- */

@@ -252,8 +252,21 @@ const opsIn = (text) => [...String(text).matchAll(/\bop=([a-z]+)\b/g)].map((m) =
    facts the shape allows — no live citations, one basis leg, nothing rested on
    — so an act can only be absent from the answer for a STATE reason. Anything
    else would let a fixture detail masquerade as an unreachable act. */
-const probeFacts = (machine, state) => ({
+/* CASE-4 / DEC-72, 2026-09-10: `case_member` JOINS THE PROBE, AND IT IS PROBED
+   AT BOTH VALUES RATHER THAN GUESSED AT ONE — which is this helper's own
+   contract ("the MOST PERMISSIVE non-state facts, so an act can only be absent
+   for a STATE reason") meeting a fact that is genuinely not a state.
+   DEC-72 ends `published` as a lifecycle state and makes publication the CASE
+   RELATION, so `op=affordances` now serves `case_member` and four acts derive
+   from it. There is NO permissive value: `true` enables `reopen` and withdraws
+   `publish`, `dispose`, `inquiryground` and `inquirydivide`; `false` does the
+   reverse. Picking either would make this instrument report acts as unreachable
+   that a real caller reaches, which is the wrong-number failure REC-72 already
+   recorded here once. So `actsAt` returns the UNION, and the two values are
+   asserted separately where the distinction is the point. */
+const probeFacts = (machine, state, caseMember = false) => ({
   ok: true, object_type: normalizeType(machine), declared_type: machine, current_state: state,
+  case_member: caseMember,
   cites_in: { confirmed: [], severed: [] }, cites_out: { confirmed: 0, severed: 0 },
   /* REC-72: `cited_by_case` is what `sever`/`reinstate` are now derived over.
      Stated rather than left to the rule's `?? 0` default — see the arm below
@@ -271,10 +284,14 @@ const probeFacts = (machine, state) => ({
    other judgements down with it, but every throw is now COUNTED and the foot of
    the file asserts the count is zero. */
 const ACTS_THREW = [];
-const actsAt = (machine, state) => {
-  try { return deriveActs(probeFacts(machine, state)).map((a) => a.id); }
-  catch (e) { ACTS_THREW.push(`${machine}@${state}: ${e && e.message}`); return []; }
+/* ONE VALUE, for the arms whose whole point is which value it is. */
+const actsAtFor = (machine, state, caseMember) => {
+  try { return deriveActs(probeFacts(machine, state, caseMember)).map((a) => a.id); }
+  catch (e) { ACTS_THREW.push(`${machine}@${state}#${caseMember}: ${e && e.message}`); return []; }
 };
+/* THE UNION — what a caller can reach at this state by any case relation. */
+const actsAt = (machine, state) =>
+  [...new Set([...actsAtFor(machine, state, false), ...actsAtFor(machine, state, true)])];
 
 const DECLARED_OPS = new Set([...INDEX_SRC.matchAll(/^ {2}([a-z][a-z0-9]*):\s*\{\s*classes:/gm)].map((m) => m[1]));
 
@@ -345,10 +362,35 @@ t("`divided` is terminal, so no repair can move an inquiry off it",
   (STATES.inquiry.edges.divided || []).length, 0);
 t("`published -> concluded` is not an edge, and `published -> open` is",
   [edgeLegal("published", "concluded"), edgeLegal("published", "open")], [false, true]);
-t("THE OP-SURFACE HALF: `concluded -> open` is a LEGAL edge that NO act travels",
-  [edgeLegal("concluded", "open"), actsAt("inquiry", "concluded").includes("reopen")], [true, false]);
-t("while at `published` the same act IS offered, so the corrected C-2.8 string names a real route",
-  actsAt("inquiry", "published").includes("reopen"), true);
+/* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, AND THE PAIR SWAPPED
+   ENDS RATHER THAN DISSOLVING. It read: `concluded -> open` is a legal edge NO
+   act travels, while at `published` the same act IS offered — which is why
+   REC-56's corrected C-2.8 string named the `published -> open` route. DEC-72
+   removes `published` as a state a document can enter, so that route no longer
+   exists for anything the plane produces and the C-2.8 string now names
+   `concluded -> open`. The RULE this pair pins is untouched and is REC-56's: a
+   repair must name a route that EXISTS. What it now takes two arms to say is
+   that the same edge is travelled or not depending on the CASE RELATION, which
+   is exactly the distinction `op=reopen`'s gate draws — a case member reopens; a
+   concluded finding in no case is refused NOT_SET_DOWN with REC-31's reason. */
+t("THE OP-SURFACE HALF: `concluded -> open` is a LEGAL edge that NO act travels for a finding in NO case",
+  [edgeLegal("concluded", "open"), actsAtFor("inquiry", "concluded", false).includes("reopen")], [true, false]);
+t("while for a CASE MEMBER the same act IS offered at `concluded`, so the corrected C-2.8 string names a real route",
+  actsAtFor("inquiry", "concluded", true).includes("reopen"), true);
+/* AND WHY THE ROUTE MOVED WITHOUT ANYTHING BEING STRANDED, measured rather than
+   asserted. `published` is kept in `STATES.inquiry.legacy` — readable because
+   ratified bytes are immutable and a store that has published anything holds
+   frontmatter saying it — and its OUT-edges are kept so a document already there
+   is not left with no exit. So `op=reopen` IS still reachable for such a
+   document, BY THE CASE RELATION and not by the state, which is the same gate a
+   `concluded` member passes. What changed is that NOTHING NEW ARRIVES at
+   `published`: no edge names it as a destination. A repair string aimed at the
+   state a member is actually in therefore has to say `concluded -> open`. */
+t("a document ALREADY at `published` is not stranded: the act is still reachable for it, by the CASE RELATION rather than by the state",
+  [actsAtFor("inquiry", "published", true).includes("reopen"),
+   actsAtFor("inquiry", "published", false).includes("reopen"),
+   Object.values(STATES.inquiry.edges).some((to) => to.includes("published"))],
+  [true, false, false]);
 t("and at `verified` the plane offers retire", actsAt("information", "verified").includes("retire"), true);
 
 /* =====================================================================
@@ -403,13 +445,35 @@ const runChecks = async (files) => (await checkBundle({
   t("C-2.8 at `divided` no longer advises a move off a terminal state",
     /back to open/.test(div), false);
 
-  const pub = (await checkBundle({ folderName: "INQ-2026-0003-x", files: inq("published"),
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, AND THE FIXTURE HAD
+     TO MOVE WITH THE RULE IT PROBES. This asked the catalogue for C-2.8's
+     published-ceremony repairs by handing it a document whose `current_state`
+     was `published` — which WAS how the catalogue recognised a case member.
+     DEC-72 makes publication the CASE RELATION, so the ceremony is now owed by a
+     document whose bytes carry the pair (`case_id`, `case_edition`), and a bare
+     `current_state: published` with no case named is a legacy state word that
+     owes nothing. Handing the old fixture in would have made this arm probe an
+     EMPTY findings list and report whatever the empty string happens to match —
+     an arm measuring nothing, green or red by accident. The fixture now asserts
+     the ceremony is owed BEFORE reading its repairs, so the probe cannot go
+     hollow the way the plant in the REACH block nearly did. */
+  const pubFindings = (await checkBundle({ folderName: "INQ-2026-0003-x",
+    files: inq("concluded", "case_id: CASE-2026-0001\ncase_edition: 1\n"),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true })).findings
-    .filter((x) => x.check === "C-2.8" && Array.isArray(x.repairs)).flatMap((x) => x.repairs).join(" | ");
-  t("C-2.8 at `published` no longer advises the edge the machine lacks",
+    .filter((x) => x.check === "C-2.8" && Array.isArray(x.repairs));
+  t("THE PROBE IS ARMED: a document that CLAIMS case membership is owed the published ceremony, so the repairs below exist to be read",
+    pubFindings.length >= 1, true);
+  const pub = pubFindings.flatMap((x) => x.repairs).join(" | ");
+  t("C-2.8 on a case member no longer advises the edge the machine lacks",
     /back to concluded/.test(pub), false);
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted. REC-56's rule is
+     unchanged — the repair must name a route that EXISTS, with its edge and its
+     act — and the route moved with the state: DEC-72 ends `published` as a
+     lifecycle state, so a member sits at `concluded` and the ceremony reads
+     `concluded -> open -> concluded -> a new edition`. `op=reopen` is still the
+     act, reached now by the case relation rather than by the state word. */
   t("and names the route that DOES exist, with its edge and its act",
-    /published -> open/.test(pub) && /op=reopen/.test(pub), true);
+    /concluded -> open/.test(pub) && /op=reopen/.test(pub), true);
 }
 
 /* =====================================================================
@@ -540,15 +604,40 @@ const plant = (why, anchor, replacement) => {
 {
   /* (iii) THE OP-SURFACE ARM, and it is the one that matters most: a LEGAL edge
      that no act travels. A1 and A2 both pass it. Only A3 bites. */
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and THE ANCHOR HAD
+     TO MOVE BECAUSE THE DEFECT IT PLANTED STOPPED BEING ONE. The planted string
+     was `concluded -> open, op=reopen`, chosen because that edge was legal and no
+     act travelled it. Under DEC-72 a CASE MEMBER reopens from `concluded`, so
+     `op=reopen` IS now offered there and the planted string names a real route —
+     it would have scored a delta of zero and this REACH arm would have gone
+     green over an instrument measuring nothing, which is the exact failure mode
+     the REACH arms exist to catch.
+     THE NEW ANCHOR IS MEASURED, NOT CHOSEN BY TASTE: `project forming ->
+     investigating` is legal in `STATES.project` and `deriveActs` offers NO state
+     act on a project at ANY of its states, under EITHER case relation — verified
+     by the arm immediately below, so this plant cannot quietly stop being a
+     defect the way the last one did. */
   const anchor = "'author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place'";
-  const armed = plant("A3", anchor, "'move the inquiry back to open (concluded -> open, op=reopen)'");
+  /* THE OP NAMED IN THE PLANT MUST BE ONE THE CONTROL PLANE DECLARES, or A5 —
+     and `op-claims.test.mjs`, which sweeps every op mentioned anywhere in the
+     estate — fires instead of A3, and this arm would be measuring the wrong
+     judgement. `op=dispose` is declared, is real, and is offered on an INQUIRY
+     and never on a PROJECT, which is exactly the shape A3 exists to catch: a
+     repair naming a legal edge and an act that does not travel it. */
+  t("THE PLANT IS A REAL DEFECT, MEASURED BEFORE IT IS USED: no act travels `forming -> investigating` under either case relation",
+    [edgeLegal("forming", "investigating"),
+     actsAtFor("project", "forming", false).includes("dispose"),
+     actsAtFor("project", "forming", true).includes("dispose"),
+     DECLARED_OPS.has("dispose")],
+    [true, false, false, true]);
+  const armed = plant("A3", anchor, "'move the project to investigating (forming -> investigating, op=dispose)'");
   const strings = repairStrings(armed);
   const got = a3Offenders(strings);
   t("REACH A3, as a delta: a LEGAL edge with no act fires A3 and NOTHING ELSE",
     [a3Offenders(REAL).length, got.length, a1Offenders(strings).length, a2Offenders(strings).length],
     [0, 1, 0, 0]);
   t("and A3 names the act the plane refuses, not a bare count",
-    /concluded -> open/.test(got[0] || "") && /reopen/.test(got[0] || ""), true);
+    /forming -> investigating/.test(got[0] || "") && /dispose/.test(got[0] || ""), true);
 }
 
 {

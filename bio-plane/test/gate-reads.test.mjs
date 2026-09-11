@@ -991,6 +991,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "be walked. A sha that was never ratified 404s identically to one that never existed. The guard is "
       + "not redundant with the bucket boundary and the suite proves it: an object planted in the published "
       + "bucket that no published_shas row names is still refused.",
+    /* CASE-4 / DEC-72, 2026-09-10: the revision flags on a published case. */
+    caseflags: "PUBLISHED PROJECTION (CASE-4 / DEC-72), on op=publishedcase's own reasoning and not a "
+      + "new one. Every fact in the answer is ALREADY on the public surface: the case editions and their "
+      + "rosters come out of op=publishedcase, the PINNED hash is inside the case container manifest a "
+      + "stranger verifies against, and the REVISED hash is a published version's own. It reads one table "
+      + "written only from two hashes this plane already holds and touches no working material, so there "
+      + "is no working material for a missing predicate to leak. Gating it would withhold from a member "
+      + "exactly what the published record already tells anybody — and the whole point of a flag that is "
+      + "SET AND NEVER CLEARED is that it stays visible until an owning project acts.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "

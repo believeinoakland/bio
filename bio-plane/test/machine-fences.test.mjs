@@ -408,8 +408,15 @@ const fence = (code, payload, machineAnswer) => {
   t("  the record did not move under the machine's call", await stateOf(INQ), "concluded");
 
   const r = await POST(`op=publish&token=${RUTH}`, BODY);
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted. `to: "published"` is
+     gone from op=publish's answer with the state it named — DEC-72 ends
+     `published` as an inquiry lifecycle state and publication moves no state at
+     all. What this arm is about is the FENCE (a machine cannot publish; the same
+     payload succeeds for a person) and that is untouched; the destination-state
+     field is replaced by the CASE the act actually produced, which is what the
+     act now reports. */
   t("  and the SAME payload publishes at EDITION 1 for a signed-in member holding `publish`",
-    [r.ok, r.edition, r.to, r.completeness?.author], [true, 1, "published", "ruth"]);
+    [r.ok, r.edition, !!r.caseId, r.completeness?.author], [true, 1, true, "ruth"]);
 }
 
 /* -------------------------------------------------------- (v) MOVE_ACTION */
