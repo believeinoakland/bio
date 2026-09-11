@@ -5331,6 +5331,80 @@ export class Store extends DurableObject {
                detail: `no published case answers to ${theCase}. A case identity is minted by this act and `
                      + `carried in the signed bytes; it is never taken from a caller, because an identity a `
                      + `caller can hand us is one a caller can invent.` };
+    /* ======================================================================
+       CASE-6 / DEC-72 clause 6, 2026-09-10 — THE FENCE BELOW IS **KEPT**, AND
+       THIS IS THE DECISION CASE-5 LEFT FOR THIS ITEM, WITH THE MEASUREMENT IT
+       RESTS ON. It is written here rather than in a queue row because the next
+       person to read this refusal is the person who needs it.
+
+       THE RULING POINTS THE OTHER WAY AND THAT IS SAID FIRST. DEC-72 clause 6
+       is not ambiguous: *"A project can span many cases; a finding can serve
+       many cases — across projects and within one."* Bob's reason is quoted in
+       the design doc: *"A finding is mined, often involving hard work. So once
+       resolved, the finding should have lasting value."* So this fence
+       contradicts a live ruling, and keeping it is a PARTIAL against clause 6
+       rather than a fulfilment of it. Anyone reading this should know that
+       before they read the reason.
+
+       WHY IT IS KEPT ANYWAY, AND THE ARGUMENT IS A COUNT RATHER THAN A
+       JUDGEMENT. CASE-5's caseflip suite framed lifting this as "a surface
+       question (which case does a finding id resolve to)" and handed it to
+       CASE-6 on that basis. **That framing was measured WRONG, and the
+       measurement is this item's most useful output.** Counted over this file
+       on 2026-09-10, the class being "a SELECT over `published_case_members`
+       whose WHERE keys on `bundle_id` — that is, a query asking which case a
+       FINDING is in":
+
+           11 sites in the class · 9 SCALAR · 2 PLURAL · 0 unclassified
+
+       The two PLURAL ones (`#caseRelationOf`, `#flagCasesOnRevision`) already
+       answer with `#rows` and are correct for any n. The nine SCALAR ones reach
+       through `#one` and live in six callers: this `belongs` derivation; the
+       container's `rel` lookup; `publishedCase()`'s resolution of a finding id;
+       `#caseClaimOf` (which gates C-21.1's freshness comparison); `#caseOf`;
+       and `#caseOfSha`. **Every one of them is correct ONLY BECAUSE THIS FENCE
+       HOLDS.** `#caseOfSha`'s own comment already says so in words, written
+       before anyone was asking: *"Nothing writes that shape today."*
+
+       SO LIFTING THE FENCE HERE WOULD NOT MAKE MULTI-CASE MEMBERSHIP WORK — it
+       would turn nine correct scalar answers into nine silent `LIMIT 1` guesses
+       over a set, with no refusal, no flag, and no way for a reader to tell.
+       `publishedCase()` would answer "this finding's case is X" when the true
+       answer is {X, Y}; C-21.1 would gate a case document's freshness against
+       whichever prior edition sorted highest. **A record that answers a
+       set-valued question with an arbitrary element is a record claiming more
+       than it can support**, which this project ranks worse than a missing
+       feature — and the missing feature is exactly what keeping the fence
+       leaves.
+
+       AND THE DERIVATION ABOVE IS THE SECOND HALF. REC-44 lets this act DERIVE
+       the case from what the members already belong to. Under multi-case that
+       derivation is itself a guess: a member of case A published with no
+       `caseId` would silently append to A rather than minting the new case the
+       publisher meant. Lifting the fence therefore also owes a named refusal
+       for an ambiguous derivation — a new DEC-49 code, its translation, and its
+       floor — which is more plane than a surfaces item should carry at the end
+       of an arc.
+
+       WHAT CASE-6 DID INSTEAD, so the next item is cheaper and not harder: the
+       SURFACE half of clause 6 is built and is built as a LIST. The UI holds the
+       whole `caseMembers` table from `op=publishedmanifest`, so it can answer
+       correctly for any n, and `pubOtherCasesHtml` does. The list is one entry
+       long for every finding today because of this fence; the day the nine
+       readers are corrected, the surface is already right and does not move.
+
+       WHAT THE COUNT CANNOT SEE, stated because the number is load-bearing: it
+       reads SQL string literals in THIS FILE only (`index.mjs` mentions the
+       table once and builds no such query; no other `src/` file mentions it). A
+       query assembled by concatenation, a reader that filters the full roster
+       array in JS, and any consumer outside this repository are all outside it.
+       So 9 is a FLOOR on the scalar readers, never a total — which only
+       strengthens the direction of the decision.
+
+       THIS IS RECORDED AS DEBT, NOT AS A NOTE. `DEBT.md` carries it with the
+       cost and the closing move, because the arc's decomposition never scoped
+       the plane half to any item and a gap nobody owns is how this one got here.
+       ====================================================================== */
     for (const [id, had] of belongs)
       if (theCase && had !== theCase)
         return { ok: false, reason: "FINDING_IN_ANOTHER_CASE", target: id, caseId: had, into: theCase,
@@ -20636,7 +20710,17 @@ export class Store extends DurableObject {
      sha can in principle be pinned by more than one case edition, so the newest
      membership answers. Nothing writes that shape today — every member
      re-publishes at each edition and mints a new sha — and the day something
-     does, this returns the most recent claim rather than an arbitrary one. */
+     does, this returns the most recent claim rather than an arbitrary one.
+
+     CASE-6, 2026-09-10: "NOTHING WRITES THAT SHAPE TODAY" IS LOAD-BEARING AND IS
+     NOW POINTED AT THE DECISION THAT KEEPS IT TRUE. The reason nothing writes it
+     is `FINDING_IN_ANOTHER_CASE` in `publishCase()`, which CASE-6 measured and
+     deliberately KEPT — see the block at that refusal for the count (11 sites in
+     the class, 9 of them scalar like this one) and for what lifting it would owe.
+     This helper is one of the nine. If that fence is ever lifted, the sentence
+     above stops being true and this function starts answering a set-valued
+     question with its newest element, which reads as an answer and is a guess.
+     The two must move together; they are cross-referenced so they cannot drift. */
   #caseOfSha(bundleId, bundleSha, fallbackEdition = null) {
     const r = bundleSha
       ? this.#one(`SELECT case_id, edition FROM published_case_members

@@ -11,7 +11,7 @@
 /* CASE-3 / DEC-72 CLAUSE 3 — VERSION PINNING: A PUBLISHED CASE SAYS WHAT IT SAID
  * WHEN IT WAS PUBLISHED.
  *
- * Bob ruled it on 2026-08-10 and `docs/development/CASE-AS-PRODUCTION.md` is the
+ * Bob ruled it on 2026-08-10 and `docs/archive/CASE-AS-PRODUCTION.md` is the
  * design. The clause, in his words: *"Once published, the act of changing the
  * findings (or any claims of any of the findings) results in the changed version
  * becoming a new version."* The design bullet this suite is judged against:

@@ -717,7 +717,29 @@ const FLOOR = {
    this to zero, one family at a time, and until then no new receivable code may
    arrive without a translation. Measured 2026-08-07 by this file. */
 const CEILING = {
-  reachGap: 41,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
+  reachGap: 40,    /* codes in reach with no canned translation — may only FALL. FELL 73 -> 42 at
+
+                          LOWERED 41 -> 40 BY CASE-6, 2026-09-10, AND IT IS A CORRECTION RATHER THAN
+                          A FALL: REC-79 below already records "FELL 41 -> 40", and the NUMBER WAS
+                          NEVER MOVED WITH THE SENTENCE. The ceiling has been carrying one code of
+                          slack ever since, which is precisely the state this file's own header calls
+                          not-a-ratchet. Measured twice by CASE-6 on two different trees — its
+                          baseline at `a4c983a` and its final — both reading 40 of 237, so the figure
+                          is the instrument's and not this item's: **CASE-6 added no code to the reach
+                          and removed none.** It is taken here because a ceiling nobody re-measures
+                          goes stale silently, which is this project's most-repeated finding, and
+                          because one code of slack is one new untranslated receivable code that this
+                          guard would have waved through.
+
+                          THE ITEM ALSO PAID FOR THE OTHER DIRECTION AND IT IS WORTH THE SENTENCE:
+                          CASE-6's first draft wrote two refusal codes into `app.html` COMMENTS in
+                          backticks, to explain a fence. `screamingLiterals` reads a backtick as a
+                          string delimiter, so both entered R2 and the gap went 40 -> 42 and FAILED.
+                          The guard was right about the bytes and wrong about the world — the surface
+                          cannot receive either code, it was describing them — and the cheap
+                          correction was to not spell the literal. **A comment about a code is
+                          indistinguishable from a use of one to this matcher**, which is worth
+                          knowing before writing the next such comment.
 
                           FELL 41 -> 40 AT REC-79, and the SIZE of that fall is the honest headline
                           rather than the fall itself: an item that added a whole family of six moved

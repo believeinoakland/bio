@@ -488,7 +488,7 @@ D-147 / D-148 (the records-request lifecycle and the fee quote as evidence) ·
 > current version is this rung's ceremony, behind D-187's reshape and DEC-59's elements.
 
 > **DEC-72 RESHAPES THIS RUNG'S OBJECT MODEL (Bob, 2026-08-10) — read
-> `docs/development/CASE-AS-PRODUCTION.md` before building anything here.** A case is a
+> `docs/archive/CASE-AS-PRODUCTION.md` before building anything here.** A case is a
 > PRODUCTION OF A PROJECT: its own object — a set of finding-versions plus the publishing
 > project — published by a project OWNER against the PROJECT'S bar at act time, members
 > pinned by version like a commit, load-bearing members meeting the bar and supporting

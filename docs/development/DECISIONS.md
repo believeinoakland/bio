@@ -235,7 +235,7 @@ response: **A CASE IS A PRODUCTION OF A PROJECT: ITS OWN OBJECT — A SET OF FIN
 decided: 2026-08-10 · Bob
 enacted: 2026-08-10 · session BOB, same turn — the design with every implication worked
   (revision flags on containing cases, the artifact-flip, the lifecycle change, the
-  honest-absent-bar posture) is `docs/development/CASE-AS-PRODUCTION.md`; the
+  honest-absent-bar posture) is `docs/archive/CASE-AS-PRODUCTION.md`; the
   decomposition (CASE-1 … CASE-6, all M10, interfaces I3/I5 via the IC protocol) is in
   the BOB INBOX; M10's milestone entry is amended; `BIO_Case_Making_v0_1.md`'s
   three-phases naming section carries a dated amendment note. SUPERSEDES: DEC-71
@@ -312,7 +312,7 @@ response: **SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 
   assertion — is the same instinct DEC-72 makes structural.
 decided: 2026-08-10 · Bob, via DEC-72
 enacted: 2026-08-10 · session BOB, same turn — carried entirely by DEC-72's enactment:
-  `docs/development/CASE-AS-PRODUCTION.md` (design and supersession table) and the CASE-2
+  `docs/archive/CASE-AS-PRODUCTION.md` (design and supersession table) and the CASE-2
   decomposition item in the BOB INBOX. Reasoning in DEC-72 and this entry.
 
 ### DEC-70 · answered

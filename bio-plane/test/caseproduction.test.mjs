@@ -11,7 +11,7 @@
    ==== RUN 2026-08-10, case2-publication-production. See the driver's header for the measured result of each arm.
  * ========================================================================= */
 /* CASE-2 — **PUBLICATION IS A PRODUCTION OF A PROJECT**, enacting DEC-72 and
- * `docs/development/CASE-AS-PRODUCTION.md`, which is the authority for scope.
+ * `docs/archive/CASE-AS-PRODUCTION.md`, which is the authority for scope.
  *
  * ---- WHAT THIS ITEM IS, in Bob's own words (DEC-72, 2026-08-10)
  *

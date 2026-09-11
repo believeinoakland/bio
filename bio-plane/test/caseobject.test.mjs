@@ -10,7 +10,7 @@
 
 /* CASE-1 / DEC-72 — THE CASE OBJECT: a case is a PRODUCTION OF A PROJECT.
  *
- * Bob ruled it on 2026-08-10 and `docs/development/CASE-AS-PRODUCTION.md` is the
+ * Bob ruled it on 2026-08-10 and `docs/archive/CASE-AS-PRODUCTION.md` is the
  * design. This item builds the OBJECT and nothing else: the case identity owned
  * by a project, the membership row as (finding id, version hash, role, ordinal),
  * and editions per case. The publishing act that fills them is CASE-2, the

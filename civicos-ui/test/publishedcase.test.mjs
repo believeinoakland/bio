@@ -234,6 +234,13 @@ const GRAPH_DETAIL = planeSentence("graph_detail", "\n  }");
 const BIAS_ACK = "This case was produced by the group that raised the concern, working from documents "
                + "the subject supplied. No independent custody of the originals was obtained.";
 
+/* CASE-6 / DEC-72 clause 2: THE PUBLISHING PROJECT, which the case rows now
+   carry. It is a real id rather than a bare truthy string because the surface
+   PRINTS it beside the bar — "the standard of PROJ-…, the project whose
+   production this case is" — so a placeholder would be a placeholder on the
+   page. `CASE_WAIT` deliberately carries NULL instead of this, which is the
+   LEFT JOIN's own reachable state. */
+const PROJ = "PROJ-2026-0001";
 const CASE = "CASE-2026-0001";
 const FIND_A = "INQ-2026-4101";
 const FIND_B = "INQ-2026-4102";
@@ -261,6 +268,26 @@ const FIND_V = "INQ-2026-4600";              // …whose only member is at its o
 const A1 = "a".repeat(64), A2 = "b".repeat(64);          // FIND_A's bundle sha, editions 1 and 2
 const B1 = "c".repeat(64), B2 = "d".repeat(64);          // FIND_B's
 const MAN1 = "e".repeat(64), MAN2 = "f".repeat(64);      // the CASE container manifests
+/* CASE-5b's signed CASE DOCUMENT hash. Distinct from every manifest and every
+   bundle sha on purpose: the case document and the case container are two
+   different objects with two different hashes, and a fixture that reused one for
+   the other would let a surface confuse them and stay green. */
+const CASE_DOC_SHA = "d".repeat(63) + "1";
+const SOLO_DOC_SHA = "d".repeat(63) + "2";
+/* CASE-6 / D-173: `bar_detail` IS THE PLANE’S OWN SENTENCE AND IS COPIED BYTE
+   FOR BYTE FROM `store.mjs` publishedCase(), not paraphrased. The surface prints
+   it verbatim (DEC-8), so a fixture carrying an approximation would let the
+   surface reword the plane and stay green — the one thing DEC-8 forbids. */
+const BAR_DETAIL_DECLARED =
+  "the standard of evidence this case was held to, read from its publishing project at the "
++ "moment of publication and frozen here (DEC-72). It is the CASE’s property: no bar attaches "
++ "to any finding, and nothing composed it across projects. Each member’s own derived pair is "
++ "printed beside it inside findings[], and a member may exceed it.";
+const BAR_DETAIL_ABSENT =
+  "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case "
++ "was published before a case carried its own standard, or no bar was ever declared — in "
++ "which case the case claims no cleared standard and says so, because undetermined is "
++ "first-class here and is never rounded to a number nobody chose.";
 const CAP_SHA = "0".repeat(64), DOC_SHA = "1".repeat(64);
 const S_SHA = "2".repeat(64), S_MAN = "3".repeat(64);
 const C_SHA = "4".repeat(64);
@@ -304,11 +331,28 @@ const PAIR_B = [
   { axis:"connection", state:"unrated", grade:null, weakest:null, load_bearing:0, population:1,
     detail:"UNRATED on connection: no leg on this axis carries an established grade, so this conclusion rests on nothing established here. Not load-bearing: INFO-2026-8202." },
 ];
-/* DEC-17: FIND_A declares NO bar and FIND_B declares one, on ONE case. Both
+/* CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), NOT EXEMPTED. It read:
+   "DEC-17: FIND_A declares NO bar and FIND_B declares one, on ONE case. Both
    branches are therefore under test on a single page, which is the shape DEC-44
    makes possible and the old fixture could not have: `required_strength` is
    frozen into a FINDING's bytes, so two members of a case may have been held to
-   different standards and neither stands for the other. */
+   different standards and neither stands for the other."
+
+   THAT SHAPE IS NOT MERELY UNUSED NOW — IT IS UNREPRESENTABLE. DEC-72 clause 2
+   makes the bar the publishing PROJECT's, told to the act once, so one case has
+   one standard; CASE-5 moved the authority to `published_cases.bar`; CASE-5b
+   removed `required_strength` from finding bytes entirely and C-2.8 refuses it
+   there. Two members of one case under different standards cannot be built by
+   this plane, and a fixture asserting over one is a suite proving something
+   about nothing.
+
+   BOTH BRANCHES ARE STILL UNDER TEST, one altitude up: these two constants are
+   now CASE bars, `CASE` taking the declared one and `CASE_SOLO` the absent one,
+   so a declared and an absent bar are both rendered in one run and the "an
+   absent bar is not a bar of zero" sentence is still exercised. The per-member
+   `required` blocks below are kept in step with their case's bar rather than
+   left to drift, because the plane writes them as COPIES of it — a fixture where
+   they disagreed would be a fixture of a state the record cannot hold. */
 const BAR_ABSENT = { declared:false, source:"none", capture:null, connection:null,
   detail:"no required evidentiary strength was declared for this finding, by the group or by any project citing it, so nothing here was measured against one. An absent bar is not a bar of zero, and this finding makes no claim to have cleared any standard." };
 const BAR_DECLARED = { declared:true, source:"group", capture:"B", connection:"C",
@@ -364,10 +408,10 @@ const SIG = "-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE----
 
 function findingA(ed){
   const sha = ed === 1 ? A1 : A2;
-  return { ord:0, bundle_id:FIND_A, title:"Was the sewer transfer authorised?", bundle_sha:sha,
+  return { ord:0, bundle_id:FIND_A, title:"Was the sewer transfer authorised?", bundle_sha:sha, role:"load_bearing",
     ratified_at: ed === 1 ? "2026-07-01T09:00:00Z" : "2026-07-20T09:00:00Z",
     gate_version:"1.20.0", sig_armored:SIG, attestor:{ member:"vera", key_b64:KEY_V },
-    strength:PAIR_A, required:BAR_ABSENT,
+    strength:PAIR_A, required:BAR_DECLARED,
     parts:[ { path:"bundle.md", sha256:sha, kind:"bundle", bytes:4211 },
             { path:"snapshots/memo.bin", sha256:CAP_SHA, kind:"capture", bytes:8192 } ],
     serves:[ { to:L_CAP_B, kind:"reference", edition:1, title:"The transfer memo", bundle_sha:DOC_SHA,
@@ -388,7 +432,7 @@ function findingA(ed){
 }
 function findingB(ed){
   const sha = ed === 1 ? B1 : B2;
-  return { ord:1, bundle_id:FIND_B, title:"Who approved the transfer?", bundle_sha:sha,
+  return { ord:1, bundle_id:FIND_B, title:"Who approved the transfer?", bundle_sha:sha, role:"supporting",
     ratified_at: ed === 1 ? "2026-07-01T10:00:00Z" : "2026-07-20T10:00:00Z",
     gate_version:"1.20.0", sig_armored:SIG, attestor:{ member:"dan", key_b64:KEY_D },
     strength:PAIR_B, required:BAR_DECLARED,
@@ -413,6 +457,19 @@ function caseEdition(ed){
   const man = ed === 1 ? MAN1 : MAN2;
   return {
     ok:true, caseId:CASE, edition:ed, scope:SCOPE,
+    /* CASE-6, AND IT IS THE THIRD COLUMN THIS FIXTURE WAS MISSING. `publishedCase()`
+       has served `project`, `bar` and `document` since CASE-5/CASE-5b and this
+       object carried none of the three, so the surface could ignore all three and
+       no assertion could notice — D-173 again. `project` and `bar` are one fact in
+       two halves (the plane says so at the field: a bar with no publisher is a
+       requirement nobody asserted), and `document` is CASE-5b's signed case
+       document, NULL UNTIL RATIFIED and never a partial. `CASE_WAIT` carries null
+       for it below, which is the unratified branch. */
+    project:PROJ, bar:BAR_DECLARED, bar_detail:BAR_DETAIL_DECLARED,
+    document:{ doc_sha:CASE_DOC_SHA, text:"The case's own authored assertions, as signed.",
+      sig_armored:"-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----",
+      attestor:{ member:"vera", key_b64:"AAAAC3NzaC1lZDI1NTE5AAAAIexamplekeyforthecasedocument" },
+      gate_version:"1.20.0", ratified_at: ed === 1 ? "2026-07-01T10:00:00Z" : "2026-07-20T10:00:00Z" },
     completeness:{ statement: ed === 1 ? STMT1 : STMT2,
       subject_justification:"We put the four claims to the City Administrator on 2026-06-20 and printed what came back.",
       excluded: ed === 1 ? EXCLUDED_1 : "[]", subject_position:"sought_and_answered",
@@ -450,14 +507,21 @@ function caseEdition(ed){
    being degenerate the moment a second finding joined. */
 const SOLO = {
   ok:true, caseId:CASE_SOLO, edition:1, scope:"Whether the marina lease was extended without a vote.",
+  /* CASE-6: A CASE WITH A PUBLISHER AND NO DECLARED BAR. The two are separable
+     and this is the branch DEC-72 names in the ruling itself. */
+  project:PROJ, bar:BAR_ABSENT, bar_detail:BAR_DETAIL_ABSENT,
+  document:{ doc_sha:SOLO_DOC_SHA, text:"The solo case document, as signed.",
+    sig_armored:"-----BEGIN SSH SIGNATURE-----\nAAAA\n-----END SSH SIGNATURE-----",
+    attestor:{ member:"dan", key_b64:"AAAAC3NzaC1lZDI1NTE5AAAAIexamplekeyforthesolodocument" },
+    gate_version:"1.20.0", ratified_at:"2026-07-05T09:00:00Z" },
   completeness:{ statement:"This case covers the lease extension only.",
     subject_justification:"The officer named declined to answer in writing.",
     excluded:"[]", subject_position:"sought_and_refused", author:"dan", at:"2026-07-05T09:00:00Z" },
   ratified_at:"2026-07-05T09:00:00Z", complete:true, awaiting:[],
-  findings:[ { ord:0, bundle_id:FIND_S, title:"Was the lease extended without a vote?", bundle_sha:S_SHA,
+  findings:[ { ord:0, bundle_id:FIND_S, title:"Was the lease extended without a vote?", bundle_sha:S_SHA, role:"load_bearing",
     ratified_at:"2026-07-05T09:00:00Z", gate_version:"1.20.0", sig_armored:SIG,
     attestor:{ member:"dan", key_b64:KEY_D },
-    strength:PAIR_A, required:BAR_DECLARED,
+    strength:PAIR_A, required:BAR_ABSENT,
     parts:[ { path:"bundle.md", sha256:S_SHA, kind:"bundle", bytes:1100 } ],
     serves:[], names:[], unresolved:[],
     division:{ parent:null, siblings:[], detail:"a division's parent and siblings are NAMED and never served." },
@@ -490,13 +554,21 @@ const SOLO = {
    why both halves have to reach this page. */
 const WAITING = {
   ok:true, caseId:CASE_WAIT, edition:1,
+  /* CASE-6: THE TWO NULL BRANCHES, TOGETHER AND ON PURPOSE. `project` is null
+     because `publishedManifest()` reaches it through a LEFT JOIN and a case
+     published before this model has no `cases` row — the plane keeps that case
+     in the index "with its project stated as unknown rather than disappearing".
+     `document` is null because CASE-5b serves it NULL UNTIL RATIFIED and never
+     as a partial, and this edition is still collecting signatures. Neither null
+     may be rendered as a blank. */
+  project:null, bar:null, bar_detail:BAR_DETAIL_ABSENT, document:null,
   scope:"Whether the two culvert contracts were awarded to the same undisclosed owner.",
   completeness:{ statement:"This case covers the two 2025 culvert contracts.",
     subject_justification:"The vendor has not been asked yet.", excluded:"[]",
     subject_position:"not_sought", author:"vera", at:"2026-07-28T09:00:00Z" },
   ratified_at:null,
   complete:false, awaiting:[FIND_D],
-  findings:[ { ord:0, bundle_id:FIND_C, title:"Who owns the vendor?", bundle_sha:C_SHA,
+  findings:[ { ord:0, bundle_id:FIND_C, title:"Who owns the vendor?", bundle_sha:C_SHA, role:"load_bearing",
     ratified_at:"2026-07-28T09:00:00Z", gate_version:"1.20.0", sig_armored:SIG,
     attestor:{ member:"vera", key_b64:KEY_V },
     strength:PAIR_A, required:BAR_ABSENT,
@@ -577,19 +649,19 @@ const LOOSE = {
 const PUB_ROWS = [
   { bundle_id:FIND_A, edition:1, title:"Was the sewer transfer authorised?", bundle_sha:A1,
     ratified_at:"2026-07-01T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
-    strength:PAIR_A, required:BAR_ABSENT },
+    strength:PAIR_A, required:BAR_DECLARED },
   { bundle_id:FIND_B, edition:1, title:"Who approved the transfer?", bundle_sha:B1,
     ratified_at:"2026-07-01T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
     strength:PAIR_B, required:BAR_DECLARED },
   { bundle_id:FIND_A, edition:2, title:"Was the sewer transfer authorised?", bundle_sha:A2,
     ratified_at:"2026-07-20T09:00:00Z", attestor_key:"AAAA", gate_version:"1.20.0",
-    strength:PAIR_A, required:BAR_ABSENT },
+    strength:PAIR_A, required:BAR_DECLARED },
   { bundle_id:FIND_B, edition:2, title:"Who approved the transfer?", bundle_sha:B2,
     ratified_at:"2026-07-20T10:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
     strength:PAIR_B, required:BAR_DECLARED },
   { bundle_id:FIND_S, edition:1, title:"Was the lease extended without a vote?", bundle_sha:S_SHA,
     ratified_at:"2026-07-05T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
-    strength:PAIR_A, required:BAR_DECLARED },
+    strength:PAIR_A, required:BAR_ABSENT },
   /* THE RATIFIED MEMBER OF THE AWAITING CASE, and it is the whole point of the
      window: it signed its pair and the container that would carry a copy does
      not exist. */
@@ -621,7 +693,7 @@ const PUB_ROWS = [
   /* THE MEMBER OF THE EDITION WHOSE CONTAINER WAS NEVER RECORDED. */
   { bundle_id:FIND_K, edition:1, title:"Was the contract amended after award?", bundle_sha:K_SHA,
     ratified_at:"2026-07-30T09:00:00Z", attestor_key:"BBBB", gate_version:"1.20.0",
-    strength:PAIR_A, required:BAR_ABSENT },
+    strength:PAIR_A, required:BAR_DECLARED },
   /* UI-56: THE DIVERGED MEMBER'S OWN RATIFIED ROW, AND ITS EDITION IS 1 WHILE ITS
      CASE'S IS 2. It carries a pair AND a declared bar deliberately — the defect
      this item closes blanked BOTH, so a fixture row holding only one of them
@@ -634,16 +706,62 @@ const PUB_ROWS = [
 ];
 const manOf = (caseId, ed, rows) => JSON.stringify({ format:"bio-case-container/2", case:caseId, edition:ed,
   findings:rows });
+/* ============================================================================
+   CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), AND THE MOCK WAS AS WRONG AS
+   THE SURFACE FOR THE SECOND ITEM RUNNING — D-173's class, the same one UI-56
+   found in this very file one item ago, and it is recorded rather than quietly
+   patched because TWICE is a pattern about this fixture and not an accident.
+
+   WHAT WAS MISSING: `publishedManifest()` selects NINE columns for `cases[]` —
+   `case_id, edition, scope, bias_acknowledgement, bar, ratified_at,
+   manifest_sha, manifest, project_id` — and these rows carried SIX. The harness's
+   own fixture-shape census printed "publishedmanifest.cases[]: 6/9 wire
+   column(s)" on every green run, naming the gap out loud, and the three it named
+   are exactly `bar` and `project_id` (and `bias_acknowledgement`). So the case's
+   bar — the authority DEC-72 clause 2 moved everything onto, on the wire since
+   CASE-5 — could not be READ by any assertion here, and a surface that ignored it
+   could not be caught doing so.
+
+   `bar` AND `project_id` ARE ONE FACT IN TWO HALVES and are added together, for
+   the reason `publishedCase()` states at the field: "bar: B/B with no publisher
+   is a requirement nobody asserted". A fixture that declared a standard and no
+   project would let the surface print a standard belonging to nobody.
+
+   THE BAR IS NOW PER CASE AND IS THE SAME FOR EVERY MEMBER OF ONE, which is the
+   only shape the plane can build: it copies `published_cases.bar` into each
+   member's `published_bundles.required`. BOTH BRANCHES ARE STILL UNDER TEST and
+   they simply moved to the altitude that can hold them — `CASE` declares a bar,
+   `CASE_SOLO` declares NONE, so a declared bar and an absent one are both on the
+   index in one run, and the absent branch's "an absent bar is not a bar of zero"
+   sentence is still exercised. What is NO LONGER representable, and was the old
+   fixture's whole premise, is two members of ONE case under different standards.
+   ============================================================================ */
 const CASE_ROWS = [
   { case_id:CASE, edition:1, scope:SCOPE, ratified_at:"2026-07-01T10:00:00Z", manifest_sha:MAN1,
-    manifest: manOf(CASE, 1, [ { bundle_id:FIND_A, strength:PAIR_A, required_strength:BAR_ABSENT },
+    bar:BAR_DECLARED, project_id:PROJ, bias_acknowledgement:null,
+    manifest: manOf(CASE, 1, [ { bundle_id:FIND_A, strength:PAIR_A, required_strength:BAR_DECLARED },
                                { bundle_id:FIND_B, strength:PAIR_B, required_strength:BAR_DECLARED } ]) },
   { case_id:CASE, edition:2, scope:SCOPE, ratified_at:"2026-07-20T10:00:00Z", manifest_sha:MAN2,
-    manifest: manOf(CASE, 2, [ { bundle_id:FIND_A, strength:PAIR_A, required_strength:BAR_ABSENT },
+    bar:BAR_DECLARED, project_id:PROJ, bias_acknowledgement:null,
+    manifest: manOf(CASE, 2, [ { bundle_id:FIND_A, strength:PAIR_A, required_strength:BAR_DECLARED },
                                { bundle_id:FIND_B, strength:PAIR_B, required_strength:BAR_DECLARED } ]) },
+  /* THE ABSENT-BAR BRANCH, MOVED TO CASE ALTITUDE. DEC-72 names this case by
+     name — "where no bar was ever declared ... the case publishes stating that
+     fact" — so the branch is not dropped, it is asked at the altitude that owns
+     the answer. `project_id` is present and the bar is absent, deliberately: the
+     two are separable and a case CAN have a publisher and no declared standard. */
   { case_id:CASE_SOLO, edition:1, scope:SOLO.scope, ratified_at:"2026-07-05T09:00:00Z", manifest_sha:S_MAN,
-    manifest: manOf(CASE_SOLO, 1, [ { bundle_id:FIND_S, strength:PAIR_A, required_strength:BAR_DECLARED } ]) },
-  { case_id:CASE_WAIT, edition:1, scope:WAITING.scope, ratified_at:null, manifest_sha:null, manifest:null },
+    bar:BAR_ABSENT, project_id:PROJ, bias_acknowledgement:null,
+    manifest: manOf(CASE_SOLO, 1, [ { bundle_id:FIND_S, strength:PAIR_A, required_strength:BAR_ABSENT } ]) },
+  /* AND THE THIRD STATE, WHICH IS NEITHER: a case with NO owning project row at
+     all. `publishedManifest()` reaches `project_id` through a LEFT JOIN
+     specifically so a case published before this model still appears, "with its
+     project stated as unknown rather than disappearing from the index because
+     the record gained a table" — the plane's own sentence. A null here is that
+     case, and the surface must say it cannot name the publisher rather than
+     printing an empty span where a project id goes. */
+  { case_id:CASE_WAIT, edition:1, scope:WAITING.scope, ratified_at:null, manifest_sha:null, manifest:null,
+    bar:null, project_id:null, bias_acknowledgement:null },
   /* REC-49: EVERY DECLARED MEMBER HAS RATIFIED AND THERE IS STILL NO CONTAINER.
      The container is recorded by the CONTROL PLANE after the last ratification
      returns, so "the roster is complete" and "the container exists" are two
@@ -651,7 +769,8 @@ const CASE_ROWS = [
      surface reading completeness off the roster prints a container hash for a
      container that is not there. */
   { case_id:CASE_STUCK, edition:1, scope:"Whether the amendment was made after award.",
-    ratified_at:"2026-07-30T09:00:00Z", manifest_sha:null, manifest:null },
+    ratified_at:"2026-07-30T09:00:00Z", manifest_sha:null, manifest:null,
+    bar:BAR_DECLARED, project_id:PROJ, bias_acknowledgement:null },
   /* UI-56: A COMPLETE, ASSEMBLED CASE AT EDITION 2 WHOSE MEMBER IS AT ITS OWN
      EDITION 1. It is assembled on purpose: the container exists and the plane
      records it as finished, so there is nothing about this case that is actually
@@ -659,6 +778,7 @@ const CASE_ROWS = [
      RATIFIED" a flat contradiction of the row it was printed inside. */
   { case_id:CASE_DIV, edition:2, scope:"Whether the sub-award was disclosed to the board.",
     ratified_at:"2026-08-02T10:00:00Z", manifest_sha:DIV_MAN,
+    bar:BAR_DECLARED, project_id:PROJ, bias_acknowledgement:null,
     manifest: manOf(CASE_DIV, 2, [ { bundle_id:FIND_V, strength:PAIR_B, required_strength:BAR_DECLARED } ]) },
 ];
 /* CORRECTED 2026-09-10 (UI-56), AND THE MOCK WAS AS WRONG AS THE SURFACE — D-173's
@@ -678,20 +798,55 @@ const CASE_ROWS = [
    on rendering EXACTLY as it does today, and block 1's `CASE-2026-0004` assertion
    is what holds it to that. `FIND_D` is pinned to a sha no ratified row answers
    to, which is what a declared-and-not-yet-ratified member really looks like. */
+/* ============================================================================
+   CASE-6 / DEC-72 clause 4: `role` WAS RESTORED AS A COLUMN BY UI-56 AND WAS
+   STILL NULL IN EVERY ROW, which meant the AUTHORED PARTITION — the fact clause 4
+   is entirely about — had no fixture and no assertion could reach it. Restoring
+   a column and never populating it is half of D-173's rule: the shape was right
+   and the content could not exercise the thing the shape exists for.
+
+   THE PARTITION IS SET SO THAT THE THREE STATES ARE ALL LIVE ON ONE PAGE, because
+   the surface must be caught doing the wrong thing with any of them:
+
+   - LOAD_BEARING (`FIND_A`, `FIND_S`, `FIND_V`, `FIND_C`) — the case rests on it,
+     and it was held to the case's bar.
+   - SUPPORTING (`FIND_B`, `FIND_E`) — part of the published work and NOT
+     presented as carrying the case. `FIND_B` is deliberately the member with the
+     STRONGER-LOOKING row in `CASE`: a supporting member that happens to clear the
+     bar is exactly the case a surface would be tempted to promote, and DEC-72
+     clause 4 says the designation decides, never the strength.
+   - NULL, KEPT AND NOT BACKFILLED (`FIND_D`, `FIND_K`) — the plane leaves
+     `published_case_members.role` with NO DEFAULT and serves `m.role ?? null`, so
+     a member rostered before CASE-2 authored roles really does carry null on real
+     instances. It is this suite's standing OVER-STRICTNESS arm for the
+     designation: an UNDESIGNATED member must render as undesignated, never
+     defaulted to either side. `FIND_K` is the unpinned legacy member UI-56 left
+     standing here for the same purpose one axis over, and the two properties are
+     deliberately carried by the same row: legacy is legacy in both columns.
+
+   ORD IS NOT THE PARTITION AND THE FIXTURE PROVES IT RATHER THAN ASSERTING IT.
+   In `CASE` the load-bearing member is at ord 0 and the supporting one at ord 1,
+   which is the ordering a lazy derivation would get RIGHT by luck. In `CASE_WAIT`
+   the order is inverted — ord 0 `FIND_C` load-bearing, ord 1 `FIND_E` supporting,
+   ord 2 `FIND_D` undesignated — no wait, ord 0 is load-bearing there too, so the
+   INVERSION is carried by `CASE_DIV`/`CASE_SOLO` having a single member and by
+   `FIND_D` at ord 2 being NULL rather than either. A derivation from ordinal
+   would have to pick a rule — "first is load-bearing", "all but the last" — and
+   every such rule gets `FIND_D` wrong, which is what the negative control arms. */
 const CASE_MEMBERS = [
-  { case_id:CASE, edition:1, ord:0, bundle_id:FIND_A, version_sha:A1, role:null },
-  { case_id:CASE, edition:1, ord:1, bundle_id:FIND_B, version_sha:B1, role:null },
-  { case_id:CASE, edition:2, ord:0, bundle_id:FIND_A, version_sha:A2, role:null },
-  { case_id:CASE, edition:2, ord:1, bundle_id:FIND_B, version_sha:B2, role:null },
-  { case_id:CASE_SOLO, edition:1, ord:0, bundle_id:FIND_S, version_sha:S_SHA, role:null },
-  { case_id:CASE_WAIT, edition:1, ord:0, bundle_id:FIND_C, version_sha:C_SHA, role:null },
-  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_E, version_sha:E_SHA, role:null },
+  { case_id:CASE, edition:1, ord:0, bundle_id:FIND_A, version_sha:A1, role:"load_bearing" },
+  { case_id:CASE, edition:1, ord:1, bundle_id:FIND_B, version_sha:B1, role:"supporting" },
+  { case_id:CASE, edition:2, ord:0, bundle_id:FIND_A, version_sha:A2, role:"load_bearing" },
+  { case_id:CASE, edition:2, ord:1, bundle_id:FIND_B, version_sha:B2, role:"supporting" },
+  { case_id:CASE_SOLO, edition:1, ord:0, bundle_id:FIND_S, version_sha:S_SHA, role:"load_bearing" },
+  { case_id:CASE_WAIT, edition:1, ord:0, bundle_id:FIND_C, version_sha:C_SHA, role:"load_bearing" },
+  { case_id:CASE_WAIT, edition:1, ord:1, bundle_id:FIND_E, version_sha:E_SHA, role:"supporting" },
   { case_id:CASE_WAIT, edition:1, ord:2, bundle_id:FIND_D, version_sha:D_SHA, role:null },
   { case_id:CASE_STUCK, edition:1, ord:0, bundle_id:FIND_K, version_sha:null, role:null },
   /* THE DIVERGED ROSTER ROW: the case is at edition 2 and the pin names the
      finding's edition-1 bytes. `2` and `1` are two different numbers here and
      that is the entire fixture. */
-  { case_id:CASE_DIV, edition:2, ord:0, bundle_id:FIND_V, version_sha:V_SHA, role:null },
+  { case_id:CASE_DIV, edition:2, ord:0, bundle_id:FIND_V, version_sha:V_SHA, role:"load_bearing" },
 ];
 
 const PUBLISHED_SHAS = new Map([
@@ -743,7 +898,7 @@ function mockFetch(u, opts){
     const poison = (c0) => {
       const c = withAccounts(c0);
       return POISON
-        ? { ...c, strength:PAIR_A, required:BAR_ABSENT, bundle_sha:A2,
+        ? { ...c, strength:PAIR_A, required:BAR_DECLARED, bundle_sha:A2,
             manifest: c.manifest ? { ...c.manifest, strength:PAIR_A } : c.manifest }
         : c;
     };
@@ -877,7 +1032,48 @@ function caseAltitude(html){
      every surface this file draws, so the complement is computed the one way on
      both and a second mechanism is a second thing to forget. */
   for(const m of out.matchAll(/<section class="pub-member"[\s\S]*?<\/section>/g)) out = out.split(m[0]).join(" ");
+  /* CASE-6 / DEC-72 clause 2, 2026-09-10 — THE BAR BLOCKS COME OUT, AND THE HOLE
+     THAT MAKES IS CLOSED BY AN ASSERTION RATHER THAN LEFT OPEN.
+
+     WHY THEY HAVE TO COME OUT. This sweep exists to stop a CASE carrying a
+     STRENGTH (DEC-44), and one of the six things it counts as evidence is the
+     text `(Documents|Links) (A|B|C|D|UNRATED)`. DEC-72 clause 2 now REQUIRES a
+     case to carry a BAR, and a bar is written in exactly that vocabulary,
+     because a required strength and a reached strength are measured on the same
+     two axes in the same letters — that is what makes the comparison mean
+     anything. So after CASE-6 the sweep's matcher cannot tell a requirement from
+     a measurement by text, and left alone it reports every correctly-rendered
+     case bar as a case-level strength.
+
+     THIS IS A CORRECTION, NOT AN EXEMPTION, AND THE DIFFERENCE IS THE ARM BELOW.
+     Exempting would be deleting the region from the sweep and moving on, which
+     would blind it to a genuine case strength printed inside a bar block —
+     narrow, but exactly the kind of hole an exemption leaves. Instead the
+     regions are removed HERE and `barsCarryNoStrength` re-reads them on their
+     own terms: inside a bar block the axis letters are permitted, and every
+     OTHER form of strength evidence — the surface's own mark, the axis panel's
+     mark, a `data-axis` attribute, a hand-written "Grade X", the composition
+     vocabulary — is still forbidden. Net: one form of evidence is licensed in
+     one named region and nothing else moved. */
+  for(const m of out.matchAll(/<div class="pub-casebar"[\s\S]*?<\/div>/g)) out = out.split(m[0]).join(" ");
+  for(const m of out.matchAll(/<div class="pub-casebar-ref"[\s\S]*?<\/div>/g)) out = out.split(m[0]).join(" ");
   return out;
+}
+/* THE OTHER HALF OF THE EXCLUSION ABOVE. Returns what a bar block carries that a
+   bar block must never carry; the axis-and-letter text is deliberately NOT on the
+   list, because in a bar that text IS the bar. */
+function barsCarryNoStrength(html){
+  const hits = [];
+  for(const m of String(html).matchAll(/<div class="pub-casebar(?:-ref)?"[\s\S]*?<\/div>/g)){
+    const f = m[0], t = strip(f);
+    for(const x of f.matchAll(/class="pub-grade"/g)) hits.push("a pub-grade strength mark inside a bar block");
+    for(const x of f.matchAll(/class="subj-grade[^"]*"/g)) hits.push("an axis-panel grade mark inside a bar block");
+    for(const x of f.matchAll(/data-axis="/g)) hits.push("a data-axis attribute inside a bar block");
+    for(const x of t.matchAll(/\bGrade [A-D]\b/g)) hits.push("grade text inside a bar block: " + x[0]);
+    for(const x of t.matchAll(/overall strength|combined strength|average grade|composite|case grade|grade of the case|the case's strength/gi))
+      hits.push("composition vocabulary inside a bar block: " + x[0]);
+  }
+  return hits;
 }
 /* WHAT COUNTS AS PRESENTING A STRENGTH, in every form this file can produce one
    in: the surface's own strength mark, the shared axis panel's grade mark, the
@@ -971,8 +1167,24 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
      [...e1.matchAll(/class="pub-axisrow" data-finding="([^"]+)"([\s\S]*?)<\/span><\/span>/g)].length >= 0
      && (e1.match(/data-axis="capture"/g) || []).length === 2
      && (e1.match(/data-axis="connection"/g) || []).length === 2);
-  ok("the declared bar rides the index row too, PER FINDING — one member declared none and one declared a bar",
-     /bar: none declared/.test(e1) && /bar: Documents B/.test(e1));
+  /* CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), NOT EXEMPTED. It read:
+     "the declared bar rides the index row too, PER FINDING — one member declared
+     none and one declared a bar", and it asserted `bar: none declared` AND
+     `bar: Documents B` on one case row. The OLD ONE WAS WRONG IN TWO WAYS AT
+     ONCE and both are worth naming, because only the first is obvious. (1) The
+     bar is the CASE's property now — one standard per case, read from the
+     publishing project at act time — so it is drawn once on the case row rather
+     than once per member. (2) The fixture it passed over could not exist: two
+     members of ONE case carrying DIFFERENT `required` blocks. The plane copies
+     `published_cases.bar` into every member's `published_bundles.required`, so
+     those two values are the same value by construction. This assertion was
+     therefore green over a shape the plane cannot produce — the mock as wrong as
+     the surface, D-173's class and the same one UI-56 found in this very file
+     one item ago. The fixture is corrected with it, below. */
+  ok("the case's bar rides the index row ONCE, as the CASE's property and not once per member",
+     (e1.match(/class="pub-casebar"/g) || []).length === 1
+     && /data-casebar="declared"/.test(e1) && /Documents B/.test(strip(e1))
+     && !/bar: none declared/.test(e1));
   ok("the superseded edition SAYS it is superseded, and says the pairs on that row are its own",
      /superseded by edition 2/.test(e1) && /every pair on this row is edition 1's own/.test(e1));
   ok("the newest edition says so", /newest edition/.test(e2));
@@ -1073,8 +1285,23 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
      && (divRow.match(/data-axis="connection"/g) || []).length === 1
      && /Documents B/.test(strip(divRow)) && /Links UNRATED/.test(strip(divRow))
      && !/carries no frozen strength pair/.test(strip(divRow)));
-  ok("UI-56: and its DECLARED BAR, which the broken join blanked beside the pair",
-     !!divRow && /bar: Documents B/.test(strip(divRow)) && !/bar: none declared/.test(strip(divRow)));
+  /* CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), NOT EXEMPTED, AND UI-56's
+     SUBJECT IS UNCHANGED. It read "UI-56: and its DECLARED BAR, which the broken
+     join blanked beside the pair" and looked for `bar: Documents B` inside the
+     diverged member's own row. The bar is no longer drawn per member, so the
+     literal is gone — but UI-56 was never about the bar, it was about the JOIN:
+     a diverged member joined by edition instead of by its pin came back EMPTY,
+     and everything downstream of the join went blank with it. The bar was one of
+     three symptoms of that one defect and the only one this item removed. So the
+     arm is re-pointed at the two symptoms that remain and at the fact the bar
+     moved to: the member's own row still resolves (its AUTHORED ROLE is served
+     and drawn, which is a roster column and would blank exactly as the bar did),
+     and its case's bar is present on the case row it belongs to. If the join
+     breaks again, both of these go blank again. */
+  ok("UI-56: and its ROSTER COLUMNS, which the broken join blanked beside the pair",
+     !!divRow && new RegExp('data-role="load_bearing" data-finding="' + FIND_V + '"').test(divRow)
+     && !/DECLARED AND NOT YET RATIFIED/.test(strip(divRow))
+     && /data-casebar="declared"/.test(divRow));
   /* AND THE OTHER HALF, WHICH IS THE ONE A READER WOULD HAVE BELIEVED. A finding
      dropped from its case did not vanish from the page — it reappeared at the
      bottom under "not a member of any published case", so the index asserted of
@@ -1121,6 +1348,40 @@ ok("the index answers a caller holding NO credential of any kind", idx.length > 
      CASE_MEMBERS.length === 10
      && CASE_MEMBERS.every(m => "version_sha" in m && "role" in m)
      && CASE_MEMBERS.filter(m => m.version_sha).length === 9);
+
+  /* ===== CASE-6 / DEC-72 clause 4 · THE GENUINELY UNDESIGNATED MEMBER, AND THIS
+     BLOCK IS THE ONLY PLACE IT CAN BE ASKED. It needs a member that is RATIFIED
+     (so the surface really did receive its roster columns) and carries a NULL
+     role (so nobody authored a designation). On the case-detail accessor the
+     suite's only role-null member is `FIND_D`, which is also AWAITING — a
+     different state with a different rendering — so the question is unanswerable
+     there. On the index it is `FIND_K`: ratified, unpinned, role null.
+
+     THIS ASSERTION EXISTS BECAUSE A NEGATIVE CONTROL FOUND IT MISSING, and that
+     is recorded rather than smoothed. Arm (b) of `case6.control.mjs` defaults
+     `pubRoleOf` to "load_bearing" for an absent designation — the exact inference
+     DEC-72 clause 4 forbids — and the suite came back **242/242 GREEN**. The
+     comment on the awaiting page already said the branch "is asked on the INDEX
+     instead, of FIND_K"; the comment was written and the assertion was not, so
+     the file DESCRIBED a coverage it did not have. A control that reddens nothing
+     is a finding about the arm OR about the suite, and this time it was the
+     suite. With this arm in place (b) fails as declared.
+
+     IT ASSERTS BOTH DIRECTIONS. Present as undesignated, and ABSENT as either of
+     the two authored values — because a default would show up as a positive
+     designation, not as a missing one, and a test that only checks for the
+     undesignated marker would pass while the row ALSO claimed to be load-bearing. */
+  ok("CASE-6: a RATIFIED member carrying NO authored designation renders as UNDESIGNATED on the index",
+     CASE_MEMBERS.find(m => m.bundle_id === FIND_K).role === null
+     && !!stuck && new RegExp('data-role="undesignated" data-finding="' + FIND_K + '"').test(stuck)
+     && /does not decide on the publisher's behalf/.test(strip(stuck))
+     && !new RegExp('data-role="load_bearing" data-finding="' + FIND_K + '"').test(stuck)
+     && !new RegExp('data-role="supporting" data-finding="' + FIND_K + '"').test(stuck));
+  ok("CASE-6: and the AUTHORED designations on the index are the ones the roster rows carry, both values",
+     new RegExp('data-role="load_bearing" data-finding="' + FIND_A + '"').test(idx)
+     && new RegExp('data-role="supporting" data-finding="' + FIND_B + '"').test(idx)
+     && !new RegExp('data-role="supporting" data-finding="' + FIND_A + '"').test(idx)
+     && !new RegExp('data-role="load_bearing" data-finding="' + FIND_B + '"').test(idx));
 
   /* THE INDEX IS THE PLACE A READER QUOTES FROM, so the same structural sweep
      runs here, over the same complement: everything outside the marked member
@@ -1189,10 +1450,26 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
   ok("each finding renders its OWN division disclosure — one member was divided out of a larger question and one was not",
      /data-division="named" data-of="INQ-2026-4102"/.test(page) && t.includes(PARENT) && t.includes(SIBLING)
      && /data-division="none" data-of="INQ-2026-4101"/.test(page));
-  ok("each finding carries its OWN attestor, signing key and signature — there is no case-level signature",
+  /* CORRECTED 2026-09-10 (CASE-6, discharging CASE-5b), NOT EXEMPTED — AND THIS
+     IS THE ONE THAT MATTERED MOST, because it pinned a NEGATIVE about the record
+     onto a page a stranger reads. It asserted the page says "there is no
+     case-level signature", which was true and well-reasoned when written: a
+     signature over a case would be a signature over something nobody reviewed,
+     which is the container manifest's own constraint. CASE-5b did not work around
+     that constraint, it SATISFIED it — `op=caseratify` verifies an SSHSIG over a
+     case DOCUMENT whose text is the publisher's own authored assertions rather
+     than a synthesised roster summary, so what is signed is a thing a member
+     actually reviewed. The constraint stands; the conclusion drawn from it does
+     not. What the page must now say is that there are TWO signatures over TWO
+     DIFFERENT things, neither standing in for the other — and it must read the
+     document off the wire rather than assert its existence, which is why the
+     null branch is asserted separately at the awaiting case below. */
+  ok("each finding carries its OWN attestor, signing key and signature, and the CASE carries its own document",
      /Attested by/.test(t) && t.includes("vera") && t.includes("dan")
      && (page.match(/<dt>Signature<\/dt>/g) || []).length === 2
-     && /there is no case-level signature/.test(t));
+     && !/there is no case-level signature/.test(t)
+     && /Two signatures over two different things, neither standing in for the other/.test(t)
+     && /data-casedoc="signed"/.test(page));
 }
 
 /* ---- THE TWO PAIRS, DISTINCTLY, AND NO CASE-LEVEL STRENGTH ANYWHERE ----
@@ -1269,14 +1546,50 @@ ok("no request this surface made carried a credential", WIRE.every(w => !w.token
      headings of its own, so the old "before the first <h3>" test was satisfied
      by position on a different page and measured nothing. */
   const spA = strengthPage(FIND_A);
-  ok("the declared bar renders BESIDE the strength reached, per finding, prominently",
-     spA.indexOf('class="pub-axisrow" data-finding="' + FIND_A + '"') < spA.indexOf('class="pub-bar"')
-     && spA.indexOf('class="pub-bar"') > 0 && spA.indexOf('class="pub-bar"') < spA.indexOf("<h3"));
-  ok("an ABSENT bar renders as ABSENT — never as zero, and never as a dash",
-     /data-bar="absent" data-finding="INQ-2026-4101"/.test(secA)
-     && /NONE WAS DECLARED/.test(strip(secA)) && /An absent bar is not a bar of zero/.test(strip(secA)));
-  ok("and a DECLARED bar on the OTHER member of the same case renders as declared, set in advance",
-     /data-bar="declared" data-finding="INQ-2026-4102"/.test(secB) && /set in advance/.test(strip(secB)));
+  /* CORRECTED 2026-09-10 (CASE-6 / DEC-72 clauses 2 and 4), NOT EXEMPTED. THE
+     POSITION RULE SURVIVES VERBATIM AND THE SUBJECT MOVED — which is why this is
+     a correction and not a deletion. The old assertion pinned that a bar sits
+     AFTER the finding's pair of frozen marks and BEFORE the per-axis panels, so a
+     reader meets the standard and the strength in one glance. DEC-72 keeps that
+     requirement exactly ("each claim's own derived strength displayed beside the
+     case's standard") and changes only WHOSE standard it is: what sits there now
+     is a REFERENCE to the case's one bar, not a bar of this finding's own, and
+     between them sits the thing that decides whether the bar applied at all —
+     the AUTHORED role. The order under test is therefore pair, then role, then
+     the case's standard, still all before the first `<h3>`. */
+  ok("the case's standard renders BESIDE the strength reached, after the finding's own role, prominently",
+     spA.indexOf('class="pub-axisrow" data-finding="' + FIND_A + '"') < spA.indexOf('class="pub-role"')
+     && spA.indexOf('class="pub-role"') < spA.indexOf('class="pub-casebar-ref"')
+     && spA.indexOf('class="pub-casebar-ref"') > 0
+     && spA.indexOf('class="pub-casebar-ref"') < spA.indexOf("<h3")
+     /* AND NO PER-FINDING BAR SURVIVES ANYWHERE. The class was renamed for
+        exactly this assertion's sake: if `pub-bar` still appeared, a selector
+        written against the old meaning would still be matching. */
+     && !/class="pub-bar"/.test(page));
+  /* THE ABSENT-BAR BRANCH MOVED TO THE ALTITUDE THAT OWNS IT — and therefore to
+     a different BLOCK of this file, because the case that declares no bar is
+     `CASE_SOLO` and this block has `CASE` open. It is asserted where that page is
+     already rendered, below. The sentence under test ("an absent bar is not a bar
+     of zero") is DEC-72's own, named in the ruling for precisely this state, and
+     it is a statement a CASE makes about itself.
+     THE DECLARED BRANCH, ONCE, AS THE CASE'S. The old pair of assertions read
+     one bar off each of two members of ONE case and called them different
+     standards; there is one standard here and it is asserted where it lives. */
+  ok("and the case that DID declare one renders it as the CASE's, set in advance, exactly once",
+     /data-casebar="declared" data-case="CASE-2026-0001"/.test(page)
+     && /set in advance/.test(strip(page))
+     && (page.match(/class="pub-casebar"/g) || []).length === 1);
+  ok("the bar names WHOSE standard it is — a requirement with no publisher is one nobody asserted",
+     new RegExp("the standard of[\\s\\S]{0,40}" + PROJ).test(strip(page)));
+  ok("SUPPORTING members are visibly NOT load-bearing, and the words say it rather than the absence of a mark",
+     /data-role="load_bearing" data-finding="INQ-2026-4101"/.test(page)
+     && /data-role="supporting" data-finding="INQ-2026-4102"/.test(page)
+     && /NOT presented as carrying the case/.test(strip(secB))
+     && /the case rests on this finding/.test(strip(secA)));
+  /* The UNDESIGNATED member lives on `CASE_WAIT` and is asserted at that page,
+     below, for the same scoping reason the absent bar is. */
+  ok("and a bar block carries a requirement and never a strength — the exclusion above is paid for here",
+     barsCarryNoStrength(page).length === 0, barsCarryNoStrength(page));
   ok("the UNRATED axis reads UNRATED — its own frozen fact, and neither a low score nor a failure",
      /data-axis="connection" data-finding="INQ-2026-4102">Links UNRATED/.test(secB)
      && /UNRATED is not a low score and not a failure/.test(strip(secB)));
@@ -1555,6 +1868,48 @@ page = pubBody();
   ok("the finding that DID land is published and answers in full, with its own pair and its own basis",
      /data-findingsec="INQ-2026-4301"/.test(page) && /Documents D/.test(t) && /Links C/.test(t)
      && keptIds(page, FIND_C).length > 0);
+  /* ==== CASE-6 / DEC-72 clause 4 · THE DESIGNATION IS READ AND NEVER DERIVED ===
+     Asserted against `FIND_D`, the one member whose designation nobody authored,
+     and it is the OVER-STRICTNESS subject for the whole partition: every rule a
+     derivation could plausibly use gets this row wrong. From ORDINAL — it is at
+     ord 2, so "the first is load-bearing" makes it supporting and "all but the
+     last" makes it load-bearing, and both are inventions. From STRENGTH — it has
+     no ratified row at all, so a comparison against the bar has nothing to
+     compare. From the CASE — this edition has a load-bearing member already, so
+     "default the rest to supporting" would look harmless and would be asserting
+     something about the publisher's intent that the publisher never wrote.
+     A null role is not a weaker answer, it is a DIFFERENT one, and the plane
+     leaves the column with no default precisely so it can stay different. */
+  /* THE THIRD NULL, AND IT IS NOT THE SAME NULL. `op=publishedcase` answers
+     `awaiting` as a bare list of bundle ids — no roster columns travel with it —
+     so for a DECLARED, UNRATIFIED member this surface does not know the
+     designation and must not report one. A page that printed "undesignated"
+     here would be asserting an absence of the PUBLISHER'S INTENT where there is
+     only an absence of DATA, which is the same conflation `pubRoleOf` refuses
+     one level down. The two are held apart by `undefined` vs `null` in
+     `pubRoster` and asserted apart here.
+     THIS IS ALSO WHERE THE OLD FIXTURE'S LIMIT SHOWS, AND IT IS STATED RATHER
+     THAN WORKED AROUND: `FIND_D` is the suite's only role-null member on THIS
+     accessor and it is also awaiting, so the genuinely-undesignated branch
+     cannot be asked here at all. It is asked on the INDEX instead, of `FIND_K`,
+     which is ratified AND carries a null role — see block 1. */
+  ok("a DECLARED-BUT-UNRATIFIED member says its designation is NOT SERVED, and never that it has none",
+     CASE_MEMBERS.find(m => m.bundle_id === FIND_D).role === null
+     && new RegExp('data-role="unserved" data-finding="' + FIND_D + '"').test(page)
+     && /a fact about what this page was sent, not about what the publisher decided/.test(t)
+     && !new RegExp('data-role="undesignated" data-finding="' + FIND_D + '"').test(page)
+     && !new RegExp('data-role="load_bearing" data-finding="' + FIND_D + '"').test(page)
+     && !new RegExp('data-role="supporting" data-finding="' + FIND_D + '"').test(page));
+  ok("and the partition is COUNTED in words, with the not-yet-served counted apart rather than folded in",
+     /1 load-bearing/.test(t)
+     && /1 whose designation is not served here at all/.test(t));
+  /* A CASE WITH NO OWNING PROJECT ROW IS A REAL STATE (the plane's LEFT JOIN
+     exists for it), and the honest rendering is to say the publisher cannot be
+     named rather than to print an empty id. */
+  ok("a case whose owning project the record cannot name SAYS so, and prints no empty publisher",
+     CASE_ROWS.find(c => c.case_id === CASE_WAIT).project_id === null
+     && /name no publishing project for this case/.test(t)
+     && /this page cannot say whose standard it is, and it does not guess/.test(t));
   ok("the declared membership is shown in the authored order, with ratified and awaited marked APART",
      (page.match(/data-member="ratified"/g) || []).length === 1
      && (page.match(/data-member="awaiting"/g) || []).length === 1
@@ -1600,6 +1955,30 @@ page = pubBody();
   ok("its one finding's pair names that finding and is not promoted into a case-level strength",
      new RegExp('class="pub-axisrow" data-finding="' + FIND_S + '"').test(page)
      && strengthEvidence(caseAltitude(page)).length === 0, strengthEvidence(caseAltitude(page)));
+  /* CASE-6 / DEC-72: THE ABSENT-BAR BRANCH, ASKED OF THE CASE THAT DECLARES NO
+     BAR. Moved here from block 3, where it used to be asked of one member of a
+     case that DID declare one — a shape the plane cannot build any more. DEC-72
+     names this state in the ruling itself: "where no bar was ever declared ...
+     the case publishes stating that fact: an absent bar is not a bar of zero,
+     and the case claims no cleared standard." The sentence is asserted verbatim
+     because it is exactly the one a renderer is tempted to shorten into a dash. */
+  ok("an ABSENT bar renders as ABSENT — never as zero, and never as a dash",
+     new RegExp('data-casebar="absent" data-case="' + CASE_SOLO + '"').test(page)
+     && /NONE WAS DECLARED/.test(t)
+     /* THE PLANE’S OWN WORDS AND NOT THE SURFACE’S PARAPHRASE. This used to look
+        for the surface’s fallback sentence ("An absent bar is not a bar of
+        zero"); the surface now prints `bar_detail` verbatim, so what must be on
+        the page is what the PLANE wrote — which is the point of DEC-8 and the
+        reason `bar_detail` exists at all. The fallback still exists for the
+        accessor that sends no `bar_detail` and is still the surface’s own words
+        said as the surface’s. */
+     && /NO BAR IS RECORDED for this case edition, and that is not a bar of zero/.test(t)
+     && !/\bcapture null\b|\bconnection null\b|Documents &mdash;/.test(t));
+  ok("and an absent bar still names the project whose absent standard it is",
+     new RegExp("the standard of[\\s\\S]{0,40}" + PROJ).test(t));
+  ok("a one-member case still states its partition rather than leaving it to be assumed",
+     new RegExp('data-role="load_bearing" data-finding="' + FIND_S + '"').test(page)
+     && /1 load-bearing/.test(t));
 }
 
 /* ============ 6. A FINDING'S ID RESOLVES TO ITS CASE, AND SAYS SO ============ */
@@ -1756,9 +2135,27 @@ page = pubBody();
   const outside = strengthEvidence(caseAltitude(poisoned));
   ok("handed an answer that CARRIES a case-level strength, this surface renders none: it reads strengths only from findings[]",
      outside.length === 0, outside);
-  ok("and it renders no case-level bar either — a bar is frozen into a FINDING's bytes",
-     (poisoned.match(/class="pub-bar"/g) || []).length === 2
-     && caseAltitude(poisoned).indexOf('class="pub-bar"') < 0);
+  /* CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), NOT EXEMPTED, AND THE
+     ASSERTION IS NOW THE OPPOSITE OF WHAT IT WAS. It read: "and it renders no
+     case-level bar either — a bar is frozen into a FINDING's bytes", pinning TWO
+     `pub-bar` blocks (one per member) and NONE at case altitude. DEC-72 clause 2
+     inverts both halves: the bar is the case's, so exactly ONE is drawn and it is
+     drawn AT case altitude, and none is drawn per finding at all.
+
+     WHAT THE ARM IS ACTUALLY FOR SURVIVES UNCHANGED, and that is why this is a
+     correction rather than a deletion. The poison hands this surface a composed
+     CASE-LEVEL STRENGTH; the point was never "no bar at case altitude", it was
+     "this surface reads strengths only from findings[] and composes nothing". So
+     the bar half is re-pinned to its new correct shape and the composition half —
+     which the poison actually attacks — is untouched above and re-stated here
+     against the bar block itself, because a bar block is now the one place at
+     case altitude where axis letters are legitimately allowed and is therefore
+     the one place a composed strength could hide. */
+  ok("and the bar it renders is the CASE's, exactly one, at case altitude — and carries no strength",
+     !/class="pub-bar"/.test(poisoned)
+     && (poisoned.match(/class="pub-casebar"/g) || []).length === 1
+     && caseAltitude(poisoned).indexOf('class="pub-casebar"') < 0
+     && barsCarryNoStrength(poisoned).length === 0, barsCarryNoStrength(poisoned));
   ok("the poisoned answer changed nothing a reader sees: both findings still carry their own pairs",
      /Documents D/.test(strip(poisoned)) && /Links UNRATED/.test(strip(poisoned)));
   await ctx.__pubOpen(CASE);
@@ -2035,16 +2432,14 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
                         + "unconsumed publication — a SURFACE GAP. DEC-34's per-page header shows a "
                         + "`Declared bias` computed from HUNCH legs, which is a DIFFERENT fact, so a "
                         + "reader of the public record never meets the group's own sentence.",
-    bar: "the CASE's standard of evidence, read from its publishing project at the moment of "
-       + "publication and frozen case-side (DEC-72 clause 2, CASE-5). A SURFACE GAP and not an "
-       + "unconsumed publication: the page still prints a per-member `required` block, which is "
-       + "each member's stamped COPY of this one fact, so a reader sees the bar without being told "
-       + "it is the case's rather than the finding's. CASE-6's row requires it shown as the case's "
-       + "property.",
-    bar_detail: "the sentence that says what a NULL bar means — that no standard is recorded, which "
-              + "is not a standard of zero. It exists precisely so a surface cannot render an absent "
-              + "bar as a met one, so it is unread on exactly the page that will need it most. "
-              + "CASE-6's, with `bar`.",
+    /* `bar` AND `bar_detail` CAME OFF THIS LIST AT CASE-6, 2026-09-10, AND THEY
+       ARE THE ITEM. Both were declared here as SURFACE GAPS rather than as
+       unconsumed publications — the entries said so, and named CASE-6 as the item
+       that owed them. `bar` is now read by `pubCaseBarHtml` at case altitude and
+       referenced beside each finding's own pair; `bar_detail` is printed verbatim
+       as the plane's own sentence, which is the whole reason the plane writes it.
+       The per-member `required` block the old `bar` entry described is gone from
+       both the case page and the index: it was N copies of one fact. */
   };
   const unread = published.filter(k => !readsIt(k));
   ok("UI-35: every top-level key the plane publishes is either READ by this surface or NAMED as unread with a reason",
@@ -2397,4 +2792,53 @@ console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
 }
 
 console.log(`publishedcase: ${n - fails.length}/${n} assertions`);
+
+/* ============================================================================
+   NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs` — CASE-6, five arms
+   plus a baseline, each armed ALONE, run 2026-09-10, every restore verified by
+   sha256 AND by `cmp` against a per-arm uniquely-named pristine copy with a byte
+   count printed and a minimum floored. `… case6.control.mjs a` runs one arm.
+
+       baseline   publishedcase 244/244 · publication-entry 119 · caseproduction 68 · caseflip 54
+       (a)        caseproduction  53 pass, 15 fail  — the owner fence neutered
+       (b)        publishedcase  243/244            — the designation INFERRED
+       (c)        publication-entry RED, one arm    — DEC-69, informed twice
+       (d)        caseflip  52 pass, 2 fail         — the multi-case fence neutered
+       (e)        publishedcase  242/244            — OVER-STRICTNESS, all load-bearing
+
+   (e) IS THE OVER-STRICTNESS ARM AND ITS RESULT IS READ BY WHICH ASSERTIONS FAIL,
+   never by the exit code: with every member re-designated LOAD-BEARING — legal,
+   and the likeliest shape of a first real case — exactly two assertions fail and
+   both name the supporting member explicitly, so they are measuring the fixture
+   rather than the rule. The partition counts, the bar and the roster all render
+   correctly over a case with no supporting member at all.
+
+   TWO ARMS CAME BACK NOT AS DECLARED ON THEIR FIRST RUN AND BOTH CORRECTIONS ARE
+   THE USEFUL HALF; the table above is the state after them.
+
+   (b) RAN GREEN AT 244/244 WITH THE INFERENCE ARMED. `pubRoleOf` was defaulting an
+   absent designation to load-bearing — exactly what DEC-72 clause 4 forbids — and
+   nothing noticed, because the suite's only role-null member on the case-detail
+   accessor is also AWAITING, which renders through a different branch. The
+   comment beside it already SAID the branch "is asked on the INDEX instead, of
+   FIND_K"; the comment had been written and the assertion had not. Two assertions
+   were added on the index and (b) now fails as declared. **A suite that describes
+   a coverage it does not have is the shape this arm exists to find.**
+
+   (d) RAN GREEN AT 52 pass 0 fail WITH THE FENCE NEUTERED, and the reason is the
+   pin's own OR: the two-target fixture puts its findings in DIFFERENT cases, so a
+   DIFFERENT refusal fired and satisfied the set-membership test. The pin was
+   pinning "some case fence refused this" — enough for CASE-5b, not enough for an
+   item that DECIDED to keep one specific fence on a count of what that fence
+   protects. A single-target arm was added beside it in `caseflip.test.mjs`,
+   pinned by EXACT EQUALITY on the reason, and (d) now fails as declared.
+
+   AND ONE INSTRUMENT LIMIT, found by the baseline row and recorded in the driver:
+   the plane's suites end in two different spellings ("52 passed, 0 failed" vs
+   "68 pass, 0 fail") and the driver's first tally reader knew only one, reporting
+   a green 68-assertion suite as "NO TALLY". On any other arm that line would have
+   read as the suite dying and the arm would have been scored on it. **This is
+   what a baseline row is for.**
+   ============================================================================ */
+
 if(fails.length){ console.error(`publishedcase: ${fails.length} FAILED`); process.exit(1); }

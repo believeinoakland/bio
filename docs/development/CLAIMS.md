@@ -2340,3 +2340,112 @@ concurrency: checked over the whole register rather than assumed — every claim
   still makes the same three ASSERTIONS. The first draft of that header said the thirteen were mine;
   the baseline run said otherwise, which is why the rule is to diff the runs.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `990181a` and verified on the MERGED tree: battery 173/173 · 10,760 (+5 closing exactly on walkfloor's new arms), `coverage --strict` exit 0 read unpiped (floor 906/167/168 by print), UI harness exit 0, `mintid --audit` 0 breaks.
+## CLAIM 2026-09-10 RECORD (CASE-6 — DEC-72's SURFACES, and the arc's closing item)
+
+worktree: `agent-ab379f634ce9616c1` · branch `worktree-agent-ab379f634ce9616c1` · from `a4c983a`.
+
+**PATHS CLAIMED, and they are named as REGIONS rather than as files because
+`civicos-ui/app.html` is 18,268 lines and a whole-file claim would fence off four
+other live items for no reason:**
+
+- `civicos-ui/app.html` — the `__PUBLICATION_ENTRY__` region (5727–5798) and the
+  `__PUBLISHED_CASE__` region (14786–16348). **NOT** the inquiry page, **NOT**
+  `openBundle`, **NOT** the act source, **NOT** the project workspace.
+- `civicos-ui/test/publishedcase.test.mjs` and
+  `civicos-ui/test/publication-entry.test.mjs` — the two suites that own those
+  regions. **EXPLICITLY NOT `civicos-ui/test/auth-surface.test.mjs`**, which M0-24
+  holds.
+- `bio-plane/test/caseflip.test.mjs` — the MULTI-CASE MEMBERSHIP pin only (the
+  arm at ~874 and its header note at ~90). CASE-5b drove that refusal so its state
+  would be pinned rather than ambiguous and named CASE-6 as the item that decides
+  it; correcting the pin's REASON is the discharge of that pin, not a second
+  author on the suite.
+- `docs/BIO_DATAPLANE_STATE.md` — the publication/case sections (the arc's
+  definition of done, condition 1).
+- `docs/development/CASE-AS-PRODUCTION.md` → `docs/archive/` and
+  `docs/archive/README.md`'s index row (condition 2).
+- `docs/development/DEBT.md` — one appended row.
+- `docs/development/MEASUREMENTS.md` — appended rows only (CPDF-14 also appends
+  there; appends conflict harmlessly).
+- `docs/decided.index.json` / whatever `node tools/decided.mjs` regenerates
+  (condition 3).
+
+**NOT CLAIMED AND DELIBERATELY SO: `bio-plane/src/**`.** See the two determinations
+below — neither the multi-case fence nor the affordance owner-gate is taken here,
+and both have their reasoning recorded rather than a half-build.
+
+concurrency: checked over the whole register. CPDF-14 holds scratch paths +
+`MEASUREMENTS.md`; M0-24 holds `civicos-ui/test/auth-surface.test.mjs`. No live
+claim names any path above.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-6) — **TWO COMMENT-ONLY SPANS IN `bio-plane/src/store.mjs`, WHICH THE ORIGINAL CLAIM EXPLICITLY EXCLUDED**
+
+The claim above says `NOT bio-plane/src/**` and that stands for every line of
+CODE: this item changes no plane behaviour, adds no refusal, moves no wire shape.
+What it adds is PROSE at two sites, and the reason it must be added rather than
+recorded elsewhere is CASE-6's own brief: the fence decision is to be enacted or
+kept **with the reasoning at the site**, and a decision recorded anywhere else is
+a decision the next reader of that refusal will not find.
+
+- `bio-plane/src/store.mjs`, the `FINDING_IN_ANOTHER_CASE` refusal (~5336) —
+  comment only, immediately above the refusal, recording the KEEP decision and
+  the census it rests on.
+- `bio-plane/src/store.mjs`, `#caseOfSha` (~20614) — comment only. That helper's
+  existing sentence ("Nothing writes that shape today") is the single clearest
+  statement of why the fence is load-bearing, and it is pointed at the decision
+  so the two cannot drift apart.
+
+Both are inside spans no live claim names, and neither is a DEC-49 governed
+region. A worker that needs to CHANGE code at either site should take it: this
+amendment claims the prose, not the function.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-6) — **ONE-TOKEN PATH CORRECTIONS IN NAVIGATION POINTERS TO THE DOCUMENT THIS ITEM MOVED**
+
+Archiving `CASE-AS-PRODUCTION.md` leaves every pointer at the old path broken.
+That is a defect this item CREATED, so it is this item's to sweep rather than to
+delegate. **CORPUS: 27 references across 13 files**, measured by grep over
+`docs/` and `bio-plane/`, `docs/DECIDED.md` (generated) excluded.
+
+**THE FOUR SUITES THAT READ THE FILE FROM DISK NEED NO CHANGE AT ALL, and that is
+worth recording as a finding rather than as a relief:** `caseflip`, `caselifecycle`,
+`casepin` and `caseproduction` each already try `docs/development/` and then
+`docs/archive/`, every one with a comment saying CASE-6 would move it. Four
+separate workers took the same precaution unprompted. The archive move goes
+through green because they did.
+
+**WHAT IS CORRECTED — live NAVIGATION pointers only, the ones that tell a reader
+where to go now:** `docs/development/MILESTONES.md` (1), `docs/development/DECISIONS.md`
+(2), `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (1),
+`docs/architecture/BIO_Case_Making_v0_1.md` (1), and the header comment of each of
+the 5 `bio-plane/test/case*.test.mjs` suites (prose only — no assertion, no
+behaviour).
+
+**WHAT IS DELIBERATELY NOT TOUCHED, and this is the distinction the sweep turns
+on: a DATED HISTORICAL ENTRY IS A LOG, AND REWRITING A LOG TO MATCH TODAY IS
+FALSIFYING IT.** Left exactly as written: `INTERFACE-CHANGES.md` (5 — each inside
+a dated IC entry saying which bullet that change enacted, true when written and
+still true), `CLAIMS.md` (5 — released claims from CASE-1…CASE-5, which correctly
+record the path those workers were pointed at), and `docs/DECIDED.md` (generated;
+regenerated in this turn). **`QUEUE.md` (2) is CONDUCT's sole writer** and is
+reported rather than edited — one is a notification entry, one is CASE-6's own
+`accepts-when`, and both are historical in the same sense.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-6) — **ONE NUMBER IN `civicos-ui/check-refusal-codes.mjs`**
+
+`CEILING.reachGap` lowered 41 → 40, with the reasoning at the site. **Not a fall this
+item caused: CASE-6 added no code to the reach and removed none.** REC-79's own comment
+in that block already reads "FELL 41 -> 40" and the NUMBER was never moved with the
+sentence, so the ceiling has carried one code of slack since — the state the file's own
+header calls not-a-ratchet. Measured twice on two different trees (this item's baseline at
+`a4c983a` and its final), both 40 of 237. One line changed plus its comment; no matcher, no
+arm, no other figure touched.
+
+### AMENDMENT 2026-09-10, MID-ITEM (CASE-6) — **TWO SUITE FILES ADDED, BOTH THIS ITEM'S OWN**
+
+- `civicos-ui/test/case6.control.mjs` — NEW FILE, this item's negative-control driver.
+  Named `.control.mjs` deliberately: `check-refusal-codes.mjs` harvests `*.test.mjs` under
+  `civicos-ui/test/` into its reach set, and a control driver that spells refusal codes in
+  order to neuter them would inflate that set with codes no surface can receive.
+- `civicos-ui/test/publication-entry.test.mjs` — a `NEGATIVE CONTROL:` declaration added at
+  the head. The suite had none and `coverage.mjs` had been printing it in the civicos-ui
+  NO CONTROL list (reported, not gated); the figure moves 25/47 → 26/47.

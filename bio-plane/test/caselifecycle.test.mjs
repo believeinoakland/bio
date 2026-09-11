@@ -10,7 +10,7 @@
 
 /* CASE-4 / DEC-72 — LIFECYCLE AND THE REVISION FLAG.
  *
- * Bob ruled DEC-72 on 2026-08-10 and `docs/development/CASE-AS-PRODUCTION.md` is
+ * Bob ruled DEC-72 on 2026-08-10 and `docs/archive/CASE-AS-PRODUCTION.md` is
  * the design. This item's bullet: *"`published` removed from the inquiry state
  * machine (State Rules amendment); containing cases FLAGGED when a member
  * finding revises; flags set-but-never-clear until each owning project acts."*

@@ -1,5 +1,86 @@
 # BIO data plane: source state, migration plan, and build status
 
+v33, 2026-09-10. **A CASE IS A PRODUCTION OF A PROJECT. This entry amends the
+publication model this document describes, and it is written at the landing of
+CASE-6 rather than ahead of it, because this file records what RUNS.** The plane
+is 0.56.0; interfaces I3 11.0.0 and I5 1.10.0. DEC-72 (Bob, 2026-08-10) was built
+as CASE-1 … CASE-6 and its design document is now archived at
+`docs/archive/CASE-AS-PRODUCTION.md`, where `decided.mjs` still scans it.
+
+**WHAT THE ENTRIES BELOW STILL SAY AND NO LONGER DESCRIBE.** Every version entry
+under this one was written against a model in which **publication was a PHASE OF
+A FINDING**: a finding moved to a `published` state, its signed bytes named the
+case it belonged to, and the standard of evidence it was held to was stamped into
+those bytes and composed across whoever cited it. **None of that is the plane any
+more.** Those entries are kept because this file is a log and its history is the
+argument; they are not the current shape, and where they disagree with this entry
+this entry is what exists.
+
+**THE SHIPPED MODEL, in the six clauses DEC-72 ruled and the items that built
+them.** A CASE IS ITS OWN OBJECT — a set of finding-versions plus the publishing
+project — and not a phase of a finding (CASE-1: `cases`, `published_cases`,
+`published_case_members` keyed on `case_id`; the schema is I5). THE BAR IS A
+PROPERTY OF THE PROJECT, read from the publishing project at act time and frozen
+case-side on `published_cases.bar`; no bar attaches to any finding and nothing
+composes across projects (CASE-2; DEC-17's strictest-across-citers composition is
+REMOVED, DEC-71 DISSOLVED). PUBLICATION PINS VERSIONS like a commit: each member
+is frozen by `version_sha` on the finding's own chain, and an edit touching a
+published version mints a new one (CASE-3). `published` HAS LEFT THE INQUIRY
+STATE MACHINE — a finding's lifecycle ends at `concluded` and publication is the
+case relation; a member whose finding is later revised leaves its containing cases
+FLAGGED, set-but-never-cleared, never silently updated and never auto-republished
+(CASE-4; `publishCase()` carries `NOT_CONCLUDED` as its own named refusal, and
+`PUBLISHED_CANNOT_BE_SET_DOWN` restores D-79 under the new lifecycle). LOAD-BEARING
+MEMBERS MEET THE BAR AND SUPPORTING MEMBERS NEED NOT, the partition AUTHORED by
+the publisher on `published_case_members.role` — a column left with NO DEFAULT
+precisely so an absent designation stays absent rather than becoming a guess.
+ONLY A PROJECT OWNER PUBLISHES, through the Membership Architecture v2 owner
+predicate with no administrator bypass (`NOT_THE_PROJECT_OWNER`).
+
+**THE ARTIFACT DIRECTION FLIPPED, AND A CASE NOW HAS A SIGNATURE OF ITS OWN.**
+Finding bytes no longer name any case: all eight case keys are gone from
+frontmatter and C-2.8 REFUSES them there per key, so their absence is a property
+of the FORMAT rather than a habit (CASE-5, CASE-5b). The CASE freezes its members
+instead — content by hash, version, per-member strength pair, role, the bar, the
+exclusions — and `op=verify` / `op=publishedcase` / `op=publishedmanifest` read
+the case artifact. Because every case fact this plane commits must come from bytes
+somebody signed, CASE-5b built the ceremony those facts moved to rather than
+deleting them into an unsigned request: `op=publish` AUTHORS a case document,
+`op=casedocument` reads it whole, and `op=caseratify` verifies an SSHSIG over
+`bio-ratify-case <case_id> <edition> <docSha>` — a separate message space from
+`ratifyStatement` — and commits the case rows FROM THOSE SIGNED BYTES. What is
+signed is the publisher's own authored assertions, never a synthesised roster
+summary. Container format `bio-case-container/5`. **The stranger-verification
+property is unchanged and is the point: someone holding published material can
+check every part of it against its hash, and now also check the case's own
+assertions against a signature, without contacting the instance.**
+
+**THE SURFACES (CASE-6, this entry's own item).** The published case page shows
+the bar as the CASE's property with the publishing project named beside it, each
+finding's own derived strength pair beside it, and each member's AUTHORED role —
+with SUPPORTING members visibly not load-bearing, in words rather than by the
+absence of a mark. An absent bar renders as absent and never as zero, printing the
+plane's own `bar_detail` sentence verbatim. The publication entry point remains a
+STATEMENT and not a ceremony — **DEC-33 still defers the five-step member-facing
+process and its re-entry condition has not been met** — and it now states the
+three facts DEC-72 changed: publication is an owner's act, the load-bearing split
+is authored, and the standard is the publishing project's.
+
+**TWO THINGS ARE DELIBERATELY NOT BUILT AND ARE NAMED HERE RATHER THAN LEFT TO BE
+DISCOVERED.** (1) **A finding still cannot serve a SECOND case** —
+`FINDING_IN_ANOTHER_CASE` refuses it, against DEC-72 clause 6, which rules that it
+should. CASE-6 measured the fence rather than deferring on judgement and KEPT it:
+nine scalar "which case is this finding in" readers in `store.mjs` are correct only
+while it holds, so removing it alone would convert them into silent guesses over a
+set. `DEBT.md` D-309, with the count and the closing move; the reasoning is at the
+refusal's own site. (2) **A case with several owning projects is NOT
+REPRESENTABLE** — `cases` is keyed on `case_id` alone, deliberately, so a case
+cannot change hands and have its standard of evidence change with it
+(`CASE_BELONGS_TO_ANOTHER_PROJECT`). That is a design property, not a gap. Also
+open: `op=affordances` offers `publish` without the owner condition the store
+enforces (D-310), which costs nothing while no ceremony calls it and must close
+before DEC-33 reopens.
+
 v32, July 27, 2026, third entry of the day. The plane is **0.35.0**, signed,
 deployed and verified on biosmoke7, deployed bytes hash-identical to the
 signed asset
