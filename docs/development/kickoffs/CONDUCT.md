@@ -451,3 +451,12 @@ finding about this session rather than noise from another.
 Credentials are in `.env`; git is configured to push as the bio persona (see the
 recalled memory). Reserve gated actions — deploying the plane or the installer —
 for BOB.
+
+## Standing down (added 2026-09-10 — ORCHESTRATION's LIVENESS rule 4, in the file whose owner performs it)
+
+**STAND-DOWN IS VERIFIED, NEVER ANNOUNCED.** Before the words "standing down": list every
+task this session spawned; TaskStop each one still alive (a worker "waiting" with its work
+integrated is a zombie — stop it, its worktree holds nothing); re-list and put the VERIFIED
+zero into the handoff. A stand-down that leaves a live task is the map diverging from the
+world — the failure every instrument here exists to refuse — and it was committed on
+2026-09-10 by a session whose handoff said "nothing is owed to a worker" while one waited.

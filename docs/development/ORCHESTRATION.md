@@ -343,3 +343,36 @@ Not agent busyness. An idle ephemeral worker costs nothing; work that lands
 wrong, or piles up unintegrated, costs a lot. Optimise for pieces that land
 green and meet every objective, policy and standard — the only throughput that
 counts.
+
+
+## LIVENESS: STATE DRIVES, SIGNALS ONLY ACCELERATE
+
+Added 2026-09-10 after three hangs in one day that were ONE defect (Bob: *"we're going to
+experience it again and again until we figure out what's at the root"*): a worker waited
+forever on a battery whose completion SIGNAL it missed; a successor session's guard checked
+a precondition ONCE, stopped correctly, and nothing re-invoked it when the precondition
+later became true; a session ANNOUNCED "nothing owed to a worker" while one of its tasks
+was still alive. The repository carries work state flawlessly; the hangs all lived in the
+signal layer beside it. **The plane already owns the answer** — its interruption model
+(Tech Arch §10.7) recovers by RE-DERIVING outstanding conditions from durable state on
+every tick and treats any delivered signal as an accelerator. Sessions follow the same law:
+
+1. **Every inter-session dependency is STATE IN THE REPOSITORY** — a file at a sha, a row,
+   a landed commit — and the dependent session RE-DERIVES readiness from that state at
+   every turn start and every wake, never only at first check. A message saying "it is
+   ready" is an accelerator; the state is the authority either way.
+2. **A guard that finds its precondition absent does not merely stop** — it says what
+   state it is waiting on, in the record or its report, so the LEADING session can re-drive
+   it the moment the state lands. Stopping silently converts a guard into a hang.
+3. **Every wait is bounded and world-checked** (`kickoffs/WORKER.md`, the 2026-09-10
+   rules): at every poll and at timeout, check the PROCESS, not the signal — an absent
+   process is a completed wait wearing silence.
+4. **Standing down is VERIFIED, never announced**: a session's last act lists its own
+   spawned tasks and STOPS every one (TaskStop), and its handoff states the verified
+   count — "zero tasks alive, listed" — not the belief. A stand-down with a live task is
+   the announcement diverging from the world, which is this record's oldest enemy wearing
+   a session's name.
+5. **The leading session owns the reconciliation tick**: periodically — and at every wake
+   its watchers give it — it compares the session list, the process table, and the record's
+   declared states, and re-drives any session whose awaited state has landed. Signals get
+   lost; the tick re-derives; that is the whole design.
