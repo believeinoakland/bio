@@ -367,6 +367,15 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
+### D-302 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching `sweep()`'s attribution figures; if none does, this row reads `queued`.
+milestone: M0 (background lane, holds no slot)
+interface: none — instrument estate; it changes no plane behaviour
+depends-on: D-265 (landed — the chokepoint and buckets it builds on)
+scope: **`DEBT.md`'s D-302 row is the authority, both clauses.** (1) `test/op-claims.test.mjs`'s fifth walk-derived floor, `result.attributions.length >= 4`, is STILL over the working tree — `sweep()` publishes no `attributionsRepro`, so an uncommitted arrival can only push the floor UP, D-238's payload exactly. Compute `attributionsRepro` beside the other four in `sweep()` and move the floor onto it FROM A PRINTED FIGURE. (2) `scripts/walkfloor.mjs` decides `guarded` by a regex for an import of `provenance.mjs` — a predicate that answers about the WRONG FILE: the suite grades UNGUARDED even where its floors genuinely are guarded, and the walking script grades GUARDED while saying nothing about the ratchets one import away. Decide `guarded` from the classification the walk now carries (D-265's `reproducible` bucket), not from an import spelling.
+accepts-when: the fifth floor reads a reproducible figure and the working-tree unwrap at that site is GONE (the chokepoint passage removed, hygiene's passage ratchet re-measured); `walkfloor`'s GUARDED/NAMED column derived from the value classification, with the re-measured census committed from PRINTED figures; `cd bio-plane && npm run test:battery` green — measure your own baseline; `node scripts/coverage.mjs --strict` DIRECTLY, `$?` unpiped, exit 0; `node civicos-ui/test/run.mjs` unpiped.
+NEGATIVE CONTROL: run and recorded, armed ALONE — (1) the arm this item exists for: an uncommitted (working-tree-only) attribution arrival must NOT move the floor's corpus, driven, where before this item it could; (2) point the `guarded` predicate back at the import spelling and something must FAIL naming a file it misgrades; (3) over-strictness — a walk that legitimately publishes only working-tree figures (a report, not a floor) must stay legal and NAMED, never failed.
+added: 2026-09-10 · CONDUCT (D-265's residual, enqueued as an ITEM at integration — a residual row with no queue item reaches no worker)
+
 ### M0-23 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching `preauth-vocabulary.test.mjs`; if none does, this row reads `queued`.
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
