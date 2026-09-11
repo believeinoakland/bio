@@ -287,6 +287,22 @@ import { CALIBRATION_CHECKS } from "../checks/bio-checks.mjs";
    and a second copy of that judgement in the store is a copy that will one day
    answer differently from the check that refuses on it. */
 import { isCaseMemberBytes } from "../checks/bio-checks.mjs";
+/* D-309 / DEC-49: the case-identity family, imported for the one reason every
+   DEC-49 import in this file exists — the catalogue holds the member-facing
+   WORDS and this file holds none of them. */
+import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
+
+/* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
+   LITERAL AT ITS SITE and reaches the wire through here, because a code held in
+   a variable is invisible to the guard and one shipped `translation: undefined`
+   to a member that way. `reason` AND `code` carry the same string: every existing
+   refusal in this store answers on `reason` and the control plane and the suites
+   read it, while DEC-49's guard and the surfaces read `code` — so both are
+   served from one literal rather than one being derived from the other. */
+function refusal(key, extra = {}) {
+  const row = CASE_DERIVATION_CHECKS[key];
+  return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
+}
 
 /* BIO store, plane layer, step 1.
  *
@@ -4937,7 +4953,17 @@ export class Store extends DurableObject {
    *
    * DEC-12: this act does NOT unpublish anything and cannot. Editions append;
    * the working document moves. */
-  publishCase({ target = null, targets = null, caseId = null, scope = "",
+  /* D-309 / IC-74: `newCase` is REC-44's THIRD ROUTE MADE SAYABLE. REC-44 always
+     had three — NAME a case, DERIVE one, or MINT one — but only the first was
+     ever expressible by a caller; minting happened when the derivation found
+     nothing. Under DEC-72 clause 6 that leaves a real intent with no way to be
+     stated: a publisher building a NEW case out of findings that already serve
+     another one had no word for it, and the derivation would quietly hand them a
+     further edition of the old case instead. This is that word. It is NOT a
+     caller minting an identity — the id is still allocated by this act and never
+     taken from the request, which is the rule REC-44 states and `NO_SUCH_CASE`
+     enforces; what the caller supplies is the INTENT, not the identity. */
+  publishCase({ target = null, targets = null, caseId = null, newCase = false, scope = "",
                 statement = "", excluded = null, subjectPosition = "",
                 subjectJustification = "", biasAcknowledgement = "",
                 project = null, roles = null,
@@ -5344,13 +5370,20 @@ export class Store extends DurableObject {
        and only when nothing answers does it MINT one. What a caller may never
        do is mint an identity — an id a caller can hand us is one a caller can
        invent, and this record has that rule everywhere else already. */
+    /* D-309 / DEC-72 clause 6, 2026-09-10: SITE 1 OF CASE-6's NINE, AND THE
+       DECISION IS **ALL CASES PER MEMBER**. This is the derivation REC-44's
+       middle route rests on, and it is the site the whole item turns on: with
+       the fence up, "which case does this member belong to" had one answer and
+       reading it was reading a fact. With the fence down it is a SET, and what
+       used to be a fact is a question. `distinct` is now the UNION over every
+       member — every case any of these findings already serves. */
     const belongs = new Map();
     for (const id of members) {
-      const row = this.#one(
-        `SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
-      if (row) belongs.set(id, row.case_id);
+      const rows = this.#rows(
+        `SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? ORDER BY case_id`, id);
+      if (rows.length) belongs.set(id, rows.map((r) => r.case_id));
     }
-    const distinct = [...new Set(belongs.values())];
+    const distinct = [...new Set([...belongs.values()].flat())];
     /* The WORKING document's own claim, consulted only after the published
        record has been asked and only to stop this act minting a SECOND identity
        for a case it already prepared. Publishing is two steps — this act, then
@@ -5363,12 +5396,97 @@ export class Store extends DurableObject {
     const claimedInBytes = [...new Set(prepared
       .map((p) => (typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null))
       .filter(Boolean))];
-    if (distinct.length > 1)
-      return { ok: false, reason: "FINDINGS_IN_DIFFERENT_CASES", cases: distinct.sort(),
-               detail: `these findings already belong to different published cases (${distinct.sort().join(", ")}). `
-                     + `A finding is a member of ONE case: publishing it into a second would make "which edition `
-                     + `does this leg cite" unanswerable, since editions are over the CASE (DEC-12).` };
-    let theCase = String(caseId ?? "").trim() || distinct[0]
+    /* DEC-49 REGION case-identity-derivation
+       ---------------------------------------------------------------------
+       NOTE ON THE MARKER ITSELF, because this cost a red guard: the opening
+       marker must be `/*` then WHITESPACE then `DEC-49 REGION <name>` — the
+       guard's matcher is `/\*[\s*]*DEC-49 REGION`, so a decorated banner like
+       `/* ===== DEC-49 REGION …` matches NOTHING and the guard fails with
+       "found 0 opening marker(s)". Which is the guard working: a `where` naming
+       a region the source does not declare is an arm that stopped running while
+       still reporting green, and it said so loudly rather than passing.
+
+       D-309, 2026-09-10, ENACTING DEC-72 CLAUSE 6. What stood here was
+       `FINDINGS_IN_DIFFERENT_CASES`, and it is DELETED rather than renamed. Its
+       stated reason was *"A finding is a member of ONE case: publishing it into a
+       second would make 'which edition does this leg cite' unanswerable, since
+       editions are over the CASE (DEC-12)."* Clause 6 overturns the premise, and
+       CASE-5's flip answered the consequence independently: a member resolves BY
+       ITS PIN, so a leg naming an edition of a case resolves by hash without the
+       finding needing to have exactly one case.
+
+       WHAT REPLACES IT IS A SMALLER AND MORE HONEST REFUSAL. Under clause 6 the
+       act can no longer DERIVE the case identity from membership, because
+       membership no longer determines it. A member of case A published with no
+       `caseId` means one of two real things — a further edition of A, or a NEW
+       case resting on findings A already rests on — and those are opposite acts.
+       The old derivation silently chose the first. So the act asks.
+
+       IT IS NOT A WALL AND REC-44 ALREADY NAMED THE DOOR: *"A caller may NAME an
+       existing case (this is how a second edition, or a finding joining a case,
+       is published)."* Naming one is route 1 and is unchanged; this refusal only
+       fires when nothing was named AND the record holds more than one candidate.
+
+       WHERE THE LINE IS DRAWN, AND IT IS DRAWN AT **MORE THAN ONE CANDIDATE**
+       RATHER THAN AT "ANY MEMBERSHIP AT ALL". That is a decision and it was the
+       hardest one in this item, so the alternative is recorded rather than
+       hidden. Refusing on ANY existing membership would read D-309's sentence
+       — *"a member of case A published with no `caseId` must not silently append
+       to A"* — as literally as it can be read. It was rejected on two grounds,
+       one measured and one doctrinal:
+
+         - MEASURED: every second edition in this corpus publishes WITHOUT naming
+           its case and always has (`caselifecycle`'s CEREMONY, `casepin`,
+           `publish`). Refusing them is not a fence against a guess, it is a
+           different act being demanded of every existing caller — and D-309's own
+           over-strictness arm requires that a single-case finding go on
+           publishing exactly as today.
+         - DOCTRINAL: the harm that sentence names is the publisher's NEW-CASE
+           intent being silently overridden. The cure for an intent that cannot be
+           expressed is to make it EXPRESSIBLE, which is what `newCase` above
+           does, not to refuse the intent that can be. With one candidate and
+           `newCase` available, nothing is silent any more: the default is what
+           the caller means and the alternative is one word away.
+
+       With TWO candidates there is no default that is anybody's meaning, and that
+       is what this refuses.
+
+       THE SHAPES THAT DO NOT FIRE, which is the over-strictness promise written
+       as code rather than as a comment:
+         - members in NO case  -> nothing to be ambiguous about; the act MINTS,
+           exactly as it always has. This is every first publication, and it is
+           DEC-44's single-finding case.
+         - members in ONE case -> one candidate, the derivation is still reading a
+           fact rather than guessing, and a second edition of a single-case series
+           publishes exactly as it did yesterday.
+         - `caseId` NAMED      -> the caller answered the question.
+         - `newCase` SET       -> the caller answered it the other way.
+       The prepared-bytes claim below is consulted after all of this and cannot
+       widen it: it can only re-find a case this same act already minted. */
+    if (newCase && String(caseId ?? "").trim())
+      return refusal("CASE_IDENTITY_AMBIGUOUS", {
+        cases: [String(caseId).trim()],
+        members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
+        detail: `this act both NAMES case ${String(caseId).trim()} and asks for a new case to be minted. `
+              + `Those are opposite instructions and the record will not choose between them: name the `
+              + `case to publish a further edition of it, or ask for a new one, not both.` });
+    if (!newCase && !String(caseId ?? "").trim() && distinct.length > 1)
+      return refusal("CASE_IDENTITY_AMBIGUOUS", {
+        cases: distinct.slice().sort(),
+        members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
+        detail: `these findings already serve ${distinct.length} published cases `
+              + `(${distinct.slice().sort().join(", ")}), and this act did not say which case it is `
+              + `publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer `
+              + `says which case this is: name the case to publish a further edition of it, or say so `
+              + `and a new case is minted. The record will not choose for you.` });
+    /* END DEC-49 REGION case-identity-derivation */
+    /* D-309: `newCase` SHORT-CIRCUITS BOTH DERIVATION ROUTES AND MINTS. It must
+       skip the prepared-bytes claim as well as the published record, or the
+       publisher who asked for a new case would be handed the case THIS SAME
+       CEREMONY prepared a moment ago — which is the identical silent override one
+       step further along. */
+    let theCase = newCase ? null
+                : String(caseId ?? "").trim() || distinct[0]
                 || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
     if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
       return { ok: false, reason: "NO_SUCH_CASE", caseId: theCase,
@@ -5376,84 +5494,86 @@ export class Store extends DurableObject {
                      + `carried in the signed bytes; it is never taken from a caller, because an identity a `
                      + `caller can hand us is one a caller can invent.` };
     /* ======================================================================
-       CASE-6 / DEC-72 clause 6, 2026-09-10 — THE FENCE BELOW IS **KEPT**, AND
-       THIS IS THE DECISION CASE-5 LEFT FOR THIS ITEM, WITH THE MEASUREMENT IT
-       RESTS ON. It is written here rather than in a queue row because the next
-       person to read this refusal is the person who needs it.
+       D-309 / DEC-72 clause 6, 2026-09-10 — **THE FENCE IS GONE, AND IT WAS
+       REMOVED LAST.** What stood here was FINDING-IN-ANOTHER-CASE (hyphens
+       deliberate, `caseflip.test.mjs`'s convention: this file is read by matchers
+       that harvest a refusal code out of source, and a removal note that spells
+       the code the way the code path did would be harvested as the code path
+       still existing — **measured, by this item's own census, which failed on
+       exactly that until this line was rewritten**):
 
-       THE RULING POINTS THE OTHER WAY AND THAT IS SAID FIRST. DEC-72 clause 6
-       is not ambiguous: *"A project can span many cases; a finding can serve
-       many cases — across projects and within one."* Bob's reason is quoted in
-       the design doc: *"A finding is mined, often involving hard work. So once
-       resolved, the finding should have lasting value."* So this fence
-       contradicts a live ruling, and keeping it is a PARTIAL against clause 6
-       rather than a fulfilment of it. Anyone reading this should know that
-       before they read the reason.
+           for (const [id, had] of belongs)
+             if (theCase && had !== theCase)
+               return the refusal, naming the case that already held it
 
-       WHY IT IS KEPT ANYWAY, AND THE ARGUMENT IS A COUNT RATHER THAN A
-       JUDGEMENT. CASE-5's caseflip suite framed lifting this as "a surface
-       question (which case does a finding id resolve to)" and handed it to
-       CASE-6 on that basis. **That framing was measured WRONG, and the
-       measurement is this item's most useful output.** Counted over this file
-       on 2026-09-10, the class being "a SELECT over `published_case_members`
-       whose WHERE keys on `bundle_id` — that is, a query asking which case a
-       FINDING is in":
+       — *"A finding belongs to one case; to move it, publish a new edition of
+       that case without it first."* It contradicted a live ruling and said so in
+       its own comment. This is that comment's other half, written by the item it
+       was written for, and it is kept at the site because the next person to ask
+       "why can a finding be in two cases" reads THIS line.
 
-           11 sites in the class · 9 SCALAR · 2 PLURAL · 0 unclassified
+       WHAT THE RULING SAYS, first, as CASE-6 said it first: *"A project can span
+       many cases; a finding can serve many cases — across projects and within
+       one"* (DEC-72 clause 6), Bob's reason being *"A finding is mined, often
+       involving hard work. So once resolved, the finding should have lasting
+       value."* A record that made a group re-mine a finding in order to cite it
+       twice was throwing that work away, and could not say that two cases rest on
+       one piece of it.
 
-       The two PLURAL ones (`#caseRelationOf`, `#flagCasesOnRevision`) already
-       answer with `#rows` and are correct for any n. The nine SCALAR ones reach
-       through `#one` and live in six callers: this `belongs` derivation; the
-       container's `rel` lookup; `publishedCase()`'s resolution of a finding id;
-       `#caseClaimOf` (which gates C-21.1's freshness comparison); `#caseOf`;
-       and `#caseOfSha`. **Every one of them is correct ONLY BECAUSE THIS FENCE
-       HOLDS.** `#caseOfSha`'s own comment already says so in words, written
-       before anyone was asking: *"Nothing writes that shape today."*
+       WHY IT COULD NOT SIMPLY BE DELETED, WHICH IS THE WHOLE OF WHY THIS IS ITS
+       OWN ITEM. CASE-6 measured the class — a SELECT over
+       `published_case_members` keyed on `bundle_id`, i.e. "which case is this
+       finding in" — and found **11 sites, 9 SCALAR, 2 PLURAL, 0 unclassified**.
+       The nine were correct ONLY because this fence held, so deleting it alone
+       would have converted nine correct answers into nine silent `LIMIT 1`
+       guesses over a set: `publishedCase()` answering "this finding's case is X"
+       when the truth is {X, Y}; the ratify path discharging one case's revision
+       flags and abandoning the other's forever. **A record that answers a
+       set-valued question with an arbitrary element claims more than it can
+       support**, which this project ranks worse than the missing feature — so
+       CASE-6 kept the fence, wrote down why, and enqueued the plane half rather
+       than half-building it.
 
-       SO LIFTING THE FENCE HERE WOULD NOT MAKE MULTI-CASE MEMBERSHIP WORK — it
-       would turn nine correct scalar answers into nine silent `LIMIT 1` guesses
-       over a set, with no refusal, no flag, and no way for a reader to tell.
-       `publishedCase()` would answer "this finding's case is X" when the true
-       answer is {X, Y}; C-21.1 would gate a case document's freshness against
-       whichever prior edition sorted highest. **A record that answers a
-       set-valued question with an arbitrary element is a record claiming more
-       than it can support**, which this project ranks worse than a missing
-       feature — and the missing feature is exactly what keeping the fence
-       leaves.
+       THAT JUDGEMENT IS VINDICATED BY DOING THE WORK, and this is the useful half
+       to carry forward: all nine had to move, and THREE separate consequences
+       hung off site 2 alone (the ratify block's divergence check, its flag
+       discharge, and its bar projection). Each would have failed differently and
+       none would have said anything.
 
-       AND THE DERIVATION ABOVE IS THE SECOND HALF. REC-44 lets this act DERIVE
-       the case from what the members already belong to. Under multi-case that
-       derivation is itself a guess: a member of case A published with no
-       `caseId` would silently append to A rather than minting the new case the
-       publisher meant. Lifting the fence therefore also owes a named refusal
-       for an ambiguous derivation — a new DEC-49 code, its translation, and its
-       floor — which is more plane than a surfaces item should carry at the end
-       of an arc.
+       ALL NINE ARE CORRECTED, EACH DECIDED AT ITS OWN SITE, and the decisions are
+       NOT uniform — which is the point CASE-6's "each caller decided individually"
+       was making:
+         1. this `belongs` derivation                     -> ALL cases per member
+         2. the ratify path's `rel` lookup                 -> ALL; it is a LOOP now
+         3. `publishedCase()` by finding id, at an edition -> REFUSES, naming them
+         4. `publishedCase()` by finding id, latest        -> REFUSES, naming them
+         5. `#caseClaimsOf` (was `#caseClaimOf`)           -> ALL; the caller was
+                                                              already wrapping it
+                                                              in an array
+         6. `#casesOf` at an edition                       -> ALL, DISTINCT by case
+         7. `#casesOf` latest                              -> ALL, DISTINCT by case
+         8. `#casesOfSha` pinned                           -> ALL; three callers,
+                                                              three different
+                                                              questions
+         9. `#casesOfSha` legacy fallback                  -> ALL, the same
+       `publishedCase()`'s loose arm stopped asking "which case" altogether: it
+       now asks the question it always meant — "is this in NO case" — explicitly,
+       which is `length === 0` and was never a scalar question at all. The two
+       PLURAL sites (`#caseRelationOf`, `#flagCasesOnRevision`) were already
+       correct for any n and are untouched, exactly as CASE-6's count predicted.
 
-       WHAT CASE-6 DID INSTEAD, so the next item is cheaper and not harder: the
-       SURFACE half of clause 6 is built and is built as a LIST. The UI holds the
-       whole `caseMembers` table from `op=publishedmanifest`, so it can answer
-       correctly for any n, and `pubOtherCasesHtml` does. The list is one entry
-       long for every finding today because of this fence; the day the nine
-       readers are corrected, the surface is already right and does not move.
+       AND THE DERIVATION OWED A NAMED REFUSAL, WHICH IS ABOVE:
+       `CASE_IDENTITY_AMBIGUOUS` (C-44), in the `case-identity-derivation` DEC-49
+       region, with `newCase` beside it so that the intent the old derivation used
+       to silently override can now be stated.
 
-       WHAT THE COUNT CANNOT SEE, stated because the number is load-bearing: it
-       reads SQL string literals in THIS FILE only (`index.mjs` mentions the
-       table once and builds no such query; no other `src/` file mentions it). A
-       query assembled by concatenation, a reader that filters the full roster
-       array in JS, and any consumer outside this repository are all outside it.
-       So 9 is a FLOOR on the scalar readers, never a total — which only
-       strengthens the direction of the decision.
-
-       THIS IS RECORDED AS DEBT, NOT AS A NOTE. `DEBT.md` carries it with the
-       cost and the closing move, because the arc's decomposition never scoped
-       the plane half to any item and a gap nobody owns is how this one got here.
+       WHAT IS **NOT** WIDENED, stated because a reader here will wonder: a case
+       with several OWNING PROJECTS is still unrepresentable. `cases` is keyed on
+       `case_id` ALONE — CASE-1's sharpest call, so a case cannot change hands
+       between its editions — and that limit is deliberately untouched by this
+       item. A finding may now serve two cases owned by two different projects;
+       a single case still has exactly one owner.
        ====================================================================== */
-    for (const [id, had] of belongs)
-      if (theCase && had !== theCase)
-        return { ok: false, reason: "FINDING_IN_ANOTHER_CASE", target: id, caseId: had, into: theCase,
-                 detail: `${id} is already a published finding of ${had}. A finding belongs to one case; to `
-                       + `move it, publish a new edition of ${had} without it first.` };
     const minted = !theCase;
     if (minted) theCase = this.allocId("CASE", new Date().toISOString().slice(0, 4)).id;
 
@@ -19783,7 +19903,9 @@ export class Store extends DurableObject {
          read from the DOCUMENT's own `case_id` — which is inside the bytes the
          signature covers — and never from this table, so a document cannot be
          gated against a case it does not claim. */
-      publishedCaseRegistry: this.publishedCaseRegistryFor([this.#caseClaimOf(bundleId)]),
+      /* D-309: EVERY case this document is prepared into, not one of them. The
+         array was always the registry's shape; only the reader was narrow. */
+      publishedCaseRegistry: this.publishedCaseRegistryFor(this.#caseClaimsOf(bundleId)),
       /* REC-18: what each basis target EARNS, so an earned grade is confirmed at
          the ratification gate and not only at the write. Both gates run the one
          catalog function over the one registry shape, which is the whole reason
@@ -19944,17 +20066,40 @@ export class Store extends DurableObject {
          include it. A finding cannot claim a case any more. The shape it
          refused is unrepresentable rather than merely refused, which is the
          better outcome and the one this record reaches for everywhere else. */
-      const rel = this.#one(
-        `SELECT m.case_id, m.edition, m.role FROM published_case_members m
-           JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
-          WHERE m.bundle_id=? AND m.version_sha=?
-          ORDER BY m.case_id, m.edition DESC LIMIT 1`, bundleId, bundleSha);
+      /* ===== D-309 / DEC-72 clause 6, 2026-09-10: SITE 2 OF CASE-6's NINE — THE
+         CONTAINER'S `rel` LOOKUP, AND THE DECISION IS **ALL OF THEM**.
+
+         WHAT IT USED TO DO: `ORDER BY m.case_id, m.edition DESC LIMIT 1` — the
+         lowest-sorting case's highest edition. With the fence up that was one
+         case and the sort was a formality. With the fence down it is a GUESS, and
+         it is the worst-placed one of the nine, because THREE separate things
+         keyed off it and each would have gone wrong differently:
+
+           - `CASE_ASSERTION_DIVERGED` would have checked this member's signed
+             completeness against ONE of the case documents it is a member of and
+             let the others through unchecked. A divergence refusal that examines
+             half its subject is a fence that has stopped biting.
+           - `#dischargeCaseFlags` would have discharged ONE case's revision flags
+             and left the other case's outstanding FOREVER with nothing to raise
+             them again — set-but-never-clear inverted into never-set.
+           - `published_bundles.required` would have frozen one case's bar onto a
+             member two cases hold to two standards of evidence.
+
+         SO IT IS A LOOP NOW, one iteration per CASE this member's bytes are
+         pinned by, and each of the three is decided on its own below. The JOIN on
+         `published_cases` is unchanged and still does its job: only case editions
+         that exist are membership. `#soleCase` collapses several editions of ONE
+         case to that case at its newest, so a single-case member takes exactly
+         the path it took yesterday, with exactly one iteration. */
+      const byCase = this.#pinnedCaseEditionsOf(bundleId, bundleSha);
+      const rel = this.#soleCase(byCase);
       const caseId = rel ? rel.case_id : null;
       const cEd = rel ? Number(rel.edition) : ed;
-      if (caseId) {
+      for (const one of byCase) {
+        const oneEd = Number(one.edition);
         const cRow = this.#one(
           `SELECT completeness, bias_acknowledgement, bar FROM published_cases WHERE case_id=? AND edition=?`,
-          caseId, cEd);
+          one.case_id, oneEd);
         const cComp = completeness ? JSON.stringify(completeness) : null;
         /* ONE COMPARISON, AND IT IS BETWEEN TWO SIGNATURES RATHER THAN BETWEEN
            TWO COPIES. The case document's signer asserted what this case does
@@ -19964,10 +20109,13 @@ export class Store extends DurableObject {
            that block, the two statements now differ — and a case edition asserts
            ONE completeness claim. Refused rather than reconciled, which is what
            the name has always meant. */
+        /* D-309: CHECKED FOR EVERY CASE, not for one of them. Two case documents
+           may each assert their own limits and this member's bytes must agree
+           with BOTH — they are two signatures and either can genuinely differ. */
         if (cRow && cComp && (cRow.completeness ?? null) !== cComp)
-          return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId, edition: cEd,
+          return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId: one.case_id, edition: oneEd,
                    detail: `this finding's signed bytes freeze a different completeness assertion for case `
-                         + `${caseId} edition ${cEd} than the CASE DOCUMENT a member signed for it. A case `
+                         + `${one.case_id} edition ${oneEd} than the CASE DOCUMENT a member signed for it. A case `
                          + `edition asserts ONE completeness claim, and since CASE-5b that claim is signed `
                          + `once, in the case's own document — so a member whose bytes say something else `
                          + `has not been re-published through op=publish since the case was authored.` };
@@ -19995,8 +20143,17 @@ export class Store extends DurableObject {
 
            `attestorMember` is who is credited, not the project: the act is a
            ratification and a ratification is performed by a member. The project
-           is already on the flag row, written when it was raised. */
-        this.#dischargeCaseFlags(caseId, cEd, attestorMember ?? null, now);
+           is already on the flag row, written when it was raised.
+
+           D-309: DISCHARGED PER CASE, INSIDE THE LOOP, AND D-266's SCOPING IS
+           STRENGTHENED RATHER THAN LOOSENED BY IT. The statement still names ONE
+           case_id and there is still no statement in this plane that names more;
+           what changed is that the loop names EVERY case this member's ratified
+           bytes are actually in, instead of one of them. A member serving two
+           cases discharges both cases' flags on the same act because the act
+           genuinely answered both — and a case this member is NOT in is as
+           unreachable from here as it ever was. */
+        this.#dischargeCaseFlags(one.case_id, oneEd, attestorMember ?? null, now);
       }
       /* ===== CASE-5b: `published_bundles.required` IS NOW A PROJECTION OF THE
          CASE'S BAR, AND IT IS STATED AS ONE RATHER THAN QUIETLY DERIVED. =======
@@ -20022,11 +20179,51 @@ export class Store extends DurableObject {
          one place the record could have made that false by accident. Moving those
          readers onto the case's own field is a SURFACE change and belongs with
          CASE-6, which owns the published case page. Recorded in IC-71 as such. */
-      const required = caseId
-        ? (() => {
-            const b = this.#one(`SELECT bar FROM published_cases WHERE case_id=? AND edition=?`, caseId, cEd);
-            return b && b.bar ? JSON.parse(b.bar) : null;
-          })()
+      /* ===== D-309: THE BAR PROJECTION UNDER CLAUSE 6, AND THIS IS THE ONE
+         DECISION ON THIS SITE THAT IS NOT "ALL OF THEM".
+
+         THE PROBLEM STATED HONESTLY: the bar is the CASE's (DEC-72 clause 2), and
+         a member serving two cases is held by two cases to two standards of
+         evidence. This is ONE column on `published_bundles`, keyed on the
+         FINDING's (bundle_id, edition). A set does not fit in it.
+
+         WHAT IS NOT DONE, AND WHY. Widening the schema is not this item's (the
+         brief says so, and the surface half of clause 6 does not need it —
+         CASE-6 moved the published page onto `published_cases.bar`, which is per
+         case and already correct for any n). Picking one case's bar is the
+         nine-silent-guesses defect arriving in a WRITE, which is worse than in a
+         read because the guess is then frozen and signed-adjacent forever.
+         Refusing the ratification is over-strict: two cases legitimately
+         declaring different bars over one shared finding is exactly the shape
+         clause 6 exists to permit, and a fence tighter than its rule is an
+         undeclared interface change wearing the costume of caution.
+
+         SO: PROJECTED WHEN THE CASES AGREE, NULL WHEN THEY DO NOT — and the
+         disagreement is STATED in this act's answer (`barUndetermined`) rather
+         than left to read as an absence. That distinction is the whole of it.
+         CASE-5b's comment names the hazard precisely — *"a column that silently
+         went NULL would have every one of them print 'bar: none declared' over a
+         case that declared one — an absent bar is not a bar of zero"* — so the
+         null is NOT silent here: the act names the cases and their differing
+         bars, and `published_cases.bar` answers per case for anyone who asks.
+         Undetermined is first-class and must be stated; inventing one of two real
+         bars to fill a column would be exactly the attribution CLAUDE.md forbids.
+
+         MEASURED, NOT ASSUMED, ABOUT HOW OFTEN THIS BITES: `published_bundles`
+         carries `ON CONFLICT(bundle_id,edition) DO NOTHING`, so this column is
+         written at a member's FIRST ratification at that edition and a later
+         case adopting the same finding rewrites nothing. The disagreement is
+         therefore reachable only when both cases pin the member before it first
+         ratifies. Stated rather than claimed either way. */
+      const bars = byCase.map((one) => {
+        const b = this.#one(`SELECT bar FROM published_cases WHERE case_id=? AND edition=?`,
+                            one.case_id, Number(one.edition));
+        return { case_id: one.case_id, edition: Number(one.edition), bar: b && b.bar ? b.bar : null };
+      });
+      const distinctBars = [...new Set(bars.map((x) => x.bar))];
+      const barUndetermined = distinctBars.length > 1;
+      const required = !barUndetermined && distinctBars.length === 1 && distinctBars[0]
+        ? JSON.parse(distinctBars[0])
         : null;
       this.sql.exec(
         `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
@@ -20056,7 +20253,53 @@ export class Store extends DurableObject {
          to be inferred from `case.edition`, because the control plane's
          container assembler branches on the pair and an assembler reading one
          number for two altitudes is the defect this item exists to remove. */
+      /* D-309 / IC-74: `caseId` and `caseEdition` keep their names and are the
+         SOLE membership or ABSENT. A consumer still reading them therefore never
+         receives a guess — it receives what it already receives for a loose
+         bundle. The old field can only become MORE absent, never wrong. `case`
+         (the container state) is served only for a sole membership, because it IS
+         one case edition's state and there is no such thing as the state of two.
+
+         `caseCount` IS A NUMBER AND NOT THE LIST, AND THAT IS A RATCHET DOING ITS
+         JOB RATHER THAN A COMPROMISE. The first draft returned the memberships as
+         a `cases` ARRAY here, and `meaning-bounds.test.mjs` went red: that put
+         `op=publish` onto the BARE roster — a collection published off an
+         unbounded row source — taking the ceiling 40 -> 41. The ceiling may only
+         FALL, and moving it up to accommodate a new read is precisely what it
+         exists to prevent, so the answer changed rather than the figure.
+
+         THE OBVIOUS FIX IS THE WRONG ONE AND IS REJECTED EXPLICITLY: bounding the
+         list with `limit`/`truncated`, the spelling the bounded roster uses,
+         would mean a member could be told their finding serves TWO cases when it
+         serves five. **A truncated membership list is a record claiming a finding
+         serves fewer cases than it does** — the overclaim class, arriving through
+         a pagination convention, in the one item whose whole subject is not
+         answering a set-valued question with part of the set.
+
+         SO THE SEPARATION IS: AN ACT ANSWERS ABOUT THE ACT, A READ ENUMERATES.
+         `caseCount` tells a caller whether the scalar above is the whole truth —
+         which is the one thing they cannot otherwise tell an absent `caseId`
+         ("in no case") from a set-valued one ("in several") — and
+         `op=publishededitions` / `op=publishedlist` serve the memberships
+         themselves, as they already did before this item and with the `cases`
+         array this item gave them. Nothing is lost; it is one read away, and it
+         is where reads live. */
       return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now, edges: graph,
+               caseCount: byCase.length,
+               /* A BOOLEAN AND NOT THE LIST, for `caseCount`'s reason exactly and
+                  measured the same way. The first draft returned `bars` — the
+                  per-case bars themselves — and `meaning-bounds.test.mjs` moved
+                  `op=publish` onto the OPAQUE roster: a collection off an
+                  unbounded row source, inside a conditional SPREAD, so the walk
+                  could not even bucket it as bare. **An op the classifier cannot
+                  see is worse than one it grades badly** — that is the state
+                  `op=airunlog` was in while a ratchet read green over it — so the
+                  array came off rather than the roster growing a blind spot.
+                  The FACT survives, which is the part that matters: a member is
+                  told their finding's bar is undetermined here rather than being
+                  handed one case's standard as though it were the answer, and
+                  `published_cases.bar` answers per case for whoever asks. */
+               ...(barUndetermined ? { barUndetermined: true } : {}),
                ...(caseId ? { caseId, caseEdition: cEd, case: caseState } : {}) };
     });
   }
@@ -20357,9 +20600,18 @@ export class Store extends DurableObject {
          case id because it is no longer derivable from `edition` on this row —
          that number is the FINDING's. A consumer joining a member to its case on
          the equality of the two numbers is the defect IC-66 measures in the UI. */
+      /* D-309 / DEC-72 clause 6: THIS CALLER WANTS **ALL** OF THEM. A public
+         index whose purpose is *"so a public index can be read as the cases it
+         actually is"* cannot name one case for a finding that serves two — it
+         would be telling a reader the record holds less than it does, on the one
+         surface a stranger browses. `cases` is the answer; the scalar pair is
+         kept and is the SOLE membership or null (`#soleCase`), so a consumer
+         still reading it receives null rather than a guess. */
       .map((r) => {
-        const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
-        return { ...r, case_id: cm ? cm.case_id : null, case_edition: cm ? cm.edition : null };
+        const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
+        const sole = this.#soleCase(cms);
+        return { ...r, case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
+                 cases: cms };
       }),
       cases: this.#rows(
       `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
@@ -20390,13 +20642,23 @@ export class Store extends DurableObject {
          number, so a finding at its own edition 1 inside a case at edition 3 was
          answered with edition 1's scope, completeness and bias acknowledgement —
          a case assertion attributed to the wrong edition of the right case. */
-      const cm = this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition);
+      /* D-309: **ALL** OF THEM, and the case-level fields below stay tied to the
+         SOLE membership. The scope, completeness assertion, bias acknowledgement
+         and bar on this row are ONE CASE EDITION'S claims; a finding serving two
+         cases has two of each, and flattening them onto one row is the exact
+         defect this read's own comment records one paragraph up — *"a case
+         assertion attributed to the wrong edition of the right case"*, which
+         becomes "attributed to the wrong CASE" the moment clause 6 is live. So
+         when the membership is set-valued those fields go NULL and `cases` names
+         where to ask; when it is a single case they are unchanged. */
+      const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
+      const cm = this.#soleCase(cms);
       const cid = cm ? cm.case_id : null;
       const c = cm ? this.#one(
         `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
          FROM published_cases WHERE case_id=? AND edition=?`,
         cm.case_id, cm.edition) : null;
-      return { ...r, case_id: cid, case_edition: cm ? cm.edition : null,
+      return { ...r, case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
                   reported from there — one manifest per case per edition,
@@ -20461,18 +20723,50 @@ export class Store extends DurableObject {
       if (r) {
         asked = r.bundle_id;
         askedEdition = Number(r.edition);
-        const cm = this.#caseOfSha(r.bundle_id, sha256, askedEdition);
-        if (cm) { theCase = cm.case_id; ed = cm.edition; }
+        const cms = this.#casesOfSha(r.bundle_id, sha256, askedEdition);
+        /* D-309: THIS CALLER MUST SERVE **ONE** CASE AND SO IT REFUSES RATHER
+           THAN PICKS — and that is this method's own stated doctrine rather than
+           a new rule. Its header already says a finding id is answered WITH the
+           case *"so the surface resolves without deciding on the reader's behalf
+           what they meant."* A hash that two cases froze has two honest answers;
+           serving the newest would attribute one finding's support to a case the
+           reader never asked about, on the surface a stranger uses to check a
+           claim. Named, with both candidates, so the reader picks. */
+        const got = this.#resolveOneCase(r.bundle_id, cms, caseId);
+        if (!got.ok) return got;
+        if (got.pick) { theCase = got.pick.case_id; ed = got.pick.edition; }
       }
     } else if (id) {
       const want = edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
       if (this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, id)) {
         theCase = id;
       } else {
-        const m = want != null
-          ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, id, want)
-          : this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
-        if (m) { theCase = m.case_id; asked = id; }
+        /* D-309: SITES 3 AND 4 OF CASE-6's NINE — the two spellings of
+           `publishedCase()`'s finding-id resolution. SAME DECISION AS THE HASH
+           ROUTE ABOVE AND FOR THE SAME REASON: a stranger handed one finding id
+           that serves two cases is told BOTH and picks, because this surface
+           exists to resolve without choosing for them. Note the edition here is
+           the CASE's, so `AND edition=?` can match two different cases that each
+           have an edition N — which is exactly the shape the old scalar would
+           have resolved by whichever row SQLite handed back first. */
+        /* THE TERNARY IS OUTSIDE THE CALL, not inside its argument list, and that
+           is this item's own census correcting this item's own code. Written as
+           `this.#rows(want != null ? \`…\` : \`…\`)` the receiving call sits behind
+           the ternary CONDITION, and `multicase.test.mjs`'s walk — which finds a
+           query's kind by looking back from the literal to the call — could not
+           see it and reported it UNCLASSIFIED. **That is the matcher being right
+           rather than blunt**, so the code moved to the spelling every other
+           member of the class uses instead of the matcher being widened to
+           tolerate one. A census nobody can read the same way twice is not one. */
+        const ms = (want != null
+          ? this.#rows(`SELECT case_id, edition FROM published_case_members
+                         WHERE bundle_id=? AND edition=? ORDER BY case_id`, id, want)
+          : this.#rows(`SELECT case_id, edition FROM published_case_members
+                         WHERE bundle_id=? ORDER BY case_id, edition`, id))
+          .map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
+        const got = this.#resolveOneCase(id, ms, caseId);
+        if (!got.ok) return got;
+        if (got.pick) { theCase = got.pick.case_id; asked = id; }
       }
       if (want != null) ed = want;
     }
@@ -20503,7 +20797,12 @@ export class Store extends DurableObject {
         : want != null
           ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, who, want)
           : this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who);
-      if (r && !this.#caseOfSha(r.bundle_id, r.bundle_sha, r.edition)) {
+      /* D-309: THIS CALLER IS ASKING A DIFFERENT QUESTION AND NOW ASKS IT
+         EXPLICITLY — not "which case" but "is this in NO case at all", which over
+         a set is `length === 0` and was never really a scalar question. It was
+         only ever spelled as one because a truthy scalar and a non-empty set
+         happened to coincide while a finding could have at most one case. */
+      if (r && this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition).length === 0) {
         const st = this.#looseEditionState(r.bundle_id, r.edition);
         if (st) { theCase = null; ed = r.edition; state = st; }
       }
@@ -20556,14 +20855,25 @@ export class Store extends DurableObject {
            ahead of the finding's would report the wrong container hash, or none,
            on the surface a reader uses to check the leg. `case_edition` is
            stated so the reader can fetch the container the hash belongs to. */
-        const tm = this.#caseOfSha(e.to_bundle, t.bundle_sha, t.edition);
+        /* D-309: **ALL** OF THEM. A served leg points at a FINDING, and under
+           clause 6 that finding may be a member of several cases — the shape the
+           ruling exists for, since a leg resting on a mined finding is exactly
+           the "lasting value" Bob named. Naming one container would tell a reader
+           checking this leg to fetch a case the leg was never about. Each entry
+           carries its own `manifest_sha` because the container hash is per case
+           edition, so the reader can verify whichever one they hold. The scalar
+           pair is the sole membership or null, as everywhere else. */
+        const tms = this.#casesOfSha(e.to_bundle, t.bundle_sha, t.edition);
+        const manifestOf = (cid, ced) =>
+          this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
+                    cid, ced)?.manifest_sha ?? null;
+        const tm = this.#soleCase(tms);
         serves.push({ to: e.to_bundle, kind: e.kind, edition: t.edition, title: t.title,
                       bundle_sha: t.bundle_sha, ratified_at: t.ratified_at,
                       case_id: tm ? tm.case_id : null, case_edition: tm ? tm.edition : null,
-                      manifest_sha: tm
-                        ? (this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`,
-                                     tm.case_id, tm.edition)?.manifest_sha ?? null)
-                        : null });
+                      cases: tms.map((x) => ({ case_id: x.case_id, edition: x.edition,
+                                               manifest_sha: manifestOf(x.case_id, x.edition) })),
+                      manifest_sha: tm ? manifestOf(tm.case_id, tm.edition) : null });
       }
       return { ...fnd, serves, names, unresolved,
                division: {
@@ -20743,28 +21053,128 @@ export class Store extends DurableObject {
      PINNED FIRST, PREPARED SECOND: a ratified relation is the record's answer
      and an unratified case document is this act's own preparation — the same
      order `publishCase()` resolves a case identity in, and for the same reason. */
-  #caseClaimOf(bundleId) {
+  /* ===== D-309 / DEC-72 clause 6, 2026-09-10: SITE 5 OF CASE-6's NINE, AND THE
+     DECISION HERE IS **ALL CASES**.
+
+     WHAT THIS ANSWERS AND FOR WHOM. Its one caller is `gateFacts`, which feeds
+     `publishedCaseRegistryFor` — the registry C-21.1's freshness rule reads. The
+     question is "what case, or cases, is the document being gated prepared into",
+     and the freshness comparison is against *the previous edition of THAT SAME
+     CASE*. Under clause 6 a finding can be prepared into several, so the honest
+     answer is every one of them: giving the registry ONE case would gate the
+     document against one case's prior edition and leave the others unexamined,
+     which is a check that has quietly stopped asking about half its subject.
+
+     THE CALLER ALREADY WANTED A LIST. `publishedCaseRegistryFor` takes an ARRAY
+     and always has; the old scalar was being wrapped in `[ ]` at the call site.
+     So this site cost nothing to correct, which is worth recording: the shape was
+     right before the fence came down and only the reader was narrow.
+
+     PINNED FIRST, PREPARED SECOND is UNCHANGED and its reasoning above still
+     holds in full — a ratified relation is the record's answer and an unratified
+     case document is this act's own preparation. What changed is only that each
+     half may now answer with more than one. */
+  #caseClaimsOf(bundleId) {
     const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
-    if (!b) return null;
-    const pinned = this.#one(
-      `SELECT case_id FROM published_case_members WHERE bundle_id=? AND version_sha=?
-        ORDER BY edition DESC LIMIT 1`, bundleId, b.bundle_sha);
-    if (pinned) return pinned.case_id;
+    if (!b) return [];
+    const pinned = this.#rows(
+      `SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? AND version_sha=?
+        ORDER BY case_id`, bundleId, b.bundle_sha).map((r) => r.case_id);
+    if (pinned.length) return pinned;
     const claim = this.#caseClaimInBytes(bundleId);
-    return claim ? claim.case_id : null;
+    return claim ? [claim.case_id] : [];
   }
 
-  #caseOf(bundleId, edition = null) {
-    const r = edition != null
-      ? this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? AND edition=?`, bundleId, edition)
-      : this.#one(`SELECT case_id FROM published_case_members WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`,
-                  bundleId);
-    return r ? r.case_id : null;
+  /* ===== D-309: SITES 6 AND 7 OF CASE-6's NINE (the `AND edition=?` spelling and
+     the `ORDER BY edition DESC LIMIT 1` spelling), AND THE DECISION IS **ALL
+     CASES**, RETURNED AS A SET OF DISTINCT CASE IDS.
+
+     `DISTINCT` IS LOAD-BEARING RATHER THAN TIDY, and it is what keeps the
+     over-strictness promise. A finding can be rostered by SEVERAL EDITIONS OF ONE
+     CASE — that has always been true and has nothing to do with clause 6 — so a
+     row-per-membership answer would report two entries for a finding that serves
+     exactly one case, and every caller deciding "is this set-valued" on
+     `length > 1` would start calling single-case findings ambiguous. The
+     set-valued question this item opened is over CASES, so the set is over cases.
+
+     The old scalar took the HIGHEST edition. Nothing here needs an edition at all
+     — the one caller (`publishedRegistryFor`) is building a per-edition registry
+     entry and wants the case identity — so the edition sort is dropped rather
+     than carried forward unused. */
+  #casesOf(bundleId, edition = null) {
+    return (edition != null
+      ? this.#rows(`SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=? AND edition=?
+                     ORDER BY case_id`, bundleId, edition)
+      : this.#rows(`SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=?
+                     ORDER BY case_id`, bundleId)).map((r) => r.case_id);
+  }
+
+  /* THE SOLE MEMBERSHIP, OR NULL — D-309's ONE MIGRATION RULE, WRITTEN ONCE SO
+     FIVE READ OPS CANNOT SPELL IT FIVE WAYS.
+
+     Every op that used to answer `case_id` / `case_edition` as a scalar now
+     serves a `cases` ARRAY beside it and keeps the scalar for the shape that has
+     exactly one answer. This computes that scalar, and the ONLY thing it will
+     ever return is a case the record genuinely holds alone: **it returns null
+     rather than choosing**, which is the entire difference between this item and
+     the nine silent `LIMIT 1` guesses CASE-6 refused to ship.
+
+     IT COLLAPSES EDITIONS AND NOT CASES, for `#casesOf`'s reason one paragraph
+     up. A finding pinned by editions 1 and 2 of ONE case is NOT set-valued and
+     answers with that case at its NEWEST edition — byte-identical to what the old
+     `ORDER BY edition DESC LIMIT 1` returned. That equality is the whole of
+     D-309's over-strictness arm: a single-case finding answers exactly as it did
+     yesterday, and it does so by construction here rather than by care at five
+     call sites. */
+  #soleCase(list) {
+    const ids = [...new Set((list || []).map((x) => x.case_id))];
+    if (ids.length !== 1) return null;
+    let top = null;
+    for (const x of list) if (top == null || Number(x.edition) > top) top = Number(x.edition);
+    return { case_id: ids[0], edition: top };
+  }
+
+  /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the
+     READER and never by this plane.
+
+     `publishedCase()` serves ONE case edition: its scope, its completeness
+     assertion, its bias acknowledgement, its bar, its findings. That is a single
+     artifact and cannot be two. So when a finding serves several cases this
+     surface has three options and only one of them is honest — serve the newest
+     (a guess dressed as an answer), serve all (a container that is not an
+     artifact anybody published), or SAY SO AND NAME THEM.
+
+     THE CALLER'S OWN `caseId` WINS WHENEVER IT ANSWERS, which is what keeps this
+     a resolution aid rather than a wall: a reader who already knows which case
+     they mean passes it and is served, and only a reader who has not said is
+     asked. That ordering matters — refusing someone who DID say would be a fence
+     tighter than its rule.
+
+     IT NEVER REFUSES AN EMPTY LIST. A finding in no case at all is not ambiguous,
+     it is loose, and the loose arm further down is what answers it — refusing
+     here would break the doorbell's promise that ratified bytes answer. */
+  #resolveOneCase(bundleId, list, namedCase = null) {
+    const rows = list || [];
+    if (!rows.length) return { ok: true, pick: null };
+    const named = String(namedCase ?? "").trim();
+    if (named) {
+      const mine = rows.filter((x) => x.case_id === named);
+      if (mine.length) return { ok: true, pick: this.#soleCase(mine) };
+    }
+    const sole = this.#soleCase(rows);
+    if (sole) return { ok: true, pick: sole };
+    const cases = [...new Set(rows.map((x) => x.case_id))].sort();
+    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,
+             memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
+             detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). `
+                   + `A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact `
+                   + `with its own scope and completeness assertion — so this read cannot choose one for `
+                   + `you. Ask again naming the case you mean.` };
   }
 
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
      RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
-     `#caseOf(bundleId, edition)` above takes a CASE edition and is still exactly
+     `#casesOf(bundleId, edition)` above takes a CASE edition and is still exactly
      right when a caller holds one. What its callers actually held, in four of
      the five places it was used, was a `published_bundles` row — whose `edition`
      is the FINDING'S, and passing that as the case's is the same conflation
@@ -20777,32 +21187,88 @@ export class Store extends DurableObject {
      The fallback is the pre-CASE-3 row whose pin is honestly NULL, and for those
      rows the finding's edition IS the case's, which is the model they were
      written under.
-     ORDER BY edition DESC LIMIT 1 and it is a real bound, not a formality: one
-     sha can in principle be pinned by more than one case edition, so the newest
-     membership answers. Nothing writes that shape today — every member
-     re-publishes at each edition and mints a new sha — and the day something
-     does, this returns the most recent claim rather than an arbitrary one.
+     IT USED TO SAY `ORDER BY edition DESC LIMIT 1`, described as a real bound
+     rather than a formality: one sha can in principle be pinned by more than one
+     case edition, so the newest membership answered. Beside it stood the sentence
+     that turned out to be the most useful in the file — *"Nothing writes that
+     shape today"* — and CASE-6 pointed it at the fence that kept it true.
 
-     CASE-6, 2026-09-10: "NOTHING WRITES THAT SHAPE TODAY" IS LOAD-BEARING AND IS
-     NOW POINTED AT THE DECISION THAT KEEPS IT TRUE. The reason nothing writes it
-     is `FINDING_IN_ANOTHER_CASE` in `publishCase()`, which CASE-6 measured and
-     deliberately KEPT — see the block at that refusal for the count (11 sites in
-     the class, 9 of them scalar like this one) and for what lifting it would owe.
-     This helper is one of the nine. If that fence is ever lifted, the sentence
-     above stops being true and this function starts answering a set-valued
-     question with its newest element, which reads as an answer and is a guess.
-     The two must move together; they are cross-referenced so they cannot drift. */
-  #caseOfSha(bundleId, bundleSha, fallbackEdition = null) {
-    const r = bundleSha
-      ? this.#one(`SELECT case_id, edition FROM published_case_members
-                   WHERE bundle_id=? AND version_sha=? ORDER BY edition DESC LIMIT 1`, bundleId, bundleSha)
-      : null;
-    if (r) return { case_id: r.case_id, edition: Number(r.edition) };
+     ===== D-309, 2026-09-10: SITES 8 AND 9 OF CASE-6's NINE, AND THE SENTENCE IS
+     NOW FALSE ON PURPOSE. `FINDING_IN_ANOTHER_CASE` is gone, so something DOES
+     write that shape: a finding can be pinned by case A and case B at one hash,
+     which is precisely what DEC-72 clause 6 rules it may be. The cross-reference
+     did its job — the two moved together, in one item, and neither drifted.
+
+     **THE DECISION HERE IS ALL MEMBERSHIPS, RETURNED AS AN ARRAY, AND IT IS NOT
+     A CHOICE BETWEEN SHAPES.** The old comment already diagnosed what would
+     happen if this stayed scalar past the fence: it *"starts answering a
+     set-valued question with its newest element, which reads as an answer and is
+     a guess."* This helper has five callers and they want three different things
+     — `publishedList` and `publishedEditions` want to REPORT every membership,
+     `publishedCase`'s loose arm wants the BOOLEAN "in no case at all", and
+     `publishedCase`'s resolution arms want to serve ONE case and must refuse
+     rather than pick when there are two. An array serves all three; a scalar
+     serves none of them honestly. Each caller's decision is argued at its own
+     site, because deciding them here is how one reader's convenience becomes
+     another reader's overclaim.
+
+     THE LEGACY FALLBACK KEEPS ITS MEANING AND ITS ORDER: pre-CASE-3 rows whose
+     pin is honestly NULL, for which the finding's edition IS the case's, because
+     that is the model they were written under. It is consulted only when the pin
+     answers nothing, exactly as before. */
+  /* D-309: SITE 2's QUERY, LIFTED OUT OF `publish()` AND PUT BESIDE ITS SIBLINGS,
+     AND THE REASON IS A MEASUREMENT RATHER THAN TIDINESS — stated in full because
+     a reader could otherwise take it for evasion, and it is the opposite.
+
+     `meaning-bounds.test.mjs` grades an op OPAQUE when its method contains a
+     `#rows(` call and publishes no collection: *"rows came out of the store and
+     this reader could not say what happened to them."* Correcting site 2 put the
+     first `#rows(` into `publish()`'s own body, and the walk moved `op=publish`
+     out of NO-COLLECTION and into OPAQUE — a blind spot on the heaviest act in
+     the system, which is the state `op=airunlog` was in while a ratchet read
+     green over it.
+
+     THE OLD CLASSIFICATION WAS AND REMAINS THE TRUE ONE. These rows do NOT reach
+     the wire: they drive a divergence refusal, a per-case flag discharge, and a
+     scalar bar projection, and the act answers with `caseCount` — a number — and
+     nothing else. `publish()` genuinely publishes no collection. The `#rows(` in
+     its body was the only thing making it look otherwise, so the query moved to
+     where the file's other which-case readers already live rather than the
+     roster growing a member that would have been describing the wrong thing.
+
+     IT IS NOT HIDDEN FROM ANYTHING. This helper is in `store.mjs`, it is counted
+     by `multicase.test.mjs`'s census as a full member of CASE-6's class, and the
+     census asserts the class total has not shrunk — so a query moved out of sight
+     of one walk is still in sight of the one that exists to count it.
+
+     WHAT IT ANSWERS: which case editions froze THESE EXACT BYTES, one entry per
+     CASE at that case's newest edition holding them — the same collapse every
+     other D-309 site takes, so "how many cases is this member in" has one answer
+     across the file. The JOIN on `published_cases` is unchanged and still does its
+     job: only case editions that exist are membership. */
+  #pinnedCaseEditionsOf(bundleId, bundleSha) {
+    const rels = this.#rows(
+      `SELECT m.case_id, m.edition, m.role FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.bundle_id=? AND m.version_sha=?
+        ORDER BY m.case_id, m.edition DESC`, bundleId, bundleSha);
+    const byCase = [];
+    for (const r of rels) if (!byCase.some((x) => x.case_id === r.case_id)) byCase.push(r);
+    return byCase;
+  }
+
+  #casesOfSha(bundleId, bundleSha, fallbackEdition = null) {
+    const rows = bundleSha
+      ? this.#rows(`SELECT case_id, edition FROM published_case_members
+                     WHERE bundle_id=? AND version_sha=? ORDER BY case_id, edition`, bundleId, bundleSha)
+      : [];
+    if (rows.length) return rows.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
     const legacy = fallbackEdition != null
-      ? this.#one(`SELECT case_id, edition FROM published_case_members
-                   WHERE bundle_id=? AND edition=? AND version_sha IS NULL`, bundleId, fallbackEdition)
-      : null;
-    return legacy ? { case_id: legacy.case_id, edition: Number(legacy.edition) } : null;
+      ? this.#rows(`SELECT case_id, edition FROM published_case_members
+                     WHERE bundle_id=? AND edition=? AND version_sha IS NULL ORDER BY case_id`,
+                   bundleId, fallbackEdition)
+      : [];
+    return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 
   /* REC-22: which of these ids have a published edition, and what each one FROZE
@@ -20929,7 +21395,17 @@ export class Store extends DurableObject {
         if (a && a.axis) byAxis[a.axis] = { state: a.state, grade: a.grade ?? null };
       e.editions[String(r.edition)] = {
         edition: r.edition, title: r.title, bundle_sha: r.bundle_sha, ratified_at: r.ratified_at,
-        case_id: this.#caseOf(r.bundle_id, r.edition),
+        /* D-309: **ALL** OF THEM. This registry is per FINDING and stays per
+           finding (the header above), and a finding's case membership is now a
+           set — so `case_ids` carries every one and `case_id` keeps its old name
+           as the sole membership or null. Nothing in the check catalog reads
+           either key today (measured: zero hits for this registry's `case_id` in
+           `checks/bio-checks.mjs`), so the correction is to the shape rather than
+           to a live gate — which is why it is worth making now, before something
+           starts reading a field that would have been quietly guessing. */
+        case_ids: this.#casesOf(r.bundle_id, r.edition),
+        case_id: this.#soleCase(
+          this.#casesOf(r.bundle_id, r.edition).map((c) => ({ case_id: c, edition: r.edition })))?.case_id ?? null,
         capture: byAxis.capture || null, connection: byAxis.connection || null };
       if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
     }
@@ -28773,6 +29249,17 @@ export class Store extends DurableObject {
              search params as the one-line form a probe can reach. */
           targets: (body || {}).targets || url.searchParams.get("targets") || null,
           caseId: url.searchParams.get("caseId") || (body || {}).caseId || null,
+          /* D-309 / IC-74: REC-44's mint route, made sayable. Reachable from the
+             body AND from the search params, like `targets` above and for the
+             same reason — a probe must be able to drive it in one line. The
+             string forms are spelled out rather than taken as truthiness, so
+             `newCase=false` on a query string means false instead of meaning
+             "a non-empty string, therefore yes". */
+          newCase: (() => {
+            const q = url.searchParams.get("newCase");
+            const v = q != null ? q : (body || {}).newCase;
+            return v === true || v === "true" || v === "1" || v === "yes";
+          })(),
           /* CASE-2 / DEC-72: the PUBLISHING PROJECT. On the search params as the
              one-line form a probe can reach, exactly as `targets=a,b` is, with
              the body taking over when the caller has one. `roles` has NO search
@@ -28823,6 +29310,13 @@ export class Store extends DurableObject {
            there is no working material for a predicate to filter. */
         publishedcase: () => this.publishedCase({ id: url.searchParams.get("id"),
           edition: url.searchParams.get("edition"),
+          /* D-309 / IC-74: the reader's answer to `FINDING_IN_SEVERAL_CASES`.
+             `publishedCase` has taken a `caseId` for as long as it has had four
+             resolution routes, but NOTHING PLUMBED IT THROUGH THE OP — measured
+             here, not assumed: the suite drove the refusal, then drove the way
+             out of it, and the way out answered as though nothing had been named.
+             A resolution aid a caller cannot reach is not one. */
+          caseId: url.searchParams.get("caseId") || null,
           sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null }),
         /* REC-44: internal only, and deliberately NOT an op. The case container's
            manifest is assembled at the control plane (SHA-256 and the R2 copy

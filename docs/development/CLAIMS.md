@@ -2578,3 +2578,69 @@ and came out byte-identical, so it carries no diff.
 acts STAY `NON_ACTS`, argued at their table and carried as D-311 — and `plancheck` fails on
 the drift. 682 rulings, 190.8 KB. No line was written by hand.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 173/173 · 10,779 (+15 attributed per suite, the worker's mintid +1 reconciled to 20bb1cf's own prose), `coverage --strict` exit 0 read unpiped (floor 906/167/168 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. IC-75's delegation is UI-57, an item; the 16 orphaned workerd processes were verified idle and killed.
+
+---
+
+## D-309 · claimed 2026-09-10 · worktree `agent-a26bce57cd13e5ea5`, branch `worktree-agent-a26bce57cd13e5ea5`
+
+**M10 — the CASE arc's plane residue.** DEC-72 clause 6 in the plane: the nine
+scalar which-case readers corrected to answer set-valued, a NAMED refusal for the
+ambiguous REC-44 derivation, and `FINDING_IN_ANOTHER_CASE` removed LAST.
+Interface: **IC-74**, filed before any code.
+
+PATHS CLAIMED, precisely:
+
+- `bio-plane/src/store.mjs` — the nine scalar sites of CASE-6's class and their
+  callers, named as methods rather than as line numbers, because line numbers in
+  this file have gone stale four times:
+  - `publishCase()` — the `belongs` derivation, the `FINDINGS_IN_DIFFERENT_CASES`
+    refusal, the REC-44 identity resolution, and the `FINDING_IN_ANOTHER_CASE`
+    fence. One new `DEC-49 REGION case-identity-derivation` inside it.
+  - `ratifyBundle()` — the container's `rel` lookup and everything that keys off
+    it in that block (`CASE_ASSERTION_DIVERGED`, `#dischargeCaseFlags`,
+    `published_bundles.required`, `#caseEditionState`, the return shape).
+  - `publishedCase()` — the finding-id resolution arm (both the `AND edition=?`
+    and the `ORDER BY edition DESC LIMIT 1` spellings).
+  - `#caseClaimOf`, `#caseOf`, `#caseOfSha` — three helpers, five of the nine
+    sites between them, plus their callers `gateFacts`, `publishedList`,
+    `publishedEditions`, `publishedRegistryFor` and `publishedCase`'s loose arm.
+  - The two PLURAL sites (`#caseRelationOf`, `#flagCasesOnRevision`) are read but
+    **not changed**: CASE-6 measured them already correct for any n and they are.
+- `bio-plane/checks/bio-checks.mjs` — ONE new DEC-49 family for the new refusal
+  (C-44, minted). No existing family's rows touched.
+- `bio-plane/test/caseflip.test.mjs` — the driven pin CORRECTED, never exempted.
+- `bio-plane/test/derivation-bounds.test.mjs` — two bound arguments that cite the
+  fence BY NAME as the reason their scan is bounded at 1. The fence moves, so the
+  argument is wrong the moment it lands; corrected at the site, not exempted.
+- `bio-plane/test/caselifecycle.test.mjs` — one comment citing the fence as the
+  reason "several owning projects" must be several cases. The ASSERTIONS do not
+  move (a case with several owning projects stays unrepresentable — `cases` keys
+  on `case_id` alone, and that is NOT this item and is not widened).
+- `bio-plane/test/multicase.test.mjs` — NEW, this item's own suite.
+- `bio-plane/test/multicase.control.mjs` — NEW, this item's negative-control driver.
+- `civicos-ui/check-refusal-codes.mjs` — FLOOR figures only, moved from what a
+  green run PRINTED, for the family and rows this item adds.
+- `docs/development/INTERFACE-CHANGES.md` (IC-74), `DEBT.md` (the D-309 row's
+  disposition), `docs/BIO_DATAPLANE_STATE.md` and `docs/development/kickoffs/RECORD.md`
+  (each carries a sentence saying multi-case membership is REFUSED, which this
+  item makes false), `docs/DECIDED.md` (regenerated).
+
+**SCHEMA IS NOT EXPECTED TO MOVE** and did not: `published_case_members` already
+keys (case_id, edition, ord) with a `published_case_members_bundle` index on
+`bundle_id` — CASE-1 built the table for exactly the many-cases-per-finding shape
+and CASE-3 added the pin. Nothing here needs a column. If that changes it will be
+reported, with D-113's purge rule and the `host_governor` / inline-`--`-semicolon
+rules honoured.
+
+**NOT CLAIMED, and deliberately: `bio-plane/src/affordances.mjs`.** D-310 is LIVE
+on that file. Nothing here touches it.
+
+DELEGATION — D-310 (`affordances.mjs`): none needed, measured rather than assumed.
+`op=affordances` offers acts; it does not ask which case a finding is in, and
+`affordances.mjs` contains no reference to `published_case_members`, `#caseOf`,
+`#caseOfSha` or `#caseClaimOf` (grepped, zero hits). The new refusal fires inside
+`publishCase()` at act time and is not an affordance condition. Recorded here so
+the absence of a delegation is a measurement and not an oversight.
+
+concurrency: checked over the register. D-310 holds `bio-plane/src/affordances.mjs`;
+CPDF-15 holds scratch/probe paths only. No live claim names any path above.

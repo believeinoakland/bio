@@ -162,6 +162,39 @@ const NOTE = m => notes.push(m);
    it is why every figure below is now the MEASURED one. Move them WITH the
    corpus, in the same turn, or they stop meaning anything. */
 const FLOOR = {
+  /* ================================================================== *
+   * TWELVE FLOORS MOVED IN ONE TURN, 2026-09-10 by D-309 (worktree
+   * agent-a26bce57cd13e5ea5), EVERY ONE FROM THE FIGURE THIS GUARD PRINTED ON
+   * ITS OWN GREEN RUN (exit 0) and never by adding to the number that was here.
+   *
+   * WHY THEY MOVED: D-309 enacted DEC-72 clause 6 and minted ONE new DEC-49
+   * family — CASE_DERIVATION_CHECKS, one row, C-44.1 — inside ONE new narrowed
+   * region, publishCase > case-identity-derivation. C-22's header states the tax
+   * that charges: *"a new `*_CHECKS` family is a floor in
+   * civicos-ui/check-refusal-codes.mjs that buys slack for everybody else's walk
+   * unless it is moved in the same turn"*. It is moved in the same turn.
+   *
+   * **THE SPLIT IS MEASURED RATHER THAN ASSERTED, AND MOST OF IT IS NOT THIS
+   * ITEM'S.** Each figure below carries three numbers: the floor that was here,
+   * what the PRISTINE tree printed, and what this item's tree printed. The
+   * pristine figures were taken by reverting `src/store.mjs`, `src/index.mjs`
+   * and `checks/bio-checks.mjs` to HEAD, re-running this guard (exit 0), and
+   * restoring all three verified by `cmp`. D-309's own delta is +1 family,
+   * +1 row, +1 reach, +1 governed site, +1 region, +18 region lines,
+   * +2 codes checked, +2 refusals judged, and -1 untranslated. **Everything
+   * else in these moves was ALREADY STALE before this item touched anything** —
+   * the census sat 28 low, rows and reach 8 low, regionLines 83 low.
+   *
+   * That makes D-309 the SEVENTH item in a row to find a floor already stale by
+   * measuring it, which is this file's own argument arriving again: a floor with
+   * slack is not a ratchet, and one that is not a ratchet has already flipped a
+   * control from RED to GREEN once in this repository.
+   *
+   * `bodyLines` is NOT moved — it is the one figure here deliberately not
+   * ratcheted (see its own note). `reachGap` is NOT moved: it is a CEILING that
+   * may only FALL, and it printed 40 on BOTH trees, sitting exactly at it. The
+   * new code arrives TRANSLATED, so it never enters the gap.
+   * ================================================================== */
   /* THE PER-ITEM REMEASUREMENT NOTES WERE CONSOLIDATED HERE 2026-08-08 by
      CONDUCT, at PL-14's integration, and the consolidation is itself a finding.
      Seven items in a row had each prepended its own dated block, and two
@@ -349,7 +382,8 @@ const FLOOR = {
      MERGED tree. REC-64's sweep predicted its own `regionLines` would be wrong here and it
      was — it measured 1527, the merge reads 1556. Thirteen floors collided and NOT ONE was
      resolvable by taking a side, which is what that item said when it filed the delegation. */
-  families: 17,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+  /* D-309 2026-09-10: 17 -> 19. pristine tree printed 18, this item's 19 — so 1 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
+  families: 19,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
   /* ================================================================== *
    * TEN FLOORS AND ONE CEILING MOVED IN ONE TURN, 2026-08-09 by REC-79, EVERY
    * ONE FROM THE FIGURE THIS GUARD PRINTED ON A GREEN RUN of its own worktree.
@@ -369,7 +403,8 @@ const FLOOR = {
                           for everybody else's walk unless it is moved in the same turn"*. It is
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
-  rows: 176,    /* MOVED 174 -> 176, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), READ
+  /* D-309 2026-09-10: 176 -> 185. pristine tree printed 184, this item's 185 — so 8 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
+  rows: 185,    /* MOVED 174 -> 176, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), READ
                           OFF THIS FILE'S OWN GREEN RUN and never by adding to the number that was here.
                           CASE-3 minted ONE row — PUBLISHED_CANNOT_MOVE_VERSION (C-25.34) in the
                           EXISTING VERSION_ACT_CHECKS, so `families` does not move: SK-1's rule that a
@@ -406,7 +441,8 @@ const FLOOR = {
                        // tail) + C-22.8 (REC-64, §14a's capability sentence) + C-31.1..3 and C-28.14/15
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
-  census: 437,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+  /* D-309 2026-09-10: 437 -> 465. pristine tree printed 465, this item's 465 — so 28 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
+  census: 465,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
                           the figure this file PRINTED on a green run (`walk: UNION (the census) 437
                           codes over 27 files`) and never by adding to what was here.
                           **THREE OF THE FOUR ARE PRE-EXISTING SLACK AND ONE IS THIS ITEM'S.**
@@ -445,7 +481,8 @@ const FLOOR = {
                           NINETEEN. That is the quantity behind "a floor with slack is not a ratchet",
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
-  reach: 229,    /* MOVED 227 -> 229, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+  /* D-309 2026-09-10: 229 -> 238. pristine tree printed 237, this item's 238 — so 8 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
+  reach: 238,    /* MOVED 227 -> 229, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
                           this file's own printed figure (`arm B: REACH 229 codes`) and never by
                           adding to what was here. ONE of the two is pre-existing slack (the tree
                           measured 228 against a floor of 227 with `bio-checks.mjs` reverted to HEAD)
@@ -469,7 +506,8 @@ const FLOOR = {
                        // REC-69: +3, and they arrive TRANSLATED — the reachGap CEILING below does not
                        // move, which is the property a new family owes rather than the number itself.
                        // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
-  governedSites: 69,   // spans named by a row's `where` — a function, or a region inside one.
+  /* D-309 2026-09-10: 69 -> 73. pristine tree printed 72, this item's 73 — so 3 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
+  governedSites: 73,   // spans named by a row's `where` — a function, or a region inside one.
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
                        // + REC-79's `fetch > is-admission` — THE FIRST GOVERNED SITE IN THE CONTROL
                        //   PLANE'S REQUEST PATH. Three index.mjs sites were governed before it, all
@@ -487,7 +525,8 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
-  regions: 55,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+  /* D-309 2026-09-10: 55 -> 59. pristine tree printed 58, this item's 59 — so 3 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
+  regions: 59,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
                        // eight judged refusals — `ROOT_OF_TRUST_REQUIRED` fires at two conditions
                        // inside the one span, which is what a region `where` can honestly hold).
                        // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
@@ -507,7 +546,8 @@ const FLOOR = {
                        // PL-11's four (is-ai-credential-mint, is-ai-credential-revoke,
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
-  regionLines: 1556,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+  /* D-309 2026-09-10: 1556 -> 1657. pristine tree printed 1639, this item's 1657 — so 83 of this move was PRE-EXISTING SLACK and 18 is D-309's. */
+  regionLines: 1657,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
                           nothing else. **CONDUCT MUST RE-READ THIS FROM A GREEN RUN OF THE MERGED
                           TREE RATHER THAN TRUST THIS NUMBER** — it is a property of the MERGED source
                           and it has moved at integration FOUR times, most recently when REC-75 landed
@@ -608,7 +648,8 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
-  codesChecked: 152,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+  /* D-309 2026-09-10: 152 -> 167. pristine tree printed 165, this item's 167 — so 13 of this move was PRE-EXISTING SLACK and 2 is D-309's. */
+  codesChecked: 167,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
                        // minted at two conditions in the span). Every code there is a STRING LITERAL
                        // at its site precisely so this number can move; `admissionRow` supplies the
@@ -652,7 +693,8 @@ const FLOOR = {
                        // thirteen governed sites once read 776 lines and checked zero — arm C's
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
-  outcomeReturns: 83,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+  /* D-309 2026-09-10: 83 -> 84. pristine tree printed 84, this item's 84 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
+  outcomeReturns: 84,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
                           separating: EIGHT are `is-admission`'s own outcomes, and ONE is a return the
                           walk could never see before — `suggestVersion > is-suggest-write`'s
                           `return remember({ ...promoted, … })`, at a site that has been governed since
@@ -667,7 +709,8 @@ const FLOOR = {
                           corpus collapses when the return reader goes blind, the yield when the
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
-  refusalsJudged: 156,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+  /* D-309 2026-09-10: 156 -> 170. pristine tree printed 168, this item's 170 — so 12 of this move was PRE-EXISTING SLACK and 2 is D-309's. */
+  refusalsJudged: 170,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
                           2026-08-09, from the printed figure on a green run.
 
                           +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
@@ -685,8 +728,10 @@ const FLOOR = {
                        // the number: five consecutive items found this block already stale by
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
-  vocabularyTerms: 63, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
-  untranslated: 248,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
+  /* D-309 2026-09-10: 63 -> 64. pristine tree printed 64, this item's 64 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
+  vocabularyTerms: 64, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
+  /* D-309 2026-09-10: 248 -> 267. pristine tree printed 268, this item's 267 — so 20 of this move was PRE-EXISTING SLACK and -1 is D-309's. */
+  untranslated: 267,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
                           from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
                           summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
                           THIS ITEM'S** — the partition summed to 248 against a floor of 246 with
