@@ -2048,3 +2048,4 @@ concurrency: checked over the whole register. The only LIVE claim is FLEET's FL-
   are UNMOVED — no suite gained or lost a declaration. Nothing else in the file is edited, and the
   reason the figure moved is written at the site so a merge conflict here resolves by re-reading a
   printed run rather than by keeping both.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `7a16642` and verified on the MERGED tree: battery 172/172 · 10,680 (10,669 + the attributed +11, closing exactly), `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` collapsed to ONE SET a third time and re-read from the merged print (895/166/167), UI harness exit 0, `mintid --audit` 0 breaks.
