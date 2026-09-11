@@ -162,7 +162,11 @@ const enrol = async (memberId, password, role, capabilities) => {
 const NADIA = await enrol("nadia", "nadia-passphrase-1", "admin", ["contribute", "publish", "create_projects"]);
 /* 4.2/4.3: the SECOND member of a group must be an administrator, and there are
    no ordinary members until two exist. */
-await enrol("omar", "omar-passphrase-1", "admin", ["contribute", "publish"]);
+/* D-310, 2026-09-10: omar's token is KEPT now rather than discarded. §3a needs a
+   member who is an ADMINISTRATOR and an owner of nothing — v2 4.9's "sees every
+   project and directs none of them" — which is the one row that separates the
+   position gate from the visibility gate. */
+const OMAR = await enrol("omar", "omar-passphrase-1", "admin", ["contribute", "publish"]);
 const PILAR = await enrol("pilar", "pilar-passphrase-1", "member", ["contribute", "publish"]);
 /* RUTH holds the PUBLISH CAPABILITY and is NOT an owner of the project, which is
    what makes §3 measure DEC-72's fence rather than the capability layer beneath
@@ -427,6 +431,115 @@ console.log("\n--- 3. DEC-72 clause 5: publication is wielded at the top of a pr
     (await publish("mem-case2", { ...CEREMONY, target: INQ_STRONG, project: PROJ,
       roles: { [INQ_STRONG]: "load_bearing" } })).reason, "MACHINE_CANNOT_PUBLISH");
   t("NOTHING MOVED under any of the four", await stateOf(INQ_STRONG), "concluded");
+}
+
+/* ===== 3a. D-310 · THE PRE-FLIGHT AND THE REFUSAL ANSWER THE SAME QUESTION ===
+ *
+ * ADDED 2026-09-10 BY D-310, and it belongs in §3 rather than in a suite of its
+ * own because the fixture §3 already built IS the measurement: one member who
+ * owns a project, one who owns none and holds the `publish` capability anyway,
+ * and one administrator who owns none — against one concluded finding.
+ *
+ * WHAT WAS WRONG. `op=affordances` published `publish` on
+ * `inquiry && concluded && !case_member` with NO condition on who was asking,
+ * while `publishCase()` refuses a non-owner BY NAME above. A member who owns no
+ * project was told publication is an act available here, and would be refused at
+ * the act — the DEC-8 disagreement `affordances.mjs`'s own header calls the one
+ * thing it exists to prevent, on the heaviest act in the system.
+ *
+ * IT IS ONE PROPERTY AND NOT TWO ASSERTIONS. Pinning the affordance answer and
+ * the refusal separately would let them drift apart and both stay green; what is
+ * asserted is the BICONDITIONAL — the act is offered exactly when the position
+ * fence would not refuse — computed per member from the two live answers, so
+ * neither side is a copy of the other and neither expectation is derived from
+ * the subject. The `want` side carries only each member's NAME.
+ *
+ * AND THE TABLE IS GUARDED AGAINST BEING UNIFORM. A gate that offered the act to
+ * everybody and a gate that offered it to nobody both satisfy a biconditional
+ * over rows that all agree; §5's own pair reasoning, one act over. So the run
+ * PRINTS the table and asserts it contains BOTH answers. */
+console.log("\n--- 3a. D-310: op=affordances offers `publish` exactly where the position fence would not refuse ---");
+{
+  const offeredTo = async (tok) =>
+    ((await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(INQ_STRONG)}`))
+      .result?.acts ?? []).some((a) => a.id === "publish");
+  /* THE POSITION HALF OF THE REFUSAL, AND ONLY THAT HALF, ASKED WITH A CEREMONY
+     THAT IS DELIBERATELY INCOMPLETE — and the incompleteness is the mechanism
+     rather than a shortcut. A COMPLETE ceremony from the owner SUCCEEDS, and a
+     success here would publish the case, move INQ_STRONG into it and leave every
+     section below meeting a record that had already changed. This suite's own
+     header records that cascade destroying §5's acceptance arm once already.
+     So the probe omits the completeness statement: `publishCase()` runs its
+     AUTHORITY fences FIRST (the machine fence, then the four project fences) and
+     the ceremony refusals after, so a caller who fails on POSITION still answers
+     NOT_THE_PROJECT_OWNER while one who passes it stops at NO_STATEMENT. Every
+     row is refused, nothing is written, and the reason distinguishes them — which
+     is what the arm needs and all it needs. The owner's own reason is asserted
+     BY NAME below, so "not refused on position" cannot quietly become "refused
+     for some third reason nobody looked at". */
+  const positionProbe = async (tok) => {
+    const { statement, ...INCOMPLETE } = CEREMONY;
+    return (await publish(tok, { ...INCOMPLETE, target: INQ_STRONG, project: PROJ,
+      roles: { [INQ_STRONG]: "load_bearing" } }, { sign: false })).reason;
+  };
+
+  const WHO = [["pilar — OWNER of the publishing project", PILAR],
+               ["ruth — joined participant, owner of NOTHING, holds `publish`", RUTH],
+               ["omar — ADMINISTRATOR, owner of nothing (v2 4.9: sees every project, directs none)", OMAR]];
+  const rows = [];
+  for (const [who, tok] of WHO) {
+    const reason = await positionProbe(tok);
+    rows.push([who, await offeredTo(tok), reason === "NOT_THE_PROJECT_OWNER", reason]);
+  }
+  for (const [who, offered, refused, reason] of rows)
+    console.log(`  ${offered ? "OFFERED " : "WITHHELD"} · refused ${reason}${refused ? " (POSITION)" : ""} · ${who}`);
+  t("PROBE GUARD: the one member who PASSES the position fence is stopped by the ceremony instead, "
+  + "by name — so `not refused on position` is a measured passage and never an unexamined outcome",
+    rows.filter((r) => !r[2]).map((r) => r[3]), ["NO_STATEMENT"]);
+
+  t("FIXTURE GUARD: the table is not uniform — the act is offered to somebody and withheld from "
+  + "somebody, so a gate that offered everything and a gate that offered nothing are both excluded",
+    [rows.some((r) => r[1]), rows.some((r) => !r[1])], [true, true]);
+  t("THE DEC-8 AGREEMENT, AS ONE PROPERTY: for every member, `op=affordances` OFFERS `publish` "
+  + "exactly when `publishCase()` does NOT refuse them NOT_THE_PROJECT_OWNER — the published act "
+  + "and the refusal it fronts answer the same question, which is the whole reason affordances.mjs exists",
+    rows.map(([who, offered, refused]) => [who, offered === !refused]),
+    WHO.map(([who]) => [who, true]));
+
+  /* OVER-STRICTNESS, and it is the arm this item most needs: the gate is
+     POSITIONAL, and a machine class carries no position. `class:member` is
+     refused publication by a DIFFERENT rule at a different level
+     (MACHINE_CANNOT_PUBLISH, asserted in §3 above), so the position fact answers
+     `null` for it and the act must NOT narrow. A `false` there would fold two
+     rules into one gate — a fence tighter than its rule. */
+  /* PRINTED AS BYTES, and the line is load-bearing rather than diagnostic:
+     `test/d310.control.mjs` diffs this exact string across its arms, which is how
+     "a machine credential's view is BYTE-UNCHANGED" becomes a measurement instead
+     of a claim — and how the probe proves it is not blind, since the arm that
+     makes the predicate `=== true` MOVES these bytes. */
+  const machineActs = (await GET(`op=affordances&token=mem-case2&target=${encodeURIComponent(INQ_STRONG)}`))
+    .result?.acts ?? [];
+  console.log(`  D310-MACHINE-ACTS ${JSON.stringify(machineActs)}`);
+  t("OVER-STRICTNESS: a MACHINE credential's answer does not narrow — it holds no roster position, "
+  + "so the positional gate says nothing about it and `publish` is still published to it",
+    machineActs.some((a) => a.id === "publish"), true);
+  /* DEC-69. The narrowed answer must not become a nag: the rule is stated at the
+     act once and never re-confirmed. A withheld act is an ABSENCE from a list —
+     no prompt rides `publish`, and the answer for a withheld caller carries no
+     second telling, no re-statement and no per-credential narration. */
+  const ruthAff = (await GET(`op=affordances&token=${RUTH}&target=${encodeURIComponent(INQ_STRONG)}`)).result;
+  const pilarPub = ((await GET(`op=affordances&token=${PILAR}&target=${encodeURIComponent(INQ_STRONG)}`))
+    .result?.acts ?? []).find((a) => a.id === "publish");
+  t("DEC-69: the narrowing informs by ABSENCE and adds no second telling — the withheld caller gets "
+  + "no `publish` entry and no owner-shaped narration, the OWNER's own entry carries no prompt and "
+  + "no re-confirmation, and the position fact does not leak onto the wire as a thing to answer for",
+    [(ruthAff.acts ?? []).some((a) => a.id === "publish"),
+     (ruthAff.acts ?? []).some((a) => /owner|confirm|are you sure/i.test(JSON.stringify(a))),
+     pilarPub !== undefined && pilarPub.prompt === null && !("confirm" in pilarPub)
+       && !/owner|confirm/i.test(JSON.stringify(pilarPub)),
+     /NOT_THE_PROJECT_OWNER|project_owner/.test(JSON.stringify(ruthAff))],
+    [false, false, true, false]);
+  t("NOTHING MOVED: every call in this section was refused or read-only", await stateOf(INQ_STRONG), "concluded");
 }
 
 /* ============================ 4. the authored partition, and its two refusals */

@@ -1678,6 +1678,50 @@ export class Store extends DurableObject {
                 disagree — DEC-8, which is the whole reason this file exists. */
              case_member: normalizeType(b.object_type) === "inquiry"
                ? this.#caseRelationOf(target).member : false,
+             /* D-310 / DEC-72 clause 5: THE VIEWER'S POSITION AS A FACT, and it
+                is a FACT and never a rule — `case_member` one line up is the
+                pattern it follows exactly, and this method still holds no copy
+                of any act rule.
+                WHY IT HAS TO EXIST. `publishCase()` refuses a caller who is not
+                an OWNER of the named project BY NAME (the CASE-2 fence, DEC-72
+                clause 5: *"Only a project OWNER publishes"*), while the `publish`
+                act was derived with NO condition on who is asking. So a member
+                who owns no project at all was told, on every concluded finding,
+                that publication is an act available here — and would be refused
+                at the act. That is the DEC-8 disagreement this file's own header
+                calls the one thing affordances exists to prevent, sitting on the
+                heaviest act in the system, and it is what D-310 closes.
+                THE OWNER RULE IS CONSUMED AND NEVER RESTATED. The row set comes
+                from the member's own participations (the `pp_member` index), and
+                the RULE over each row is `#isProjectOwner` — the SAME predicate
+                `publishCase()` runs. That is the `#citesInto` discipline exactly:
+                ONE predicate behind the published act and the refusal it fronts,
+                so the two cannot disagree. A second implementation of the owner
+                rule is this repository's most-repeated defect class and has
+                already absorbed a control at publishCase()'s own fence.
+                IT ANSWERS "OWNER OF SOME PROJECT", AND THAT IS THE WHOLE SHAPE.
+                The project is a PARAMETER of `op=publish`, not its target: this
+                method is asked about an INQUIRY and cannot know which project a
+                caller will name. Owner-of-THIS-project is a different question
+                needing a different, per-pair fact (D-311), and the store already
+                refuses on the PAIR — `caseproduction.test.mjs` §3 measures a
+                member who owns one project being refused as she publishes for
+                another. So this narrows the act to exactly the class for which NO
+                parameter could make it succeed, and leaves "this caller's
+                parameters may still not pass" where every other act leaves it.
+                THREE-VALUED, AND THE null IS STATED RATHER THAN DEFAULTED.
+                A machine-class credential holds no roster position — participation
+                is keyed on a member id and a class credential has none — so
+                `false` would assert that the question was asked of it and came
+                back empty, which is not what this store knows. It answers null,
+                the act catalogue does not narrow on a null, and a machine
+                credential's published act set is therefore BYTE-UNCHANGED by this
+                fact. A machine is refused publication by a DIFFERENT rule at a
+                different level (MACHINE_CANNOT_PUBLISH, DEC-49's fence, which
+                fires first in publishCase()); folding the two into one gate here
+                would make this fence tighter than its rule, which is an
+                undeclared interface change wearing the costume of caution. */
+             project_owner: gate.member === null ? null : this.#ownsAnyProject(gate.member),
              basis_legs: Array.isArray(docFm.basis)
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
@@ -18481,6 +18525,33 @@ export class Store extends DurableObject {
   #isProjectOwner(projectId, memberId) {
     const p = this.#participation(projectId, memberId);
     return !!(p && p.owner);
+  }
+  /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
+   *  `op=affordances` has to answer before it offers `publish`, because the
+   *  project is a PARAMETER of that act and the pre-flight cannot know which one
+   *  a caller will name. `publishCase()` refuses the per-PAIR question
+   *  (`NOT_THE_PROJECT_OWNER`, DEC-72 clause 5); this is the weakest fact that
+   *  makes the two unable to disagree, and nothing weaker would close it.
+   *
+   *  THE RULE IS `#isProjectOwner`'s AND IS NOT RESTATED. This selects the
+   *  member's own participations off the `pp_member` index and asks THAT
+   *  predicate about each — the same one publishCase()'s fence runs — so a
+   *  change to what "owner" means is made once. Writing `AND owner=1` here
+   *  would be a second implementation of the owner rule, which is this
+   *  repository's most-repeated defect class and is named as such at the fence
+   *  itself.
+   *
+   *  AND IT IS A PREDICATE RATHER THAN A SCAN INSIDE `affordanceFacts`, for the
+   *  reason `#citesInto` and `#restsOnLive` are: that method STATES FACTS and
+   *  assembles no SQL of its own, and every row question it asks goes through a
+   *  predicate a refusal also runs. A LIMIT is deliberately NOT taken — a bound
+   *  that stopped before an owner row would withhold the act from a genuine
+   *  owner, which is the over-strictness failure this item's control arms exist
+   *  to catch, and what bounds this set is roster ACTS (an invite, a join) and
+   *  never a corpus. */
+  #ownsAnyProject(memberId) {
+    return this.#rows(`SELECT project_id FROM project_participants WHERE member_id=?`, memberId)
+               .some((p) => this.#isProjectOwner(p.project_id, memberId));
   }
 
   #participation(projectId, memberId) {

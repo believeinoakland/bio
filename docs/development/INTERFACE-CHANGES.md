@@ -5424,3 +5424,133 @@ each entry saying it was resolved late and that sequence position is resolution 
 Every resolution here is CONDUCT answering FOR a dormant consumer (or recording an
 as-built fact), per protocol step 3 — never the area agreeing. An objection from any
 owner reopens the specific row, not this section.
+
+---
+
+## IC-75 · I3: `op=affordances` STOPS OFFERING `publish` TO A CALLER WHO HOLDS THE OWNER POSITION ON NO PROJECT — the act set NARROWS for a class of callers, and the store's `NOT_THE_PROJECT_OWNER` refusal and the published act finally answer the same question · PROPOSED 2026-09-10 (D-310, closing the DEC-8 disagreement CASE-6 found) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts), currently **13.0.0 STABLE**
+- **Proposer:** `RECORD`, session `d310-publish-position`, 2026-09-10, from `DEBT.md`'s D-310 row
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI`, `DIST` (the installer's served surfaces), every content area
+- **Filed BEFORE the code was written**, because the SET of acts `op=affordances` publishes is
+  something consumers build against: narrowing it for a class of callers is a behaviour change
+  whether or not a field moves, and this one is measured to remove a whole section from a page.
+
+### The change
+
+`op=affordances?target=<concluded inquiry>` publishes the `publish` act on
+
+```
+    ty === "inquiry" && f.current_state === "concluded" && !f.case_member
+```
+
+with NO condition on WHO is asking. `Store.publishCase()` refuses a caller who is not an owner
+of the named project BY NAME — `NOT_THE_PROJECT_OWNER`, the DEC-72 clause 5 fence CASE-2 built
+(*"Only a project OWNER publishes"*). So a member who owns no project is told, on every
+concluded finding, that publication is an act available here, and is refused at the act.
+
+Two things move, and only these two:
+
+1. **`affordanceFacts()` states ONE new FACT**, beside `case_member` and on its pattern exactly
+   — a fact the store states, never a rule the act layer re-derives:
+
+   ```
+   project_owner: true   the viewer holds the OWNER position on at least one project
+                  false  the viewer is a positional identity holding it on none
+                  null   the viewer is not a positional identity (a machine class
+                         credential), so the question is not asked of it
+   ```
+
+   It is DO-internal: `affordancefacts` is the store's own dispatch path and **no op on the
+   control plane reaches it**, so this field crosses no wire. (That correction is D-310's own,
+   recorded because the row first gave the opposite reason.)
+
+2. **The `publish` act's `applies` predicate gains one clause**, `f.project_owner !== false`.
+
+Nothing else changes: no op renamed, no refusal reason added or reworded, no success shape
+touched, no other act's predicate moved, and the act catalogue's membership is unchanged —
+`publish` is still published, still `weight: "single"`, still rung `irreversible`.
+
+### Why `!== false` and not `=== true`, which is the whole of the shape
+
+**Undetermined is first-class and is STATED.** A machine-class credential holds no roster
+position — `project_participants` is keyed on a member id and a `class:` credential has none —
+so `false` would assert that a machine was asked the question and holds nothing, which is not
+what the store knows. It answers `null`, and a null does not narrow. That is also what keeps a
+machine credential's affordance answer **byte-unchanged** by this item, which is asserted as an
+over-strictness arm rather than hoped for: machine credentials are refused publication by a
+DIFFERENT rule at a different level (`MACHINE_CANNOT_PUBLISH`, DEC-49's fence, which fires
+first in `publishCase()`), and folding two rules into one gate would make this fence tighter
+than its rule.
+
+### Why the fact is "owner of SOME project" and not "owner of THIS project"
+
+Because the project is a **PARAMETER of the act**, not the target of it. `op=publish` takes
+`project=<id>` from the caller; `op=affordances` is asked about an INQUIRY and cannot know
+which project a caller will name. `caseproduction.test.mjs` §3 already measures the distinction
+in the store — *"pilar owns one project and publishes as another she merely joined — refused,
+because the fence is keyed on the PAIR"* — and that arm is untouched and must stay green.
+
+So the published act says what every other act here says, in the file's own words: *publishing
+the act says the record permits the move, not that this caller's parameters will pass.* What it
+stops saying is that publication is available to somebody for whom **no parameter exists** that
+could make it succeed. That is exactly the class the disagreement lived in, and the narrowing
+is the weakest one that closes it.
+
+### MEASURED consumer impact
+
+Measured by reading the consuming code, not inferred. **`UI` is affected in two places and the
+second is the one that matters:**
+
+1. **`civicos-ui/app.html`, `publicationEntryHtml()` (~:5873)** — `const act = (r && r.ok) ?
+   actNamed(r.acts, "publish") : null; if(!act) return "";`. The **whole "Publishing this case"
+   section** — five paragraphs, including the `data-pubwho` paragraph that states DEC-72 clause
+   5 in words (*"A case is published BY A PROJECT, and only by an owner of it"*) — is rendered
+   **only where the act is published**. After this change it disappears for exactly the readers
+   the paragraph was written for. **CASE-6 put that sentence there so the fence would not be
+   learned by silence, and this change makes it unreachable for the class that meets the
+   fence.** That is a real product consequence and it is DELEGATED to `UI` rather than fixed
+   here (`CLAIMS.md`, D-310 → UI): the gate is a proxy for "the record offers publication on
+   this OBJECT", and the act's presence stops being that proxy the moment it is per-credential.
+   The surface's own header already forbids the alternative — *"NO PER-CREDENTIAL VARIANT … it
+   would also be the surface composing a position rule out of facts"* — so the fix is to gate
+   the STATEMENT on the object, not to branch it on the reader.
+2. **`civicos-ui/app.html` (~:6223)** — `actBarHtml(…, pubEntry ? { elsewhere:["publish"] } :
+   undefined)`. With `publish` absent from `acts`, the act bar's "The record also publishes
+   **Publish (author the case)** … It has a section of its own further up this page" line does
+   not render either. No control disappears, because **no control ever existed**: DEC-33 defers
+   the member-facing ceremony and the page wires none.
+3. **`SURFACES.inquiry.acts` (~:2072) still names `publish` and is still CORRECT** — the act is
+   published, for owners, on this surface. The surface-registry totality arm does not move.
+4. **`op=queue`'s `options[]`** (`store.mjs #queueOptions`, the same `deriveActs` over the same
+   facts, by construction) narrows identically for a non-owner. That is the intended behaviour
+   and not a second change: the two answers are one derivation and must not be able to disagree.
+5. **`DIST`** serves these surfaces and builds against no act id of its own: expected
+   `NOT-AFFECTED`, to be answered rather than assumed.
+6. **Content areas** consume I3 reads and no act set: expected `NOT-AFFECTED`.
+
+**Inside the plane, the battery's own act-list pins move**, and every one is CORRECTED at its
+site with a dated reason and never exempted. The set is measured from the delta rather than
+guessed, and is named in this row's amendment when it is known.
+
+### What this does NOT settle
+
+**The seven roster acts stay `NON_ACTS`, "position-enforced by the store", and that is DECIDED
+rather than deferred** — the argument is at their own table in `affordances.mjs` and the item is
+`D-311`. In short: they need a DIFFERENT fact (`#isProjectOwner(TARGET, viewer)`, a per-pair
+question) because their subject IS the project, and deriving them from this item's "owner
+somewhere" fact would offer `projectinvite` on every project to anyone who owns any — the very
+confusion the store refuses. Folding them in is an ADDITION to the published set, which is a
+separate I3 change with its own consumers to measure.
+
+**And it does not touch the machine fence.** `MACHINE_CANNOT_PUBLISH` is still a refusal
+`op=affordances` does not front, which is the same CLASS of disagreement one rule over. It is
+named in `D-311`'s row so it is not lost, and it is deliberately not closed here: closing it
+would change a machine credential's published act set, which is a second, opposite behaviour
+change that this row does not propose and no consumer has been asked about.
+
+### Status
+
+**PROPOSED, 2026-09-10.** Awaiting `UI` and `DIST`. The version bump and the RESOLUTION are
+CONDUCT's, per the standing shape of every row since IC-62.

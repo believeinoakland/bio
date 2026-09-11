@@ -2450,3 +2450,130 @@ arm, no other figure touched.
   the head. The suite had none and `coverage.mjs` had been printing it in the civicos-ui
   NO CONTROL list (reported, not gated); the figure moves 25/47 → 26/47.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `9e738ae` (+ ratchet fix `715ab23`) and verified on the MERGED tree: battery 173/173 · 10,764 (+4 closing exactly), `coverage --strict` exit 0 read unpiped (floor 906/167/168 unmoved), UI harness exit 0 after the M0-24 cross-item ratchet was corrected at the cause and D-286's D0b flake passed its one re-run, `mintid --audit` 0 breaks. THE CASE ARC IS DONE; the plane residue is D-309, an item.
+
+## CLAIM 2026-09-10 RECORD (D-310 — the DEC-8 disagreement on the heaviest act: `op=affordances` offers `publish` to a caller `publishCase()` refuses BY NAME)
+session: d310-publish-position (worktree agent-adfe47f738e1ba61b, branch `worktree-agent-adfe47f738e1ba61b`, from `main` at `20bb1cf`)
+opened: 2026-09-10T00:00:00Z
+paths:
+- `bio-plane/src/store.mjs` — **ONLY the `affordanceFacts()` method body**, which is the one
+  `#affordanceFacts` region: ONE new FACT (`project_owner`) beside `case_member`, derived by
+  consuming the EXISTING `#isProjectOwner` predicate (the owner rule is never restated), plus
+  the comment that states it. **NOT** `publishCase()`, **NOT** `#caseRelationOf`, **NOT**
+  `#caseOfSha`, **NOT** any reader of `published_case_members`, **NOT** the publish/ratify
+  path, **NOT** `#queueOptions`, **NOT** `#isProjectOwner` itself, **NOT** the DO dispatch
+  map. **D-309 IS LIVE ON `store.mjs`'s `published_case_members` READERS AND THE PUBLISH
+  PATH** (QUEUE D-309, spawned the same day): none of those sites is in this claim, and if a
+  merge puts this item's fact inside a span D-309 also moved, **this claim yields and the
+  conflict is a DELEGATION naming D-309**, not a keep-both.
+- `bio-plane/src/affordances.mjs` — **ONLY** (1) the `publish` ACT entry's `applies` predicate,
+  which gains ONE clause consuming the new fact, and its comment; (2) the facts-shape note in
+  the header if the fact list is spelled there; (3) **COMMENT ONLY** above the seven
+  `project*` rows of `NON_ACTS` — the roster-act DECISION argued at its own table, no key
+  added, no key removed, no reason string's classification changed. **NOT** `ACTS`'
+  membership, **NOT** any other act's predicate, **NOT** `RUNGS`/`RUNG_ABSENT`,
+  **NOT** `VOCABULARIES`, **NOT** `DISPOSITIONS`/`REOPENABLE_FROM`, **NOT** `deriveActs`.
+- `bio-plane/src/query.mjs` — **ONLY `viewerPredicate`'s return sites**, which gain the
+  member id the function ALREADY computes (`member: memberId`) so the store consumes the ONE
+  viewer parser instead of writing a second one. **NOT** the regex, **NOT** the gate SQL,
+  **NOT** any `scope` value, **NOT** `GATE_MARK`, **NOT** `compile`/`FIELDS`/`FTS_COLUMNS`.
+- `bio-plane/test/affordances.test.mjs` — this item's assertions (the ONE agreement property,
+  and the over-strictness pair). **DEC-39's byte-read pin in this file reads
+  `docs/development/DECISIONS.md`, which this item does not touch**; if this change moves
+  pinned bytes anywhere, the pin is CORRECTED at the site with a dated reason, never exempted.
+- `bio-plane/test/d310.control.mjs` — **NEW**, this item's negative-control driver. Named
+  `.control.mjs` deliberately: it EDITS REAL SOURCES while it runs and the battery must not
+  discover it (`caseproduction.control.mjs`'s precedent).
+- **Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never
+  exempted** — the set is MEASURED from the battery delta rather than guessed, and every one
+  is named in an amendment to this claim before it is edited.
+- `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed BEFORE the
+  code is written. The version bump and the RESOLUTION are CONDUCT's.
+- `docs/development/DEBT.md` — **ONLY** the D-310 row's disposition and ONE appended row
+  (**D-311**, minted, the seven roster acts' decision made into an item).
+- `docs/development/CLAIMS.md` — this entry.
+**NOT** `docs/development/QUEUE.md` (CONDUCT's, sole writer). **NOT** `civicos-ui/app.html` —
+the publication surface's act-gated render is affected and is a DELEGATION below, not an edit.
+
+### AMENDMENT 2026-09-10, MID-ITEM (D-310) — **FIVE PATHS ADDED, AND ONE PREDICTION IN THE ORIGINAL CLAIM MEASURED WRONG**
+
+- `bio-plane/test/caseproduction.test.mjs` — **ADDED, and it is where the item's
+  headline assertion actually belongs.** The claim above expected the behavioural half in
+  `affordances.test.mjs`; that suite drives every affordance call with a MACHINE token
+  (`mem-rec19`), so it cannot express "an owner is offered the act and a non-owner is not"
+  at all. CASE-2's suite already builds the roster the question needs — an owner, a joined
+  non-owner holding the `publish` capability, an administrator who owns nothing — and its
+  §3 IS the owner fence. New section **§3a** (the ONE agreement property, a probe guard, a
+  fixture-uniformity guard, the machine over-strictness arm, the DEC-69 arm, a
+  nothing-moved arm) plus **one line changed**: `omar`'s session token is kept instead of
+  discarded. Nothing else in that file moved.
+- `bio-plane/test/d310.control.mjs` — NEW, this item's control driver (as claimed).
+- `.gitignore` — **TWO lines**: `.d310-harness/` (the driver's pen, beside `.case2-harness/`
+  and for the reason written at every pen above it) and `.d310-runs/` (this session's run
+  logs, kept inside the worktree — the battery's residue check MEASURED this session
+  writing a baseline into `/private/tmp` and NAMED it as an unfenced shared path, D-237).
+- `bio-plane/src/query.mjs` — as claimed, and the shape is confirmed narrow: three return
+  sites gain `member`, nothing else. `meaningread.test.mjs` pins this function's SOURCE
+  span (it locates the end by searching forward from `scope: "participant"`) and
+  `hygiene.test.mjs` pins that it holds no literal machine prefix — both re-run green.
+- `docs/development/DEBT.md` — as claimed: the D-310 row's disposition and the appended
+  **D-311** row.
+
+**WHAT THE CLAIM PREDICTED AND THE MEASUREMENT DENIED, stated because a wrong prediction
+that goes unrecorded reads as a thing nobody checked: NO act-list pin in any other suite
+moved.** The claim above reserved "superseded act-list pins in OTHER suites, corrected with
+dated reasons". None was owed. Measured rather than assumed — the twelve suites that pin an
+inquiry's published acts (`conclude`, `reopen`, `caselifecycle`, `divide`, `inquiryground`,
+`citeinquiry`, `queue` and the rest) all drive `op=affordances` with a **machine-class
+token**, whose positional fact is `null`, so the narrowing cannot reach them. That is the
+same property the over-strictness arm exists to protect, arriving as the reason the blast
+radius was zero.
+
+### DELEGATION 2026-09-10 RECORD (D-310 / IC-75) -> UI: **THE PUBLICATION STATEMENT IS GATED ON AN ACT THAT IS NOW PER-CREDENTIAL, SO THE ONE PARAGRAPH THAT STATES THE OWNER RULE DISAPPEARS FOR EXACTLY THE READERS IT WAS WRITTEN FOR**
+
+**Not edited here.** `civicos-ui/app.html` is UI's ground and this is a design decision
+about a statement, not a mechanical follow-on.
+
+**The site, measured:** `publicationEntryHtml()` (~:5873) opens
+`const act = (r && r.ok) ? actNamed(r.acts, "publish") : null; if(!act) return "";`. Until
+today the presence of `publish` in `op=affordances`' answer was a fact about the OBJECT —
+concluded, not already in a case — which is exactly what that gate wanted to ask. D-310
+makes it a fact about the OBJECT **and the reader's position**. So for a member who owns no
+project the whole "Publishing this case" section stops rendering, including the
+`data-pubwho` paragraph CASE-6 wrote for precisely that member: *"A case is published BY A
+PROJECT, and only by an owner of it."* CASE-6's own header says why it is there — *"finding
+that out from an operator after assembling a case is the worst possible moment to learn
+it"* — and the fence would go back to being learned by silence. The act bar's "It has a
+section of its own further up this page" line (~:6223, `elsewhere:["publish"]`) goes with
+it. **No control is lost, because DEC-33 defers the ceremony and the page wires none.**
+
+**The constraint this has to be solved inside, and it is that header's own:** *"NO
+PER-CREDENTIAL VARIANT. A version of this that checked whether the reader is an owner and
+shortened itself for everyone else would be forcing a mode, and it would also be the
+surface composing a position rule out of facts, which is what `affordances.mjs` exists to
+stop anyone doing."* So the fix is to gate the STATEMENT on the OBJECT again — it is a
+statement about the record, not a control — and not to branch it on the reader.
+
+**Measured as NOT breaking the UI harness:** `civicos-ui/test/publication-entry.test.mjs`
+and `case6.control.mjs` drive a MOCK plane with hand-built `acts` arrays, so nothing there
+moves; `SURFACES.inquiry.acts` still names `publish` correctly, because the plane still
+publishes it. `node civicos-ui/test/run.mjs` from the repo root is green on this branch.
+The cost is to a real reader, not to a suite, which is why it is delegated rather than left.
+
+### AMENDMENT 2026-09-10, MID-ITEM (D-310) — **TWO BUILD ARTIFACTS ADDED, BECAUSE FL-10's GUARD MADE THEM PART OF ANY PLANE-SOURCE CHANGE**
+
+`bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json`, rebuilt
+with `npm run build` in `bio-plane/` and committed with the change. **Not a judgement call
+and not a version bump:** FL-10's arm in `fleetbundles.test.mjs` went red on this branch
+naming all three changed sources by sha256 and printing the instruction — *"Run `npm run
+build` in bio-plane/ and commit the artifact with the change"* — which is the guard doing
+exactly what it was built for (a stale plane artifact FAILS instead of shipping). Baseline
+had this suite at 50 pass / 0 fail; the change took it to 46/4; the rebuild returns it.
+**Nothing was signed, no version was bumped, nothing was deployed** — that is DIST's, and
+`package.json` still reads 0.56.0. `src/signpage.mjs` was re-embedded by the build script
+and came out byte-identical, so it carries no diff.
+
+### AMENDMENT 2026-09-10, MID-ITEM (D-310) — **ONE PATH ADDED: `docs/DECIDED.md`, REGENERATED AND NOT HAND-EDITED**
+
+`node tools/decided.mjs` re-run because this item RULES on something — the seven roster
+acts STAY `NON_ACTS`, argued at their table and carried as D-311 — and `plancheck` fails on
+the drift. 682 rulings, 190.8 KB. No line was written by hand.

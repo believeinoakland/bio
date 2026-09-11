@@ -54,6 +54,62 @@
  * NEGATIVE CONTROL RUN 2026-08-03 (rec19-agent): added `frobnicate: "contribute",`
  * to NEEDS in src/index.mjs, ran this suite -> the totality assertion FAILED with
  * got ["frobnicate"] (the unpublished op named); removed the line -> suite green.
+ *
+ * NEGATIVE CONTROL (D-310, the first POSITION-gated act), FOUR arms, DECLARED
+ * HERE AND RUN BY `test/d310.control.mjs` — deliberately not a `.test.mjs`,
+ * because it edits real sources while it runs (`caseproduction.control.mjs`'s
+ * precedent). Every arm is armed ALONE with every other defence held OPEN, every
+ * arm DECLARES before it runs what MUST fail and what MUST NOT, and both sources
+ * are restored from per-arm pristine copies verified by sha256, by content and by
+ * `cmp` twice. Run in one step with `node test/d310.control.mjs [arm]`.
+ *   (BASELINE) both suites green first, and the machine-acts probe line floored,
+ *      so a run with every arm broken is distinguishable from one with every arm
+ *      working and the byte arms cannot compare emptiness.
+ *   (1) THE ITEM'S OWN — THE DISAGREEMENT RE-OPENED. Drop
+ *      `&& f.project_owner !== false` from the `publish` act in
+ *      src/affordances.mjs, so the pre-flight offers publication to a caller
+ *      `publishCase()` refuses by name. MUST FAIL: caseproduction §3a's ONE
+ *      agreement property, whose label names BOTH surfaces, and the fixture
+ *      guard with it (the table goes uniform); this suite's `ONLY act that
+ *      consults the position`. MUST NOT FAIL: the STORE's own owner refusal, and
+ *      the machine arm. AND THE MACHINE'S PUBLISHED ACTS MUST BE BYTE-IDENTICAL
+ *      to the baseline's — the byte-unchanged claim, measured.
+ *   (2a) OVER-STRICTNESS, WITH THE HEADLINE STILL GREEN: `!== false` becomes
+ *      `=== true`, so an UNDETERMINED position narrows. Every member still
+ *      answers correctly, so the agreement property MUST NOT fail; the machine
+ *      arm and the truth-table arm MUST, and the machine bytes MUST DIFFER —
+ *      which is also the byte probe's own control, since an identity nothing can
+ *      move is free (D-280's lesson, one act over).
+ *   (2b) OVER-STRICTNESS, THE OTHER DIRECTION: the fact answers `false` for every
+ *      member, so an OWNER loses the offer. MUST FAIL: the agreement property and
+ *      the fixture guard. MUST NOT FAIL: the machine arm, whose bytes must be
+ *      UNCHANGED — a machine is answered `null` and this arm cannot reach it.
+ *   (3) DEC-69 — THE NAG PLANTED: the `publish` act grows a PROMPT re-stating the
+ *      owner rule at the act. MUST FAIL: caseproduction's DEC-69 arm and this
+ *      suite's prompt-totality assertion. MUST NOT FAIL: the agreement property.
+ *   ==== RUN 2026-09-10, d310-publish-position: 4 arms, ALL AS DECLARED, both
+ *        sources restored byte-identically after every arm (affordances.mjs
+ *        121,632 chars sha256 8e189277…, store.mjs 1,831,107 chars sha256
+ *        f2c40760…, each verified by sha256, by content and by `cmp` twice —
+ *        the driver prints STRING LENGTHS, which are below the byte counts on
+ *        these files because both are full of multi-byte punctuation).
+ *        BASELINE caseproduction 74/0, this suite 89/0, machine-acts probe 1,873
+ *        bytes. (1) caseproduction 71/3, this suite 86/3, machine acts
+ *        BYTE-IDENTICAL. (2a) caseproduction 73/1, this suite 88/1, machine acts
+ *        1,873 -> 1,711 bytes — the probe MOVES, so its identity under (1) and
+ *        (2b) was not free. (2b) caseproduction 71/3, machine acts
+ *        BYTE-IDENTICAL. (3) caseproduction 73/1, this suite 88/1.
+ *        TWO THINGS CAME BACK WIDER THAN DECLARED AND ARE RECORDED RATHER THAN
+ *        SMOOTHED, because a surprising failure is a finding about the ARM:
+ *        (i) under (1) this suite's `holds NO owner rule of its own` pin ALSO
+ *        fails — its fourth clause asserts the fact is still CONSUMED, so it
+ *        catches the deletion as well as a re-derivation, which is more than it
+ *        was written for and is kept; (ii) caseproduction's DEC-69 arm fails
+ *        under (1) and (2b) as well as (3), because its first clause reads
+ *        whether the WITHHELD caller was offered the act and is therefore
+ *        entangled with the gate. The isolation that matters still holds and is
+ *        the declared direction: under (3) the agreement property stays GREEN, so
+ *        nagging and disagreeing are distinguishable where it counts.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -66,8 +122,11 @@ import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROM
          ATTEST_FENCE, attestFence }
   from "../src/affordances.mjs";
 import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
-         RESOLUTIONS, BASIS_GRADES,
+         RESOLUTIONS, BASIS_GRADES, MACHINE_CLASS_PREFIX,
          EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* D-310: the ONE viewer parser, imported so this suite asks the real function
+   what a viewer resolves to rather than restating its spellings. */
+import { viewerPredicate } from "../src/query.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
@@ -365,6 +424,100 @@ const en = rP(await POST("op=enroll", { invite: add.invite, handle: "ruth", pass
 if (!en.ok) throw new Error("enroll: " + JSON.stringify(en));
 const lg = rP(await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" }));
 const RUTH = lg.token;
+
+/* ======= D-310 · THE FIRST POSITION-GATED ACT, PINNED STRUCTURALLY ==========
+ *
+ * ADDED 2026-09-10. The BEHAVIOURAL half — a non-owner not offered `publish`, an
+ * owner still offered it, the store's refusal and the published act asserted as
+ * ONE property — is in `caseproduction.test.mjs` §3a, where the roster fixture
+ * that makes the question askable already exists. What belongs HERE is the
+ * SHAPE: that the act layer consumes a FACT and states no owner rule of its own,
+ * which is the property `case_member` and `rested_on` were built to preserve and
+ * the one a later reader is most likely to erode.
+ *
+ * WHY THE STRUCTURAL PIN IS NOT DECORATION. A copy of the owner rule in this
+ * file would agree with the store on the day it was written and satisfy every
+ * behavioural arm in the battery — REC-35's finding, restated for a PREDICATE
+ * rather than an array. A second implementation of the owner rule is also this
+ * repository's most-repeated defect class by name, and `publishCase()`'s own
+ * fence carries a comment saying so. */
+console.log("\n--- D-310: the position gate is a FACT consumed, never a rule this file re-derives ---");
+{
+  const affSrc = readFileSync(new URL("../src/affordances.mjs", import.meta.url), "utf8");
+  const affCode = stripComments(affSrc);
+  t("affordances.mjs holds NO owner rule of its own: it names no roster table, no owner column and "
+  + "no ownership predicate — it reads a fact the store stated",
+    [/project_participants/.test(affCode), /\bowner\s*=\s*1\b/.test(affCode),
+     /isProjectOwner/.test(affCode), /\bproject_owner\b/.test(affCode)],
+    [false, false, false, true]);
+  /* AND THE STORE'S SIDE IS THE SAME DISCIPLINE FROM THE OTHER END: the fact is
+     derived by CALLING the predicate publishCase() calls, not by asking the
+     table the owner question a second time. The span is the ONE region this item
+     claims — affordanceFacts' own body — so the pin cannot pass on some other
+     method's use of the predicate. */
+  const factsRegion = (() => {
+    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null } = {}) {");
+    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+  })();
+  t("the region under test EXISTS (an empty slice would pass everything below)",
+    factsRegion.length > 2000, true);
+  /* CORRECTED IN FLIGHT 2026-09-10, never exempted, and the correction is the
+     useful half. This pin first read `#isProjectOwner(` inside the facts region
+     and passed — with the row scan written INLINE in the method. That put the
+     store's DO-internal `affordancefacts` dispatch path — NOT an op, and
+     `op-claims.test.mjs` caught this very sentence claiming otherwise, exactly
+     as it caught the same wrong-level claim in D-310's own DEBT row and in the
+     `app.html` comment that mirrored it — onto `meaning-bounds.test.mjs`'s BARE roster (39 -> 40, measured on
+     both trees), because the method had acquired an unbounded row
+     source of its own; every other row question it asks goes through a predicate
+     (`#citesInto`, `#restsOnLive`) for the DEC-8 reason, and this one now does
+     too. So the pin follows the rule to where it lives: the region calls the
+     PREDICATE, and the predicate consumes `#isProjectOwner`. The property being
+     held is unchanged — the owner rule is consumed, never restated. */
+  const ownsAny = (() => {
+    const s = storeSrc.indexOf("  #ownsAnyProject(memberId) {");
+    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+  })();
+  t("the fact is derived THROUGH `#isProjectOwner` — the same predicate publishCase()'s refusal runs "
+  + "— and neither the facts region nor the predicate restates the owner rule in SQL",
+    [ownsAny.length > 50, /#isProjectOwner\(/.test(ownsAny), /#ownsAnyProject\(/.test(factsRegion),
+     /\bowner\s*=\s*1\b/.test(stripComments(factsRegion) + stripComments(ownsAny)),
+     /project_participants/.test(stripComments(factsRegion))],
+    [true, true, true, false, false]);
+  /* ONE VIEWER PARSER. The member id comes from `viewerPredicate`, which is the
+     function that already decides what a viewer may SEE; a second parse here
+     would fail in the direction that reopens the disagreement — a spelling the
+     real parser recognises and the copy does not reads as "no member", the fact
+     goes undetermined, and the act is offered again. */
+  t("the store does not parse the viewer a SECOND time: no `member:` prefix literal and no slice of "
+  + "one inside the facts region — the id comes from the gate the same call already compiled",
+    [/["']member:["']/.test(stripComments(factsRegion)), /gate\.member/.test(factsRegion)],
+    [false, true]);
+  t("and `viewerPredicate` answers the positional question only for an identified session: a machine "
+  + "class credential and the operator-internal `admin` spelling both carry NO member",
+    [viewerPredicate("member:ruth").member, viewerPredicate(`${MACHINE_CLASS_PREFIX}member`).member,
+     viewerPredicate("admin").member, viewerPredicate("nonsense").member],
+    ["ruth", null, null, null]);
+  /* THE PREDICATE'S OWN TRUTH TABLE, and it is stated for what it is: this
+     asserts the `!== false` semantics the machine arm in caseproduction §3a
+     depends on, and NOTHING about whether the store computes the fact correctly.
+     It is here because the difference between `!== false` and `=== true` is
+     invisible to every behavioural arm that never sees a null — and a null is
+     exactly what a machine credential gets. */
+  const pub = ACTS.find((a) => a.id === "publish");
+  const concluded = { object_type: "inquiry", current_state: "concluded", case_member: false };
+  t("`publish` narrows on a STATED false and on nothing else — true, null and an absent fact all "
+  + "leave the act published, so an undetermined position never silently withholds it",
+    [true, false, null, undefined].map((v) => pub.applies({ ...concluded, project_owner: v }, "inquiry")),
+    [true, false, true, true]);
+  t("and it is the ONLY act that consults the position: D-310 gated one act, and the seven roster "
+  + "acts stay NON_ACTS with their argument at that table (D-311)",
+    ACTS.filter((a) => /project_owner/.test(String(a.applies))).map((a) => a.id), ["publish"]);
+  t("the seven roster acts are still NON_ACTS, named and unmoved — the decision is that they STAY, "
+  + "and this fails by name if one is folded in without the per-pair fact D-311 owes",
+    ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
+     "projectownerremove", "projectownerrescue"].filter((k) => !(k in NON_ACTS) || ACT_IDS.has(k)), []);
+}
 
 /* ------------------------------------------------------- catalogue + gates */
 console.log("\n--- the catalogue call: the full act table and the vocabularies, once ---");

@@ -1134,9 +1134,36 @@ export const ACTS = [
      the affordance-layer half of the same sentence `publishCase()`'s
      NOT_CONCLUDED refusal carries, and the two must agree: an act this file
      offers that the store then refuses is the pre-flight lying, which is the one
-     thing affordances.mjs exists to prevent. */
+     thing affordances.mjs exists to prevent.
+
+     D-310, 2026-09-10: `f.project_owner !== false` IS THE FOURTH CONDITION, AND
+     IT IS THE ONE THIS ACT WAS MISSING RATHER THAN A NEW RULE. DEC-72 clause 5
+     — *"Only a project OWNER publishes"* — has been enforced in `publishCase()`
+     since CASE-2, which refuses a non-owner BY NAME (`NOT_THE_PROJECT_OWNER`).
+     This predicate had no condition on who is asking, so a member who owns no
+     project was offered publication on every concluded finding and would be
+     refused at the act: the DEC-8 disagreement this file's header calls the one
+     thing it exists to prevent, on the heaviest act in the system. CASE-6 found
+     it while reading the op path the publication surface calls, and deliberately
+     did not half-fix it inside a surfaces item.
+     `!== false` AND NOT `=== true`, WHICH IS THE WHOLE OF THE SHAPE. The fact is
+     three-valued and the third value is STATED: a machine-class credential holds
+     no roster position, so the store answers `null` rather than `false`, and a
+     null does not narrow. A machine credential's published act set is therefore
+     unchanged by this clause — it is refused publication by a different rule at a
+     different level (`MACHINE_CANNOT_PUBLISH`, DEC-49's fence, first in
+     `publishCase()`), and a gate that quietly absorbed that second rule would be
+     a fence tighter than its rule. Undetermined is first-class here as everywhere.
+     AND IT IS "OWNER OF SOME PROJECT", deliberately. The project is a PARAMETER
+     of `op=publish`; this file is asked about an INQUIRY and cannot know which
+     project a caller will name, so the act says what every act here says — the
+     record permits the move, not that this caller's parameters will pass — while
+     no longer saying it to somebody for whom NO parameter could succeed. The
+     per-pair question (may this viewer publish for THIS project) is a different
+     fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && f.current_state === "concluded" && !f.case_member },
+    applies: (f, ty) => ty === "inquiry" && f.current_state === "concluded" && !f.case_member
+                     && f.project_owner !== false },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
      `single`, conclude's precedent: one question is divided at a time.
@@ -1507,7 +1534,49 @@ export const NON_ACTS = {
   selectionrelease: "selection lifecycle, owned by the credential that made it",
   /* Participation: acts on a project's ROSTER, enforced by the store on who the
      caller IS (owner/participant), published today via op=projectparticipants
-     and op=projectownerarith; folding them into affordances is a later item. */
+     and op=projectownerarith.
+
+     ── D-310, 2026-09-10 · THE SEVEN STAY, AND IT IS DECIDED HERE RATHER THAN
+        DEFERRED AGAIN. The sentence this replaces read "folding them into
+        affordances is a later item", which is a NOTE and not an item; it had
+        stood since REC-19 with nothing to pick it up. D-310 put the FIRST
+        position-gate in this file — the `publish` act now consults
+        `f.project_owner` — and gating one act while seven sit here saying
+        "position-enforced by the store" is a consequence across the act
+        catalogue rather than a line, so it is argued, not skipped. THE DECISION
+        IS THAT THEY STAY NON_ACTS; the item that folds them in is **D-311**,
+        which exists so the "later item" is a row somebody can pick up.
+
+     (1) THE TWO CASES ARE NOT THE SAME DEFECT, AND THE DIFFERENCE IS THE
+         RECORD'S OWN RANKING. `publish` was ALREADY in ACTS with an INCOMPLETE
+         derivation: it was offered to callers the store refuses, which is a
+         pre-flight claiming more than the plane will honour — the OVERCLAIM
+         class this whole record ranks above a missing feature. These seven are
+         offered by nothing at all, so no pre-flight is lying about them. A gap
+         is not a disagreement, and DEC-8 is about disagreement.
+     (2) THEY NEED A DIFFERENT FACT, AND DERIVING THEM FROM D-310's WOULD SHIP A
+         CONFUSION THE STORE ALREADY REFUSES. `project_owner` answers "does this
+         viewer own SOME project", which is right for `publish` because the
+         project is a PARAMETER of that act. Here the project IS the target, so
+         the honest fact is the PAIR — `#isProjectOwner(target, viewer)` — and
+         `caseproduction.test.mjs` §3 measures the store refusing exactly the
+         mistake the loose fact would make: a member who owns one project,
+         acting on another she merely joined, is refused. Reusing D-310's fact
+         would offer `projectinvite` on EVERY project to anyone who owns any.
+     (3) THEY ARE SEVEN POSITIONS, NOT ONE. `projectjoin` is the INVITEE's act
+         and an invitee is by definition not an owner; `projectleave` is a joined
+         participant's; `projectremove` is an ADMINISTRATOR's (Membership
+         Architecture v2 7.7, which gives removal to administrators alone, and
+         7.7 is also why owners invite but do not remove); `projectownerrescue`
+         has a condition of its own. "Position-enforced by the store" is a
+         summary of seven different rules, and each would have to be derived
+         from the refusal its own op raises — the way every act above was.
+     (4) AND IT IS AN ADDITION WHERE D-310 WAS A NARROWING. The SET of acts this
+         file publishes is something consumers build against: putting seven new
+         acts into it is an I3 change with its own consumers to measure, and
+         pairing it with a narrowing behind one IC row would make neither
+         reviewable. IC-75 carries the narrowing alone, which is what lets a
+         consumer answer it. */
   projectinvite: "participation: roster act, position-enforced by the store",
   projectjoin: "participation: roster act, position-enforced by the store",
   projectleave: "participation: roster act, position-enforced by the store",
