@@ -367,7 +367,7 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### M0-23 · queued
+### M0-23 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits touching `preauth-vocabulary.test.mjs`; if none does, this row reads `queued`.
 milestone: M0 (background lane, holds no slot)
 interface: none — test estate; it changes no plane behaviour
 depends-on: none
@@ -716,7 +716,7 @@ one act). NAMING NOTE, so no reader hunts for ghosts: `RECONCILED.md` §3.3 list
 same work as "CPDF-8 (the FORMAT registry)" and "CAP-5 (the OOXML container)" — those
 names were never enqueued; COFF-1 and COFF-2 are the items.
 
-### CPDF-13 · queued
+### CPDF-13 · running — spawned 2026-09-10 by CONDUCT #9, Opus 5, worktree-isolated; CONTENT-PDF promoted into the slot UI-56 freed (activation order is CONDUCT's, ruled 2026-07-31). Falsify rather than believe: a live worker holds an `agent-*` worktree with commits for the calibration construct; if none does, this row reads `queued`.
 milestone: M2
 scope: **The CALIBRATION construct and its scheduled re-probe (D-183).** (a) A
   calibration is a dated, identified fidelity measurement of a named derivation
