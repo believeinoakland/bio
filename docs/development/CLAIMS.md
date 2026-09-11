@@ -1739,3 +1739,29 @@ made after `git commit`.
 
 **CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should:** this branch cannot see FL-9's arms,
 and every figure here is true of this branch alone.
+## CLAIM 2026-09-10 M0 (M0-22 — the test estate's wall-clock dependency: a fixture date the calendar overtook)
+session: M0-22 worker (worktree `agent-afbe0c8c012724e68`, branch `worktree-agent-afbe0c8c012724e68`)
+opened: 2026-09-10
+paths: `bio-plane/test/action-loop.test.mjs` — the FIXTURE/CLOCK region only: the
+  `NOW`/`LATER`/`DUE`/`BEFORE_MS`/`AFTER_MS` block and its header comment (~lines 110-120), the
+  `Miniflare` construction's `bindings` object (~line 60), the `errorsOf` helper (~line 102),
+  and ONE new assertion block for C-11.1's past-due arm. No op under test changes and no
+  existing assertion is deleted.
+  `bio-plane/test/clockadvance.control.mjs` (NEW) — this item's negative-control harness and the
+  re-runnable clock-advanced arm, written INSIDE this worktree per PL-10/UI-38 rather than to the
+  shared scratchpad.
+  `bio-plane/test/clockshift.preload.mjs` (NEW) — the clock-advance instrument the control drives.
+  `docs/development/DEBT.md` — APPEND only, for the census residue (D-300).
+  **NO LASTING EDIT** to `bio-plane/checks/bio-checks.mjs`: the over-strictness arm ARMS and
+  restores it in-process, exactly as this suite's existing control (b) already does, with the
+  restore verified by CONTENT and by sha256 and the harness ABORTING rather than warning if it
+  does not match. Measured clean before and after: `676259987f70da2b…`.
+  **NOT** `bio-plane/src/**`, and no PERSISTENT change to `bio-plane/checks/**` (the `ctx.nowMs`
+  and `BIO_NOW_MS` seams this item uses ALREADY EXIST; nothing in the plane moves), **NOT**
+  `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground), **NOT** any other suite.
+  **CASE-4's worker holds the inquiry state machine** — this claim names no inquiry ground; the
+  `inquiryMd()` fixture here is read-only scaffolding for an action's basis and is not edited.
+released: 2026-09-10 — the work is committed on this worktree's branch and the paths are free.
+  The over-strictness arm's temporary edit to `checks/bio-checks.mjs` was restored and verified
+  by content AND sha256 in the same process (`676259987f70da2b3784284272e19c90fcfe255880990a38d0c3456da4c3ba4a`,
+  identical before the first arm and after the last).

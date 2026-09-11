@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (all four RUN 2026-08-05 by rec24-agent, each broken ALONE and restored byte-identical; 79 pass / 0 fail restored) (a) THE SECOND EDGE TABLE, this item's NAMED hazard - in src/store.mjs actionMove() replace the two catalog lookups with a local copy that permits everything from everything (`const legal = ["planned","active","awaiting_response","resolved","abandoned"]` and `const legalFrom = legal`) -> 4 FAIL: "planned -> resolved is refused" (got NO_RESOLUTION, i.e. the move was legal and only the parameter stopped it), the refusal no longer names what the table permits, the structural no-copy pin, and "resolved is TERMINAL" reports ok:true - an action reopened out of a terminal state. (b) C-2.10 CAPTURE-OR-TESTIFY - in checks/bio-checks.mjs correspondenceFindings change `} else if (!sha && !account) {` to `} else if (false) {` -> 1 FAIL: the catalog no longer names an entry that carries NEITHER bytes nor an account. NOTE, and it is the finding worth keeping: this control was run against a first draft of this suite and the draft PASSED, because the op refuses both shapes before the document is ever written and every assertion was on the op. The catalog and the write arms are now asserted separately - a rule enforced in three places needs an assertion at each. (c) DEC-14 OUTCOME/IMPACT - in consequenceState change `if (!evidence.length) {` to `if (false) {` -> 3 FAIL: an impact claim resting on nothing outside our own action reads "established", determined true, and the "not a low score / sequence alone" wording is gone; the claim resting only on the reply OUR OWN ACTION elicited also reads established. (d) DEC-13 SPECIFICITY - in actionBasisFindings change `if (!disclosed.length) {` to `if (false) {` -> 3 FAIL: a request_for_comment naming ZERO inquiries is accepted by the catalog AND by the write (reason undefined where ACTION_BASIS_REFUSED was wanted). */
+/* NEGATIVE CONTROL: (all four RUN 2026-08-05 by rec24-agent, each broken ALONE and restored byte-identical; 79 pass / 0 fail restored) (a) THE SECOND EDGE TABLE, this item's NAMED hazard - in src/store.mjs actionMove() replace the two catalog lookups with a local copy that permits everything from everything (`const legal = ["planned","active","awaiting_response","resolved","abandoned"]` and `const legalFrom = legal`) -> 4 FAIL: "planned -> resolved is refused" (got NO_RESOLUTION, i.e. the move was legal and only the parameter stopped it), the refusal no longer names what the table permits, the structural no-copy pin, and "resolved is TERMINAL" reports ok:true - an action reopened out of a terminal state. (b) C-2.10 CAPTURE-OR-TESTIFY - in checks/bio-checks.mjs correspondenceFindings change `} else if (!sha && !account) {` to `} else if (false) {` -> 1 FAIL: the catalog no longer names an entry that carries NEITHER bytes nor an account. NOTE, and it is the finding worth keeping: this control was run against a first draft of this suite and the draft PASSED, because the op refuses both shapes before the document is ever written and every assertion was on the op. The catalog and the write arms are now asserted separately - a rule enforced in three places needs an assertion at each. (c) DEC-14 OUTCOME/IMPACT - in consequenceState change `if (!evidence.length) {` to `if (false) {` -> 3 FAIL: an impact claim resting on nothing outside our own action reads "established", determined true, and the "not a low score / sequence alone" wording is gone; the claim resting only on the reply OUR OWN ACTION elicited also reads established. (d) DEC-13 SPECIFICITY - in actionBasisFindings change `if (!disclosed.length) {` to `if (false) {` -> 3 FAIL: a request_for_comment naming ZERO inquiries is accepted by the catalog AND by the write (reason undefined where ACTION_BASIS_REFUSED was wanted). (e)-(h) M0-22's CLOCK ARMS, all RUN 2026-09-10, DRIVEN by `node bio-plane/test/clockadvance.control.mjs` (8/8 arms, exit 0) so the next session re-runs them in one step instead of re-deriving them; each armed ALONE, every restore verified by CONTENT and by sha256. (e) THE ARM THIS SUITE'S FIX EXISTS FOR - node's clock advanced +1, +5 and +20 years by test/clockshift.preload.mjs -> 82 pass / 0 fail at every one. Before the fix this suite read 73 pass / 6 FAIL at the TRUE wall on a tree NOBODY HAD TOUCHED, because DUE was 2026-09-10 and the calendar reached it; the six were the catalog's C-11.1 past-due finding plus the cached-column staleness pair. (f) THE REJECTED FIX, which is the whole argument for pinning over moving - the two pins removed and DUE moved to 2026-09-19 -> 79 pass / 0 fail TODAY and 73 pass / 6 FAIL at +1 year, reproducing the original signature exactly. 2026-09-19 is the LAST date that is green today: DUE must exceed the wall AND stay under AFTER_MS for section 5's before/after instrument to mean anything, so the date-move fix has a viable window of NINE DAYS, and buying more requires moving BEFORE_MS and AFTER_MS too - at which point the one-line edit is the whole instrument, merely rescheduled. (g) OVER-STRICTNESS, the arm that keeps the pin honest - in checks/bio-checks.mjs change `if (DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {` to `if (false) {` -> 2 FAIL, both in section 5a. C-11.1's past-due branch is LIVE in production (op=audit calls checkBundle with NO nowMs, so it fires against the wall and tells a group a window it still calls pending has closed); pinning this suite's clock silences it for every fixture here, so 5a asserts it in BOTH directions or "the suite is green" and "the check was deleted" become the same reading. (h) THE PIN IS LOAD-BEARING - remove `BIO_NOW_MS: String(BEFORE_MS)` from the bindings ALONE -> 1 FAIL, the CACHED-column assertion, because action_clock_overdue is then computed from the true wall inside workerd. That arm is what closes clockshift.preload.mjs's OWN stated blind spot - it moves node's clock and never workerd's - by measurement rather than by argument. */
 /* REC-24: THE ACTION LOOP — the plane half of the IMPACTING verb, which had zero
  * reachable processes before this suite existed.
  *
@@ -52,12 +52,77 @@ import { checkBundle, parseFrontmatter, ACTION_KINDS, ACTION_BASIS_KINDS,
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+
+/* ===========================================================================
+ * THE CLOCK, PINNED — M0-22, 2026-09-10, and the constants are declared HERE,
+ * above the Miniflare construction, because the binding below needs them.
+ *
+ * WHAT WENT WRONG, MEASURED RATHER THAN REMEMBERED. `DUE` was `2026-09-10` and
+ * this suite read the WALL CLOCK in two places, so on 2026-09-10 the fixture's
+ * response window came due and C-11.1 began reporting every action in this file
+ * *silently past-due*. Six assertions fell: 79 pass / 0 fail became 73 pass /
+ * 6 FAIL on a tree NOBODY HAD TOUCHED. CONDUCT measured `168/168 · 10,351` that
+ * morning and a later worker measured `167/168 · 10,345` on the SAME COMMIT —
+ * both honest, and the difference is exactly these six. **The calendar
+ * falsified the earlier measurement, and no re-measurement discipline catches
+ * that**, because a figure gone stale by TIME is indistinguishable from a figure
+ * gone stale by a CHANGE. That is the same shape as the missing-`node_modules`
+ * trap in CLAUDE.md: "measure your own baseline and trust it over the brief"
+ * points the WRONG WAY at it.
+ *
+ * THE SHAPE OF THE FIX, AND WHY IT IS THIS ONE. Moving the date buys silence
+ * until the next roll-past and leaves the defect class live — and this very file
+ * proves that, because it carried a SECOND undetected instance: RFC3's
+ * `2026-12-01` window (section 8) is `status: pending` and would have failed the
+ * identical way on 2026-12-02. The alternative considered was a fixture date
+ * computed RELATIVE TO NOW. Rejected: it makes the suite's subject a function of
+ * the run day, and every assertion must then re-derive the same date by the same
+ * formula — an expectation derived from the thing under test, which agrees with
+ * it for free and proves nothing.
+ *
+ * PINNING MAKES THE CLASS UNREPRESENTABLE HERE RATHER THAN DEFERRING IT: after
+ * the binding below, this suite reads NO wall clock at all. Every date in it is
+ * a literal, and every consumer of "now" — the catalog (`ctx.nowMs`), the CACHED
+ * `action_clock_overdue` column (`Store.projectionOf`, via the store's own
+ * `#nowMs`), the as-of derived read, and the state-history stamps — resolves to
+ * an instant this file supplies. There is no quantity left for the calendar to
+ * move, at any distance in either direction.
+ *
+ * NOTHING HERE IS INVENTED. Both seams already existed and both are documented
+ * in the source as existing for exactly this: `bio-checks.mjs` consults
+ * `ctx.nowMs ?? Date.now()` at five sites, and `store.mjs` (the comment above
+ * `projectionOf`) says in its own words that "a suite that pins BIO_NOW_MS pins
+ * the cached flag too". `overdue-successor.test.mjs` and
+ * `capture-progressions.test.mjs` already bind it. This suite's own header
+ * comment believed it was already clock-injected — it injected the as-of READ
+ * and left the catalog and the WRITE on the wall.
+ * ======================================================================== */
+const NOW = "2026-07-01T00:00:00Z";
+const LATER = "2026-07-02T00:00:00Z";
+/* The authored response window. A LITERAL, and it stays one: it is now read
+   only against instants this file names, never against the day the suite runs. */
+const DUE = "2026-09-10";
+const BEFORE_MS = Date.parse("2026-08-20T00:00:00Z");   // the window is still open
+const AFTER_MS = Date.parse("2026-09-20T00:00:00Z");    // the window has closed
+/* A THIRD instant, chosen INDEPENDENTLY of the two above and of DUE, for the
+   fixture that is past-due BY DESIGN (section 5a). Deriving it from DUE or from
+   BEFORE_MS is the defect that has bitten seven items here: an expectation
+   computed the same way as the thing it checks agrees with it for free. */
+const LONG_PAST = "2026-08-01";
+
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-rec24", MEMBER_TOKEN: "mem-rec24", PROBE_TOKEN: "prb-rec24", VERSION: "test" },
+  /* BIO_NOW_MS is the store's AMBIENT clock (`Store.#nowMs`): the instant every
+     write in this suite is stamped at and, decisively, the instant the CACHED
+     `action_clock_overdue` column is computed at. Without it that column is
+     written from the wall, which is why assertion 4 of section 5 — the one
+     asserting the cache and the derived answer DISAGREE — failed on the day the
+     wall passed DUE and stopped demonstrating staleness at all. */
+  bindings: { ADMIN_TOKEN: "adm-rec24", MEMBER_TOKEN: "mem-rec24", PROBE_TOKEN: "prb-rec24",
+              VERSION: "test", BIO_NOW_MS: String(BEFORE_MS) },
 });
 
 let pass = 0, fail = 0;
@@ -99,24 +164,37 @@ const stateOf = async (id, tok) =>
 /* The catalog's OWN parser, so this suite never invents a second reading of the
    grammar it is testing. */
 const fmOf = (text) => parseFrontmatter(text).data || {};
-const errorsOf = async (id, text) => {
+/* M0-22: `nowMs` is the catalog's OWN injectable clock (`ctx.nowMs ?? Date.now()`
+   in bio-checks.mjs, five sites), threaded here so a finding derived from "today"
+   is derived from an instant THIS FILE names. It defaults to the same ambient
+   instant the store is pinned at, so the two halves of every assertion below —
+   what the catalog says about the bytes and what the store wrote about them —
+   answer at ONE instant rather than at two. Passing it explicitly is how section
+   5a asks the SAME bytes at a second instant. */
+const errorsOf = async (id, text, nowMs = BEFORE_MS) => {
   const { findings } = await checkBundle({ folderName: id,
     files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
+    nowMs,
     resolveTarget: () => true });
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
 
 /* ------------------------------------------------------------- documents */
-const NOW = "2026-07-01T00:00:00Z";
-const LATER = "2026-07-02T00:00:00Z";
-/* The response window is a FUTURE date so the derivation is exercised by the
-   INJECTED clock and not by the wall — which is the point of an injectable
-   clock, and also keeps C-11.1's "silently past-due" arm (a real and separate
-   finding about the document) out of this suite's way. */
-const DUE = "2026-09-10";
-const BEFORE_MS = Date.parse("2026-08-20T00:00:00Z");   // the window is still open
-const AFTER_MS = Date.parse("2026-09-20T00:00:00Z");    // the window has closed
+/* SUPERSEDED 2026-09-10 (M0-22), and corrected here rather than exempted. The
+   comment that stood at this spot read: "The response window is a FUTURE date so
+   the derivation is exercised by the INJECTED clock and not by the wall — which
+   is the point of an injectable clock, and also keeps C-11.1's 'silently
+   past-due' arm (a real and separate finding about the document) out of this
+   suite's way."
+   IT WAS WRONG IN BOTH HALVES, and the wrongness is the finding. (1) "a FUTURE
+   date" is not a property of a literal — it is a relation between a literal and
+   the day the suite runs, so the sentence silently depended on the very wall
+   clock it claimed to have escaped, and expired. (2) The clock was injected into
+   the as-of READ only; the CATALOG and the WRITE were still on the wall, which
+   is why only those two produced failures. The constants now live above the
+   Miniflare construction with the reasoning; the past-due arm is no longer
+   routed around but ASSERTED, in section 5a. */
 
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -443,6 +521,62 @@ console.log("\n--- 5. the clock: overdue derived ON READ against the injectable 
     party: "City Clerk", account: "The window closed with no substantive response to the request." });
   t("a NON-RESPONSE is recorded with its date (DEC-13): a refusal to reply is a fact about the body",
     [none.ok, none.direction, none.at, none.held_as], [true, "no_response", DUE, "testimony"]);
+}
+
+/* =====================================================================
+   5a. C-11.1's PAST-DUE ARM, ASSERTED RATHER THAN ROUTED AROUND (M0-22).
+
+   THIS SECTION IS THE OVER-STRICTNESS GUARD FOR THE PIN ABOVE, and it is
+   here because the pin without it would be indistinguishable from deleting
+   the check. C-11.1's "silently past-due" finding is REAL: `op=audit` calls
+   checkBundle with NO nowMs, so in production it fires against the wall and
+   tells a group that a window it is still calling `pending` has closed. The
+   pin silences that finding for every fixture in this file, so this file now
+   owes an assertion that the finding still fires — otherwise "make the suite
+   green" and "neuter C-11.1" produce the same reading.
+
+   The instrument is section 5's, applied to the catalog instead of to the
+   projection: THE SAME BYTES, ASKED AT TWO INSTANTS. `LONG_PAST` is chosen
+   independently of DUE and of the pinned instants, so no expectation here is
+   derived from the thing it checks.
+   ===================================================================== */
+console.log("\n--- 5a. C-11.1 still fires: the pin names the instant, it does not remove the check ---");
+{
+  /* Direction ONE: the same conformant action this suite calls clean draws the
+     finding when the catalog is asked PAST its window. This is the arm that
+     would have caught M0-22's defect in 2026-07, when it was written. */
+  const conformant = actionMd(ACT, { refs: [INQ],
+    basis: [{ target: INQ, kind: "rests_on" }], clock: RESPONSE_WINDOW });
+  t("the SAME bytes draw ZERO errors before the window and C-11.1 after it: the finding is a "
+    + "function of the INSTANT, and this suite now names the instant instead of inheriting the day",
+    [(await errorsOf(ACT, conformant, BEFORE_MS)),
+     (await errorsOf(ACT, conformant, AFTER_MS)).some((m) => /silently past-due/.test(m))],
+    [[], true]);
+
+  /* Direction TWO: a fixture that is past-due BY DESIGN must assert past-due
+     even at the pinned instant, so the pin cannot be what is producing silence. */
+  const STALE = "ACTN-2026-2411-stale-window";
+  const staleWindow = [{ text: "City response due", date: LONG_PAST,
+    description: "A window that closed before the instant this suite is pinned at.",
+    basis: "California Public Records Act 7922.535", status: "pending" }];
+  t("a window that closed BEFORE the pinned instant is still reported silently past-due, and the "
+    + "finding NAMES the date and the status so a member can act on it",
+    (await errorsOf(STALE, actionMd(STALE, { refs: [INQ],
+      basis: [{ target: INQ, kind: "rests_on" }], clock: staleWindow })))
+      .filter((m) => /silently past-due/.test(m)),
+    [`C-11.1: clock[0] 'City response due' is silently past-due (${LONG_PAST} < today, status still pending)`]);
+
+  /* Direction THREE: the finding is about SILENCE, not about being late. The
+     identical closed window, OWNED by a non-pending status, draws nothing —
+     which is what makes it a discriminating check rather than one that fires on
+     every old date, and therefore what makes direction TWO worth anything. */
+  const OWNED = "ACTN-2026-2412-owned-window";
+  t("...and the IDENTICAL closed date marked `overdue` draws nothing: C-11.1 is about a window "
+    + "the document has not acknowledged, never about a window merely being in the past",
+    await errorsOf(OWNED, actionMd(OWNED, { refs: [INQ],
+      basis: [{ target: INQ, kind: "rests_on" }],
+      clock: [{ ...staleWindow[0], status: "overdue" }] })),
+    []);
 }
 
 /* =====================================================================
