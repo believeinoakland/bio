@@ -594,9 +594,31 @@ const REGISTER_FLOOR = {
      ratchet whose whole purpose is to have none, by the edit warning about it.
      Seventh instance of the hazard, and the tell was the tool printing
      `classified 164/163` while the file plainly said 164. */
-  arms: 883,
-  classified: 164,
-  corpus: 165,
+  /* MOVED 2026-09-10 by CPDF-13 (worktree agent-ab1e3df0de5e3b8ec): 883 -> 887 /
+     164 -> 165 / 165 -> 166, ALL THREE IN THE SAME TURN and every one read off
+     the figure a green `--strict` run PRINTED on this branch
+     (`arms 887/883 - classified 165/164 - corpus (suites read) 166/165 - GREW by
+     4 arm(s)`), never by adding to the numbers that were here.
+     THE RISE IS ONE NEW SUITE, `test/calibration.test.mjs`, whose declaration
+     states FOUR armed arms (a)-(d) plus a BASELINE - so `classified` and
+     `corpus` each move by one and `arms` by four. The baseline is deliberately
+     NOT an ordinal item: `countArms` reads the enumerated list, and an opening
+     `(baseline)` item is what CASE-1 measured going unreadable one item earlier.
+     **MEASURED AFTER THE COMMIT, NOT BEFORE.** Read on the working tree the run
+     reported the suite as UNTRACKED and held all three figures at the in-commit
+     values (883/164/165), because `provenance.mjs` will not let this register
+     count work no other checkout can see (D-238). The figures above are from the
+     run made AFTER `git commit`, the only run in which they are reproducible by
+     anyone else.
+     ONE KEY SET, grepped for duplicates before writing (`grep -n "^  arms:"` and
+     its two siblings) - the keep-both merge that leaves a second, LOWER pair
+     here is on the record seven times, and valid JavaScript where the last
+     silently wins. CONDUCT RE-DERIVES THESE ON THE MERGED TREE and should: this
+     branch cannot see another item's arms, and every figure here is true of this
+     branch alone. */
+  arms: 887,
+  classified: 165,
+  corpus: 166,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
