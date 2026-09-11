@@ -101,6 +101,7 @@ import {
    on `fleetStatement`. This file defined its own copy for exactly one commit. */
 import { NS_FLEET, fleetStatement } from "../bio-plane/src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
+import { resolveVersion } from "../bio-plane/scripts/resolve-version.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -176,17 +177,28 @@ for (const m of all) {
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
 }
 
-/* ---- the version, and that every source agrees on it ---------------------- */
-
-const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "bio-plane/package.json"), "utf8"));
-const version = flag("--version") || pkg.version;
-const wrangler = readFileSync(join(REPO_ROOT, "bio-plane/wrangler.jsonc"), "utf8");
-const wv = /"VERSION"\s*:\s*"([^"]+)"/.exec(wrangler)?.[1] ?? null;
-if (pkg.version !== version || wv !== version) {
-  die("VERSION_DISAGREES",
-    `the version sources do not all read ${version}.`,
-    `  bio-plane/package.json   ${pkg.version}\n  bio-plane/wrangler.jsonc ${wv}\n` +
-    "A release whose sources disagree about its own version is D-106's defect. Bump them together.");
+/* ---- the version, and that the WHOLE FLEET agrees on it ------------------
+   This checked only bio-plane's two files until DS-2. That was too narrow by
+   exactly the amount that matters here: a release carries ONE version over a
+   SET of artifacts, so a member declaring something else makes the manifest's
+   `version` field a claim about nothing. The fleet-spanning resolver is the
+   same one `deploy.mjs` refuses on, so the release and the deploy cannot
+   disagree about what "the version" means. */
+const version = flag("--version") || resolveVersion().version;
+{
+  const r = resolveVersion();
+  if (!r.ok) {
+    die("VERSION_SKEW", "the fleet does not agree on one version.",
+      `  authority: bio-plane/package.json = ${JSON.stringify(r.version)}\n`
+      + r.findings.map((f) => "  - " + f).join("\n"));
+  }
+  if (version !== r.version) {
+    die("VERSION_DISAGREES",
+      `--version ${version} does not match what the tree declares.`,
+      `  declared: ${JSON.stringify(r.version)} (bio-plane/package.json, the authority)\n`
+      + "A flag cannot fake a bump the tree has not made. Bump the authority and the\n"
+      + "fleet together — `node bio-plane/scripts/resolve-version.mjs` names every site.");
+  }
 }
 
 /* ---- REFUSAL 4: A PUBLISHED VERSION IS IMMUTABLE -------------------------

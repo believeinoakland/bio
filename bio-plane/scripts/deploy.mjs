@@ -38,6 +38,7 @@
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { resolveVersion } from "./resolve-version.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (name) => { const i = argv.indexOf(name); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -50,6 +51,39 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
   console.error("usage: CF_TOKEN=... CF_ACCT=... node deploy.mjs <slug> <version> <asset> --thread <NAME>");
   console.error("       [--force-without-baton \"<reason>\"]");
   process.exit(2);
+}
+
+/* DS-2 / D-116: THE VERSION AUTHORITY SPANS THE FLEET, CHECKED BEFORE ANYTHING
+   ELSE HAPPENS.
+   This script takes the version as a POSITIONAL ARGUMENT, which means that until
+   now the operator's typing was the only thing deciding what a deploy claimed to
+   be — nothing compared it to what the repository declares, and nothing compared
+   the plane's declaration to the fleet's. Measured 2026-09-11, five of the six
+   declaring sites disagreed with the authority and no instrument said so.
+   Two refusals, and they are different failures:
+     - the TREE disagrees with itself (a member behind or ahead of the plane), or
+     - the ARGUMENT disagrees with the tree, which is a typo about to be signed. */
+{
+  const r = resolveVersion();
+  if (!r.ok) {
+    console.error("REFUSED [VERSION_SKEW]: the fleet does not agree on one version, so this");
+    console.error("deploy cannot say what it is deploying.");
+    console.error(`  authority: bio-plane/package.json = ${JSON.stringify(r.version)}`);
+    for (const f of r.findings) console.error("  - " + f);
+    process.exit(1);
+  }
+  if (version !== r.version) {
+    console.error("REFUSED [VERSION_ARGUMENT_DISAGREES]: the version on the command line is not");
+    console.error("the version this tree declares.");
+    console.error(`  argument : ${JSON.stringify(version)}`);
+    console.error(`  declared : ${JSON.stringify(r.version)}  (bio-plane/package.json, the authority)`);
+    console.error("  A deploy stamps VERSION into the worker's bindings and the rollout gate then");
+    console.error("  waits for that string to SERVE. A typo here does not fail loudly: it deploys,");
+    console.error("  serves a version nothing else in the repository claims, and the next reader");
+    console.error("  cannot tell which bytes are running. Fix the argument, or bump the tree.");
+    process.exit(1);
+  }
+  console.log(`version: ${r.version} — plane and ${r.sites.length - 2} fleet site(s) agree`);
 }
 
 const BATON_URL = "https://raw.githubusercontent.com/believeinoakland/bio/main/docs/development/kickoffs/BATON.md";
