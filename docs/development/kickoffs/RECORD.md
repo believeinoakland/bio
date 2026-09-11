@@ -402,3 +402,57 @@ pinning in the same neighbourhood.
 **WHAT IS STILL OWED BY THE ARC** (CASE-4, CASE-6 and the arc's definition of done) is in `QUEUE.md`
 and `CASE-AS-PRODUCTION.md`; nothing in this item touches `docs/BIO_DATAPLANE_STATE.md`, which the
 arc binds to CASE-6.
+
+## CASE-4 landed 2026-09-10 (worktree `agent-a2cabbd5225deffd5`) — `published` leaves the inquiry state machine, and what carries the rules it was carrying
+
+**READ THIS BEFORE TOUCHING ANY GUARD THAT USED TO ASK `current_state === "published"`.** There
+is no such state on a newly published finding. DEC-72's design: *"A finding's lifecycle ends at
+`concluded`; publication is the case relation."*
+
+1. **THE ONE PREDICATE IS `#caseRelationOf(bundleId)` AND THERE IS EXACTLY ONE OF IT.** It answers
+   by the PIN — `published_case_members.version_sha = bundles.bundle_sha` — which is CASE-5's own
+   mechanism read from the member's side, so the case relation and the revision flag are ONE
+   comparison over ONE column in two directions. It has two arms: PINNED (the ratified relation)
+   and PREPARED (the window between `op=publish` and `op=ratify`, read off the document's own
+   `case_id` + `case_edition` pair, and a REFUSAL INPUT ONLY — nothing commits a case fact from
+   it, which is what keeps it clear of CASE-5b's wall). Do not add a second way to ask this.
+
+2. **A RULE THAT RODE ON THE EDGE TABLE DIES WITH IT, SILENTLY, AND FOUR DID.** This is the lesson
+   worth carrying out of the item. An array entry can enforce two rules at once, and deleting it
+   deletes both while the suite stays green. Found by RUNNING the suites, not by reading:
+   `op=dispose` (a published case could be deferred — D-79 reversed), `op=publish` (a second
+   edition of unchanged bytes), `inquirydivide`'s affordance (offered where the op refuses — DEC-8),
+   and `checkCompletenessFreshness` (C-21.1 stops firing on EVERY document). Each is now a named
+   refusal or an explicit predicate: `PUBLISHED_CANNOT_BE_SET_DOWN`, `ALREADY_A_CASE_MEMBER`,
+   `NOT_CONCLUDED`, `!f.case_member`.
+
+3. **`op=affordances` NOW SERVES `case_member`, and four acts derive from it** — `publish`,
+   `reopen`, `dispose`, `inquiryground`, `inquirydivide`. It is a FACT and never a rule; the rules
+   stay in `affordances.mjs`. If you add an act that used to key on the state word, key it here.
+
+4. **`op=reopen`'s GATE IS A DISJUNCTION** — a disposition OR the case relation. `REOPENABLE_FROM`
+   lost `published` and did NOT gain `concluded`: REC-31's rule that a conclusion nobody published
+   may not revert to open still wearing its conclusion is preserved exactly where it was aimed.
+
+5. **THE REVISION FLAG IS SET AT THE MINT AND NEVER CLEARED.** `#flagCasesOnRevision` is called
+   from `promote()` — the one write that mints a version — with the sha being replaced. Nothing in
+   the plane DELETES a flag row except `op=purge`'s sweep (D-113). The discharge is a new RATIFIED
+   edition of that case, scoped to `case_id` and nothing wider, which is D-266's ruling made
+   structural. **Do not add an acknowledgement op**: a bare acknowledgement would commit a
+   case-level assertion from an UNSIGNED REQUEST, which is CASE-5b's wall.
+
+6. **`published` SURVIVES IN `STATES.inquiry.legacy`, READ BY `checkStateLegality` AND BY NOTHING
+   ELSE.** Ratified bytes are immutable and a store that has published anything holds frontmatter
+   saying it. Every other reader — the affordance derivation, the transition guards, `edgesFrom` —
+   sees only `legal`. Do not fold `legacy` into `legal`.
+
+7. **THE STATE RULES AMENDMENT IS IN `docs/architecture/BIO_State_Rules_Consistency_v1_5.md`**, as a
+   dated amendment section at the foot, on the precedent of the declared-bias cross-reference note
+   above it. §4 owns the per-type machines; the catalog remains the authority for the edge set.
+
+8. **A PRE-EXISTING DEFECT THIS ITEM DID NOT FIX AND MUST NOT BE BLAMED FOR:
+   `action-loop.test.mjs` FAILS ON EVERY TREE FROM 2026-09-10 ONWARD.** Its fixture hard-codes
+   `DUE = "2026-09-10"` as a "future" date and the wall clock reached it; six assertions draw
+   C-11.1's silently-past-due finding. **Moving the constant forward re-arms the bomb** — the
+   suite owns an injected clock and the date should be derived from it. ACTION's ground, not
+   RECORD's; measured and reported to CONDUCT.

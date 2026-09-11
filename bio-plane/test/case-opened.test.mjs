@@ -322,10 +322,23 @@ t("REC-58 THE FINDING: the publish-case method — `Store.publishCase()`, reache
    /\bopened\b/.test(publishCase.text),
    /caseEditionState/.test(publishCase.text)],
   [false, false, false]);
+/* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and it is a ONE-LETTER
+   correction with a real cause. This matched `/reopened/` against the lowercase
+   word inside publishCase's ILLEGAL_TRANSITION sentence. CASE-4 replaced that
+   refusal — the precondition it carried is now NOT_CONCLUDED, said explicitly
+   rather than derived from the edge table — and the new sentence spells the word
+   REOPENED in capitals ("A finding already in a published case is REOPENED
+   first"). THE TRAP THIS ARM PINS IS UNCHANGED: the letters are still in the raw
+   bytes of the method, inside a refusal sentence, exactly where a
+   string-body-keeping scanner would have found them and agreed with REC-58. The
+   match is now case-insensitive so it pins the TRAP rather than one refusal's
+   capitalisation — which is what it was always about, and pinning the casing
+   would make this arm fail every time a sentence is reworded while the hazard it
+   describes stays put. */
 t("REC-58 AND THE TRAP THAT HID IT: the RAW bytes of `publishCase` DO contain the letters, inside a "
 + "refusal sentence — so a scanner that kept string bodies would have reported the field present and "
 + "agreed with the item",
-  /reopened/.test(rawRegion(publishCase)), true);
+  /reopen(ed)?/i.test(rawRegion(publishCase)), true);
 
 console.log("\n--- REC-58 · 3. THE TWO CALLERS OF THE PRODUCER, AND WHICH ONE SPREADS ---");
 t("REC-58: `Store.publish()` — the RATIFICATION committer — is the ONE caller that returns the state "

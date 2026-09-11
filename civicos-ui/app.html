@@ -1640,7 +1640,17 @@ const STATE_EDGES = {
     surfaced:["deferred","dismissed","concluded","divided"],
     deferred:["open","surfaced","dismissed"],
     dismissed:["open","surfaced","deferred"],
-    concluded:["open","surfaced","deferred","dismissed","published","divided"],
+    /* CASE-4 / DEC-72, 2026-09-10: `published` LEAVES `concluded`'s list, because
+       it leaves the catalog's. Under DEC-72 publication no longer moves a
+       finding's state — a member of a published case sits at `concluded` and
+       membership is the CASE RELATION — so `concluded -> published` is not a
+       move the disposition pre-flight may offer, and offering it would be this
+       mirror disagreeing with the refusal it fronts (DEC-8), which is the exact
+       thing the comment above says this block exists to prevent.
+       `published -> open|surfaced` is KEPT, because the catalog keeps it: the
+       state is now LEGACY — readable in bytes already signed, entered by nothing
+       — and a document already sitting there must still be pickable-up. */
+    concluded:["open","surfaced","deferred","dismissed","divided"],
     published:["open","surfaced"],
     divided:[],
   },

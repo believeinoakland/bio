@@ -119,8 +119,31 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
  *
  * ONE reopen act, not two: "pick this question back up" is one verb, and a
  * second control meaning the same thing on a different state is exactly the
- * drift this file exists to prevent. */
-export const REOPENABLE_FROM = [...DISPOSITIONS, "published"];
+ * drift this file exists to prevent.
+ *
+ * ===== CASE-4 / DEC-72, 2026-09-10: `published` LEAVES THIS ARRAY AND THE RULE
+ * IT STOOD FOR DOES NOT. Every word of the reasoning above is still true; what
+ * is no longer true is that a case-member finding WEARS A STATE. DEC-72 ends the
+ * `published` lifecycle state and makes publication THE CASE RELATION, so a
+ * published finding now sits at `concluded` — the exact state this array refuses
+ * BY NAME. Left alone, that is not a conservative outcome: it would refuse
+ * reopening to every published case in the record and leave `op=publish`'s
+ * second edition, which DEC-12 requires, with no route to it.
+ *
+ * So the test in `reopen()` is now a DISJUNCTION and this array is only half of
+ * it: reopenable FROM A DISPOSITION (this array, unchanged in meaning), OR
+ * BECAUSE THE DOCUMENT IS A CASE MEMBER (the store's own case-relation
+ * predicate, which cannot live in this file because it is a query). The
+ * `concluded` exclusion is thereby PRESERVED EXACTLY WHERE IT WAS AIMED: a
+ * concluded finding that was never published is still refused BY NAME with
+ * REC-31's own reason, and only the case relation lifts it. Making the whole of
+ * `concluded` reopenable would have been the softening this comment warns
+ * against, and it is the over-strictness arm CASE-4's control runs.
+ *
+ * The array stays exported and stays the refusal's `reopenable:` payload,
+ * because it is still the answer to "which states does reopening pick a question
+ * up from" — the case relation is not a state and does not belong in it. */
+export const REOPENABLE_FROM = [...DISPOSITIONS];
 
 /* REC-35, UI-13's delegation: THE INTENT LAYER'S THREE CLOSED VOCABULARIES, and
  * they live HERE for the reason DISPOSITIONS does — one array, imported by the
@@ -968,8 +991,17 @@ export const ACTS = [
      not that this caller's parameters will pass, which is exactly what release
      and conclude already say here. Narrowing it would unpublish DEFER on the
      one question a member most wants to defer. */
+  /* CASE-4 / DEC-72, 2026-09-10: `!f.case_member`, and it restores a rule rather
+     than adding one. The STATES table's own comment has said since REC-14 that
+     `published -> deferred|dismissed` is DELIBERATELY not an edge — *"Ageing is
+     what happens to a finding NOBODY published (D-79); a published case cannot
+     quietly stop being worked on, because it is already out in the world."* The
+     edge table was the enforcement; DEC-72 moves a case member to `concluded`,
+     which DOES carry the disposition edges, so the rule had to become a
+     condition. The store refuses PUBLISHED_CANNOT_BE_SET_DOWN by name, and this
+     clause is what keeps the pre-flight from offering what that refuses. */
   { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry"
+    applies: (f, ty) => ty === "inquiry" && !f.case_member
                      && DISPOSITIONS.some((d) => edgesFrom(f).includes(d)) },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
@@ -1018,8 +1050,17 @@ export const ACTS = [
      no edition recorded" hazard this act was scoped around cannot arise there
      -- and published -> open is the only route to a second edition. The
      reasoning is on REOPENABLE_FROM itself, where both consumers read it. */
+  /* CASE-4 / DEC-72, 2026-09-10: THE DISJUNCTION, AND IT MIRRORS `reopen()`'s
+     GATE EXACTLY — that is the requirement rather than a coincidence, since a
+     pre-flight that could disagree with the refusal it fronts is DEC-8's
+     failure. The store now permits reopening from a disposition OR because the
+     document is a member of a published case; `REOPENABLE_FROM` lost
+     `published` with the state, and `edgesFrom` alone would offer this act on
+     EVERY concluded finding, which the store refuses NOT_SET_DOWN with REC-31's
+     own reason. */
   { id: "reopen", label: "Reopen", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && REOPENABLE_FROM.includes(f.current_state)
+    applies: (f, ty) => ty === "inquiry"
+                     && (REOPENABLE_FROM.includes(f.current_state) || !!f.case_member)
                      && edgesFrom(f).includes("open") },
   /* REC-14. An inquiry whose machine offers the `published` edge — which is
      `concluded` and nothing else, because a material set cannot be asserted
@@ -1049,9 +1090,32 @@ export const ACTS = [
      the declared and justified subject position) and C-21.1's freshness check
      are ACT-TIME refusals the store words itself — the release precedent:
      publishing the act says the state machine permits the move, not that this
-     caller's parameters will pass. */
+     caller's parameters will pass.
+
+     `!f.case_member` IS THE OTHER HALF AND IT IS NOT NEW BEHAVIOUR. Before
+     CASE-4 a member of a published case wore `current_state: published`, whose
+     edge list carried no `published` destination, so the act was already not
+     offered there — and `op=publish` would already have refused it, since
+     publishing an unchanged member would mint a second edition of bytes nobody
+     revised. The condition is now said instead of falling out of the table. A
+     member that HAS been revised (reopened, worked, concluded again) is no
+     longer pinned, so `case_member` is false and the act reappears — which is
+     exactly DEC-12's second-edition route.
+
+     CASE-4 / DEC-72, 2026-09-10: `edgesFrom(f).includes("published")` WAS THE
+     PRECONDITION WEARING A STATE MACHINE'S CLOTHES, and it is now the
+     precondition itself. There is no `published` destination in the inquiry
+     machine any more, so that expression is FALSE FOR EVERY DOCUMENT — the act
+     would have vanished from every affordance answer with the suite green,
+     which is the failure mode a state removal produces if nobody looks. The
+     condition was only ever true from `concluded` (it was `concluded`'s edge and
+     no other state's), so `concluded` IS the expression, said plainly. This is
+     the affordance-layer half of the same sentence `publishCase()`'s
+     NOT_CONCLUDED refusal carries, and the two must agree: an act this file
+     offers that the store then refuses is the pre-flight lying, which is the one
+     thing affordances.mjs exists to prevent. */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("published") },
+    applies: (f, ty) => ty === "inquiry" && f.current_state === "concluded" && !f.case_member },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
      `single`, conclude's precedent: one question is divided at a time.
@@ -1087,9 +1151,20 @@ export const ACTS = [
      reasoning is at divide()'s guard, where both consumers of the distinction
      can read it), and unpublishing the act here would disagree in the other
      direction. ONE predicate behind both, as with retire and #citesInto. */
+  /* FOURTH CONDITION, ADDED BY CASE-4 / DEC-72, 2026-09-10, AND IT IS NOT A NEW
+     RULE — IT IS AN OLD RULE THAT LOST ITS CARRIER. `op=inquirydivide` has
+     refused PUBLISHED_CANNOT_DIVIDE since REC-16, and this predicate did not
+     need to say so, because a published case wore `current_state: published`
+     whose edge list has no `divided` in it — `edgesFrom` did the work. DEC-72
+     ends that state: a case member sits at `concluded`, and `concluded` DOES
+     carry the `divided` edge. So without this clause the act is offered on every
+     published case and the store then refuses it, which is DEC-8's headline
+     failure and was caught by `divide.test.mjs`'s own DEC-8 arm rather than
+     reasoned about in advance. */
   { id: "inquirydivide", label: "Divide (split this question)", weight: "single", types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
+                     && !f.case_member
                      && (f.basis_legs ?? 0) >= 1
                      && (f.rested_on?.working ?? 0) === 0 },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
@@ -1136,8 +1211,16 @@ export const ACTS = [
      permits the move, not that this caller's parameters will pass. */
   { id: "inquiryground", label: "Group what this rests on", weight: "single", types: ["inquiry"],
     prompt: GROUND_PROMPT,
+    /* CASE-4 / DEC-72: `f.current_state !== "published"` became
+       `!f.case_member`. The exclusion is unchanged in meaning — a member of a
+       signed edition cannot be restructured, and `op=inquiryground` refuses it
+       PUBLISHED_CANNOT_RESTRUCTURE — but the state word is gone, so a predicate
+       still naming it would offer this act on every published case and the op
+       would then refuse it. That is a pre-flight disagreeing with the refusal it
+       fronts, which is DEC-8's headline failure and the one thing this file
+       exists to prevent. `divided` is untouched: it is still a state. */
     applies: (f, ty) => ty === "inquiry" && (f.basis_legs ?? 0) >= 1
-                     && f.current_state !== "published" && f.current_state !== "divided" },
+                     && !f.case_member && f.current_state !== "divided" },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
      guards are type-only on both: any information bundle may be cited (cite
      checks the member's TYPE and nothing about state — citing retired material

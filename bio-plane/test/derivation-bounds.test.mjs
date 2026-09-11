@@ -441,9 +441,28 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    replacement that had quietly re-entered the class would mean the composition
    survived under a new name, and this ratchet is one of the two instruments in
    the estate that could have seen it. */
-const CLASS_MEASURED_2026_08_08 = 30;
+/* MOVED 30 -> 31 on 2026-09-10 by CASE-4, AND THE ARRIVAL IS NAMED RATHER THAN
+   ABSORBED: `#flagCasesOnRevision`, the revision flag DEC-72 requires, raised in
+   `promote()` when the version a case froze is replaced.
+   WHAT THE WALKER SEES AND WHAT IS ACTUALLY THERE, stated because a ratchet
+   moved without its measurement is the thing this instrument exists to catch.
+   The walker sees a `#rows(` with no LIMIT followed by a `for`, which is exactly
+   its class definition and it is right to name it. The SCAN, measured: it is
+   `published_case_members WHERE bundle_id=? AND version_sha=?` — an equality on
+   the indexed leading column (`published_case_members_bundle`, CASE-1's) AND an
+   equality on the pinned hash. A row can only match if some case edition froze
+   THIS finding at THIS exact sha, so the result is bounded by the number of case
+   editions holding one hash, which the schema makes at most one per (case,
+   edition) and which is 1 in every shape the plane can currently produce (a
+   finding belongs to one case — FINDING_IN_ANOTHER_CASE — so the ceiling is that
+   case's edition count). The LOOP does one indexed `cases` lookup and one INSERT
+   per matched row. It is a real member of the class by the walker's own
+   definition and is counted honestly; the bound is stated here rather than
+   claimed by exempting it, because an exempted member is a rule nobody is
+   enforcing. */
+const CLASS_MEASURED_2026_08_08 = 31;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",

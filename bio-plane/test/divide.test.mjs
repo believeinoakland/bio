@@ -549,14 +549,29 @@ console.log("\n--- 9. a PUBLISHED case refuses PUBLISHED_CANNOT_DIVIDE — an ed
   const refused = await divide(ROSA, { target: PUB, reason: WHY,
     children: [{ id: "INQ-2026-1600-pub-a", question: "Was it authorised?", legs: [0] },
                { id: "INQ-2026-1600-pub-b", question: "Who signed it?", legs: [1] }] });
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and the CHANGE IS
+     THE `from:` FIELD ALONE. The refusal, its name and its reasoning are
+     untouched: a signed edition cannot be retroactively declared malformed. What
+     moved is what the document's state SAYS while that is true — DEC-72 ends
+     `published` as an inquiry lifecycle state, so a case member sits at
+     `concluded` and the refusal reports the state it actually has. The old
+     expectation was right when written, and reading `published` here now would
+     assert a state the machine no longer produces.
+     THE LOAD-BEARING HALF IS THE REFUSAL NAME, and it still fires — which is the
+     whole of what CASE-4 had to preserve: the guard moved from the state word to
+     the CASE RELATION and did not weaken on the way. */
   t("dividing it is refused BY NAME, not as a generic illegal move",
-    [refused.ok, refused.reason, refused.from], [false, "PUBLISHED_CANNOT_DIVIDE", "published"]);
+    [refused.ok, refused.reason, refused.from], [false, "PUBLISHED_CANNOT_DIVIDE", "concluded"]);
   t("and the refusal states the distinction: an EDITION says the case continues, a DIVISION says the parent was malformed",
     [refused.detail.includes("An EDITION says the case continues"),
      refused.detail.includes("Reopen it")], [true, true]);
   t("op=affordances does not publish the act there either — publication and refusal agree (DEC-8)",
     actIds(await affordances(PUB)).includes("inquirydivide"), false);
-  t("the published case is untouched by the refusal", await stateOf(PUB), "published");
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted. The PROPERTY is
+     unchanged and is the one this line exists for — a refused division moves
+     nothing — and `concluded` is what "untouched" now looks like, because
+     publication no longer moves the state at all. */
+  t("the published case is untouched by the refusal", await stateOf(PUB), "concluded");
 }
 
 console.log("\n--- 10. a CHILD publishes, and its published bytes carry the disclosure (REC-14's reserved keys, populated) ---");

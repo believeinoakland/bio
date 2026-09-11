@@ -464,15 +464,38 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
   t("an exclusion row with no reason is refused: what was left out and why are two statements",
     (await publish(PILAR, { ...base, excluded: [{ target: INFO_LEFTOUT, description: "x", reason: "" }] })).reason,
     "BAD_EXCLUSION");
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, AND THIS IS THE ONE
+     ASSERTION IN THE ESTATE THAT PROVES THE PRECONDITION SURVIVED THE STATE'S
+     REMOVAL. The sentence on this line has not changed by one word: a material
+     set cannot be asserted over a question with no conclusion. What changed is
+     WHERE THE RULE LIVES. It used to be `ILLEGAL_TRANSITION`, derived from
+     `STATES.inquiry.edges.concluded` carrying `published` — so the refusal was a
+     side effect of an array entry. DEC-72 deletes that entry, and with it the
+     old expression `legalFrom.includes("published")` is false from EVERY state,
+     which reads as a gate refusing everything and is in fact a gate that has
+     stopped asking. The precondition is now `publishCase()`'s own NOT_CONCLUDED
+     refusal — a line, with a name, that a reader can find.
+     THE OLD EXPECTATION WAS RIGHT WHEN IT WAS WRITTEN and it is corrected rather
+     than dropped, because a suite that stopped asserting this would be the exact
+     shape of the damage: an unconcluded finding admitted to a case, silently. */
   t("an OPEN inquiry cannot publish: a material set cannot be asserted over a question with no conclusion",
-    (await publish(PILAR, { ...base, target: INQ_OPEN })).reason, "ILLEGAL_TRANSITION");
+    (await publish(PILAR, { ...base, target: INQ_OPEN })).reason, "NOT_CONCLUDED");
   t("and after every refusal the case is still exactly concluded", await stateOf(INQ_CASE), "concluded");
   t("a member without the publish capability is refused at the capability layer, not by the store",
     (await publish(VIEWONLY, base)).reason ?? rP(await POST(`op=publish&token=${VIEWONLY}`, base)).reason,
     "NOT_CAPABLE");
 
   const ok = await publish(PILAR, base);
-  t("a concluded inquiry publishes at EDITION 1", [ok.ok, ok.edition, ok.to], [true, 1, "published"]);
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted. `to: "published"` is
+     gone from the answer with the state it named — under DEC-72 publication does
+     not move a finding's state at all, so an act reporting a destination state
+     would be reporting a move it did not make. What the act produced is a CASE
+     MEMBERSHIP, and `caseId` is where the answer says so. */
+  t("a concluded inquiry publishes at EDITION 1", [ok.ok, ok.edition, !!ok.caseId], [true, 1, true]);
+  /* AND THE STATE DID NOT MOVE, asserted rather than assumed — the positive half
+     of the same fact, which the line above can no longer carry. */
+  t("and publishing left the finding's lifecycle exactly where conclude left it: DEC-72 ends it at `concluded`",
+    await stateOf(INQ_CASE), "concluded");
   t("the author and the time are SERVER-stamped, never taken from the caller",
     [ok.completeness.author, /^\d{4}-\d{2}-\d{2}T/.test(ok.completeness.at)], ["pilar", true]);
   const md = await imageOf(INQ_CASE);
@@ -522,9 +545,23 @@ console.log("\n--- 1. op=publish AUTHORS the case, and refuses before anything m
     (await errorsOf(INQ_CASE, md.replace(/^bias_acknowledgement: .*$/m, 'bias_acknowledgement: ""'),
                     undefined, await earnedFor(INQ_CASE)))
       .filter((e) => e.startsWith("C-2.8") && e.includes("bias_acknowledgement")).length, 1);
-  t("op=affordances stops publishing `publish` once it is published, and the store agrees",
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and BOTH HALVES OF
+     THE RULE STAND. The act is still withdrawn once the finding is in a case and
+     the store still refuses a republication of unchanged bytes — what changed is
+     the reason each gives. The affordance used to fall out of the edge table (a
+     `published` document had no `published` edge); it is now the case relation,
+     `!f.case_member`, which op=affordances serves. The store's refusal used to be
+     ILLEGAL_TRANSITION and is now ALREADY_A_CASE_MEMBER — and that second
+     refusal EXISTS BECAUSE THIS ARM CAUGHT ITS ABSENCE. The old edge test
+     `legalFrom.includes("published")` enforced TWO rules at once: publish only
+     from concluded, and never twice. With the state gone a member sits at
+     `concluded`, passes the first, and would have minted a second edition of a
+     case from bytes nobody revised. That is DEC-12's edition number turned into
+     a count of publish calls, and C-21.1 did NOT catch it (its comparison runs
+     only against a prior edition that has RATIFIED). This line is the receipt. */
+  t("op=affordances stops publishing `publish` once the finding is a case member, and the store agrees",
     [actIds(await affordances(INQ_CASE)).includes("publish"),
-     (await publish(PILAR, base)).reason], [false, "ILLEGAL_TRANSITION"]);
+     (await publish(PILAR, base)).reason], [false, "ALREADY_A_CASE_MEMBER"]);
 }
 
 /* ============================================ 2. DEC-13: what the gate does NOT check */
@@ -670,9 +707,21 @@ console.log("\n--- 4. DEC-17: the declared bar, stamped beside the derived pair 
 /* ======================================== 5. DEC-12: a second edition, and both answer */
 console.log("\n--- 5. DEC-12: reopened, concluded again, published at edition 2 — and edition 1 still answers ---");
 {
-  t("the catalog makes published -> open legal and published -> dismissed illegal: reopening is not unpublishing",
-    [STATES.inquiry.edges.published, STATES.inquiry.legal.includes("published")],
-    [["open", "surfaced"], true]);
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and the correction is
+     the SECOND half of the pair rather than the first. `published` is no longer in
+     `legal` — it is in `legacy`, the new key that says "this machine no longer
+     produces this word but must still read bytes that carry it", because ratified
+     documents are immutable and a store that has published anything holds
+     frontmatter saying `current_state: published` whose hash a stranger may be
+     verifying against. The OUT-EDGES are kept for the same reason and only for
+     it: a document already sitting there must still be pickable-up.
+     WHAT THIS LINE ASSERTED IS STILL ASSERTED — reopening is not unpublishing —
+     and the arms below it, which drive the real act, are what now carry it. */
+  t("the catalog keeps `published` READABLE but no longer PRODUCIBLE: it is out of `legal`, into `legacy`, and no edge names it as a destination",
+    [STATES.inquiry.edges.published, STATES.inquiry.legal.includes("published"),
+     (STATES.inquiry.legacy || []).includes("published"),
+     Object.values(STATES.inquiry.edges).some((to) => to.includes("published"))],
+    [["open", "surfaced"], false, true, false]);
   /* The reopen itself rides op=promote, the one write path: REC-31 builds the
      op=reopen act on this edge concurrently, and it takes its legality from the
      catalog's own edge table — this suite holds the EDGE and the consequence,

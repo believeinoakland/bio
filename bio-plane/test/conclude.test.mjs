@@ -319,13 +319,23 @@ console.log("\n--- 4. the machine is the CATALOG's, consulted through the map (t
   /* CORRECTED 2026-08-04 (REC-14), never exempted: `published` joins the edges
    OUT of concluded, so the sorted edge set moves. The rule this asserts is
    unchanged — the edges come from the ONE exported table and nothing here keeps
-   a copy — and the new member is the point of REC-14 rather than drift. */
+   a copy — and the new member is the point of REC-14 rather than drift.
+   CORRECTED AGAIN 2026-09-10 (CASE-4 / DEC-72), never exempted, AND IT IS THE
+   SAME EDGE LEAVING THAT REC-14 ADDED. `published` is no longer a state an
+   inquiry enters: under DEC-72 a finding's lifecycle ENDS at `concluded` and
+   publication is the CASE RELATION, so `concluded -> published` is not an edge
+   and the sorted set drops back to five. **The rule this line asserts has never
+   moved** — the edges come from the ONE exported table and nothing here keeps a
+   copy — and the removal is the point of CASE-4 exactly as the addition was the
+   point of REC-14. The precondition that rode on this array entry ("publishing
+   only from concluded") did NOT leave with it: it is `publishCase()`'s own
+   NOT_CONCLUDED refusal now, and `caselifecycle.test.mjs` drives it. */
 t("the ONE edge table carries the new state and its edges — nothing here keeps a copy",
     [STATES.inquiry.legal.includes("concluded"),
      STATES.inquiry.edges.open.includes("concluded"),
      STATES.inquiry.edges.surfaced.includes("concluded"),
      STATES.inquiry.edges.concluded.slice().sort()],
-    [true, true, true, ["deferred", "dismissed", "divided", "open", "published", "surfaced"]]);
+    [true, true, true, ["deferred", "dismissed", "divided", "open", "surfaced"]]);
 
   const alias = await conclude(PILAR, { target: INQ_ALIAS, conclusion: CONCL, falsifier: FALS });
   t("`surfaced`, open's legal alias, concludes — refusing it would be the trap the alias exists to avoid",

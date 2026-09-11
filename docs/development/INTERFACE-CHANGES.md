@@ -4714,3 +4714,140 @@ UNSIGNED REQUEST, which is the attribution class this record refuses everywhere 
 is a second publication ceremony — a case document, its gate, its checks, its ratify path — and it
 is larger than the rest of CASE-5 combined. **Raised to CONDUCT as the remaining half rather than
 half-built here.**
+
+---
+
+## IC-69 · I3 + I5: `published` LEAVES THE INQUIRY STATE MACHINE — a finding's lifecycle ends at `concluded` and publication becomes THE CASE RELATION; `op=publish` stops moving state and refuses `NOT_CONCLUDED`; `REOPENABLE_FROM` loses `published`; `op=affordances` gains `case_member`; one new table (`case_revision_flags`) and one new op (`op=caseflags`) carry the set-but-never-clear revision flag · PROPOSED 2026-09-10 (CASE-4, enacting DEC-72) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I3** (the op contracts: `op=publish`, `op=reopen`, `op=affordances`,
+  `op=ratify`, plus the new `op=caseflags`) **and I5** (one new table, `case_revision_flags`).
+- **Proposer:** RECORD, session `case4-lifecycle-flag` (worktree `agent-a2cabbd5225deffd5`),
+  2026-09-10, enacting `docs/development/CASE-AS-PRODUCTION.md`'s CASE-4 bullet under **DEC-72**.
+  **IC-69 was PRE-ALLOCATED BY CONDUCT AT SPAWN** — the IC-64 lesson enacted rather than
+  remembered, since `mintid` reads its floor from ids mentioned in prose and two parallel
+  branches cannot see each other's files.
+- **Owner to land it:** `RECORD` (owns I3 and I5).
+- **Consumers to answer:** `UI` — and **MEASURED IMPACT IS NOT ZERO.** See the measurement
+  below; a DELEGATION is filed in `CLAIMS.md`.
+- **Status:** PROPOSED. **A VOCABULARY TERM IS REMOVED, which is the strongest form this
+  protocol handles.** `published` stops being a value `current_state` can take on a newly
+  published finding. Filed BEFORE any code was written.
+
+### Why this is a contract change and not a defect fix
+
+`CASE-AS-PRODUCTION.md`'s supersession table rules on it by name:
+
+> **`published` as an inquiry lifecycle state** (State Rules per-type machine;
+> `ILLEGAL_TRANSITION` publishing-only-from-concluded) | The precondition survives as *"only a
+> CONCLUDED finding may be a case member"*; the state itself becomes the case relation.
+
+and the design's own clause: *"A finding's lifecycle ends at `concluded`; publication is the case
+relation. Reopening a finding is unchanged and never edits published bytes."*
+
+### The change
+
+**1. `STATES.inquiry` LOSES `published` FROM `legal` AND FROM `concluded`'s EDGE LIST.**
+
+    legal:   [open, deferred, dismissed, surfaced, concluded, divided]        (published REMOVED)
+    legacy:  [published]                                                      (NEW key)
+    edges.concluded:  [open, surfaced, deferred, dismissed, divided]          (published REMOVED)
+    edges.published:  [open, surfaced]                                        (KEPT — see below)
+
+**`legacy` IS A NEW KEY ON THE TABLE AND IT IS NOT A HEDGE.** Ratified bytes are immutable and a
+store that has published anything holds documents whose frontmatter says `current_state:
+published` — bytes whose hash a stranger may already be verifying against. Rewriting them would
+break every pin that names them and would be this record editing what it already signed. So the
+word stays VALID and stops being REACHABLE: nothing in `edges` names it as a destination, which is
+what "removed from the state machine" means for a machine that cannot rewrite its own history.
+`checkStateLegality` reads `legal ∪ legacy`; **every other reader — the affordance derivation, the
+transition guards, `edgesFrom` — sees only `legal`**, because they ask what the machine can DO.
+
+**2. `op=publish` STOPS MOVING STATE, AND THE PRECONDITION BECOMES A NAMED REFUSAL.**
+
+    WAS:  ILLEGAL_TRANSITION  (to: "published")   — derived from edges.concluded
+    NOW:  NOT_CONCLUDED       (from: <the state>) — an explicit test on `concluded`
+
+The old expression carried TWO facts on one array entry: that publishing moves the document to a
+new state (deleted by DEC-72), and that publishing is reachable from `concluded` AND FROM NOWHERE
+ELSE (untouched by DEC-72). Removing the entry removes both, so the second is now a line of its
+own. `op=publish` no longer appends a `state_history` transition, no longer sets `prior_state`, and
+no longer writes `current_state: published`; `UNSPLICEABLE_STATE_HISTORY` is unreachable from this
+act. **`op=publish`'s answer loses `to: "published"`** and its `findings[]` rows lose `from`/`to`,
+gaining `state` (the state the act did not move), `case_id` and `case_edition`.
+
+**3. `REOPENABLE_FROM` LOSES `published`, AND `op=reopen`'s GATE BECOMES A DISJUNCTION.**
+
+    WAS:  REOPENABLE_FROM.includes(current_state)
+    NOW:  REOPENABLE_FROM.includes(current_state)  ||  <this finding is a case member>
+
+A naive removal damages this in both directions at once: dropping `published` alone refuses
+reopening to every published case (a member now sits at `concluded`, which the refusal names BY
+NAME), and widening to `concluded` destroys REC-31's rule that a conclusion nobody published may
+not revert to open still wearing its conclusion. The rule was never about the word — it was that
+reopening is refused where something would be ERASED WITH NO RECORD and permitted where an
+immutable signed edition means there is nothing to erase. `NOT_SET_DOWN`'s detail is reworded
+accordingly; the refusal's `reopenable:` payload still carries `REOPENABLE_FROM`, because the case
+relation is not a state and does not belong in a list of states.
+
+**4. `op=reopen` CLEARS `case_edition` FROM THE WORKING DOCUMENT.** `case_id` STAYS (publish
+re-derives the case identity from it and must never take an identity from a caller). Membership as
+the bytes assert it is the PAIR, so clearing the edition claim is what ends it.
+
+**5. FIVE GUARDS AND TWO AFFORDANCES RE-KEY ONTO THE CASE RELATION.** Names, details and remedies
+are UNCHANGED; only the question is asked differently. `PUBLISHED_CANNOT_DIVIDE`,
+`PUBLISHED_CANNOT_RESTRUCTURE`, `PUBLISHED_CANNOT_MOVE_VERSION` (CASE-3's, C-25.34), the
+frozen/working split in `#restsOnLive`, and `op=ratify`'s `isCase` derivation. Left keyed on the
+state word, every one of them would have become unreachable with the suite green.
+
+**6. `op=affordances` GAINS ONE FACT: `case_member` (boolean).** It has to exist because a document
+that is a member of a signed case now wears no word that says so, and two acts derived themselves
+from that word. `publish` applies at `concluded && !case_member`; `inquiryground` at
+`!case_member && current_state !== "divided"`.
+
+**7. C-2.8's PUBLISHED ENTRY REQUIREMENTS RE-KEY ONTO THE CASE RELATION IN THE BYTES.** Not one
+requirement moves. The condition was `fm.current_state === 'published'` and is now
+`isCaseMemberBytes(fm)` — `case_id` AND `case_edition`, the pair, both inside the hash the member
+signs. A new arm refuses `case_edition` with no `case_id` beside it, which is where REC-44's
+`case_id` requirement survives. The 17 refusal texts reading *"published state requires …"* now
+read *"a case member requires …"*.
+
+**8. NEW TABLE `case_revision_flags` (I5) AND NEW OP `op=caseflags` (I3).** The design: *"When a
+member finding is later revised (new version minted), the containing cases are FLAGGED, never
+silently updated and never automatically re-published … New editions are each owning project's
+deliberate act."* The flag is RAISED in `promote()` — the one write that mints a version — when
+the sha being replaced is one a case roster pinned, and it is DISCHARGED by a ratified new edition
+of that case. **No row is ever deleted and no flag is ever unset**: the discharge is ADDED to the
+row (`acted_at`, `acted_by`, `acted_edition`). `op=caseflags` is ungated on `op=publishedcase`'s
+own reasoning — every fact in the answer is already on the public surface.
+
+### The measurement — CONSUMER IMPACT, and it is NOT zero
+
+Measured 2026-09-10 by grep over `civicos-ui/`, `newgroup/`, `pdf-worker/`, `agent-worker/`,
+`docprofile/`, `tools/` and `release/`, built copies excluded.
+
+**`newgroup`, `pdf-worker`, `agent-worker`, `docprofile`, `tools`, `release`: ZERO.** None of them
+reads a state vocabulary.
+
+**`civicos-ui/app.html`: FOUR SITES, and the first is a HAND COPY OF THE MACHINE THIS ITEM
+CHANGES.**
+
+| where | what | what breaks |
+| --- | --- | --- |
+| ~1636-1646, `STATE_EDGES.inquiry` | a mirror of `STATES.inquiry.edges`, with `concluded:[…,"published",…]` and `published:["open","surfaced"]` | the disposition pre-flight offers a move the store now refuses `NOT_CONCLUDED` — DEC-8's headline failure |
+| ~1670, `PHASE` | `published:"case"` | a member of a published case now sits at `concluded`, so the page calls a CASE a "Finding" |
+| ~1767, the SPACE vocabulary | `published: {label:"published record", …}` | unaffected — this is the published-record SPACE, not the inquiry state, and the word is correct there |
+| ~1794-1797, the state seal vocabulary | a `published` row with chip, mark, `next:["open"]` and two `forbids` | a case renders with no seal and no forbids; the two forbids are still TRUE and now hang off the case relation |
+
+**The honest shape of the UI fix is NOT a find-and-replace**, which is why it is a delegation and
+not a footnote: the page has to render a CASE MEMBER, and there is no longer a state word to
+render it from. `op=affordances` now serves `case_member` for exactly that, and `op=caseflags`
+serves the revision flags a case page should show. Enqueued in `CLAIMS.md` as a DELEGATION.
+
+### Reversal cost
+
+**Low and it does not rise.** The table and the op are additive and nothing reads them yet. The
+lifecycle half reverses by restoring `published` to `legal` and to `concluded`'s edges and putting
+the three state writes back in `publishCase()` — but **any document published while this is in
+force sits at `concluded` with a case relation and no `published` in its history**, so a reversal
+does not un-publish them and must keep the case-relation predicate as the reader for those. That
+is a one-way door on DATA and a two-way door on CODE, and it is stated here rather than discovered.

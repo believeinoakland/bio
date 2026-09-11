@@ -306,8 +306,17 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
   const partial = await publish(WREN, { targets: [FIND_A, FIND_C], scope: SCOPE1, statement: STMT1,
     excluded: [], subjectPosition: "sought_and_answered", subjectJustification: JUST1,
     biasAcknowledgement: BACK1 });
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and ONLY THE
+     REFUSAL NAME MOVED. The property this arm exists for — one unpublishable
+     member refuses the WHOLE act, names the member, and moves nothing — is
+     untouched and is the whole of what it asserts. The precondition that refuses
+     an unconcluded member used to be derived from the edge table
+     (ILLEGAL_TRANSITION, because `concluded -> published` was the only edge in);
+     DEC-72 deletes that edge, so the rule "only a CONCLUDED finding may be a
+     case member" is now `publishCase()`'s own NOT_CONCLUDED refusal. Same rule,
+     said rather than implied. */
   t("one unpublishable member refuses the WHOLE act, naming the member — and nothing moved",
-    [partial.reason, partial.target, await stateOf(FIND_A)], ["ILLEGAL_TRANSITION", FIND_C, "concluded"]);
+    [partial.reason, partial.target, await stateOf(FIND_A)], ["NOT_CONCLUDED", FIND_C, "concluded"]);
 
   const e1 = await publish(WREN, { targets: [FIND_A, FIND_B], scope: SCOPE1, statement: STMT1,
     excluded: [{ target: INFO_TEST, description: "the FY2023 comparison memo",
@@ -323,8 +332,16 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
      e1.caseId !== FIND_A, e1.caseId !== FIND_B], [true, true, true, true]);
   t("a multi-finding case answers NO single bundle sha: reading one member's sha as the case's is the confusion",
     ["bundleSha" in e1, "target" in e1], [false, false]);
-  t("both members moved to published in the one act", [await stateOf(FIND_A), await stateOf(FIND_B)],
-    ["published", "published"]);
+  /* CORRECTED 2026-09-10 (CASE-4 / DEC-72), never exempted, and the old line was
+     right when written. Under DEC-72 publication MOVES NO STATE: a finding's
+     lifecycle ends at `concluded` and membership of a case is the relation, so
+     "both members moved to published" is no longer a thing that happens to
+     either of them. What this arm is really about — that ONE act placed BOTH
+     findings in the case together — is asserted where it can now be seen: the
+     state is unchanged for both, and both are members of the one case edition,
+     read back through the anonymous public read. */
+  t("the one act left BOTH members' lifecycles exactly where conclude left them (DEC-72)",
+    [await stateOf(FIND_A), await stateOf(FIND_B)], ["concluded", "concluded"]);
 
   const [mdA, mdB] = [await imageOf(FIND_A), await imageOf(FIND_B)];
   /* THE CASE IS IN THE BYTES EACH MEMBER SIGNS, in every member and not in one

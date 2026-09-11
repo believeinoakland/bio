@@ -1391,3 +1391,155 @@ half is not, and it cannot be closed by DIST alone.**
   decide this. Filed as **D-297**. If you would rather the installer carry members as multi-part module
   uploads instead, say so and DIST will build that — it costs a manifest with a hash per part and makes
   the signature cover a set rather than a file, which is why it is not the recommendation.
+
+## CLAIM 2026-09-10 RECORD (CASE-4 — DEC-72's LIFECYCLE CHANGE: `published` leaves the inquiry state machine, the precondition survives as the case relation, and a revised member FLAGS its containing cases)
+session: case4-lifecycle-flag (worktree `agent-a2cabbd5225deffd5`, branch
+  `worktree-agent-a2cabbd5225deffd5`)
+opened: 2026-09-10T00:00:00Z
+paths: **NAMED BY REGION. AN FL-9 WORKER IS LIVE ON THE BUILD TOOLING AND THE FLEET BUNDLES**
+  (`newgroup/`, `pdf-worker/`, the committed per-member bundles and their gate) — disjoint from
+  every path below, but the CASE header's rule is that precision is the only protection two
+  workers get, so the regions are named anyway.
+  **`bio-plane/checks/bio-checks.mjs` — named by SITE:**
+  (1) `STATES.inquiry` ONLY: `published` removed from `legal` and from every `edges` list, and
+  the REC-14/DEC-12 commentary block amended in place with the reason. **NOT** `STATES.focus`,
+  **NOT** `STATES.project`, **NOT** `STATES.action`, **NOT** `STATES.bias`, **NOT**
+  `STATES.information`.
+  (2) `checkInquiryPublished` / `checkPublishedExtension`'s KEYING only — the C-2.8 entry
+  requirements re-keyed off `fm.current_state === 'published'` onto the case relation the bytes
+  carry. The REQUIREMENTS THEMSELVES ARE UNTOUCHED. **NOT** `checkCompletenessFreshness`,
+  **NOT** `checkInquiryBasis`, **NOT** `VERSION_ACT_CHECKS`, **NOT** any other C-number.
+  (3) `HEADINGS.inquiry`'s `states: ['published']` entry, which names the same vanished word.
+  **`bio-plane/src/store.mjs` — named by SITE:**
+  (1) `publishCase()`: the ENTRY GUARD only — `ILLEGAL_TRANSITION`-to-`published` replaced by
+  the explicit `NOT_CONCLUDED` precondition; and the state-write block (`#appendStateHistory`,
+  `prior_state`, `current_state`, the `promote` meta). **NOT** the project fence, **NOT** the
+  owner fence, **NOT** the bar computation, **NOT** the roles partition, **NOT** C-21.1's
+  freshness comparison, **NOT** the case-identity resolution, **NOT** the edition allocation.
+  (2) `reopen()`: the `REOPENABLE_FROM` test only, which becomes the case relation.
+  (3) `divide()`, `inquiryGround()` (restructure) and `#moveVersionState()`: the ONE
+  `current_state === "published"` predicate in each, which becomes the case relation. The
+  refusal NAMES and DETAILS are unchanged.
+  (4) `#basisLegs()`'s frozen/confirmed split (the one `r.current_state === "published"`).
+  (5) NEW private helpers `#caseMemberVersion()` / `#caseRelationOf()` and NEW `#flagCases()`,
+  plus the ONE call to it inside `promote()` and the discharge inside the ratify committer
+  (`publish()`), and `caseFlags()` as the read. **NOT** `#publishEdges`, **NOT** `#caseOf`,
+  **NOT** `#caseEditionState`'s pin predicate (CASE-5's, landed — READ and reused, not edited
+  beyond serving the flags beside the roster), **NOT** the run / task / capture / link /
+  proposal / queue surfaces.
+  (6) `purge()`: the whole-store arm gains the ONE new table (D-113).
+  **`bio-plane/src/schema.mjs`** — ONE new table, `case_revision_flags`, placed BEFORE the
+  `host_governor` block, with **no semicolon inside any `--` comment** and no backtick.
+  **`bio-plane/src/affordances.mjs`** — `REOPENABLE_FROM` and the two `applies:` predicates
+  (`publish`, `inquiryground`) that name the vanished state. **NOT** the intent vocabularies,
+  **NOT** any other affordance row.
+  **`bio-plane/src/index.mjs`** — `op=ratify`'s `isCase` derivation (the one
+  `ratifiedFm.current_state === "published"`), the `state: "published"` label in the published
+  body reader, and ONE new dispatch line for the flags read. **NOT** the R2 copy, **NOT** the
+  gate, **NOT** the container manifest, **NOT** any other op.
+  **Tests — CORRECTED, NEVER EXEMPTED:**
+  - `bio-plane/test/caselifecycle.test.mjs` (NEW — the item's own suite),
+    `bio-plane/test/caselifecycle.control.mjs` (NEW — the negative-control driver, committed so
+    the arms re-run in one step; it edits real sources, so it is deliberately NOT a
+    `.test.mjs` and the battery must not discover it).
+  - `bio-plane/test/*.test.mjs` — touched ONLY where this item's change makes an existing
+    assertion false, each with a dated reason at the assertion saying what it asserted before
+    and why that was right when written. **No floor, census or ratchet moved without naming
+    the arrival.**
+  `docs/development/INTERFACE-CHANGES.md` (**IC-69, PRE-ALLOCATED BY CONDUCT AT SPAWN**;
+  APPENDED — the file is append-only), `docs/development/CLAIMS.md` (this entry),
+  `docs/development/kickoffs/RECORD.md` (APPENDED, never rewritten),
+  `docs/development/MEASUREMENTS.md` (appended),
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (**the State Rules amendment**, as a
+  DATED AMENDMENT NOTE appended to the section that owns the per-type machine — never a
+  rewrite of the spec's own text).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT is sole writer), **NOT**
+  `docs/development/DECISIONS.md` (CONDUCT is sole writer), **NOT**
+  `docs/development/CASE-AS-PRODUCTION.md` (the authority, READ ONLY — CASE-6 archives it),
+  **NOT** `docs/BIO_DATAPLANE_STATE.md` (**the arc binds it to CASE-6's `accepts-when`**),
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, **NOT** `pdf-worker/**`, **NOT**
+  `agent-worker/**`, **NOT** `release/**`, **NOT** `bio-plane/dist/**`, **NOT** `tools/**`,
+  **NOT** `bio-plane/scripts/coverage.mjs` (**if `REGISTER_FLOOR` has to move it goes in an
+  AMENDMENT block below and is reported to CONDUCT by name**).
+interfaces owned: I3 (op contracts) and I5 (the store schema). **IC-69 is filed before the
+  build**, per the protocol.
+interfaces consumed: none.
+
+### DELEGATION 2026-09-10 RECORD (CASE-4 / IC-69) -> UI: **THE PAGE HOLDS A HAND COPY OF THE INQUIRY STATE MACHINE, AND THE STATE IT USES TO RECOGNISE A CASE NO LONGER EXISTS**
+
+**What changed.** DEC-72 ends `published` as an inquiry lifecycle state. A finding's lifecycle now
+ends at `concluded`, and publication is THE CASE RELATION — a roster row pinning that finding's
+current version. `op=affordances` gains a `case_member` boolean for exactly this, and the new
+`op=caseflags` serves the revision flags a case carries.
+
+**Where it bites, measured 2026-09-10 by grep over seven trees, built copies excluded. ONE file,
+FOUR sites, and only the first is a mechanical fix.**
+
+1. **`civicos-ui/app.html` ~1636-1646, `STATE_EDGES.inquiry` — A MIRROR OF THE MACHINE THIS ITEM
+   CHANGED.** It carries `concluded:[...,"published",...]` and `published:["open","surfaced"]`. The
+   comment above it says it exists so *"the disposition pre-flight reads this so it refuses exactly
+   what the store would refuse"* — which is now false in both directions: it offers a publish move
+   the store refuses `NOT_CONCLUDED`, and it will refuse a reopen from `concluded` that the store
+   now permits for a case member.
+2. **~1670, `PHASE`** maps `published:"case"`. A member of a published case sits at `concluded`, so
+   **the page now labels a CASE a "Finding"** — a wrong word in the column a reader uses to tell
+   the two apart.
+3. **~1794-1797, the state seal vocabulary.** The `published` row (chip, mark `P`, `next:["open"]`,
+   two `forbids`) is now unreachable, so a case renders with no seal. **The two `forbids` are still
+   TRUE** — an edition already published keeps answering, and a signed edition cannot be declared
+   malformed — and they now hang off the case relation rather than off a state.
+4. **~1767, the SPACE vocabulary's `published` row is CORRECT and must NOT be touched.** That is
+   the published-record SPACE ("across the fence"), not the inquiry state. Named here so a
+   find-and-replace does not take it.
+
+**This is not a rename and that is why it is a delegation.** There is no longer a state word that
+says "this is a case", so the page has to read the relation: `op=affordances` answers
+`case_member`, and `op=publishedcase` already answers the roster. **UI-56 (already queued) touches
+the same neighbourhood** — `pubIndex`'s join — and a session doing both at once will do less work
+than two.
+
+**What is NOT owed:** nothing in `newgroup`, `pdf-worker`, `agent-worker`, `docprofile`, `tools` or
+`release` reads a state vocabulary at all. Measured, zero.
+
+### AMENDMENT 2026-09-10 RECORD (CASE-4) — **I EDITED THREE `civicos-ui/` PATHS MY OWN CLAIM SAID `NOT`, AND THIS BLOCK IS WHY, WHAT, AND WHAT I DID NOT TOUCH**
+
+**The claim above says `NOT civicos-ui/**`, and that was the right posture when it was
+written.** What changed it is a measurement rather than a convenience: with the plane's change
+in place, `node civicos-ui/test/run.mjs` went from exit 0 to **exit 1 with three failures**, and
+every one of them is a DRIFT DETECTOR firing on the catalog change — which is the mechanism
+working, not a UI defect. Landing the plane and leaving the harness red would put a red gate on
+`main` and hand the next worker a failure that looks like theirs. **A delegation cannot carry a
+red gate.**
+
+**WHAT I CHANGED — three edits, and two of them are in the INSTRUMENT rather than in the page:**
+
+1. `civicos-ui/app.html`, `STATE_EDGES.inquiry` — **ONE ARRAY ENTRY.** `concluded`'s list drops
+   `published`, because the catalog's does. This block is declared a MIRROR of
+   `STATES[type].edges` by its own comment, and the disposition pre-flight reads it *"so it
+   refuses exactly what the store would refuse"* — an entry the store now refuses
+   `NOT_CONCLUDED` is DEC-8's disagreement sitting in the page. `published -> open|surfaced` is
+   KEPT, because the catalog keeps it.
+2. `civicos-ui/check-semantics.mjs` — the PHASE domain and the semantics-row check now read
+   **`legal ∪ legacy`**. The catalog gained a `legacy` key when `published` left the machine: a
+   word it no longer PRODUCES and must still READ, because ratified bytes are immutable. The
+   PHASE union already unioned `STATES.focus.legal` for exactly this reason, in its own words —
+   *"every state an inquiry can legally stand in, under the canonical machine AND under the
+   legacy one it is read through, must have a phase."* `legacy` is that sentence's new half.
+3. `civicos-ui/test/bias-vocabulary.test.mjs` — the same widening in its `R2` sourcing verdict.
+   The pin is unchanged in force: still a two-way set comparison, so a row for a state the
+   catalog knows nothing about still fails.
+
+**THE FIRST DRAFT OF THIS AMENDMENT WAS WRONG AND IS RECORDED BECAUSE THE CORRECTION IS THE
+POINT.** I first DELETED `PHASE.published` and the `published` row from `SEMANTICS.types.inquiry`
+— reading them as stale. **Three more UI suites went red**, and they were right: a document
+already at `published` still exists, the catalog keeps the word READABLE for exactly that, and
+**the UI is a reader of those bytes.** Deleting the entries would have made the page unable to
+explain a published case to a member — the opposite of what those tables are for. Reverted whole
+(`git checkout civicos-ui/app.html`) and replaced with the `legacy` widening above.
+
+**WHAT I DID NOT TOUCH, AND IT IS STILL DELEGATED:** the page cannot tell a CASE from a FINDING
+for anything published from now on, because a case member sits at `concluded` and wears no word
+that says otherwise. That is authored rendering — it needs `op=affordances`' new `case_member`
+or `op=publishedcase`'s roster — and it is the DELEGATION filed above, alongside **UI-56**,
+which touches the same neighbourhood. **No UI behaviour was authored here; three mirrors were
+made to agree with the catalog again.**

@@ -38,7 +38,11 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             all until REC-79, so the gate every caller passes through was outside
             the rule governing everything behind it. */
          ADMISSION_CHECKS,
-         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
+         /* CASE-4 / DEC-72: THE CASE RELATION, asked of signed bytes. Imported
+            rather than restated so the ratify committer and the catalog that
+            refuses on the same fact cannot answer it differently. */
+         isCaseMemberBytes } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -734,6 +738,24 @@ const OPS = {
      identically whether it was never ratified or never existed. */
   publishedcase:  { classes: null,                                 mutating: false },
   publishedbytes: { classes: null,                                 mutating: false },
+  /* CASE-4 / DEC-72: THE REVISION FLAGS ON A PUBLISHED CASE. A case is a frozen,
+     signed edition honest as of its date; when a member finding is later revised
+     the containing cases are FLAGGED, set-but-never-clear until each owning
+     project acts. This is where a reader — a member deciding whether to publish
+     a new edition, or a stranger weighing how current a case is — sees which
+     flags stand and which were discharged.
+
+     `classes: null` — UNGATED, on publishedcase's own reasoning above and not on
+     a new one. Every fact in the answer is already public: the case editions and
+     their rosters come out of op=publishedcase, the pinned hash is in the
+     container manifest a stranger verifies against, and the revised hash is a
+     published version's own. Nothing here reads working material, so there is no
+     working material for a missing predicate to leak — and gating it would
+     withhold from a member exactly what the published record already tells
+     anybody. NO `NEEDS` ENTRY, on op=reevaluations' precedent: a read carries no
+     working capability, so REC-19's NEEDS/NON_ACTS totality neither gains nor
+     loses a row. */
+  caseflags:      { classes: null,                                 mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -2945,6 +2967,30 @@ export default {
          own Durable Object and its own PUBLISHED prefix and is therefore NOT
          readable here, which is deliberate — rehearsing a publication must not
          put anything on the public surface. */
+      /* ---- CASE-4 / DEC-72: op=caseflags ----
+         WHICH PUBLISHED CASES ARE CARRYING A STALE PIN, AND WHICH OWNING
+         PROJECTS HAVE ACTED. Placed with the public read path above and pinned
+         to `bio` for its reason: every fact in the answer is already on the
+         public surface, and an instance has ONE published record, so a probe's
+         scratch namespace is deliberately not readable here.
+
+         `case=` OR `target=` OR NEITHER, and neither is a whole-store sweep of
+         the FLAG TABLE only — bounded by the number of revisions that have ever
+         been made to a published member, which is a small number by
+         construction and never a walk of the corpus. */
+      if (op === "caseflags") {
+        const q = new URLSearchParams();
+        const cid = (url.searchParams.get("case") || "").trim();
+        const tgt = (url.searchParams.get("target") || "").trim();
+        if (cid) q.set("case", cid);
+        if (tgt) q.set("target", tgt);
+        if (url.searchParams.get("outstanding") === "1") q.set("outstanding", "1");
+        if (url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        const fOut = await doAnswer(stub.fetch(`http://do/caseflags?${q}`));
+        if (!fOut.answered) return storeSilent("caseflags");
+        return json({ ok: true, result: fOut.result }, 200);
+      }
+
       if (op === "publishedcase" || op === "publishedbytes") {
         const shaParam = (url.searchParams.get("sha256") || "").toLowerCase();
         const pubKey = (sha) => `${PUBLISHED_STORE}/published/${sha}`;
@@ -5643,8 +5689,17 @@ export default {
          what every information bundle is. */
       const ratifiedFm = typeof image["bundle.md"] === "string"
         ? (parseFrontmatter(image["bundle.md"]).data || {}) : {};
+      /* CASE-4 / DEC-72: THE CASE RELATION, read out of the SIGNED BYTES exactly
+         as the state word was. A member finding no longer wears `published`; it
+         asserts membership of a case edition, and that assertion is inside the
+         hash the member signed for REC-44's own reason. Left keyed on the state
+         word, this would be FALSE for every document published after this item —
+         and everything it gates would then quietly take its non-case default:
+         edition 1, no frozen strength, no frozen completeness, no case. A case
+         would ratify as though it were an information bundle, with the suite
+         green, which is why this line is the most dangerous one in the change. */
       const isCase = normalizeType(ratifiedFm.object_type) === "inquiry"
-        && ratifiedFm.current_state === "published";
+        && isCaseMemberBytes(ratifiedFm);
       const edition = isCase && Number.isInteger(ratifiedFm.edition) ? ratifiedFm.edition : 1;
       const frozenStrength = isCase && Array.isArray(ratifiedFm.published_strength)
         ? ratifiedFm.published_strength : null;

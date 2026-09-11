@@ -211,7 +211,19 @@ function sourcingVerdict(appText, type = "bias", opts = {}) {
      inquiry/focus/problem, none on any type without a legacy spelling. */
   const row = ui.SEMANTICS && ui.SEMANTICS.types && ui.SEMANTICS.types[type];
   if (row && want.STATE_EDGES) {
-    const legal = (opts.states ?? STATES)[type].legal;
+    /* CASE-4 / DEC-72, 2026-09-10: `legal ∪ legacy`, never exempted. The catalog
+       gained a `legacy` key when `published` left the inquiry machine — a word
+       the machine no longer PRODUCES and must still READ, because ratified bytes
+       are immutable and a store that has published anything holds frontmatter
+       carrying it. **A SEMANTICS ROW IS WHAT A READER IS SHOWN WHEN THEY MEET A
+       STATE IN BYTES**, so the row for `published` is owed by exactly the same
+       argument that makes the state readable at all; comparing against `legal`
+       alone would have this pin demand the page DELETE the explanation a member
+       gets when they open a published case. The pin itself is unchanged in
+       force — it is still a two-way set comparison, so a row for a state the
+       catalog knows nothing about still fails. */
+    const spec = (opts.states ?? STATES)[type];
+    const legal = [...spec.legal, ...(spec.legacy || [])];
     if (!sameSet(Object.keys(row.states || {}), legal))
       out.push(`SEMANTICS.types.${type} covers ${J(Object.keys(row.states || {}).sort())}, and the plane's legal set is ${J([...legal].sort())}`);
     /* THE LEGACY-SPELLING EXEMPTION, and it is a property of the TYPE rather
