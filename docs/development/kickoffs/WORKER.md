@@ -43,6 +43,23 @@ by anchoring a regex that `ps`'s output never matches, and once because its "don
 waiter" line was itself a substring test that swallowed the fixture. Both were caught by the
 over-strictness arm, in the direction that releases a wait too early.
 
+**A WAIT ENDS WHEN THE WORLD SAYS DONE, NEVER ONLY WHEN A SIGNAL SAYS SO — and "waiting" is
+not a state a worker may rest in** (2026-09-10: a CASE-4 worker's output was fully landed and
+integrated while the worker sat "waiting for the battery to complete" on a machine with ZERO
+battery, workerd or miniflare processes — the run had finished, the completion signal was
+missed or already consumed, and nothing would ever arrive to wake it). Three rules, each the
+incident's own shape inverted:
+
+1. **Launch a long run so its EXIT is your signal** — foreground, or backgrounded through the
+   harness so completion re-invokes you. Never "start it and wait to hear."
+2. **Any hand-rolled wait is BOUNDED, and at every poll and at its timeout it checks the
+   PROCESS, not the signal**: if no battery/workerd process exists, the wait is OVER — read
+   the result from what the run wrote (the suite output, the exit file, git state) instead of
+   waiting longer. An absent process is a completed wait wearing silence.
+3. **A worker is either RUNNING A TOOL or DONE AND SAYING SO.** Ending a turn with "waiting
+   for X" and no pending tool call is a hang with a status message, not a state — if there is
+   nothing left to run, verify, report, and EXIT, and let CONDUCT reap the worktree.
+
 ## Your environment
 
 - Your worktree may arrive **without `bio-plane/node_modules`**. If a battery reports ~14
