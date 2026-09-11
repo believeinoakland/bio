@@ -1871,3 +1871,60 @@ concurrency: checked over the whole register. **No live claim names any path abo
   **Restored to green and measured:** `coverage-provenance` 28 → 29, `owed-controls` 40 → 41,
   the +1 in each being the new assertion on the derived list.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `33e0b5e` and verified on the MERGED tree: battery 171/171 · 10,537 (pre-merge main 10,488 + the attributed +49, closing exactly), `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` 888/165/166, UI harness exit 0, `mintid --audit` 0 breaks. The CLAIMS.md merge conflict was the claim's own predicted one and was resolved keep-both (two appended blocks, no shared row).
+## CLAIM 2026-09-10 M0 (M0-23 — UI-56's delegation: a `publishedmanifest` fixture that cannot represent the wire shape, and the CLASS question behind it)
+session: M0 worker (worktree `.claude/worktrees/agent-ae817651c6d08b3b1`, branch `worktree-agent-ae817651c6d08b3b1`)
+opened: 2026-09-10
+paths:
+  - `civicos-ui/test/preauth-vocabulary.test.mjs` — the `MANIFEST_ANSWER` fixture ONLY (its
+    `caseMembers[]` rows corrected to the wire shape the plane selects, and the rows a DIVERGED
+    member needs to be representable), plus any assertion the enlarged fixture moves, corrected at
+    its site with a dated reason and never exempted. No other block.
+    **AMENDED MID-ITEM, and the amendment is the item's own finding.** The claim as written covered
+    correcting the fixture and moving what it moved. NC arm (t) — the pin deleted from the corrected
+    fixture — came back **GREEN, not as declared**: the corrected fixture can REPRESENT the wire
+    shape, and no assertion in this suite READ it, so by the item's own criterion the correction was
+    decoration. Closing that needs an assertion this file did not have, so the claim now also covers
+    **TWO APPENDED ASSERTIONS in the `public-record` REACH block** (the diverged member joined through
+    its pin on the uncredentialed index, and its undiverged sibling unmoved) and the file's own
+    summary line, where this suite records every movement of its measurement basis. No existing
+    assertion is edited or exempted.
+  - `civicos-ui/check-mock-envelope.mjs` — a NEW reporting arm (the fixture-shape census) APPENDED;
+    arms A and B are not edited.
+  - `civicos-ui/test/envelope-probe.mjs` — the recorder gains the per-row key sets the census reads.
+    It still records and never judges; nothing existing is removed.
+  - `docs/development/CLAIMS.md` (this entry).
+  **NOT** `civicos-ui/app.html` (the join is UI-56's and landed; this item changes no surface),
+  **NOT** `bio-plane/src/**` (the plane already answers the six columns — this is a MOCK correction
+  and nothing on the wire moves), **NOT** `civicos-ui/test/publishedcase.test.mjs` (UI-56 just landed
+  in it; it is the census's subject and is READ ONLY here), **NOT** any other suite under
+  `civicos-ui/test/` — the census REPORTS on them and edits none, **NOT**
+  `docs/development/QUEUE.md` (CONDUCT's sole ground).
+
+### DELEGATION 2026-09-10 (M0-23 → UI / whoever next holds these suites) — what the fixture-shape census found OUTSIDE my claim
+The census arm M0-23 added to `civicos-ui/check-mock-envelope.mjs` (arm C) reports, on every
+harness run, every UI fixture whose rows are narrower than the plane's own `SELECT`. **It is
+REPORT-ONLY by design and nothing below is failing anything.** Three findings are in suites this
+claim says `NOT`, so they are handed over rather than fixed:
+
+1. **`civicos-ui/test/auth-surface.test.mjs` · `publishedmanifest.published[]` carries 7 of 9
+   columns, MISSING `strength` and `required`** — and it answers **NO `cases[]` and NO
+   `caseMembers[]` at all**. Its four published rows therefore render as bundles in no case with
+   no frozen pair, and **the fixture cannot represent a loose ratified finding that HAS a pair** —
+   which is exactly the state REC-49 corrected `pubList` to render. Same class as M0-23's own:
+   not a live defect, and not assertable either.
+2. **`cases[]` is 6 of 9 in BOTH `publishedcase.test.mjs` and `preauth-vocabulary.test.mjs`,
+   MISSING `bias_acknowledgement`, `bar` and `project_id`** — the three columns CASE-1 and CASE-5
+   put on the public index. **MEASURED AND LEGITIMATELY NARROW, not a gap to close on my say-so:
+   `grep` over `civicos-ui/app.html` finds ZERO reads of `bias_acknowledgement`, of `project_id`,
+   and of a case-level `bar`.** No surface reads them, so this is the over-strictness case the
+   census exists to NAME rather than fail. It becomes real work the day a surface renders the
+   bar or the publishing project — and on that day arm C already says which fixtures cannot
+   represent it.
+3. **`auth-surface.test.mjs · published[]` also answers `manifest` and `manifest_sha`, two keys
+   the plane's `published` SELECT does not carry** (they belong to `cases[]`). Named as WIDER
+   THAN THE WIRE; a fixture inventing a column is the same class pointing the other way.
+
+I did not touch any of these files. `preauth-vocabulary.test.mjs`'s `cases[]` row is mine and I
+left it narrow DELIBERATELY for the reason in (2) — correcting it would have been the fence
+tighter than its rule that `WORKER.md` warns about, and would have moved this file's measurement
+basis a second time for no measured reader.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-654 rulings across 67 documents.
+655 rulings across 67 documents.
 
 ## DEC-
 
@@ -1143,6 +1143,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:1615`
 - fixture rows (`CASE_MEMBERS`, `PUB_ROWS`, `CASE_ROWS`): the roster fixture is CORRECTED to the wire shape the plane actually selects (`version_sha`, `role`) and gains a DIVERGED member.  
   `docs/development/CLAIMS.md:1807`
+- AMENDED MID-ITEM, and the amendment is the item's own finding.** The claim as written covered correcting the fixture and moving what it moved.  
+  `docs/development/CLAIMS.md:1882`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

@@ -34,9 +34,40 @@ const SEEN = new Map();
 let CALLS = 0;
 
 function note(op, wrapped, keys){
-  if(!SEEN.has(op)) SEEN.set(op, { op, wrapped:0, flat:0, sampleKeys:null });
+  if(!SEEN.has(op)) SEEN.set(op, { op, wrapped:0, flat:0, sampleKeys:null, rowKeys:{} });
   const e = SEEN.get(op);
   if(wrapped) e.wrapped++; else { e.flat++; if(!e.sampleKeys) e.sampleKeys = keys; }
+}
+
+/* M0-23 — THE COLUMN HALF, and it is the same observation one altitude down.
+ * Arm B asks what shape the ENVELOPE was; this asks what shape the ROWS INSIDE
+ * it were. A mock can answer a perfectly wrapped envelope whose rows drop half
+ * the columns the plane selects, and the suite reading it cannot assert against
+ * a column its own fixture does not have — which is how `caseMembers[]` lost
+ * `version_sha`, the column the published index's join is actually made on, in
+ * two suites at once (UI-56 and M0-23, D-173's class at the column level).
+ *
+ * It records the UNION of row keys per array field rather than one sample,
+ * because a fixture may carry the column on one row and not another and the
+ * union is the shape the fixture can REPRESENT. It records and never judges;
+ * `check-mock-envelope.mjs` owns the verdict, as with everything else here. */
+const MAX_KEYS = 60;
+function noteRows(op, payload){
+  if(!payload || typeof payload !== "object" || Array.isArray(payload)) return;
+  const e = SEEN.get(op);
+  if(!e) return;
+  for(const [field, val] of Object.entries(payload)){
+    if(!Array.isArray(val)) continue;
+    if(!e.rowKeys[field]) e.rowKeys[field] = { rows:0, keys:[] };
+    const slot = e.rowKeys[field];
+    slot.rows += val.length;
+    const set = new Set(slot.keys);
+    for(const row of val){
+      if(!row || typeof row !== "object" || Array.isArray(row)) continue;
+      for(const k of Object.keys(row)) if(set.size < MAX_KEYS) set.add(k);
+    }
+    slot.keys = [...set].sort();
+  }
 }
 
 async function observe(u, res){
@@ -63,7 +94,13 @@ async function observe(u, res){
      request with `json({ok:false, …})` directly, no envelope. Only SUCCESS
      answers carry the wrapped/flat distinction this guard is about. */
   if(body.ok === false) return;
-  note(op, Object.prototype.hasOwnProperty.call(body, "result"), Object.keys(body).slice(0, 12));
+  const wrapped = Object.prototype.hasOwnProperty.call(body, "result");
+  note(op, wrapped, Object.keys(body).slice(0, 12));
+  /* The PAYLOAD is what the surface actually reads: `result` for a wrapped op,
+     the body itself for a flat one. Taking the body for both would have scored
+     every wrapped op's rows as absent — the census measuring the envelope it was
+     built to look past. */
+  noteRows(op, wrapped ? body.result : body);
 }
 
 const origCreate = vm.createContext.bind(vm);
