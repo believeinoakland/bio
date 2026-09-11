@@ -51,6 +51,7 @@ import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseJsonc } from "./jsonc.mjs";   /* one parser, shared with release-assemble.mjs */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
@@ -87,32 +88,10 @@ if (!existsSync(join(memberDir, "fleet-member.json"))) {
     "civicos-ui/deploy-ui.mjs. This tool deploys only members that declare themselves one.");
 }
 
-/* JSONC, and the comment stripper is STRING-AWARE. A naive /\/\/.*$/ strip
-   corrupts any config holding a URL, and these configs hold several. */
-function stripJsonc(text) {
-  let out = "", inStr = false, quote = "", inLine = false, inBlock = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i], n = text[i + 1];
-    if (inLine) { if (c === "\n") { inLine = false; out += c; } continue; }
-    if (inBlock) { if (c === "*" && n === "/") { inBlock = false; i++; } continue; }
-    if (inStr) {
-      out += c;
-      if (c === "\\") { out += text[++i] ?? ""; continue; }
-      if (c === quote) inStr = false;
-      continue;
-    }
-    if (c === '"' || c === "'") { inStr = true; quote = c; out += c; continue; }
-    if (c === "/" && n === "/") { inLine = true; i++; continue; }
-    if (c === "/" && n === "*") { inBlock = true; i++; continue; }
-    out += c;
-  }
-  return out;
-}
-
 const cfgPath = join(memberDir, "wrangler.jsonc");
 if (!existsSync(cfgPath)) die("NO_CONFIG", `"${member}" has no wrangler.jsonc.`);
 let cfg;
-try { cfg = JSON.parse(stripJsonc(readFileSync(cfgPath, "utf8"))); }
+try { cfg = parseJsonc(readFileSync(cfgPath, "utf8"), `${member}/wrangler.jsonc`); }
 catch (e) { die("UNPARSEABLE_CONFIG", `${member}/wrangler.jsonc did not parse.`, String(e.message)); }
 
 /* THE TEMPLATING, and it is the whole point. Every service target equal to the

@@ -200,3 +200,58 @@ export const NS_RATIFY = "bio-ratify";
    verified signature IS the integrity check and cannot diverge from one. */
 export const ratifyStatement = (bundleId, bundleSha) =>
   te.encode(`bio-ratify ${bundleId} ${bundleSha}\n`);
+
+/* ---------------------------------------------------------------- the fleet */
+
+/* A SEPARATE NAMESPACE, so a signature over the plane asset can never be
+   replayed as a signature over the fleet list, or the reverse. Domain
+   separation costs one string here and cannot be retrofitted once signatures
+   exist in the wild. */
+export const NS_FLEET = "bio-release-fleet";
+
+/* THE ONE PLACE THE FLEET STATEMENT IS BUILT, and the reason it is here rather
+   than in the tool that signs it.
+   A release carries several assets now — the plane and each fleet member — and
+   ONE signature covers the SET. A signature per asset would let anyone serving
+   the manifest DROP a member: every remaining signature still verifies and the
+   installer silently installs less, which is D-115's "quietly doing less" with
+   cryptographic cover.
+   The producer (`tools/release-assemble.mjs`) and the verifier (`newgroup`) must
+   derive byte-identical statements from the same manifest, and they run in
+   different processes on different machines months apart. If each built its own
+   string, the first divergence would present as "signature invalid" on a release
+   that is perfectly good — indistinguishable from an attack, and debugged by
+   whoever is least equipped to. So neither builds it: both call this.
+   The PLANE LINE IS PART OF THE STATEMENT on purpose. It is what makes the
+   signature say "these members were built against THIS plane", which is the
+   claim D-298 found unbacked when a month-old plane was nearly published beside
+   fleet bundles compiled from today's plane source.
+   Sorted by member, so two assemblers of the same tree emit the same bytes.
+
+   THE SERVICE BINDINGS ARE PART OF THE STATEMENT, and that is deliberate rather
+   than thorough. The installer cannot give every member the same bindings:
+   `pdf-worker` declares NONE on purpose ("the narrowest binding that does the
+   job" — it structurally cannot reach the record), while `agent-worker` needs
+   PLANE. So the per-member binding set has to travel in the manifest, and
+   anything the installer ACTS ON from the manifest must be signed or it is a
+   value an attacker can choose. The targets travel as WRITTEN in the member's
+   config — the phantom `bio-plane` included — and the installer substitutes the
+   instance slug at upload; so what is signed is the SHAPE, and the slug can
+   never come from the network. Rendering is `NAME:target`, sorted by binding
+   name, comma-joined, and the `services=` key is always present so a member
+   with none is stated rather than omitted. */
+const renderServices = (services) => [...(services || [])]
+  .map((s) => `${s.binding}:${s.service}`)
+  .sort()
+  .join(",");
+
+export const fleetStatement = ({ version, plane, members }) =>
+  `${NS_FLEET}/1\n`
+  + `version ${version}\n`
+  + `plane ${plane.sha256} ${plane.bytes} ${plane.asset}\n`
+  + [...members]
+      .sort((a, b) => (a.member < b.member ? -1 : a.member > b.member ? 1 : 0))
+      .map((m) => `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset}`
+        + ` services=${renderServices(m.services)}`)
+      .join("\n")
+  + "\n";

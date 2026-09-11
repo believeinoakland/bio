@@ -96,6 +96,11 @@ import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256,
 } from "../bio-plane/scripts/fleet-bundle.mjs";
+/* The statement and its namespace come from the module the INSTALLER also
+   imports. Neither side builds the bytes it signs or verifies — see the comment
+   on `fleetStatement`. This file defined its own copy for exactly one commit. */
+import { NS_FLEET, fleetStatement } from "../bio-plane/src/sshsig.mjs";
+import { parseJsonc } from "./jsonc.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -103,11 +108,6 @@ const DRY = argv.includes("--dry-run");
 const SIGN = argv.includes("--sign");
 const EMIT = flag("--emit-payload");
 
-/** SSHSIG namespace for the FLEET payload. Deliberately NOT `bio-release`: a
- *  distinct namespace means a plane-asset signature can never be replayed as a
- *  fleet signature, or the reverse. Domain separation is free here and is not
- *  free to add later. */
-const NS_FLEET = "bio-release-fleet";
 const RELEASE_DIR = join(REPO_ROOT, "release");
 
 const die = (code, msg, detail) => {
@@ -162,8 +162,17 @@ for (const m of all) {
       + `but the artifact hashes ${sha256(committed).slice(0, 16)}….`,
       "The manifest and the artifact must be written by the same build.");
   }
+  /* The member's DECLARED service bindings, taken from its own config and
+     carried into the signed statement exactly as written — phantom and all.
+     The installer substitutes the instance slug at upload, so the slug is never
+     a value that arrived over the network. */
+  const wrangler = join(m.abs, "wrangler.jsonc");
+  const services = existsSync(wrangler)
+    ? (parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`).services || [])
+        .map((s) => ({ binding: s.binding, service: s.service }))
+    : [];
   entries.push({ member: m.name, asset: `${m.name}.bundled.mjs`, sha256: sha256(committed),
-                 bytes: committed.length, from: join(m.abs, m.bundle.outfile) });
+                 bytes: committed.length, from: join(m.abs, m.bundle.outfile), services });
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
 }
 
@@ -211,13 +220,12 @@ const planeEntry = entries.find((e) => e.member === "bio-plane");
 const fleetEntries = entries.filter((e) => e.member !== "bio-plane")
   .sort((a, b) => a.member.localeCompare(b.member));
 
-/** Deterministic and line-oriented so a human can read what was signed. Sorted,
- *  so two assemblers of the same tree produce the same bytes. */
-const payload =
-  `${NS_FLEET}/1\n` +
-  `version ${version}\n` +
-  `plane ${planeEntry.sha256} ${planeEntry.bytes} bio-plane.bundled.mjs\n` +
-  fleetEntries.map((e) => `member ${e.member} ${e.sha256} ${e.bytes} ${e.asset}`).join("\n") + "\n";
+/* Built by the SHARED statement function, never here. */
+const payload = fleetStatement({
+  version,
+  plane: { sha256: planeEntry.sha256, bytes: planeEntry.bytes, asset: "bio-plane.bundled.mjs" },
+  members: fleetEntries,
+});
 
 console.log("\n──── the payload fleetSig covers ────");
 process.stdout.write(payload);
@@ -320,10 +328,17 @@ copyFileSync(planeEntry.from, join(RELEASE_DIR, "bio-plane.bundled.mjs"));
 const out = {
   version,
   sha256: planeEntry.sha256,
+  /* THE PLANE'S BYTE LENGTH IS PUBLISHED BECAUSE THE SIGNED STATEMENT CONTAINS
+     IT. Without it the installer cannot rebuild the bytes fleetSig covers, and
+     a perfectly good release would verify as tampered — the producer/verifier
+     divergence `fleetStatement` exists to prevent, reappearing as MISSING DATA
+     rather than as divergent code. Additive; older installers ignore it. */
+  bytes: planeEntry.bytes,
   asset: "bio-plane.bundled.mjs",
   sig: planeSig,              // the PLANE signature, verified above over THIS asset
   signer: existing.signer,
-  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes }) => ({ member, asset, sha256: s, bytes })),
+  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, services }) =>
+    ({ member, asset, sha256: s, bytes, services })),
   fleetSig,
 };
 writeFileSync(join(RELEASE_DIR, "RELEASE.json"), JSON.stringify(out, null, 2) + "\n");
