@@ -2679,3 +2679,30 @@ the absence of a delegation is a measurement and not an oversight.
 concurrency: checked over the register. D-310 holds `bio-plane/src/affordances.mjs`;
 CPDF-15 holds scratch/probe paths only. No live claim names any path above.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `dad57cd` and verified on the MERGED tree: battery 174/174 · 10,804 (10,779 + the attributed +25, closing exactly), `coverage --strict` exit 0 read unpiped (floor 909/168/169 by print), UI harness exit 0, `mintid --audit` 0 breaks, `dist/**` rebuilt. The DEBT conflict was two same-row edits resolved by keeping each row's CLOSING copy (D-309 from the branch, D-310 from main), the split-the-resolution rule applied.
+
+## CLAIM 2026-09-10 CONTENT-PDF (CPDF-15 — the TESSERACT RUNTIME measurement: wasm tesseract on the DEPLOYED Workers runtime, DEC-42's CPU question, D-245)
+session: cpdf15-tesseract-runtime (worktree `agent-a871d94f8580cb2a6`, branch `worktree-agent-a871d94f8580cb2a6`)
+opened: 2026-09-10T00:00:00Z
+paths:
+  - `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` — **NEW**. A PROBE, deliberately NOT named
+    `*.test.mjs` so the battery's discovery rule (`scripts/battery.mjs`: readdir +
+    `endsWith(".test.mjs")`) never picks it up and it needs no skip marker. It commits no product
+    code and changes nothing the plane runs.
+  - `bio-plane/test/cpdf15-tesseract-worker.mjs` — **NEW**. The scratch Worker source uploaded
+    under this item's own scratch slug `bio-ocrtess`, used, DELETED and verified gone. Not a
+    plane source, not in `dist/`, reachable from nothing.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  - `docs/development/DEBT.md` — **APPEND ONLY**, if this item raises any row; ids from
+    `tools/mintid.mjs`, no existing row edited.
+  **READ, NEVER EDITED** (the coupling is deliberate and one-way — it is what makes the figures
+  comparable with the floor): `bio-plane/test/ocr-measure-probe.mjs` (CPDF-9's floor — its
+  `GT_PAGE2` ground truth, its `norm`/`levenshteinPairs` and its four metric expressions are READ
+  AT RUN TIME and pinned by digest, never copied; **D-305's fifth expression is NOT added here** —
+  the digit-substitution column this item reports is computed in this item's own file, so every
+  prior figure stays comparable), and `bio-plane/test/ocr-moondream-probe.mjs` (CPDF-11's six-rung
+  ladder recipe, likewise read and pinned, never copied).
+  **NOT** `bio-plane/src/**` — this item writes no product code at all; in particular **NOT**
+  `store.mjs` (D-309 is live there) and **NOT** `affordances.mjs` (D-310). **NOT**
+  `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
+  `bio-plane/scripts/coverage.mjs` — a probe declares no checks, so no floor here can move.
+  **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`.
