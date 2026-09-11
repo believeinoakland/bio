@@ -302,7 +302,7 @@ is written here.
 
 - **ID:** I2
 - **Owner:** `FRAMEWORK` (currently dormant)
-- **Version:** 1.1.0 (1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
+- **Version:** 1.2.0 (1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
   (session framework-agent-2, FW-1) 2026-07-31. Supersedes the provisional 0.1.0
   producer-proposed 2026-07-31 from CONTENT-PDF's as-built output (plane 0.55.0),
   written from the code that emits it rather than as anyone would like it, exactly
@@ -320,7 +320,12 @@ is written here.
   `kind` tag + IC-1 `source`), undetermined[{part, why}], counts}` — plus the
   pageless text degenerate form `text.paragraphs[]` (`{para, ref:"¶N", text}`)
   where a container has no pages in its bytes. A reader ignoring both sees 1.0.0.
-  Producers of further container arms CONFIRM at IC-2, inventing no variants.)
+  Producers of further container arms CONFIRM at IC-2, inventing no variants.
+  1.2.0 2026-09-10, IC-73 (CPDF-13's integration) — ADDITIVE: a derivation step in
+  `text_source`'s chain MAY carry one OPTIONAL `calibration` field naming the
+  measurement its `cap` rests on, plus ONE refusal (`TEXT_CHAIN_CAL_REF`, C-35.12)
+  for a reference present and unreadable. A reader ignoring it sees 1.1.0. Resolved
+  by CONDUCT in writing on dormant FRAMEWORK's behalf, protocol step 3.)
 - **Producers:** `CONTENT-PDF` (live), `CONTENT-HTML` (dormant), `CONTENT-OFFICE` (live — the office-format entries)
 - **Consumer:** `FRAMEWORK` (dormant)
 - **Status:** STABLE. FRAMEWORK, the consumer, confirms the shape serves what it
@@ -519,8 +524,14 @@ change to this interface: `civicos-ui` and the served pages match on these strin
 
 - **ID:** I4
 - **Owner:** `DIST`
-- **Version:** 1.0.0 (first written 2026-07-31; half-formalised by D-106's version
-  authority rule)
+- **Version:** 1.1.0 (first written 2026-07-31; half-formalised by D-106's version
+  authority rule; 1.1.0 2026-09-10, IC-70 (FL-10's integration) — ADDITIVE:
+  `dist/bio-plane.bundle.json` lands BESIDE the artifact (sha256, byte length,
+  exact recipe, per-input sha256s) and the FL-9 gate asserts the committed module
+  is byte-identical to a fresh build; zero readers of the new file measured at
+  filing; the artifact's own path and the build command are unchanged. Resolved by
+  CONDUCT per FL-10's row assignment — DIST's release half (D-297/D-298 clause 2)
+  is untouched and remains DIST's.)
 - **Consumers:** `newgroup/**`, and every sovereign instance it installs
 - **Status:** STABLE
 
@@ -554,7 +565,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.8.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.9.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —
@@ -596,7 +607,14 @@ correctness properties, not preferences. Changing either is an interface change.
   `op=purge`'s whole-store arm ONLY, like the registry and the progression definitions — a
   per-bundle purge leaves it. A re-disposition UPSERTS on the key, so one proposal re-decided keeps
   ONE row. No existing table's columns changed, so nothing built against I5 breaks. The shapes are
-  in the ownership list and note below.)
+  in the ownership list and note below. 1.9.0 2026-09-10, IC-72 (CPDF-13's
+  integration) — ADDITIVE: three new tables `calibrations`, `calibration_subjects`,
+  `calibration_signals` (declared BEFORE `host_governor`, added to `purge`, D-113
+  honoured) plus one additive NULLABLE column on the DERIVED `reading_text_source`
+  projection and five new ops. The stored supersession column is `replaced_by` —
+  D-221's version-chain pin is total on purpose and was NOT narrowed; the wire
+  field stays `superseded_by`. No existing column changed. Resolved by CONDUCT in
+  writing on dormant RECORD's behalf, protocol step 3.)
 - **Consumers:** every area that persists anything
 - **Status:** STABLE
 

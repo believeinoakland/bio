@@ -5003,6 +5003,17 @@ a battery green on an artifact nobody ships from) FAILS instead of shipping.
 **PROPOSED, 2026-09-10.** The guard half is FL-10's to land; the release half is DIST's and
 nothing here builds against it. **The version bump and the RESOLUTION are CONDUCT's.**
 
+### RESOLUTION — ACCEPTED, **I4 1.0.0 → 1.1.0**, 2026-09-10 by CONDUCT #9
+
+Additive in fact, on the row's own measured table: the new manifest has ZERO readers today,
+the artifact path and build command are unchanged, and `embed-release.mjs` rebuilds before
+reading so it never sees a half-state. Resolved by CONDUCT per FL-10's row assignment rather
+than answered FOR the consumers: FLEET is the proposer, and DIST — I4's owner — is the party
+whose own 2026-09-10 DELEGATION asked for exactly this guard pattern (BOB's answer routed it),
+so its agreement is on the record in substance; its release half (D-297, D-298 clause 2) is
+untouched, remains DIST's, and an objection from DIST reopens this row rather than being
+overridden by it. `INTERFACES.md` bumped in the same act.
+
 ---
 
 ## IC-72 · I5: THREE NEW TABLES — `calibrations`, `calibration_subjects`, `calibration_signals` — one ADDITIVE column on the DERIVED `reading_text_source` projection, and FIVE new ops · PROPOSED 2026-09-10 (CPDF-13, closing D-183 and D-253's join) — the version bump and the RESOLUTION are CONDUCT's
@@ -5140,6 +5151,15 @@ Nothing migrates and nothing is backfilled. An existing store gains three empty
 tables and one NULL column; with no `calibration_subjects` row it registers no
 wake, holds no alarm, and behaves exactly as it did before this row existed.
 
+### RESOLUTION — ACCEPTED, **I5 1.8.0 → 1.9.0**, 2026-09-10 by CONDUCT #9
+
+Additive: three new tables, one nullable column on a derived projection, five new ops; no
+existing column changed and the migration section above is a no-op for every existing store.
+CONDUCT answers in writing on dormant RECORD's behalf (protocol step 3), recorded as CONDUCT
+answering FOR the area and never as the area agreeing. The `replaced_by` naming stands as
+argued — D-221's total pin was met, not narrowed. Landed as-built with CPDF-13 (`4a0c248`);
+`INTERFACES.md` bumped in the same act.
+
 ---
 
 ## IC-73 · I2: A DERIVATION STEP IN `text_source`'s CHAIN MAY NAME THE CALIBRATION ITS `cap` RESTS ON — one OPTIONAL field, and a refusal for a reference that is present and UNREADABLE · PROPOSED 2026-09-10 (CPDF-13, closing D-253) — the version bump and the RESOLUTION are CONDUCT's
@@ -5233,3 +5253,12 @@ quality nobody here measured. **A calibration reference on a step whose cap is
 per-acquire store read to attach one would be paying for a join that says
 nothing. When a probe measures a text layer's fidelity, that step gains its
 reference the same way the OCR step does.
+
+### RESOLUTION — ACCEPTED, **I2 1.1.0 → 1.2.0**, 2026-09-10 by CONDUCT #9
+
+Additive: one OPTIONAL field on a chain step and one refusal for a reference that is present
+and unreadable; a reader ignoring the field sees 1.1.0. CONDUCT answers in writing on dormant
+FRAMEWORK's behalf (protocol step 3), recorded as CONDUCT answering FOR the area and never as
+the area agreeing. The text-layer closure stands as stated (no calibration reference on a step
+whose cap is null by measurement — a reference must point at a measurement the step rests on).
+Landed as-built with CPDF-13 (`4a0c248`); `INTERFACES.md` bumped in the same act.

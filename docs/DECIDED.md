@@ -157,7 +157,7 @@ authority is the file named, never this one.
 - **DEC-49** — DEC-49's headline was SUPERSEDED IN PART by this landing and CONDUCT corrected it in the entry** (the UNAVOIDABLE column did not move, so none of the reasoning is invalidated — but Bob answers that ruling against the measurement, so the measurement it quotes must be current).  
   `docs/archive/ledgers/QUEUE-2026-08.md:2055`
 - **DEC-49** — `test/textchain.test.mjs` was CORRECTED at its site, never exempted.** Its DEC-49 family-totality assertion caught the new refusal row immediately — the hand-written `codesUsed` list was wrong the moment the refusal landed — and the correction carries a dated reason at the line, with an arm driving the new code.  
-  `docs/development/INTERFACE-CHANGES.md:5205`
+  `docs/development/INTERFACE-CHANGES.md:5225`
 - **DEC-52** — WHY THEY ARE NOT DECIDED HERE.** Bob ruled on THREE VERBS — declare a relation, resolve a reference, thread a progression.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3709`
 - **DEC-52** · 2026-08-07 — `docs/development/INVESTIGATIVE-SESSION.md` states at TWO sites — §14a's post-processing paragraph (`[BOB-4 — RULED 2026-08-07, PROVISIONAL]`) and the open-questions list — that *"the sidebar approval (identify → present → member approves) remains the act of record for the constitutive fields."* **DEC-52's decided…  
@@ -541,7 +541,7 @@ authority is the file named, never this one.
 ## REC-
 
 - **REC-3** · 2026-07-31 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
-  `docs/development/INTERFACES.md:478`
+  `docs/development/INTERFACES.md:483`
 - **REC-8** · 2026-07-31 — PARTLY SETTLED 2026-07-31 (REC-8, Step 7): the TEMPORAL half is built and the mechanism is decided — an `overdue-scan` consumer on REC-1's reconciling DO alarm detects an overdue required successor (derived on read against an injectable clock, no stored flag), surfacing an `overdue_successor` proposal.  
   `docs/development/DEBT.md:71`
 - **REC-11** — her than minting a second constant; (2) ONE `strength:` line in the DO dispatch map beside `basis:`/`restson:`; (3) the CORRECTED comment on #weakerGrade (RECONCILED §1.1 R1-m — the old comment named the two-axis substitution R2 forbids as a design INTENT), with #weakerGrade itself unchanged and deliberately unused…  
@@ -1216,7 +1216,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - THE OVER-STRICTNESS HALF, DECIDED IN THE ITEM AND NOT INHERITED **A member-cancelled run keeps reading `finished`, and that is a decision rather than an oversight.** `cancelled` is an ending, so it falls on the same side of the keying as `completed`, and one could  
   `docs/development/INTERFACE-CHANGES.md:4548`
 - SIX EXISTING SUITES CAUGHT THIS CHANGE AND EVERY ONE WAS CORRECTED AT ITS SITE, NEVER EXEMPTED.** This is the measured consumer impact and it is not zero: `scheduler.test.mjs` (registry totality, ten consumers → eleven), `airun.test.mjs` (the same count as a pinned DELTA, 10→11 — corrected rather  
-  `docs/development/INTERFACE-CHANGES.md:5111`
+  `docs/development/INTERFACE-CHANGES.md:5122`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  
