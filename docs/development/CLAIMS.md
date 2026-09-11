@@ -2253,3 +2253,29 @@ FIXTURE across the whole package, and the three NARROWER rows that remain are ON
 closure in three suites — `cases[].bias_acknowledgement`, `.bar` and `.project_id`, which no
 surface in `app.html` reads.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `db1df93` and verified on the MERGED tree: battery 173/173 · 10,753 (delta ZERO, predicted), `coverage --strict` exit 0 read unpiped, UI harness exit 0 (`auth-surface` 94), `mintid --audit` 0 breaks.
+
+## CLAIM 2026-09-10 CONTENT-PDF (CPDF-14 — the COMPOSED-SHAPE measurement: detect → crop → transcribe the crop, at n>1, against the enforced-comparable CPDF-9 floor)
+session: cpdf14-composed-shape (worktree agent-a6d473988f1f33530)
+opened: 2026-09-10T00:00:00Z
+paths:
+  - `bio-plane/test/ocr-composed-probe.mjs` — **NEW**, and the only file this item adds. A PROBE,
+    deliberately NOT named `*.test.mjs` so the battery's discovery rule (`scripts/battery.mjs`:
+    readdir + `endsWith(".test.mjs")`) never picks it up and it needs no skip marker. It commits
+    no product code and changes nothing the plane runs — verified by the suite count being
+    IDENTICAL with the file present.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  - `docs/development/DEBT.md` — **APPEND ONLY**: D-305 and D-306, both RAISED by this item,
+    both minted with `tools/mintid.mjs`. No existing row edited.
+  **READ, NEVER EDITED** (named so the next reader knows the coupling is deliberate and one-way):
+  `bio-plane/test/ocr-measure-probe.mjs` (CPDF-9's floor — its ground truth and its four metric
+  expressions are READ AT RUN TIME, never copied), `bio-plane/test/ocr-moondream-probe.mjs`
+  (CPDF-11's ladder recipe and its one prompt, likewise read not copied), and
+  `bio-plane/test/ocr-moondream-worker.mjs` (the scratch Worker source, uploaded VERBATIM under
+  this item's own scratch slug `bio-ocrcomposed`, then deleted and verified gone).
+  **NOT** `bio-plane/src/**` — this item writes no product code at all. **NOT** the case suites
+  (a CASE-5b worker was live there; its work is now on `main` and this worktree fast-forwarded
+  onto it). **NOT** `op-claims`/walkfloor ground (a D-302 worker held it; likewise landed).
+  **NOT** `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
+  `bio-plane/scripts/coverage.mjs` — no floor here can move, because a probe declares no checks.
+  **NOT** `newgroup/**`. **NOT** `civicos-ui/**`. **NOT** `bio-plane/dist/**` — nothing this item
+  writes is a plane source, so FL-10's staleness guard has nothing to catch.
