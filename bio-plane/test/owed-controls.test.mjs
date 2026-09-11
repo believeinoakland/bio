@@ -53,6 +53,9 @@ import { dirname, join } from "node:path";
    register reads, and this suite's own fixtures would then be counted as part of
    the estate they are measuring (coverage-provenance's precedent). */
 import { CONTROL_MARKER, MARKER_PHRASE, readControl } from "../scripts/control-register.mjs";
+/* D-265: the copy list, derived from coverage.mjs own imports rather than kept
+   by hand here and in coverage-provenance.test.mjs. The note at REAL records why. */
+import { instrumentDeps } from "./instrument-deps.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
@@ -69,8 +72,15 @@ const REPO = join(DIR, "..", "..");
    Measured on the day: eleven, exactly like that. NAMED here rather than
    silently fixed, and DELEGATED in CLAIMS.md: two hand-kept copies of one
    instrument's dependency list is a thing that will go stale. */
-const REAL = ["coverage.mjs", "control-register.mjs", "provenance.mjs",
-              "declared-source.mjs", "walkfloor.mjs"];
+/* CORRECTED 2026-09-10 BY D-265, NOT EXEMPTED, AND THE PARAGRAPH ABOVE IS KEPT
+   BECAUSE IT IS THE EVIDENCE — it says eleven failures, entirely in the HARNESS,
+   and DELEGATES the fix with the words *"two hand-kept copies of one instrument's
+   dependency list is a thing that will go stale."* D-265 added one import
+   (`walkfloor.mjs` gained `./walkfigure.mjs`) and this suite came back at
+   `29 pass, 11 fail`. The prediction was exact. The list is now DERIVED from
+   `coverage.mjs`'s own import graph, in ONE place both suites share, so the second
+   copy is gone rather than corrected. */
+const { files: REAL, outside: REAL_OUTSIDE } = instrumentDeps("coverage.mjs");
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -90,6 +100,18 @@ const realOut = `${realRun.stdout || ""}${realRun.stderr || ""}`;
 const ledgerRows = [...realOut.matchAll(/^ {4}\((\d)\) (\S+) {2}(PLACED|OUTSTANDING|SUITE MISSING|SUITE DECLARES NO CONTROL)(?: {2}(\S+))?$/gm)]
   .map((m) => ({ n: +m[1], item: m[2], state: m[3], suite: m[4] || null }));
 
+/* D-265: the DERIVED copy list, asserted rather than trusted — a deriver that
+   silently shrank would put this suite back in the state the paragraph at REAL
+   describes, failing in the harness with no obvious cause. */
+console.log(`  D-265 derived copy list: ${REAL.length} module(s) — ${REAL.join(", ")}`
+  + `${REAL_OUTSIDE.length ? ` · OUTSIDE scripts/: ${REAL_OUTSIDE.join(", ")}` : ""}`);
+t("A0 the instrument's copy list is DERIVED from its own imports, still contains every "
++ "name the hand-kept array carried, and reaches nothing outside scripts/",
+  [REAL.length >= 5,
+   ["coverage.mjs", "control-register.mjs", "provenance.mjs", "declared-source.mjs",
+    "walkfloor.mjs"].filter((n) => !REAL.includes(n)),
+   REAL_OUTSIDE],
+  [true, [], []]);
 t("A1 the instrument ran at all", [realRun.status, realOut.length > 0], [0, true]);
 /* THE COUNT IS THE DESIGN'S, AND IT IS ASSERTED AS SEVEN RATHER THAN AS
    `ledgerRows.length` — an assertion against the thing it is measuring passes

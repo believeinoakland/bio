@@ -73,6 +73,9 @@ import { dirname, join } from "node:path";
    marker written in this file would plant a declaration in the corpus the
    register reads, and this suite's fixtures would then be counted as its own. */
 import { CONTROL_MARKER } from "../scripts/control-register.mjs";
+/* D-265: the copy list, derived from `coverage.mjs`'s own imports rather than kept
+   by hand in two places. The header below records why. */
+import { instrumentDeps } from "./instrument-deps.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
@@ -86,9 +89,17 @@ const SCRIPTS = join(DIR, "..", "scripts");
    growing a third copy of it. Miss either here and the scratch repository throws
    ERR_MODULE_NOT_FOUND, this suite reports nineteen failures with no obvious
    cause, and the failure is in the HARNESS. Measured on the day: dropping them
-   left `9 pass, 19 fail`. */
-const REAL = ["coverage.mjs", "control-register.mjs", "provenance.mjs",
-              "declared-source.mjs", "walkfloor.mjs"];
+   left `9 pass, 19 fail`.
+
+   CORRECTED 2026-09-10 BY D-265, NOT EXEMPTED, AND THE PARAGRAPH ABOVE IS KEPT
+   BECAUSE IT IS THE EVIDENCE. D-265 added exactly one import — `walkfloor.mjs`
+   gained `./walkfigure.mjs` — and this suite came back at `9 pass, 19 fail`, the
+   figure that paragraph names, to the assertion. The warning was written, was
+   correct, and was honoured anyway, because a hand-kept copy of another file's
+   imports cannot be kept by the person who does not know it exists. The list is
+   now DERIVED from the instrument's own import graph, so a module it starts or
+   stops importing arrives or leaves without anybody noticing. */
+const { files: REAL, outside: REAL_OUTSIDE } = instrumentDeps("coverage.mjs");
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -296,6 +307,23 @@ console.log(`corpus: ${corpus} scratch repositories driven through the REAL scri
    the only reason it is worth having — an absolute the author supplies is exactly
    the kind of number that goes stale. */
 t("the reach arm drove every scratch repository it declared", corpus, 9);
+
+/* D-265 · THE DERIVED COPY LIST IS ASSERTED, NOT TRUSTED. A deriver that returned
+   an empty set would copy nothing, and every arm above would fail loudly — but it
+   would fail in the HARNESS again, which is the failure this change exists to stop
+   being invisible. So the list is floored, the five names this array carried BY
+   HAND until today are asserted to still be in it (a deriver that silently shrinks
+   is the regression that matters), and an import reaching outside `scripts/` is
+   reported rather than truncating the copy set in silence. */
+console.log(`  D-265 derived copy list: ${REAL.length} module(s) — ${REAL.join(", ")}`
+  + `${REAL_OUTSIDE.length ? ` · OUTSIDE scripts/: ${REAL_OUTSIDE.join(", ")}` : ""}`);
+t("the instrument's copy list is DERIVED from its own imports, still contains every "
++ "name the hand-kept array carried, and reaches nothing outside scripts/",
+  [REAL.length >= 5,
+   ["coverage.mjs", "control-register.mjs", "provenance.mjs", "declared-source.mjs",
+    "walkfloor.mjs"].filter((n) => !REAL.includes(n)),
+   REAL_OUTSIDE],
+  [true, [], []]);
 
 console.log(`\ncoverage-provenance: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

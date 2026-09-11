@@ -267,13 +267,23 @@ const prov = readGitProvenance(REPO);
 const trackedSites = prov.inHead === null
   ? est.sites
   : est.sites.filter((s) => stateOf(prov, s.file) === "in the commit");
-console.log(`  ESTATE: ${est.corpus.length} module(s) · ${est.walkModules.length} walk module(s) · `
+console.log(`  ESTATE: ${est.corpus.count} module(s) · ${est.walkModules.count} walk module(s) · `
   + `${est.sites.length} cross-file floor(s) (${trackedSites.length} in the commit) · `
   + `${est.ceilings.length} ceiling(s) at zero · ${est.unknowns.length} unclassified · provenance ${est.provenance}`);
 for (const u of est.unknowns) console.log(`  UNCLASSIFIED ${u.file}:${u.line}  ${u.expr} — ${u.why}`);
 
+/* D-265: these two ARE floors, and they are floors on the WORKING TREE — an
+   uncommitted `.mjs` under CENSUS_ROOTS inflates both. The detector's own result now
+   says so, and the unwrap here is the site admitting it rather than the shape being
+   indistinguishable from a tracked figure. Narrowing them to HEAD would make the
+   REACH arm blind to a detector that stopped reading uncommitted work, which is the
+   population this suite's own sandbox fixtures live in. */
+const REACH_OVER_THE_WORKING_TREE =
+  "a REACH floor, and reach is a claim about what the detector READ — including "
+  + "uncommitted modules, which is where this suite's own fixtures live";
 t("the estate corpus is non-trivial — a sweep over nothing reports its verdict triumphantly",
-  [est.corpus.length >= 200, est.walkModules.length >= 8], [true, true]);
+  [est.corpus.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 200,
+   est.walkModules.count.overWorkingTree(REACH_OVER_THE_WORKING_TREE) >= 8], [true, true]);
 t("the REAL op-claims split is found across the module boundary, and it is the FIVE floors "
 + "the census could never name (the brief predicted four)",
   (() => { const s = trackedSites.filter((x) => x.file === "bio-plane/test/op-claims.test.mjs");

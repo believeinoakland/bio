@@ -83,6 +83,28 @@ import {
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 
+/* ---- D-265 · THE THREE PASSAGES THIS SUITE MAKES THROUGH THE CHOKEPOINT -------
+ *
+ * `sweep()` and `corpus()` now hand back their WORKING-TREE figures CLASSIFIED, so
+ * a floor written on one refuses itself at the line that wrote it. Three uses here
+ * legitimately need the bare value, and each says why — the reasons are named
+ * constants rather than inline strings so `hygiene.test.mjs`'s ratchet reads three
+ * DECISIONS instead of three occurrences of a spelling, and so a fourth passage
+ * cannot be added without writing a fourth reason.
+ *
+ * The unwrap is not a way round the classification. It IS the classification: the
+ * difference between the old state and this one is that a floor on the whole
+ * working tree used to be indistinguishable, in the source, from a subset check. */
+const FIGURE_IS_THE_SUBJECT =
+  "the relationship between the two populations is what is being asserted, so the "
+  + "working-tree figure is the SUBJECT of the comparison and not a ratchet";
+const WHOLE_TREE_IS_THE_SUBJECT =
+  "the dot-segment rule is a claim about what the WALK admitted, so it must be asked "
+  + "of the whole working tree; narrowing it to HEAD would hide exactly the arrival it checks";
+const ATTRIBUTIONS_NOT_YET_REPRODUCIBLE =
+  "a REAL floor on a working-tree figure, NAMED rather than guarded: sweep() publishes "
+  + "no attributionsRepro and producing one changes what the walk computes (D-265 residual)";
+
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
@@ -123,7 +145,7 @@ t("and the wrong-level answer names the op that DOES reach that path",
 console.log("\n--- 2. the corpus, PRINTED, and asserted non-trivial ---");
 const result = sweep();
 console.log(`  M0-12 CORPUS: ${result.files} files, ${result.chars} chars scanned; `
-  + `${result.mentions} op= mentions over ${result.names.length} distinct names; `
+  + `${result.mentions} op= mentions over ${result.names.count} distinct names; `
   + `${result.dynamic} dynamic (template-built) skipped; `
   + `${result.excluded.length} generated artifact(s) excluded `
   + `(${result.excluded.map((x) => `${x.rel} ${x.chars} — ${x.why}`).join("; ")})`);
@@ -157,7 +179,7 @@ const HEAD_SAYS = result.prov.inHead === null
   : `in the commit at HEAD (${result.prov.headSha})`;
 console.log(`  M0-18 CORPUS, REPRODUCIBLE: ${result.filesRepro} of ${result.files} file(s), `
   + `${result.charsRepro} of ${result.chars} chars, ${result.mentionsRepro} of ${result.mentions} mention(s) `
-  + `over ${result.namesRepro.length} of ${result.names.length} distinct name(s) are ${HEAD_SAYS} `
+  + `over ${result.namesRepro.length} of ${result.names.count} distinct name(s) are ${HEAD_SAYS} `
   + `— the floors below apply to THESE`);
 console.log(`  M0-18 SKIPPED BY THE DOT-SEGMENT RULE: ${result.skipped.length} path(s) `
   + `(${result.skipped.slice(0, 12).join(", ")}${result.skipped.length > 12 ? ", …" : ""}) `
@@ -175,16 +197,26 @@ t(`and it found a non-trivial population of op= mentions to check, over that sam
   [result.mentionsRepro >= 5000, result.namesRepro.length >= 150], [true, true]);
 t("the provenance check either verified against `git ls-tree HEAD` or reported UNVERIFIED — never a silent "
 + "third state, and under UNVERIFIED every pair of figures COLLAPSES rather than the reproducible one reading zero",
+  /* D-265: the three comparisons below read the WORKING-TREE figure, and the walk now
+     refuses a bare comparison on one. They are NOT floors — each is a SUBSET or a
+     COLLAPSE check whose whole subject is the relationship between the two
+     populations, so the working-tree number is the thing being asked about rather
+     than a ratchet somebody moves. The unwrap says so at the site, which is the
+     point: this is the one shape that has to be allowed, and it is now visible
+     instead of indistinguishable from a floor. */
   [result.prov.inHead instanceof Set || result.prov.inHead === null,
-   result.filesRepro <= result.files && result.mentionsRepro <= result.mentions,
+   result.filesRepro <= result.files.overWorkingTree(FIGURE_IS_THE_SUBJECT)
+     && result.mentionsRepro <= result.mentions.overWorkingTree(FIGURE_IS_THE_SUBJECT),
    result.prov.inHead === null
-     ? result.filesRepro === result.files && result.mentionsRepro === result.mentions : true],
+     ? result.filesRepro === result.files.overWorkingTree(FIGURE_IS_THE_SUBJECT)
+       && result.mentionsRepro === result.mentions.overWorkingTree(FIGURE_IS_THE_SUBJECT) : true],
   [true, true, true]);
 /* THE DOT-SEGMENT RULE IS ENFORCED, NOT DESCRIBED. A rule stated in a comment
    and enforced by nothing is the defect this project meets most often, so the
    walk is asked directly whether it admitted anything under a dot. */
 t("no file under a dot path segment is in the corpus — the rule at the walk is DRIVEN rather than described",
-  corpus().files.filter((f) => f.rel.split("/").some((s) => s.startsWith("."))).map((f) => f.rel), []);
+  corpus().files.overWorkingTree(WHOLE_TREE_IS_THE_SUBJECT)
+    .filter((f) => f.rel.split("/").some((s) => s.startsWith("."))).map((f) => f.rel), []);
 /* CORRECTED 2026-08-10, never exempted, and the count moved from 2 to 3 for a
    REASON rather than to make a red suite green. `docs/DECIDED.md` is generated by
    `tools/decided.mjs` and QUOTES every ruling in the corpus, so each quoted `op=`
@@ -214,9 +246,18 @@ t(`no comment and no planning document names an op that is not in the dispatch t
   result.findings.filter((f) => f.class !== "WRONG-METHOD").map(nameFinding), []);
 t("and no prose attributes an op to a method the dispatch table does not route it to",
   result.findings.filter((f) => f.class === "WRONG-METHOD").map(nameFinding), []);
+/* D-265 · THIS ONE IS A REAL FLOOR ON A WORKING-TREE FIGURE, AND SAYING SO IS THE
+   POINT OF THE UNWRAP RATHER THAN A WAY ROUND IT. D-268 found it — the FIFTH floor,
+   the one no census row and no brief had ever named. By D-257's ruling it should be
+   GUARDED (floored over `git ls-tree HEAD`) and not merely named, and it cannot be
+   here: `sweep()` publishes no `attributionsRepro`, and producing one means changing
+   what the walk COMPUTES, which is outside this item's claim. So it is NAMED, the
+   reason travels with the line, `hygiene.test.mjs` ratchets it, and the residual is
+   carried in DEBT rather than dissolved in a green report. The floor itself has not
+   moved and the assertion is unchanged. */
 t("the attribution half found real routing claims to check — a grammar matching "
 + "nothing would pass this vacuously",
-  result.attributions.length >= 4, true);
+  result.attributions.count.overWorkingTree(ATTRIBUTIONS_NOT_YET_REPRODUCIBLE) >= 4, true);
 
 console.log("\n--- 4. the ledger is held EXACTLY, and every entry can expire ---");
 t("no ledger entry has drifted: each registered (file,name) appears exactly as many "
@@ -337,7 +378,7 @@ t("...and the must-not-fire fixtures are not passing because the matcher is dead
 /* corpus() is the half a neutering hits hardest, so it is asserted directly rather
    than only through the headline. */
 console.log("\n--- 7. the walk reads real files from both halves of the named corpus ---");
-const rels = new Set(corpus().files.map((f) => f.rel));
+const rels = new Set(corpus().files.overWorkingTree(WHOLE_TREE_IS_THE_SUBJECT).map((f) => f.rel));
 t("the walk reaches bio-plane source, bio-plane tests, docs/development, the "
 + "kickoffs, the installer and the UI — the sentence that cost REC-58 an item was "
 + "in a planning document, not in code",
