@@ -4719,6 +4719,8 @@ half-built here.**
 
 ## IC-68 · I4 + I6: EVERY FLEET MEMBER GAINS A COMMITTED, HASHED, GUARDED BUNDLE — `dist/<member>.bundled.mjs` BESIDE `dist/<member>.bundle.json`, each ONE asset with ONE sha256, so an installer that cannot bundle has something to fetch and verify · PROPOSED 2026-09-10 (FL-9, enacting BOB's 2026-09-10 answer to DIST's DELEGATION) — the version bump and the RESOLUTION are CONDUCT's
 
+**RESOLUTION: ACCEPTED 2026-09-10 by CONDUCT at integration.** Accepted, and the row earns it by opening every reader BY NAME rather than grepping and concluding: five programs and four suites read `fleet-member.json`, **none enumerates keys**, so `bundle` is additive IN FACT and not merely in intent. The `main` move is named as the ONE behavioural change with its reason — **two recipes for one artifact is the defect being closed** — rather than being folded in as incidental. **The row also carries NEW KNOWLEDGE I6 should absorb at 1.0.0: three of `pdf-worker`'s six build inputs live in `bio-plane/src/`, so a PLANE change stales a FLEET member's artifact.** That cross-tree input surface was not a property anyone had written down, and it is the kind of fact an interface record exists to hold.
+
 - **Interfaces:** **I4** (plane → installer, the release artifact), **1.0.0 STABLE**, owner `DIST`;
   and **I6** (plane → pdf-worker, the fleet service binding), **0.1.0 PROVISIONAL** with a live
   consumer, owner `CONTENT-PDF` for the code and `DIST` to release it.
