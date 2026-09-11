@@ -8715,3 +8715,263 @@ control SPELLED its `op=` fixture in a committed file, which put a real routing 
 corpus the arm exists to prove immovable — the phantom's `5 of 6` became `6 of 7`. The token is now
 composed at runtime, the way `test/op-claims.test.mjs`'s §5 fixtures already were and for the
 reason its header already gave.
+
+## CPDF-14 — THE COMPOSED SHAPE (detect → crop → transcribe the crop) MEASURED ACROSS THE CORPUS: **NO-GO** (2026-09-10, worker `agent-a6d473988f1f33530`)
+
+**The question, and why it was worth a second probe after a NO-GO.** CPDF-11
+returned NO-GO on Moondream 3.1 as the DEFAULT in-account path, on the one thing
+DEC-35 called non-negotiable: the image-region anchor. In the same run one
+incidental measurement did not fail — the COMPOSED shape (detect the block, crop
+it, transcribe the crop) scored **99.62% characters, 10/10 digits, 0 minted on
+the one trustworthy region, at n=1**. That is *unproven, not refuted*, and it was
+the only in-account shape that could carry the anchor at all, so CPDF-12's landed
+line re-scoped itself to measuring it and CPDF-10's whole placement waited on the
+answer. This is that measurement. **It commits no product code, funds nothing,
+creates no account and no credential, bumps no version, signs nothing, deploys
+nothing, and touches no real namespace.** Grade VALUES are not set here (DEC-4).
+
+**Instrument.** `bio-plane/test/ocr-composed-probe.mjs`, plus CPDF-11's scratch
+Worker `bio-plane/test/ocr-moondream-worker.mjs` uploaded VERBATIM under this
+item's own slug. A probe, NOT in the battery — the runner discovers `*.test.mjs`
+and this is not one, so nothing joins the battery and no skip marker exists to
+rot (confirmed: the suite count is identical with the file present). Model
+`@cf/moondream/moondream3.1-9B-A2B` through `env.AI`, in the pinned project
+account `20b533579290b9b93168345edd3b7f72`, **asserted before a byte was
+uploaded**. Every figure below is from **ONE run of the committed probe on
+2026-09-10**: `node test/ocr-composed-probe.mjs --runs 3 --pages 12 --perdoc 4`.
+
+### 0. COMPARABILITY IS ENFORCED, AND ENFORCED HARDER THAN IN THE PRECEDENT
+
+Like CPDF-11 this probe READS CPDF-9's ground truth and `norm`/`levenshteinPairs`
+out of `ocr-measure-probe.mjs` at run time and asserts all four floor scoring
+expressions are literally present. **Two guards are new, because CPDF-11's has a
+hole this item had to look straight at:** CPDF-11 grabs `GT_PAGE2` by regex and
+scores against whatever it finds — change one digit of the ground truth and the
+guard is silent while the number printed beside the 2026-08-03 floor becomes
+incomparable. **CPDF-11's probe contains no hashing of any kind** (checked at
+source: zero occurrences of `createHash`/`sha256`/`digest`). So this probe PINS
+BY DIGEST the normalised ground truth (`17dff6b3…`, 2,687 chars), CPDF-11's rung
+recipe (`34796b30…`, executed verbatim rather than copied) and CPDF-11's one
+prompt (`de8320f4…`). Any of them moving is **exit 4 before anything is
+uploaded**.
+
+### 1. THE VERDICT, SAID FIRST
+
+**NO-GO on the composed shape as the in-account transcription path.** It fails
+the same non-negotiable the default path failed — the image-region anchor — for a
+*different reason*, and it fails reproducibility more severely than the default
+path did. The three things CPDF-12's landed line asked to be re-measured under
+the composed shape came back: anchor **NOT stable**, transcription **NOT
+reproducible**, invention **present, and one full rung EARLIER than under the
+default path**. **CPDF-10 routes to the external escalation tier, which is
+unfunded and Bob's to fund.** The one clean result is the controls, below.
+
+### 2. THE ANCHOR DOES NOT COME BACK — and this is the NO-GO
+
+The composed shape exists *only* because it can carry an image region. Nobody had
+measured whether the region is the same region twice. Identical page bytes,
+`task=detect` target `paragraph of text`, 3 runs per page, 8 pages:
+
+| | Measured |
+| --- | --- |
+| pages measured for anchor stability | **8** (the ground-truthed anchor page + 7 corpus pages) |
+| pages returning the SAME BOX COUNT on 3 runs | **1 / 8** |
+| run-1 boxes with a counterpart at IoU >= 0.5 in a later run | **102 / 194 (52.6%)** |
+| median of the per-page median best-match IoU | **0.708** |
+
+**Nearly half the regions detected on one run do not come back on the next.** The
+spread is wide and the worst cases are not marginal: `legistar-73502` p10
+returned **17, 8 and 7** boxes on three runs of identical bytes with a median
+best-match IoU of **0.000**; p9 returned **18, 5, 23** at median IoU 0.131. Only
+one page was stable (`legistar-73536` p1: 3, 3, 3 boxes, IoU 0.972, 6/6 matched)
+and it is the page with the fewest regions to get wrong. **A rectangle that comes
+back about half the time cannot anchor a claim**: the anchor's whole purpose is
+that a reader re-derives it and checks the pixels themselves, and a record that
+cannot reproduce the region it named is a record that has to be trusted instead.
+That is DEC-4's mechanism, not a nice-to-have a good character score buys off.
+
+### 3. THE TRANSCRIPTION IS NOT REPRODUCIBLE EITHER — and it is worse at region scale
+
+Every scorable region was transcribed 3 times from the **same crop file**:
+
+| | Measured |
+| --- | --- |
+| regions transcribed 3x on IDENTICAL bytes | **22** (9 anchor + 13 corpus) |
+| regions giving MORE THAN ONE distinct text | **10 (45%)** |
+| regions giving THREE distinct texts in three runs | **7** |
+
+CPDF-11 measured the default path at **2 distinct transcriptions from 3 runs** of
+one whole page. Cropping does not fix that and at region granularity it is worse:
+seven regions produced a different text every single time. **The record cannot be
+re-derived from what it names**, which is the first of CPDF-11's three reasons for
+capping that engine at C, unchanged and now measured on the composed shape.
+
+### 4. THE LADDER, COMPOSED — and the invention band moved UP, not down
+
+Region ground truth is derived from the **CLEAN** page at the same box (the
+referee reads clean pixels, the model reads degraded ones), through CPDF-11's own
+trustworthiness gate: a region is scored only if the referee's read of the clean
+crop is >= 40 chars AND >= 80% placeable in the page ground truth. Char column is
+**median (worst region)**, 3 runs per region.
+
+| Rung | What it is | boxes | scorable | refused | DISTINCT/3 | char med (worst) | GT digits | MINTED |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| R0 | 300 dpi, the original page | 10 | 1 | 0/3 | 2/3 | 100.00% (100.00%) | 5/5 | 0 |
+| **R1** | **150 dpi equivalent** | 10 | 3 | 0/9 | **3/3** | **89.47% (78.70%)** | 25/27 | **7** |
+| R2 | 75 dpi equivalent | 8 | 2 | 0/6 | 2/3 | 100.00% (99.69%) | 32/32 | 0 |
+| **R3** | **75 dpi + gaussian blur 2.0** | 9 | 1 | **0/3** | **3/3** | **19.48%** | **4/17** | 0 |
+| R4 | 37.5 dpi + gaussian blur 3.0 | 1 | **0 — UNDETERMINED** | — | — | — | — | — |
+| C1 | OFF-LADDER: contrast collapsed to 16 greys | 6 | 2 | 0/6 | 1/3 | 99.21% (93.06%) | 5/5 | 0 |
+
+**R1 is the finding.** Under the DEFAULT path CPDF-11 measured R1 as FAITHFUL —
+99.44% characters, zero minted. Under the COMPOSED shape the same rung **minted
+seven digits**, dropped to 78.70% on its worst region and produced three distinct
+texts in three runs. **Cropping does not suppress invention; on this rung it
+brought it forward a full rung.** That is the opposite of the direction the n=1
+hint pointed, and it is exactly the hazard CPDF-10's chain rule is written
+against: output that looks better than its input.
+
+**R3 is where the probe caught its own metric lying.** The composed shape scored
+**19.48% characters and 4 of 17 ground-truth digits — while MINTING ZERO.** The
+model returned *"any one transportation which amounts $10,000, and the award to
+the lowest comparable and inexpensive builder of records; and"* against a ground
+truth of *"any one transaction which exceeds $50,000, and the award to the lowest
+responsible and responsive bidder…"*. `$50,000` became `$10,000`: a digit SWAPPED
+for a digit is aligned digit-to-digit, so the floor's minted expression counts
+nothing. A reader watching the MINTED column would have called that rung clean.
+**Raised as D-305 and deliberately not fixed here** — the fix edits CPDF-9's floor
+arithmetic, which this probe's own comparability guard exists to refuse mid-measurement.
+
+**R4 is UNDETERMINED and says so.** Zero scorable regions does NOT mean the model
+refused: `detect` put its one box somewhere whose clean content the referee can
+place only 36% of, so no trustworthy region truth exists and the probe declines to
+score rather than score a window it made up. What the model did at R4 is unknown.
+
+**The ladder is not monotone under the composed shape, and that is structural.**
+R1 minted 7 while R2 minted 0 at 100%. The cause is not noise: **`detect` returns
+different boxes at each rung, so a "rung" under this shape does not hold the
+region constant** and rung-to-rung comparison is confounded by region choice. You
+cannot build a degradation ladder for a path whose first step moves — which is
+finding §2 arriving a second time, from a different direction.
+
+### 5. CORPUS REACH — stated with what it can and cannot see
+
+No human ground truth exists off the anchor page (**D-306**), so the corpus
+columns are **agreement with the local-tesseract floor reading the same crop** and
+**digits DIVERGING from the floor** — neither is accuracy and neither is minting,
+and they are never mixed with the anchor's figures.
+
+| Document / page | boxes | scorable | refused | DISTINCT/3 | agree w/ floor | floor digits | DIVERGING |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| legistar-73536 p0 | 36 | 2 | 0/6 | 3/3 | 96.05% | 19/19 | 0 |
+| legistar-73536 p1 | 3 | 2 | 0/6 | 2/3 | 100.00% | 7/8 | 0 |
+| legistar-73536 p2 | 3 | 2 | 0/6 | 1/3 | 97.66% | 0/0 | 0 |
+| legistar-73536 p3 | 6 | 2 | 0/6 | 3/3 | 96.13% | 0/2 | 0 |
+| legistar-73502 p8 | 1 | 1 | 0/3 | 1/3 | 97.47% | 19/25 | 0 |
+| legistar-73502 p9 | 18 | 2 | 1/6 | 3/3 | 97.56% | 9/9 | 0 |
+| **legistar-73502 p10** | 17 | 2 | 0/6 | **3/3** | **61.16%** | 8/12 | **4** |
+
+`legistar-73502` p10 is the corpus's own R1: on a real, undegraded Oakland page
+the composed shape agreed with the floor only 61.16% and produced **four digits
+the floor engine does not see**, with a different text on every run.
+
+**THE REACH, n stated:**
+
+| | n |
+| --- | --- |
+| pages with HUMAN ground truth | **1** — the only one this project has (D-306) |
+| ladder rungs measured on it | **6** |
+| scorable anchor regions, all rungs | **9** |
+| anchor transcriptions of identical crop bytes | **27** |
+| corpus PDFs harvested / readable | **60 / 60** (68.1 MB, real Oakland Legistar) |
+| corpus pages censused | **1,458** — 1,434 carry a text layer, 3 have neither text nor image, **13 are IMAGE-ONLY** |
+| corpus image-only pages measured | **7** (cap of 4 per document) |
+| corpus regions scored against the floor | **13** |
+| corpus transcriptions of identical crop bytes | **39** |
+| pages measured for anchor stability | **8** |
+| model calls that never answered | **0** |
+
+**The image-only class is 0.9% of this sample** (13 of 1,458), against CPDF-12's
+census of 24 of 622. The two samples are different draws of recent Legistar
+attachments, not a contradiction, and neither is a population figure.
+
+### 6. NEGATIVE CONTROLS — three arms, each armed ALONE, each declared before arming
+
+**(NC1) Blank and noise, on the composed shape — PASS, and the forced half is what earns it.**
+Declared: nothing may transcribe to text. `detect` returned **0 boxes** on both
+the blank page and the uniform-noise page — which is a real structural refusal the
+default path does not have, **and a pass that costs nothing to produce**, since
+the transcriber is never asked. So the transcriber was ALSO asked directly on a
+forced fixed central crop of each control. Result: **`ILLEGIBLE` on 6 of 6 forced
+runs, 0 control runs producing text.** The failure mode that would put invented
+text in the record from nothing is absent, matching CPDF-11's result on the
+default path and the floor engine's behaviour.
+
+**(NC2) The comparability guard, armed — 4 arms, ALL AS DECLARED, with a baseline row.**
+Each arm copies this probe and the two files it reads into a temp dir, mutates
+exactly ONE thing, and runs the copy with `--guard-only`:
+
+| Arm | What moved | Declared exit | Actual | |
+| --- | --- | --- | --- | --- |
+| baseline | pristine copy, nothing mutated | 0 | **0** | AS DECLARED |
+| metric | the floor's char-accuracy expression | 4 | **4** | AS DECLARED |
+| groundtruth | ONE DIGIT of the floor's ground truth | 4 | **4** | AS DECLARED |
+| ladder | CPDF-11's rung recipe (R3's blur radius) | 4 | **4** | AS DECLARED |
+
+Each arm asserts its own patch matched before spawning, so an arm that never
+armed is a named failure rather than a silent pass. The baseline row is there
+because a harness whose every arm reports the same thing is indistinguishable
+from one that never armed. **The `groundtruth` and `ladder` arms are the two
+CPDF-11's guard would not have caught** — they are why the digests exist.
+
+**(NC3) Over-strictness — AS DECLARED.** A clean high-fidelity page must still
+pass end to end or the instrument is sabotaging its subject and no NO-GO it
+returns is worth anything. Declared: R0 must yield at least one scorable region at
+>= 95% character accuracy with no refusals. Actual: **best R0 region 100.00%,
+refusals 0.** The shape was measured, not broken.
+
+### 7. COST, AND THE PROBE'S OWN HOUSEKEEPING
+
+**104 model calls; 79,704 input tokens, 6,092 output tokens; 2,728 neurons.** At
+the **vendor-stated** price for this model ($0.30/M input, $1.00/M output,
+retrieved 2026-08-04 and labelled as theirs) the run of record cost **~$0.030**;
+with the earlier shakedown run, **~$0.043 in total**. Free allocation, in the
+account the project already has, **nothing funded and no credential issued**. The
+scratch Worker was deleted and **the deletion was VERIFIED rather than assumed**:
+`DELETE` HTTP 200 followed by a `GET` returning **HTTP 404** — a 200 on DELETE is
+the service accepting a request; the 404 is the account saying the script is gone.
+
+### 8. WHAT THIS PROBE CANNOT SEE, stated beside the numbers
+
+- **Human ground truth exists for ONE page (D-306).** Every corpus figure is
+  agreement with the local-tesseract floor, so an error both engines make the same
+  way is invisible to it.
+- **A rung or page with 0 scorable regions is UNDETERMINED, never "it refused."**
+  R4 is unmeasured, not clean.
+- **The MINTED column under-reports digit damage (D-305).** R3 read 0 minted over
+  13 wrong digits out of 17.
+- **No Worker CPU, memory or latency figure.** This ran on a shared machine with
+  other workers live on it; every millisecond available is harness wall time, so
+  none is reported. The CPU question DEC-42 bought Paid to answer is still
+  tesseract's (D-245), untouched here.
+- **One detect TARGET (`paragraph of text`) and one prompt.** A different ask —
+  a fixed grid, a classic layout analyser, a per-line target — is unmeasured, and
+  the anchor-stability finding is about THIS model's detect step and nothing else.
+- **One model at one version**, and nothing here is a statement about any other
+  engine. The floor (local tesseract: 99.96% char, 90/90 digits, zero minted) is
+  unchanged and unchallenged by any of it.
+
+### 9. WHAT THIS LICENSES, AND WHAT IT DOES NOT
+
+- **CPDF-10's in-account placement is NOT licensed by this measurement.** The
+  composed shape was the last in-account shape that could carry the anchor and it
+  does not carry it.
+- **CPDF-11's cap stands unchanged: C, never B**, and its extra rule — a digit
+  from this engine may not carry a leg without member attestation — is
+  *strengthened* here, since D-305 shows the metric that rule was written against
+  cannot see a substitution.
+- **Nothing here refutes tesseract as a fleet member** (DEC-35's standing default).
+  It was never the subject; its gate is still its deployed CPU cost (D-245).
+- **CPDF-10's external escalation tier is what remains, it is UNFUNDED, and
+  funding it is Bob's.** That is the decision this measurement hands him, and the
+  measurement's job was to make sure it is not taken on a guess.
