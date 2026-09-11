@@ -358,6 +358,21 @@ export function checkChain(chain) {
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain `
         + `exists to carry — a calibration is OF an engine and a version, and neither can be `
         + `recovered from the word '${step.step}'`);
+    /* CPDF-13 / D-253 — THE CALIBRATION REFERENCE. Optional, and read the
+       comment in the checks catalogue for why it is optional rather than
+       required: every chain written before this rule existed carries a `cap`
+       and no calibration, and refusing those would be a fence tighter than its
+       rule. What is refused is a reference PRESENT AND UNREADABLE, because an
+       unresolvable pointer looks like a binding and joins to nothing — which is
+       strictly worse than the honest absence `measured_by`'s free string
+       already is. */
+    if (step.calibration != null
+        && !(typeof step.calibration === "string" && step.calibration.trim()))
+      return refusal("TEXT_CHAIN_CAL_REF",
+        `step ${i} names a calibration that is not a readable identifier `
+        + `(${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade `
+        + `rests on so a superseded measurement can name exactly the transcriptions resting on it; `
+        + `a pointer nothing can resolve breaks that join while looking like it works`);
   }
   /* END DEC-49 REGION is-text-chain-shape */
   return null;
@@ -397,8 +412,41 @@ export function appendStep(chain, step) {
 /** The chain a document's OWN text layer produces (FW-15's case, restated as a
  *  chain). `cap` is the measured fidelity a text layer supports and arrives
  *  from the caller for the reason in the header — it is a measurement. */
-export function layerChain({ tier = null, container = null, cap = null, measured_by = null } = {}) {
-  return [{ step: "layer", tier, container, cap, measured_by }];
+export function layerChain({ tier = null, container = null, cap = null, measured_by = null,
+                             calibration = null } = {}) {
+  return [{ step: "layer", tier, container, cap, measured_by, calibration }];
+}
+
+/* ------------------------------------------------------------------ *
+ * CPDF-13 / D-253 — THE CALIBRATION REFERENCE, READ BACK
+ * ------------------------------------------------------------------ */
+
+/** Which calibrations does this chain's provenance rest on?
+ *
+ *  THE ANSWER IS A SET OF IDS AND NOTHING ELSE. This module still holds no
+ *  calibration and still knows no engine: it returns the pointers the chain
+ *  carries, and `calibration.mjs` plus the store decide what any of them mean.
+ *  That boundary is the same one the header states for `cap` — a measurement
+ *  must not acquire a second home — and it is why the drift handler lives over
+ *  there rather than here.
+ *
+ *  VERIFICATION STEPS ARE INCLUDED IF THEY CARRY ONE, and none does today. An
+ *  attestation rests on a person, not on a measurement, so it has no
+ *  calibration to name; walking every step rather than only the derivations is
+ *  the shape that stays right if that ever stops being true, and costs nothing
+ *  now. What matters for the drift join is that a step naming a calibration is
+ *  FOUND, whatever kind it is.
+ *
+ *  A MALFORMED CHAIN ANSWERS THE EMPTY SET rather than throwing, on
+ *  `derivationCap`'s precedent — a reader asking what a broken chain rests on
+ *  should get "nothing this record can name", which is true. */
+export function calibrationsOf(chain) {
+  if (checkChain(chain)) return [];
+  const out = [];
+  for (const s of chain)
+    if (typeof s.calibration === "string" && s.calibration.trim() && !out.includes(s.calibration))
+      out.push(s.calibration);
+  return out;
 }
 
 /* ------------------------------------------------------------------ *

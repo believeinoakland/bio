@@ -256,15 +256,31 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   const registry = at >= 0 && end > at ? bare.slice(at, end) : "";
   const names = [...registry.matchAll(/name:\s*"([a-z-]+)"/g)].map((m) => m[1]);
 
-  console.log("\n--- FL-4: ten consumers, ONE alarm, and the order is the mechanism ---");
+  console.log("\n--- FL-4 + CPDF-13: eleven consumers, ONE alarm, and the order is the mechanism ---");
   /* THE CORPUS IS PRINTED AND FLOORED. A totality assertion over an empty slice
      passes for free, which this repository has measured three times. */
   console.log(`    registry span: ${registry.length} chars · consumers: ${names.join(", ")}`);
   t("the registry span was found and is not empty", registry.length > 400, true);
-  t("the registry is exactly the ten real consumers, in order", names, [
+  /* CORRECTED 2026-09-10 by CPDF-13 (D-183), never exempted: the ELEVENTH
+     consumer, `calibration-reprobe`, is appended and this list says so. The old
+     assertion was right for a registry that no longer exists — which is exactly
+     what this totality arm is for, and it caught the append rather than the
+     author remembering to. Worth recording that QUEUE.md CPDF-13 calls its
+     consumer "a SIXTH", which it was on 2026-08-04 when the item was written;
+     five landed while it sat queued. A count carried by hand in prose goes stale
+     silently, and the list below is the thing that does not. */
+  t("the registry is exactly the eleven real consumers, in order", names, [
     "selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "ai-run-reap",
-    "capture-request-drain", "ai-run-wake"]);
+    "capture-request-drain", "ai-run-wake", "calibration-reprobe"]);
+  /* CPDF-13: the re-probe is appended LAST and that is deliberate rather than
+     incidental. It is a pure clock over engines and shares no subject with any
+     consumer before it, so nothing it does can change what they see and nothing
+     they do can change what it sees — which means its position is free, and a
+     free position goes at the end where an append does not disturb an ordering
+     another consumer's correctness rests on (the drain-then-wake pair above). */
+  t("the calibration re-probe is appended after every consumer it shares no subject with",
+    names.indexOf("calibration-reprobe"), names.length - 1);
   /* THE ORDER ARM, asserted as a RELATION rather than as an index, so it still
      means what it says after the eleventh consumer is appended. */
   t("the wake is registered AFTER the drain, so a completion is delivered on the alarm that made it",

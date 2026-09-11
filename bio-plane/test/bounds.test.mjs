@@ -440,7 +440,23 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    whatever is there — which is what puts it on this roster. It is DRIVEN, in
    this loop's own shape, in `test/caselifecycle.test.mjs`; see DRIVEN_ELSEWHERE
    below for why there and not here. */
-  OPS.size, 30);
+/* MOVED TO 31, 2026-09-10 by CPDF-13 (D-183) — MEASURED by running the walk on
+   this tree and taking what it PRINTED (it reported 31 against a pin of 30),
+   never by adding one to the figure above, which is this pin's own recorded
+   hazard: two items have already collided on it by arithmetic. The arrival is
+   `op=calibrations`, CPDF-13's read of the dated fidelity measurements this
+   instance holds of its derivation engines. It is the ORDINARY kind of arrival:
+   `LIMIT ?` against a clamped cap drawn from the same named constants
+   (`TEXT_SOURCE_LIMIT_DEFAULT`/`_MAX`) its sibling `op=textprovenance` already
+   uses, so nothing about the detector had to move to admit it. The table grows
+   by one per engine per cadence -- slowly, which is an argument about how the
+   world will behave and is exactly the kind this roster exists to refuse. It is
+   DRIVEN in this loop, with a fixture of two calibrations so a cap of 1 provably
+   bites. `op=calibrationdrift` is NOT on this roster and that is correct rather
+   than a gap: its bound lives in the private `#calDriftFor`, which this walk
+   reads at method grain and not at op grain, and its `limit`/`truncated` pair
+   reaches the answer regardless. */
+  OPS.size, 31);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -571,6 +587,25 @@ for (const note of ["first", "second"]) {
 }
 t("FIXTURE ARMS THE TRAP: the append-only export log carries two rows, so a cap of 1 cuts it",
   (await GET("op=exportlog&token=adm-r57&limit=200")).exports.length, 2);
+
+/* ---------------------------------------------- CPDF-13 / D-183's FIXTURE.
+   `op=calibrations` joined this roster as a NEW capped read. TWO measurements of
+   one engine, so a cap of 1 provably bites — and they are recorded through the
+   OP, with real probe inputs and scores, because `op=calibrate` refuses a
+   calibration that carries none (a calibration is a measurement, never a claim)
+   and a fixture that reached past that refusal would be arming the trap with
+   something the plane will not hold. */
+for (const [at, cap] of [["2026-09-01T00:00:00Z", "C"], ["2026-10-01T00:00:00Z", "D"]]) {
+  const c = await POST("op=calibrate&token=adm-r57", {
+    engine: "pdfjs", version: "4.2.67", at, cap,
+    probe_id: "bounds-fixture-v1",
+    probe_inputs: { corpus: "bounds-synthetic", pages: 4 },
+    scores: { char_error_rate: cap === "C" ? 0.02 : 0.31 },
+    measured_by: "test/bounds.test.mjs (synthetic — measures no engine)" });
+  if (c?.ok === false) throw new Error(`calibrate ${at}: ${JSON.stringify(c)}`);
+}
+t("FIXTURE ARMS THE TRAP: two calibrations of one engine, so a cap of 1 cuts them",
+  (await GET("op=calibrations&token=adm-r57&limit=500")).count, 2);
 
 /* ------------------------------------------------------ PL-10 / D-220's FIXTURE.
    The version chain joined this roster as a NEW capped read. It counts VERSIONS
@@ -794,6 +829,15 @@ const DRIVEN = [
     drive: (n) => GET(`op=searchindexcheck&token=mem-r57&limit=${n}`),
     more: (a) => a.cursor !== null, says: "a non-null `cursor`",
     lost: "whether index parity was checked over the record or over one page" },
+  /* CPDF-13 / D-183: the calibration read. What a cut answer costs here is
+     specific and worse than a short list — a member reading "these are the
+     measurements this instance holds" off a page that was silently cut could
+     conclude an engine has never been calibrated when it has, and act on a
+     grade they think rests on nothing. */
+  { op: "calibrations", bite: 1, whole: 500,
+    drive: (n) => GET(`op=calibrations&token=adm-r57&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether these are all the measurements this instance holds, or the first page of them" },
   { op: "exportlog", bite: 1, whole: 200,
     drive: (n) => GET(`op=exportlog&token=adm-r57&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",

@@ -737,6 +737,22 @@ export const RUNG_ABSENT = {
   provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },
   airuntick:            { ground: "substrate", is: "an AI run's own progress tick" },
+  /* CPDF-13 / D-183. THE THREE CALIBRATION WRITES, and they are `substrate`
+     rather than absent-for-want-of-thought: a RUNG is a step on the ladder of
+     acts that move the RECORD's claims about the civic world, and none of these
+     touches a claim. `calibrate` records what a probe measured of a DERIVATION
+     ENGINE; `calibrationsubject` says which engine this instance can probe; and
+     `calibrationsignal` records that somebody else announced something about
+     their own product. What they establish is how far the record may be
+     TRUSTED, which is a fact about the instrument and not about the subject.
+     AND THE ABSENCE IS LOAD-BEARING RATHER THAN CLERICAL. If `calibrate` carried
+     a rung it would be an act that moves the record — and the whole thesis of
+     this item is that a measurement NEVER moves a grade, in either direction
+     (DEC-4; refused by name at the door as CAL_CANNOT_REGRADE). A rung here
+     would say the opposite of what the construct enforces. */
+  calibrate:            { ground: "substrate", is: "records what a probe measured of a derivation ENGINE; it moves no claim and no grade (DEC-4)" },
+  calibrationsubject:   { ground: "substrate", is: "declares which engine this instance can probe; registering is not measuring" },
+  calibrationsignal:    { ground: "substrate", is: "records a vendor announcement; it may only SHORTEN the interval to the next probe and changes no grade" },
 
   /* ---- credential: who may act, not what the record says. */
   memberadd:            { ground: "credential", is: "roster governance" },

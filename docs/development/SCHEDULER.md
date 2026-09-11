@@ -86,6 +86,54 @@ give it a self-perpetuating `wake` if it is a pure clock), and it inherits
 earliest-wake reconciliation and idle self-termination. Do NOT add a second alarm
 or a cron; that is the decision this file records.
 
+## The eleventh consumer, and what it costs a group (CPDF-13, D-183)
+
+`calibration-reprobe` is the eleventh entry in `#schedConsumers`, appended
+exactly the way this file says a consumer joins: no cron line, no second alarm,
+and no timer of its own. **It is worth recording that QUEUE.md CPDF-13 calls it
+"a SIXTH REC-1 alarm consumer", which it was on 2026-08-04 when Bob wrote the
+entry — five landed while the item sat queued.** The count in the item is stale;
+the registry and `test/scheduler.test.mjs`'s totality assertion are not, which is
+the argument for pinning a count in a test rather than in prose.
+
+**What it is for.** A transcription's grade rests on a fidelity letter; a
+fidelity letter is a MEASUREMENT of a named engine AT A DATE; engines move. With
+no clock, the record's grades rest on a measurement that silently ages and
+nothing is looking. This consumer is the thing that looks. The construct it
+serves is `bio-plane/src/calibration.mjs`.
+
+**THE CADENCE IS A DECLARED CONSTANT AND IT IS `CALIBRATION_CADENCE_MS` —
+THIRTY DAYS.** It lives in `calibration.mjs`, in one place, and is deliberately
+NOT re-typed here: a number carried by hand into a second file is this
+repository's most-repeated finding. It is CHOSEN rather than measured — nobody
+has yet measured how fast a derivation engine drifts — and it is **revisable by
+measurement**. When somebody measures a real drift interval, that constant moves
+and the reason moves with it.
+
+**WHAT IT COSTS, STATED HERE SO NO GROUP DISCOVERS IT BY BEING BILLED FOR IT:**
+
+- **ONE PROBE PER REGISTERED ENGINE PER CADENCE.** Not one per document, not one
+  per capture, not one per reading. A group with one calibratable engine pays for
+  twelve probe runs a year.
+- **ON THE INSTANCE'S OWN ACCOUNT, against the free allocation.** Never a vendor
+  key and never a second account: the distribution model puts a sovereign
+  instance into each group's own Cloudflare account, and a capability that
+  required somebody else's credential is not one this project can ship (D-115's
+  class, DEC-35's own argument).
+- **AND ZERO ON AN INSTANCE THAT HAS REGISTERED NOTHING.** `#calibrationWake`
+  returns `null` on its first line when `calibration_subjects` is empty, so an
+  instance with no calibratable engine holds **no alarm at all** — the
+  self-termination property this whole file exists to preserve. Turning the
+  feature on is an act (`op=calibrationsubject`); until a group performs it, this
+  consumer costs exactly nothing.
+
+**The tick runs no probe and writes no calibration.** This plane holds no
+derivation engine of its own, so the tick marks a subject OWED and says so in
+words. A tick that treated "the cadence elapsed and nobody announced anything" as
+grounds to refresh a calibration would be the claim-versus-measurement failure
+committed by the scheduler; `calibrationRecord` refuses a calibration with no
+probe behind it, so it could not do it even if it tried.
+
 ## The test seam
 
 `bio-plane/test/scheduler.test.mjs` proves the mechanism with two synthetic

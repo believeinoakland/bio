@@ -61,7 +61,7 @@ import {
   layerChain, appendStep, checkChain, derivationCap, describeChain, isTranscribed,
   terminalStep, checkConfidence, applyConfidenceFloor, checkAnchor, checkAttestation,
   extentCovers, gradeCeiling, captureBound, weaker, STEP_KINDS, CONFIDENCE_BASES,
-  mergedChain, stepCovers,
+  mergedChain, stepCovers, calibrationsOf,
 } from "../src/textchain.mjs";
 import { TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
 
@@ -465,7 +465,13 @@ console.log("\n--- DEC-49: EVERY REFUSAL CARRIES A CODE AND A CANNED TRANSLATION
 const codesUsed = ["TEXT_CHAIN_COLLAPSED", "TEXT_CHAIN_EMPTY", "TEXT_CHAIN_STEP_SHAPE",
   "TEXT_CHAIN_STEP_UNKNOWN", "TEXT_CHAIN_STEP_UNNAMED", "TEXT_CHAIN_STRENGTHENS",
   "TEXT_CONFIDENCE_PSEUDO", "TEXT_CONFIDENCE_SHAPE", "TEXT_ANCHOR_MISSING",
-  "TEXT_ATTEST_MACHINE", "TEXT_ATTEST_EXTENT"];
+  "TEXT_ATTEST_MACHINE", "TEXT_ATTEST_EXTENT",
+  /* CORRECTED 2026-09-10 by CPDF-13 (D-253), never exempted. The list above was
+     complete for the module as CPDF-10 left it; `checkChain` now also refuses a
+     CALIBRATION REFERENCE that is present and unreadable, so the list was wrong
+     the moment that refusal landed and the totality assertion below caught it
+     rather than the author remembering. The arm that drives it is in CHECK_ARMS. */
+  "TEXT_CHAIN_CAL_REF"];
 t("every code this module can mint has a row", codesUsed.filter((c) => !TEXT_CHAIN_CHECKS[c]), []);
 t("every row carries a C-number", Object.values(TEXT_CHAIN_CHECKS).filter((r) => !/^C-35\.\d+$/.test(r.check)).length, 0);
 t("every row carries a member-facing translation",
@@ -495,12 +501,35 @@ const CHECK_ARMS = [
   ["C-35.9",  () => checkAnchor({ kind: "pdf-page", page: 0 })],
   ["C-35.10", () => checkAttestation({ member: "token:member", at: NOW, extent: { kind: "document" } })],
   ["C-35.11", () => checkAttestation({ member: "bob", at: NOW, extent: { kind: "the whole thing" } })],
+  /* CPDF-13 / D-253. A reference that is PRESENT AND UNREADABLE — the only
+     calibration-reference case `checkChain` refuses. An ABSENT one is legal and
+     is asserted as such two lines below, because the over-strictness direction
+     here is the one that would have broken every chain written before CPDF-13. */
+  ["C-35.12", () => checkChain([{ step: "layer", cap: "C", calibration: { id: "CAL-1" } }])],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
   t(`${number} is carried by the refusal the code path produced, not read off the table`,
     [r?.check, typeof r?.translation === "string" && r.translation.length > 40], [number, true]);
 }
+/* CPDF-13 / D-253 — THE OVER-STRICTNESS DIRECTION FOR C-35.12, and it is the
+   direction that matters. The refusal above fires on a reference that is PRESENT
+   AND UNREADABLE. An ABSENT reference is the shape of EVERY chain this record
+   wrote before CPDF-13 existed, and a fence that refused those would not be a
+   safer fence — it would be an undeclared interface change wearing the costume
+   of caution, and it would have refused the whole store on migration. */
+t("OVER-STRICTNESS: a step with a cap and NO calibration is LEGAL — the pre-CPDF-13 shape",
+  checkChain([{ step: "layer", cap: "C", measured_by: "MEASUREMENTS.md 2026-08-03" }]), null);
+t("OVER-STRICTNESS: a step naming a calibration as a plain string is LEGAL",
+  checkChain([{ step: "layer", cap: "C", calibration: "CAL-1" }]), null);
+t("and a chain reports the calibrations it names, deduped and in order",
+  calibrationsOf([{ step: "pixels", cap: "C", calibration: "CAL-4" },
+                  { step: "ocr", engine: "e", version: "1", cap: "C", calibration: "CAL-4" },
+                  { step: "ai", engine: "f", version: "2", cap: "D", calibration: "CAL-9" }]),
+  ["CAL-4", "CAL-9"]);
+t("a chain naming none answers the empty set, which is not the same as a broken chain",
+  calibrationsOf([{ step: "layer", cap: "C" }]), []);
+
 /* AND THE REACH ARM: every row in the family was driven above. A per-code loop
    that silently skipped one would look identical to one that covered them all,
    which is how a walk over a short corpus reports clean. */

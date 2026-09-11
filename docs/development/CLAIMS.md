@@ -1811,3 +1811,66 @@ paths:
   **NOT** `bio-plane/src/**` — the plane already answers `version_sha` on `caseMembers[]` and states the
   join rule in `publishedManifest().production`; this item is pure I3 CONSUMPTION and nothing on the wire
   moves. **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground). **NOT** any other UI suite.
+
+## CLAIM 2026-09-10 CONTENT-PDF (CPDF-13 — the CALIBRATION construct, its chain reference, and the scheduled re-probe; D-183 / D-253)
+session: CPDF-13 worker (worktree `.claude/worktrees/agent-ab1e3df0de5e3b8ec`, branch `worktree-agent-ab1e3df0de5e3b8ec`)
+opened: 2026-09-10
+paths:
+  - `bio-plane/src/calibration.mjs` — **NEW**. The construct: what a calibration IS, the
+    BETTER/WORSE/SAME comparison, the asymmetric drift verdict, the declared cadence constant,
+    and the announcement-signal rule (may only SHORTEN). Holds no engine, exactly as
+    `textchain.mjs` holds none.
+  - `bio-plane/src/textchain.mjs` — the CALIBRATION REFERENCE on a derivation step and the
+    `calibrationsOf(chain)` reader ONLY. No existing rule, refusal or export changes shape.
+  - `bio-plane/src/schema.mjs` — **APPEND ONLY**, immediately BEFORE the `host_governor` block:
+    `calibrations`, `calibration_signals`, `calibration_subjects`. Plus ONE additive column on
+    the DERIVED `reading_text_source` projection (`calibrations`) and its index.
+  - `bio-plane/src/store.mjs` — **THE CALIBRATION REGION ONLY**: the four calibration store
+    methods, ONE APPENDED `#schedConsumers` entry (`calibration-reprobe`), the
+    `#writeTextSource` projection's new column, the four `#dispatch` rows, and the three new
+    table names in `purge`'s derived list (D-113). **NOT** `publish()`, **NOT** any case
+    surface, **NOT** `#aiRun*`, **NOT** `taskDrain` — CASE-5b is live on the publish path.
+  - `bio-plane/src/index.mjs` — the four rows in the op-class registry, the two reading-read
+    set memberships, and `layerChainFor`/`ocrTextFromMember` gaining the calibration reference.
+    **NOT** the case/publish dispatch.
+  - `bio-plane/checks/bio-checks.mjs` — **APPEND ONLY**: the `CALIBRATION_CHECKS` family (C-42)
+    and `CALIBRATION_DRIFT_CHECKS` (C-43). No existing family edited. (The suffix `_CHECKS` is
+    reserved and harvested by the DEC-49 guard — that is intended here: these ARE refusal
+    families.)
+  - `bio-plane/test/calibration.test.mjs` and `bio-plane/test/calibration.control.mjs` — **NEW**,
+    this item's suite and its negative-control harness.
+  - `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` figure ONLY, moved to the figure the
+    instrument PRINTED. ONE key set, collapsed if it conflicts.
+  - `docs/development/INTERFACE-CHANGES.md` — APPEND: IC-72 (I5) and IC-73 (I2).
+  - `docs/development/SCHEDULER.md` — APPEND: the calibration consumer and THE CADENCE'S COST,
+    stated so no group discovers it as a surprise.
+  - `docs/development/DEBT.md` — the D-183 and D-253 disposition cells ONLY.
+  - `docs/development/MEASUREMENTS.md` — APPEND: this item's figures.
+  **NOT** `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
+  `newgroup/**`. **NOT** `civicos-ui/**` (nothing on I3 moves; measured, and stated in IC-72).
+  **NOT** `bio-plane/src/pdfstructure.mjs`.
+
+  **PATHS ADDED AFTER THE FIRST BATTERY, each because a TOTALITY GUARD OR A RATCHET DEMANDED
+  IT — listed here rather than absorbed, because a claim that grows silently is not a claim:**
+  - `bio-plane/src/affordances.mjs` — the `RUNG_ABSENT` table ONLY, three appended rows.
+    `test/rung-ladder.test.mjs` refuses a mutating op that carries neither a rung nor a STATED
+    absence, and named all three of mine.
+  - `bio-plane/test/gate-reads.test.mjs` — the `GATED` and `UNGATED` tables ONLY, one row each.
+    Same shape: its sweep refuses an unclassified read and named both of mine.
+  - `bio-plane/test/airun.test.mjs` — ARM S1's pinned consumer-count delta ONLY (10→11),
+    CORRECTED at its site with a dated reason, never loosened to a floor.
+  - `bio-plane/test/hygiene.test.mjs` — the `EXEMPT` map only (D-113's purge-or-exempt census).
+  - `bio-plane/test/bounds.test.mjs` — a fixture (two calibrations, so a cap of 1 provably bites),
+    one `DRIVEN` row, and the capped-op roster pin 30 → 31, MEASURED from what the walk PRINTED.
+    `op=calibrations` joined the roster as a new capped read and the suite refuses a roster op
+    nobody drives.
+  - `bio-plane/test/versionchain.test.mjs` — **NOT EDITED.** Its total version-edge sweep named a
+    `calibrations.superseded_by` column; the guard was left alone and MY COLUMN WAS RENAMED to
+    `replaced_by`, with the reasoning at the column. Loosening a total sweep to admit a lookalike
+    is how a guard stops being total.
+  - `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` —
+    **REBUILT, because FL-10's guard (landed in the two commits this worktree fast-forwarded
+    onto) FAILS a plane artifact that is stale against its sources.** `npm run build` in
+    `bio-plane/`; `src/signpage.mjs` regenerated BYTE-IDENTICALLY and is not in the diff,
+    exactly as FL-10's release note said it would be. No version bumped, nothing signed,
+    nothing deployed — that is DIST's.

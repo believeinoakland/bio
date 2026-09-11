@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-654 rulings across 67 documents.
+659 rulings across 67 documents.
 
 ## DEC-
 
@@ -156,6 +156,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:1674`
 - **DEC-49** — DEC-49's headline was SUPERSEDED IN PART by this landing and CONDUCT corrected it in the entry** (the UNAVOIDABLE column did not move, so none of the reasoning is invalidated — but Bob answers that ruling against the measurement, so the measurement it quotes must be current).  
   `docs/archive/ledgers/QUEUE-2026-08.md:2055`
+- **DEC-49** — `test/textchain.test.mjs` was CORRECTED at its site, never exempted.** Its DEC-49 family-totality assertion caught the new refusal row immediately — the hand-written `codesUsed` list was wrong the moment the refusal landed — and the correction carries a dated reason at the line, with an arm driving the new code.  
+  `docs/development/INTERFACE-CHANGES.md:5205`
 - **DEC-52** — WHY THEY ARE NOT DECIDED HERE.** Bob ruled on THREE VERBS — declare a relation, resolve a reference, thread a progression.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3709`
 - **DEC-52** · 2026-08-07 — `docs/development/INVESTIGATIVE-SESSION.md` states at TWO sites — §14a's post-processing paragraph (`[BOB-4 — RULED 2026-08-07, PROVISIONAL]`) and the open-questions list — that *"the sidebar approval (identify → present → member approves) remains the act of record for the constitutive fields."* **DEC-52's decided…  
@@ -280,6 +282,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1812`
 - **D-113** — — roster/classification/ratchet rows for the ONE new op, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2390`
+- **D-113** — CORRECTED at its site with a dated reason, never loosened to a floor. - `bio-plane/test/hygiene.test.mjs` — the `EXEMPT` map only (D-113's purge-or-exempt census). - `bio-plane/test/bounds.test.mjs` — a fixture (two calibrations, so a cap of 1 provably bites), one `DRIVEN` row, and the capped-op roster pin 30 → 31,…  
+  `docs/development/CLAIMS.md:1861`
 - **D-114** · 2026-07-31 — The conformance suite was CORRECTED rather than exempted, both ways, and now asserts that a two-hop archive chain passes, which is the point of disclosure.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:73`
 - **D-117** — 2 · STALE RECORD CORRECTED BY THIS SWEEP (already pushed, batch 1) `VERIFICATION.md`'s floor table (0/42 → measured 105/105 suites declaring negative controls) · D-117 resolved (coverage.mjs gates the fleet under `--strict`) · D-213's close  
@@ -374,6 +378,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed-2026-08.md:108`
 - **D-252** · 2026-08-09 — AMENDED 2026-08-09 (D-252) — A DERIVATION STEP MAY NAME THE PAGES IT COVERS **Amended in place rather than raised as a second IC**, because this row is still `PROPOSED`, its producer is this same area, and the shape it describes has never been released: splitting one  
   `docs/development/INTERFACE-CHANGES.md:2971`
+- **D-253** · 2026-08-08 — `measured_by` IS NOT WITHDRAWN**, which is a correction to this row's own NEEDS clause and is worth stating: the row said the reference should REPLACE the free string, and building it showed the two are not redundant — the string says where a HUMAN reads the measurement, the reference is what a QUERY follows, and…  
+  `docs/development/DEBT.md:224`
 - **D-255** — THE CLASS WAS DECIDED RATHER THAN LISTED:** `--tripwire-sweep` gives EVERY field of the descriptor a verdict over a whole battery each — `arm`/`table`/`grain`/ `identity`/`limit`/`offset` **LIVE** (the five D-255 could only assert are now MEASURED), `columns`/`refs` **DEAD** — with a BASELINE row aiming the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:6704`
 - **D-255** — D-255's ARM C was CORRECTED, not exempted** (its anchor no longer occurs, so it would have exited 3 and taken the run down).  
@@ -1205,6 +1211,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:4528`
 - THE OVER-STRICTNESS HALF, DECIDED IN THE ITEM AND NOT INHERITED **A member-cancelled run keeps reading `finished`, and that is a decision rather than an oversight.** `cancelled` is an ending, so it falls on the same side of the keying as `completed`, and one could  
   `docs/development/INTERFACE-CHANGES.md:4548`
+- SIX EXISTING SUITES CAUGHT THIS CHANGE AND EVERY ONE WAS CORRECTED AT ITS SITE, NEVER EXEMPTED.** This is the measured consumer impact and it is not zero: `scheduler.test.mjs` (registry totality, ten consumers → eleven), `airun.test.mjs` (the same count as a pinned DELTA, 10→11 — corrected rather  
+  `docs/development/INTERFACE-CHANGES.md:5111`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — session BOB under Bob's 2026-08-07 delegation (SWEEP §4b) and are SETTLED here: versions attach to the **inquiry's basis**; prune **hides, never deletes**; the capture-request door is a **`capture_requests` table drained by the daemon**; **CHECK is the first deployed mode**.  
@@ -1275,6 +1283,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:6566`
 - THE MEASUREMENT THAT DECIDED THE ITEM, and it is the one §14b.6 demands before anything is minted: does `RUN_STATUS` already carry an honest term for a run that never started?** Instrument: `grep -arn` over every tree with `node_modules` and built artifacts excluded, plus reading each term's PRODUCER in…  
   `docs/development/MEASUREMENTS.md:8175`
+- schema word reserved by another item's pin — and each was CORRECTED at its site with a dated reason.  
+  `docs/development/MEASUREMENTS.md:8510`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:117`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

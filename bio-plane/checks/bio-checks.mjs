@@ -9061,6 +9061,107 @@ export const TEXT_CHAIN_CHECKS = {
       + 'this page, or all of it. Checking one table and having that stand behind an entire scanned '
       + 'report is exactly what this record will not do on your behalf.',
   },
+  /* CPDF-13 / D-253. The calibration REFERENCE, and note carefully what this
+     row does NOT refuse: a step with a `cap` and no calibration is the
+     pre-CPDF-13 shape and is LEGAL — every chain written before this rule
+     existed is that shape, and refusing it would be a fence tighter than its
+     rule wearing the costume of caution. What is refused is a reference that is
+     PRESENT AND UNREADABLE, because an unresolvable pointer is worse than an
+     absent one: it looks like a binding and joins to nothing. */
+  TEXT_CHAIN_CAL_REF: {
+    check: 'C-35.12',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This step points at the measurement its fidelity rests on, but the pointer is not '
+      + 'readable as one. A measurement nobody can look up is not a measurement this record can '
+      + 'stand behind — and a broken pointer is worse than none, because it looks like one that works.',
+  },
+};
+
+/* ============================================================================
+ * C-42 · THE CALIBRATION FAMILY — a measurement of a derivation engine, and the
+ * two ways a record could come to claim one it does not have.
+ * ============================================================================
+ *
+ * CPDF-13, closing D-183 and D-253. The construct is `src/calibration.mjs` and
+ * its header carries the full argument; this is the refusal catalogue.
+ *
+ * THE FAMILY IS SMALL AND IT IS ALL ONE IDEA. A transcription's grade rests on
+ * a fidelity letter; a fidelity letter is a MEASUREMENT of a named engine at a
+ * date; and the two ways to lose that are to record a measurement nobody made,
+ * or to let something that is not a measurement stand in for one. Every row
+ * below is one of those two.
+ *
+ * THE TRANSLATIONS ARE WRITTEN FOR A MEMBER, not for an operator, because these
+ * surface through member-facing ops. A member who trips `CAL_NO_PROBE` is
+ * usually right that the engine changed — a vendor did announce something — and
+ * the translation says so before it says what is missing, because a refusal that
+ * reads as "you are wrong" when the member is right is a refusal they will route
+ * around.
+ *
+ * C-42 minted with `node tools/mintid.mjs C` (floor C-38, stepping over three
+ * ids already held by parallel workers) — never measured free by hand.
+ * ========================================================================= */
+export const CALIBRATION_CHECKS = {
+  CAL_SHAPE: {
+    check: 'C-42.1',
+    where: 'src/calibration.mjs checkCalibration > is-calibration-shape',
+    translation: 'This measurement is not readable as one. It has to name an engine, a version, a '
+      + 'date, and the probe run that produced it — and the quality figure, where there is one, has '
+      + 'to be on the same scale the rest of this record uses.',
+  },
+  /* A measurement of "the OCR" is a measurement of nothing re-runnable. */
+  CAL_UNNAMED: {
+    check: 'C-42.2',
+    where: 'src/calibration.mjs checkCalibration > is-calibration-shape',
+    translation: 'A measurement has to say exactly what it measured — which engine, and which '
+      + 'version of it. Services are retrained and re-released under the same name, so the name '
+      + 'alone cannot tell a later reader whether the thing you measured is the thing that read '
+      + 'their document.',
+  },
+  CAL_UNDATED: {
+    check: 'C-42.3',
+    where: 'src/calibration.mjs checkCalibration > is-calibration-shape',
+    translation: 'A measurement has to carry the day it was taken. How good an engine is, is a fact '
+      + 'about a particular day — without one, nothing can tell whether anybody has checked recently, '
+      + 'and nothing can ever supersede it.',
+  },
+  /* RULE 1, and the one the announcement watch exists under. */
+  CAL_NO_PROBE: {
+    check: 'C-42.4',
+    where: 'src/calibration.mjs checkCalibration > is-calibration-shape',
+    translation: 'Nothing here was actually measured. A release note, a changelog, a model card or a '
+      + 'new version number all tell you an engine CHANGED — none of them tells you how well it now '
+      + 'reads a page, and that is the number the record grades against. Run the probe and record '
+      + 'what it scored, including the inputs you gave it, so somebody else can disagree with you '
+      + 'later.',
+  },
+  CAL_SIGNAL_SHAPE: {
+    check: 'C-42.5',
+    where: 'src/calibration.mjs checkSignal > is-calibration-signal',
+    translation: 'This announcement is not readable as one. It has to say which engine it is about '
+      + 'and where you saw it, because it is somebody else\'s statement about their own product and '
+      + 'the record keeps it attributed to them.',
+  },
+  /* RULE 4's first half, refused at the door rather than sanitised quietly. */
+  CAL_SIGNAL_CLAIMS_MEASUREMENT: {
+    check: 'C-42.6',
+    where: 'src/calibration.mjs checkSignal > is-calibration-signal',
+    translation: 'This announcement carries a quality figure. Noticing that a vendor announced '
+      + 'something is useful and the record keeps it — it brings the next check forward. But what '
+      + 'they say about their own product is a claim, and a grade in this record rests on a '
+      + 'measurement. The announcement cannot stand in for the check, and it cannot change a grade '
+      + 'on its own.',
+  },
+  /* RULE 2's teeth at the surface. DEC-4: no machine mints a grade, in EITHER
+     direction — and the direction people expect to be allowed is the downgrade. */
+  CAL_CANNOT_REGRADE: {
+    check: 'C-42.7',
+    where: 'src/store.mjs calibrationRecord > is-calibration-regrade',
+    translation: 'A new measurement cannot re-grade the documents already read by that engine, and '
+      + 'that holds even when the new measurement is WORSE. What the record does instead is name '
+      + 'exactly which transcriptions were graded under the old measurement, so a person can look at '
+      + 'them and decide. Grades in this record are things people put their name to.',
+  },
 };
 
 /* ============================================================================

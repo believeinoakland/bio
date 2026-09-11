@@ -238,7 +238,19 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
    may attest — the eleven-copies-of-one-predicate failure REC-46 measured is
    the reason nothing below re-derives any of it. */
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
-         terminalStep, describeChain, gradeCeiling, STEP_KINDS } from "./textchain.mjs";
+         terminalStep, describeChain, gradeCeiling, STEP_KINDS,
+         calibrationsOf } from "./textchain.mjs";
+/* CPDF-13 / D-183 / D-253: THE CALIBRATION CONSTRUCT, imported for exactly the
+   reason `textchain.mjs` is imported above — the rules about what a measurement
+   must carry, how two measurements compare and what each direction may cause
+   have ONE implementation, and this file holds no copy of any of them. The
+   asymmetry in particular (a WORSE calibration raises an obligation and
+   re-grades nothing; a BETTER one raises nothing) is `drifted`'s and is asked
+   rather than restated, because a rule restated at its call site is a rule that
+   can come to disagree with itself. */
+import { checkCalibration, checkSignal, compare, drifted, driftObligations,
+         nextProbeDue, cadenceSentence, DRIFT,
+         CALIBRATION_CADENCE_MS } from "./calibration.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
    it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
@@ -256,6 +268,12 @@ import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER,
    reason every other DEC-49 family is — the C-number, the wire code and the
    canned translation are ONE ROW there and this file holds no second copy. */
 import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";
+/* CPDF-13: the calibration family, for the one refusal this file owns rather
+   than `calibration.mjs` — `CAL_CANNOT_REGRADE`, which is a fact about this
+   STORE's door and not about the shape of a measurement. Imported for the same
+   reason `ROUTE_MARK_CHECKS` above is: the C-number, the wire code and the
+   canned translation are ONE ROW in the catalogue. */
+import { CALIBRATION_CHECKS } from "../checks/bio-checks.mjs";
 
 /* CASE-4 / DEC-72: THE CASE RELATION, asked of a document's own bytes. Imported
    rather than restated for the reason every other vocabulary here is imported:
@@ -614,6 +632,15 @@ export class Store extends DurableObject {
          either side of a project's bar moving. The full reasoning is at the
          column in schema.mjs. */
       ["published_cases", "bar", "TEXT"],
+      /* CPDF-13 / D-253: the calibration ids a reading's chain references.
+         Additive and nullable, and NULL here needs no backfill reasoning of the
+         kind the two rows above needed — because this column is DERIVED. Every
+         other column on `reading_text_source` is computed from the stored chain
+         and rebuilt with it, so a store migrated forward fills this in on each
+         reading's next projection and cannot disagree with the chain meanwhile.
+         A chain written before calibrations existed names none, which is exactly
+         what NULL says and exactly what is true of it. */
+      ["reading_text_source", "calibrations", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -2116,6 +2143,61 @@ export class Store extends DurableObject {
         due:  (now) => this.#aiRunWakePending(now) > 0 ? now : null,
         wake: (now) => this.#aiRunWakeWake(now),
         tick: (now) => ({ airunwake: this.#aiRunWake(now) }) },
+      /* CPDF-13 / D-183 — THE CALIBRATION RE-PROBE, and ONE APPENDED ENTRY
+         exactly as SCHEDULER.md instructs: *"append an entry to
+         #schedConsumers… Do NOT add a second alarm or a cron; that is the
+         decision this file records."* No cron line is added to wrangler.jsonc
+         and no second alarm exists.
+
+         A NOTE ON THE COUNT, because the item's own text will read as wrong to
+         the next person: QUEUE.md CPDF-13 calls this "a SIXTH REC-1 alarm
+         consumer", which it was on 2026-08-04 when Bob wrote the entry. Five
+         more landed while the item sat queued. This is the ELEVENTH, and the
+         figure is corrected here rather than in the item, because the item is
+         CONDUCT's ground and because a stale count in a brief is exactly the
+         hand-carried-number failure this repository names most often. What the
+         item MEANT — one more consumer on the one alarm, registered the
+         ordinary way — is what this is.
+
+         WHY A CONSUMER AT ALL, which is D-183's argument and not a scheduling
+         preference. A transcription's grade rests on a fidelity letter; a
+         fidelity letter is a measurement of an engine AT A DATE; engines move.
+         With no clock, the record's grades rest on a measurement that silently
+         ages, and the age is invisible because nothing is looking. This
+         consumer is the thing that looks.
+
+         INTERVAL-CONSUMER SHAPE, like queue-renotify, monitor-cadence and the
+         reaper: due only when a subject is actually past its own next-probe
+         instant, so it fires at its own moment and no other's. ITS CADENCE IS
+         PER SUBJECT and is `CALIBRATION_CADENCE_MS` — a DECLARED CONSTANT,
+         thirty days, chosen and recorded as chosen because nobody has yet
+         measured how fast a derivation engine drifts. It is revisable by
+         measurement and lives in `calibration.mjs`, in one place, which
+         SCHEDULER.md quotes by name rather than re-typing.
+
+         AND IT SELF-TERMINATES ON AN INSTANCE THAT HAS REGISTERED NOTHING.
+         `#calibrationWake` returns null on its first line when
+         `calibration_subjects` is empty, so an instance with no calibratable
+         engine holds NO ALARM AT ALL and this feature costs it exactly zero.
+         That is the property REC-1 prized and the one the Free tier the
+         installer targets is paid for. WHAT IT COSTS A GROUP THAT DOES
+         REGISTER ONE, stated here and in SCHEDULER.md so no group discovers it
+         by being billed: ONE PROBE PER SUBJECT PER CADENCE, on the INSTANCE'S
+         OWN ACCOUNT, against the free allocation — never one per document,
+         never one per capture, and never somebody else's vendor key (D-115's
+         class: a sovereign instance must not need a second account).
+
+         THE TICK RUNS NO PROBE AND WRITES NO CALIBRATION, and that is rule 1
+         holding at the one place it would be most tempting to bend. This plane
+         holds no derivation engine of its own; the tick marks the subject OWED
+         and says so in words. A tick that treated "the cadence elapsed and
+         nobody announced anything" as grounds to refresh a calibration would be
+         the claim-versus-measurement failure committed by the scheduler, and
+         `calibrationRecord` would refuse it anyway. */
+      { name: "calibration-reprobe",
+        due:  (now) => this.#calibrationDue(now) > 0 ? now : null,
+        wake: (now) => this.#calibrationWake(now),
+        tick: (now) => ({ calibration: this.#calibrationTick(now) }) },
     ];
     for (const name of Object.keys(probe || {})) {
       const st = probe[name];
@@ -2144,7 +2226,7 @@ export class Store extends DurableObject {
     const grace = Store.SCHED_GRACE_MS;
     let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
         queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null,
-        airunwake = null;
+        airunwake = null, calibration = null;
     const probes = [];
     for (const c of reg) {
       const d = c.due(now);
@@ -2184,6 +2266,13 @@ export class Store extends DurableObject {
          mechanism believed because it exists rather than because it was seen to
          behave. */
       else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;
+      /* CPDF-13, named for the sixth time and for the same reason every one of
+         the five above is named: an unnamed consumer is reported as a TEST
+         PROBE, and a calibration clock that disappears into `probes` is the
+         record's only mechanism for noticing that its grades rest on an ageing
+         measurement, going unobservable in the alarm's own account of itself.
+         That is the mechanism-believed-on-its-existence shape exactly. */
+      else if (c.name === "calibration-reprobe") calibration = r && r.calibration;
       else probes.push(c.name);
     }
     /* Reconcile over the FULL registry, not just the consumers that ticked, and
@@ -2206,7 +2295,8 @@ export class Store extends DurableObject {
              ...(monitorcadence ? { monitorcadence } : {}),
              ...(airunreap ? { airunreap } : {}),
              ...(capturerequests ? { capturerequests } : {}),
-             ...(airunwake ? { airunwake } : {}) };
+             ...(airunwake ? { airunwake } : {}),
+             ...(calibration ? { calibration } : {}) };
   }
 
   /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
@@ -10136,12 +10226,22 @@ export class Store extends DurableObject {
     if (checkChain(chain)) return;
     const engines = [...new Set(chain.filter((s) => typeof s.engine === "string" && s.engine)
                                      .map((s) => s.engine))];
+    /* CPDF-13 / D-253: the calibration ids the chain names, projected here so
+       the drift handler's "which transcriptions rest on CAL-n" is an indexed
+       read rather than a scan of every reading's JSON. DERIVED like every other
+       column on this table — `calibrationsOf` reads the chain and this file
+       holds no second opinion about what a chain references. NULL, not "[]",
+       when the chain names none: an empty array would say "this chain was asked
+       and named nothing", which is true, but NULL is what every pre-CPDF-13 row
+       already reads as and the two must not be distinguishable by accident. */
+    const cals = calibrationsOf(chain);
     this.sql.exec(
       `INSERT OR REPLACE INTO reading_text_source
-         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain)
-       VALUES (?,?,?,?,?,?,?,?)`,
+         (capture_sha,bundle_id,transcribed,terminal_step,engines,derivation_cap,steps,chain,calibrations)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
       sha, bundleId, isTranscribed(chain) ? 1 : 0, terminalStep(chain),
-      JSON.stringify(engines), derivationCap(chain), chain.length, JSON.stringify(chain));
+      JSON.stringify(engines), derivationCap(chain), chain.length, JSON.stringify(chain),
+      cals.length ? JSON.stringify(cals) : null);
   }
 
   /* CPDF-10: RECORD A MEMBER'S ATTESTATION that a document's text matches the
@@ -10386,6 +10486,515 @@ export class Store extends DurableObject {
                transcribed: !!r.transcribed, terminal_step: r.terminal_step,
                engines: safeJson(r.engines) || [], derivation_cap: r.derivation_cap,
                steps: r.steps })) };
+  }
+
+  /* ================================================================== *
+   * CPDF-13 — THE CALIBRATION REGION (D-183, D-253).
+   * ================================================================== *
+   *
+   * FOUR STORE METHODS AND ONE SCHEDULER CONSUMER. The RULES are all in
+   * `calibration.mjs` and none of them is restated here; what lives in this
+   * file is the storage, the join, and the surfaces.
+   *
+   * THE ONE THING TO UNDERSTAND BEFORE READING ANY OF IT: the drift handler
+   * WRITES NOTHING ABOUT A TRANSCRIPTION. `calibrationRecord` writes a
+   * calibration row and stamps `replaced_by`/`drift` on the one it replaces —
+   * facts about MEASUREMENTS — and stops. It does not touch `readings`, it does
+   * not touch `reading_text_source`, it does not touch a grade, and it does not
+   * write an obligation. The obligation is DERIVED by `calibrationDrift` on
+   * read, which is REC-17's shape and REC-17's two reasons: a stored verdict
+   * goes stale in both directions, and the member decides rather than the plane.
+   *
+   * THAT IS ALSO WHY THE NEGATIVE CONTROL FOR THIS ITEM IS ARMED BY ADDING
+   * CODE RATHER THAN BY REMOVING IT. There is no line here to delete that would
+   * make the handler re-grade; an arm has to INSERT the write. An arm that must
+   * add a defect to expose one is a stronger statement about the design than an
+   * arm that removes a guard, and it is stated here so the next reader knows the
+   * control was shaped that way on purpose.
+   * ================================================================== */
+
+  /* The instance's own calibratable engines. An instance with no row here is an
+     instance that holds no alarm for this consumer at all (see the registry
+     entry) — so this read is also the honest answer to "what does this feature
+     cost me", which is nothing until a group registers something. */
+  calibrationSubjects() {
+    return this.#rows(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE enabled=1 ORDER BY engine`);
+  }
+
+  /* The live (not-yet-superseded) calibration for an engine, or null. ONE row by
+     construction: `calibrationRecord` supersedes the previous one in the same
+     transaction as it inserts the new, so two live rows for one engine is a
+     state this store cannot reach. */
+  #calibrationCurrent(engine) {
+    return this.#one(
+      `SELECT * FROM calibrations WHERE engine=? AND replaced_by IS NULL
+        ORDER BY at_ms DESC LIMIT 1`, engine) || null;
+  }
+
+  /* CAL-<n>, minted from the highest suffix this store has ever used rather than
+     from a count — a count re-issues an id after any row is removed, and an id
+     that has meant two things is worse than a gap. The Durable Object
+     serialises, so this needs no lock. */
+  #mintCalibrationId() {
+    /* THE MAX IS TAKEN IN SQL, NOT BY SCANNING AND LOOPING. The first draft read
+       every row and looped — an unbounded scan with an amplifying loop over it,
+       which is precisely the class `test/derivation-bounds.test.mjs` ratchets,
+       and it caught this one. One row comes back regardless of how many
+       calibrations the store holds.
+       CAST on the SUFFIX rather than on the whole id, because `CAL-10` sorts
+       before `CAL-9` as text and a text MAX would re-issue an id. An id that has
+       meant two things is worse than a gap, which is also why this reads the
+       highest ever used rather than a count. */
+    const row = this.#one(
+      `SELECT MAX(CAST(substr(calibration_id, 5) AS INTEGER)) AS n FROM calibrations
+        WHERE calibration_id LIKE 'CAL-%'`);
+    const max = row && Number.isFinite(Number(row.n)) ? Number(row.n) : 0;
+    return `CAL-${max + 1}`;
+  }
+
+  /** RECORD A CALIBRATION — a probe ran, and this is what it measured.
+   *
+   *  EVERY REFUSAL IS `calibration.mjs`'s, called from here AND from the op, so
+   *  a measurement that cannot land through the door cannot be smuggled in
+   *  through a second one (`checkAttestation`'s precedent exactly).
+   *
+   *  WHAT HAPPENS TO THE PREVIOUS CALIBRATION, and it is the whole asymmetry:
+   *  it is stamped `replaced_by` and with the DRIFT VERDICT, in the same
+   *  transaction. That verdict is the ONLY thing the drift handler needs, and
+   *  stamping it here rather than deriving it later is not a stored verdict in
+   *  REC-17's forbidden sense — it is a fact about two MEASUREMENTS, fixed the
+   *  moment both exist and unable to go stale. What is never stored is any
+   *  verdict about a TRANSCRIPTION, which is the thing that would go stale in
+   *  both directions.
+   *
+   *  AND THE SIGNALS ARE CONSUMED. A probe that has run answers every
+   *  announcement that was asking for one, so a spent signal stops accelerating
+   *  anything — otherwise one changelog entry would pull every future probe
+   *  forward for ever. */
+  calibrationRecord(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const at = typeof pkg.at === "string" && pkg.at.trim() ? pkg.at : new Date(now).toISOString();
+    const cal = {
+      engine: pkg.engine, version: pkg.version, at,
+      cap: pkg.cap === undefined ? null : pkg.cap,
+      probe_id: pkg.probe_id, probe_inputs: pkg.probe_inputs, scores: pkg.scores,
+      measured_by: typeof pkg.measured_by === "string" ? pkg.measured_by : "",
+    };
+    /* DEC-49 REGION is-calibration-regrade
+       DEC-4 AT THE DOOR. A caller asking this act to move grades is refused by
+       NAME rather than having the field quietly dropped, because the member who
+       asks is usually reasoning correctly — the engine really did get worse and
+       those documents really are overclaiming — and a silent no-op would leave
+       them believing it happened. The other direction is refused by the same
+       row on purpose: an automatic DOWNGRADE is a machine minting a grade just
+       as much as an upgrade is. */
+    if (pkg.regrade !== undefined || pkg.apply_to_transcriptions !== undefined)
+      return { ok: false, reason: "CAL_CANNOT_REGRADE",
+               code: "CAL_CANNOT_REGRADE",
+               ...this.#calCheckRow("CAL_CANNOT_REGRADE"),
+               detail: `this call asks the new measurement to re-grade the transcriptions already `
+                     + `made by ${String(pkg.engine)}. A calibration records what an engine scores; `
+                     + `it never moves a grade, in EITHER direction — a grade rises or falls only by `
+                     + `an authored act (DEC-4, no machine mints a grade). Record the measurement, `
+                     + `then read op=calibrationdrift for exactly which transcriptions a member `
+                     + `should look at` };
+    /* END DEC-49 REGION is-calibration-regrade */
+    const bad = checkCalibration(cal);
+    if (bad) return { ok: false, reason: bad.code, ...bad };
+
+    return this.ctx.storage.transactionSync(() => {
+      const prev = this.#calibrationCurrent(cal.engine);
+      const id = this.#mintCalibrationId();
+      const verdict = compare({ ...cal, calibration_id: id },
+                              prev ? this.#calRowToCal(prev) : null);
+      this.sql.exec(
+        `INSERT INTO calibrations
+           (calibration_id,engine,version,at,at_ms,cap,probe_id,probe_inputs,scores,measured_by,note)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        id, cal.engine, cal.version, cal.at, now, cal.cap, String(cal.probe_id),
+        typeof cal.probe_inputs === "string" ? cal.probe_inputs : JSON.stringify(cal.probe_inputs),
+        typeof cal.scores === "string" ? cal.scores : JSON.stringify(cal.scores),
+        cal.measured_by, typeof pkg.note === "string" ? pkg.note : null);
+      if (prev)
+        this.sql.exec(`UPDATE calibrations SET replaced_by=?, drift=? WHERE calibration_id=?`,
+                      id, verdict, prev.calibration_id);
+      this.sql.exec(
+        `INSERT INTO calibration_subjects (engine,version,probe_id,registered_at,last_probe_ms,enabled)
+         VALUES (?,?,?,?,?,1)
+         ON CONFLICT(engine) DO UPDATE SET version=excluded.version, probe_id=excluded.probe_id,
+                                           last_probe_ms=excluded.last_probe_ms`,
+        cal.engine, cal.version, String(cal.probe_id), cal.at, now);
+      /* A probe has run, so every announcement that was asking for one is spent.
+         Left unconsumed, one changelog entry would pull every future probe
+         forward for ever — the watch accelerating in perpetuity rather than
+         once. */
+      this.sql.exec(`UPDATE calibration_signals SET consumed_at=? WHERE engine=? AND consumed_at IS NULL`,
+                    cal.at, cal.engine);
+      const d = drifted(verdict);
+      /* THE OBLIGATION IS COMPUTED FOR THE ANSWER AND NOT WRITTEN. The caller
+         who just recorded a worse measurement is exactly who should see the
+         blast radius immediately; the rows come from the same derived read
+         op=calibrationdrift serves, so the echo cannot disagree with the query. */
+      const obligations = d.raises_obligation
+        ? this.#calDriftFor(prev.calibration_id) : [];
+      return { ok: true, calibration_id: id, engine: cal.engine, version: cal.version,
+               at: cal.at, cap: cal.cap,
+               supersedes: prev ? prev.calibration_id : null,
+               drift: d,
+               /* NAMED IN THE ANSWER, always, including when it is zero — an
+                  absent field reads as "not applicable" and a 0 reads as
+                  "asked, and the answer was none". */
+               obligations_raised: obligations.length,
+               obligations,
+               regraded: 0,
+               why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} `
+                  + `${cal.version} on ${cal.at}: fidelity ${cal.cap ?? "undetermined"}. `
+                  + `${d.why}` };
+    });
+  }
+
+  /* The catalogue row for a calibration code, so a refusal from this file
+     carries the same `check`/`translation` pair the construct's own refusals
+     do. Read from the catalogue rather than typed here — DEC-49's rule that a
+     code has one home, and the reason `refusal()` exists in calibration.mjs. */
+  #calCheckRow(code) {
+    const row = CALIBRATION_CHECKS[code];
+    return row ? { check: row.check, translation: row.translation } : {};
+  }
+
+  /* A stored row, back into the shape `calibration.mjs` compares. */
+  #calRowToCal(r) {
+    return { calibration_id: r.calibration_id, engine: r.engine, version: r.version, at: r.at,
+             cap: r.cap ?? null, probe_id: r.probe_id, probe_inputs: r.probe_inputs,
+             scores: r.scores, measured_by: r.measured_by };
+  }
+
+  /** THE ASYMMETRIC DRIFT HANDLER'S ANSWER — derived, never stored.
+   *
+   *  Which transcriptions rest on a calibration that a LATER probe measured
+   *  WORSE? The join is one indexed read on `calibrations_drift` and one on
+   *  `reading_text_source.calibrations`, and the verdict comes from
+   *  `drifted()`, so the direction rule has exactly one home.
+   *
+   *  THE SET IS EXACT IN BOTH DIRECTIONS AND THE SUITE ASSERTS THE ABSENCES AS
+   *  HARD AS THE PRESENCES. Not here: a transcription bound to a calibration
+   *  superseded by a BETTER measurement; one bound to a calibration nothing has
+   *  superseded; one whose chain names no calibration at all. That last one is
+   *  the subtle absence and it is correct — text that never rested on a
+   *  measurement is not affected by that measurement moving, and sweeping it in
+   *  because it happens to name the same engine would be the record raising an
+   *  obligation nobody can discharge. */
+  #calDriftFor(supersededId = null) {
+    /* THE TWO STATEMENTS ARE WRITTEN OUT RATHER THAN COMPOSED FROM A `where`
+       VARIABLE, and that is not style. `test/airuns.test.mjs`' index sweep reads
+       the filtered columns OFF THE SQL TEXT, so a predicate assembled into a
+       variable and interpolated is a predicate the reader cannot see — it scored
+       `calibrations_drift` as an index NOBODY FILTERS ON, which is the
+       access-path-built-for-a-question-no-op-asks finding, reported against an
+       op that does ask it. The concatenated form hid a true fact from an
+       instrument whose whole job is to notice its absence. Both statements lead
+       on `drift`, which is that index's leading column. */
+    const supers = (supersededId
+      ? this.#rows(
+          `SELECT * FROM calibrations
+            WHERE drift=? AND replaced_by IS NOT NULL AND calibration_id=?`,
+          DRIFT.WORSE, supersededId)
+      : this.#rows(
+          `SELECT * FROM calibrations
+            WHERE drift=? AND replaced_by IS NOT NULL`, DRIFT.WORSE))
+      .map((r) => ({ superseded: this.#calRowToCal(r), verdict: r.drift,
+                     current: (() => { const c = this.#one(
+                       `SELECT * FROM calibrations WHERE calibration_id=?`, r.replaced_by);
+                       return c ? this.#calRowToCal(c) : null; })() }))
+      .filter((s) => s.current);
+    if (!supers.length) return [];
+    const wanted = new Set(supers.map((s) => s.superseded.calibration_id));
+    /* BOUNDED AT BIRTH (REC-60/REC-70's ratchet, and `test/derivation-bounds.test.mjs`
+       caught the unbounded first draft of exactly this loop). The row source is
+       one per captured document — a table that only grows — and an amplifying
+       loop runs over what comes out of it, which is the class that ratchet
+       exists to refuse. The bound is the plane's OWN pair for this table
+       (`Store.TEXT_SOURCE_LIMIT_*`, the one `transcribedDocuments` already
+       publishes) rather than a second vocabulary, and it is asked for as
+       `cap + 1` so truncation is a MEASUREMENT rather than an inference from a
+       full page.
+       ONLY ROWS THAT NAME A CALIBRATION ARE READ AT ALL — the index makes the
+       NULL majority free, which is what the projected column is for, and it is
+       also what makes this bound generous rather than tight: the rows it can
+       return are the transcriptions that rest on a measurement, never the
+       corpus. */
+    const cap = Store.TEXT_SOURCE_LIMIT_MAX;
+    const page = this.#rows(
+      `SELECT capture_sha, bundle_id, derivation_cap, chain, calibrations
+         FROM reading_text_source WHERE calibrations IS NOT NULL
+        ORDER BY capture_sha LIMIT ?`, cap + 1);
+    const truncated = page.length > cap;
+    const bound = [];
+    for (const r of page.slice(0, cap)) {
+      for (const id of (safeJson(r.calibrations) || [])) {
+        if (!wanted.has(id)) continue;
+        bound.push({ id: r.capture_sha, capture_sha: r.capture_sha, bundle_id: r.bundle_id,
+                     calibration_id: id, derivation_cap_recorded: r.derivation_cap ?? null });
+      }
+    }
+    const out = driftObligations(supers, bound);
+    /* THE TRUNCATION IS CARRIED OUT, NOT SWALLOWED. An obligation list that
+       silently stopped short would be the record UNDERSTATING a blast radius,
+       which is the one direction this item must never fail in — a member would
+       read a short list as the whole of the work. */
+    out.truncated = truncated;
+    out.limit = cap;
+    return out;
+  }
+
+  /** op=calibrationdrift. The derived obligation, gated the way every read that
+   *  names a bundle is (REC-30): a row ABOUT a bundle the viewer may not see is
+   *  WITHHELD WHOLE with no count of what was withheld, because that count is
+   *  the leak. */
+  calibrationDrift({ engine = null, viewer = null } = {}) {
+    const visible = this.#bundleRedactor(viewer);
+    const raw = this.#calDriftFor(null);
+    const all = raw
+      .filter((o) => (engine ? o.engine === engine : true))
+      .filter((o) => visible(o.bundle_id) !== null);
+    return { ok: true, ...(engine ? { engine } : {}),
+             obligations: all, count: all.length,
+             /* `limit` beside `truncated`, the plane's own spelling (REC-60's
+                pair). An UNDERSTATED obligation list is the one direction this
+                read must never fail in, so the shortfall is published rather
+                than inferred. */
+             limit: raw.limit, truncated: !!raw.truncated,
+             /* STATED IN EVERY ANSWER, including the empty one, because the
+                property this item is accepted on is that nothing moved. A
+                reader should not have to infer it from an absence. */
+             regraded: 0,
+             why: all.length
+               ? `${all.length} transcription(s) were graded under a measurement a later probe `
+                 + `found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: `
+                 + `this names the work so a member can do it (DEC-4)`
+               : `no transcription in this store rests on a calibration that a later probe measured `
+                 + `worse. A calibration that measured BETTER raises nothing by design — a grade `
+                 + `rises only by an authored act` };
+  }
+
+  /** op=calibrations. What this instance has measured, and when the next probe
+   *  is due for each subject. The due instant comes from `nextProbeDue`, which
+   *  is also what the scheduler consumer reads — one answer, so the surface
+   *  cannot tell a member something different from what the alarm will do. */
+  calibrations({ engine = null, nowMs = null, limit = null } = {}) {
+    const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+    /* BOUNDED AT BIRTH, like every collection read in this plane
+       (REC-60/REC-70's ratchet, and `test/meaning-bounds.test.mjs` caught the
+       bare first draft of this one). `calibrations` grows by one per engine per
+       cadence — slowly, which is an argument about how the world will behave and
+       is exactly the kind the ratchet exists to refuse. `limit` beside
+       `truncated`, asked for as `cap + 1` so truncation is measured. */
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.TEXT_SOURCE_LIMIT_DEFAULT),
+                                     Store.TEXT_SOURCE_LIMIT_MAX));
+    const page = this.#rows(
+      `SELECT * FROM calibrations${engine ? ` WHERE engine=?` : ""}
+        ORDER BY at_ms DESC, calibration_id DESC LIMIT ?`,
+      ...(engine ? [engine] : []), cap + 1);
+    const rows = page.slice(0, cap);
+    const subjects = this.calibrationSubjects()
+      .filter((s) => (engine ? s.engine === engine : true))
+      .map((s) => ({ ...s, next_probe: this.#calNextProbe(s, now) }));
+    return { ok: true, ...(engine ? { engine } : {}),
+             cadence_ms: CALIBRATION_CADENCE_MS,
+             cadence: cadenceSentence(),
+             count: rows.length, limit: cap, truncated: page.length > cap,
+             calibrations: rows.map((r) => ({
+               calibration_id: r.calibration_id, engine: r.engine, version: r.version,
+               at: r.at, cap: r.cap ?? null, probe_id: r.probe_id,
+               probe_inputs: safeJson(r.probe_inputs) ?? r.probe_inputs,
+               scores: safeJson(r.scores) ?? r.scores,
+               measured_by: r.measured_by,
+               superseded_by: r.replaced_by ?? null, drift: r.drift ?? null,
+               note: r.note ?? null })),
+             subjects,
+             why: subjects.length
+               ? `this instance probes ${subjects.length} engine(s) on its own account — `
+                 + cadenceSentence()
+               : `no engine is registered for calibration in this instance, so no probe is scheduled `
+                 + `and this consumer holds no alarm at all` };
+  }
+
+  /* One subject's next-probe instant, and the ONLY place the signals reach the
+     cadence. `nextProbeDue` can return an instant at or before the cadence's own
+     and has no arithmetic that could return a later one — rule 4. */
+  #calNextProbe(subject, now) {
+    const signals = this.#rows(
+      `SELECT probe_by_ms FROM calibration_signals
+        WHERE engine=? AND consumed_at IS NULL`, subject.engine)
+      .map((s) => ({ probe_by: s.probe_by_ms }));
+    const due = nextProbeDue({ lastAt: subject.last_probe_ms ?? null, signals });
+    return { ...due, overdue: due.at <= now };
+  }
+
+  /** op=calibrationsignal — the OPTIONAL announcement watch (clause (e)).
+   *
+   *  IT MAY ONLY SHORTEN THE INTERVAL TO THE NEXT PROBE. That is enforced in
+   *  three places and each is a different kind of guard, which is deliberate:
+   *
+   *    - `checkSignal` REFUSES a signal carrying a cap or scores, so a signal
+   *      cannot even be SHAPED like a measurement.
+   *    - `nextProbeDue` takes the minimum against the cadence's own instant, so
+   *      there is no arithmetic by which a signal produces a later answer.
+   *    - nothing anywhere reads a signal when computing a cap, a grade or a
+   *      drift verdict. A signal is not an input to any of them.
+   *
+   *  The middle one is the one a reader should check hardest, because the
+   *  plausible mistake is not a malicious signal — it is a well-meaning "no
+   *  announcement, so nothing changed, so push the probe out". ABSENCE OF AN
+   *  ANNOUNCEMENT IS NOT EVIDENCE OF NO CHANGE. */
+  calibrationSignalRecord(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const sig = { engine: pkg.engine, source: pkg.source,
+                  ...(pkg.cap !== undefined ? { cap: pkg.cap } : {}),
+                  ...(pkg.scores !== undefined ? { scores: pkg.scores } : {}) };
+    const bad = checkSignal(sig);
+    if (bad) return { ok: false, reason: bad.code, ...bad };
+    const observed = typeof pkg.observed_at === "string" && pkg.observed_at.trim()
+      ? pkg.observed_at : new Date(now).toISOString();
+    /* A signal with no explicit instant asks for a probe NOW — which is the
+       strongest thing a watch is allowed to ask for, and is still only an
+       acceleration. */
+    const by = Number.isFinite(pkg.probe_by_ms) ? pkg.probe_by_ms : now;
+    const id = `CALSIG-${now}-${String(pkg.engine).replace(/[^A-Za-z0-9_.-]/g, "")}`;
+    this.sql.exec(
+      `INSERT OR REPLACE INTO calibration_signals
+         (signal_id,engine,source,observed_at,probe_by_ms,detail,consumed_at)
+       VALUES (?,?,?,?,?,?,NULL)`,
+      id, sig.engine, sig.source, observed, by,
+      typeof pkg.detail === "string" ? pkg.detail : null);
+    const subject = this.#one(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?`, sig.engine);
+    /* Arm the scheduler: a signal that pulls a probe earlier is a PRODUCER, and
+       `#armScheduler` only ever pulls the alarm earlier — so a signal cannot
+       push another consumer's wake out either. */
+    const armed = !!subject;
+    return { ok: true, signal_id: id, engine: sig.engine, source: sig.source,
+             observed_at: observed, probe_by_ms: by,
+             next_probe: subject ? this.#calNextProbe(
+               { ...subject, last_probe_ms: subject.last_probe_ms }, now) : null,
+             armed,
+             /* NAMED, and named as zero rather than omitted. */
+             changed_grades: 0, stood_in_for_probe: false,
+             why: `recorded that ${sig.source} announced something about ${sig.engine}. An `
+                + `announcement may only SHORTEN the interval to the next probe: it does not stand `
+                + `in for one and it changes no grade, because a vendor's documentation is a claim `
+                + `and a grade here rests on a measurement`
+                + (subject ? `` : `. No calibration subject is registered for this engine, so there `
+                                + `is no probe for it to accelerate — the announcement is kept as a `
+                                + `fact and does nothing else`) };
+  }
+
+  /** op=calibrationsubject — REGISTER AN ENGINE THIS INSTANCE CAN PROBE.
+   *
+   *  IT IS A SEPARATE ACT FROM RECORDING A CALIBRATION, and it has to be. The
+   *  first calibratable engine here is Tier-2 pdf.js: pinned, in use, and NEVER
+   *  MEASURED. If a subject could only come into existence by recording a
+   *  measurement of it, the one engine that most needs calibrating would be the
+   *  one engine that could not be scheduled for it — the state a group is
+   *  actually in is "this engine reads our documents and nobody has ever
+   *  checked how well", and that state must be REGISTRABLE and must be VISIBLE.
+   *
+   *  So a never-probed subject is `due immediately` (`nextProbeDue`'s
+   *  `never-probed` branch), not a cadence away. An engine nothing has measured
+   *  has the least standing to wait, and defaulting it to a month would leave
+   *  the record grading against an unmeasured engine for a month while reporting
+   *  that a probe was scheduled.
+   *
+   *  REGISTERING IS NOT MEASURING. This writes a row saying an engine CAN be
+   *  probed; it writes no cap, no score, and nothing a grade could rest on. */
+  calibrationSubjectRegister(pkg = {}) {
+    const now = Number.isFinite(pkg.nowMs) ? pkg.nowMs : Date.now();
+    const engine = typeof pkg.engine === "string" ? pkg.engine.trim() : "";
+    const probeId = typeof pkg.probe_id === "string" ? pkg.probe_id.trim() : "";
+    if (!engine)
+      return { ok: false, reason: "CAL_UNNAMED", ...this.#calCheckRow("CAL_UNNAMED"),
+               detail: `registering a calibration subject names the engine to be probed` };
+    if (!probeId)
+      return { ok: false, reason: "CAL_NO_PROBE", ...this.#calCheckRow("CAL_NO_PROBE"),
+               detail: `registering a calibration subject names the PROBE that will measure it. `
+                     + `A subject with no probe is a promise to measure something by some means `
+                     + `nobody stated, which is the shape a measurement never takes here` };
+    const enabled = pkg.enabled === false ? 0 : 1;
+    this.sql.exec(
+      `INSERT INTO calibration_subjects (engine,version,probe_id,registered_at,last_probe_ms,enabled)
+       VALUES (?,?,?,?,NULL,?)
+       ON CONFLICT(engine) DO UPDATE SET probe_id=excluded.probe_id, version=excluded.version,
+                                         enabled=excluded.enabled`,
+      engine, typeof pkg.version === "string" ? pkg.version : null, probeId,
+      new Date(now).toISOString(), enabled);
+    const s = this.#one(
+      `SELECT engine, version, probe_id, registered_at, last_probe_ms, enabled
+         FROM calibration_subjects WHERE engine=?`, engine);
+    return { ok: true, engine, probe_id: probeId, enabled: !!enabled,
+             cadence_ms: CALIBRATION_CADENCE_MS, cadence: cadenceSentence(),
+             next_probe: this.#calNextProbe(s, now),
+             measured: false,
+             why: `${engine} is registered for calibration in this instance. Registering is not `
+                + `measuring: no fidelity is claimed for it and nothing rests on it until a probe `
+                + `runs. ${s.last_probe_ms == null
+                    ? `Nothing has ever probed it, so a probe is due immediately`
+                    : `The next probe is due at its own cadence`} — ${cadenceSentence()}` };
+  }
+
+  /* ---- the scheduler consumer's three predicates (see #schedConsumers) ---- */
+
+  /* How many subjects are past their own next-probe instant RIGHT NOW. */
+  #calibrationDue(now) {
+    let n = 0;
+    for (const s of this.calibrationSubjects()) if (this.#calNextProbe(s, now).at <= now) n++;
+    return n;
+  }
+
+  /* The EARLIEST instant any subject wants a probe, or null when none does —
+     which is what makes this consumer self-terminating. An instance with no
+     registered subject returns null on the first line and holds no alarm. */
+  #calibrationWake(now) {
+    const subjects = this.calibrationSubjects();
+    if (!subjects.length) return null;
+    let earliest = null;
+    for (const s of subjects) {
+      const at = this.#calNextProbe(s, now).at;
+      /* A subject already overdue asks for the next tick rather than for an
+         instant in the past — an alarm reconciled to a past instant is one the
+         runtime fires immediately and forever. */
+      const want = at <= now ? now + Store.SCHED_GRACE_MS : at;
+      if (earliest == null || want < earliest) earliest = want;
+    }
+    return earliest;
+  }
+
+  /* THE TICK. It does NOT run a probe itself and it does not pretend to: this
+     plane holds no derivation engine (CPDF-11 returned NO-GO on Moondream, and
+     the tesseract fleet member is CPDF-12's). What it does is mark the subject
+     DUE, which is the honest state — a probe is owed, and nothing has run it.
+     The day a probe runner exists it is called from this one line.
+
+     IT NEVER RECORDS A CALIBRATION ON ITS OWN. A tick that wrote a calibration
+     without a probe run would be precisely the claim-versus-measurement failure
+     rule 1 refuses, committed by the scheduler. `calibrationRecord` is the only
+     writer and it refuses a calibration with no probe behind it, so this tick
+     could not do it even if it tried. */
+  #calibrationTick(now) {
+    const due = [];
+    for (const s of this.calibrationSubjects()) {
+      const n = this.#calNextProbe(s, now);
+      if (n.at <= now) due.push({ engine: s.engine, probe_id: s.probe_id,
+                                  last_probe_ms: s.last_probe_ms ?? null, from: n.from });
+    }
+    return { due: due.length, subjects: due, probes_run: 0, calibrations_written: 0,
+             why: due.length
+               ? `${due.length} engine(s) are due a calibration probe. This plane runs no derivation `
+                 + `engine of its own, so the probe is OWED and not RUN — and the record says owed `
+                 + `rather than quietly treating the last measurement as current`
+               : `no engine is due a probe` };
   }
 
   /* The reverse index Step 4 builds on: every captured document whose reading
@@ -26985,6 +27594,39 @@ export class Store extends DurableObject {
                 rect: safeJson(url.searchParams.get("rect")) },
           url.searchParams.get("viewer"), url.searchParams.get("limit")),
         attesttext: () => this.attestText(body || {}),
+        /* CPDF-13 / D-183 / D-253 — THE CALIBRATION SURFACE. Five ops, and the
+           split is the item's doctrine expressed as a capability boundary, the
+           way CPDF-10's three-way split above is.
+
+           `calibrations` and `calibrationdrift` are READS. What an engine was
+           measured at, and which transcriptions rest on a measurement that
+           moved, are facts about the record: a view-only member weighing a case
+           needs them precisely as a contributor does, and an operator asking
+           "is anything in this store graded against a stale measurement" should
+           be able to answer it without a session. `calibrationdrift` takes the
+           viewer stamp for REC-30's reason exactly — its rows NAME the bundles
+           a capture is filed in.
+
+           `calibrate` and `calibrationsubject` MUTATE, and `calibrate` is the
+           consequential one: it is the act that says a probe RAN. It writes no
+           grade and cannot (`CAL_CANNOT_REGRADE` refuses a caller who asks it
+           to), but what it records is what every transcription graded against
+           that engine will be read against afterwards.
+
+           `calibrationsignal` mutates too and is deliberately the WEAKEST act
+           here: it records that somebody else said something about their own
+           product. Everything that makes it safe is structural rather than
+           permissional — it cannot carry a fidelity (`checkSignal` refuses one
+           that does), and it cannot push a probe out (`nextProbeDue` has no
+           arithmetic that returns a later instant). */
+        calibrations: () => this.calibrations({ engine: url.searchParams.get("engine"),
+                                               limit: url.searchParams.get("limit") }),
+        calibrationdrift: () => this.calibrationDrift({
+          engine: url.searchParams.get("engine"),
+          viewer: url.searchParams.get("viewer") }),
+        calibrate: () => this.calibrationRecord(body || {}),
+        calibrationsubject: () => this.calibrationSubjectRegister(body || {}),
+        calibrationsignal: () => this.calibrationSignalRecord(body || {}),
         /* REC-36: the same reverse question asked by NAME rather than by the
            source's own reference — section 8.1's grade-C tier. Entity-driven, so
            the registry's aliases do the matching; the viewer stamp is the same
