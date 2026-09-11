@@ -1557,3 +1557,11 @@ paths: `docs/development/kickoffs/FLEET.md` ONLY — a stand-up addendum recordi
   rule this session claims none of it and coordinates through CONDUCT. The kickoff is the one
   path FL-9's brief does not name and the area session is its writer of record.
 released: 2026-09-10, same turn — the addendum lands in the same commit as this entry.
+
+## CLAIM 2026-09-10 FLEET (takeover note in the area's own kickoff after FL-9 landed; NO code ground)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-10
+paths: `docs/development/kickoffs/FLEET.md` ONLY — the takeover addendum. **NOT** `agent-worker/**`,
+  **NOT** `pdf-worker/**`, **NOT** `bio-plane/**`, **NOT** `docs/development/QUEUE.md`. FL-9 is
+  `done` and merged (`7429166`, integrated `626fad7`); no worker holds fleet ground.
+released: 2026-09-10, same turn — the addendum lands in the same commit as this entry.

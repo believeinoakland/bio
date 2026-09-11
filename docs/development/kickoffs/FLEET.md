@@ -68,3 +68,24 @@ next FLEET session starts from evidence:
 pattern, both members) and its negative controls are the area's law going forward, and
 DIST's release-format half plus D-297 unblock behind it. FL-6 remains the next runnable
 item once DS-3 lands.
+
+## Takeover, 2026-09-10 — FL-9 landed and the area session verified it before believing it
+
+FL-9 is `done` (`d83695b`/`debee98`, merged `7429166`, integrated `626fad7`). The area
+session RE-RAN the guard in its own tree the same day rather than trusting the row:
+`node --test bio-plane/test/fleetbundles.test.mjs` — **43 pass, 0 fail, exit 0 read
+unpiped**, with `pdf-worker/node_modules` installed first so the byte-identity arm ran
+UNSKIPPED for both members, and section 4's prove-it-can-fail arms green. Both committed
+bundles boot under workerd and answer `/version`.
+
+The area's law gained two measured facts from FL-9 — carry them, do not rediscover them:
+- **The INPUT-HASH arm is the load-bearing one**; byte-identity alone passes a real
+  committed-source change (esbuild tree-shakes unused exports; comment-only changes are
+  invisible to it).
+- **A PLANE change can stale a FLEET member's artifact** — three of `pdf-worker`'s six
+  build inputs live in `bio-plane/src/`, hashed in its manifest. When plane source moves,
+  expect the fleet gate to demand a rebuild; that is the guard working.
+
+Open in this area after FL-9: **FL-6** (Claude-account cascade) still waits on DIST's
+DS-3; DIST's release-format half (D-297) consumes FL-9's artifacts and is DIST's ground.
+The stale `tools/deploy-fleet.mjs` header is delegated to DIST in FL-9's landed row.
