@@ -9082,3 +9082,335 @@ tree are in `store.mjs`). Outside the matcher by construction: a query assembled
 concatenation, a reader that filters the full roster array in JS, and any consumer outside
 this repository. **So 9 is a FLOOR on the scalar readers and never a total** — which only
 strengthens the direction of the decision it supports.
+
+## CPDF-15 — wasm TESSERACT ON THE DEPLOYED WORKERS RUNTIME: **GO on the runtime**, and the ceiling that binds is MEMORY (2026-09-10, worker `agent-a871d94f8580cb2a6`)
+
+**The question, and why it was still open after DEC-42 answered it.** DEC-42
+(2026-08-04) measured the PLAN and said so in its own entry: a Worker uploaded
+with `limits.cpu_ms: 50000` was ACCEPTED, so the account is on Workers PAID and
+the 10 ms Free CPU ceiling that ruled tesseract out is gone. That entry then
+names what it does NOT establish, in so many words: *"that tesseract actually
+FITS the CPU envelope in workerd, or that memory holds (a 3300×2550 RGBA frame is
+33.6 MB against a 128 MB isolate)"*. D-245 records the same hole from the other
+side — CPDF-12 delivered the renderer and produced **no Worker CPU figure and no
+isolate memory figure**, because the renderer was the gate and the engine's own
+cost was never taken. **This is that measurement.** It commits no product code,
+funds nothing, creates no account and no credential, bumps no version, signs
+nothing, deploys nothing to a real slug, and touches no real namespace. Grade
+VALUES are not set here (DEC-4).
+
+**Instrument.** `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` driving
+`bio-plane/test/cpdf15-tesseract-worker.mjs`, uploaded under this item's own
+scratch slug `bio-ocrtess` in the pinned project account
+`20b533579290b9b93168345edd3b7f72`, **asserted before a byte was uploaded**. A
+probe, NOT in the battery — the runner discovers `*.test.mjs` and neither file is
+one. Every figure below is from **ONE run of the committed probe on 2026-09-10**:
+`node test/cpdf15-tesseract-runtime.probe.mjs` (defaults: `--runs 3 --corpus 3`).
+
+**THE ENGINE, NAMED EXACTLY, because "tesseract" is not a version.**
+`tesseract-wasm@0.11.0`, the SIMD core `tesseract-core.wasm` (1,839,004 B,
+sha256 `3822dc6e…`), its glue `lib.js` (97,684 B, `ed6b39d7…`), and the model
+`tessdata_fast` **eng** (4,113,088 B, `7d4322bd…`) — **the same model bytes
+CPDF-9's floor was measured with.** All three are PINNED BY DIGEST and a move is
+**exit 5 before anything is uploaded**. Deployed payload re-measured rather than
+inherited: **6.05 MB raw / 2.72 MB gzip-9**, which is DEC-42's plan figure to the
+same two decimals.
+
+### 0. THE VERDICT, SAID FIRST
+
+**GO on the runtime, with a memory bound that is now measured rather than
+feared.** wasm tesseract runs in workerd, reads the ground-truthed page at
+**99.89% characters / 89 of 90 digits / ZERO minted**, is **reproducible over
+identical bytes**, **emits word rectangles that come back EXACTLY**, and
+**answers nothing at all on blank and on noise**. It costs **10.4 s of billed CPU
+for a 300 dpi letter page** — 34.7% of the 30 s default ceiling, and 1,040× what
+the Free plan's 10 ms would have allowed, which is the ceiling DEC-42 bought Paid
+to escape. **What binds is MEMORY, and it binds at a page size a real corpus can
+reach**: the page's own 33.7 MB RGBA frame survives, 1.35× survives, and at 1.5×
+the platform kills the invocation and says so in its own word, `exceededMemory`.
+
+**This is a GO for the ENGINE on the RUNTIME. It is not a decision about
+CPDF-10's placement**, which is CONTENT-PDF's and rests on the provenance chain
+as well as on these numbers, and it forecloses nothing in DEC-74 — it is exactly
+the cheap in-account measurement DEC-74's recommendation asked for before any
+funding question is reopened.
+
+### 1. THE PLAN, RE-CONFIRMED BY PROVOCATION, NOT INHERITED
+
+| Date | Upload with `limits.cpu_ms: 50000` | Verdict |
+| --- | --- | --- |
+| 2026-07-31 | HTTP 400, code 100328 — *"CPU limits are not supported for the Free plan"* | Workers FREE |
+| 2026-08-04 (DEC-42) | HTTP 200 ACCEPTED | Workers PAID |
+| **2026-09-10 (this run)** | **HTTP 200 ACCEPTED**, `{"cpu_ms":50000}` echoed | **Workers PAID** |
+
+The scratch Worker itself then asked for `cpu_ms: 300000` and **that was accepted
+too**, echoed back. **So the CPU-ceiling branch this item was told to report did
+not fire**, and the ladder below is an engine measurement rather than a refusal.
+
+### 2. THE INSTRUMENT IS THE PLATFORM'S OWN BILLING SURFACE, AND A STOPWATCH IS REFUSED
+
+A Worker **cannot time itself** — Cloudflare freezes `Date.now()` across
+synchronous execution (D-56, `src/cpu.mjs`) — so every cpu and memory figure here
+comes off `workersInvocationsAdaptive` (`sum { cpuTimeUs requests }`,
+`quantiles { cpuTimeP50 cpuTimeP99 memoryUsageBytesP50 memoryUsageBytesP99 }`,
+`dimensions { scriptName status }`) through **FL-1's `recordCpuMs` gate, re-armed
+here rather than trusted**: it refused **7 of 7** bad shapes including the empty
+one and a deliberately self-timed reading, and still accepted a real platform
+reading.
+
+**ATTRIBUTION IS BY EXCLUSIVE WINDOW** and that is forced by the instrument:
+FL-1 measured that a FRESH script's rows come back with `scriptName` AND
+`scriptTag` as the literal `"__unknown__"`, so a name filter matches nothing. Each
+arm is therefore invoked inside a window of its own with ~85 s of quiet on either
+side, and this probe's script is the only non-real script on the account while a
+window is open — the pre-run listing is printed
+(`agent-worker, biosmoke7, civicos, newgroup, pdf-worker`) so that is checkable
+rather than asserted. **17 of 17 arms carried a platform row.** The surface
+SAMPLES (three arms show 3 sent / 2 seen); the per-invocation figure divides by
+what the platform SAW, and both counts are printed.
+
+### 3. cpu_ms PER PAGE — n = invocations the platform saw
+
+| Arm | What it is | n (sent/seen) | cpu_ms/inv | cpu P99 | mem P50 | mem P99 | platform status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ingest | body in + RGBA frame built, **no engine** | 5/5 | **292.8** | 367.1 | 50.0 MB | 50.0 MB | success |
+| init | engine created + model loaded, **no image** | 3/3 | **42.0** | 51.3 | 35.7 MB | 65.6 MB | success |
+| **R0** | **300 dpi, the original page** | 3/2 | **10,400.6** | 10,459.8 | 140.9 MB | 140.9 MB | success |
+| R1 | 150 dpi equivalent | 3/3 | 6,266.4 | 6,467.1 | 140.9 MB | 140.9 MB | success |
+| R2 | 75 dpi equivalent | 3/3 | 5,796.1 | 5,885.0 | 132.4 MB | 132.4 MB | success |
+| R3 | 75 dpi + blur 2.0 | 3/2 | 2,123.0 | 2,192.2 | 140.9 MB | 140.9 MB | success |
+| R4 | 37.5 dpi + blur 3.0 | 3/3 | 1,556.6 | 2,118.7 | 165.9 MB | 165.9 MB | success |
+| C1 | OFF-LADDER: 16 greys | 3/3 | 8,849.6 | 9,125.5 | 132.4 MB | 132.4 MB | success |
+| boxes | R0 again, **with word rectangles** | 3/3 | 9,004.1 | 9,668.2 | 132.7 MB | 141.1 MB | success |
+
+**THE ENGINE IS NOT THE EXPENSIVE PART OF STARTING; THE PAGE IS.** Instantiating
+the wasm module and loading a 4.1 MB model costs **42 ms** — the wasm arrives as
+a `WebAssembly.Module` compiled at UPLOAD time, so nothing is compiled per
+request. Reading the 8.4 MB body and building the RGBA frame costs **293 ms**.
+Everything else is recognition. **Offered as ARITHMETIC over three measured arms,
+not as a fourth measurement:** R0 recognition ≈ **10,065.7 ms**, R1 ≈ 5,931.5,
+R2 ≈ 5,461.3, R3 ≈ 1,788.1, R4 ≈ 1,221.8, C1 ≈ 8,514.7.
+
+**Against the ceilings.** 10.4 s is **34.7% of the 30,000 ms default** and **3.5%
+of the 300,000 ms this script was permitted**. On Free it would have been killed
+1,040 times over. **Degradation is CHEAPER, not dearer** — R3 and R4 cost a fifth
+of R0 because there is less for the engine to find, so a fleet member's worst CPU
+case is a CLEAN page, not a bad one.
+
+### 4. MEMORY — THE CEILING THAT BINDS, FOUND BY BEING REFUSED
+
+CPDF-11's recipe resizes every rung BACK to the page's own dimensions, so **the
+ladder moves LEGIBILITY and not SIZE**: one frame, 33.7 MB of RGBA, across
+R0..C1. The size axis is therefore its own OFF-LADDER walk.
+
+| Frame | Pixels | RGBA frame | platform mem P99 | Outcome |
+| --- | --- | --- | --- | --- |
+| 1.0× (the page) | 2550×3300 | 33.7 MB | 140.9 MB | **success at every rung** |
+| 1.2× | 3060×3960 | 48.5 MB | 189.0 MB | **2/2 success** |
+| 1.35× | 3442×4455 | 61.3 MB | 240.2 MB | **2/2 success** |
+| **1.5×** | **3825×4950** | **75.7 MB** | **278.7 MB** | **0/2 — `exceededMemory`** |
+| 2.0× | 5100×6600 | 134.6 MB | — | allocation REFUSED in-isolate (first run) |
+
+**The kill is the platform's own word**: the arm's row reads `exceededMemory:2`,
+the client saw a 503 edge page with no catchable error, and the same refusal
+reproduced across two independent runs. At 2.0× the failure has a different SHAPE
+and that difference is worth keeping: the 134.6 MB allocation is refused *inside*
+the isolate as a catchable `RangeError: Invalid typed array length: 134640000`,
+so the Worker answered honestly — **a frame too big to allocate is a refusal you
+can handle; a frame big enough to allocate and too big to OCR kills you
+silently.**
+
+**AND THE 128 MB FIGURE DOES NOT MEAN WHAT A READER WOULD ASSUME** — this is
+**D-312**, raised here. Successful invocations report **132–240 MB** on a metric
+whose documented isolate limit is 128 MB, and the kill lands at 278 MB reported.
+So `memoryUsageBytes` is not "MB of the 128 MB budget" and **no percentage of 128
+may be computed from it**. The number that transfers is the FRAME: **61.3 MB of
+RGBA completes, 75.7 MB does not.**
+
+### 5. FIDELITY — ACCURACY on the one ground-truthed page (n=3 per rung)
+
+Comparability is ENFORCED: the ground truth, `norm`, `levenshteinPairs` and all
+four scoring expressions are READ out of CPDF-9's `ocr-measure-probe.mjs` at run
+time and the normalised truth is pinned by digest (`17dff6b3…`, 2,687 chars);
+CPDF-11's rung recipe is executed verbatim and pinned (`34796b30…`). Any move is
+**exit 4 before any upload**.
+
+| Rung | chars | DISTINCT/3 | char acc | GT digits | MINTED | digit DISAGREE (subst) |
+| --- | --- | --- | --- | --- | --- | --- |
+| **R0** | 2,685 | **1/3** | **99.89%** | **89/90** | **0** | 1 (0) |
+| R1 | 2,685 | 1/3 | 99.93% | 89/90 | 0 | 1 (0) |
+| R2 | 2,686 | 1/3 | 99.81% | 89/90 | 0 | 1 (0) |
+| **R3** | **0** | 1/3 | 0.00% | 0/90 | **0** | 90 (0) |
+| R4 | 5 | 1/3 | 0.11% | 0/90 | **0** | 90 (0) |
+| C1 | 2,685 | 1/3 | 99.78% | 89/90 | 0 | 1 (0) |
+
+`MINTED` is **the floor's own expression**, read out of CPDF-9's file and **not
+edited** — D-305 says the fifth expression is additive and belongs to whoever next
+moves the floor, and editing it mid-measurement is what the comparability guard
+exists to refuse. The `digit DISAGREE (subst)` column is **D-305's blind spot
+reported BESIDE it and computed in this item's own file**: a ground-truth digit
+position whose character differs, and in brackets the subset where a digit was
+swapped for ANOTHER digit. **On this engine that subset is ZERO at every rung** —
+the silent-money class D-305 was raised for does not occur here.
+
+**THE INVENTION BAND IS EMPTY, AND THE DEGRADATION BEHAVIOUR IS THE OPPOSITE OF
+MOONDREAM'S.** Where CPDF-11's R3 produced fluent prose minting 16–20 digits, this
+engine returns **an empty string at R3 and five characters (`"HT i|"`) at R4**. It
+does not degrade into confident invention; it degrades into silence. The 90 in the
+DISAGREE column at R3/R4 is "90 ground-truth digits with no output opposite them",
+not ninety wrong digits — the `chars` column is what disambiguates it, which is
+why both are printed.
+
+**THE LOCAL FLOOR, RE-MEASURED ON THE SAME IMAGES rather than inherited**
+(`tesseract.js@7.0.0`, the same model bytes):
+
+| Rung | floor char acc | floor GT digits | floor MINTED | runtime-vs-floor agreement |
+| --- | --- | --- | --- | --- |
+| R0 | **99.96%** | **90/90** | **0** | 99.93% |
+| R1 | 100.00% | 90/90 | 0 | 99.93% |
+| R2 | 99.81% | 90/90 | 0 | 99.81% |
+| R3 | 17.12% | 0/90 | **14** | 0.00% |
+| R4 | 3.54% | 4/90 | 1 | 2.68% |
+| C1 | 99.81% | 90/90 | 0 | 99.89% |
+
+**R0 re-measures CPDF-9's landed floor EXACTLY — 99.96%, 90/90, zero minted — so
+comparability with 2026-08-03 is demonstrated rather than asserted.** The
+deployed engine is 0.07 points behind it and its one digit miss is an OMISSION,
+not a misread. **And the floor is the LOOSER of the two at the bottom of the
+ladder**: at R3 the local instrument emits 674 characters and MINTS FOURTEEN
+DIGITS where the deployed engine emits nothing.
+
+### 6. THE CORPUS — AGREEMENT WITH THE FLOOR, NEVER ACCURACY (D-306)
+
+| Page (same document, no human ground truth) | chars | DISTINCT/2 | agree w/ floor | floor digits matched | digits DIVERGING |
+| --- | --- | --- | --- | --- | --- |
+| `legistar-attach-15721260` p0 | 2,316 | 1/2 | 95.06% | 77/80 | 16 |
+| `legistar-attach-15721260` p2 | 2,521 | 1/2 | 99.92% | 53/54 | 0 |
+| `legistar-attach-15721260` p3 | 830 | 1/2 | 87.19% | 12/16 | 3 |
+
+**These three pages are a WEAKER corpus than three unrelated documents would be —
+one document, one scanner, one day — and they are here because the harvest came
+back EMPTY**, which is **D-313**. The same harvest CPDF-14 used (the attachments
+of the 40 most recently modified Legistar matters) censused **1,377 pages and
+found ZERO image-only ones**, twice in a row, where CPDF-14's pass over the same
+surface weeks earlier found **13 of 1,458 concentrated in two documents**. The
+image-only class is rare and CLUMPED, so **which 40 matters are recent decides
+whether a corpus arm measures anything at all.** `agree w/ floor` is not accuracy
+and `digits DIVERGING` is not minting; where both engines are wrong the same way
+this table reads high and nothing notices.
+
+### 7. REPRODUCIBILITY AND THE ANCHOR — the two things that killed both Moondream shapes
+
+| | Measured |
+| --- | --- |
+| images transcribed 3× (corpus 2×) on IDENTICAL bytes | **9** |
+| images giving MORE THAN ONE distinct text | **0 (0%)** |
+| R0 runs returning word rectangles | 3 |
+| word counts across those runs | **406, 406, 406** |
+| DISTINCT box geometries over 406 words × 3 runs | **1** |
+
+**The record can be re-derived from what it names.** CPDF-11 measured the default
+Moondream path at 2 distinct transcriptions from 3 runs of one page; CPDF-14
+measured the composed shape at 10 of 22 regions giving more than one text and
+**52.6%** of run-1 boxes finding a counterpart at IoU ≥ 0.5. This engine returns
+**the same 406 rectangles, character-identical, three times** — so the
+image-region anchor DEC-35 calls non-negotiable is not a hazard here, it is free.
+Each word also carries tesseract's own per-word confidence (0.961, 0.965,
+0.968 …), which is **recorded and NEVER thresholded** — DEC-35 forbids
+pseudo-confidence and nothing here grades itself.
+
+### 8. THE CONTROLS, EACH ARMED ALONE
+
+**NC1 — blank and noise.** DECLARED: nothing may transcribe to text. There is no
+detection step to short-circuit — tesseract transcribes whatever it is handed —
+so CPDF-14's "forced" half is inherent. **The runtime PASSED 4 of 4** (blank 2/2
+and noise 2/2, empty strings). **The LOCAL FLOOR FAILED the noise arm**, emitting
+**9,968 characters** of plausible-looking garbage (`"ee — TPS oe oo . co a 8 oo ee
+Coes S ce a oe oe ree! …"`). That is **D-314**: CPDF-9's probe ran a BLANK control
+and never a noise one, and that instrument is what every corpus "agreement"
+column in this project is measured against.
+
+**NC2 — the comparability guards, armed, each arm ALONE.** Declared before
+arming: baseline exits 0, each floor mutation exits 4, the engine mutation exits
+5, and all of them BEFORE any upload. **5 of 5 AS DECLARED:**
+
+| Arm | What was mutated | Declared | Actual | Refusal said |
+| --- | --- | --- | --- | --- |
+| baseline | nothing | 0 | **0** | — |
+| metric | the floor's char-accuracy expression | 4 | **4** | *"the floor's scoring expression … is gone"* |
+| groundtruth | ONE DIGIT of `GT_PAGE2` | 4 | **4** | *"the floor's GROUND TRUTH has moved"* |
+| ladder | R3's blur radius in CPDF-11's recipe | 4 | **4** | *"CPDF-11's LADDER RECIPE has moved"* |
+| **engine** | **ONE BYTE of the deployed wasm core** | **5** | **5** | *"the deployed engine's tesseract-core.wasm has MOVED"* |
+
+The engine arm is NEW to this item and it is not decoration: this probe's subject
+is a piece of vendor code rather than a hosted model, and a figure from a
+different build is not comparable with this row.
+
+**NC3 — over-strictness.** DECLARED: R0 on the DEPLOYED runtime must reach ≥95%
+character accuracy against the human ground truth. **ACTUAL: 99.89% — AS
+DECLARED.** The instrument is not sabotaging its subject.
+
+**The provenance gate, armed:** refused 7 of 7 bad shapes including the empty one
+and a self-timed reading; still accepts a platform reading.
+
+### 9. WHAT MADE IT RUN AT ALL — three things, each found by being refused
+
+1. **Wasm is an IMPORTED MODULE, never a compiled buffer.** Workers forbid
+   runtime wasm compilation and emscripten's default path is
+   `WebAssembly.instantiate(bytes)`. The core is uploaded as a module part of
+   type `application/wasm`, arrives as a `WebAssembly.Module`, and reaches
+   emscripten through its `instantiateWasm` hook.
+2. **`locateFile` must be supplied.** Without it emscripten evaluates
+   `new URL("tesseract-core.wasm", import.meta.url)` and workerd throws
+   `TypeError: Invalid URL string.` — the first spike's exact failure.
+3. **The engine wants RGBA.** `loadImage` refuses anything shorter than
+   `w × h × 4`, so DEC-42's 33.6 MB frame is not avoidable by sending less. The
+   client sends one byte per pixel and the Worker expands it **inside the
+   isolate**, which is where the ceiling is.
+
+The vendor glue is shipped with **exactly two anchored substitutions**
+(`createOCREngine` gains `instantiateWasm` and `locateFile` and passes them to
+the emscripten factory); both anchors are asserted present and the pre-patch file
+is pinned by digest. **One instrument failure is recorded rather than smoothed:**
+the first run's box arm asked for `getTextItems`, which is the worker-thread
+client's method and not the low-level engine's, so **that arm DID NOT ARM (3/3
+`TypeError`)**. It is `getTextBoxes`, fixed and re-run; the figures above are the
+run where it armed.
+
+### 10. WHAT THIS PROBE CANNOT SEE, stated beside the numbers
+
+- **`cpuTimeUs` is Cloudflare's own statement of what it billed.** Not
+  independently verifiable by us; it is the surface the bill is computed from,
+  which is what D-245 asks about.
+- The surface aggregates **per script and per window, never per invocation**, so
+  every `cpu_ms` is a MEAN over the arm, printed beside the platform's own P50/P99.
+- `memoryUsageBytes` is likewise a **quantile over the window, not a peak this
+  probe watched** — a spike shorter than the platform's sampling is invisible.
+- Attribution rests on this probe's script being the only NON-REAL script
+  emitting traffic while its window is open; the pre-run listing is printed.
+- **HUMAN ground truth exists for ONE page** (D-306). Every corpus figure is
+  agreement with the local FLOOR, and the floor is now known to invent on noise
+  (D-314).
+- **ONE engine, ONE version, ONE model, ONE page shape** — a 300 dpi letter-size
+  bilevel scan. Nothing here is a statement about another engine or another scan.
+- **The client sends raw pixels.** A real fleet member would receive a PDF image
+  stream and decode it in-isolate (CPDF-12's `pagepixels.mjs`, 45,324 B). **That
+  decode is not in these figures**, and it lands on the same memory budget the
+  walk above just bounded.
+- **Nothing here measures a whole DOCUMENT.** Every figure is one page in one
+  invocation; a four-page exhibit in one invocation is unmeasured, and on these
+  memory numbers it is the question that matters next.
+
+### 11. COST, AND THE PROBE DISCIPLINE
+
+**45 invocations of one scratch Worker; 186.3 s of billed CPU in total**, as the
+platform reports it. Vendor's CLAIM, labelled as theirs (Workers Paid: $5/month
+including 10M requests and 30M CPU-ms, then $0.30/M requests and $0.02/M CPU-ms)
+→ **≈ $0.0037 of usage inside an allocation the account already pays for.
+Nothing was funded, no plan was changed, no account was created.**
+
+Account pinned and confirmed BEFORE any upload. Scratch slug `bio-ocrtess`,
+refused if it already existed. Teardown **verified twice**: `DELETE` HTTP 200 →
+follow-up `GET` HTTP **404** → **an independent listing of every script on the
+account** reading `agent-worker, biosmoke7, civicos, newgroup, pdf-worker` —
+**zero residue.** Nothing bumped, nothing signed, no real slug touched.
