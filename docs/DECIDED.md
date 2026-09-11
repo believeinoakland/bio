@@ -1198,9 +1198,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - act is absent" are CORRECTED at their site with a dated reason, never exempted. - `civicos-ui/test/case6.control.mjs` — three arms appended (`f`, `g`, `h`) for this item; arms `a`, `b`, `c` and `e` untouched and re-run on the merged tree; arm `d` RETIRED at its site with its reason and its replacement named,…  
   `docs/development/CLAIMS.md:2595`
 - `bio-plane/test/caseflip.test.mjs` — the driven pin CORRECTED, never exempted. - `bio-plane/test/derivation-bounds.test.mjs` — two bound arguments that cite the fence BY NAME as the reason their scan is bounded at 1.  
-  `docs/development/CLAIMS.md:2644`
+  `docs/development/CLAIMS.md:2645`
 - item makes false), `docs/DECIDED.md` (regenerated). **SCHEMA IS NOT EXPECTED TO MOVE** and did not: `published_case_members` already keys (case_id, edition, ord) with a `published_case_members_bundle` index on  
-  `docs/development/CLAIMS.md:2659`
+  `docs/development/CLAIMS.md:2660`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
