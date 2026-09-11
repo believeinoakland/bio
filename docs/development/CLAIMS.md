@@ -1811,3 +1811,4 @@ paths:
   **NOT** `bio-plane/src/**` — the plane already answers `version_sha` on `caseMembers[]` and states the
   join rule in `publishedManifest().production`; this item is pure I3 CONSUMPTION and nothing on the wire
   moves. **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground). **NOT** any other UI suite.
+released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `b834f26` and verified on the MERGED tree: battery 170/170 · 10,488, `coverage --strict` exit 0 read unpiped, UI harness exit 0 (47/47, publishedcase 234/234), `mintid --audit` 0 breaks.
