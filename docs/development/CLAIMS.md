@@ -1391,3 +1391,122 @@ half is not, and it cannot be closed by DIST alone.**
   decide this. Filed as **D-297**. If you would rather the installer carry members as multi-part module
   uploads instead, say so and DIST will build that — it costs a manifest with a hash per part and makes
   the signature cover a set rather than a file, which is why it is not the recommendation.
+
+---
+
+## CLAIM 2026-09-10 FLEET (FL-9 — the per-member build step on the GUARD pattern: a committed bundle whose gate refuses to ship stale)
+session: fl9-fleet-bundle-guard (worktree `agent-abe10acbf93247266`, branch
+  `worktree-agent-abe10acbf93247266`)
+opened: 2026-09-10T00:00:00Z
+paths: **NAMED BY REGION, AND A CASE-4 WORKER IS LIVE ON THE INQUIRY STATE MACHINE.** The two
+  grounds are disjoint by construction and the disjointness is checkable rather than asserted:
+  this item touches **no file under `bio-plane/src/`, `bio-plane/checks/` or `bio-plane/schema.mjs`
+  at all**, adds no op, no check and no table. Its ground is BUILD TOOLING and the two fleet
+  members' committed artifacts.
+  - `bio-plane/scripts/fleet-bundle.mjs` — **NEW.** The one implementation of the build recipe
+    and of the verification. It lives here and not in `tools/` for a measured reason recorded at
+    the site: `esbuild` is installed in `bio-plane/node_modules` and the repository root has no
+    `node_modules` at all, so a library in `tools/` could not import it. Precedent:
+    `newgroup/scripts/embed-release.mjs` already expects "the sibling ../bio-plane tree with its
+    devDependencies installed".
+  - `bio-plane/test/fleetbundles.test.mjs` — **NEW.** The gate. It lives in the PLANE's test
+    directory, not in a member's, because a member's suite is SKIPPED when that member has no
+    `node_modules` (`battery.mjs`'s own fleet walk says so) and a guard that skips is not a guard.
+  - `bio-plane/test/fleetbundles.control.mjs` — **NEW.** The negative-control driver. Deliberately
+    NOT a `.test.mjs`: it EDITS REAL SOURCES while it runs and neither the battery nor the fleet
+    walk must discover it (PL-3/PL-4/PL-11's precedent). It lives INSIDE THIS WORKTREE and never
+    in the shared scratchpad, which a concurrent worker overwrote between ARM and RESTORE once
+    already.
+  - `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY** (one key set, plus the dated
+    reasoning comment above it). **NOT** `FLEET_FLOOR` (this item adds no fleet member and no
+    fleet SUITE — the gate is a PLANE suite), **NOT** `REGISTER_UNCLASSIFIED`, **NOT**
+    `NOT_A_FLEET_MEMBER`, **NOT** `discoverFleet`, **NOT** any other region. **Reported to CONDUCT
+    by name so it is re-derived from the merged run.**
+  - `agent-worker/scripts/build.mjs` — **NEW.**
+  - `agent-worker/dist/agent-worker.bundled.mjs`, `agent-worker/dist/agent-worker.bundle.json` —
+    **NEW, COMMITTED ARTIFACTS.**
+  - `agent-worker/fleet-member.json` — **the added `bundle` block and the sentence naming it ONLY.**
+    **NOT** `name`, `entry`, `surface` or `testDir` (READ ONLY — `battery.mjs` and `coverage.mjs`
+    both read this file and neither reads the new key; additive, measured before writing).
+  - `agent-worker/package.json` — **the added `build` script ONLY.** No dependency added: the
+    member still imports nothing from npm and the build resolves `esbuild` from the plane's install.
+  - `agent-worker/wrangler.jsonc` — **the `main` key and the comment block that owns it ONLY**
+    (the FLEET ruling's own named reversal condition, now reversed BY BOB, 2026-09-10, and the
+    reversal recorded at the site with its authority). **NOT** `account_id`, **NOT** `services`,
+    **NOT** `vars`, **NOT** the binding-narrowness block, **NOT** `observability`.
+  - `pdf-worker/scripts/build.mjs` — **rewritten onto the shared library**, its header's reasoning
+    kept.
+  - `pdf-worker/dist/pdf-worker.bundle.json` — **NEW, COMMITTED ARTIFACT.**
+    `pdf-worker/dist/pdf-worker.bundled.mjs` — **claimed, and MEASURED BYTE-IDENTICAL to a fresh
+    build already** (2,427,807 B, sha256 `642a9b78…`), so it is expected to be rewritten with the
+    same bytes and no deploy is owed. If that stops being true it is reported, never smoothed.
+  - `pdf-worker/fleet-member.json` — **the added `bundle` block ONLY.**
+  - `docs/development/INTERFACE-CHANGES.md` (**IC-68**, APPENDED — the file is append-only and the
+    id is **PRE-ALLOCATED BY CONDUCT**, not minted here: two parallel workers each minted `IC-64`
+    on 2026-08-10 because `mintid` derives its floor from ids mentioned in prose and neither branch
+    could see the other's file).
+  - `docs/development/CLAIMS.md` (this entry, and the DELEGATIONS below it).
+  - `docs/development/MEASUREMENTS.md` (APPENDED).
+  **NOT** `bio-plane/src/**` — untouched, entirely (CASE-4's ground, and this item has no business
+  in it).
+  **NOT** `bio-plane/scripts/battery.mjs` (READ ONLY — the gate is an ordinary plane suite and the
+  runner needs no change to run it; measured, not assumed).
+  **NOT** `bio-plane/package.json` (READ ONLY — no script added; the gate is discovered).
+  **NOT** any existing `.test.mjs` or `.control.mjs` (no assertion of another item is edited).
+  **NOT** `agent-worker/src/**`, **NOT** `pdf-worker/src/**` — **the sources are READ and HASHED
+  and never written.** A build step that edits its own input is the defect wearing the costume of
+  a build.
+  **NOT** `agent-worker/test/**`, **NOT** `pdf-worker/test/**` (FL-8 is live in
+  `agent-worker/test/harness.test.mjs`).
+  **NOT** `tools/deploy-fleet.mjs` (DIST's — its header cites the ruling Bob has now reversed, so
+  that prose is now STALE; raised as a DELEGATION below rather than edited).
+  **NOT** `newgroup/**`, **NOT** `release/**` (the release-format half is DIST's, D-297; IC-68
+  states the shape it will need and builds nothing against it).
+  **NOT** `docs/development/QUEUE.md`, **NOT** `docs/development/DECISIONS.md` (CONDUCT is the
+  sole writer of both).
+  **NOT** `civicos-ui/**`, **NOT** `docprofile/**`.
+
+### DELEGATION 2026-09-10 FLEET (FL-9) -> DIST: **THREE THINGS, AND THE FIRST IS THAT YOUR DEPLOYER'S HEADER NOW ARGUES FOR A RULING THAT NO LONGER STANDS**
+
+1. **`tools/deploy-fleet.mjs`'s header is STALE as of Bob's 2026-09-10 answer.** Its section "WHY
+   IT SHELLS OUT TO WRANGLER INSTEAD OF PUTTING BYTES LIKE deploy.mjs DOES" rests on
+   `agent-worker/wrangler.jsonc` saying *"THE SOURCE DEPLOYS, NOT A BUNDLE"* and on the member
+   being three modules a one-part REST upload cannot resolve. **Both facts have changed**: the
+   member's `main` now points at a committed, guarded bundle, and that bundle is ONE part with no
+   unresolved specifier (asserted). The tool still WORKS unchanged — wrangler is happy to deploy a
+   pre-bundled entry — so nothing is broken and nothing is urgent; the PROSE is what is now wrong,
+   and a load-bearing comment that argues from a reversed ruling is exactly the stale document
+   this project keeps paying for. It is yours, so it is not edited here.
+2. **The per-member release assets now EXIST and are hash-stable.** `agent-worker/dist/agent-worker.bundled.mjs`
+   (48,392 B) and `pdf-worker/dist/pdf-worker.bundled.mjs` (2,427,807 B) each ship beside a
+   committed `dist/<name>.bundle.json` carrying the artifact's `sha256`, its byte length, the exact
+   build recipe, and the sha256 of every input. **IC-68 states the shape `RELEASE.json` will need**
+   and deliberately builds nothing against it — the release format is yours (D-297).
+3. **The multi-part alternative was REFUSED and the refusal COST NOTHING, measured.**
+   `agent-worker` is three modules; bundled it is ONE file of 48,392 bytes with **zero** remaining
+   import specifiers of any kind. `pdf-worker` bundled is one file whose only remaining specifiers
+   are the platform's own (`node:*`). So "one asset, one hash, one signature" is available for both
+   members and a signature over a SET buys nothing here. Stated either way, as the item required.
+
+### DELEGATION 2026-09-10 FLEET (FL-9) -> whoever owns `bio-plane/test/action-loop.test.mjs`: **A SUITE WITH AN EXPIRING FIXTURE WENT RED BETWEEN CONDUCT'S BASELINE AND MINE, AND THE CAUSE IS THE CALENDAR**
+
+**MEASURED, not suspected, and it is NOT this item's damage** — it reproduces on a tree this item
+has not touched, at `3b340d8`, standalone. `node test/action-loop.test.mjs` reports **73 pass, 6
+FAIL**, every failure the same shape:
+
+    want []
+    got  ["C-11.1: clock[0] 'City response due' is silently past-due (2026-09-10 < today, status still pending)"]
+
+The fixture's clock entry is dated **2026-09-10**, and the machine's clock has rolled past it. CONDUCT's
+brief for this item records the true baseline as **168/168 · 10,351 assertions**, measured on `main`
+earlier the same day; this worktree measures **167/168 · 10,345** — a difference of exactly **6
+assertions**, which is exactly this suite's six. **The brief was right when it was written and the
+calendar falsified it**, which is a failure mode no re-measurement discipline catches, because both
+numbers are honest measurements of the same tree.
+
+**Not fixed here, for two reasons and neither is reluctance:** the file is an assertion estate this
+item does not own, and the right fix is a decision rather than an edit — a fixture date must either
+be RELATIVE to the run (`today + N days`) or the suite must pin a clock, and choosing between those
+is the owner's call. **A hardcoded future date in a fixture is a time bomb with a fuse measured in
+days**, and this is the class, not the instance: the same pattern should be swept for wherever a
+suite writes a literal date into a document it then conformance-checks.
