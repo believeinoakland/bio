@@ -424,7 +424,7 @@ risk of any state machine, not of this one.
 > project, published by a project owner against the project's own bar, members pinned by
 > version. A finding serves many cases; a project spans many cases. What this section
 > says about the names' member-facing role survives; what it says about `case` being the
-> same object in a later phase does not. `docs/development/CASE-AS-PRODUCTION.md` is the
+> same object in a later phase does not. `docs/archive/CASE-AS-PRODUCTION.md` is the
 > design; DEC-72 is the ruling.
 
 

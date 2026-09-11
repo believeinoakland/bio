@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-669 rulings across 67 documents.
+672 rulings across 67 documents.
 
 ## DEC-
 
@@ -208,6 +208,8 @@ authority is the file named, never this one.
   `docs/development/DECISIONS.md:307`
 - **DEC-72** · 2026-08-10 — op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are…  
   `docs/development/INTERFACE-CHANGES.md:4203`
+- **DEC-72** — WHAT IT DECIDED.** DEC-72 clause 6 rules that a finding can serve many cases; CASE-5's suite framed lifting `FINDING_IN_ANOTHER_CASE` as *"a surface question"* and handed it to CASE-6.  
+  `docs/development/MEASUREMENTS.md:8735`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
   `docs/development/QUEUE.md:230`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
@@ -949,6 +951,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/README.md:60`
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant. What survives of it, and where the answers actually live:  
   `docs/architecture/README.md:102`
+- so its update rides the landing, never precedes it; (b) the RULED-AND-NOT-YET-BUILT banner at the head of THIS document comes down and the document is archived per the working-surface rule (`docs/archive/`, where `decided.mjs` keeps its rulings findable); and (c) `node tools/decided.mjs` is regenerated so the index…  
+  `docs/archive/CASE-AS-PRODUCTION.md:148`
 - Move 0 — `tools/decided.mjs` and `docs/DECIDED.md`.** 597 rulings, 167 KB, generated, gated by `plancheck`, wired into `CLAUDE.md`.  
   `docs/archive/CORPUS-STUDY.md:24`
 - `docs/DECIDED.md` making a wrong-level op claim it was merely QUOTING; and found a truncated op name — a claim about an op that has never existed, manufactured by my own summary cutting a real op name mid-token.  
@@ -1098,7 +1102,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - S6 · SUPERSEDED — pull, never push** ``` ┌── this case has been superseded ─────────────────── --signal ─┐  
   `docs/archive/research/SB-OUTPUT.md:1195`
 - old rule and were CORRECTED rather than exempted. **7.2 LOST ITS ADMINISTRATOR BYPASS, AND NOTHING HAD EVER EXERCISED IT.** `projectInvite` carried `|| this.#isAdminMember(by)` and no test drove that  
-  `docs/BIO_DATAPLANE_STATE.md:463`
+  `docs/BIO_DATAPLANE_STATE.md:544`
 - Sections marked RULED are his and are not to be re-litigated.  
   `docs/development/AUTHORITY-AND-TRUST.md:4`
 - **2026-07-30** — RULED: the renderer is immaterial. Authority follows the DATA. Bob, 2026-07-30. Sometimes what is being rendered is GIS data, a CAD drawing, or a paper posted to a hosting platform, and the rendering is genuinely executed by  
@@ -1125,10 +1129,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CAPTURE-SCALING.md:309`
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
   `docs/development/CAPTURE-SCALING.md:423`
-- Status: RULED AND NOT YET BUILT.** `BIO_DATAPLANE_STATE.md` continues to describe the shipped behaviour until the build lands; where the two disagree, the dataplane state is what exists and this is what was decided.  
-  `docs/development/CASE-AS-PRODUCTION.md:5`
-- so its update rides the landing, never precedes it; (b) the RULED-AND-NOT-YET-BUILT banner at the head of THIS document comes down and the document is archived per the working-surface rule (`docs/archive/`, where `decided.mjs` keeps its rulings findable); and (c) `node tools/decided.mjs` is regenerated so the index…  
-  `docs/development/CASE-AS-PRODUCTION.md:123`
 - BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED THEM.  
   `docs/development/CIVICOS_UI_STATE.md:350`
 - and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a document ARRIVING and a meeting being scheduled are routine, because those are the normal course of business.  
@@ -1167,6 +1167,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:2109`
 - helper and at the assertions the flip superseded, every superseded assertion CORRECTED with a dated reason at the site and none exempted: `publish`, `multifinding`, `publishedcase`, `caseflip`, `casepin`, `caseproduction`, `caselifecycle`, `reevaluation`, `caseobject`.  
   `docs/development/CLAIMS.md:2138`
+- `docs/` and `bio-plane/`, `docs/DECIDED.md` (generated) excluded. **THE FOUR SUITES THAT READ THE FILE FROM DISK NEED NO CHANGE AT ALL, and that is worth recording as a finding rather than as a relief:** `caseflip`, `caselifecycle`,  
+  `docs/development/CLAIMS.md:2266`
+- WHAT IS CORRECTED — live NAVIGATION pointers only, the ones that tell a reader where to go now:** `docs/development/MILESTONES.md` (1), `docs/development/DECISIONS.md` (2), `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (1), `docs/architecture/BIO_Case_Making_v0_1.md` (1), and the header comment of each of  
+  `docs/development/CLAIMS.md:2275`
+- record the path those workers were pointed at), and `docs/DECIDED.md` (generated; regenerated in this turn).  
+  `docs/development/CLAIMS.md:2287`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

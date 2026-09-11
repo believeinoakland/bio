@@ -53,6 +53,7 @@ source of Bob's published review).
 | `kickoffs/BOB-HANDOVER-2026-08-04.md` | a handover to a session that has since been replaced twice |
 | `kickoffs/CONDUCT-BOOTSTRAP.md` | the first CONDUCT bootstrap, superseded by `kickoffs/CONDUCT.md` |
 | `apps-script-README.md` | the Apps Script accelerator's notes. **That runtime no longer exists** — the plane is a Cloudflare Worker |
+| `CASE-AS-PRODUCTION.md` | DEC-72's design — a case is a production of a project. **BUILT, not abandoned**, which is why it reads differently from everything else in this table: CASE-1 … CASE-6 landed it between 2026-08-10 and 2026-09-10, its ruled-and-not-yet-built banner came down at CASE-6, and `docs/BIO_DATAPLANE_STATE.md` v33 is now the description of what RUNS. Archived here rather than deleted because `decided.mjs` and `mintid` both scan `docs/archive/**`, so every ruling in it stays findable. **It is archived WITH ITS ONE GAP STATED IN THE BANNER** — clause 6 (a finding serving many cases) is built in the format and on the surface and still refused by the plane, `DEBT.md` D-309 — because filing a design as finished with a clause unbuilt is the stale-document defect this project keeps paying for, and the honest way to archive it is to say so at the head |
 
 ### `architecture/` — the retired runtime's own sections, moved 2026-08-10
 

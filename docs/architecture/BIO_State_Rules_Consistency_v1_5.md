@@ -1528,7 +1528,7 @@ drift apart.
 **Section 4 owns the per-type state machines, and one word leaves the inquiry
 machine here.** Bob ruled **DEC-72** on 2026-08-10 — *a case is a production of a
 project: its own object, a set of finding-versions plus the publishing project* —
-and its design, `docs/development/CASE-AS-PRODUCTION.md`, states the consequence
+and its design, `docs/archive/CASE-AS-PRODUCTION.md`, states the consequence
 for this section: *"A finding's lifecycle ends at `concluded`; publication is the
 case relation. Reopening a finding is unchanged and never edits published
 bytes."*

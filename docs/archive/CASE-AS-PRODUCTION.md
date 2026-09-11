@@ -2,9 +2,34 @@
 
 Ruled by Bob 2026-08-10 (**DEC-72**), worked to convergence in session BOB the same day.
 This document is the design the decomposition points at; the ruling's verbatim reasoning
-is in the register entry. **Status: RULED AND NOT YET BUILT.** `BIO_DATAPLANE_STATE.md`
-continues to describe the shipped behaviour until the build lands; where the two
-disagree, the dataplane state is what exists and this is what was decided.
+is in the register entry.
+
+> **STATUS: BUILT AND ARCHIVED, 2026-09-10.** The ruled-and-not-yet-built banner that
+> stood here came down at CASE-6, the arc's closing item. CASE-1 … CASE-6 (plus CASE-5b,
+> split out of CASE-5) landed the model between 2026-08-10 and 2026-09-10, and
+> **`docs/BIO_DATAPLANE_STATE.md` v33 is now the description of what RUNS** — the
+> direction the old banner set has reversed, and where that file and this one disagree,
+> that file is what exists and this is the design it was built from. Archived rather than
+> deleted because `decided.mjs` and `mintid` both scan `docs/archive/**`: every ruling
+> below stays findable and every id below stays allocated.
+>
+> **ONE CLAUSE IS NOT FULLY BUILT AND IT IS NAMED HERE RATHER THAN IN THE COMMIT THAT
+> FILED THIS AWAY.** Clause 6 — *a finding can serve many cases* — is built in the
+> FORMAT (CASE-5's flip made it representable) and on the SURFACE (CASE-6 renders a
+> finding's memberships as a list, correct for any n) and is **still REFUSED by the
+> plane**: `FINDING_IN_ANOTHER_CASE` stands. CASE-6 measured that fence rather than
+> deferring on judgement and kept it deliberately — nine scalar "which case is this
+> finding in" readers in `store.mjs` are correct only while it holds, so lifting it alone
+> would convert them into silent guesses over a set. **`DEBT.md` D-309** carries the
+> count, the cost and the closing move; the reasoning in full is at the refusal's own
+> site. A second, smaller gap is D-310 (`op=affordances` offers `publish` without the
+> owner condition the store enforces).
+>
+> **Saying so in the banner is the point.** Archiving a design as finished with a clause
+> unbuilt is exactly the stale-document defect this arc's own queue rows were written to
+> prevent — CASE-6's dependency on CASE-5b exists for that reason, in those words. The
+> honest close is to file the design AND its one outstanding clause together, so that a
+> reader who finds this document through `decided.mjs` learns both in the same breath.
 
 ## The model, in six clauses
 

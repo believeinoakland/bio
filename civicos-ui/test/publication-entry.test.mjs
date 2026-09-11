@@ -1,4 +1,20 @@
-/* UI-17a — S8 THE PUBLICATION ENTRY POINT, the placeholder DEC-33 ships in
+/* NEGATIVE CONTROL: `node civicos-ui/test/case6.control.mjs c` — ONE ARM, armed
+ * ALONE, run 2026-09-10, `civicos-ui/app.html` restored from a uniquely-named
+ * pristine copy and verified by sha256 AND by `cmp` with the byte count printed
+ * (1203867 B, MATCH / IDENTICAL) and a minimum floored.
+ *   (c) DEC-69 · THE STATEMENT INFORMS TWICE. A second telling of the owner rule
+ *       is inserted further down the section — the nag's exact shape, and what a
+ *       well-meaning edit produces when it wants to be sure the reader saw
+ *       something. DECLARED: the informed-ONCE arm must FAIL; the three property
+ *       arms must NOT, because the facts are all still present and correct and
+ *       this arm has to prove the suite can tell CORRECT-AND-REPEATED from WRONG
+ *       rather than merely noticing that the text changed. RESULT: as declared —
+ *       exactly the informed-ONCE arm red, every property arm green.
+ *   THIS SUITE HAD NO DECLARED CONTROL UNTIL CASE-6, and `coverage.mjs` had been
+ *   printing it in the civicos-ui NO CONTROL list all along (reported, not gated).
+ *   It is declared here rather than only in the driver so the register can read it.
+ *
+ * UI-17a — S8 THE PUBLICATION ENTRY POINT, the placeholder DEC-33 ships in
  * UI-17's place.
  *
  * Drives `openInquiry` over a mock plane that publishes the `publish` act the
@@ -377,6 +393,76 @@ ok("a credential that CAN act is told nothing about its credential", !acting.inc
 ok("a credential that CAN act is offered no publication control either",
    !/actGo\("publish"/.test(acting) && !/<button[^>]*publish/i.test(acting));
 ok("and the section it reads is the same one again", section(acting) === sec);
+
+/* ============ CASE-6 / DEC-72 · THE THREE PROPERTIES THE STATEMENT MUST CARRY,
+   AND THE DEC-69 ARM THAT KEEPS IT A STATEMENT ============================
+
+   DEC-33 still defers the five-step ceremony and nothing here wires a control —
+   every assertion above that pins that is untouched and still green. What CASE-6
+   owed this surface is the three facts DEC-72 changed about publication, because
+   a member about to ask their operator to publish has to bring all three, and
+   learning any of them afterwards is learning it at the worst moment. */
+ok("CASE-6 (1) WHO: the statement says a case is published BY A PROJECT and only by an OWNER of it",
+   /data-pubwho="1"/.test(sec)
+   && /published BY A PROJECT, and only by an owner of it/.test(sec)
+   && /wielded at the top of that project&rsquo;s roster/.test(sec)
+   /* AND THE ADMINISTRATOR HALF, which is the one a reader would otherwise get
+      backwards: seeing every project is not directing one, and it is the plane's
+      own refusal wording at `publishCase()`. */
+   && /an administrator, who can see every project, directs none of them/.test(sec));
+ok("CASE-6 (2) AUTHORED: the statement says the load-bearing split is written by the publisher",
+   /data-pubauthored="1"/.test(sec)
+   && /That split is authored by whoever publishes/.test(sec)
+   /* THE TWO INFERENCES NAMED AND REFUSED BY NAME. It is not enough to say the
+      split is authored; the two things a reader (or a later implementer) would
+      reach for instead have to be ruled out in words, because both look like
+      reasonable defaults and neither is what the publisher asserted. */
+   && /not read off the order the findings are listed in/.test(sec)
+   && /not worked out from how strong each one turned out to be/.test(sec)
+   && /something to bring to the act, not something the act will decide for you/.test(sec));
+ok("CASE-6 (3) THE BAR: the statement says the standard is the publishing PROJECT's, for the whole case",
+   /data-pubbar="1"/.test(sec)
+   && /standard of evidence is the publishing project&rsquo;s, and it applies to the case as a whole/.test(sec)
+   && /every load-bearing finding has to meet it, and the supporting ones do not/.test(sec)
+   /* DEC-72's two-honest-answers clause, which is the part that stops a reader
+      taking a cleared bar as an absolute fact about the findings. */
+   && /published by a different project are held to that project&rsquo;s standard instead, and both results are honest at the same time/.test(sec)
+   && /an absent bar is not a bar of zero/.test(sec));
+/* ==== THE DEC-69 ARM, AND IT IS THE ONE THIS SECTION IS MOST AT RISK FROM ====
+   "Inform at the act once; never nag, re-confirm or force a mode." Three new
+   paragraphs is three new chances to break all three, so each is measured:
+
+   ONCE — each property is stated in exactly ONE marked paragraph. A second
+   telling further down the page is the nag, and it is the shape a well-meaning
+   edit produces when it wants to be sure the reader saw something.
+
+   NO RE-CONFIRMATION — nothing here asks the reader to acknowledge, confirm,
+   accept or agree to anything. There is no act to confirm; there is not even a
+   control. A ceremony that asks twice fails, and a statement that asks once is
+   already one too many.
+
+   NO MODE FORCED — and this is the arm with teeth. The section renders
+   IDENTICALLY for every credential, so it cannot have quietly grown a
+   per-position variant that shortens itself for a non-owner. That would force a
+   mode (owners get the real thing, everyone else gets a summary) AND it would be
+   the surface composing a position rule out of facts, which is what
+   `affordances.mjs` exists to stop. Asserted by byte equality against the
+   read-only credential's copy, which is the strongest form available here. */
+ok("DEC-69: each property is informed ONCE — no paragraph is repeated further down the page",
+   (sec.match(/data-pubwho="1"/g) || []).length === 1
+   && (sec.match(/data-pubauthored="1"/g) || []).length === 1
+   && (sec.match(/data-pubbar="1"/g) || []).length === 1
+   && (sec.match(/published BY A PROJECT, and only by an owner of it/g) || []).length === 1);
+ok("DEC-69: nothing here re-confirms, acknowledges or asks the reader to agree to an already-decided act",
+   !/\bconfirm\b/i.test(sec) && !/\backnowledg/i.test(sec)
+   && !/\bare you sure\b/i.test(sec) && !/\bagree\b/i.test(sec)
+   && !/\bproceed\b/i.test(sec) && !/\bcontinue\?/i.test(sec));
+ok("DEC-69: no mode is forced — the three properties read IDENTICALLY for a credential that cannot act",
+   section(acting) === section(ro) && /data-pubwho="1"/.test(section(ro))
+   && /data-pubauthored="1"/.test(section(ro)) && /data-pubbar="1"/.test(section(ro)));
+ok("and it is still a STATEMENT: no control was wired for any of the three",
+   !/actGo\("publish"/.test(sec) && !/<button/i.test(sec) && !/<input/i.test(sec)
+   && !/<select/i.test(sec) && !/onclick=/i.test(sec));
 
 /* ============ (6) ABSENT, NOT GREYED, WHERE THE RECORD DOES NOT PUBLISH IT ============ */
 const openQ = await open("INQ-2026-9003");

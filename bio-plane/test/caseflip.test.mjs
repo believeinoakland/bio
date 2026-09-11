@@ -11,7 +11,7 @@
 /* CASE-5 / DEC-72 — THE ARTIFACT FLIP: THE CASE FREEZES ITS MEMBERS, AND A
  * MEMBER IS RESOLVED BY THE VERSION THE CASE PINNED.
  *
- * Bob ruled DEC-72 on 2026-08-10 and `docs/development/CASE-AS-PRODUCTION.md` is
+ * Bob ruled DEC-72 on 2026-08-10 and `docs/archive/CASE-AS-PRODUCTION.md` is
  * the design. The CASE-5 bullet, verbatim: *"Case-side freezing; finding bytes
  * stop naming a case; `op=verify` / `op=publishedcase` / `op=publishedmanifest`
  * read the case artifact; the stranger-verification path proven end to end;
@@ -89,10 +89,14 @@
  *     that every one of them is in the case document a member signed. IC-71.
  *   - MULTI-CASE MEMBERSHIP. `FINDING_IN_ANOTHER_CASE` still refuses a finding
  *     into a second case. The flip makes that representable rather than
- *     impossible-by-format; lifting the refusal is a surface question (which case
- *     does a finding id resolve to) and belongs with CASE-6, which owns the
- *     finding view. Asserted below as STILL REFUSED, so the state of the record is
- *     pinned rather than left ambiguous.
+ *     impossible-by-format. **CASE-6 TOOK THE QUESTION AND KEPT THE FENCE, on a
+ *     count rather than a judgement**, and the sentence this replaces — "lifting
+ *     the refusal is a surface question (which case does a finding id resolve
+ *     to)" — was the part that turned out to be wrong: the class has 11 sites in
+ *     `store.mjs`, 9 of them SCALAR readers that are correct only while the fence
+ *     holds. Reasoning in full at the refusal's own site; the remaining gap
+ *     against DEC-72 clause 6 is in `DEBT.md`. Asserted below as STILL REFUSED,
+ *     so the state of the record is pinned rather than left ambiguous.
  */
 
 import "./stdio.mjs";
@@ -874,10 +878,85 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
     subjectPosition: "not_sought",
     subjectJustification: "Not approached for this attempt, which the fence should refuse first.",
     biasAcknowledgement: "Unchanged declared position on public adoption." });
+  /* THE PIN IS KEPT AND ITS REASON IS CORRECTED, NOT EXEMPTED (CASE-6,
+     2026-09-10) — and the correction is that CASE-5's own framing of this
+     question was WRONG, which is worth more than the assertion it sits on.
+
+     THIS ARM USED TO SAY: "lifting the fence is a surface question that belongs
+     with CASE-6". CASE-6 took the question, measured it, and found it is not a
+     surface question at all. The class — a SELECT over `published_case_members`
+     keyed on `bundle_id`, i.e. "which case is this finding in" — has **11 sites
+     in `store.mjs`, 9 of them SCALAR (`#one`) and 2 PLURAL (`#rows`), 0
+     unclassified**, counted 2026-09-10. The nine scalar ones (`publishCase`'s
+     `belongs` derivation, the container's `rel` lookup, `publishedCase`'s
+     finding-id resolution, `#caseClaimOf`, `#caseOf`, `#caseOfSha`) are correct
+     ONLY BECAUSE THIS REFUSAL HOLDS — `#caseOfSha` says so in its own words,
+     "Nothing writes that shape today" — so lifting it in a surfaces item would
+     convert nine correct answers into nine silent `LIMIT 1` guesses over a set.
+
+     SO THE FENCE IS KEPT DELIBERATELY, and this pin now records a DECISION
+     rather than a deferral. It remains a PARTIAL against DEC-72 clause 6, which
+     rules that a finding CAN serve many cases; the reasoning in full is at the
+     refusal's own site in `store.mjs`, and the gap is in `DEBT.md` with its cost
+     and its closing move rather than left as a sentence in a suite. The SURFACE
+     half clause 6 asks for IS built: the published index renders a finding's
+     memberships as a list, correct for any n, so the plane's half can land
+     without the surface moving.
+
+     THE ASSERTION ITSELF IS UNCHANGED ON PURPOSE. What is pinned is that the
+     act is REFUSED and refused BY NAME, and that is exactly as true after the
+     decision as before it — a pin whose subject did not move should not move. */
   t("and MULTI-CASE MEMBERSHIP IS STILL REFUSED, driven: the flip makes a finding serving many cases "
-    + "REPRESENTABLE, and lifting the fence is a surface question that belongs with CASE-6",
+    + "REPRESENTABLE, and CASE-6 measured the fence and KEPT it — nine scalar which-case readers in "
+    + "store.mjs are correct only while it holds (reasoning at the refusal, gap in DEBT.md)",
     [both.ok, ["FINDING_IN_ANOTHER_CASE", "FINDINGS_IN_DIFFERENT_CASES"].includes(both.reason)],
     [false, true]);
+
+  /* ==== AND THE SAME FENCE DRIVEN ON ITS OWN, ADDED BY CASE-6 BECAUSE A
+     NEGATIVE CONTROL PROVED THE ARM ABOVE CANNOT SEE IT ====================
+
+     THE FINDING, recorded rather than smoothed. `case6.control.mjs` arm (d)
+     neuters FINDING-IN-ANOTHER-CASE (hyphens deliberate: a backticked
+     SCREAMING_SNAKE token here is harvested as a code in reach) and declared the
+     pin above MUST go red. **It came back GREEN, 52 pass 0 fail.** The reason is
+     the assertion's own OR: the two-target fixture puts LOOSE and ALPHA in
+     DIFFERENT cases, so `distinct.length > 1` and FINDINGS-IN-DIFFERENT-CASES —
+     a different refusal, on a different line, guarding a different rule — fires
+     first and satisfies the OR. The pin was pinning "some case fence refused
+     this", which was all CASE-5b needed from it.
+
+     THAT IS NO LONGER ENOUGH, because CASE-6 did not defer this question, it
+     DECIDED it: the KEEP rests on a specific refusal and a count of the specific
+     readers that refusal protects. A decision anchored to an assertion that
+     cannot tell which mechanism held is a decision anchored to nothing, and the
+     OR above would go on passing if the fence this item reasoned about were
+     deleted tomorrow.
+
+     SO THIS ARM MAKES `distinct.length` EQUAL ONE. A single target, already a
+     member of its own case, published into an EXPLICITLY NAMED existing case:
+     nothing is in two cases, so the different-cases refusal has nothing to
+     notice, and the only thing between the act and the roster is the
+     `had !== theCase` loop. It is pinned by EXACT EQUALITY on the reason, not by
+     membership of a set. The arm above keeps its OR — both outcomes are honest
+     for a two-target act and which one wins is a property of the fixture's
+     ordering, which is not what either arm is about. */
+  const single = await publishCase({ targets: ALPHA, caseId: other.caseId,
+    roles: { [ALPHA]: "load_bearing" },
+    statement: "One finding, already a member of its own case, offered to a second case by name.",
+    scope: "Whether one finding may serve two cases.",
+    excluded: [],
+    subjectPosition: "not_sought",
+    subjectJustification: "Not approached: the membership fence should refuse before any of this is reached.",
+    biasAcknowledgement: "Unchanged declared position on public adoption." });
+  t("and the MEMBERSHIP fence is driven ALONE and named EXACTLY — one target, one distinct case, so "
+    + "nothing else can answer for it: this is the refusal CASE-6 measured and chose to keep, and an "
+    + "OR over two fences cannot tell you which one held",
+    [single.ok, single.reason], [false, "FINDING_IN_ANOTHER_CASE"]);
+  t("and it names the finding and the case that already holds it, so a publisher is told what to do "
+    + "about it rather than only that they may not",
+    [String(single.target), String(single.caseId) !== String(other.caseId),
+     String(single.detail).includes("publish a new edition")],
+    [String(ALPHA), true, true]);
 }
 
 /* ------------------------------------------------------------------------------

@@ -8715,3 +8715,43 @@ control SPELLED its `op=` fixture in a committed file, which put a real routing 
 corpus the arm exists to prove immovable — the phantom's `5 of 6` became `6 of 7`. The token is now
 composed at runtime, the way `test/op-claims.test.mjs`'s §5 fixtures already were and for the
 reason its header already gave.
+
+## 2026-09-10 · CASE-6 · THE SCALAR "WHICH CASE IS THIS FINDING IN" CENSUS, and it is the measurement that decided DEC-72 clause 6
+
+**Instrument:** a classifier over `bio-plane/src/store.mjs` at `a4c983a`, run from this
+item's worktree. **Class:** a `SELECT` over `published_case_members` whose `WHERE` keys on
+`bundle_id` — that is, a query asking *which case is this FINDING in*. Each match is graded
+by walking BACKWARD at most four lines to the accessor that opens it: `#one` (at most one
+row) is SCALAR, `#rows` is PLURAL.
+
+| figure | value |
+| --- | --- |
+| sites in the class | **11** |
+| SCALAR (`#one`) | **9** — lines 5306, 19803, 20328, 20329, 20605, 20614, 20615, 20642, 20647 |
+| PLURAL (`#rows`) | **2** — lines 3285, 3394 |
+| UNCLASSIFIED | **0** |
+| distinct callers behind the 9 | **6** — `publishCase()`'s `belongs` derivation, the container's `rel` lookup, `publishedCase()`'s finding-id resolution, `#caseClaimOf`, `#caseOf`, `#caseOfSha` |
+
+**WHAT IT DECIDED.** DEC-72 clause 6 rules that a finding can serve many cases; CASE-5's
+suite framed lifting `FINDING_IN_ANOTHER_CASE` as *"a surface question"* and handed it to
+CASE-6. **The framing was wrong and this count is why.** All nine scalar readers are correct
+ONLY while the fence holds — `#caseOfSha` had already said so in its own words, *"Nothing
+writes that shape today"* — so lifting the fence alone converts nine correct answers into
+nine silent `LIMIT 1` guesses over a set. The fence was KEPT; the gap is `DEBT.md` D-309.
+
+**THE FIRST RUN OF THIS CLASSIFIER WAS WRONG AND THE CORRECTION IS THE USEFUL HALF.** It
+read a ±3-line window around each `SELECT` and tested it for `this.#one(`, which reported
+**11 SCALAR, 0 PLURAL** — sweeping in an accessor from a neighbouring statement and
+misgrading `#caseRelationOf` and `#flagCasesOnRevision`, the only two sites that already
+answer correctly for n>1. The corrected version walks backward to the NEAREST accessor.
+A window is not a parse, and a matcher that finds an anchor *somewhere near* the thing it is
+grading will confidently grade the wrong thing.
+
+**WHAT THIS COUNT CANNOT SEE, and the number is load-bearing so it is stated.** It reads SQL
+string literals in `store.mjs` only. Measured alongside it: `index.mjs` names
+`published_case_members` **once** and builds no such query; `schema.mjs` names it 4 times as
+DDL; **no other file under `bio-plane/src/` mentions it at all** (27 of 32 references in the
+tree are in `store.mjs`). Outside the matcher by construction: a query assembled by string
+concatenation, a reader that filters the full roster array in JS, and any consumer outside
+this repository. **So 9 is a FLOOR on the scalar readers and never a total** — which only
+strengthens the direction of the decision it supports.

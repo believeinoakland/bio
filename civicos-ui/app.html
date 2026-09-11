@@ -745,8 +745,28 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 .pub-grade{font-family:var(--font-fact);font-size:12px;font-weight:700;letter-spacing:.03em;
            border:1px solid var(--ink);padding:1px 7px;display:inline-block}
 .pub-axisrow{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;margin:6px 0}
-.pub-bar{font-family:var(--font-fact);font-size:12.5px;border-left:3px solid var(--verdigris-dk);
-         padding:4px 0 4px 10px;margin:8px 0}
+/* CASE-6 / DEC-72 clause 2: `.pub-bar` became `.pub-casebar`, and the weight
+   went UP rather than across. The bar is now the CASE's one standard and the
+   design doc asks for it PROMINENT, so it is drawn at the altitude it belongs to
+   instead of repeating at finding weight; `.pub-casebar-ref` is the reference
+   beside a finding's own pair and is deliberately the LIGHTER of the two, so a
+   reader cannot mistake the reference for a second standard. */
+.pub-casebar{font-family:var(--font-fact);font-size:13.5px;border-left:5px solid var(--verdigris-dk);
+         padding:8px 0 8px 12px;margin:10px 0}
+.pub-casebar[data-casebar="absent"],.pub-casebar[data-casebar="none"]{border-left-style:dashed}
+.pub-casebar-ref{font-family:var(--font-fact);font-size:12px;border-left:2px solid var(--verdigris-dk);
+         padding:3px 0 3px 10px;margin:6px 0;opacity:.9}
+/* THE PARTITION IS DRAWN AS A DISTINCTION AND NOT AS A RANKING. Load-bearing is
+   marked, supporting is marked differently, and UNDESIGNATED is marked too —
+   an unmarked row would read as one of the other two by default, which is the
+   inference `pubRoleOf` exists to refuse. */
+.pub-role{font-family:var(--font-fact);font-size:11px;letter-spacing:var(--tr-caps);
+         padding:2px 0;margin:3px 0}
+.pub-role[data-role="load_bearing"]{font-weight:700;color:var(--verdigris-dk)}
+.pub-role[data-role="supporting"]{font-weight:400;font-style:italic}
+.pub-role[data-role="undesignated"]{font-weight:400;font-style:italic;opacity:.85}
+.pub-alsocase{font-family:var(--font-fact);font-size:11.5px;border-left:2px dotted var(--verdigris-dk);
+         padding:3px 0 3px 10px;margin:5px 0}
 .pub-leg{border-top:var(--hair);padding:14px 0}
 .pub-leg .served{font-family:var(--font-fact);font-size:11px;letter-spacing:var(--tr-caps);text-transform:uppercase}
 .pub-leg .served.yes{color:var(--verdigris-dk)}
@@ -5778,6 +5798,76 @@ function actNamed(acts, id){ return (acts||[]).find(a=>a && a.id === id) || null
    not a control, so a credential that cannot act reads every word of it. Q12's
    one credential sentence is the surface's, rendered once by `openInquiry`, and
    nothing here narrates a control or greys one.
+
+   ── CASE-6 / DEC-72, 2026-09-10 · WHAT THIS SECTION HAD TO START SAYING, AND
+      WHY IT IS STILL NOT A CEREMONY ────────────────────────────────────────
+
+   DEC-33 IS LIVE AND WAS RE-READ RATHER THAN ASSUMED. Its re-entry condition is
+   named in the ruling — *"the chain through UI-18 has landed and a group needs
+   to publish without its operator"* — and it has not been met, so UI-17 stays
+   asleep and every sentence above about not wiring a control still governs, to
+   the letter. DEC-72 did not lift it: its supersession table does not name
+   DEC-33, and the same CONDUCT pass that enqueued CASE-6 on 2026-08-10 left
+   REC-15 blocked by DEC-33 on that same day.
+
+   SO WHAT CASE-6's "PUBLICATION CEREMONY UI (owner-gated, load-bearing
+   designation authored, bar shown as the case's property)" MEANS HERE IS THE
+   THREE PROPERTIES, NOT THE FIVE STEPS. Those three are not decoration on a
+   deferred control — they are what a member has to know BEFORE they go and ask
+   their operator, and under DEC-72 all three changed:
+
+     1. WHO. Clause 5: *"Only a project OWNER publishes."* Publication is a
+        project's production, wielded at the top of its roster. A member who is
+        not an owner of a project cannot have this done in their own name, and
+        finding that out from an operator after assembling a case is the worst
+        possible moment to learn it.
+     2. WHAT THEY MUST AUTHOR. Clause 4: the load-bearing partition is AUTHORED
+        by the publisher and is never derived. It is an input the publisher has
+        to bring, so it is named as one here.
+     3. WHAT IT IS MEASURED AGAINST. Clause 2: the bar is the PROJECT's, read
+        from the publishing project at act time — so which project publishes
+        decides the standard, and the same case published by two projects is two
+        honestly different claims.
+
+   DEC-69 GOVERNS THE FORM AND IS THE REASON THIS IS ONE BLOCK OF PROSE. Inform
+   at the act, once. There is no second telling, no confirmation step, no
+   re-statement further down the page, and — the arm worth naming because it is
+   the one a later session will be tempted by — NO PER-CREDENTIAL VARIANT. A
+   version of this that checked whether the reader is an owner and shortened
+   itself for everyone else would be forcing a mode, and it would also be the
+   surface composing a position rule out of facts, which is what `affordances.mjs`
+   exists to stop anyone doing. One statement, every credential, once.
+
+   MEASURED AND NOT FIXED HERE, RECORDED SO IT IS NOT LOST: `op=affordances`
+   publishes `publish` on `ty === "inquiry" && current_state === "concluded" &&
+   !f.case_member` (`affordances.mjs` ~1139) with NO owner condition, while
+   `publishCase()` refuses a non-owner NOT-THE-PROJECT-OWNER (`store.mjs`
+   ~4956; the code is written with hyphens here and NOT in backticks, for the
+   reason recorded at the multi-case note below — a backticked SCREAMING_SNAKE
+   token in this file is indistinguishable from a string literal to
+   `check-refusal-codes.mjs`, and quoting a code in a COMMENT would put it in the
+   reach set as though this surface could receive it). That is the DEC-8
+   disagreement `affordances.mjs`'s own header calls
+   "the one thing [it] exists to prevent", sitting on the heaviest act in the
+   system. It is NOT corrected in this item, and the reasons are narrower than
+   this comment's first draft claimed — the correction is recorded because the
+   draft's strongest-sounding reason was the false one. IT SAID: "it adds a field
+   to an op of its own and so needs the IC protocol". **There is no such op.**
+   `affordancefacts` is the store's DO-INTERNAL dispatch path, routed to
+   `affordanceFacts()`, and no op on the control plane reaches it —
+   `op-claims.test.mjs` caught the claim in this very comment and named it
+   WRONG-LEVEL, which is what that guard is for. So adding a FACT to
+   `#affordanceFacts` moves no wire shape, and the IC argument is weaker than
+   written. WHAT ACTUALLY STANDS, and it is enough: the SET of acts
+   `op=affordances` publishes is something consumers build against, so narrowing
+   it for a class of callers is a behaviour change on I3 whether or not a field
+   moves; and it would be the FIRST position-gate in a file whose roster-act table
+   deliberately holds none ("position-enforced by the store", seven acts, with the
+   reason given). That is its own item's worth of consequence, and half-building it inside a
+   surfaces item is how a fence ends up tighter than its rule. It is in `DEBT.md`
+   with the cost and the closing move. What this section does in the meantime is
+   the honest thing a statement can do: say the rule, so that a reader is not
+   told by silence that it does not exist.
    ============================================================ */
 function publicationEntryHtml(r){
   const act = (r && r.ok) ? actNamed(r.acts, "publish") : null;
@@ -5792,7 +5882,10 @@ function publicationEntryHtml(r){
       <p><b>Publishing is the one act here that cannot be taken back.</b> A published case goes across the fence: its bytes keep answering to anyone who holds them, checkable against the published hash without this group&rsquo;s help, and this group cannot make them stop.</p>
       <p><b>A case is corrected by publishing again.</b> A further edition is a separate document, and every edition that was ever published still stands &mdash; so a reader who relied on the first can still see exactly what they relied on, and can now also see what came after it.</p>
       <p><b>A withdrawal is itself an act on the record</b> &mdash; dated, attributed and signed like the publication it withdraws &mdash; and both stand. Correction always moves forward. Nothing is unpublished, and nothing is undone quietly.</p>
-      <p><b>Publishing runs through the group&rsquo;s operator today.</b> The member-facing process for it has not been built, so there is no way to publish from this page and none is shown here. Ask the person who runs this record for the group. This section says so rather than leaving the question unanswered.</p>
+      <p data-pubwho="1"><b>A case is published BY A PROJECT, and only by an owner of it.</b> Publication is a project&rsquo;s own production, so the act is wielded at the top of that project&rsquo;s roster. A member who contributes to the work without being an owner contributes to it without putting the project&rsquo;s name on it &mdash; and an administrator, who can see every project, directs none of them and cannot publish for one either.</p>
+      <p data-pubauthored="1"><b>The publisher decides which findings the case RESTS on, and writes it down.</b> A case is published with its findings split into two: the LOAD-BEARING ones, which the case stands or falls on, and the SUPPORTING ones, which are part of the published work and are not presented as carrying it. That split is authored by whoever publishes &mdash; it is not read off the order the findings are listed in, and it is not worked out from how strong each one turned out to be. It is something to bring to the act, not something the act will decide for you.</p>
+      <p data-pubbar="1"><b>The standard of evidence is the publishing project&rsquo;s, and it applies to the case as a whole.</b> Whichever project publishes, its declared required strength is read at that moment and becomes this case&rsquo;s standard; every load-bearing finding has to meet it, and the supporting ones do not. The same findings published by a different project are held to that project&rsquo;s standard instead, and both results are honest at the same time. Where no standard was ever declared, the case is published saying exactly that: an absent bar is not a bar of zero, and a case with no declared standard claims to have cleared none.</p>
+      <p><b>Publishing runs through the group&rsquo;s operator today.</b> The member-facing process for it has not been built, so there is no way to publish from this page and none is shown here. Ask the person who runs this record for the group, and bring them the three things above: which project is publishing, which findings it rests on, and what those findings answer. This section says so rather than leaving the question unanswered.</p>
     </div></div>`;
 }
 /*__PUBLICATION_ENTRY_END__*/
@@ -15025,8 +15118,104 @@ function pubCaseId(c){ return c && c.caseId ? String(c.caseId) : null; }
 function pubRoster(c){
   const got = (c && Array.isArray(c.findings)) ? c.findings : [];
   const wait = (c && Array.isArray(c.awaiting)) ? c.awaiting : [];
-  return [...got.map((f) => ({ ratified: true, id: String(f.bundle_id), finding: f })),
-          ...wait.map((id) => ({ ratified: false, id: String(id), finding: null }))];
+  /* CASE-6: THE AWAITING MEMBER'S ROLE IS `undefined` AND NOT `null`, AND THE
+     DIFFERENCE IS LOAD-BEARING. `op=publishedcase` answers `awaiting` as a bare
+     list of bundle ids — no roster columns travel with it — so for a declared,
+     unratified member this surface does not KNOW the designation. A `null` here
+     would be indistinguishable from the plane's own `role: null`, which means
+     something entirely different: that the publisher authored no designation.
+     "Nobody designated it" and "this accessor did not send it" are two facts, and
+     collapsing them would have this page report an absence of intent where there
+     is only an absence of data — the exact conflation `pubRoleOf` exists to
+     refuse, arriving one level up through a fixture instead of through a guess. */
+  return [...got.map((f) => ({ ratified: true, id: String(f.bundle_id), finding: f, role: pubRoleOf(f) })),
+          ...wait.map((id) => ({ ratified: false, id: String(id), finding: null, role: undefined }))];
+}
+
+/* ============================================================================
+   THE LOAD-BEARING DESIGNATION IS READ AND NEVER DERIVED (CASE-6 / DEC-72
+   clause 4, 2026-09-10), AND THIS FUNCTION IS ONE LINE SO THAT THE RULE HAS
+   EXACTLY ONE PLACE TO BE BROKEN IN.
+
+   DEC-72 clause 4: *"All load-bearing findings of a case being published must
+   meet the necessary bar. Other findings/claims that don't meet the bar can be
+   a part of the published work, though they aren't presented as load-bearing."*
+   — and then the sentence this function exists for: **"The designation is
+   AUTHORED by the publisher (a partition someone asserts, DEC-32's discipline at
+   case altitude)."**
+
+   SO THERE IS NOTHING HERE TO INFER FROM, AND THE TEMPTATIONS ARE NAMED so the
+   next reader recognises one before writing it. The roster arrives in ORDINAL
+   order, and ordinal is the order the publisher listed the members in — it is
+   not a ranking, and "the first member is the load-bearing one" would be this
+   surface authoring a partition on the publisher's behalf. Neither is STRENGTH:
+   a finding that clears the bar is not thereby load-bearing (DEC-72 clause 4's
+   whole point is that supporting members may clear it too, and that a
+   load-bearing one may exceed it), so deriving the role by comparing
+   `f.strength` against `c.bar` would invert the direction the rule runs in — the
+   role decides WHETHER the bar applies, never the other way round.
+
+   A NULL ROLE IS A REAL STATE AND IS RETURNED AS NULL. The plane leaves
+   `published_case_members.role` with NO DEFAULT for exactly this reason, and
+   `publishedCase()` serves `role: m.role ?? null` with the comment saying so.
+   A member rostered before CASE-2 authored roles carries null, and the honest
+   rendering of that is UNDESIGNATED — not "supporting", which would be an
+   assertion about the publisher's intent that nobody made. Undetermined is
+   first-class and must be STATED.
+
+   The `=== ` comparisons are deliberate and exhaustive: an unrecognised spelling
+   arriving from a future plane returns null and renders as undesignated, rather
+   than being passed through into an attribute a sweep would then have to guess
+   about. */
+function pubRoleOf(f){
+  const r = f && typeof f.role === "string" ? f.role.trim() : null;
+  return (r === "load_bearing" || r === "supporting") ? r : null;
+}
+/* The reader's words for it, and the SUPPORTING one is written so that a member
+   who skims cannot come away thinking it means "also carries the case". DEC-72
+   clause 4's requirement is that supporting members are "not presented as
+   load-bearing", which is a requirement about what the page SAYS and not only
+   about what it withholds. */
+const PUB_ROLE_WORD = {
+  load_bearing: "LOAD-BEARING — the case rests on this finding, and it was held to the case's required strength",
+  supporting: "SUPPORTING — part of the published work and NOT presented as carrying the case; it was not held to the required strength",
+};
+/* THE OTHER CASES THIS FINDING SERVES (CASE-6 / DEC-72 clause 6). Takes the
+   multimap `pubList` builds over the WHOLE `caseMembers` table and renders every
+   case except the one the reader is already looking at.
+
+   IT RENDERS NOTHING WHEN THERE ARE NO OTHERS, and that is not the same choice
+   as rendering "this finding serves no other case". The absence of a second
+   membership is the ordinary condition of every finding in the record today and
+   saying so on every row would be DEC-69's nag exactly — informing at the act
+   once is the rule, and there is no act here to inform at. What a reader needs
+   told is the SURPRISING fact: that a finding they are reading inside one case
+   is also carrying another. When there is nothing surprising, this is silent.
+
+   `data-alsocase` CARRIES THE COUNT so a sweep can assert the shape without
+   parsing prose, and the count is of OTHER cases rather than of all of them —
+   the number a reader would have to have been told. */
+function pubOtherCasesHtml(byCaseOfFinding, fid, thisCaseId){
+  const all = (byCaseOfFinding && byCaseOfFinding.get(String(fid))) || [];
+  const others = all.filter((x) => x.case_id !== thisCaseId);
+  if(!others.length) return "";
+  return `<div class="pub-alsocase" data-alsocase="${esc(String(others.length))}" data-finding="${esc(String(fid))}"
+    ><b>This finding also serves ${esc(String(others.length))} other published case${others.length === 1 ? "" : "s"}.</b>
+    A finding is mined once and can carry more than one case; each case froze it at its own version and holds it under its own designation, and neither case's use of it says anything about the other's. ${
+      others.map((x) => `<span class="mono" data-alsocaseid="${esc(String(x.case_id))}">${esc(String(x.case_id))}</span> (${esc(x.role === "load_bearing" ? "load-bearing there" : x.role === "supporting" ? "supporting there" : "no designation recorded there")})`).join(" &middot; ")}</div>`;
+}
+function pubRoleBadgeHtml(role, fid){
+  const key = (role === "load_bearing" || role === "supporting") ? role
+            : role === undefined ? "unserved" : "undesignated";
+  const words = key === "undesignated"
+    ? "UNDESIGNATED — the published bytes do not say whether this finding carries the case, and this page does not decide on the publisher's behalf"
+    : key === "unserved"
+      /* THE THIRD STATE, AND IT IS ABOUT THIS PAGE RATHER THAN ABOUT THE RECORD.
+         Saying "undesignated" here would report an absence of the publisher's
+         intent when what is absent is the field. */
+      ? "DESIGNATION NOT SERVED HERE — this member has not been ratified, so the roster columns that would say whether the case rests on it are not published for it yet. That is a fact about what this page was sent, not about what the publisher decided"
+      : PUB_ROLE_WORD[key];
+  return `<div class="pub-role" data-role="${esc(key)}" data-finding="${esc(String(fid == null ? "" : fid))}">${esc(words)}.</div>`;
 }
 function pubComplete(c){ return !(c && c.complete === false); }
 /* THE EDITION'S STATE IN ONE LINE, for DEC-34's per-page header. It goes on
@@ -15082,21 +15271,120 @@ function pubPairBadges(pair, fid){
     GRADE_AXES.map((ax) => pubStateBadge(ax, pair ? pair[ax] : null, fid)).join("")}</span>`;
 }
 
-/* DEC-17 AS AMENDED: THE DECLARED BAR, BESIDE THE STRENGTH REACHED — and per
-   FINDING, because `required_strength` is frozen into the finding's own bytes
-   and two findings of one case may have been held to different standards. An
-   ABSENT bar renders as ABSENT and never as zero; the plane's own sentence is
-   printed verbatim, because "an absent bar is not a bar of zero" is exactly the
-   sentence a renderer is tempted to shorten into a dash. */
-function pubBarHtml(f){
-  const b = f && f.required ? f.required : null;
-  const fid = esc(String((f && f.bundle_id) || ""));
+/* ============================================================================
+   THE BAR IS THE CASE'S, AND THIS FUNCTION WAS CORRECTED RATHER THAN EXEMPTED
+   (CASE-6 / DEC-72 clause 2, 2026-09-10).
+
+   WHAT IT SAID, AND WHY THE SENTENCE WAS WRONG. It read: *"DEC-17 AS AMENDED:
+   THE DECLARED BAR, BESIDE THE STRENGTH REACHED — and per FINDING, because
+   `required_strength` is frozen into the finding's own bytes and two findings of
+   one case may have been held to different standards."* Every clause of that was
+   true when it was written and none of it is true now. **DEC-72 clause 2 makes
+   the bar a property of the PROJECT, told to the publishing act at act time: "No
+   bar ever attaches to a finding; nothing composes across projects."** CASE-5
+   moved the authority to `published_cases.bar` and serves it as `c.bar`;
+   CASE-5b removed `required_strength` from finding bytes altogether, so the
+   thing the old sentence pointed at — a standard frozen into a finding's own
+   bytes — does not exist in the format any more. Two findings of one case
+   CANNOT have been held to different standards: one case, one publishing
+   project, one bar, read once.
+
+   `f.required` IS STILL POPULATED AND IS NO LONGER AN AUTHORITY. The plane still
+   writes `published_bundles.required` per member, now COPIED from
+   `published_cases.bar` — so reading it per finding would render N copies of one
+   fact and invite a reader to compare them. **N copies of one fact is the shape
+   CASE-5b spent four refusals removing from the plane** (its landed line: "they
+   noticed N copies of one fact disagreeing; one copy cannot"), and a surface
+   that re-introduces it at the draw has undone that at the only altitude a
+   reader ever sees. This function now reads `c.bar` and nothing else.
+
+   WHAT SURVIVES PER FINDING IS STRENGTH, NOT THE BAR, and that is the design
+   doc's own pairing: *"each claim's own derived strength displayed beside the
+   case's standard — a claim may exceed the bar and the reader sees that too."*
+   So `pubPairBadges` stays per finding, this stays per case, and
+   `pubCaseBarRefHtml` below puts the case's one standard beside each finding's
+   own pair without minting a second copy of it.
+
+   THE CLASS NAME MOVED FROM `pub-bar` TO `pub-casebar` ON PURPOSE. A selector
+   that used to mean "this finding's bar" would otherwise silently start matching
+   "the case's bar" — the same string meaning a different thing is how a suite
+   goes on passing over a changed subject, and this file has paid for that twice.
+
+   AN ABSENT BAR RENDERS AS ABSENT AND NEVER AS ZERO, unchanged and still the
+   load-bearing half: the plane's own sentence is printed verbatim, because "an
+   absent bar is not a bar of zero" is exactly the sentence a renderer is tempted
+   to shorten into a dash. DEC-72 names this case explicitly — where no bar was
+   ever declared, "the case publishes stating that fact ... the case claims no
+   cleared standard." Undetermined stays first-class.
+   ============================================================================ */
+function pubCaseBarHtml(c){
+  const b = c && c.bar ? c.bar : null;
+  const cid = esc(String(pubCaseId(c) || ""));
+  /* THE PLANE'S OWN SENTENCE ABOUT ITS OWN BAR, PRINTED VERBATIM AND NEVER
+     REWORDED (DEC-8). `bar_detail` is written on the plane for exactly the state
+     this surface is most likely to mishandle — it says, in the record's own
+     words, that an absent bar is not a bar of zero — and until CASE-6 nothing
+     read it, which meant the one sentence built to stop that mistake was
+     reaching no reader. The surface keeps a fallback for the accessor that does
+     not send it (`op=publishedmanifest`'s `cases[]` rows carry `bar` but no
+     `bar_detail`), and the fallback is the surface's own words said as the
+     surface's, never passed off as the plane's. */
+  const planeSaid = (c && typeof c.bar_detail === "string" && c.bar_detail.trim()) ? c.bar_detail : null;
+  const proj = (c && c.project) ? String(c.project) : null;
+  /* WHOSE STANDARD IT IS, SAID WITH IT. DEC-72 clause 2 makes the bar the
+     publishing project's property; a standard with no publisher named is a
+     requirement nobody asserted, which is the shape the plane's own
+     `publishedCase()` comment says it serves `project` and `bar` together to
+     prevent. The surface must not split the pair the plane deliberately joined. */
+  const whose = proj
+    ? `It is the standard of <span class="mono">${esc(proj)}</span>, the project whose production this case is, read from that project at the moment it published.`
+    : `The published bytes name no publishing project for this case, so this page cannot say whose standard it is, and it does not guess.`;
+  if(!pubCaseId(c))
+    return `<div class="pub-casebar" data-casebar="none"><b>These bytes are not a member of any published case.</b>
+      A standard of evidence is a CASE's property, held by the project that published it. Bytes in no case were held to no case's standard, and none is invented here.</div>`;
   if(!b || b.declared !== true)
-    return `<div class="pub-bar" data-bar="absent" data-finding="${fid}"><b>Declared required strength for ${fid}: NONE WAS DECLARED.</b>
-      ${esc(b && b.detail ? b.detail : "No required evidentiary strength was declared for this finding, so nothing here was measured against one. An absent bar is not a bar of zero, and this finding makes no claim to have cleared any standard.")}</div>`;
-  return `<div class="pub-bar" data-bar="declared" data-finding="${fid}"><b>Declared required strength for ${fid}, set in advance:
+    return `<div class="pub-casebar" data-casebar="absent" data-case="${cid}"><b>Required strength for this case: NONE WAS DECLARED.</b>
+      ${esc(planeSaid || b && b.detail || "No required evidentiary strength was declared for this case, so nothing in it was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard.")}
+      ${whose}</div>`;
+  return `<div class="pub-casebar" data-casebar="declared" data-case="${cid}"><b>Required strength for this case, set in advance:
       ${esc(AXIS_SHORT.capture)} ${esc(b.capture || "not set")} &middot; ${esc(AXIS_SHORT.connection)} ${esc(b.connection || "not set")}.</b>
-      ${esc(b.detail || "")}</div>`;
+      ${esc(planeSaid || b.detail || "")} ${whose}
+      ${/* A SPAN AND NOT A DIV, AND THE REASON IS A MATCHER. A bar block is read
+           back by the harness as one region, delimited by its opening tag and the
+           NEXT closing div — a nested div would truncate that region at the inner
+           tag and leave the rest of the bar under a sweep that would then report
+           its axis letters as a case-level strength. The block is therefore kept
+           flat by construction rather than by anybody remembering. */""}
+      <span class="subj-note">Every LOAD-BEARING finding below was held to this standard. The findings marked SUPPORTING were not, and are not presented as carrying the case.</span></div>`;
+}
+
+/* THE CASE'S STANDARD, BESIDE ONE FINDING'S OWN STRENGTH — a REFERENCE and never
+   a second copy. It repeats on the finding's page for DEC-34's reason, the one
+   the per-page footer already runs on: files get forwarded and a reader may hold
+   one sheet out of nine, so "the standard this was held to" must not live only
+   on the page nobody kept. It is marked `data-casebar-ref` rather than
+   `data-casebar` so the difference between the case's own statement of its bar
+   and a reference to it is visible to a sweep, not only to a reader.
+
+   IT IS DRAWN FROM `c`, NOT FROM `f`, at a call site that has both: the finding
+   contributes only WHICH SIDE of the bar it was placed on, which is its authored
+   role and not a standard of its own. */
+function pubCaseBarRefHtml(c, f){
+  const cid = esc(String(pubCaseId(c) || ""));
+  const fid = esc(String((f && f.bundle_id) || ""));
+  if(!pubCaseId(c)) return "";
+  const b = c && c.bar ? c.bar : null;
+  const said = (b && b.declared === true)
+    ? `${esc(AXIS_SHORT.capture)} ${esc(b.capture || "not set")} &middot; ${esc(AXIS_SHORT.connection)} ${esc(b.connection || "not set")}`
+    : "none was declared";
+  const role = pubRoleOf(f);
+  const held = role === "load_bearing"
+    ? `This finding is LOAD-BEARING, so it was held to it.`
+    : role === "supporting"
+      ? `This finding is SUPPORTING, so it was NOT held to it and is not presented as carrying the case.`
+      : `The published bytes do not say which side of it this finding was placed on, and this page does not decide.`;
+  return `<div class="pub-casebar-ref" data-casebar-ref="1" data-case="${cid}" data-finding="${fid}"
+    ><b>The case's required strength: ${said}.</b> ${held} The two marks above are this finding's OWN strength, which is a different measurement and may sit above the standard as easily as on it.</div>`;
 }
 
 /* THE QUALIFIERS (H5, D-8/C-15), PER FINDING. A threshold may drop CLAIMS. It
@@ -15401,12 +15689,27 @@ function pubAskedHtml(c){
 function pubRosterHtml(c){
   const roster = pubRoster(c);
   if(!roster.length) return `<p class="subj-note" data-roster="0">This case edition declares no findings, and this page invents none.</p>`;
+  /* CASE-6 / DEC-72 clause 4: THE AUTHORED PARTITION IS PART OF THE MEMBERSHIP
+     AND IS DRAWN WITH IT. A roster that listed members without saying which of
+     them the case RESTS on would be showing the reader the set and withholding
+     the claim — and the claim is the half that decides how much the case is
+     asserting. The counts are stated in words rather than left to be counted off
+     the list, because a reader forwarded one sheet cannot count the others. */
+  const lb = roster.filter((m) => m.role === "load_bearing").length;
+  const sup = roster.filter((m) => m.role === "supporting").length;
+  const und = roster.filter((m) => m.role === null).length;
+  /* COUNTED APART, NOT FOLDED IN, for the reason `pubRoster` states: a member
+     whose designation this accessor did not send is not a member without one. */
+  const unsent = roster.filter((m) => m.role === undefined).length;
   return `<h2>The findings in this case</h2>
     <p class="subj-note">In the order the group published them. Each is a separate document with its own conclusion, its own falsifier, its own basis and its own pair of strengths, signed on its own bytes by its own attestor.</p>
+    <p class="subj-note" data-partition="1">The publisher AUTHORED which of these the case rests on; this page reads that designation and never derives one. Of ${esc(String(roster.length))} declared finding${roster.length === 1 ? "" : "s"}: <b>${esc(String(lb))} load-bearing</b>, ${esc(String(sup))} supporting${und ? `, ${esc(String(und))} carrying no designation in the published bytes` : ""}${unsent ? `, and ${esc(String(unsent))} whose designation is not served here at all because ${unsent === 1 ? "it has" : "they have"} not been ratified yet` : ""}. Only the load-bearing findings were held to the case's required strength; the supporting ones are part of the published work and are not presented as carrying it.</p>
     ${roster.map((m, i) => m.ratified
       ? `<div class="pub-file" data-member="ratified" data-leg="${esc(m.id)}">Finding ${esc(String(i + 1))} of ${esc(String(roster.length))} &middot; <span class="mono">${esc(m.id)}</span> &middot; ${esc(m.finding.title || "untitled")}
+           ${pubRoleBadgeHtml(m.role, m.id)}
            <div class="mono">ratified ${esc(String(m.finding.ratified_at || "").slice(0, 10))} &middot; attested by ${esc((m.finding.attestor && m.finding.attestor.member) || "not named")}</div></div>`
       : `<div class="pub-file" data-member="awaiting" data-leg="${esc(m.id)}">Finding ${esc(String(i + 1))} of ${esc(String(roster.length))} &middot; <span class="mono">${esc(m.id)}</span> &middot; DECLARED AND NOT YET RATIFIED
+           ${pubRoleBadgeHtml(m.role, m.id)}
            <div class="mono">nothing of this finding is served here: it has not been signed, so this surface has no title, no conclusion, no strength and no hash to offer for it</div></div>`).join("")}`;
 }
 
@@ -15721,6 +16024,59 @@ async function pubList(fromNav){
       if(p.bundle_sha) byId.set(String(p.bundle_sha), p);
     }
     const inCase = new Set(members.map((m) => pubMemberKey(m, null)));
+    /* ========================================================================
+       MULTI-CASE MEMBERSHIP (CASE-6 / DEC-72 clause 6, 2026-09-10) — A FINDING'S
+       CASES ARE A LIST HERE, AND THE LIST IS CORRECT AT LENGTH ONE.
+
+       DEC-72 clause 6 is a ruling and it is quoted rather than paraphrased: *"A
+       project can span many cases; a finding can serve many cases — across
+       projects and within one."* Bob's reason for it is the one that decides how
+       this renders: *"A finding is mined, often involving hard work. So once
+       resolved, the finding should have lasting value."* A finding whose second
+       use is invisible has not been given lasting value; it has been given one
+       use and a copy.
+
+       WHAT IS AND IS NOT TRUE TODAY, STATED SO NOBODY READS MORE INTO THIS THAN
+       IT SAYS. The PLANE still refuses a finding into a second case
+       (FINDING-IN-ANOTHER-CASE — and the hyphens are not a typo: a
+       SCREAMING_SNAKE token in BACKTICKS anywhere in this file, comments
+       included, is harvested by `check-refusal-codes.mjs` as a code THIS SURFACE
+       CAN RECEIVE, because its matcher reads a backtick as a string delimiter
+       and cannot tell prose from code. Writing this item's first draft of this
+       comment raised the untranslated-in-reach count from 41 to 42 and failed
+       the ratchet — the guard was RIGHT about the bytes and wrong about the
+       world, which is the "sweep arm that failed by citing itself" shape, and
+       the cheap correction is to not spell the literal), and CASE-6 DECIDED TO
+       KEEP that fence — the
+       reasoning is at the refusal's own site in `store.mjs` and in
+       `caseflip.test.mjs`'s pin, and the short form is that some scalar
+       "which case is this finding in" readers in the plane are correct ONLY
+       because the fence holds, so lifting it without correcting them would turn
+       each into a silent `LIMIT 1` guess over a set. So this list is one entry
+       long for every finding in the record today.
+
+       IT IS STILL BUILT AS A LIST, DELIBERATELY, and that is the half of clause 6
+       this item CAN close honestly. `op=publishedmanifest` serves the WHOLE
+       `caseMembers` table, so this surface — unlike any single scalar reader in
+       the plane — already holds the complete membership of every finding and can
+       answer the question correctly for any n. Writing the boolean `Set` a second
+       time would bake one-case-per-finding into the surface as well, so that the
+       day the plane's half lands, the reader would still see one case and nobody
+       would know which layer was lying. Built this way, the plane's half lands
+       and this page is already right.
+
+       KEYED ON THE FINDING'S BUNDLE ID and not on the pin, because the question
+       is "what has this FINDING been used for", which is the identity that
+       persists across versions — the pin answers "which version did this case
+       freeze", which is `pubMemberKey`'s question and a different one. Both are
+       needed and neither substitutes for the other. */
+    const byCaseOfFinding = new Map();
+    for(const m of members){
+      const k = String(m.bundle_id);
+      if(!byCaseOfFinding.has(k)) byCaseOfFinding.set(k, []);
+      const seen = byCaseOfFinding.get(k);
+      if(!seen.some((x) => x.case_id === m.case_id)) seen.push({ case_id: m.case_id, role: pubRoleOf(m) });
+    }
     const top = new Map();
     for(const cs of cases) top.set(cs.case_id, Math.max(Number(cs.edition || 1), Number(top.get(cs.case_id) || 0)));
     const rows = [];
@@ -15744,20 +16100,35 @@ async function pubList(fromNav){
       const sup = Number(cs.edition) < latest
         ? `<span class="served no">superseded by edition ${esc(String(latest))}, which is a separate document — every pair on this row is edition ${esc(String(cs.edition))}'s own</span>`
         : `<span class="served yes">newest edition</span>`;
-      /* ONE PAIR PER FINDING, EACH NAMED. Never a row-level pair, and never a
-         bar for the case: `required_strength` is frozen into a finding's bytes
-         and two members may have been held to different standards. */
+      /* ONE PAIR PER FINDING, EACH NAMED. Never a row-level pair.
+         CORRECTED 2026-09-10 (CASE-6 / DEC-72 clause 2), NOT EXEMPTED — this is
+         the second of the two comments CASE-5b's DELEGATION named, and it said:
+         *"and never a bar for the case: `required_strength` is frozen into a
+         finding's bytes and two members may have been held to different
+         standards."* Both halves are now false. The bar IS the case's — one
+         standard, declared by the publishing project, read once at act time —
+         and `required_strength` is not in a finding's bytes at all any more
+         (CASE-5b removed it, and C-2.8 now REFUSES it there, so its absence is a
+         property of the format rather than of this record's habits). What this
+         row drew was `row.required` per member, which the plane still writes as a
+         COPY of `published_cases.bar`: N identical copies of one fact, inviting a
+         comparison that can never come out anything but equal. The case's bar is
+         now drawn ONCE on the case row below, and what each member carries here
+         is the thing that really is per-member — its AUTHORED ROLE. */
       const findingRows = roster.map((m) => {
         const row = byId.get(pubMemberKey(m, cs));
-        /* THE MEMBER'S OWN RATIFIED ROW IS THE SOURCE (REC-49). `row.strength`
-           and `row.required` are the pair and the bar frozen into the bytes that
-           member signed — the same two the case page reads and the same two the
-           container copies at assembly. Read here, they answer in the awaiting
-           window as well as after it. */
+        /* THE MEMBER'S OWN RATIFIED ROW IS THE SOURCE (REC-49). `row.strength` is
+           the pair frozen into the bytes that member signed — the same one the
+           case page reads and the same one the container copies at assembly.
+           Read here, it answers in the awaiting window as well as after it. */
         const pair = pubPair(row);
-        const bar = row && row.required && row.required.declared === true
-          ? `bar: ${esc(AXIS_SHORT.capture)} ${esc(row.required.capture || "not set")} · ${esc(AXIS_SHORT.connection)} ${esc(row.required.connection || "not set")}`
-          : `bar: none declared`;
+        /* THE ROLE COMES OFF THE ROSTER ROW `m`, NOT OFF THE RATIFIED ROW `row`,
+           and the distinction is the whole of DEC-72 clause 4: the designation is
+           the PUBLISHER's authored partition of the case, which lives on
+           `published_case_members.role` — a property of the MEMBERSHIP. It is not
+           a property of the finding, which is why an AWAITING member (no `row` at
+           all) still has one and it is still drawn. */
+        const role = pubRoleOf(m);
         /* A MEMBER BLOCK IS A SECTION AND CARRIES `data-findingsec`, THE SAME
            MARK THE CASE PAGE'S FINDING PAGES CARRY. One altitude mechanism, not
            two: everything a FINDING says about its own strength lives inside a
@@ -15765,7 +16136,8 @@ async function pubList(fromNav){
            sweep for a case-level strength is the complement of those regions on
            both. A second mechanism here would be a second thing to forget. */
         if(!row)
-          return `<section class="pub-member" data-member="awaiting" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> — DECLARED AND NOT YET RATIFIED. Nothing of it is served or described here.</section>`;
+          return `<section class="pub-member" data-member="awaiting" data-findingsec="${esc(m.bundle_id)}" data-leg="${esc(m.bundle_id)}"><span class="mono">${esc(m.bundle_id)}</span> — DECLARED AND NOT YET RATIFIED. Nothing of it is served or described here.
+            ${pubRoleBadgeHtml(role, m.bundle_id)}${pubOtherCasesHtml(byCaseOfFinding, m.bundle_id, cs.case_id)}</section>`;
         /* THE NO-PAIR SENTENCE, CORRECTED 2026-08-05 (REC-49) AND NOT EXEMPTED.
            UI-29 wrote it honestly for the shape it had: the pair came out of the
            container manifest, so the only reason a ratified member could lack
@@ -15780,7 +16152,7 @@ async function pubList(fromNav){
           <div style="margin-top:5px">${pair
             ? pubPairBadges(pair, m.bundle_id)
             : `<span class="subj-how" data-nopair="${esc(m.bundle_id)}">The published record carries no frozen strength pair for this ratified member: nothing was established on either axis at the edition it was ratified in. That is a fact about the record and not a gap in this page, and no pair is composed for it here.</span>`}</div>
-          <div class="m">${bar}</div></section>`;
+          ${pubRoleBadgeHtml(role, m.bundle_id)}${pubOtherCasesHtml(byCaseOfFinding, m.bundle_id, cs.case_id)}</section>`;
       }).join("");
       rows.push(`<div class="pf" data-caserow="${esc(cs.case_id)}" data-caseedition="${assembled ? "complete" : "awaiting"}" onclick="pubOpen('${esc(cs.case_id)}', ${esc(String(cs.edition))})">
         <div class="t">${esc(cs.scope || cs.case_id)}</div>
@@ -15789,6 +16161,17 @@ async function pubList(fromNav){
             ? `ratified ${esc(String(cs.ratified_at || "").slice(0, 10))} &middot; container sha256:${esc(String(cs.manifest_sha || "").slice(0, 16))}&hellip;`
             : `NOT FINISHED YET: ${esc(String(roster.length - waiting.length))} of ${esc(String(roster.length))} declared findings ratified, and the container is not assembled`}</div>
         <div class="m">A case of ${esc(String(roster.length))} finding${roster.length === 1 ? "" : "s"}. Each carries its own pair of strengths; there is no strength for the case.</div>
+        ${/* THE CASE'S BAR, DRAWN ONCE PER CASE INSTEAD OF ONCE PER MEMBER.
+             `op=publishedmanifest` has served `cases[].bar` since CASE-5 and
+             IC-66 recorded it as UNREAD, with reasons, pointing here; this is
+             the read. The shape is adapted rather than the function forked: the
+             two accessors spell the owning project differently — `publishedcase`
+             answers `project`, the manifest answers `project_id` off its LEFT
+             JOIN — and that difference is NAMED here rather than smoothed by a
+             `||` chain inside the renderer, because a renderer that quietly
+             accepts two spellings is a renderer that cannot tell you which
+             accessor it was looking at when one of them stops sending. */""}
+        ${pubCaseBarHtml({ caseId: cs.case_id, bar: cs.bar, project: cs.project_id })}
         ${findingRows}
         <div class="m">${sup}</div>
       </div>`);
@@ -15948,7 +16331,8 @@ function pubFindingPages(c, f, i, n, floors){
     `<h2>How strong finding ${esc(String(i + 1))} is &middot; <span class="mono">${esc(fid)}</span></h2>
      <p class="lede">A finding does not have <i>a</i> strength. It has two, and they are never combined, averaged or scored against each other: how directly the record holds the DOCUMENTS it reaches, and how strongly the LINKS between them were established. A conclusion is no stronger than the weakest leg on each, separately. And a CASE has neither: these two belong to this finding, the other findings have their own, and nothing on this surface adds them up.</p>
      ${pair ? pubPairBadges(pair, fid) : ""}
-     ${pubBarHtml(f)}
+     ${pubRoleBadgeHtml(pubRoleOf(f), fid)}
+     ${pubCaseBarRefHtml(c, f)}
      ${pair ? GRADE_AXES.map((ax) => axisPanel(ax, pair[ax], (f.basis || []).map((l) => ({ ...l, target: l.target })), { link: namedLink })).join("")
             : `<div class="empty">This finding published no frozen strength pair, and this page invents neither half of one.</div>`}
      ${th.axisFails.map((x) => `<div class="pub-drop" data-axisfail="${esc(x.axis)}" data-of="${esc(fid)}">${esc(x.detail)}</div>`).join("")}`);
@@ -16014,6 +16398,9 @@ function pubCaseHtml(c, floors){
      <h2>What this case is about</h2>
      <p class="subj-note">Authored by the group, per case per edition, and never derived from the findings' titles: what the case is ABOUT is a different claim from what it leaves OUT, and a reader needs both.</p>
      <div class="pub-excl" data-scopetext="1">${esc(pubCaseId(c) ? ((c.scope) || "The published bytes carry no scope statement for this case.") : "These bytes are not a member of any published case, so there is no case scope statement and none is invented here.")}</div>
+     <h2>The standard of evidence this case was held to</h2>
+     <p class="subj-note">One standard, for the whole case, declared in advance by the project that published it &mdash; not one per finding. It is the case's property because publication is a project's production, and a project's standard is what the case was measured against at the moment it was published.</p>
+     ${pubCaseBarHtml(c)}
      ${pubRosterHtml(c)}
      <h2>Why there is no single strength for this case</h2>
      ${pubPlaneAccount("case_detail", c && c.case_detail)}`);
@@ -16070,7 +16457,39 @@ function pubCaseHtml(c, floors){
         <div class="mono">${e.manifest_sha ? "container sha256:" + esc(String(e.manifest_sha)) : "no container assembled for this edition yet"}</div></div>`).join("")}
      <h2>Check this yourself</h2>
      <p class="subj-note">${esc((c.verification && c.verification.detail) || "")}</p>
-     <div class="pub-verify"><p>Anyone may confirm any part of this case against its published hash, without this group's cooperation and without an account. Each finding is signed on its OWN bytes — there is no case-level signature, because a signature over the case would be a signature over something no single member reviewed.</p>
+     <div class="pub-verify"><p>Anyone may confirm any part of this case against its published hash, without this group's cooperation and without an account. Each finding is signed on its OWN bytes, and the case's own assertions &mdash; its scope, its completeness statement, its membership, which findings carry it, and the required strength above &mdash; are signed as a CASE DOCUMENT by a member of the publishing project. Two signatures over two different things, neither standing in for the other.</p>
+       ${(() => {
+         /* CASE-6, 2026-09-10 — CORRECTED, NOT EXEMPTED, AND IT IS THE LOUDEST
+            OF THE THREE STALE SITES CASE-5b's DELEGATION POINTED AT because it
+            is the only one a STRANGER READS. This paragraph said: "there is no
+            case-level signature, because a signature over the case would be a
+            signature over something no single member reviewed." That was the
+            container manifest's own constraint, quoted correctly, and CASE-5b
+            ANSWERED it rather than working around it: `op=caseratify` verifies an
+            SSHSIG over a case document whose text is the publisher's OWN authored
+            assertions — never a synthesised roster summary — so what is signed IS
+            a thing a member reviewed. The constraint held; the conclusion drawn
+            from it did not survive the item that satisfied it.
+
+            THE DELEGATION NAMED TWO COMMENTS AND THE CLASS IS THREE SITES. The
+            two it named (`pubCaseBarHtml`'s header and `pubList`'s) are PROSE IN
+            A COMMENT, read by the next session. This one is PROSE ON THE PAGE,
+            read by the reader the whole product exists for, and it asserted a
+            NEGATIVE about the record that the record had stopped supporting.
+            That is the defect class this project ranks worst — a page claiming
+            something the evidence no longer supports — pointing, for once, at
+            our own capability rather than at a public body's.
+
+            IT IS DRAWN FROM `c.document` AND NEVER ASSERTED: null until ratified
+            (the plane's own rule, stated at the field), and a null renders as the
+            absence it is rather than as the old sentence's certainty. */
+         const d = c && c.document ? c.document : null;
+         if(!pubCaseId(c)) return "";
+         if(!d) return `<div class="pub-drop" data-casedoc="none"><b>This case edition's own document has not been signed yet.</b> Its findings are each verifiable now, by hash, on their own signatures. The case's assertions are not: until the document is ratified there is nothing signed for a stranger to check them against, and this page does not present them as though there were.</div>`;
+         return `<div class="pub-file" data-casedoc="signed" data-case="${esc(String(pubCaseId(c)))}">The case document &middot; signed by ${esc((d.attestor && d.attestor.member) || "not named")} &middot; ratified ${esc(String(d.ratified_at || "").slice(0, 10))}
+           <div class="mono">sha256:${esc(String(d.doc_sha || ""))} &middot; key ${esc(String((d.attestor && d.attestor.key_b64) || "")).slice(0, 44)}&hellip; &middot; gate ${esc(String(d.gate_version || ""))}
+             &middot; <button class="btn ghost" onclick="pubVerify('${esc(String(d.doc_sha || ""))}','#v-casedoc')">Verify this hash</button><span id="v-casedoc"></span></div></div>`;
+       })()}
        ${(c.verification && Array.isArray(c.verification.findings) ? c.verification.findings : findings.map((f) => ({ bundle_id: f.bundle_id }))).map((v) => `<div class="mono">${esc(String(v.bundle_id))} &middot; <button class="btn ghost" onclick="pubVerify('${esc(String((findings.find((f) => f.bundle_id === v.bundle_id) || {}).bundle_sha || ""))}','#v-c-${esc(String(v.bundle_id))}')">Verify ${esc(String(v.bundle_id))}</button><span id="v-c-${esc(String(v.bundle_id))}"></span></div>`).join("")}</div>
      <div id="v-case"></div>
      <div class="metagrid">

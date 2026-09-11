@@ -38730,25 +38730,35 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return r ? r.case_id : null;
   }
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
-     RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
-     `#caseOf(bundleId, edition)` above takes a CASE edition and is still exactly
-     right when a caller holds one. What its callers actually held, in four of
-     the five places it was used, was a `published_bundles` row — whose `edition`
-     is the FINDING'S, and passing that as the case's is the same conflation
-     `#caseEditionState` carried, arriving through the argument list instead of
-     through a WHERE clause. Before the flip the two numbers agreed and nobody
-     could see it; after it a finding at its own edition 1 inside a case at
-     edition 2 would resolve to NO CASE AT ALL and read as unpublished material.
-     Answers BOTH halves — the case and THE CASE'S EDITION — because every caller
-     that wanted one wanted the other and was deriving it from the wrong number.
-     The fallback is the pre-CASE-3 row whose pin is honestly NULL, and for those
-     rows the finding's edition IS the case's, which is the model they were
-     written under.
-     ORDER BY edition DESC LIMIT 1 and it is a real bound, not a formality: one
-     sha can in principle be pinned by more than one case edition, so the newest
-     membership answers. Nothing writes that shape today — every member
-     re-publishes at each edition and mints a new sha — and the day something
-     does, this returns the most recent claim rather than an arbitrary one. */
+       RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
+       `#caseOf(bundleId, edition)` above takes a CASE edition and is still exactly
+       right when a caller holds one. What its callers actually held, in four of
+       the five places it was used, was a `published_bundles` row — whose `edition`
+       is the FINDING'S, and passing that as the case's is the same conflation
+       `#caseEditionState` carried, arriving through the argument list instead of
+       through a WHERE clause. Before the flip the two numbers agreed and nobody
+       could see it; after it a finding at its own edition 1 inside a case at
+       edition 2 would resolve to NO CASE AT ALL and read as unpublished material.
+       Answers BOTH halves — the case and THE CASE'S EDITION — because every caller
+       that wanted one wanted the other and was deriving it from the wrong number.
+       The fallback is the pre-CASE-3 row whose pin is honestly NULL, and for those
+       rows the finding's edition IS the case's, which is the model they were
+       written under.
+       ORDER BY edition DESC LIMIT 1 and it is a real bound, not a formality: one
+       sha can in principle be pinned by more than one case edition, so the newest
+       membership answers. Nothing writes that shape today — every member
+       re-publishes at each edition and mints a new sha — and the day something
+       does, this returns the most recent claim rather than an arbitrary one.
+  
+       CASE-6, 2026-09-10: "NOTHING WRITES THAT SHAPE TODAY" IS LOAD-BEARING AND IS
+       NOW POINTED AT THE DECISION THAT KEEPS IT TRUE. The reason nothing writes it
+       is `FINDING_IN_ANOTHER_CASE` in `publishCase()`, which CASE-6 measured and
+       deliberately KEPT — see the block at that refusal for the count (11 sites in
+       the class, 9 of them scalar like this one) and for what lifting it would owe.
+       This helper is one of the nine. If that fence is ever lifted, the sentence
+       above stops being true and this function starts answering a set-valued
+       question with its newest element, which reads as an answer and is a guess.
+       The two must move together; they are cross-referenced so they cannot drift. */
   #caseOfSha(bundleId, bundleSha, fallbackEdition = null) {
     const r = bundleSha ? this.#one(`SELECT case_id, edition FROM published_case_members
                    WHERE bundle_id=? AND version_sha=? ORDER BY edition DESC LIMIT 1`, bundleId, bundleSha) : null;
