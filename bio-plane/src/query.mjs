@@ -445,7 +445,7 @@ export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
-  if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY" };
+  if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
 
   /* D-15 SATISFIED HERE, and nowhere else. Membership Architecture 7.9.
    *
@@ -476,10 +476,31 @@ export function viewerPredicate(viewer) {
    * access to the record, so filtering it would buy nothing while breaking the
    * operator path the token exists for. Only an identified session, which is
    * the only thing that CAN be a participant, gets the participation filter. */
+  /* D-310, 2026-09-10: `member` IS RETURNED, AND IT IS THE ID THIS FUNCTION
+     ALREADY COMPUTED rather than a new question. It is here because a POSITIONAL
+     fact — does this viewer hold the owner position on any project (DEC-72
+     clause 5) — has to be asked of the viewer, and the store's alternative was
+     to parse the viewer string a SECOND time. A second parser is this
+     repository's most-repeated defect class, and here it fails in the direction
+     that reopens a DEC-8 disagreement: a spelling this function recognises and
+     the copy does not reads as "no member", the positional fact goes
+     undetermined, and the act it gates is offered again. So the parse stays in
+     the one place that does it, exactly as the machine-credential PREFIX does
+     (REC-46's note above).
+     IT IS null FOR EVERY ARM THAT IS NOT AN IDENTIFIED SESSION, and that is the
+     honest answer rather than a default: a `class:` credential has no person
+     behind it and therefore no participation to hold, which is the same sentence
+     the paragraph above gives for not filtering it. The bare `admin` spelling
+     takes this arm too — it is the operator-internal viewer, and the control
+     plane stamps the root administrator as `member:admin`, which reaches the
+     branch below and is answered positionally like any other member.
+     NOTHING ELSE MOVES: not the regex, not a `scope` value, not a gate
+     predicate. A consumer reading `sql`/`args`/`viewer`/`scope` is untouched. */
   const memberId = m[3] || null;
-  if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member" };
+  if (!memberId) return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
 
   return {
+    member: memberId,
     sql: `${GATE_MARK} (b.object_type <> 'project' OR EXISTS (
              SELECT 1 FROM project_participants pp
              WHERE pp.project_id = b.bundle_id AND pp.member_id = ?)

@@ -54,6 +54,15 @@
 # else's corpus (M0-15: `git stash -u` is repository-wide, not per-worktree).
 .case2-harness/
 
+# D-310's pen, named for its item for the same reason every one above it is.
+# An interrupted driver must not leave an untracked file that becomes somebody
+# else's corpus (M0-15: `git stash -u` is repository-wide, not per-worktree).
+.d310-harness/
+# D-310's own run logs, kept INSIDE the worktree rather than in a shared temp
+# root: the battery's residue check measured this session writing a baseline to
+# /private/tmp and NAMED it as an unfenced shared path (D-237).
+.d310-runs/
+
 # macOS Finder artifact — committed once by CONDUCT on 2026-08-10 via `git add -A`.
 .DS_Store
 **/.DS_Store
