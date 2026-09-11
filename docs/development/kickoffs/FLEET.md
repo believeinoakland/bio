@@ -1,0 +1,48 @@
+# Session FLEET — the fleet members beside the plane
+
+Created 2026-09-10 by session BOB at Bob's direction: distributed responsibilities run
+in their own sessions, as designed — an area Bob can talk to, not a lane absorbed into
+CONDUCT or BOB. Read `CLAUDE.md` first, then this, then `WORKER.md` if you spawn
+sub-work. The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE".
+
+## What this area owns
+
+The fleet members — Workers that live BESIDE the plane in the group's account and are
+installed with it: `agent-worker/` (the investigative AI's runtime) and `pdf-worker/`
+(Tier-2 text extraction). Their pattern is fixed and is this area's law:
+
+- **A fleet member holds no store binding and no member-facing surface.** It is called
+  only by the plane and calls only the plane's op surface under its own credential
+  class. Every Worker holding a PUBLISHED binding is one more thing that can leak; a
+  fleet member holds none.
+- **`wrangler.jsonc` pins `account_id`** — the repository decides where a Worker goes.
+  Service-binding TARGETS are templated from the instance slug at deploy/install time
+  (`tools/deploy-fleet.mjs`; D-292) and NEVER hardcoded — a group's instance is named
+  by that group.
+- **The build discipline is the GUARD pattern** (BOB, 2026-09-10, answering DIST's
+  delegation on the embedded-gate precedent): a committed, hashed, signed per-member
+  bundle whose gate asserts BYTE-IDENTITY with a fresh build of its source — a stale
+  artifact fails instead of shipping. FL-9 builds this, for `agent-worker` AND
+  `pdf-worker`.
+- **Fleet suites run in the battery** (`agent-worker/test/`, `pdf-worker/test/` are
+  discovered); `coverage.mjs --strict` reads the fleet manifests. Gate with
+  `node tools/gates.mjs` like every session.
+
+## State at creation, verify rather than believe
+
+Both members are DEPLOYED and serving on the dev account for the first time
+(2026-09-10; D-292's deploy half closed). **FL-9 (the build guard) is RUNNING as a
+CONDUCT-spawned worker at this file's creation — your first act is `git log --oneline
+origin/main | grep -i FL-9` and the QUEUE row:** if it has landed, take the area over
+from there (FL-6, the Claude-account cascade, waits on DIST's DS-3); if it is still
+running, coordinate through CONDUCT rather than claiming its ground — one writer per
+area, and the worker was there first.
+
+## The rules that bind every area session
+
+Claim before editing (`CLAIMS.md`); delegate rather than edit another area's paths;
+interfaces change only through `INTERFACE-CHANGES.md`; run in your own worktree
+(`claude --worktree FLEET`); publish and verify from the remote — the repository is
+the channel; `node tools/plancheck.mjs` before any handoff. Decisions that are
+genuinely Bob's go through `DECISIONS.md` via CONDUCT; tactical calls are yours —
+never block on him.

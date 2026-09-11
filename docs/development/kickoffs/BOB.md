@@ -185,6 +185,18 @@ as "one last item for you" is the failure dressed as diligence, and it has been
 corrected three times. If this session knows how to fix a thing, mentioning it instead
 of fixing it costs Bob attention and buys nothing.
 
+**Spawning a missing area session is BOB's act, and the mechanism is the chip, not
+absorption** (Bob, 2026-09-10: distributed responsibilities are handled as designed —
+an area that needs a Bob-chatable session gets its OWN session, not a lane inside BOB
+or CONDUCT). The means: (1) ensure the area's kickoff exists — an area may not be
+ACTIVE without one, and BOB writes it at activation exactly as CONDUCT writes one when
+it activates an area; (2) file a spawn chip (`spawn_task`) whose prompt is the
+SELF-CONTAINED paste block — read `CLAUDE.md`, then the area kickoff, fetch, verify
+state from `origin/main`, claim before editing; (3) Bob clicks once and the session
+exists, chatable and messageable. The same mechanism replaces a saturating session: the
+outgoing session writes its `<AREA>-NEXT.md` handoff FIRST, and the chip's prompt
+refuses to work if the handoff it names is absent from the remote.
+
 **Decision items are for doctrine, risk carrying Bob's name, and effects on people
 outside the project — and nothing else.** Activation order, sequencing, mechanism,
 scoping and which item runs next are THIS SESSION'S, ruled explicitly by Bob on
