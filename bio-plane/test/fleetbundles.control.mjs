@@ -279,6 +279,80 @@ const ARMS = {
   },
 };
 
+/* ---- FL-10's ARMS, APPENDED (D-298: the plane's own bundle gets the guard).
+ * No existing arm is edited. The plane's sources are armed the way arm 2b
+ * already arms `src/pdfstructure.mjs` — transiently, restored with both
+ * proofs — and NEVER `store.mjs` or `schema.mjs`, which is FL-10's own claim
+ * rule made physical here. */
+const PLANE_ENTRY = join(PLANE, "src/index.mjs");
+const SIGNPAGE_HTML = join(REPO, "tools/sign-release.html");
+
+ARMS["6"] = {
+  label: "(6) FL-10's OWN ARM — a PLANE source moves and the committed plane bundle does not. Append one export "
+    + "to bio-plane/src/pdfstructure.mjs (a NON-ENTRY module, so this is ALSO the tree-shake arm: esbuild "
+    + "tree-shakes the unused export and byte-identity alone MISSES it — the input-hash arm must fail anyway). "
+    + "The same file is one of pdf-worker's cross-tree inputs, so BOTH artifacts must go stale by name.",
+  run: () => withAppended(PLANE_PDFSTRUCT, SUFFIX, () => {
+    const r = report("6", runSuite(), {
+      mustFail: "exit non-zero — bio-plane's input-hash arm NAMING `src/pdfstructure.mjs` AND pdf-worker's "
+        + "cross-tree arm NAMING `../bio-plane/src/pdfstructure.mjs`; the plane BYTE arm alone would stay "
+        + "green (tree-shaken), which is exactly why the input-hash arm is load-bearing",
+      mustNot: "agent-worker, which imports nothing from the plane",
+    });
+    console.log(`     names bio-plane+file: ${named(r, "bio-plane:", "src/pdfstructure.mjs")}`);
+    console.log(`     says STALE BUNDLE: ${named(r, "STALE BUNDLE")}`);
+    console.log(`     pdf-worker cross-tree fired too: ${named(r, "pdf-worker:", "../bio-plane/src/pdfstructure.mjs")}`);
+    console.log(`     agent-worker held: ${named(r, "agent-worker: no staleness")}`);
+    return r;
+  }),
+};
+
+ARMS["6b"] = {
+  label: "(6b) THE SAME CHANGE ON THE PLANE'S ENTRY — src/index.mjs, whose exports are NOT tree-shaken, "
+    + "so the byte-identity arm AND the input-hash arm must BOTH fire.",
+  run: () => withAppended(PLANE_ENTRY, SUFFIX, () => {
+    const r = report("6b", runSuite(), {
+      mustFail: "exit non-zero from BOTH plane arms — input-hash naming `src/index.mjs`, and byte-identity, "
+        + "because an ENTRY's exports survive the bundle",
+      mustNot: "either fleet member's own assertions",
+    });
+    console.log(`     names bio-plane+file: ${named(r, "bio-plane:", "src/index.mjs")}`);
+    return r;
+  }),
+};
+
+ARMS["7"] = {
+  label: "(7) THE GENERATED-INPUT LOOP — tools/sign-release.html changes and src/signpage.mjs was never "
+    + "re-rendered. Every input hash stays TRUE (signpage.mjs itself did not move), so only the render "
+    + "comparison can see it. Append one HTML comment to the page.",
+  run: () => withAppended(SIGNPAGE_HTML, "\n<!-- fl10 armed probe -->\n", () => {
+    const r = report("7", runSuite(), {
+      mustFail: "exit non-zero on the ONE assertion comparing committed src/signpage.mjs against the render "
+        + "of tools/sign-release.html — naming the stale render",
+      mustNot: "any input-hash or byte-identity arm, plane or member: no hashed input moved",
+    });
+    console.log(`     the render assertion fired: ${named(r, "committed src/signpage.mjs IS the render")}`);
+    return r;
+  }),
+};
+
+ARMS["8"] = {
+  label: "(8) OVER-STRICTNESS, PLANE HALF — a legitimate `npm run build` of the UNCHANGED plane must leave "
+    + "the tree byte-identical and the suite green. RUN AFTER THE COMMIT, like arm 5: the tree-unchanged "
+    + "half is only a statement about a clean tree.",
+  run: () => {
+    console.log("  (a) rebuilding the plane from unchanged sources");
+    const b = spawnSync("npm", ["run", "build"], { cwd: PLANE, encoding: "utf8" });
+    console.log(`      bio-plane: build exit ${b.status}`);
+    const dirty = spawnSync("git", ["status", "--porcelain"], { cwd: REPO, encoding: "utf8" }).stdout.trim();
+    console.log(`      tree after a legitimate rebuild: ${dirty === "" ? "UNCHANGED" : "DIRTY:\n" + dirty}`);
+    return report("8", runSuite(), {
+      mustFail: "nothing",
+      mustNot: "any assertion — a legitimately rebuilt, byte-identical plane bundle must still pass",
+    });
+  },
+};
+
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);
 for (const n of names) {
