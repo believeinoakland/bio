@@ -600,7 +600,17 @@ const REGISTER_FLOOR = {
      figures below are what the merged tree's own green `--strict` run PRINTED
      after the CASE-5b merge, read from output, never summed by hand.
      ONE KEY SET, grepped before writing. */
-  arms: 901,
+  /* MOVED 2026-09-10 (a FIFTH time that day) by D-301: 901 -> 906, from the figure
+     this tree's own green `--strict` run PRINTED (`arms 906/901 · GREW by 5 arm(s)`,
+     `fullest 56 (hygiene.test.mjs)`, up from 51) — read from the output, never
+     incremented by hand, and a floor with slack is not a ratchet. The cause is one
+     new declaration segment: `hygiene.test.mjs` states SIX arms for the class
+     census's string-blinding, run by `test/d301-census.control.mjs`; the register
+     counts five of them, which is its stated behaviour as a FLOOR on arms stated
+     rather than an exact count. `classified` and `corpus` are UNMOVED — no suite
+     gained or lost a declaration, and the new control driver is a `.control.mjs`
+     the battery does not discover. ONE KEY SET, grepped before writing. */
+  arms: 906,
   classified: 167,
   corpus: 168,
 };

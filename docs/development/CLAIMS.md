@@ -2280,3 +2280,62 @@ paths:
   **NOT** `newgroup/**`. **NOT** `civicos-ui/**`. **NOT** `bio-plane/dist/**` — nothing this item
   writes is a plane source, so FL-10's staleness guard has nothing to catch.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 173/173 · 10,755 (+2 fully attributed to planning-hygiene on the two new DEBT rows), `coverage --strict` exit 0 read unpiped, UI harness exit 0 from the repo root, `mintid --audit` 0 breaks. The verdict is enacted: CPDF-10 re-routed to blocked-on-DEC-74; DEC-73 and DEC-74 raised.
+
+## CLAIM 2026-09-10 M0 (D-301 — the class census is comment-blind and NOT string-blind: a walking FIXTURE counts as a walk)
+session: d301-census-stringblind (worktree `agent-a3a3f27c44675daff`, branch
+  `worktree-agent-a3a3f27c44675daff`)
+opened: 2026-09-10
+scope: `DEBT.md`'s D-301 row is the authority. The class census in `hygiene.test.mjs` runs its
+  discovery matcher over a LOCAL comment-stripper, so a discovery primitive inside a fixture
+  template literal is counted as a walk — `bio-plane/test/walkfigure.test.mjs` was enumerated as
+  a NEW UNGUARDED WALK while containing no walk at all. Run the matcher over the estate's ONE
+  lexer (`strip`, exported by `scripts/walkfloor.mjs`), never a second one, then RE-MEASURE the
+  census count, the REACH floor and `CLASS_NAMED_UNGUARDED`'s membership FROM PRINTED OUTPUT,
+  every drop NAMED with its reason. A measurement, not an edit.
+paths:
+  - `bio-plane/test/hygiene.test.mjs` — the CLASS CENSUS block ONLY (the local `codeOnly`
+    reader it deletes, the `walks` line, the block's own comment, the REACH floor's figure,
+    `CLASS_NAMED_UNGUARDED`'s membership) and the suite's `NEGATIVE CONTROL:` declaration at
+    line 1, appended. **NOT** the D-268 cross-file block below it, **NOT** the D-265 chokepoint
+    block, **NOT** any other arm in the file.
+  - `bio-plane/scripts/walkfloor.mjs` — `strip`'s TEMPLATE-LITERAL BRANCH ONLY, gaining one
+    option (`keepInterpolations`, DEFAULT OFF so no existing caller's behaviour moves) and one
+    named export (`stripToCode`) that spells the census's question once. **CONSUMED, NOT
+    FORKED** — the estate keeps exactly one lexer. **NOT** the `guarded` predicate, **NOT** the
+    buckets, **NOT** the flow stage, **NOT** the CLI report.
+  - `bio-plane/test/walkfloor.test.mjs` — §1 (the stripper's own arms) APPENDED for the new
+    mode. No existing arm deleted or altered.
+  - `bio-plane/test/d301-census.control.mjs` — NEW, this item's negative-control driver.
+    Deliberately not a `.test.mjs`: it edits real sources while it runs, the precedent being
+    `walkfloor.control.mjs` and `d249-port.control.mjs`.
+  - `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` `arms:` FIGURE ONLY, and only if a
+    printed `--strict` run says it GREW. ONE key set, re-read from the print, never incremented.
+  - `docs/development/DEBT.md` — the D-301 row's disposition.
+  - `docs/development/MEASUREMENTS.md` — APPEND, one dated section.
+  - `docs/development/CLAIMS.md` — this entry.
+  **NOT** `bio-plane/src/**` (this item changes no plane behaviour), **NOT** `civicos-ui/**` at
+  all — a CASE-6 worker is live on `app.html` and the UI suites, and the census only READS those
+  files, **NOT** `newgroup/**`, **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground),
+  **NOT** `bio-plane/scripts/walkfigure.mjs`, **NOT** `bio-plane/scripts/op-claims.mjs`.
+concurrency: checked over the whole register rather than assumed — every claim above this one
+  carries a `released:` line, including D-265, D-302 and M0-24, the three items whose ground this
+  is. The only worker named as live in this session's brief is CASE-6 on `civicos-ui/app.html`
+  and the UI suites; no path here is under `civicos-ui/`.
+
+### AMENDMENT 2026-09-10 to the D-301 claim above — ONE PATH ADDED: `bio-plane/test/walkfloor.control.mjs`, ARM (6)'s ANCHOR ONLY
+  Not foreseen when the claim was written, and OWED rather than opportunistic. Re-running that
+  driver whole — which this item owes, because it moves the driver's subject — returned arm (6)
+  `stripper` as **DID NOT ARM**: its patch anchored on `strip`'s full SIGNATURE, D-301 added one
+  option to that signature, so the patch matched ZERO TIMES and the arm neutered nothing while both
+  suites read a comfortable green. **An arm that did not arm is a finding, and only the driver's own
+  zero-match check made it visible.** The anchor now names the first two lines of the function BODY,
+  which no signature change can reach; the arm's `expect` text is corrected in the same edit (§1 of
+  `walkfloor.test.mjs` is eight arms now, not three, and hygiene falls with the lexer since D-301).
+  Nothing else in the driver is touched. The eleven arms' FIGURES in `walkfloor.test.mjs`'s own
+  `NEGATIVE CONTROL:` declaration went stale as well and are RE-MEASURED from that run's print,
+  never adjusted by hand. **The two halves have different causes and were attributed by re-running
+  rather than by subtracting**: walkfloor 39 -> 44 is this item's five new section-1 arms, while
+  hygiene 665 -> 678 is CPDF-13, CASE-5b and M0-24 merging between D-302's run and this one —
+  **D-301 adds NOTHING to hygiene's tally**, it replaces a reader and moves a floor, and the census
+  still makes the same three ASSERTIONS. The first draft of that header said the thirteen were mine;
+  the baseline run said otherwise, which is why the rule is to diff the runs.

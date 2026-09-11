@@ -20,32 +20,51 @@
  * fail and what must not, every restore verified by sha256 AND by a byte compare
  * against a UNIQUELY NAMED per-arm pristine copy with the byte count printed and
  * floored against the empty-string digest.  RE-RUN WHOLE 2026-09-10 by D-302, all
- * eleven AS DECLARED, every restore VERIFIED.  Figures are walkfloor pass/fail ·
- * hygiene pass/fail, except (9) which is op-claims pass/fail.
+ * eleven AS DECLARED, every restore VERIFIED.  RE-RUN WHOLE AGAIN 2026-09-10 by D-301,
+ * which touches this lexer: all eleven AS DECLARED, every restore VERIFIED, AND ARM (6)
+ * CAME BACK `DID NOT ARM` ON THE FIRST OF THOSE RUNS — recorded at (6) below and fixed
+ * at its anchor.  EVERY FIGURE BELOW IS RE-MEASURED FROM THAT RUN'S PRINT, AND THE
+ * TWO HALVES OF THE MOVE HAVE DIFFERENT CAUSES — attributed by re-running, never by
+ * subtracting: the walkfloor column moved 39 -> 44 because D-301 adds five arms to
+ * section 1, and the hygiene column moved 665 -> 678 because CPDF-13, CASE-5b and
+ * M0-24 merged between D-302's run and this one.  **D-301 ADDS NOTHING TO HYGIENE'S
+ * TALLY** — it replaces a reader and moves a floor, and the census still makes the
+ * same three ASSERTIONS (reach, guarded-or-named, not-gone-stale).  Measured across
+ * the whole battery: the only suite that moved is this one, 39 -> 44, and the total
+ * closes exactly at 10,747 -> 10,752.  A hand-kept list of figures goes stale on
+ * whatever schedule the REST of the estate keeps, which is the half that is easy to
+ * miss.  Figures are walkfloor pass/fail · hygiene pass/fail, except (9) which is
+ * op-claims pass/fail.
  *
- *   (1) baseline — NO EDIT AT ALL: 39/0 · 665/0, GREEN as declared.  The row that
- *       makes every other row interpretable.  (Was 31/0 · 570/0 on 2026-08-09.)
- *   (2) hop — never seed a binding from an imported walk-derived export: 29/10 · 660/5.
+ *   (1) baseline — NO EDIT AT ALL: 44/0 · 678/0, GREEN as declared.  The row that
+ *       makes every other row interpretable.  (Was 31/0 · 570/0 on 2026-08-09 and
+ *       39/0 · 665/0 on D-302's run the same day.)
+ *   (2) hop — never seed a binding from an imported walk-derived export: 34/10 · 673/5.
  *   (3) destructured — restore first-draft bug (a), a destructured parameter list
- *       read as a function body: 29/10 · 659/6.
+ *       read as a function body: 34/10 · 672/6.
  *   (4) stringstrip — restore first-draft bug (b), imports read off source with
- *       string literals blanked: 28/11 · 660/5.
+ *       string literals blanked: 33/11 · 673/5.
  *   (5) modulegrain — grade at MODULE granularity instead of BINDING granularity:
- *       35/4 · 660/5.  THE ARM THAT PROVES THE FALSE-POSITIVE GUARD IS REAL, AND
+ *       40/4 · 673/5.  THE ARM THAT PROVES THE FALSE-POSITIVE GUARD IS REAL, AND
  *       ON 2026-09-10 IT FOUND THE INSTRUMENT RATHER THAN THE SUBJECT: D-302's
  *       first-draft grade read `info.from` off an `undefined`, because this arm
  *       makes every identifier live by construction, and hygiene died with a
  *       TypeError reporting NO tally (-1/-1) instead of a low one.  Recorded, not
  *       smoothed; an unresolved root is now graded UNCLASSIFIED at the site.
  *   (6) stripper — make the stripper a no-op, so prose and regex literals count as
- *       code: 33/6 · 661/4.
+ *       code: 34/10 · 673/5.  **THIS ARM REPORTED `DID NOT ARM` ON D-301'S FIRST RUN
+ *       AND THAT IS THE FINDING, NOT THE FIX**: its anchor named `strip`'s full
+ *       SIGNATURE, D-301 added one option to it, the patch matched ZERO TIMES, and the
+ *       arm neutered nothing while both suites read a comfortable green.  Only the
+ *       driver's zero-match check made it visible.  Anchored on the function BODY now,
+ *       where a signature change cannot reach it.
  *   (7) overstrict — a NEW consumer that floors on the figure a walk declares
- *       REPRODUCIBLE: 39/0 · 665/0, GREEN as declared.  D-302 CORRECTED THIS
+ *       REPRODUCIBLE: 44/0 · 678/0, GREEN as declared.  D-302 CORRECTED THIS
  *       FIXTURE: it used to floor on a WORKING-TREE figure and import
  *       `provenance.mjs`, which was correct work only under the predicate D-302
  *       removed — so it asserted that the ratchet must not fire on a real instance.
  *   (8) ratchet — the SAME fixture reading a WORKING-TREE figure instead:
- *       39/0 · 664/1, and the failure NAMES the new file.  A delta over one
+ *       44/0 · 677/1, and the failure NAMES the new file.  A delta over one
  *       identifier rather than a claim about a fixture.
  *   (9) phantom — D-302's own arm, and the one the item exists for.  An UNCOMMITTED
  *       file carrying a TRUE routing claim — the publish op, stated in op-claims'
@@ -56,13 +75,13 @@
  *       count MOVED to 6, which is the figure the fifth floor read before this item
  *       and is the BEFORE proved rather than described, while the reproducible
  *       figure the floor now reads stayed 5.  Removing the phantom prints 5 of 5.
- *  (10) guardimport — point the grade back at the import spelling: 39/0 · 661/4,
+ *  (10) guardimport — point the grade back at the import spelling: 44/0 · 674/4,
  *       and the failures NAME `op-claims.test.mjs`, whose five genuinely-guarded
  *       floors the old predicate misgrades because that file does not import
  *       `provenance.mjs`.  The discarded predicate kept as a CONTROL.
  *  (11) reportonly — OVER-STRICTNESS, second direction: a consumer that imports a
  *       walk and only PRINTS its working-tree figures, no comparison and no unwrap:
- *       39/0 · 665/0, GREEN as declared.  A report is not a floor (D-257), and a
+ *       44/0 · 678/0, GREEN as declared.  A report is not a floor (D-257), and a
  *       detector that flagged one would make every diagnostic line a finding.
  *
  * THE ARMS ARE ENUMERATED, AND THEY SIT DIRECTLY UNDER THE MARKER'S OWN PARAGRAPH.
@@ -107,6 +126,9 @@ import {
   importsOf, comparisonsOf, seededLocals, WALK_PRIMITIVES, REPO,
   /* D-302: the grade is read off the figure's declared bucket, not off an import. */
   bucketsOf, gradeOf,
+  /* D-301: the third strip mode, which is what `hygiene.test.mjs`'s class census now
+     reads its corpus through — code only, with `${…}` kept. */
+  stripToCode,
 } from "../scripts/walkfloor.mjs";
 /* GUARDED: this suite FLOORS on what `walkfloor.mjs`'s walk found (§4 below), which
    is precisely the class it is built to detect, so it asks the same question every
@@ -168,6 +190,35 @@ const real = readdirSync(d);`;
     [st.length === src.length, st.split("\n").length === src.split("\n").length], [true, true]);
   t("a module whose ONLY mention of a walk is prose is NOT a walk module",
     moduleFacts(`/* we could use readdirSync( here */\nexport const N = 1;`).walks, 0);
+
+  /* D-301: THE THIRD MODE, AND IT WAS ADDED IN THE OVER-STRICTNESS DIRECTION.
+     `hygiene.test.mjs`'s class census used to read its corpus through a stripper
+     local to that file which knew about comments and nothing else, so a fixture
+     string counted as a walk. Moving it onto THIS lexer fixes that — and would
+     have broken something else, because a template literal's `${…}` is CODE THAT
+     RUNS and two live files in this estate call a discovery primitive inside one
+     (`scripts/battery.mjs:639`, `test/ref-variance-probe.mjs:414`). Neither would
+     have left the census, since both have other code sites; the membership figures
+     would have read correct while the matcher had gone blind. `keepInterpolations`
+     is that correction, DEFAULT OFF so no caller that predates D-301 moved. */
+  const interp = "const a = `holds ${readdirSync(dir).length} entr(ies)`;\n"
+               + "const b = `the literal readdirSync( in template TEXT`;\n"
+               + "const c = `${ \"readdirSync(\" }`;\n"
+               + "const d = readdirSync(other);";
+  const count = (s) => (s.match(/readdirSync\s*\(/g) || []).length;
+  t("(D-301) the DEFAULT strip blanks an interpolation with the text — 1 site, the bare call only",
+    count(strip(interp)), 1);
+  t("(D-301) stripToCode KEEPS the interpolation: 2 sites, the bare call AND the one inside ${…}",
+    count(stripToCode(interp)), 2);
+  t("(D-301) ...and a string NESTED in an interpolation is still blanked — the recursion re-lexes",
+    count(stripToCode(interp)) === 2 && !/"readdirSync\(/.test(stripToCode(interp)), true);
+  t("(D-301) stripToCode preserves length and line count exactly as the other two modes do",
+    [stripToCode(interp).length === interp.length,
+     stripToCode(interp).split("\n").length === interp.split("\n").length], [true, true]);
+  t("(D-301) a module whose ONLY primitive is inside a FIXTURE is not a walk module, in either quoting",
+    [moduleFacts("const tpl = `export const f = (d) => readdirSync(d);`;\nexport const N = 1;").walks,
+     moduleFacts("const s = \"export const f = (d) => readdirSync(d);\";\nexport const N = 1;").walks],
+    [0, 0]);
 }
 
 /* --------------------------------------------------- 2. THE BENIGN SHAPES, BUILT */

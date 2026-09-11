@@ -140,13 +140,23 @@ const ARMS = [
   {
     id: "stripper",
     what: "MAKE THE STRIPPER A NO-OP — let comments, strings and regex literals count as code",
-    expect: "MUST FAIL: §1's three arms. A module whose only mention of a walk is prose "
-          + "becomes a walk module, which is the documentation-poisons-a-corpus class "
-          + "this repository has now met in four separate instruments.",
+    expect: "MUST FAIL: §1's arms (three until 2026-09-10, EIGHT since D-301). A module "
+          + "whose only mention of a walk is prose becomes a walk module, which is the "
+          + "documentation-poisons-a-corpus class this repository has now met in four "
+          + "separate instruments. Since D-301 the census in `hygiene.test.mjs` reads "
+          + "through this same lexer, so hygiene falls with it.",
     file: DETECTOR,
-    patch: (s) => s.includes("export function strip(src, { strings = true } = {}) {\n  const n = src.length;")
-      ? s.replace("export function strip(src, { strings = true } = {}) {\n  const n = src.length;",
-                  "export function strip(src, { strings = true } = {}) {\n  if (true) return src;\n  const n = src.length;")
+    /* ANCHOR MOVED 2026-09-10 BY D-301, AND IT MOVED BECAUSE THIS ARM REPORTED
+       `DID NOT ARM` ON A REAL RUN — the finding, not a tidy-up. The anchor named
+       `strip`'s full SIGNATURE, and D-301 added one option to it
+       (`keepInterpolations`), so the patch matched zero times and the arm quietly
+       neutered nothing while both suites read green. Precisely WORKER.md's named
+       failure: an arm that did not arm is the most common way a control lies, and
+       only the driver's own zero-match check made it visible. The anchor is now the
+       first two lines of the BODY, which no signature change can move. */
+    patch: (s) => s.includes("  const n = src.length;\n  const out = new Array(n);")
+      ? s.replace("  const n = src.length;\n  const out = new Array(n);",
+                  "  if (true) return src;\n  const n = src.length;\n  const out = new Array(n);")
       : null,
     ok: (r) => r.walkfloor.fail > 0,
   },
