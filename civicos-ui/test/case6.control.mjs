@@ -1,5 +1,8 @@
 /* ============================================================================
-   CASE-6 · THE NEGATIVE CONTROL DRIVER — five arms plus a baseline, each armed
+   CASE-6 · THE NEGATIVE CONTROL DRIVER — EIGHT arms plus a baseline (five are
+   CASE-6's own, a–e; UI-57 appended f, g and h on 2026-09-10 when IC-75's
+   measured impact became its own item and the section's gate moved from the ACT
+   to the OBJECT), each armed
    ALONE with every other defence held open, each restore verified by sha256 AND
    by byte-for-byte content compare against a per-arm uniquely-named pristine
    copy, with a byte count printed and a minimum floored.
@@ -212,10 +215,81 @@ const ARMS = {
     check: () => ({ publishedcase: uiSuite("publishedcase.test.mjs") }),
     expect: "GREEN except assertions naming the supporting member by name; read the NAMES, not the code",
   },
+  /* ------------------------------------------------------------------- ARM f
+     UI-57 / IC-75, 2026-09-10. THE ARM THIS ITEM EXISTS FOR. */
+  f: {
+    declare: "UI-57 · THE SECTION RE-GATED ON THE ACT — the code exactly as it stood before this "
+           + "item, and the defect IC-75 measured. `publicationEntryHtml` goes back to gating the "
+           + "whole 'Publishing this case' section on the presence of the `publish` act in "
+           + "`op=affordances`' answer, which D-310 correctly withholds from a caller who owns no "
+           + "project.\n"
+           + "      MUST FAIL, AND BY NAME: `publication-entry.test.mjs`'s UI-57 block — the "
+           + "non-owner's section ABSENT, the owner rule not stated to them, and the byte-for-byte "
+           + "card comparison with the owner, which cannot hold against an empty string.\n"
+           + "      MUST NOT FAIL: every assertion taken over the OWNER's page. This arm changes "
+           + "nothing an owner sees — the act is published to them, so the old gate and the new one "
+           + "agree there — and if an owner's assertion reddens, the arm has broken the section "
+           + "generally rather than the gate specifically and proves nothing about the gate at all.",
+    file: APP,
+    arm: () => patch(APP,
+      '  const onObject = ok && r.object_type === "inquiry" && r.current_state === "concluded";',
+      '  const onObject = ok && !!actNamed(r.acts, "publish");'),
+    check: () => ({ publicationEntry: uiSuite("publication-entry.test.mjs") }),
+    expect: "publication-entry RED, and the failures NAMED as the non-owner's absent statement",
+  },
+
+  /* ------------------------------------------------------------------- ARM g */
+  g: {
+    declare: "UI-57 · OVER-STRICTNESS — CORRECT WORK IN A SPELLING THIS ITEM DID NOT ANTICIPATE "
+           + "MUST PASS. The non-owner's concluded inquiry is answered with an act set this item "
+           + "never imagined: the record publishes a SECOND act to them beside `conclude`. That is "
+           + "ordinary and legal — `op=affordances` derives every act on the object for the caller, "
+           + "and `publish` is the only one D-310 withholds.\n"
+           + "      MUST NOT FAIL: `publication-entry.test.mjs`, any of it. The section's gate is "
+           + "the OBJECT's state, so the shape and length of the act list are none of its business.\n"
+           + "      WHAT A RED HERE WOULD MEAN: the gate secretly reads the act LIST — that it is "
+           + "empty, or short, or exactly the fixture's — rather than the object, which is a fence "
+           + "tighter than its rule wearing the costume of caution. Read the arm by WHICH "
+           + "assertions fail, never by the exit code alone.",
+    file: null,
+    armFile: join(ROOT, "civicos-ui", "test", "publication-entry.test.mjs"),
+    arm: function () {
+      patch(this.armFile,
+        '  "INQ-2026-9004": { state:"concluded", title:"Did the authority waive the tipping fee?",\n    acts:[CONCLUDE_ACT],',
+        '  "INQ-2026-9004": { state:"concluded", title:"Did the authority waive the tipping fee?",\n    acts:[CONCLUDE_ACT, { id:"divide", label:"Divide the question", weight:"single", needs:"contribute", mode:"session", rung:null, prompt:null }],');
+    },
+    check: () => ({ publicationEntry: uiSuite("publication-entry.test.mjs") }),
+    expect: "publication-entry GREEN — all of it",
+  },
+
+  /* ------------------------------------------------------------------- ARM h */
+  h: {
+    declare: "UI-57 · THE DEFECT RE-MADE IN A SMALLER PLACE. Not the whole section this time: only "
+           + "the `data-pubwho` paragraph — the owner rule itself — is put behind the act. This is "
+           + "the shape the corrected header warns a later edit will reach for, because it looks "
+           + "like tact (why tell a non-owner about an act they are not offered?) and it is exactly "
+           + "the silence CASE-6 wrote the paragraph to break.\n"
+           + "      MUST FAIL: the UI-57 owner-rule assertion for the non-owner, and the "
+           + "byte-for-byte card comparison against the owner — the two that separate a statement "
+           + "restored from a statement merely present.\n"
+           + "      MUST NOT FAIL: the section's PRESENCE for the non-owner (it still renders), the "
+           + "other two CASE-6 properties, and every owner-side assertion. A red there would mean "
+           + "the arm removed more than one paragraph. THIS IS THE ARM THAT PROVES THE SUITE CAN "
+           + "TELL A SECTION THAT RENDERS from a section that renders THE RULE.",
+    file: APP,
+    arm: () => {
+      patch(APP, '      <p data-pubwho="1"><b>A case is published BY A PROJECT',
+                 '      ${act?`<p data-pubwho="1"><b>A case is published BY A PROJECT');
+      patch(APP, 'cannot publish for one either.</p>', 'cannot publish for one either.</p>`:""}');
+    },
+    check: () => ({ publicationEntry: uiSuite("publication-entry.test.mjs") }),
+    expect: "publication-entry RED at the owner-rule and card-equality assertions only",
+  },
 };
 MIN[join(ROOT, "civicos-ui", "test", "publishedcase.test.mjs")] = 80000;
+MIN[join(ROOT, "civicos-ui", "test", "publication-entry.test.mjs")] = 20000;
 
-const want = process.argv[2] ? [process.argv[2]] : ["baseline", "a", "b", "c", "d", "e"];
+const want = process.argv[2] ? [process.argv[2]] : ["baseline", "a", "b", "c", "d", "e", "f", "g", "h"];
 let notAsDeclared = 0;
 for (const name of want) {
   const A = ARMS[name];
@@ -234,11 +308,21 @@ for (const name of want) {
   for (const [k, r] of Object.entries(results)) {
     const t = tally(r.out);
     console.log(`    ${k}: exit ${r.code} · ${t.note || `${t.pass} pass${t.fail !== undefined ? `, ${t.fail} fail` : `/${t.total}`}`}`);
-    for (const line of r.out.split("\n").filter((l) => /^\s*(FAIL|✗|not ok)/.test(l)).slice(0, 8))
-      console.log(`        ${line.trim()}`);
+    /* WIDENED FROM 8 BY UI-57, AND THE COUNT IS PRINTED BESIDE IT. Every arm here
+       is declared with a MUST FAIL half and a MUST NOT FAIL half, and a truncated
+       list answers only the first: arm f's 8-line slice could not show whether an
+       OWNER-side assertion had also reddened, which is the half that says whether
+       the arm broke the gate or the section. A list that cannot show the arm
+       over-reaching is not evidence that it did not. */
+    const failed = r.out.split("\n").filter((l) => /^\s*(FAIL|✗|not ok)/.test(l));
+    if (failed.length) console.log(`        ${failed.length} failing assertion(s)${failed.length > 20 ? ", first 20:" : ":"}`);
+    for (const line of failed.slice(0, 20)) console.log(`        ${line.trim()}`);
   }
   const anyRed = Object.values(results).some((r) => r.code !== 0);
-  const asDeclared = name === "baseline" ? !anyRed : name === "e" ? true : anyRed;
+  /* `e` and `g` are the OVER-STRICTNESS arms: they are read by WHICH assertions
+     fail, never by the exit code, so the verdict line does not score them red or
+     green on its own. Every other arm is declared RED and the baseline GREEN. */
+  const asDeclared = name === "baseline" ? !anyRed : (name === "e" || name === "g") ? true : anyRed;
   if (!asDeclared) notAsDeclared++;
   console.log(`  EXPECTED: ${A.expect}`);
   console.log(`  VERDICT:  ${asDeclared ? "AS DECLARED" : "**NOT AS DECLARED — this is a finding about the ARM, read it before believing the subject**"}`);
