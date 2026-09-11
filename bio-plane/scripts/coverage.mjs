@@ -598,7 +598,7 @@ const REGISTER_FLOOR = {
      ONE RED IS EXPECTED ON THIS TREE AND IS NEITHER ITEM'S: `action-loop.test.mjs`
      pins a fixture clock at 2026-09-10 and the machine rolled past it. Both workers
      measured it independently on untouched baselines. It is M0-22. */
-  arms: 875,
+  arms: 879,
   classified: 164,
   corpus: 165,
   /* THE DUPLICATE `classified`/`corpus` KEYS THAT STOOD HERE FOR ONE COMMIT WERE MINE,

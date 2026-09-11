@@ -1138,7 +1138,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - Tests — CORRECTED, NEVER EXEMPTED:** - `bio-plane/test/caseflip.test.mjs` (NEW — the item's own suite), `bio-plane/test/caseflip.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step).  
   `docs/development/CLAIMS.md:1271`
 - Tests — CORRECTED, NEVER EXEMPTED:** - `bio-plane/test/caselifecycle.test.mjs` (NEW — the item's own suite), `bio-plane/test/caselifecycle.control.mjs` (NEW — the negative-control driver, committed so the arms re-run in one step; it edits real sources, so it is deliberately NOT a  
-  `docs/development/CLAIMS.md:1613`
+  `docs/development/CLAIMS.md:1615`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

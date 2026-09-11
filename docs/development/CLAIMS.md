@@ -1404,6 +1404,7 @@ half is not, and it cannot be closed by DIST alone.**
 session: fl9-fleet-bundle-guard (worktree `agent-abe10acbf93247266`, branch
   `worktree-agent-abe10acbf93247266`)
 opened: 2026-09-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at integration — merged on `main` and verified on the MERGED tree, not the branch's own: battery **170/170 · 10,475**, `coverage --strict` exit 0 read unpiped, register floor 879/164/165 re-derived from that same run, UI harness exit 0, `plancheck` 0 fail / 0 warn.
 paths: **NAMED BY REGION, AND A CASE-4 WORKER IS LIVE ON THE INQUIRY STATE MACHINE.** The two
   grounds are disjoint by construction and the disjointness is checkable rather than asserted:
   this item touches **no file under `bio-plane/src/`, `bio-plane/checks/` or `bio-plane/schema.mjs`
@@ -1569,6 +1570,7 @@ released: 2026-09-10, same turn — the addendum lands in the same commit as thi
 session: case4-lifecycle-flag (worktree `agent-a2cabbd5225deffd5`, branch
   `worktree-agent-a2cabbd5225deffd5`)
 opened: 2026-09-10T00:00:00Z
+released: 2026-09-10 by CONDUCT at integration — merged on `main` and verified on the MERGED tree, not the branch's own: battery **170/170 · 10,475**, `coverage --strict` exit 0 read unpiped, register floor 879/164/165 re-derived from that same run, UI harness exit 0, `plancheck` 0 fail / 0 warn.
 paths: **NAMED BY REGION. AN FL-9 WORKER IS LIVE ON THE BUILD TOOLING AND THE FLEET BUNDLES**
   (`newgroup/`, `pdf-worker/`, the committed per-member bundles and their gate) — disjoint from
   every path below, but the CASE header's rule is that precision is the only protection two
