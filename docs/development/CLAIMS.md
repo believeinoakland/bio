@@ -2294,3 +2294,21 @@ concurrency: checked over the whole register rather than assumed — every claim
   carries a `released:` line, including D-265, D-302 and M0-24, the three items whose ground this
   is. The only worker named as live in this session's brief is CASE-6 on `civicos-ui/app.html`
   and the UI suites; no path here is under `civicos-ui/`.
+
+### AMENDMENT 2026-09-10 to the D-301 claim above — ONE PATH ADDED: `bio-plane/test/walkfloor.control.mjs`, ARM (6)'s ANCHOR ONLY
+  Not foreseen when the claim was written, and OWED rather than opportunistic. Re-running that
+  driver whole — which this item owes, because it moves the driver's subject — returned arm (6)
+  `stripper` as **DID NOT ARM**: its patch anchored on `strip`'s full SIGNATURE, D-301 added one
+  option to that signature, so the patch matched ZERO TIMES and the arm neutered nothing while both
+  suites read a comfortable green. **An arm that did not arm is a finding, and only the driver's own
+  zero-match check made it visible.** The anchor now names the first two lines of the function BODY,
+  which no signature change can reach; the arm's `expect` text is corrected in the same edit (§1 of
+  `walkfloor.test.mjs` is eight arms now, not three, and hygiene falls with the lexer since D-301).
+  Nothing else in the driver is touched. The eleven arms' FIGURES in `walkfloor.test.mjs`'s own
+  `NEGATIVE CONTROL:` declaration went stale as well and are RE-MEASURED from that run's print,
+  never adjusted by hand. **The two halves have different causes and were attributed by re-running
+  rather than by subtracting**: walkfloor 39 -> 44 is this item's five new section-1 arms, while
+  hygiene 665 -> 678 is CPDF-13, CASE-5b and M0-24 merging between D-302's run and this one —
+  **D-301 adds NOTHING to hygiene's tally**, it replaces a reader and moves a floor, and the census
+  still makes the same three ASSERTIONS. The first draft of that header said the thirteen were mine;
+  the baseline run said otherwise, which is why the rule is to diff the runs.

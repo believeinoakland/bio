@@ -8715,3 +8715,71 @@ control SPELLED its `op=` fixture in a committed file, which put a real routing 
 corpus the arm exists to prove immovable — the phantom's `5 of 6` became `6 of 7`. The token is now
 composed at runtime, the way `test/op-claims.test.mjs`'s §5 fixtures already were and for the
 reason its header already gave.
+
+## 2026-09-10 — D-301: the class census was comment-blind and NOT string-blind, measured both ways
+
+**Instrument:** `bio-plane/test/hygiene.test.mjs`'s class census, run over two readers on the same
+tree: the comment-stripper local to that file (the `before`), and `stripToCode` from
+`bio-plane/scripts/walkfloor.mjs`, the estate's ONE lexer (the `after`). Every figure below is
+PRINTED by a run, never derived.
+
+| figure | before | after |
+| --- | --- | --- |
+| files in the census | **34** | **32** |
+| GUARDED by `scripts/provenance.mjs` | 24 | 23 |
+| named and not guarded | 10 | 9 |
+| REACH floor at the site | 15 | **32** |
+
+**THE TWO DROPS, EACH NAMED WITH ITS REASON — and the debt row predicted one of them.**
+
+1. `bio-plane/test/walkfigure.test.mjs` — **1 raw site, 0 code.** Its only discovery primitive is
+   inside the two-line fixture library its sandboxes import, which has to spell a real primitive
+   because the thing under test is whether a detector recognises one. It was on
+   `CLASS_NAMED_UNGUARDED`; the entry is REMOVED, and the removal is forced rather than chosen —
+   a named file that has stopped walking fails the census's own `goneFromList` arm as STALE.
+2. `bio-plane/test/walkfloor.test.mjs` — **14 raw sites, 0 code, and NOT PREDICTED.** Every site is
+   a comment or a fixture source string, several of them fixtures whose whole subject is which
+   spellings a lexer must ignore. It had never appeared on any named list because it imports
+   `provenance.mjs` for unrelated arms and so graded GUARDED: **the same class hidden on the other
+   side of the ledger, where no ratchet would ever have asked about it.** The instance the row was
+   written about was the visible one; the census's count overstated the class by two, not one.
+
+**THE OVER-STRICTNESS TWIN, WHICH IS THE FINDING THE ROW DID NOT CONTAIN.** A template literal's
+`${…}` is CODE THAT RUNS, and two live files in this estate call a discovery primitive inside one:
+`bio-plane/scripts/battery.mjs:639` and `bio-plane/test/ref-variance-probe.mjs:414`. A plain
+string-blinding blanks both. **Neither file would have LEFT the census** — each has other code
+sites — so the membership table above would have read exactly as it does now while the matcher had
+gone blind to a real spelling. No figure in this section can detect that; the control arm can, and
+does. `strip` gained `keepInterpolations` (DEFAULT OFF, so no caller that predates this item moved)
+and `stripToCode` is the one named spelling of the census's question.
+
+**BATTERY, ATTRIBUTED BY DIFFING RUNS RATHER THAN BY SUBTRACTION.** Baseline on this worktree at
+`4c61500` after `npm ci`: **173/173 · 10,747**, exit 0. Final: **173/173 · 10,752**, exit 0.
+Diffing the two runs' per-suite lines, **exactly one suite moved**: `walkfloor.test.mjs` 39 → 44,
+this item's five new section-1 arms. `hygiene.test.mjs` is UNMOVED at 678 — the census makes the
+same three assertions, it just reads a different reader — and `op-claims` 35, `walkfigure` 32 and
+`planning-hygiene` 221 are unmoved too. +5 closes exactly.
+
+**D-303 REPRODUCED, FOURTH INDEPENDENT SIGHTING, AND CLOSED BY READING THE SKIP LINES.** This
+worktree's baseline reads **6 below `main`'s published 10,753**. `test/fleetbundles.test.mjs`
+prints `SKIP pdf-worker: byte-identity not runnable here — 2 vendored input(s) are not installed`
+and `SKIP pdf-worker: needs its own install to rebuild`, both by name. The −6 is that skip, not
+damage, and the suite says so loudly every run.
+
+**COVERAGE.** `node scripts/coverage.mjs --strict` exit 0, read unpiped. `REGISTER_FLOOR` `arms`
+moved **901 → 906** from the figure the run PRINTED (`arms 906/901 · GREW by 5 arm(s)`, `fullest 56
+(hygiene.test.mjs)`, up from 51) — the fifth move that day, ONE key set verified by grep, and the
+register counts five of the six arms `hygiene.test.mjs` now declares, which is its stated behaviour
+as a FLOOR on arms stated rather than an exact count. `classified` 167 and `corpus` 168 UNMOVED.
+
+**NEGATIVE CONTROLS.** `node test/d301-census.control.mjs` — **six arms, ALL AS DECLARED on the
+first run**, each armed ALONE, every restore verified by sha256 AND byte compare against a
+uniquely-named per-arm pristine copy with a byte floor. The `before` arm prints the prior state
+rather than describing it: census **35**, the fixture probe named as a new unguarded walk, and the
+two files this item dropped back in the corpus with it. **AND RE-RUNNING `walkfloor.control.mjs`
+WHOLE — owed, because this item moves that driver's subject — RETURNED ITS ARM (6) `stripper` AS
+`DID NOT ARM`.** Its patch anchored on `strip`'s full SIGNATURE, this item added one option to it,
+the patch matched ZERO TIMES, and the arm neutered nothing while both suites read a comfortable
+green. Only the driver's own zero-match check made it visible; re-anchored on the function BODY and
+re-run, eleven of eleven as declared. **An instrument's negative control is itself source, and it
+goes stale the way source does.**

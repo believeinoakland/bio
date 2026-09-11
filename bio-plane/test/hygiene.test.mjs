@@ -28,7 +28,8 @@
    (3b) AN ARM THAT NEVER ARMED, RECORDED RATHER THAN QUIETLY REWRITTEN. Arm (3) first ignored the phantom via `.git/info/exclude`; in a worktree `.git` is a FILE pointing at `<common>/worktrees/<id>`, which has no `info/` directory, so the append ENOENTed, nothing was ignored, `git status` was NOT empty, and the arm silently re-measured arm (1). It was caught by the printed pristine digest reading `e3b0c442…` — the sha256 of the EMPTY STRING, the identical instrument failure M0-15's own harness had, in the same place, for a different reason.
    (4) NEUTER THE ONE CHECK — delete `reportProvenance`'s naming branch in `scripts/provenance.mjs`, ONE edit in ONE module -> `coverage-provenance` 28 -> 17 pass/11 fail, `battery-provenance` 23 -> 14/9, this suite 533 -> 531/2, every corpus still PRINTED. Three callers moving on one edit is the evidence that this is ONE mechanism and not three copies. Restored, `cmp` byte-identical, sha256 acec3087…, all three back to 28/23/533.
    (4b) THE SURPRISING GREEN THAT WAS A FINDING ABOUT THE ARM. On its first run arm (4) left this suite at 533 pass, 0 fail — because arms (1)-(4) of the block below all read `classifyDiscovered`'s RETURN and none read a printed WORD, and on an honest tree the naming branch never runs, so it could have gone dark here in silence. Arm (5) of that block was added to drive the printer over a synthetic off-commit item into a captured sink; only then did this suite move.
-   (5) OVER-STRICTNESS, on the real tree with NOTHING planted -> coverage 137 of 137 and this suite 154 of 154 in the commit, no NOT-IN-ANY-COMMIT block from either walk, no floor described as contaminated. Silence is the result here, not the absence of one. */
+   (5) OVER-STRICTNESS, on the real tree with NOTHING planted -> coverage 137 of 137 and this suite 154 of 154 in the commit, no NOT-IN-ANY-COMMIT block from either walk, no floor described as contaminated. Silence is the result here, not the absence of one.
+   (run 2026-09-10, D-301) THE CLASS CENSUS'S STRING-BLINDING — SIX ARMS, declared in `test/d301-census.control.mjs` and run in one step with `node test/d301-census.control.mjs [arm]`, deliberately NOT a `.test.mjs` because it edits real sources AND deposits real modules while it runs. Each armed ALONE, every other defence held OPEN, each DECLARING before it ran what must fail and what must not, every restore verified by sha256 AND by a byte compare against a uniquely-named per-arm pristine copy with the byte count printed and floored. Figures are hygiene pass/fail · walkfloor pass/fail. (a) `baseline` — nothing armed: 678/0 · 44/0, and the census prints `32 file(s)`. It is not decoration: it is what distinguishes six-arms-broken from six-arms-working. (b) `realwalk` — THE TWIN THIS ITEM CAN FAIL AT, since a matcher blinded TOO FAR reports a clean census over a real exposure and its figures are indistinguishable from a correct one's: a probe whose only primitive is a REAL call in live code must STILL be enumerated -> 677/1 · 44/0, the GUARDED-or-NAMED arm failing BY NAME, census 33. (c) `realinterp` — the over-strictness spelling nobody anticipated: the only site inside a template `${…}`, which `scripts/battery.mjs:639` and `test/ref-variance-probe.mjs:414` both really do -> 677/1 · 44/0 NAMING the probe. Without `keepInterpolations` this arm PASSES, and the census would be quietly narrower than its own stated rule while every membership figure read correct — neither live file would have left the corpus. (d) `fixture` — THE ARM THIS ITEM EXISTS FOR: a walking fixture in a template literal AND in a string, written from scratch rather than taken from the allowlist -> 678/0 · 44/0 GREEN, census still `32 file(s)`, the probe ABSENT from the corpus rather than graded harmless. (e) `before` — the SAME fixture read by the comment-only stripper this item deleted -> 677/1 · 44/0 NAMING it, census 35, which is the BEFORE state proved rather than described (the two files D-301 dropped come back in the same print). Two edits at once on purpose, and the only arm here that is: the claim is about a PAIR, so arming either half alone proves nothing about the other. (f) `neuter` — blank everything, so the census's lexer sees no code at all -> 676/2 · 42/2, the REACH arm failing at `0 walking file(s), floor 32` WITH THE CORPUS PRINTED and the stale-list arm naming all nine entries at once; D-265's arm re-proven on the moved matcher, and the row without which (d) is satisfied for free, because a census that looked at nothing would also report the probe harmless. ALL SIX AS DECLARED. **AND RE-RUNNING `walkfloor.control.mjs` WHOLE — owed, because D-301 moves that driver's subject — RETURNED ITS ARM (6) `stripper` AS `DID NOT ARM`, WHICH IS THE SHARPEST THING THIS ITEM FOUND**: that patch anchored on `strip`'s full SIGNATURE, D-301 added one option to it, so the patch matched ZERO TIMES and the arm neutered nothing while both suites read a comfortable green. Re-anchored on the function BODY, where a signature change cannot reach it, and re-run: eleven of eleven as declared. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
@@ -90,7 +91,7 @@ import { readGitProvenance, reportProvenance, stateOf, repoPath } from "../scrip
 /* M0-21 / D-268: the census below grades a file by whether THAT FILE walks, so a
    floor standing one import away from its walk is invisible to it. This module
    answers the question by DATA FLOW instead. Imported, never restated. */
-import { sweepWalkFloors, strip as stripSource } from "../scripts/walkfloor.mjs";
+import { sweepWalkFloors, strip as stripSource, stripToCode } from "../scripts/walkfloor.mjs";
 /* D-265: the census's SECOND question. `walkfloor.mjs` asks whether a value produced
    by a walk reaches a comparison — by reading source, so five stated shapes are
    invisible to it. `walkfigure.mjs` puts the classification ON the value, where no
@@ -1832,7 +1833,43 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    *
    * WHAT THIS MATCHER CAN SEE: a discovery primitive — `readdirSync(`,
    * `readdir(`, `opendirSync(`, `opendir(` or `globSync(` — in the CODE of a
-   * tracked `.mjs` under `bio-plane/` or `civicos-ui/`.
+   * tracked `.mjs` under `bio-plane/` or `civicos-ui/`, where CODE now means what
+   * the estate's one lexer says it means (see D-301 below) rather than what a
+   * reader local to this file said it meant.
+   *
+   * MADE STRING-BLIND 2026-09-10 BY D-301, AND THE FIGURES BELOW ARE THE
+   * MEASUREMENT RATHER THAN AN EDIT. Until this item the matcher ran over a
+   * comment-stripper local to this file, so a primitive inside a FIXTURE TEMPLATE
+   * LITERAL counted as a walk — `test/walkfigure.test.mjs` was enumerated as a NEW
+   * UNGUARDED WALK on D-265's first full run while containing no walk at all. It
+   * now runs over `stripToCode` from `scripts/walkfloor.mjs`, the estate's ONE
+   * lexer, which blanks comments, regex literals, string literals and a template's
+   * text chunks. The local reader is DELETED rather than corrected: a second lexer
+   * is the defect, and this one had never heard of strings.
+   *
+   *   MEASURED, printed by the harness in this item's control driver:
+   *   **34 files before, 32 after.** TWO dropped, and only one of them was the one
+   *   the debt row named:
+   *     - `bio-plane/test/walkfigure.test.mjs` — 1 site, inside the two-line fixture
+   *       library its sandboxes import. It was NAMED on the list below and its entry
+   *       is gone; the removal is at the site.
+   *     - `bio-plane/test/walkfloor.test.mjs` — **14 raw sites, ZERO of them code**,
+   *       and NOT PREDICTED BY THE ROW. Every one is a comment or a fixture source
+   *       string, several of them fixtures whose whole subject is which spellings a
+   *       lexer must ignore. It never appeared on the named list because it happens
+   *       to import `provenance.mjs` for unrelated arms and so graded GUARDED — the
+   *       same class, hidden on the other side of the ledger, where no ratchet
+   *       would ever have asked about it.
+   *   TWO files kept a site that a naive string-blinding would have TAKEN, and this
+   *   is the half the debt row did not see: `scripts/battery.mjs:639` (7 sites, one
+   *   of them this) and `test/ref-variance-probe.mjs:414` (2 sites, one of them
+   *   this) each call a primitive inside a `${…}` of a report line. An interpolation
+   *   is CODE THAT RUNS, and the lexer's `keepInterpolations` mode — added by D-301
+   *   in `walkfloor.mjs`, DEFAULT OFF so no caller that predates it moved — is what
+   *   keeps them counted. NEITHER FILE WOULD HAVE LEFT THE CENSUS either way, since
+   *   both have other code sites: the membership figures would have read correct
+   *   while the matcher had gone blind, which no figure here can detect. Arm (c)
+   *   `realinterp` of this item's control is what asks that question instead.
    *
    * WIDENED AND MADE COMMENT-BLIND 2026-08-09 BY M0-18, AND BOTH HALVES WERE
    * MEASURED RATHER THAN TIDIED.
@@ -1857,8 +1894,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    * WHAT IT STILL CANNOT SEE, stated because a matcher that hides its blind spots
    * is read as though it had none: a third-party glob library, a walk in a shell
    * script or in another language, a walk reached through an aliased or
-   * destructured binding these regexes do not spell, and anything outside those
-   * two directories (`newgroup/`, `tools/`, `agent-worker/`, `pdf-worker/`).
+   * destructured binding these regexes do not spell, a walk in a source string that
+   * something `eval`s or writes out and runs (D-301 made the matcher blind to
+   * strings ON PURPOSE, so a fixture is now invisible whether or not it later
+   * executes — `walkfloor.test.mjs`'s sandboxes do exactly that, and the exposure
+   * is the sandbox's, not this estate's), and anything outside those two
+   * directories (`newgroup/`, `tools/`, `agent-worker/`, `pdf-worker/`).
    * **AND THE ONE THAT MATTERED MOST, because M0-18 was bitten by it: this census
    * grades the file the WALK is in, and a walk's FLOOR can live in a DIFFERENT
    * FILE.** `scripts/op-claims.mjs` walks and `test/op-claims.test.mjs` floors on
@@ -1878,12 +1919,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
    * walk at all. Neither root is added to the census, because adding a root whose
    * every member is a non-instance buys a longer list and no enforcement.
    */
-  /* Comment-blind, and blind in BOTH directions: the token must be CODE. The
-     same reader `test/bounds.test.mjs` uses on the same problem, kept small
-     because it only has to blank spans rather than preserve them. */
-  const codeOnly = (text) => text
-    .replace(/\/\*[\s\S]*?\*\//g, (s) => s.replace(/[^\n]/g, " "))
-    .replace(/(^|[^:])\/\/[^\n]*/g, (s, p) => p + s.slice(p.length).replace(/[^\n]/g, " "));
+  /* D-301: the token must be CODE, and CODE is the estate's ONE lexer's answer.
+     The local comment-stripper that stood here until 2026-09-10 is DELETED, not
+     corrected — it was comment-blind and string-blind in neither direction, and a
+     second reader of the same question is how the two answers were allowed to
+     differ in the first place. `stripToCode` blanks comments, regex literals,
+     string literals and a template's text chunks, and KEEPS the code inside
+     `${…}`. It is imported, never restated. */
   const DISCOVERY = /\b(?:readdirSync|readdir|opendirSync|opendir|globSync)\s*\(/g;
   const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "src", "checks", "migrate"]],
                         ["civicos-ui", [".", "test"]]];
@@ -1897,7 +1939,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
         const rel = repoPath(REPO, join(d, n));
         let src = "";
         try { src = readFileSync(join(d, n), "utf8"); } catch { continue; }
-        const walks = (codeOnly(src).match(DISCOVERY) || []).length;
+        const walks = (stripToCode(src).match(DISCOVERY) || []).length;
         if (!walks) continue;
         /* GUARDED means it IMPORTS the check, and the import is what is matched.
            Written first as a bare mention of `scripts/provenance.mjs` anywhere in
@@ -2006,26 +2048,20 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        and `netstat`, not from the directory. Guarding it would be true and
        useless, which is `ref-variance-probe.mjs`'s reason exactly. */
     "bio-plane/test/d249-port.probe.mjs",         // its own test/ census, printed as context, read by no assertion
-    /* ADDED 2026-09-10 by D-265's item, AND THE RATCHET FIRED ON ITS OWN AUTHOR
-       BEFORE ANYONE READ THE DIFF — this file, `walkfigure.test.mjs` and the
-       chokepoint arm below all went red on the first run of the new suite, which
-       is three independent ratchets catching one new file and is the best
-       evidence available that they work.
-       WHY IT IS NAMED AND NOT GUARDED, and the reason is a finding about THIS
-       MATCHER rather than about that file: `walkfigure.test.mjs` CONTAINS NO WALK
-       AT ALL. Its only discovery primitive is the word `readdirSync` inside a
-       FIXTURE TEMPLATE LITERAL — the two-line library its sandboxes import, which
-       has to spell a real primitive because the thing under test is whether the
-       detector recognises one. The file itself mints `mkdtemp` sandboxes, sweeps
-       them, and floors that count at 2.
-       SO THE MATCHER IS COMMENT-BLIND AND NOT STRING-BLIND, measured here. M0-18
-       blinded it to comments after `op-claims.test.mjs` was enumerated on the
-       strength of a SENTENCE DESCRIBING THIS MATCHER; a fixture string is the
-       same class one step over. NOT CORRECTED IN THIS ITEM, deliberately:
-       blinding it to strings would move the census count, the REACH floor and the
-       membership of this very list, which is a measurement rather than an edit and
-       is not what D-265 claims. Carried as debt instead of dissolved here. */
-    "bio-plane/test/walkfigure.test.mjs",         // no walk; its only primitive is inside a fixture template literal
+    /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
+       AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
+       file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
+       `readdirSync` inside a FIXTURE TEMPLATE LITERAL, the two-line library its
+       sandboxes import, which has to spell a real primitive because the thing under
+       test is whether the detector recognises one. That entry also said, in the same
+       breath, that it was carrying debt rather than closing it, because blinding the
+       matcher to strings would move the census count, the REACH floor and the
+       membership of this very list. D-301 is that measurement: with the matcher
+       reading `stripToCode`, this file scores ZERO sites and is not in the census at
+       all, so a NAMING of it would now fail as STALE on the `goneFromList` arm below.
+       An entry that has stopped being true is removed rather than kept as a
+       courtesy — the entry did its job, which was to make a blind spot VISIBLE until
+       somebody measured it. */
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
@@ -2034,13 +2070,32 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      widening ADDED `test/query-reach.report.mjs` (an `fs/promises` `readdir` that
      no run of this census had ever seen) and the comment-blinding DROPPED
      `test/op-claims.test.mjs` (matched only by a sentence describing this matcher).
-     27 before, 27 after, and neither file is the one it was. */
+     27 before, 27 after, and neither file is the one it was.
+     D-301 measured its own the same way: 34 before, 32 after, the two DROPS named
+     in the block header above with the sites that produced them. */
   console.log(`  class census: ${census.length} file(s) in the estate walk a directory with a discovery`
-    + ` primitive in CODE (readdirSync / readdir / opendirSync / opendir / globSync) ·`
+    + ` primitive in CODE (readdirSync / readdir / opendirSync / opendir / globSync;`
+    + ` D-301: comments, regex literals, strings and template TEXT blanked by the estate's one`
+    + ` lexer, the code inside \${…} KEPT) ·`
     + ` ${guarded.length} GUARDED by scripts/provenance.mjs (${guarded.map((r) => r.file).join(", ")})`
     + ` · ${unguarded.length} named and not guarded`);
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 15)`,
-    census.length >= 15, true);
+  /* THE REACH FLOOR, MOVED 2026-09-10 BY D-301 FROM 15 TO THE FIGURE THIS RUN
+     PRINTS, AND THE MOVE IS THE POINT RATHER THAN HOUSEKEEPING. 15 was not a
+     measurement of anything: it sat 19 below a real 34, so the matcher could have
+     lost more than half its reach and this arm would have stayed green — and D-301
+     is precisely an item that CHANGES THE READER, where over-blinding is the
+     failure mode and a slack floor is blind to it. A floor with slack is not a
+     ratchet. EXACTNESS IS ARGUED, not assumed: the census already treats a NAMED
+     walk that stops walking as a decision (`goneFromList`, below), and the file
+     D-301 dropped from the guarded side — `walkfloor.test.mjs`, 14 raw sites and
+     no code — is the receipt that the guarded half needed the same rule. An exact
+     floor extends "a walk disappearing is a decision, not a silence" to both
+     halves. The expensive direction is honest work: a suite that legitimately
+     stops walking fails HERE, by name, with the corpus printed, and costs the next
+     worker one re-measured number and a reason — which is what this estate asks
+     for every other figure. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 32)`,
+    census.length >= 32, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

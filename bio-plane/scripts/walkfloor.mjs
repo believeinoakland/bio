@@ -236,8 +236,25 @@ export const CENSUS_ROOTS = [["bio-plane", ["scripts", "test", "src", "checks", 
  * flow stage, driven directly, found all four of `op-claims.test.mjs`'s floors.
  * TWO SEPARATE DEFECTS IN ONE INSTRUMENT, BOTH OF WHICH PRODUCED A CLEAN REPORT.
  * That is the whole reason this item's controls drive the REAL split rather than
- * only a fixture: a fixture-only arm would have agreed with both bugs. */
-export function strip(src, { strings = true } = {}) {
+ * only a fixture: a fixture-only arm would have agreed with both bugs.
+ *
+ * `keepInterpolations: true` blanks a template literal's TEXT CHUNKS but keeps the
+ * code inside every `${…}` span, recursing so a string nested in an interpolation
+ * is still blanked.  IT EXISTS BECAUSE OF A THIRD MEASURED BUG, FOUND BY D-301 IN
+ * THE DIRECTION NOBODY LOOKS — over-strictness.  Blinding M0-16's class census to
+ * strings correctly dropped two files whose only discovery primitive was a fixture,
+ * and ALSO blanked two REAL walks in live code: `scripts/battery.mjs:639` and
+ * `test/ref-variance-probe.mjs:414` each call `readdirSync(` inside a `${…}` of a
+ * report line.  Neither file left the census (each has other code sites), so the
+ * membership figures were right and the MATCHER was wrong — the kind of defect a
+ * clean report hides.  DEFAULT OFF, so every caller that existed before D-301 reads
+ * exactly what it read before; the census is the one caller that turns it on.
+ *
+ * What it cannot do, stated: an interpolation body is re-lexed from its own first
+ * character, so `prev` starts empty and a leading `/` there is read as a regex
+ * literal.  No site in the estate is written that way, and the failure direction is
+ * blanking rather than counting. */
+export function strip(src, { strings = true, keepInterpolations = false } = {}) {
   const n = src.length;
   const out = new Array(n);
   for (let k = 0; k < n; k++) out[k] = src[k] === "\n" ? "\n" : src[k];
@@ -264,15 +281,26 @@ export function strip(src, { strings = true } = {}) {
       j = Math.min(j + 1, n); if (strings) blank(i, j); i = j; prev = "x"; continue;
     }
     if (c === "`") {                                    // template literal, interpolations included
-      let j = i + 1, depth = 0;
+      let j = i + 1, depth = 0, bodyAt = -1;
+      const interps = [];                               // [start, end) of each depth-1 `${…}` BODY
       while (j < n) {
         if (src[j] === "\\") { j += 2; continue; }
-        if (src[j] === "$" && src[j + 1] === "{") { depth++; j += 2; continue; }
-        if (depth > 0 && src[j] === "}") { depth--; j++; continue; }
+        if (src[j] === "$" && src[j + 1] === "{") { if (depth === 0) bodyAt = j + 2; depth++; j += 2; continue; }
+        if (depth > 0 && src[j] === "}") { depth--; if (depth === 0) interps.push([bodyAt, j]); j++; continue; }
         if (depth === 0 && src[j] === "`") break;
         j++;
       }
-      j = Math.min(j + 1, n); if (strings) blank(i, j); i = j; prev = "x"; continue;
+      j = Math.min(j + 1, n);
+      if (strings) {
+        blank(i, j);
+        /* D-301: an interpolation is CODE that runs, not text. Put it back, lexed
+           by this same function so a string nested inside it is still blanked. */
+        if (keepInterpolations) for (const [a, b] of interps) {
+          const inner = strip(src.slice(a, b), { strings, keepInterpolations });
+          for (let k = a; k < b && k < n; k++) out[k] = inner[k - a];
+        }
+      }
+      i = j; prev = "x"; continue;
     }
     if (c === "/" && REGEX_OK_AFTER.has(prev)) {        // regex literal (heuristic, stated above)
       let j = i + 1, cls = false, ok = false;
@@ -299,6 +327,15 @@ export function strip(src, { strings = true } = {}) {
    whose answer lives inside a string — "what does this file import" and "does it
    ask `provenance.mjs`" — are asked over this and never over the full strip. */
 export const stripComments = (src) => strip(src, { strings: false });
+
+/* Everything that is not CODE blanked — comments, regex literals, string literals
+   and a template's text chunks — with the code inside `${…}` KEPT.  D-301's census
+   asks its question over this and nothing else: "does this file CALL a discovery
+   primitive", where a primitive spelled inside a fixture is not a call and one
+   spelled inside an interpolation is.  Named here so the estate has ONE spelling of
+   that question rather than a reader per instrument — which is how `hygiene.test.mjs`
+   came to carry a second lexer that did not know about strings. */
+export const stripToCode = (src) => strip(src, { keepInterpolations: true });
 
 /* ------------------------------------------------------ 2. WALK DERIVATION */
 
