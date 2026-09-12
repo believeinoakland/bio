@@ -219,6 +219,16 @@ export function optionsFor(member) {
 
 const isVendored = (p) => p.split("/").includes("node_modules");
 
+/** The UPLOAD PARTS a member declares beside its bundle, member-relative.
+ *  Absent for every member that is a one-part upload, which is both of the
+ *  members that existed before `ocr-worker`. Read through one function so the
+ *  build step, the manifest and the gate cannot disagree about what an asset is
+ *  — the same rule the recipe itself follows. */
+export function assetsOf(member) {
+  const a = member && member.bundle ? member.bundle.assets : null;
+  return Array.isArray(a) ? a.filter((p) => typeof p === "string" && p) : [];
+}
+
 /** Build one member. `write: false` (the default) NEVER touches the tree. */
 export async function buildMember(member, { write = false, mutateEntry = null } = {}) {
   const opts = { ...optionsFor(member), write };
@@ -257,6 +267,7 @@ export function manifestFrom(member, built) {
   };
   const first = built.inputs.filter((i) => !isVendored(i.path));
   const vendored = built.inputs.filter((i) => isVendored(i.path));
+  const assets = assetsOf(member);
   let lock = null;
   try {
     lock = { path: "package-lock.json", sha256: sha256(readFileSync(join(member.abs, "package-lock.json"))) };
@@ -284,6 +295,33 @@ export function manifestFrom(member, built) {
        written down nowhere (IC-68, finding 3). */
     inputs: first.map((i) => ({ path: i.path, bytes: i.bytes, sha256: hashOf(i.path) })),
     vendoredInputs: vendored.map((i) => ({ path: i.path, bytes: i.bytes, sha256: hashOf(i.path) })),
+    /* ---- CPDF-10: THE UPLOAD PARTS A BUNDLE CANNOT SWALLOW ------------------
+     *
+     * `ocr-worker` is the first member that is NOT a one-part upload, and it is
+     * not one for a PLATFORM reason rather than a build one: Workers FORBID
+     * runtime wasm compilation, so `tesseract-core.wasm` must arrive as a module
+     * the platform compiled at upload time. No bundler makes that one part.
+     * Its language model rides the same way so the exact bytes are hashed here
+     * rather than fetched at runtime from somewhere nothing pins.
+     *
+     * Those files are declared as `bundle.external`, which means ESBUILD NEVER
+     * SEES THEM and they appear in no `inputs` list — so without this arm the
+     * staleness guard would cover every line of the member's source and NONE of
+     * the 5.95 MB that actually decides what its output says. A guard with that
+     * shape is the FL-9 defect one directory over.
+     *
+     * THE KEY IS EMITTED ONLY FOR A MEMBER THAT DECLARES ASSETS, so
+     * `pdf-worker`'s and `agent-worker`'s committed manifests are byte-unchanged
+     * by this addition — asserted in `fleetbundles.test.mjs`, not assumed. An
+     * asset a member declares and does not HAVE is `sha256: null`, which
+     * `verifyStatic` treats as staleness rather than as an absence to tolerate:
+     * unlike a vendored dependency, an upload part is committed, so it is never
+     * legitimately missing. */
+    ...(assets.length ? { assets: assets.map((rel) => ({
+      path: rel,
+      bytes: (() => { try { return readFileSync(join(member.abs, rel)).length; } catch { return null; } })(),
+      sha256: hashOf(rel),
+    })) } : {}),
     lock,
   };
 }
@@ -399,6 +437,55 @@ export function verifyStatic(member) {
         + `was built (now sha256 ${liveSha}, the bundle was built from ${inp.sha256}). `
         + `Run \`npm run build\` in ${member.dir}/.`);
   }
+
+  /* (b3) CPDF-10 — THE UPLOAD PARTS. Dependency-free like (b), and it is the
+     arm that matters most for the member that has them: `ocr-worker`'s stated
+     transcription fidelity is a measurement OF the exact wasm core and language
+     model bytes it carries, so a model swapped underneath it makes a `cap` in
+     the record a claim about something else. THREE conditions, and the third is
+     the one an `inputs`-shaped arm would not have:
+
+       - a declared asset that is ABSENT is staleness, not a tolerated gap. An
+         upload part is COMMITTED (unlike a vendored dependency, which is
+         legitimately missing in a fresh checkout), so absent means the artifact
+         cannot be reproduced or installed.
+       - a declared asset whose bytes MOVED is staleness in the ordinary way.
+       - an asset the member DECLARES and the manifest does not RECORD — the
+         asymmetry, and the direction that fails open: a member could otherwise
+         gain a part that nothing hashes simply by being rebuilt with an older
+         library. The manifest is checked against the member's declaration, not
+         only the other way round. */
+  const declaredAssets = assetsOf(member);
+  const recordedAssets = Array.isArray(manifest.assets) ? manifest.assets : [];
+  for (const rel of declaredAssets) {
+    const rec = recordedAssets.find((a) => a && a.path === rel);
+    if (!rec) {
+      add(`it declares the upload asset ${rel} and its committed manifest records NO hash for it, `
+        + `so nothing would notice those bytes changing. Run \`npm run build\` in ${member.dir}/.`);
+      continue;
+    }
+    let live = null;
+    try { live = readFileSync(join(member.abs, rel)); } catch { /* named below */ }
+    if (!live) {
+      add(`STALE BUNDLE — the declared upload asset ${rel} is MISSING. An upload part is committed, `
+        + `so an absent one means this member cannot be installed or reproduced. `
+        + `Restore it and run \`npm run build\` in ${member.dir}/.`);
+      continue;
+    }
+    const liveSha = sha256(live);
+    if (liveSha !== rec.sha256)
+      add(`STALE BUNDLE — the upload asset ${rel} has changed since ${member.bundle.outfile} was built `
+        + `(now sha256 ${liveSha}, the manifest records ${rec.sha256}). This member's stated fidelity `
+        + `is a measurement OF these bytes, so a swap here is a claim about something else. `
+        + `Re-measure the engine and run \`npm run build\` in ${member.dir}/.`);
+    if (rec.bytes != null && live.length !== rec.bytes)
+      add(`STALE BUNDLE — the upload asset ${rel} is ${live.length} B, the manifest says ${rec.bytes} B.`);
+  }
+  for (const rec of recordedAssets)
+    if (rec && !declaredAssets.includes(rec.path))
+      add(`its committed manifest records an upload asset ${rec.path} the member no longer declares. `
+        + `An asset that stops being declared stops being shipped, which is a change nobody stated. `
+        + `Run \`npm run build\` in ${member.dir}/.`);
 
   /* (c) the lock moved without a rebuild */
   let liveLock = null;

@@ -1,0 +1,67 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ocr-worker",
+
+  // PINNED, for the same reason the plane, the installer and pdf-worker pin it:
+  // wrangler otherwise deploys wherever the machine's OAuth session points, and
+  // a fresh checkout was once found authenticated to the WRONG account with a
+  // deploy that would have SUCCEEDED (CLAUDE.md). A new Worker config must carry
+  // this, and `coverage.mjs` fails --strict on a Worker directory that does not.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // Built by scripts/build.mjs through bio-plane/scripts/fleet-bundle.mjs. The
+  // committed bundle is what deploys and what the battery loads under miniflare.
+  "main": "dist/ocr-worker.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+
+  // NO `nodejs_compat`. The engine glue references nothing from node (measured:
+  // zero `require(`, `process.` or `__dirname` occurrences in the vendor file),
+  // and CPDF-15's deployed probe ran the same engine with no compatibility flags
+  // at all. A flag nothing needs is surface nobody asked for.
+
+  // THE UPLOAD PARTS THIS MEMBER HAS AND NEITHER SIBLING DOES, and the reason
+  // this member is NOT a one-part upload:
+  //   * Workers FORBID runtime wasm compilation, so `tesseract-core.wasm` must
+  //     arrive as a MODULE the platform compiled at upload time. There is no
+  //     bundler trick that makes it one part; this is a platform fact CPDF-15
+  //     measured by being refused.
+  //   * `eng.traineddata` rides as a Data part rather than out of R2 so the
+  //     model's exact bytes are HASHED by the same guard that hashes the source
+  //     (`dist/ocr-worker.bundle.json`). A model fetched at runtime is bytes
+  //     nothing in this record pins, and the engine's measured fidelity is a
+  //     fidelity OF THOSE BYTES.
+  // `fleet-member.json`'s `bundle.assets` is where that list is declared for the
+  // guard; these rules are how wrangler carries them.
+  "rules": [
+    { "type": "CompiledWasm", "globs": ["assets/*.wasm"] },
+    { "type": "Data", "globs": ["assets/*.traineddata"] }
+  ],
+
+  // DS-2 / D-116: ONE version across the plane and every member. This site and
+  // package.json's `version` are the member's two declaring sites and
+  // `bio-plane/test/resolveversion.test.mjs` refuses a tree where they and the
+  // authority disagree — in BOTH directions.
+  "vars": { "VERSION": "0.56.0" },
+
+  // CPU. CPDF-15 MEASURED 10,400.6 cpu_ms per page at 300 dpi on this engine and
+  // model (34.7% of the 30 s Workers Paid ceiling, 1,040x the Free one), so this
+  // member cannot run on Free at all and asks for the ceiling explicitly rather
+  // than discovering it. **ONE PAGE PER INVOCATION** is the binding rule and it
+  // is MEMORY, not CPU, that sets it: 33.7/48.5/61.3 MB RGBA frames complete and
+  // a 75.7 MB frame is KILLED (`exceededMemory`, reproduced). A whole-document
+  // loop is UNMEASURED and the member refuses one rather than assuming it.
+  "limits": { "cpu_ms": 30000 },
+
+  // The NARROWEST binding that does the job (fleet rule 3, I6): the private
+  // working corpus, READ, and nothing else. No PUBLISHED — this Worker has no
+  // business inside the ratification fence. No STORE (Durable Object) binding,
+  // so it structurally CANNOT write the record: it asserts nothing (fleet rule
+  // 2). It never calls put/delete on R2, which a hygiene-style source scan and a
+  // behavioural R2-unchanged assertion in its own suite enforce, because the
+  // platform's R2 bindings do not distinguish read from write.
+  "r2_buckets": [
+    { "binding": "CAPTURES", "bucket_name": "bio-captures" }
+  ],
+
+  "observability": { "enabled": true }
+}

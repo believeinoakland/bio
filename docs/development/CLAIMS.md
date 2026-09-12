@@ -2740,3 +2740,59 @@ paths:
 concurrency: checked over the register. CPDF-10 is live on the fleet-member ground, disjoint
 from every path above. No live claim names `ocr-measure-probe.mjs`.
 released: 2026-09-11 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,808 (+1 attributed to planning-hygiene on D-315), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. D-305 and D-314 closed; D-315 stands as the probes-side residue.
+
+## CLAIM 2026-09-12 CONTENT-PDF (CPDF-10 — the THIRD FLEET MEMBER: `ocr-worker`, wasm tesseract behind the provenance chain the plane already refuses with)
+session: cpdf10-ocr-member (worktree `agent-accf1711f80abb70c`, branch `worktree-agent-accf1711f80abb70c`)
+opened: 2026-09-12T00:00:00Z
+paths:
+  - `ocr-worker/**` — **NEW DIRECTORY, the whole of it.** The third fleet member: `fleet-member.json`,
+    `package.json`, `wrangler.jsonc` (`account_id` PINNED, the rule `CLAUDE.md` sets for every new
+    Worker config), `.gitignore`, `scripts/build.mjs`, `scripts/embed-tesslib.mjs`, `src/index.mjs`,
+    `src/transcribe.mjs`, `src/tessengine.mjs`, `src/pngsamples.mjs`, `src/tesslib.mjs` (GENERATED and
+    committed, the `src/signpage.mjs` precedent), `assets/tesseract-core.wasm`,
+    `assets/eng.traineddata`, `dist/**` (the committed bundle + its manifest), `test/**`.
+  - `bio-plane/scripts/fleet-bundle.mjs` — **ONE ADDITIVE ARM**: a member's `bundle.assets` (the
+    upload parts a wasm member has and neither existing member does) are hashed into the committed
+    manifest and checked for staleness by `verifyStatic`. The `assets` key is EMITTED ONLY for a
+    member that declares them, so `pdf-worker`'s and `agent-worker`'s committed manifests stay
+    BYTE-UNCHANGED — asserted, not assumed. No existing function's behaviour moves.
+  - `bio-plane/test/fleetbundles.test.mjs` — the FL-9/FL-10 guard's roster: the discovered-members
+    assertion gains `ocr-worker`, `GUARDED_FLOOR` 2 -> 3, section 7's boot table gains the member
+    WITH its wasm/data parts, and one new arm drives the asset staleness arm on the synthetic
+    member. No FL-9 or FL-10 arm is edited.
+  - `bio-plane/test/resolveversion.test.mjs` — **ONE ASSERTION CORRECTED, NEVER EXEMPTED**: DS-2's
+    live ARM 7b pins `versionSites().length === 6` (the plane + two members, 2 sites each). A third
+    member makes the true figure 8; the assertion moves with the reason stated at the site.
+  - `bio-plane/scripts/coverage.mjs` — **`FLEET_FLOOR` and `REGISTER_FLOOR` ONLY**, moved to figures a
+    green `--strict` run PRINTED. ONE `arms:` key per table (the six keep-both merges this file
+    records). Nothing else in it.
+  - `bio-plane/wrangler.jsonc` — **ONE LINE**: the `OCR_WORKER` service binding beside `PDF_WORKER`
+    and `AGENT_WORKER`, INERT until DIST deploys the member — exactly how both of those shipped.
+  - `bio-plane/test/ocr-member-e2e.test.mjs` and `bio-plane/test/ocr-member-e2e.control.mjs` —
+    **NEW**: the acceptance arm (the REAL member answering the plane's `OCR_WORKER` binding over a
+    REAL image-only Oakland page) and its negative-control driver.
+  - `docs/development/INTERFACES.md` — **APPEND ONLY**: the `I9` entry (plane -> ocr-worker),
+    PROVISIONAL on I8's precedent.
+  - `docs/development/INTERFACE-CHANGES.md` — **APPEND ONLY**: IC-78 and IC-79 (minted).
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  - `docs/development/DEBT.md` — **APPEND ONLY** for rows this item raises; ids from `tools/mintid.mjs`.
+  **READ, NEVER EDITED**: `pdf-worker/src/pagepixels.mjs` (CPDF-12's renderer — the member IMPORTS it
+  across trees, which is `pdf-worker`'s own `../bio-plane/src/*` precedent and is why FL-9's
+  cross-tree arm already covers it); `pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf` (the real
+  Oakland page, used as a fixture and not moved); `bio-plane/src/textchain.mjs` and
+  `bio-plane/src/index.mjs`'s Tier-3 wire (D-251/D-252/CPDF-13 built the consumer completely and
+  stated the producer contract — this item CONSUMES that contract and reshapes nothing);
+  `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` (its three engine digests are this member's
+  comparability check and are reproduced, never edited — a D-315 worker is live on this file).
+  **NOT** `bio-plane/src/**` (the chain, the wire, the merge and the refusals all already exist —
+  a source edit there would mean the contract was reshaped, which is a finding to report rather
+  than an edit to make), **NOT** `bio-plane/src/affordances.mjs`, **NOT** the case or publish
+  paths, **NOT** `bio-plane/test/textchain.test.mjs` (the stub-driven consumer suite stands as the
+  over-strictness arm: it must pass UNCHANGED), **NOT** `pdf-worker/**` beyond reading, **NOT**
+  `agent-worker/**`, **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT**
+  `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's), **NOT** `release/**`, **NOT** any
+  version bump (`0.56.0` is the authority DS-2 set and every site this item writes ANSWERS to it).
+concurrency: checked over the register. D-315 is live on `ocr-composed-probe.mjs` and
+`cpdf15-tesseract-runtime.probe.mjs` — both READ ONLY here and neither touched. No live claim names
+`ocr-worker/`, `fleet-bundle.mjs`, `fleetbundles.test.mjs`, `resolveversion.test.mjs` or
+`bio-plane/wrangler.jsonc`. FL-9/FL-10's FLEET claims are released.

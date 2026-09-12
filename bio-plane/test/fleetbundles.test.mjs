@@ -68,7 +68,7 @@ import { join } from "node:path";
 import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
-  planeMember,
+  planeMember, assetsOf,
 } from "../scripts/fleet-bundle.mjs";
 import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../scripts/embed-signpage.mjs";
 
@@ -88,13 +88,17 @@ const show = (findings) => { for (const f of findings) console.log(`         ! $
    declaring itself stops existing, and `2 of 2 guarded` reads exactly as green
    as it did before a directory was deleted. Move this only UPWARD and only to a
    figure a green run PRINTED. */
-const GUARDED_FLOOR = 2;
+/* MOVED 2026-09-12 by CPDF-10: 2 -> 3, the fleet's third member (`ocr-worker`,
+   the Tier-3 OCR path). Moved to a figure a green run PRINTED and in the SAME
+   turn as the member that invalidates it, which is the rule a floor with slack
+   breaks. */
+const GUARDED_FLOOR = 3;
 
 const members = discoverMembers(REPO_ROOT);
 
 console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them is GUARDED ---");
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-worker", "pdf-worker"]);
+  members.map((m) => m.name), ["agent-worker", "ocr-worker", "pdf-worker"]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
@@ -152,6 +156,51 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
     (agent?.vendoredInputs || []).length, 0);
   t("every recorded input carries a hash — a null sha256 would be an input nothing checks",
     members.flatMap((m) => (manifests.get(m.name)?.inputs || []).filter((i) => !i.sha256).map((i) => `${m.name}:${i.path}`)), []);
+
+  /* CPDF-10: `ocr-worker` reaches into TWO other trees — CPDF-12's renderer in
+     `pdf-worker/src/` and the plane sources behind it — so a change in either
+     stales this member's artifact, exactly as it does `pdf-worker`'s. Asserted
+     rather than described, on IC-68 finding 3's precedent one member over. */
+  const ocr = manifests.get("ocr-worker");
+  t("ocr-worker's build reaches into the RENDERER's tree and the PLANE's, and the manifest hashes all of them",
+    (ocr?.inputs || []).map((i) => i.path).filter((p) => p.startsWith("../")).sort(),
+    ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs",
+     "../pdf-worker/src/pagepixels.mjs"]);
+  t("and it vendors NOTHING — its engine is a committed upload part, not an npm install, so its byte arm can never skip",
+    (ocr?.vendoredInputs || []).length, 0);
+}
+
+console.log("\n--- 2b · THE UPLOAD PARTS: a member that is not a one-part upload, and the bytes its grade rests on ---");
+{
+  /* CPDF-10's additive arm. `ocr-worker` carries a wasm core and a language
+     model as MODULE PARTS — Workers forbid compiling wasm at runtime, so there
+     is no bundler trick that makes them one part. They are declared `external`,
+     which means esbuild never sees them and they appear in NO input list: without
+     this the guard would cover every line of the member's source and none of the
+     5.95 MB that decides what its output says. That is FL-9's own defect, one
+     directory over. */
+  const ocr = manifests.get("ocr-worker");
+  t("the member's upload parts are recorded in its committed manifest, with a hash each",
+    (ocr?.assets || []).map((a) => a.path).sort(),
+    ["assets/eng.traineddata", "assets/tesseract-core.wasm"]);
+  t("and every one carries a real sha256 and a byte count",
+    (ocr?.assets || []).filter((a) => !a.sha256 || !a.bytes).map((a) => a.path), []);
+  /* THE ENGINE'S OWN DIGESTS, and they are not this item's numbers: CPDF-15
+     pinned these exact bytes when it measured the GO verdict, and this member
+     reproduces them from a fresh install and a fresh fetch. The `cap` in every
+     chain this member writes is a measurement OF these two files. */
+  const byPath = Object.fromEntries((ocr?.assets || []).map((a) => [a.path, a]));
+  t("the wasm core is the one CPDF-15 measured, by digest and by byte count",
+    [byPath["assets/tesseract-core.wasm"]?.sha256, byPath["assets/tesseract-core.wasm"]?.bytes],
+    ["3822dc6ee83d507f2bd2f83b97a3dd5dabf3ea71a9836d951602c9054615137e", 1839004]);
+  t("and the language model likewise — a different model is a different measurement",
+    [byPath["assets/eng.traineddata"]?.sha256, byPath["assets/eng.traineddata"]?.bytes],
+    ["7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2", 4113088]);
+  /* THE OTHER TWO MEMBERS ARE UNTOUCHED BY THE ADDITION, which is the constraint
+     the arm was written under: the key is emitted only for a member that declares
+     assets, so no committed manifest moved. */
+  t("a member that declares no upload part records no `assets` key at all — nothing else's manifest moved",
+    ["agent-worker", "pdf-worker"].map((n) => manifests.get(n)?.assets === undefined), [true, true]);
 }
 
 console.log("\n--- 3 · THE BYTE-IDENTITY ARM: a fresh build of the SOURCE against the COMMITTED artifact ---");
@@ -244,6 +293,59 @@ console.log("\n--- 4 · THE GUARD PROVES IT CAN FAIL, on a subject this suite fu
     const gone = verifyStatic(noBundle).findings;
     t("(e) a member that stops declaring a `bundle` block is NAMED, not silently dropped",
       gone.length === 1 && gone[0].startsWith("probe-worker:") && /no .bundle. block/.test(gone[0]), true);
+
+    /* ---- CPDF-10's ARM, PROVED ON A SUBJECT THIS SUITE FULLY CONTROLS -------
+     * The upload-part arm gets the same treatment every other arm here gets:
+     * a synthetic member DECLARES an asset, is built, verifies GREEN, and then
+     * each of the three ways an asset can go wrong is armed and must go RED.
+     * A guard nobody has seen fail is a guard nobody has seen — and this one
+     * guards the bytes a stated fidelity is a measurement OF. */
+    mkdirSync(join(dir, "assets"), { recursive: true });
+    const assetPath = join(dir, "assets/model.bin");
+    writeFileSync(assetPath, Buffer.from("MODEL-v1"));
+    const withAsset = { ...probe, bundle: { ...probe.bundle, assets: ["assets/model.bin"] } };
+    await writeMember(withAsset);
+    t("(f) a member declaring an upload part builds and verifies GREEN",
+      verifyStatic(withAsset).findings, []);
+    const manifestOf = () => JSON.parse(readFileSync(join(dir, withAsset.bundle.manifest), "utf8"));
+    t("(f) and the part is recorded with its own hash",
+      manifestOf().assets, [{ path: "assets/model.bin", bytes: 8, sha256: sha256(Buffer.from("MODEL-v1")) }]);
+
+    const assetBefore = readFileSync(assetPath);
+    writeFileSync(assetPath, Buffer.from("MODEL-v2"));
+    const swapped = verifyStatic(withAsset).findings;
+    t("(g) SWAP the model's bytes without rebuilding -> the guard FAILS", swapped.length > 0, true);
+    t("(g) naming the member, the part, and STALE BUNDLE",
+      [swapped.every((f) => f.startsWith("probe-worker:")),
+       swapped.some((f) => f.includes("assets/model.bin")),
+       swapped.some((f) => f.includes("STALE BUNDLE"))], [true, true, true]);
+    t("(g) and it says WHY it matters here — the fidelity is a measurement OF these bytes",
+      swapped.some((f) => /measurement OF these bytes/.test(f)), true);
+    writeFileSync(assetPath, assetBefore);
+    t("(g) restored BY CONTENT", readFileSync(assetPath).equals(assetBefore), true);
+    t("(g) restored BY sha256", sha256(readFileSync(assetPath)), sha256(assetBefore));
+    t("(g) GREEN again — so the red above was the CHANGE and not the harness",
+      verifyStatic(withAsset).findings, []);
+
+    rmSync(assetPath);
+    const missing = verifyStatic(withAsset).findings;
+    t("(h) an upload part that VANISHES is staleness, not a tolerated absence — unlike a vendored dependency it is committed",
+      missing.some((f) => f.includes("MISSING") && f.includes("assets/model.bin")), true);
+    writeFileSync(assetPath, assetBefore);
+    t("(h) restored BY sha256", sha256(readFileSync(assetPath)), sha256(assetBefore));
+
+    /* THE ASYMMETRIC ARM, and it is the one an `inputs`-shaped check would not
+       have: a member that GAINS a part the manifest never recorded. Without it
+       a member could acquire an unhashed upload part simply by being rebuilt
+       against an older library, and every other arm would stay green. */
+    const gainsOne = { ...probe, bundle: { ...probe.bundle, assets: ["assets/model.bin", "assets/extra.bin"] } };
+    writeFileSync(join(dir, "assets/extra.bin"), Buffer.from("EXTRA"));
+    t("(i) a member that DECLARES a part its manifest does not record is named — the direction that would otherwise fail open",
+      verifyStatic(gainsOne).findings.some((f) => /records NO hash for it/.test(f) && f.includes("assets/extra.bin")), true);
+    t("(i) and the mirror: a manifest recording a part the member no longer declares is named too",
+      verifyStatic(probe).findings.some((f) => /no longer declares/.test(f) && f.includes("assets/model.bin")), true);
+    t("(i) while the DECLARED-and-recorded member is still GREEN (over-strictness)",
+      verifyStatic(withAsset).findings, []);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -300,12 +402,28 @@ console.log("\n--- 7 · and the committed bytes really are a Worker: each boots 
      nothing resolves; this says the runtime agrees. Both members expose a GET
      `/version` that needs no plane and no bytes. */
   for (const [name, extra] of [["agent-worker", { serviceBindings: { PLANE: () => new Response("{}") } }],
-                               ["pdf-worker", { r2Buckets: ["CAPTURES"] }]]) {
+                               ["pdf-worker", { r2Buckets: ["CAPTURES"] }],
+                               ["ocr-worker", { r2Buckets: ["CAPTURES"] }]]) {
     const m = members.find((x) => x.name === name);
     if (!m || !m.bundle || !committedOf.get(name)) { t(`${name}: present to boot`, false, true); continue; }
     const p = join(m.abs, m.bundle.outfile);
+    /* CPDF-10: A MEMBER WITH UPLOAD PARTS BOOTS WITH THEM, and the modules array
+       is how a boot expresses that — `modules:true` cannot. The parts are typed
+       the way the PLATFORM types them at upload: `CompiledWasm` (Workers forbid
+       compiling wasm at runtime, so this is the only way the core can arrive at
+       all) and `Data`. `modulesRoot` is the MEMBER directory, because the module
+       names are the specifiers the committed bundle imports. A member whose
+       parts were missing would boot and then fail on its first page, which is
+       why the version arm below asks the engine whether it is really there. */
+    const assets = assetsOf(m);
+    const wasmType = (rel) => (rel.endsWith(".wasm") ? "CompiledWasm" : "Data");
     const mf = new Miniflare({
-      modules: true, modulesRoot: "/", scriptPath: p, script: committedOf.get(name).toString("utf8"),
+      ...(assets.length
+        ? { modulesRoot: m.abs,
+            modules: [{ type: "ESModule", path: p, contents: committedOf.get(name).toString("utf8") },
+                      ...assets.map((rel) => ({ type: wasmType(rel), path: join(m.abs, rel),
+                                                contents: readFileSync(join(m.abs, rel)) }))] }
+        : { modules: true, modulesRoot: "/", scriptPath: p, script: committedOf.get(name).toString("utf8") }),
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
       bindings: { VERSION: "bundle-gate" }, ...extra,
     });
@@ -316,6 +434,13 @@ console.log("\n--- 7 · and the committed bytes really are a Worker: each boots 
         [res.status, body.name], [200, name]);
       t(`${name}: and it is the version the runtime bound, so the module really initialised`,
         body.version, "bundle-gate");
+      /* CPDF-10: A MEMBER WITH UPLOAD PARTS IS ASKED WHETHER THEY ARRIVED. The
+         boot above proves the JavaScript initialised; a member deployed without
+         its wasm part initialises perfectly and then cannot transcribe anything.
+         `ocr-worker` answers that on its own `/version`, so the gate asks. */
+      if (assets.length)
+        t(`${name}: and its upload parts really arrived — the engine reports itself loaded`,
+          [body.engine_loaded, body.engine_unavailable], [true, undefined]);
     } finally { await mf.dispose(); }
   }
 }
