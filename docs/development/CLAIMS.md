@@ -2962,3 +2962,4 @@ concurrency: checked over the register 2026-09-12. Every CONTENT-PDF block above
 `ocr-measure-probe.mjs`, `cpdf16-floor-controls.mjs` or `bio-plane/scripts/coverage.mjs`.
 DIST and FLEET push frequently — the `REGISTER_FLOOR` key is the one collision risk and the
 resolution rule is written at its site: COLLAPSE TO ONE SET and re-read the printed figures.
+released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 181/181 · 11,078 (+18 attributed), `coverage --strict` exit 0 read unpiped (floor 936/173/174 by print), UI harness exit 0, `mintid --audit` 0 breaks. D-322 closed; the class swept to zero across six test dirs.
