@@ -484,6 +484,52 @@ function citedAddresses(reports) {
   return out.slice(0, CITATIONS_MAX);
 }
 
+// ../bio-plane/src/tokens.mjs
+var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
+  // dist/SECRETS.txt of the 0.2.0 test deployment
+  // ADMIN_TOKEN
+  "34451e5e855bf8d45e93d89fca560e6bd392cf1d0cc6832e3121614d1c68d9db",
+  // MEMBER_TOKEN
+  "7ecc5d014e25ce4c2e8457424afa0420288742c69182db1be5f4caccd63d4c91",
+  // PROBE_TOKEN
+  "5910ebbfe7816d9d5e2451012f9db8ac92aaa3f65a8f50da3f7255ab8bdb26ad"
+]);
+var sha256hex = async (v) => {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+
+// src/cascade.mjs
+var CASCADE_ORDER = Object.freeze(["member", "project", "instance"]);
+var CASCADE_NO_ACCOUNT = "NO_ACCOUNT_RESOLVED";
+var LEVEL_UNSET = "unset";
+var LEVEL_REVOKED = "revoked_by_publication";
+var LEVEL_AVAILABLE = "available";
+async function levelState(entry) {
+  const v = entry && typeof entry.token === "string" ? entry.token : "";
+  if (v.length === 0) return LEVEL_UNSET;
+  if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
+  return LEVEL_AVAILABLE;
+}
+async function resolveClaudeCascade(accounts = {}) {
+  const levels = [];
+  let resolved = null;
+  for (const level of CASCADE_ORDER) {
+    const entry = accounts?.[level];
+    const state = await levelState(entry);
+    levels.push({ level, state });
+    if (!resolved && state === LEVEL_AVAILABLE)
+      resolved = { level, ref: typeof entry.ref === "string" && entry.ref ? entry.ref : null };
+  }
+  if (resolved) return { available: true, level: resolved.level, ref: resolved.ref, levels };
+  return {
+    available: false,
+    reason: CASCADE_NO_ACCOUNT,
+    levels,
+    detail: "no Claude account resolved at any level of the cascade (member, then project, then instance). The capability is UNAVAILABLE and this is that statement \u2014 an honest absence, stated, because a silent no-op is indistinguishable from a run that found nothing. Each level's own absence is named beside this."
+  };
+}
+
 // src/index.mjs
 var PLANE_ORIGIN = "http://plane";
 var DEFAULT_MAX_TURNS_PER_SEGMENT = 120;
@@ -523,7 +569,7 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
   return { reached: true, status: res.status, body: parsed };
 }
 var MAX_STEPS = 400;
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null }) {
   let calls = 0;
   const call = (op, query, body) => {
     calls += 1;
@@ -548,6 +594,14 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       "the plane holds no run under that id in this namespace, so there is nothing to continue. This member opens no run: a run's identity and its conditions are the plane's, and a member that could open one would be a machine deciding what it was formed under.",
       404,
       { run_id: runId }
+    ) };
+  const recordedPayer = session.principal?.claude ?? null;
+  if (cascade?.available && recordedPayer !== cascade.level)
+    return { refusal: refusal2(
+      "RUN_NAMES_A_DIFFERENT_PAYER",
+      `the run's own record says the ${JSON.stringify(recordedPayer)} level of the Claude-account cascade pays for it, but the material handed to this segment resolves to the ${JSON.stringify(cascade.level)} level. Those are two different payers and this member will not spend under one while the record names the other. Either the launch recorded the wrong level or this segment was handed the wrong accounts; both are the caller's to fix.`,
+      409,
+      { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }
     ) };
   const logRead = planeAnswer(await call("airunlog", { run: runId }), "airunlog");
   if (logRead.silent) return { refusal: planeSilent(logRead.silent) };
@@ -916,6 +970,21 @@ async function handleRun(req, env) {
       "the credential handed to this member is not shaped like one this plane issues. Whether a well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and is never made here.",
       400
     );
+  const accountsSupplied = body.claude_accounts != null;
+  if (accountsSupplied && (typeof body.claude_accounts !== "object" || Array.isArray(body.claude_accounts)))
+    return refusal2(
+      "BAD_CLAUDE_ACCOUNTS",
+      "claude_accounts, when present, is an object keyed by cascade level (member, project, instance), each entry { token, ref }. This member judges only what it is handed.",
+      400
+    );
+  const cascade = accountsSupplied ? await resolveClaudeCascade(body.claude_accounts) : null;
+  if (cascade && !cascade.available)
+    return refusal2(
+      CASCADE_NO_ACCOUNT,
+      cascade.detail,
+      409,
+      { capability: "unavailable", levels: cascade.levels }
+    );
   const bound = Number(env.MAX_TURNS_PER_SEGMENT) || DEFAULT_MAX_TURNS_PER_SEGMENT;
   const requested = body.turns == null ? bound : Number(body.turns);
   if (!Number.isFinite(requested) || requested < 1)
@@ -950,6 +1019,7 @@ async function handleRun(req, env) {
     runId,
     store,
     credential,
+    cascade,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS
   });
@@ -966,7 +1036,24 @@ async function handleRun(req, env) {
     stage: "harness",
     turns_run: 0,
     judgement_source: "supplied",
-    judgement_note: "the control-flow table is FL-3's and it ran; the model account that would supply the judgement inside a step is FL-6's cascade and is not resolved here, so judgements arrived from the caller. Stated rather than presented as a model run.",
+    /* CORRECTED AT FL-6, never exempted: this note used to say the model
+       account "is FL-6's cascade and is not resolved here". The cascade IS
+       resolved here now, and the honest remainder is different — the account
+       is resolved and NAMED, and what still does not happen is a MODEL TURN,
+       whose sizing is D-218's measurement and not this item's. */
+    judgement_note: "the control-flow table is FL-3's and it ran; the Claude account that would pay for a model turn is resolved by FL-6's cascade and named beside this. What has not happened is a model turn itself (turns_run: 0) \u2014 running one is sized by D-218 and is not this segment's claim \u2014 so judgements arrived from the caller. Stated rather than presented as a model run.",
+    /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
+       honest statement of a different fact: material supplied and RESOLVED
+       (level + ref + every level's own state); material supplied and NOTHING
+       resolved never reaches here — it refused above, by name; material NOT
+       supplied is its own stated absence, distinct from "nothing resolved",
+       because a caller that offered no accounts and a cascade that exhausted
+       them are different facts about this segment. */
+    claude_account: cascade ? { available: true, level: cascade.level, ref: cascade.ref, levels: cascade.levels } : {
+      available: false,
+      reason: "NO_ACCOUNT_MATERIAL_SUPPLIED",
+      detail: "this segment was handed no claude_accounts material, so the cascade had nothing to resolve \u2014 the deterministic, judgements-supplied mode. An absence, stated."
+    },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,

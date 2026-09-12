@@ -33,11 +33,15 @@
  *
  * **IT STILL RUNS NO MODEL TURNS AND IT STILL SAYS SO ON THE WIRE**
  * (`turns_run: 0`, `judgement_source: "supplied"`). The DETERMINISTIC half is
- * what FL-3 builds; the model account that would supply the judgement inside a
- * step is FL-6's cascade and is not resolved here. Until it lands, a judgement
- * arrives from the caller and the answer names that fact rather than presenting
- * a table-driven walk as a model run. Nothing here is a stub that pretends to be
- * finished, and nothing here claims to be the half it is not.
+ * what FL-3 builds. SINCE FL-6 the Claude account that would pay for a model
+ * turn IS resolved here — `src/cascade.mjs`, member → project → instance, from
+ * per-call material retained exactly as long as the credential is: not at all
+ * — and the response names which level pays or states, per level, why none
+ * can. What still does not happen is the model turn itself, whose segment
+ * sizing is D-218's measurement; a judgement therefore still arrives from the
+ * caller and the answer names that fact rather than presenting a table-driven
+ * walk as a model run. Nothing here is a stub that pretends to be finished,
+ * and nothing here claims to be the half it is not.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite — behaviourally AND by a source scan, as I6's are for `pdf-worker`):
@@ -129,6 +133,13 @@ import {
 import {
   SUBSESSION_OPS, spawnContract, takeReports, citedAddresses,
 } from "./subsession.mjs";
+
+/* FL-6 — THE CLAUDE-ACCOUNT CASCADE, in its own file and pure like the two
+ * above. Which level pays is resolved HERE, in the fleet member, because the
+ * plane's own airunopen stamp says so: the plane learns it by being told and
+ * refuses a run that cannot say. The material arrives PER CALL beside the `ai`
+ * credential and is retained exactly as long: not at all. */
+import { resolveClaudeCascade, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -252,7 +263,7 @@ const MAX_STEPS = 400;
  *  answers F10's precondition. Every one of those is in `harness.mjs`, is pure,
  *  and is driven directly by the suite as well as through this function — so a
  *  decision made here instead would be a decision nothing exhaustive covers. */
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null }) {
   /* EVERY PLANE CALL IS COUNTED, AND THE COUNT IS WHAT SPENDS `runtime`.
      §14b.6 named `runtime-ceiling-reached` as a word the record had with no
      writer, and IS-9(d) as the item that builds the producer. This counter IS
@@ -289,6 +300,26 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       "the plane holds no run under that id in this namespace, so there is nothing to continue. This "
       + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
       + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
+
+  /* FL-6 — THE RECORD'S PAYER AND THE RUNTIME'S RESOLUTION MUST BE THE SAME
+     FACT. The run object names WHICH LEVEL of the cascade pays (two principals,
+     both named — §14a, DEC-27(b)); this segment just resolved the cascade from
+     the material it was handed. When the two disagree, driving on would spend
+     under one account while the record names another — a payer nobody can
+     audit, which is exactly the fail-closed reason the store refuses to OPEN a
+     run with no payer named. Refused naming BOTH, so the reader knows which
+     two facts disagree; this member re-words neither. Checked only when
+     material was supplied: a judgements-only segment resolves nothing and has
+     nothing to disagree with. */
+  const recordedPayer = session.principal?.claude ?? null;
+  if (cascade?.available && recordedPayer !== cascade.level)
+    return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
+      `the run's own record says the ${JSON.stringify(recordedPayer)} level of the Claude-account `
+      + `cascade pays for it, but the material handed to this segment resolves to the `
+      + `${JSON.stringify(cascade.level)} level. Those are two different payers and this member will `
+      + "not spend under one while the record names the other. Either the launch recorded the wrong "
+      + "level or this segment was handed the wrong accounts; both are the caller's to fix.",
+      409, { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }) };
 
   /* §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINUES.
      The count is what the table needs; the entries are what a later reader
@@ -892,6 +923,30 @@ async function handleRun(req, env) {
       + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
       + "is never made here.", 400);
 
+  /* FL-6 — THE CASCADE, RESOLVED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN.
+     `claude_accounts` is per-call material for the three levels ({member,
+     project, instance}, each `{ token, ref }`), handed over the way the `ai`
+     credential is and retained the same way: not at all — it is read here,
+     judged, and only the SECRET-FREE status travels further. ABSENT ENTIRELY
+     is a legal caller (the deterministic, judgements-supplied mode FL-3 built)
+     and is STATED as an absence on the response rather than silently treated
+     as the same fact as "nothing resolved".
+
+     SUPPLIED-BUT-NOTHING-RESOLVES REFUSES, by name, per level. The caller
+     asked for a run some Claude account would pay for and none can: that is
+     the capability UNAVAILABLE, and FL-6's own row states the failure mode
+     this guards — a silent no-op is indistinguishable from a run that found
+     nothing. An "empty success" here would be exactly that. */
+  const accountsSupplied = body.claude_accounts != null;
+  if (accountsSupplied && (typeof body.claude_accounts !== "object" || Array.isArray(body.claude_accounts)))
+    return refusal("BAD_CLAUDE_ACCOUNTS",
+      "claude_accounts, when present, is an object keyed by cascade level (member, project, "
+      + "instance), each entry { token, ref }. This member judges only what it is handed.", 400);
+  const cascade = accountsSupplied ? await resolveClaudeCascade(body.claude_accounts) : null;
+  if (cascade && !cascade.available)
+    return refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
+      { capability: "unavailable", levels: cascade.levels });
+
   const bound = Number(env.MAX_TURNS_PER_SEGMENT) || DEFAULT_MAX_TURNS_PER_SEGMENT;
   const requested = body.turns == null ? bound : Number(body.turns);
   if (!Number.isFinite(requested) || requested < 1)
@@ -936,7 +991,7 @@ async function handleRun(req, env) {
    * row into a plane call. A driver that decided anything would be a second
    * control flow nobody could exhaust. */
   const drive = await driveHarness(env, {
-    runId, store, credential,
+    runId, store, credential, cascade,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
   });
@@ -954,9 +1009,28 @@ async function handleRun(req, env) {
     stage: "harness",
     turns_run: 0,
     judgement_source: "supplied",
-    judgement_note: "the control-flow table is FL-3's and it ran; the model account that would supply the "
-                  + "judgement inside a step is FL-6's cascade and is not resolved here, so judgements "
-                  + "arrived from the caller. Stated rather than presented as a model run.",
+    /* CORRECTED AT FL-6, never exempted: this note used to say the model
+       account "is FL-6's cascade and is not resolved here". The cascade IS
+       resolved here now, and the honest remainder is different — the account
+       is resolved and NAMED, and what still does not happen is a MODEL TURN,
+       whose sizing is D-218's measurement and not this item's. */
+    judgement_note: "the control-flow table is FL-3's and it ran; the Claude account that would pay for "
+                  + "a model turn is resolved by FL-6's cascade and named beside this. What has not "
+                  + "happened is a model turn itself (turns_run: 0) — running one is sized by D-218 and "
+                  + "is not this segment's claim — so judgements arrived from the caller. Stated rather "
+                  + "than presented as a model run.",
+    /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
+       honest statement of a different fact: material supplied and RESOLVED
+       (level + ref + every level's own state); material supplied and NOTHING
+       resolved never reaches here — it refused above, by name; material NOT
+       supplied is its own stated absence, distinct from "nothing resolved",
+       because a caller that offered no accounts and a cascade that exhausted
+       them are different facts about this segment. */
+    claude_account: cascade
+      ? { available: true, level: cascade.level, ref: cascade.ref, levels: cascade.levels }
+      : { available: false, reason: "NO_ACCOUNT_MATERIAL_SUPPLIED",
+          detail: "this segment was handed no claude_accounts material, so the cascade had nothing "
+                + "to resolve — the deterministic, judgements-supplied mode. An absence, stated." },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,

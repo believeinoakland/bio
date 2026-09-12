@@ -302,6 +302,19 @@ plan without running; `--full` forces everything. The full set, when it is owed:
   nothing reports it (2026-08-10, this file's own handoff commit). Same class, same
   cost, and the heredoc is immune to both.
 
+- **`git checkout -- <file>` RESTORES TO HEAD, NOT TO WHAT YOU HAD.** In a tree
+  with uncommitted work it is not "put it back", it is "throw mine away", and it
+  exits 0 either way. Measured twice in two days (2026-09-11 and 2026-09-12,
+  both DIST): a negative-control arm edited a file, `git checkout --` was used to
+  undo the arm, and it silently discarded the session's own uncommitted change to
+  that same file — once losing a whole implementation that then had to be
+  rewritten from the transcript. The next arm measured the wrong tree and its
+  result was nearly recorded. **To undo an on-disk control arm, `cp` the file
+  aside first and `cp` it back**, then verify with a hash — the restore is only
+  believable if it is measured, and `restored byte-identically: NO` is the line
+  that caught both. Writing the lesson in a commit message did not prevent the
+  second occurrence, which is why it is here.
+
 - **A FRESH WORKTREE HAS NO `bio-plane/node_modules`, AND A BASELINE MEASURED BEFORE
   `npm ci` IS A WRONG NUMBER CARRYING FULL CONFIDENCE.** Two workers hit this
   independently on 2026-08-10 and both reported it rather than working around it: one

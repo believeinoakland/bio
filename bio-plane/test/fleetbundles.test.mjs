@@ -149,9 +149,16 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   t("pdf-worker's build reaches into the PLANE's source, and the manifest hashes those files too",
     cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs"]);
   const agent = manifests.get("agent-worker");
-  t("agent-worker's three modules are all recorded — the reason a one-part upload needed a bundle at all",
+  /* CORRECTED 2026-09-12 BY FL-6, never exempted: the roster was three modules
+     when FL-9 pinned it. FL-6 added `src/cascade.mjs` AND the member's first
+     CROSS-TREE input — the plane's `tokens.mjs`, imported for the ONE denylist
+     so publication-is-revocation has one expression — which is exactly the
+     input class this manifest exists to hash (pdf-worker's three plane inputs,
+     one section down). The old assertion going red on the first post-FL-6
+     build is this guard working, not an obstacle. */
+  t("agent-worker's five inputs are all recorded — four modules and the plane's own denylist, the member's first cross-tree input",
     (agent?.inputs || []).map((i) => i.path).sort(),
-    ["src/harness.mjs", "src/index.mjs", "src/subsession.mjs"]);
+    ["../bio-plane/src/tokens.mjs", "src/cascade.mjs", "src/harness.mjs", "src/index.mjs", "src/subsession.mjs"]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);
   t("every recorded input carries a hash — a null sha256 would be an input nothing checks",

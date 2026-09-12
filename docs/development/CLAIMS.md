@@ -2741,6 +2741,90 @@ concurrency: checked over the register. CPDF-10 is live on the fleet-member grou
 from every path above. No live claim names `ocr-measure-probe.mjs`.
 released: 2026-09-11 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,808 (+1 attributed to planning-hygiene on D-315), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. D-305 and D-314 closed; D-315 stands as the probes-side residue.
 
+## CLAIM 2026-09-12 FLEET (FL-6 — the Claude-account cascade at runtime: member → project → instance, resolved in the fleet member, absence STATED per level)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-12
+paths:
+  - `agent-worker/src/cascade.mjs` — NEW, the resolver: ONE expression of the order and of the
+    per-level judgement (absent/empty is UNSET, a published value is REVOKED — consuming the ONE
+    denylist, `PUBLISHED_TOKEN_HASHES`/`sha256hex` imported from `bio-plane/src/tokens.mjs` as a
+    cross-tree build input the FL-9 guard hashes like `pdf-worker`'s three).
+  - `agent-worker/src/index.mjs` — the `/run` cascade wiring and the honesty notes it supersedes
+    ONLY (`judgement_note` says the account "is FL-6's cascade and is not resolved here" — after
+    this it IS, and the note must say what remains instead). **NOT** `src/harness.mjs`,
+    **NOT** `src/subsession.mjs`.
+  - `agent-worker/test/cascade.test.mjs` + `agent-worker/test/cascade.control.mjs` — NEW, the
+    suite `battery.mjs cascade` selects and its NC driver.
+  - `agent-worker/test/agent-worker.test.mjs` — ONLY assertions the cascade supersedes (module
+    roster, /run response shape), corrected with dated reasons, never exempted.
+  - `agent-worker/dist/*` — REBUILT (the FL-9 guard demands it the moment `src` moves) and the
+    manifest with it.
+  - `bio-plane/test/fleetbundles.test.mjs` — section 2a's agent-worker input-roster assertions
+    ONLY (three modules become four plus a cross-tree input; the assertion is a pin and moves
+    with dated reasons).
+  - `docs/development/IS-BUILD-PLAN.md` — FL-6's OWN row only, the landed note (FL-4's precedent).
+  **NOT** `bio-plane/src/**` (tokens.mjs is READ as a build input, never edited — the instance
+  rule and its suite are DS-3's pins), **NOT** `pdf-worker/**`, **NOT** any third-member path
+  (CPDF-10 is live on that ground), **NOT** `docs/development/QUEUE.md`.
+concurrency: checked over the register 2026-09-12. CPDF-10 (live, third fleet member) — no
+  overlap: its ground is a NEW member directory and CPDF paths; no live claim names
+  `agent-worker/**`. RECORD's live claims (CASE-6, D-310) name `store.mjs`/UI ground — disjoint.
+DEC-43: read and NOT triggered — FL-6 deploys nothing and configures no fallback instance; the
+  ruling binds a deployment step this item does not contain.
+
+## CLAIM 2026-09-12 CONTENT-PDF (D-315 — the comparability guards' expression pin moves from SUBSTRING PRESENCE to BYTE IDENTITY, in both probes)
+session: d315-guard-pins (worktree `agent-a853636fda19082d6`, branch `worktree-agent-a853636fda19082d6`)
+opened: 2026-09-12
+paths:
+  - `bio-plane/test/ocr-composed-probe.mjs` — **THE COMPARABILITY GUARD REGION ONLY** (the
+    `METRIC_EXPRS` pin, the `--digests` bootstrap that prints the pins, and the header comment
+    that describes them). CPDF-14's `--controls` arm table and the probe's exit-code contract
+    (4 = comparability, and it refuses BEFORE any upload) are UNCHANGED — D-315 is a change of
+    DETECTION, not of interface. No measurement code, no upload code, no account code touched.
+  - `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` — **THE SAME GUARD REGION ONLY**, the
+    same change. The engine pins (`checkEnginePins`, exit 5) and CPDF-15's `--controls` arm
+    table are UNCHANGED.
+  - `bio-plane/test/d315-guard-controls.mjs` — **NEW**, this item's negative-control driver.
+    Deliberately NOT named `*.test.mjs` so the battery's discovery rule (`scripts/battery.mjs`:
+    readdir + `endsWith(".test.mjs")`) never picks it up: it mutates a committed file in place
+    and needs a quiet tree.
+  - `docs/development/DEBT.md` — the **D-315 row's disposition ONLY**, plus APPEND ONLY for any
+    row this item raises; ids from `tools/mintid.mjs`.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  **READ, NEVER EDITED**: `bio-plane/test/ocr-measure-probe.mjs` — CPDF-9's floor instrument,
+  carrying CPDF-16's landed additive regions. Its digests must not move, and this item's whole
+  subject is guarding them. **If the exact-match extraction had required a change THERE, that
+  is a finding to report and argue, not an edit to make** — it did not: the four pinned
+  expressions each already occur EXACTLY ONCE and each already sits alone on its own statement
+  line, measured before a byte was written. Also read, never edited:
+  `bio-plane/test/ocr-moondream-probe.mjs` (CPDF-11's ladder recipe) and
+  `bio-plane/test/cpdf16-floor-controls.mjs` (CPDF-16's driver, whose `nc3-expr` arm carries the
+  comment that raised this row).
+  **NOT** `bio-plane/src/**` — this item writes no product code and changes no plane behaviour.
+  **NOT** `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
+  `bio-plane/scripts/coverage.mjs` — a probe declares no checks, so no floor here can move.
+  **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`, and none of
+  CPDF-10's ground (`agent-worker/**`, `pdf-worker/**`, the fleet-member paths).
+concurrency: checked over the register 2026-09-12. One unreleased block (FLEET FL-10, whose own
+body records it released) names `bio-plane/scripts/**`, `bio-plane/dist/**` and
+`fleetbundles.*` — disjoint from every path above. CPDF-10 is live on the fleet-member ground,
+also disjoint. No live claim names either probe file or `ocr-measure-probe.mjs`.
+released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 176/176 · 10,833, `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` moved to the merged print (920/170/171 — 11 slack, mostly FL-6/DS-2/DS-3 accumulation, noted for FLEET and DIST), UI harness exit 0, `mintid --audit` 0 breaks. D-315 closed; D-318 stands.
+### RELEASED 2026-09-12: the FL-6 claim above — landed as `56ed70b` (the cascade) + the floor-move commit beside it
+Acceptance measured, not believed: `battery.mjs cascade` green **29/0** — the three fixtures
+resolve to the right level with the run object naming it (and the record's payer REFUSING to
+disagree with the runtime's, `RUN_NAMES_A_DIFFERENT_PAYER` naming both facts); the no-token
+fixture answers the NAMED unavailable (`NO_ACCOUNT_RESOLVED`, 409, per-level absences stated
+— unset and revoked-by-publication are different facts and both are named); no secret on the
+wire in either direction, and no Claude token value in any plane call, asserted. NC four arms
+armed ALONE with measured tallies (26/3 · 20/9 · 26/3 · baseline 29/0), restores verified
+content+sha256. Full gates GREEN class FULL: battery 177/177 · 10,861, UI green, plancheck
+0/0. `--strict` exit 0 unpiped post-commit, provenance 183/183 at HEAD; REGISTER_FLOOR
+909→920/168→170/169→171 to the printed figures. The FL-9 guard caught the superseded
+module-roster pin on the first rebuild — corrected with the dated reason, never exempted.
+**For CONDUCT:** FL-6's build-plan row carries its landed note; the QUEUE build-plan table's
+FL-6 line is yours. **The IS build plan's FLEET share is now COMPLETE** — what remains behind
+DS-4 is VF-4 (VERIFY's), and model TURNS are D-218's sizing, deliberately not FL-6's.
 ## CLAIM 2026-09-12 CONTENT-PDF (CPDF-10 — the THIRD FLEET MEMBER: `ocr-worker`, wasm tesseract behind the provenance chain the plane already refuses with)
 session: cpdf10-ocr-member (worktree `agent-accf1711f80abb70c`, branch `worktree-agent-accf1711f80abb70c`)
 opened: 2026-09-12T00:00:00Z

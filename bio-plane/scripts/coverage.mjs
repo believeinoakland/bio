@@ -636,27 +636,29 @@ const REGISTER_FLOOR = {
      TOO HIGH, failing every honest run afterwards. Moved after the suite landed
      in a commit, from a `--strict` run that then read 909/168/169 itself.
      ONE KEY SET, grepped before writing (2 matches for `^  arms:` in this file,
-     the other being FLEET's — a different table).
-
-     MOVED 2026-09-12 by CPDF-10: 909 -> 917 arms, 168 -> 170 classified,
-     169 -> 171 corpus, from the figures a green `--strict` run PRINTED on this
-     branch (`REGISTER FLOOR  arms 917/909 · classified 170/168 · corpus (suites
-     read) 171/169 · GREW by 8 arm(s)`).
-     **FIVE OF THOSE EIGHT ARMS WERE ALREADY SLACK BEFORE THIS ITEM TOUCHED
-     ANYTHING, AND THIS ITEM DID NOT INVALIDATE THEM** — measured on a clean tree
-     at `cebf564` BEFORE any file here moved: the register already printed
-     914/169/170 against a floor of 909/168/169. DS-2 landed
-     `resolveversion.test.mjs` (one suite, five arms) and moved `FLEET_FLOOR`'s
-     neighbour but not this key. This item's own contribution is the other three:
-     `bio-plane/test/ocr-member-e2e.test.mjs`, one suite stating three arms. **A
-     floor with slack is not one**, which is why a figure this item did not cause
-     moves here rather than waiting for the next reader to find it again — VF-5's
-     reasoning, and the EIGHTH consecutive item in this estate to find a
-     hand-carried floor stale by measuring it. ONE KEY SET, grepped again after
-     writing. */
-  arms: 917,
-  classified: 170,
-  corpus: 171,
+     the other being FLEET's — a different table). */
+  /* MOVED 2026-09-12 by CONDUCT #9 at D-315's integration, from the merged run's
+     OWN print (arms 920/909 · classified 170/168 · corpus 171/169 · GREW by 11):
+     the slack accumulated across the FL-6 and DS-2/DS-3 landings (which added
+     suites without moving this floor — the seventh-instance stale-floor pattern,
+     noted for FLEET and DIST) plus D-315's own new arms. Read from output, never
+     summed by hand. ONE KEY SET, grepped before writing. */
+  /* MOVED AGAIN 2026-09-12 by CPDF-10 AT ITS OWN MERGE, and **COLLAPSED TO ONE
+     KEY SET DELIBERATELY** — `WORKER.md` records keep-both merges leaving
+     duplicate `arms:` keys here SIX times, valid JavaScript where the last
+     silently wins and once the last was the LOWEST. Both sides of this conflict
+     had moved the same key and the figures below are re-read from a green
+     `--strict` run on the MERGED tree, never from either side's number:
+     CPDF-10's branch printed 917/170/171 against the pre-merge floor of
+     909/168/169 (five of those eight arms already slack at `cebf564` — DS-2
+     landed `resolveversion.test.mjs` without moving this key), CONDUCT's
+     integration of D-315 printed 920/170/171, and the merged tree prints the
+     figure set below. This item's own contribution inside it is three arms
+     (`bio-plane/test/ocr-member-e2e.test.mjs`, one suite). CONDUCT re-reads all
+     three on the merged tree — it is NAMED in this item's report for that. */
+  arms: 923,
+  classified: 171,
+  corpus: 172,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

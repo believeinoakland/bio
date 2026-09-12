@@ -228,8 +228,8 @@
     },
     {
       "path": "src/tokens.mjs",
-      "bytes": 1728,
-      "sha256": "6c6fd308e2875f780187030226b1bf680558bf7a3515f5190910f99b449cae94"
+      "bytes": 5908,
+      "sha256": "4454443417ebe5ed87a7baac5f34133a4599873e0daa37a2a70f22ac27ab23eb"
     },
     {
       "path": "src/tsa.mjs",
