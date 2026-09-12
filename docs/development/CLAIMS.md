@@ -2809,3 +2809,4 @@ concurrency: checked over the register 2026-09-12. One unreleased block (FLEET F
 body records it released) names `bio-plane/scripts/**`, `bio-plane/dist/**` and
 `fleetbundles.*` — disjoint from every path above. CPDF-10 is live on the fleet-member ground,
 also disjoint. No live claim names either probe file or `ocr-measure-probe.mjs`.
+released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 176/176 · 10,833, `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` moved to the merged print (920/170/171 — 11 slack, mostly FL-6/DS-2/DS-3 accumulation, noted for FLEET and DIST), UI harness exit 0, `mintid --audit` 0 breaks. D-315 closed; D-318 stands.
