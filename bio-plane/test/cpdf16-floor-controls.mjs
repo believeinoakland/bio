@@ -8,6 +8,33 @@
  * by the same technique the CPDF-14/CPDF-15 comparability guards use — never
  * a copy, so what is exercised is what is committed.
  *
+ * >>> D-322 (2026-09-12): THAT NON-DISCOVERY WAS THE HOLE, AND IT IS CLOSED
+ * BESIDE THIS FILE RATHER THAN BY MOVING IT. D-318's class sweep walked all 288
+ * modules in this directory and named this driver the one clear instance of its
+ * class — a defence whose only witness is an instrument nothing runs
+ * automatically. Because the `nc2-*` arms below were the only thing anywhere
+ * that drove D-314's blank/noise gate, NEUTERING THAT GATE left every automatic
+ * gate green, and the gate is what stands between the record and an agreement
+ * figure scored against noise. `test/d322-floor-gate-witness.test.mjs` is now
+ * the battery-discovered witness: the same subject, driven over a PER-ARM
+ * TEMP-DIR COPY the way both probes' `--controls` already do, so it is safe to
+ * run inside a battery. It widens the arms in one direction this file does not
+ * reach — the gate's WIRING, read as text: a `controlGate()` that is perfect and
+ * no longer CALLED, a noise page filled white, a second control read pointed
+ * back at the blank page. Those pass every behavioural arm here.
+ *
+ * THE TWO ARE NOT DUPLICATES AND NEITHER REPLACES THE OTHER. The discovered
+ * suite proves the gate refuses over a MUTATED COPY, on every run,
+ * automatically. THIS driver proves the two landed guards refuse the REAL
+ * COMMITTED FLOOR when it is mutated (`nc3-*`) — the path a careless edit
+ * actually takes, and the one a copy cannot stand in for — which is exactly why
+ * it must stay out of the battery: a suite that edits a committed file races
+ * every other suite in the run and leaves the tree dirty if it dies mid-arm. Run
+ * this one by hand on a quiet tree; the battery runs the other one for you. The
+ * cost of keeping both, stated rather than discovered later: the gate's arms are
+ * now written in two files and two statements of one thing can drift, which
+ * these two paragraphs are the mitigation for and not a guarantee against.
+ *
  * ARMS, each armed ALONE, declared before arming:
  *   baseline        identical text scores all-zero and a passing gate yields a
  *                   NUMBER — the row that distinguishes six-arms-broken from
