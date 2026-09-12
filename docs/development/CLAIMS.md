@@ -2919,3 +2919,4 @@ concurrency: checked over the register 2026-09-12. Every CONTENT-PDF block above
 `ocr-measure-probe.mjs`, `d315-guard-controls.mjs`, or `bio-plane/scripts/coverage.mjs`.
 DIST and FLEET push frequently — the `REGISTER_FLOOR` key is the one collision risk and the
 resolution rule is written at its site: COLLAPSE TO ONE SET and re-read the printed figures.
+released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the FULLY MERGED tree (including DIST's f5872c7): battery 180/180 · 11,060, `coverage --strict` exit 0 read unpiped (floor 928/172/173 by print, zero pre-move slack), UI harness exit 0, `mintid --audit` 0 breaks. D-318 closed; D-322 stands as the sweep's residue.
