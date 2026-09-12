@@ -760,7 +760,13 @@ const FLEET_FLOOR = {
      so CONDUCT re-reads all four on the merged tree. */
   members: 3,
   surfaceOps: 6,
-  suites: 6,
+  /* 6 -> 7 AT CPDF-10's OWN MERGE, and this one is NOT this item's: FL-6 landed
+     `agent-worker/test/cascade.test.mjs` on `main` without moving this key, so
+     the merged tree printed `7/7 SUITES declaring a negative control` against a
+     floor of 6. A floor with slack is not one, and it is moved here rather than
+     left for the next reader — the same reasoning VF-5 and FL-9 each recorded
+     when they moved a figure they had not invalidated. */
+  suites: 7,
   /* RESTORED AT INTEGRATION 2026-08-09 by CONDUCT. This key was DROPPED by my own
      conflict resolution on the D-277 merge, and the loss was SILENT: with no `arms`
      the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
@@ -786,8 +792,15 @@ const FLEET_FLOOR = {
      IS NOT SLACK BEING SWEPT UP: the fleet's other five suites are unchanged by
      this item and still state 58 between them, so the ratchet was exactly right
      when this item found it — measured, and said either way, because the
-     practice is to trust the measurement rather than the streak. */
-  arms: 64,
+     practice is to trust the measurement rather than the streak.
+     THEN 64 -> 68 AT THIS ITEM'S MERGE, and that step has a DIFFERENT cause:
+     FL-6 landed `agent-worker/test/cascade.test.mjs` (four arms) on `main`
+     without moving this key, so the merged tree printed `68 arms · GREW by 4`.
+     This item did not invalidate those four and moves them anyway, for the
+     reason VF-5 and FL-9 each recorded when they did the same. Read from the
+     merged tree's own print, never summed by hand. **ONE `arms:` KEY IN THIS
+     TABLE, grepped after writing.** */
+  arms: 68,
 };
 
 function discoverFleet() {

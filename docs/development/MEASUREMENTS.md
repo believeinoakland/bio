@@ -9682,13 +9682,32 @@ unguarded `r.source.rect.length` ended the module through no assertion at all, a
 the foot sentinel turned that silence into a red. The suite's reads are now null-tolerant
 and the arm was re-run.
 
-**GATES on this branch:** battery 177/177 green, `coverage.mjs --strict` exit 0 read
-UNPIPED, UI harness exit 0 from the repo root, `plancheck` clean but for UNPUSHED. Floors
-moved from figures a green run PRINTED: `FLEET_FLOOR` 2/4/5/58 -> 3/6/6/64,
-`REGISTER_FLOOR` 909/168/169 -> 917/170/171 — **and five of those eight arms were already
-slack before this item touched anything** (measured on a clean tree at `cebf564`: the
-register printed 914/169/170 against a floor of 909/168/169, DS-2's landing), which makes
-this the eighth consecutive item here to find a hand-carried floor stale by measuring it.
+**GATES.** BASELINE, measured on a clean tree at `cebf564` before anything moved:
+**175/175 suites green · 10,821 assertions**, `--strict` exit 0, UI harness exit 0,
+`plancheck` 0 fail / 0 warn. PRE-MERGE FINAL on this branch: **177/177 · 10,991**, and the
++170 is fully attributed by diffing the two runs per suite — `fleetbundles` +31,
+`hygiene` +3, `planning-hygiene` +3 (the three new debt rows), and the two new suites at
+63 and 70. POST-MERGE FIGURE OF RECORD, after `origin/main` moved seven commits under
+this item (D-315 integrated, FL-6's cascade, DS-3): **179/179 suites green · 11,032
+assertions · fleet 3 members, 7 suites, 3 members ACTUALLY RAN (no skip — this member has
+no runtime dependency, so its suite and its byte-identity arm can never go dark on a
+fresh checkout)**; `coverage.mjs --strict` exit 0 read UNPIPED; UI harness exit 0 from
+the repo root; `plancheck` clean but for UNPUSHED.
+
+**FOUR FLOOR FIGURES MOVED, EACH TO A NUMBER A GREEN RUN PRINTED, AND ONLY ONE OF THE
+FOUR IS THIS ITEM'S OWN.** `FLEET_FLOOR` 2/4/5/58 -> 3/6/7/68 and `REGISTER_FLOOR`
+909/168/169 -> 923/171/172. This item's own contribution is three members' worth of one
+member (`ocr-worker`, its two surface ops and its one suite's six arms) plus three
+register arms. The rest was ALREADY SLACK and this item did not invalidate it: DS-2
+landed `resolveversion.test.mjs` without moving `REGISTER_FLOOR` (measured at `cebf564`:
+the register printed 914/169/170 against a floor of 909/168/169), and FL-6 landed
+`agent-worker/test/cascade.test.mjs` without moving `FLEET_FLOOR`'s suites or arms. **A
+floor with slack is not one** — so both moved, which makes this the eighth consecutive
+item here to find a hand-carried floor stale by measuring it. **`REGISTER_FLOOR` was a
+MERGE CONFLICT** — this branch had moved it to 917 and CONDUCT to 920 at D-315's
+integration — and it was **COLLAPSED TO ONE KEY SET** and re-read from the merged tree,
+which is the resolution `WORKER.md` names after six keep-both merges left duplicate
+`arms:` keys in that file.
 
 **NOTHING DEPLOYED, NOTHING BUMPED, NOTHING SIGNED, NO ACCOUNT TOUCHED.** The member's
 version is `0.56.0` at both of its declaring sites, which is the authority DS-2 set and
