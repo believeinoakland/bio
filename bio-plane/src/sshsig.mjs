@@ -245,6 +245,26 @@ const renderServices = (services) => [...(services || [])]
   .sort()
   .join(",");
 
+/* A MEMBER IS NOT ALWAYS ONE FILE, and the signature has to say so.
+   `ocr-worker` (CPDF-10 / IC-78) ships its bundle PLUS two upload parts — a
+   tesseract wasm core and a language model, 5.95 MB between them — declared
+   `external` so esbuild does not inline them and `assets` so FL-9's guard hashes
+   them. An installer must upload all three or the member deploys and fails at
+   runtime with no engine.
+   SIGNING ONLY THE BUNDLE WOULD HAVE BEEN WORSE THAN INCOMPLETE. The engine's
+   measured fidelity (CPDF-15) is a fidelity OF THOSE EXACT BYTES, and the
+   provenance chain this member produces names a `cap` that rests on it — so a
+   swapped model or wasm core changes what the record claims while every
+   signature still verified. That is the record claiming more than it can
+   support, with cryptographic cover.
+   Rendered `path:sha256:bytes`, sorted by path, and `parts=` is always present
+   so a member with none is STATED rather than omitted — absent and empty must
+   not look alike, here as everywhere else in this statement. */
+const renderParts = (parts) => [...(parts || [])]
+  .map((p) => `${p.path}:${p.sha256}:${p.bytes}`)
+  .sort()
+  .join(",");
+
 export const fleetStatement = ({ version, plane, members }) =>
   `${NS_FLEET}/1\n`
   + `version ${version}\n`
@@ -252,7 +272,8 @@ export const fleetStatement = ({ version, plane, members }) =>
   + [...members]
       .sort((a, b) => (a.member < b.member ? -1 : a.member > b.member ? 1 : 0))
       .map((m) => `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset}`
-        + ` services=${renderServices(m.services)}`)
+        + ` services=${renderServices(m.services)}`
+        + ` parts=${renderParts(m.parts)}`)
       .join("\n")
   + "\n";
 

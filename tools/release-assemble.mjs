@@ -82,6 +82,17 @@
  *   FLEET_SIG_REJECTED is the same `verifyWith` call as (e) with a different
  *   namespace and payload, and is NOT separately driven — stated rather than
  *   claimed.
+ * NEGATIVE CONTROL, SECOND PASS: RUN 2026-09-12, when `ocr-worker` arrived with
+ * upload parts (CPDF-10 / IC-78) — (g) MEMBER_PART_MISSING, the declared
+ * `assets/eng.traineddata` moved aside: refused, because releasing without a
+ * declared part publishes a member that cannot run while the manifest says it
+ * is complete; (h) MEMBER_PART_DISAGREES, one byte appended to that model:
+ * refused, naming both hashes — the engine or model changing underneath a
+ * member is staleness exactly as a changed source is, and CPDF-15's measured
+ * fidelity is a fidelity of THOSE EXACT BYTES. Both restored byte-identically,
+ * verified by hash. MEMBER_PART_UNHASHED (a manifest with no hash for a
+ * declared part) is NOT driven — it requires hand-editing a generated manifest,
+ * and it is stated rather than claimed.
  *
  * usage:
  *   node tools/release-assemble.mjs --dry-run
@@ -90,7 +101,7 @@
  */
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
@@ -172,8 +183,45 @@ for (const m of all) {
     ? (parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`).services || [])
         .map((s) => ({ binding: s.binding, service: s.service }))
     : [];
+  /* THE MEMBER'S OTHER UPLOAD PARTS. `ocr-worker` (CPDF-10 / IC-78) ships a
+     tesseract wasm core and a language model beside its bundle — declared
+     `external` so esbuild does not inline them, and `assets` so FL-9's guard
+     hashes them. An installer that uploaded only the bundle would deploy a
+     member that fails at runtime with no engine, and the release would have
+     SAID it was complete. Each part is hashed HERE and the hash is required to
+     match the committed manifest, so the guard's reading and the release's
+     reading cannot diverge. */
+  const parts = [];
+  for (const rel of m.bundle.assets || []) {
+    const abs = join(m.abs, rel);
+    if (!existsSync(abs)) {
+      die("MEMBER_PART_MISSING",
+        `${m.name} declares the upload part ${rel}, and it is not in the tree.`,
+        "A member's declared parts are what an installer must ship beside its bundle.\n"
+        + "Releasing without one publishes a member that cannot run.");
+    }
+    const bytes = readFileSync(abs);
+    const declared = (manifest.assets || []).find((a) => a.path === rel);
+    if (!declared) {
+      die("MEMBER_PART_UNHASHED",
+        `${m.name}'s manifest does not hash the declared part ${rel}.`,
+        "The bundle manifest must carry a hash for every part, or the guard is not\n"
+        + "watching the bytes the release is about to sign. Rebuild the member.");
+    }
+    if (declared.sha256 !== sha256(bytes)) {
+      die("MEMBER_PART_DISAGREES",
+        `${m.name}'s part ${rel} does not match its manifest.`,
+        `  manifest: ${declared.sha256}\n  on disk : ${sha256(bytes)}\n`
+        + "The engine or model underneath this member changed without a rebuild.");
+    }
+    parts.push({ path: rel, sha256: sha256(bytes), bytes: bytes.length, from: abs });
+  }
+  if (parts.length) {
+    console.log(`       + ${parts.length} upload part(s): `
+      + parts.map((x) => `${x.path} (${x.bytes} B)`).join(", "));
+  }
   entries.push({ member: m.name, asset: `${m.name}.bundled.mjs`, sha256: sha256(committed),
-                 bytes: committed.length, from: join(m.abs, m.bundle.outfile), services });
+                 bytes: committed.length, from: join(m.abs, m.bundle.outfile), services, parts });
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
 }
 
@@ -236,7 +284,7 @@ const fleetEntries = entries.filter((e) => e.member !== "bio-plane")
 const payload = fleetStatement({
   version,
   plane: { sha256: planeEntry.sha256, bytes: planeEntry.bytes, asset: "bio-plane.bundled.mjs" },
-  members: fleetEntries,
+  members: fleetEntries,   /* carries services AND parts; both are signed */
 });
 
 console.log("\n──── the payload fleetSig covers ────");
@@ -335,6 +383,15 @@ if (!fleetSig) die("NO_FLEET_SIG", "no fleet signature supplied.",
 /* ---- write the release ---------------------------------------------------- */
 
 for (const e of entries) copyFileSync(e.from, join(RELEASE_DIR, e.asset));
+/* Parts are published under the member's own name so two members declaring the
+   same relative path cannot collide in one flat directory. */
+for (const e of entries) {
+  for (const part of e.parts || []) {
+    const dest = join(RELEASE_DIR, e.member, part.path);
+    mkdirSync(dirname(dest), { recursive: true });
+    copyFileSync(part.from, dest);
+  }
+}
 copyFileSync(planeEntry.from, join(RELEASE_DIR, "bio-plane.bundled.mjs"));
 
 const out = {
@@ -349,8 +406,9 @@ const out = {
   asset: "bio-plane.bundled.mjs",
   sig: planeSig,              // the PLANE signature, verified above over THIS asset
   signer: existing.signer,
-  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, services }) =>
-    ({ member, asset, sha256: s, bytes, services })),
+  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, services, parts }) =>
+    ({ member, asset, sha256: s, bytes, services,
+       parts: (parts || []).map(({ path, sha256: ps, bytes: pb }) => ({ path, sha256: ps, bytes: pb })) })),
   fleetSig,
 };
 writeFileSync(join(RELEASE_DIR, "RELEASE.json"), JSON.stringify(out, null, 2) + "\n");

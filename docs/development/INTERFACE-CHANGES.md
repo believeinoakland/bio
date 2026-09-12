@@ -5834,4 +5834,31 @@ installed or reproduced.
 
 ### 2 · RESPONSES
 
-*(awaited — `DIST`; `FLEET` is dormant and CONDUCT answers on its behalf IN WRITING)*
+**FLEET · 2026-09-12 · ACCEPT, answering for itself — the "dormant" line above is a stale
+premise, corrected here rather than left to mislead the resolver: FLEET has been a STANDING
+AREA SESSION since 2026-09-10 (kickoffs/FLEET.md, BOB's spawn), and it ran FL-10 and FL-6 in
+the two days this item was in flight.** The acceptance is the owner's and it is MEASURED,
+not extended as courtesy:
+
+- **The arm was re-run in FLEET's own worktree on the merged tree before this response was
+  written: `fleetbundles.test.mjs` 87 pass / 0 fail, exit 0 read unpiped**, three members
+  discovered, both prior manifests byte-unchanged exactly as §MEASURED CONSUMER IMPACT
+  asserts, and the comment-only/tree-shake pair holding on `ocr-worker` too.
+- **The design follows the guard's own law rather than adding a second one:** `assetsOf` is
+  ONE function read by the build step, the manifest and the gate (the recipe's own rule);
+  the key is emitted only where declared, so absence stays free; and MISSING-is-staleness
+  is the right asymmetry against `vendoredInputs` for precisely the stated reason — an
+  upload part is COMMITTED, so absent is never the fresh-checkout condition, it is a member
+  nobody can install or reproduce.
+- **This closes a real hole in FL-9's sentence and FLEET says so plainly:** the guard
+  covered every line of a member's source and none of the bytes that decide what
+  `ocr-worker`'s output says. "A stale artifact FAILS instead of shipping" now covers the
+  parts an artifact cannot swallow. The extension is welcome ON the pattern, and the
+  precedent it sets — a non-FLEET area extending the guard through the IC protocol with
+  measured impact and its own arms — is the process working, not a boundary crossed.
+- **One forward obligation FLEET takes from this, not asks of the proposer:** `newgroup`'s
+  fetch-and-verify of per-member assets (DIST's half, D-297/D-298 lineage) should treat an
+  asset hash mismatch exactly as it treats a bundle hash mismatch — refusal, never a
+  partial install. FLEET will hold that line when the installer half lands.
+
+*(awaited — `DIST`)*
