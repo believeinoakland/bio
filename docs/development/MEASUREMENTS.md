@@ -9806,3 +9806,107 @@ would fail, the safe direction but not detection.
 files are byte-identical to `3366611` (`67432ead…`, `e36a7241…`), as is `ocr-measure-probe.mjs`
 (`71518864…`); the suite's own foot measures that claim on every run by sha256 and by `cmp`
 rather than asserting it.
+
+## 2026-09-12 · D-322 — D-314's BLANK/NOISE GATE IN THE FLOOR GETS A WITNESS THE BATTERY RUNS, and the measurement that changed the design is that a gate can be neutered in two places neither half can see (worktree `agent-a2699815d6147db52`)
+
+**Instrument:** `bio-plane/test/d322-floor-gate-witness.test.mjs` (NEW, battery-discovered),
+driven with `cd bio-plane && npm run test:battery`, `node scripts/battery.mjs
+d322-floor-gate-witness`, `node scripts/coverage.mjs --strict` (directly, `$?` unpiped) and
+`node civicos-ui/test/run.mjs` from the repo root. Nothing deployed, nothing bumped, no
+account touched, no network reached, no OCR engine installed: every arm is a local file copy
+plus a `data:` import of the gate's own source.
+
+**THE GAP, RE-MEASURED RATHER THAN TAKEN FROM THE ROW.** D-322 says the floor's blank/noise
+gate is pinned by nothing the battery runs. Confirmed at the mechanism: the gate's only arms
+(`nc2-noise`, `nc2-overstrict`) live in `bio-plane/test/cpdf16-floor-controls.mjs`, which is
+not a `*.test.mjs`, so `scripts/battery.mjs` (readdir + `endsWith(".test.mjs")`) does not
+discover it; and the floor itself is a probe that needs python3, an npm install, a model
+download and a real Legistar fetch before it reaches its own controls, so nothing automatic
+has ever driven them. Neutering the gate left the whole battery green — measured, below.
+
+**WHICH CLOSURE, AND WHAT THE OTHERS COST.** The discovered-suite shape D-318 landed one
+instrument over. (a) Renaming `cpdf16-floor-controls.mjs` to `*.test.mjs` is zero new code —
+its arms already exist and are declared — and was NOT taken because it mutates the COMMITTED
+floor in place: as a battery suite it would race every other suite in the run and leave the
+tree dirty if it died mid-arm. Its unpaid cost is that the gate's arms are now stated in two
+files, and two statements of one thing can drift; the mitigation is a cross-reference in each
+header, which is a pointer and not a guarantee. (b) Extracting the gate into an importable
+module is the cleanest testing shape by a distance and was NOT taken because it is a
+NON-ADDITIVE edit to the one file whose byte-level comparability is the constraint D-305 and
+D-314 were both closed under — both landed probes pin four metric statements and the ground
+truth by digest. Its unpaid cost is stated at the suite's site: the witness must grab
+`controlGate()` and `floorAgreement()` out of the source by regex, so renaming either
+function reads as `GRAB FAILED` — a refusal that names itself, which is the safe direction
+but is not the same as understanding the change.
+
+| figure | baseline (`6406c5a`) | final | delta |
+| --- | --- | --- | --- |
+| battery | **180/180 suites · 11,060 assertions · exit 0** | **181/181 · 11,078 · exit 0** | **+1 suite, +18 assertions, attributed PER SUITE by diffing the two runs rather than by subtraction.** `d322-floor-gate-witness.test.mjs` **+16** (this item's own); `hygiene.test.mjs` 687 -> 689 (**+2**: its two PER-SUITE derived censuses each gain a row for the new suite — `… exits deterministically` and `… imports test/sandbox.mjs`). `planning-hygiene.test.mjs` did NOT move, and that is the difference from D-318: this item CLOSES a DEBT row rather than raising one. Nothing unattributed |
+| `coverage --strict`, `$?` unpiped | exit 0 · register `928/928 · 172/172 · 173/173` | exit 0 · register **936/936 · 173/173 · 174/174** | floor MOVED from the COMMITTED print (`GREW by 8`); **zero slack before and zero after** |
+| `civicos-ui/test/run.mjs` from the repo root | exit 0 | exit 0 | 0 |
+| the new suite alone | n/a | **16 pass, 0 fail, exit 0, 78 ms · 13 arms** | — |
+| `cpdf16-floor-controls.mjs` (the kept driver) | 8 arms, 0 not as declared, exit 0 | 8 arms, 0 not as declared, exit 0 | 0 |
+| both landed comparability guards, `--guard-only` | exit 0 / exit 0 | exit 0 / exit 0 | 0 |
+| `d315-guard-witness.test.mjs` (D-318's suite) | 25 pass, exit 0 | 25 pass, exit 0 | 0 |
+
+**The briefed baseline was exactly right and is recorded as such** — 180/180 · 11,060,
+reproduced to the assertion after `npm ci` in `bio-plane/`, `ocr-worker/` and `pdf-worker/`.
+The practice is to trust the measurement over the streak, and here the measurement agreed.
+
+**THE FINDING THAT CHANGED THE DESIGN: A GATE HAS TWO NEUTERING SURFACES AND NEITHER HALF OF
+A WITNESS CAN SEE THE OTHER.** Driving `controlGate()` and `floorAgreement()` on constructed
+inputs — CPDF-16's own technique — catches a verdict hard-wired true, a dropped noise clause,
+an ungated agreement path and an unnamed refusal. It calls **five** other neuterings GREEN,
+each measured: `controlGate()` never CALLED (`const gate = { passed: true }`), the
+`process.exitCode = 1` removed from either control, the agreement loop handed a fabricated
+verdict instead of the run's own, **the noise control page filled WHITE** — which makes the
+gate pass for free, and an outcome that costs nothing to produce is not evidence — and the
+second control read pointed back at `blank.png`, so two controls read one page. The mirror
+holds: every one of those five leaves all eight behavioural rows passing, and the four
+behavioural mutations leave all seven wiring rows passing. The suite therefore asserts the
+EXACT SET of findings per arm rather than "something failed", which is what makes the two
+halves' independence a measurement instead of a claim.
+
+**NEGATIVE CONTROLS — 8 arms, each armed ALONE, every restore verified by sha256 AND `cmp`
+against a uniquely-named per-arm pristine copy with the byte count printed and floored.**
+
+| arm | declared | actual |
+| --- | --- | --- |
+| (1) the gate neutered in the REAL committed floor (`const passed = true;`) | the suite FAILS naming the gate | **3 pass / 13 FAIL, exit 1**; baseline names all four gate checks; `node scripts/battery.mjs d322-floor-gate-witness` reads `FAIL … 3 pass, 13 FAIL`, `0/1 suites green`, exit 1. AS DECLARED, and MORE than declared — the brief's four rows are 13, because every mutation arm inherits the neutered baseline and the two arms whose anchor is gone report ARM NEVER ARMED |
+| (2) the noise clause dropped ALONE (the pre-CPDF-16 state) | FAILS naming the noise rows, blank row still passing | **3 pass / 13 FAIL**, baseline names THREE rows, `gate-refuses-blank` PASSES. AS DECLARED |
+| (3) over-strictness — the untouched floor | everything green, byte for byte | **16 pass / 0 fail**, whole battery green, floor `71518864…` unchanged by sha256 AND `cmp`. AS DECLARED |
+| (4) the gate's OWN over-strictness (`const passed = false;`) | the CLEAN rows fail | **3 pass / 13 FAIL**, baseline names exactly `gate-passes-clean-controls` and `agreement-is-a-number-over-a-clean-gate`. AS DECLARED |
+| (5) the suite's own mutation neutered | ARM NEVER ARMED fires rather than a quiet pass | **4 pass / 12 FAIL**, every arm `ARM NEVER ARMED: the edit produced byte-identical source`. AS DECLARED |
+| (6) REACH — the committed floor truncated to 400 B | the corpus floor fires naming the byte count | **2 pass / 14 fail**, `the floor is a real file, not an empty one (400 B, floor 10000)` FAILS, and the grab then refuses by name. AS DECLARED |
+| (7) the per-arm copy blanked inside `sandbox()` | the copy-is-the-subject guard fires | **3 pass / 13 fail**, every arm `THREW: COPY IS NOT THE SUBJECT`. AS DECLARED |
+| (8) the same blanking aimed with a four-space anchor | — | **NOT AS AIMED, KEPT AS A FINDING: 15 pass / 1 fail.** The anchor occurs exactly once — in the FOOT's own `cmp` block, not in `sandbox()` — so the arm blanked the foot's freshly-taken copy and the foot's second restore check was the thing under test. An arm that armed somewhere else is a finding about the arm, and it is the only run in which that row was exercised |
+
+**THE SWEEP CLOSED D-318's STATED BLIND SPOT RATHER THAN RE-WALKING ITS CORPUS.** D-318's
+sweep walked `bio-plane/test/` only and said so; this one walked what it could not:
+`civicos-ui/test/`, `ocr-worker/test/`, `pdf-worker/test/` and `agent-worker/test/` —
+**25 non-discovered `.mjs` modules against a naming corpus of 230 discovered suites across
+six test directories, and ZERO ORPHANS**: 14 have a same-stem discovered sibling (every
+`*.control.mjs` in those directories does, which is the property `cpdf16-floor-controls.mjs`
+lacked) and 11 are named by at least one discovered suite (`extract.mjs` by 40 of them,
+`run.mjs` by 22, `plane-meaning.mjs` and `memberworker.mjs` by their members' own suites).
+So D-322's class has no further instance in the directories D-318 could not reach.
+`newgroup/test` was deliberately NOT walked — DIST's, out of bounds without an instruction.
+
+**WHAT THE MATCHERS AND THE SUITE CANNOT SEE, stated because the next reader cannot
+re-derive it.** The sweep matches a module's FILENAME as a literal in discovered suite text,
+so a discovered suite asserting the same SUBJECT without naming the file reads as an orphan;
+`NAMED BY` is weaker than *witnessed* — four of the eleven are plain helpers a suite imports,
+not defences a suite pins; and it cannot tell a defence from a measurement, which is a hand
+judgement here as it was there. The suite never runs an OCR engine and never fetches the
+exhibit, so it cannot see a gate that is wired correctly and fed the wrong bytes at run time
+— the floor's own full run is the only instrument for that, and D-314's finding came from
+exactly such a run. It reads the wiring as TEXT, deliberately whitespace-tolerant, so a
+re-indentation is not a regression and a semantic change in a spelling the regexes still
+match is not caught. And because it mutates a COPY it cannot see a gate that reads a file by
+an absolute path instead of relative to itself.
+
+**NOTHING COMMITTED WAS EDITED EXCEPT THE FLOOR'S READ-ONLY NEIGHBOURS.**
+`ocr-measure-probe.mjs` is byte-identical to `6406c5a` (`71518864…`) — proved by the suite's
+own foot on every run, by `git status`, and by the restore check after each of the four arms
+that mutated it; both landed probes are untouched; `cpdf16-floor-controls.mjs` gained a
+header paragraph and no arm.
