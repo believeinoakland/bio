@@ -656,9 +656,25 @@ const REGISTER_FLOOR = {
      figure set below. This item's own contribution inside it is three arms
      (`bio-plane/test/ocr-member-e2e.test.mjs`, one suite). CONDUCT re-reads all
      three on the merged tree — it is NAMED in this item's report for that. */
-  arms: 923,
-  classified: 171,
-  corpus: 172,
+  /* MOVED 2026-09-12 by D-318, from the figure a green `--strict` run PRINTED on
+     this branch (`arms 928/923 · classified 172/171 · corpus 173/172 · GREW by
+     5`), never summed by hand and never added to the number already here. THE
+     WHOLE MOVE IS THIS ITEM'S OWN and is accounted for exactly: one new suite,
+     `test/d315-guard-witness.test.mjs`, whose `NEGATIVE CONTROL:` declaration
+     states FIVE arms as a single enumerated paragraph — (1) revert one guard's
+     statement-digest pin to the pre-D-315 `.includes` form, (2) the same revert
+     in the other guard, (3) over-strictness, (4) a neutered mutation so the
+     ARM-NEVER-ARMED guard is itself proven, (5) REACH, the blanked floor. So
+     corpus +1, classified +1, arms +5, and the pre-move floor carried ZERO slack
+     (923/923 · 171/171 · 172/172 on this branch's own baseline at `3366611`,
+     measured before a byte was written) — which is worth recording, because the
+     eleven-arm slack D-315's integration had to absorb is the pattern this file
+     keeps catching and there is none of it here. ONE KEY SET, grepped before and
+     after writing: `^  arms:` matches TWICE in this file, once here and once in
+     `FLEET_FLOOR`, which is the documented expected state. */
+  arms: 928,
+  classified: 172,
+  corpus: 173,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
