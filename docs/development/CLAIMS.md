@@ -2740,3 +2740,41 @@ paths:
 concurrency: checked over the register. CPDF-10 is live on the fleet-member ground, disjoint
 from every path above. No live claim names `ocr-measure-probe.mjs`.
 released: 2026-09-11 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,808 (+1 attributed to planning-hygiene on D-315), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. D-305 and D-314 closed; D-315 stands as the probes-side residue.
+
+## CLAIM 2026-09-12 CONTENT-PDF (D-315 — the comparability guards' expression pin moves from SUBSTRING PRESENCE to BYTE IDENTITY, in both probes)
+session: d315-guard-pins (worktree `agent-a853636fda19082d6`, branch `worktree-agent-a853636fda19082d6`)
+opened: 2026-09-12
+paths:
+  - `bio-plane/test/ocr-composed-probe.mjs` — **THE COMPARABILITY GUARD REGION ONLY** (the
+    `METRIC_EXPRS` pin, the `--digests` bootstrap that prints the pins, and the header comment
+    that describes them). CPDF-14's `--controls` arm table and the probe's exit-code contract
+    (4 = comparability, and it refuses BEFORE any upload) are UNCHANGED — D-315 is a change of
+    DETECTION, not of interface. No measurement code, no upload code, no account code touched.
+  - `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` — **THE SAME GUARD REGION ONLY**, the
+    same change. The engine pins (`checkEnginePins`, exit 5) and CPDF-15's `--controls` arm
+    table are UNCHANGED.
+  - `bio-plane/test/d315-guard-controls.mjs` — **NEW**, this item's negative-control driver.
+    Deliberately NOT named `*.test.mjs` so the battery's discovery rule (`scripts/battery.mjs`:
+    readdir + `endsWith(".test.mjs")`) never picks it up: it mutates a committed file in place
+    and needs a quiet tree.
+  - `docs/development/DEBT.md` — the **D-315 row's disposition ONLY**, plus APPEND ONLY for any
+    row this item raises; ids from `tools/mintid.mjs`.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  **READ, NEVER EDITED**: `bio-plane/test/ocr-measure-probe.mjs` — CPDF-9's floor instrument,
+  carrying CPDF-16's landed additive regions. Its digests must not move, and this item's whole
+  subject is guarding them. **If the exact-match extraction had required a change THERE, that
+  is a finding to report and argue, not an edit to make** — it did not: the four pinned
+  expressions each already occur EXACTLY ONCE and each already sits alone on its own statement
+  line, measured before a byte was written. Also read, never edited:
+  `bio-plane/test/ocr-moondream-probe.mjs` (CPDF-11's ladder recipe) and
+  `bio-plane/test/cpdf16-floor-controls.mjs` (CPDF-16's driver, whose `nc3-expr` arm carries the
+  comment that raised this row).
+  **NOT** `bio-plane/src/**` — this item writes no product code and changes no plane behaviour.
+  **NOT** `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT**
+  `bio-plane/scripts/coverage.mjs` — a probe declares no checks, so no floor here can move.
+  **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`, and none of
+  CPDF-10's ground (`agent-worker/**`, `pdf-worker/**`, the fleet-member paths).
+concurrency: checked over the register 2026-09-12. One unreleased block (FLEET FL-10, whose own
+body records it released) names `bio-plane/scripts/**`, `bio-plane/dist/**` and
+`fleetbundles.*` — disjoint from every path above. CPDF-10 is live on the fleet-member ground,
+also disjoint. No live claim names either probe file or `ocr-measure-probe.mjs`.
