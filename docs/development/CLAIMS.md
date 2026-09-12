@@ -2880,3 +2880,4 @@ concurrency: checked over the register. D-315 is live on `ocr-composed-probe.mjs
 `cpdf15-tesseract-runtime.probe.mjs` — both READ ONLY here and neither touched. No live claim names
 `ocr-worker/`, `fleet-bundle.mjs`, `fleetbundles.test.mjs`, `resolveversion.test.mjs` or
 `bio-plane/wrangler.jsonc`. FL-9/FL-10's FLEET claims are released.
+released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 179/179 · 11,032 (the record figure reproduced exactly after `npm ci` in `ocr-worker/` — the loud skip read correctly), `coverage --strict` exit 0 read unpiped (REGISTER_FLOOR 923/171/172, FLEET_FLOOR 3/6/7/68, both by print), UI harness exit 0, `mintid --audit` 0 breaks. The live-verify is DIST's next cut per IC-78.
