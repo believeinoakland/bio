@@ -256,8 +256,12 @@ t("EVERY generated artifact is excluded, each recognised STRUCTURALLY at "
   [result.excluded.length,
    result.excluded.some((x) => /newgroup\/src\/release\.mjs/.test(x.rel)),
    result.excluded.some((x) => /release\/bio-plane\.bundled\.mjs/.test(x.rel)),
-   result.excluded.some((x) => /docs\/DECIDED\.md/.test(x.rel))],
-  [3, true, true, true]);
+   result.excluded.some((x) => /docs\/DECIDED\.md/.test(x.rel)),
+   /* ADDED 2026-09-13 (DS-4): release 0.57.0 publishes the fleet, and
+      release/pdf-worker.bundled.mjs INLINES bio-plane/src — an embed of the plane
+      for the same reason the other two are. */
+   result.excluded.some((x) => /release\/pdf-worker\.bundled\.mjs/.test(x.rel))],
+  [4, true, true, true, true]);
 t("AND THE GENERATOR IS KEPT IN — `newgroup/scripts/embed-release.mjs` carries the "
 + "banner because it WRITES it; excluding it would hide a real claim while still reading green",
   generatedReason(readFileSync(join(REPO, "newgroup/scripts/embed-release.mjs"), "utf8")), null);

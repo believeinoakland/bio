@@ -1,7 +1,51 @@
 {
- "version": "0.56.0",
- "sha256": "da67aa4dd7740ee6ce5cfdf5180707a2e18cb44e52d06f3cc14317482b90e2a9",
- "asset": "bio-plane.bundled.mjs",
- "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABASySvR0uw1LfcvaJh/u8Y4pSw4KrCS1nH+53er/jdKd+EOqsY17rz7W\n7hcILJjRiZyz1Q2tWaNnntTanXtfYhCw==\n-----END SSH SIGNATURE-----\n",
- "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl bio-release"
+  "version": "0.57.0",
+  "sha256": "72fce1e9156163ad5a04cff68d0dae405e051548fc85fef4d6228ea7fcd28f4c",
+  "bytes": 2715828,
+  "asset": "bio-plane.bundled.mjs",
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABAuE/Gbtexv5E2Wz0bxIAIljW35ESNM23i8DVy/+mB6U3SCfX1TjErsC\nNp5qgTgpjHxWERKvUKxoidpilurHUNDg==\n-----END SSH SIGNATURE-----\n",
+  "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl bio-release",
+  "fleet": [
+    {
+      "member": "agent-worker",
+      "asset": "agent-worker.bundled.mjs",
+      "sha256": "5464ec8a143b6dc2da8f735290e99e227596302fcbcca3ecab2c991c08efa145",
+      "bytes": 53258,
+      "services": [
+        {
+          "binding": "PLANE",
+          "service": "bio-plane"
+        }
+      ],
+      "parts": []
+    },
+    {
+      "member": "ocr-worker",
+      "asset": "ocr-worker.bundled.mjs",
+      "sha256": "c56ebbf216acae46b4a2ab0993f3885f8fb2ddcc933c7ca5eb3919845c3ca04e",
+      "bytes": 166471,
+      "services": [],
+      "parts": [
+        {
+          "path": "assets/tesseract-core.wasm",
+          "sha256": "3822dc6ee83d507f2bd2f83b97a3dd5dabf3ea71a9836d951602c9054615137e",
+          "bytes": 1839004
+        },
+        {
+          "path": "assets/eng.traineddata",
+          "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+          "bytes": 4113088
+        }
+      ]
+    },
+    {
+      "member": "pdf-worker",
+      "asset": "pdf-worker.bundled.mjs",
+      "sha256": "642a9b78fc745ed6390ccc04e773ef26b733d7c840fa7b791a3a00f5beca862d",
+      "bytes": 2427807,
+      "services": [],
+      "parts": []
+    }
+  ],
+  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABA8waREWOh6v7Eic1hIl22kVf5529fSn4lhrn73enR6jdOVx\nxh8GrCulrtwLEkvCvOzgAZJGM3ZSEW9Kgw2jNeCQ==\n-----END SSH SIGNATURE-----\n"
 }

@@ -113,6 +113,7 @@ import {
 import { NS_FLEET, fleetStatement } from "../bio-plane/src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
 import { resolveVersion } from "../bio-plane/scripts/resolve-version.mjs";
+import { signSshsig } from "./sign-sshsig.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -306,15 +307,20 @@ const existing = existsSync(join(RELEASE_DIR, "RELEASE.json"))
 
 const NS_RELEASE = "bio-release";
 
-/** Sign `bytes` in `ns` with the release seed, via stock ssh-keygen. */
+/** Sign `bytes` in `ns` with the release seed.
+ *  NOT via `ssh-keygen -Y sign`: that wants an OpenSSH private key FILE and this
+ *  project's seed is a `BIOKEY-RAW1.<label>.<b64 seed>` envelope — measured
+ *  2026-09-13, it fails with "Couldn't load public key … No such file or
+ *  directory". The doctrine is unaffected: stock ssh-keygen remains the
+ *  ACCEPTANCE authority and `verifyWith` below is run on everything signed here,
+ *  including immediately after signing it. See tools/sign-sshsig.mjs. */
 function signWith(seed, bytes, ns) {
-  const dir = join(tmpdir(), "bio-rel-" + Date.now() + "-" + Math.random().toString(36).slice(2));
-  mkdirSync(dir, { recursive: true });
-  const keyPath = join(dir, "k"), payPath = join(dir, "p");
-  writeFileSync(keyPath, seed.endsWith("\n") ? seed : seed + "\n", { mode: 0o600 });
-  writeFileSync(payPath, bytes);
-  execFileSync("ssh-keygen", ["-Y", "sign", "-f", keyPath, "-n", ns, payPath], { stdio: "pipe" });
-  return readFileSync(payPath + ".sig", "utf8");
+  try { return signSshsig(seed, bytes, ns); }
+  catch (e) {
+    die("SIGNING_FAILED", `could not sign in namespace ${ns}.`,
+      `  ${String(e.message || e)}\n`
+      + "BIO_RELEASE_SEED must be the BIOKEY-RAW1 envelope this project mints.");
+  }
 }
 
 /** Stock `ssh-keygen -Y verify` is the acceptance authority, here as everywhere. */
