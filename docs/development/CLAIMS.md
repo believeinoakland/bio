@@ -2810,3 +2810,18 @@ body records it released) names `bio-plane/scripts/**`, `bio-plane/dist/**` and
 `fleetbundles.*` — disjoint from every path above. CPDF-10 is live on the fleet-member ground,
 also disjoint. No live claim names either probe file or `ocr-measure-probe.mjs`.
 released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 176/176 · 10,833, `coverage --strict` exit 0 read unpiped with `REGISTER_FLOOR` moved to the merged print (920/170/171 — 11 slack, mostly FL-6/DS-2/DS-3 accumulation, noted for FLEET and DIST), UI harness exit 0, `mintid --audit` 0 breaks. D-315 closed; D-318 stands.
+### RELEASED 2026-09-12: the FL-6 claim above — landed as `56ed70b` (the cascade) + the floor-move commit beside it
+Acceptance measured, not believed: `battery.mjs cascade` green **29/0** — the three fixtures
+resolve to the right level with the run object naming it (and the record's payer REFUSING to
+disagree with the runtime's, `RUN_NAMES_A_DIFFERENT_PAYER` naming both facts); the no-token
+fixture answers the NAMED unavailable (`NO_ACCOUNT_RESOLVED`, 409, per-level absences stated
+— unset and revoked-by-publication are different facts and both are named); no secret on the
+wire in either direction, and no Claude token value in any plane call, asserted. NC four arms
+armed ALONE with measured tallies (26/3 · 20/9 · 26/3 · baseline 29/0), restores verified
+content+sha256. Full gates GREEN class FULL: battery 177/177 · 10,861, UI green, plancheck
+0/0. `--strict` exit 0 unpiped post-commit, provenance 183/183 at HEAD; REGISTER_FLOOR
+909→920/168→170/169→171 to the printed figures. The FL-9 guard caught the superseded
+module-roster pin on the first rebuild — corrected with the dated reason, never exempted.
+**For CONDUCT:** FL-6's build-plan row carries its landed note; the QUEUE build-plan table's
+FL-6 line is yours. **The IS build plan's FLEET share is now COMPLETE** — what remains behind
+DS-4 is VF-4 (VERIFY's), and model TURNS are D-218's sizing, deliberately not FL-6's.
