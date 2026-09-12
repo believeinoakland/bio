@@ -86,6 +86,22 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
   console.log(`version: ${r.version} — plane and ${r.sites.length - 2} fleet site(s) agree`);
 }
 
+/* DS-3: SAY WHICH WAY THE CASCADE IS GOING OUT, because an absence that is not
+   stated is indistinguishable from one nobody checked. A deploy from a machine
+   without the value does not clear the instance (keep_bindings preserves
+   secret_text) — so the two cases genuinely differ and the operator is told
+   which one this is. The value itself is never printed. */
+{
+  const has = typeof process.env.INSTANCE_CLAUDE_TOKEN === "string"
+    && process.env.INSTANCE_CLAUDE_TOKEN.length > 0;
+  console.log(has
+    ? "cascade: INSTANCE_CLAUDE_TOKEN present in this environment — it will be SENT and will"
+      + " replace whatever the instance holds (value not printed; confirmed by USING it)"
+    : "cascade: INSTANCE_CLAUDE_TOKEN not in this environment — NOT sent. Any value already"
+      + " on the instance is KEPT (keep_bindings: secret_text), so this deploy neither sets"
+      + " nor clears the instance Claude account.");
+}
+
 const BATON_URL = "https://raw.githubusercontent.com/believeinoakland/bio/main/docs/development/kickoffs/BATON.md";
 
 /** Read the holder off the remote. Returns null when it cannot be determined,
@@ -270,6 +286,18 @@ const meta = {
     { type: "plain_text", name: "INSTANCE_NAME", text: slug },
     { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
     { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
+    /* DS-3 — the account cascade's third level, sent ONLY when the operator has
+       put it in the environment. `keep_bindings` below keeps `secret_text`, so a
+       value already on the instance SURVIVES a deploy that does not carry one:
+       the ordinary case is an operator who set it once, and a deploy from a
+       machine without it must not silently DELETE the instance's Claude account
+       — that is D-202's binding-deletion class, which this script has already
+       been bitten by once.
+       The value is read from the environment and never printed, here or
+       anywhere: it is confirmed by USING it, which is FL-6's runtime path. */
+    ...(process.env.INSTANCE_CLAUDE_TOKEN
+      ? [{ type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: process.env.INSTANCE_CLAUDE_TOKEN }]
+      : []),
   ],
   /* `service` is here for the reason D-201 exists: a binding class this script
      neither SENDS nor KEEPS is silently DELETED on every deploy. D-202 measured
